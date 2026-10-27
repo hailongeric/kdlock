@@ -1,23 +1,25 @@
 # Single-round catalog campaign, October 26, 2026
 
-The user requested all workloads from `docs/BENCHMARK_WORKLOADS.md`, one timed
-repetition per point and immediate per-workload tables/charts. The runnable
-standard catalog plan contains 51 workload configurations, each with 21 worker
-counts and Native/TCLock/KD: 3,213 planned sessions. See [plan.json](plan.json).
-All 51 configurations and 3,213 points were attempted: **3,166 valid timed
-measurements and 47 KD helper-preparation failures**, all drained. Each measured
-point has exactly one timed repetition. The [result index](progress.md) links
-every table, CSV and chart. Failed points have no rate and break the chart line.
-The [offline audit](audit.json) matched every published value, all 51 archive
-hashes and 13,994 frozen source-file hashes. Recorded final health retained the
-same recovery boot and original 73-module inventory.
+This retained subset contains 45 historical lock/API configurations, each with
+21 worker counts and Native/TCLock/KD: **2,835 attempted sessions**, comprising
+**2,788 valid timed measurements and 47 drained KD preparation failures**.
+Each measured point has one timed repetition. The [result index](progress.md)
+links every retained table, CSV and chart. Failed points have no rate.
+
+The user-directed cleanup removed retired benchmark records and portions of
+mixed source archives. Provenance is **REDACTED / INCOMPLETE**: original
+complete-archive hashes and full-source replay claims no longer apply. Rates
+and failure outcomes for the retained subset are unchanged. The filtered
+[plan](plan.json) and [audit](audit.json) describe the retained scope.
+Recorded final health retained the recovery boot and original 73-module inventory.
+
 The [corrected API command plan](plan-v2.json) restricts `--mutex-api public`
 to pipe and seek mutex cases. The original OFD startup attempt rejected this
 option before output creation or module loading; it measured no points. All
 23 corrected API plans passed the guest runner's argument and plan checks.
 The initial check harness had a missing Python import path; that failed check
-is preserved separately from the successful check. Existing measurements and
-their inputs remain unchanged.
+is preserved separately from the successful check. Retained measurements keep their original values; archived inputs are incomplete
+after cleanup.
 The first xattr front/n16 attempt measured Native and TCLock at one worker,
 then KD exhausted four eight-worker helper-learning waves without a returned
 body. It drained and remains a preparation failure, with no KD timed rate.
@@ -37,8 +39,7 @@ Strict timing qualification remains failed throughout this continuation.
 | Workload | Measurements | Correct and drained | Timing qualification | Results |
 | --- | ---: | ---: | --- | --- |
 | Spin c01/post64 | 63/63 | 63/63 | Failed host endpoint: 67 to 74 QEMU tasks | [Table](spin-c01/README.md), [CSV](spin-c01/table.csv), [PNG](spin-c01/throughput.png), [SVG](spin-c01/throughput.svg) |
-| All 51 lock/API configurations, including c01 | 3,166/3,213 timed; 47 preparation failures | All 3,213 attempts drained | Strict qualification remains failed | [Tables/charts](progress.md); corrected API commands in plan-v2.json |
-| Selected 64-node lists | Unrun | Not implemented by current payload/runners | Requires implementation and validation | Not substituted with 128 nodes |
+| Retained 45 lock/API configurations, including c01 | 2,788/2,835 timed; 47 preparation failures | All 2,835 retained attempts drained | Strict qualification remains failed | [Tables/charts](progress.md); corrected API commands in plan-v2.json |
 | Private-backing mmap/fault timing and actual shared-mm mmap | 126/126 timed | All passed and drained | Exploratory; separate runner and kernel scopes | [Three tables/charts](../catalog-mmap-single-20261026/README.md) |
 | Generic actual-page-fault throughput and full proc/application proposals | Unrun | No generic maintained throughput driver | Requires implementation | Not represented by synthetic or extracted snapshots |
 
@@ -69,11 +70,9 @@ reboot ran. Guest evidence remains at
 `/root/kdlock-evidence/10.176.26.71/bench/catalog-single-20261026/`;
 source-host raw receipts are under
 `bench/results/10.176.26.71/raw/bench/catalog-single-20261026/`.
-The `spin-c01-evidence.tar.gz` archive contains 2,802 members and 5,746,092
-compressed bytes; SHA-256:
-`e1495578117abf0944e79e8bafb34b0878c39009feccf5b833c7ce005a65d62b`.
-Read-only archive review matched all 63 published rates to their original
-receipts and verified the retained idle-health record.
+The original complete archive and source-manifest bindings are superseded by
+the filtered retention receipts. Published rates remain historical observations;
+cleanup does not provide a fresh source/binary replay.
 
 Preparation synchronized 4,323 tracked source hashes to the idle guest. Both
 basic C programs and all 27 affected reader/writer runner tests passed there.

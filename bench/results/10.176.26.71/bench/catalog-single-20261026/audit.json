@@ -1,13 +1,11 @@
 {
-  "passed": true,
   "scope": "Offline receipt, arithmetic, source archive and recorded health audit",
   "strict_timing_qualified": false,
-  "configurations": 51,
-  "planned": 3213,
-  "attempted": 3213,
-  "measured": 3166,
-  "drained": 3213,
-  "source_files_verified": 13994,
+  "configurations": 45,
+  "planned": 2835,
+  "attempted": 2835,
+  "measured": 2788,
+  "drained": 2835,
   "original_xattr_attempts_retained_without_repeat": 3,
   "workloads": [
     {
@@ -17,9 +15,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "spin-c01-evidence.tar.gz",
-      "archive_sha256": "e1495578117abf0944e79e8bafb34b0878c39009feccf5b833c7ce005a65d62b"
+      "archive": "spin-c01-evidence.tar.gz"
     },
     {
       "workload": "spin-c08",
@@ -28,9 +24,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "spin-c08-evidence.tar.gz",
-      "archive_sha256": "d6940f69c8e9cb891a4257fedd307b858473e30a714adff9151ad31e700043d7"
+      "archive": "spin-c08-evidence.tar.gz"
     },
     {
       "workload": "spin-rcuht",
@@ -39,20 +33,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "spin-rcuht-evidence.tar.gz",
-      "archive_sha256": "384ec785339b30ced3b86f5070c8d043edbe50ee27549dee5a2e5f6ca272d3fc"
-    },
-    {
-      "workload": "spin-list16",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "spin-list16-evidence.tar.gz",
-      "archive_sha256": "ee154cc72a6c448f3070031dbb986c9e7e1e39c419484a51e2bea3c2d19dd7ff"
+      "archive": "spin-rcuht-evidence.tar.gz"
     },
     {
       "workload": "mutex-c01",
@@ -61,9 +42,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "mutex-c01-evidence.tar.gz",
-      "archive_sha256": "cc7ca8687d933b891864dbb1bc3fc633c83e6bd3415099aa6eb1bc09d10cc665"
+      "archive": "mutex-c01-evidence.tar.gz"
     },
     {
       "workload": "mutex-c08",
@@ -72,9 +51,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "mutex-c08-evidence.tar.gz",
-      "archive_sha256": "cb0fae6b2e9d10cfe06de0fbe220545c016300e6eb810ab4a9d651cc7cf529f7"
+      "archive": "mutex-c08-evidence.tar.gz"
     },
     {
       "workload": "mutex-rcuht",
@@ -83,20 +60,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "mutex-rcuht-evidence.tar.gz",
-      "archive_sha256": "55495de6a6635fd76f9166f2a3b242a8a7ebb6e9009d9cc9de9d6990cb501db4"
-    },
-    {
-      "workload": "mutex-list16",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 350,
-      "archive": "mutex-list16-evidence.tar.gz",
-      "archive_sha256": "bdcfc1618f987e3361a9a7f6555a6aaedc65c80d9f03c9b5cce4b1035563caac"
+      "archive": "mutex-rcuht-evidence.tar.gz"
     },
     {
       "workload": "rwlock-c01-w01",
@@ -105,9 +69,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-c01-w01-evidence.tar.gz",
-      "archive_sha256": "207bdc13568b79914fc71a200f5c8759759a29f38b77e5a0bbf00bef86906845"
+      "archive": "rwlock-c01-w01-evidence.tar.gz"
     },
     {
       "workload": "rwlock-c01-w20",
@@ -116,9 +78,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-c01-w20-evidence.tar.gz",
-      "archive_sha256": "bc6c02f7058ae912e380d5772d8db8ab224a2f0223161c0207882d088745092d"
+      "archive": "rwlock-c01-w20-evidence.tar.gz"
     },
     {
       "workload": "rwlock-c08-w01",
@@ -127,9 +87,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-c08-w01-evidence.tar.gz",
-      "archive_sha256": "45b8edd24a6728bbb70e3ba21a170efc57676f9ac29429774b399d927b94eec6"
+      "archive": "rwlock-c08-w01-evidence.tar.gz"
     },
     {
       "workload": "rwlock-c08-w20",
@@ -138,9 +96,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-c08-w20-evidence.tar.gz",
-      "archive_sha256": "189a5018889ae1281905b0d3fa66d4bcf5afc95f71fe71efcf923296d9788172"
+      "archive": "rwlock-c08-w20-evidence.tar.gz"
     },
     {
       "workload": "rwlock-rcuht-w01",
@@ -149,9 +105,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-rcuht-w01-evidence.tar.gz",
-      "archive_sha256": "75c3588a76df477522ec4d5a9d8cab49e545f699633f0439404dddbd27274b3a"
+      "archive": "rwlock-rcuht-w01-evidence.tar.gz"
     },
     {
       "workload": "rwlock-rcuht-w20",
@@ -160,31 +114,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-rcuht-w20-evidence.tar.gz",
-      "archive_sha256": "02b204be38f196364852ef217f3b3fa505738cdb0c937c4b1829063dbb5f4337"
-    },
-    {
-      "workload": "rwlock-list16-w01",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-list16-w01-evidence.tar.gz",
-      "archive_sha256": "322eb134e043e2e38fb03fd7001374a1a4f070da8e376dded67234c7163b707a"
-    },
-    {
-      "workload": "rwlock-list16-w20",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwlock-list16-w20-evidence.tar.gz",
-      "archive_sha256": "09a7a8c39a1afb64ca3908b2eb2d8daaa74dd5e5c0ce558db7696931d1029833"
+      "archive": "rwlock-rcuht-w20-evidence.tar.gz"
     },
     {
       "workload": "rwsem-c01-w01",
@@ -193,9 +123,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-c01-w01-evidence.tar.gz",
-      "archive_sha256": "c32b0eb7e703b01709f81c1a1dd1bba71c99a883386ff0c38d50920a8374c525"
+      "archive": "rwsem-c01-w01-evidence.tar.gz"
     },
     {
       "workload": "rwsem-c01-w20",
@@ -204,9 +132,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-c01-w20-evidence.tar.gz",
-      "archive_sha256": "513d7f9303b3ed1c56317dc6a6cd4a4d688ad25d2c31c2a2d1951dedb60b41c4"
+      "archive": "rwsem-c01-w20-evidence.tar.gz"
     },
     {
       "workload": "rwsem-c08-w01",
@@ -215,9 +141,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-c08-w01-evidence.tar.gz",
-      "archive_sha256": "cbf67d49ef7394d1cec9f40e13fa59d6d4cedae4e53b414a5ba57893548b4449"
+      "archive": "rwsem-c08-w01-evidence.tar.gz"
     },
     {
       "workload": "rwsem-c08-w20",
@@ -226,9 +150,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-c08-w20-evidence.tar.gz",
-      "archive_sha256": "6907ad039d8cf336cdeb0f6dbafd8d4dd776f155ca2b08f4c4dcf24da6367797"
+      "archive": "rwsem-c08-w20-evidence.tar.gz"
     },
     {
       "workload": "rwsem-rcuht-w01",
@@ -237,9 +159,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-rcuht-w01-evidence.tar.gz",
-      "archive_sha256": "f3ddb0c0f78f45f32f451403e5879f9a585d25304a9410edc68d7859e0c95021"
+      "archive": "rwsem-rcuht-w01-evidence.tar.gz"
     },
     {
       "workload": "rwsem-rcuht-w20",
@@ -248,31 +168,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-rcuht-w20-evidence.tar.gz",
-      "archive_sha256": "9efc0d92fd64721aa009f5ac476afb34a5cbd737b1709bfc27503c08fd95368e"
-    },
-    {
-      "workload": "rwsem-list16-w01",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-list16-w01-evidence.tar.gz",
-      "archive_sha256": "9be935bbfe0e6866606d5b7e7653fdaf9d042b1b2501f0a6df19a6ad6ed6c0cc"
-    },
-    {
-      "workload": "rwsem-list16-w20",
-      "planned": 63,
-      "attempted": 63,
-      "measured": 63,
-      "drained": 63,
-      "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "rwsem-list16-w20-evidence.tar.gz",
-      "archive_sha256": "bbf8d707d2d810e2555fe8bedfa87ab0b29ad65761f3c0d6917b12650934dd0e"
+      "archive": "rwsem-rcuht-w20-evidence.tar.gz"
     },
     {
       "workload": "argbounds-w00",
@@ -281,9 +177,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "argbounds-w00-evidence.tar.gz",
-      "archive_sha256": "34eda0e93be5d1f8c3d7022314ab6b08101589e2710ef8287588a7d116479215"
+      "archive": "argbounds-w00-evidence.tar.gz"
     },
     {
       "workload": "argbounds-w20",
@@ -292,9 +186,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "argbounds-w20-evidence.tar.gz",
-      "archive_sha256": "10bb06db30801e9b84a49069c9ed0429a17cd6bfa0296fbdd2e8b8d6793b15aa"
+      "archive": "argbounds-w20-evidence.tar.gz"
     },
     {
       "workload": "taskname-w00",
@@ -303,9 +195,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "taskname-w00-evidence.tar.gz",
-      "archive_sha256": "ed8bea65e775b131ffd74ad4cf9131c0960ca1bec3961c3cbd6bb8ab98a8f790"
+      "archive": "taskname-w00-evidence.tar.gz"
     },
     {
       "workload": "taskname-w20",
@@ -314,9 +204,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 263,
-      "archive": "taskname-w20-evidence.tar.gz",
-      "archive_sha256": "8cbbfb96168e4a1e2905e555d42d462f2a9cc26ddf4bf0fac92122c8f34fd513"
+      "archive": "taskname-w20-evidence.tar.gz"
     },
     {
       "workload": "ofd-front-n16",
@@ -325,9 +213,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-front-n16-evidence.tar.gz",
-      "archive_sha256": "966520b34705440f96fd1ec68ddf3e06aa7a30b9556bf69fcf613018a6b6bf04"
+      "archive": "ofd-front-n16-evidence.tar.gz"
     },
     {
       "workload": "ofd-front-n128",
@@ -336,9 +222,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-front-n128-evidence.tar.gz",
-      "archive_sha256": "64c39821a23a89092e65b7120557a186fb501baa3bfad9177d9ab07fa2c6c0e2"
+      "archive": "ofd-front-n128-evidence.tar.gz"
     },
     {
       "workload": "ofd-tail-n16",
@@ -347,9 +231,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-tail-n16-evidence.tar.gz",
-      "archive_sha256": "b99bfafc6b0e65013e5c4fa927d92684bcf8f92ac665683ebf580d7d1c70fb39"
+      "archive": "ofd-tail-n16-evidence.tar.gz"
     },
     {
       "workload": "ofd-tail-n128",
@@ -358,9 +240,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-tail-n128-evidence.tar.gz",
-      "archive_sha256": "a429902f553b9c590a8aac8491f38f34154e127a47027607cf9256a9c3944cc2"
+      "archive": "ofd-tail-n128-evidence.tar.gz"
     },
     {
       "workload": "ofd-miss-n16",
@@ -369,9 +249,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-miss-n16-evidence.tar.gz",
-      "archive_sha256": "69e3dbcc96497a0f3e6450c57d372fa0a926aaa2d289cd1cabef3151937d8dfb"
+      "archive": "ofd-miss-n16-evidence.tar.gz"
     },
     {
       "workload": "ofd-miss-n128",
@@ -380,9 +258,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "ofd-miss-n128-evidence.tar.gz",
-      "archive_sha256": "b28d1df77f2d7d7a263488f6eb22a42f08e753d156378ec4f6c0845d781fad65"
+      "archive": "ofd-miss-n128-evidence.tar.gz"
     },
     {
       "workload": "setfd-toggle-n16",
@@ -391,9 +267,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "setfd-toggle-n16-evidence.tar.gz",
-      "archive_sha256": "c8ccf059c0b6f2983951657cd776ceed973e9bc4fb239130be367752ce8cc9f9"
+      "archive": "setfd-toggle-n16-evidence.tar.gz"
     },
     {
       "workload": "setfd-toggle-n512",
@@ -402,9 +276,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "setfd-toggle-n512-evidence.tar.gz",
-      "archive_sha256": "c6c097cab8617cb5cd239d7c0d54473d50405b6e9ca262df2885758f09698b60"
+      "archive": "setfd-toggle-n512-evidence.tar.gz"
     },
     {
       "workload": "pipebytes-query-n16",
@@ -413,9 +285,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "pipebytes-query-n16-evidence.tar.gz",
-      "archive_sha256": "08197c56d272239a06087378391fa94be959c489f84aab9b2461d7de22d2c82e"
+      "archive": "pipebytes-query-n16-evidence.tar.gz"
     },
     {
       "workload": "pipebytes-query-n128",
@@ -424,9 +294,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "pipebytes-query-n128-evidence.tar.gz",
-      "archive_sha256": "a825aac6f5be7e52667423ec511dafb470d0692b74a98ad508e7d9dd8910ba49"
+      "archive": "pipebytes-query-n128-evidence.tar.gz"
     },
     {
       "workload": "pipecap-query-n16",
@@ -435,9 +303,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "pipecap-query-n16-evidence.tar.gz",
-      "archive_sha256": "1c2dbc48aea22c40510aec31adcdbfed38a53439f6f9f0d601ca0132d028dea1"
+      "archive": "pipecap-query-n16-evidence.tar.gz"
     },
     {
       "workload": "seek-set-n16",
@@ -446,9 +312,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "seek-set-n16-evidence.tar.gz",
-      "archive_sha256": "9b290d9f9036eea84a23f29cdaa4bb3d642f97e6b43f994c36a0e24b8a14c2b6"
+      "archive": "seek-set-n16-evidence.tar.gz"
     },
     {
       "workload": "seek-end-n16",
@@ -457,9 +321,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "seek-end-n16-evidence.tar.gz",
-      "archive_sha256": "1a3a46ee28a6807a04e3a42bcde8b42a0fa55fd7ae9792915647bcdb202bc12f"
+      "archive": "seek-end-n16-evidence.tar.gz"
     },
     {
       "workload": "utsname-host-n20",
@@ -468,9 +330,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "utsname-host-n20-evidence.tar.gz",
-      "archive_sha256": "3373a1219b82e016d7b0726622e2da8e5c532f57e5769f4d213260c47e9335c2"
+      "archive": "utsname-host-n20-evidence.tar.gz"
     },
     {
       "workload": "utsname-domain-n20",
@@ -479,9 +339,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "utsname-domain-n20-evidence.tar.gz",
-      "archive_sha256": "54113b8180c47dc94fd555840a58768161b102b9a2bafc8c407119c09d3a133f"
+      "archive": "utsname-domain-n20-evidence.tar.gz"
     },
     {
       "workload": "xattr-front-n16",
@@ -551,9 +409,7 @@
           "status": "PREPARATION_FAILED"
         }
       ],
-      "source_files_verified": 258,
-      "archive": "xattr-front-n16-evidence.tar.gz",
-      "archive_sha256": "ad41ac67121e7f740bcb78f3310e63ca39650471623e8432d0303329a41cde61"
+      "archive": "xattr-front-n16-evidence.tar.gz"
     },
     {
       "workload": "xattr-front-n128",
@@ -638,9 +494,7 @@
           "status": "PREPARATION_FAILED"
         }
       ],
-      "source_files_verified": 258,
-      "archive": "xattr-front-n128-evidence.tar.gz",
-      "archive_sha256": "c023edb832263c38dfc8b66cfb5f5d938a7fd8b89a7d89b83ea1ea087316b2a3"
+      "archive": "xattr-front-n128-evidence.tar.gz"
     },
     {
       "workload": "xattr-tail-n16",
@@ -655,9 +509,7 @@
           "status": "PREPARATION_FAILED"
         }
       ],
-      "source_files_verified": 258,
-      "archive": "xattr-tail-n16-evidence.tar.gz",
-      "archive_sha256": "522150bb4ccd1c14c89033c92507adbcee9d783b1e9963237e8ea6bbb40dca85"
+      "archive": "xattr-tail-n16-evidence.tar.gz"
     },
     {
       "workload": "xattr-tail-n128",
@@ -747,9 +599,7 @@
           "status": "PREPARATION_FAILED"
         }
       ],
-      "source_files_verified": 258,
-      "archive": "xattr-tail-n128-evidence.tar.gz",
-      "archive_sha256": "c91d798fdfc90559e177cd86a179bc5667becf5085a983a617a2122d04163aa2"
+      "archive": "xattr-tail-n128-evidence.tar.gz"
     },
     {
       "workload": "xattr-miss-n16",
@@ -758,9 +608,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "xattr-miss-n16-evidence.tar.gz",
-      "archive_sha256": "f362a8ace4792868244bd7274b02bb6bb5644da0a806033ef977a6a40dd1421b"
+      "archive": "xattr-miss-n16-evidence.tar.gz"
     },
     {
       "workload": "xattr-miss-n128",
@@ -785,9 +633,7 @@
           "status": "PREPARATION_FAILED"
         }
       ],
-      "source_files_verified": 258,
-      "archive": "xattr-miss-n128-evidence.tar.gz",
-      "archive_sha256": "d96c09f01cf3e4f1b72ea559ebb39884719a28ac617e1c7ae1e61f363125f429"
+      "archive": "xattr-miss-n128-evidence.tar.gz"
     },
     {
       "workload": "xattr-size-n16",
@@ -796,9 +642,7 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "xattr-size-n16-evidence.tar.gz",
-      "archive_sha256": "5ff8bb63eadd58b2e06fb950b72af0ebd38965df2c6cbb812157ac0dbdd06e73"
+      "archive": "xattr-size-n16-evidence.tar.gz"
     },
     {
       "workload": "xattr-size-n128",
@@ -807,9 +651,13 @@
       "measured": 63,
       "drained": 63,
       "preparation_failures": [],
-      "source_files_verified": 258,
-      "archive": "xattr-size-n128-evidence.tar.gz",
-      "archive_sha256": "6ea777e97487a498cfcac6540a30200bb40cd2468bfdfb0ad6caaab5beb2b097"
+      "archive": "xattr-size-n128-evidence.tar.gz"
     }
-  ]
+  ],
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  },
+  "status": "REDACTED_INCOMPLETE"
 }

@@ -11,7 +11,6 @@
     "bench/spin_cacheline/client_fixture.c": "ba16c9485097a64d86731f1debe15a8ac6b89aec2931d08908b0dabd59306f4e",
     "bench/spin_cacheline/control_fixture.c": "3912b4ed410a06988b3bf4d196809e8d447e8eeb5a0d87edba81d8746abbfc27",
     "bench/spin_cacheline/kernel_identity.py": "7b8ff6550e268644f51cd383a00a8d9921d53e33677799e1c1a9f1eff94f0965",
-    "bench/spin_cacheline/list_audit.py": "8d7ca4a99a79ff6f6abc445912e019d317fae7624042c61d4c1bbde0466f5489",
     "bench/spin_cacheline/native_image.py": "63a4abae3ceec28d0b74f1898c9b8b5f779c60dc798ae7fe60720655bf2e43ac",
     "bench/spin_cacheline/peak.py": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2",
     "bench/spin_cacheline/post_work_fixture.c": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9",
@@ -22,7 +21,6 @@
     "bench/spin_cacheline/provider/prepare.py": "06b485cddbf40c7f706330e1880dc2d082cdf17bb57aa198efee7ee48cc7175c",
     "bench/spin_cacheline/summarize.py": "3535df0ad59016f097488693528313f99546353676633fbf39d38ca7d846ca06",
     "bench/spin_cacheline/test_assembly.py": "38b117cd3497af871da30b58b2e09c216a7df0674cb9f0fadbf5253aca8b0a2c",
-    "bench/spin_cacheline/test_list_audit.py": "3d66803136bdbf5b5b4de5caa6a19fa9ac8589ac0f90fd6a05457b447ac1bfa8",
     "bench/spin_cacheline/test_peak.py": "73e86ce37ef2e1262b44c6d157e018bafb2102711ae06e13fce130fa19a5af53",
     "bench/spin_cacheline/test_spin_cacheline.py": "3d273a9c5bb7c39f343dfafed4ebdd030d77978ed586451a8b9ed100f28a4ca7",
     "daemon/Makefile": "0d57b1892d38ad682d19c8d06e76f2174867c9ad47d6e81ff2bd91cbf69d4bec",
@@ -293,7 +291,6 @@
     "tests/unit/rwlock/test_tclock_rwlock_context.py": "46cdd682d61d3ec7f837ad8f8b8abf04d57b47ec08f580b7627725a49a474a2d",
     "tests/unit/spin/hash_relink_fixture.c": "774ff6ee641f11dce900edccee222589739f54bcd8e541278f0d11aca17536c0",
     "tests/unit/spin/legacy_batch.S": "e046f85b9605e1a1a9f59599cbb8292c538fb40102df0b86b96b2bdce79f2f7a",
-    "tests/unit/spin/list_payload_fixture.c": "10d73106cf6f97296bac4ca2ad60ad415fe6c0812ff20a24c287b730fe8c2749",
     "tests/unit/spin/spin_batch_fixture.c": "56f3079740c1ed4460d15a61387e9d16a8c56fbbc559f9a33dc5d64f2841e5fe",
     "tests/unit/spin/spin_cold_route_fixture.c": "26d454434ceb3c02c7ab06c86b1d4915d5f8d1b4d11eea672609662b5d91e3e3",
     "tests/unit/spin/spin_entry_fixture.c": "17af521898afb011b7ec6e65266fd07c9a2e24879cd06f835e7e51b50ec2a073",
@@ -312,7 +309,6 @@
     "tests/unit/spin/spin_storage_fixture.c": "4cebc7163207ce98be8d4031e4a92d8c3828ba01b605295ebd103f5d2c6a879e",
     "tests/unit/spin/spin_wait_fixture.c": "33bd5c12db675980042b5a3539b91112c42ef6ec5ffaf98311cbe87e083059bc",
     "tests/unit/spin/test_hash_relink.py": "81b903952171b512af3e19e4f484a7369d6dd1591a5f758cb11f38ec6193f284",
-    "tests/unit/spin/test_list_payload.py": "341b8240bb26ada8f525d5ea7de4e85d1a687b9b7d13cad1728500adf413e3d5",
     "tests/unit/spin/test_spin_batch.py": "d726ac2914496508587100073bff17d4155ad9daccd6ad2fd39cbdcabd10d482",
     "tests/unit/spin/test_spin_cold.py": "0d6e77a88949ba55d58e29adefd69eaa9be4e96c165ebd1f88f5bc12462909ac",
     "tests/unit/spin/test_spin_direct.py": "8e6c8db399e68fb02a697929509aa2a47f32115f9c627ae250408c6ebfaab88d",
@@ -328,5 +324,10 @@
     "tests/unit/spin/test_spin_wait.py": "63e8e4c22e6f4d7f29a3add0eab442c15b05b930a3022b188e94358996d2bbaa",
     "tests/unit/spin/test_spin_wwjump.py": "775bef0177aff47fcb8d5f7d9dc9081ba2826e02c46453f9d860714b90a87928",
     "tests/unit/spin/test_tclock_context.py": "4d38eb031d839067071639d0865c1025ca6e90ebe534a923c29551717bc1f37d"
+  },
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
   }
 }

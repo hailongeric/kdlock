@@ -22,7 +22,6 @@
     "bench/mutex_api_compare/test_host_observer.py": "beb9594dbe1ffc5209017b0e0c9eddcce275f02faf56a2eedd37d327b2a7ee5e",
     "tests/unit/run.py": "c79bd4be7305383e632f130c69735067c265ca56c3cedeb21ad73b01b56f9db2",
     "tests/unit/__init__.py": "13482033400fad607653018ae5d42ac3b49047092f2531a621109e76a68a5d11",
-    "tests/unit/spin/list_payload_fixture.c": "10d73106cf6f97296bac4ca2ad60ad415fe6c0812ff20a24c287b730fe8c2749",
     "tests/unit/spin/test_hash_relink.py": "81b903952171b512af3e19e4f484a7369d6dd1591a5f758cb11f38ec6193f284",
     "tests/unit/spin/test_tclock_context.py": "4d38eb031d839067071639d0865c1025ca6e90ebe534a923c29551717bc1f37d",
     "tests/unit/spin/spin_wait_fixture.c": "33bd5c12db675980042b5a3539b91112c42ef6ec5ffaf98311cbe87e083059bc",
@@ -43,7 +42,6 @@
     "tests/unit/spin/test_spin_wwjump.py": "775bef0177aff47fcb8d5f7d9dc9081ba2826e02c46453f9d860714b90a87928",
     "tests/unit/spin/spin_preempt_fixture.c": "8c296f418797733ad150c1687d5e8f59e3dd539ffaf4001a5c31a3b48b9e214a",
     "tests/unit/spin/test_spin_direct.py": "8e6c8db399e68fb02a697929509aa2a47f32115f9c627ae250408c6ebfaab88d",
-    "tests/unit/spin/test_list_payload.py": "341b8240bb26ada8f525d5ea7de4e85d1a687b9b7d13cad1728500adf413e3d5",
     "tests/unit/spin/test_spin_wait.py": "63e8e4c22e6f4d7f29a3add0eab442c15b05b930a3022b188e94358996d2bbaa",
     "tests/unit/spin/test_spin_outer_progress.py": "c6fd3cadc02eed01b85973f059e9262898dea04ae0672bbedf08dca91c201ace",
     "tests/unit/spin/spin_shadow_fixture.c": "20cc5567c25bb413365d12e695b18de9f88ceaa384429b151ce84689b3e2577e",
@@ -230,5 +228,10 @@
     }
   ],
   "final_idle": true,
-  "finished_ns": 1792527068475183063
+  "finished_ns": 1792527068475183063,
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  }
 }

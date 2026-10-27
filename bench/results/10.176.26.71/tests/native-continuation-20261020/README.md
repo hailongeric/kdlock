@@ -1,10 +1,14 @@
 # Native continuation validation
 
+The user-directed cleanup removed retired benchmark records and parts of mixed
+source archives. Archival provenance is **REDACTED / INCOMPLETE**. Original
+complete-archive hashes and full-source replay claims below describe the earlier
+collection, not the current retained subset; retained measurements are unchanged.
+
 Continuation implementation `9a0fdd4`, with fixture-only corrections through
 `a4eb4eb`, passed basic and directly affected checks in the recovery VM.
-The selected correctness stage is complete: all nine live continuation/ownership
-probes and all 16 resident-list functional sessions passed at their recorded
-source revisions. This is separate from the completed
+All nine live continuation/ownership probes passed at their recorded source
+revisions. This is separate from the completed
 [`d21a1e3` public-mutex performance matrix](../../bench/mutex-public-20261020/README.md).
 The subsequent [controlled replay](../../bench/mutex-public-regressions-20261020/README.md)
 completed 120 valid, drained sessions using those original performance inputs.
@@ -24,10 +28,9 @@ The guest kernel has not been modified or rebooted.
 | --- | --- | --- |
 | checks-1 | `9a0fdd4` | Dependencies, W=1 provider and Werror daemon passed. Unit aggregate: 28 passed, three drivers failed. Remaining benchmark checks did not run. |
 | checks-2 | `390d04c` | Dependencies, provider, daemon, both basic programs and all 29 selected unit drivers passed. First benchmark driver failed compiling a stale observation fixture. |
-| checks-3 | `d7d65c1` | Spin/cacheline, list-image audit and direct-comparison drivers passed. Rwlock/rwsem benchmark driver failed on missing fixture metadata. |
+| checks-3 | `d7d65c1` | Spin/cacheline and direct-comparison drivers passed. Rwlock/rwsem benchmark driver failed on missing fixture metadata. |
 | checks-4 | `a4eb4eb` | All 26 rwlock/rwsem benchmark tests passed; final idle and source hashes verified. |
 | checks-5 | `b345db3` | Dependencies, provider/daemon, both basic programs, eight selected unit drivers and three benchmark drivers passed. Includes 12 focused replay tests. The emission-only prefetch test missed an assembler failure found by the next live run. |
-| checks-6 | `cee947b` | Both basic programs, eight affected unit drivers, provider/daemon and two list benchmark drivers passed. The actual wrapper compiles for all 15 read-hint/backend/ABI combinations; three FS-hint cases are refused. |
 
 All failed attempts and original results remain under their numbered
 directories. Each failed process exited; a separate `post-failure-health.json`
@@ -54,8 +57,7 @@ The third and fourth attempts select only remaining affected benchmark
 drivers. Passed provider, daemon and unit inputs are byte-identical to checks-2;
 their validation is retained under that exact revision, not relabeled as a
 new run. Skips, missing dependencies and compile failures are not passes.
-The successful benchmark drivers contain 16, five, 58 and 26 tests respectively,
-with no reported skips.
+The retained benchmark-driver outcomes remain scoped to their original inputs.
 The provider build exited successfully with existing locale-fallback warnings
 and the `_Q_LOCKED_COMBINER_VAL` redefinition warning retained verbatim in its
 log; this is not a warning-free build claim.
@@ -148,10 +150,8 @@ hot native continuation, sticky refusal and final drain. Publication alone
 does not satisfy them. Reader contention must remain visible in shared-lock
 families. Caller timeouts do not prove drain and must retain unsafe state.
 
-Resident-list functional and matched prefetch measurements remain separate
-subsequent stages. The seven original mutex regressions, incomplete comparisons
-and unmeasured p95 gap remain open; correctness progress is not performance
-acceptance.
+The seven original mutex regressions, incomplete comparisons and unmeasured
+p95 gap remain open; correctness progress is not performance acceptance.
 
 ## Completed affected live probes
 
@@ -174,9 +174,7 @@ matched faults in the nine kernel logs. Complete archives are retained under
 raw `native-continuation-20261020/live-6/` and the same VM evidence run identifier.
 
 The basic/affected unit results above remain bound to their original exact
-sources. At this point resident-list functional coverage remained to be
-completed; its final outcomes appear below. Performance acceptance is still
-open. The separately retained offline-review
+sources. Performance acceptance is still open. The separately retained offline-review
 script and per-attempt receipts check archive consistency, not live correctness
 or generic kernel replacement support.
 
@@ -190,93 +188,3 @@ used an incorrect offset convention; the corrected review uses CALL opcode
 offset + 1 for the displacement write and + 5 for the continuation. This was
 an offline review error, not a runtime failure. All helpers report no files
 touched; the main agent remains the only writer.
-
-## Resident-list attempts
-
-`list-functional-1`, source `96f81ac`, passed spin list/n16 with 1,595,966
-matching JIT entries/completions. Its supervisor then stopped because the
-source snapshot includes 94 generated observation-provider files. Independent
-reconstruction from the exact committed production source and observation
-patch verified all 94; 339 frozen source/binary hashes and final retirement
-were also verified. The original STOPPED receipt is preserved.
-
-The revised external supervisor verifies that complete generated set by
-reconstructing it in a new evidence directory. It still checks every other
-snapshot file against the committed manifest; no unknown extra file is ignored.
-`list-functional-2`, on the same source, passed public mutex list/n16 with
-1,503,219 returned JIT bodies. Spin list-prefetch/n16 then failed preparation:
-Miasm 0.1.5 decoded the existing T0 read hint as `PREFETCH0`, which did not match
-the policy's Intel mnemonic `PREFETCHT0`. No business phase ran for that case.
-Independent verification found idle, exact zero retirement counts, 678 unchanged
-frozen hashes, 188 reconstructed provider files and no matched kernel faults.
-
-The ensuing instruction-policy correction normalizes only `PREFETCH0/1/2`
-whose bytes encode the corresponding `0F 18 /1,/2,/3` memory hint, excluding
-LOCK/REP prefixes and register operands. The existing scalar, hardware-register,
-address and context checks still apply. Positive emission and mismatched-byte
-refusal tests are added. This is an explicit decoder-alias correction, not a
-general admission exemption. Its unit and remaining live results follow below.
-
-Both attempts have complete raw archives and compact receipts under
-[list-functional-1](list-functional-1/archives.json) and
-[list-functional-2](list-functional-2/archives.json). The first archive-wrapper
-invocations for attempt 2 used invalid health/group arguments and ran no tests;
-the failed wrapper directory remains on the VM. The successful complete
-archive directory is `list-functional-2-archives-v2`.
-
-`a4eec9a` added the exact-byte alias admission. `checks-5` on collection source
-`b345db3` passed, but `list-functional-3` exposed a second part of the decoder
-compatibility issue: GNU assembler rejects emitted `PREFETCH0`. No measured
-business phase ran. The existing fixture mocks `build_jit_binary`, so successful
-text generation did not establish successful assembly. This gap is retained
-explicitly; the next correction shares the reviewed alias mapping with
-instruction spelling and compiles the actual wrapper for all three hints in
-all five backend/ABI combinations. An FS-prefixed hint remains a refusal test.
-
-The original attempt-3 receipt reports `drained=false` and
-`cleanup_error="translator has not exited"`. The failed supervisor exited;
-there were no active workers or frames. A separate cleanup waited for the
-current translator to finish naturally, stopped only the failed coordinator,
-verified zero writers/frames, retired through the ordinary ioctl, and unloaded
-normally. Its separate receipt records exact `state=2, modules=writers=frames=0`;
-the original failure is not rewritten as a drained pass.
-
-The two earlier resident-list archives also passed inert local review:
-8,057 and 16,434 checks respectively, zero inconsistencies. These counts concern
-archive consistency, not additional live test executions.
-
-Attempt 3 is preserved in [its complete archives](list-functional-3/archives.json),
-including [the separate drain receipt](list-functional-3/post-failure-drain.json).
-Independent source/hash/idle checks found 339 unchanged frozen hashes and 94
-exactly reconstructed provider files. The inert archive review performed 7,887
-checks with zero inconsistencies.
-
-`cee947b` implements the assembler spelling correction and strengthened tests.
-After `checks-6` passed, `list-functional-4` completed the same remaining
-14-session plan. All six spin/public-mutex cases and all eight mixed rwlock/rwsem
-cases passed. Each session has positive, exactly matching JIT entry/completion
-counts, complete workers, list-integrity and loaded-image checks, and exact
-retirement. Together with the two earlier plain n16 passes, all 16 planned
-resident-list cases are covered.
-Provider exclusion, ownership, queue/ACK semantics and admission thresholds are
-unchanged. The translation correction is separate from the original frozen
-performance inputs, which the completed controlled replay retained.
-
-[Final health](list-functional-4/health.json) confirms idle, zero retirement
-references, 2,544 unchanged frozen source/binary hashes, 564 reconstructed
-provider files, and no matched kernel faults in the 14 session logs.
-[Complete archives](list-functional-4/archives.json) have manifest SHA-256
-`4e8c2a0e28fe2fb776e9eb7a37562697ec5870d66e599abbc5eafca1d9b95b16`.
-The final inert list archive review completed 71,854 checks with zero
-inconsistencies. Its initial filename search ambiguously matched both the
-workspace image and the intentionally preserved publication history. The
-corrected review verifies the exact workspace path and every history copy
-separately; [the initial review](list-functional-4/offline-review-initial.json)
-remains retained.
-The selected correctness stage is complete; full suites and whole-kernel
-replacement remain outside this validation. The separate
-[controlled performance replay](../../bench/mutex-public-regressions-20261020/README.md)
-retains all seven original regressions and three original class gaps. Four
-losses reproduced with separated ranges, two overlapped, and one fell below the
-provisional screen; none establishes a causal fix. Two class gaps, p95 latency
-and host worker variability remain unresolved.

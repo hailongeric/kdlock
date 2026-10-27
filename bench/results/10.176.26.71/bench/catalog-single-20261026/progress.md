@@ -1,6 +1,6 @@
 # Single-round lock/API results
 
-All 51 configurations and 3,213 points attempted; 3,166 valid measurements and 47 drained KD helper-preparation failures. One timed repetition per measured point. Strict timing qualification remains failed.
+Retained subset: 45 configurations and 2,835 attempted points; 2,788 valid measurements and 47 drained KD helper-preparation failures. One timed repetition per measured point. Strict timing qualification remains failed.
 
 [Campaign scope](README.md) · [Archive audit](audit.json) · [Attempt history](progress.json)
 
@@ -9,27 +9,21 @@ All 51 configurations and 3,213 points attempted; 3,166 valid measurements and 4
 | spin-c01 | 63 / 63 | 0 | [Table](spin-c01/README.md) | [CSV](spin-c01/table.csv) | [Chart](spin-c01/throughput.png) |
 | spin-c08 | 63 / 63 | 0 | [Table](spin-c08/README.md) | [CSV](spin-c08/table.csv) | [Chart](spin-c08/throughput.png) |
 | spin-rcuht | 63 / 63 | 0 | [Table](spin-rcuht/README.md) | [CSV](spin-rcuht/table.csv) | [Chart](spin-rcuht/throughput.png) |
-| spin-list16 | 63 / 63 | 0 | [Table](spin-list16/README.md) | [CSV](spin-list16/table.csv) | [Chart](spin-list16/throughput.png) |
 | mutex-c01 | 63 / 63 | 0 | [Table](mutex-c01/README.md) | [CSV](mutex-c01/table.csv) | [Chart](mutex-c01/throughput.png) |
 | mutex-c08 | 63 / 63 | 0 | [Table](mutex-c08/README.md) | [CSV](mutex-c08/table.csv) | [Chart](mutex-c08/throughput.png) |
 | mutex-rcuht | 63 / 63 | 0 | [Table](mutex-rcuht/README.md) | [CSV](mutex-rcuht/table.csv) | [Chart](mutex-rcuht/throughput.png) |
-| mutex-list16 | 63 / 63 | 0 | [Table](mutex-list16/README.md) | [CSV](mutex-list16/table.csv) | [Chart](mutex-list16/throughput.png) |
 | rwlock-c01-w01 | 63 / 63 | 0 | [Table](rwlock-c01-w01/README.md) | [CSV](rwlock-c01-w01/table.csv) | [Chart](rwlock-c01-w01/throughput.png) |
 | rwlock-c01-w20 | 63 / 63 | 0 | [Table](rwlock-c01-w20/README.md) | [CSV](rwlock-c01-w20/table.csv) | [Chart](rwlock-c01-w20/throughput.png) |
 | rwlock-c08-w01 | 63 / 63 | 0 | [Table](rwlock-c08-w01/README.md) | [CSV](rwlock-c08-w01/table.csv) | [Chart](rwlock-c08-w01/throughput.png) |
 | rwlock-c08-w20 | 63 / 63 | 0 | [Table](rwlock-c08-w20/README.md) | [CSV](rwlock-c08-w20/table.csv) | [Chart](rwlock-c08-w20/throughput.png) |
 | rwlock-rcuht-w01 | 63 / 63 | 0 | [Table](rwlock-rcuht-w01/README.md) | [CSV](rwlock-rcuht-w01/table.csv) | [Chart](rwlock-rcuht-w01/throughput.png) |
 | rwlock-rcuht-w20 | 63 / 63 | 0 | [Table](rwlock-rcuht-w20/README.md) | [CSV](rwlock-rcuht-w20/table.csv) | [Chart](rwlock-rcuht-w20/throughput.png) |
-| rwlock-list16-w01 | 63 / 63 | 0 | [Table](rwlock-list16-w01/README.md) | [CSV](rwlock-list16-w01/table.csv) | [Chart](rwlock-list16-w01/throughput.png) |
-| rwlock-list16-w20 | 63 / 63 | 0 | [Table](rwlock-list16-w20/README.md) | [CSV](rwlock-list16-w20/table.csv) | [Chart](rwlock-list16-w20/throughput.png) |
 | rwsem-c01-w01 | 63 / 63 | 0 | [Table](rwsem-c01-w01/README.md) | [CSV](rwsem-c01-w01/table.csv) | [Chart](rwsem-c01-w01/throughput.png) |
 | rwsem-c01-w20 | 63 / 63 | 0 | [Table](rwsem-c01-w20/README.md) | [CSV](rwsem-c01-w20/table.csv) | [Chart](rwsem-c01-w20/throughput.png) |
 | rwsem-c08-w01 | 63 / 63 | 0 | [Table](rwsem-c08-w01/README.md) | [CSV](rwsem-c08-w01/table.csv) | [Chart](rwsem-c08-w01/throughput.png) |
 | rwsem-c08-w20 | 63 / 63 | 0 | [Table](rwsem-c08-w20/README.md) | [CSV](rwsem-c08-w20/table.csv) | [Chart](rwsem-c08-w20/throughput.png) |
 | rwsem-rcuht-w01 | 63 / 63 | 0 | [Table](rwsem-rcuht-w01/README.md) | [CSV](rwsem-rcuht-w01/table.csv) | [Chart](rwsem-rcuht-w01/throughput.png) |
 | rwsem-rcuht-w20 | 63 / 63 | 0 | [Table](rwsem-rcuht-w20/README.md) | [CSV](rwsem-rcuht-w20/table.csv) | [Chart](rwsem-rcuht-w20/throughput.png) |
-| rwsem-list16-w01 | 63 / 63 | 0 | [Table](rwsem-list16-w01/README.md) | [CSV](rwsem-list16-w01/table.csv) | [Chart](rwsem-list16-w01/throughput.png) |
-| rwsem-list16-w20 | 63 / 63 | 0 | [Table](rwsem-list16-w20/README.md) | [CSV](rwsem-list16-w20/table.csv) | [Chart](rwsem-list16-w20/throughput.png) |
 | argbounds-w00 | 63 / 63 | 0 | [Table](argbounds-w00/README.md) | [CSV](argbounds-w00/table.csv) | [Chart](argbounds-w00/throughput.png) |
 | argbounds-w20 | 63 / 63 | 0 | [Table](argbounds-w20/README.md) | [CSV](argbounds-w20/table.csv) | [Chart](argbounds-w20/throughput.png) |
 | taskname-w00 | 63 / 63 | 0 | [Table](taskname-w00/README.md) | [CSV](taskname-w00/table.csv) | [Chart](taskname-w00/throughput.png) |

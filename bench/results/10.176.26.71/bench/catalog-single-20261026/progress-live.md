@@ -9,27 +9,21 @@ User-authorized continuation after the spin c01 67→74-task host failure. Stric
 | spin-c01 | 63/63 | Correct and drained; strict host failure | [Results](spin-c01/README.md) |
 | spin-c08 | 63/63 | COMPLETE_EXPLORATORY | [Results](spin-c08/README.md) |
 | spin-rcuht | 63/63 | COMPLETE_EXPLORATORY | [Results](spin-rcuht/README.md) |
-| spin-list16 | 63/63 | COMPLETE_EXPLORATORY | [Results](spin-list16/README.md) |
 | mutex-c01 | 63/63 | COMPLETE_EXPLORATORY | [Results](mutex-c01/README.md) |
 | mutex-c08 | 63/63 | COMPLETE_EXPLORATORY | [Results](mutex-c08/README.md) |
 | mutex-rcuht | 63/63 | COMPLETE_EXPLORATORY | [Results](mutex-rcuht/README.md) |
-| mutex-list16 | 63/63 | COMPLETE_EXPLORATORY | [Results](mutex-list16/README.md) |
 | rwlock-c01-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-c01-w01/README.md) |
 | rwlock-c01-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-c01-w20/README.md) |
 | rwlock-c08-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-c08-w01/README.md) |
 | rwlock-c08-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-c08-w20/README.md) |
 | rwlock-rcuht-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-rcuht-w01/README.md) |
 | rwlock-rcuht-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-rcuht-w20/README.md) |
-| rwlock-list16-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-list16-w01/README.md) |
-| rwlock-list16-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwlock-list16-w20/README.md) |
 | rwsem-c01-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-c01-w01/README.md) |
 | rwsem-c01-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-c01-w20/README.md) |
 | rwsem-c08-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-c08-w01/README.md) |
 | rwsem-c08-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-c08-w20/README.md) |
 | rwsem-rcuht-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-rcuht-w01/README.md) |
 | rwsem-rcuht-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-rcuht-w20/README.md) |
-| rwsem-list16-w01 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-list16-w01/README.md) |
-| rwsem-list16-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](rwsem-list16-w20/README.md) |
 | argbounds-w00 | 63/63 | COMPLETE_EXPLORATORY | [Results](argbounds-w00/README.md) |
 | argbounds-w20 | 63/63 | COMPLETE_EXPLORATORY | [Results](argbounds-w20/README.md) |
 | taskname-w00 | 63/63 | COMPLETE_EXPLORATORY | [Results](taskname-w00/README.md) |

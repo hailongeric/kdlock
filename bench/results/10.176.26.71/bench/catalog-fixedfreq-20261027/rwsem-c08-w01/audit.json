@@ -1027,7 +1027,7 @@
     }
   ],
   "source_commit": "a9aeb280a68242818aa469d8277e0c5a22fffee1",
-  "status": "PASS",
+  "status": "REDACTED_INCOMPLETE",
   "strict_timing_qualification": "FAILED",
   "unrun": 0,
   "validator_method": "Named pure AST function definitions from the verified archived source; no live runner import",
@@ -1040,5 +1040,12 @@
     "source_commit": 278
   },
   "warmup_scope": "Exact recorded phase correctness; independent warmup JIT entry/return deltas are not available",
-  "workload": "rwsem-c08-w01"
+  "workload": "rwsem-c08-w01",
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  },
+  "historical_audit_status": "PASS",
+  "archival_status": "REDACTED_INCOMPLETE"
 }

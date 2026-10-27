@@ -1,14 +1,18 @@
 # Full selected catalog at fixed 2.0 GHz
 
-One two-second observation per worker/backend point; 21 worker counts (1–8, then 12–60 by four). The selected plan has **61 lock/API configurations (3,843 points)** plus **three MM suites (126 points)**. Every workload has a table and chart backed by its replayed archive.
+The retained subset has **55 lock/API configurations (3,465 points)** plus
+**three MM suites (126 points)**. Each measured point used one two-second
+observation at 21 worker counts (1–8, then 12–60 by four). It retains **3,452
+valid measurements and 139 drained xattr preparation failures**, accounting for
+3,591 points. All ten nano profiles retain their 630 measurements and warmups.
 
-**Completed:** 3,830 valid measurements and 139 drained xattr preparation
-failures account for all 3,969 planned points. No points were rerun or left
-unattempted. All ten nano profiles passed their 630 measurements and warmups.
-The [final audit](validation.json) verifies the archives, source/binary
-identities, exact checks, 65 frequency streams and final recovery. The focused
-VM checks passed two basic programs and 61 Python cases; MM preparation passed
-18 split cases, eight client controls and nine negative-oracle checks.
+The user-directed cleanup removed retired benchmark records and portions of
+mixed source archives. Archival provenance is **REDACTED / INCOMPLETE**;
+original complete-source and archive-hash claims no longer apply. The
+[retention audit](validation.json) identifies the filtered evidence. Retained
+rates and failure outcomes are unchanged. The historical VM checks passed two
+basic programs and 61 Python cases; MM preparation passed 18 split cases,
+eight client controls and nine negative-oracle checks.
 
 [Cross-workload comparison](COMPARISON.md) · [Xattr preparation failures](XATTR_PREPARATION.md) · [MM results and interpretation](MM_INTERPRETATION.md)
 
@@ -20,7 +24,7 @@ sampling limits remain in the audit.
 
 **EXPLORATORY:** strict host task-membership qualification remains failed. The host frequency target is 2.0 GHz minimum = maximum, performance governor and turbo disabled. Endpoint readbacks are bound in each audit; effective-frequency and final environment evidence are separate. One round supplies no repeat-variability estimate. Historical campaign rates are not pooled.
 
-The ten nano profiles use padded c01/c16 counters with post256. Existing micro c01/c08, list16, RCUHT and API configurations retain their own bodies and call shells. MM uses separately recorded kernels/backends; the three suites do not represent generic page-fault or unchanged mmap1 coverage.
+The ten nano profiles use padded c01/c16 counters with post256. Retained micro c01/c08, RCUHT and API configurations retain their own bodies and call shells. MM uses separately recorded kernels/backends; the three suites do not represent generic page-fault or unchanged mmap1 coverage.
 
 | Lock/API workload | Measured | Failed / unrun | Results |
 |:---|---:|---:|:---|
@@ -37,27 +41,21 @@ The ten nano profiles use padded c01/c16 counters with post256. Existing micro c
 | `spin-c01` | 63 | 0 / 0 | [Table and chart](spin-c01/README.md) |
 | `spin-c08` | 63 | 0 / 0 | [Table and chart](spin-c08/README.md) |
 | `spin-rcuht` | 63 | 0 / 0 | [Table and chart](spin-rcuht/README.md) |
-| `spin-list16` | 63 | 0 / 0 | [Table and chart](spin-list16/README.md) |
 | `mutex-c01` | 63 | 0 / 0 | [Table and chart](mutex-c01/README.md) |
 | `mutex-c08` | 63 | 0 / 0 | [Table and chart](mutex-c08/README.md) |
 | `mutex-rcuht` | 63 | 0 / 0 | [Table and chart](mutex-rcuht/README.md) |
-| `mutex-list16` | 63 | 0 / 0 | [Table and chart](mutex-list16/README.md) |
 | `rwlock-c01-w01` | 63 | 0 / 0 | [Table and chart](rwlock-c01-w01/README.md) |
 | `rwlock-c01-w20` | 63 | 0 / 0 | [Table and chart](rwlock-c01-w20/README.md) |
 | `rwlock-c08-w01` | 63 | 0 / 0 | [Table and chart](rwlock-c08-w01/README.md) |
 | `rwlock-c08-w20` | 63 | 0 / 0 | [Table and chart](rwlock-c08-w20/README.md) |
 | `rwlock-rcuht-w01` | 63 | 0 / 0 | [Table and chart](rwlock-rcuht-w01/README.md) |
 | `rwlock-rcuht-w20` | 63 | 0 / 0 | [Table and chart](rwlock-rcuht-w20/README.md) |
-| `rwlock-list16-w01` | 63 | 0 / 0 | [Table and chart](rwlock-list16-w01/README.md) |
-| `rwlock-list16-w20` | 63 | 0 / 0 | [Table and chart](rwlock-list16-w20/README.md) |
 | `rwsem-c01-w01` | 63 | 0 / 0 | [Table and chart](rwsem-c01-w01/README.md) |
 | `rwsem-c01-w20` | 63 | 0 / 0 | [Table and chart](rwsem-c01-w20/README.md) |
 | `rwsem-c08-w01` | 63 | 0 / 0 | [Table and chart](rwsem-c08-w01/README.md) |
 | `rwsem-c08-w20` | 63 | 0 / 0 | [Table and chart](rwsem-c08-w20/README.md) |
 | `rwsem-rcuht-w01` | 63 | 0 / 0 | [Table and chart](rwsem-rcuht-w01/README.md) |
 | `rwsem-rcuht-w20` | 63 | 0 / 0 | [Table and chart](rwsem-rcuht-w20/README.md) |
-| `rwsem-list16-w01` | 63 | 0 / 0 | [Table and chart](rwsem-list16-w01/README.md) |
-| `rwsem-list16-w20` | 63 | 0 / 0 | [Table and chart](rwsem-list16-w20/README.md) |
 | `argbounds-w00` | 63 | 0 / 0 | [Table and chart](argbounds-w00/README.md) |
 | `argbounds-w20` | 63 | 0 / 0 | [Table and chart](argbounds-w20/README.md) |
 | `taskname-w00` | 63 | 0 / 0 | [Table and chart](taskname-w00/README.md) |
@@ -86,7 +84,7 @@ The ten nano profiles use padded c01/c16 counters with post256. Existing micro c
 | `xattr-size-n16` | 60 | 3 / 0 | [Table and chart](xattr-size-n16/README.md) |
 | `xattr-size-n128` | 44 | 19 / 0 | [Table and chart](xattr-size-n128/README.md) |
 
-Published lock/API workloads: **61/61**; measured **3704/3,843**, failed **139**. Unpublished points are not counted as completed.
+Retained lock/API workloads: **55**; measured **3,326/3,465**, failed **139**. Unpublished points are not counted as completed.
 
 | Separate MM suite | Planned points | Results |
 |:---|---:|:---|

@@ -432,19 +432,6 @@ The later [lock-only mmap integration](../../tests/mmap-irq-trylock-20261025/REA
 completed selected actual-object runtime checks. Broader integration and full
 Native equivalence remain unvalidated; retired MM-body work is not reopened.
 
-The [resident-list stage](../nano-list-followup-20261020/README.md) preserves
-`timing-1` (146 strict successes, one strict rwlock `NO_JIT` failure) and the
-separate `rwsem-1` (48 strict successes). Both have complete archives and
-independent evidence-integrity checks, and both retain immediate host-thread
-mismatches. The first run's remaining 69 rwlock cases subsequently completed
-in the [strict continuation](../nano-rwlock-diagnosis-20261021/README.md):
-59 successes, ten NO_JIT failures, 23 exact retirements and a failed 76-thread
-endpoint. Missing-case coverage is closed. The second gate diagnostic records
-10,441 first-follower non-combinable refusals at eight workers; it preserves
-all strict failures and does not relax admission.
-The 48 rwsem cases were the untouched original task, not repetitions of
-failed attempts. Reports retain every range, CV, miss and prefetch comparison.
-
 All seven original mutex points remain unresolved: c08 at 3/4/5 workers,
 pipebytes at 3/5, pipecap at 5 and RCUHT at 2. The inline-entry experiment
 remains rejected, and the maintained implementation is the restored entry.

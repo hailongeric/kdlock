@@ -49,8 +49,7 @@
       "-C",
       "tests/unit",
       "run",
-      "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
-      "PY_TESTS=admission/test_instruction_policy.py admission/test_context_policy.py admission/test_context_guards.py admission/test_native_escape.py admission/test_constant_paths.py codegen/test_native_escape_codegen.py codegen/test_spin_paired_jit.py spin/test_list_payload.py"
+      "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3"
     ],
     "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-5/source",
     "exit_code": 0,
@@ -69,18 +68,6 @@
     "finished_unix": 1792496326.4698935,
     "name": "test_spin_cacheline",
     "started_unix": 1792496323.4381292,
-    "timeout_seconds": 180
-  },
-  {
-    "argv": [
-      "/root/kdlock-translation-venv-20261019/bin/python3",
-      "bench/spin_cacheline/test_list_audit.py"
-    ],
-    "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-5/source",
-    "exit_code": 0,
-    "finished_unix": 1792496327.250783,
-    "name": "test_list_audit",
-    "started_unix": 1792496326.5816946,
     "timeout_seconds": 180
   },
   {

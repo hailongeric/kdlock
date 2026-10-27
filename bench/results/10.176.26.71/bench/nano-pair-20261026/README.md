@@ -1,5 +1,10 @@
 # Nano selection, minimal-body results and locality refinement
 
+The user-directed cleanup removed retired benchmark records and parts of mixed
+source archives. Archival provenance is **REDACTED / INCOMPLETE**. Original
+complete-archive hashes and full-source replay claims below describe the earlier
+collection, not the current retained subset; retained measurements are unchanged.
+
 The final **16-cacheline mutex nano with post64 beats both baselines at 32 and
 60 workers**. At 60 workers KD reaches **4.025 Mops/s: 1.435× Native and
 1.839× TCLock**, with 98.20% returned writers. It still loses to Native at eight,
@@ -18,13 +23,11 @@ are retained; there is one timing round per point and no further parameter sweep
 
 The [complete catalog analysis](../catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 motivated this experiment. At 60 workers, public mutex seek-set achieved
-3.117× Native / 1.689× TCLock, pipecap 2.728× / 2.193×, and the resident mutex
-list16 1.728× / 1.662×, with returned-body shares above 97%. Those results combine
+3.117× Native / 1.689× TCLock and pipecap 2.728× / 2.193×, with returned-body
+shares above 97%. Those results combine
 different useful bodies and call shells; their speedups do not transfer directly
 to a one-ioctl nano loop. The strongest rwsem ratio against Native was RCUHT at
-1% writes and 36 workers: 7.907× Native, but 0.642× TCLock and NO_JIT. The strongest
-rwsem ratio against TCLock was list16 at 20% writes and four workers: 1.245× TCLock
-and 2.612× Native, with only 0.2796% returned writers. Within the 20%-write cases,
+1% writes and 36 workers: 7.907× Native, but 0.642× TCLock and NO_JIT. Within the 20%-write cases,
 RCUHT at three workers had the strongest Native ratio, 3.821×, also NO_JIT.
 
 All minimal measurements and local controls use source
@@ -160,9 +163,9 @@ benefit. Each local observation is a separate single round.
 
 The `mutex-locality` candidate reuses the existing straight-line
 `cacheline` body at **16 separate 64-byte counters**, with 100% writes and post4.
-One protected operation increments all 16 counters directly. It removes the
-resident list's pointer chain while preserving its 1 KiB dirty payload footprint;
-the existing 16-value oracle must require every counter delta to equal the exact
+One protected operation increments all 16 counters directly across a 1 KiB
+dirty payload footprint. The existing 16-value oracle requires every counter
+delta to equal the exact
 sum of completed writes. No new payload implementation or lock protocol is
 needed. Native, KD and TCLock were rebuilt and measured under the new frozen
 identity. [Full table, chart and replay evidence](mutex-locality/README.md).
@@ -176,16 +179,14 @@ identity. [Full table, chart and replay evidence](mutex-locality/README.md).
 | 36 | 6.589418 | 4.103647 | 2.234544 | 0.623× | 1.836× | RETURNED_JIT; 95.0617% |
 | 60 | 4.393695 | 4.134295 | 2.194298 | 0.941× | 1.884× | RETURNED_JIT; 97.0243% |
 
-This single bounded choice comes from the catalog's list16 evidence, rather
-than a search over arbitrary sizes. Keeping multiple dirty lines near an executor
+Keeping multiple dirty lines near an executor
 across requests could amortize more data ownership transfers for the same
 delegation bookkeeping. Straight-line addressing can also help Native. At
 60 workers KD is still 5.90% below Native, despite 97.02% returned coverage;
 at 8–36 workers it is 22.7–37.7% below Native. KD beats TCLock by 1.836–2.598×
 under contention. Preserving the dirty footprint alone therefore did not produce
-a Native win in this post4 bulk-ioctl shell. Neither this result nor the original
-list16 measurement isolates pointer traversal, ownership transfers and caller
-spacing as individual causes. Wider local reads could also change rwsem scaling,
+a Native win in this post4 bulk-ioctl shell. This result does not isolate
+ownership transfers and caller spacing as individual causes. Wider local reads could also change rwsem scaling,
 so this refinement is scoped to mutex.
 
 ## Final mutex locality: 16 cachelines, post64

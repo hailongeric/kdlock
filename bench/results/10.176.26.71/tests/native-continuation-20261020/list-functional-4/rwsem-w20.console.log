@@ -1,8 +1,0 @@
-[1/4] rwsem-list-n16-kdlock-w020-t16-r00
-  reads=1280000 writes=320000 JIT_entries=48657 JIT_complete=48657 drained=True
-[2/4] rwsem-list-n128-kdlock-w020-t16-r00
-  reads=1280000 writes=320000 JIT_entries=111511 JIT_complete=111511 drained=True
-[3/4] rwsem-list-prefetch-n16-kdlock-w020-t16-r00
-  reads=1280000 writes=320000 JIT_entries=43542 JIT_complete=43542 drained=True
-[4/4] rwsem-list-prefetch-n128-kdlock-w020-t16-r00
-  reads=1280000 writes=320000 JIT_entries=108653 JIT_complete=108653 drained=True

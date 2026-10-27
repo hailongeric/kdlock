@@ -15,18 +15,6 @@
     {
       "argv": [
         "/root/kdlock-translation-venv-20261019/bin/python3",
-        "bench/spin_cacheline/test_list_audit.py"
-      ],
-      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-3/source",
-      "exit_code": 0,
-      "finished_unix": 1792491622.4405236,
-      "name": "test_list_audit",
-      "started_unix": 1792491621.7711039,
-      "timeout_seconds": 180
-    },
-    {
-      "argv": [
-        "/root/kdlock-translation-venv-20261019/bin/python3",
         "bench/tclock_compare/test_direct.py"
       ],
       "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-3/source",
@@ -56,7 +44,6 @@
   "passed": false,
   "runner_tests": [
     "bench/spin_cacheline/test_spin_cacheline.py",
-    "bench/spin_cacheline/test_list_audit.py",
     "bench/tclock_compare/test_direct.py",
     "bench/rwlock_compare/test_bench.py"
   ],
@@ -65,5 +52,10 @@
   "source_revision": "d7d65c10e3260013461af7cca1e7c6e521714a7b",
   "source_unchanged": false,
   "unit_basic": 0,
-  "unit_drivers": []
+  "unit_drivers": [],
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  }
 }

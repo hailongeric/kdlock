@@ -15,8 +15,7 @@ The receipt preserves failed development attempts and the allocator preparation
 used for the successful retries.
 
 The [continuation correctness stage](10.176.26.71/tests/native-continuation-20261020/README.md)
-completed basic/affected checks, nine live probes and 16 resident-list sessions
-at their recorded revisions. The separate
+retains basic/affected checks and nine live probes at their recorded revisions. The separate
 [public-mutex regression replay](10.176.26.71/bench/mutex-public-regressions-20261020/README.md)
 completed 120 serial, valid, drained timings using the original `d21a1e3` inputs.
 Four of seven losses remained separated, two overlapped, and one fell below

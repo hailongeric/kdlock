@@ -183,29 +183,37 @@
   "focused_checks": [
     {
       "path": "focused-validation-summary.json",
-      "sha256": "29fc56cda2e35f55d54d0ce18dd20bb374b1cbe30010ceef9673008f1a8707eb",
       "status": "MIXED_ATTEMPTS_RETAINED",
-      "label": "Checks 02 through 20, including failures and affected retries"
+      "label": "Retained generic focused checks and affected retries; payload-specific retired evidence removed",
+      "historical_sha256": "29fc56cda2e35f55d54d0ce18dd20bb374b1cbe30010ceef9673008f1a8707eb",
+      "retained_sha256": "03b0ef17153f11453f1eb9bd47c00557389e8567c800122dac712ba82b85f5ac",
+      "archival_status": "REDACTED_INCOMPLETE"
     }
   ],
   "compilation_and_audits": [
     {
       "path": "compile-01/receipt-original.json",
-      "sha256": "b390a152100b43cb24fdf034392db4e71d78ecd5bca9b31d882d7049fc514f0b",
       "status": "FAILED",
-      "label": "Initial module matrix, original receipt"
+      "label": "Initial module matrix, original receipt",
+      "historical_sha256": "b390a152100b43cb24fdf034392db4e71d78ecd5bca9b31d882d7049fc514f0b",
+      "retained_sha256": "e72440c1cec57798916be243df6cbefa727f6b0b6b93f6b046fe34ab3246004d",
+      "archival_status": "REDACTED_INCOMPLETE"
     },
     {
       "path": "compile-01/receipt-canonical.json",
-      "sha256": "26f32faafe723b3fc175ef08a312b3ad227be81069b4ce1bb2803d8297bfd07a",
       "status": "FAILED",
-      "label": "Initial matrix, canonicalized receipt with failures and blocked comparators retained"
+      "label": "Initial matrix, canonicalized receipt with failures and blocked comparators retained",
+      "historical_sha256": "26f32faafe723b3fc175ef08a312b3ad227be81069b4ce1bb2803d8297bfd07a",
+      "retained_sha256": "4a6eb96af4cb8927390ca3ed0d9cae8b5f658fce66e2cf8f143c158ace233c76",
+      "archival_status": "REDACTED_INCOMPLETE"
     },
     {
       "path": "compile-02/receipt.json",
-      "sha256": "34165ce5ff1768704c1fb395a70eedcbb6cb70da9778dac1d5650bad4c9d9fcf",
       "status": "COMPILE_CHECKS_PASSED",
-      "label": "Affected module compilation retries"
+      "label": "Affected module compilation retries",
+      "historical_sha256": "34165ce5ff1768704c1fb395a70eedcbb6cb70da9778dac1d5650bad4c9d9fcf",
+      "retained_sha256": "f8df608134ede4a2506b859e7e5c7a905d3118d98764db1352808ab3ee1f87a8",
+      "archival_status": "REDACTED_INCOMPLETE"
     },
     {
       "path": "compile-03/receipt.json",
@@ -232,147 +240,8 @@
       "label": "Final module mitigation metadata inspection"
     }
   ],
-  "refusal_diagnoses": [
-    {
-      "path": "rwlock-source-refusal/diagnosis.json",
-      "sha256": "7f0611c2c683109bd3bf4229bcbe4ff46a2c179dfd8f7ba222f89cba58801689",
-      "status": "CAPTURED",
-      "label": "Leased executable-window refusal and bounded retry"
-    },
-    {
-      "path": "rwsem-address-refusal/diagnosis.json",
-      "sha256": "742085a8923f00224558a04c3de8da4de39bdfbdf6a23aacfbe267b166172f86",
-      "status": "CAPTURED",
-      "label": "Private outer-cookie spill and strict alias refusal"
-    },
-    {
-      "path": "rwsem-address-refusal/resolution.json",
-      "sha256": "d6b2697f07dd2e6c15f9ad32eb6b4aecafa19897e929f86a83a13d7e74c2f8b6",
-      "status": "CAPTURED",
-      "label": "Private lexical cookie correction; protocol/admission unchanged"
-    },
-    {
-      "path": "rwsem-address-refusal/independent-cookie-review.json",
-      "sha256": "122e8a1d3fd6c7b74a26b2924f169b78b724c68ceed01dc21aca1f62801dede2",
-      "status": "CAPTURED",
-      "label": "Independent review of cookie lifetime and access scope"
-    }
-  ],
-  "retained_live_failures": [
-    {
-      "name": "basic-01",
-      "result": {
-        "path": "basic-01/result.json",
-        "sha256": "e4984857dbd3f6b385c331000bae949cd5cbd674bcdef831df53cd32b2a59707",
-        "status": "RETAINED_FAILURE"
-      },
-      "controller_state": "FAILED",
-      "passed": false,
-      "controller_final_idle": false,
-      "preservation": {
-        "path": "basic-01-preservation/receipt.json",
-        "sha256": "0cf85241dc7173aad482fce99a78d9f10bb2eabd322ad603972ddb32cfffc22e",
-        "status": "HASH_VERIFIED"
-      },
-      "note": "Failed controller result unchanged. Completed sessions retired; independent post-run health established idle before later work."
-    },
-    {
-      "name": "basic-02",
-      "result": {
-        "path": "basic-02/result.json",
-        "sha256": "798c32a2612fc8f221e9e399020dac7151dfc75cd6e6207e4787d49fb2f833af",
-        "status": "RETAINED_FAILURE"
-      },
-      "controller_state": "FAILED",
-      "passed": false,
-      "controller_final_idle": false,
-      "preservation": {
-        "path": "basic-02-preservation/receipt.json",
-        "sha256": "540b69140ab0ad28096ea0dfeaf1d1a65174bba7932df9518fda89c56eebe218",
-        "status": "HASH_VERIFIED"
-      },
-      "note": "Failed controller result unchanged. Completed sessions retired; independent post-run health established idle before later work."
-    }
-  ],
+  "retained_live_failures": [],
   "final_functional_results": {
-    "kd_basic_03": {
-      "result": {
-        "path": "basic-03/result.json",
-        "sha256": "419373cc22a4c21bb720f99471ebfa8845dcb94991716b340f5004addea967ce",
-        "status": "PASS"
-      },
-      "mode": "FUNCTIONAL_ONLY",
-      "passed": true,
-      "final_idle": true,
-      "performance_accepted": false,
-      "sessions": [
-        {
-          "drained": true,
-          "execution": "RETURNED_JIT",
-          "family": "rwsem",
-          "jit_completions": 43067,
-          "jit_entries": 43067,
-          "operations": 1600000,
-          "passed": true,
-          "performance_accepted": false,
-          "receipt": {
-            "path": "basic-03/rwsem/rwsem-list-n16-kdlock-w020-t16-r00/session.json",
-            "sha256": "31b2d04b8a7224b02703ba0744dc0a6baaa9e9f6706f1ba8b0afcafee9c90b73",
-            "status": "PASS"
-          }
-        },
-        {
-          "drained": true,
-          "execution": "RETURNED_JIT",
-          "family": "rwlock",
-          "jit_completions": 30463,
-          "jit_entries": 30463,
-          "operations": 6000000,
-          "passed": true,
-          "performance_accepted": false,
-          "receipt": {
-            "path": "basic-03/rwlock/list-n16-kdlock-w020-t60-r00/session.json",
-            "sha256": "35d71c30a32de43670b09595faa8eb339ad1d4be774ec553af43ad9ad467ec5f",
-            "status": "PASS"
-          }
-        },
-        {
-          "drained": true,
-          "execution": "RETURNED_JIT",
-          "family": "spin",
-          "jit_completions": 1596396,
-          "jit_entries": 1596396,
-          "operations": 1600000,
-          "passed": true,
-          "performance_accepted": false,
-          "receipt": {
-            "path": "basic-03/spin/list-n16-t16-r00-direct-kdlock-adaptive/session.json",
-            "sha256": "7821fcf7c0814bc6d3ba36bc519b2772d1f863f185988bf3fb9f9af45fdb1ab2",
-            "status": "PASS"
-          }
-        },
-        {
-          "drained": true,
-          "execution": "RETURNED_JIT",
-          "family": "mutex",
-          "jit_completions": 1333599,
-          "jit_entries": 1333599,
-          "operations": 1600000,
-          "passed": true,
-          "performance_accepted": false,
-          "receipt": {
-            "path": "basic-03/mutex/list-n16-t16-r00-direct-kdlock-adaptive-public/session.json",
-            "sha256": "d7c488869a2d021c224ce7ef06be803924749ec2f0f5ba321f02743199e29e3e",
-            "status": "PASS"
-          }
-        }
-      ],
-      "preservation": {
-        "path": "basic-03-preservation/receipt.json",
-        "sha256": "06ca209a38d5da8f887d5b6cf33fc583f193a7a2398137f049e96f140595c496",
-        "status": "HASH_VERIFIED"
-      }
-    },
     "native_tclock_controls": {
       "result": {
         "path": "tclock-functional-01/evidence/result.json",
@@ -395,8 +264,10 @@
           "delegation_status": "NATIVE",
           "receipt": {
             "path": "tclock-functional-01/evidence/spin/c01-t08-r00-direct-native/session.json",
-            "sha256": "fd0e83491ea29eb594bf9537ca787d87fdaaca44f20a3f6342f1a891cec1f822",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "fd0e83491ea29eb594bf9537ca787d87fdaaca44f20a3f6342f1a891cec1f822",
+            "retained_sha256": "cc542e2c9072e0da1d8b354a0d43a1677fcc504feedee38b41fc93457f5961e5",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -410,8 +281,10 @@
           "delegation_status": "UNMEASURED",
           "receipt": {
             "path": "tclock-functional-01/evidence/spin/c01-t08-r00-direct-tclock/session.json",
-            "sha256": "4ffb9ea767e6b49fb153ef7cc452cc377b201dda31e77ac044b046a33849587c",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "4ffb9ea767e6b49fb153ef7cc452cc377b201dda31e77ac044b046a33849587c",
+            "retained_sha256": "5110966d5fb554bdba12d1afc4318ad2f4da15f7c736cdfb4688fe90a8713628",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -425,8 +298,10 @@
           "delegation_status": "NATIVE",
           "receipt": {
             "path": "tclock-functional-01/evidence/mutex/c01-t08-r00-direct-native/session.json",
-            "sha256": "f1b753968365394de885fdc7d7d28354175a116cc40091ed57cc306dfcec6658",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "f1b753968365394de885fdc7d7d28354175a116cc40091ed57cc306dfcec6658",
+            "retained_sha256": "039b17626c8bbf2b409f52f8d4a3e411701c3df322cc5885f2bf76a4dc6c0381",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -440,8 +315,10 @@
           "delegation_status": "PASS",
           "receipt": {
             "path": "tclock-functional-01/evidence/mutex/c01-t08-r00-direct-tclock/session.json",
-            "sha256": "8d45e52c4dda5076cecbd44f712a0fd0af6e671cdf78ec0bd161769e803986e7",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "8d45e52c4dda5076cecbd44f712a0fd0af6e671cdf78ec0bd161769e803986e7",
+            "retained_sha256": "cb2bb66cc629c3a2d7d5ded5893a33474159399f176b33d95213ee08291e705a",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -455,8 +332,10 @@
           "delegation_status": "NOT_APPLICABLE",
           "receipt": {
             "path": "tclock-functional-01/evidence/rwlock/cacheline-c01-native-w020-t08-r00/session.json",
-            "sha256": "285f7ae647250a840afa955fb57ea8d20dea98a0b352b7d4928144d0db0d16f6",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "285f7ae647250a840afa955fb57ea8d20dea98a0b352b7d4928144d0db0d16f6",
+            "retained_sha256": "a4340be1721857431daf5f485ec73648318f3e752136e5aca220cb65c5dff240",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -470,8 +349,10 @@
           "delegation_status": "UNMEASURED",
           "receipt": {
             "path": "tclock-functional-01/evidence/rwlock/cacheline-c01-tclock-w020-t08-r00/session.json",
-            "sha256": "2c1a8874593e690c4299e93294c22f9e27b8b82ad82af868713ffc8d6ab6e5e0",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "2c1a8874593e690c4299e93294c22f9e27b8b82ad82af868713ffc8d6ab6e5e0",
+            "retained_sha256": "1cffa4a4d5de47ff0e0eac59ec4473f5396bed241c6f84ed4dbcbefa197f2312",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -485,8 +366,10 @@
           "delegation_status": "NOT_APPLICABLE",
           "receipt": {
             "path": "tclock-functional-01/evidence/rwsem/rwsem-cacheline-c01-native-w020-t08-r00/session.json",
-            "sha256": "60da8b703f7789295aa70aea2f77e4fc80a162ee872a9ae6abb1477c0ea248bc",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "60da8b703f7789295aa70aea2f77e4fc80a162ee872a9ae6abb1477c0ea248bc",
+            "retained_sha256": "5f1c7ed9bbfa26769b8c0ddf022c7a56a4090b58dfdbaed7d8463ba0f52b1574",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         },
         {
@@ -500,15 +383,19 @@
           "delegation_status": "UNMEASURED",
           "receipt": {
             "path": "tclock-functional-01/evidence/rwsem/rwsem-cacheline-c01-tclock-w020-t08-r00/session.json",
-            "sha256": "16482f797f4e4a01bd950a7222fe9e208ef3d0731378d1c48aae1f3535bc3945",
-            "status": "PASS"
+            "status": "PASS",
+            "historical_sha256": "16482f797f4e4a01bd950a7222fe9e208ef3d0731378d1c48aae1f3535bc3945",
+            "retained_sha256": "70a816ebec1587c2dec452a295bc363080191fd77fa59f984b12dfe29af30626",
+            "archival_status": "REDACTED_INCOMPLETE"
           }
         }
       ],
       "compact_archive": {
         "path": "tclock-functional-01/receipts.tar.gz",
-        "sha256": "73c06dab8c0cd73346769c0d483c66914f611bf29610b58c72ccbb0b628bbc97",
-        "status": "HASH_VERIFIED"
+        "status": "HASH_VERIFIED",
+        "historical_sha256": "73c06dab8c0cd73346769c0d483c66914f611bf29610b58c72ccbb0b628bbc97",
+        "retained_sha256": "520407655bb777e04b4d0122b2e167ea289780f6ff601f614de2d00f2f7bdedd",
+        "archival_status": "REDACTED_INCOMPLETE"
       }
     },
     "native_continuation": [
@@ -640,7 +527,7 @@
   },
   "limitations": [
     "Source snapshots and retries remain separate; this is not a single final-source full-suite result.",
-    "The 109 initial module/probe selections have compile passes across affected retries; old phase-offset payloads explicitly refuse Linux 7 runtime.",
+    "The 97 retained module/probe selections have compile passes across affected retries; old phase-offset payloads explicitly refuse Linux 7 runtime.",
     "CONFIG_KDLOCK_MMAP is disabled in the running kernel. Enabled object compilation does not establish actual-MM/page-fault runtime correctness.",
     "Named thunk and direct-call metadata are covered by their audits; raw RET and handwritten/generated transfers still lack complete mitigation qualification.",
     "Active call-depth tracking is refused because its return thunk changes restored arithmetic flags. Native-escape checks apply to the recorded ITS boot.",
@@ -666,5 +553,24 @@
       "sha256": "e0ec337af1aec977b015439626822f918eac3641d4af49ddab50af5141287894",
       "status": "CAPTURED"
     }
-  }
+  },
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  },
+  "source_reviews": [
+    {
+      "path": "cookie-source-review/resolution.json",
+      "sha256": "5d2f62522c318c88d6fbdc315ddf7573665cdd1b4f728daf8edfa2313e5dc7dd",
+      "status": "HISTORICAL_GENERIC_SOURCE_REVIEW",
+      "label": "Private lexical cookie correction and standalone routing fixture"
+    },
+    {
+      "path": "cookie-source-review/independent-cookie-review.json",
+      "sha256": "122e8a1d3fd6c7b74a26b2924f169b78b724c68ceed01dc21aca1f62801dede2",
+      "status": "HISTORICAL_GENERIC_SOURCE_REVIEW",
+      "label": "Independent cookie lifetime and access review"
+    }
+  ]
 }

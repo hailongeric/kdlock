@@ -259,9 +259,7 @@ All seven original regression causes remain explicitly **unresolved**: c08 at
 controlled reruns and latency results remain in the
 [previous stage](../mutex-latency-20261021/README.md); this stage adds focused
 pipecap evidence. The c08-t02 and pipebytes-t04 class gaps remain open.
-The [rwlock continuation](../nano-rwlock-diagnosis-20261021/README.md) has complete
-remaining-case coverage but retains ten strict NO_JIT failures and the observed
-first-follower refusal mechanism. [Shared-lock parity](../shared-lock-followup-20261020/README.md)
+[Shared-lock parity](../shared-lock-followup-20261020/README.md)
 and [real mmap/fault integration](../../tests/mmap-fault-followup-20261020/README.md)
 remain unresolved at their recorded blockers. Whole-kernel replacement,
 RT/ww_mutex, lockdep and oversubscription remain separately unvalidated.

@@ -1,9 +1,0 @@
-{
-  "error": "ValueError('replay QEMU thread placement differs')",
-  "measured_sessions": 0,
-  "passed": false,
-  "planned_output": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/rwsem-1",
-  "rwsem_only": true,
-  "script_sha256": "ecd4345b593311d706659cb0770098a94c0dff05f151d75789eb049fca412633",
-  "source_commit": "f48b90e42e1538a5204d215b573a238ebd95f391"
-}

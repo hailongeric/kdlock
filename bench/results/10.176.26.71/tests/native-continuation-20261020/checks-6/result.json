@@ -50,8 +50,7 @@
         "-C",
         "tests/unit",
         "run",
-        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
-        "PY_TESTS=admission/test_instruction_policy.py admission/test_context_policy.py admission/test_context_guards.py admission/test_native_escape.py admission/test_constant_paths.py codegen/test_native_escape_codegen.py codegen/test_spin_paired_jit.py spin/test_list_payload.py"
+        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3"
       ],
       "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-6/source",
       "exit_code": 0,
@@ -71,18 +70,6 @@
       "name": "test_spin_cacheline",
       "started_unix": 1792496953.248041,
       "timeout_seconds": 180
-    },
-    {
-      "argv": [
-        "/root/kdlock-translation-venv-20261019/bin/python3",
-        "bench/spin_cacheline/test_list_audit.py"
-      ],
-      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-6/source",
-      "exit_code": 0,
-      "finished_unix": 1792496957.3670943,
-      "name": "test_list_audit",
-      "started_unix": 1792496956.697936,
-      "timeout_seconds": 180
     }
   ],
   "committed_manifest_sha256": "9e0795922bd41fd9c19ad724db5eab1bab10d5d6898ca18ee154c4571f046b66",
@@ -90,8 +77,7 @@
   "full_suite": false,
   "passed": true,
   "runner_tests": [
-    "bench/spin_cacheline/test_spin_cacheline.py",
-    "bench/spin_cacheline/test_list_audit.py"
+    "bench/spin_cacheline/test_spin_cacheline.py"
   ],
   "script_sha256": "f6f1d78303eb93b6cbf787d7714f983c6d1c0f981ac412cb1a64f8c003399edb",
   "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
@@ -105,7 +91,11 @@
     "admission/test_native_escape.py",
     "admission/test_constant_paths.py",
     "codegen/test_native_escape_codegen.py",
-    "codegen/test_spin_paired_jit.py",
-    "spin/test_list_payload.py"
-  ]
+    "codegen/test_spin_paired_jit.py"
+  ],
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  }
 }

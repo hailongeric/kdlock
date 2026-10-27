@@ -1,5 +1,4 @@
 {
-  "validated_sessions": 320,
   "failed_sessions": [
     {
       "session": "spin-cacheline/c08-t36-r01-direct-native/session.json",
@@ -82,8 +81,11 @@
     "spin-cacheline/c08-t60-r02-direct-native/session.json",
     "spin-cacheline/c08-t60-r02-direct-tclock/session.json"
   ],
-  "checked_source_files": 338,
-  "checked_binaries": 8,
-  "consistent_sources": 338,
-  "scope": "Saved client oracles, exact totals, worker placement, publication and retirement receipts, counters, logs, retained input bytes. Does not rerun measured operations."
+  "scope": "Saved client oracles, exact totals, worker placement, publication and retirement receipts, counters, logs, retained input bytes. Does not rerun measured operations.",
+  "status": "REDACTED_INCOMPLETE",
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  }
 }

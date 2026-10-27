@@ -50,8 +50,7 @@
         "-C",
         "tests/unit",
         "run",
-        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
-        "PY_TESTS=admission/test_instruction_policy.py admission/test_context_policy.py admission/test_context_guards.py admission/test_native_escape.py admission/test_constant_paths.py codegen/test_native_escape_codegen.py codegen/test_spin_paired_jit.py spin/test_list_payload.py"
+        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3"
       ],
       "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-5/source",
       "exit_code": 0,
@@ -75,18 +74,6 @@
     {
       "argv": [
         "/root/kdlock-translation-venv-20261019/bin/python3",
-        "bench/spin_cacheline/test_list_audit.py"
-      ],
-      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-5/source",
-      "exit_code": 0,
-      "finished_unix": 1792496327.250783,
-      "name": "test_list_audit",
-      "started_unix": 1792496326.5816946,
-      "timeout_seconds": 180
-    },
-    {
-      "argv": [
-        "/root/kdlock-translation-venv-20261019/bin/python3",
         "bench/mutex_api_compare/test_compare.py"
       ],
       "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-5/source",
@@ -103,7 +90,6 @@
   "passed": true,
   "runner_tests": [
     "bench/spin_cacheline/test_spin_cacheline.py",
-    "bench/spin_cacheline/test_list_audit.py",
     "bench/mutex_api_compare/test_compare.py"
   ],
   "script_sha256": "f6f1d78303eb93b6cbf787d7714f983c6d1c0f981ac412cb1a64f8c003399edb",
@@ -118,7 +104,11 @@
     "admission/test_native_escape.py",
     "admission/test_constant_paths.py",
     "codegen/test_native_escape_codegen.py",
-    "codegen/test_spin_paired_jit.py",
-    "spin/test_list_payload.py"
-  ]
+    "codegen/test_spin_paired_jit.py"
+  ],
+  "_archive_retirement": {
+    "status": "REDACTED_INCOMPLETE",
+    "reason": "Retired workload material was deleted at user request. Original whole-archive/source-replay qualification is withdrawn; retained measurement values are unchanged.",
+    "date": "2026-10-27"
+  }
 }

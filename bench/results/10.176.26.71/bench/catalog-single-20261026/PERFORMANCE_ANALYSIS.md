@@ -3,20 +3,20 @@
 The strongest high-contention **mutex** examples are the short public-ABI2 seek
 and pipe operations. At 60 workers, seek-set is **3.117× Native / 1.689× TCLock**,
 pipecap **2.728× / 2.193×**, and pipebytes16 **2.663× / 2.039×**. Their returned
-JIT completion shares exceed 97%. The strongest synthetic mutex locality example
-is list16 at 60 workers: **1.728× / 1.662×**, with 98.20% returned completion.
+JIT completion shares exceed 97%.
 
 The strongest **rwsem** ratios have a different explanation. RCUHT at 1% writes
 reaches **7.907× Native at 36 workers**, but only **0.642× TCLock**, and has
-**zero JIT executions**. All 84 KD points in the four 1%-write rwsem configurations
+**zero JIT executions**. All 63 retained KD points in the three 1%-write rwsem configurations
 are `NO_JIT`. The data supports selecting a separate local reader/phase-policy
 control; it does not support claiming that those gains come from delegation.
 
 ## Scope, evidence and interpretation
 
-This analysis uses all 51 lock/API tables and all three MM tables from the
-October 26 single-round screen: 3,292 measured points and 47 drained preparation
-failures. It uses whole-run completed-operation rates, not selected peak windows.
+This analysis uses 45 retained lock/API tables and all three MM tables from the
+October 26 single-round screen: 2,914 measured points and 47 drained preparation
+failures. Archived source provenance is redacted/incomplete after cleanup;
+retained rates and failure outcomes are unchanged. It uses whole-run completed-operation rates, not selected peak windows.
 [The comparison CSV](workload-comparisons.csv) contains one row per workload,
 Native/KD/TCLock rates at 1, 32 and 60 workers, both comparator ratios, each
 comparator's best observed ratio and worker count, execution classes, returned
@@ -61,11 +61,9 @@ rate or no supported comparator. Full curves and raw table values are linked.
 | [spin-c01](spin-c01/README.md) | 1.807× | 1.296× | 2.204× | 1.884× | 2.361× @ 52, J | 0 |
 | [spin-c08](spin-c08/README.md) | 1.808× | 1.909× | 2.919× | 2.524× | 2.919× @ 60, J | 0 |
 | [spin-rcuht](spin-rcuht/README.md) | 1.776× | 1.573× | 1.573× | 1.167× | 1.848× @ 36, J | 0 |
-| [spin-list16](spin-list16/README.md) | 1.807× | 7.213× | 9.503× | 2.142× | 10.488× @ 56, J | 0 |
 | [mutex-c01](mutex-c01/README.md) | 1.788× | 0.906× | 1.227× | 1.591× | 1.788× @ 1, L | 0 |
 | [mutex-c08](mutex-c08/README.md) | 1.780× | 0.899× | 1.468× | 1.561× | 1.780× @ 1, L | 0 |
 | [mutex-rcuht](mutex-rcuht/README.md) | 1.739× | 1.085× | 1.203× | 1.162× | 1.739× @ 1, L | 0 |
-| [mutex-list16](mutex-list16/README.md) | 1.781× | 1.276× | 1.728× | 1.662× | 1.781× @ 1, L | 0 |
 
 **c01/c08.** Each operation increments one or eight separately aligned shared
 cache lines under one exclusive lock. At 60 workers spin c08 improves more than
@@ -76,14 +74,6 @@ and its different caller path remain part of measured cost. At 32 workers both
 mutex c01 and c08 are below Native despite returned JIT, so a tiny write body is
 not universally a win. Their one-worker maxima are local executions.
 
-**list16.** Sixteen resident 64-byte nodes have immutable stride-five links;
-every writer traverses and increments all 16 values. This combines repeated
-exclusive use of the same dirty working set with stable lifetime and bounded
-control flow. Spin achieves 9.503× Native at 60 workers, while mutex achieves
-1.728×. That contrast points to lock-shell sensitivity, not a general property
-of every list traversal. Cache residency and fewer ownership transfers are
-plausible benefits; this run did not measure their individual contributions.
-
 **RCUHT.** The body searches buckets and moves a preallocated node, with random
 source/destination keys chosen outside the lock. It has branches, pointer chains
 and multiple outcomes, with no allocator or actual RCU service in the body.
@@ -92,7 +82,6 @@ of lock-transfer overhead delegation can amortize. At 60 workers KD is only
 1.573× Native for spin and 1.203× for mutex, and close to TCLock (1.167×/1.162×).
 
 Source: [payload](../../../../../workload_modules/spin_cacheline/payload.h),
-[list](../../../../../workload_modules/spin_cacheline/list_payload.h),
 [hash](../../../../../workload_modules/spin_cacheline/hash_payload.h),
 [mutex shell](../../../../../workload_modules/mutex_cacheline/module.c).
 
@@ -106,28 +95,24 @@ Source: [payload](../../../../../workload_modules/spin_cacheline/payload.h),
 | [rwlock-c08-w20](rwlock-c08-w20/README.md) | 1.712× | 1.931× | 2.066× | 1.606× | 2.400× @ 3, L | 0 |
 | [rwlock-rcuht-w01](rwlock-rcuht-w01/README.md) | 1.916× | 1.072× | 1.066× | 0.979× | 1.916× @ 1, L | 0 |
 | [rwlock-rcuht-w20](rwlock-rcuht-w20/README.md) | 1.883× | 1.379× | 1.330× | 1.328× | 1.883× @ 1, L | 0 |
-| [rwlock-list16-w01](rwlock-list16-w01/README.md) | 1.858× | 1.203× | 1.154× | 1.010× | 1.858× @ 1, L | 0 |
-| [rwlock-list16-w20](rwlock-list16-w20/README.md) | 1.790× | 1.796× | 2.176× | 1.255× | 2.591× @ 6, L | 0 |
 | [rwsem-c01-w01](rwsem-c01-w01/README.md) | 1.159× | 1.824× | 1.948× | 0.449× | 3.308× @ 36, L | 0 |
 | [rwsem-c01-w20](rwsem-c01-w20/README.md) | 1.103× | 1.358× | 1.523× | 0.383× | 2.977× @ 4, L | 0 |
 | [rwsem-c08-w01](rwsem-c08-w01/README.md) | 1.160× | 2.297× | 2.223× | 0.476× | 2.744× @ 36, L | 0 |
 | [rwsem-c08-w20](rwsem-c08-w20/README.md) | 1.115× | 1.314× | 1.511× | 0.450× | 3.395× @ 2, L | 0 |
 | [rwsem-rcuht-w01](rwsem-rcuht-w01/README.md) | 1.304× | 2.177× | 2.280× | 0.512× | 7.907× @ 36, L | 0 |
 | [rwsem-rcuht-w20](rwsem-rcuht-w20/README.md) | 1.339× | 1.451× | 2.255× | 0.674× | 3.821× @ 3, L | 0 |
-| [rwsem-list16-w01](rwsem-list16-w01/README.md) | 0.893× | 2.091× | 2.192× | 0.515× | 4.902× @ 36, L | 0 |
-| [rwsem-list16-w20](rwsem-list16-w20/README.md) | 0.942× | 0.882× | 0.968× | 0.658× | 2.612× @ 4, J | 0 |
 
 **Rwlock, 1% writes.** Readers execute locally and write only caller-private
 results. At 60 workers KD is close to the controls: 1.066–1.264× Native and
 0.979–1.228× TCLock. Readers dominate total operations; only the rare writer can
 benefit from JIT, so a large writer-specific improvement need not noticeably
-change total throughput. c08/list/hash add read-side work that also stays local.
+change total throughput. c08/hash add read-side work that also stays local.
 
 **Rwlock, 20% writes.** Writer contention is more frequent and KD/Native improves
 to 1.330–2.181× at 60 workers. Yet c01 and c08 are `NO_JIT` at that point while
-list16 and RCUHT have returned bodies. Ordinary reader/writer admission and local
-lock paths therefore matter independently of delegation. The list's full traversal
-and the hash's data-dependent paths lower absolute rates relative to c01/c08.
+RCUHT has returned bodies. Ordinary reader/writer admission and local lock paths
+therefore matter independently of delegation. The hash's data-dependent paths
+lower absolute rates relative to c01/c08.
 
 **Rwsem, 1% writes.** All KD measurements are local. KD's uninterruptible wait
 path polls for at most 16,384 condition probes before sleeping, closes reader
@@ -137,22 +122,20 @@ delegated. Avoiding sleep/wakeup transitions for short reader/writer epochs is a
 source-grounded explanation for Native differences, but the campaign did not
 count those transitions. The TCLock comparator uses a distinct reader gate and
 counter protocol and is substantially faster at high counts: KD reaches only
-0.449–0.515× TCLock at 60 workers. A winner against Native is not a winner against
+0.449–0.512× TCLock at 60 workers. A winner against Native is not a winner against
 both baselines.
 
 The largest RCUHT ratio at 36 workers is amplified by a Native trough. At
 32/36/40 workers, Native rates are 5.024788/0.821573/4.141666 Mops/s and KD rates
 10.937521/6.496501/9.346471. KD also slows at 36; the 7.907× ratio is not a KD
-throughput peak. The list16 36-worker result shows the same pattern. Do not pick
+throughput peak. Do not pick
 36 workers as a guaranteed sweet spot from one round.
 
 **Rwsem, 20% writes.** More frequent admission closure and reader drainage reduce
 absolute throughput versus the 1% case. Delegated writers can queue only after
 reader drainage; they release their reader-free reservation on the original
-caller after matching unlock. At 60 workers returned writer shares are 11.96%
-for RCUHT and 44.33% for list16, yet KD remains below TCLock. list16 is even
-0.968× Native there. Its best four-worker result has only 0.2796% returned writer
-completion, so attributing its 2.612× Native gain primarily to JIT would be wrong.
+caller after matching unlock. At 60 workers RCUHT has an 11.96% returned writer
+share, yet KD remains below TCLock.
 These observations favor distinguishing reader/phase-policy gains from
 high-density writer delegation when defining a nano case.
 
@@ -306,22 +289,16 @@ TCLock ratio from a JIT-heavy win.
 | seek-end-n16 | 48 | 1.450615 | 4.488347 | 2.467012 | 3.094× | 1.819× | RETURNED_JIT; 97.6146% |
 | pipecap-query-n16 | 60 | 1.903198 | 5.192804 | 2.368322 | 2.728× | 2.193× | RETURNED_JIT; 97.4686% |
 | pipebytes-query-n16 | 60 | 1.828942 | 4.869609 | 2.387763 | 2.663× | 2.039× | RETURNED_JIT; 97.3640% |
-| mutex-list16 | 60 | 2.455822 | 4.242759 | 2.553286 | 1.728× | 1.662× | RETURNED_JIT; 98.2021% |
-| mutex-list16 | 20 | 5.189264 | 5.481742 | 2.518496 | 1.056× | 2.177× | RETURNED_JIT; 98.8295% |
 | pipecap-query-n16 | 4 | 13.342398 | 16.243509 | 2.722419 | 1.217× | 5.967× | NO_JIT; 0.0000% |
 | rwsem-rcuht-w01 | 36 | 0.821573 | 6.496501 | 10.120494 | 7.907× | 0.642× | NO_JIT; 0.0000% |
 | rwsem-rcuht-w01 | 60 | 3.289808 | 7.500175 | 14.655516 | 2.280× | 0.512× | NO_JIT; 0.0000% |
-| rwsem-list16-w01 | 36 | 1.330796 | 6.523674 | 9.517633 | 4.902× | 0.685× | NO_JIT; 0.0000% |
-| rwsem-list16-w01 | 8 | 7.701607 | 16.597154 | 14.946496 | 2.155× | 1.110× | NO_JIT; 0.0000% |
-| rwsem-list16-w20 | 4 | 1.633089 | 4.265740 | 3.425752 | 2.612× | 1.245× | RETURNED_JIT; 0.2796% |
 
 The largest mutex KD/TCLock ratio is pipecap at four workers (5.967×), but it is
 `NO_JIT` and only 1.217× Native. For a delegation-oriented nano, the stronger
 selection evidence is the sustained returned-body coverage of pipe/seek at
-12–60 workers and list16 at 20–60. For rwsem, RCUHT's 36-worker Native ratio is
-the largest, while list16 at four workers and 20% writes is the largest observed
-TCLock ratio (1.245×); the latter's 0.2796% writer completion share also rules out
-a strong causal claim for JIT. At 60 workers every rwsem case loses to TCLock.
+12–60 workers. For rwsem, RCUHT's 36-worker Native ratio is the largest retained
+example; its zero JIT count rules out delegation as its cause. At 60 workers
+every retained rwsem case loses to TCLock.
 
 ## Mechanism to preserve in a new nano workload
 

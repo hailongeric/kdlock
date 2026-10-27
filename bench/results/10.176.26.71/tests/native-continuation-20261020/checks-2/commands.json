@@ -49,8 +49,7 @@
       "-C",
       "tests/unit",
       "run",
-      "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
-      "PY_TESTS=admission/test_native_escape.py admission/test_instruction_policy.py admission/test_context_policy.py admission/test_text_regions.py admission/test_context_guards.py admission/test_constant_paths.py admission/test_clobber_entry.py codegen/test_native_escape_codegen.py codegen/test_jit_diagnostics.py codegen/test_clobber_abi.py codegen/test_native_call_execution.py codegen/test_spin_paired_jit.py execution/test_jit_entry_scope.py execution/test_mutex_images.py execution/test_exe_registry.py execution/test_bench_completion.py execution/test_native_escape_restore.py execution/test_native_after_outer.py infrastructure/test_source_lifetime.py spin/test_spin_wait.py spin/test_spin_preempt.py spin/test_spin_irq.py spin/test_spin_direct.py spin/test_spin_batch.py spin/test_list_payload.py rwlock/test_rwlock.py mutex/test_mutex_api.py mutex/test_mutex_resources.py infrastructure/test_jit_escape_runner.py"
+      "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3"
     ],
     "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-2/source",
     "exit_code": 0,

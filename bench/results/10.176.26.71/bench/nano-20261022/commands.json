@@ -115,7 +115,6 @@
     ]
   ],
   [
-    "spin-list-n16",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run.py",
@@ -126,8 +125,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list",
-      "--list-nodes",
       "16",
       "--keep-going-no-jit",
       "--threads",
@@ -168,12 +165,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/spin-list-n16"
+      "--output"
     ]
   ],
   [
-    "spin-list-n128",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run.py",
@@ -184,8 +179,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list",
-      "--list-nodes",
       "128",
       "--keep-going-no-jit",
       "--threads",
@@ -226,12 +219,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/spin-list-n128"
+      "--output"
     ]
   ],
   [
-    "spin-list-prefetch-n16",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run.py",
@@ -242,8 +233,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list-prefetch",
-      "--list-nodes",
       "16",
       "--keep-going-no-jit",
       "--threads",
@@ -284,12 +273,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/spin-list-prefetch-n16"
+      "--output"
     ]
   ],
   [
-    "spin-list-prefetch-n128",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run.py",
@@ -300,8 +287,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list-prefetch",
-      "--list-nodes",
       "128",
       "--keep-going-no-jit",
       "--threads",
@@ -342,8 +327,7 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/spin-list-prefetch-n128"
+      "--output"
     ]
   ],
   [
@@ -466,7 +450,6 @@
     ]
   ],
   [
-    "mutex-list-n16",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run_mutex.py",
@@ -477,8 +460,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list",
-      "--list-nodes",
       "16",
       "--mutex-api",
       "public",
@@ -521,12 +502,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/mutex-list-n16"
+      "--output"
     ]
   ],
   [
-    "mutex-list-n128",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run_mutex.py",
@@ -537,8 +516,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list",
-      "--list-nodes",
       "128",
       "--mutex-api",
       "public",
@@ -581,12 +558,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/mutex-list-n128"
+      "--output"
     ]
   ],
   [
-    "mutex-list-prefetch-n16",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run_mutex.py",
@@ -597,8 +572,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list-prefetch",
-      "--list-nodes",
       "16",
       "--mutex-api",
       "public",
@@ -641,12 +614,10 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/mutex-list-prefetch-n16"
+      "--output"
     ]
   ],
   [
-    "mutex-list-prefetch-n128",
     [
       "/root/kdlock-translation-venv-20261019/bin/python3",
       "/root/host_fs/kdlock/bench/tclock_compare/run_mutex.py",
@@ -657,8 +628,6 @@
       "--cpus",
       "0-59",
       "--workload",
-      "list-prefetch",
-      "--list-nodes",
       "128",
       "--mutex-api",
       "public",
@@ -701,8 +670,7 @@
       "/root/linux-6.1.159-kdclobber2",
       "--kernel-baseline",
       "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
-      "--output",
-      "/mnt/kdlock-builds/nano-20261022/mutex-list-prefetch-n128"
+      "--output"
     ]
   ],
   [
@@ -719,12 +687,9 @@
       "--workloads",
       "cacheline",
       "rcuht",
-      "list",
-      "list-prefetch",
       "--cachelines",
       "1",
       "8",
-      "--list-nodes",
       "16",
       "128",
       "--write-percent",
@@ -846,12 +811,9 @@
       "--workloads",
       "cacheline",
       "rcuht",
-      "list",
-      "list-prefetch",
       "--cachelines",
       "1",
       "8",
-      "--list-nodes",
       "16",
       "128",
       "--write-percent",

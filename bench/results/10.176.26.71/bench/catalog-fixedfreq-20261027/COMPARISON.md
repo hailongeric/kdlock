@@ -1,5 +1,10 @@
 # Per-workload comparison at 60 workers
 
+The user-directed cleanup removed retired benchmark records and parts of mixed
+source archives. Archival provenance is **REDACTED / INCOMPLETE**. Original
+complete-archive hashes and full-source replay claims below describe the earlier
+collection, not the current retained subset; retained measurements are unchanged.
+
 Each row is one separately identified workload. Rates are whole-run Mops/s at 60 workers from one audited observation per backend. **No workload averages, pooled source versions or repeat means.** Strict timing qualification remains failed; host frequency target is 2.0 GHz. Ratios are descriptive, not statistical superiority or latency claims. Pending/missing/failed or score-ineligible points have no ratio.
 
 [Full dimensions, identities and precision](comparison-60.csv). Every plotted/table rate was matched against its per-workload audit. Original source/kernel/call-shell distinctions remain in those reports. Only completed-backend archive-audited MM rows enter this comparison; a partial MM table can be newer.
@@ -19,27 +24,21 @@ Each row is one separately identified workload. Rates are whole-run Mops/s at 60
 | [spin-c01](spin-c01/README.md) | spin; c1; w100; post64 | 4.399 | 3.987 | 7.796 | 1.772× | 1.955× | RETURNED_JIT | 63 / 63 |
 | [spin-c08](spin-c08/README.md) | spin; c8; w100; post64 | 3.141 | 3.139 | 7.688 | 2.447× | 2.449× | RETURNED_JIT | 63 / 63 |
 | [spin-rcuht](spin-rcuht/README.md) | spin; rcuht; w100; post64 | 1.512 | 2.007 | 2.330 | 1.541× | 1.161× | RETURNED_JIT | 63 / 63 |
-| [spin-list16](spin-list16/README.md) | spin; list16; w100; post64 | 0.922 | 3.423 | 7.003 | 7.592× | 2.046× | RETURNED_JIT | 63 / 63 |
 | [mutex-c01](mutex-c01/README.md) | mutex; c1; w100; post64 | 3.698 | 2.730 | 4.943 | 1.337× | 1.811× | RETURNED_JIT | 63 / 63 |
 | [mutex-c08](mutex-c08/README.md) | mutex; c8; w100; post64 | 3.218 | 2.353 | 4.070 | 1.265× | 1.730× | RETURNED_JIT | 63 / 63 |
 | [mutex-rcuht](mutex-rcuht/README.md) | mutex; rcuht; w100; post64 | 2.080 | 1.544 | 2.095 | 1.007× | 1.357× | RETURNED_JIT | 63 / 63 |
-| [mutex-list16](mutex-list16/README.md) | mutex; list16; w100; post64 | 2.115 | 2.303 | 4.196 | 1.983× | 1.822× | RETURNED_JIT | 63 / 63 |
 | [rwlock-c01-w01](rwlock-c01-w01/README.md) | rwlock; c1; w1; post4 | 11.253 | 8.782 | 12.204 | 1.085× | 1.390× | RETURNED_JIT | 63 / 63 |
 | [rwlock-c01-w20](rwlock-c01-w20/README.md) | rwlock; c1; w20; post4 | 4.596 | 5.201 | 9.465 | 2.059× | 1.820× | NO_JIT | 63 / 63 |
 | [rwlock-c08-w01](rwlock-c08-w01/README.md) | rwlock; c8; w1; post4 | 10.339 | 10.624 | 11.641 | 1.126× | 1.096× | RETURNED_JIT | 63 / 63 |
 | [rwlock-c08-w20](rwlock-c08-w20/README.md) | rwlock; c8; w20; post4 | 3.716 | 5.195 | 8.138 | 2.190× | 1.566× | RETURNED_JIT | 63 / 63 |
 | [rwlock-rcuht-w01](rwlock-rcuht-w01/README.md) | rwlock; rcuht; w1; post4 | 10.659 | 10.575 | 10.819 | 1.015× | 1.023× | RETURNED_JIT | 63 / 63 |
 | [rwlock-rcuht-w20](rwlock-rcuht-w20/README.md) | rwlock; rcuht; w20; post4 | 3.903 | 4.134 | 5.372 | 1.377× | 1.299× | RETURNED_JIT | 63 / 63 |
-| [rwlock-list16-w01](rwlock-list16-w01/README.md) | rwlock; list16; w1; post4 | 8.181 | 8.063 | 10.274 | 1.256× | 1.274× | RETURNED_JIT | 63 / 63 |
-| [rwlock-list16-w20](rwlock-list16-w20/README.md) | rwlock; list16; w20; post4 | 2.182 | 3.440 | 4.465 | 2.046× | 1.298× | RETURNED_JIT | 63 / 63 |
 | [rwsem-c01-w01](rwsem-c01-w01/README.md) | rwsem; c1; w1; post4 | 2.830 | 12.987 | 6.731 | 2.378× | 0.518× | NO_JIT | 63 / 63 |
 | [rwsem-c01-w20](rwsem-c01-w20/README.md) | rwsem; c1; w20; post4 | 2.709 | 6.917 | 1.935 | 0.714× | 0.280× | RETURNED_JIT | 63 / 63 |
 | [rwsem-c08-w01](rwsem-c08-w01/README.md) | rwsem; c8; w1; post4 | 2.634 | 12.531 | 7.205 | 2.736× | 0.575× | NO_JIT | 63 / 63 |
 | [rwsem-c08-w20](rwsem-c08-w20/README.md) | rwsem; c8; w20; post4 | 2.727 | 6.216 | 2.059 | 0.755× | 0.331× | RETURNED_JIT | 63 / 63 |
 | [rwsem-rcuht-w01](rwsem-rcuht-w01/README.md) | rwsem; rcuht; w1; post4 | 2.715 | 12.481 | 6.102 | 2.248× | 0.489× | NO_JIT | 63 / 63 |
 | [rwsem-rcuht-w20](rwsem-rcuht-w20/README.md) | rwsem; rcuht; w20; post4 | 1.504 | 4.686 | 1.935 | 1.287× | 0.413× | RETURNED_JIT | 63 / 63 |
-| [rwsem-list16-w01](rwsem-list16-w01/README.md) | rwsem; list16; w1; post4 | 2.516 | 9.787 | 6.127 | 2.435× | 0.626× | NO_JIT | 63 / 63 |
-| [rwsem-list16-w20](rwsem-list16-w20/README.md) | rwsem; list16; w20; post4 | 3.381 | 4.605 | 1.806 | 0.534× | 0.392× | RETURNED_JIT | 63 / 63 |
 | [argbounds-w00](argbounds-w00/README.md) | spin; argbounds; w0; post4 | 3.702 | 4.402 | 2.808 | 0.758× | 0.638× | RETURNED_JIT | 63 / 63 |
 | [argbounds-w20](argbounds-w20/README.md) | spin; argbounds; w20; post4 | 3.588 | 4.222 | 3.058 | 0.852× | 0.724× | NO_JIT | 63 / 63 |
 | [taskname-w00](taskname-w00/README.md) | spin; taskname; w0; post4 | 3.687 | 4.380 | 4.185 | 1.135× | 0.956× | RETURNED_JIT | 63 / 63 |
