@@ -3,6 +3,9 @@
 The documentation-first commit is `67361fee6440765e130385b2961246a41052b953`.
 Its implementation matches the audited `6a7350291ebab8c50a43431561e11085098d628b`.
 This is ongoing implementation evidence, not completion of the requested API work.
+The later [isolated queued-exchange record](../mutex-roleswap-20261029/README.md)
+contains the four passing cases, native-mutex assertion, untested correction and
+preserved failed VM. That candidate is not promoted or performance-qualified.
 
 ## Strict selected-waiter pin candidate
 
