@@ -39,6 +39,7 @@ static int fixture_count(struct kd_mutex *lock)
 static int kd_mutex_active_waiters[2], kd_mutex_reserved_nodes[2];
 static int kd_mutex_max_waiters[2], kd_mutex_frame_failure_count[2];
 static struct { unsigned long node_slots; } kd_mutex_shadows[2];
+static unsigned long kd_mutex_custody_slots[2];
 #define unlikely(c) (c)
 #define READ_ONCE(v) (v)
 #define per_cpu(v, cpu) ((v)[cpu])
@@ -85,6 +86,13 @@ int main(void)
  CHECK(!kd_mutex_check_idle()); /* bitmap protects even a gauge disagreement */
  kd_mutex_shadows[1].node_slots = 0;
  CHECK(kd_mutex_check_idle());
+ /* A retained native owner's custody hint independently prevents drain even
+  * if a broken slot publication disagrees with it. Clearing it cannot replace
+  * the exact task, count and reservation checks exercised above. */
+ kd_mutex_custody_slots[1] = 1;
+ CHECK(!kd_mutex_check_idle());
+ kd_mutex_custody_slots[1] = 0;
+ CHECK(kd_mutex_check_idle());
  kd_mutex_reserved_nodes[1] = 1;
  CHECK(!kd_mutex_check_idle());
  kd_mutex_reserved_nodes[1] = 0;
@@ -113,6 +121,6 @@ int main(void)
  if (!setjmp(bug_target)) { kd_mutex_waiter_exit(&lock, local); CHECK(false); }
  CHECK(!fixture_count(&lock) && !local->counted_lock);
  expect_bug = false;
- puts("PASS exact pinned balances: sleeping reservation, independent CPUs, slot lifetime, nested slots, underflow and drain");
+ puts("PASS exact pinned balances: sleeping reservation, independent CPUs, slot and custody lifetime, nested slots, underflow and drain");
  return 0;
 }
