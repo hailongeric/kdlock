@@ -147,12 +147,24 @@ def make_plan(args):
     workload = getattr(args, 'workload', 'cacheline')
     require(workload in ('cacheline', 'rcuht'), 'unsupported workload')
     lock_kind = getattr(args, 'lock_kind', 'spin')
+    spin_api = getattr(args, 'spin_api', 'direct')
+    require(spin_api in ('direct', 'public') and
+            (spin_api == 'direct' or lock_kind == 'spin'),
+            'public spin API requires the spin runner')
+    require(spin_api == 'direct' or getattr(args, 'scenario', 'plain') == 'plain',
+            'public spin comparison supports the plain workload')
     mutex_api = getattr(args, 'mutex_api', 'outer')
     require(mutex_api in ('outer', 'public') and
             (mutex_api == 'outer' or lock_kind == 'mutex'),
             'public mutex API requires the mutex runner')
     require(lock_kind != 'mutex' or getattr(args, 'spin_delegate', 'on') == 'on',
             '--spin-delegate off is a spin-only control; mutex JIT is required')
+    if lock_kind == 'mutex':
+        kd_shell = 'mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie'
+        kd_cookie = 'provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local'
+    else:
+        kd_shell = 'spin_public_clobber' if spin_api == 'public' else 'cold_clobber'
+        kd_cookie = 'provider_acquisition_ledger' if spin_api == 'public' else 'percpu_direct_gate'
     sizes = (args.cachelines or [1]) if workload == 'cacheline' else [0]
     # Admission is adaptive only. Retain the fixed metadata label so reports
     # keep current results separate from historically frozen admission modes.
@@ -164,14 +176,15 @@ def make_plan(args):
         for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
             suffix = f'-{mode}' if backend == 'kdlock' else ''
-            if backend == 'kdlock' and lock_kind == 'mutex' and mutex_api == 'public':
+            if backend == 'kdlock' and ((lock_kind == 'mutex' and mutex_api == 'public') or
+                                        (lock_kind == 'spin' and spin_api == 'public')):
                 suffix += '-public'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload,
                 lock_kind=lock_kind, hotlock_mode=mode,
-                caller_shell=(('mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie') if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
-                cookie_storage=(('provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local') if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
+                caller_shell=kd_shell if backend == 'kdlock' else 'c',
+                cookie_storage=kd_cookie if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy=('mutex_contention1024_ratio256' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
@@ -395,6 +408,8 @@ def main(lock_kind='spin'):
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--mutex-api', choices=('outer', 'public'), default='outer',
                    help='KD mutex compiled caller; public invokes kd_mutex_lock/unlock')
+    p.add_argument('--spin-api', choices=('direct', 'public'), default='direct',
+                   help='KD spin compiled caller; public invokes kd_spin_lock/unlock')
     perf_mode = p.add_mutually_exclusive_group()
     perf_mode.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
@@ -534,6 +549,7 @@ def main(lock_kind='spin'):
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
                      f'SC_MUTEX_API={args.mutex_api}',
+                     f'SC_SPIN_API={args.spin_api}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}',
                      f'SC_SHARED={WORKLOAD}',
@@ -577,6 +593,22 @@ def main(lock_kind='spin'):
                         'kd_mutex_unlock_clobber_v1' not in imported.split(),
                         'workload still imports experimental kernel mutex bridge')
             if backend == 'kdlock' and lock_kind == 'spin':
+                compiled_api = command(['modinfo', '-F', 'kd_spin_api', binary],
+                                       out/'spin-api.txt').strip()
+                require(compiled_api == args.spin_api, 'compiled spin API differs')
+                if args.spin_api == 'public':
+                    expected = ('kd_spin_lock_clobber_v1',
+                                'kd_spin_unlock_clobber_v1', 'kd_spin_prepare')
+                    require(not set(imported.split()) & {
+                        'kd_spin_lock_pinned_clobber_v1', 'kd_spin_direct_native_contended',
+                        'kd_hotlock_spin_gate', 'kd_hotlock_spin_entries', 'kd_spin_fast_cpu'},
+                        'public spin caller imports another call shell')
+                    sizes = (1, 2, 4, 8, 16) if args.workload == 'cacheline' else (0,)
+                    write_json(out/'spin-public-entries.json',
+                               audit_public_entries(binary, {
+                                   f'sc_entry_{n}': f'sc_body_{n}' for n in sizes},
+                                   lock_symbol='kd_spin_lock_clobber_v1',
+                                   unlock_symbol='kd_spin_unlock_clobber_v1'))
                 require('kd_spin_direct_native_lock' not in imported.split(),
                         'cold caller still imports the out-of-line CAS entry')
                 require('kd_spin_direct_native_unlock' not in imported.split(),
@@ -593,6 +625,7 @@ def main(lock_kind='spin'):
         hashes = {str(p):digest(p) for p in binaries}; write_json(out/'binary-sha256.json',hashes)
         if args.build_only:
             write_json(out/'build-ready.json', dict(passed=True, sessions_run=0,
+                spin_api=args.spin_api if lock_kind == 'spin' else 'not_applicable',
                 mutex_api=args.mutex_api if lock_kind == 'mutex' else 'not_applicable'))
             return 0
         rejected_no_jit = []

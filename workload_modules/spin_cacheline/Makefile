@@ -1,5 +1,12 @@
 # Independent guest workload: no kdlock symbol dependency for the native arm.
 SC_WORKLOAD ?= cacheline
+SC_SPIN_API ?= direct
+ifneq ($(words $(SC_SPIN_API)),1)
+$(error SC_SPIN_API requires one caller name)
+endif
+ifneq ($(filter $(SC_SPIN_API),direct public),$(SC_SPIN_API))
+$(error SC_SPIN_API must be direct or public)
+endif
 ifneq ($(words $(SC_WORKLOAD)),1)
 $(error SC_WORKLOAD requires one payload name)
 endif
@@ -19,6 +26,9 @@ ccflags-y += -DSC_HASH_PAYLOAD
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)
+ifeq ($(SC_SPIN_API),public)
+ccflags-y += -DSC_SPIN_PUBLIC_API
+endif
 ifneq ($(SC_SCENARIO),)
 ccflags-y += -DSC_SCENARIO=$(SC_SCENARIO)
 endif

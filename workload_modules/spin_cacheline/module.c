@@ -15,6 +15,13 @@
 
 #define SC_DEVICE_NAME "spin_cacheline"
 #define SC_LOCK_KIND 1
+#ifdef SC_DIRECT_KDLOCK
+#ifdef SC_SPIN_PUBLIC_API
+MODULE_INFO(kd_spin_api, "public");
+#else
+MODULE_INFO(kd_spin_api, "direct");
+#endif
+#endif
 static int sc_worker_register(void) { return 0; }
 static int sc_workers_drain(void) { return 0; }
 static void sc_lock_init(void)
