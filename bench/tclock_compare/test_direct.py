@@ -6,6 +6,7 @@ import io
 import sys
 from unittest.mock import Mock, patch
 import json
+import re
 from pathlib import Path
 import tempfile
 import unittest
@@ -20,6 +21,97 @@ from mutex_api_audit import audit_public_entries
 
 
 class DirectTests(unittest.TestCase):
+
+    def test_public_spin_plan_preserves_default_and_separates_callers(self):
+        args = dict(cachelines=[1, 16], threads=[*range(1, 9), *range(12, 61, 4)],
+                    repeats=1, iterations=100, backends=['native', 'tclock', 'kdlock'],
+                    lock_kind='spin')
+        direct = run.make_plan(Namespace(**args))
+        self.assertEqual(direct, run.make_plan(Namespace(**args, spin_api='direct')))
+        public = run.make_plan(Namespace(**args, spin_api='public'))
+        self.assertEqual(len(public), 2 * 21 * 3)
+        self.assertEqual(len({row['name'] for row in public}), len(public))
+        for row, control in zip(public, direct):
+            if row['arm'] == 'kdlock':
+                self.assertEqual(row['caller_shell'], 'spin_public_clobber')
+                self.assertEqual(row['cookie_storage'], 'provider_acquisition_ledger')
+                self.assertNotEqual(row['name'], control['name'])
+                self.assertEqual({k: v for k, v in row.items()
+                                  if k not in ('name', 'caller_shell', 'cookie_storage')},
+                                 {k: v for k, v in control.items()
+                                  if k not in ('name', 'caller_shell', 'cookie_storage')})
+            else:
+                self.assertEqual(row, control)
+        for extra in (dict(lock_kind='mutex'), dict(scenario='nested'), dict(scenario='early')):
+            with self.subTest(extra=extra), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**(args | extra), spin_api='public'))
+        with self.assertRaises(run.Failure):
+            run.make_plan(Namespace(**args, spin_api='unknown'))
+
+    def test_report_keeps_public_spin_separate_from_direct(self):
+        args = dict(cachelines=[1], threads=[8], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='spin')
+        plan = [run.make_plan(Namespace(**args, spin_api=api))[0]
+                for api in ('direct', 'public')]
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plan)
+            for spec, wall in zip(plan, (100000, 200000)):
+                (out/spec['name']).mkdir()
+                run.write_json(out/spec['name']/'session.json', dict(spec,
+                    execution_status='OK', drained=True, jit_bodies=100, jit_completions=100,
+                    measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=wall)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 2)
+            self.assertEqual({row['caller_shell']: row['best_throughput_ops_s'] for row in rows},
+                             {'cold_clobber': 1000000, 'spin_public_clobber': 500000})
+            self.assertTrue(all(row['sessions'] == row['valid'] == 1 for row in rows))
+
+    def test_compiled_public_spin_alias_matches_captured_rip(self):
+        # Compile the actual public assembly/macro and workload alias. This is
+        # ELF evidence only; real Kbuild and returned JIT bodies are separate.
+        header = (run.ROOT/'include/kd_spin_direct.h').read_text()
+        call = '#define KD_SPIN_DIRECT_CALL' + header.split(
+            '#define KD_SPIN_DIRECT_CALL', 1)[1].split('\n\n', 1)[0]
+        api = re.sub(r'^#include .*$', '',
+                     (run.ROOT/'include/kd_spin_api.h').read_text(), flags=re.M)
+        workload = re.sub(r'^#include .*$', '',
+                         (run.ROOT/'workload_modules/spin_cacheline/direct.h').read_text(),
+                         flags=re.M)
+        source = '\n'.join((
+            'typedef unsigned int kd_spinlock_t;',
+            'register unsigned long current_stack_pointer asm("rsp");',
+            '#define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)',
+            '#define _ASM_PTR ".quad"', '#define SC_DIRECT_KDLOCK 1',
+            '#define SC_SPIN_PUBLIC_API 1', call, api, workload,
+            'static kd_spinlock_t sc_lock; static volatile unsigned long value;',
+            '__attribute__((noipa, used)) static void sc_body_1(void) {',
+            'SC_LOCK(1); value++; SC_UNLOCK(); }',
+        ))
+        audit_args = dict(lock_symbol='kd_spin_lock_clobber_v1',
+                          unlock_symbol='kd_spin_unlock_clobber_v1')
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            caller, binary = folder/'caller.c', folder/'caller.o'
+            for shifted in (False, True):
+                caller.write_text(source.replace(', 1b\\n', ', 1b + 1\\n') if shifted else source)
+                subprocess.run(['gcc', '-O2', '-fno-omit-frame-pointer',
+                                '-fno-optimize-sibling-calls', '-mno-red-zone',
+                                '-Wall', '-Wextra', '-Werror', '-c', str(caller),
+                                '-o', str(binary)], check=True, capture_output=True, timeout=30)
+                if shifted:
+                    with self.assertRaisesRegex(ValueError, 'captured RIP'):
+                        audit_public_entries(binary, {'sc_entry_1': 'sc_body_1'}, **audit_args)
+                else:
+                    result = audit_public_entries(binary, {'sc_entry_1': 'sc_body_1'}, **audit_args)
+                    self.assertEqual(result['sc_entry_1']['entry_offset'],
+                                     result['sc_entry_1']['call_offset'] + 5)
+                    with self.assertRaisesRegex(ValueError, 'public lock CALL'):
+                        audit_public_entries(binary, {'sc_entry_1': 'sc_body_1'})
+                    with self.assertRaisesRegex(ValueError, 'valid DIRECT unlock'):
+                        audit_public_entries(binary, {'sc_entry_1': 'sc_body_1'},
+                                             lock_symbol=audit_args['lock_symbol'])
 
 
     def test_jit_requires_returned_bodies_and_separates_local_repeats(self):

@@ -10,8 +10,12 @@
 | [scenario.h](scenario.h) | Plain operation and selected KD nested/early cases |
 
 Each backend owns its own object and uses one protocol throughout the session.
-KD uses `kd_spinlock_t` and paired direct macros; its per-CPU heat cookie selects
-entry, while exact owner state selects unlock. The outer operation uses the pair;
+KD uses `kd_spinlock_t`. The default `SC_SPIN_API=direct` uses paired direct macros;
+its per-CPU heat cookie selects entry, while exact owner state selects unlock.
+`SC_SPIN_API=public` calls literal `kd_spin_lock/unlock`; native pinning and
+admission occur inside the provider. Both preserve the same business payload.
+The runner records these as separate caller identities and audits each public
+preparation alias against the compiled clobber CALL before loading. The outer operation uses the pair;
 nested translated controls retain ordinary direct clobber entries. Preparation
 registers the named continuation before measurement. See
 [execution flow](../../docs/JIT_EXECUTION.md) for adaptive/native/JIT details.

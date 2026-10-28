@@ -1,10 +1,11 @@
-"""Verify literal public mutex/rwsem prepared ABI2 continuations."""
+"""Verify literal public spin/mutex/rwsem clobber continuations."""
 from pathlib import Path
 
 from elftools.elf.elffile import ELFFile
 
 
-def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_clobber_v1'):
+def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_clobber_v1',
+                         unlock_symbol='kd_mutex_direct_unlock_clobber_v1'):
     """Inspect relocatable x86-64 ELF, never infer an entry from source labels.
 
     The workload aliases the public clobber call's private numeric continuation. Require the
@@ -14,10 +15,10 @@ def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_
     with Path(binary).open('rb') as stream:
         elf = ELFFile(stream)
         if elf['e_machine'] != 'EM_X86_64' or elf['e_type'] != 'ET_REL':
-            raise ValueError('public mutex audit requires x86-64 relocatable ELF')
+            raise ValueError('public clobber audit requires x86-64 relocatable ELF')
         symbols = elf.get_section_by_name('.symtab')
         if symbols is None:
-            raise ValueError('public mutex audit requires symbols')
+            raise ValueError('public clobber audit requires symbols')
         result = {}
         for entry_name, body_name in expected.items():
             entries = symbols.get_symbol_by_name(entry_name) or []
@@ -45,7 +46,7 @@ def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_
                             and target == lock_symbol):
                         calls.append(relocation)
                     if (start <= offset < start + size
-                            and target == 'kd_mutex_direct_unlock_clobber_v1'):
+                            and target == unlock_symbol):
                         unlocks.append(relocation)
             if len(calls) != 1:
                 raise ValueError('expected one public lock CALL: ' + entry_name)

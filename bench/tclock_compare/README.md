@@ -84,6 +84,17 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --output /root/kdlock-evidence/10.176.26.71/bench/spin-matrix-new
 ```
 
+For spin, `--spin-api direct` is the unchanged default. Use `--spin-api public`
+in a separate output directory to measure literal `kd_spin_lock/unlock` on the
+same cacheline or hash payload, warmup and timing settings. The public pair's
+provider acquires the pin; the DIRECT caller has an inline heat/native prefix.
+Records identify them as `spin_public_clobber` and `cold_clobber`, respectively;
+do not treat a DIRECT result as performance evidence for the public pair. Public
+spin comparison currently accepts only `--scenario plain`. Module metadata,
+imports and exact captured-RIP/entry aliases are audited before loading. Use
+`--build-only` for the same build/audit without starting a session. These are
+nano workloads, not real-world API evidence.
+
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
 Add `--mutex-api public` to measure the unified `kd_mutex_lock/unlock` facade.
 The default `--mutex-api outer` retains the explicit OUTER cookie comparison.
