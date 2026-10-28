@@ -224,9 +224,9 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		return;
 	}
 
-	/* Published waiters keep preemption disabled until completion or native
-	 * handoff: their origin GS storage must not be reused by another task.
-	 * Migration stays pinned when an executor acquires a real sleeping mutex. */
+	/* Reserve/publish on a stable CPU. Queued waiters later enable preemption;
+	 * the selected executor must obtain their pin ACK before proxy execution.
+	 * Migration stays pinned through the independent slot/stack lifetime. */
 	migrate_disable();
 	preempt_disable();
 	if (unlikely(kd_mutex_has_local_predecessor(lock))) {
@@ -269,7 +269,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->packet_state = abi == KD_ENTRY_ABI_LEGACY ?
 			KD_PACKET_FULL : KD_PACKET_MINIMAL;
 		curr_node->regs.sp = rsp_value;
-		curr_node->locked = true;
+		curr_node->locked = KD_MUTEX_WAIT;
 		curr_node->completed = false;
 		curr_node->native_resume = false;
 		curr_node->next = NULL;

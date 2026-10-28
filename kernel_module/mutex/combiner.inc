@@ -278,6 +278,10 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			raw_smp_processor_id());
 		return KD_EXE_NO_RUN;
 	}
+	/* Publication lends storage, not the origin CPU. The origin acknowledges
+	 * preemption exclusion only when selected for this execution attempt. */
+	if (!kd_mutex_proxy_pin(curr_node))
+		return KD_EXE_NO_RUN;
 
 	if (!clobber)
 		retry_regs = curr_node->regs;
@@ -419,9 +423,9 @@ prepared:
 	if (frame_ret) {
 		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("mutex JIT frame pop failed: %d\n", frame_ret);
-		if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
-			BUG();
-		return KD_EXE_RUN_ERROR;
+		/* Even an unstarted refusal cannot release its origin pin while
+		 * a failed pop leaves the executor frame live. */
+		BUG();
 	}
 
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
@@ -512,6 +516,11 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		KD_MUTEX_DIAG_RESULT(&batch, exe_flag);
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
+			/* A ready image can still refuse frame construction before any
+			 * body executes. Drop its acknowledged pin before rejoining a
+			 * deferred prefix, so a later owner starts a fresh request. */
+			if (smp_load_acquire(&curr_node->locked) == KD_MUTEX_PROXY_PINNED)
+				smp_store_release(&curr_node->locked, KD_MUTEX_WAIT);
 			/*
 			 * Only kd_mutex_execute_cs() returning 0 means the sandbox reached
 			 * mutex_unlock. Any other status must fall back without marking

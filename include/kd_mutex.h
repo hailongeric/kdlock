@@ -39,6 +39,13 @@
 #define KD_MUTEX_GATE_ACQUIRING 2
 #define KD_MUTEX_GATE_RELEASING 4
 
+/* The queue notification also carries the origin/executor pin handshake.
+ * A request stays preemptible in WAIT; only its selected executor requests PIN.
+ * PINNED is the origin's release acknowledgement, never an executor guess. */
+#define KD_MUTEX_WAIT 1
+#define KD_MUTEX_PROXY_REQUEST 2
+#define KD_MUTEX_PROXY_PINNED 3
+
 #include <linux/atomic.h>
 #include <linux/spinlock.h>
 #include <linux/list.h>
@@ -69,7 +76,8 @@ struct kd_mutex_osq_node {
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
  * owns its shadow stack, so an executor acquiring a sleeping KD mutex cannot
  * have its stack reused by another target task running on the same CPU.
- * A published delegation waiter keeps preemption disabled while polling.
+ * A published waiter may schedule until a selected executor requests its pin.
+ * Migration and slot ownership remain stable throughout queue membership.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.

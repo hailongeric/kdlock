@@ -73,8 +73,9 @@ static u32 tail_cas(u32 *p,u32 old,u32 value)
 #define cmpxchg(p,o,n) tail_cas((p),(o),(n))
 static void publish(u8 *p,int value)
 {
-    CHECK(value==0);
-    *p=value;wakes++;
+    if(value==KD_MUTEX_WAIT)CHECK(*p==KD_MUTEX_PROXY_PINNED && scenario==12);
+    else { CHECK(value==0);wakes++; }
+    *p=value;
 }
 #define smp_store_release(p,v) publish((p),(v))
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
@@ -96,7 +97,12 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     int i=node-nodes;
     CHECK(p==&lock && leases==1 && lock.owner==current);
     CHECK(calls<1030);order[calls++]=i;
-    if(i==refusal_at)return KD_EXE_NO_RUN;
+    if(i==refusal_at) {
+        /* Frame allocation can refuse after the origin acknowledges its pin.
+         * The real combiner must cancel before rejoining deferred requests. */
+        if(scenario==12)node->locked=KD_MUTEX_PROXY_PINNED;
+        return KD_EXE_NO_RUN;
+    }
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
             .outer_lock_addr=(unsigned long)p,.jit_lock_depth=2};
@@ -182,6 +188,7 @@ int main(void)
     scenario=12;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;refusal_at=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==1 && !completed && wakes==1 && !nodes[0].locked);
+    CHECK(nodes[1].locked==KD_MUTEX_WAIT);
     CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[1] && nodes[1].next==&nodes[3]);finish();
     scenario=13;reset(4);nodes[0].numa_node=1;native_at=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);

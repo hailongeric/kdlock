@@ -52,6 +52,8 @@ def main():
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),
             'skip-deferred-rejoin': (helpers.replace('if (batch->deferred_head) {', 'if (false) {'), loop),
             'lose-refused-successor': (helpers, loop.replace('WRITE_ONCE(curr_node->next, next_node);', '')),
+            'retain-refused-pin': (helpers, loop.replace(
+                'smp_store_release(&curr_node->locked, KD_MUTEX_WAIT);', '(void)curr_node;')),
             'unbounded-local-cohort': (helpers, loop.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY', 'false')),
             'short-local-cohort': (helpers, loop.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY', 'counter >= 128')),
             'late-local-cohort': (helpers, loop.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY', 'counter >= 512')),

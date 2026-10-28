@@ -166,6 +166,7 @@ static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
 static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
 static void might_sleep(void) { CHECK(!preempt); }
+static void cond_resched(void);
 static void kd_hotlock_mutex_entry(void)
 {
 	CHECK(preempt <= 1);
@@ -297,6 +298,12 @@ static void schedule(void)
 	schedules++;
 	schedule_wanted = false;
 }
+static void cond_resched(void)
+{
+	CHECK(!preempt && migration == 1);
+	if (schedule_wanted)
+		schedule();
+}
 static void release_peer(struct kd_mutex *gate)
 {
 	struct task_struct *saved_task = current;
@@ -314,10 +321,10 @@ static void release_peer(struct kd_mutex *gate)
 static void cpu_relax(void)
 {
 	if (poll_node) {
-		/* The origin must not enable preemption even with reschedule pending.
-		 * Simulate the remote completion only after several PAUSE iterations. */
-		CHECK(preempt == 1 && migration == 1 && current == &waiter);
-		CHECK(schedule_wanted && !schedules);
+		/* This request has not been selected for proxy execution. Scheduling
+		 * must be possible while the peer delays its ordinary head handoff. */
+		CHECK(preempt == 0 && migration == 1 && current == &waiter);
+		CHECK(schedule_wanted || schedules == 1);
 		CHECK(++polls <= 8);
 		if (polls == 8) {
 			poll_node->regs = expected_regs;
@@ -325,7 +332,7 @@ static void cpu_relax(void)
 		}
 		return;
 	}
-	CHECK(waiting_gate && preempt == 1 && migration == 1);
+	CHECK(waiting_gate && preempt == 0 && migration == 1);
 	CHECK(fixture_gate_owner(waiting_gate) == &peer);
 	release_peer(waiting_gate);
 	waiting_gate = NULL;
@@ -805,7 +812,7 @@ static void check_promotion_and_routing(void)
 static void check_hook_nodes(void)
 {
 	/* Full slots and absent stacks converge on the real no-node wait path.
-	 * It must poll with preemption disabled, then acquire L and unlock L before S. */
+	 * It must allow scheduling while waiting, then acquire L and unlock L before S. */
 	for (int resource = 0; resource < 3; resource++) {
 		struct kd_mutex *lock = &origins[0].mutex;
 		struct kd_mutex *gate;
@@ -839,7 +846,7 @@ static void check_hook_nodes(void)
 		      kd_mutex_gate_read(gate) == _Q_LOCKED_VAL);
 		CHECK(acquires == 1 && kd_mutex_node_overflow_count ==
 					       (unsigned long)(resource != 0));
-		CHECK(!schedules && !preempt && !migration);
+		CHECK(schedules == (resource ? 1U : 0U) && !preempt && !migration);
 		CHECK(cpu_shadows.node_slots == occupied &&
 		      memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 		release_gate = gate;
@@ -957,9 +964,8 @@ static void check_slowpath_packets(void)
 	}
 }
 
-/* Exercise the production acquire/PAUSE loop against a delayed publication,
- * including completion already visible at entry. No kernel scheduler is mocked
- * into the loop to create progress; the peer publishes from cpu_relax(). */
+/* Exercise a delayed ordinary handoff and completion already visible at entry.
+ * The peer publishes from cpu_relax; the origin independently honors reschedule. */
 static void check_poll_result(void)
 {
 	reset();
@@ -969,10 +975,10 @@ static void check_poll_result(void)
 	poll_node->locked = 1;
 	polls = 0;
 	kd_mutex_wait_for_result(poll_node);
-	CHECK(polls == 8 && !schedules && preempt == 1 && migration == 1);
+	CHECK(polls == 8 && schedules == 1 && preempt == 1 && migration == 1);
 	CHECK(memcmp(&poll_node->regs, &expected_regs, sizeof(expected_regs)) == 0);
 	kd_mutex_wait_for_result(poll_node);
-	CHECK(polls == 8 && schedule_wanted);
+	CHECK(polls == 8 && !schedule_wanted && schedules == 1);
 	poll_node = NULL;
 }
 

@@ -77,14 +77,59 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock, struct kd_mutex_node *no
 	}
 }
 
-/* Called with preemption disabled from before request publication. Keep the
- * origin task on its CPU while another CPU executes GS accesses on its behalf.
- * The acquire pairs with completion/native-handoff publication; PAUSE is only
- * a polling hint and does not supply that ordering or disable interrupts. */
+/* Enter and return pinned, but allow scheduling while merely queued. The slot
+ * and shadow stack stay reserved under migration disable. A release PINNED ACK
+ * follows preempt_disable, before an executor may access origin CPU state.
+ * Completion/native handoff ends all delegated accesses to that CPU state.
+ * A plain head handoff needs no proxy ACK and returns with the same one pin. */
 static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
-	while (smp_load_acquire(&node->locked))
+	preempt_enable();
+queued:
+	for (;;) {
+		u8 state = smp_load_acquire(&node->locked);
+
+		if (state != KD_MUTEX_WAIT) {
+			preempt_disable();
+			if (state == KD_MUTEX_PROXY_REQUEST) {
+				smp_store_release(&node->locked, KD_MUTEX_PROXY_PINNED);
+				while ((state = smp_load_acquire(&node->locked))) {
+					if (state == KD_MUTEX_WAIT) {
+						/* An unstarted attempt can be refused after ACK.
+						 * Release the pin before waiting behind its rejoined
+						 * queue prefix; no executor has run this body. */
+						preempt_enable();
+						goto queued;
+					}
+					if (state == KD_MUTEX_PROXY_REQUEST)
+						smp_store_release(&node->locked, KD_MUTEX_PROXY_PINNED);
+					else
+						BUG_ON(state != KD_MUTEX_PROXY_PINNED);
+					cpu_relax();
+				}
+			} else {
+				BUG_ON(state);
+			}
+			return;
+		}
 		cpu_relax();
+		if (need_resched())
+			cond_resched();
+	}
+}
+
+/* Only one physical owner selects a queued request. Never wait for a task
+ * preempted on this executor's own CPU: it cannot acknowledge while we spin.
+ * Refuse that still-unstarted request so the existing queue hands it off. */
+static bool kd_mutex_proxy_pin(struct kd_mutex_node *node)
+{
+	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
+		return false;
+	BUG_ON(READ_ONCE(node->locked) != KD_MUTEX_WAIT);
+	smp_store_release(&node->locked, KD_MUTEX_PROXY_REQUEST);
+	while (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED)
+		cpu_relax();
+	return true;
 }
 
 /* ACQUIRING reserves the gate while physical acquisition can sleep. HELD
@@ -106,13 +151,18 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,
 					struct kd_mutex_node *node)
 {
+	/* A queue head is waiting for physical ownership, not being proxied.
+	 * Keep it schedulable until acquisition and preserve the caller's pin. */
+	preempt_enable();
 	for (;;) {
-		while (kd_mutex_gate_read(lock))
+		while (kd_mutex_gate_read(lock)) {
 			cpu_relax();
+			if (need_resched())
+				cond_resched();
+		}
 		if (kd_mutex_gate_trylock(lock)) {
 			/* This request now owns the gate and cannot be delegated.
 			 * Only the real mutex owner may execute/release its body. */
-			preempt_enable();
 			kd_mutex_claim_origin_node(lock, node);
 			preempt_disable();
 			return;
@@ -128,7 +178,7 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 
 /* Reservation is serialized by preemption disable on this migration-pinned
  * CPU. An executor can later sleep acquiring the real mutex; its reserved
- * stack must survive that sleep. Published delegation waiters never schedule. */
+ * stack must survive that sleep and the preemptible queue wait. */
 /* A reserved local predecessor may have enabled preemption while acquiring
  * the KD physical mutex. Publishing another non-scheduling waiter on its CPU
  * would prevent that predecessor from ever resuming. Refuse before publication;
