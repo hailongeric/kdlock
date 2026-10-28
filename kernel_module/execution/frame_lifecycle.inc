@@ -325,6 +325,9 @@ int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)
 	frame->control_call.phase = KD_CALL_NONE;
 	frame->native_request = NULL;
 	frame->remote_result = KD_EXEC_REMOTE_IDLE;
+	frame->mutex_mixed.transfer_requested = false;
+	frame->mutex_mixed.transferred = false;
+	frame->mutex_mixed.picked_up = false;
 	INIT_LIST_HEAD(&frame->native_link);
 	frame->complex_ready = true;
 	return 0;

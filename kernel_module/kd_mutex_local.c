@@ -342,6 +342,45 @@ int kd_mutex_trylock(struct kd_mutex *lock)
 }
 EXPORT_SYMBOL_GPL(kd_mutex_trylock);
 
+/* This is a continuation of an already acquired mutex, not a fresh lock.
+ * Keep the owner nonzero throughout, including when ordinary local waiters
+ * requested handoff. wait_lock serializes cancellation/list flag changes;
+ * the CAS preserves concurrent optimistic updates to the owner flags. */
+int kd_mutex_transfer_owner(struct kd_mutex *lock, struct task_struct *next)
+{
+	unsigned long owner;
+	int ret = 0;
+
+	if (!next || next == current)
+		return -EINVAL;
+	_raw_spin_lock(&lock->wait_lock);
+	owner = atomic_long_read(&lock->owner);
+	for (;;) {
+		unsigned long transferred;
+
+		if ((owner & ~KD_FLAGS) != (unsigned long)current ||
+		    (owner & KD_PICKUP)) {
+			ret = -EPERM;
+			break;
+		}
+		transferred = (unsigned long)next | (owner & KD_FLAGS) | KD_PICKUP;
+		if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, transferred))
+			break;
+	}
+	_raw_spin_unlock(&lock->wait_lock);
+	return ret;
+}
+
+int kd_mutex_transfer_pickup(struct kd_mutex *lock)
+{
+	unsigned long owner = atomic_long_read(&lock->owner);
+
+	if ((owner & ~KD_FLAGS) != (unsigned long)current || !(owner & KD_PICKUP))
+		return -EPERM;
+	/* kd_try_common consumes this task's PICKUP with acquire ordering. */
+	return kd_try_common(lock, false) ? -EPERM : 0;
+}
+
 static noinline void kd_local_unlock_slow(struct kd_mutex *lock)
 {
 	unsigned long owner = atomic_long_read(&lock->owner);

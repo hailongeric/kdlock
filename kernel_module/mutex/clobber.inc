@@ -16,6 +16,18 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	/* FULL must outlive node reuse; COMPLETE never reads absent GPRs. */
 	if (!minimal)
 		full = node->regs;
+	if (native) {
+		struct kd_exec_frame *transfer = node->native_transfer;
+		unsigned int spin_pins = node->native_spin_pins;
+
+		if (transfer)
+			BUG_ON(kd_exec_mutex_transfer_pickup(transfer));
+		/* A borrowed mixed spin lock has one logical pin on this task and
+		 * an independent physical ticket pin on its executor. Restore before
+		 * dropping the proxy pin, while the node metadata still belongs to us. */
+		while (spin_pins--)
+			preempt_disable();
+	}
 	WRITE_ONCE(this_cpu_ptr(&kd_mutex_shadows)->resume_node, NULL);
 	kd_mutex_release_node(node);
 	if (!native)

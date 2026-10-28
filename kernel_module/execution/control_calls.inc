@@ -252,6 +252,20 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 	return kd_mutex_stack_finish(frame, regs, &saved);
 }
 
+static int known_pending_native(struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	unsigned long return_ip;
+	int ret;
+
+	if (!regs || !regs->sp || !kd_exec_frame_can_borrow_locks(frame) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp, sizeof(return_ip)))
+		return -EINVAL;
+	ret = kd_call_begin(&frame->control_call, regs->ip, regs->sp, return_ip);
+	if (!ret)
+		kd_exec_frame_save_continuation(frame, regs);
+	return ret ? ret : KD_EXE_KNOWN_NATIVE;
+}
+
 static int handle_known_call(struct kd_regs *regs,
 			     unsigned long outer_lock_addr)
 {
@@ -261,26 +275,41 @@ static int handle_known_call(struct kd_regs *regs,
 	if (frame)
 		frame->control_call.phase = KD_CALL_NONE;
 
-	/* The outer-only return-valued entry is not a nested void lock service.
-	 * Admission rejects it; retain the same boundary in generic recovery. */
+	/* The result-returning outer API cannot be emulated by a void service.
+	 * Preserve its pending CALL for native execution under trusted source. */
 	if (regs->ip == outer_mutex_lock_addr)
-		return -EOPNOTSUPP;
+		return known_pending_native(frame, regs);
 
-	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.
-	 * In particular, never enter a sleeping mutex service from a spin frame. */
-	if (frame &&
-	    ((frame->mutex_backend && ((regs->ip == raw_spin_lock_addr ||
-		     regs->ip == clobber_spin_lock_addr ||
-		     regs->ip == pinned_spin_lock_addr) ||
-				       (regs->ip == raw_spin_unlock_addr ||
-		     regs->ip == clobber_spin_unlock_addr ||
-		     regs->ip == cold_spin_unlock_addr))) ||
-	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
+	/* Mixed mutex -> unpinned spin controls use an exact single-CAS service.
+	 * Pinned entries may have already changed the origin's preempt counter;
+	 * retain their real CALL and let that same task consume the existing pin. */
+	if (frame && frame->mutex_backend) {
+		if (regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr)
+			return kd_mutex_jit_spin_lock_ctx((raw_spinlock_t *)regs->di,
+							regs, frame);
+		if (regs->ip == pinned_spin_lock_addr)
+			return known_pending_native(frame, regs);
+		if (regs->ip == raw_spin_unlock_addr || regs->ip == clobber_spin_unlock_addr ||
+		    regs->ip == cold_spin_unlock_addr) {
+			ret = kd_mutex_jit_spin_unlock_ctx((raw_spinlock_t *)regs->di, frame);
+			if (ret == -ENOENT)
+				return known_pending_native(frame, regs);
+			if (ret)
+				return ret;
+			if (kd_exec_frame_can_complete(frame))
+				return KD_EXE_KNOWN_OUTER_UNLOCK;
+			return advance_and_save_continuation(frame, regs);
+		}
+	}
+	/* A sleeping acquisition is never executed on a spin proxy. This pending
+	 * CALL returns to its original task; it does not make sleeping under a
+	 * spinlock legal, but it must not turn source misuse into executor replay. */
+	if (frame && !frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
 	      (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
 	       regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr ||
 	       regs->ip == mutex_unlock_addr ||
-	       regs->ip == clobber_mutex_unlock_addr || regs->ip == direct_mutex_unlock_addr))))
-		return -EOPNOTSUPP;
+	       regs->ip == clobber_mutex_unlock_addr || regs->ip == direct_mutex_unlock_addr))
+		return known_pending_native(frame, regs);
 
 	if ((regs->ip == raw_spin_lock_addr ||
 		     regs->ip == clobber_spin_lock_addr ||

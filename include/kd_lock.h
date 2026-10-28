@@ -64,6 +64,10 @@ int kd_mutex_jit_nested_lock_ctx(struct kd_mutex *lock, struct kd_regs *regs,
 int kd_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 				   struct kd_exec_frame *frame);
 int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame);
+int kd_mutex_jit_spin_lock_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
+			      struct kd_exec_frame *frame);
+int kd_mutex_jit_spin_unlock_ctx(raw_spinlock_t *lock,
+				struct kd_exec_frame *frame);
 int kd_mutex_debug_waiter_count(struct kd_mutex *lock);
 
 

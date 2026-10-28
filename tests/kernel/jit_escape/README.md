@@ -27,6 +27,19 @@ the existing cookie shell. Public runs audit the compiled lock capture, named
 continuation and unlock imports before loading the module; metadata and result
 files keep the two shells distinct. Both execute the same four phases below.
 
+`--family mutex --mixed-spin` adds literal public `kd_spin_lock/unlock` calls
+inside the outer mutex. These macros emit the shared unpinned clobber shell.
+It checks the one-CAS acquired path, original-task instruction escape
+while the spin ticket remains owned by the executor, native unlock ACKs and
+the restored task's preemption pin. The inner word must drain before each
+phase transition. The outer mutex serializes all uses of this inner lock, so
+this variant does **not** validate failed-CAS ownership transfer, the separate
+DIRECT shell's inlined preemption/heat prefix, or multiple-owner transfer chains.
+Production-code unit fixtures in `tests/unit/mutex/test_mutex_mixed.py` and
+`tests/unit/execution/test_remote_outer.py` cover the physical owner exchange,
+pending CALL, exact ticket and ACK ordering with scheduler/queue substitutes;
+those substitutes are not live-kernel validation.
+
 `--family spin` selects ordinary task-context ABI1 DIRECT acquisitions;
 `--family rwlock` selects ABI3 DIRECT writers and concurrent local readers.
 `--family rwsem` selects the existing ABI2 OUTER writer and sleeping local readers.

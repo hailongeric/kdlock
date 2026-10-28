@@ -59,6 +59,20 @@ static bool track_nested_owner;
 static unsigned int nested_acquires, nested_waits;
 static int kd_jit_fail_pending_lock;
 
+/* These cases exercise same-backend controls; the mixed fixture executes the
+ * actual one-CAS service and exact ticket lifecycle. */
+int kd_mutex_jit_spin_lock_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
+			      struct kd_exec_frame *frame)
+{
+	(void)lock; (void)regs; (void)frame;
+	abort();
+}
+int kd_mutex_jit_spin_unlock_ctx(raw_spinlock_t *lock, struct kd_exec_frame *frame)
+{
+	(void)lock; (void)frame;
+	abort();
+}
+
 /* Primitive observations only; the live case verifies real owner-side ACKs. */
 static unsigned long kd_spin_debug_owner(raw_spinlock_t *lock)
 {
@@ -879,7 +893,7 @@ static void check_mutex_call_pair(void)
 		 * acquisition: retain the packet and ownership for generic refusal. */
 		f.regs.ip = outer_mutex_lock_addr;
 		expected = f.regs;
-		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == -EOPNOTSUPP);
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == KD_EXE_KNOWN_NATIVE);
 		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
 		CHECK(!nested_owner && f.jit_lock_depth == 1);
 		f.regs.ip = 0xDEAD;

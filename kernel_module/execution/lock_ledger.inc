@@ -26,7 +26,9 @@ int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
 		if (!lock_addr[i])
 			return -EINVAL;
 		if (lock_kind && (lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-				  lock_kind[i] > KD_EXEC_LOCK_NATIVE))
+				  lock_kind[i] > KD_EXEC_LOCK_MUTEX_SPIN ||
+				  (lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN &&
+				   !frame->mutex_backend)))
 			return -EINVAL;
 		for (j = 0; j < i; j++)
 			if (lock_addr[j] == lock_addr[i])
@@ -71,7 +73,8 @@ int kd_exec_frame_lock_push(struct kd_exec_frame *frame,
 			    enum kd_exec_lock_kind kind, void *lock_node)
 {
 	if (!frame || !lock_addr || kind <= KD_EXEC_LOCK_NONE ||
-	    kind > KD_EXEC_LOCK_NATIVE || !kd_exec_frame_validate(frame))
+	    kind > KD_EXEC_LOCK_MUTEX_SPIN || !kd_exec_frame_validate(frame) ||
+	    (kind == KD_EXEC_LOCK_MUTEX_SPIN && !frame->mutex_backend))
 		return -EINVAL;
 	if (frame->jit_lock_depth >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;
@@ -109,6 +112,9 @@ int kd_exec_frame_lock_pop(struct kd_exec_frame *frame, unsigned long lock_addr)
 		removed_outer = removed == frame->outer_lock_index;
 
 		for (; i < frame->jit_lock_depth; i++) {
+			if (frame->jit_lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN)
+				frame->mutex_mixed.spin_sequence[i - 1] =
+					frame->mutex_mixed.spin_sequence[i];
 			frame->jit_lock_addr[i - 1] = frame->jit_lock_addr[i];
 			frame->jit_lock_kind[i - 1] = frame->jit_lock_kind[i];
 			frame->jit_lock_node[i - 1] = frame->jit_lock_node[i];

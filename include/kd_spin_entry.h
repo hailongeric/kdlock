@@ -56,6 +56,10 @@ int kd_spin_entry_end(struct kd_spin_ref *ref);
 /* Retire ticket metadata while retaining the caller pin for final restoration.
  * On success the caller must unpin after its final per-CPU/packet access. */
 int kd_spin_entry_end_pinned(struct kd_spin_ref *ref);
+/* Exact ticket, one physical CAS, no pending bit or queue on failure. */
+int kd_spin_nested_try_once(raw_spinlock_t *lock, struct kd_spin_ref *ref);
+int kd_spin_nested_release_exact(raw_spinlock_t *lock,
+				struct kd_spin_ref *ref);
 
 /* Executors register every native frame before waking the original waiter.
  * Put never unpins a remote CPU. The waiter marks native and consumes its pin

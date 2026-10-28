@@ -110,6 +110,9 @@ struct kd_mutex_node {
 	u8 completed;
 	u8 locked;
 	bool native_resume;
+	/* Cold native suffix metadata, written only before a native release wake. */
+	unsigned int native_spin_pins;
+	struct kd_exec_frame *native_transfer;
 };
 
 void kd_mutex_init(struct kd_mutex *lock);
@@ -151,6 +154,9 @@ void _kd_mutex_unlock(struct kd_mutex *lock);
 int kd_mutex_debug_nested_waiters(void);
 int kd_mutex_nested_lock(struct kd_mutex *lock);
 int kd_mutex_nested_unlock(struct kd_mutex *lock);
+/* A transfer preserves exclusion; PICKUP is acknowledged by the new owner. */
+int kd_mutex_transfer_owner(struct kd_mutex *lock, struct task_struct *next);
+int kd_mutex_transfer_pickup(struct kd_mutex *lock);
 void kd_mutex_note_nested_jit(void);
 /* Cold exact snapshot; -EAGAIN on repeated changes, -ENOMEM on scratch failure.
  * Neither a successful zero nor an error is an admission/lifetime barrier. */

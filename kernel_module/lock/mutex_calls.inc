@@ -285,6 +285,12 @@ int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 		struct kd_mutex *lock = (struct kd_mutex *)frame->jit_lock_addr[i];
 		int ret;
 
+		if (frame->jit_lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN) {
+			ret = kd_mutex_jit_spin_unlock_ctx((raw_spinlock_t *)lock, frame);
+			if (ret)
+				return ret;
+			continue;
+		}
 		if (frame->jit_lock_kind[i] != KD_EXEC_LOCK_NATIVE ||
 		    frame->jit_lock_node[i] != lock)
 			return -EINVAL;

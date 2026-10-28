@@ -60,6 +60,8 @@ enum kd_exec_lock_kind {
 	KD_EXEC_LOCK_FAST,
 	KD_EXEC_LOCK_QUEUE_OWNER,
 	KD_EXEC_LOCK_NATIVE,
+	/* A mutex executor acquired this spin ticket with one nonblocking CAS. */
+	KD_EXEC_LOCK_MUTEX_SPIN,
 };
 
 enum kd_exec_remote_state {
@@ -132,7 +134,17 @@ struct kd_exec_frame {
 	unsigned long delegated_lock_addr;
 	struct kd_exec_frame *resume_target;
 	struct kd_remote_request *remote_request;
-	struct kd_combiner_state saved_combiner;
+	union {
+		struct kd_combiner_state saved_combiner;
+		/* Mutex frames do not save a spin combiner. Reuse that cold storage;
+		 * jit_lock_node holds each exact spin entry, indexed by the ledger. */
+		struct {
+			unsigned long spin_sequence[KD_EXEC_MAX_LOCK_DEPTH];
+			bool transfer_requested;
+			bool transferred;
+			bool picked_up;
+		} mutex_mixed;
+	};
 	unsigned long jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
 	enum kd_exec_lock_kind jit_lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
 	void *jit_lock_node[KD_EXEC_MAX_LOCK_DEPTH];
@@ -272,6 +284,9 @@ int kd_exec_frame_state(const struct kd_exec_frame *frame);
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex);
 int kd_exec_native_wait(struct kd_exec_frame *frame);
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex);
+unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame);
+bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame);
+int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame);
 
 /* Only a waiting virtual request owns these logical-parent links/mailboxes. */
 int kd_exec_remote_unlock(struct kd_exec_frame *frame, unsigned long lock_addr);

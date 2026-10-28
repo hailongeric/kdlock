@@ -69,6 +69,7 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 }
 
 #include "lock/spin_calls.inc"
+#include "lock/mixed_calls.inc"
 
 static __always_inline bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 {
