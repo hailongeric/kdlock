@@ -18,6 +18,8 @@ struct mixed_snapshot {
 	__u64 owner_before, owner_after, combiner_owner;
 	__u64 samples, steal_attempts, steals, prefix_observed, thief_done;
 	__u64 c_task, w_task, warm_ops, armed;
+	__u64 warm_eligible, entry_checked, entry_eligible;
+	__u64 preholder_release, preholder_done, g_task, t_task;
 	__s64 waiters;
 };
 #define MIXED_RUN _IOWR('M', 1, struct mixed_run)
@@ -27,4 +29,5 @@ struct mixed_snapshot {
 #define MIXED_DRAIN _IO('M', 5)
 #define MIXED_WARMUP _IOWR('M', 6, struct mixed_run)
 #define MIXED_ARM _IO('M', 7)
+#define MIXED_PREHOLDER_RELEASE _IO('M', 8)
 #endif

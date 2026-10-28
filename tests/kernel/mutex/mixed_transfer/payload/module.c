@@ -13,6 +13,7 @@
 #include <linux/uaccess.h>
 #include <linux/wait.h>
 #include "kd_lock.h"
+#include "kd_hotlock.h"
 #include "kd_mutex_api.h"
 #include "kd_spin_api.h"
 #include "api.h"
@@ -25,6 +26,8 @@ static unsigned long started, ready, done;
 /* Address tokens only: never dereference a task after its ioctl returns. */
 static unsigned long task[MIXED_ROLES];
 static bool release_gate, prefix_observed, thief_stop, thief_done, armed;
+static bool preholder_release, preholder_done;
+static unsigned long warm_eligible, entry_checked, entry_eligible;
 static u64 warm_ops;
 static u64 prefix, suffix, combiner_bodies, owner_before, owner_after;
 static u64 combiner_owner, samples, steal_attempts, steals;
@@ -53,6 +56,14 @@ static __attribute__((noipa)) void protected_body(unsigned int role)
 		WRITE_ONCE(warm_ops, READ_ONCE(warm_ops) + 1);
 		for (polls = 0; polls < 128; polls++)
 			cpu_relax();
+	} else if (role == MIXED_GATE) {
+		/* G acquired through the free delegation gate while T held A.
+		 * Hold the resulting HELD gate until both later producers publish.
+		 * This same entry stays translatable without another prepared image. */
+		for (polls = 0; polls < 500000000 && !READ_ONCE(release_gate); polls++)
+			cpu_relax();
+		if (!READ_ONCE(release_gate))
+			atomic_inc(&failures);
 	} else if (role == MIXED_WAITER) {
 		if (READ_ONCE(prefix) || READ_ONCE(suffix) || READ_ONCE(combiner_bodies))
 			atomic_inc(&failures);
@@ -90,15 +101,16 @@ static __attribute__((noipa)) void protected_body(unsigned int role)
 	kd_mutex_unlock(&a);
 }
 
-static void hold_gate(void)
+static void hold_predecessor(void)
 {
-	/* Callable C acquisition is deliberately local: it blocks the first
-	 * delegation head without creating a second prepared image. */
+	/* A local holder alone leaves the delegation gate FREE. Let G claim
+	 * ACQUIRING before releasing A, so G subsequently owns a HELD gate. */
 	(kd_mutex_lock)(&a);
-	set_bit(MIXED_GATE, &ready);
-	if (!wait_event_timeout(gate_wait, READ_ONCE(release_gate), 10 * HZ))
+	set_bit(MIXED_THIEF, &ready);
+	if (!wait_event_timeout(gate_wait, READ_ONCE(preholder_release), 10 * HZ))
 		atomic_inc(&failures);
 	(kd_mutex_unlock)(&a);
+	smp_store_release(&preholder_done, true);
 }
 
 static void hold_spin(void)
@@ -151,9 +163,10 @@ static void hold_spin(void)
 
 static void try_to_steal(void)
 {
-	u64 deadline = ktime_get_ns() + 10000000000ULL;
+	u64 deadline;
 
-	set_bit(MIXED_THIEF, &ready);
+	hold_predecessor();
+	deadline = ktime_get_ns() + 10000000000ULL;
 	while (!READ_ONCE(thief_stop) && ktime_get_ns() < deadline) {
 		if (READ_ONCE(prefix)) {
 			if (kd_mutex_trylock(&a)) {
@@ -193,23 +206,38 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			WRITE_ONCE(task[run.role], (unsigned long)current);
 		before_preempt = preempt_count();
 		before_irqs = irqs_disabled();
+		run.returned = run.errors = 0;
 		if (cmd == MIXED_WARMUP) {
 			unsigned int i;
 
 			for (i = 0; i < run.iterations; i++)
 				protected_body(run.role);
-		} else if (run.role == MIXED_GATE)
-			hold_gate();
-		else if (run.role == MIXED_SPIN)
+			/* Read cached eligibility on this worker's actual affine CPU.
+			 * The diagnostic export does not record an acquisition or heat. */
+			if (kd_hotlock_query_mutex((unsigned long)&a))
+				set_bit(run.role, &warm_eligible);
+			else
+				clear_bit(run.role, &warm_eligible);
+		} else if (run.role == MIXED_SPIN)
 			hold_spin();
 		else if (run.role == MIXED_THIEF)
 			try_to_steal();
 		else {
+			bool eligible = kd_hotlock_query_mutex((unsigned long)&a);
+
 			set_bit(run.role, &ready);
+			if (eligible)
+				set_bit(run.role, &entry_eligible);
+			set_bit(run.role, &entry_checked);
+			if (!eligible) {
+				run.errors = 1;
+				goto finished;
+			}
 			protected_body(run.role);
 		}
 		run.returned = run.iterations;
-		run.errors = preempt_count() != before_preempt || irqs_disabled() != before_irqs;
+finished:
+		run.errors += preempt_count() != before_preempt || irqs_disabled() != before_irqs;
 		if (run.errors)
 			atomic_inc(&failures);
 		if (cmd == MIXED_RUN) {
@@ -229,9 +257,19 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	}
 	if (cmd == MIXED_RELEASE) {
 		if (READ_ONCE(ready) != (1UL << MIXED_ROLES) - 1 ||
+		    owner() != READ_ONCE(task[MIXED_GATE]) ||
+		    atomic_read(&a.delegation_state) != KD_MUTEX_GATE_HELD ||
 		    kd_mutex_debug_waiter_count(&a) != 2)
 			return -EAGAIN;
 		WRITE_ONCE(release_gate, true);
+		return 0;
+	}
+	if (cmd == MIXED_PREHOLDER_RELEASE) {
+		if (!test_bit(MIXED_THIEF, &ready) || !test_bit(MIXED_GATE, &ready) ||
+		    owner() != READ_ONCE(task[MIXED_THIEF]) ||
+		    atomic_read(&a.delegation_state) != KD_MUTEX_GATE_ACQUIRING)
+			return -EAGAIN;
+		WRITE_ONCE(preholder_release, true);
 		wake_up_all(&gate_wait);
 		return 0;
 	}
@@ -266,6 +304,11 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			.prefix_observed = READ_ONCE(prefix_observed), .thief_done = READ_ONCE(thief_done),
 			.c_task = READ_ONCE(task[MIXED_COMBINER]), .w_task = READ_ONCE(task[MIXED_WAITER]),
 			.warm_ops = READ_ONCE(warm_ops), .armed = READ_ONCE(armed),
+			.warm_eligible = READ_ONCE(warm_eligible),
+			.entry_checked = READ_ONCE(entry_checked), .entry_eligible = READ_ONCE(entry_eligible),
+			.preholder_release = READ_ONCE(preholder_release),
+			.preholder_done = READ_ONCE(preholder_done),
+			.g_task = READ_ONCE(task[MIXED_GATE]), .t_task = READ_ONCE(task[MIXED_THIEF]),
 			.waiters = kd_mutex_debug_waiter_count(&a),
 		};
 		ret = copy_to_user(user, &s, sizeof(s)) ? -EFAULT : 0;
@@ -285,7 +328,7 @@ static struct miscdevice mixed_device = {
 static int __init mixed_init(void)
 {
 	BUILD_BUG_ON(sizeof(struct mixed_run) != 24);
-	BUILD_BUG_ON(sizeof(struct mixed_snapshot) != 240);
+	BUILD_BUG_ON(sizeof(struct mixed_snapshot) != 296);
 	return misc_register(&mixed_device);
 }
 static void __exit mixed_exit(void)
