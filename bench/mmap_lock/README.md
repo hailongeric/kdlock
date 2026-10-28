@@ -19,7 +19,7 @@ completed 42 Native/KD shared-mm measurements, one per backend/count, with exact
 aggregate accounting and drain. It is exploratory, retains the KD regression,
 and does not fill the historical three-repeat matrix below. A separately
 qualified 16-worker validation pair is also retained. Stage 2's improvement/parity
-objective remains open; the [campaign plan](../../docs/THROUGHPUT_PLAN.md) separates
+objective remains open; the [campaign plan](../../docs/ROADMAP.md#stage-2-prove-scoped-mm-improvement-or-parity) separates
 completed evidence from proposed work.
 
 The retained measurement plan is throughput only. The historical `plain-scaling-v1` plan selects

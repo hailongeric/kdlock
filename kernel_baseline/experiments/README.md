@@ -3,7 +3,7 @@
 These directories retain the independently authorized kernel-interface chain.
 They are provenance/reproduction inputs, not instructions to change the current
 kernel during ordinary provider work. [kernel_baseline](../README.md)
-and [the project guide](../../docs/PROJECT_GUIDE.md#kernel-identity) define identity checks.
+and [VM operations](../../docs/operations/VM.md#kernel-identity) define identity checks.
 
 Linux 6.1 development is retired. Ubuntu 26.04 / Linux 7.0 is the active
 adaptation platform; its OS boot is recorded in the

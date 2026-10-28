@@ -6,13 +6,10 @@ scoped mmap adapter. A supported standalone API is a prerequisite for broader
 integration, not evidence that all kernel callers already use it.
 
 This is the entry point for the four lock families maintained on `master`.
-The earlier protocol inventory used `05876a4`, with documentation and benchmark
-checkpoint `40a0f36`. The IRQ-safe rwsem/mmap correction at `e6fc371` is
-integrated into `master`; its focused validation remains scoped to the
-recorded inputs and checks. The selected KD-only mutex
-protocol comes from `d2a2304`, and the accepted rwsem waiting policy from
-`c21345b`. Later translation changes and the compact mutex storage refactor do
-not replace those lock protocols. Current object sizes below include that refactor.
+The KD-only physical/delegation foundation selected at `d2a2304` and rwsem
+waiting policy selected at `c21345b` remain the basis. Later storage and Linux 7
+ports retain their ownership protocols. API support is distinct from a measured
+performance result; [validation](VALIDATION.md) binds each checked source version.
 
 **Delegation** means that a lock holder executes a waiting caller's protected
 work. The **origin** is that caller; the **executor** runs the work. Local or
@@ -116,18 +113,18 @@ preemption protection. Spin's explicit interrupt and bottom-half variants stay
 on the calling CPU. Rwlock has no such variants. Mutex operations and sleeping
 rwsem acquisitions require task context. KD rwsem read trylock and matching read
 unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
-observed through timed writer-drain rechecks. A sleeping lock does not make every
-task-dependent or sleeping helper eligible for translation. Rwsem outer writers cannot cancel after publication,
+observed through timed writer-drain rechecks. Source trust does not switch hardware task identity or make unsupported
+execution/backend protocols available. Rwsem outer writers cannot cancel after publication,
 downgrade, or appear as nested controls inside a translated body. Its ordinary
 writer API retains cancellation and downgrade.
 
 | Current rwsem behavior | Evidence / limit |
 | --- | --- |
-| Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The standalone probe passed 352 assertions; the corrected actual mmap adapter separately passed 137 Native and 161 KD assertions. The two basic programs are another validation class. See the [receipt](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md); these are not full Linux equivalence claims. |
+| Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The [Linux 7 enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md) records fresh bounded API/lifetime and actual-MM prerequisites in both modes. These are not full Linux equivalence claims. |
 | Read trylock/rollback and matching release with IRQs/preemption disabled | Focused standalone and actual mmap checks; no synchronous wake from atomic final release. Writer drain rechecks after one jiffy. |
 | Explicit outer writers | Separate mutex delegation protocol; no cancellation or downgrade after publication. |
 | Teardown | Callers must stop/join all users and retire published work. An idle predicate alone does not establish object lifetime. |
-| Fairness, starvation bounds, performance neutrality | Unestablished. Current corrected code has no qualified Native/KD performance baseline. |
+| Fairness, starvation bounds, performance neutrality | Unestablished; completed shared-MM measurements remain exploratory and below Native. See [performance](PERFORMANCE.md). |
 | Whole-kernel, RT/ww_mutex, lockdep integration | Separately unvalidated; nested/non-owner compatibility wrappers are not full lockdep support. |
 | TCLock rwsem | Restricted ordinary registered-worker pairs only; no equivalent cancellation, downgrade or actual mmap arm. |
 
@@ -139,22 +136,21 @@ tradeoff. Ordinary uninterruptible acquisitions have bounded polling of at most
 16,384 checks per stage; mmap's killable writer path bypasses that polling loop.
 Neither mechanism establishes fairness or a maximum acquisition latency.
 
-The current translation features also have distinct scopes:
+The current translator trusts kernel and module source. Semantic safety,
+context/loop-value and entry-input proofs are bypassed; the compiler input
+contract is assumed. Ordinary strings use decoded CALL/RET without named helper
+models, services or direct native bridges. Source leases, complete selected
+text, faithful lowering, actual return words and runtime ownership remain required.
 
-| Feature | Current scope and canonical contract |
-| --- | --- |
-| Reviewed instruction exits | [Mutex/rwsem ABI2 and root spin/rwlock ABI1/3](../tests/kernel/jit_escape/README.md): stop before a reviewed special instruction, resume the original waiter there, and disable delegation of that entry for the source session. Root ABI1/3 images require capability bit 11 and immutable requirements 33. |
-| Checked pointer-load exits | [Restricted spin ABI1 bodies](design/admission.md#checked-spin-pointer-loads): validate the supported address relation before the load and resume the original waiter if it fails |
-| Direct original `strcmp` / `strscpy_pad` calls | [Eligible spin ABI1 bodies](design/admission.md#direct-original-helper-calls): stay inside one generated invocation, with no helper-code scans or extra string/destination checks; source lifetime, return words and call quotas remain required |
-
-Sharing an engine does not automatically extend an ABI1 feature to rwlock ABI3
-or establish a new rwsem workload. Exact eligibility remains in the linked
-admission contract. Hardware task identity, interrupt state and the executor's
-stack do not become the origin's identity merely because work is delegated.
+Supported instruction exits preserve their documented original-waiter and
+arithmetic-flags contract. Optional checked pointer-load guards and legacy string
+routes are compatibility/regression features, not current production emission.
+See [translation policy](design/admission.md) and [register ABI](JIT_REGISTER_ABI.md).
+Sharing an engine does not expand an entry ABI or switch executor task/GS/IRQ state.
 
 The accepted scope does not establish whole-kernel replacement, real-time (RT),
 lock dependency checking (lockdep), wound/wait mutexes or arbitrary
-oversubscription. The separate [experimental mmap-lock adapter](../kernel_integration/mmap_lock/README.md)
+oversubscription. The separate [Linux 7 mmap-lock adapter](../kernel_integration/linux70/MMAP.md)
 replaces the guest's `mm_struct::mmap_lock` API in its tested configuration,
 using local concurrent readers and original-task writers. Arbitrary MM-body
 delegation remains unsupported. Oversubscription

@@ -25,7 +25,7 @@ The versioned hook installer retains legacy callbacks alongside new callbacks.
 
 All commands below run in the idle recovery guest. Confirm a recoverable monitor
 snapshot before installing/loading experimental code; see the existing
-[operating guide](../../../docs/PROJECT_GUIDE.md#guest-workflow) for VM and module lifecycle.
+[operating guide](../../../docs/operations/VM.md#source-synchronization) for VM and module lifecycle.
 Do not apply this patch to the parent tree or overwrite its captured bundle.
 
 ```sh

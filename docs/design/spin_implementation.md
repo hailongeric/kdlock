@@ -39,7 +39,7 @@ Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization a
 
 The ordinary pair uses a unique named continuation in a `noipa` function so
 compiler cloning cannot duplicate that entry label. Preparation does not force
-delegation: source admission, a ready image and the current heat policy also
+delegation: source readiness, runtime eligibility and the current heat policy also
 apply. `kd_spin_direct_cookie` names the provider's per-CPU heat indicator, not
 an acquisition result. Unlock reads actual ownership rather than that indicator.
 
@@ -126,21 +126,13 @@ Unlock always enters the generic broad-clobber endpoint. Byte-5 native ownership
 uses its short release path; delegated/ticketed ownership follows the existing
 ledger/ACK route. Current heat is never used to choose which acquisition to unlock.
 
-### Original helper calls inside generated code
+### Ordinary callees inside generated code
 
-The `05876a4` execution path lets eligible ABI1 spin bodies call original
-`strcmp` and `strscpy_pad` without leaving generated code for each helper.
-Code residency is retained at immutable-image publication. The wrapper preserves
-the required registers, the original CALL return word and call quotas; it adds
-no helper-code inspection, string scan or runtime destination check. Quota
-exhaustion transfers the unexecuted call to the original waiter, which finishes
-under the existing ownership/acknowledgement protocol. The complete eligibility
-and exit rules belong to [direct helper calls](admission.md#direct-original-helper-calls).
-
-This is an execution optimization, not a queue or locking protocol change.
-It applies to the audited taskname/xattr spin bodies and does not automatically
-apply to rwlock ABI3 or mutex ABI2. The [completed comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-retains the remaining low-count and TCLock gaps.
+Production trusts kernel/module source and translates ordinary callees through
+the same decoded CALL/RET graph. Strings receive no named service, model, quota
+or direct native bridge. Source leases and exact return routing remain required.
+The former ABI1 helper optimization is historical compatibility, not the current
+execution path. See [translation policy](admission.md).
 
 ## Batch and NUMA selection
 
@@ -217,7 +209,7 @@ unchanged. No other task's critical section is delegated.
 
 PV stealing and PV waiting/kicks are disabled in this boot. Kernel instrumentation
 and runtime patching remain part of the Native arm. Verify build/config/live
-identity and [boot selection](../PROJECT_GUIDE.md#native-qspinlocks-in-the-vm)
+identity and [boot selection](../operations/VM.md#boot-policy)
 separately; historical samples may use the earlier PV policy.
 
 ## Verification boundaries

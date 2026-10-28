@@ -1,121 +1,75 @@
 # JIT execution flow
 
-This guide follows an ordinary spin request from preparation to completion.
-Mutexes and rwlock writers share the execution engine, but have different
-acquisition steps; see [mutex](design/mutex_implementation.md) and
-[rwlock](design/rwlock_implementation.md). The
-[design glossary](DESIGN.md#terms-used-in-these-guides) explains the request terms.
-
-An ordinary spin pair disables preemption until unlock and preserves IRQ/BH
-state. Explicit [IRQ/BH variants](../include/README.md#explicit-irqbh-spin-interfaces)
-run natively on the calling CPU.
+This guide follows ordinary requests. Family-specific acquisition belongs in
+[spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md),
+[rwlock](design/rwlock_implementation.md) and [rwsem](design/rwsem_implementation.md).
+[Translation policy](design/admission.md) defines trusted source; the
+[register ABI](JIT_REGISTER_ABI.md) defines machine-state capture and exits.
 
 ## Preparation and entry
 
-For ordinary spin:
+1. Register the continuation and matching backend/ABI after its source is live.
+   Unified direct mutex calls may register their internal numeric continuation.
+2. Decode leased text and publish a complete image. Kernel/module source is
+   trusted; semantic context, loop/value and entry-input proofs are not run.
+   Ordinary string callees use generated CALL/RET without named helper routes.
+3. Attempt the family-specific physical acquisition. A hot caller may still
+   acquire locally without a frame. Delegation also requires a ready image,
+   correct runtime context and available request/ticket resources.
+4. A published waiter release-orders its shared frame/packet and queue membership.
+   It polls pinned on its reserved stack. The executor uses that existing packet;
+   it does not copy a second request to simplify lifetime accounting.
 
-1. **Prepare the code.** `kd_spin_prepare()` registers the continuation after the
-   lock call and its ABI. The daemon keeps source modules pinned while reading and
-   translating the machine code, then uploads it as NORMAL. Benchmarks finish
-   preparation and stop the daemon before warming up all workers. NORMAL means
-   the code is published, not that anyone has executed it.
-2. **Try to acquire the lock.** `KD_SPIN_DIRECT_LOCK()` pins the caller and reads
-   the per-CPU heat value. A cold caller tries the inline compare-and-swap (CAS).
-   If it fails, the native pending/MCS helper uses that observed result rather
-   than repeating the first CAS. A hot caller uses the pinned clobber entry;
-   the compiler saves live values around that call.
-3. **Decide whether to delegate.** Even a hot caller may acquire the lock directly,
-   without allocating an execution frame. A contending caller needs a request,
-   an exact acquisition ticket and a ready image. Failed context, readiness or
-   resource checks use the native pending/MCS path. Only running out of queue
-   nodes falls back to polling the lock word itself.
-4. **Publish the request.** An eligible waiter prepares its shared frame and
-   register packet, switches to the reserved wait stack, and makes its queue node
-   visible with release ordering. It polls with preemption disabled. The combiner
-   uses the same frame and packet, without copying the register state.
-
-Heat controls whether KD considers delegation. It never bypasses backend or code
-checks. [Admission](design/admission.md) explains those checks, including how GS
-and the original task are represented and which dynamic addresses remain unchecked.
-
-Rwlock preparation registers the embedded gate with ABI3. Readers run locally.
-Writers first try a native count CAS without the gate; on failure they take the
-native or hot gate path. Before the body starts, either the pinned native helper
-or the combiner must acquire exclusive writer admission.
+Ordinary spin/rwlock pairs protect preemption and IRQ/BH state. Explicit spin
+IRQ/BH variants are local. Published mutex waiters are pinned even though physical
+owners and supported service paths may sleep. Heat never authorizes ownership.
 
 ## Batch execution and return
 
-A combiner can execute several simple root requests in one C loop. For each
-request, preparation checks the image layout, ABI, packet state and whether the
-request is eligible for this simple path. Successful preparation binds the
-frame's image descriptor before writing the wrapper metadata once. A refused
-preparation does not change that binding. One source lease covers the batch, but
-each request still needs a readiness check. Legacy and clobber entries share the
-loop while keeping their different completion checks.
+A combiner holds physical exclusion while selecting requests. Each request keeps
+its exact ticket/acquisition, frame and image binding. Batch preparation checks
+layout, ABI, packet and supported simple-path conditions. A refused preparation
+leaves the prior binding unchanged. An existing source lease may cover the batch,
+but each request still needs readiness and exact owner checks.
 
-For an ABI3 rwlock root, the combiner waits for readers and acquires the writer
-byte in native code before entering JIT. A nested virtual spin request inherits
-the ABI but does not acquire another rwlock count. If JIT refuses before the body
-starts, KD cancels writer admission while retaining the gate. The physical native
-retry must acquire admission again before resuming the body. If the body already
-made progress, its native remainder keeps admission until write unlock.
-`rwlock_admitted` records that obligation without enlarging the packet or wrapper
-inputs.
+Rwlock ABI3 acquires exclusive writer admission before the first body. An unstarted
+refusal cancels it while retaining the gate; a native retry must reacquire it.
+A progressed native remainder keeps admission until its matching writer unlock.
+Rwsem outer writers reserve/drain before entering the mutex queue.
 
-The final clobber unlock can combine CALL handling and completion checks. When
-those checks pass, the wrapper returns only IP/SP/BP and skips writing a virtual
-return address. If the checks fail, it constructs the original CALL exactly once,
-saves FULL state and uses the general recovery path. Nested and other complex
-exits also use the general dispatcher. Dispatcher controls and approved services
-can resume JIT at registered continuations; an ordinary untranslated call finishes
-natively. The direct-helper route below permits only one generated invocation.
+The terminal clobber unlock can complete with IP/SP/BP only. If its exact fast
+completion conditions do not hold, the wrapper constructs the original CALL once,
+materializes FULL and uses the dispatcher. Supported controls/scalar services may
+resume at validated continuations. An ordinary untranslated callee finishes the
+remaining invocation on the origin; it does not resume JIT after arbitrary native
+work or reset the body.
 
-A [checked spin pointer load](design/admission.md#checked-spin-pointer-loads) can
-also stop before the original load when its address may overlap tracked stack
-writes. The checked exit resumes the original waiter at that same instruction
-and stack position, retains earlier effects and existing lock ownership, and
-permanently disables delegation for the entry. It does not construct a CALL or
-retry the body. Generic faults and execution-limit exits cannot use this path.
+Supported instruction markers resume the origin before the selected instruction
+with the declared arithmetic flags. Prior stores and locks remain owned; the entry
+becomes native-only for the session. Generic faults, missing targets and budget
+errors are not arbitrary recovery boundaries. Optional address guards and old
+string-service/direct-call routes belong to checked/historical compatibility,
+not current trusted-source emission.
 
-The original [`strcmp`](design/admission.md#original-strcmp-service) and
-[`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service) APIs
-rely on the original C caller's valid memory and lifetime guarantees. Neither
-route checks helper instructions, scans strings or rechecks destination bounds.
-The translator retains their memory effects, including the padding call's
-64-byte write. The dispatcher route uses the existing CALL exit: KD validates
-ownership, saves the pending return state, invokes the helper and consumes that
-saved return once. It permits 128 comparisons plus 16 other services or controls,
-with padding calls sharing the latter allowance.
+## Unlock and validation
 
-The optional [direct-helper route](design/admission.md#direct-original-helper-calls)
-keeps these original calls inside one generated invocation. It requires a fresh
-ABI1 spin request: the body has not started, one physical lock is held, the
-original waiter differs from the executor, and only the entry instruction and
-stack/frame pointers need be captured in the MINIMAL packet. The bound image is
-immutable; helper and return-source pins are acquired at publication and retained
-by the existing leases. Exact physical-owner and acquisition records still apply.
-The wrapper consumes the actual source CALL return word after each helper and
-can finish through the minimal terminal unlock without a dispatcher round trip.
+Unlock follows the exact acquisition, not current heat or an approximate counter.
+Public mutex unlock routes local owners, delegation owners and borrowed native
+continuations through their retained provider records and ACKs. Rwlock writer
+unlock releases the writer byte before gate/spin completion, and completion must
+not clear it again after a successor can own it.
 
-Direct calls have the same limits of 128 comparisons and 16 padding calls. Quota
-exhaustion exits before executing the pending helper; the original waiter runs
-that call and the remaining native instructions under the existing lock. The
-image cannot reenter from FULL state or reset its quota after an exit. Completed
-helper effects are never replayed; invalid returns and instruction-limit failures
-remain errors. See [image lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
-for source residency and publication rules.
+A frame leaves the active stack before DONE publication. The waiter reads return
+state before reusing storage or releasing its pin. NATIVE_READY permits a checked
+native remainder, not root retirement. Native executors, including relays with no
+remaining held lock, retain their root/ticket references until cleanup and frame
+removal finish. Final native unlock waits for required owner ACKs.
 
-Completion removes the frame from the active stack before publishing DONE. The
-waiter must read its return state before reusing the continuation or enabling
-preemption. NATIVE_READY only grants permission to run a checked native remainder;
-it does not permit the root request to be freed. Every native executor, including
-a relay with no remaining held lock, retains a reference to the root ticket until
-its cleanup and frame removal finish. Final native unlock waits for those
-references and the required owner ACKs.
-
-See [ABI](JIT_REGISTER_ABI.md), [KD ownership](design/locking.md),
-[frames](design/frames.md) and [spin layout](design/spin_implementation.md) for the
-exact state and storage rules.
+To claim returned JIT execution, require actual completion evidence, correct data,
+state restoration and drain. Reader/writer delegated share uses completed writes
+as its denominator. `NORMAL`, an entry witness and successful local `NO_JIT` are
+different evidence classes. See [validation](VALIDATION.md), [frames](design/frames.md)
+and [ownership](design/locking.md).
 
 ## Heat and roles
 
@@ -172,46 +126,18 @@ executes natively. `hotlock_stats=1` reports approximate accumulated observation
 the ratio log's `scope=unfinished_batch` is only the remaining uncompleted window.
 Neither is a peak-window execution count or lifetime/ownership proof.
 
-## Unlock and validation
-
-`KD_SPIN_DIRECT_UNLOCK()` always calls the broad-clobber unlock entry. For native
-ownership marked by byte 5, it clears only that byte, keeps the pending/tail fields,
-drops the exact in-flight count and unpins. Other ownership states use their
-owner, ticket and native-ACK records. Unlock follows the recorded acquisition;
-it does not choose a route from the current heat value or cookie.
-
-Rwlock write unlock clears only the count's writer byte before releasing the gate
-or entering spin completion. Ungated native writers instead drop their exact
-reference and pin after that byte release. Completion clears frame bookkeeping;
-it must not clear the count again after a successor can own it.
-
-To report successful JIT execution, require a returned-body count, correct data,
-restored IRQ/preemption state and complete drain. Report native controls, NO_JIT,
-refusals and synthetic fixtures separately. For rwlocks, JIT share is the number
-of returned JIT writer bodies divided by completed writes; reads are excluded.
-[Tests](../tests/README.md), the
-[spin/mutex runner](../bench/tclock_compare/README.md) and
-[rwlock runner](../bench/rwlock_compare/README.md) define acceptance and commands;
-[operations](operations/VM.md) defines environment/recovery.
-
 ## Executable image generations
 
-In the current implementation, mutex registration precedes executable allocation.
-The daemon publishes one complete, immutable generation; a frame binds its
-image and keeps it through FULL continuations. Replacement never overwrites a
-running mutex image, and old-generation misses cannot change the current image's
-metadata. Source and ownership retirement still apply independently. Published
-versions remain in the existing 64-block pool until session teardown. See the
-[compatibility comparison](history/legacy_mutex_compatibility.md).
+Mutex frames bind immutable generations through FULL/native continuations.
+Replacement does not overwrite their code or allow an old-generation miss to
+modify new metadata. Versions remain allocated until terminal session teardown.
 
-Ordinary spin/rwlock entries initially have a stable descriptor whose code block
-can be replaced in place. The first ABI1 image requiring checked pointer loads,
-`strcmp` or `strscpy_pad` instead publishes a new immutable block. A frame already
-using the earlier descriptor keeps its earlier code and cannot observe the new
-image's metadata. Every later generation for that entry remains immutable,
-including images without guards or typed services.
-Generation checks prevent an older frame's miss from changing newer metadata.
-Permanent delegation refusal uses the publication gate, so an upload cannot
-undo it. The [lifetime guide](design/lifetimes.md#executable-images-and-guarded-spin-transition)
-defines the transition and storage limits; ordinary spin/rwlock entries retain
-their existing in-place lifetime until such a transition.
+Ordinary spin/rwlock descriptors initially refer to in-place code. Supported root
+instruction-marker images make an immutable transition. Retained checked address
+and historical string images have their own compatible transition too; production
+does not select their analyses or named string routes. Once transitioned, later
+generations remain immutable even if their requirements shrink.
+
+Source pins, bound image descriptors, physical ownership and frame retirement
+remain distinct. [Lifetimes](design/lifetimes.md) defines their limits. Synchronize
+only while idle and never replace frozen inputs under live work.

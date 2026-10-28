@@ -58,17 +58,10 @@ compiler-emitted string helper bodies normally. Production assumes the compiler
 input contract instead of proving helper-prologue dependencies. The optional
 entry remains available to other callers; the two-word ABI is unchanged.
 
-The frozen `c79d84f` implementation used helper checks. Its ordinary taskname
-shell passed the read-only functional check; the 20% mutation check was correct
-and drained but failed measured delegation. The
-[validation record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-retains those source identities. The version 10 dispatcher implementation without helper-specific
-checks passed [focused correctness validation](VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6 and completed the
-[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
-The separate mutation control disabled helper preparation and recorded zero JIT,
-so it does not reverse the earlier
-delegation failure. See [API admission](design/admission.md#original-strscpy_pad-writing-service).
+Earlier helper-entry, string-service and mutation controls retain their original
+outcomes in [history](history/README.md). Current ordinary-callee validation is
+indexed under [trusted translation](VALIDATION.md#trusted-ordinary-translation),
+including the separately failed strict mixed-taskname control.
 
 ### Mutex clobber and outer cookie
 
@@ -143,13 +136,13 @@ two-word ABI remain the same.
 | 41 | `KDAB` identity tag |
 | 45 | Generated `entry_abi` byte |
 | 46 | Image publication protocol version, currently 2 |
-| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 original read-only string API; bit 3 original string API with 64-byte writing effects; bit 4 direct original string calls |
+| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 original read-only string API; bit 3 original string API with 64-byte writing effects; bit 4 historical direct original string calls; bit 5 root ABI1/3 instruction exits |
 
 Layout-1 images cannot be published NORMAL. Ordinary offset 0 preserves the C ABI.
 Offset 16's adapter preserves physical RBP; offset 32 preserves it in the wrapper.
 Both batch entries allow the compiler to protect live combiner values and stay
 inside one C batch loop. Neither is callable as an ordinary C function pointer.
-Direct-call images accept only the clobber entry at offset 32 with a pristine
+Historical direct-string images accept only the clobber entry at offset 32 with a pristine
 MINIMAL packet; their ordinary and legacy entries deliberately reject execution.
 
 The separate 16-byte `KD_JIT_CAPS` ioctl reports version 12. Bits 0 and 1 describe
@@ -167,7 +160,8 @@ invocation. Such images add requirement bit 4, value 16, to the API requirement:
 20 for `strcmp`, 24 for `strscpy_pad`, or 28 for both. The feature is absent if
 the provider cannot allocate suitable executable storage or the kernel enables
 call-depth tracking, whose additional call accounting this bridge does not
-implement. Eligible images then use the existing dispatcher route.
+implement. That fallback describes the historical direct-string ABI; current strings
+always use ordinary translation instead of either named string route.
 
 Bit 11 separately enables pristine ABI1/3 root instruction exits. These images
 require exactly bits 0 and 5 (value 33), immutable storage and the MINIMAL
@@ -187,7 +181,7 @@ image initializes or exports them. The successful batch or its pending
 dispatcher consumes the counts once. They neither extend `args[2]` nor change
 the body witness, register packet, lock ownership or mutex protocol.
 
-Direct images end with a `KDNC0001` relocation directory: a 16-byte footer and
+Historical direct-string images end with a `KDNC0001` relocation directory: a 16-byte footer and
 up to 64 16-byte rows naming the generated CALL offset, service and original
 return address. The uploaded CALL has a zero displacement. Before immutable
 publication the provider fills its signed 32-bit relative displacement to the
@@ -196,7 +190,7 @@ generated-image checks, not helper or source-CALL inspection. The uploaded
 `jit.bin` hash therefore differs from the loaded executable image. Outside
 timing, the runner saves the loaded bytes and receipt and reconstructs the
 expected changes using captured symbol addresses. See
-[direct-call admission](design/admission.md#direct-original-helper-calls).
+[direct-call admission](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls).
 
 ## Physical and virtual registers
 
@@ -292,98 +286,12 @@ Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their actual virtual return-slot
 write remains emitted. Optional checked mode also models it in alias analysis.
 
-The following string service/direct-call paragraphs describe retained historical
-ABI/provider compatibility only. Production selects neither route: string bodies
-use ordinary decoding and generated CALL/RET, without semantic memory summaries.
-
-The dispatcher route for original string APIs uses HOSTCALL exit 5 and the
-existing FULL packet. `strcmp` receives saved DI/SI and
-stores its 32-bit integer result in saved AX. `strscpy_pad` receives DI/SI/DX and
-stores its full-width result in AX. Its translation summary describes count 64
-and all 64 destination bytes, including native truncation and padding. The
-summary discards facts for registers the call may overwrite (caller-saved) and
-retains registers the calling agreement requires it to preserve (callee-saved),
-along with the returned SP. The source CALL still writes its actual return-address
-word, and runtime still reads and consumes that word. Only for the `strcmp`
-and `strscpy_pad` services used by selected reviewed C callers does analysis
-record these temporary control bytes separately from
-ordinary object data. The caller promises that ordinary data accesses neither
-inspect nor overwrite that temporary return storage; an explicit known access
-to those bytes is refused. Other calls and ordinary data writes retain their
-conservative alias analysis, including decoded `memcpy` and its ordinary RET.
-There is no copy-call classification or special return path. The generic
-refinement for partially overlapping CALL-return bytes remains archived. This is
-a caller obligation, not a runtime pointer check or a promise for arbitrary C
-functions. The version 10 dispatcher implementation passed
-[focused correctness checks](VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6. The
-[`88bb5a4` performance comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-is complete. See the
-[selected-caller contract](design/admission.md#original-call-word-aliases).
-
-The original caller supplies valid stable ordinary memory and, for the writer,
-a valid live local destination disjoint from the source and pending CALL word.
-Neither helper's instructions or arguments are checked at runtime or publication;
-the translator uses API effects rather than decoding the helper body. KD still
-requires an immutable ABI1 image and one exact outer physical lock owner. The
-dispatcher route requires a FULL root packet; before effects it bounds and reads
-the pending CALL return word and retains the return target's source residency.
-Success consumes that saved token once. An invalid frame or continuation remains
-an error. Preliminary string checks no longer reject calls or automatically
-disable the entry.
-
-There may be at most 128 `strcmp` calls plus 16 other continuations per invocation.
-The latter allowance includes scalar services, lock controls and `strscpy_pad`.
-An excess unexecuted CALL uses the existing native continuation while retaining
-its pushed word and earlier effects. See the
-[read-only](design/admission.md#original-strcmp-service) and
-[writing](design/admission.md#original-strscpy_pad-writing-service) contracts.
-Neither API summary proves that incoming arithmetic flags are unused by the
-helper; address guards cannot infer that from a service declaration.
-
-The optional version 11 direct route enters only a pristine ABI1 spin root:
-its body has not started, its packet is MINIMAL, and its waiter differs from the
-executor. It cannot contain resumable scalar services, nonterminal lock controls
-or address guards. Decoded ordinary callees and final outer unlock remain
-allowed. The wrapper preserves physical R11, its packet pointer, and the current
-source argument registers around an original C helper on the aligned executor
-stack. The eight saved registers occupy 64 bytes, preserving the alignment
-established at entry; source stack operations use virtual SP. The C calling
-agreement preserves virtual SP/BP in physical R13/R12. Quota and return checks
-temporarily save RCX in a reserved register, use LEA arithmetic and JRCXZ (a
-zero test that leaves flags unchanged), then restore RCX on every path. After the helper,
-the wrapper reads and consumes the actual virtual CALL word and checks its exact
-allowed return; it does not substitute a fixed address for the stored word.
-
-This route permits 128 comparisons and 16 padding calls in one invocation.
-Exit 10 materializes FULL before an excess helper runs, with the pending CALL
-word intact. The original waiter finishes the call and remaining native code;
-no FULL reentry can reset the allowances. Successful direct calls may reach the
-terminal COMPLETE path without exporting a FULL packet. Invalid returns and
-ordinary instruction limits remain errors. Direct helper counts are distinct
-from dispatcher exits, body entries and body completions. The
-[canonical contract](design/admission.md#direct-original-helper-calls) defines
-publication, lifetime and execution restrictions.
-
-The v10 implementation passed focused correctness checks and completed all 567
-sessions of the [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-with validation and drain. In that historical dispatcher round, KD was slower
-than Linux Native and TCLock at 60 workers in all three measured workloads. Earlier
-[functional checks](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
-belong to the frozen `c79d84f` checked implementation. Its probe for native return
-after a failed string check does not describe current behavior.
-The final version 11 bridge passed its affected unit checks, including 15,663
-executable-wrapper assertions, and all ten candidate 3 live checks. Its separate
-36-session KD screen and 18 diagnostic profiles completed and drained; the
-[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
-retains the exact source versions and earlier failures. The separate
-[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-completed all 567 sessions with validation and drain for read-only taskname and
-the two xattr tail workloads. Archive verification and the separate n129 quota
-control are complete. That control verified native waiter completion after
-quota exhaustion and full drain. Taskname mutation delegation remains
-unestablished.
+Current strings use ordinary decoded CALL/RET and actual virtual return words,
+without a named service, memory summary, quota or direct native bridge. The
+provider retains historical string capability/image fields for compatibility;
+their full former calling and relocation contracts are in the
+[fixed ABI checkpoint](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/JIT_REGISTER_ABI.md#call-completion-and-exits).
+Those fields do not enable helper-specific handling in current translation.
 
 ## Native continuation and final restore
 
@@ -474,7 +382,7 @@ defines the address and source flag proofs. The
 passed successful delegation, exact native resumption after a failed check and
 continued local execution after delegation was disabled. That receipt belongs
 to the earlier frozen inputs. The v10 dispatcher implementation also passed the
-probe in [candidate 6](VALIDATION.md#taskname-and-xattr-helper-validation).
+probe in [candidate 6](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/VALIDATION.md#taskname-and-xattr-helper-validation).
 An image that required source constant-branch simplification cannot also obtain
 address-check admission: the simplified graph could omit a flags read still
 present in the original native suffix. Bodies requiring both remain refused.

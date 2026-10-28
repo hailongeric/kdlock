@@ -21,13 +21,13 @@ The [terminology guide](../docs/TERMINOLOGY.md) defines lock names, just-in-time
 (JIT) execution, status labels and measurement terms such as post4 and Mops/s.
 
 The [basic runner](basic/run.py) and
-[functional workflow](../docs/PROJECT_GUIDE.md#basic-working-version) select
-one c01 cacheline case per KD family, with public mutex calls,
-concurrent local readers, returned-body checks and complete drain. It produces
-no timing acceptance or throughput score. It requires the schema-2 Linux 7
-kernel bundle, a new-platform recovery snapshot and fresh hash-bound host
-evidence. The replacement c01 presets require their own fresh functional
-receipt; prior payload passes do not validate them. Comparison timing rules stay unchanged.
+[functional workflow](../docs/operations/VM.md#dependencies-and-checks) select
+sixteen workers per family: spin/public mutex c01, rwlock c01/20% writes/post4,
+and rwsem c16/100% writes/post4. Every case requires correct data, returned JIT
+bodies and complete drain. The [fresh normal-boot checkpoint](results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
+passed all four. These fixed-iteration checks produce no throughput score and
+require the pinned Python, schema-2 identity, real recovery tag and fresh
+hash-bound host evidence. Comparison timing rules remain separate.
 
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |

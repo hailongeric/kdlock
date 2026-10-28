@@ -240,23 +240,14 @@ unlock routing to release an executor-owned mutex.
 
 ### Bodies that must execute locally
 
-A task-context critical section is not automatically eligible to run on another
-task. The [context admission rules](admission.md#72-context-and-memory-admission)
-support selected origin-task and GS operations while refusing recognized
-unsupported scheduling, per-CPU, IRQ/BH/RCU and lock-backend operations. Supported
-translated nesting uses the exact lock ledger; arbitrary nested lock services
-are not authorized by the outer mutex acquisition.
+Production trusts kernel/module source and does not prove its context, memory,
+loop or entry-input safety. That assumption does not switch hardware `current`,
+GS, IRQ/RCU, accounting or address-space state to the origin, supply missing
+backend support, or permit arbitrary nested lock protocols. See
+[translation policy](admission.md) and the [register ABI](../JIT_REGISTER_ABI.md).
 
-Admission refusal preserves KD exclusion, but fallback is not a proof of
-arbitrary critical-section safety. The
-[dynamic address gap](admission.md#721-dynamic-address-gap) includes runtime
-pointers that can reach sensitive state without a statically recognized address.
-Generic JIT faults are errors, not arbitrary native-continuation points. A
-refusal after progress neither undoes prior work nor validates an owner-sensitive
-suffix. New bodies need validation against these limits.
-
-For an ordinary caller using a fully converted KD object, explicitly local
-execution is available without introducing a delegation boundary:
+When the body's semantics require its original task, use local acquisition on
+the fully converted KD object:
 
 ```c
 kd_mutex_local_lock(&lock);
@@ -264,78 +255,30 @@ kd_mutex_local_lock(&lock);
 kd_mutex_local_unlock(&lock);
 ```
 
-The callable `(kd_mutex_lock)(&lock)` also acquires locally and can pair with
-public `kd_mutex_unlock(&lock)`. Signal, trylock and I/O variants remain local.
-These interfaces do not authorize native-only calls inside a translated body,
-add RT/lockdep support, or make a Linux object compatible with KD.
+Callable `(kd_mutex_lock)(&lock)` also acquires locally and pairs with routed
+public unlock. Signal, trylock and I/O forms remain local. This does not make a
+Linux object compatible with KD or add unsupported nested/cancellation protocols.
+Generic JIT faults are errors; a progressed body cannot restart from entry.
 
-Published delegation waiters remain pinned with preemption disabled while
-polling, even though physical owners and supported service paths may sleep.
-Oversubscription safety remains unvalidated; the current policy does not offer
-general equivalence to Linux sleeping waits under arbitrary scheduling loads.
-NUMA batching also changes service order; bounded bypass within a batch is not
-a scheduler-independent starvation-freedom guarantee.
+Published delegation waiters poll pinned even though physical owners and supported
+service paths may sleep. Broad oversubscription and scheduler-independent
+starvation freedom remain unvalidated. Bounded NUMA grouping changes service
+order without changing exact physical ownership.
 
 ## Validation and measurement boundary
 
-The [shared-node receipt](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
-retains `752fec1` with its 256-body locality policy. Both it and the first FIFO
-trial passed separate 17-check basic/affected bundles, 11/13-case runner
-programs and three live probes. Four separate source arms completed 72 valid,
-drained c01/seek/pipe timings; all 78 retained kernel logs have no matched faults.
-Real API sessions count returned JIT bodies; synthetic c01 sessions witness
-entry only. The [current performance table](../PERFORMANCE.md#mutex-shared-node-and-locality-comparison)
-retains eight-worker variation, c01's low-count regression, and the remaining
-9.2% sixty-worker pipe gap against old256.
+The [Linux 7 normal basic checkpoint](../../bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
+checks the public mutex c01 preset with correct data, matched returned-JIT
+counters and final drain. [Current performance](../PERFORMANCE.md) links the
+separately frozen nano/API curves and their adverse/local points.
 
-The first shared-node trial `f4d359d`, including `7290327`, serviced every
-deferred cohort before a FIFO remainder after 128 bodies. Its sixty-worker
-regressions remain at `archive/mutex32-fifo-20261020`. The retained version
-keeps shared OSQ storage and restores larger-cohort handoff. These policies,
-source identities and results remain separate.
+The ordinary API probe in [tests/kernel/mutex/local](../../tests/kernel/mutex/local/README.md)
+and affected fixtures cover their declared layout, cancellation, handoff,
+queue/storage, ownership, ACK and retirement obligations. Evidence applies to
+its recorded source; it does not establish whole-kernel compatibility.
 
-The preceding [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
-records checked `76af844` queue-head and inline-predicate changes with fresh
-pipe comparisons, placement diagnostics and the separately archived prefetch
-trial. Its retained candidate still uses separate OSQ storage and the earlier
-NUMA physical-handoff policy.
-
-The earlier [embedded-state receipt](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
-records `372be89` basic and affected checks, live native geometry,
-ring cancellation/handoff, JIT/native recovery, exact drain and fresh pipe
-comparisons. It retains the performance deficit against the old 256-byte object.
-
-The historical [compact-object validation receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
-records the basic and affected VM checks, live delegation and native continuation,
-the initial failed attempts, and source/ELF/archive identities. It makes no
-performance claim for the changed layout.
-
-The live ordinary-API probe is
-[tests/kernel/mutex/local](../../tests/kernel/mutex/local/kd_mutex_local_probe.c).
-It checks native size/alignment and containing-structure offsets at compile time,
-160,000 operations across eight workers, sleeping owners, nested locking,
-2,048 initialized objects reused at the same addresses and freed without destroy,
-zero embedded delegation state during ordinary ownership and after drain,
-interruptible/killable cancellation, head/middle/tail ring cancellation with
-HANDOFF, I/O state and trylock.
-Unit checks retain compiled/JIT caller execution,
-queue-resource failures, terminal retirement, FULL recovery, frame capacity,
-immutable images and source leases. Provider and KD workload import audits reject
-Linux mutex imports. The provider-lifecycle fixture executes production startup
-and teardown with observable service boundaries and injected initialization failures;
-it checks that device publication follows private-runtime initialization. These
-checks do not establish whole-kernel compatibility.
-
-The historical c01 comparison uses the unchanged one-cacheline business payload
-and 64 rounds of common post-work. Its 256-byte lock is separate from that payload;
-those results do not measure the current compact embedded object.
-For pipebytes n16, Native uses the actual pipe mutex; KD and TCLock each protect the
-same redirected FIONREAD business body with their own private lock. The pipe is
-private to the controlled cohort; no reads, writes, resize or independent consumer
-may run while bound. The KD adapter never uses the native pipe mutex. This tests
-the exclusive-KD assumption for the selected object, rather than installing a
-kernel-wide mutex replacement.
-
-The [paired performance report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-records fresh accepted-baseline/KD-only pairs, Native and TCLock at 1–8 workers by
-one and 12–60 by four, three repetitions, with all samples and failed attempts.
+Historical auxiliary registries, object layouts, queue/prefetch trials and
+comparisons against the former 256-byte object remain in the
+[fixed pre-cleanup contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/kd_only_mutex.md#validation-and-measurement-boundary)
+and [history index](../history/README.md). Those rates are not current-layout or
+Linux 7 measurements.

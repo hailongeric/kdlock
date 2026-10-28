@@ -11,7 +11,7 @@ Linux 6.1 development and its MM kernel variants are retired. This source and
 its results remain references for adaptation to the active Ubuntu 26.04 /
 Linux 7.0 platform. OS readiness is recorded in the
 [migration record](../../docs/history/vm-ubuntu2604-migration-20261027.md); KD and
-MM compatibility remain unvalidated. The separate
+MM validation now have separate Linux 7 identities and receipts. The separate
 [Linux 7 adapter port](../linux70/MMAP.md) supplies its own patch, authenticated
 input manifest, preparation helper and affected-object checker; its
 `CONFIG_KDLOCK_MMAP` option defaults to disabled. This directory's
@@ -21,7 +21,10 @@ and local adapter overlay are reused by the new preparation helper.
 The [retirement record](../../docs/history/kernel-retirement-20261027.md)
 preserves one complete legacy recovery version. Commands requiring `kdmm1`,
 `kdmm31` or `kdclobber2` describe archived workflows and do not authorize more
-Linux 6.1 adaptation.
+Linux 6.1 adaptation. The current `7.0.0-38-kdmm1` image and fresh Native/KD
+prerequisites/42 timing points are recorded in the
+[enabled-MM checkpoint](../../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md).
+The older validation and campaign narrative below retains its Linux 6.1 scope.
 
 The maintained scope is **lock implementation plus minimal API and lifetime
 wrappers**. Native mmap, munmap, advice and page-fault algorithms remain unchanged
@@ -184,7 +187,7 @@ shared-provider workload coverage remains open.
 
 RT, lockdep, whole-kernel substitution
 and broader Linux semantic equivalence remain unvalidated. The next performance
-work follows the [throughput campaign plan](../../docs/THROUGHPUT_PLAN.md);
+work follows the [throughput campaign plan](../../docs/ROADMAP.md#stage-2-prove-scoped-mm-improvement-or-parity);
 the old `kdmm1` timing profile cannot establish performance of this correction.
 The earlier plain/sampled proposal selected 24 shared-mm writer cases over five
 candidate boots followed by recovery. Its authorized October 25 attempt

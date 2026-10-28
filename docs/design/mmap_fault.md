@@ -41,8 +41,8 @@ TCLock uses the maintained task-context rwlock only for the short, non-sleeping
 backing critical sections. It is not a sleeping rwsem replacement. Its supported
 mapping shape matches KD's read-only shared shape. A request requiring downgrade
 selects a fresh Native object before publication or fails; a live TCLock object
-cannot switch backend. Only equivalent supported cases are eligible for a future
-comparison, and execution classes and observation settings must remain separate.
+cannot switch backend. Only equivalent supported cases belong in the private-backing comparison;
+execution classes and observation settings remain separate.
 The common payload is compiled against one provider at a time, with Native
 available in either build; the selected build mode is recorded in module info.
 TCLock may combine only the short backing writer work. The fault handler and
@@ -116,11 +116,13 @@ separate coverage and must not be inferred from successful ordinary cases.
 
 The [focused runner](../../tests/kernel/mmap_fault/README.md) keeps source, binary,
 kernel and callback receipts. Correctness, returned-JIT evidence and performance
-acceptance are separate. This driver is a real callback integration for owned
-mapping state, not a coordinated kernel mmap-lock adapter; the four blockers in
-the [retained full-mm review](../../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
-remain for that wider task. Whole-kernel replacement, RT, lockdep and the seven
-mutex regressions remain open.
+acceptance are separate. This driver integrates callbacks for owned mapping state; it does not replace
+the actual mmap lock. The separate [Linux 7 MM adapter](../../kernel_integration/linux70/MMAP.md)
+has its own identities, correctness prerequisites and actual shared-MM timings.
+The [private-MM campaign](../../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
+records this backing experiment's completed Linux 7 measurements. Neither scope
+establishes full-kernel, RT, lockdep or generic fault-path equivalence. Older
+full-MM reviews retain their historical status rather than an active blocker list.
 
 ## Separate workload tasks
 

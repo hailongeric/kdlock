@@ -54,7 +54,7 @@ checks are in `bench/rwlock_compare/test_bench.py`;
 full procfs/mmap integration is outside these checks.
 
 Build and run all checks only in the recovery guest on `10.176.26.71`. Use the
-[project guide](../docs/PROJECT_GUIDE.md) for setup and
+[VM operations](../docs/operations/VM.md#environment) for setup and
 [operations](../docs/operations/VM.md) for kernel verification, snapshots, fixed test inputs
 and safe shutdown. Run the basic checks plus those affected by the change. A full
 suite requires an explicit request.
@@ -93,8 +93,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
-| Checked spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
-| Ordinary string callee admission (legacy provider fixtures retained separately) | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`, `execution/test_jit_entry_scope.py`; [live strcmp check](kernel/spin/string_service/README.md) |
+| Checked-regression spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
+| Trusted ordinary callees and scalar services | `codegen/test_ordinary_callee_bytes.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`; [Linux 7 ordinary-translation evidence](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md). Legacy string-model/provider fixtures are separate compatibility checks. |
 | Legacy direct-helper ABI compatibility | `admission/test_native_calls.py`, `codegen/test_native_call_execution.py`, `execution/test_mutex_images.py`, `execution/test_jit_entry_scope.py`, `infrastructure/test_native_image.py` |
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
@@ -106,7 +106,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
-| Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
+| Optional checked analysis (`trusted_source=False`) |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
 | Original TCLock four-family port | [Pinned-source checks and serial live probes](kernel/tclock_original/README.md); ordinary rwsem API and IRQ-enabled rwlock caller scope |
@@ -235,8 +235,8 @@ complete delegated bodies from the same image, with the original comparison
 result and no permanent refusal. Both probes require exact operation counts,
 task identity, lock exclusion and final drain; their delegated phases require
 positive matching entry and completed-body counts. Neither is a
-performance benchmark or a general pointer-safety test. The current string
-probe additionally requires the version 11/12 direct-call route, with generated
+performance benchmark or a general pointer-safety test. The retained historical string
+probe requires the version 11/12 direct-call route, with generated
 image requirement 20 (read-only API bit 2 plus direct-call bit 4). The string probe does
 not exercise the separate `strscpy_pad` writing service.
 
@@ -256,11 +256,11 @@ is insufficient. The supported compatibility ranges are:
 The writing-service capability is separate from the read-only comparison
 capability. Its focused unit checks and exact taskname workload are separate
 from the `strcmp` continuation probe. See the
-[comparison contract](../docs/design/admission.md#original-strcmp-service) and
-[writing contract](../docs/design/admission.md#original-strscpy_pad-writing-service)
+[comparison contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strcmp-service) and
+[writing contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strscpy_pad-writing-service)
 for the single-lock, source-lifetime and stable-memory limits. Publication and
 unit success do not imply live workload or performance acceptance.
-The [direct-call contract](../docs/design/admission.md#direct-original-helper-calls)
+The [direct-call contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 preserves the original arguments, actual CALL return word and two-word wrapper
 ABI. Generated-image readback validates relocated CALL operands outside timing;
 it does not inspect helper instructions or string arguments. Final candidate 3

@@ -171,10 +171,10 @@ path that skips the gate. KD handles slow readers locally and delegates writers
 through JIT; TCLock delegates by switching native stacks. KD retains its existing
 packet, source lease, completion and ACK rules.
 
-ABI3 support does not include the ABI1-only direct string-helper path or checked
-pointer-load exits. Their shared spin implementation is not sufficient to admit
-those features under another entry ABI. Consult [instruction admission](admission.md)
-for the exact generated-code requirements.
+Production ABI3 uses the same trusted ordinary-callee policy as other current
+entries. Historical ABI1-only direct string bridges and checked pointer-load
+exits do not become ABI3 features merely by sharing the spin engine. Consult
+[translation policy](admission.md) for construction and runtime requirements.
 
 ## Scope and lifetime
 

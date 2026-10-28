@@ -6,8 +6,10 @@ compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. Bounded NUMA selection
 hands larger deferred cohorts to the next owner at a 768-body local boundary;
 a smaller rejoined prefix is followed by FIFO service under the current owner.
-The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
-processor-state admission, immutable mutex images and generation-bound frames.
+Immutable mutex images and generation-bound frames remain required. Production
+now trusts kernel/module source and skips semantic admission; the
+[compatibility backport](../history/legacy_mutex_compatibility.md) records its
+earlier checked-analysis behavior.
 The [KD-only extension](kd_only_mutex.md) embeds physical exclusion in a native-sized
 KD object together with the delegation scheduling root.
 
@@ -551,7 +553,7 @@ The default total cap is exactly 1024 bodies. Independent build definitions
 `KDLOCK_MUTEX_BATCH` and `KDLOCK_MUTEX_NUMA_BOUNDARY` select the total cap and
 locality boundary; neither changes spin batching. The legacy `--kd-batch-size`
 mutex runner explicitly forwards its cap and uses boundary 768. The
-[nano profiling guide](../../bench/nano/README.md#profiling-the-mutex-profiles)
+[nano profiling guide](../../bench/nano/README.md#historical-mutex-profiling-runner)
 documents separate bounded experiments for both values. Runners verify the
 provider's `mutex_batch` and `mutex_numa_boundary` ELF metadata and retain the
 policy with each result. A longer cohort can delay remote service; it does not
@@ -713,8 +715,8 @@ If execution reaches the marker, the original waiter resumes before that
 instruction and future delegation of the entry is disabled for the source
 session. Other unsupported instructions remain refused. This translation policy
 does not change the mutex queue, physical ownership or pinned-waiter protocol.
-The direct string-helper optimization is restricted to spin ABI1 and is not a
-new mutex execution path.
+Current string callees use ordinary decoded CALL/RET under the selected
+trusted-source policy; historical helper-specific routes are not selected.
 
 The benchmark KD provider defaults to UBSAN off; a standalone provider build
 inherits the existing kernel configuration. Backend/workload ELF identity
@@ -723,64 +725,15 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The [current Native/TCLock/KD comparison](../../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
-uses collection revision `bd9d4ce` with the `752fec1` runtime unchanged. It
-covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes n16
-and pipecap n16 at `1 2 4 8 16 32 36 48 60` workers, three repetitions each.
-All 567 sessions completed correctly and drained, with no matched kernel
-faults. Fresh validation passed two basic programs and 86 cases across four
-benchmark test programs; this documentation/comparison round did not rerun
-the protocol drivers or live probes. KD's whole-run median exceeds both controls
-on all seven workloads at 60 workers; its three synthetic medians remain below
-Native at eight workers. This nine-point comparison keeps local, synthetic
-entry-witnessed and API returned-body results separate, including the split
-c08/t2 class. It neither establishes full-grid parity nor measures a new runtime
-change.
+The [current Linux 7 catalog](../../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+includes both maintained mutex nano profiles and selected syscall/API cases.
+[Performance](../PERFORMANCE.md) summarizes the actual curves without pooling
+checked/trusted generations or treating local `NO_JIT` as returned execution.
+The [normal basic run](../../bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
+provides separate fixed-iteration public-mutex returned-body evidence.
 
-The preceding [shared-node comparison](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
-retains `752fec1`: shared OSQ storage, a 256-body locality boundary and handoff
-for eight or more deferred requests. It passed 17 basic/affected checks,
-11/13-case runner programs and three live probes. Fresh sixty-worker medians
-improve 14.3%/13.6%/16.5% over the preceding compact version for c01/seek/pipe;
-pipe remains 9.2% below old256. Eight-worker ranges overlap, and the c01 median
-is 2.1% lower. See [performance status](../PERFORMANCE.md#mutex-shared-node-and-locality-comparison)
-for the six-point table and measurement limits. Synthetic c01 counters witness
-entry; API sessions separately count returned bodies.
-The first shared-node trial `f4d359d` included `7290327`'s all-cohort FIFO rejoin
-at 128 bodies. Its sixty-worker regressions are retained separately at
-`archive/mutex32-fifo-20261020`. Both sources passed their own checks; their
-timings are not pooled. The four-arm comparison contains 72 valid, drained
-timings and 78 kernel logs without matched runtime faults.
-
-The preceding [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
-records `76af844` basic/affected checks and fresh pipe comparisons against the
-previous 32-byte and old 256-byte versions. It removes redundant queue-head tail
-RMWs and inlines the gate hint and unchanged ownership predicate. The object
-remains 32 bytes with native alignment; the remaining pipe gap is explicit.
-Separate placement diagnostics and an archived prefetch trial do not enter the
-retained candidate's medians.
-
-The earlier [embedded-state comparison](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
-records `372be89` basic/affected checks and twelve fresh pipe sessions against
-old-256-byte `0324e60`. The 32-byte version trails by 40.7% at eight workers and
-37.0% at sixty; removing the auxiliary references has not established parity.
-Its measured returned-JIT share is higher at sixty workers, so lower delegation
-cannot explain that point. Packed-state coherence cost remains a hypothesis.
-
-The selected `d2a2304` c01/post64 and pipebytes n16 comparison, returned-body
-evidence and regression limits are in the
-[KD-only report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
-That report measures the prior 256-byte, 128-byte-aligned object. The separate
-[compact comparison](../../bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md)
-measures the RCU registry, direct-index table and reference transfer against a
-fresh inline baseline. The final compact version improves pipe medians over
-RCU but retains c01, seek and pipe gaps against the inline object. Its basic
-plus affected checks, profiles, variation and sequential-run limits remain
-with that report; the historical full-grid results are not compact measurements.
-Earlier grouping/cache candidates remain in
-[fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
-The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)
-retain their original-host behavior after rejecting those versions of task
-retention and smaller entry/execution changes under `nopvspin`.
-Source review and synthetic unit fixtures do not substitute for those live
-results or prove starvation freedom.
+Older compact-layout, shared-node, prefetch and 256-byte comparisons remain at
+the [fixed implementation checkpoint](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/mutex_implementation.md#scope-and-evidence)
+and in [history](../history/README.md). Their numeric outcomes and failures are
+unchanged, but they do not qualify the current source/kernel. Deterministic
+fixtures and source review do not prove all kernel schedules or starvation freedom.

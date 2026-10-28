@@ -5,17 +5,11 @@ locking in the [project roadmap](../ROADMAP.md). Broader kernel replacement is
 the stage 3 objective. The two current uses have distinct execution paths:
 eligible benchmark outer writers may delegate, while native MM bodies stay local.
 
-The waiting implementation selected in `c21345b` is the KD rwsem baseline.
-Its acceptance includes the measured tradeoff: large gains at 60 workers and
-substantial regressions at two workers with 20% writes. The
-[performance status](../PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
-retains those results. This acceptance does not replace the selected KD mutex
-protocol or establish support for every Linux reader/writer semaphore use.
-The subsequent IRQ-safe reader-release correction at `e6fc371` adds timed
-writer-drain rechecks and is included in maintained `master`. A source comparison
-at `b8d9137` confirms that the rwsem implementation, public rwsem headers and mmap
-overlay are unchanged since that correction. The historical `c21345b`
-measurements predate the correction and do not establish its performance.
+The waiting policy selected at `c21345b` and later IRQ-safe release correction
+remain the protocol foundation. Their historical acceptance and regressions do
+not qualify current performance. The current Linux 7 shared-MM comparison loses
+to Native at all measured counts; [performance](../PERFORMANCE.md) owns those
+results and [validation](../VALIDATION.md) owns exact source/check scopes.
 
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
@@ -265,220 +259,32 @@ arrivals can delay those waiters. It supplies no bounded-wait guarantee or
 implied throughput advantage. The selected mutex's general oversubscription
 limitations remain separate from the rwsem reader-drain solution.
 
-## Why the archived delegation cannot be copied unchanged
-
-The archived implementation remains reachable at
-`archive/task/sleep-rwsem-snapshots` (`82f92db`). Its writer integration depended
-on the rejected owned-mutex protocol:
-
-1. It combined during unlock, after the physical writer had drained readers.
-   The selected mutex may combine during acquisition. Reader drainage after
-   its outer lock macro is therefore too late. The new positive phase drains
-   readers before entering that macro.
-2. `cookie.owner == 0` includes routed physical acquisitions and native
-   fallbacks; it does not identify only synthetic delegated entries. The new
-   phase protocol applies before every outer acquisition without making this
-   assumption.
-3. Published waiters poll with preemption disabled. Waiting for a sleeping
-   reader only after publication can prevent that reader from resuming on a
-   pinned CPU. The new drain wait happens before publication while the caller
-   remains schedulable.
-4. A pre-publication reader drain alone cannot account for a later ordinary
-   downgrade. Exclusive ordinary admission prevents that transition from
-   overlapping a positive outer-writer phase.
-
-These admission rules resolve the rwsem-specific ordering hazards without
-restoring the owned/adaptive protocol, Linux mutex backing or parked published
-producers.
-
 ## Mmap and validation boundaries
 
-The [conditional instruction probe](../../tests/kernel/jit_escape/README.md)
-has a rwsem family using the same outer-writer pair, ABI2 and requirement-1
-image as the mutex continuation. It requires returned cold-path bodies, a
-validated hot instruction marker, exact native suffix effects, competing
-accepted-reader exclusion and final reservation/gate drain. It does not add
-delegated reader or nested rwsem control support.
+The [Linux 7 mmap adapter](../../kernel_integration/linux70/MMAP.md) uses ordinary
+local KD readers/writers behind Linux's `mmap_*` wrappers. It selects one backend
+per mm before publication; native MM algorithms execute on their original task.
+It does not use the outer writer delegation pair. Minimal wrappers retain exact
+read-share tokens and mm references for asynchronous read release; an observed
+reader count cannot replace that lifetime transfer.
 
-The separate [mmap adapter](../../kernel_integration/mmap_lock/README.md) integrates
-the ordinary local API into `mm_struct::mmap_lock` for its documented non-RT,
-non-lockdep x86_64 SMP configuration. Linux callers keep the `mmap_*` wrappers;
-the adapter selects Native or namespaced KD primitives once per mm before
-publication. Readers remain concurrent and local. Native mmap, munmap, advice
-and fault algorithms stay unchanged and execute on their original task. The
-adapter does not use the explicit outer-writer pair.
+Normal `kdlock1` disables this adapter. The separate enabled `kdmm1` image has
+Native/KD schema-2 identities, fresh API/lifetime/mapping/fault prerequisites and
+42 completed exploratory shared-MM timings. The
+[checkpoint](../../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+retains the initial failed contention witness and later diagnostic separately.
+Correctness does not establish fairness, full Linux equivalence, performance
+parity, whole-kernel/RT/lockdep support or general non-owner API support.
 
-Minimal API/lifetime wrappers preserve the acquired-share token and mm reference
-for asynchronous non-owner read release. The generic rwsem API does not gain a
-non-owner release contract. An observed reader count or idle predicate cannot
-replace that exact transfer or stopped/joined users at destruction.
+The [instruction-exit probe](../../tests/kernel/jit_escape/README.md) has a separate
+outer-writer ABI2 family. Its returned cold bodies, hot native suffix, exclusion
+and drain are distinct from the local actual-MM backend. Production source trust
+changes no reader-drain, ownership, ACK or reservation-release requirement.
 
-The [corrected-image receipt](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
-records 137 Native and 161 KD assertions on actual mm objects in `kdmm31`, with
-normal drain and unload. Its 352 standalone assertions and two basic programs
-are separate validation classes. They establish the tested API/order/lifetime
-cases, not full Linux semantics, fairness, bounded starvation, transitive callback
-coverage, whole-kernel substitution, RT or lockdep equivalence. Provider loading
-alone also does not establish shared-provider workload or returned-JIT coverage.
-
-The [scoped audit](../../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#lock-audit)
-records acquisition, rollback, cancellation, downgrade, exact writer ownership
-and mmap token/destruction ordering. It found no new demonstrated lock correctness
-defect within that scope. It distinguishes the validated one-jiffy tradeoff from
-unproved fairness and wakeup-amplification hypotheses; it does not establish
-full Native equivalence. The already-authorized one-attempt diagnostic loaded
-the unchanged provider, retired it and unloaded normally, without a workload or
-JIT-body test. The earlier pre-initialization failure to allocate its 7,592-byte
-per-CPU section remains unexplained: capacity, fragmentation and allocator hints
-were not isolated. Do not repeat that diagnostic as a prerequisite for the
-built-in mmap comparison.
-
-The older 24-session plain/sampled campaign
-[stopped at initial admission](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-with 73 QEMU tasks versus the required 67, before any boot or payload load. All
-24 measured sessions remain unrun. Later quiet observations cannot validate
-that failed admission or any rejected timing.
-
-The prospective [shared-mm comparison plan](../../bench/mmap_lock/README.md#plain-throughput-plan)
-is the separate `plain-scaling-v1` schema: 21 worker counts, Native/KD and three
-paired repetitions, or 126 plain sessions. Its
-[41 focused mocked test passes](../../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
-and independent review establish tooling behavior only. The 44 unscored checks,
-170 payload cycles and six boots are planning maxima, not live approval.
-Current window admission needs 385 full captures; the historical transport
-estimate was 259. See the [runner budget](../../bench/mmap_lock/README.md#plain-throughput-plan)
-for the worker-policy waits and revised storage/runtime. Counts above 32 span
-both guest NUMA nodes; this does not isolate a
-NUMA effect. Adjacent repetitions share boots. No expanded measurement has run:
-the [live sweep](../../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
-passed Native validation and stopped at the KD fixed-writer proof, then restored
-recovery. That validation failure is not a lock-defect claim. The subsequent
-[explicit eligibility policy](../../bench/mmap_lock/THROUGHPUT_POLICY.md)
-separates a missing scheduling observation from completed functional work while
-preserving strict mode, every positive-proof predicate and exact drain checks.
-Its 99 offline tests and saved Native-control replay passed. The
-[authorized continuation](../../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
-then completed 80,000 actual KD mmap/munmap cycles with an inconclusive writer
-observation and passed 15 unscored controls through 36 workers. The 40-worker
-control failed the unchanged positive full-cohort peak-window requirement;
-all workers and references drained, but no measured case ran. This supplies no
-repeated performance baseline or optimization claim. The new policy is selected
-explicitly and cannot reclassify historical failures.
-
-The separate [small validation pair](../../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
-qualified under `mmap-window-v2` and `qemu-workers-v1`: Native 108,245.61 versus
-KD 35,406.14 completed cycles/s, KD/Native 0.3271. One unscored pair supplies no
-variability estimate or causal bottleneck diagnosis. The historical exact
-67-task admission failures remain rejected; the explicit worker policy does
-not retroactively qualify them.
-
-The earlier 12-session `plain-v1`
-[authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
-consumed one capture and stopped at 68 QEMU tasks versus 67, before any boot or
-payload check. All twelve measurements and six unscored checks remain unrun;
-that attempt qualified no timing. This failure is separate from the older
-73-task stop. Review and idle synchronization of runner inputs remain necessary
-before a future separately approved campaign. The workload measures completed
-writer mmap/munmap cycles, not isolated lock acquisition, concurrent-reader
-scaling or page-fault throughput. New latency sampling is deferred. TCLock has
-no equivalent killable/downgrade mmap interface and is not a comparison arm.
-
-The [first 60-second diagnostic attempt](../../bench/results/10.176.26.71/bench/mmap-diagnostic-20261026/README.md)
-stopped during initial observation at a 504.396027 ms gap, before any stimulus.
-The user subsequently clarified the approximate cadence requirement; the
-[diagnostic guide](../../bench/mmap_lock/DIAGNOSTIC.md) tracks its separate
-correction and latest execution status. Neither a diagnostic nor a later quiet
-observation replaces original benchmark admission or validates rejected timing.
-The historical/default exact 67-task gate remains unchanged.
-
-The [corrected diagnostic](../../bench/results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
-then stopped on a new QEMU task during the guest no-op phase; its checksum phase
-did not run. Final health at **01:26:28 on October 26 (Asia/Shanghai)** recorded
-recovery `6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`,
-the original 73 modules, taint **12288** and no pending boot. This is time-stamped
-saved evidence, superseded for current recovery status by the later sweep,
-offline preparation and [stopped continuation](../../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md):
-recovery `6.1.159-kdclobber2`, original 73 modules, taint 0, no pending boot and
-no active project work. Recheck recovery and competing jobs before later live
-work; preserve the
-[reconstruction and recovery inputs](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
-
-Operation-specific MM body delegation and prepared teardown campaigns are
-retired. The historical audits below explain native dependencies and preserve
-their captured evidence; they do not authorize resuming those mechanisms.
-`access_remote_vm()` and other task-dependent bodies remain on the originating
-task. Broader substitution still requires coordinated reader/writer, Linux helper
-and lockdep contracts, fault/VMA lifetimes, retry and lock-mode transitions, and
-kernel configuration validation.
-
-The retained [native mmap audit](../../bench/results/10.176.26.71/tests/proc-mmap-audit-20261015/README.md)
-identifies the following dependencies. Paths and line numbers refer to its
-captured kernel inputs, not an independently verified current guest tree.
-
-| Native participant | Branch contract that a replacement must preserve |
-| --- | --- |
-| `include/linux/mm_types.h:597`, `include/linux/mmap_lock.h:11`, `kernel/fork.c:mm_init` | The object is a native rwsem, with static/dynamic initialization, nested/killable/try acquisition, downgrade, non-owner read release, assertions and contention helpers. Maple tree uses its `dep_map` as an external lock only with `CONFIG_LOCKDEP`; the macro is a no-op in the current configuration. Every participant and its object/layout, initialization and supported lockdep contract must be converted together. |
-| `arch/x86/mm/fault.c:do_user_addr_fault` | Fault handling uses `current->mm`, saved registers, IRQ state, signal/accounting context and exception fixups. Capturing an `mm` pointer does not preserve these originating-task requirements or establish sleep eligibility. |
-| `mm/memory.c:lock_mm_and_find_vma` | Read trylock can fall back to killable acquisition. Stack growth drops read ownership, acquires write killably, refinds the VMA and downgrades on success; failures return unlocked. `mmap_upgrade_trylock()` always returns false in this capture. Old VMA references cannot survive the drop by assumption. |
-| `arch/x86/mm/fault.c:1311`, `__bad_area` | Access-error handling releases the read lock. Signal-pending and `VM_FAULT_COMPLETED` exits are already unlocked. `VM_FAULT_RETRY` reacquires and refinds the VMA; ordinary completion explicitly unlocks. Each implicit release needs one exact ownership/ACK transition, and each retry needs a fresh acquisition. |
-| `mm/memory.c:fault_dirty_shared_page`, `__do_fault`, `handle_mm_fault` | Filemap/folio retries, filesystem fault callbacks and userfault handling can drop the lock while allocating, waiting or doing I/O. Complete callback, reference and origin-context proofs are needed. Their internal implementations are not fully retained in this capture. |
-| `mm/gup.c:faultin_page`, `__get_user_pages_locked` | `COMPLETED` clears `*locked` and returns `-EAGAIN`. `RETRY` returns `-EBUSY` and clears `*locked` except with `RETRY_NOWAIT`. The wrapper can reacquire killably, then release again to report the interrupted critical section. Return flags alone do not identify ownership; page references, partial progress and VMA invalidation must also be preserved. |
-| `mm/gup.c:fixup_user_fault` | Internal `COMPLETED`/`RETRY` paths reacquire the read lock and set `*unlocked`; retries refind the VMA. Returning with the lock held does not mean ownership was uninterrupted. |
-| `mm/mmap.c:expand_stack`, `mm/memory.c:__access_remote_vm` | Legacy stack expansion drops read, takes write killably, and returns read-held after downgrade or unlocked on failure. Remote access requires an `mm` reference and must preserve both exits and page references. Its GUP call supplies `locked=NULL`; retry-driven unlock cannot be inferred for that call. |
-| `mm/mmap.c:do_mas_align_munmap`, `__vm_munmap`, `brk`; `mm/mremap.c` | Unmapping may downgrade and return `1`, selecting read rather than write unlock. Some stack-growth neighbors suppress downgrade. `vm_munmap()` disables downgrade while the munmap syscall enables it. Current delegated outer writers cannot downgrade; these paths require ordinary ownership or a separately established protocol. |
-| `mm/util.c:vm_mmap_pgoff`, `mm/mprotect.c:do_mprotect_pkey`, `kernel/fork.c:dup_mmap`, `fs/proc/task_mmu.c` | mmap/mprotect have killable acquisition, mmap population follows unlock, fork nests old/new-mm write ownership, and proc iteration retains task/mm references across callbacks. Smaps rollup can drop and reacquire on contention. Cancellation, cross-object nesting, post-unlock work and iterator invalidation remain required. |
-
-The x86 fault handler never sets `FAULT_FLAG_RETRY_NOWAIT`; its inference that
-`VM_FAULT_RETRY` means unlocked is therefore valid for that caller. Applying the
-same inference to GUP would lose the documented NOWAIT exception. Userfault
-copying in `__mcopy_atomic()` also releases and reacquires internally, while
-returning bytes/errno rather than fault flags. In the newly captured
-`handle_userfault()` implementation, the blocking drop path returns `RETRY`
-without reacquisition; NOWAIT returns `RETRY` while still held. Its architecture
-comment alone does not prove a different branch. A lexical acquisition/release
-pair or a retry counter cannot represent these transitions.
-
-The audit was captured on 2026-10-15 against `6.1.159-kdclobber2`, with recorded
-live/source Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. A read-only
-recheck on 2026-10-20 matched all 25 retained source/configuration files to the
-unchanged audit hashes and the baseline manifest to SHA-256
-`0f44870efd7ff604067a2436edcfd95ac8c4e413b42e3d534a51e3c011d3d013`.
-That configuration enables `LOCK_MM_AND_FIND_VMA`, `USERFAULTFD` and
-`PREEMPT_DYNAMIC`; `PROVE_LOCKING` and `DEBUG_LOCK_ALLOC` are disabled.
-These historical checks and native syscall probes do not establish KD
-mmap/fault execution. The subsequent
-[current-source capture and review](../../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
-rechecked the live identity and all 25 files, adding 21 callback/helper files.
-Its 1,470 archive checks passed and 24 hashed source intervals document implicit
-release, NOWAIT, file/context pins, nested resources, retry and downgrade.
-Those audited inputs still used native mm lock objects and did not establish
-delegated rwsem mode/ownership transitions, origin context or transitive
-filesystem/DAX/journal lifetimes. The separate earlier opt-in
-[module-owned mapping integration](mmap_fault.md)
-passed Native/KD/TCLock functional checks for its private backing state and
-originating-task fault transactions. Its native `mm->mmap_lock` remains intact;
-that bounded integration does not resolve the full-mm blockers. The existing
-fail-closed rwsem-call admission stays intact. Generic fault replay remains
-unsupported.
-
-The [API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
-writer/late-reader exclusion, same-CPU scheduling progress, cancellation,
-trylocks, downgrade and drain. Its phase-specific checks distinguish the two
-waitqueues and keep an outer writer before publication while an ordinary reader
-or downgraded writer is active. Separate strict JIT acceptance checks require
-returned bodies through matching outer-unlock completions; a published `NORMAL`
-image alone is insufficient. Native, delegated-capable KD and ordinary local KD
-shells retain distinct source and instrumentation identities.
-
-See the [optimization validation receipt](../../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
-for recorded checks and source identities. Functional and JIT acceptance do not
-establish throughput parity; measured comparisons belong in the
-[optimization report](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-and [performance status](../PERFORMANCE.md).
-
-The [initial writer-delegation receipt](../../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
-records the earlier shared-queue implementation without bounded polling. The
-[previous ordinary-only receipt](../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
-and [archived delegated receipt](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
-describe their captured implementations. Those earlier receipts do not establish
-validation or performance of the current waiting implementation.
+The archived owned-mutex rwsem design is not interchangeable: outer writers must
+reserve admission and drain readers before publication, and retain their exact
+reservation through the origin's final release. Do not restore Linux mutex
+backing, parked producers or operation-specific MM delegation. Older kernel
+line audits, fault proposals and stopped campaign plans remain in the
+[fixed pre-cleanup guide](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/rwsem_implementation.md#mmap-and-validation-boundaries)
+and [history](../history/README.md).

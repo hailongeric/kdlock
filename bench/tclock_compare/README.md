@@ -44,8 +44,8 @@ reviewed inputs to the new-host VM before running.
 
 ## Prepare and run
 
-Verify the captured kernel and idle state with [the project guide](../../docs/PROJECT_GUIDE.md).
-Benchmark boot policy requires [nopvspin](../../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+Verify the captured kernel and idle state with [VM operations](../../docs/operations/VM.md#environment).
+Benchmark boot policy requires [nopvspin](../../docs/operations/VM.md#boot-policy).
 Check the live argument and boot confirmation; Build ID alone does not select
 the spin path. Use a confirmed snapshot of this boot and replace
 `YOUR_CONFIRMED_SNAPSHOT` in the examples with its actual monitor tag.

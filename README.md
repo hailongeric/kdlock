@@ -1,207 +1,92 @@
 # kdlock
 
-The project's goal is to replace relevant Linux kernel locks with KD and measure
-unchanged applications such as will-it-scale's `mmap1`. Work proceeds in three
-stages: demonstrate gains on lock micro/nano benchmarks; establish improvement
-or parity in scoped mmap/page-fault integration; then complete the declared
-kernel lock replacements and evaluate application performance. The
-[project roadmap](docs/ROADMAP.md) defines goals, milestones and completion
-criteria. Current measurements support favorable nano cases but have not met the
-scoped MM performance objective; broad kernel replacement remains planned.
+kdlock is an experimental x86_64 Linux lock library. A physical lock holder can
+execute waiting callers' critical sections through generated code, then return
+each caller after its completed work. The project goal is relevant in-kernel lock
+replacement and evaluation of unchanged applications such as will-it-scale
+`mmap1`.
 
-The development VM uses **Ubuntu 26.04.1 LTS**, with **Linux 7.0.0-38-kdlock1**
-as its normal boot default and a separate enabled-MM image for the shared-MM campaign.
-Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; further Linux 6.1
-adaptation is retired. The [migration record](docs/history/vm-ubuntu2604-migration-20261027.md)
-records OS boot, matching header packages and storage identities. The
-[Linux 7 port record](bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
-tracks the exact `linux=7.0.0-38.38` source, kernel/provider changes and each
-build and live-validation gate. Eight Native/TCLock controls passed data and
-drain checks; separate KD mutex/spin probes validated native continuation. These are
-functional results, with no new performance claim. The
-[retirement record](docs/history/kernel-retirement-20261027.md) preserves the
-legacy recovery version and results. Earlier functional commands and throughput
-results retain their Linux 6.1 scope. The
-[trusted-source basic controller](bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md#complete-four-family-basic-controller)
-passed all four recorded cacheline presets in one run, with correct data,
-returned JIT bodies and final drain. These iteration-count checks supply no scores.
+The [roadmap](docs/ROADMAP.md) has three stages: demonstrate a useful lock
+micro/nano performance envelope; establish scoped mmap/page-fault improvement or
+parity; then complete declared kernel replacements and compare applications.
+Favorable nano cases exist. The current actual shared-MM performance objective
+remains unmet, and broader kernel replacement remains planned.
 
-The current [workload catalog](docs/BENCHMARK_WORKLOADS.md) selects 52 lock/API
-configurations, including all ten c01/c16/post256 nano profiles. The Linux 7
-campaign uses 21 worker counts, Native/TCLock/KD and one two-second round per
-point: 3,276 planned lock/API measurements. The earlier checked-source
-[campaign](bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
-completed 29 matrices (1,827 timed points) and preserved a partial failed
-taskname attempt. The separate
-[trusted-source campaign](bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
-completed 22 full workloads (1,386 points). Its `taskname-w20` attempt remains
-stopped with 23 valid points, one timed KD failure and 39 unrun points. A fresh
-[prepared taskname cohort](bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
-completed its own 63-point matrix, with six KD returned-JIT points and fifteen
-successful local `NO_JIT` points. The
-[complete catalog index](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
-therefore covers all 52 configurations and 3,276 lock/API points across those
-three separate source/preparation cohorts. This is coverage accounting, not
-pooled performance evidence. The old partial failure and the separate failed
-strict unscored taskname check remain unchanged.
+## Current platform and policy
 
-All **126 selected Linux 7 MM measurements** are complete: the
-[private-MM campaign](bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
-contains 84 independent-mm/private-fault points, and the separately frozen
-[shared-MM campaign](bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
-contains 42 Native/KD points. Native measured higher shared-MM throughput at
-all 21 worker counts; at 60 workers KD achieved 0.0436× Native. These are single
-exploratory rounds, including the 2.15% KD deficit at one worker; no repeat
-variability or scoped MM improvement is established. The separate
-[enabled-MM kernel checkpoint](bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
-records the same `7.0.0-38-kdmm1` image in Native/KD modes, fresh correctness and
-preparation passes, and the earlier KD1 mapping failure, cleanup and diagnostic.
-The normal `kdlock1` boot default keeps the global mmap backend disabled.
+The VM uses **Ubuntu 26.04.1 LTS** and normal kernel **`7.0.0-38-kdlock1`**, built
+from authenticated Ubuntu `linux=7.0.0-38.38` source containing upstream 7.0.14.
+The ordinary kernel disables the mmap backend. A separate `7.0.0-38-kdmm1` image
+has explicit Native/KD modes for actual shared-MM experiments. Linux 6.1
+development is retired; results and one legacy recovery version remain preserved.
+[VM operations](docs/operations/VM.md) owns paths, identity, dependencies and recovery.
 
-The October 26 exploratory screen now retains 45 historical lock/API
-configurations and completed the three separate implemented mmap/fault workloads,
-with one timed round per point. The [lock/API tables](bench/results/10.176.26.71/bench/catalog-single-20261026/progress.md)
-retain 2,788 measurements and 47 drained KD xattr preparation failures; the
-[MM tables](bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
-retain another 126 measurements. Strict host timing qualification remains failed;
-these observations do not replace repeated accepted baselines.
+Production trusts all kernel/module source, including loops. It skips semantic
+safety, context/value and entry-input proofs; the compiler clobber-entry agreement
+is assumed. Strings use ordinary decoded CALL/RET, without named models, services
+or direct native bridges. Source leases, complete selected text, faithful lowering,
+actual return words and exact runtime ownership/retirement remain required.
+The checked analyzer is an explicit regression utility, `trusted_source=False`.
+See [translation policy](docs/design/admission.md).
 
-kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
-execute waiting callers' critical sections through a just-in-time (JIT) compiler,
-which translates their protected work into code for delegated execution. The project
-provides spinlocks, ordinary mutexes and spinning read-write locks, with matched
-Linux Native (unmodified Linux locks) and TCLock (the separate stack-switching
-delegation implementation) workloads. A separate
-[sleeping reader/writer semaphore, or rwsem](docs/design/rwsem_implementation.md),
-allows concurrent readers or one exclusive writer, and lets blocked callers
-sleep. Its ordinary readers/writers execute locally; explicit outer writers can
-delegate their work through the unchanged KD mutex protocol.
+## Lock interfaces
 
-The public rwsem interface is [`include/kd_rwsem.h`](include/kd_rwsem.h) and
-`struct kd_rwsem`. The experimental [Linux 7 mmap adapter](kernel_integration/linux70/MMAP.md)
-uses that local reader/writer protocol behind Linux's mmap wrappers. Native MM
-bodies stay on their original task, and readers remain concurrent. Explicit
-rwsem delegation is a separate interface; operation-specific MM-body delegation
-and prepared teardown are retired.
-
-The `e6fc371` correction passed 137 Native and 161 KD assertions on actual mmap
-objects, plus a separate 352-assertion standalone probe and two basic programs.
-These focused checks do not establish full Linux semantic equivalence. Benchmark
-payload/client preparation has passed. The authorized October 25 `plain-v1`
-attempt [stopped before boot](bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
-at 68 QEMU tasks versus the required 67; all 12 measured sessions remain unrun.
-The separate prospective `plain-scaling-v1` matrix has 21 worker counts and
-126 Native/KD sessions per workload; its 41 focused mocked tests passed. Its
-[live sweep](bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
-passed all Native controls, then stopped on the KD fixed-writer observation;
-all 126 measurements remain unrun and recovery is restored. A separate qualified
-[16-worker validation pair](bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
-measured 108,246 Native versus 35,406 KD mmap/munmap cycles/s (KD 0.3271×).
-One pair provides no variability estimate or optimization conclusion. See the
-[validation scopes](docs/VALIDATION.md#native-shared-mm-mmap-writers).
-
-The rwsem waiting policy selected in **`c21345b`** remains the baseline. Writers
-first block new readers and wait for existing readers to finish. Separate queues
-serve different waiting conditions. Ordinary uninterruptible acquisition polls
-for a bounded number of attempts before sleeping; killable mmap writers use
-their separate wait path. The
-[756-session comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-records large 60-worker gains and retained two-worker regressions. Acceptance
-includes this measured tradeoff. Those measurements predate the current object
-layout and IRQ-safe reader-release correction; they do not establish current
-performance. The [TCLock rwsem port](tclock_backend/README.md#original-rwsem-comparator)
-supports restricted ordinary pairs, without compatible cancellation, downgrade
-or actual mmap integration.
-
-`master` is the maintained version. Its KD mutex uses **KD-owned physical
-exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.
-All callers of a KD mutex object must use KD APIs. Direct calls to the unified
-`kd_mutex_lock/unlock` interface and ordinary blocking aliases permit delegation;
-signal/try/I/O acquisitions and function-pointer lock calls execute locally.
-Loading the provider does not replace locks throughout an existing kernel. See the
-[mutex contract](docs/design/kd_only_mutex.md) for supported APIs and scope.
-
-Mutex translation now supports [checked instruction exits](docs/design/admission.md#checked-instruction-exits).
-A reviewed special instruction on an untaken branch can remain in an eligible
-critical section. If that branch is taken, generated code stops before the
-instruction; the original waiter resumes there, and delegation of that entry is
-disabled for the source session. Earlier updates are retained. The
-[validation record](bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
-separates correctness checks from the accepted performance measurements below.
-
-The current mutex is 32 bytes with native 8-byte alignment. Its delegation phase
-and tail are embedded in the object; preallocated CPU/slot nodes share storage
-between independent OSQ and delegation memberships. There is no auxiliary
-address-indexed table. The user-selected defaults are a 1024-body total cap and
-768-body NUMA locality boundary; the
-[optimization study](bench/results/10.176.26.71/bench/mutex-profile-20261026/OPTIMIZATION.md)
-retains the exploratory cross-NUMA gains and same-node regressions motivating
-that choice. The earlier
-[shared-node comparison](bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
-records the 256-body NUMA locality policy and remaining performance gaps against
-the old 256-byte object. Earlier compact-table measurements remain historical.
-
-The historical accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by four,
-with three repetitions and Native/TCLock controls. The
-[performance guide](docs/PERFORMANCE.md) retains variation and regression limits.
-
-Production translation now trusts all selected kernel and module source code.
-It skips semantic context, memory/alias, loop-value and entry-input analysis;
-the compiler clobber-entry input contract is assumed. String routines use
-ordinary leased-text decoding and generated CALL/RET, with no string-specific
-service, summary or direct native bridge. Generated dispatch, budget and return
-checks preserve arithmetic flags. Decoding/lowering correctness, source leases,
-exact ownership and frame/return bookkeeping remain required. The
-[ordinary-translation checks](bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md)
-record 22 passing affected unit drivers, five MM runner drivers, a live
-read-only taskname pass with 1,600,000 correct reads and 1,592,658 returned JIT
-bodies, and one complete four-family basic controller pass. All drained;
-these are unscored functional results. See the
-[translation policy](docs/design/admission.md).
-
-The historical [`05876a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-contains 567 validated, drained sessions. At 60 workers, KD reaches
-4.521/2.368/0.573 Mops/s for taskname/xattr n16/xattr n128: 1.838×/4.901×/6.528×
-the preceding dispatcher implementation. All three exceed fresh Native there
-and remain below TCLock. The report retains low-count regressions, complete
-scaling results and the still-unaccepted taskname mutation delegation case.
-
-## Documentation
-
-- [Project goal and three-stage roadmap](docs/ROADMAP.md)
-- [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)
-- [Terminology](docs/TERMINOLOGY.md): lock, execution and measurement terms used in these guides
-- [Current lock catalog](docs/LOCKS.md): spinlock, mutex, rwlock and rwsem APIs and implementation guides
-- [Design](docs/DESIGN.md), [lock protocol comparisons](docs/design/lock_protocols.md)
-  and [code map](docs/CODE_MAP.md)
-- [Benchmark workloads](docs/BENCHMARK_WORKLOADS.md) and [benchmark commands](bench/README.md)
-- [Tests](tests/README.md), [validation](docs/VALIDATION.md) and [known limitations](docs/TODO.md)
-- [VM operations](docs/operations/VM.md) and [development rules](AGENTS.md)
-- [Branch consolidation](docs/history/main-consolidation-20261018.md) and [historical evidence](docs/history/README.md)
-- [Feature reintegration](docs/history/feature-reintegration-20261018.md): restored proc snapshots, benchmark safeguards and ordinary rwsem
-- [Accepted rwsem comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md): `c21345b` Native/KD results, separate Native/TCLock/KD spinning-rwlock reference, candidate history and validation limits
-- [Initial rwsem writer comparison](bench/results/10.176.26.71/bench/rwsem/20261018/README.md): historical shared-queue baseline, execution evidence and regressions
-
-## Repository
-
-| Directory | Responsibility |
+| Family | Supported execution model |
 | --- | --- |
-| [kernel_module](kernel_module/README.md) | KD provider, ownership, queues and execution engine |
-| [include](include/README.md) | Public APIs, shared ABI and wrapper assembly |
-| [disassem](disassem/README.md), [daemon](daemon/README.md) | Translation, admission and immutable mutex image publication |
-| [tclock_backend](tclock_backend/README.md) | Independent TCLock ports and upstream provenance |
-| [workload_modules](workload_modules/README.md) | Kernel benchmark payloads |
-| [bench](bench/README.md) | Maintained runners, archived analysis and results by machine |
-| [tests](tests/README.md) | Basic, targeted and live checks |
-| [kernel_baseline](kernel_baseline/README.md) | Captured kernel identity and historical experiments |
-| [tools/vm](tools/vm/README.md) | Source synchronization |
+| Spin | Exclusive ordinary pinned pair; eligible bodies may delegate; explicit IRQ/BH variants execute locally |
+| Mutex | KD-owned physical exclusion; direct public blocking calls and aliases use ABI2; callable/signal/try/I/O forms execute locally |
+| Rwlock | Concurrent local readers; exclusive ABI3 writers may delegate after writer admission |
+| Rwsem | Concurrent local readers and ordinary local writers; explicit outer ABI2 writers reserve/drain before delegation |
 
-The [folder ownership guide](docs/PROJECT_GUIDE.md#folder-ownership) explains
-where new source, runners, probes and records belong. Historical analysis tools
-are kept together in [bench/archive](bench/archive/README.md); measured outputs
-remain under machine-specific result directories.
+The maintained mutex is 32 bytes with native alignment. It shares preallocated
+CPU/slot storage between separate OSQ and delegation memberships. Defaults are
+batch cap 1024 and NUMA boundary 768, with handoff for at least eight deferred
+requests and bounded FIFO service after a smaller prefix. The promoted locality
+policy is an exploratory choice, not a universal optimum.
 
-Edit source on `380G10`; build and test only in the designated recovery VM on
-`10.176.26.71`. Trusted translation is not a security sandbox. See
-[admission](docs/design/admission.md) and [lifetimes](docs/design/lifetimes.md).
+Published mutex waiters poll pinned; physical owners may sleep. Every user of an
+object must follow one protocol. Public unlock retains exact acquisition routing.
+Loading the provider does not replace unrelated Linux locks. Whole-kernel,
+RT/ww_mutex/lockdep, broad oversubscription and complete mitigation coverage remain
+separately unvalidated. [Lock APIs](docs/LOCKS.md) and [open work](docs/TODO.md)
+define the current boundary.
+
+The MM adapter changes only the lock backend and minimal API/lifetime wrappers.
+Native mmap/munmap/advice/fault bodies execute unchanged on their original task.
+Operation-specific MM delegation and prepared teardown are retired.
+
+## Results and validation
+
+The [completed Linux 7 catalog](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+selects **52 full lock/API configurations plus three MM suites: 3,402 points**.
+It keeps 29 checked-source, 22 trusted-source and one prepared lock/API cohort
+separate, alongside distinct private/shared-MM identities. Each coordinate has
+one two-second round at fixed 2 GHz host policy. All timing is exploratory;
+strict qualification remains failed and no repeat variance is available.
+
+Both mutex nano profiles exceed Native and TCLock at the measured 60-worker
+point, with adverse/local points retained in their full curves. Actual shared-MM
+KD throughput is below Native at all 21 measured worker counts. Those observations
+do not establish universal gains or scoped MM parity. See
+[performance](docs/PERFORMANCE.md) for current tables and interpretation.
+
+The [fresh normal-kernel basic checkpoint](bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
+passed all four selected families with correct data, returned JIT bodies and final
+drain. Failed partial campaigns, the initial MM witness failure and strict
+unscored taskname `NO_JIT` control remain recorded. [Validation](docs/VALIDATION.md)
+separates those verdicts. `NORMAL` means publication, not returned execution.
+
+## Working in the repository
+
+[Documentation index](docs/README.md) assigns one guide per responsibility.
+[Code map](docs/CODE_MAP.md) locates implementation and test ownership.
+[Public headers](include/README.md), [benchmark runners](bench/README.md) and
+[test selection](tests/README.md) own their interfaces and commands.
+[Historical evidence](docs/history/README.md) retains superseded protocols,
+campaign plans and full earlier status narratives at fixed Git checkpoints.
+
+`master` is maintained. Source edits, Git and static/offline review run on
+`380G10`; all builds, tests, modules, daemons and timing run only in the designated
+VM. Follow [development rules](AGENTS.md): preserve exact owners, source leases,
+unlock ACKs and frame retirement; synchronize only while idle; verify recovery
+before live work; never force unload or treat timeout as drain.

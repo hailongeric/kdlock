@@ -16,7 +16,7 @@ finite-edge refinement candidate is preserved with the ordinary-translation
 experiment receipts and is absent from active code.
 
 Use [the daemon](../daemon/README.md) for publication and
-[the project guide](../docs/PROJECT_GUIDE.md) for guest dependencies.
+[VM operations](../docs/operations/VM.md#environment) for guest dependencies.
 Python 3.14 requires the [pinned Miasm compatibility patch and preflight](compat/README.md).
 Startup checks those installed bytes before decoding. The
 [terminology guide](../docs/TERMINOLOGY.md) explains JIT, ABI and execution states.
@@ -116,11 +116,11 @@ accesses. Explicit known observers are refused. This limited rule does not apply
 to arbitrary calls or discard ordinary writes. Decoded `memcpy` keeps ordinary
 CALL/RET analysis and all copy effects; it has no separate classification or
 special return path. See the
-[selected-caller contract](../docs/design/admission.md#original-call-word-aliases).
+[selected-caller contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-call-word-aliases).
 Both services use immutable images. Only `strcmp` uses the allowance
 of 128 calls; writing helpers share the limit of 16 scalar/control continuations.
-See the [read-only contract](../docs/design/admission.md#original-strcmp-service)
-and [writing contract](../docs/design/admission.md#original-strscpy_pad-writing-service).
+See the [read-only contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strcmp-service)
+and [writing contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strscpy_pad-writing-service).
 
 Version 11 optionally advertises bit 10 for direct original-helper calls.
 The selected image adds requirement bit 4, value 16, alongside its read/write
@@ -149,7 +149,7 @@ word for the original waiter; the invocation cannot reenter and reset its limits
 Completed-call counts use private descriptor fields at offsets 96 and 104 in a
 112-byte descriptor. The two-word wrapper ABI, body witness and lock protocol
 are unchanged. See the
-[direct-call contract](../docs/design/admission.md#direct-original-helper-calls)
+[direct-call contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 and [register guide](../docs/JIT_REGISTER_ABI.md) for the complete boundaries.
 
 The optional checked analyzer refuses Linux mutex APIs, their compiler clones

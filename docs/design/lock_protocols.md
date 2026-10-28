@@ -53,7 +53,7 @@ Unlock releases the ownership byte and balances preemption protection.
 The kernel is compiled with paravirtual spinlock support, but benchmark boot
 policy requires `nopvspin`. This selects native pending/MCS locking and disables
 PV stealing, PV wait/kick parking and the virtualization TAS shortcut. Earlier
-samples retain their recorded boot policy; see [VM configuration](../PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+samples retain their recorded boot policy; see [VM configuration](../operations/VM.md#boot-policy).
 Linux does not delegate the critical-section body, lend its stack to another
 CPU, or create a KD packet/frame/source lease.
 
@@ -359,11 +359,13 @@ as its denominator. Performance acceptance, failed candidates and remaining gaps
 the [current performance status](../PERFORMANCE.md),
 [RCUHT rwlock report](../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
 [historical spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
-Those original-host reports retain their historical source and topology. The
-[current mutex report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-compares accepted compatibility and KD-only mutexes on c01/post64 and pipebytes n16.
-The [accepted rwsem report](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-retains its sleeping-semaphore comparison and separate spinning-rwlock reference.
-The [current taskname/xattr report](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-measures the direct original-helper path on spinlocks. These source revisions,
-lock families and workload results are not pooled.
+Those original-host reports retain their historical source and topology. Current Linux 7 measurements and their separate checked/trusted/prepared
+identities are indexed in [performance](../PERFORMANCE.md) and
+[validation](../VALIDATION.md). Native controls use the recorded Linux 7 build;
+earlier Linux 6.1 line audits and rates retain their historical scope.
+
+The former mutex layout and direct taskname/xattr string-helper comparisons
+remain in [history](../history/README.md). Current production strings use ordinary
+decoded CALL/RET under the source-trust policy; they do not select the old helper
+bridge. A protocol description or historical win does not qualify current
+performance, fairness or whole-kernel replacement.

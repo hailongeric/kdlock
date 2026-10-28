@@ -8,7 +8,8 @@ kernel still requires separate approval under [development rules](../AGENTS.md).
 
 Ubuntu 26.04 / Linux 7.0 is the active adaptation platform, whose OS identity
 is recorded in the [migration record](../docs/history/vm-ubuntu2604-migration-20261027.md).
-KD compatibility remains unvalidated. The [retirement policy](../docs/history/kernel-retirement-20261027.md)
+Current KD build/boot and bounded live validation are recorded in the separate
+[Linux 7 port receipt](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md). The [retirement policy](../docs/history/kernel-retirement-20261027.md)
 retains results and one complete `6.1.159-kdclobber2` recovery version. The
 small manifests, configurations, patches and verifier here remain historical
 provenance and test inputs; they do not identify the currently booted kernel.
@@ -18,17 +19,17 @@ kernel replacement. Candidate kernels for those stages need separate recorded
 source/configuration identities and recovery plans; this captured historical
 bundle is not an editable implementation of the roadmap.
 
-This is the original `6.1.159` baseline, not the current ordinary-spin ABI.
-The current spin provider requires spin caller-clobber v1 on
-[`kdclobber2`](experiments/mutex_clobber/README.md) and does not build on this
-original kernel; retain this bundle for verification, recovery and reproducing
-its historical source versions.
+This is the original `6.1.159` baseline. Historical direct-spin runs used
+caller-clobber v1 on [`kdclobber2`](experiments/mutex_clobber/README.md). The active
+Linux 7 provider uses the separately ported spin-clobber prerequisite; this
+bundle remains only for historical verification, recovery and recorded source
+versions. Its commands are not the active build procedure.
 The separate [spin-static](experiments/spin_static/README.md) and
 [caller-clobber](experiments/spin_clobber/README.md) experiments record historical
 ancestors. Their small captured inputs remain part of the provenance chain;
 obsolete independent build trees are covered by the retirement inventory.
 Select the retained bundle matching the running kernel as described in
-[the manual](../docs/PROJECT_GUIDE.md#kernel-identity). Preserve the original
+[the manual](../docs/operations/VM.md#kernel-identity). Preserve the original
 tracked capture and the retained bundle's embedded parent/ancestor records.
 
 ## Contents
@@ -45,7 +46,7 @@ tracked capture and the retained bundle's embedded parent/ancestor records.
   extract, patch, build, load/unload modules, restart the VM or write kernel files.
 - `nopvspin-grub.cfg`: the separate boot override activated on the original
   benchmark VM on 2026-10-08. It is not part of this source/config capture. See
-  [verification and rollback](../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+  [verification and rollback](../docs/operations/VM.md#boot-policy).
 
 The source archive is [official Linux 6.1.159](https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.159.tar.xz).
 Its SHA256, checked against the
@@ -135,7 +136,7 @@ protection and out-of-line spin unlock. Debug spinlocks/mutexes and debug lock
 allocation are disabled. The captured guest exposed 40 CPUs; `CONFIG_NR_CPUS=8192`
 is a compile-time maximum, not its online CPU count. The documented destination
 uses the verified 64-vCPU launcher configuration;
-see [current operations](../docs/PROJECT_GUIDE.md#guest-workflow). Other configurations are
+see [current operations](../docs/operations/VM.md#source-synchronization). Other configurations are
 not validated by matching a few of these options.
 The observed boot uses `nokaslr` and the runtime preemption selector reports
 `none (voluntary) full`. Neither dynamic preemption nor boot arguments are

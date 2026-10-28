@@ -1,917 +1,127 @@
 # Translation admission and publication
 
-Production translation trusts all selected kernel and module code, as explicitly
-requested for the current work. Source safety is a caller assumption, not a
-verdict produced by the translator. Read the [design overview](../DESIGN.md)
-and [register ABI](../JIT_REGISTER_ABI.md) for the unchanged execution protocol;
-[tests](../../tests/README.md) identifies validated source versions.
+Production uses `dis_assem(..., trusted_source=True)` for all selected kernel
+and module code. This is also the CLI default. Source safety and the compiler
+clobber-entry input agreement are caller assumptions, not translator proofs.
+[Register ABI](../JIT_REGISTER_ABI.md) defines the unchanged saved state.
 
-`dis_assem(..., trusted_source=True)` is the default, including the production
-CLI. It skips context metadata resolution and screening, instruction-safety
-admission, value/alias and loop analysis, constant-path specialization, and the
-minimal-entry input-definedness proof. The compiled clobber entry is assumed to define each live uncaptured GPR
-before it affects source behavior; only IP/SP/BP are imported. Trust does not
-capture additional registers, prove memory validity, or reproduce arbitrary
-processor state on the executor.
+## Source trust and backend requirements
 
-The translator still acquires source leases, obtains complete selected text,
-decodes and lowers instructions, constructs the actual CALL/RET graph and
-return whitelist, respects the critical-section protocol, assembles the image
-and negotiates provider requirements. Unsupported decoding/lowering, missing
-source, or invalid image construction remains a translation failure; it is not
-a judgment that the source program is unsafe. Source trust cannot correct a
-decoder alias or justify changing instruction semantics. Runtime exact physical
-owners, acquisitions, continuation tokens, unlock ACKs, frame retirement and
-normal drain remain required. A NORMAL publication does not prove a returned
-JIT body.
+Trusted translation skips semantic instruction admission, context metadata
+screening, memory/alias and loop-value analysis, constant-path specialization
+and minimal-entry input-definedness proofs. ABI1/2/3 import only IP/SP/BP;
+trusting the compiler agreement does not capture extra GPRs or processor state.
 
-Generated dispatch, block-budget checks, return-target comparisons and the
-LEA-to-MOV/ADD rewrite always preserve arithmetic flags. Their balanced physical
-stack saves are separate from the virtual source stack and its CALL words.
-This adds no captured entry state and does not extend native-continuation
-flags restoration.
+The following requirements still hold:
 
-Current images retain only the scalar services `ktime_get`, `ktime_get_ns`
-and `int_sqrt`. String routines such as `strcmp`, `strnlen`, `sized_strscpy`,
-`strscpy_pad` and `memcpy` use ordinary decoding and CALL/RET lowering. Their
-bodies and loops receive no special semantic analysis, summary, service quota,
-control-slot exception or direct native bridge. Historical provider capability
-bits cannot select those former string routes in a current translation.
-
-Explicit `trusted_source=False` keeps the earlier checked analyzer available
-for regression fixtures. The constant, context, memory and input proofs in
-sections 7.1–7.2 describe that optional mode and historical results, not the
-production trust policy. The finite-edge refinement candidate was superseded
-and archived with the ordinary-translation experiment; it is absent from the
-active analyzer. Historical numeric evidence below is unchanged and does not
-validate the new trusted path.
-
-## 7. Translation And Publication
-
-Rwlock writer entries use ABI3 on the spin backend. Native writer admission and
-reader drain occur before the prepared JIT body. The paired unlock releases the
-writer byte before spin completion. The historical ABI1 RCUHT alias refusal
-belonged to the checked analyzer; current trusted translation performs no such
-memory/context screening. Admission cancellation and native retry belong to
-[the rwlock ownership protocol](rwlock_implementation.md).
-
-### 7.1 Possible JIT Episode
-
-A **JIT episode** is the code that one invocation could execute before finishing
-or transferring to native code. `context_policy.jit_phase_blocks()` selects its
-reachable decoded blocks, starting from the entry and learned targets.
-
-When an ordinary direct CALL targets an untranslated function, the selected graph
-keeps the CALL and exit stub but removes the edge returning from native code to
-JIT. The original waiter runs that function and the rest of the invocation natively.
-Recognized lock controls, allowed hostcalls, decoded callees and indirect calls
-keep the successors that their handling requires.
-
-A block still belongs to the episode if another JIT path reaches it. Every
-recompile recomputes this structural scope; lock boundaries, code emission and
-entry dispatch use the same selected code. The optional checked analyzer uses
-that scope too. Missing reachable code is a construction failure, never an
-empty block silently emitted as a successful translation.
-
-If a branch points into another decoder window whose bytes are already cached,
-the translator seeds that window and recomputes the graph. It splits blocks at
-new decoder roots, even when a root lies inside a previously decoded block. Those
-roots do not become independent admission entries. Text reads and decoder reseeding
-share the 32-expansion limit; code that still cannot be decoded is refused.
-
-#### Source branches with proven constant inputs
-
-This subsection describes optional checked mode only. Production trusted
-translation retains the source branches and does not invoke this proof.
-For ABI1 spin bodies containing `UD2`, `constant_paths.py` can prove an exact
-source branch unreachable before checked instruction admission. Historical
-`strscpy_pad` callers supplied a constant count to `strscpy`; this is not a
-claim about the different compiler-expanded Linux 7 helper graph. The current
-taskname API use is decoded and lowered normally without this specialization.
-
-The proof begins with unknown inputs at the registered root. It follows exact
-register and flag constants through reviewed instructions and direct calls,
-never infers a value from memory, and retains a constant at a merge only when
-all incoming paths agree. Each call's continuation forgets all register facts;
-returns conservatively reach every recorded call continuation. Indirect control
-or previously learned indirect targets, overlapping instruction byte ranges,
-and exhausted analysis limits prevent specialization. Uncertain instruction
-effects discard the known values instead of preserving stale facts. A proved
-conditional branch becomes a jump to its sole possible successor before the
-ordinary instruction and context checks. All remaining code still passes those
-checks and the same selected graph is emitted. The diagnostic
-`CONSTANT_PATH_SPECIALIZATION` records the changed branch addresses.
-
-These source proofs do not establish support for the complete procfs task-name
-operation. The historical version 10 extracted taskname caller used the original API service
-without helper-specific checks and passed
-[focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6. The
-[`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-is complete. The separate 20% mutation control disabled helper preparation and
-recorded zero JIT, so it establishes correctness
-only. The preceding
-`c79d84f` checked implementation completed delegated bodies in the read-only
-functional check; its 20% mutation case was correct but failed measured
-delegation. Those historical results remain in the
-[validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
-
-### 7.2 Context And Memory Admission
-
-This section and its subsections document the optional checked analyzer and
-its historical evidence. Production trusted mode skips these checks, bounded
-loop/value analyses and input-definedness proofs. Runtime operations described
-here, such as source pinning and the mutex continuation checkpoint, remain
-runtime obligations independently of that analyzer.
-
-The checked mode screens CPU/task context operations across every block it emits:
-
-- Explicit GS reads, writes and read-modify-write operations may use the pinned
-  origin CPU's GS base. A GS displacement is an offset, not a linear kernel address.
-- Supported `current_task` MOV loads may use the original task supplied to JIT.
-- FS/base operations, implicit GS string/XLAT operations without lowering, known
-  linear per-CPU/current addresses, scheduling/preemption/IRQ/BH/RCU references
-  and calls to the wrong lock backend are refused.
-
-Native, per-CPU and KD rwsem operations and slowpaths are also refused inside
-the emitted episode, including helpers discovered through later CALL learning.
-The execution ledger has no rwsem read/write, cancellation, downgrade or
-non-owner-release contract. Symbol families include compiler clones and their
-interior ranges; the conservative `rwsem_*` family also covers named rwsem data
-such as lock-class keys. The separately admitted
-[ABI2 outer-writer wrapper](rwsem_implementation.md#api-and-scope) remains
-supported because reader admission and drain occur before its mutex entry.
-This does not authorize nested rwsem operations inside another delegated body.
-
-Pinning the waiter prevents task replacement. It does not prevent IRQ/NMI activity
-or arbitrary remote accesses, and it does not reproduce the waiter's complete
-per-CPU context on the combiner.
-
-These byte and operand checks run before value propagation or a guarded retry.
-A rewritten RET can leave a connected block with no propagated input, but that
-block still has emitted code and a permitted target. It must still pass the segment,
-IRQ, context-symbol and backend checks. The scan covers only the selected episode;
-it does not add back an ordinary CALL miss's native-only remainder.
-
-The value analysis follows explicit operands and the lifted intermediate
-representation (IR), including implicit memory accesses, CALL arguments, RET
-results and writes of return addresses. It follows the selected control-flow
-graph (CFG), keeps relevant alternatives when paths merge, and checks memory values,
-masks, aliases and writes conservatively. It neither reads runtime memory nor
-assumes memory addressed through the waiter's RBP/RSP is private. If analysis
-runs out of the resources needed to resolve an address, it refuses the entry.
-
-Eligible single-root nested entries can retry address-precision failures with
-entry disjointness predicates. Every premise is enforced before generated body
-execution; independently enterable callees cannot borrow those root facts.
-For learned direct callees, a separate single-entry analysis seeds only the
-checked root and propagates real CALL packets and RET effects. It removes the
-fabricated immediate CALL fall-through and verifies the complete RET graph
-against the generated whitelist. Selected text must be structurally connected
-to the checked root before value-based refinement; disconnected targets,
-indirect control, IJ history and adjusting RETs are refused. Default
-independent-root analysis remains unchanged.
-
-Generated entry dispatch, block-budget instrumentation, return-target comparisons
-and the LEA-to-MOV/ADD rewrite preserve source arithmetic flags. Balanced physical
-stack saves are separate from the virtual source stack and its actual CALL return
-words. This preserves flags within generated execution; it adds no captured entry
-state and does not extend the existing FULL/native-continuation flags contract.
-
-This does not assume callee-saved registers or untouched source memory for an
-ordinary function. The predicate/continuation contract is in
-[Historical JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-%E5%85%A5%E5%8F%A3%E6%9D%A1%E4%BB%B6%E4%B8%8E%E5%B5%8C%E5%A5%97%E7%BB%AD%E7%82%B9).
-
-Stack analysis keeps several possible RSP values and origins when different paths
-reach a block. This preserves the relationship between CALL depth, saved registers
-and shared RET instructions. For a plain 64-bit pop, it checks the IR and reads
-the pre-pop target from the sequential memory model.
-
-Only a completely known set of numeric return targets can narrow propagation to
-those also allowed by the emitted target list. An unknown, partly overwritten or
-widened slot must keep every target. Those paths merge normally; the analysis does
-not invent cycles from hypothetical pop depths. It adds no assumption that CALLs
-and RETs balance, that the stack is private, or that runtime stack contents match
-the model.
-
-Each block permits at most 64 alternative states. The CFG work budget also bounds
-state visits; exhausting either limit refuses the entry. A proven return-slot
-rewrite may skip a connected continuation without inventing an input for it. Its
-emitted bytes still receive unconditional checks. None of this proves that another
-executor cannot change a return slot or pointer before a later load.
-
-The return-table builder groups direct CALL sites by callee and walks each callee
-with a visited set. If several callers share a RET tail, that RET keeps all their
-continuations, including targets reachable after return-slot rewrites. It does
-not assume a RET must match the original CALL. Offsets come from the decoder's
-location database, not from text labels.
-
-The builder has a 65536-unit work budget covering instructions, graph nodes and
-edges, and additions to the return-target table. An unknown location, missing
-successor/database entry or exhausted budget refuses translation without keeping
-a partial table. Both scope comparison and final emission report that outcome as
-native-only. This budget limits translation graph work; it is not a runtime
-instruction limit, a strict memory/time bound or a code-versioning mechanism.
-
-New clobber boundaries retain SP/BP facts only; the compiler spills other live
-values. The separate minimal-entry check tracks uncaptured dependencies per bit.
-Zero extension preserves source-bit dependencies and defines the added high bits;
-sign extension propagates the source sign-bit dependency to those high bits.
-A 32-bit CMOV can therefore leave an already-defined low byte usable even when
-other source bits remain uncaptured. Observing the undefined bits in a store,
-address or branch still refuses admission; this adds no captured registers.
-
-`KD_SPIN_DIRECT_HELPER_LOCK` provides an optional ABI1 source entry for helpers
-whose prologue saves registers before assigning them. It sets `RBX` and
-`R12`–`R15` to zero immediately at the named continuation, before compiler
-reloads and helper calls. These registers were already declared overwritten by
-the inline assembly, so this adds no capture or packet fields. Hot local returns
-and delegated execution use the same five instructions; ordinary cold execution
-already has valid native values. A helper's formerly uncaptured R13 save can
-then pass the existing input check; other unsafe helper effects remain refused.
-Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` entry and ordinary translation
-of its compiler-emitted string helpers, without these five setup instructions.
-Under optional checked mode, helper prologues face the same input checks as other
-source code in checked mode. Production assumes the compiler clobber-entry
-contract instead of proving these dependencies. The optional helper entry and
-the selected KD mutex protocol remain unchanged.
-
-Entry predicates may prove an entire BP-relative spill lies inside the
-256-byte SP-relative checkpoint. All prior checkpoint obligations are joined
-by intersection of coverage (union of predicates); opaque writes/callees still
-block new entry identities. Neither the checkpoint size nor address screening
-is relaxed to admit these spills.
-
-Preserving handler GPRs does not prove that saved stack words stayed unchanged.
-The two-level mutex helper therefore requires the following runtime checkpoint,
-not a private-stack or arbitrary callee-ABI assumption. RET emission, thunk
-mitigations and alias checks are unchanged.
-
-`handle_known_mutex_call()` checks whether a supported local mutex call changed
-the waiter's stack. Before the call, nofault reads snapshot 256 bytes above the
-virtual CALL word, bounded by the waiter's live kernel stack. Afterward, KD compares
-those bytes and separately checks the saved target, return token and exact
-post-CALL RIP/RSP.
-
-If the bytes match, JIT may continue. If they changed, `KD_CALL_STACK_CHANGED`
-resumes the original waiter after the completed control call. It keeps the current
-memory and registers; the combiner retains the real locks and handles unlock ACKs.
-No writes are rolled back and no acquisition is replayed. If the required window
-is unavailable before the call, a validated PENDING exit runs the call natively.
-An invalid token, read or packet after progress is still fail-stop. Final completion
-needs no preservation check because it does not return to this JIT episode.
-
-The real contention gate now extends the existing seven-role driver. B's native
-owner waits for the combiner in Linux's mutex wait_list before writing an
-explicitly exposed live waiter-local word. The original waiter observes the new
-value after the completed CALL, with A and B still owned by that combiner;
-the two unlock ACKs precede suffix completion. The oracle requires the distinct
-stack-change warning, actual source CALL successor and unchanged NORMAL root,
-not only successful native code. This is one bounded shared-slot history, not
-arbitrary concurrent mutation or a stack-privacy assumption; see
-[Historical the execution gate](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-%E6%8E%A7%E5%88%B6-call-%E7%9A%84%E6%A0%88%E6%A3%80%E6%9F%A5).
-
-The provider now advertises this immutable implementation contract through
-the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated
-device description once before text inspection, caches only that lease's bound
-and clears it on close. Absent/unknown contracts leave the bound zero; actual I/O
-errors abort inspection. Version 1 still describes the old mutex bound but lacks
-the module range required by checked translation (7.2.2). Source INFO remains
-mandatory. This is not a mutable
-admission bit or executable generation. Guarded mutex analysis now uses the bound
-only at registered local controls whose IR matches the exact eight-byte CALL
-push and source return token. It first applies that write, then derives checked
-window starts from every possible post-push RSP+8. It never restores pre-CALL
-facts. Only identical-base, fully covered byte/word facts survive the clobber;
-partial words use the byte model. Unknown bases/packets, spin, hostcall and other
-memory retain the existing uncertainty and work limits. Coverage checks cannot
-refill the analysis budget or add an alias separation to assume membership.
-Spin remote controls can execute later source instructions, so this local mutex
-contract must not be generalized to them. The check compares
-values across this one control boundary; it is not protection from arbitrary
-concurrent writes outside that interval, a private-stack proof, or code-version
-isolation.
-
-The real depth gate now learns the local and external helpers in two separate,
-joined waves, without inlining either CALL level. The final JIT acquires seven
-children in the external helper, executes its RET, and reaches the local
-helper's eighth-child capacity exit. The remaining local suffix/RET runs natively
-with retained owners and ACKs. Source pins and native importer references are
-checked separately through retirement; generated userspace tests also execute
-both RETs across substituted control successes. This bounded increment is
-complete; broader context/alias work remains in TODO C5.
-
-This remains incomplete for arbitrary pointers, unlifted instructions and
-concurrent mutation. Improving precision is not grounds for removing safety
-probes. A refusal makes future entries native-only; it does not undo earlier
-work or validate owner-sensitive native suffixes.
-
-### 7.2.1 Dynamic Address Gap
-
-The current checks do not validate every address when it is accessed. Unknown
-input pointers and pointers loaded from runtime memory are accepted unless another
-rule rejects them. For example, `mov rax,[rdi]; mov rax,[rax]` loads a pointer and
-then follows it. The second load could reach a sensitive region even though that
-region's address never appeared in the instruction bytes.
-
-The sequential memory model also cannot stop another thread from changing a
-pointer before a later load. Holding lock A excludes other users of A, but not
-per-CPU activity or a writer that never takes A.
-
-The bounded [pointer audit](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/docs/VALIDATION.md#dynamic-pointer-screening-gap) executes
-these paths against harmless user allocations labelled by mock symbols.
-It confirms a missing check, not actual kernel context corruption or a rate of
-failure. The entry predicates, local mutex checkpoint, retained native owner
-and unconditional emitted-block scan do not close this gap. Successful code
-generation reports `CONTEXT_SCREENING_ONLY`; the narrow stack-alias checks below
-do not establish a general runtime address or object policy.
-
-#### Original CALL-word aliases
-
-The source CALL still stores its return address in the waiter's memory. For an
-ordinary assembly CALL or scalar service, an
-ordinary later load can read all or part of that word, including through a list
-pointer. The translator keeps both accesses unchanged. It does not assume that
-stack memory is private and does not reject an overlap merely because it occurs.
-
-Ordinary CALLs retain the existing conservative byte-memory model. Exact
-whole-word loads can retain known values. If possible partial overlap combines
-known return bytes with unknown bytes and the analysis cannot bound every result,
-that value remains widened and address-dependent execution is refused. Copies,
-constant offsets, stores, joins and indirect control cannot turn that lost fact
-into an ordinary unknown pointer. No generic partial-CALL provenance exception
-or mask/range domain is part of this version.
-
-The earlier experimental relaxation is preserved in the candidate 4 checkpoint
-`66cccfab511866f095d9fbfb2ed33b909afd1d79`; it is not the current admission policy.
-The generic alias fixtures retain explicit refusal checks and separately execute
-original full/partial CALL stores and loads in a bounded userspace lowering
-fixture. That isolated execution bypasses admission only within the test and is
-not evidence of accepted kernel delegation. Existing return-dispatch tests also
-retain all allowed continuations for uncertain return words and verify that an
-unlisted actual target exits the JIT.
-
-The rest of this subsection describes historical string-service compatibility,
-which current translations do not select. All checked-mode string CALLs retain the
-ordinary memory and return-word rules above; the old validation below does not
-establish their admission.
-
-The string API contract introduced in version 10 and retained in version 11 had
-a separate, explicit contract for the selected caller. Through ordinary data
-accesses, the caller and its helpers do not
-inspect, retain pointers into, or mutate those services' temporary return-token
-and discarded helper-stack storage below the stack pointer before CALL. This
-storage holds temporary control state, not caller objects. Normal CALL/RET
-handling and a helper's own internal stack use remain unchanged. The kernel C
-calling convention has no red zone (reserved caller-local storage below that
-stack pointer), so normal live locals,
-list nodes, heap objects and string buffers satisfy this distinction. Merely
-passing valid strings does not establish the promise: code that inspects raw task
-stack bytes, escapes a control-slot pointer, or uses assembly to observe that
-scratch is outside this contract.
-
-For these two API calls, analysis retains the exact return token separately
-from ordinary caller-object bytes. The emitted store, original API call, runtime
-return-token read and continuation are unchanged. Known full or partial accesses
-to that temporary slot are refused as explicit contract violations. Different
-ordinary-object bases use the audited caller promise, without runtime pointer
-exclusions. Control-flow joins retain both control-slot records and every
-ordinary-memory effect; a typed-call path cannot erase an ordinary CALL path.
-Prior widened memory stays widened, and `strscpy_pad` still writes all 64 ordinary
-destination bytes. An explicit later reuse of that scratch as a new local can
-remain refused; this limited analysis does not prove arbitrary stack allocation
-lifetimes.
-
-The decoded `memcpy` remains an ordinary CALL. It replaces the older token at
-the same slot and retains its complete original loads, writes, pointer arithmetic,
-byte count, direction and RET dispatch. There is no memcpy hostcall or additional
-C-copy classification. The benchmark's count of 64 is not assumed by analysis.
-An uncertain final lock pointer is passed only to the existing terminal unlock
-handler, which validates the exact physical owner; it is not subsequently
-dereferenced by the generated xattr body. An actual generated dereference would
-still require the ordinary context-address proof. Guest validation uses the raw
-captured kernel/module bytes and requires the copy's RET dispatch to reach its
-original caller continuation and terminal unlock, without an address guard.
-The simplified version passed these focused checks through candidate 6; see the
-[validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
-The [completed performance comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-records `88bb5a4` separately from the checked-helper baseline.
-
-#### Checked spin pointer loads
-
-A source CALL writes its return address on the waiter's stack. A later load
-through a dynamically obtained list pointer might refer to those same bytes.
-Keeping every possible overlap can make the analysis unable to bound the loaded
-pointer, as happened in the earlier xattr linked-list translation. For cases
-outside the audited C caller contract above, `address_guards.py` permits a limited
-retry that checks the particular overlap immediately before the load.
-
-This retry requires ABI1 spin, complete selected source text, no learned indirect
-control and provider capability versions 7 through 12 with bit 6. It handles only an explicit
-64-bit `MOV` memory load addressed by one register plus a fixed displacement.
-The retry is disabled if source constant-branch proof changed any branch during
-this translation. A simplified branch could otherwise hide a flags read in the
-original native suffix. A body requiring both kinds of proof remains refused;
-the spin flag proof must describe the source that the waiter will actually run.
-It can exclude uncertain overlap with recorded source-stack writes whose address
-is known relative to the current logical SP or BP; definite overlap retains its
-actual stored value. It does not declare arbitrary pointers safe. There are at
-most 64 sites, 64 checked ranges per site and a 16,384-byte displacement bound.
-The check covers the complete eight-byte load, including address wraparound.
-Its address calculations and original load use the same preserved source register
-and displacement without reloading a pointer from memory between check and use.
-
-Each site also needs a source flag proof. Arithmetic flags record carry, parity,
-auxiliary carry, zero, sign and overflow. Along every possible source path after
-the guarded instruction, the proof requires each incoming flag to be overwritten
-before a source instruction reads it, or to reach the declared final clobber
-unlock. It follows decoded helper instructions and all permitted returns; a CALL
-alone does not prove flags are disposable. Missing code, overlapping instruction
-streams, unknown flow and cycles that retain incoming flags refuse this proof.
-
-On success, the load executes with its original register state and flags. On a
-failed check, generated code saves the current full register packet and returns
-exit 9 before the load. The runtime validates the immutable image's site record,
-exact source address and instruction bytes, stack bounds and single-root spin
-ownership. The original waiter resumes at that same load with the current SP
-and registers. Earlier effects remain; no body or CALL is replayed. This path
-uses the existing spin native ownership and unlock-acknowledgement rules, and
-disables future delegation of the stable entry for the source session. It does
-not restore arithmetic flags because the source proof established that their
-incoming values are no longer needed. See the
-[packet and image contract](../JIT_REGISTER_ABI.md#checked-spin-address-exit).
-
-The candidate 11 live continuation probe passed four phases of 1,600,000
-operations. Its cold delegated phase recorded 1,432,107 matching entries and
-completed bodies. When a pointer overlapped the waiter's stack, exactly one
-entry exited through the address check and completed zero delegated bodies;
-later calls made zero generated-code entries. Result, original-task identity,
-once-only effects, exclusion and teardown checks passed. These
-[functional checks](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-do not establish a performance result. The checks do not cover ABI3 rwlock,
-nested spin ownership, arbitrary loads/stores, sensitive objects, concurrent
-memory changes or generic fault recovery. The existing general processor-flag
-limitation also remains.
-
-The following steps describe the remaining general address-policy work,
-**not an implemented safety contract**:
-
-1. Define the enforceable address/object policy and its lifetime first. Linked
-   kallsyms intervals alone do not enumerate runtime per-CPU allocations, task
-   objects or aliases with context-sensitive behavior. A known-range denylist
-   would protect only that declared range, not establish context equivalence.
-   Core static and boot-reserved module ranges are handled below; object coverage remains
-   open. Assess existing kdlock/kernel APIs before considering any guest change.
-2. Separate entry-only predicates from use-time validation. Entry GPR checks
-   cannot validate a later memory-loaded pointer. An access guard must compute
-   and check the effective address once, then use that same address for the
-   original load/store/RMW, including width/overflow and implicit accesses.
-   Reloading a mutable pointer after checking it leaves a check/use race.
-3. Extend either checked exit contract only after proving the new guard's own
-   address and state handling. Neither reviewed processor markers nor the
-   restricted spin MOV check authorizes recovery at an arbitrary memory
-   operation. Preserve completed stores, exact owners and required flags; do
-   not reuse entry refusal after progress or treat a generic fault as a validated
-   exit. General flag repair remains deferred.
-4. Validate memory/RET assumptions at their uses or conservatively join their
-   effects. Keep the complete emitted return whitelist; unconditional byte
-   bans alone do not check computed addresses in a dataflow-skipped block.
-5. Convert the bounded counterexamples into refusal/forward-continuation gates
-   in existing test programs, with exactly-once stores and owner ACK checks.
-   Keep affected complex spin/mutex modes actually executing JIT; mutex JIT
-   is always enabled. Blanket unknown-pointer refusal is not a passing JIT result.
-
-Until an enforceable policy and these exits exist, limit use to audited
-experimental workloads. More static examples or successful stress runs cannot
-justify a claim that every context-sensitive critical section is refused.
-
-### 7.2.2 Static Per-CPU Ranges
-
-The captured x86-64 kernel's `__per_cpu_start` is zero; `current_task` and other
-static per-CPU symbol values are offsets, not each CPU's dereferenceable address.
-Translation now reads `nr_cpu_ids`, `__cpu_possible_mask` and `__per_cpu_offset`
-through its existing pinned kcore/device lease, before text admission. For every
-possible CPU it adds the interval starting at `__per_cpu_start + offset[cpu]`
-(modulo 64 bits), with size `__per_cpu_end - __per_cpu_start`. Offline possible
-CPUs remain covered. The linked section itself is not added as a low-address
-interval, which would incorrectly classify ordinary small immediates.
-
-This uses the captured boot-time initialization contract in
-`arch/x86/kernel/setup_percpu.c` and `smpboot.c`: possible CPUs are established
-before per-CPU setup and offsets become read-only after init. Each translation
-reads the metadata anew and compares a second read. Counts are bounded to 8192,
-the static section to 16 MiB, and offset reads to 64 KiB. Missing/ambiguous core
-symbols, invalid counts/masks/addresses, short or changed reads, wrapping or
-overlapping runtime intervals abort as infrastructure errors, not successful
-native-only verdicts.
-
-On the captured x86-64 SMP kernel, both first-chunk allocators reserve
-`PERCPU_MODULE_RESERVE` (8192 bytes) after the core section aligned to
-`PCPU_MIN_ALLOC_SIZE` (4 bytes). `kernel/module/main.c` uses
-`__alloc_reserved_percpu()`; `mm/percpu.c` serves it only from the reserved chunk
-when that boot-fixed chunk exists, failing rather than spilling to a dynamic
-chunk when full. Normal module unload frees allocations within that arena,
-not the arena's address classification. This does not pin or validate an object.
-
-The provider reports this bound using the existing 16-byte CAPS packet on the
-same device lease. The module bound was introduced in version 2; the current provider
-uses version 12. Translation requires immutable mutex images plus exclusive KD
-objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
-version 5 through 12 contracts. Mutex instruction-marker images require version 6 through 12
-with bit 5. Spin address-check images require version 7 through 12 with bit 6.
-ABI1/3 root instruction markers additionally require version 12 bit 11.
-Historical original string API summaries require version 10 through 12 bit 9 plus bit 7
-for `strcmp` or bit 8 for `strscpy_pad`. Bit 9 identifies the caller-guaranteed
-memory and lifetime contract without helper-specific checks. Version 11 bit 10
-also permits [direct calls inside the wrapper](#direct-original-helper-calls).
-Historical images without that optional bit use the existing service dispatcher.
-Current translation selects neither route, regardless of these compatibility bits.
-Version 4 remains readable by observers but
-cannot open a translation session for this object contract. It checks the build constants and the non-NULL
-`pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
-the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
-base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,
-unavailable or invalid capability cannot silently omit the module check: checked
-translation reports an infrastructure error before reading source text. Source
-inspection/retirement can still query older providers. Neither the ioctl number
-nor its size, guest code or wrapper arguments change.
-
-Do not extend coverage to `pcpu_unit_size`: the embedded allocator returns unused
-tail pages to ordinary memory. Alignment padding is not claimed as module data,
-and ordinary dynamic chunks/objects remain outside this range contract.
-
-Whole-area coverage is separate from named-symbol intervals, so an interior
-symbol cannot truncate it. Existing explicit-operand, derived-address and IR
-checks then reject statically resolvable accesses, including boundary overlap.
-`STATIC_PERCPU_SCREENING` reports possible `cpus`, `core_bytes`, `module_bytes`
-and their sum `bytes_per_cpu`, not runtime address enforcement. Core and module
-arenas retain separate labels. The optional name-only/core-only parser remains
-for byte fixtures; the real translator must supply its leased reader and
-negotiated module bound. This is not a runtime memory snapshot
-of the protected areas, and it does not establish code-version isolation.
-
-The API audit found that `is_kernel_percpu_address()` only recognizes core
-static areas, while `is_module_percpu_address()` recognizes module static areas.
-Neither is an arbitrary dynamic-allocation classifier. `per_cpu_ptr_to_phys()`
-requires an already valid, live per-CPU pointer; the private allocator lookup
-assumes an allocator pointer and cannot safely classify arbitrary JIT addresses.
-Module/dynamic allocation lifetimes, other task/context objects, unresolved
-runtime pointers and concurrent pointer replacement therefore remain open.
-No such helper is called from generated code in this increment.
-
-### 7.3 Build And Publication
-
-The daemon has flat RIP and RIP/tgid workspace modes, independent of benchmark
-mode. It maintains callee/indirect-target tables, reads /proc/kcore, combines
-generated assembly with the wrapper, assembles/links and transfers jit.bin.
-The [device session](../../daemon/README.md#device-session-and-source-residency) remains held across this
-flow; opening a new device after an error is not a supported recovery path.
-Policy refusal removes stale outputs and exits 2; launch failures/exceptions
-are errors/retry conditions, not successful native-only decisions.
-
-Images must include the 48-byte protocol/ABI directory and fit 640 KiB. Transfers
-use up to 4000-byte chunks with exact upload identity, contiguous coverage and a
-base generation. Mutex uploads publish a complete immutable descriptor; frames
-retain it through continuations and old-generation misses cannot change a newer
-image's metadata. Published versions remain in the bounded pool until teardown.
-Publishing the first address-check image, or a historical string-service image,
-also moves that ABI1
-spin entry to immutable versions; every later image for that entry remains
-immutable, even without optional checks or services. Active frames retain their
-bound image and any address-check site directory. The dispatcher-based string
-services add no site table. Direct-call images add a directory of generated
-call locations so publication can resolve their relative addresses; these are
-not checks of source CALL instructions or helper implementations.
-Ordinary spin entries that have not made this transition and ABI3 rwlock images
-retain in-place storage. Independent locks sharing an entry address do not
-establish image lifetime through lock serialization.
-
-The optional checked scalar policy screens unknown instructions and processor
-state before emission. Production trusted mode skips that screening and still
-requires correct decoding and lowering. The exact marker mechanism below emits
-a waiter exit instead of executing the selected instruction on the executor.
-See [the compatibility backport](../history/legacy_mutex_compatibility.md) for scope, capability
-negotiation and the separate owned-origin/ABI4 interfaces.
-See [daemon README](../../daemon/README.md) for CLI and diagnostics.
-
-### Checked instruction exits
-
-The name describes the retained image/runtime marker contract. Production
-trusted mode does not run the source semantic or entry-definedness proofs
-recorded below; source and compiler guarantees are assumed. Exact marker-byte
-recognition, structural protocol restrictions, image requirements and runtime
-owner/continuation validation remain active. Historical checked-mode proofs
-and validation results do not establish the new trust policy's correctness.
-
-An instruction on a rarely taken branch need not reject an otherwise eligible
-mutex critical section before it runs. For mutex entry ABI2, the translator can
-replace the exact reviewed encodings below with a **marker**, generated code
-that returns to the runtime before executing that instruction. The runtime
-resumes the original waiter at the instruction and disables future delegation
-of that critical-section entry. Earlier protected writes are retained and are
-not repeated. Rwsem outer writers use this same ABI2 path.
-
-| Source instructions | Meaning; action at the marker |
+| Requirement | Purpose |
 | --- | --- |
-| `RDTSC`, `RDTSCP` | Read the processor timestamp counter; RDTSCP also returns an operating-system-programmed value called TSC_AUX, commonly used to identify a CPU. The waiter performs the read. |
-| `CPUID` | Query processor features using register inputs; the waiter performs the query. |
-| `RDPMC` | Read a processor performance counter selected by a register; the waiter performs the read. |
-| `RDMSR`, `WRMSR` | Read or write a model-specific processor register; the waiter executes the original operation with its current register inputs. |
-| `CLI`, `STI` | Disable or enable maskable interrupts on the current CPU; the original operation runs on the waiter. |
-| `CLD`, `STD` | Clear or set the direction flag used by string instructions; the original operation runs on the waiter. |
-| `LAHF`, `SAHF` | Copy selected arithmetic flags to or from the high byte of register AX; the original operation runs on the waiter. |
+| Leased source and complete selected text | Keep original module code live while reading, compiling, learning or executing it |
+| Supported decoding and faithful lowering | Emit the original operation and selected control flow correctly |
+| Actual CALL/RET words and return whitelist | Preserve the source stack protocol and exact continuation routing |
+| Matching backend, entry ABI and image requirements | Bind generated code to the provider contract it needs |
+| Physical ownership and exact acquisition/frame records | Execute under the required exclusion and retain every unlock/retirement obligation |
 
-Instruction meanings and encodings follow Intel's
-[instruction-set reference](https://cdrdv2-public.intel.com/789581/325383-sdm-vol-2abcd.pdf).
-The live probe relies on the documented property that RDTSC leaves arithmetic
-flags unchanged, so the native suffix can check flags set before the marker.
+Missing text, incomplete decoding, unsupported lowering or invalid image
+construction remains a translation failure. It is not a source-safety verdict.
+Trust does not supply missing backend support or permit different semantics.
+Runtime probes and source/owner/ACK/frame checks must not be removed to hide
+failures.
 
-Only exact unprefixed encodings without explicit operands qualify. Checked
-mode models their scalar inputs and outputs; trusted mode assumes the source
-contract. Neither marker route simulates their processor effects on the executor. An unsafe source instruction
-does not become safe by running locally: this change preserves the original
-program's behavior and does not authorize new kernel operations. In particular,
-the live check uses the harmless timestamp read, not interrupt or register writes.
+## Ordinary callees and strings
 
-Optional checked mode screens the full selected source graph, including the
-native suffix, and proves required register inputs and source-defined arithmetic
-flags before emitting markers. Production trusted mode omits those source proofs
-and assumes their compiler/source contract. Both modes preserve the exact marker
-lowering and runtime continuation protocol; undecodable selected text still
-prevents construction of a complete image.
+`strcmp`, `strnlen`, `sized_strscpy`, `strscpy_pad` and `memcpy` use ordinary
+leased-text decoding and generated CALL/RET. Their bodies and loops receive no
+named memory model, string service, control-slot exception, string quota or
+direct native bridge. Historical provider capability bits cannot select those
+routes in current translation.
 
-Provider capability versions 6 through 12 advertise the ABI2 contract on bit 5; the image
-requires it on directory bit 0. Earlier providers cannot accept such images.
-Ordinary task-context ABI1 spin and ABI3 rwlock writer roots can use the same
-reviewed encodings only with the additional version-12 capability bit 11 and
-image requirement bit 5. Their image requires exactly `33` (bits 0 and 5), is
-immutable from its first such publication onward, and executes once through
-the MINIMAL clobber entry. Before any body executes, both batch and general
-dispatch require one exact physical root with no parent, virtual child,
-released lock, remote request or prior control transaction.
+Only the declared scalar services `ktime_get`, `ktime_get_ns` and `int_sqrt`
+remain selected hostcalls. They have explicit result/clobber contracts; they do
+not switch hardware task identity to the origin. Their source CALL word remains
+part of the ordinary continuation protocol.
 
-The complete selected source must contain no hostcall service, learned or
-indirect control, nested acquisition, nonterminal unlock or combined optional
-image contract. Marker-bearing source cannot use constant-branch specialization
-or address-guard retries. Checked mode additionally applies its full source
-proof to decoded callees; trusted mode does not. Missing direct callees can end
-the generated invocation through the existing native CALL handback. The standard ABI3 unlock's cold native fast
-branch is retained in source analysis, but reaching its helper from this
-delegated image is a runtime error: that helper cannot acknowledge the retained
-gate owner. Only the exact outer clobber unlock can complete the root.
+An untranslated ordinary callee can transfer the remaining invocation to the
+original waiter. Later learning may extend the graph. It does not authorize
+resuming JIT after arbitrary native work, replaying the prefix, or consuming a
+return token twice. The taskname benchmark learns ordinary callees before its
+measured phase; preparation and measured returned-body counts are separate.
 
-At a reached spin/rwlock marker, the original waiter retains its acquisition
-pin and continuation until owner-serviced unlock ACK. ABI3 additionally retains
-writer admission through the native suffix; its paired unlock clears the writer
-byte before releasing the gate. This bounded contract does not add nested marker
-relay, reader delegation, explicit IRQ/BH support or a rwsem control ledger.
-Existing ABI2 nested behavior is unchanged. Unknown
-encodings, unreviewed prefixes, control-register moves, flags-stack operations,
-interrupt/trap instructions, transactional operations and floating-point/vector
-state remain outside this reviewed marker set. Runtime validation failures and
-generic JIT faults remain errors, not arbitrary native-continuation points.
+## Selected graph and code generation
 
-The entry becomes `NATIVE_ONLY` under the image-publication gate, including when
-an older retained image reaches the marker. Already admitted work may drain;
-after quiescence, later calls must have zero JIT entries. The disable persists
-for the source session and is cleared only by its normal retirement/reload.
-See [register restoration](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
-[frame lifetime](frames.md#95-forward-native-continuation) for the exact state
-and ownership obligations.
+The translator resolves lock controls, decodes selected roots and learned
+targets, and constructs the CALL/RET graph. Intentional native suffixes stay
+outside the emitted episode; alternate reachable paths must still be complete.
+A reachable empty decoder block is not a successful translation. Decoder-window
+extension/reseeding retains its bounded construction limits.
 
-### Original strcmp service
+Trusted mode keeps source branches. It does not invoke the optional constant
+proof to eliminate a difficult path. Generated entry dispatch, block-budget
+checks, indirect/RET target lookup and synthetic LEA lowering preserve arithmetic
+flags. Their balanced physical-stack saves are distinct from the virtual source
+stack and its real CALL words.
 
-Historical compatibility only: current images translate this callee normally.
-The contract and measurements in this subsection describe the earlier service
-implementation, whose provider interfaces remain available for recorded images.
+Known lock controls retain their supported physical/virtual acquisition rules.
+ABI3 writer admission precedes body execution. Rwsem outer writers reserve their
+phase and drain readers before ABI2 publication. Source trust does not make
+unsupported nested, signal, try, I/O or non-owner protocols available.
 
-ABI1 spin callers can invoke the original kernel `strcmp` through a typed
-service. Here, typed means that translation knows the arguments, return value
-and caller-memory effects of this C API. The helper runs on the executor's
-stack with the original pointers; the generated caller resumes at its original
-return address. The source CALL still writes that return address to the waiter's
-stack. Analysis retains it as exact control state under the explicit
-[selected-caller scratch contract](#original-call-word-aliases), separately from
-ordinary caller objects. No emitted write or runtime return-token check is removed.
+## Build and publication
 
-Version 10 or 11 capability bit 9 selects the native API contract described here,
-together with bit 7 for read-only string services. The image retains requirement
-bit 2. The translator resolves the original kernel symbol without inspecting
-its implementation. Neither translation, publication nor execution checks
-helper bytes, helper-specific CALL encodings, string contents or string lengths.
-The dispatcher route needs no per-call registration table; the optional direct
-route has only the [generated-call relocation directory](#direct-original-helper-calls).
-The original caller supplies the
-same valid, terminated, allocated and stable strings required by native
-`strcmp`. In the xattr workload, the source lock protects stored names and the
-pinned waiter owns the syscall's copied search name. An unrelated lock does not
-supply those guarantees for other objects.
+The daemon retains one device writer session through text reads, compiler
+children and uploads. It checks dependency bytes, assembles the image privately
+and negotiates the provider's exact header/ABI/requirements. Incomplete uploads,
+unknown requirements and mismatched backends cannot become ready images.
 
-Ordinary captured-register and context-address admission remains active. Context
-addresses refer to task or processor state that cannot safely be treated as
-ordinary shared data. The existing 256-byte static screening span remains an
-analysis rule, not a runtime string-length limit or proof that arbitrary
-pointers are safe. If analysis can no longer bound every possible address value,
-the resulting widened value still causes refusal. An address guard needs proof
-that source instructions overwrite incoming arithmetic flags before reading
-them. Neither string service supplies that proof: without inspecting the helper,
-admission cannot assume that it overwrites every incoming arithmetic flag before
-use. Such a guard must have an independent
-proof from the original source instructions or remain refused.
+Mutex registration may precede executable allocation. Each completed mutex
+publication creates an immutable generation; frames retain their bound image
+through all continuations. Ordinary spin/rwlock entries can still use in-place
+replacement until an immutable transition. See [image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition).
 
-Both string services require one top-level physical lock hold. A source graph
-containing a nested acquisition or another nonterminal lock-control call is
-refused before publication; the terminal outer clobber unlock remains allowed.
-Both execution routes establish the physical owner, frame and immutable image,
-consume the actual pending CALL return word, and preserve the common
-source-continuation lifetime. The dispatcher saves the word before invoking the
-helper; direct generated code reads it after the helper and checks the permitted
-continuation before resuming. These are the shared delegation protocol, not
-helper validation. Successful `strcmp` changes the return register to its
-integer result and resumes the caller once. Invalid ownership or continuation
-state remains an error.
+`NORMAL` records publication. Successful returned JIT execution additionally
+requires a completed generated body and matching unlock protocol. Exact business
+results and drain remain independent checks. The
+[Linux 7 trusted-source evidence](../VALIDATION.md#trusted-ordinary-translation)
+does not establish arbitrary-source equivalence or whole-kernel replacement.
 
-Each delegated body permits at most 128 `strcmp` calls. Other dispatcher services
-and resumed lock-control calls share the existing limit of 16, so their combined
-maximum is 144. `strscpy_pad` uses that allowance. The direct route admits only
-these string APIs and gives `strscpy_pad` the same limit of 16. Ordinary decoded
-callees still undergo the generated block budget. `strscpy_pad` and `memcpy`
-write memory and do not inherit the read-only contract. Publication alone is
-not evidence that an entire benchmark body completed in generated code.
+## Checked instruction exits
 
-Version 10 passed [focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6, including valid 300-character strings and all eight xattr
-controls. The
-[`88bb5a4` comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-completed all 567 sessions with validation and drain. KD remains slower than
-Linux Native and TCLock at 60 workers in all three measured workloads. The
-preceding implementation, frozen in `c79d84f`, performed helper and string checks and has
-separate [functional receipts](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
-Its candidate 10 string probe completed 6,400,000 operations, with 1,292,047
-matching generated entries and completed bodies in the cold phase. An over-limit
-string caused one native continuation with zero completed bodies, then zero
-subsequent generated entries. That historical length-triggered behavior is
-absent from version 10. Candidate 11 also passed all eight xattr
-front/tail/miss/size checks at n16/n128, v64 and 16 workers, with matching entries
-and completions, correct results and clean teardown. These observations do not
-establish the revised implementation's throughput or replace its own receipts.
+Supported instruction markers stop before a reviewed original instruction. The
+origin resumes there with earlier effects retained and the documented arithmetic
+flags restored; future delegation of that entry is disabled for the source
+session. A generic fault, unsupported lowering or budget failure cannot be
+converted into an arbitrary safe native restart.
 
-### Original strscpy_pad writing service
+Mutex/rwsem use the ABI2 marker contract. Supported pristine root spin/rwlock
+ABI1/3 images require immutable requirements 33 and the matching provider bits.
+Their physical owner, writer admission where applicable, FULL packet and exact
+source target survive native transfer. See the
+[register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
+[live probes](../../tests/kernel/jit_escape/README.md).
 
-Historical compatibility only: current images translate the compiler-emitted
-callees normally. The following effect summary, caller promise and quotas are
-not selected by current taskname translation.
+Linux 7 active call-depth tracking is rejected at provider initialization because
+its return thunk changes arithmetic flags after restore. Configured support is
+not the same as an active runtime feature. Complete mitigation coverage of
+handwritten/generated returns remains separately unvalidated.
 
-The historical API call is the original `strscpy_pad(destination, source, 64)`.
-It copies a string and zero-fills the unused destination bytes; when the source
-does not fit, the original API's truncation result and destination contents are
-preserved. Version 10 or 11 bit 9 selects the native API contract, together with bit 8
-for writing string services. The image retains requirement bit 3. Read-only
-string capability alone cannot enable this writing summary.
+## Checked spin pointer loads
 
-Translation must know that the count is 64 and that the destination is one
-64-byte span in the current caller's local frame. Those facts justify the
-memory-effect summary and protect saved control state; they are not runtime
-buffer checks. Both possible 64-byte argument spans still pass ordinary
-context-address analysis. Unsupported counts, unknown frame relationships and
-address values that analysis can no longer bound remain refused. The original
-caller owns source validity and lifetime, keeps the source outside the waiter's
-stack, and supplies a live local destination disjoint from the source and saved
-CALL/control words, as required by this API use. Taskname declares these
-properties next to its unchanged call.
+Pointer-load guards are optional checked-regression/historical behavior.
+Production trusted translation does not run the address/flags analysis or emit
+its retry policy. The retained runtime ABI and fixtures do not establish a
+production pointer-validity or object-lifetime check. Its detailed former
+contract is in the [fixed pre-cleanup guide](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#checked-spin-pointer-loads).
 
-The helper is selected by its original kernel symbol. No phase inspects its
-instructions or called routines. Publication and execution do not scan string
-contents or recheck destination bounds; translation retains the effect analysis
-described above. There is no preliminary string scan or separate
-helper-specific fallback. Execution invokes the original helper with its
-original arguments, under the same common owner/frame/return-continuation
-protocol as other services. Truncation runs through the original API instead
-of causing a KD-specific rejection. This service does not prove that incoming
-arithmetic flags are overwritten before use, as an address guard requires.
+## Explicit checked regression mode
 
-After the service, analysis retains the virtual CALL write, invalidates every
-one of the 64 destination bytes, drops facts for registers the call may overwrite,
-and preserves those the calling agreement requires it to keep, along with the
-returned stack pointer. A possible destination alias still invalidates overlapping
-facts. The caller cannot observe the
-helper's discarded temporary stack storage: the helper runs on the executor's
-stack. This does not declare arbitrary waiter memory private or read-only.
-The entry uses immutable images. General writing helpers, including `memcpy`,
-do not automatically receive this summary. Writing services share the limit of
-16 scalar services and resumed lock-control calls; only `strcmp` has the separate
-128-comparison allowance.
+Python callers can select `trusted_source=False` to exercise the retained
+context, value/alias, loop and entry-input analyzer in regression fixtures.
+Its refusals, widening limits and flags proofs belong to that explicit mode.
+They are not production admission failures or implicit requirements to restore.
+The finite-edge experiment remains archived and inactive.
 
-The version 10 taskname shell used `KD_SPIN_DIRECT_LOCK`, without helper-specific
-register initialization. Version 10 passed read-only taskname correctness with
-returned KD bodies through candidate 6. Its 20% mutation run disabled helper
-preparation and recorded zero JIT; it is a correctness control, not a delegation
-pass. See the [historical validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
-The [completed comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-measures read-only taskname and xattr tail searches; it does not establish
-mutation delegation. In the preceding
-`c79d84f` implementation, its 16-worker read-only check completed 3,200,000
-operations with 3,194,222 returned delegated bodies. Linux Native, TCLock and KD
-passed data and drain checks with 20% mutations, but KD's nine preparation
-completions were followed by zero measured completions. That strict measured-
-delegation check remains failed. The [validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-retains those source-specific results and earlier failures; the completed
-comparison identifies the revised `88bb5a4` version separately.
-
-### Direct original-helper calls
-
-Historical compatibility only: current image selection never invokes this
-emitter or adds its direct-call requirement/directory. These ABI/provider details
-and measurements remain tied to the recorded older source versions.
-
-Version 11 capability bit 10 permits the generated caller to invoke original
-`strcmp` and `strscpy_pad` directly, without returning to the C service dispatcher
-for each helper. The caller and memory-effect contracts above are unchanged.
-No phase checks helper instructions or source CALL encodings, scans strings,
-or repeats buffer-bound or overlap checks at execution time. Ordinary source
-admission still proves the required captured inputs and modeled memory effects.
-
-The image adds requirement bit 4, value 16, alongside its existing read or write
-service requirement. The first implementation supports only ABI1 spin and one
-pristine request: a request that has not executed its body or created a nested
-continuation. Before entry, the provider requires a single root, a different
-original waiter from the current executor, the minimal register packet (with
-only its entry instruction and stack/frame pointers guaranteed), and an
-immutable bound image. Its physical binding retains the exact lock owner and
-source lease. Direct-call graphs cannot contain scalar dispatcher services or
-nonterminal lock controls, and cannot combine this route with address guards.
-Ordinary decoded callees and the final outer clobber unlock remain allowed.
-Other eligible string graphs keep the existing dispatcher route.
-
-Each generated native CALL uses an x86 signed 32-bit relative displacement: an
-offset from the instruction following CALL to the original helper. A separate
-pool, allocated near kernel text during provider startup with `module_alloc`,
-makes these offsets possible without an indirect call. It reserves at most
-64 blocks of 640 KiB, an extra 40 MiB. The existing pool and mutex allocation
-remain unchanged, and both pools share the same 64 image descriptors. Missing
-allocator support, no usable block at startup, or a kernel configured for
-call-depth tracking leaves bit 10 absent; translation then uses the dispatcher.
-Call-depth tracking adds kernel-specific call accounting that this generated
-bridge does not implement. Later pool or descriptor exhaustion refuses the
-upload instead of replacing an image that a frame may still use.
-
-The `KDNC0001` directory records at most 64 generated CALL locations, service IDs
-and original return addresses. Publication checks this generated layout and
-each displacement's range, selects the resolved original helper address, pins helper
-and return-source code under the device writer lease, and fills the private
-CALL operands. A failed upload cannot publish partially relocated code. These
-are image construction and code-residency operations; publication reads no
-helper or source CALL bytes. The immutable image and existing frame or batch
-lease then retain those references through execution and native continuation.
-Publication logs identify the loaded address and every relocation. Uploaded
-`jit.bin` contains placeholder operands, so its hash alone does not identify
-the relocated executable bytes; measurement evidence must retain the loaded
-image or explicitly identify a reconstruction from the relocation records.
-
-The wrapper preserves its register-storage pointer and source argument state
-around the original C helper. It keeps the actual source return-word store,
-reads and consumes that word once after the helper, and resumes only its allowed
-continuation. Quota bookkeeping and this return comparison preserve the
-arithmetic flags surrounding them. Those historical receipts predate the current
-general dispatch/block-budget flag-preservation change and do not validate it.
-
-One wrapper invocation allows 128 comparisons and 16 padding calls. On quota
-exhaustion, exit 10 captures the full packet before the pending helper executes,
-leaving its actual CALL word in place. The provider validates the owned request
-and continuation, and the original waiter completes that call and the native
-suffix under the existing lock. An untranslated ordinary CALL similarly ends
-the invocation and may teach a future image about its target. The direct image
-never reenters from a full packet or resets its quota after an exit. Instruction
-limits, invalid returns and malformed state remain errors, not permission to
-replay the body.
-
-Completed direct helper calls are exported once per wrapper return through two
-appended private result fields. A successful batch consumes them on completion;
-other exits consume them in the pending dispatcher. The two wrapper argument
-words and the body/completion evidence remain unchanged. Separate
-`direct_strcmp` and `direct_pad` observations count these calls; the existing
-hostcall counters continue to count actual dispatcher exits and resumptions.
-These observations never replace physical ownership or retirement records.
-
-The final bridge at `05876a4` passed the affected VM unit checks and all ten
-candidate 3 live checks. Its 36-session KD screen and 18 diagnostic profiles also
-completed and drained. The [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
-retains earlier candidates and fixture failures. The separate
-[`05876a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-completed all 567 sessions with validation and drain for read-only taskname and
-xattr tail queries with 16 or 128 entries. KD improved over the earlier
-dispatcher at 60 workers but remained below TCLock on these three workloads.
-Archive verification is complete. The separate n129 quota control passed with
-native waiter completion and full drain; its generated prefixes are correctly
-classified as partial execution, not completed delegated bodies.
-
-The [profile comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
-confirms that the measured direct bodies no longer call the source-pin lookup,
-full-frame validator, continuation saver or C string-service adapters. The
-historical `88bb5a4` dispatcher repeated those operations for each string call.
-Moving helper calls into one generated invocation removes those repeated
-transitions; code is pinned before publication and exact ownership is still
-checked when binding and completing requests. Instrumented timings are unscored
-and cannot establish an exclusive cost or throughput gain. KD mutex's physical
-protocol, whole-kernel replacement limits and unestablished mutation delegation
-are unchanged.
+Historical string services/direct bridges, control-storage models and their
+quotas are documented at the
+[fixed pre-cleanup checkpoint](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md).
+Their original numeric outcomes and failures remain in [history](../history/README.md)
+and frozen results; they do not validate the current ordinary-callee policy.

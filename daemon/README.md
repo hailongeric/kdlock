@@ -1,7 +1,7 @@
 # Translation daemon
 
 The daemon polls registered entries, launches the Python translator and uploads
-images through one `/dev/kd_dev` session. [The project guide](../docs/PROJECT_GUIDE.md)
+images through one `/dev/kd_dev` session. [VM operations](../docs/operations/VM.md#environment)
 owns guest setup; [admission](../docs/design/admission.md) and
 [register ABI](../docs/JIT_REGISTER_ABI.md) own translation/packet contracts.
 Do not start a second daemon alongside a runner-managed session.
@@ -78,26 +78,20 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS version 12 retains the checked mutex stack bound and static module per-CPU
-arena introduced in v1/v2. Bits 3 and 4 describe immutable mutex images and
-exclusive KD mutex objects; bits 5 and 6 describe checked instruction exits and
-restricted ABI1 spin address exits. Bits 7 and 8 identify the original `strcmp`
-and `strscpy_pad` APIs. Bit 9 states that these APIs rely on the original C
-caller's valid memory and lifetime, without helper-specific checks. Current
-translation requires bit 9 as well as the appropriate API bit before using
-these service summaries.
-Optional bit 10 permits direct original-helper calls inside one generated
-invocation; otherwise eligible string bodies retain the dispatcher route.
-Bit 11 separately permits immutable ABI1/3 root instruction exits, requiring
-bit 5 as well. These images require exactly 33 and admit no nested control or
-service continuation.
+Production translation trusts kernel/module source, including loops, and skips
+semantic context/value/input proofs. Strings use ordinary decoded CALL/RET;
+current images select no named string summary, service or direct native bridge.
+Only the declared scalar services remain selected. The compiler clobber-entry
+contract is assumed; source leases, faithful lowering, actual return words and
+runtime ownership remain required.
 
-Ordinary images accept compatible versions 5 through 12. Mutex instruction
-markers require versions 6 through 12 with bit 5; spin address-check images
-require versions 7 through 12 with bit 6. Older service contracts remain readable
-by observers, but do not authorize the current string summaries. Rebuild/reload
-the provider, daemon and translator together. Fixed stack and module bounds
-describe implementation behavior; they do not establish arbitrary object validity.
+CAPS version 12 and each image's requirement bits still negotiate the exact
+runtime protocol. Mutex images are immutable. Root ABI1/3 instruction markers
+require bits 11 and 5 and image requirements exactly 33. Retained address/string
+capability fields are compatibility ABI, not a way to re-enable old analysis or
+helper-specific emission. [Register ABI](../docs/JIT_REGISTER_ABI.md) owns the
+complete directory and compatibility values. Rebuild/reload matching provider,
+daemon and translator together; capabilities do not prove arbitrary object safety.
 
 Real kcore text windows pin up to 64 distinct LIVE source modules, including learned
 callees and cold extensions. Core text/rodata follow their declared ranges; init,
@@ -109,9 +103,10 @@ protect provider use; text pins do not retain arbitrary lock/object allocations.
 
 The translator selects the code this invocation could reach, checks every block
 it will emit, rewrites register and control-flow operations, and builds `jit.bin`.
-If the code violates admission policy, it deletes stale outputs and returns 2
-(native-only). Exceptions or failures to launch, build or access the device are
-errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 requires
+A terminal construction/native-only result clears stale outputs and remains
+distinct from a launch, dependency, assembly or device error. Production does not
+issue semantic source-safety verdicts. Missing backend support is not supplied by
+source trust, and an infrastructure failure is never a successful translation. MINIMAL entry for ABI1/ABI2/ABI3 requires
 the matching versioned entry. A legacy image cannot be relabelled as clobber code.
 
 Images must fit 640 KiB and include the 48-byte protocol/ABI directory. Uploads
@@ -128,10 +123,10 @@ remain immutable even without optional requirements. Other spin/rwlock entries
 retain in-place storage. Deploy the matching provider,
 daemon and translator together. Mutex instruction markers set directory
 requirement bit 0; spin address checks set bit 1 and include a validated source
-instruction directory. Read-only string services set bit 2; writing services
+instruction directory. Historical read-only string images set bit 2; writing images
 set bit 3 and cannot run on a provider advertising only the read-only contract.
 ABI1/3 root instruction markers require exactly bits 0 and 5, value 33.
-Direct string-call images additionally set bit 4, value 16, and contain a
+Historical direct string-call images additionally set bit 4, value 16, and contain a
 `KDNC0001` directory naming generated CALL operands. Publication fills their
 relative helper addresses in separate preallocated storage near kernel text.
 The uploaded `jit.bin` still contains zero placeholders: evidence for executed
@@ -140,49 +135,15 @@ The benchmark reads these bytes outside worker timing. This checks generated
 image construction and residency; it reads no helper or source CALL instructions.
 A reached instruction marker or failed address check disables the stable entry
 under the publication gate, so a concurrent upload cannot reopen it.
-Translation refuses bodies needing both source constant-branch simplification
+Optional checked translation refuses bodies needing both constant-branch simplification
 and spin address checks, because the flag proof must cover the original native
 suffix, including branches that generated code might otherwise remove.
 
-String services invoke the original kernel APIs with the original arguments.
-No phase verifies the helper instructions. Runtime and publication perform no
-string scans or destination-bound rechecks. The translator still accounts
-for each API's register and memory effects; the caller supplies valid stable
-memory as for a native call. Common KD ownership, frame and pending CALL return
-bookkeeping remain mandatory. The limits are 128 `strcmp` calls and 16 other
-continuations, including `strscpy_pad`; quota fallback retains the unexecuted
-CALL and earlier effects. Every session must drain and retire normally. The
-[API admission rules](../docs/design/admission.md#original-strcmp-service)
-define the caller's obligations and separate writing effects.
-
-The optional [direct-call route](../docs/design/admission.md#direct-original-helper-calls)
-accepts only a pristine ABI1 spin root and cannot reenter after a FULL exit.
-It preserves the actual source CALL word and enforces the same invocation
-allowances, returning an excess unexecuted call to the original waiter. Its
-private result counters do not change the two-word wrapper ABI or KD mutex
-protocol. The final `05876a4` bridge passed its
-[focused wrapper and live checks](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks).
-Its [diagnostic profiles](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
-completed with tracing restored. The separate
-[standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-completed 567 validated sessions for read-only taskname and xattr tail with 16
-and 128 entries. Archive audits and the additional live quota control remain
-separate from these throughput results.
-
-The preceding v10 dispatcher implementation passed
-[focused VM correctness checks](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#final-live-acceptance)
-through candidate 6 and completed all 567 sessions of the
-[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-with validation and drain. This does not establish mutation-case delegation,
-performance parity with Native/TCLock, a full-suite pass or whole-kernel support.
-The frozen `c79d84f` checked implementation's
-[functional receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-and [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
-remain historical evidence for that source version. Its preliminary string
-checks and resulting native fallback are no longer current behavior. See
-[checked spin exits](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit) and
-[the mutex compatibility backport](../docs/history/legacy_mutex_compatibility.md)
-for their independent contracts.
+The string-service/direct-bridge publication and quota details above describe
+retained historical image ABI only. Current strings are ordinary callees. Their
+former contracts, returned-body checks and performance results remain at the
+[fixed daemon checkpoint](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/daemon/README.md#publication-and-failures).
+They do not validate the current Linux 7 trusted-source path.
 
 ## Optional translation measurements
 

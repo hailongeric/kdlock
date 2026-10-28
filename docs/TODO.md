@@ -1,608 +1,67 @@
 # Known limitations and deferred work
 
-The [terminology guide](TERMINOLOGY.md) explains lock, generated-code and
-measurement terms used here. In particular, rwsem means a sleeping reader/writer
-semaphore; JIT means just-in-time compiled code used to execute a waiting task's
-work; and final drain means all requests, references and release confirmations
-have finished.
-
-The [KD-only mutex contract](design/kd_only_mutex.md) is the current replacement
-assumption. Whole-kernel lock replacement, lockdep/RT/ww_mutex integration and broad
-oversubscription remain unvalidated. Removing the Linux mutex bridge does not
-resolve historical pinned-producer scheduling failures.
-
-Current scope: x86_64 kernel spin/mutex/rwlock delegation and sleeping rwsem
-with local readers and explicit outer writer delegation. Implementation contracts
-live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-accepted KD-only mutex, accepted `c21345b` rwsem results, the separate spinning-rwlock
-reference and historical comparisons. These unresolved issues remain documented;
-this list does not schedule new work. Historical evidence is
-indexed in [VALIDATION](VALIDATION.md).
+The [roadmap](ROADMAP.md) owns the three-stage plan. This page records unresolved
+implementation and evidence gaps; [validation](VALIDATION.md) owns outcomes and
+[performance](PERFORMANCE.md) owns measurements.
 
 ## Current checkpoint
 
-Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
-[migration record](history/vm-ubuntu2604-migration-20261027.md) establishes OS
-boot and matching package/header identities. The separate
-[port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
-records the custom kernel boot, Native/TCLock functional controls and KD
-native-continuation probes. The
-[trusted-source basic controller](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md#complete-four-family-basic-controller)
-passed all four recorded cacheline presets with correct data, returned JIT
-bodies and final drain. Those functional checks supply no performance scores.
+Ubuntu 26.04.1 / Linux `7.0.0-38-kdlock1` is the normal platform. The separate
+`kdmm1` image supports the measured Native/KD shared-MM modes. Linux 6.1 is
+recovery/history only. Fresh four-family functional checks and the selected
+[3,402-point catalog](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+are complete within their separate frozen scopes. All timing is exploratory,
+with one round per point and failed strict qualification.
 
-The normal `7.0.0-38-kdlock1` boot keeps the global mmap adapter disabled. The
-separate [enabled-MM image](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md),
-`7.0.0-38-kdmm1`, uses the same image and configuration for Native/KD modes.
-Fresh Native/KD correctness and preparation passed, and the
-[shared-MM campaign](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
-completed all 42 timing points with drain. Together with the separately frozen
-[84 private-MM points](../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md),
-all 126 selected MM measurements are complete. Native measured higher shared-MM
-throughput at all 21 worker counts; at 60 workers KD achieved 0.0436× Native.
-Each point has one exploratory round, so the 2.15% one-worker KD deficit has no
-repeat-variability estimate. The original KD1 mapping failure, its normal
-cleanup and the later diagnostic remain separate evidence. The MM performance
-goal is still unmet.
+## Correctness and integration limits
 
-The earlier checked-source
-[lock/API campaign](../bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
-retains 29 complete matrices and 1,827 timed points plus its partial failed
-taskname attempt. The separate
-[trusted-source campaign](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
-completed and audited 22 full workloads (1,386 points). Its `taskname-w20`
-attempt remains stopped with 23 valid points, one timed failure and 39 unrun
-points. The fresh
-[prepared taskname cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
-completed its own 63-point matrix, with six KD returned-JIT and fifteen
-successful local `NO_JIT` points. The separate strict unscored 16-worker
-taskname check remains a `NO_JIT` failure. The
-[complete catalog index](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
-now accounts for all 52 lock/API configurations (3,276 points) plus 126 MM
-points, or 3,402 selected points. That closes the selected measurement
-coverage; it does not close the MM performance goal or pool the three
-lock/API source/preparation cohorts. Earlier partial failures remain intact.
+| Area | Remaining limit |
+| --- | --- |
+| Whole-kernel replacement | Loading the provider does not convert kernel objects; each object and all its users require one protocol and lifecycle integration |
+| Pinned delegation waiters | Published mutex producers poll with preemption disabled; broad oversubscription/progress redesign is deferred |
+| Origin context | Hardware task/GS, IRQ/RCU, accounting and address-space state remain the executor's; trusting source does not switch them |
+| Native recovery | Generic FULL exits do not restore arbitrary flags or SIMD/FPU state; only the documented instruction-exit paths preserve their declared arithmetic flags |
+| Mitigations | Active call-depth tracking is rejected; complete mitigation coverage of handwritten/generated returns remains unvalidated |
+| Image replacement | Mutex images are immutable; ordinary spin/rwlock entries may still replace code in place until an immutable transition |
+| Source and object lifetime | Session source pins and image leases do not retain arbitrary data/lock allocations; stop/join, exact owners, ACKs and frame drain remain required |
+| Fairness | Bounded batching and NUMA grouping do not establish starvation freedom or a maximum acquisition latency |
+| API coverage | RT, ww_mutex, lockdep, general non-owner/cancellation nesting and unsupported IRQ/BH forms remain outside the declared support |
+| Decoder/backend coverage | Source trust bypasses semantic proofs, not missing instruction lowering, text, return routing or runtime protocol support |
 
-Optional near-text direct-helper allocation remains unavailable with call-depth
-tracking. Linux 6.1 adaptation is retired, with
-results and one recovery version retained under the
-[retirement policy](history/kernel-retirement-20261027.md). Earlier campaign
-plans keep their outcomes and unrun coordinates without scheduling more 6.1 work.
+Production uses `trusted_source=True`, including kernel and module loops and
+ordinary string callees. Earlier context/value/input proofs and string models
+are optional checked regression or historical compatibility code, not pending
+production admission work. Do not restore those checks as an implicit default.
+See [translation policy](design/admission.md) and [register ABI](JIT_REGISTER_ABI.md).
 
-The [three-stage project roadmap](ROADMAP.md) defines the goal: micro/nano gains,
-scoped MM improvement or parity, then relevant kernel lock replacement and
-application evaluation. Stage 1 has favorable exploratory cases and retained
-regressions; stage 2 has not achieved its performance gate; stage 3 remains planned.
-The next scoped gaps are an exact actual-backend `mmap1_threads` comparison, an
-independent-process control, and a generic actual-fault throughput driver.
+## MM and performance gaps
 
-The retained measurement plan is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
-across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
-page faults. Substantial gains are a hypothesis; losses remain reportable.
-Reuse the validated
-[basic working version](PROJECT_GUIDE.md#basic-working-version) and retain focused
-correctness, ownership, lifetime, recovery and environment checks. The
-historical `plain-scaling-v1` plan selected 21 worker counts and 126 plain
-Native/KD sessions, with [41 mocked passes and independent review](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
-Its cases remain unrun. The earlier smaller plan used 1 and 16 workers and
-three pairs: 12 measured cases. The explicit `plain-v1` runner/report mode passed
-[25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md);
-its [authorized attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
-stopped at 68 QEMU tasks versus 67 before boot or payload execution. It consumed
-one full capture; all twelve measurements and six unscored checks remain unrun.
-Skipping entries in the stopped 24-case
-plain/sampled plan is invalid. New latency sampling is deferred.
-Generic actual page-fault throughput needs a driver; the private backing-lock
-fault workload is a distinct comparison.
+The ordinary `kdlock1` kernel keeps the mmap adapter disabled. The separate
+actual shared-MM comparison completed 42 points; Native was faster at all 21
+worker counts. At 60 workers KD achieved 0.0436× Native throughput. A measured
+cause or accepted optimization has not been established on the Linux 7 cohort.
 
-The [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
-records build-3 compatibility checks, 16 capture and 14 paired/report mocked
-tests, and two earlier basic programs. These are build/offline results; prior
-actual mmap correctness was reused. The earlier authorized October 25 attempt
-[stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
-checks, and left all 24 measured sessions unrun. Qualified performance cases for
-that attempt remain zero. Later validation and exploratory campaigns are recorded
-separately in [performance status](PERFORMANCE.md). The first bounded diagnostic
-stopped during initial
-observation; its
-[guide](../bench/mmap_lock/DIAGNOSTIC.md) records the subsequent approximate-cadence
-correction and execution status. The existing stop and
-acceptance criteria remain in force. The six workers predated that full capture
-helper by about 63/55 seconds; its snapshot query did not create them. Their
-roles and initiating I/O remain unknown.
-Local `master` includes the earlier integration through `92f773f`, the expanded
-plan at `80f3f1e` and diagnostic timing correction at `39ad0be`.
-The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
-confirms the prepared binaries and persistent identities still match; guest root
-space supported the older 512 MiB campaign evidence allowance. The expanded
-plan instead estimates 2 GiB per retention filesystem; fresh space/log review
-is required before any separately approved execution. A subsequent
-[exact-file cleanup](../bench/results/10.176.26.71/tests/approved-archive-cleanup-20261025/README.md)
-removed three approved duplicate guest archives and retained their verified
-source-host copies, freeing 1,237,295,104 bytes. That cleanup involved no build
-or live test.
-Additional cleanup requires its own verified preservation and exact approval.
-The failed admission cannot be replaced by a later quiet observation.
-Broader matrices, causal profiling, observer expansion and tuning remain
-separate work. All seven earlier mutex causes and qualified variance remain
-unresolved; preserved performance refusals remain failures. The historical
-checkpoints below retain their original scopes, including deferred p95 work.
-The completed [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
-passed 49 serial basic/affected and 2,626 inert archive checks, with one original
-warmup, exact retirement and final drain. Seventeen writes/4,874,247 logical
-bytes narrow receipt intervals; all three worker births precede export. The
-unchanged endpoint fails at 70, and request/descriptor attribution remains open.
-No timing or new p95 ran. The completed read-only
-[RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
-finds plain no-JIT sessions with queue entries but zero lifetime combiner calls;
-their cause remains unresolved. The separate
-[actual-MM plain stage](../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
-passed both-mode correctness with identical frozen binaries and restored the
-recovery kernel. Throughput admission refused 68 QEMU threads versus 67, so no
-timing session started. The RCUHT phase diagnostic passed five focused tests but
-refused at 71 threads before workload execution. All seven causes, new qualified
-throughput repetitions and their variance remain unresolved; p95 stays deferred.
+The next scoped tasks are an exact actual-backend `mmap1_threads` runner, its
+independent-process control, and a generic actual-backend minor-fault throughput
+driver. Existing independent-mm device mappings and private-backing fault cycles
+are different workloads. Preserve native MM bodies and original-task execution;
+operation-specific delegation and prepared teardown remain retired.
 
-The [2026-10-22 continuation](../bench/results/10.176.26.71/tests/serial-continuation-20261022/README.md)
-completed and archived the separate RCUHT OUTER/DIRECT phase diagnostics after
-fresh full admission. Both drained exactly; fixed endpoints still failed at
-110/76 threads. The phase counts are entry witnesses and provide no causal fix.
-The unchanged actual-MM candidate completed six serial boot blocks and 24
-validated, drained cases using the already validated binaries. Every case
-retains its own admission and fixed endpoint; all endpoints failed at 68–70
-threads versus 67. Recovery is restored. All-attempt ranges and CVs are
-[reported](../bench/results/10.176.26.71/tests/serial-continuation-20261022/ACTUAL_MM.md),
-but qualified repetitions and qualified variance remain unresolved (n=0).
-All seven mutex causes remain unresolved; no performance acceptance is declared.
+Favorable nano points do not establish a universal gain. Current repeated
+confirmation, uncertainty estimates and performance-neutral integration remain
+open. The 768 locality boundary was promoted from exploratory evidence and can
+retain within-node losses. New tail-latency collection remains deferred.
 
-The [focused mmap contention investigation](../bench/results/10.176.26.71/bench/mmap-contention-20261022/README.md)
-binds the actual killable writer paths to the candidate ELF and identifies
-phase wakeup/reader-drain work as a hypothesis. Two basic programs and fourteen
-affected checks passed. Its one planned diagnostic pair was refused before
-execution at 72 QEMU threads versus 67; both profiles remained unrun in that
-attempt and recovery was restored. No implementation defect or causal fix was
-demonstrated, and no gate was relaxed. That stage left the matched, bounded
-kernel-stack profile of the unchanged 16-worker mmap workload outstanding.
+## Retained failures
 
-The subsequent [settled diagnostic pair](../bench/results/10.176.26.71/bench/mmap-contention-followup-20261022/README.md)
-completed once per mode with full admission, business validation and drain.
-Recovery is restored. Endpoints failed at 85/74 versus 67, so qualified timing
-and variance remain unresolved. KD's sampled CPU contexts concentrate in writer
-phase admission (1,000/1,148 selected samples), with no selected physical-gate
-sample. This identifies the next investigation target, not a demonstrated cause
-or fix. Preserve killable cancellation, concurrent readers, exact ownership and
-downgrade/wake ordering in any follow-up. All seven public-mutex causes remain
-unresolved; no performance acceptance follows.
+The old checked taskname preparation, the original trusted mixed-taskname timed
+failure, zero-point telemetry preflight, initial enabled-MM contention witness,
+and strict unscored taskname `NO_JIT` control remain failed. Later prepared,
+diagnostic or timed cohorts do not change their verdicts. Their exact counts,
+causes and cleanup receipts are linked from [validation](VALIDATION.md).
 
-The [writer-phase metadata stage](../bench/results/10.176.26.71/bench/mmap-phase-observation-20261022/README.md)
-passed basic, receipt and serial live controls, then observed repeated failed
-admission after blocking across all 16 workers: 94.04% of blocked phase-schedule
-returns fail their next predicate. Original ownership, cancellation, reader,
-downgrade and reference oracles passed. This does not identify wake source or
-fanout, uninstrumented cost, per-acquisition retry distribution or fairness.
-That stage left failed-after-block, no-switch and runnable-only coverage gaps,
-which the follow-up below closes. Any selective-wake candidate still needs competing-writer,
-reader-cohort, cancellation/rollback-successor and downgrade controls. The fixed
-endpoint failed at 72 versus 67; qualified timing/variance and all seven original
-public-mutex causes remain unresolved. Recovery is restored and idle; no protocol
-change or acceptance followed this diagnostic.
-
-The [deterministic observer controls](../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
-now close the failed-after-block, no-switch and runnable-only coverage gaps:
-51 checks passed with exact identities, independent task switch counters and
-complete joins, after basic/receipt checks and the unchanged 139-check baseline.
-The observer and original workload bindings remain sealed. Recovery is restored
-idle. A later causal stage would validate exact wait-entry/wake-callback correlation,
-including stack reuse, scheduler activation, cancellation and complete callback
-lifetimes, before attributing retries to fanout or changing wake policy. No
-timing ran; qualified variance and all seven original causes remain unresolved.
-
-KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
-workloads compare KD, TCLock and Native; sleeping rwsem also has an original TCLock port with fixed-affinity registered
-workers and ordinary API scope. KD tracks real lock owners and
-unlock acknowledgements, keeps source modules loaded while needed, and shares
-register packets between waiter and combiner. It does not intercept global lock
-calls. Historical comparisons retained configuration-specific throughput gaps;
-see the [spin/mutex report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-and [RCUHT rwlock report](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md).
-
-Rwlock ABI3 moves reader drainage and write admission before the prepared body,
-resolving the older hash-writer translation refusal. Native writers have a fast
-path, and the count and gate occupy separate cachelines in a 128-byte object.
-The historical 40-vCPU RCUHT matrix completed 270 runs correctly and drained,
-but met both throughput targets at only 21/30 points. That captured version and
-placement had read-heavy cross-NUMA and two-worker writer gaps; those results do
-not establish a universal or current KD rwlock limitation. The separate fresh
-spinning reference is source- and topology-specific and remains distinct from
-sleeping-rwsem performance. All 270 sessions completed correctly and drained.
-KD is slower than both comparators at c08/20%/one worker and slower than TCLock
-at RCUHT/1%/60 workers; it meets both measured criteria at 29/30 points against
-Native and 28/30 against TCLock. These
-comparisons retain repetition ranges and do not establish statistical
-significance. TCLock's stack-delegation share remains unmeasured.
-
-The accepted `c21345b` [rwsem implementation](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-uses separate queues for waiting to enter and waiting for readers to finish,
-separates frequently written fields across cachelines, and checks conditions
-repeatedly for a limited number of attempts before sleeping. These changes
-precede delegation publication and preserve the accepted KD mutex protocol. All 756
-sessions completed correctly and drained. KD meets both observed throughput
-criteria at 117/126 points against Native, with six misses and three split
-execution-status groups. Against the initial KD there are 110 passes, 12 misses
-and four split comparisons. Low-count regressions remain substantial: c01/c08
-at 20% writes and two workers reach only 0.286×/0.276× the initial KD whole-run
-throughput, approximately 71–72% slower. The user accepted this version with
-those measured limitations; acceptance does not remove them. The six Native
-misses are the three 20%/one-worker cases,
-c08/1%/two workers and c01/c08 at 20%/36 workers. Split comparisons completed
-all planned sessions; execution groups and variability remain in the report.
-The limit of 16,384 condition checks is accepted platform-specific tuning, not a
-universal optimum. The first-repetition Native variation in both baseline and selected focused screens
-remains unexplained; governor-policy equality does not isolate its cause.
-Continuous outer-writer arrivals can delay readers or ordinary writers, and no
-Linux rwsem fairness or bounded-wait guarantee is provided.
-
-The [initial rwsem report](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
-preserves the `485729f` shared-queue baseline: 756 correct, drained sessions,
-26/126 observed parity points, seven JIT-positive KD sessions and 371 local
-fallback sessions. Its high-count regressions are historical evidence, not
-current performance numbers. Neither waiting-path changes nor favorable
-measurements resolve the correctness limits below.
-
-Known failures are still open:
-
-- Concurrent cold promotion stalled with an RCU warning in c16/t4 preparation.
-  Single-CPU preparation avoids that phase rather than fixing it. The fixed
-  [failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)
-  retains the original inputs.
-- Seven-role/two-CPU mutex mode4 soft-locked with pinned polling. Other passes
-  do not replace that case; see the fixed
-  [mutex failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
-- An older oversubscribed mode5 published code but lacked actual JIT. Its former
-  scheduling strategy does not validate today's pinned waiters; see
-  [the recorded assessment](VALIDATION.md#mutex-oversubscription-assessment).
-
-## Delivery scope
-
-The user reopened the seven public-mutex regressions and requested subsequent
-rwlock/rwsem comparisons, real mmap/fault integration and nano measurements.
-The active [stage record](../bench/results/10.176.26.71/bench/mutex-regression-diagnosis-20261020/README.md)
-tracks those dependencies and results. Their prior deferred status is not a
-reason to skip the requested investigation; unsupported behavior still requires
-an explicit ownership/context design and validation before execution.
-
-The latest [regression evidence review](../bench/results/10.176.26.71/bench/mutex-causal-boundary-20261021/README.md)
-narrows pipecap's class mismatch to OUTER sessions with no delegation queue entry
-versus DIRECT sessions with returned bodies. Historical host-worker activity
-cannot be reconstructed, and a fresh observation still fails the thread-count
-gate. All seven causes remain unresolved. The subsequent
-[isolated general-unlock control](../bench/results/10.176.26.71/bench/pipecap-unlock-20261021/README.md)
-is implemented and passed basic/affected, ELF, live owner/ACK and four serial
-syscall correctness checks. Its single timing gate failed at 68 versus 67 host
-tasks, before any session. The later
-[paired follow-up](../bench/results/10.176.26.71/bench/pipecap-unlock-followup-20261021/README.md)
-waited for a qualifying gate and completed all six planned sessions, retaining
-all paired rates and variance. Its immediate endpoint failed at 120 versus 67
-tasks, with changing returned fractions and one mixed-class pair. All seven
-causal resolutions remain open; no admission, ownership or environment check
-may be relaxed. The allocator failure and identical-binary successful retry stay
-separate from these frozen-provider workload results.
-
-Focused [QEMU phase controls](../bench/results/10.176.26.71/bench/qemu-workers-20261021/README.md)
-now reproduce extra workers during guest setup/no-op activity before a workload.
-The separately bracketed workload/collection diagnosis is complete with the
-original gate, frozen inputs and correctness prerequisites preserved. All six
-observed workload workers were born before measurement, but the runtime count
-still fails at 73 and boundary activity remains unattributed. Three archives
-passed 2,340 inert checks. Observer overhead, unsampled lifetimes, delayed guest
-I/O and indirect interference remain unresolved. No historical endpoint or
-regression is accepted by these controls; causal unlock-path attribution and
-acquisition latency remain open.
-
-The [setup-boundary diagnostic](../bench/results/10.176.26.71/bench/mutex-boundary-20261021/README.md)
-completed without timing: basic/affected checks passed, one original warmup
-completed 6,724,992 operations, and the held session preserved exact state and
-retired normally. Its five scheduled full captures at 0/15/30/60/120 seconds
-all refused (75/75/70/68/68 tasks). Eleven intervening accounting scans saw
-67, then a new worker appeared; the post-cleanup full capture was 70. Archives
-passed 2,004 inert checks. Next, a bounded no-timing candidate-triggered full
-capture can test the observed quiet interval; a sample alone never admits the
-gate. Post-warmup waiting changes the preparation contract, so timing parity,
-all seven causal resolutions and acquisition latency remain unresolved.
-
-The [sample-triggered follow-up](../bench/results/10.176.26.71/bench/mutex-boundary-trigger-20261021/README.md)
-obtained one valid full prepared-boundary pass: an exact-67 scan triggered the
-capture after 25.431 ms, and the unchanged fresh guest comparison passed while
-held state remained identical. One warmup completed 8,375,936 operations; no
-timing was sent and retirement/drain passed. The endpoint full capture failed
-at 70, distinct from the last accounting sample's 67. Basic/affected checks and
-2,046 archive checks passed. This establishes observed feasibility only; the
-83.971-second post-warmup wait changes preparation history. A separate no-timing
-pre-warmup-wait control can test whether warmup recreates workers. Original
-timing parity, all seven causal regressions and acquisition latency remain open.
-
-The [pre-warmup control](../bench/results/10.176.26.71/bench/mutex-prewarmup-20261021/README.md)
-now passed the full gate before one original warmup and in one immediate post
-capture, without a post-warmup settling wait or timing command. The warmup
-completed 8,272,256 operations/54,599 returns and retired exactly; 33 basic and
-affected checks and 2,390 inert archive checks passed. The endpoint still failed
-at 68. No accounting samples cover warmup or the later validation/cleanup gap,
-so the new endpoint worker cannot be attributed. Preserve this observed boundary
-feasibility separately; all seven causes, acquisition latency and performance
-acceptance remain unresolved. Do not replace the failed endpoint with an
-eventually quiet capture.
-
-The [phase-accounting follow-up](../bench/results/10.176.26.71/bench/mutex-phase-accounting-20261021/README.md)
-completed with 38 serial basic/affected checks and 2,446 inert archive checks.
-One original warmup completed 6,975,616 operations/53,833 matched returns with
-exact retirement and final drain. Full gates passed at 67 before and immediately
-after warmup, but the endpoint failed at 70. All three extra workers were born
-after the post capture and before the cleanup body began; initiating I/O remains
-unknown. Active-window observer CPU was at least 25.758% of one core, so this
-separate no-timing evidence does not establish continuous quiet or acceptance.
-Keep the endpoint in place. The subsequent
-[receipt-I/O diagnostic](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
-and [retained RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
-are complete, as recorded in the current checkpoint above. All seven causes,
-acquisition latency and timing acceptance remain unresolved.
-
-The entry-inlining experiment passed focused correctness checks but did not
-resolve the seven mutex losses in its separate 120-session comparison. It is
-not accepted as a performance fix. The stage record retains all repetitions,
-class gaps and the failed post-run QEMU thread-set check; latency and runtime
-host interference were unmeasured in that experiment. The archive ref
-`archive/mutex-entry-inline-20261020` preserves it at `7062887`. The common entry
-and its test extraction marker are restored to their pre-experiment bytes; the separate
-`mutex-entry-restored-20261020/checks-1` basic and affected checks passed.
-Its first live attempt failed before provider initialization with reserved
-per-CPU ENOMEM and is preserved. After the unchanged allocator guard completed
-normal allocation/free preparation, all four `live-2` probes passed with exact
-retirement and final idle. The complete archive review passed 31,957 checks.
-This restores validated correctness scope, while all seven causal performance
-points and the remaining environment/class gaps stay explicitly unresolved.
-The later latency stage records complete-operation p95 within its stated scope.
-The next [shared-lock comparison stage](../bench/results/10.176.26.71/bench/shared-lock-followup-20261020/README.md)
-retains the current recovery VM and pinned environment, with separate fresh
-Native/KD rwsem and Native/TCLock/KD rwlock controls. All 756 rwsem sessions
-completed correctly and drained, with 378 exact KD retirements. Its independent
-562,530-check review passed archive/source/arithmetic checks and retained one
-failed post-run host-thread comparison (115 versus 67). The observed Native
-comparison has 118/126 throughput passes, six misses and two split-class
-points, with substantial repetition variation. Acceptance remains open.
-The separate 270-session rwlock reference completed correctly and drained, with
-90 exact KD retirements and 208,412 independent checks without issues.
-Observed parity is 27/30 against Native and 28/30 against TCLock. Both captured
-host endpoints match, but the after receipt is delayed 117.556 seconds; that
-interval and runtime interference remain unobserved. These results cannot
-resolve the mutex comparison by implication.
-The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
-completed in the idle guest: 46 source/configuration files, including 21 newly
-captured callback/helper files, with unchanged kernel identity. The independent
-1,470-check review passed and 24 hashed source intervals establish concrete
-object/API, ownership/mode, context/lifetime and validation blockers. That review
-made no kernel changes and ran no KD mmap/fault test. The subsequent
-[opt-in mapping stage](../bench/results/10.176.26.71/tests/mmap-fault-optin-20261021/README.md)
-implemented module-owned backing state and passed Native/KD/TCLock functional
-checks at `21451da`, preserving three failed preparation attempts. Native mmap
-ownership, origin-task callbacks, exact retry/completion releases and explicit
-Native fallback remain separate from private backing locking. The later
-[split-workload stage](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
-passed eighteen separate mmap/fault cases and completed 48 timings through local
-readers, with complete-operation p95 and paired observation controls. Its strict
-host endpoint failed (73 versus 67 threads); variance and isolated instrumentation
-cost remain unresolved. Those private-backing results did not establish actual
-mmap-lock conversion or its signal APIs; subsequent lock-only integration and
-focused cancellation checks are recorded below. Broad callback coverage, full
-Native equivalence and all seven mutex causes remain open. Reader delegation is
-deliberately absent; a real exclusive backing-writer workload needs its own supported
-contract and execution evidence.
-
-The [shared-mm Native writer stage](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md) now proves actual mmap writer
-contention without payload faults and validates split, descriptor/VMA and exit
-lifetimes. Its six cases, four timing-client validations, twelve measurements
-and eighteen negative checks completed with drain. The strict endpoint failed
-at 76 versus 67 QEMU threads. Native timing variance and sampling cost remain
-unresolved. The
-[historical integration audit](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
-is separate from the subsequent
-[actual-object kernel correctness stage](../bench/results/10.176.26.71/tests/mmap-kd-kernel-20261021/README.md),
-which completed selected Native-control/KD-local tasks on `6.1.159-kdmm1`.
-Readers are concurrent/local, writers stay on the original task, and mmap and
-fault cases are distinct. Recovery artifacts and organization are complete.
-The full transitive participant/filesystem/module scope remains unvalidated;
-no arbitrary MM delegation, TCLock MM support or experimental timing is claimed.
-The subsequent [plain-workload validation](../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
-bound the candidate image/mode, runtime modules, prior receipts and one frozen
-binary set. Both-mode correctness and default recovery payload builds passed.
-Its planned timing remains unstarted because the original host gate refused
-68 versus 67 threads. A future attempt must retain separate boot identities and
-qualify unchanged environment/endpoint checks. No repeated organization or
-already-completed correctness is needed without changed inputs or new evidence.
-
-Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
-exact acquisition references and final ACKs. Shared storage must survive its final
-reader. Builds/tests/benchmarks run in the recovery guest; default work does not
-change its kernel. Published KD waiters remain pinned polling.
-
-Userspace/futex, other architectures and oversubscription redesign remain
-deferred. Lock-only actual mmap integration and its selected Native/KD runtime
-checks are complete; broader participant coverage and full Native equivalence
-remain unvalidated. The [rwsem phase protocol](design/rwsem_implementation.md)
-drains readers before writer publication and excludes ordinary downgrade during
-an outer-writer cohort. It preserves pinned mutex producers and their existing
-oversubscription limits. Outer downgrade, post-publication cancellation, Linux
-rwsem fairness and general nested rwsem JIT controls remain unsupported.
-Basic plus directly affected checks are the default; full suites need
-explicit selection. Extremely uncommon scheduling/resource/alias combinations are
-optional coverage, while reproduced supported-path failures must remain visible.
-
-## P0: Correctness contracts
-
-### C1. Forward continuation after partial execution
-
-The supported CALL/PENDING, post-acquisition spin, checked mutex instruction exits
-and limited ABI1 pointer-load exits resume from the current state. Earlier stores,
-lock acquisitions and releases must happen exactly once. Fixing a recovery defect
-must not restart those operations. Typed string argument refusals also preserve
-the original unexecuted CALL; a helper that has run cannot be replayed. Generic
-faults, indirect-jump misses and instruction-budget errors still stop execution; they cannot
-be used as arbitrary native fallback points. Broader combinations of remote
-execution and resource exhaustion remain optional coverage.
-
-For rwlock ABI3, writer admission can be cancelled only before the body starts.
-A body that already made progress keeps exclusive write access while finishing
-natively. Its matching unlock releases the writer byte, and the request must still
-complete the required ACK and retirement steps.
-
-### C2. One protocol per physical lock
-
-KD spin owns its word; TCLock/Native own theirs. KD mutex owns its physical
-owner word, wait list and legacy scheduling gate. Linux mutex objects or calls
-cannot be mixed on it. Preserve ledger identity, local/delegated exclusion,
-frame pop, owner ACK and storage retirement as separate operations.
-KD rwlock owns its count and KD gate. Ungated native writers retain exact
-nondelegated references; gate quiescence alone does not establish count or reader
-drain. No Linux/TCLock operations may access the same KD rwlock object.
-
-### C3. Immutable JIT publication and lifetime
-
-The current KD mutex implements complete staged publication,
-immutable mutex generations, frame binding and stale-miss rejection. Published
-versions use the existing bounded pool and remain until session teardown; there
-is no in-session generation reclamation. ABI1 spin entries now transition to
-immutable generations when first publishing checked pointer loads or the bounded
-`strcmp` or `strscpy_pad` service; every later generation remains immutable, and
-older frames keep their earlier image binding.
-Ordinary spin/rwlock entries still use in-place storage. General immutable
-publication for those entries and in-session reclamation remain open. See
-[image lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
-and [the mutex backport comparison](history/legacy_mutex_compatibility.md).
-
-### C4. Instruction, flags, and fault semantics
-
-Mutex ABI2 can emit a checked exit marker before the reviewed instructions listed
-in [instruction admission](design/admission.md#checked-instruction-exits).
-An executed marker resumes the original waiter at that instruction and disables
-future delegation of the entry. Its image preserves arithmetic flags across
-generated checks and restores them at that boundary. Unknown instructions,
-unreviewed processor-state operations and equivalent context helpers still fail
-static admission. Interrupt instructions are never silently replaced with no-ops.
-General flag repair outside marker-bearing images and floating-point/vector
-virtualization remain deferred. Packet comparisons alone do not prove live
-processor-flag restoration.
-
-### C5. Origin context and nested boundaries
-
-Current analysis screens emitted scope, CALL/RET, aliases and static per-CPU ranges;
-GS/logical current are not a hardware context switch. Arbitrary hidden calls,
-context-object lifetimes, runtime pointers and concurrent replacement remain open.
-
-#### Limited pointer-load checks and remaining address policy
-
-ABI1 spin can now check a restricted pointer load against tracked stack writes
-at the point of access. A failed check resumes the original waiter before that
-load and disables future delegation. Admission requires proof that incoming
-arithmetic flags are unused by the original remainder; a body whose branches
-were simplified is conservatively refused by this retry. See the exact
-[pointer-load contract](design/admission.md#checked-spin-pointer-loads).
-
-This does not provide general checks for every memory access, arbitrary object
-lifetimes, concurrent pointer changes, nested spin ownership or ABI3 rwlock.
-Those broader checks remain deferred. Entry guards, the mutex stack checkpoint
-and these limited pointer-load checks do not close the
-[dynamic-address gap](design/admission.md#721-dynamic-address-gap). Functional
-continuation evidence and workload performance acceptance remain separate.
-
-The original [`strcmp`](design/admission.md#original-strcmp-service) and
-[`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
-services require stable, resident ordinary source strings and one outer spin
-owner. They do not infer object lifetime or authorize general copying. `strcmp`
-has a private 128-call allowance; on the dispatcher route, `strscpy_pad`, scalar
-services and lock controls share the existing 16-call allowance. The direct-call
-route has separate per-invocation limits of 128 comparisons and 16 padding calls;
-exhaustion transfers the pending original call to the waiter before its effects.
-The implementation removes helper code checks, argument scans and runtime
-destination checks, using the original C
-caller's guarantees. For these two services in selected reviewed C callers,
-analysis records temporary CALL return-address storage separately from ordinary
-object data. The source
-CALL write and its runtime return handling remain unchanged; the caller promises
-that ordinary data accesses do not inspect or overwrite this storage. Known
-violations are refused, and other calls and ordinary writes retain conservative
-alias analysis. The generic refinement for partially overlapping CALL-return
-bytes remains archived. The current implementation retains conservative ordinary-CALL/RET
-behavior and separate control storage only for `strcmp` and `strscpy_pad`.
-Decoded `memcpy` has no special classification or return handling; its original
-loads and writes remain analyzed. Focused VM validation passed for read-only
-taskname, all eight xattr controls and the string/exit probes; the
-[preceding development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
-preserves the failed intermediate checks and the final receipts. See the
-[selected-caller contract](design/admission.md#original-call-word-aliases).
-The preceding [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-is complete: 567 correct, fully drained sessions cover read-only taskname and
-xattr tail queries at 16 and 128 attributes, with fresh Linux Native and TCLock
-controls. KD returned generated bodies in 167 of its 189 sessions; 22 recorded
-no generated entry. These execution outcomes remain separate in the report.
-That version's whole-run throughput at 60 workers is below both comparators in
-all three cases. Subsequent profiles identified repeated dispatcher work: one
-source-pin lookup per string call and 7/37/261 frame validations per returned
-taskname/xattr-n16/xattr-n128 body. Version 11 calls the original helpers within
-one generated invocation and pins the code at immutable-image publication.
-All six new KD diagnostic cases returned bodies with zero calls to those
-dispatcher routines. Registers, actual source CALL words, exact ownership,
-quotas and completion checks remain. Fixed request and translated-call costs
-remain visible in source, but their individual time costs are unmeasured. The
-[current report](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
-keeps the new full grid, earlier screens and diagnostic profiles separate.
-Its 567-session matrix is complete: 168 KD sessions returned bodies and 21 had
-no generated entry. At 60 workers, KD reaches 4.521/2.368/0.573 Mops/s for
-taskname/xattr n16/xattr n128, above fresh Native but below TCLock. Six of the
-61 compatible historical points have lower whole-run throughput, with the
-largest regression about 3.65%; low- and mid-count gaps to fresh controls remain.
-The unscored 129-comparison control passed original-waiter continuation and
-exact retirement, but its generated prefixes do not count as completed bodies.
-
-The 20% taskname mutation control is correct but has no returned delegated
-bodies; its delegation acceptance remains open, and the earlier strict failure
-is retained. Xattr front, miss and size-only queries have correctness evidence
-but no separate throughput matrix in this round. Full live-task/procfs
-integration and arbitrary-caller safety also remain unvalidated. Historical
-checked-helper timings retain their own source identity and are not pooled
-with this revision.
-
-## P1: Evidence and services
-
-- Complete fresh-checkout reproducibility. Pinned dependencies, frozen source and
-  offline checking exist; bundled compiler/dependency bytes and reproducible kernel
-  builds do not.
-- Add only typed bounded services with argument/result, context, sleeping, overflow
-  and side-effect contracts. Clock/int_sqrt exist; arbitrary pointer or variadic
-  printk services do not.
-- Expand randomized/exactly-once fixtures when useful; do not confuse synthetic
-  passes with forced live remote schedules.
-
-### Main-plan acceptance audit
-
-The [focused five-worker pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
-completed its separate 48-session diagnostic after a retained admission failure.
-Queue/owner polling observations did not establish a cause or production fix;
-its 95-thread endpoint failed. All seven points remain unresolved: c08 at
-3/4/5 workers, pipebytes at 3/5, pipecap at 5 and RCUHT at 2. Remaining
-performance and broad integration gaps retain explicit unresolved dispositions.
-
-The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-completed its separate 252-session follow-up after a retained capacity failure.
-The larger buffer passed basic/affected checks; 4,073,421 observations and 126
-exact KD retirements passed 5,218,772 independent integrity checks. The host
-endpoint failed at 125 versus 67 threads. Preserve all observations, observer
-effects, class changes, variance, failed preflights and missing samples from
-the failed first run. Sampled complete-operation p95 is available; the seven
-causes, acquisition latency, isolated observer cost and runtime interference
-remain unresolved. No performance acceptance is declared.
-
-A JIT pass requires the generated and published identities to match, an observed
-returned JIT body, correct data, the required physical-owner ACKs and complete
-drain. Report publication, native controls and refusals separately. Combining
-old passes or selected checks does not establish a current whole-project pass;
-see [the historical audit](VALIDATION.md#main-plan-acceptance-audit).
+Linux 6.1 performance regressions, stopped three-repeat matrices and rejected
+protocol experiments remain in [history](history/README.md) and frozen results.
+They are not an instruction to resume old-kernel adaptation or repeat expired
+campaign plans. Use [basic plus affected checks](../tests/README.md) for a concrete
+change; full suites and new performance campaigns need their own requested scope.

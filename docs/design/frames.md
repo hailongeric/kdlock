@@ -136,7 +136,7 @@ allow that lease to be released.
 Ordinary CALL miss preserves the virtual CALL word and enters the original callee
 on the waiter. The remainder of that invocation stays native. Known controls and
 dispatcher services can resume JIT at validated registered continuations instead.
-The direct-helper route below does not permit such reentry.
+Current ordinary callee misses do not authorize reentry after arbitrary native work.
 
 Native registration accepts only supported NONE/PENDING and distinct validated
 post-acquisition/STACK_CHANGED/remote COMPLETE tags. It verifies callee, token,
@@ -153,41 +153,12 @@ normal retirement. A marker does not release a held lock or replay the entry.
 The [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) specifies
 the validated tag and restore order.
 
-An ABI1 [checked pointer-load exit](admission.md#checked-spin-pointer-loads)
-resumes the original waiter before the guarded load, with the exact current
-instruction, stack position and registers. Its image is immutable, and the
-translator must prove that the original remainder does not read incoming
-arithmetic flags before overwriting them. This path creates no synthetic CALL
-word. It retains the existing spin ticket, physical owner, source lease, native
-references and unlock acknowledgements through normal retirement, and disables
-future delegation of the entry. This is a specific checked boundary, not recovery
-from arbitrary faults or exhausted execution limits.
-
-Original [string APIs](admission.md#original-strcmp-service) retain the frame's
-single outer spin owner, acquisition ticket and source lease. The dispatcher
-route saves and validates the pending CALL return state before invoking the
-helper; success consumes that saved return once. The
-[writing API](admission.md#original-strscpy_pad-writing-service) relies on the
-original caller's valid-buffer contract. Neither route checks helper instructions,
-scans argument strings, rechecks destination bounds or retries completed effects.
-
-The optional [direct-helper route](admission.md#direct-original-helper-calls)
-starts only with a fresh ABI1 spin root, a minimal entry packet and one physical
-lock hold. Original helpers run inside one generated invocation; their actual
-source CALL return words remain on the waiter stack and are consumed once.
-Publication pins helper and return-source code, and the immutable image's existing
-frame or batch lease keeps that code resident through completion or native
-continuation. These calls create no child owner or replacement frame, and leave
-the shared packet and two-word wrapper interface unchanged.
-
-A comparison beyond its 128-call limit, or a padding call beyond its 16-call
-limit, exits before its effects and continues on the original waiter with the
-native suffix. The direct
-image cannot reenter from FULL state and restart its allowance. Exact owners,
-root-ticket references, source leases and unlock acknowledgements survive that
-handoff until normal retirement. Invalid returns and exhausted instruction
-budgets remain errors. [Image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition)
-defines the publication and storage obligations.
+Optional checked-regression address exits retain their historical packet and
+ownership ABI. Production trusted translation does not emit their address/flags
+analysis. Current strings use ordinary decoded CALL/RET under the existing frame,
+source lease and physical owner; they create no string-specific service frame or
+quota. Legacy string-service/direct-bridge details remain at the
+[fixed checkpoint](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/frames.md#95-forward-native-continuation).
 
 Before a supported local mutex control, KD snapshots 256 bytes within the
 waiter's live stack. After the call, it compares those bytes and checks the exact
@@ -212,8 +183,8 @@ behavior; they do not establish every live remote/native schedule. Ordinary nati
 controls, actual JIT, context refusals and returned-body evidence remain separate.
 Known pinned-waiter dependencies, general runtime address checks, general flags
 repair and immutable versions for ordinary spin/rwlock entries remain open or
-deferred in [TODO](../TODO.md). Mutex images and spin entries that have published
-checked pointer loads or either string service use immutable generations.
-Ordinary spin/rwlock entries still use in-place storage. See
+deferred in [TODO](../TODO.md). Mutex images and transitioned spin entries retain immutable generations, including
+supported root instruction markers. Historical checked/service images also keep
+their immutable ABI. Ordinary spin/rwlock entries may still use in-place storage. See
 [image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition)
 and the limited [pointer-load admission contract](admission.md#checked-spin-pointer-loads).
