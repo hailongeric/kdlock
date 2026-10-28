@@ -27,13 +27,18 @@ probe exercises successful CAS and borrowed-spin native escape; it cannot
 validate failed-CAS owner transfer. The `40353f4f` live transfer attempt timed out
 in setup: C took a node-less gate route, so the required queued-waiter condition
 never occurred and W never started its ioctl. Normal cleanup later completed;
-the failed verdict remains and actual transfer is unvalidated. Four-family
+the failed verdict remains. The corrected `20baf5c2` probe passed actual owner
+handoff, exact prefix/suffix, physical unlock ACK, C's later reacquisition and
+retirement, with 10,006 competing trylocks and zero thefts. Six runner checks
+passed; an initial affinity preflight refusal is retained separately. Four-family
 basic checks at `5f96dd5c` subsequently completed
 1,600,000 operations each with returned JIT bodies and final idle; the checkpoint
 retains exact counts. The 60-point nano comparison from that frozen source
 completed all ten blocks with zero return status and exact data/drain. Single-round
 losses, including rwlock c01/1% at eight workers (-14.38%), require investigation;
-a separate 44-observation frozen-input recheck is running. Emitted rwlock
+a separate 44-observation frozen-input recheck completed. Its rwlock c01/1%
+losses persisted at eight (-4.14%) and twenty (-6.12%) workers, while several
+rwsem coordinates changed sign. Emitted rwlock
 uncontended instructions are unchanged, but contended-reader code and subsequent
 loop placement change; this is static evidence, not a measured cause.
 Earlier API passes do not validate this later source, and performance neutrality

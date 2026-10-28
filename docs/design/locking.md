@@ -242,9 +242,11 @@ republished. After W's unlock ACK, C waits for the gate/physical mutex through
 `kd_mutex_wait_and_lock(lock)`, which supplies no delegation node. W resumes its
 native suffix; it does not enter a new combiner loop to execute C's request.
 The requested full queued role exchange remains unimplemented. The
-source and passing deterministic fixtures cover only this owner-handoff path;
-a live failed-CAS transfer probe and matched performance qualification remain
-separate gates. See the [current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
+source, deterministic fixtures and the live failed-CAS probe at `20baf5c2`
+cover only this owner-handoff path. The live probe observed C/W ownership,
+10,006 competing trylocks without theft, exact continuation/ACK and final drain.
+Queued role exchange and matched performance qualification remain separate
+gates. See the [current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
 
 A successful mixed spin acquisition may later encounter an instruction exit.
 The executor retains the physical spin ticket; the original task receives one

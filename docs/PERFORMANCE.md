@@ -32,8 +32,11 @@ The later [API implementation comparison](../bench/results/10.176.26.71/tests/ap
 compares 60 KD c01/c16 points at `5f96dd5c` with `67361fee`, one round each.
 All blocks completed with exact data/drain; losses remain unresolved, including
 rwlock c01/1% at eight workers (-14.38%) and rwsem c01/1% at 32 (-8.77%).
-The prepared rwsem call shell changed. A separate matched recheck is running;
-there is no performance-neutrality verdict or accepted gain from this cohort.
+The prepared rwsem call shell changed. A separate matched recheck completed
+44 observations: rwlock c01/1% still lost 4.14% at eight workers and 6.12% at
+twenty, while several rwsem coordinates changed sign. The checkpoint retains
+the separate unrounded rounds. There is no performance-neutrality verdict or
+accepted gain from this cohort.
 These observations do not replace or pool with the Native/TCLock comparison below.
 
 The [single-round rerun](../bench/results/10.176.26.71/bench/nano-cohort-20261028/README.md)

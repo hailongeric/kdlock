@@ -151,8 +151,9 @@ The mixed public-spin instruction-exit run at that source passed and drained
 all four phases, each with 1,600,000 operations. Cold warmup recorded 1,537,032
 JIT bodies, cold execution 1,592,691, hot execution one native escape and post-ban
 execution zero JIT bodies. A separate public-spin runner suite passed 5/5.
-The deterministic failed-CAS live transfer attempt failed during setup as
-recorded below; transfer and timing qualification remain pending. The
+The first deterministic failed-CAS live transfer attempt failed during setup as
+recorded below; the corrected owner-handoff probe passed. Full queued role
+exchange and timing qualification remain pending. The
 optional mixed instruction-exit probe serializes every inner-spin user with
 the outer mutex and therefore cannot prove the contended transfer path. No
 whole-kernel replacement, arbitrary nesting, long-chain transfer or performance
@@ -204,9 +205,9 @@ repeat-qualified gains or a performance-neutrality verdict.
 
 The largest observed rwlock loss is c01/1% at eight workers, from 9.316989 to
 7.977198 Mops/s. Rwsem also has losses requiring investigation. A separate
-44-observation matched recheck is running from frozen old/new inputs at
+44-observation matched recheck completed from frozen old/new inputs at
 `/root/kdlock-evidence/10.176.26.71/bench/api-semantics-recheck-20261029`.
-It does not change the maintained source. No recheck result is claimed here.
+It does not change the maintained source. Its separate results are recorded below.
 The isolated local-unlock candidate `667cb8f4` is not integrated or measured by
 this comparison; full queued role exchange is still separate implementation work.
 The rejected strict pin candidate remains unpromoted.
@@ -244,8 +245,58 @@ host build or execution was performed.
 
 This verifies a bounded added contended-reader path and changed code placement.
 It does not measure their individual costs or explain the observed 14.38% loss.
-Matched repeats are needed before changing the interrupt correctness path or
-attributing the loss to layout, contention or run variation.
+Matched observations are needed before attributing the loss to layout,
+contention or run variation; the completed follow-up below still does not
+isolate those causes.
+
+### Completed matched follow-up
+
+The [unrounded recheck](api-recheck-comparison.json) contains 20 rwsem and two
+rwlock coordinates for each source: 44 observations, each two seconds, post256,
+one round and the existing placement/instrumentation policy. All four blocks
+returned zero. The original and follow-up rounds remain separate.
+
+| Family / body / writes | 8 workers | 20 | 32 | 36 | 60 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Rwsem c01, 1% | +1.74% | -7.54% | -2.65% | +1.35% | -0.59% |
+| Rwsem c01, 20% | +10.06% | +0.53% | +3.43% | -1.28% | +2.08% |
+| Rwsem c16, 1% | -1.80% | -1.79% | -0.86% | +6.45% | +1.57% |
+| Rwsem c16, 20% | +0.06% | -1.82% | -0.06% | +2.56% | +0.37% |
+| Rwlock c01, 1% | -4.14% | -6.12% | — | — | — |
+
+The two rwlock losses persisted: 9.639161 to 9.240310 Mops/s at eight workers,
+and 8.968762 to 8.420128 at twenty. Rwsem changed signs at several coordinates;
+its c01/1% twenty-worker point lost 7.54% in this round. These data do not close
+the no-regression gate. Neither one round nor differing old/new rwsem call
+shells permit a general performance-neutrality claim.
+
+## Passed live owner handoff
+
+After the staging fix at `20baf5c2`, the probe at
+`/root/kdlock-evidence/10.176.26.71/tests/mixed-transfer-20261029-r2` passed.
+Six focused runner checks passed before the live run. The
+[compact proof](mixed-transfer-r2-proof.json) preserves kernel identity, exact
+effects, owner tokens, native totals and source retirement.
+
+Two real warmup rounds performed 500,000 acquisitions. Cached CPU eligibility
+was 11 after the first and 31 after the second; the armed G/C/W checks were 13.
+The probe observed C owning A before the failed B CAS and W owning A afterwards.
+All five tasks returned with balanced state. Prefix, suffix and C's later own
+body each executed once; C owned A for its own body. There were 10,006 competing
+trylock attempts and zero acquisitions. The forced partial JIT entry count was
+one, with zero returned-JIT completions, as expected for native continuation.
+Native totals were `started=1 completed=1 unlocks=1`; final owner, gate, tail,
+B word, waiter count and active callers were zero, with zero failures.
+Source retirement reported zero modules, frames and writers.
+
+An initial controller-affinity launch excluded CPUs 0–4 and was refused before
+output creation or module work; its log remains
+`/tmp/kdlock-mixed-transfer-20261029-r2.log`. The successful full-affinity launch
+is `/tmp/kdlock-mixed-transfer-20261029-r2-live.log`. The older setup failure
+below remains failed. The successful probe validates physical handoff, retained
+unlock ACK and C's later reacquisition. It does not validate queued role exchange,
+multiple-owner chains or performance. New recheck/probe archives are pending;
+the original thirteen-tree archive receipt below has its original scope.
 
 ## Failed live owner-handoff setup
 
