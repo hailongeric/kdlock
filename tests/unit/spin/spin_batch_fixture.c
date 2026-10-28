@@ -164,7 +164,7 @@ static void test_batch_refill(void)
 			following.socket_id = native ? IRQ_NUMA_NODE : 0;
 			refill_after = at;
 			refill_pauses = 0;
-			CHECK(kd_spin_batch_can_continue(&node, 127) ==
+			CHECK(kd_spin_batch_can_continue(&node, 511) ==
 			      (at >= 1 && at <= 8 && !native));
 			CHECK(refill_pauses == (at >= 1 && at <= 8 ? at : 8));
 		}
@@ -176,7 +176,12 @@ static void test_batch_refill(void)
 	CHECK(!refill_pauses);
 	CHECK(kd_spin_batch_can_continue(&node, 511));
 	node.next = NULL;
-	CHECK(!kd_spin_batch_can_continue(&node, 128));
+	refill_after = 1;
+	CHECK(kd_spin_batch_can_continue(&node, 128));
+	CHECK(refill_pauses == 1);
+	refill_pauses = 0;
+	node.next = NULL;
+	CHECK(!kd_spin_batch_can_continue(&node, 512));
 	CHECK(!refill_pauses);
 	node.next = &following;
 	kd_spin_cpu.local_queue_head = NULL;

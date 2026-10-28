@@ -22,7 +22,7 @@ class NanoTests(unittest.TestCase):
         self.assertEqual(defaults.threads, [*range(1, 9), *range(12, 61, 4)])
         args = launcher.parser().parse_args(['--output', '/tmp/nano-plan-only',
             '--threads', '1', '60', '--plan-only'])
-        self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 768))
+        self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 1024))
         commands = list(launcher.commands(args))
         self.assertEqual([name for name, _ in commands],
                          ['mutex-throughput', 'mutex-locality',
@@ -48,7 +48,7 @@ class NanoTests(unittest.TestCase):
             self.assertTrue(all(r['mutex_api'] is None for r in plan
                                 if family != 'mutex' or r['arm'] != 'kdlock'))
             self.assertTrue(all(r['provider_mutex_policy'] == dict(total_cap=1024,
-                numa_boundary=768, deferred_handoff=8, scan_budget=64)
+                numa_boundary=1024, deferred_handoff=8, scan_budget=64)
                 for r in plan if r['arm'] == 'kdlock'))
         args.post_work_rounds = 4
         for _, argv in launcher.commands(args):
@@ -113,7 +113,7 @@ class NanoTests(unittest.TestCase):
         spec.loader.exec_module(launcher)
         base = ['--output', '/tmp/nano-policy-plan', '--profiles', 'mutex-throughput', 'mutex-locality',
                 '--threads', '16', '--plan-only']
-        for cap, boundary in ((1024, 768), (4096, 768), (1024, 256)):
+        for cap, boundary in ((1024, 1024), (1024, 768), (4096, 768), (1024, 256)):
             args = launcher.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
                                                        '--mutex-numa-boundary', str(boundary)])
             for _, argv in launcher.commands(args):
@@ -139,7 +139,7 @@ class NanoTests(unittest.TestCase):
     def test_mutex_policy_is_independent_and_invalid_cli_stops_before_build(self):
         base = ['--lock-kind', 'mutex', '--workloads', 'nano', '--write-percent', '100',
                 '--threads', '16', '--collector-cpu', '63', '--repeats', '1']
-        for cap, boundary in ((1024, 768), (4096, 768), (1024, 256), (4096, 256)):
+        for cap, boundary in ((1024, 1024), (1024, 768), (4096, 768), (1024, 256), (4096, 256)):
             plan = run.make_plan(run.parser().parse_args(base +
                 ['--mutex-batch-limit', str(cap), '--mutex-numa-boundary', str(boundary)]))
             kd = next(row for row in plan if row['arm'] == 'kdlock')

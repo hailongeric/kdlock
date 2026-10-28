@@ -3,9 +3,9 @@
 `master` retains KD-only physical ownership and pinned published delegation
 waiters. New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
-node storage while keeping independent memberships. Bounded NUMA selection
-hands larger deferred cohorts to the next owner at a 768-body local boundary;
-a smaller rejoined prefix is followed by FIFO service under the current owner.
+node storage while keeping independent memberships. The total cap and NUMA
+locality boundary both default to 1024 bodies. Bounded NUMA selection retains
+terminal/deferred handoff but has no earlier count-based local cutoff.
 Immutable mutex images and generation-bound frames remain required. Production
 now trusts kernel/module source and skips semantic admission; the
 [compatibility backport](../history/legacy_mutex_compatibility.md) records its
@@ -346,10 +346,11 @@ flowchart TD
 ```
 
 The batch keeps a real tail while it temporarily defers remote-NUMA requests.
-At the default 768 serviced bodies, or when reaching a terminal node with deferred work,
-eight or more deferred requests cause handoff. A smaller deferred prefix
-rejoins ahead of the remainder, which is then served in FIFO order within the
-total batch cap. Normal handoff elects the next queue head; the current owner
+When reaching a terminal node with deferred work, eight or more deferred
+requests cause handoff. A smaller deferred prefix rejoins ahead of the remainder,
+which is then served in FIFO order within the total batch cap. The configurable
+locality boundary defaults to the same 1024 bodies as the total cap, so it does
+not impose an earlier count-based cutoff. Normal handoff elects the next queue head; the current owner
 keeps physical A and HELD for its own original body until it unlocks.
 Refusal before body execution hands off the unchanged request;
 an entered body must reach its matching unlock or a validated forward native
@@ -536,9 +537,10 @@ full CAS is skipped; the producer's full tail exchange precedes publication.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. At the default boundary of 768
-completed bodies, or when the
-retained successor has no link, deferred requests take priority. Eight or more
+an unlinked global tail is never detached. When the retained successor has no
+link, deferred requests take priority. A separately configured locality boundary
+can also trigger that rule, but its default 1024 equals the total cap and therefore
+does not cut the default batch short by count. Eight or more
 deferred requests receive physical handoff with the prefix rejoined first.
 A smaller prefix is rejoined and serviced by the current owner, with FIFO
 selection for the rest of the batch. The total cap remains 1024 by default.
@@ -552,23 +554,24 @@ do not prove scheduler-independent starvation freedom.
 The default total cap is exactly 1024 bodies. Independent build definitions
 `KDLOCK_MUTEX_BATCH` and `KDLOCK_MUTEX_NUMA_BOUNDARY` select the total cap and
 locality boundary; neither changes spin batching. The legacy `--kd-batch-size`
-mutex runner explicitly forwards its cap and uses boundary 768. The
+mutex runner explicitly forwards its cap and uses boundary 1024. The
 [nano profiling guide](../../bench/nano/README.md#historical-mutex-profiling-runner)
 documents separate bounded experiments for both values. Runners verify the
 provider's `mutex_batch` and `mutex_numa_boundary` ELF metadata and retain the
 policy with each result. A longer cohort can delay remote service; it does not
 establish a throughput or latency improvement by itself.
 
-The user promoted the 768 boundary after the
+The earlier user-selected 768 boundary followed the
 [October 26 optimization study](../../bench/results/10.176.26.71/bench/mutex-profile-20261026/OPTIMIZATION.md).
 Under the same frozen source, four 36/60-worker ordinary observations improved
 8.41–15.95% over boundary 256, while both 16-worker bodies regressed. Separate
 batch diagnostics showed fewer remote returned bodies at 36 and longer mostly
-local batches at 60. These exploratory observations motivate the selected
-default; they do not guarantee a gain for another workload or worker count.
+local batches at 60. Those exploratory observations describe the earlier policy.
+On October 28 the user selected 1024/1024 to remove the earlier count-based local
+cutoff; performance under that default requires separate measurements.
 The total cap, deferred-handoff threshold, scan budget and exact ownership,
 admission, cancellation and retirement rules remain unchanged. Historical
-256-boundary measurements retain their original source and policy identities.
+256- and 768-boundary measurements retain their original source and policy identities.
 
 The combiner takes one enclosing source lease and uses
 `kd_exec_frame_push_mutex_batch()` plus `kd_exe_mutex_batch_prepare()` for

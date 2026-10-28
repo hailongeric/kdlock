@@ -46,8 +46,8 @@ def parser():
                    help='off uses local mutex/rwsem writer shells; rwlock keeps ABI3 but disables provider delegation')
     p.add_argument('--mutex-batch-limit', type=int, default=1024,
                    help='KD mutex total service cap; default 1024')
-    p.add_argument('--mutex-numa-boundary', type=int, default=768,
-                   help='KD mutex NUMA cohort boundary; default 768')
+    p.add_argument('--mutex-numa-boundary', type=int, default=1024,
+                   help='KD mutex NUMA cohort boundary; default 1024')
     p.add_argument('--functional', action='store_true')
     p.add_argument('--plan-only', action='store_true')
     return p
@@ -57,7 +57,7 @@ def commands(args):
     cap, boundary = args.mutex_batch_limit, args.mutex_numa_boundary
     if not (type(cap) is int and type(boundary) is int and 1 <= cap <= 32767 and 1 <= boundary <= 32767):
         raise ValueError('mutex policy requires total cap and NUMA boundary in 1..32767')
-    if (cap, boundary) != (1024, 768) and not (
+    if (cap, boundary) != (1024, 1024) and not (
             all(PROFILES[name][0] == 'mutex' for name in args.profiles) and
             'kdlock' in args.backends and args.delegate == 'on'):
         raise ValueError('nondefault mutex policy requires only public KD mutex profiles')

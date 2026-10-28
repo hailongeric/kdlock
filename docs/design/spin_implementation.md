@@ -144,11 +144,12 @@ successor reads. Native/IRQ nodes and unsupported queue boundaries stop delegati
 Local eligible successors can stay in the batch; remote runs are deferred without
 rewriting already-correct links. Deferred remote waiters receive priority at final
 handoff. The remote chain is reattached before ownership transfer.
-A temporarily empty successor link can be rechecked with at most eight PAUSEs;
-with a deferred remote chain, this refill is allowed only before body 128.
-After that grace, an empty link ends the batch and the deferred head receives
-handoff. Already-linked work retains the configured 1024-body maximum. This
-amortizes short-queue/socket handoffs while bounding added refill opportunities;
+A temporarily empty successor link can be rechecked with at most eight PAUSEs,
+including when a deferred remote chain exists, until the configured 1024-body
+limit. The earlier 128-body cutoff for those refill attempts is removed. An empty
+link after the bounded retries still ends the batch and the deferred head receives
+handoff. Already-linked work retains the same total limit. This
+amortizes short-queue/socket handoffs while bounding each refill attempt;
 it does not wait indefinitely for a producer or inspect a node after wake.
 These work bounds do not prove starvation freedom.
 

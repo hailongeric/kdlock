@@ -49,9 +49,11 @@ become the origin's context. See the [code map](CODE_MAP.md).
 
 Mutex OSQ and delegation memberships share preallocated CPU/slot storage with
 separate links and retirement rules. The total batch cap defaults to 1024 and
-the NUMA locality boundary to 768. At the boundary, eight or more deferred
-requests receive handoff; a smaller prefix is serviced before a bounded FIFO
-remainder. This policy does not change physical ownership or promise fairness.
+the NUMA locality boundary to 1024. Equal limits remove the earlier count-based
+local cutoff. At an earlier terminal boundary, eight or more deferred requests
+receive handoff; a smaller prefix is serviced before a bounded FIFO remainder.
+Deferred requests still rejoin on every exit. This policy does not change
+physical ownership or promise fairness.
 
 All users of an object must use one protocol. Local KD execution uses KD
 exclusion; it is not a switch to a Linux lock. Public mutex unlock routes every

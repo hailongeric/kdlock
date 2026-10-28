@@ -30,6 +30,8 @@ partial generated execution contributes no accepted throughput.
 
 The following **Linux 7 checked-source cohort** uses the maintained c01/c16
 padded-counter bodies, post256, mutex cap 1024 and locality boundary 768.
+That recorded policy predates the October 28 user-selected KD default of
+1024/1024; these measurements do not validate the new default.
 These are 60-worker whole-run Mops/s, not medians or cross-version aggregates.
 Each profile link contains the full curve, local points and adverse counts.
 

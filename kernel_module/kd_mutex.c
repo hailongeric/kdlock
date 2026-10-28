@@ -65,7 +65,7 @@
 #define KD_MUTEX_WAITER_PROCESSED 1
 
 /* Independent mutex limits bound one physical-owner service interval.
- * NUMA fairness may hand off earlier; defaults are 1024 and 768. */
+ * Both default to 1024, so NUMA counting adds no earlier cutoff. */
 static const unsigned int kd_mutex_batch_size = KDLOCK_MUTEX_BATCH;
 MODULE_INFO(mutex_batch, __stringify(KDLOCK_MUTEX_BATCH));
 MODULE_INFO(mutex_numa_boundary, __stringify(KDLOCK_MUTEX_NUMA_BOUNDARY));

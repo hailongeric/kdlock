@@ -53,15 +53,17 @@ supports the observed change in contention but does not prove rapid Native
 reacquisition or actual overlap between producer post-work and combiner service.
 
 That selection study used source `b0d12ba8`, the **1024/256 policy**, only
-16/36/60 workers, and Native/KD controls. The user separately promoted the
+16/36/60 workers, and Native/KD controls. The user then promoted the
 provider default to **total cap 1024 / NUMA boundary 768** after the
 [policy experiment](../results/10.176.26.71/bench/mutex-profile-20261026/OPTIMIZATION.md):
 four 36/60-worker observations improved 8.41–15.95%, while both 16-worker bodies
-regressed. New full-grid measurements at 768 have their own source, policy and
-TCLock comparisons; the earlier factor results do not establish those outcomes.
+regressed. The subsequent full-grid measurements at 768 have their own source,
+policy and TCLock comparisons; the earlier factor results do not establish those outcomes.
 Promotion records the user's choice from exploratory evidence, not a universal
-optimum or guaranteed improvement. The new rwsem/rwlock profiles apply the same
-one-/sixteen-counter, post256 selection at 1% and 20% writes. That is an explicit
+optimum or guaranteed improvement. On October 28 the user selected KD mutex
+**1024/1024**, removing the earlier count-based local cutoff; existing measured
+results retain their original limits. KD spin retains its 1024-body limit.
+The rwsem/rwlock profiles apply the same one-/sixteen-counter, post256 selection at 1% and 20% writes. That is an explicit
 new workload choice, not a measured rwsem/rwlock optimum or a continuation of the
 earlier two-word/post4 results.
 
@@ -289,7 +291,7 @@ unported. Change one limit per campaign and retain a matched default control;
 the first example is current, while the second documents the retained profiler:
 
 ```sh
-# Uninstrumented comparison: total cap 4096, NUMA boundary still 768.
+# Uninstrumented comparison: total cap 4096, NUMA boundary still 1024.
 python3 bench/nano/best_case.py --profiles mutex-throughput mutex-locality \
   --threads 16 36 60 --mutex-batch-limit 4096 \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-cap4096-NEW
@@ -302,8 +304,9 @@ python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
 
 The current launcher accepts either option. The retained profiler also records
 them for its historical `stat`, `record` and `batch` modes.
-Defaults are total cap 1024 and NUMA boundary 768. Each accepts `1..32767`
-independently; a smaller total cap can stop service before the NUMA boundary.
+Defaults are total cap 1024 and NUMA boundary 1024, so the locality boundary
+does not shorten the default batch by count. Terminal/deferred exits remain.
+Each accepts `1..32767` independently; a smaller total cap can stop service before the NUMA boundary.
 Nondefault policies require mutex-only profiles, KD among the selected backends
 and public delegation enabled. Plans and receipts record both values, and the
 runner verifies the provider's `mutex_batch` and `mutex_numa_boundary` modinfo.

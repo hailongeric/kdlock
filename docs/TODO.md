@@ -49,8 +49,10 @@ operation-specific delegation and prepared teardown remain retired.
 
 Favorable nano points do not establish a universal gain. Current repeated
 confirmation, uncertainty estimates and performance-neutral integration remain
-open. The 768 locality boundary was promoted from exploratory evidence and can
-retain within-node losses. New tail-latency collection remains deferred.
+open. The October 28 user-selected KD mutex default is 1024/1024, removing the
+earlier count-based local cutoff. Recorded 768-boundary observations remain
+separate; performance under the new default needs measurement. New tail-latency
+collection remains deferred.
 
 ## Retained failures
 

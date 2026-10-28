@@ -67,9 +67,11 @@ The ten configurations account for 630 points. Existing runner identifiers and
 archived paths remain unchanged; this guide names the actual payloads.
 [best_case.py](../bench/nano/best_case.py) defines their parameters;
 [rwlock_bench/payload.h](../workload_modules/rwlock_bench/payload.h) supplies the
-current cacheline body. Mutex defaults are cap 1024, locality boundary 768,
-deferred handoff threshold eight and scan budget 64. These favorable profiles
-were selected from exploratory evidence, not a proof of universal optimality.
+current cacheline body. KD mutex defaults are cap 1024, locality boundary 1024,
+deferred handoff threshold eight and scan budget 64. Equal limits remove the
+earlier count-based local cutoff while retaining terminal/deferred queue handling.
+KD spin retains its 1024-body cap. Historical favorable profiles used their
+recorded policy; they do not establish performance under the new default.
 
 Mutex uses public ABI2 calls; rwsem uses explicit outer writers; rwlock uses
 exclusive writer pairs. Readers remain local. `--delegate off` is a separately

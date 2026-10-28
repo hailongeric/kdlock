@@ -28,11 +28,13 @@ retain separate frozen identities. Private-MM and shared-MM kernels also remain
 separate. This closes selected one-round coverage, not a repeated baseline or
 a performance acceptance gate.
 
-Current mutex defaults are total cap 1024 and NUMA boundary 768. The favorable
-nano bodies are one or sixteen padded counters with 256 post-unlock rounds.
-The user promoted these defaults from exploratory evidence; they are not a
-universal optimum. [Performance](PERFORMANCE.md) includes losses and local
-`NO_JIT` results as well as returned-body wins.
+Current KD mutex defaults are total cap 1024 and NUMA boundary 1024; KD spin
+retains its 1024-body limit. The user selected equal limits on October 28 to
+remove the earlier count-based local cutoff. The favorable nano bodies are one
+or sixteen padded counters with 256 post-unlock rounds. Their recorded
+768-boundary evidence does not establish performance under the new default.
+[Performance](PERFORMANCE.md) includes losses and local `NO_JIT` results as well
+as returned-body wins.
 
 The normal development kernel is `7.0.0-38-kdlock1`; its mmap backend is disabled.
 The separate `7.0.0-38-kdmm1` image runs the actual adapter in Native/KD modes.

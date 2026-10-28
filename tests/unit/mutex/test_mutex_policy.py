@@ -12,7 +12,7 @@ from source_text import ROOT, read_source, without_includes
 from test_mutex_terminal import production_sources
 
 MAIN = r'''#ifdef KD_MUTEX_EXPECT_DEFAULT
-_Static_assert(KDLOCK_MUTEX_BATCH==1024 && KDLOCK_MUTEX_NUMA_BOUNDARY==768,
+_Static_assert(KDLOCK_MUTEX_BATCH==1024 && KDLOCK_MUTEX_NUMA_BOUNDARY==1024,
                "maintained mutex policy defaults differ");
 #endif
 int main(void)
@@ -22,6 +22,22 @@ int main(void)
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==cap && completed==cap && wakes==1 && !nodes[cap].locked);
     CHECK(nodes[cap].next==&nodes[cap+1] && nodes[cap+1].locked && !cas_calls);finish();
+    if(boundary>=cap) {
+        /* A deferred remote cohort must not cut local service below the cap.
+         * It still receives the first physical handoff with links intact. */
+        const unsigned int prefixes[]={1,7,8};
+        for(unsigned int p=0;p<3;p++) {
+            const unsigned int deferred=prefixes[p];
+            scenario=5;reset(cap+deferred+2);
+            for(unsigned int i=0;i<deferred;i++)nodes[i].numa_node=1;
+            kd_mutex_run_combiner(&lock,&nodes[0]);
+            CHECK(calls==cap && completed==cap && wakes==1 && !nodes[0].locked);
+            for(unsigned int i=0;i<cap;i++)CHECK(order[i]==i+deferred);
+            for(unsigned int i=0;i<deferred;i++)CHECK(!nodes[i].completed);
+            for(unsigned int i=0;i+1<deferred;i++)CHECK(nodes[i].next==&nodes[i+1]);
+            CHECK(nodes[deferred-1].next==&nodes[cap+deferred] && nodes[cap+deferred].locked);finish();
+        }
+    }
     if(cap<=boundary+64) {
         printf("PASS policy cap=%u boundary=%u: smaller total cap wins, %u checks\n",cap,boundary,checks);
         return 0;
@@ -72,7 +88,8 @@ def main():
                                  '-o', str(binary)], check=True, timeout=30)
         subprocess.run([str(binary)], check=True, timeout=10)
         for cap, boundary in ((1, 256), (128, 256), (1024, 256), (4096, 256),
-                              (1, 768), (128, 768), (1024, 768), (4096, 768)):
+                              (1, 768), (128, 768), (1024, 768), (4096, 768),
+                              (1, 1024), (128, 1024), (1024, 1024), (4096, 1024)):
             binary = path/f'policy-{cap}-{boundary}'
             flags = [f'-DKDLOCK_MUTEX_BATCH={cap}', f'-DKDLOCK_MUTEX_NUMA_BOUNDARY={boundary}']
             subprocess.run(command+flags+[str(path/'fixture.c'), '-o', str(binary)], check=True, timeout=30)

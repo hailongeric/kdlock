@@ -40,9 +40,10 @@ See [translation policy](docs/design/admission.md).
 
 The maintained mutex is 32 bytes with native alignment. It shares preallocated
 CPU/slot storage between separate OSQ and delegation memberships. Defaults are
-batch cap 1024 and NUMA boundary 768, with handoff for at least eight deferred
-requests and bounded FIFO service after a smaller prefix. The promoted locality
-policy is an exploratory choice, not a universal optimum.
+batch cap 1024 and NUMA boundary 1024, removing the earlier count-based local
+cutoff. Terminal/deferred queue handling and bounded FIFO service remain intact.
+KD spin retains its 1024-body limit. The user selected these defaults; no new
+performance gain is established.
 
 Published mutex waiters poll pinned; physical owners may sleep. Every user of an
 object must follow one protocol. Public unlock retains exact acquisition routing.

@@ -17,7 +17,7 @@ KDLOCK_SPIN_BATCH ?= 1024
 ccflags-y += -DKDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
 # Independent mutex policy; explicit overrides support matched comparisons.
 KDLOCK_MUTEX_BATCH ?= 1024
-KDLOCK_MUTEX_NUMA_BOUNDARY ?= 768
+KDLOCK_MUTEX_NUMA_BOUNDARY ?= 1024
 ccflags-y += -DKDLOCK_MUTEX_BATCH=$(KDLOCK_MUTEX_BATCH)
 ccflags-y += -DKDLOCK_MUTEX_NUMA_BOUNDARY=$(KDLOCK_MUTEX_NUMA_BOUNDARY)
 # Optional observations are compiled out of ordinary timing builds.

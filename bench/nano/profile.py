@@ -35,7 +35,7 @@ PROFILES = {'mutex-throughput': ('cacheline', 1, 256),
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
-BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=768,
+BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=1024,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
@@ -98,7 +98,7 @@ def selected_mutex_policy(args):
     policy = dict(total_cap=args.mutex_batch_limit, numa_boundary=args.mutex_numa_boundary,
                   deferred_handoff=8, scan_budget=64)
     batch_metadata(policy)
-    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 768) or
+    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 1024) or
             'kdlock' in selected_backends(args), 'nondefault mutex policy requires KD')
     return policy
 
@@ -433,7 +433,7 @@ def parser():
     p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--mutex-batch-limit', type=int, default=1024)
-    p.add_argument('--mutex-numa-boundary', type=int, default=768)
+    p.add_argument('--mutex-numa-boundary', type=int, default=1024)
     p.add_argument('--record-event', default='cycles:k')
     p.add_argument('--events', nargs='+', default=list(EVENTS))
     p.add_argument('--allow-multiplex', action='store_true')

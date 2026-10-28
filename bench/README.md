@@ -48,9 +48,10 @@ Runner contracts: [spin/mutex](tclock_compare/README.md), [rwlock](rwlock_compar
 
 The retained KD mutex has a 32-byte object with native 8-byte alignment. Its
 OSQ and delegation queues share four preallocated node slots per CPU while
-keeping independent links and retirement. The NUMA locality boundary is 768
-bodies, with larger deferred cohorts handed off and smaller prefixes followed
-by FIFO service within the total 1024-body cap. See the
+keeping independent links and retirement. The NUMA locality boundary and total
+cap are both 1024 bodies, removing the earlier count-based local cutoff. Earlier
+terminal boundaries still hand off larger deferred cohorts or service smaller
+prefixes before bounded FIFO work. See the
 [mutex implementation guide](../docs/design/mutex_implementation.md).
 
 ## Full selected catalog
