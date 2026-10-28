@@ -16,18 +16,28 @@ reader probe passed and drained without JIT. At `1b186f5d`, the rwsem/config uni
 group passed 7/7, runner groups passed 25 and 12 cases, the live rwsem probe passed
 17 API/10 cancellation/3 publication checks, and the prepared rwsem JIT escape
 completed and drained all four phases. Exact source hashes, counters and guest
-paths are in the checkpoint; host raw archive collection remains pending.
+paths are in the checkpoint. Thirteen evidence trees (26 tar archives) are now
+preserved on the host with read-only hash and complete inventory verification;
+archive integrity does not change their original verdicts.
 
 The later `ee7ace66` mixed mutex-to-spin code passed affected fixtures after two
 fixture-only corrections at `5f96dd5c`, with the original failed runs retained.
 Its mixed public-spin JIT probe completed and drained all four phases. That
 probe exercises successful CAS and borrowed-spin native escape; it cannot
-validate failed-CAS owner transfer. Live contended transfer and timing remain
-separate gates. Four-family basic checks at `5f96dd5c` subsequently completed
+validate failed-CAS owner transfer. The `40353f4f` live transfer attempt timed out
+in setup: C took a node-less gate route, so the required queued-waiter condition
+never occurred and W never started its ioctl. Normal cleanup later completed;
+the failed verdict remains and actual transfer is unvalidated. Four-family
+basic checks at `5f96dd5c` subsequently completed
 1,600,000 operations each with returned JIT bodies and final idle; the checkpoint
-retains exact counts. The matched 60-point nano run is in progress from that
-frozen source. Earlier API passes do not validate this later source.
-No new prepared-shell timing or performance-neutrality result is claimed.
+retains exact counts. The 60-point nano comparison from that frozen source
+completed all ten blocks with zero return status and exact data/drain. Single-round
+losses, including rwlock c01/1% at eight workers (-14.38%), require investigation;
+a separate 44-observation frozen-input recheck is running. Emitted rwlock
+uncontended instructions are unchanged, but contended-reader code and subsequent
+loop placement change; this is static evidence, not a measured cause.
+Earlier API passes do not validate this later source, and performance neutrality
+is not established. Immediate queued role exchange remains unimplemented.
 RT/debug/lockdep configurations are explicitly refused by the shared build
 contract. The strict selected-waiter pin candidate remains archived for its
 measured contended regression; bounded-selection policy is still pending.

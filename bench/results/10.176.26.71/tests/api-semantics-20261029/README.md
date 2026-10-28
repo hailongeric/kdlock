@@ -76,8 +76,9 @@ receipts and frozen sources remain at:
 - `/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-pin-20261029-r2`
 - `/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-basic-20261029`
 
-Host archive collection remains pending. The later API checkpoints below retain
-their own source identities and do not promote the rejected pin candidate.
+Host archives have been collected and checked as recorded below. The later API
+checkpoints retain their own source identities and do not promote the rejected
+pin candidate.
 
 
 ## Integrated API checkpoints
@@ -120,7 +121,7 @@ Guest receipts/logs:
 - `/root/kdlock-evidence/10.176.26.71/tests/rwsem-api-jit-20261029`
 
 The controller reported these results against the named frozen sources. Host raw
-archive collection remains pending. The shared build contract explicitly refuses
+archives are retained as recorded below. The shared build contract explicitly refuses
 `CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and
 `CONFIG_LOCKDEP`; unsupported configurations are not pending integration targets.
 
@@ -150,8 +151,8 @@ The mixed public-spin instruction-exit run at that source passed and drained
 all four phases, each with 1,600,000 operations. Cold warmup recorded 1,537,032
 JIT bodies, cold execution 1,592,691, hot execution one native escape and post-ban
 execution zero JIT bodies. A separate public-spin runner suite passed 5/5.
-The deterministic failed-CAS live transfer probe and matched timing remain
-pending qualification. The
+The deterministic failed-CAS live transfer attempt failed during setup as
+recorded below; transfer and timing qualification remain pending. The
 optional mixed instruction-exit probe serializes every inner-spin user with
 the outer mutex and therefore cannot prove the contended transfer path. No
 whole-kernel replacement, arbitrary nesting, long-chain transfer or performance
@@ -172,7 +173,107 @@ at `5f96dd5c`, with final idle. Each family completed 1,600,000 operations;
 returned JIT bodies were spin 1,597,626, mutex 1,587,239, rwlock 24,210 and rwsem
 1,588,877. These are correctness/retirement counts, not throughput scores.
 
-The matched 60-point nano comparison is running from frozen `5f96dd5c` at
-`/root/kdlock-evidence/10.176.26.71/bench/api-semantics-candidate-20261029`.
-No new timing verdict is available. Its inputs must remain frozen until the run
-ends; the archived strict pin candidate remains unpromoted.
+## Completed API candidate comparison
+
+The 60-point KD nano comparison completed from frozen
+`5f96dd5c42a27583aef679554f31e41bcafef793`, against baseline
+`67361fee6440765e130385b2961246a41052b953`. Ten workload blocks returned zero,
+with complete data and drain receipts. Each point has one two-second observation,
+post256 and the same 1024/1024 mutex policy. No real-world API ran. The comparison
+does not include spin; public-spin timing remains a separate gate.
+
+The [unrounded comparison](api-candidate-comparison.json) preserves all 60 rates,
+their writer JIT counts and the original runner identifiers. Its shell fields
+are null; they do not establish equal call shells. Source inspection identifies
+the changed rwsem shell as `public-prepared-direct-abi2`, replacing OUTER/cookie.
+The table shows observed candidate-minus-baseline percentage changes, not
+repeat-qualified gains or a performance-neutrality verdict.
+
+| Family / body / writes | 1 worker | 8 | 20 | 32 | 36 | 60 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Mutex c01, 100% | +0.02% | -1.01% | -1.12% | -1.60% | +1.72% | +0.14% |
+| Mutex c16, 100% | +0.02% | +0.07% | +1.67% | +2.30% | +1.46% | +4.81% |
+| Rwsem c01, 1% | +0.00% | +0.55% | +2.27% | -8.77% | -7.65% | -0.53% |
+| Rwsem c01, 20% | -0.04% | +1.06% | +7.95% | +5.43% | -6.44% | -2.36% |
+| Rwsem c16, 1% | -0.02% | +3.72% | -8.33% | -2.01% | -1.50% | -2.71% |
+| Rwsem c16, 20% | -0.04% | -3.62% | +3.66% | -0.29% | -0.22% | +2.02% |
+| Rwlock c01, 1% | -0.02% | -14.38% | -7.01% | +3.78% | -1.94% | +1.17% |
+| Rwlock c01, 20% | -0.07% | -0.99% | -1.07% | -1.02% | -4.44% | -1.15% |
+| Rwlock c16, 1% | +0.03% | +4.14% | -0.59% | -2.64% | +1.63% | +0.37% |
+| Rwlock c16, 20% | +0.02% | -0.71% | +3.04% | +0.01% | +0.59% | +2.55% |
+
+The largest observed rwlock loss is c01/1% at eight workers, from 9.316989 to
+7.977198 Mops/s. Rwsem also has losses requiring investigation. A separate
+44-observation matched recheck is running from frozen old/new inputs at
+`/root/kdlock-evidence/10.176.26.71/bench/api-semantics-recheck-20261029`.
+It does not change the maintained source. No recheck result is claimed here.
+The isolated local-unlock candidate `667cb8f4` is not integrated or measured by
+this comparison; full queued role exchange is still separate implementation work.
+The rejected strict pin candidate remains unpromoted.
+
+Original comparison receipts:
+
+- `/root/kdlock-evidence/10.176.26.71/bench/api-semantics-baseline-20261029`
+- `/root/kdlock-evidence/10.176.26.71/bench/api-semantics-candidate-20261029`
+
+### Rwlock emitted-code inspection
+
+Read-only host `nm`, `objdump` and ELF byte comparisons used the frozen baseline
+and candidate c01/c16 modules. The [emitted-code record](rwlock-emitted-comparison.json)
+retains their SHA-256 identities, symbol positions and differing offsets. No
+host build or execution was performed.
+
+- `rb_write` is byte-for-byte identical for both bodies: c01 at `0x10`, size
+  `0x183`; c16 at `0x10`, size `0x294`.
+- c01 `rb_read` starts at `0x1b0` in both modules. Its first `0x69` bytes are
+  identical, covering the ordinary uncontended acquire/body/unlock path. Size
+  grows from `0xda` to `0xf7`; new work starts at the writer-bit slow path.
+- c16 `rb_read` starts at `0x2c0`. Its ordinary uncontended instructions are
+  unchanged; the first byte difference at relative `0x161` is the displacement
+  of the existing preempt-schedule branch. The slow block at relative `0x18c`
+  gains the interrupt check. Total size grows from `0x229` to `0x249`.
+- An ordinary contended task reader gains a GS `__preempt_count` load, mask and
+  conditional branch before the existing speculative-reader rollback. The old
+  zeroing XOR is eliminated. The new IRQ-reader loop is not taken by benchmark
+  task workers. There is no added uncontended-path check or helper CALL.
+- `rb_run` remains size `0x11c2`; only bytes at relative `0x1ea` and `0x1016`
+  differ, both direct-call displacements for `rb_write`/`rb_read`. Reader growth
+  shifts its start by 32 bytes: c01 `0x2a0` to `0x2c0`, c16 `0x500` to `0x520`.
+  Thus the worker-loop placement relative to 64-byte boundaries changes in
+  opposite directions. Lock/value/progress `.bss` symbol offsets are unchanged.
+
+This verifies a bounded added contended-reader path and changed code placement.
+It does not measure their individual costs or explain the observed 14.38% loss.
+Matched repeats are needed before changing the interrupt correctness path or
+attributing the loss to layout, contention or run variation.
+
+## Failed live owner-handoff setup
+
+The `40353f4f` live probe attempt at
+`/root/kdlock-evidence/10.176.26.71/tests/mixed-transfer-20261029` retained
+`TIMEOUT` with `retain workers: combiner-queued`. Local owner G left the delegation
+gate FREE, so C claimed ACQUIRING through the node-less direct route. The setup's
+required `waiters == 1` state could not occur. W never started its ioctl and later
+exited the userspace barrier. The failed-CAS owner-handoff path was not exercised;
+this is neither a transfer pass nor evidence of a reproduced transfer failure.
+
+After all entered roles completed, ready/entered/done masks were 23 and active,
+owner, gate, tail, inner B and waiters were zero. The first cleanup assertion
+incorrectly required zero source writers before stopping the idle daemon; it
+failed without mutation. Correctly ordered normal cleanup then verified all
+caller PIDs absent, zero frames, stopped the exact daemon, obtained source retire
+`{state: 2, modules: 0, frames: 0, writers: 0}`, and normally removed source and
+provider modules. The original timeout remains failed. Exact receipts are
+`failure.json` and `cleanup.json` in that evidence directory and its host archive.
+Neither this setup nor the serializing mixed JIT probe qualifies immediate
+queued role exchange.
+
+## Host archive preservation
+
+Thirteen evidence trees, comprising 26 tar archives, are retained under
+`bench/results/10.176.26.71/raw/tests/api-semantics-20261029/`. The
+[offline verification receipt](archive-verification.json) records completed
+compressed-hash and complete path/type/size/mode/owner/link inventory checks on
+`380G10`, without extraction or guest execution. It includes both comparison
+trees, strict-pin runs/failures, API/basic/JIT runs and the failed transfer setup.
+Archive integrity and archive-time idle do not change any original test verdict.

@@ -45,7 +45,7 @@ become the origin's context. See the [code map](CODE_MAP.md).
 | Spin | Four-byte KD lock word; pinned ordinary callers; eligible exclusive bodies may delegate |
 | Mutex | KD-owned 32-byte native-aligned object; direct blocking calls use ABI2; callable and task-sensitive APIs execute locally |
 | Rwlock | Concurrent local readers; exclusive writers use the spin engine after writer admission, ABI3 |
-| Rwsem | Concurrent local readers and ordinary local writers; explicit outer writers reserve admission and drain readers before mutex delegation |
+| Rwsem | Concurrent local readers and ordinary local writers; explicit preparation enables ordinary writer calls to reserve admission and drain readers before mutex delegation |
 
 Mutex OSQ and delegation memberships share preallocated CPU/slot storage with
 separate links and retirement rules. The total batch cap defaults to 1024 and
