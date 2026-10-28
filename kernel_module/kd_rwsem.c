@@ -48,9 +48,9 @@ EXPORT_SYMBOL_GPL(kd_rwsem_init);
 
 static void kd_rwsem_wake(wait_queue_head_t *queue)
 {
-	/* Call only after a fully ordered count/phase RMW. Each predicate keeps
-	 * its own queue: reader drainage cannot enable a closed admission phase.
-	 * The RMW pairs with enqueue/recheck, including this lockless test. */
+	/* Call only after a full barrier or fully ordered count/phase RMW. Each
+	 * predicate keeps its own queue: reader drainage cannot enable a closed
+	 * admission phase. Ordering pairs with enqueue/recheck for this test. */
 	if (waitqueue_active(queue))
 		wake_up_all(queue);
 }
@@ -131,6 +131,15 @@ static bool kd_rwsem_spin_read(struct kd_rwsem *sem)
 	kd_mutex_osq_node_put(node);
 out:
 	preempt_enable();
+	/* Give the queued reader cohort a chance before starting another writer
+	 * phase. The final unlink may enable writers sleeping on phase_wait, even
+	 * when no writer phase changed. Pair the release-only OSQ tail update with
+	 * their enqueue/recheck before testing the waitqueue. Never wake while a
+	 * queue slot or the CPU pin is still held. */
+	if (!atomic_read(&sem->reader_osq.tail)) {
+		smp_mb();
+		kd_rwsem_wake(&sem->phase_wait);
+	}
 	return acquired;
 }
 
@@ -171,7 +180,8 @@ EXPORT_SYMBOL_GPL(kd_down_read_killable);
 
 static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)
 {
-	if (atomic_long_read(&sem->admission))
+	if (atomic_long_read(&sem->admission) ||
+	    atomic_read(&sem->reader_osq.tail))
 		return false;
 	return atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER) == 0;
 }
@@ -274,6 +284,12 @@ static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
 	long phase = atomic_long_read(&sem->admission);
 
 	while (phase >= 0 && phase < LONG_MAX) {
+		/* Queue presence is a fairness hint, not ownership. A new cohort
+		 * yields to queued local readers; an existing cohort keeps its exact
+		 * reservation/ACK protocol. Recheck after CAS failure can reopen the
+		 * phase. A racing enqueue still relies on the count/drain barriers. */
+		if (!phase && atomic_read(&sem->reader_osq.tail))
+			return false;
 		/* Exact reservations also close reader/ordinary-writer admission.
 		 * Use a full barrier before inspecting admitted readers. */
 		if (atomic_long_try_cmpxchg(&sem->admission, &phase, phase + 1))

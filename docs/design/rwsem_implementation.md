@@ -7,8 +7,9 @@ eligible benchmark outer writers may delegate, while native MM bodies stay local
 
 The waiting policy selected at `c21345b` and later IRQ-safe release correction
 remain the protocol foundation. Ordinary read contention now queues optimistic
-admission attempts before the existing sleeping fallback. Historical acceptance and regressions do
-not qualify current performance. The current Linux 7 shared-MM comparison loses
+admission attempts before the existing sleeping fallback. New writer phases
+yield while those readers remain queued. Historical acceptance and regressions
+do not qualify current performance. The current Linux 7 shared-MM comparison loses
 to Native at all measured counts; [performance](../PERFORMANCE.md) owns those
 results and [validation](../VALIDATION.md) owns exact source/check scopes.
 
@@ -139,7 +140,7 @@ An atomic admission word is independent of the embedded KD physical mutex:
 
 | Admission value | Allowed participants |
 | --- | --- |
-| `0` | Readers may enter; an ordinary or outer writer may reserve admission |
+| `0` | Readers may enter; a writer may reserve admission when no optimistic readers are queued |
 | Positive | Exact number of live outer-writer reservations; no new reader or ordinary writer may enter |
 | `-1` | One ordinary writer owns admission; no outer writer or new reader may enter |
 
@@ -149,6 +150,15 @@ queue, source lease, result acknowledgement or frame records. An outer
 reservation begins before the KD mutex call and ends only after its matching
 unlock returns on the originating task. An origin delayed after unlock therefore
 keeps admission closed conservatively.
+
+When admission is zero, ordinary writers and new outer-writer cohorts defer
+while `reader_osq` is nonempty. An outer writer rechecks that hint after a failed
+reservation CAS, because the observed phase may have changed from positive to
+zero. Existing positive cohorts still accept exact outer-writer reservations.
+The queue hint grants no ownership: an enqueue can race the check, and the
+unchanged reservation RMW and reader-drain barriers still enforce exclusion.
+This gives queued readers a chance to enter before another writer phase starts;
+every reader acquires its own count and executes its own body.
 
 A reader observes admission open, publishes its reader count with a fully
 ordered increment, then rechecks admission with acquire ordering. A failed
@@ -184,12 +194,13 @@ increased the object from 384 to 512 bytes; both historical layouts had 128-byte
 overall alignment through the former embedded mutex. The compact gate reduced
 the containing object to 320 bytes while retaining those separate regions;
 the appended read-admission tail targets the spare space after `reader_drain`.
-`phase_wait` contains readers and writers
-waiting for an eligible admission phase. `reader_drain` contains writers that
-already hold an ordinary or outer reservation and are waiting for readers to
+`phase_wait` contains readers and writers waiting for eligible admission,
+including writers deferred by the optimistic reader queue. `reader_drain`
+contains writers that already hold an ordinary or outer reservation and wait for readers to
 finish. A final reader in schedulable context wakes only `reader_drain`; an ordinary phase release
-or final outer reservation release wakes only `phase_wait`. Reader drainage
-cannot open a closed admission phase. A reader-drain waiter retains its
+or final outer reservation release wakes only `phase_wait`. Emptying the
+optimistic reader queue can also enable phase waiters without changing admission.
+Reader drainage cannot open a closed admission phase. A reader-drain waiter retains its
 reservation, so admission cannot reopen while that wait remains live. Fully
 ordered count/phase updates precede the lockless `waitqueue_active()` checks
 and pair with waitqueue enrolment and predicate rechecks.
@@ -229,8 +240,13 @@ OSQ acquisition can also abort when rescheduling is needed or the predecessor's
 vCPU is preempted. An unavailable slot skips optimistic polling.
 
 Every success, abort or exhausted poll retires OSQ membership and releases the
-slot before enabling preemption. Only then may the reader enter its body or
-use the existing `wait_event()` enrolment/recheck fallback. A reader count is
+slot before enabling preemption. After enabling preemption, an empty OSQ tail
+triggers a full memory barrier before the lockless `phase_wait` check and wake.
+This orders the release-only tail update against writer enrolment/recheck;
+otherwise a writer could remain asleep after the queue became empty. The check
+also runs on unsuccessful acquisition paths. A replacement queued reader keeps
+writers deferred until a later empty transition. The reader then enters its body
+or uses the existing `wait_event()` enrolment/recheck fallback. A reader count is
 always acquired by the reader's own task; the queue head cannot grant ownership
 to another caller. Read trylock and interruptible/killable read APIs bypass this
 queue and retain their existing semantics. A speculative rollback while the
@@ -284,11 +300,12 @@ reader from resuming on a pinned CPU. Cancelling a published request would also
 require changing the selected mutex's queue and source/frame lifetime protocol.
 Keeping those operations on ordinary acquisitions preserves both contracts.
 
-This construction prefers a live outer-writer cohort: new outer writers may
-join a positive phase while readers or ordinary writers wait. It does not port
-Linux rwsem's reader batching or fairness policy, and sustained outer-writer
-arrivals can delay those waiters. It supplies no bounded-wait guarantee or
-implied throughput advantage. The selected mutex's general oversubscription
+This construction preserves a live outer-writer cohort: new outer writers may
+join a positive phase while readers or ordinary writers wait. New phases yield
+to queued optimistic readers, but this does not port Linux rwsem's reader
+batching or fairness policy. Sustained outer-writer arrivals can still delay
+those waiters. It does not guarantee starvation freedom, bounded waiting or
+improved throughput. The selected mutex's general oversubscription
 limitations remain separate from the rwsem reader-drain solution.
 
 ## Mmap and validation boundaries
@@ -305,6 +322,7 @@ Native/KD schema-2 identities, fresh API/lifetime/mapping/fault prerequisites an
 42 completed exploratory shared-MM timings. The
 [checkpoint](../../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
 retains the initial failed contention witness and later diagnostic separately.
+The current queued-reader preference does not qualify those frozen MM results.
 Correctness does not establish fairness, full Linux equivalence, performance
 parity, whole-kernel/RT/lockdep support or general non-owner API support.
 
