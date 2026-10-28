@@ -91,11 +91,13 @@ Unified mutex calls use an internal numeric continuation; contention admission
 registers that entry without requiring a caller-supplied label. Address-taking
 and indirect lock calls retain the ordinary C ABI and execute locally.
 
-The spin/rwlock macro's `cookie` names a shared per-CPU heat indicator; it is
+The named DIRECT spin/rwlock macro's `cookie` names a shared per-CPU heat indicator; it is
 not an ownership token. A mutex/rwsem outer cookie instead belongs to one exact,
 same-task acquisition and must not be copied, transferred or reused before its
 matching unlock. Follow the individual guide's paired API and initialization
-rules. Internal pinned spin helpers are not interchangeable with public pairs.
+rules. Ordinary `kd_spin_lock/unlock` emit the unpinned clobber control CALL;
+the provider owns their native pin. Internal pinned spin helpers are not
+interchangeable with public pairs.
 
 ## Compatibility and execution limits
 
