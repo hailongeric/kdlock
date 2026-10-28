@@ -24,6 +24,13 @@ The integrated implementation checkpoint is
 `ee7ace6684b5257ae08d82648e9e2dcb4ceb8986`; code, focused execution and timing
 remain separate acceptance boundaries.
 
+The [queued-exchange candidate](design/mutex-role-exchange.md) now implements
+scoped node/source custody transfer and after-body combining in this source.
+Its build, focused execution, live returned-C-body/native-exit and no-regression
+gates are pending. The older owner-handoff evidence in the table does not qualify
+that candidate. Untracked Native sleeping locks, KD rwsem reads/downgrade and
+preheld locks remain unsupported contexts; trusted-source translation is unchanged.
+
 | Step | Deliverable and acceptance boundary | Status |
 | --- | --- | --- |
 | 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. Bounded-selection clarification pending. |

@@ -19,7 +19,7 @@ int main(void)
 {
     const unsigned int cap=KDLOCK_MUTEX_BATCH, boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
     scenario=1;reset(cap+2);
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==cap && completed==cap && wakes==1 && !nodes[cap].locked);
     CHECK(nodes[cap].next==&nodes[cap+1] && nodes[cap+1].locked && !cas_calls);finish();
     if(boundary>=cap) {
@@ -30,7 +30,7 @@ int main(void)
             const unsigned int deferred=prefixes[p];
             scenario=5;reset(cap+deferred+2);
             for(unsigned int i=0;i<deferred;i++)nodes[i].numa_node=1;
-            kd_mutex_run_combiner(&lock,&nodes[0]);
+            CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
             CHECK(calls==cap && completed==cap && wakes==1 && !nodes[0].locked);
             for(unsigned int i=0;i<cap;i++)CHECK(order[i]==i+deferred);
             for(unsigned int i=0;i<deferred;i++)CHECK(!nodes[i].completed);
@@ -44,21 +44,21 @@ int main(void)
     }
     scenario=2;reset(boundary+10);
     for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==boundary && completed==boundary && wakes==1 && !nodes[0].locked);
     for(unsigned int i=0;i<boundary;i++)CHECK(order[i]==i+8);
     for(unsigned int i=0;i<7;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
     CHECK(nodes[7].next==&nodes[boundary+8] && nodes[boundary+8].locked);finish();
     scenario=3;reset(cap+2);
     for(unsigned int i=0;i<7;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==cap && completed==cap && wakes==1 && !nodes[cap].locked);
     CHECK(order[boundary-1]==boundary+6 && order[boundary]==0 && order[boundary+6]==6);
     CHECK(order[boundary+7]==boundary+7 && order[cap-1]==cap-1);
     CHECK(nodes[cap].next==&nodes[cap+1] && nodes[cap+1].locked);finish();
     scenario=4;reset(boundary+100);
     for(unsigned int i=0;i<boundary+100;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==boundary && completed==boundary && wakes==1 && !nodes[0].locked);
     for(unsigned int i=0;i<boundary;i++)CHECK(order[i]==i+64);
     CHECK(nodes[63].next==&nodes[boundary+64] && nodes[boundary+64].locked);finish();

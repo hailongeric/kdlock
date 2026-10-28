@@ -6,8 +6,9 @@
 
 /* Read in this order: reserve node, claim KD physical exclusion, kd_mutex_execute_cs,
  * kd_mutex_run_combiner, then waiter restoration. Every queue executor must
- * own the KD physical primitive. Native continuation keeps that owner blocked
- * in its ACK service loop; it does not hand the mutex owner field to waiter.
+ * own the KD physical primitive. Native borrowing retains its owner through
+ * unlock ACK. Sole-root mixed-spin contention can transfer physical ownership
+ * and exact queue custody while requeuing the former owner's original request.
  * Public lock/unlock and stack trampolines remain here. mutex/ components
  * separate queue reservation, delegated execution, waiting and lifecycle. */
 #include <linux/module.h>
@@ -116,6 +117,8 @@ struct kd_mutex_cpu_state {
 DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
+DEFINE_PER_CPU(unsigned long, kd_mutex_custody_slots);
+EXPORT_SYMBOL_GPL(kd_mutex_custody_slots);
 
 #include "mutex/queue.inc"
 #include "mutex/count.inc"
@@ -123,6 +126,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 #include "mutex/combiner.inc"
 
 #include "mutex/waiter.inc"
+#include "mutex/custody.inc"
 
 /* Only current's completed physical acquisition orders this pair of reads.
  * Arbitrary-task snapshots could mix different ownership generations. PICKUP

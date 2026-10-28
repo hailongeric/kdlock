@@ -43,6 +43,7 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_mutex_custody) > sizeof(struct kd_regs));
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, count_seq) != 88);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, counted_lock) != 96);
 	BUILD_BUG_ON(sizeof(struct kd_mutex_osq_node) != 24);
@@ -64,6 +65,7 @@ int kd_mutex_init_percpu(void)
 
 		per_cpu(kd_mutex_active_waiters, i) = 0;
 		per_cpu(kd_mutex_reserved_nodes, i) = 0;
+		per_cpu(kd_mutex_custody_slots, i) = 0;
 		per_cpu(kd_mutex_slowpath_count, i) = 0;
 		per_cpu(kd_mutex_combiner_count, i) = 0;
 		per_cpu(kd_mutex_handoff_count, i) = 0;
@@ -130,6 +132,7 @@ bool kd_mutex_check_idle(void)
 	for_each_possible_cpu(cpu) {
 		if (READ_ONCE(per_cpu(kd_mutex_active_waiters, cpu)) ||
 		    READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu)) ||
+		    READ_ONCE(per_cpu(kd_mutex_custody_slots, cpu)) ||
 		    READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots))
 			return false;
 	}

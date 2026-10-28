@@ -48,6 +48,55 @@ bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame)
 		list_empty(&frame->native_link) && !frame->mutex_mixed.transferred;
 }
 
+/* The new owner has copied FULL, consumed PICKUP and accepted queue/source
+ * custody. It cannot run its suffix or reuse the node until the old executor
+ * retires this frame and publishes READY. This is not an unlock/completion. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	struct kd_mutex_node *node;
+	unsigned long owner;
+
+	if (!frame || !frame->mutex_backend || !frame->complex_ready ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !frame->logical_task ||
+	    frame->parent || frame->depth || frame->request_frame ||
+	    !frame->mutex_mixed.queue_transfer ||
+	    !frame->mutex_mixed.transferred ||
+	    !smp_load_acquire(&frame->mutex_mixed.picked_up) ||
+	    frame->completion_seen || frame->outer_unlock_seen ||
+	    frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL ||
+	    frame->outer_lock_index || frame->jit_lock_depth != 1 ||
+	    frame->jit_lock_released[0] ||
+	    frame->jit_lock_addr[0] != frame->outer_lock_addr ||
+	    frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
+	    frame->jit_lock_node[0] != (void *)frame->outer_lock_addr ||
+	    frame->remote_request || frame->resume_target || frame->native_request ||
+	    kd_exec_frame_remote_pending(frame) || !list_empty(&frame->native_link))
+		return false;
+	node = frame->mutex_mixed.queue.owner;
+	if (!node || node->task_struct_ptr != frame->logical_task ||
+	    !frame->mutex_mixed.queue.head ||
+	    node->custody.head != frame->mutex_mixed.queue.head ||
+	    !frame->mutex_mixed.queue.waiter ||
+	    frame->mutex_mixed.queue.waiter->task_struct_ptr != current ||
+	    (unsigned long)frame->mutex_mixed.queue.waiter->lock != frame->outer_lock_addr ||
+	    READ_ONCE(frame->mutex_mixed.queue.waiter->counted_lock) != node->lock ||
+	    !READ_ONCE(frame->mutex_mixed.queue.waiter->locked) ||
+	    frame->mutex_mixed.queue.waiter->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->mutex_mixed.queue.waiter->packet_state != KD_PACKET_MINIMAL ||
+	    (unsigned long)node->lock != frame->outer_lock_addr ||
+	    node->custody.generation != frame->mutex_mixed.queue.generation ||
+	    READ_ONCE(node->count_seq) != node->custody.generation ||
+	    READ_ONCE(node->counted_lock) ||
+	    node->custody.phase != KD_MUTEX_CUSTODY_WAIT_READY ||
+	    !node->custody.source_lease || READ_ONCE(node->custody.ready) ||
+	    kd_mutex_task_custody(frame->logical_task) != node)
+		return false;
+	owner = atomic_long_read(&node->lock->owner);
+	return (owner & ~KD_MUTEX_OWNER_FLAGS) == (unsigned long)frame->logical_task &&
+	       !(owner & 4UL);
+}
+
 /* The native wake supplies a stable frame reference. The executor retains its
  * source lease and route until this task's real physical unlock is acknowledged. */
 int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame)

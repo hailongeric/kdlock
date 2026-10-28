@@ -71,6 +71,7 @@ static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,
 	might_sleep();
 	if (kd_mutex_trylock_fast(lock)) {
 		kd_hotlock_mutex_entry();
+		kd_mutex_note_native_acquire(lock);
 		return;
 	}
 	kd_mutex_contended_entry(lock, ret_rsp, ret_addr, bp, abi);
@@ -102,6 +103,8 @@ void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,
 		kd_origin_mutex_unlock(lock, ret_addr);
 		return;
 	}
+	if (kd_mutex_custody_unlock(lock))
+		return;
 	if (kd_exec_native_unlock((unsigned long)lock, true))
 		return;
 	kd_mtx = lock;

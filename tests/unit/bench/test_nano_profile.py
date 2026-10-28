@@ -16,16 +16,16 @@ profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
 
 
-BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=1024,
+BATCH_METADATA = dict(schema=3, compiled=1, total_cap=1024, numa_boundary=1024,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
-BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
+BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed', 'owner_transfers',
                   'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total',
                   'scan_steps', 'scan_exhausted_batches', 'small_fifo_batches')
 
 
-def batch_snapshot(scale=1):
-    """Five possible batches, including zero, native and returned-JIT bodies."""
+def batch_snapshot(scale=1, *, schema=3):
+    """Five historical batches; schema 3 also records one unfinished transfer."""
     completed = [0] * 16
     completed[0], completed[1], completed[2], completed[4] = 2, 1, 1, 1
     deferred = [0] * 8
@@ -38,8 +38,16 @@ def batch_snapshot(scale=1):
                       numa_boundary=0, numa_tail=1, execution_refusal=1, early_outer_release=0,
                       native_done=1, total_cap=0, empty_tail=1, unsupported_tail=0),
                   legacy=dict(combiner=5, jit_success=10, handoff=2))
+    result['schema'] = schema
+    if schema == 3:
+        result.update(owner_transfers=1, batches=6, attempts=13)
+        result['completed_hist'][0] += 1
+        result['deferred_peak_hist'][0] += 1
+        result['stop_reason']['owner_transfer'] = 1
+        result['legacy']['combiner'] += 1
     for key in BATCH_COUNTERS:
-        result[key] *= scale
+        if key in result:
+            result[key] *= scale
     for key in ('completed_hist', 'deferred_peak_hist'):
         result[key] = [value * scale for value in result[key]]
     for key in ('stop_reason', 'legacy'):
@@ -221,6 +229,33 @@ class NanoProfileTests(unittest.TestCase):
 
 
 class NanoBatchSnapshotTests(unittest.TestCase):
+    def test_historical_schema_is_preserved_and_never_mixed_with_current(self):
+        before, after = batch_snapshot(schema=2), batch_snapshot(2, schema=2)
+        self.assertEqual(profile.validate_batch(before), before)
+        self.assertEqual(profile.batch_delta(before, after, expected_completions=10), before)
+        self.assertEqual(before['schema'], 2)
+        self.assertNotIn('owner_transfers', before)
+        self.assertNotIn('owner_transfer', before['stop_reason'])
+        for old, new in ((before, batch_snapshot(2)), (batch_snapshot(), after)):
+            with self.assertRaisesRegex(ValueError, 'schema changed'):
+                profile.batch_delta(old, new)
+        for invalid in (dict(before, owner_transfers=0), dict(batch_snapshot(), schema=2)):
+            with self.assertRaises(ValueError):
+                profile.validate_batch(invalid)
+
+    def test_transfer_is_an_unfinished_attempt_with_its_own_stop_reason(self):
+        snapshot = batch_snapshot()
+        self.assertEqual(snapshot['attempts'], 13)
+        self.assertEqual(snapshot['jit_completed'] + snapshot['native_completed'], 11)
+        self.assertEqual(snapshot['owner_transfers'], 1)
+        profile.validate_batch(snapshot)
+        for classification in ('native_completed', 'execution_refusals'):
+            invalid = deepcopy(snapshot)
+            invalid['owner_transfers'] -= 1
+            invalid[classification] += 1
+            with self.assertRaisesRegex(ValueError, 'ownership transfer accounting'):
+                profile.validate_batch(invalid)
+
     def test_nondefault_batch_metadata_requires_the_exact_recorded_policy(self):
         for cap, boundary in ((1024, 768), (4096, 768), (1024, 256)):
             policy = dict(total_cap=cap, numa_boundary=boundary, deferred_handoff=8, scan_budget=64)
@@ -272,7 +307,8 @@ class NanoBatchSnapshotTests(unittest.TestCase):
                 del invalid[key]
                 with self.assertRaises(ValueError):
                     profile.validate_batch(invalid)
-        for group, key in (('stop_reason', 'empty_tail'), ('legacy', 'handoff')):
+        for group, key in (('stop_reason', 'empty_tail'), ('stop_reason', 'owner_transfer'),
+                           ('legacy', 'handoff')):
             with self.subTest(missing=(group, key)):
                 invalid = batch_snapshot()
                 del invalid[group][key]
@@ -285,7 +321,7 @@ class NanoBatchSnapshotTests(unittest.TestCase):
                     profile.validate_batch(invalid)
 
     def test_counters_require_nonnegative_u64_integers(self):
-        for keys in (('batches',), ('jit_local',), ('completed_hist', 1),
+        for keys in (('batches',), ('jit_local',), ('owner_transfers',), ('completed_hist', 1),
                      ('deferred_peak_hist', 1), ('stop_reason', 'empty_tail'),
                      ('legacy', 'combiner')):
             for value in (-1, 1.0, True, '1', None, 1 << 64):
@@ -299,10 +335,11 @@ class NanoBatchSnapshotTests(unittest.TestCase):
                         profile.validate_batch(invalid)
 
     def test_count_identities_and_batch_histogram_totals_are_checked(self):
-        for keys in (('attempts',), ('jit_local',), ('native_completed',),
+        for keys in (('attempts',), ('jit_local',), ('native_completed',), ('owner_transfers',),
                      ('deferred_total',), ('legacy', 'combiner'), ('legacy', 'jit_success'),
                      ('legacy', 'handoff'), ('completed_hist', 0),
-                     ('deferred_peak_hist', 0), ('stop_reason', 'empty_tail')):
+                     ('deferred_peak_hist', 0), ('stop_reason', 'empty_tail'),
+                     ('stop_reason', 'owner_transfer')):
             with self.subTest(path=keys):
                 invalid = batch_snapshot()
                 target = invalid

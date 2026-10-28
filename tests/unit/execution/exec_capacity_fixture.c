@@ -33,6 +33,14 @@ static bool kd_hotlock_role_trace;
 typedef uint64_t u64;
 #include "frame_types.h"
 
+/* These scenarios never transfer queued mutex ownership. The dedicated custody
+ * fixture validates that admission; keep this unrelated terminal route closed. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return false;
+}
+
 static struct kd_exec_context kd_exec_context[2];
 static struct task_struct owners[] = { { 11 }, { 12 } };
 static struct task_struct waiters[KD_EXEC_MAX_NESTING];

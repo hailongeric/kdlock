@@ -20,6 +20,13 @@ struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 struct task_struct { int pid; } __attribute__((aligned(8)));
 struct list_head { struct list_head *next, *prev; };
+/* Ordinary fixtures never install native owner custody. Keep its per-CPU
+ * rejection hint explicitly false while compiling the production headers. */
+#define DECLARE_PER_CPU(type, name) extern type name
+#define raw_cpu_read(name) ((void)sizeof(name), 0UL)
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
 #include "types.h"
 #define _Q_LOCKED_COMBINER_VAL 3
 #define KD_EXE_NO_RUN 2
@@ -71,10 +78,10 @@ static u32 tail_cas(u32 *p,u32 old,u32 value)
     return seen;
 }
 #define cmpxchg(p,o,n) tail_cas((p),(o),(n))
-static void publish(u8 *p,int value)
+static void publish(void *p,int value)
 {
     CHECK(value==0);
-    *p=value;wakes++;
+    *(u8 *)p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
@@ -143,13 +150,15 @@ static void finish(void)
 }
 int main(void)
 {
-    scenario=1;reset(1);kd_mutex_run_combiner(&lock,&nodes[0]);
+    /* Ordinary pre-body mode has no retained owner node in this fixture.
+     * The separate custody fixture exercises committed queued role exchange. */
+    scenario=1;reset(1);CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && !wakes && !lock.delegation_tail && cas_calls==1);finish();
     scenario=2;reset(2);nodes[0].next=NULL;delayed_link=true;delayed_from=&nodes[0];delayed_to=&nodes[1];
-    lock.delegation_tail=nodes[0].tail;kd_mutex_run_combiner(&lock,&nodes[0]);
+    lock.delegation_tail=nodes[0].tail;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==2 && completed==2 && polls==2 && !lock.delegation_tail && !wakes);finish();
     scenario=3;reset(2);nodes[0].next=NULL;lock.delegation_tail=nodes[0].tail;new_head_after_cas=true;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && new_head_pending && nodes[1].locked && !wakes);
     CHECK(lock.delegation_tail==(u32)nodes[1].tail && kd_mutex_gate_read(&lock) && lock.owner==current);finish();
     /* Its original KD physical owner cannot enter until the retained owner releases.
@@ -158,68 +167,68 @@ int main(void)
     CHECK(new_head_pending && !kd_mutex_gate_read(&lock));kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);lock.owner=&waiter;
     CHECK(lock.delegation_tail==(u32)nodes[1].tail);lock.delegation_tail=0;new_head_pending=false;
     scenario=4;reset(1);refusal_at=0;u32 original_tail=lock.delegation_tail;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && !completed && wakes==1 && !nodes[0].locked && lock.delegation_tail==original_tail && !cas_calls);finish();
-    scenario=5;reset(1);native_at=0;kd_mutex_run_combiner(&lock,&nodes[0]);
+    scenario=5;reset(1);native_at=0;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && !completed && nodes[0].native_resume && !lock.delegation_tail && cas_calls==1 && !wakes);finish();
-    scenario=6;reset(1);early_at=0;kd_mutex_run_combiner(&lock,&nodes[0]);
+    scenario=6;reset(1);early_at=0;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && reclaims==1 && !lock.delegation_tail && !wakes);finish();
-    scenario=7;reset(1026);kd_mutex_run_combiner(&lock,&nodes[0]);
+    scenario=7;reset(1026);CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1024 && completed==1024 && wakes==1 && !nodes[1024].locked && nodes[1024].next==&nodes[1025] && !cas_calls);finish();
     for(scenario=8;scenario<10;scenario++) {
         reset(1);if(scenario==8)nodes[0].entry_abi=KD_ENTRY_ABI_LEGACY;else nodes[0].packet_state=KD_PACKET_FULL;
-        original_tail=lock.delegation_tail;kd_mutex_run_combiner(&lock,&nodes[0]);
+        original_tail=lock.delegation_tail;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
         CHECK(!calls && !lease_gets && !completed && wakes==1 && lock.delegation_tail==original_tail);finish();
     }
-    scenario=10;reset(1);source_open=false;original_tail=lock.delegation_tail;kd_mutex_run_combiner(&lock,&nodes[0]);
+    scenario=10;reset(1);source_open=false;original_tail=lock.delegation_tail;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(!calls && !lease_gets && !completed && wakes==1 && lock.delegation_tail==original_tail);finish();
     /* Select local work without ever detaching the unlinked global tail. */
     scenario=11;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==4 && completed==4 && !wakes && !lock.delegation_tail && cas_calls==1);finish();
     /* An unexecuted/refused current node must not retain a link into the
      * deferred prefix, which would make rejoin publish a cycle. */
     scenario=12;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;refusal_at=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && !completed && wakes==1 && !nodes[0].locked);
     CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[1] && nodes[1].next==&nodes[3]);finish();
     scenario=13;reset(4);nodes[0].numa_node=1;native_at=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && !completed && wakes==1 && nodes[1].native_resume && !nodes[0].locked);
     CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[3] && !cas_calls);finish();
     scenario=14;reset(4);nodes[0].numa_node=1;early_at=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && wakes==1 && reclaims==1 && !nodes[0].locked);
     CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[3] && !cas_calls);finish();
     scenario=15;reset(280);
     for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==256 && completed==256 && wakes==1 && !nodes[0].locked && !cas_calls);
     for(unsigned int i=0;i<256;i++)CHECK(order[i]==i+8);
     for(unsigned int i=0;i<7;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
     CHECK(nodes[7].next==&nodes[264] && nodes[264].locked);finish();
     scenario=16;reset(360);
     for(unsigned int i=0;i<360;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==256 && completed==256 && wakes==1 && !nodes[0].locked && !cas_calls);
     for(unsigned int i=0;i<256;i++)CHECK(order[i]==i+64);
     for(unsigned int i=0;i<63;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
     CHECK(nodes[63].next==&nodes[320] && nodes[320].locked);finish();
     scenario=17;reset(280);nodes[0].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==280 && completed==280 && !wakes && !lock.delegation_tail && cas_calls==1);
     CHECK(order[255]==256 && order[256]==0 && order[257]==257);finish();
     /* A small rejoined prefix still cannot extend the total batch bound. */
     scenario=18;reset(1026);
     for(unsigned int i=0;i<7;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1024 && completed==1024 && wakes==1 && !nodes[1024].locked && !cas_calls);
     CHECK(order[255]==262 && order[256]==0 && order[262]==6 && order[263]==263);
     CHECK(order[1023]==1023 && nodes[1024].next==&nodes[1025] && nodes[1025].locked);finish();
     /* A refused deferred request retains the entire joined chain for handoff. */
     scenario=19;reset(280);refusal_at=0;
     for(unsigned int i=0;i<7;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==257 && completed==256 && wakes==1 && !nodes[0].locked && !cas_calls);
     CHECK(order[256]==0 && !nodes[0].completed);
     for(unsigned int i=0;i<6;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
@@ -227,7 +236,7 @@ int main(void)
     /* Terminal-link exhaustion hands off a large prefix before the bound. */
     scenario=20;reset(200);
     for(unsigned int i=0;i<200;i++)nodes[i].numa_node=1;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==135 && completed==135 && wakes==1 && !nodes[0].locked && !cas_calls);
     for(unsigned int i=0;i<135;i++)CHECK(order[i]==i+64);
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();

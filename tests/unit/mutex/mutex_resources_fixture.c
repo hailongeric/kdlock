@@ -29,6 +29,12 @@ struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 struct list_head { struct list_head *next, *prev; };
+/* This fixture exercises an ordinary path with no installed owner custody. */
+#define DECLARE_PER_CPU(type, name) extern type name
+#define raw_cpu_read(name) ((void)sizeof(name), 0UL)
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
 #include "mutex_resource_types.h"
 
 static struct task_struct waiter __attribute__((aligned(8))) = { .pid = 1 };
@@ -88,7 +94,6 @@ static jmp_buf resume_target;
 #define TASK_COMM_LEN 16
 #define BUILD_BUG_ON(c) _Static_assert(!(c), "kernel build contract")
 #define likely(c) (c)
-#define unlikely(c) (c)
 #define READ_ONCE(v) (v)
 #define WRITE_ONCE(v, value) ((v) = (value))
 #define smp_load_acquire(p) (*(p))
@@ -101,6 +106,8 @@ static jmp_buf resume_target;
 #define atomic64_inc(p) (++*(p))
 #define BIT(n) (1UL << (n))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name
+#define DEFINE_PER_CPU(type, name) type name
+#define EXPORT_SYMBOL_GPL(name)
 #define this_cpu_ptr(p) (p)
 #define per_cpu_ptr(p, cpu) tail_node_for_cpu(p, cpu)
 #define DEFINE_RAW_SPINLOCK(name) int name
@@ -157,6 +164,12 @@ static void kd_mutex_task_put(struct task_struct *task);
 static int kd_hotlock_record_mutex(unsigned long addr);
 static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi);
 static bool kd_exec_native_unlock(unsigned long addr, bool mutex);
+/* The role-exchange fixture covers this route with a retained node. */
+bool kd_mutex_custody_unlock(struct kd_mutex *lock)
+{
+ (void)lock;
+ return false;
+}
 static unsigned long kd_read_kernel_gsbase(void);
 static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 				      struct kd_mutex_node *node);

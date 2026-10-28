@@ -86,12 +86,14 @@ validate whole-kernel replacement.
    Mixed mutex-to-spin known CALLs now have a one-CAS exact-ticket path. Only
    an eligible ABI2 root with its sole outer mutex may transfer that owner to the
    original waiter on contention; multi-owner chains retain borrowing. Transfer
-   retains source/frame state through physical unlock ACK and the old executor
-   reacquires before its own body. This is only an owner handoff: the former
-   combiner is not immediately requeued/delegatable, and the recipient does not
-   start a new combiner loop.
-   The requested queued role exchange remains unimplemented; code support and
-   live owner-handoff validation cannot be reported as completing that request.
+   now has a scoped queued-exchange candidate: C republishes its original node,
+   W accepts exact node/source custody, and a distinct pickup ACK permits C's
+   frame retirement before W can combine at its logical unlock. Native borrowed
+   routes and the old owner-handoff fallback retain their physical unlock ACKs.
+   Build, live C delegation/native-exit and no-regression gates remain pending.
+   Untracked Native sleeping locks, KD rwsem reads/downgrade and locks held before
+   the root remain unsupported contexts; do not infer safety from a zero
+   preemption count. See [the custody contract](docs/design/mutex-role-exchange.md).
 7. Do not modify, build, install or reboot the guest kernel by default. Captured
    kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.

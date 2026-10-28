@@ -61,6 +61,14 @@ struct kd_mutex {
 	int unused;
 };
 #include "remote_types.h"
+
+/* These scenarios never transfer queued mutex ownership. The dedicated custody
+ * fixture validates that admission; keep this unrelated terminal route closed. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return false;
+}
 struct kd_spin_continuation { struct { struct kd_regs *regs_ref; } frame; };
 struct kd_spin_node { struct kd_spin_continuation *execution; };
 

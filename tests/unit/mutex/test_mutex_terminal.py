@@ -22,7 +22,9 @@ def production_sources():
         types += without_includes(read_source(ROOT/f'include/{name}.h'))+'\n'
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
     helpers = '#define MODULE_INFO(...)\n'
+    helpers += next(line for line in source.splitlines() if line.startswith('#define KD_MUTEX_EXEC_SWAPPED '))+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
+    helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in source.splitlines() if line.startswith(name+'('))
@@ -33,7 +35,8 @@ def production_sources():
     ):
         helpers += definition(source, marker)+'\n'
     helpers += definition(source, 'static int kd_mutex_release_outer(struct kd_exec_frame *frame,')+'\n'
-    loop = 'static void\n'+definition(source, 'kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)')
+    marker = next(line for line in source.splitlines() if line.startswith('kd_mutex_run_combiner('))
+    loop = 'static enum kd_mutex_batch_result\n' + definition(source, marker)
     return types, helpers, loop
 
 

@@ -7,6 +7,7 @@
 #include <stdint.h>
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint64_t u64;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,14 @@ struct kd_mutex {
 };
 
 #include "frame_types.h"
+
+/* These scenarios never transfer queued mutex ownership. The dedicated custody
+ * fixture validates that admission; keep this unrelated terminal route closed. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return false;
+}
 
 #define THREAD_SIZE 1024UL
 static unsigned long waiter_stack[THREAD_SIZE / sizeof(unsigned long)];

@@ -7,12 +7,22 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+#define KD_MUTEX_EXEC_SWAPPED 0x100
 #include "batch_diag.inc"
+
+enum kd_mutex_batch_result {
+	KD_MUTEX_BATCH_OWNED,
+	KD_MUTEX_BATCH_SWAPPED,
+	KD_MUTEX_BATCH_RELEASED,
+};
 
 struct kd_mutex_batch {
 	struct kd_mutex *lock; /* enclosing invocation keeps the object live */
 	struct kd_exec_outer_unlock outer;
 	struct kd_mutex_node *next;
+	struct kd_mutex_node *own_node;
+	struct kd_mutex_node *swapped_owner;
+	bool after_body;
 	/* A queue tail can receive a delayed successor link until it is retired.
 	 * This exact flag prevents a second access after native waiter wake/reuse. */
 	struct kd_mutex_node *current_node;
@@ -195,6 +205,78 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	return 0;
 }
 
+/* Transfer only a sole ABI2 root. C's own node still contains its unstarted
+ * compiler continuation and remains counted/reserved throughout the exchange.
+ * Append it before retiring W: even a terminal W therefore has a successor,
+ * and no racing publisher can become an independent gate-waiting head. */
+static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
+				  struct kd_mutex_node *node,
+				  struct kd_mutex_batch *batch,
+				  struct kd_exec_frame *frame)
+{
+	struct kd_mutex_node *own = batch->own_node, *previous;
+	u64 generation;
+	u32 tail;
+
+	if (batch->after_body || !own || own == node ||
+	    own->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    own->packet_state != KD_PACKET_MINIMAL ||
+	    own->task_struct_ptr != current || own->lock != lock ||
+	    READ_ONCE(own->counted_lock) != lock ||
+	    !frame->mutex_mixed.transfer_requested ||
+	    !kd_exec_mutex_transfer_allowed(frame))
+		return false;
+	generation = READ_ONCE(node->count_seq);
+	BUG_ON((generation & 1) || generation > U64_MAX - 2 ||
+	       READ_ONCE(node->counted_lock) != lock);
+	/* No irrevocable edit precedes admission of the independent custody lease.
+	 * The old batch/frame keeps its own lease through pickup and retirement. */
+	if (!kd_source_frame_get())
+		return false;
+	if (!kd_mutex_task_custody_reserve(node->task_struct_ptr, node)) {
+		kd_source_frame_put();
+		return false;
+	}
+	BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
+	node->regs = *kd_exec_frame_regs(frame);
+	node->packet_state = KD_PACKET_FULL;
+	WRITE_ONCE(own->next, NULL);
+	WRITE_ONCE(own->locked, true);
+	WRITE_ONCE(own->completed, false);
+	WRITE_ONCE(own->native_resume, false);
+	own->queued_at_ns = kd_exe_queue_timing_start();
+	tail = kd_mutex_xchg_tail(lock, own->tail);
+	BUG_ON(!tail || tail == (u32)own->tail);
+	previous = kd_mutex_decode_tail(tail);
+	WRITE_ONCE(previous->next, own);
+	kd_mutex_batch_retire_current(lock, batch);
+	batch->next = kd_mutex_batch_rejoin(batch, batch->next);
+	BUG_ON(!batch->next);
+	frame->mutex_mixed.queue.owner = node;
+	frame->mutex_mixed.queue.waiter = own;
+	frame->mutex_mixed.queue.head = batch->next;
+	frame->mutex_mixed.queue.generation = generation + 2;
+	frame->mutex_mixed.queue_transfer = true;
+	BUG_ON(kd_mutex_transfer_owner(lock, frame->logical_task));
+	frame->mutex_mixed.transferred = true;
+	pr_info("kd_mutex role exchange: outer=%lx executor=%d owner=%d queued=%px head=%px\n",
+		frame->outer_lock_addr, current->pid, frame->logical_task->pid,
+		own, batch->next);
+	node->native_spin_pins = 0;
+	node->native_transfer = frame;
+	WRITE_ONCE(node->native_resume, true);
+	smp_store_release(&node->locked, 0);
+	/* W's last frame access acknowledges copied packet, owner pickup, exact
+	 * task routing and source/queue custody. No native relay was published. */
+	while (!smp_load_acquire(&frame->mutex_mixed.picked_up))
+		cpu_relax();
+	BUG_ON(kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OWNER_TRANSFER, NULL));
+	BUG_ON(kd_exec_frame_pop(frame, NULL));
+	batch->swapped_owner = node;
+	batch->next = NULL;
+	return true;
+}
+
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
  *
@@ -307,6 +389,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	frame->mutex_mixed.transfer_requested = false;
 	frame->mutex_mixed.transferred = false;
 	frame->mutex_mixed.picked_up = false;
+	frame->mutex_mixed.queue_transfer = false;
 	frame->entry_abi = curr_node->entry_abi;
 	frame->packet_state = curr_node->packet_state;
 	lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
@@ -364,6 +447,10 @@ prepared:
 		bool transfer = frame->mutex_mixed.transfer_requested &&
 			kd_exec_mutex_transfer_allowed(frame);
 
+		if (transfer && kd_mutex_try_role_swap(lock, curr_node, batch, frame)) {
+			kd_exe_native_handoff_timing_end(true, handoff_start);
+			return KD_MUTEX_EXEC_SWAPPED;
+		}
 		BUG_ON(kd_exec_native_begin(frame, true));
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 		curr_node->regs = *regs;
@@ -466,12 +553,15 @@ prepared:
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
-__attribute__((noipa)) noinline notrace static void
-kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+__attribute__((noipa)) noinline notrace static enum kd_mutex_batch_result
+kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
+		      struct kd_mutex_node *own_node, bool after_body)
 {
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {
 		.lock = lock,
+		.own_node = own_node,
+		.after_body = after_body,
 		.outer.release = kd_mutex_release_outer,
 		.scan_left = 64,
 #ifdef NUMA_AWARE
@@ -491,10 +581,12 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		/* Keep unsupported last packets and source refusal on native handoff. */
 		this_cpu_inc(kd_mutex_handoff_count);
 		kd_mutex_set_locked(lock);
+		if (after_body)
+			BUG_ON(_kd_mutex_unlock_checked(lock));
 		if (curr_node)
 			smp_store_release(&curr_node->locked, 0);
 		KD_MUTEX_DIAG_FINISH(&batch);
-		return;
+		return after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED;
 	}
 
 	while (curr_node) {
@@ -536,6 +628,18 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 		int exe_flag = kd_mutex_execute_cs(lock, curr_node, &batch);
 		KD_MUTEX_DIAG_RESULT(&batch, exe_flag);
+		if (exe_flag == KD_MUTEX_EXEC_SWAPPED) {
+			struct kd_mutex_node *owner = batch.swapped_owner;
+
+			BUG_ON(after_body || !owner);
+			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_OWNER_TRANSFER);
+			KD_MUTEX_DIAG_FINISH(&batch);
+			kd_source_frame_put();
+			/* Last old-executor access: W can finish and reuse this slot as
+			 * soon as it observes READY. C now only waits on its own node. */
+			smp_store_release(&owner->custody.ready, true);
+			return KD_MUTEX_BATCH_SWAPPED;
+		}
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
 			/*
@@ -561,11 +665,12 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			/* A's queue already runs independently. B and the frame are
 			 * now finished; reacquire A for our own original request.
 			 * Do not inspect or wake the old successor a second time. */
-			kd_mutex_wait_and_lock(lock);
+			if (!after_body)
+				kd_mutex_wait_and_lock(lock);
 			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE);
 			KD_MUTEX_DIAG_FINISH(&batch);
 			kd_source_frame_put();
-			return;
+			return after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED;
 		}
 
 		/* A terminal tail may have gained a successor while its body ran.
@@ -587,10 +692,13 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	 * Keep the real mutex and gate for this physical owner's original body. */
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
 	kd_mutex_set_locked(lock);
+	if (after_body)
+		BUG_ON(_kd_mutex_unlock_checked(lock));
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
 	KD_MUTEX_DIAG_FINISH(&batch);
 	/* Includes synchronous native continuation and final physical owner ACK. */
 	kd_source_frame_put();
+	return after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED;
 }
 #pragma GCC pop_options
