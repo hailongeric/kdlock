@@ -304,6 +304,9 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	lock_addr[0] = (unsigned long)lock;
 	frame->mutex_backend = true;
+	frame->mutex_mixed.transfer_requested = false;
+	frame->mutex_mixed.transferred = false;
+	frame->mutex_mixed.picked_up = false;
 	frame->entry_abi = curr_node->entry_abi;
 	frame->packet_state = curr_node->packet_state;
 	lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
@@ -358,6 +361,8 @@ prepared:
 		/* Include borrowing/publication before the waiter can run; the
 		 * inner owner-wait timer starts too late to cover that prefix. */
 		u64 handoff_start = kd_exe_native_timing_start();
+		bool transfer = frame->mutex_mixed.transfer_requested &&
+			kd_exec_mutex_transfer_allowed(frame);
 
 		BUG_ON(kd_exec_native_begin(frame, true));
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
@@ -366,6 +371,27 @@ prepared:
 		/* Native resume releases/reuses the node before owner ACK returns.
 		 * Finish every possible predecessor link before that publication. */
 		kd_mutex_batch_retire_current(lock, batch);
+		curr_node->native_spin_pins = kd_exec_mutex_spin_count(frame);
+		curr_node->native_transfer = NULL;
+		if (transfer) {
+			struct kd_mutex_node *next;
+
+			/* Queue and source ownership survive the real owner exchange.
+			 * No unlocked state is exposed between the executed prefix and
+			 * the original task's suffix. Retain this frame until its ACK. */
+			next = kd_mutex_batch_rejoin(batch, batch->next);
+			BUG_ON(kd_mutex_transfer_owner(lock, frame->logical_task));
+			frame->mutex_mixed.transferred = true;
+			curr_node->native_transfer = frame;
+			pr_info("kd_mutex transfer: outer=%lx executor=%d owner=%d target=%lx pending=1\n",
+				frame->outer_lock_addr, current->pid,
+				frame->logical_task->pid, frame->control_call.target);
+			/* The next head may wait for A, but cannot acquire its occupied
+			 * gate. The old combiner never touches this chain after wake. */
+			if (next)
+				smp_store_release(&next->locked, 0);
+			batch->next = NULL;
+		}
 		WRITE_ONCE(curr_node->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */

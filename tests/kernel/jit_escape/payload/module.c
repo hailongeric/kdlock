@@ -29,6 +29,13 @@ static DEFINE_KD_RWSEM(test_lock);
 static DEFINE_KD_MUTEX(test_lock);
 #endif
 #include "api.h"
+#ifdef JIT_ESCAPE_MIXED_SPIN
+#if defined(JIT_ESCAPE_SPIN) || defined(JIT_ESCAPE_SHARED)
+#error "The mixed probe requires a mutex outer lock"
+#endif
+#include "kd_spin_api.h"
+static DEFINE_KD_SPINLOCK(inner_spin);
+#endif
 
 static atomic_t control = ATOMIC_INIT(0);
 static atomic_t writers = ATOMIC_INIT(0);
@@ -91,7 +98,11 @@ static bool escape_idle(void)
 #elif defined(JIT_ESCAPE_SPIN)
 	return !atomic_read(&test_lock.val);
 #else
-	return kd_mutex_is_idle(&test_lock);
+	return kd_mutex_is_idle(&test_lock)
+#ifdef JIT_ESCAPE_MIXED_SPIN
+	       && !atomic_read(&inner_spin.val)
+#endif
+	       ;
 #endif
 }
 
@@ -126,6 +137,11 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 
 	KD_MUTEX_OUTER_LOCK(&test_lock, cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
+#endif
+#ifdef JIT_ESCAPE_MIXED_SPIN
+	/* The ordinary unpinned CALL is the nested contract. No inline preemption
+	 * or native CAS is hidden from the executor's exact mixed owner ledger. */
+	kd_spin_lock(&inner_spin);
 #endif
 	if (atomic_inc_return(&writers) != 1)
 		atomic_inc(&failures);
@@ -212,6 +228,12 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 			     "cc", "memory");
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
+#ifdef JIT_ESCAPE_MIXED_SPIN
+		/* This is after the real native marker and before B's physical ACK.
+		 * A correct waiter resume restores the logical spin pin. */
+		if (!(preempt_count() & PREEMPT_MASK))
+			atomic_inc(&failures);
+#endif
 #ifdef JIT_ESCAPE_SHARED
 		/* Sample before the marker, then carry those exact live values
 		 * through the restored native continuation. */
@@ -240,6 +262,9 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 	if (atomic_dec_return(&writers))
 		atomic_inc(&failures);
+#ifdef JIT_ESCAPE_MIXED_SPIN
+	kd_spin_unlock(&inner_spin);
+#endif
 #ifdef JIT_ESCAPE_RWLOCK
 	KD_RWLOCK_DIRECT_WRITE_UNLOCK(&test_lock, kd_rwlock_direct_cookie);
 #elif defined(JIT_ESCAPE_RWSEM)

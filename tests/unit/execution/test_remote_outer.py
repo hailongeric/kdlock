@@ -66,6 +66,7 @@ def main():
         "bool kd_exec_native_pending(struct task_struct *task)",
         "void kd_exec_remote_cancel(struct kd_exec_frame *frame)",
         "bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)",
+        "unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame)",
         "int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)",
         "bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)",
         "static int kd_exec_native_finish(struct kd_exec_frame *frame)",
@@ -144,6 +145,10 @@ def main():
                 "request->result = ret < 0 ? ret : 0;",
                 "frame->regs.bx ^= 1;\n\t\t\trequest->result = ret < 0 ? ret : 0;",
             ),
+        ),
+        "native-owner-ack-before-release": (
+            "request && (!request->owner_release ||\n\t\t\t\t smp_load_acquire(&request->owner_released))",
+            "request",
         ),
         "native-wait-not-measured": (
             "kd_exe_native_timing_end(mutex, start);",

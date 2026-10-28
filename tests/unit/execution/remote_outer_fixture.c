@@ -72,6 +72,9 @@ enum { CPUS = KD_EXEC_MAX_LOCK_DEPTH, WAITER_CPU = CPUS };
 static _Thread_local unsigned int cpu;
 static unsigned int checks, failures, wrong_owner, released;
 static bool threaded_native;
+static bool mixed_native, transferred_native, mixed_early;
+static _Thread_local unsigned int logical_spin_pins;
+static unsigned int release_entered, release_go;
 static unsigned int borrows, borrow_puts, ends, refs, polls, stages;
 static unsigned long kd_exec_invariant_failures;
 static unsigned long kd_native_started, kd_native_completed, kd_native_unlocks;
@@ -195,13 +198,20 @@ static bool need_resched(void)
 {
 	return false;
 }
+static unsigned int preempt_count(void)
+{
+	return logical_spin_pins;
+}
 static void cond_resched(void)
 {
-	BUG_ON(true);
+	BUG_ON(!mixed_native && !transferred_native);
+	BUG_ON(logical_spin_pins);
+	sched_yield();
 }
 static void preempt_enable(void)
 {
-	BUG_ON(true);
+	BUG_ON(!mixed_native || cpu != WAITER_CPU || !logical_spin_pins);
+	logical_spin_pins--;
 }
 static void preempt_disable(void)
 {
@@ -219,6 +229,28 @@ static int kd_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 	(void)frame;
 	BUG_ON(true);
 	return -EINVAL;
+}
+static int kd_mutex_jit_spin_unlock_ctx(raw_spinlock_t *lock,
+				      struct kd_exec_frame *frame)
+{
+	BUG_ON(!mixed_native || cpu || frame != &frames[0] || lock != &locks[1]);
+	CHECK(lock->owner == cpu && lock->held && frame->jit_lock_depth == 2);
+	CHECK(frame->jit_lock_kind[1] == KD_EXEC_LOCK_MUTEX_SPIN);
+	lock->held = false;
+	__atomic_add_fetch(&released, 1, __ATOMIC_RELAXED);
+	return kd_exec_frame_lock_pop(frame, (unsigned long)lock);
+}
+static int _kd_mutex_unlock_checked(struct kd_mutex *lock)
+{
+	raw_spinlock_t *physical = (raw_spinlock_t *)lock;
+	BUG_ON(!transferred_native || cpu != WAITER_CPU || current != &logical);
+	CHECK(physical == &locks[0] && physical->held && physical->owner == cpu);
+	__atomic_store_n(&release_entered, 1, __ATOMIC_RELEASE);
+	while (!__atomic_load_n(&release_go, __ATOMIC_ACQUIRE))
+		sched_yield();
+	physical->held = false;
+	__atomic_add_fetch(&released, 1, __ATOMIC_RELAXED);
+	return 0;
 }
 static int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 {
@@ -678,6 +710,87 @@ static void check_empty_native(void)
 	CHECK(ends == 1 && !refs && borrow_puts == 1 && !kd_native_unlocks);
 }
 
+/* Exercise production family matching and the request lifetime in both mixed
+ * modes. Physical ticket operations and mutex owner exchange are independently
+ * covered by test_mutex_mixed; these substitutes observe who performs unlock. */
+static void *mixed_native_waiter(void *unused)
+{
+	(void)unused;
+	select_cpu(WAITER_CPU);
+	if (mixed_native) {
+		logical_spin_pins = 1;
+		if (mixed_early)
+			CHECK(kd_exec_native_unlock((unsigned long)&locks[0], true));
+		CHECK(!kd_exec_native_unlock((unsigned long)&locks[1], true));
+		CHECK(kd_exec_native_unlock((unsigned long)&locks[1], false));
+		CHECK(!logical_spin_pins && !locks[1].held);
+	}
+	if (!mixed_early)
+		CHECK(kd_exec_native_unlock((unsigned long)&locks[0], true));
+	CHECK(list_empty(&kd_native_frames) && mutex_puts == 1);
+	return NULL;
+}
+
+static void *delay_transferred_release(void *unused)
+{
+	(void)unused;
+	while (!__atomic_load_n(&release_entered, __ATOMIC_ACQUIRE))
+		sched_yield();
+	/* W is stopped inside its physical unlock. C may neither acknowledge it
+	 * nor mark the ledger released merely because the request was published. */
+	for (unsigned int i = 0; i < 1000; i++) {
+		struct kd_native_request *request = smp_load_acquire(&frames[0].native_request);
+		CHECK(request && !READ_ONCE(request->done));
+		CHECK(!READ_ONCE(frames[0].outer_unlock_seen) && !READ_ONCE(hooks[0].released));
+		sched_yield();
+	}
+	__atomic_store_n(&release_go, 1, __ATOMIC_RELEASE);
+	return NULL;
+}
+
+static void check_mixed_native(bool transfer, bool early)
+{
+	pthread_t waiter, delayed;
+	struct kd_exec_frame *frame = &frames[0];
+
+	setup(1);
+	kd_jit_timing = false;
+	frame->mutex_backend = true;
+	frame->complex_ready = true;
+	frame->mutex_mixed.transferred = transfer;
+	frame->mutex_mixed.picked_up = transfer;
+	if (transfer) {
+		locks[0].owner = WAITER_CPU;
+	} else {
+		locks[1] = (raw_spinlock_t){ .owner = 0, .held = true };
+		frame->jit_lock_depth = frame->held_lock_depth = 2;
+		frame->jit_lock_addr[1] = (unsigned long)&locks[1];
+		frame->jit_lock_kind[1] = KD_EXEC_LOCK_MUTEX_SPIN;
+		frame->jit_lock_node[1] = &locks[1];
+	}
+	CHECK(!kd_exec_native_begin(frame, true));
+	mixed_native = !transfer;
+	transferred_native = transfer;
+	mixed_early = early;
+	threaded_native = true;
+	release_entered = release_go = 0;
+	if (transfer)
+		CHECK(!pthread_create(&delayed, NULL, delay_transferred_release, NULL));
+	CHECK(!pthread_create(&waiter, NULL, mixed_native_waiter, NULL));
+	CHECK(!kd_exec_native_wait(frame));
+	CHECK(!pthread_join(waiter, NULL));
+	if (transfer)
+		CHECK(!pthread_join(delayed, NULL));
+	threaded_native = mixed_native = transferred_native = mixed_early = false;
+	CHECK(kd_exec_frame_can_complete(frame));
+	CHECK(kd_native_unlocks == (transfer ? 1U : 2U));
+	CHECK(kd_native_started == 1 && kd_native_completed == 1 && mutex_puts == 1);
+	CHECK(!frame->native_request && list_empty(&kd_native_frames));
+	CHECK(locks[0].held == !(transfer || early) && hooks[0].released == (transfer || early));
+	CHECK(released == (early ? 2U : 1U) && !wrong_owner && !refs && !ends);
+	check_packets();
+}
+
 /* Nested waits enclose one another. N deterministic calls consume 2*N clock
  * samples and N*N ticks, rather than N independent elapsed intervals. */
 static void check_native_timing(unsigned int count, bool mutex)
@@ -760,6 +873,9 @@ int main(void)
 		check_native_chain(count, true, false);
 	}
 	check_empty_native();
+	check_mixed_native(false, false);
+	check_mixed_native(false, true);
+	check_mixed_native(true, false);
 	for (unsigned int enabled = 0; enabled < 2; enabled++) {
 		kd_jit_timing = enabled;
 		for (unsigned int mutex = 0; mutex < 2; mutex++) {

@@ -48,6 +48,8 @@ static int mode, entered, after_bridge, released, task_put;
 static struct kd_mutex_node node;
 static unsigned char shadow[KD_MUTEX_SHADOW_STACK_SIZE] __attribute__((aligned(16)));
 static void preempt_enable(void) {}
+static void preempt_disable(void) {}
+static int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *f) { (void)f; abort(); }
 static void migrate_enable(void) {}
 static void kd_mutex_task_put(void *p) { assert(p==current); task_put++; }
 static void kd_mutex_release_node(struct kd_mutex_node *n) {

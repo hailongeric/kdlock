@@ -20,12 +20,56 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 	       kd_exec_frame_has_unreleased_nested(frame);
 }
 
+unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame)
+{
+	unsigned int i, count = 0;
+
+	if (!frame || !frame->mutex_backend || !frame->complex_ready)
+		return 0;
+	for (i = frame->outer_lock_index + 1; i < frame->jit_lock_depth; i++)
+		count += frame->jit_lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN &&
+			 !frame->jit_lock_released[i];
+	return count;
+}
+
+bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame)
+{
+	return frame && frame->mutex_backend && frame->complex_ready &&
+		frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+		!frame->parent && !frame->depth && !frame->request_frame &&
+		kd_exec_frame_can_borrow_locks(frame) && !frame->outer_unlock_seen &&
+		frame->outer_lock_index == 0 && frame->jit_lock_depth == 1 &&
+		frame->jit_lock_kind[0] == KD_EXEC_LOCK_QUEUE_OWNER &&
+		frame->jit_lock_node[0] == (void *)frame->outer_lock_addr &&
+		frame->outer_unlock_hook && !frame->outer_unlock_hook->released &&
+		frame->control_call.phase == KD_CALL_PENDING &&
+		!kd_exec_frame_remote_pending(frame) && !frame->resume_target &&
+		!frame->remote_request && !frame->native_request &&
+		list_empty(&frame->native_link) && !frame->mutex_mixed.transferred;
+}
+
+/* The native wake supplies a stable frame reference. The executor retains its
+ * source lease and route until this task's real physical unlock is acknowledged. */
+int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame)
+{
+	int ret;
+
+	if (!frame || !frame->mutex_backend || !frame->mutex_mixed.transferred ||
+	    frame->logical_task != current || frame->mutex_mixed.picked_up)
+		return -EINVAL;
+	ret = kd_mutex_transfer_pickup((struct kd_mutex *)frame->outer_lock_addr);
+	if (!ret)
+		smp_store_release(&frame->mutex_mixed.picked_up, true);
+	return ret;
+}
+
 #ifdef KDLOCK_SELFTEST
 #include "../../tests/kernel/execution/exec_relay_exit_probe.c"
 #endif
 
-/* Publish borrowing only for a validated continuation packet. This registers
- * unlock routing; it neither transfers Linux ownership nor jumps to source. */
+/* Publish routing only for a validated continuation packet. This function
+ * neither transfers ownership nor jumps to source. A mutex batch may exchange
+ * its physical owner afterwards, before publishing the native waiter wake. */
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	unsigned long flags;
@@ -127,8 +171,7 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 	list_for_each_entry(frame, &kd_native_frames, native_link) {
 		unsigned int i;
 
-		if (frame->logical_task != current ||
-		    frame->mutex_backend != mutex)
+		if (frame->logical_task != current)
 			continue;
 		/* Ancestors copied into a remote B frame still belong to A's
 		 * executor. Only route the locks owned by this particular frame. */
@@ -137,6 +180,12 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 			if (frame->jit_lock_addr[i] != lock_addr ||
 			    frame->jit_lock_released[i])
 				continue;
+			request.mixed_spin = frame->mutex_backend &&
+				frame->jit_lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN;
+			if (mutex != (frame->mutex_backend && !request.mixed_spin))
+				continue;
+			request.owner_release = frame->mutex_backend &&
+				frame->mutex_mixed.transferred && i == frame->outer_lock_index;
 			BUG_ON(frame->native_request);
 			smp_store_release(&frame->native_request, &request);
 			found = true;
@@ -148,16 +197,27 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
 	if (!found)
 		return false;
+	if (request.owner_release) {
+		/* Ownership has really moved to this task. The old executor may
+		 * observe completion only after this owner releases both A and gate. */
+		request.result = _kd_mutex_unlock_checked((struct kd_mutex *)lock_addr);
+		smp_store_release(&request.owner_released, true);
+	}
 
 	/* The acknowledgment lives on the waiter's native stack, not in the
 	 * executor frame, which may be retired as soon as it acknowledges. */
 	while (!smp_load_acquire(&request.done)) {
 		cpu_relax();
-		if (mutex)
+		/* An out-of-order A unlock may still hold a restored logical B pin. */
+		if (mutex && !preempt_count())
 			cond_resched();
 	}
 	BUG_ON(request.result);
-	if (!mutex && !kd_exec_native_pending(current)) {
+	if (request.mixed_spin) {
+		/* The executor retired its physical ticket before ACK. This is the
+		 * original task's separately restored logical spin acquisition pin. */
+		preempt_enable();
+	} else if (!mutex && !kd_exec_native_pending(current)) {
 		request.spin_last = true;
 		kd_spin_native_retire(&request.spin_origin);
 	}
@@ -187,7 +247,9 @@ static int kd_exec_native_finish(struct kd_exec_frame *frame)
 	return 0;
 }
 
-/* The physical owner pauses its batch here, servicing the waiter's unlocks.
+/* The executor pauses its batch here, servicing the waiter's unlocks. A
+ * transferred mutex is already owned by the waiter; only its real release is
+ * acknowledged here. Other physical locks stay owned by this executor.
  * Remove routing/references before the final release ACK; an awakened waiter
  * may immediately return, exit, or discard its request storage. */
 int kd_exec_native_wait(struct kd_exec_frame *frame)
@@ -203,15 +265,33 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 		struct kd_native_request *request =
 			smp_load_acquire(&frame->native_request);
 
-		if (request) {
+		if (request && (!request->owner_release ||
+				 smp_load_acquire(&request->owner_released))) {
 			unsigned long flags;
 			bool complete, local_complete;
 			int ret;
 
-			if (request->lock_addr == frame->outer_lock_addr)
+			if (request->owner_release) {
+				ret = request->result;
+				if (!smp_load_acquire(&frame->mutex_mixed.picked_up) ||
+				    !frame->mutex_mixed.transferred ||
+				    request->lock_addr != frame->outer_lock_addr ||
+				    kd_exec_frame_has_unreleased_nested(frame))
+					ret = -EINVAL;
+				if (!ret) {
+					/* This records an acknowledged physical unlock, never a
+					 * synthetic release at the ownership-transfer point. */
+					frame->outer_unlock_hook->released = true;
+					ret = kd_exec_frame_record_event(frame,
+						KD_EXEC_EVENT_OUTER_UNLOCK, NULL);
+				}
+			} else if (request->lock_addr == frame->outer_lock_addr)
 				ret = kd_exec_frame_record_event(
 					frame, KD_EXEC_EVENT_OUTER_UNLOCK,
 					NULL);
+			else if (request->mixed_spin)
+				ret = kd_mutex_jit_spin_unlock_ctx(
+					(raw_spinlock_t *)request->lock_addr, frame);
 			else if (frame->mutex_backend)
 				ret = kd_mutex_jit_nested_unlock_ctx(
 					(struct kd_mutex *)request->lock_addr,
@@ -253,7 +333,11 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 			break;
 		}
 		cpu_relax();
-		if (frame->mutex_backend && need_resched()) {
+		/* A retained mixed spin ticket forbids scheduling this executor even
+		 * though its root is a sleepable mutex. Its own final ACK retires the
+		 * physical pin before this check can make scheduling legal again. */
+		if (frame->mutex_backend && need_resched() &&
+		    !kd_exec_mutex_spin_count(frame)) {
 			preempt_enable();
 			cond_resched();
 			preempt_disable();

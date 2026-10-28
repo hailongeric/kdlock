@@ -362,6 +362,8 @@ def main():
     parser.add_argument("--reader-iterations", type=int, default=10000000,
                         help="shared operations per reader and phase; hot writers require a pending reader")
     parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
+    parser.add_argument("--mixed-spin", action="store_true",
+                        help="mutex: hold an exact nested spin ticket across native escape")
     parser.add_argument("--hotlock-stats", action="store_true",
                         help="retain final heat observations for diagnosis; admission is unchanged")
     kernel_identity.arguments(parser)
@@ -378,6 +380,8 @@ def main():
                "rwlock/rwsem need at least one reader and four writers; other families have no readers")
     rt.require(args.family == "mutex" or args.mutex_api == "outer",
                "--mutex-api public requires --family mutex")
+    rt.require(not args.mixed_spin or args.family == "mutex",
+               "--mixed-spin requires --family mutex")
     rt.require(0 < args.reader_iterations <= 10000000, "reader iterations out of bounds")
     rt.require(0 < args.iterations <= 10000000 and 0 < args.warmup_iterations <= 10000000 and
                1 <= args.phase_timeout <= 600, "invalid iteration/timeout bounds")
@@ -417,6 +421,7 @@ def main():
                     f"KDLOCK_INCLUDE={source / 'include'}",
                     f"JIT_ESCAPE_FAMILY={args.family}",
                     f"JIT_ESCAPE_MUTEX_API={args.mutex_api}",
+                    f"JIT_ESCAPE_MIXED_SPIN={int(args.mixed_spin)}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)
         compiled_api = rt.command(["modinfo", "-F", "kd_mutex_api", workload],
                                   out / "mutex-api.txt").strip()
@@ -426,6 +431,9 @@ def main():
                                      out / "family.txt").strip()
         rt.require(compiled_family == args.family, "compiled escape family differs")
         imported = rt.command(["nm", "-u", workload], out / "workload-imports.txt")
+        if args.mixed_spin:
+            rt.require({"kd_spin_lock_clobber_v1", "kd_spin_unlock_clobber_v1"} <= set(imported.split()),
+                       "mixed payload lacks ordinary nested spin controls")
         rt.command(["objdump", "-dr", workload], out / "workload-disassembly.txt")
         if args.family in ("spin", "rwlock"):
             names = set(imported.split())
@@ -500,6 +508,7 @@ def main():
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
                     image_requirements=1 if args.family in ("mutex", "rwsem") else 33,
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
+                    mixed_spin=args.mixed_spin,
                     caller_shell=shell, cookie_storage=cookie, hotlock_stats=args.hotlock_stats,
                     worker_roles=["writer"] * (len(args.cpus) - reader_count) + ["reader"] * reader_count,
                     reader_iterations=args.reader_iterations,
@@ -513,6 +522,7 @@ def main():
             family=args.family, entry_abi=session.record["entry_abi"],
             image_requirements=session.record["image_requirements"],
             worker_roles=session.record["worker_roles"],
+            mixed_spin=session.record["mixed_spin"],
             mutex_api=session.record["mutex_api"], caller_shell=session.record["caller_shell"],
             cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,

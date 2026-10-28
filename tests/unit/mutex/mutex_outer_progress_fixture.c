@@ -349,6 +349,10 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	active.executed = true;
 	/* Model the dispatcher materializing a full packet before native control. */
 	active.packet_state = KD_PACKET_FULL;
+	if (mode == 6) {
+		active.mutex_mixed.transfer_requested = true;
+		return KD_EXE_RUN_NATIVE; /* The source inner CALL is still pending. */
+	}
 	if (mode == 5)
 		return KD_EXE_RUN_NATIVE; /* Only A remains; its final ACK does not detach. */
 	active.jit_lock_depth = active.held_lock_depth = 2;
@@ -366,8 +370,28 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	CHECK(frame == &active && mutex &&
-	      (mode == 5 ? !b.owner : b.owner == &executor));
+	      (mode >= 5 ? !b.owner : b.owner == &executor));
 	CHECK(handoff_starts == 1 && !handoff_ends);
+	return 0;
+}
+bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame)
+{
+	CHECK(frame == &active);
+	/* The actual eligibility predicate is exercised by test_mutex_mixed. */
+	return mode == 6;
+}
+unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return 0;
+}
+int kd_mutex_transfer_owner(struct kd_mutex *lock, struct task_struct *next)
+{
+	CHECK(mode == 6 && lock == &gate && next == &waiter);
+	CHECK(gate.owner == &executor && current == &executor && request.locked);
+	CHECK(kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_COMBINER);
+	CHECK(active.entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 && source_leases == 1);
+	gate.owner = next;
 	return 0;
 }
 int kd_exec_native_wait(struct kd_exec_frame *frame)
@@ -383,7 +407,18 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 	}
 	if (mode == 2)
 		early_unlock_a();
-	if (mode == 5)
+	if (mode == 6) {
+		CHECK(gate.owner == &waiter && frame->mutex_mixed.transferred);
+		CHECK(request.native_transfer == frame && !request.native_spin_pins);
+		CHECK(terminal || !successor.locked);
+		/* W's actual release precedes the owner ACK. The production dispatcher
+		 * independently tests this ordering in test_remote_outer. */
+		current = &waiter;
+		CHECK(!_kd_mutex_unlock_checked(&gate));
+		current = &executor;
+		frame->outer_unlock_hook->released = true;
+		CHECK(!kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL));
+	} else if (mode == 5)
 		CHECK(kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL) == 0);
 	else
 		release_b();
@@ -397,7 +432,7 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 int main(void)
 {
 	for (unsigned int terminal_case = 0; terminal_case < 2; terminal_case++)
-	for (mode = 0; mode < 6; mode++) {
+	for (mode = 0; mode < 7; mode++) {
 		terminal = terminal_case;
 		unsigned long stack[8] = { [7] = 0x800 };
 		unsigned int expected = mode == 4 ? 0 : 1;
@@ -415,7 +450,7 @@ int main(void)
 		request.tail = 1U << KD_MUTEX_TAIL_CPU_OFFSET;
 		request.next = terminal ? NULL : &successor;
 		gate.delegation_tail = terminal ? (unsigned int)request.tail : 2U << KD_MUTEX_TAIL_CPU_OFFSET;
-		request.entry_abi = terminal ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
+		request.entry_abi = terminal || mode == 6 ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
 		request.packet_state = terminal ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 		request.regs.ip = 0x800;
 		successor.task_struct_ptr = &other;
@@ -439,13 +474,13 @@ int main(void)
 		CHECK(scripts == expected && pops == expected);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
-		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5));
+		CHECK(native_waits == (mode == 2 || mode == 3 || mode >= 5));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(kd_mutex_delegation_owned(&gate, &executor) && gate.owner == &executor);
 		CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_VAL);
 		CHECK(!b.owner && preempt == 1 && !other_holds);
-		CHECK(kd_mutex_origin_acquires == (early ? 3 : 1));
-		CHECK(kd_mutex_origin_releases == (early ? 2 : 0));
+		CHECK(kd_mutex_origin_acquires == (early ? 3 : mode == 6 ? 2 : 1));
+		CHECK(kd_mutex_origin_releases == (early ? 2 : mode == 6 ? 1 : 0));
 		CHECK(wakes == ((mode == 4 || terminal) ? 0 : 1));
 		if (terminal)
 			CHECK(gate.delegation_tail == (mode == 4 ? 1U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
@@ -464,8 +499,8 @@ int main(void)
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
-	CHECK(routine_traces == 12);
-	printf("mutex outer production progress: %u checks, %u failures, 12 scenarios\n",
+	CHECK(routine_traces == 14);
+	printf("mutex outer production progress: %u checks, %u failures, 14 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

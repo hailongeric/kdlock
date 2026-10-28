@@ -133,6 +133,15 @@ static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 			printf(__VA_ARGS__); \
 	} while (0)
 static int kd_mutex_nested_unlock(struct kd_mutex *lock);
+/* This fixture constructs same-family ledgers. Mixed exact-ticket cleanup is
+ * exercised separately by test_mutex_mixed; reaching it here is a failure. */
+static int kd_mutex_jit_spin_unlock_ctx(raw_spinlock_t *lock,
+				      struct kd_exec_frame *frame)
+{
+	(void)lock; (void)frame;
+	failures++;
+	return -EINVAL;
+}
 static void kd_mutex_note_nested_abort_release(void);
 static void kd_spin_debug_nested_unlock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);

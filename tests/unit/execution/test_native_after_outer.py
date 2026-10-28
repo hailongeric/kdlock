@@ -215,6 +215,7 @@ def main():
             "static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,",
             "static int kd_mutex_stack_finish(struct kd_exec_frame *frame,",
             "static int handle_known_mutex_call(struct kd_exec_frame *frame,",
+            "static int known_pending_native(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int handle_known_call(struct kd_regs *regs,",
         ),
     }

@@ -37,6 +37,9 @@ struct kd_native_request {
 	int result;
 	bool done;
 	bool spin_last;
+	bool mixed_spin;
+	bool owner_release;
+	bool owner_released;
 };
 
 static LIST_HEAD(kd_native_frames);
@@ -118,7 +121,9 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	for (i = 0; i < frame->jit_lock_depth; i++) {
 		if (!frame->jit_lock_addr[i] ||
 		    frame->jit_lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-		    frame->jit_lock_kind[i] > KD_EXEC_LOCK_NATIVE)
+		    frame->jit_lock_kind[i] > KD_EXEC_LOCK_MUTEX_SPIN ||
+		    (frame->jit_lock_kind[i] == KD_EXEC_LOCK_MUTEX_SPIN &&
+		     !frame->mutex_backend))
 			return false;
 	}
 

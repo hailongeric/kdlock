@@ -241,3 +241,37 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 		preempt_enable();
 	return ret;
 }
+
+/* Mixed mutex nesting must never wait for B on its proxy executor. Reserve
+ * exact ownership before the sole CAS; a miss publishes no queue membership. */
+int kd_spin_nested_try_once(raw_spinlock_t *lock, struct kd_spin_ref *ref)
+{
+	kd_spinlock_t *word;
+	int ret = kd_spin_entry_begin(lock, KD_SPIN_ENTRY_VIRTUAL, ref);
+
+	if (ret)
+		return ret;
+	word = kd_spin_entry_word(ref);
+	if (atomic_cmpxchg_acquire(&word->val, 0, 1U)) {
+		BUG_ON(kd_spin_entry_end(ref));
+		return -EAGAIN;
+	}
+	BUG_ON(kd_spin_entry_claim(ref));
+	return 0;
+}
+
+int kd_spin_nested_release_exact(raw_spinlock_t *lock,
+				struct kd_spin_ref *ref)
+{
+	kd_spinlock_t *word = kd_spin_entry_word(ref);
+	int ret;
+
+	if (!word || (raw_spinlock_t *)word != lock)
+		return -EINVAL;
+	ret = kd_spin_entry_release_origin(ref);
+	if (ret)
+		return ret;
+	/* Keep pending/tail and retain the pin through physical publication. */
+	smp_store_release(&word->locked, 0);
+	return kd_spin_entry_end(ref);
+}
