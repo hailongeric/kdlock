@@ -108,7 +108,16 @@ body. The exchange offer alone cannot establish that custody was accepted or
 that C executed. The `c-native` case verifies the real C task after the safe
 RDTSC marker, arithmetic flag mask `0x95`, a single suffix visit and the native
 begin/ACK/completion on W's new executor frame. W's transferred prefix must not
-retain the old native relay. `c-early-spin` requires the existing outer-release
+retain the old native relay. Its validated RDTSC escape invokes
+`kd_jit_native_escape`, which makes the source entry sticky `NATIVE_ONLY` (`-3`)
+through `kd_image_disable`. Only `c-native` expects that status transition: it
+requires exactly one escape count/event naming C, the marker and the existing
+generation. Code address, ABI, requirements, generation, generated image/assembly/
+disassembly hashes and source drain state must otherwise remain identical.
+Every other case still requires the unchanged NORMAL publication and zero
+instruction escapes. This follows the existing instruction-escape probe's
+terminal-status contract; it changes no source trust or runtime policy.
+`c-early-spin` requires the existing outer-release
 trace naming logical C and physical W, followed by an unlocked A and still-held
 B observation; W must finish without reacquiring A for another body.
 
