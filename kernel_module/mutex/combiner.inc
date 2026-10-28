@@ -199,6 +199,9 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
  * The enclosing batch owns the source lease; node metadata is published and
  * stable. This helper only initializes the executor's own frame. It neither
  * accesses origin GS/stack contents nor prepares or invokes generated code.
+ * &node->regs names reserved queue storage; its SP and gsbase are address
+ * values, not dereferences. push_mutex_batch uses the executor's this_cpu
+ * context; source-open and optional validators inspect provider/frame metadata.
  * A NULL preparation still drains REQUEST: cancellation cannot race PINNED. */
 static __always_inline bool kd_mutex_proxy_prepare_batch(struct kd_mutex *lock,
 					struct kd_mutex_node *node,
@@ -252,7 +255,9 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	if (!clobber) {
 		/* Legacy capture decodes the original stack, so it cannot overlap
-		 * the pin handshake. ABI2 uses only published packet metadata. */
+		 * the pin handshake. ABI2 uses only published packet metadata.
+		 * Subsequent pre-frame refusals return to run_combiner's common
+		 * PINNED -> WAIT cancellation before rejoin/native head handoff. */
 		if (!kd_mutex_proxy_pin(curr_node))
 			return KD_EXE_NO_RUN;
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];

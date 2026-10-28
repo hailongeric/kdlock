@@ -44,6 +44,29 @@ surrounding batch lease keeps published source storage resident. No ACK
 timeout authorizes cancellation. Node geometry, queue order, 1024/1024 limits,
 polling/scheduling behavior and the two-word ABI are unchanged.
 
+The pointer distinction is explicit: `&node->regs` addresses the reserved queue
+packet, whose IP/SP/BP and task/GS address values were published by the origin.
+Copying those values does not dereference the original stack or access its GS
+storage. `kd_exec_frame_push_mutex_batch` selects the executor's `this_cpu`
+context; `kd_source_is_open` reads provider state. Its optional context/frame
+validators walk executor frame and lock-ledger metadata, without dereferencing
+the borrowed packet's SP or the saved GS address. Actual legacy stack decoding,
+generic frame handling and wrapper execution remain after PINNED. The existing
+successor prefetch still issues cache hints for published stack addresses before
+selection; those hints consume no stack values and are unchanged here.
+
+After a successful legacy pin, an invalid decoded return, absent ready image or
+busy executor context returns without constructing a frame. The sole caller,
+`kd_mutex_run_combiner`, handles every such nonzero refusal through its common
+PINNED-to-WAIT publication before queue rejoin. A failed generic frame push takes
+the same path; a constructed-frame refusal first aborts/pops that frame. An
+origin observing WAIT enables preemption and resumes queued polling. If immediate
+native head publication replaces WAIT with zero before the origin observes it,
+the waiter returns with one pin and `kd_mutex_wait_and_lock_node` enables
+preemption before its physical-owner wait. Neither path leaves a queued origin
+pinned indefinitely. These availability and ownership checks do not change the
+trusted-source translation policy.
+
 The archived candidate lost 42–54% at the measured contended c01/c16 points.
 At 20 workers, c01 ran entirely within NUMA node 0 and returned-JIT share rose
 from 99.2823% to 99.6205%; reduced delegation does not explain that loss. The
