@@ -84,6 +84,13 @@ validate whole-kernel replacement.
 10. Keep one guide per responsibility. Current instructions belong in maintained
     docs; historical protocols/results belong in history or fixed Git evidence.
     Preserve captured hashes, numeric evidence, failures and topology identities.
+11. Permanent real-world API testing constraint: invoke the actual API through
+    its userspace system call path. Restrict kernel-side experimental changes to
+    the relevant critical sections' lock API calls and minimal required lock
+    binding/routing/lifetime glue. Preserve native bodies, surrounding semantics
+    and data structures; prefer leaving kernel source unchanged. Extracted-body
+    calls and test ioctls are mechanism evidence, not real-world API substitutes.
+    See [the workload contract](docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint).
 
 ## Git and reporting
 

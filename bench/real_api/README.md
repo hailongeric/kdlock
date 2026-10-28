@@ -4,6 +4,13 @@ These scoped API workloads extend stage 1 beyond synthetic bodies. The
 [project roadmap](../../docs/ROADMAP.md) separately defines stage 2 actual-MM
 integration and stage 3 broader kernel replacement with unchanged applications.
 
+All real-world API testing follows the permanent
+[syscall and minimal-change constraint](../../docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint):
+invoke the actual userspace syscall and preserve native kernel operation bodies,
+changing only relevant lock calls and minimal required integration glue. The
+existing function-substitution adapters must be reviewed against that constraint;
+their historical results retain their original implementation scope.
+
 This runner measures actual syscalls on private kernel objects: extended
 attributes, file-lock queries, descriptor flags, pipe metadata, file positions
 and UTS namespace names.

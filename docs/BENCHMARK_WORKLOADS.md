@@ -49,17 +49,23 @@ All profiles use one or sixteen directly addressed, 64-byte-aligned counters and
 Shared readers compare values, including a repeated first-counter load in the
 one-counter case. There is no allocation or container traversal in the body.
 
-| Profile suffix | Lock and writes | Counters |
-| --- | --- | ---: |
-| `mutex-throughput` | Mutex, 100% writes | 1 |
-| `mutex-locality` | Mutex, 100% writes | 16 |
-| `rwsem-throughput-read` / `rwsem-throughput-mixed` | Rwsem, 1% / 20% writes | 1 |
-| `rwsem-locality-read` / `rwsem-locality-mixed` | Rwsem, 1% / 20% writes | 16 |
-| `rwlock-throughput-read` / `rwlock-throughput-mixed` | Rwlock, 1% / 20% writes | 1 |
-| `rwlock-locality-read` / `rwlock-locality-mixed` | Rwlock, 1% / 20% writes | 16 |
+Use concrete payload names: `c01` means one cacheline, `c08` means eight
+cachelines, and `c16` means sixteen cachelines. Each cacheline contains one
+updated counter. State the lock family, write percentage and post-work count
+alongside the payload name; the name alone does not identify a comparison.
 
-Catalog names add `nano-` to these suffixes. The ten profiles account for
-630 points. [best_case.py](../bench/nano/best_case.py) defines their parameters;
+| Workload | Lock and writes | Cachelines |
+| --- | --- | ---: |
+| `c01` | Mutex, 100% writes | 1 |
+| `c16` | Mutex, 100% writes | 16 |
+| `c01` | Rwsem, 1% / 20% writes | 1 |
+| `c16` | Rwsem, 1% / 20% writes | 16 |
+| `c01` | Rwlock, 1% / 20% writes | 1 |
+| `c16` | Rwlock, 1% / 20% writes | 16 |
+
+The ten configurations account for 630 points. Existing runner identifiers and
+archived paths remain unchanged; this guide names the actual payloads.
+[best_case.py](../bench/nano/best_case.py) defines their parameters;
 [rwlock_bench/payload.h](../workload_modules/rwlock_bench/payload.h) supplies the
 current cacheline body. Mutex defaults are cap 1024, locality boundary 768,
 deferred handoff threshold eight and scan budget 64. These favorable profiles
@@ -124,6 +130,28 @@ rwlock/rwsem micro cases twelve, and proc snapshots four: 42 micro/API cases tot
 [plan.py](../bench/catalog_single/plan.py) defines exact runner arguments.
 
 ## Real-world API critical sections
+
+### Permanent testing constraint
+
+Invoke each real-world API from userspace through its actual system call path.
+Measure the complete declared syscall operation, including its normal validation,
+security checks and result copies. Direct calls to extracted kernel bodies or a
+test ioctl that runs those bodies are mechanism tests, not substitutes for
+real-world API measurements.
+
+Inside the kernel, restrict experimental changes to the lock API calls protecting
+the relevant critical sections. Preserve the native critical-section bodies,
+surrounding control flow, data structures and observable API behavior. Prefer
+integration that leaves the kernel source unchanged. Any necessary lock-object
+binding, routing or lifetime glue must be minimal, documented separately, and
+must ensure that every user of an object follows the same lock protocol. Do not
+rewrite the operation, precompute its result or move work out of the measured
+path to improve a benchmark.
+
+This is a permanent project constraint. The existing scoped function-substitution
+adapters below remain evidence of their recorded implementation; syscall entry
+alone does not prove that an adapter satisfies the minimal-change constraint.
+Review its source differences against the bound kernel before making that claim.
 
 | Kind | Protected work | Execution boundary |
 | --- | --- | --- |
