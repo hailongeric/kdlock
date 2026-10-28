@@ -158,6 +158,22 @@ def observe_hotlock(provider_root):
     return record
 
 
+def observe_outer_release(provider_root):
+    """Keep the existing cold release observation when bench_quiet is enabled."""
+    relative = "kernel_module/mutex/combiner.inc"
+    path = provider_root / relative
+    original = path.read_text()
+    prefix = "kd_mutex outer release:"
+    old, new = 'KD_PR_ROUTINE("' + prefix, 'pr_info("' + prefix
+    rt.require(original.count(old) == 1 and new not in original,
+               "outer-release trace overlay anchor differs")
+    receipt = dict(path=relative, before=rt.digest(path), sites=[prefix],
+                   semantics="diagnostic sink only; release ordering and ownership unchanged")
+    path.write_text(original.replace(old, new, 1))
+    receipt["after"] = rt.digest(path)
+    return receipt
+
+
 def validate_result(record, after, delta, messages):
     """Require effects and returned execution evidence, not an exchange offer alone."""
     protocol, case = record["protocol"], record["case"]
@@ -525,6 +541,8 @@ def main():
         native.write_text(text)
         trace_overlay["after"] = rt.digest(native)
         rt.write_json(out / "native-trace-overlay.json", trace_overlay)
+        rt.write_json(out / "outer-release-trace-overlay.json",
+                      observe_outer_release(build / "provider"))
         rt.write_json(out / "hotlock-query-overlay.json", observe_hotlock(build / "provider"))
         provider = build / "provider/kernel_module/kdlock_km.ko"
         rt.command(["make", "-C", provider.parent, f"KDIR={args.kernel_source}", "W=1",

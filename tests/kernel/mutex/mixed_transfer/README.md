@@ -122,7 +122,11 @@ are outside the role-swap context contract; these tests do not validate them.
 The benchmark observation provider suppresses ordinary warmup logging. A
 separately recorded overlay preserves the existing native begin/complete/ACK
 diagnostic sites by replacing only their quiet logging macro with `pr_info`.
-The existing production transfer log remains intact. A second recorded overlay
+`outer-release-trace-overlay.json` independently records the same sink-only
+replacement for the existing `kd_mutex outer release` site in
+`kernel_module/mutex/combiner.inc`. This keeps the `c-early-spin` evidence visible
+with `bench_quiet=1`; it changes no release operation or ordering.
+The existing production transfer log remains intact. Another recorded overlay
 adds only `EXPORT_SYMBOL_GPL(kd_hotlock_query_mutex)` to the prepared provider;
 the query body is unchanged and updates no heat, sample count or clock. This
 export is absent from the ordinary provider. Before/after hashes identify both
