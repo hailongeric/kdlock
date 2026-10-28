@@ -71,7 +71,9 @@ static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,
 	might_sleep();
 	if (kd_mutex_trylock_fast(lock)) {
 		kd_hotlock_mutex_entry();
-		kd_mutex_note_native_acquire(lock);
+		/* The fast helper uses kd_mutex_outer_trylock, which records this
+		 * successful physical acquisition for retained native custody. Do
+		 * not record it again at the public-entry layer. */
 		return;
 	}
 	kd_mutex_contended_entry(lock, ret_rsp, ret_addr, bp, abi);
