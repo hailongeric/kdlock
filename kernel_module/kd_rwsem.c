@@ -4,6 +4,7 @@
 #include <linux/limits.h>
 #include "kd_rwsem.h"
 #include "kd_lock.h"
+#include "kd_mutex_local.h"
 
 #define KD_RWSEM_LOCAL_WRITER (-1L)
 
@@ -40,6 +41,7 @@ void kd_rwsem_init(struct kd_rwsem *sem)
 	atomic_long_set(&sem->admission, 0);
 	init_waitqueue_head(&sem->phase_wait);
 	init_waitqueue_head(&sem->reader_drain);
+	osq_lock_init(&sem->reader_osq);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
 
@@ -104,10 +106,39 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 }
 EXPORT_SYMBOL_GPL(kd_down_read_trylock);
 
+static bool kd_rwsem_spin_read(struct kd_rwsem *sem)
+{
+	struct kd_mutex_osq_node *node;
+	bool acquired = false;
+
+	/* Only the queue head retries shared reader admission. The other
+	 * unpublished callers poll their own OSQ nodes instead of repeatedly
+	 * invalidating the reader count when a writer closes the phase. Reuse
+	 * a reserved mutex slot with independent OSQ links, never a delegation
+	 * publication. Release it before scheduling or executing the read body. */
+	preempt_disable();
+	if (need_resched())
+		goto out;
+	node = kd_mutex_osq_node_get(&sem->gate);
+	if (!node)
+		goto out;
+	if (kd_mutex_osq_lock(&sem->reader_osq, node)) {
+		acquired = kd_rwsem_poll(kd_down_read_trylock(sem));
+		kd_mutex_osq_unlock(&sem->reader_osq, node);
+	}
+	/* Abort also finishes all OSQ unlink accesses before returning. */
+	kd_mutex_osq_node_put(node);
+out:
+	preempt_enable();
+	return acquired;
+}
+
 void kd_down_read(struct kd_rwsem *sem)
 {
 	might_sleep();
-	kd_rwsem_wait(sem->phase_wait, kd_down_read_trylock(sem));
+	if (kd_down_read_trylock(sem) || kd_rwsem_spin_read(sem))
+		return;
+	wait_event(sem->phase_wait, kd_down_read_trylock(sem));
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
@@ -264,6 +295,7 @@ bool kd_rwsem_is_idle(struct kd_rwsem *sem)
 	return !atomic_long_read(&sem->admission) &&
 		!atomic_long_read(&sem->readers) &&
 		!waitqueue_active(&sem->phase_wait) &&
-		!waitqueue_active(&sem->reader_drain) && kd_mutex_is_idle(&sem->gate);
+		!waitqueue_active(&sem->reader_drain) &&
+		!atomic_read(&sem->reader_osq.tail) && kd_mutex_is_idle(&sem->gate);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_is_idle);

@@ -14,6 +14,9 @@ struct kd_rwsem {
 	atomic_long_t admission __aligned(64);
 	wait_queue_head_t phase_wait __aligned(64);
 	wait_queue_head_t reader_drain __aligned(64);
+	/* Serialize optimistic read admission, never the reader payload. Fits in
+	 * the final cacheline without moving the existing counters/waitqueues. */
+	struct optimistic_spin_queue reader_osq;
 };
 
 #define KD_RWSEM_INITIALIZER(name) { \
@@ -22,6 +25,7 @@ struct kd_rwsem {
 	.admission = ATOMIC_LONG_INIT(0), \
 	.phase_wait = __WAIT_QUEUE_HEAD_INITIALIZER(name.phase_wait), \
 	.reader_drain = __WAIT_QUEUE_HEAD_INITIALIZER(name.reader_drain), \
+	.reader_osq = OSQ_LOCK_UNLOCKED, \
 }
 #define DEFINE_KD_RWSEM(name) \
 	struct kd_rwsem name = KD_RWSEM_INITIALIZER(name)
