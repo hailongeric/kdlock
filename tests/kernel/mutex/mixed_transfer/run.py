@@ -24,16 +24,19 @@ from mutex_api_audit import audit_public_entries
 
 DEVICE = "/dev/kd_mutex_mixed_transfer"
 MODULE = "kd_mutex_mixed_transfer"
-COMM = ("kmx_gate", "kmx_spin", "kmx_worker", "kmx_worker", "kmx_thief")
+COMM = ("kmx_worker", "kmx_spin", "kmx_worker", "kmx_worker", "kmx_thief")
 GATE, SPIN, COMBINER, WAITER, THIEF = range(5)
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
-RUN, SNAPSHOT = 0xC0184D01, 0x80F04D02
+RUN, SNAPSHOT = 0xC0184D01, 0x81284D02
 PREPARE, RELEASE, DRAIN, WARMUP, ARM = 0x4D03, 0x4D04, 0x4D05, 0xC0184D06, 0x4D07
+PREHOLDER_RELEASE = 0x4D08
+REQUIRED_ELIGIBILITY = (1 << GATE) | (1 << COMBINER) | (1 << WAITER)
 FIELDS = ("a", "b", "entry", "spin_call", "active", "failures", "started", "ready",
           "done", "release_gate", "owner", "gate", "tail", "b_word", "prefix", "suffix",
           "combiner_bodies", "owner_before", "owner_after", "combiner_owner", "samples",
           "steal_attempts", "steals", "prefix_observed", "thief_done", "c_task", "w_task",
-          "warm_ops", "armed", "waiters")
+          "warm_ops", "armed", "warm_eligible", "entry_checked", "entry_eligible",
+          "preholder_release", "preholder_done", "g_task", "t_task", "waiters")
 
 
 def control(command):
@@ -42,16 +45,28 @@ def control(command):
 
 
 def snapshot():
-    buffer = bytearray(240)
+    buffer = bytearray(296)
     with open(DEVICE, "rb", buffering=0) as device:
         fcntl.ioctl(device, SNAPSHOT, buffer, True)
-    return dict(zip(FIELDS, struct.unpack("=29Qq", buffer)))
+    return dict(zip(FIELDS, struct.unpack("=36Qq", buffer)))
 
 
 def publish(path, value):
     temporary = path.with_suffix(".tmp")
     rt.write_json(temporary, value)
     temporary.replace(path)
+
+
+def wait_worker_start(go):
+    # Pending userspace workers may leave a failed setup; this never interrupts
+    # an ioctl already executing in the kernel or supplies evidence of drain.
+    abort = go.parent / "abort-starts.json"
+    deadline = time.monotonic() + 360
+    while not go.exists():
+        rt.require(not abort.exists(), "setup aborted before ioctl", "SETUP_ABORTED")
+        rt.require(time.monotonic() < deadline, "worker start barrier expired", "TIMEOUT")
+        time.sleep(.001)
+    rt.require(not abort.exists(), "setup aborted before ioctl", "SETUP_ABORTED")
 
 
 def worker(arguments):
@@ -69,10 +84,8 @@ def worker(arguments):
     buffer = bytearray(struct.pack("=2I2Q", role, iterations, 0, 0))
     with open(DEVICE, "rb", buffering=0) as device:
         publish(receipt, dict(pid=os.getpid(), role=role, cpu=cpu, comm=comm))
-        deadline = time.monotonic() + 15
-        while not go.exists():
-            rt.require(time.monotonic() < deadline, "worker start barrier expired", "TIMEOUT")
-            time.sleep(.001)
+        # Test workers import and bind before up to four bounded warm rounds.
+        wait_worker_start(go)
         fcntl.ioctl(device, WARMUP if warm else RUN, buffer, True)
     returned_role, requested, returned, errors = struct.unpack("=2I2Q", buffer)
     print(json.dumps(dict(pid=os.getpid(), role=returned_role, cpu=cpu, comm=comm,
@@ -122,6 +135,22 @@ def trace_records(messages, prefix):
             rt.require(len(row) == len(fields), "duplicate trace field: " + line, "DATA_ERROR")
             result.append(row)
     return result
+
+
+def observe_hotlock(provider_root):
+    """Expose the existing cached query only in this frozen diagnostic build."""
+    path = provider_root / "kernel_module/kd_hotlock.c"
+    text = path.read_text()
+    anchor = ("bool kd_hotlock_query_mutex(unsigned long address) { "
+              "return kd_hotlock_access(address, 1, false, false); }")
+    export = "EXPORT_SYMBOL_GPL(kd_hotlock_query_mutex);"
+    rt.require(text.count(anchor) == 1 and export not in text,
+               "hotlock query observation overlay anchor differs")
+    record = dict(path="kernel_module/kd_hotlock.c", before=rt.digest(path),
+                  change=export, semantics="existing cached query; no heat/count/clock update")
+    path.write_text(text.replace(anchor, anchor + "\n" + export))
+    record["after"] = rt.digest(path)
+    return record
 
 
 class MixedSession(Session):
@@ -179,10 +208,11 @@ class MixedSession(Session):
             time.sleep(.1)
         raise rt.Failure("TIMEOUT", "prepared mutex image did not publish", unsafe=True)
 
-    def launch(self, role, warm=False):
-        name = ("warm" if warm else "test") + "-" + str(role)
+    def launch(self, role, warm=False, round_number=0):
+        prefix = f"warm-{round_number}" if warm else "test"
+        name = prefix + "-" + str(role)
         receipt = self.path / (name + "-ready.json")
-        go = self.path / ("warm-go.json" if warm else name + "-go.json")
+        go = self.path / (prefix + "-go.json" if warm else name + "-go.json")
         log = (self.path / (name + ".json")).open("w")
         self.logs.append(log)
         argv = [sys.executable, self.translation_source / "tests/kernel/mutex/mixed_transfer/run.py",
@@ -192,6 +222,7 @@ class MixedSession(Session):
         process = subprocess.Popen(list(map(str, argv)), stdout=log, stderr=subprocess.STDOUT,
                                    start_new_session=True)
         row = dict(pid=process.pid, role=role, cpu=self.record["cpus"][role], warm=warm,
+                   warm_round=round_number if warm else None,
                    argv=list(map(str, argv)), receipt=str(receipt), output=name + ".json")
         self.callers.append((process, row))
         self.record["callers"] = [row for _, row in self.callers]
@@ -200,17 +231,31 @@ class MixedSession(Session):
 
     def wait_state(self, label, predicate, processes, timeout=3):
         deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            self.faults()
-            row = snapshot()
-            rt.require(not row["failures"], "payload failed during " + label, "DATA_ERROR")
-            if predicate(row):
-                rt.write_json(self.path / (label + ".counts.json"), row)
-                return row
-            rt.require(all(process.poll() is None for process, _ in processes),
-                       "worker exited before " + label, "DATA_ERROR")
-            time.sleep(.002)
-        raise rt.Failure("TIMEOUT", "retain workers: " + label, unsafe=True)
+        row, observed_ns = None, None
+        try:
+            while time.monotonic() < deadline:
+                self.faults()
+                row = snapshot()
+                observed_ns = time.monotonic_ns()
+                rt.require(not row["failures"], "payload failed during " + label, "DATA_ERROR")
+                if predicate(row):
+                    rt.write_json(self.path / (label + ".counts.json"), row)
+                    return row
+                rt.require(all(process.poll() is None for process, _ in processes),
+                           "worker exited before " + label, "DATA_ERROR")
+                time.sleep(.002)
+            raise rt.Failure("TIMEOUT", "retain workers: " + label, unsafe=True)
+        except Exception as error:
+            # Preserve the exact last observation, even on payload failure or
+            # caller exit. A timeout snapshot is evidence, never a drain proof.
+            failure = dict(label=label, error=str(error), last_snapshot=row,
+                           observed_ns=observed_ns,
+                           callers=[dict(metadata, returncode=process.poll())
+                                    for process, metadata in processes])
+            rt.write_json(self.path / (label + ".failed.json"), failure)
+            self.record["failed_wait"] = failure
+            self.save()
+            raise
 
     def join(self, processes, timeout):
         deadline = time.monotonic() + timeout
@@ -228,44 +273,64 @@ class MixedSession(Session):
             rows.append(row)
         return rows
 
+    def wait_receipts(self, processes, label):
+        deadline = time.monotonic() + 10
+        while not all(Path(row["receipt"]).exists() for _, row in processes):
+            rt.require(time.monotonic() < deadline and all(p.poll() is None for p, _ in processes),
+                       label + " readiness failed", "TIMEOUT")
+            time.sleep(.005)
+
+    def warm(self):
+        self.record["warm_rounds"] = []
+        for round_number in range(1, self.record["warmup_rounds"] + 1):
+            warm = [self.launch(role, True, round_number) for role in range(5)]
+            self.wait_receipts(warm, "warmup")
+            publish(self.path / f"warm-{round_number}-go.json", dict(start=True))
+            workers = self.join(warm, 60)
+            before = self.counts(f"warm-{round_number}-drain")
+            rt.require(before["warm_ops"] == round_number * 5 * self.record["warmup_iterations"] and
+                       not before["prefix"] and not before["suffix"] and not before["started"],
+                       "warmup count/probe isolation differs", "DATA_ERROR")
+            self.record["warm_rounds"].append(dict(workers=workers, after=before))
+            self.save()
+            # A global JIT witness cannot establish CPU-local admission for G,
+            # C or W. These cached queries ran at each affine worker's return.
+            if before["warm_eligible"] & REQUIRED_ELIGIBILITY == REQUIRED_ELIGIBILITY:
+                return before
+        raise rt.Failure("DATA_ERROR", "real warmup did not make G/C/W eligible: " + str(before))
+
     def measure(self):
         self.verify()
-        warm = [self.launch(role, True) for role in range(5)]
-        deadline = time.monotonic() + 10
-        while not all(Path(row["receipt"]).exists() for _, row in warm):
-            rt.require(time.monotonic() < deadline and all(p.poll() is None for p, _ in warm),
-                       "warmup readiness failed", "TIMEOUT")
-            time.sleep(.005)
-        publish(self.path / "warm-go.json", dict(start=True))
-        self.record["warm_workers"] = self.join(warm, 60)
-        before = self.counts("warm-drain")
-        rt.require(before["warm_ops"] == 5 * self.record["warmup_iterations"] and
-                   not before["prefix"] and not before["suffix"] and not before["started"],
-                   "warmup count/probe isolation differs", "DATA_ERROR")
+        # Complete imports and affinity binding before the real warmup. No
+        # holder is started until all required CPU-local queries report hot.
+        probe = [self.launch(role) for role in (GATE, SPIN, THIEF, COMBINER, WAITER)]
+        self.wait_receipts(probe, "test")
+        self.warm()
         counters_before = self.counters()
         rt.require(counters_before["bench_jit_bodies"] > 0,
                    "real warmup did not demonstrate delegation; no forced heat fallback", "DATA_ERROR")
-        # Start Python/imports before releasing any holder. Separate external
-        # barriers make queue order deterministic without using sleeping work
-        # inside B's spin critical section or forcing admission state.
-        probe = [self.launch(role) for role in (GATE, SPIN, THIEF, COMBINER, WAITER)]
-        deadline = time.monotonic() + 10
-        while not all(Path(row["receipt"]).exists() for _, row in probe):
-            rt.require(time.monotonic() < deadline and all(p.poll() is None for p, _ in probe),
-                       "test readiness failed", "TIMEOUT")
-            time.sleep(.005)
         control(ARM)
+        # T holds A locally; G claims ACQUIRING without publishing a node. Once
+        # T releases, G owns HELD. Only then can C and W publish queue nodes.
+        publish(self.path / f"test-{THIEF}-go.json", dict(start=True))
+        self.wait_state("preholder-held", lambda row: row["ready"] & (1 << THIEF) and
+                        row["owner"] == row["t_task"] != 0 and row["gate"] == 0, probe)
         publish(self.path / f"test-{GATE}-go.json", dict(start=True))
-        self.wait_state("gate-held", lambda row: row["ready"] & (1 << GATE) and row["owner"], probe)
+        self.wait_state("gate-acquiring", lambda row: row["ready"] & (1 << GATE) and
+                        row["owner"] == row["t_task"] != 0 and row["gate"] == 2 and
+                        row["entry_eligible"] & (1 << GATE), probe)
+        control(PREHOLDER_RELEASE)
+        self.wait_state("gate-held", lambda row: row["owner"] == row["g_task"] != 0 and
+                        row["gate"] == 1 and row["preholder_done"], probe)
         publish(self.path / f"test-{SPIN}-go.json", dict(start=True))
         self.wait_state("spin-held", lambda row: row["ready"] & (1 << SPIN) and row["b_word"], probe)
-        publish(self.path / f"test-{THIEF}-go.json", dict(start=True))
-        self.wait_state("thief-ready", lambda row: row["ready"] & (1 << THIEF), probe)
         publish(self.path / f"test-{COMBINER}-go.json", dict(start=True))
-        first = self.wait_state("combiner-queued", lambda row: row["waiters"] == 1 and row["tail"], probe)
+        first = self.wait_state("combiner-queued", lambda row: row["waiters"] == 1 and row["tail"] and
+                                row["entry_eligible"] & (1 << COMBINER), probe)
         publish(self.path / f"test-{WAITER}-go.json", dict(start=True))
         self.wait_state("waiter-queued", lambda row: row["waiters"] == 2 and
-                        row["tail"] != first["tail"] and row["ready"] == 31, probe)
+                        row["tail"] != first["tail"] and row["ready"] == 31 and
+                        row["entry_checked"] == row["entry_eligible"] == REQUIRED_ELIGIBILITY, probe)
         control(RELEASE)
         self.record["workers"] = self.join(probe, 15)
         self.record["callers_joined"] = True
@@ -320,6 +385,8 @@ class MixedSession(Session):
                        "final exact native counters differ: " + str(stats), "DATA_ERROR")
             self.record.update(execution_status="OK", native_stats=stats)
         except Exception as error:
+            publish(self.path / "abort-starts.json", dict(error=str(error),
+                    meaning="unstarted userspace barriers only; active ioctls untouched"))
             self.record.update(execution_status=getattr(error, "status", "RUN_FAILED"), error=str(error),
                                unsafe=True, retained_modules=[name for name in (MODULE, "kdlock_km")
                                                              if Path("/sys/module", name).exists()])
@@ -339,8 +406,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--cpus", type=rt.cpu_list, default=rt.cpu_list("0-4"),
-                        help="five distinct CPUs: initial A holder, B holder, C, W, thief")
+                        help="five distinct CPUs: delegation holder G, B holder, C, W, predecessor/thief T")
     parser.add_argument("--warmup-iterations", type=int, default=50000)
+    parser.add_argument("--warmup-rounds", type=int, default=4,
+                        help="maximum real warmup rounds before refusing cold G/C/W CPUs (1..4)")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith("/root/") and
@@ -349,6 +418,7 @@ def main():
     rt.require(len(args.cpus) == len(set(args.cpus)) == 5 and set(args.cpus) <= os.sched_getaffinity(0),
                "select five distinct available CPUs")
     rt.require(5000 <= args.warmup_iterations <= 200000, "warmup iterations out of range")
+    rt.require(1 <= args.warmup_rounds <= 4, "warmup rounds out of range")
     out = args.output.resolve()
     rt.require(not out.exists() and not out.is_relative_to(ROOT), "new output outside source required")
     idle()
@@ -384,6 +454,7 @@ def main():
         native.write_text(text)
         trace_overlay["after"] = rt.digest(native)
         rt.write_json(out / "native-trace-overlay.json", trace_overlay)
+        rt.write_json(out / "hotlock-query-overlay.json", observe_hotlock(build / "provider"))
         provider = build / "provider/kernel_module/kdlock_km.ko"
         rt.command(["make", "-C", provider.parent, f"KDIR={args.kernel_source}", "W=1",
                     "KDLOCK_SELFTEST=0", "KDLOCK_NUMA=1", "UBSAN_SANITIZE=n"],
@@ -397,7 +468,8 @@ def main():
                    out / "build-payload.log", timeout=180)
         imports = set(rt.command(["nm", "-u", payload], out / "payload-imports.txt").split())
         rt.require({"kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_unlock_clobber_v1",
-                    "kd_spin_lock_clobber_v1", "kd_spin_unlock_clobber_v1"} <= imports and
+                    "kd_spin_lock_clobber_v1", "kd_spin_unlock_clobber_v1",
+                    "kd_hotlock_query_mutex"} <= imports and
                    "kd_spin_lock_pinned_clobber_v1" not in imports,
                    "public control shells differ")
         rt.write_json(out / "public-entry-audit.json",
@@ -425,6 +497,7 @@ def main():
         idle()
         session = MixedSession(out, dict(name="session", arm="kdlock", lock_kind="mutex", entry_abi=2,
             delegate=True, cpus=args.cpus, warmup_iterations=args.warmup_iterations,
+            warmup_rounds=args.warmup_rounds,
             kernel_identity=identity, snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]), binaries, verify)
         session.execute()
         verify()
