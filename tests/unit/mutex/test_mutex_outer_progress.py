@@ -28,7 +28,9 @@ def main():
                  "include/kd_mutex_types.h", "include/kd_mutex.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h")) + "\n"
-    kernel = Path(f"/lib/modules/{os.uname().release}/build")
+    # This is a source header, not a generated output. The maintained Linux 7
+    # build deliberately separates source from its Kbuild output directory.
+    kernel = Path(f"/lib/modules/{os.uname().release}/source")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
     types += "\n".join(
         line

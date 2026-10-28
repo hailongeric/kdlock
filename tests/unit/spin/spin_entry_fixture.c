@@ -4,6 +4,8 @@
 #include "spin_single_mock.h"
 #define smp_store_release(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
 #define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
+#define atomic_cmpxchg_acquire(p, old, v) cmpxchg(&(p)->counter, old, v)
+#define BUG_ON(condition) CHECK(!(condition))
 
 static bool mock_alloc_fail;
 #define alloc_percpu(type) (mock_alloc_fail ? NULL : calloc(2, sizeof(type)))
@@ -53,6 +55,25 @@ _Static_assert((KD_ENTRY_REF_MASK & (KD_ENTRY_STATE_MASK | KD_ENTRY_VIRTUAL_BIT)
 	       "ticket borrows must not overlap phase or kind");
 
 static raw_spinlock_t locks[KD_SPIN_ENTRY_SLOTS + 1];
+
+/* Exercise the mixed helper with the real ticket allocator/claim/retirement,
+ * including a contended word and a peer's pending/tail bits at release. */
+static void mixed_ticket(void)
+{
+	struct kd_spin_ref ref = { 0 }, stale;
+
+	CHECK(!kd_spin_nested_try_once(&locks[0], &ref));
+	CHECK(mock_preempt == 1 && locks[0].val.counter == 1);
+	stale = ref;
+	locks[0].val.counter = 0x12340101;
+	CHECK(!kd_spin_nested_release_exact(&locks[0], &ref));
+	CHECK(!mock_preempt && locks[0].val.counter == 0x12340100);
+	CHECK(kd_spin_nested_release_exact(&locks[0], &stale) == -EINVAL);
+	CHECK(kd_spin_nested_try_once(&locks[0], &ref) == -EAGAIN);
+	CHECK(!mock_preempt && !ref.entry && locks[0].val.counter == 0x12340100);
+	locks[0].val.counter = 0;
+	CHECK(!kd_spin_entries_check_idle());
+}
 
 static void select_cpu(unsigned int cpu)
 {
@@ -471,6 +492,7 @@ int main(void)
 	mock_alloc_fail = false;
 	CHECK(kd_spin_entries_init() == 0);
 	CHECK(kd_spin_entries_init() == -EBUSY);
+	mixed_ticket();
 	retirement_barrier();
 	pinned_admission();
 	lifecycle();
