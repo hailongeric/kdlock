@@ -114,15 +114,19 @@ headers inherited by rwlock/rwsem and through provider initialization source.
 The Linux 7 identity verifier independently requires these options to be off.
 Whole-kernel replacement and `ww_mutex` remain unvalidated.
 
-Same-backend nested mutex/spin mechanisms do not establish mixed-family support.
-The current known-control handler refuses delegated mutex-to-spin and
-spin-to-mutex calls. Production source trust skips the earlier mixed-kind
-analysis, so this refusal is not guaranteed to occur before execution; an
-already-progressed unsupported control can reach the backend fail-stop path.
-There is no general nested rwlock/rwsem mode ledger. The Linux 7 basic tests cover
-the four families separately, and the instruction-exit probes exclude nested
-acquisition. See [ownership](design/locking.md) and the
-[requested implementation sequence](TODO.md#october-29-api-and-execution-work).
+At `ee7ace6684b5257ae08d82648e9e2dcb4ceb8986`, a recognized ordinary unpinned
+spin CALL inside a delegated ABI2 mutex body uses one CAS and an exact spin
+ticket. Success continues JIT with a ledger entry. A miss preserves the pending
+CALL; an eligible root holding only its outer mutex can transfer that physical
+owner directly to the original waiter. Other owner chains retain native borrowing.
+The former executor retains source/frame state through real unlock ACK and
+reacquires for its own request. This replaces the earlier blanket mixed-control
+`-EOPNOTSUPP`; it does not establish arbitrary mixed nesting or live transfer
+correctness. Pinned DIRECT controls and spin-to-mutex controls take pending native
+continuation; sleeping while a spinlock is held remains invalid. Translated
+rwlock/rwsem acquisition has no general mode ledger. See
+[ownership and limits](design/locking.md#53-nested-ab-and-native-continuation) and
+[implementation/check status](TODO.md#october-29-api-and-execution-work).
 
 All users of one object must use the same protocol. KD local and delegating
 interfaces can share their corresponding KD object with matching unlocks.
@@ -140,18 +144,18 @@ avoid blocking an interrupted reader; active writers still exclude them. Mutex
 operations and sleeping rwsem acquisitions require task context. KD rwsem read trylock and matching read
 unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
 observed through timed writer-drain rechecks. Source trust does not switch hardware task identity or make unsupported
-execution/backend protocols available. Rwsem outer writers cannot cancel after publication,
-downgrade, or appear as nested controls inside a translated body. Its ordinary
-writer API retains cancellation and downgrade.
+execution/backend protocols available. Explicitly prepared rwsem macro writers cannot cancel after publication,
+downgrade, or appear as nested controls inside a translated body. Default ordinary
+and callable/signal/try/cleanup writer acquisitions remain local with downgrade.
 
 | Current rwsem behavior | Evidence / limit |
 | --- | --- |
 | Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The [Linux 7 enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md) records fresh bounded API/lifetime and actual-MM prerequisites in both modes. These are not full Linux equivalence claims. |
 | Read trylock/rollback and matching release with IRQs/preemption disabled | Focused standalone and actual mmap checks; no synchronous wake from atomic final release. Writer drain rechecks after one jiffy. |
-| Explicit outer writers | Separate mutex delegation protocol; no cancellation or downgrade after publication. |
+| Prepared ordinary writers | Explicit quiescent preparation enables the mutex ABI2 protocol through the same public names; no downgrade or translated nesting. Fresh local/API and instruction-exit checks are indexed in the [October 29 checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md); the changed shell has no new timing result yet. |
 | Teardown | Callers must stop/join all users and retire published work. An idle predicate alone does not establish object lifetime. |
 | Fairness, starvation bounds, performance neutrality | Unestablished; completed shared-MM measurements remain exploratory and below Native. See [performance](PERFORMANCE.md). |
-| Whole-kernel, RT/ww_mutex, lockdep integration | Separately unvalidated; nested/non-owner compatibility wrappers are not full lockdep support. |
+| Whole-kernel and `ww_mutex` | Unvalidated. RT, debug-mutex/debug-lock-allocation and lockdep configurations are explicitly refused, not future acceptance milestones. |
 | TCLock rwsem | Restricted ordinary registered-worker pairs only; no equivalent cancellation, downgrade or actual mmap arm. |
 
 The atomic reader-release correction retains fully ordered count updates and
@@ -174,9 +178,9 @@ routes are compatibility/regression features, not current production emission.
 See [translation policy](design/admission.md) and [register ABI](JIT_REGISTER_ABI.md).
 Sharing an engine does not expand an entry ABI or switch executor task/GS/IRQ state.
 
-The accepted scope does not establish whole-kernel replacement, real-time (RT),
-lock dependency checking (lockdep), wound/wait mutexes or arbitrary
-oversubscription. The separate [Linux 7 mmap-lock adapter](../kernel_integration/linux70/MMAP.md)
+Whole-kernel replacement, wound/wait mutexes and arbitrary oversubscription
+remain unvalidated. RT, debug mutexes and lockdep configurations are excluded by
+the shared build contract. The separate [Linux 7 mmap-lock adapter](../kernel_integration/linux70/MMAP.md)
 replaces the guest's `mm_struct::mmap_lock` API in its tested configuration,
 using local concurrent readers and original-task writers. Arbitrary MM-body
 delegation remains unsupported. Oversubscription

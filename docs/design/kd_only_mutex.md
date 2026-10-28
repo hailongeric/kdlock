@@ -197,8 +197,9 @@ and every caller. Matching native size and alignment preserves the corresponding
 embedding geometry, but does not permit casting an existing Linux object,
 mixing old and new callers, or changing only a function pointer. The supported
 build is the captured x86-64,
-non-RT, non-debug-mutex, non-lockdep configuration. RT mutexes and wound/wait mutexes
-are separate integration work. No kernel image is rebuilt or installed in this
+non-RT, non-debug-mutex, non-lockdep configuration. The shared public-header
+contract refuses RT, debug mutexes, debug lock allocation and lockdep. Wound/wait
+mutexes remain separate unvalidated integration work. No kernel image is rebuilt or installed in this
 experiment.
 
 ## Semantic differences and replacement limits

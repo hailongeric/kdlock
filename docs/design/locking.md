@@ -190,8 +190,10 @@ is a queued/preemptible to selected/pinned handshake: publication alone must not
 disable preemption for the full wait. The executor must wait for the origin's
 pin acknowledgement before accessing origin CPU storage or executing its body,
 and must acknowledge retirement before the origin unpins. Migration stability,
-slot ownership and frame exclusion remain independent obligations. This change
-does not redesign oversubscription and is tracked in [open work](../TODO.md#october-29-api-and-execution-work).
+slot ownership and frame exclusion remain independent obligations. The strict one-request handshake candidate was archived after a measured
+42–54% contended nano regression; it is not the maintained implementation.
+Bounded-selection policy remains pending. This work does not redesign
+oversubscription and is tracked in [open work](../TODO.md#october-29-api-and-execution-work).
 
 After publishing a request, a KD waiter stays preemption-disabled and polls with
 PAUSE on a reserved stack. The physical mutex owner or a service path may sleep,
@@ -207,35 +209,71 @@ on from running. The reproduced mode-4 failure remains in
 
 ### Nested A/B and native continuation
 
-These mechanisms are backend-specific. Nested mutex B is physically acquired by
-the current executor; nested spin B may instead use a virtual queued child.
-`handle_known_call` currently returns `-EOPNOTSUPP` for mixed mutex/spin controls.
-Trusted translation skips the checked policy that detects mixed kinds, and the
-ordinary dispatcher converts a reached unsupported control into an execution
-error. After progress, the backend fails stop instead of replaying the body.
-Do not describe this as universal safe native fallback.
+The integrated `ee7ace6684b5257ae08d82648e9e2dcb4ceb8986` candidate recognizes
+ordinary unpinned spin controls inside an ABI2 mutex image. In
+[`mixed_calls.inc`](../../kernel_module/lock/mixed_calls.inc), the runtime saves
+B's actual CALL/return token, reserves an exact virtual spin ticket and attempts
+one zero-to-owned CAS. Success records that ticket and its generation in the
+mutex frame, advances the CALL once and continues JIT. Failure retires the
+unacquired ticket and preserves the CALL for original-task native continuation;
+the proxy never waits for B. Repeated identities, ledger capacity and unsupported
+entry ABI also retain a pending native boundary rather than acquiring again.
+Native recursion or source misuse can still deadlock; this is not a repair for
+invalid lock ordering.
 
-Local B acquisition uses the KD physical primitive and records the combiner as physical
-owner. A validated PENDING capacity/control boundary resumes the original CALL;
-a checked STACK_CHANGED boundary resumes after the already-completed CALL.
-Previously acquired A/B remain on their real owners, serviced through native
-unlock notifications and exact ACKs. Never roll back memory or replay acquisition.
+For a failed CAS, [`kd_exec_mutex_transfer_allowed`](../../kernel_module/execution/native.inc)
+allows a real owner transfer only for an ABI2 root with no parent or remote/native
+request, one unreleased outer mutex ledger entry and its live release hook.
+There must be no retained inner lock. The combiner retires the current
+queue node's predecessor obligations and rejoins any deferred successors before
+[`kd_mutex_transfer_owner`](../../kernel_module/kd_mutex_local.c) exchanges A's
+owner pointer under its wait lock. The owner word stays nonzero and preserves
+waiter/handoff flags; PICKUP lets the new owner consume the transfer with acquire
+ordering. This is uninterrupted exclusion, not unlock followed by relock.
 
-An ordinary untranslated interruptible/killable CALL runs on the original waiter
-with its source return token. The native callee supplies its real result; `-EINTR`
-creates no B ownership. Uninterruptible `mutex_lock` completes its suffix and ACKs
-before userspace signal/exit handling. Generic post-progress faults remain fail-stop.
+The original waiter resumes the pending spin CALL after pickup. The old executor
+retains the source lease, route and frame until that task physically releases A
+and the release ACK completes. Only then may the old executor retire its frame
+and reacquire A for its own original body. A transferred owner is not a completed
+unlock, so the outer release hook is marked only after the real release. The
+source and passing deterministic fixtures cover these intended transitions;
+a live failed-CAS transfer probe and matched performance qualification remain
+separate gates. See the [current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
 
-Borrowing deliberately leaves physical acquisition records with their current
-owners: the origin runs the native suffix while owners service exact unlock
-requests. It avoids an exclusion gap and does not make the combiner a new lock
-waiter. A genuine swap instead needs an atomic physical-owner transfer, origin
-pickup, transfer of gate/source/frame obligations and a new acquisition for the
-former owner. Unlock followed by relock is insufficient after body progress.
-Long borrowed chains retain executor frames and ACK dependencies; current frame
-and lock-depth limits are both eight. This bounds storage, not completion latency
-or deadlock freedom. The requested mixed mutex-to-spin swap is new work, not an
-existing TCLock-compatible contract or a validated replacement for all borrowing.
+A successful mixed spin acquisition may later encounter an instruction exit.
+The executor retains the physical spin ticket; the original task receives one
+logical preemption pin per retained spin acquisition before its mutex waiter pin
+is dropped. Native unlock dispatch uses each ledger entry's actual family.
+The executor releases B and its physical ticket before ACK; the original task
+then drops the matching logical pin. The mutex executor must not schedule while
+any such spin ticket remains. Pinned DIRECT spin controls preserve a pending
+native CALL instead of taking the one-CAS path; that distinct inline-prefix
+shell is outside the mixed public-pair probe. Spin-to-mutex controls likewise
+return to the pending native CALL, which does not make sleeping under a held
+spinlock legal. No general translated rwlock/rwsem mode ledger is provided.
+
+Other cases retain **borrowing**: original-task native code executes the current
+suffix while the already-recorded owners service exact unlock requests. A nested
+mutex B can belong to the current executor, while a queued spin child can belong
+to another executor. Moving one owner pointer would not transfer the other
+owners, child continuations, tickets or ACK dependencies. Keeping each real owner
+and its lifetime record avoids an exclusion gap without replaying the executed
+prefix. A valid PENDING boundary resumes the original CALL; a checked
+STACK_CHANGED boundary resumes after a completed CALL. No acquired B or consumed
+return token is retried.
+
+An untranslated interruptible/killable mutex CALL runs on the original waiter and
+returns its actual result. `-EINTR` creates no B ownership. Generic post-progress
+faults still fail stop when no valid continuation exists; trusted translation is
+not a universal native fallback guarantee.
+
+Borrowing retains executor frames, task/source references and ACK dependencies
+through the whole owner chain. `KD_EXEC_MAX_NESTING` and `KD_EXEC_MAX_LOCK_DEPTH`
+are both eight; the spin ticket pool has 32 slots per CPU. These are finite storage
+bounds, not a maximum scheduling delay, starvation bound or deadlock proof.
+Capacity refusal must preserve the exact pending CALL and prior owners; it cannot
+relabel progressed work as an unstarted request. Longer or multi-owner transfers
+are not implemented, and the root-only transfer does not replace all borrowing.
 
 Each acquisition holds its task-record reference through final owner ACK. Zero-ref
 records immediately stop routing and may remain in the bounded inactive cache.

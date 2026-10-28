@@ -86,7 +86,12 @@ Suppose a body holds lock A and then acquires lock B:
    held. If the protocol later requires reacquiring A, use A's original identity.
 
 Lock depth is bounded at eight. Scope/ledger checks reject repeat identities,
-backend mismatches and invalid outer membership before treating a request as simple.
+unsupported family combinations and invalid outer membership before treating a
+request as simple. The mixed mutex-to-spin candidate records a successful
+single-CAS spin acquisition with its exact ticket and generation in the mutex
+ledger. On a root-only miss it may transfer the sole outer mutex owner; other
+chains retain borrowing. Its source/frame lifetime continues through physical
+unlock ACK. See [mixed ownership and limits](locking.md#53-nested-ab-and-native-continuation).
 Minimal mutex roots defer cold routing fields; generic recovery materializes them
 before any handler reads them.
 

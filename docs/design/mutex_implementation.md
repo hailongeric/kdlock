@@ -612,6 +612,19 @@ Refusal and ordinary completion publish that value before waking a successor;
 early outer release reacquires it before returning. Terminal and outer-progress
 fixtures check this contract independently of the caller's repeated restoration.
 
+## Mixed ordinary spin acquisition
+
+The `ee7ace66` candidate services recognized unpinned spin CALLs inside ABI2 mutex
+images with one CAS and a generation-checked ticket. A successful acquisition
+continues JIT; a miss preserves the pending CALL. Only a root with its sole outer
+mutex can transfer physical ownership to the original waiter. The owner word
+never opens during transfer, and the old executor retains source/frame state
+through actual unlock ACK before reacquiring for its own body. Multi-owner chains
+continue borrowing. This restricted implementation has separate unit, live
+failed-CAS and timing gates; it is not arbitrary mixed-family support. The
+[ownership guide](locking.md#53-nested-ab-and-native-continuation) owns the detailed
+transfer conditions, logical spin pins, ACK routing and bounded-chain limits.
+
 ## Linux Native implementation
 
 `struct mutex` contains `owner`, `wait_lock`, an optimistic spin queue when

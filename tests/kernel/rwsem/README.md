@@ -124,4 +124,5 @@ local/prepared routing, preparation failures, exact unlock-before-phase order,
 downgrade and the emitted ABI2 terminal boundary. Deterministic mutex/ACK stubs
 do not establish live scheduling or delegation. The Native header identity in
 [native-source.json](native-source.json) records the source used to compare API
-coverage; lockdep/RT/fairness and arbitrary kernel replacement remain unvalidated.
+coverage. RT/debug/lockdep configurations are explicitly refused; fairness and
+arbitrary kernel replacement remain unvalidated.

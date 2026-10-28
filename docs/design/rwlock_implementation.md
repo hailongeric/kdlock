@@ -233,8 +233,10 @@ native execution, publication and returned JIT bodies separately. The focused
 reader ordering, local state restoration and trylocks; it records `JIT=0`.
 The [native source manifest](../../tests/kernel/rwlock/irq_api/native-source.json)
 binds the IRQ/try and interrupt-reader comparisons to the authenticated
-`linux=7.0.0-38.38` source. These additions require their own guest validation;
-older ordinary rwlock results do not validate the new APIs.
+`linux=7.0.0-38.38` source. The focused units and live IPI probe passed at
+`428e068a`, as recorded in the [October 29 checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
+Older ordinary rwlock results do not validate the new APIs or establish their
+performance.
 
 The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
 Native and TCLock using matched cacheline and hash workloads. The

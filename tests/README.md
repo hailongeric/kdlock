@@ -47,9 +47,10 @@ checks publication after runtime initialization, failed-start cleanup, and devic
 removal before teardown in ordinary and SELFTEST control flow.
 The [rwsem admission probe](kernel/rwsem/README.md) checks sleeping reader/writer
 semantics, cancellation, trylocks and ordinary downgrade on the selected KD
-mutex. It also checks that outer writers stay unpublished until sleeping or
-downgraded readers release, including same-CPU progress. These checks use local
-outer returns; they do not claim JIT execution. Proc snapshot and rwsem runner
+mutex. It also checks that prepared ordinary writers stay unpublished until
+sleeping or downgraded readers release, including same-CPU progress, Native
+aliases/guards, coordinated non-owner read release and preparation eligibility.
+These checks use local prepared returns; they do not claim JIT execution. Proc snapshot and rwsem runner
 checks are in `bench/rwlock_compare/test_bench.py`;
 full procfs/mmap integration is outside these checks.
 
@@ -110,8 +111,9 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Optional checked analysis (`trusted_source=False`) |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
-| IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
-| Ordinary spin source API | `spin/test_spin_api.py`: production facade with destructive clobber callees, single evaluation, type checking, nested/early release and instruction/relocation equality with DIRECT. Queue concurrency and returned kernel bodies remain live checks. |
+| IRQ/BH variants | `spin/test_spin_irq.py`, `test_spin_cold.py`; [spin consumer](kernel/spin/irq_api/README.md). `rwlock/test_rwlock.py` and the [live rwlock IPI reader probe](kernel/rwlock/irq_api/README.md) cover local rwlock context ordering and waiting-writer bypass. |
+| Unified rwsem public API | `mutex/test_rwsem_api.py`, `test_rwsem_read_admission.py`, `infrastructure/test_mmap_rwsem_generation.py`; [live API/scheduling probe](kernel/rwsem/README.md) and separate [prepared JIT escape](kernel/jit_escape/README.md). The generator fixture checks local MM dependencies without building or executing a kernel. |
+| Ordinary spin source API | `spin/test_spin_api.py`: production facade with destructive clobber callees, single evaluation, type checking, root and mutex-nested calls, single pin/unpin and the raw unpinned clobber capture/relocations. It does not assert equality with the named DIRECT shell, whose inline pin/heat prefix differs. Queue concurrency and returned kernel bodies remain live checks. |
 | Original TCLock four-family port | [Pinned-source checks and serial live probes](kernel/tclock_original/README.md); ordinary rwsem API and IRQ-enabled rwlock caller scope |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
 | Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
@@ -208,7 +210,7 @@ reader overlap, writer exclusion, updates and exact count/gate drain. The
 1%/20% RCUHT mixes. Its `--require-jit` checks returned writer bodies; performance
 parity is a separate `--require-parity` result. Readers do not count as JIT bodies.
 The same runner's `--lock-kind rwsem` mode compares Linux Native, original
-TCLock rwsem and KD outer ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
+TCLock rwsem and explicitly prepared ordinary KD ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
 reader consistency while entry and matching-unlock completion counters record
 actual delegated execution. Whole-kernel mmap replacement is outside this scope.
 

@@ -76,9 +76,10 @@ ordinary public pair now always makes the unpinned clobber CALL; it therefore
 has a different cold path from DIRECT. `spin/test_spin_api.py` checks generated
 root and mutex-nested calls against that raw clobber shell, executes destructive
 provider substitutes and checks exact metadata, spills and pin balance. It does
-not establish returned JIT execution or native provider behavior. Record focused
-VM checks and public-pair measurements separately before claiming validated
-execution or a performance result.
+not establish returned JIT execution or native provider behavior. Ten selected
+VM checks passed at `893c16b5`; the [October 29 checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)
+separates those results from later mixed-lock JIT execution and pending
+public-pair measurements.
 
 ## Following one request in source
 
