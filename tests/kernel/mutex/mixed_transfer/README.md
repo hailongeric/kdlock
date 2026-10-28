@@ -1,4 +1,4 @@
-# Public mutex to spin ownership-transfer check
+# Public mutex to spin owner-handoff and queued-role-swap checks
 
 Run only in the recovery guest under [VM operations](../../../../docs/operations/VM.md).
 This is a correctness mechanism test with a control ioctl, not a real-world API
@@ -11,6 +11,7 @@ After setting the verified snapshot variables and pinned Python environment:
 
 ```sh
 timeout 900s python3 tests/kernel/mutex/mixed_transfer/run.py \
+  --protocol owner-handoff --warmup-iterations 200000 \
   --cpus 0-4 \
   --output /root/kdlock-evidence/10.176.26.71/tests/mixed-transfer-NEW
 ```
@@ -30,6 +31,10 @@ before entering the lock. These are cached observations, so actual gate/queue
 publication remains the authority if the following acquisition resamples heat.
 The probe never forces heat, changes eligibility counters or treats image
 publication as execution. Every warm round has separate counts and receipts.
+The original default remains `owner-handoff`, `simple`, and 50,000 warmup
+iterations. The suggested commands use 200,000: a recorded live attempt exhausted
+all four 50,000 rounds with G still cold; the larger real warmup then succeeded.
+Neither setting guarantees eligibility, and failure retains its observations.
 
 The runner prepares the public mutex entry and audits its compiled capture/CALL
 bytes. C and W use literal `kd_mutex_lock/unlock`; the inner B acquisition uses
@@ -55,16 +60,64 @@ creating a second prepared image. G uses the same prepared public entry as C/W.
    at least 10,000 competing trylock attempts. W acquires B natively, checks
    that W really owns A, completes the suffix once, and stops/joins the trylock
    loop before its legitimate A unlock.
-4. W's A unlock must produce the retained executor's native ACK. C's own body
+4. In `--protocol owner-handoff`, W's A unlock must produce the retained executor's native ACK. C's own body
    must subsequently run exactly once with C again physically owning A. All
    five processes must return with balanced preemption/IRQ state. The runner
    requires one partial JIT body for the forced attempt, one matching transfer,
    one pending-B native continuation, one A ACK and one native completion.
 
-This tests direct physical owner handoff followed by C's later reacquisition.
+The default tests direct physical owner handoff followed by C's later reacquisition.
 C keeps servicing the retained frame until W's unlock ACK; C does not immediately
 publish a new request for W to execute as a combiner. The probe does not claim a
-full queued role swap.
+full queued role swap. The explicit mode below has different requirements; the
+runner never accepts the old handoff result as a successful role swap. These
+flags select probe expectations; they do not switch the provider's protocol.
+Use the corresponding frozen runtime source for each mode.
+
+## Queued role swap
+
+Integrate the reviewed runtime candidate before running `--protocol role-swap`.
+The runner refuses this mode if the runtime's role-exchange implementation is
+absent. That source check is a prerequisite, not evidence of live execution.
+Run each selected case in a new output directory after the previous run has
+joined and drained:
+
+```sh
+timeout 900s python3 tests/kernel/mutex/mixed_transfer/run.py \
+  --protocol role-swap --case simple --warmup-iterations 200000 \
+  --cpus 0-4 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/mixed-role-swap-simple-NEW
+```
+
+Select the other cases explicitly by changing `--case` and the output directory.
+Each invocation still runs one forced attempt after genuine warmup.
+
+| Case | Required C execution | JIT entries / returned completions | Native started / completed / unlocks |
+| --- | --- | --- | --- |
+| `simple` | W executes C's body while W physically owns A | 2 / 1 | 0 / 0 / 0 |
+| `c-native` | C starts under W, then RDTSC resumes original C; A remains owned by W until C's ACK | 2 / 0 | 1 / 1 / 1, for C |
+| `c-early-spin` | W executes C, which acquires B, releases A while B remains held, then releases B | 2 / 1 | 0 / 0 / 0 |
+| `w-early-spin` | Native W releases A while holding B; C runs locally and observes B still held | 1 / 0 | 0 / 0 / 0 |
+| `w-early-mutex` | Native W releases A while holding a separate KD mutex M; C runs locally and observes owner W on M | 1 / 0 | 0 / 0 / 0 |
+
+All cases require one `kd_mutex role exchange` offer, no old `kd_mutex transfer`
+record, exact once-only W prefix/suffix and C body effects, and zero successful
+thief acquisitions before W reaches its legitimate A unlock. The simple case
+additionally requires a returned C JIT completion and physical A owner W in C's
+body. The exchange offer alone cannot establish that custody was accepted or
+that C executed. The `c-native` case verifies the real C task after the safe
+RDTSC marker, arithmetic flag mask `0x95`, a single suffix visit and the native
+begin/ACK/completion on W's new executor frame. W's transferred prefix must not
+retain the old native relay. `c-early-spin` requires the existing outer-release
+trace naming logical C and physical W, followed by an unlocked A and still-held
+B observation; W must finish without reacquiring A for another body.
+
+The two `w-early-*` cases stop the thief before W releases A, then use a bounded
+source barrier to keep W's inner lock held until C independently observes it.
+They require C to execute locally after release, rather than under W's unrelated
+inner lock. These cases cover tracked KD mutexes and spin state. Native Linux
+sleeping locks, KD rwsem reads and locks already held before the root acquisition
+are outside the role-swap context contract; these tests do not validate them.
 
 The benchmark observation provider suppresses ordinary warmup logging. A
 separately recorded overlay preserves the existing native begin/complete/ACK
@@ -80,7 +133,9 @@ Success requires zero successful thief acquisitions, observed C/W owner tokens,
 exact prefix/suffix/C-body effects, unchanged prepared image, empty A owner,
 gate, tail and waiter records, zero B word, explicit joined-object drain,
 source retirement with zero frames/writers/modules, and final native totals
-`started=1 completed=1 unlocks=1`. Sampling plus competing trylocks validates the
+matching the selected protocol/case. The separate M object must also be idle.
+The default owner-handoff totals remain `started=1 completed=1 unlocks=1`.
+Sampling plus competing trylocks validates the
 selected execution; it does not prove every memory-order interleaving. The
 production owner-word CAS and focused mutation fixtures provide separate code
 and deterministic protocol evidence.
@@ -100,5 +155,6 @@ oversubscription and arbitrary kernel replacement remain outside this probe.
 
 `tests/unit/infrastructure/test_mixed_transfer_runner.py` checks the real runner's
 warm eligibility decisions, gate-before-queue staging, snapshot wire format,
-export-only overlay and failure records using explicit substitutes. It does
+export-only overlay, protocol-specific returned-JIT/native/early-release
+requirements and failure records using explicit substitutes. It does
 not compile the payload or replace live validation.

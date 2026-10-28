@@ -22,7 +22,8 @@ spec.loader.exec_module(runner)
 class Probe(runner.MixedSession):
     def __init__(self, path):
         self.path = path
-        self.record = dict(cpus=list(range(5)), warmup_iterations=5000, warmup_rounds=2)
+        self.record = dict(cpus=list(range(5)), warmup_iterations=5000, warmup_rounds=2,
+                           protocol="owner-handoff", case="simple")
         self.save = Mock()
         self.faults = Mock()
 
@@ -55,12 +56,12 @@ class MixedTransferRunnerTests(unittest.TestCase):
                 runner.observe_hotlock(root)
 
     def test_snapshot_wire_keeps_signed_waiter_error(self):
-        values = list(range(36)) + [-11]
+        values = list(range(47)) + [-11]
 
         def ioctl(device, command, buffer, mutate):
-            self.assertEqual(command, 0x81284D02)
-            self.assertEqual(len(buffer), 296)
-            buffer[:] = struct.pack("=36Qq", *values)
+            self.assertEqual(command, 0x81804D02)
+            self.assertEqual(len(buffer), 384)
+            buffer[:] = struct.pack("=47Qq", *values)
 
         with patch("builtins.open", mock_open()), patch.object(runner.fcntl, "ioctl", ioctl):
             self.assertEqual(runner.snapshot(), dict(zip(runner.FIELDS, values)))
@@ -155,6 +156,91 @@ class MixedTransferRunnerTests(unittest.TestCase):
             self.assertEqual(calls, [runner.ARM, "preholder-held", "gate-acquiring",
                                     runner.PREHOLDER_RELEASE, "gate-held", "spin-held",
                                     "combiner-queued", "waiter-queued", runner.RELEASE])
+
+    def evidence(self, protocol="role-swap", case="simple"):
+        early_waiter = case.startswith("w-early")
+        swapped = protocol == "role-swap"
+        native = not swapped or case == "c-native"
+        record = dict(protocol=protocol, case=case, cpus=list(range(5)),
+                      workers=[dict(role=role, pid=100 + role) for role in range(5)],
+                      layout=dict(a=0xa, entry=0x100, spin_call=0x200, native_marker=0x300))
+        after = dict(prefix=1, suffix=1, combiner_bodies=1, c_task=0xc, w_task=0xd,
+                     owner_before=0xc, owner_after=0xd, samples=2, steal_attempts=10000,
+                     steals=0, done=31, ready=31, started=31, prefix_observed=1, thief_done=1,
+                     protocol=runner.PROTOCOLS.index(protocol), test_case=runner.CASES.index(case),
+                     combiner_owner=0xd if swapped and not early_waiter else 0xc,
+                     early_unlocked=int("early" in case), early_inner_held=int("early" in case),
+                     c_native_task=0xc if case == "c-native" else 0,
+                     c_native_owner=0xd if case == "c-native" else 0,
+                     c_native_flags=0x95 if case == "c-native" else 0,
+                     c_native_visits=int(case == "c-native"))
+        delta = dict(bench_jit_bodies=2 if swapped and not early_waiter else 1,
+                     bench_jit_completions=int(swapped and case in ("simple", "c-early-spin")))
+        messages = ("kd_mutex role exchange: outer=a executor=102 owner=103 queued=111 head=222\n"
+                    if swapped else "kd_mutex transfer: outer=a executor=102 owner=103 target=200 pending=1\n")
+        if native:
+            role, cpu, ip = (102, 3, "300") if swapped else (103, 2, "200")
+            messages += (f"kd_native begin: task={role} outer=a entry=100 ip={ip} sp=999 "
+                         f"held=1 mutex=1 cpu={cpu} outer_released=0 remaining=1\n"
+                         f"kd_native ack: task={role} lock=a mutex=1 last_spin=0\n"
+                         f"kd_native complete: task={role} outer=a mutex=1\n")
+        if case == "c-early-spin":
+            messages += "kd_mutex outer release: task=102 owner=103 owner_task=d outer=a next_task=0 remaining=1\n"
+        return record, after, delta, messages
+
+    def test_distinct_protocol_and_case_evidence(self):
+        for protocol, cases in (("owner-handoff", ("simple",)), ("role-swap", runner.CASES)):
+            for case in cases:
+                with self.subTest(protocol=protocol, case=case):
+                    evidence = self.evidence(protocol, case)
+                    result = runner.validate_result(*evidence)
+                    count = "1" if protocol == "owner-handoff" or case == "c-native" else "0"
+                    self.assertEqual(result["expected_native_stats"],
+                                     dict(started=count, completed=count, unlocks=count))
+
+    def test_exchange_offer_does_not_replace_returned_c_jit(self):
+        for field, replacement in (("completion", 0), ("owner", 0xc), ("bodies", 1)):
+            with self.subTest(field=field):
+                record, after, delta, messages = self.evidence()
+                if field == "completion":
+                    delta["bench_jit_completions"] = replacement
+                elif field == "owner":
+                    after["combiner_owner"] = replacement
+                else:
+                    delta["bench_jit_bodies"] = replacement
+                with self.assertRaises(runner.rt.Failure):
+                    runner.validate_result(record, after, delta, messages)
+
+    def test_c_native_requires_new_executor_and_original_task_flags_ack(self):
+        for mutation in ("task", "flags", "executor", "old-w-ack"):
+            with self.subTest(mutation=mutation):
+                record, after, delta, messages = self.evidence(case="c-native")
+                if mutation == "task":
+                    after["c_native_task"] = after["w_task"]
+                elif mutation == "flags":
+                    after["c_native_flags"] ^= 1
+                elif mutation == "executor":
+                    messages = messages.replace("cpu=3", "cpu=2")
+                else:
+                    messages = messages.replace("kd_native ack: task=102", "kd_native ack: task=103")
+                with self.assertRaises(runner.rt.Failure):
+                    runner.validate_result(record, after, delta, messages)
+
+    def test_early_inner_lock_and_no_unexpected_w_relay(self):
+        for case in ("c-early-spin", "w-early-spin", "w-early-mutex"):
+            record, after, delta, messages = self.evidence(case=case)
+            with self.subTest(case=case, mutation="inner-released"):
+                with self.assertRaises(runner.rt.Failure):
+                    runner.validate_result(record, dict(after, early_inner_held=0), delta, messages)
+            with self.subTest(case=case, mutation="old-relay"):
+                with self.assertRaises(runner.rt.Failure):
+                    runner.validate_result(record, after, delta, messages +
+                                           "kd_native ack: task=103 lock=a mutex=1 last_spin=0\n")
+            if case.startswith("w-early"):
+                with self.subTest(case=case, mutation="combining-under-B"):
+                    with self.assertRaises(runner.rt.Failure):
+                        runner.validate_result(record, after,
+                            dict(bench_jit_bodies=2, bench_jit_completions=1), messages)
 
 
 if __name__ == "__main__":
