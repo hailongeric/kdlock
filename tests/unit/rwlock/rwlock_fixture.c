@@ -12,6 +12,7 @@ typedef uint32_t u32;
 typedef uint8_t u8;
 typedef struct { int counter; } atomic_t;
 #define __aligned(n) __attribute__((aligned(n)))
+#define noinline __attribute__((noinline))
 #define smp_mb__before_atomic() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 #define ATOMIC_INIT(n) { (n) }
 #define likely(x) (x)
@@ -47,8 +48,9 @@ static int cmpxchg_count(atomic_t *p, int old, int next, int order)
 	} while (!(condition)); VAL; })
 #define smp_store_release(p, n) __atomic_store_n((p), (n), __ATOMIC_RELEASE)
 static _Thread_local unsigned int pins, gates, hardirq_depth, bh_depth, heat_calls;
+static _Thread_local unsigned int context_checks;
 static _Thread_local bool irq_off, last_unpin_irq;
-#define in_interrupt() (hardirq_depth || bh_depth)
+#define in_interrupt() (++context_checks, hardirq_depth || bh_depth)
 #define _RET_IP_ 0UL
 #define SOFTIRQ_LOCK_OFFSET 1
 #define typecheck(type, value) ((void)sizeof((type){value}))
@@ -105,6 +107,7 @@ static int kd_spin_prepare(kd_spinlock_t *p, unsigned long ip, unsigned int abi)
 	return ip == 0x1234 && abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ? 0 : -EINVAL;
 }
 #include "rwlock_production.h"
+#include "rwlock_reader_slowpath.h"
 #include "rwlock_native_release.h"
 
 /* Substitute the gate engine, retaining the production writer admission. */
@@ -194,8 +197,11 @@ static void ordering(void)
 
 static void *fast_reader(void *interrupt)
 {
+	unsigned int before_context = context_checks;
+
 	if (interrupt) hardirq_depth++;
 	kd_read_lock(&lock);
+	assert(context_checks == before_context + 1);
 	assert(atomic_read(&fast_released));
 	atomic_set(&fast_reader_inside, 1);
 	kd_read_unlock(&lock);
@@ -265,8 +271,10 @@ static void interrupt_readers(void)
 		kd_read_lock(&lock);
 		assert(!pthread_create(&writer, NULL, waiting_writer, NULL));
 		while (!(atomic_read(&lock.cnts) & KD_RWLOCK_WRITER_WAITING)) sched_yield();
+		unsigned int before_context = context_checks;
 		if (bh) kd_read_lock_bh(&lock);
 		else { hardirq_depth++; kd_read_lock(&lock); }
+		assert(context_checks == before_context + 1);
 		assert(pins == 2 && !gates && !atomic_read(&writer_inside));
 		assert(atomic_read(&lock.cnts) == 2 * KD_RWLOCK_READER_BIAS + KD_RWLOCK_WRITER_WAITING);
 		if (bh) kd_read_unlock_bh(&lock);
@@ -277,6 +285,25 @@ static void interrupt_readers(void)
 		atomic_set(&release_writer, 1);
 		assert(!pthread_join(writer, NULL));
 		assert(!pins && !gates && !atomic_read(&lock.cnts));
+	}
+}
+
+/* The inline success path must not enter the provider's context classifier.
+ * The same fast body serves task, hardirq and BH read pairs. */
+static void reader_fast_boundary(void)
+{
+	for (unsigned int context = 0; context < 3; context++) {
+		unsigned int before_context = context_checks;
+
+		if (context == 1) hardirq_depth++;
+		if (context == 2) kd_read_lock_bh(&lock);
+		else kd_read_lock(&lock);
+		assert(context_checks == before_context && pins == 1 && !gates);
+		if (context == 2) kd_read_unlock_bh(&lock);
+		else kd_read_unlock(&lock);
+		if (context == 1) hardirq_depth--;
+		assert(!pins && !gates && !hardirq_depth && !bh_depth);
+		assert(!atomic_read(&lock.cnts) && !atomic_read(&lock.gate.val));
 	}
 }
 
@@ -392,6 +419,7 @@ int main(void)
 	assert(!frame.rwlock_admitted && !atomic_read(&lock.cnts));
 	kd_spin_direct_native_release_inline(&lock.gate);
 	preempt_enable();
+	reader_fast_boundary();
 	ordering();
 	fast_ordering();
 	interrupt_readers();
