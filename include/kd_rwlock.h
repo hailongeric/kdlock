@@ -5,10 +5,11 @@
 #define KD_RWLOCK_H
 
 #include <linux/errno.h>
+#include <linux/hardirq.h>
 #include <linux/spinlock.h>
 #include "kd_spin_direct.h"
 
-/* Ordinary task-context reader/writer spin lock, inspired by TCLock's
+/* Reader/writer spin lock, inspired by TCLock's
  * komb_rwlock. Readers execute concurrently on their own CPUs. The embedded
  * KD gate queues writers and slow readers; writer bodies use the existing
  * spin clobber-v1 JIT, source leases, packets and completion/ACK protocol.
@@ -16,7 +17,8 @@
  * Uncontended native writers own a distinct count byte without the gate.
  * Queued and delegated writers own the gate through their whole write body.
  * Never use Linux spin/rwlock APIs on this object.
- * Recursive reads, upgrades and IRQ/BH use are unsupported. Storage must live
+ * Explicit IRQ/BH pairs execute locally. Task-context recursive reads,
+ * upgrades and NMI use are unsupported. Storage must live
  * until all readers, writers, queued requests and retained frames have drained.
  */
 #define KD_RWLOCK_WRITER_LOCKED  0xffU
@@ -51,14 +53,22 @@ static inline u32 kd_rwlock_state(kd_rwlock_t *lock)
 	return atomic_read(&lock->cnts);
 }
 
-static __always_inline void kd_read_lock(kd_rwlock_t *lock)
+static __always_inline void __kd_read_lock_pinned(kd_rwlock_t *lock)
 {
 	u32 cnts;
 
-	preempt_disable();
 	cnts = atomic_add_return_acquire(KD_RWLOCK_READER_BIAS, &lock->cnts);
 	if (likely(!(cnts & KD_RWLOCK_WRITER_MASK)))
 		return;
+
+	/* Match native queued rwlocks: an interrupt/BH reader may interrupt a
+	 * reader that a queued writer is draining. Joining that writer's gate
+	 * would deadlock the interrupted reader. Keep this count and wait only
+	 * for actual writer ownership, never for WAITING or the gate. */
+	if (unlikely(in_interrupt())) {
+		atomic_cond_read_acquire(&lock->cnts, !(VAL & KD_RWLOCK_WRITER_LOCKED));
+		return;
+	}
 
 	/* Do not wait in the admission queue while counted as an active reader:
 	 * its writer head may already be waiting for that count to reach zero. */
@@ -72,20 +82,49 @@ static __always_inline void kd_read_lock(kd_rwlock_t *lock)
 	kd_spin_direct_native_release_inline(&lock->gate);
 }
 
-static __always_inline void kd_read_unlock(kd_rwlock_t *lock)
+static __always_inline void kd_read_lock(kd_rwlock_t *lock)
+{
+	preempt_disable();
+	__kd_read_lock_pinned(lock);
+}
+
+static __always_inline void __kd_read_unlock_pinned(kd_rwlock_t *lock)
 {
 	/* x86's locked SUB supplies release ordering without an unused XADD
 	 * result. Keep the release compiler barrier explicit at the API. */
 	smp_mb__before_atomic();
 	atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
+}
+
+static __always_inline void kd_read_unlock(kd_rwlock_t *lock)
+{
+	__kd_read_unlock_pinned(lock);
 	preempt_enable();
+}
+
+/* Try acquisition never joins the gate. A failed speculative reader count
+ * retires before restoring the caller's preemption state. */
+static __always_inline int kd_read_trylock(kd_rwlock_t *lock)
+{
+	u32 cnts;
+
+	preempt_disable();
+	if (!(atomic_read(&lock->cnts) & KD_RWLOCK_WRITER_MASK)) {
+		cnts = atomic_add_return_acquire(KD_RWLOCK_READER_BIAS, &lock->cnts);
+		if (!(cnts & KD_RWLOCK_WRITER_MASK))
+			return 1;
+		atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
+	}
+	preempt_enable();
+	return 0;
 }
 
 /* Called with the gate held, on either the physical caller or a JIT executor.
  * Admission precedes the prepared body, on both native and delegated paths.
- * Only the gate owner can publish WAITING. Once published, arriving readers
- * withdraw their speculative count and queue, allowing existing readers to
- * drain. The acquire observation pairs with the final reader's release. */
+ * Only the gate owner can publish WAITING. Once published, task readers
+ * withdraw their speculative count and queue; interrupt/BH readers retain
+ * theirs to avoid blocking the reader context they interrupted. The acquire
+ * observation pairs with the final reader's release. */
 static __always_inline void kd_rwlock_writer_enter(kd_rwlock_t *lock)
 {
 	if (atomic_cmpxchg_acquire(&lock->cnts, 0,
@@ -108,18 +147,43 @@ static __always_inline void kd_rwlock_writer_exit(kd_rwlock_t *lock)
 /* Pinned caller only. The exact native acquisition count remains live through
  * an ungated write, so source/provider drain cannot miss this ownership route.
  * A failed attempt transfers to the gate's ordinary acquisition accounting. */
-static __always_inline bool kd_rwlock_try_fast_write(kd_rwlock_t *lock)
+static __always_inline bool __kd_write_trylock_pinned(kd_rwlock_t *lock)
 {
 	/* Avoid a failed locked CAS while existing readers/writers are visible. */
 	if (atomic_read(&lock->cnts))
 		return false;
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
-	if (atomic_cmpxchg_acquire(&lock->cnts, 0, KD_RWLOCK_WRITER_FAST) == 0) {
-		kd_hotlock_spin_entry_pinned();
+	if (atomic_cmpxchg_acquire(&lock->cnts, 0, KD_RWLOCK_WRITER_FAST) == 0)
 		return true;
-	}
 	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 	return false;
+}
+
+/* Ordinary writer entries retain their existing heat accounting. Explicit
+ * IRQ/BH and trylock entries are local and do not enter the heat/JIT path. */
+static __always_inline bool kd_rwlock_try_fast_write(kd_rwlock_t *lock)
+{
+	if (!__kd_write_trylock_pinned(lock))
+		return false;
+	kd_hotlock_spin_entry_pinned();
+	return true;
+}
+
+static __always_inline void __kd_write_lock_pinned(kd_rwlock_t *lock)
+{
+	if (__kd_write_trylock_pinned(lock))
+		return;
+	kd_spin_direct_native_lock_inline(&lock->gate);
+	kd_rwlock_writer_enter(lock);
+}
+
+static __always_inline int kd_write_trylock(kd_rwlock_t *lock)
+{
+	preempt_disable();
+	if (__kd_write_trylock_pinned(lock))
+		return 1;
+	preempt_enable();
+	return 0;
 }
 
 /* Explicit native writer pair, useful before publication and for controls.
@@ -134,7 +198,7 @@ static __always_inline void kd_write_lock(kd_rwlock_t *lock)
 	kd_rwlock_writer_enter(lock);
 }
 
-static __always_inline void kd_write_unlock(kd_rwlock_t *lock)
+static __always_inline void __kd_write_unlock_pinned(kd_rwlock_t *lock)
 {
 	if (READ_ONCE(lock->wlocked) == KD_RWLOCK_WRITER_FAST) {
 		kd_rwlock_writer_exit(lock);
@@ -143,8 +207,89 @@ static __always_inline void kd_write_unlock(kd_rwlock_t *lock)
 		kd_rwlock_writer_exit(lock);
 		kd_spin_direct_native_release_inline(&lock->gate);
 	}
+}
+
+static __always_inline void kd_write_unlock(kd_rwlock_t *lock)
+{
+	__kd_write_unlock_pinned(lock);
 	preempt_enable();
 }
+
+/* IRQ/BH ownership stays on its acquiring CPU. These local pairs use the
+ * same count/gate protocol, but never capture a continuation or enter JIT.
+ * Their ordering matches the target non-RT native rwlock interfaces. */
+#define __KD_RWLOCK_IRQ_API(mode) \
+static __always_inline unsigned long __kd_##mode##_lock_irqsave(kd_rwlock_t *lock) \
+{ \
+	unsigned long flags; \
+	local_irq_save(flags); \
+	preempt_disable(); \
+	__kd_##mode##_lock_pinned(lock); \
+	return flags; \
+} \
+static __always_inline void __kd_##mode##_unlock_irqrestore(kd_rwlock_t *lock, unsigned long flags) \
+{ \
+	__kd_##mode##_unlock_pinned(lock); \
+	local_irq_restore(flags); \
+	preempt_enable(); \
+} \
+static __always_inline void kd_##mode##_lock_irq(kd_rwlock_t *lock) \
+{ \
+	local_irq_disable(); \
+	preempt_disable(); \
+	__kd_##mode##_lock_pinned(lock); \
+} \
+static __always_inline void kd_##mode##_unlock_irq(kd_rwlock_t *lock) \
+{ \
+	__kd_##mode##_unlock_pinned(lock); \
+	local_irq_enable(); \
+	preempt_enable(); \
+} \
+static __always_inline void kd_##mode##_lock_bh(kd_rwlock_t *lock) \
+{ \
+	__local_bh_disable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET); \
+	__kd_##mode##_lock_pinned(lock); \
+} \
+static __always_inline void kd_##mode##_unlock_bh(kd_rwlock_t *lock) \
+{ \
+	__kd_##mode##_unlock_pinned(lock); \
+	__local_bh_enable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET); \
+}
+__KD_RWLOCK_IRQ_API(read)
+__KD_RWLOCK_IRQ_API(write)
+#undef __KD_RWLOCK_IRQ_API
+
+#define kd_read_lock_irqsave(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	(flags) = __kd_read_lock_irqsave(lock); \
+} while (0)
+#define kd_write_lock_irqsave(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	(flags) = __kd_write_lock_irqsave(lock); \
+} while (0)
+
+#define kd_read_unlock_irqrestore(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	__kd_read_unlock_irqrestore((lock), (flags)); \
+} while (0)
+#define kd_write_unlock_irqrestore(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	__kd_write_unlock_irqrestore((lock), (flags)); \
+} while (0)
+
+static __always_inline bool
+__kd_write_trylock_irqsave(kd_rwlock_t *lock, unsigned long *flags)
+{
+	local_irq_save(*flags);
+	if (kd_write_trylock(lock))
+		return true;
+	local_irq_restore(*flags);
+	return false;
+}
+#define kd_write_trylock_irqsave(lock, flags) ({ \
+	typecheck(unsigned long, flags); \
+	__kd_write_trylock_irqsave((lock), &(flags)); \
+})
 
 static inline int kd_rwlock_prepare(kd_rwlock_t *lock, unsigned long ip,
 				   unsigned int abi)

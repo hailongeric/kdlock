@@ -81,6 +81,12 @@ CONTEXT_SYMBOLS = (
     "__kd_spin_*_irq*",
     "kd_spin_*_bh",
     "__kd_spin_*_bh",
+    # Local rwlock variants have no translated mode/context ownership ledger.
+    "kd_read_*_irq*", "__kd_read_*_irq*",
+    "kd_write_*_irq*", "__kd_write_*_irq*",
+    "kd_read_*_bh", "kd_write_*_bh",
+    "kd_read_trylock", "kd_write_trylock",
+    "__kd_read_*_pinned", "__kd_write_*_pinned",
     "irq_enter*",
     "irq_exit*",
     "nmi_enter*",

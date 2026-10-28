@@ -186,8 +186,13 @@ The writer has exclusive access before entering that continuation. At unlock,
 it clears the writer byte before completing through the spin engine. Older ABI1
 rwlock callers must be rebuilt with matching provider, daemon and translator.
 See [the rwlock API and protocol](../docs/design/rwlock_implementation.md).
-All rwlock pairs keep preemption disabled until unlock. IRQ/BH variants and
-read-to-write upgrades are unsupported.
+All rwlock pairs keep preemption disabled until unlock. Explicit read/write
+IRQ-save, IRQ and BH pairs run locally; `kd_read_trylock`, `kd_write_trylock` and
+`kd_write_trylock_irqsave` retain no acquisition on failure. Interrupt/BH readers
+bypass a waiting writer while still excluding an active writer. Arbitrary
+task-context recursive reads, read-to-write upgrades and NMI use remain unsupported.
+See the [focused local probe](../tests/kernel/rwlock/irq_api/README.md); historical
+ordinary/JIT measurements do not validate these additional APIs.
 
 Rwsem readers use `kd_down_read/up_read`; ordinary writers use
 `kd_down_write/up_write`, with trylock, interruptible/killable and downgrade
