@@ -38,6 +38,19 @@ def replace_once(text, old, new):
     return text.replace(old, new)
 
 
+def local_mutex_source(text):
+    # This backend never owns a delegated native suffix. Keep every physical
+    # lock operation and scheduler call, replacing only the provider's notes.
+    # The IRQ module uses the same specialization with its I/O resolver intact.
+    for hook, count in (('kd_mutex_note_native_acquire(lock);', 2),
+                        ('kd_mutex_note_native_release(lock);', 1)):
+        rt.require(text.count(hook) == count, 'local mutex note boundary changed: ' + hook)
+        text = text.replace(hook, '(void)lock; /* Local MM has no delegated owner custody. */')
+    rt.require('kd_mutex_note_native_' not in text and 'kd_mutex_custody_' not in text,
+               'local mutex retains a provider custody dependency')
+    return text
+
+
 def generated_sources(target):
     inputs, outputs = {}, {}
     private = target / 'kernel/locking/kd_mmap'
@@ -50,6 +63,7 @@ def generated_sources(target):
         text = source.read_text()
         inputs[name] = digest(source)
         if name.endswith('kd_mutex_local.c'):
+            text = local_mutex_source(text)
             start = text.index('static int (*kd_io_prepare)(void);')
             end = text.index('\nvoid kd_mutex_local_runtime_exit(void)', start)
             # Builtins call scheduler helpers directly. The module's resolver
@@ -58,6 +72,25 @@ def generated_sources(target):
                                   '{\n\treturn 0;\n}\n') + text[end:]
             text = replace_once(text, 'int old = kd_io_prepare();', 'int old = io_schedule_prepare();')
             text = replace_once(text, 'kd_io_finish(old);', 'io_schedule_finish(old);')
+        if name == 'include/kd_mutex.h':
+            # The builtin has no executor/task custody route. Preserve the
+            # shared OSQ node geometry without importing its inactive union.
+            start = text.index('enum kd_mutex_custody_phase {')
+            end = text.index('bool kd_mutex_check_idle(void);', start)
+            text = replace_once(text, text[start:end], '')
+            text = replace_once(text,
+                '\tunion {\n\t\tstruct kd_regs regs;\n'
+                '\t\tstruct kd_mutex_custody custody;\n'
+                '\t}; /* Header ends at byte 128; lifecycle asserts this offset and stride. */',
+                '\tstruct kd_regs regs __attribute__((aligned(64)));')
+            start = text.index('bool kd_mutex_custody_unlock(struct kd_mutex *lock);')
+            end = text.index('void kd_mutex_note_nested_jit(void);', start)
+            text = replace_once(text, text[start:end], '')
+            text = replace_once(text, '#include <linux/percpu.h>\n', '')
+        if name == 'include/kd_lock.h':
+            start = text.index('bool kd_mutex_task_custody_reserve(')
+            end = text.index('void kd_mutex_tasks_exit(void);', start)
+            text = replace_once(text, text[start:end], '')
         if name.endswith('kd_rwsem.c'):
             # Builtin MM never delegates: keep the ordinary local unlock and
             # negative-phase release, without a loadable API-router dependency.
@@ -73,6 +106,9 @@ def generated_sources(target):
         if name in ('include/kd_mutex.h', 'include/kd_rwsem.h'):
             text = re.sub(r'#include "(kd_(?:mutex|rwsem)_types.h)"',
                           r'#include <linux/\1>', text)
+        rt.require(not re.search(r'\b(?:kd_mutex_(?:custody|task_custody|note_native)\w*|'
+                                 r'KD_MUTEX_CUSTODY\w*)\b', text),
+                   'generated local MM retains provider custody declarations: ' + name)
         filename = rename(Path(name).name)
         public_header = name.endswith('_types.h') or name == 'include/kd_config.h'
         dest = (target / 'include/linux' if public_header else private) / filename

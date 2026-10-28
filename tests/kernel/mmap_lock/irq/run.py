@@ -126,7 +126,8 @@ def main():
         # maintained module resolver for this module, preserving all lock bodies.
         prepare = runpy.run_path(str(ROOT / 'kernel_integration/mmap_lock/prepare.py'))
         (module_dir / 'kd_mmap_mutex_local.c').write_text(
-            prepare['rename']((ROOT / 'kernel_module/kd_mutex_local.c').read_text()))
+            prepare['rename'](prepare['local_mutex_source'](
+                (ROOT / 'kernel_module/kd_mutex_local.c').read_text())))
         result['module_io_bridge'] = 'maintained module resolver; no I/O operation tested'
         for p in Path(__file__).with_name('payload').iterdir():
             shutil.copyfile(p, module_dir / p.name)

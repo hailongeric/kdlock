@@ -8,6 +8,7 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	struct kd_regs full;
 	bool native = READ_ONCE(node->native_resume);
 	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
+	bool custody = false;
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
 
 	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
@@ -20,7 +21,10 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 		struct kd_exec_frame *transfer = node->native_transfer;
 		unsigned int spin_pins = node->native_spin_pins;
 
-		if (transfer)
+		if (transfer && transfer->mutex_mixed.queue_transfer) {
+			kd_mutex_custody_pickup(node, transfer);
+			custody = true;
+		} else if (transfer)
 			BUG_ON(kd_exec_mutex_transfer_pickup(transfer));
 		/* A borrowed mixed spin lock has one logical pin on this task and
 		 * an independent physical ticket pin on its executor. Restore before
@@ -29,11 +33,13 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 			preempt_disable();
 	}
 	WRITE_ONCE(this_cpu_ptr(&kd_mutex_shadows)->resume_node, NULL);
-	kd_mutex_release_node(node);
+	if (!custody)
+		kd_mutex_release_node(node);
 	if (!native)
 		this_cpu_inc(kd_mutex_jit_resume_count);
 	preempt_enable();
-	migrate_enable();
+	if (!custody)
+		migrate_enable();
 	if (native)
 		jump_to_saved_regs_in_cs(&full);
 	kd_mutex_task_put(current);

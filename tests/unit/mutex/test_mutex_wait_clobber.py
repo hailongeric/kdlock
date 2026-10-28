@@ -40,7 +40,19 @@ struct list_head { struct list_head *next, *prev; };
 #define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)
 register unsigned long current_stack_pointer asm("rsp");
 #include "exe_info.h"
+/* This fixture exercises an ordinary path with no installed owner custody. */
+#define DECLARE_PER_CPU(type, name) extern type name
+#define raw_cpu_read(name) ((void)sizeof(name), 0UL)
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
 #include "types.h"
+/* No FULL/native handoff is run by this physical-stack fixture. */
+struct kd_exec_frame { struct { bool queue_transfer; } mutex_mixed; };
+static void kd_mutex_custody_pickup(struct kd_mutex_node *n,
+                                  struct kd_exec_frame *f)
+{ (void)n; (void)f; abort(); }
+
 static struct { struct kd_mutex_node *resume_node; } kd_mutex_shadows;
 static unsigned long kd_mutex_jit_resume_count;
 static void *current;

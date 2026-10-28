@@ -40,6 +40,11 @@ static inline void cpu_relax(void)
 	asm volatile("pause" : : : "memory");
 }
 static inline void kd_hotlock_mutex_entry(void) { }
+/* This compiler/ABI fixture has no retained native owner custody. */
+static inline void kd_mutex_note_native_acquire(struct kd_mutex *lock)
+{
+	(void)lock;
+}
 
 unsigned long direct_locks, direct_unlocks, c_locks, c_unlocks, local_locks;
 static int cancel_result;

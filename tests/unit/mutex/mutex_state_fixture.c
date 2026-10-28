@@ -20,6 +20,12 @@ typedef struct { unsigned long counter; } atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct task_struct { int id; } __attribute__((aligned(8)));
+/* This fixture exercises an ordinary path with no installed owner custody. */
+#define DECLARE_PER_CPU(type, name) extern type name
+#define raw_cpu_read(name) ((void)sizeof(name), 0UL)
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
 #include "mutex_state_types.h"
 
 #define CHECK(c) do { if (!(c)) { \

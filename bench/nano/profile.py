@@ -35,15 +35,15 @@ PROFILES = {'mutex-throughput': ('cacheline', 1, 256),
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
-BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=1024,
+BATCH_METADATA = dict(schema=3, compiled=1, total_cap=1024, numa_boundary=1024,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
-BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
+BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed', 'owner_transfers',
     'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total', 'scan_steps',
     'scan_exhausted_batches', 'small_fifo_batches')
 BATCH_REASONS = ('unclassified', 'initial_unexecutable', 'source_refusal',
     'numa_boundary', 'numa_tail', 'execution_refusal', 'early_outer_release',
-    'native_done', 'total_cap', 'empty_tail', 'unsupported_tail')
+    'native_done', 'owner_transfer', 'total_cap', 'empty_tail', 'unsupported_tail')
 BATCH_HISTOGRAMS = ('completed_hist', 'deferred_peak_hist')
 BATCH_LEGACY = ('combiner', 'jit_success', 'handoff')
 
@@ -80,8 +80,18 @@ def observation_delta(before, after):
     return result
 
 
-def batch_metadata(policy=None):
-    result = dict(BATCH_METADATA)
+def batch_fields(schema):
+    require(type(schema) is int and schema in (2, 3), 'unsupported batch diagnostic schema')
+    if schema == 2:
+        # Preserve historical records exactly; absence is not a measured zero.
+        return (tuple(key for key in BATCH_COUNTERS if key != 'owner_transfers'),
+                tuple(key for key in BATCH_REASONS if key != 'owner_transfer'))
+    return BATCH_COUNTERS, BATCH_REASONS
+
+
+def batch_metadata(policy=None, *, schema=3):
+    batch_fields(schema)
+    result = dict(BATCH_METADATA, schema=schema)
     if policy is not None:
         require(isinstance(policy, dict) and set(policy) ==
                 {'total_cap', 'numa_boundary', 'deferred_handoff', 'scan_budget'},
@@ -105,19 +115,21 @@ def selected_mutex_policy(args):
 
 def validate_batch(snapshot, policy=None):
     """Quiescent diagnostic identities only; these never replace exact drain."""
-    metadata = batch_metadata(policy)
-    require(isinstance(snapshot, dict) and set(snapshot) ==
-            set(BATCH_METADATA) | set(BATCH_COUNTERS) | set(BATCH_HISTOGRAMS) | {'stop_reason', 'legacy'},
+    require(isinstance(snapshot, dict), 'unexpected batch diagnostic schema')
+    counters, reasons = batch_fields(snapshot.get('schema'))
+    metadata = batch_metadata(policy, schema=snapshot['schema'])
+    require(set(snapshot) ==
+            set(BATCH_METADATA) | set(counters) | set(BATCH_HISTOGRAMS) | {'stop_reason', 'legacy'},
             'unexpected batch diagnostic schema')
     def counter(value):
         return type(value) is int and 0 <= value <= 2**64 - 1
     require(all(type(snapshot[key]) is int and snapshot[key] == value
                 for key, value in metadata.items()), 'batch diagnostic metadata differs')
-    require(all(counter(snapshot[key]) for key in BATCH_COUNTERS), 'invalid batch counter')
+    require(all(counter(snapshot[key]) for key in counters), 'invalid batch counter')
     for key in BATCH_HISTOGRAMS:
         require(isinstance(snapshot[key], list) and len(snapshot[key]) == snapshot[key + '_bins'] and
                 all(counter(value) for value in snapshot[key]), 'invalid batch histogram: ' + key)
-    for key, fields in (('stop_reason', BATCH_REASONS), ('legacy', BATCH_LEGACY)):
+    for key, fields in (('stop_reason', reasons), ('legacy', BATCH_LEGACY)):
         require(isinstance(snapshot[key], dict) and set(snapshot[key]) == set(fields) and
                 all(counter(value) for value in snapshot[key].values()), 'invalid batch mapping: ' + key)
     batches = snapshot['batches']
@@ -125,8 +137,12 @@ def validate_batch(snapshot, policy=None):
             sum(snapshot['stop_reason'].values()) == snapshot['legacy']['combiner'],
             'batch counts/histograms/stop reasons/legacy combiner differ')
     require(snapshot['stop_reason']['unclassified'] == 0, 'unclassified batch exit')
+    transfers = snapshot['owner_transfers'] if snapshot['schema'] == 3 else 0
     require(snapshot['attempts'] == snapshot['jit_completed'] + snapshot['native_completed'] +
-            snapshot['execution_refusals'], 'batch attempt accounting differs')
+            snapshot['execution_refusals'] + transfers, 'batch attempt accounting differs')
+    if snapshot['schema'] == 3:
+        require(transfers == snapshot['stop_reason']['owner_transfer'],
+                'batch ownership transfer accounting differs')
     require(snapshot['jit_completed'] == snapshot['jit_local'] + snapshot['jit_remote'] ==
             snapshot['legacy']['jit_success'], 'batch completion/locality accounting differs')
     require(snapshot['deferred_total'] == snapshot['scan_steps'], 'batch deferral/scan accounting differs')
@@ -149,8 +165,10 @@ def validate_batch(snapshot, policy=None):
 def batch_delta(before, after, expected_completions=None, policy=None):
     validate_batch(before, policy)
     validate_batch(after, policy)
-    result = batch_metadata(policy)
-    result.update({key: after[key] - before[key] for key in BATCH_COUNTERS})
+    require(before['schema'] == after['schema'], 'batch diagnostic schema changed')
+    counters, _ = batch_fields(before['schema'])
+    result = batch_metadata(policy, schema=before['schema'])
+    result.update({key: after[key] - before[key] for key in counters})
     for key in BATCH_HISTOGRAMS:
         result[key] = [b - a for a, b in zip(before[key], after[key])]
     for key in ('stop_reason', 'legacy'):
@@ -373,6 +391,8 @@ def profiled_session(runner, args, perf, perf_sha):
                     scope='Quiescent pre/post reads after warmup and joined measurement; optional compiled batch observations, no perf process',
                     histogram_bins='0: zero; i>0: [2^(i-1), 2^i-1]',
                     locality='Requester node versus executor node immediately before JIT entry, not whole-body residency',
+                    owner_transfer_accounting=('Accepted queued ownership transfer before body completion; this counter does not count completed bodies'
+                        if batch_after['schema'] == 3 else 'Unavailable in historical schema 2'),
                     legacy_handoff='Existing refusal-path counter, not total physical-owner handoffs')
                 self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
                 self.save()

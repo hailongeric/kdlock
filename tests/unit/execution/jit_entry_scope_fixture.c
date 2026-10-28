@@ -42,6 +42,14 @@ typedef struct {
 } raw_spinlock_t;
 #include "frame_types.h"
 
+/* These scenarios never transfer queued mutex ownership. The dedicated custody
+ * fixture validates that admission; keep this unrelated terminal route closed. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return false;
+}
+
 static unsigned long stack[16];
 static struct task_struct executor = { .pid = 1 },
 	waiter = { .pid = 2, .stack = stack }, stranger = { .pid = 3 };

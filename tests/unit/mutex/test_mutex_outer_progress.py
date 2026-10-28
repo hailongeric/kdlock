@@ -63,7 +63,9 @@ def main():
     end = mutex.index("#endif", start) + len("#endif")
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     code += '#define MODULE_INFO(...)\n'
+    code += next(line for line in mutex.splitlines() if line.startswith("#define KD_MUTEX_EXEC_SWAPPED ")) + "\n"
     code += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
+    code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
@@ -93,7 +95,7 @@ def main():
     # Match the real signature, including a newly added batch parameter.
     for name, prefix in (
         ("kd_mutex_execute_cs", "static int\n"),
-        ("kd_mutex_run_combiner", "static void\n"),
+        ("kd_mutex_run_combiner", "static enum kd_mutex_batch_result\n"),
     ):
         marker = next(
             line for line in mutex.splitlines() if line.startswith(name + "(")

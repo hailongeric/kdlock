@@ -274,13 +274,16 @@ static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state,
 			       struct kd_mutex_node *node)
 {
 	unsigned long zero = 0;
+	int ret = 0;
 
 	might_sleep();
 	BUG_ON(kd_owner(lock) == current);
-	if (!atomic_long_read(&lock->owner) &&
-	    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, (unsigned long)current))
-		return 0;
-	return kd_local_lock_slow(lock, state, node);
+	if (atomic_long_read(&lock->owner) ||
+	    !atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, (unsigned long)current))
+		ret = kd_local_lock_slow(lock, state, node);
+	if (!ret)
+		kd_mutex_note_native_acquire(lock);
+	return ret;
 }
 
 void kd_mutex_local_lock(struct kd_mutex *lock)
@@ -338,7 +341,11 @@ EXPORT_SYMBOL_GPL(kd_atomic_dec_and_mutex_lock);
 
 int kd_mutex_trylock(struct kd_mutex *lock)
 {
-	return !kd_try_common(lock, false);
+	int acquired = !kd_try_common(lock, false);
+
+	if (acquired)
+		kd_mutex_note_native_acquire(lock);
+	return acquired;
 }
 EXPORT_SYMBOL_GPL(kd_mutex_trylock);
 
@@ -425,6 +432,7 @@ void kd_mutex_local_unlock(struct kd_mutex *lock)
 
 	if (!atomic_long_try_cmpxchg_release(&lock->owner, &owner, 0))
 		kd_local_unlock_slow(lock);
+	kd_mutex_note_native_release(lock);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_local_unlock);
 

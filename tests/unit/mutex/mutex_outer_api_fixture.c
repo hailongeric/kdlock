@@ -44,6 +44,11 @@ unsigned long entries, routed_locks, routed_unlocks, native_unlocks;
 uintptr_t test_cookie_address;
 unsigned long contended_native_return;
 static inline void kd_hotlock_mutex_entry(void) { entries++; }
+/* This compiler/ABI fixture has no retained native owner custody. */
+static inline void kd_mutex_note_native_acquire(struct kd_mutex *lock)
+{
+	(void)lock;
+}
 __attribute__((noinline,noipa)) void kd_mutex_local_unlock(struct kd_mutex *lock)
 {
  assert((lock->owner & ~7UL) == (unsigned long)current);

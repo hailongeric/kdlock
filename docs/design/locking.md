@@ -231,22 +231,25 @@ owner pointer under its wait lock. The owner word stays nonzero and preserves
 waiter/handoff flags; PICKUP lets the new owner consume the transfer with acquire
 ordering. This is uninterrupted exclusion, not unlock followed by relock.
 
-The original waiter W resumes the pending spin CALL after pickup. The old executor
-C retains the source lease, route and frame until that task physically releases A
-and the release ACK completes. Only then may the old executor retire its frame
-and reacquire A for its own original body. A transferred owner is not a completed
-unlock, so the outer release hook is marked only after the real release. The
-current implementation does **not** exchange queue roles immediately. C's own
-request node remains reserved by its original wait invocation but is not
-republished. After W's unlock ACK, C waits for the gate/physical mutex through
-`kd_mutex_wait_and_lock(lock)`, which supplies no delegation node. W resumes its
-native suffix; it does not enter a new combiner loop to execute C's request.
-The requested full queued role exchange remains unimplemented. The
-source, deterministic fixtures and the live failed-CAS probe at `20baf5c2`
-cover only this owner-handoff path. The live probe observed C/W ownership,
-10,006 competing trylocks without theft, exact continuation/ACK and final drain.
-Queued role exchange and matched performance qualification remain separate
-gates. See the [current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
+The original owner-handoff fallback retains C's frame until W's physical unlock
+ACK, after which C reacquires A for its own request. It is distinct from the new
+[queued-exchange candidate](mutex-role-exchange.md): C appends its original
+MINIMAL node before retiring W's tail, W copies FULL and accepts queue/source
+custody, and a separate pickup ACK authorizes C's frame retirement without
+fabricating an unlock. READY then releases W into its native suffix while C waits
+on its own node. At its logical A unlock, W can combine C with its own body already
+finished. Existing C native exits and early A release retain their actual owner
+ACKs; the after-body loop never reacquires A for a second W body.
+
+Build, live returned-C-body/native-exit and performance gates remain pending for
+this candidate. W's native KD mutex ledger and spin/IRQ state force ordinary
+handoff if another tracked lock remains held at A unlock. Untracked Native
+sleeping locks, KD rwsem reads/downgrade and locks held before the root remain
+unsupported contexts. No trusted-source/image restriction closes that observation
+gap. The live owner-handoff probe at `20baf5c2` observed C/W ownership, 10,006
+competing trylocks without theft, exact continuation/ACK and final drain. That
+evidence does not qualify this new lifecycle. See the
+[current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
 
 A successful mixed spin acquisition may later encounter an instruction exit.
 The executor retains the physical spin ticket; the original task receives one

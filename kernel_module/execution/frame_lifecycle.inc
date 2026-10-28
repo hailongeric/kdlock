@@ -328,6 +328,7 @@ int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)
 	frame->mutex_mixed.transfer_requested = false;
 	frame->mutex_mixed.transferred = false;
 	frame->mutex_mixed.picked_up = false;
+	frame->mutex_mixed.queue_transfer = false;
 	INIT_LIST_HEAD(&frame->native_link);
 	frame->complex_ready = true;
 	return 0;
@@ -407,7 +408,11 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 	    READ_ONCE(frame->remote_request) ||
 	    READ_ONCE(frame->native_request) ||
 	    !list_empty(&frame->native_link) ||
-	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR)))
+	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR &&
+	     state != KD_EXEC_FRAME_TRANSFERRED)))
+		return -EBUSY;
+	if (state == KD_EXEC_FRAME_TRANSFERRED &&
+	    (regs || !kd_exec_mutex_custody_accepted(frame)))
 		return -EBUSY;
 	if (!frame->complex_ready &&
 	    (state != KD_EXEC_FRAME_COMPLETE || !frame->completion_seen))

@@ -24,6 +24,14 @@ static bool list_empty(const struct list_head *head)
 #define kd_exec_frame_bind real_frame_bind
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_outer_types.h"
+
+/* These scenarios never transfer queued mutex ownership. The dedicated custody
+ * fixture validates that admission; keep this unrelated terminal route closed. */
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return false;
+}
 #undef kd_exec_frame_push
 #undef kd_exec_frame_push_borrowed
 #undef kd_exec_frame_bind

@@ -30,6 +30,13 @@ typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
+/* Ordinary fixtures never install native owner custody. Keep its per-CPU
+ * rejection hint explicitly false while compiling the production headers. */
+#define DECLARE_PER_CPU(type, name) extern type name
+#define raw_cpu_read(name) ((void)sizeof(name), 0UL)
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
 #include "mutex_outer_types.h"
 
 static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
@@ -427,16 +434,35 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 	return 0;
 }
 
+/* This existing fixture has no retained original combiner node. The separate
+ * custody fixture runs the real role-exchange commit and ACK helpers. */
+struct kd_mutex_batch;
+static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
+{
+ (void)frame;
+ return false;
+}
+static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
+ struct kd_mutex_node *node, struct kd_mutex_batch *batch,
+ struct kd_exec_frame *frame)
+{
+ (void)batch;
+ CHECK(lock==&gate && node==&request && frame==&active);
+ return false;
+}
+
 #include "mutex_outer_production.h"
 
 int main(void)
 {
+	for (unsigned int after_body_case = 0; after_body_case < 2; after_body_case++)
 	for (unsigned int terminal_case = 0; terminal_case < 2; terminal_case++)
 	for (mode = 0; mode < 7; mode++) {
 		terminal = terminal_case;
 		unsigned long stack[8] = { [7] = 0x800 };
 		unsigned int expected = mode == 4 ? 0 : 1;
 		bool early = mode >= 1 && mode <= 3;
+		bool after_body = after_body_case;
 
 		memset(&gate, 0, sizeof(gate));
 		/* A separate producer owns this record across early physical release
@@ -470,25 +496,45 @@ int main(void)
 		preempt = 1;
 		kd_mutex_wait_and_lock(&gate);
 		kd_mutex_gate_set(&gate, KD_MUTEX_GATE_COMBINER);
-		kd_mutex_run_combiner(&gate, &request);
+		CHECK(kd_mutex_run_combiner(&gate, &request, NULL, after_body) ==
+		      (after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED));
 		CHECK(scripts == expected && pops == expected);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode >= 5));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
-		CHECK(kd_mutex_delegation_owned(&gate, &executor) && gate.owner == &executor);
-		CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_VAL);
-		CHECK(!b.owner && preempt == 1 && !other_holds);
-		CHECK(kd_mutex_origin_acquires == (early ? 3 : mode == 6 ? 2 : 1));
-		CHECK(kd_mutex_origin_releases == (early ? 2 : mode == 6 ? 1 : 0));
+		CHECK(!source_leases && !b.owner && preempt == 1);
+		if (after_body) {
+			/* W has already executed its own body. The loop must neither
+			 * reacquire A nor release a successor's later ownership. */
+			CHECK(!kd_mutex_delegation_owned(&gate, &executor));
+			CHECK(gate.owner == (early ? &other : NULL));
+			CHECK(kd_mutex_gate_read(&gate) == (early ? KD_MUTEX_GATE_HELD : KD_MUTEX_GATE_FREE));
+			CHECK(other_holds == early);
+			CHECK(kd_mutex_origin_acquires == (early ? 2 : 1));
+			CHECK(kd_mutex_origin_releases == 1);
+		} else {
+			CHECK(kd_mutex_delegation_owned(&gate, &executor) && gate.owner == &executor);
+			CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_VAL);
+			CHECK(!other_holds);
+			CHECK(kd_mutex_origin_acquires == (early ? 3 : mode == 6 ? 2 : 1));
+			CHECK(kd_mutex_origin_releases == (early ? 2 : mode == 6 ? 1 : 0));
+		}
 		CHECK(wakes == ((mode == 4 || terminal) ? 0 : 1));
 		if (terminal)
 			CHECK(gate.delegation_tail == (mode == 4 ? 1U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
 		CHECK(successor.locked == (early || mode == 4 || terminal));
 		CHECK(request.completed == (mode == 0 || mode == 1));
 		CHECK(release_traces == early);
-		CHECK(_kd_mutex_unlock_checked(&gate) == 0);
-		CHECK(!kd_mutex_gate_read(&gate) && !gate.owner);
+		if (!after_body) {
+			CHECK(_kd_mutex_unlock_checked(&gate) == 0);
+		} else if (early) {
+			current = &other;
+			CHECK(_kd_mutex_unlock_checked(&gate) == 0);
+			current = &executor;
+			other_holds = false;
+		}
+		CHECK(!kd_mutex_gate_read(&gate) && !gate.owner && !other_holds);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 		CHECK(enclosing.counted_lock == &gate && !(enclosing.count_seq & 1));
 		/* Remaining unexecuted nodes belong to substituted peers; discard them
@@ -499,8 +545,8 @@ int main(void)
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
-	CHECK(routine_traces == 14);
-	printf("mutex outer production progress: %u checks, %u failures, 14 scenarios\n",
+	CHECK(routine_traces == 28);
+	printf("mutex outer production progress: %u checks, %u failures, 28 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

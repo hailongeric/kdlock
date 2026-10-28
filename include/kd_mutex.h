@@ -43,6 +43,7 @@
 #include <linux/spinlock.h>
 #include <linux/list.h>
 #include <linux/osq_lock.h>
+#include <linux/percpu.h>
 #include "kd_mutex_types.h"
 #include "kd_regs.h"
 
@@ -50,6 +51,29 @@ struct kd_exec_frame;
 struct kd_mutex;
 struct kd_local_waiter;
 struct lock_class_key;
+struct kd_mutex_node;
+
+enum kd_mutex_custody_phase {
+	KD_MUTEX_CUSTODY_WAIT_READY = 1,
+	KD_MUTEX_CUSTODY_NATIVE,
+	KD_MUTEX_CUSTODY_COMBINING,
+	KD_MUTEX_CUSTODY_RETIRED,
+};
+
+/* Activated only after FULL has been copied to the owner's native stack.
+ * The retained slot and task record name one exact ownership generation.
+ * Overflow disables combining; it never rejects a valid native acquisition. */
+#define KD_MUTEX_CUSTODY_LOCKS 8
+struct kd_mutex_custody {
+	struct kd_mutex_node *head;
+	u64 generation;
+	unsigned int phase;
+	bool ready;
+	bool source_lease;
+	bool native_overflow;
+	u8 native_count;
+	struct kd_mutex *native_locks[KD_MUTEX_CUSTODY_LOCKS];
+};
 
 bool kd_mutex_check_idle(void);
 
@@ -100,7 +124,10 @@ struct kd_mutex_node {
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */
-	struct kd_regs regs __attribute__((aligned(64)));
+	union {
+		struct kd_regs regs;
+		struct kd_mutex_custody custody;
+	}; /* Header ends at byte 128; lifecycle asserts this offset and stride. */
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
 	/* The unused tail of the FULL packet's last line holds notification.
@@ -157,6 +184,22 @@ int kd_mutex_nested_unlock(struct kd_mutex *lock);
 /* A transfer preserves exclusion; PICKUP is acknowledged by the new owner. */
 int kd_mutex_transfer_owner(struct kd_mutex *lock, struct task_struct *next);
 int kd_mutex_transfer_pickup(struct kd_mutex *lock);
+bool kd_mutex_custody_unlock(struct kd_mutex *lock);
+void kd_mutex_custody_native_acquire(struct kd_mutex *lock);
+void kd_mutex_custody_native_release(struct kd_mutex *lock);
+/* Only a fast rejection hint. Every positive path validates the exact task,
+ * retained node, lock and generation; this mask never grants ownership. */
+DECLARE_PER_CPU(unsigned long, kd_mutex_custody_slots);
+static __always_inline void kd_mutex_note_native_acquire(struct kd_mutex *lock)
+{
+	if (unlikely(raw_cpu_read(kd_mutex_custody_slots)))
+		kd_mutex_custody_native_acquire(lock);
+}
+static __always_inline void kd_mutex_note_native_release(struct kd_mutex *lock)
+{
+	if (unlikely(raw_cpu_read(kd_mutex_custody_slots)))
+		kd_mutex_custody_native_release(lock);
+}
 void kd_mutex_note_nested_jit(void);
 /* Cold exact snapshot; -EAGAIN on repeated changes, -ENOMEM on scratch failure.
  * Neither a successful zero nor an error is an admission/lifetime barrier. */

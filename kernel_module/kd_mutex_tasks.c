@@ -24,6 +24,7 @@ struct kd_mutex_task {
 	struct rcu_head rcu;
 	struct task_struct *task;
 	atomic_t refs; /* >=0 live identity, -1 claimed exclusively for eviction */
+	struct kd_mutex_node *custody;
 };
 
 #define KD_MUTEX_TASK_BITS 8
@@ -108,6 +109,7 @@ static bool kd_mutex_task_evict(struct kd_mutex_task_bucket *bucket,
 {
 	if (atomic_cmpxchg(&entry->refs, 0, -1) != 0)
 		return false;
+	BUG_ON(READ_ONCE(entry->custody));
 	hlist_del_rcu(&entry->link);
 	WRITE_ONCE(bucket->count, bucket->count - 1);
 	call_rcu(&entry->rcu, kd_mutex_task_free);
@@ -153,6 +155,7 @@ bool kd_mutex_task_get(struct task_struct *task)
 	}
 	get_task_struct(task);
 	new->task = task;
+	new->custody = NULL;
 	atomic_set(&new->refs, 1);
 	hlist_add_head_rcu(&new->link, &bucket->tasks);
 	WRITE_ONCE(bucket->count, bucket->count + 1);
@@ -189,6 +192,7 @@ void kd_mutex_task_put(struct task_struct *task)
 		refs = atomic_dec_return(&entry->refs);
 
 		WARN_ON_ONCE(refs < 0);
+		BUG_ON(!refs && READ_ONCE(entry->custody));
 		/* Active collisions may exceed the cache bound. Only the cold
 		 * zero transition of an overfull bucket needs writer serialization. */
 		if (!refs && READ_ONCE(bucket->count) > KD_MUTEX_TASK_CACHE_PER_BUCKET) {
@@ -201,6 +205,64 @@ void kd_mutex_task_put(struct task_struct *task)
 	}
 	rcu_read_unlock();
 	WARN_ON_ONCE(1);
+}
+
+/* Existing acquisition references pin this identity across reservation, pickup
+ * and final owner release. No new task allocation or global lock is needed. */
+bool kd_mutex_task_custody_reserve(struct task_struct *task,
+				 struct kd_mutex_node *node)
+{
+	struct kd_mutex_task *entry;
+	bool reserved = false;
+
+	if (!task || !node)
+		return false;
+	rcu_read_lock();
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(task)->tasks, link) {
+		if (entry->task != task)
+			continue;
+		if (atomic_read(&entry->refs) > 0)
+			reserved = cmpxchg(&entry->custody, NULL, node) == NULL;
+		break;
+	}
+	rcu_read_unlock();
+	return reserved;
+}
+
+struct kd_mutex_node *kd_mutex_task_custody(struct task_struct *task)
+{
+	struct kd_mutex_task *entry;
+	struct kd_mutex_node *node = NULL;
+
+	rcu_read_lock();
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(task)->tasks, link) {
+		if (entry->task != task)
+			continue;
+		if (atomic_read(&entry->refs) > 0)
+			node = READ_ONCE(entry->custody);
+		break;
+	}
+	rcu_read_unlock();
+	return node;
+}
+
+void kd_mutex_task_custody_clear(struct task_struct *task,
+			       struct kd_mutex_node *node)
+{
+	struct kd_mutex_task *entry;
+	bool cleared = false;
+
+	BUG_ON(!task || !node);
+	rcu_read_lock();
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(task)->tasks, link) {
+		if (entry->task != task)
+			continue;
+		BUG_ON(atomic_read(&entry->refs) <= 0);
+		cleared = cmpxchg(&entry->custody, node, NULL) == node;
+		break;
+	}
+	rcu_read_unlock();
+	BUG_ON(!cleared);
 }
 
 bool kd_mutex_tasks_idle(void)

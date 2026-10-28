@@ -10,6 +10,7 @@
 #include <string.h>
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint64_t u64;
 struct task_struct { int pid; };
 struct list_head { struct list_head *next, *prev; };
 typedef struct {

@@ -36,6 +36,7 @@ MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
 	X(EXECUTION_REFUSAL, execution_refusal) \
 	X(EARLY_OUTER_RELEASE, early_outer_release) \
 	X(NATIVE_DONE, native_done) \
+	X(OWNER_TRANSFER, owner_transfer) \
 	X(TOTAL_CAP, total_cap) \
 	X(EMPTY_TAIL, empty_tail) \
 	X(UNSUPPORTED_TAIL, unsupported_tail)
@@ -49,13 +50,16 @@ enum kd_mutex_diag_reason {
 
 /* Keep request/result observations separate from the original attempt limit.
  * A native continuation completes on its requester, so it is not classified
- * as local/remote executor service. JIT locality compares the requester's
+ * as local/remote executor service. Accepted queue ownership transfers leave
+ * the body unfinished, so they count neither completion nor refusal. JIT
+ * locality compares the requester's
  * immutable node with the physical executor's node immediately before entry;
  * it is not a claim that a sleepable body cannot migrate later. */
 struct kd_mutex_batch_diag {
 	unsigned int attempts;
 	unsigned int jit_completed;
 	unsigned int native_completed;
+	unsigned int owner_transfers;
 	unsigned int execution_refusals;
 	unsigned int jit_local;
 	unsigned int jit_remote;
@@ -72,6 +76,7 @@ struct kd_mutex_batch_diag {
 	X(attempts) \
 	X(jit_completed) \
 	X(native_completed) \
+	X(owner_transfers) \
 	X(execution_refusals) \
 	X(jit_local) \
 	X(jit_remote) \
@@ -88,6 +93,8 @@ struct kd_mutex_batch_totals {
 	u64 deferred_peak_hist[KD_MUTEX_DIAG_DEFERRED_BINS];
 	u64 stop_reason[KD_MUTEX_DIAG_REASON_COUNT];
 };
+_Static_assert(sizeof(struct kd_mutex_batch_totals) <= 384,
+	       "mutex batch observations exceed the reserved per-CPU budget");
 static DEFINE_PER_CPU(struct kd_mutex_batch_totals, kd_mutex_batch_totals);
 
 static bool kd_mutex_diag_condition(struct kd_mutex_batch_diag *diag,
@@ -135,6 +142,8 @@ static void kd_mutex_diag_result(struct kd_mutex_batch_diag *diag, int result)
 			diag->jit_remote++;
 	} else if (result == KD_EXE_NATIVE_DONE) {
 		diag->native_completed++;
+	} else if (result == KD_MUTEX_EXEC_SWAPPED) {
+		diag->owner_transfers++;
 	} else {
 		diag->execution_refusals++;
 	}
@@ -152,6 +161,7 @@ static void kd_mutex_diag_finish(struct kd_mutex_batch_diag *diag)
 	KD_MUTEX_DIAG_ADD(attempts);
 	KD_MUTEX_DIAG_ADD(jit_completed);
 	KD_MUTEX_DIAG_ADD(native_completed);
+	KD_MUTEX_DIAG_ADD(owner_transfers);
 	KD_MUTEX_DIAG_ADD(execution_refusals);
 	KD_MUTEX_DIAG_ADD(jit_local);
 	KD_MUTEX_DIAG_ADD(jit_remote);
@@ -191,7 +201,7 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 	}
 #define KD_MUTEX_DIAG_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_DIAG_PRINT("{\"schema\":2,\"compiled\":1,\"total_cap\":%u,"
+	KD_MUTEX_DIAG_PRINT("{\"schema\":3,\"compiled\":1,\"total_cap\":%u,"
 		"\"numa_boundary\":%u,\"deferred_handoff\":8,\"scan_budget\":64,"
 		"\"completed_hist_bins\":%u,\"deferred_peak_hist_bins\":%u,",
 		kd_mutex_batch_size, (unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY,

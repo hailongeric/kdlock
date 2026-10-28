@@ -64,7 +64,8 @@ static bool kd_exec_frame_state_is_active(int state)
 	return state == KD_EXEC_FRAME_RUNNING ||
 	       state == KD_EXEC_FRAME_WAITING_LOCK ||
 	       state == KD_EXEC_FRAME_RESUME ||
-	       state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR;
+	       state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ||
+	       state == KD_EXEC_FRAME_TRANSFERRED;
 }
 
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
@@ -97,6 +98,8 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	     (state != KD_EXEC_FRAME_RUNNING && state != KD_EXEC_FRAME_COMPLETE)))
 		return false;
 	if (!kd_exec_frame_state_is_active(state) ||
+	    (state == KD_EXEC_FRAME_TRANSFERRED &&
+	     !kd_exec_mutex_custody_accepted(frame)) ||
 	    frame->depth >= KD_EXEC_MAX_NESTING || !frame->gsbase ||
 	    !frame->logical_task ||
 	    frame->held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
@@ -254,10 +257,16 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
-	if (state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR)
+	if (state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ||
+	    state == KD_EXEC_FRAME_TRANSFERRED)
 		return -EALREADY;
 
 	switch (event) {
+	case KD_EXEC_EVENT_OWNER_TRANSFER:
+		if (!kd_exec_mutex_custody_accepted(frame))
+			return -EINVAL;
+		kd_exec_frame_set_state(frame, KD_EXEC_FRAME_TRANSFERRED);
+		return 0;
 	case KD_EXEC_EVENT_CONTINUE:
 	case KD_EXEC_EVENT_NESTED_LOCK:
 	case KD_EXEC_EVENT_NESTED_UNLOCK:

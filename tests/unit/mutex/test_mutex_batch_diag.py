@@ -96,14 +96,26 @@ CHECKS = r'''
 
 EXTRA = r'''
     scenario=21;reset(2);nodes[1].entry_abi=KD_ENTRY_ABI_LEGACY;
-    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && wakes==1 && !nodes[1].locked);finish();
-    scenario=22;reset(1);kd_mutex_run_combiner(&lock,NULL);
+    scenario=22;reset(1);CHECK(kd_mutex_run_combiner(&lock,NULL,NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(!calls && !wakes && !lease_gets);finish();
     char json_buffer[PAGE_SIZE];
     int length=kd_mutex_batch_stats_get(json_buffer,NULL);
     CHECK(length>0 && length<(int)sizeof(json_buffer));
     printf("DIAG %s",json_buffer);
+    /* A transferred owner has accepted its queue and packet, but has not
+     * finished the native suffix. Do not count a completion or a refusal. */
+    memset(&kd_mutex_batch_totals,0,sizeof(kd_mutex_batch_totals));
+    kd_mutex_combiner_count=1; kd_mutex_jit_success_count=kd_mutex_handoff_count=0;
+    struct kd_mutex_batch_diag transfer={.attempts=1,.reason=KD_MUTEX_DIAG_OWNER_TRANSFER};
+    kd_mutex_diag_result(&transfer,KD_MUTEX_EXEC_SWAPPED);
+    CHECK(transfer.owner_transfers==1 && !transfer.jit_completed &&
+          !transfer.native_completed && !transfer.execution_refusals);
+    kd_mutex_diag_finish(&transfer);
+    length=kd_mutex_batch_stats_get(json_buffer,NULL);
+    CHECK(length>0 && length<(int)sizeof(json_buffer));
+    printf("TRANSFER %s",json_buffer);
     /* Exercise both declared last bins independently of this fixture's
      * smaller queue. No observation may grow beyond the per-CPU budget. */
     _Static_assert(sizeof(struct kd_mutex_batch_totals)<=384,
@@ -153,9 +165,9 @@ def main():
                                 check=True, timeout=10)
         print(result.stdout, end='')
         values = {line.split(' ', 1)[0]: json.loads(line.split(' ', 1)[1])
-                  for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'MAX '))}
+                  for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'TRANSFER ', 'MAX '))}
         sample = values['DIAG']
-        assert sample['schema'] == 2 and sample['compiled'] == 1
+        assert sample['schema'] == 3 and sample['compiled'] == 1
         assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
         assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
         assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
@@ -163,14 +175,24 @@ def main():
         assert sample['batches'] == sum(sample['deferred_peak_hist'])
         assert sample['batches'] == sum(sample['stop_reason'].values())
         assert sample['stop_reason']['unclassified'] == 0
+        assert sample['owner_transfers'] == sample['stop_reason']['owner_transfer'] == 0
         assert sample['attempts'] == (sample['jit_completed'] +
-                                     sample['native_completed'] + sample['execution_refusals'])
+                                     sample['native_completed'] + sample['execution_refusals'] +
+                                     sample['owner_transfers'])
         assert sample['jit_completed'] == sample['jit_local'] + sample['jit_remote']
         assert sample['deferred_total'] == sample['scan_steps']
         assert sample['legacy']['combiner'] == sample['batches']
         assert sample['legacy']['jit_success'] == sample['jit_completed']
+        transfer = values['TRANSFER']
+        assert transfer['schema'] == 3 and transfer['batches'] == transfer['attempts'] == 1
+        assert transfer['owner_transfers'] == transfer['stop_reason']['owner_transfer'] == 1
+        assert transfer['jit_completed'] == transfer['native_completed'] == transfer['execution_refusals'] == 0
+        assert transfer['completed_hist'] == [1] + [0] * 15
+        assert transfer['deferred_peak_hist'] == [1] + [0] * 7
+        assert transfer['legacy'] == dict(combiner=1, jit_success=0, handoff=0)
         maximum = (1 << 64) - 1
         assert values['MAX']['batches'] == maximum
+        assert values['MAX']['owner_transfers'] == maximum
         assert values['MAX']['completed_hist'] == [maximum] * 16
         assert values['MAX']['deferred_peak_hist'] == [maximum] * 8
         assert all(value == maximum for value in values['MAX']['stop_reason'].values())

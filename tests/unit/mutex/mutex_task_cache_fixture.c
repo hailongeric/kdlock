@@ -9,6 +9,8 @@
 typedef struct { int counter; } atomic_t;
 typedef int raw_spinlock_t;
 struct task_struct { int usage; };
+/* Task routing stores this opaque identity; custody protocol owns its fields. */
+struct kd_mutex_node { unsigned int identity; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct hlist_head { struct hlist_node *first; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
@@ -57,8 +59,11 @@ static int atomic_cmpxchg(atomic_t *p, int old, int value)
  }
  int seen=p->counter; if(seen==old)p->counter=value; return seen;
 }
-static int cmpxchg(int *p, int old, int value)
-{ int seen=*p; if(seen==old)*p=value; return seen; }
+#define cmpxchg(p, old, value) ({ \
+ __auto_type target=(p); __typeof__(*target) expected=(old); \
+ __typeof__(*target) replacement=(value), seen=*target; \
+ if(seen==expected) { *target=replacement; } seen; \
+})
 #define raw_spin_lock_irqsave(p, f) do { CHECK(!*(p)); *(p)=1; (f)=0; } while(0)
 #define raw_spin_unlock_irqrestore(p, f) do { CHECK(*(p)==1 && !(f)); *(p)=0; } while(0)
 #define __RAW_SPIN_LOCK_UNLOCKED(n) 0
@@ -71,6 +76,7 @@ static int cmpxchg(int *p, int old, int value)
 #define unlikely(x) (x)
 static bool warned(bool value) { if(value)warnings++; return value; }
 #define WARN_ON_ONCE(x) warned(!!(x))
+#define BUG_ON(x) CHECK(!(x))
 #define KD_MUTEX_STAT(n) static long n
 #define KD_MUTEX_STAT_READ(n) (n)
 #define this_cpu_inc(n) (++(n))
@@ -96,6 +102,31 @@ static void drain(void)
 int main(void)
 {
  for(unsigned int i=0;i<16;i++)tasks[i].usage=1;
+ struct kd_mutex_node first={1}, second={2};
+ /* A reservation must attach to the exact live task identity. Nested refs
+  * retain it, and final put follows exact removal before inactive reuse. */
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[0],&first));
+ CHECK(!kd_mutex_task_custody_reserve(NULL,&first));
+ CHECK(kd_mutex_task_get(&tasks[0]));
+ CHECK(!kd_mutex_task_custody(&tasks[0]));
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[0],NULL));
+ CHECK(kd_mutex_task_custody_reserve(&tasks[0],&first));
+ CHECK(kd_mutex_task_custody(&tasks[0])==&first);
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[0],&first));
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[0],&second));
+ CHECK(!kd_mutex_task_custody(&tasks[1]));
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[1],&second));
+ CHECK(kd_mutex_task_get(&tasks[0]));
+ kd_mutex_task_put(&tasks[0]);
+ CHECK(kd_mutex_task_custody(&tasks[0])==&first);
+ kd_mutex_task_custody_clear(&tasks[0],&first);
+ CHECK(!kd_mutex_task_custody(&tasks[0]));
+ CHECK(kd_mutex_task_custody_reserve(&tasks[0],&second));
+ CHECK(kd_mutex_task_custody(&tasks[0])==&second);
+ kd_mutex_task_custody_clear(&tasks[0],&second);
+ kd_mutex_task_put(&tasks[0]);
+ CHECK(!kd_mutex_task_custody(&tasks[0]));
+ CHECK(!kd_mutex_task_custody_reserve(&tasks[0],&first));
  for(unsigned int i=0;i<10000;i++) {
   CHECK(kd_mutex_task_get(&tasks[0]) && kd_mutex_task_get(&tasks[0]));
   CHECK(kd_mutex_task_count()==1 && atomic_read(&identity(0)->refs)==2);
@@ -134,6 +165,6 @@ int main(void)
   kd_mutex_task_put(&tasks[i]); CHECK(kd_mutex_task_count()==11-i);
  }
  CHECK(kd_mutex_task_buckets[0].count==8); drain(); kd_mutex_tasks_exit();
- puts("PASS production task cache: exact nested refs, reuse, collisions, active overflow, eviction/reactivation race, deferred free, allocation refusal and drain");
+ puts("PASS production task cache: exact custody reserve/lookup/clear, nested refs, reuse, collisions, active overflow, eviction/reactivation race, deferred free, allocation refusal and drain");
  return 0;
 }

@@ -44,6 +44,7 @@ enum kd_exec_event {
 	KD_EXEC_EVENT_OUTER_UNLOCK,
 	KD_EXEC_EVENT_COMPLETE,
 	KD_EXEC_EVENT_ERROR,
+	KD_EXEC_EVENT_OWNER_TRANSFER,
 };
 
 enum kd_exec_frame_state {
@@ -53,6 +54,7 @@ enum kd_exec_frame_state {
 	KD_EXEC_FRAME_RESUME,
 	KD_EXEC_FRAME_COMPLETE,
 	KD_EXEC_FRAME_ERROR,
+	KD_EXEC_FRAME_TRANSFERRED,
 };
 
 enum kd_exec_lock_kind {
@@ -139,10 +141,20 @@ struct kd_exec_frame {
 		/* Mutex frames do not save a spin combiner. Reuse that cold storage;
 		 * jit_lock_node holds each exact spin entry, indexed by the ledger. */
 		struct {
-			unsigned long spin_sequence[KD_EXEC_MAX_LOCK_DEPTH];
+			union {
+				unsigned long spin_sequence[KD_EXEC_MAX_LOCK_DEPTH];
+				/* Sole-root ownership transfer has no live spin ticket. */
+				struct {
+					struct kd_mutex_node *owner;
+					struct kd_mutex_node *waiter;
+					struct kd_mutex_node *head;
+					u64 generation;
+				} queue;
+			};
 			bool transfer_requested;
 			bool transferred;
 			bool picked_up;
+			bool queue_transfer;
 		} mutex_mixed;
 	};
 	unsigned long jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];

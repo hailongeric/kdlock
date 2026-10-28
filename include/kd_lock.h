@@ -42,6 +42,11 @@ bool kd_mutex_task_active(struct task_struct *task);
 bool kd_mutex_task_reroute(struct task_struct *task);
 bool kd_mutex_task_get(struct task_struct *task);
 void kd_mutex_task_put(struct task_struct *task);
+bool kd_mutex_task_custody_reserve(struct task_struct *task,
+				 struct kd_mutex_node *node);
+struct kd_mutex_node *kd_mutex_task_custody(struct task_struct *task);
+void kd_mutex_task_custody_clear(struct task_struct *task,
+			       struct kd_mutex_node *node);
 void kd_mutex_tasks_exit(void);
 bool kd_mutex_tasks_idle(void);
 #ifdef KDLOCK_SELFTEST
