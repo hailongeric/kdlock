@@ -1,0 +1,34 @@
+{
+  "scope": "Host copies and hashes only. Guest remains undrained; this is not an idle archive verification.",
+  "source_commit": "2d4ee3df6c0f31dc442c514a649c1934c3482f3e",
+  "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+  "failure_snapshot": "kdlock-roleswap-failure-20261029",
+  "clean_snapshot_preserved": "linux70-kdlock1-clean-20261027",
+  "copied_files": [
+    {
+      "file": "kdlock-roleswap-failure-serial-20261029.log",
+      "bytes": 8428564,
+      "sha256": "712323eb7da72642c8abed89f4295d1e8bc285e3c1efdd3fd5a767b087cf378d"
+    },
+    {
+      "file": "kdlock-roleswap-failure-snapshot-20261029.json",
+      "bytes": 12427,
+      "sha256": "23d51692a9125617b22ee637801dacc9f70855b8e27654c33e052f5303e8e411"
+    },
+    {
+      "file": "kdlock-roleswap-r2-proof-20261029.json",
+      "bytes": 8951,
+      "sha256": "5d8431f2fc4eb1f52ce27626fcc73c48369931dd0ac5af0ab3aa977607efe31c"
+    },
+    {
+      "file": "kdlock-roleswap-host-20261029.json",
+      "bytes": 477349,
+      "sha256": "6452b1c7d3a10930b13d4e1ed4e7a2e021364a51e3858702b3e1c03c2a31e531"
+    },
+    {
+      "file": "kdlock-preserve-roleswap-failure-20261029.py",
+      "bytes": 1975,
+      "sha256": "c502008763dbd6f6f75f12f19b68f9e585de79f647f4c5e4ee01c33032d43e61"
+    }
+  ]
+}
