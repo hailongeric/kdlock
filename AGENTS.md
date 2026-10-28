@@ -39,6 +39,12 @@ owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
 Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
 ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.
 Public unlock retains exact provider routing for every successful acquisition.
+Ordinary spin source macros expose the unpinned clobber control before acquiring
+caller state; named DIRECT benchmark pairs retain their separate inline prefix.
+Rwlock local IRQ/BH and trylock APIs preserve the declared Native context order.
+Rwsem uses one ordinary family: default and callable/signal/try/cleanup writers
+stay local with downgrade; explicit quiescent preparation enables ordinary macro
+writer delegation with no downgrade or translated rwsem nesting.
 All users of an object must follow one protocol. Whole-kernel replacement and
 ww_mutex remain separately unvalidated. Explicitly refuse CONFIG_PREEMPT_RT,
 CONFIG_DEBUG_MUTEXES, CONFIG_DEBUG_LOCK_ALLOC and lockdep; these configurations
@@ -71,11 +77,17 @@ validate whole-kernel replacement.
 6. Preserve the two-word wrapper ABI. Spin/rwlock ordinary pairs protect
    preemption and IRQ/BH state. Explicit spin IRQ variants use native interfaces;
    rwlock IRQ/BH variants require their own local context-preserving contract.
-   The October 29 selected mutex policy permits preemption while merely queued
-   and requires an acknowledged pin before proxy execution, retained until all
-   executor accesses retire. The baseline still pins published waiters until
-   that change is implemented and checked. Physical mutex owners/services can
-   sleep. Oversubscription redesign and rwsem fairness changes are deferred.
+   The maintained mutex still pins published waiters. The October 29 strict
+   queued/preemptible to selected/pinned candidate passed focused correctness but
+   was archived after a measured regression; bounded selection remains undecided.
+   Do not promote it or restore a queue-wide pin as a claimed solution to that
+   request. Physical mutex owners/services can sleep. Oversubscription redesign
+   and rwsem fairness changes are deferred.
+   Mixed mutex-to-spin known CALLs now have a one-CAS exact-ticket path. Only
+   an eligible ABI2 root with its sole outer mutex may transfer that owner to the
+   original waiter on contention; multi-owner chains retain borrowing. Transfer
+   retains source/frame state through physical unlock ACK and the old executor
+   reacquires before its own body. Code support is not live transfer validation.
 7. Do not modify, build, install or reboot the guest kernel by default. Captured
    kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.

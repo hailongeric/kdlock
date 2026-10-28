@@ -76,4 +76,98 @@ receipts and frozen sources remain at:
 - `/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-pin-20261029-r2`
 - `/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-basic-20261029`
 
-Host archive collection and later API candidates remain pending.
+Host archive collection remains pending. The later API checkpoints below retain
+their own source identities and do not promote the rejected pin candidate.
+
+
+## Integrated API checkpoints
+
+These are separate source generations from the strict pin candidate. They are
+functional evidence, not new nano throughput results. The maintained published
+mutex waiter remains pinned; bounded-selection policy is still pending.
+
+| Frozen source | Implemented scope | Reported guest result |
+| --- | --- | --- |
+| `893c16b5e9eb8b53796e9c486d7ac22d75c5cc6c` | Ordinary public spin macros expose the unpinned clobber CALL; named DIRECT benchmark shells keep their inline prefix | Ten selected checks passed (`10 passed, 0 failed`). The surrounding shell receipt failed while assigning zsh's readonly `status`; preserve that wrapper failure separately from the explicit test totals. |
+| `428e068ae2b084e98ed8ecbb47215586900fe702` | Local rwlock IRQ/BH/trylock APIs and interrupt-reader waiting-writer bypass | Two basic programs plus rwlock/context drivers passed: 4/4, including 105 context cases. The live IPI reader probe passed and drained; JIT bodies were zero. |
+| `1b186f5d236155d4f30c32e3950e658039519ae7` | Unified rwsem API from `6099baf36d0888759cc6fd5bf15d252f382ebc6a`, plus shared RT/debug/lockdep configuration refusal | Two basic programs and five affected drivers passed: 7/7. Benchmark runner tests passed 25 and 12 cases. Live rwsem reported 17 API checks, 10 cancellation checks, 3 publication checks, successful downgrade and exact drain. |
+
+The rwsem source preserves local downgrade for default ordinary and
+callable/signal/try/cleanup writers. Quiescent explicit preparation enables the
+same ordinary macro names to delegate under a no-downgrade/no-translated-nesting
+contract. Reads remain local, and the generated MM backend retains local unlock
+and downgrade without a loadable delegation dependency. The prepared benchmark
+shell changed from OUTER/cookie to `public-prepared-direct-abi2`; historical timing
+cannot qualify this shell.
+
+The separate prepared rwsem instruction-exit run at `1b186f5d` completed and
+drained all four phases. Every phase completed 1,400,000 writes and 20,000,000
+reads. Cold warmup recorded 1,358,563 returned JIT bodies; cold measured execution
+recorded 1,356,716. The hot phase recorded one native escape and post-ban execution
+recorded zero JIT bodies. These observations qualify the probe's local-reader,
+prepared-writer continuation and retirement scope, not fairness, performance
+neutrality or actual MM delegation.
+
+Guest receipts/logs:
+
+- `/tmp/kdlock-spin-api-units-20261029.log`
+- `/tmp/kdlock-rwlock-api-units-20261029.log`
+- `/root/kdlock-evidence/10.176.26.71/tests/rwlock-api-20261029`
+- `/tmp/kdlock-rwsem-api-units-20261029.log`
+- `/tmp/kdlock-rwsem-api-runner-20261029.log`
+- `/root/kdlock-evidence/10.176.26.71/tests/rwsem-api-20261029`
+- `/tmp/kdlock-rwsem-api-jit-20261029.log`
+- `/root/kdlock-evidence/10.176.26.71/tests/rwsem-api-jit-20261029`
+
+The controller reported these results against the named frozen sources. Host raw
+archive collection remains pending. The shared build contract explicitly refuses
+`CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and
+`CONFIG_LOCKDEP`; unsupported configurations are not pending integration targets.
+
+## Mixed mutex-to-spin candidate
+
+`ee7ace6684b5257ae08d82648e9e2dcb4ceb8986` adds a one-CAS exact-ticket service
+for recognized unpinned spin CALLs in a delegated ABI2 mutex body. On a miss,
+only an eligible root holding its sole outer mutex may transfer physical
+ownership directly to its original waiter through PICKUP. The owner remains
+nonzero, queue flags survive, source/frame state lives through physical unlock
+ACK, and the former executor reacquires before running its own body. Other
+owner chains retain borrowing.
+
+These transitions are verified by static source inspection and affected
+production-code fixtures. Initial mixed units recorded eight passes and two
+fixture failures (source-header lookup and missing new atomic/BUG substitutes);
+the corrected two-driver rerun passed 2/2 at
+`5f96dd5c42a27583aef679554f31e41bcafef793`. Preserve the original
+failed verdicts. The actual ticket, owner-exchange, remote ACK and wrapper
+fixtures use deterministic scheduler/queue substitutes, not live transfer.
+The mixed public-spin instruction-exit run at that source passed and drained
+all four phases, each with 1,600,000 operations. Cold warmup recorded 1,537,032
+JIT bodies, cold execution 1,592,691, hot execution one native escape and post-ban
+execution zero JIT bodies. A separate public-spin runner suite passed 5/5.
+The deterministic failed-CAS live transfer probe and matched timing remain
+pending qualification. The
+optional mixed instruction-exit probe serializes every inner-spin user with
+the outer mutex and therefore cannot prove the contended transfer path. No
+whole-kernel replacement, arbitrary nesting, long-chain transfer or performance
+gain follows from this candidate. The [ownership guide](../../../../../docs/design/locking.md#53-nested-ab-and-native-continuation)
+records the source paths, pin/ACK obligations and finite chain limits.
+
+
+Mixed candidate guest receipts/logs:
+
+- `/tmp/kdlock-mixed-api-units-20261029.log` (8 passes, 2 retained fixture failures)
+- `/tmp/kdlock-mixed-api-units-r2-20261029.log` (corrected 2-driver rerun)
+- `/tmp/kdlock-spin-public-runner-20261029.log`
+- `/root/kdlock-evidence/10.176.26.71/tests/mutex-spin-jit-20261029`
+
+The four-family basic run at
+`/root/kdlock-evidence/10.176.26.71/tests/api-basic-20261029` completed and passed
+at `5f96dd5c`, with final idle. Each family completed 1,600,000 operations;
+returned JIT bodies were spin 1,597,626, mutex 1,587,239, rwlock 24,210 and rwsem
+1,588,877. These are correctness/retirement counts, not throughput scores.
+
+The matched 60-point nano comparison is running from frozen `5f96dd5c` at
+`/root/kdlock-evidence/10.176.26.71/bench/api-semantics-candidate-20261029`.
+No new timing verdict is available. Its inputs must remain frozen until the run
+ends; the archived strict pin candidate remains unpromoted.

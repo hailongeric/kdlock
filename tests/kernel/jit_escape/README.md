@@ -42,7 +42,9 @@ those substitutes are not live-kernel validation.
 
 `--family spin` selects ordinary task-context ABI1 DIRECT acquisitions;
 `--family rwlock` selects ABI3 DIRECT writers and concurrent local readers.
-`--family rwsem` selects the existing ABI2 OUTER writer and sleeping local readers.
+`--family rwsem` selects the unified prepared ordinary ABI2 writer and sleeping
+local readers; its compiled capture is audited separately from historical OUTER
+cookie callers.
 The default remains `--family mutex`. Spin/rwlock runs require capability
 version 12, both native-exit bit 5 and root-exit bit 11, and an immutable
 generation with image requirements exactly 33. Older providers or a static

@@ -6,6 +6,32 @@ performance qualification are separate observations. Basic plus directly affecte
 checks are the default; use [test selection](../tests/README.md) for commands.
 This index does not claim a full suite or arbitrary-kernel equivalence.
 
+## October 29 API implementation checkpoints
+
+The [API checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)
+separates the archived strict pin candidate from later integrated API sources.
+At `893c16b5`, ten selected spin checks passed, with a separate shell-receipt
+failure retained. At `428e068a`, basic/affected rwlock checks and the live IPI
+reader probe passed and drained without JIT. At `1b186f5d`, the rwsem/config unit
+group passed 7/7, runner groups passed 25 and 12 cases, the live rwsem probe passed
+17 API/10 cancellation/3 publication checks, and the prepared rwsem JIT escape
+completed and drained all four phases. Exact source hashes, counters and guest
+paths are in the checkpoint; host raw archive collection remains pending.
+
+The later `ee7ace66` mixed mutex-to-spin code passed affected fixtures after two
+fixture-only corrections at `5f96dd5c`, with the original failed runs retained.
+Its mixed public-spin JIT probe completed and drained all four phases. That
+probe exercises successful CAS and borrowed-spin native escape; it cannot
+validate failed-CAS owner transfer. Live contended transfer and timing remain
+separate gates. Four-family basic checks at `5f96dd5c` subsequently completed
+1,600,000 operations each with returned JIT bodies and final idle; the checkpoint
+retains exact counts. The matched 60-point nano run is in progress from that
+frozen source. Earlier API passes do not validate this later source.
+No new prepared-shell timing or performance-neutrality result is claimed.
+RT/debug/lockdep configurations are explicitly refused by the shared build
+contract. The strict selected-waiter pin candidate remains archived for its
+measured contended regression; bounded-selection policy is still pending.
+
 ## Current full nano rerun
 
 The [630-point nano rerun](../bench/results/10.176.26.71/bench/nano-cohort-20261028/README.md)
@@ -145,7 +171,8 @@ supply strict qualification, continuous health coverage or repeat variance.
 Only the new prepared cohort restores the existing helper-wave setting; it does
 not change translation, ownership or acceptance thresholds. No failed point is
 silently retried or overwritten. Full-suite, arbitrary-source equivalence,
-whole-kernel/RT/ww_mutex/lockdep support and mitigation coverage remain open.
+whole-kernel/ww_mutex support and mitigation coverage remain open. RT/debug/lockdep
+configurations are explicitly refused, not pending support milestones.
 
 ## Historical evidence
 

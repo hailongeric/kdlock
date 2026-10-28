@@ -149,7 +149,8 @@ operations when included after Linux headers. Rebuild every containing object
 and caller, and use KD storage exclusively. The layout, scheduling/fairness,
 lockdep annotations and prepared execution context differ from Native. There is
 no reader-to-writer upgrade, arbitrary recursive-read guarantee, IRQ/BH writer
-API, RT support or translated rwsem nesting ledger. Native MM uses only the
+API or translated rwsem nesting ledger. RT/debug/lockdep configurations are
+explicitly refused by the shared build contract. Native MM uses only the
 local declarations and generated backend; the generator removes delegated phase
 helpers and replaces routed unlock with local gate release. It never links the
 loadable public API wrapper or opts MM into delegation.
@@ -344,7 +345,8 @@ Native/KD schema-2 identities, fresh API/lifetime/mapping/fault prerequisites an
 retains the initial failed contention witness and later diagnostic separately.
 The current queued-reader preference does not qualify those frozen MM results.
 Correctness does not establish fairness, full Linux equivalence, performance
-parity, whole-kernel/RT/lockdep support or automatic non-owner lifetime transfer.
+parity, whole-kernel support or automatic non-owner lifetime transfer. RT and
+lockdep configurations are explicitly excluded.
 
 The [instruction-exit probe](../../tests/kernel/jit_escape/README.md) has a separate
 prepared local-writer ABI2 family. Its returned cold bodies, hot native suffix, exclusion

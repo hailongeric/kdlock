@@ -26,7 +26,7 @@ storage, source files and execution details. KD's nested ownership, recovery and
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
 | Linux Native rwsem | Linux `struct rw_semaphore` | Readers and writers execute their own bodies | Concurrent readers or one writer; blocked callers may sleep | Ordinary compatible Linux rwsem APIs |
 | TCLock rwsem | Original count, AQS reader gate and writer queue | Local readers; writers may run on a borrowed waiter stack | Original reader spinning and writer scheduling/parking | Registered ordinary TCLock rwsem pairs only |
-| KD rwsem | 320-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and ordinary writers run locally; outer writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | KD ordinary and outer-writer pairs only; no Linux/TCLock mixing |
+| KD rwsem | 320-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and default ordinary writers run locally; explicitly prepared macro writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | Unified ordinary KD family with explicit preparation; no Linux/TCLock mixing |
 
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
@@ -275,8 +275,10 @@ body has already made progress, its native continuation keeps write access and
 must complete the usual spin unlock acknowledgement and retirement steps.
 
 Readers are never delegated. Native and direct KD writer pairs may share this
-object, each with its matching unlock. Recursive reads, upgrades/downgrades,
-IRQ/BH variants and sleeping bodies are unsupported. The full state machine,
+object, each with its matching unlock. Local IRQ/BH and trylock forms preserve
+the target Native state ordering; interrupt/BH readers bypass waiting writers
+while still excluding active writers. Arbitrary task recursive reads,
+upgrades/downgrades, NMI use and sleeping bodies remain unsupported. The full state machine,
 API and lifetime contract live in [rwlock implementation](rwlock_implementation.md).
 
 ## Linux Native rwsem
@@ -310,19 +312,20 @@ and borrowed-stack storage survive cohort join and task retirement. See the
 ## KD rwsem
 
 The reader count and writer-admission word sit outside the embedded KD mutex.
-Admission `0` lets readers enter; `-1` reserves one ordinary writer; a positive
-value counts exact outer-writer reservations. Readers increment and recheck
+Admission `0` lets readers enter; `-1` reserves one local writer; a positive
+value counts exact prepared-writer reservations. Readers increment and recheck
 admission before touching data, undoing speculative increments if a writer won.
 They always execute locally and may sleep while holding read access.
 
-An ordinary writer reserves `-1`, takes the physical mutex locally and waits for
+A default ordinary or callable/signal/try/cleanup local writer reserves `-1`, takes the physical mutex locally and waits for
 existing readers to finish. It retains local cancellation, trylock and downgrade
 semantics. Downgrade publishes its reader count before releasing the mutex and
 reopening admission, so no writer can enter between exclusive and shared access.
 
-An outer writer joins a positive phase and drains readers while still
-schedulable, before `KD_MUTEX_OUTER_LOCK` can publish a pinned request. The phase
-prevents new admitted readers and ordinary downgrades during that cohort.
+An explicitly prepared ordinary macro writer joins a positive phase and drains
+readers while still schedulable, before the mutex DIRECT entry can publish a
+pinned request. The phase
+prevents new admitted readers and local downgrades during that cohort.
 Writers then use the unchanged KD mutex exclusion, queue and ABI2 execution.
 After the matching mutex unlock/acknowledgement returns, the original task
 releases its reservation. Only the final reservation reopens reader admission.
@@ -331,10 +334,10 @@ The accepted wait policy uses separate phase and reader-drain waitqueues. Before
 an uninterruptible sleeping wait, a caller checks its condition at most 16,384
 times, stopping early when scheduling is needed. A predicate can retain its own
 atomic retry loop, so this is not an elapsed-time bound. Published mutex waiters
-do not adopt this sleeping policy. Outer writers cannot cancel after publication,
+do not adopt this sleeping policy. Prepared macro writers cannot cancel after publication,
 downgrade or act as nested rwsem controls inside a translated body.
 
-New outer writers may extend a positive phase while readers or ordinary writers
+New prepared writers may extend a positive phase while readers or local writers
 wait; this does not reproduce Linux's fairness policy. No bounded wait or general
 oversubscription guarantee follows. See the [rwsem implementation](rwsem_implementation.md)
 for ordering, exact reservations, wakeups and retained performance limitations.

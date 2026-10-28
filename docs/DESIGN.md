@@ -114,7 +114,9 @@ a different experiment. Current shared-MM timings lose to Native at all 21
 worker counts; exact `mmap1` and generic actual-backend fault throughput remain
 future work. See [performance](PERFORMANCE.md) and [validation](VALIDATION.md).
 
-Whole-kernel replacement, RT/ww_mutex/lockdep integration, broad oversubscription,
-general native flags recovery and full mitigation coverage remain unvalidated.
+Whole-kernel replacement, ww_mutex, broad oversubscription, general native flags
+recovery and full mitigation coverage remain unvalidated. RT, debug mutexes,
+debug lock allocation and lockdep are explicitly refused by the shared build
+contract; they are not pending integration milestones.
 Published mutex waiters poll pinned even though physical owners may sleep.
 [Open work](TODO.md) records these limits.
