@@ -35,6 +35,8 @@ def main():
             'READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu))', 'false'),
         'ignores-slot-lifetime': (
             'READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots)', 'false'),
+        'ignores-custody-lifetime': (
+            'READ_ONCE(per_cpu(kd_mutex_custody_slots, cpu))', 'false'),
         'drops-exit-balance': (
             'this_cpu_dec_return(kd_mutex_active_waiters)',
             'this_cpu_read(kd_mutex_active_waiters)'),
