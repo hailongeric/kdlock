@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef KD_SPIN_TYPE_H
 #define KD_SPIN_TYPE_H
+#include "kd_config.h"
 #include <linux/atomic.h>
 #include <linux/types.h>
 

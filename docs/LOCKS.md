@@ -106,8 +106,11 @@ are not interchangeable with KD. Callable, signal, try and I/O mutex operations
 retain local execution, including signal results and I/O accounting. Nested
 mutex annotations match the non-lockdep configuration, not lockdep semantics.
 `CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and lockdep
-are explicitly outside support. Whole-kernel replacement and `ww_mutex` remain
-unvalidated.
+are explicitly outside support. The shared `kd_config.h` build contract refuses
+all four, including `CONFIG_LOCKDEP`, through the public spin/mutex object
+headers inherited by rwlock/rwsem and through provider initialization source.
+The Linux 7 identity verifier independently requires these options to be off.
+Whole-kernel replacement and `ww_mutex` remain unvalidated.
 
 Same-backend nested mutex/spin mechanisms do not establish mixed-family support.
 The current known-control handler refuses delegated mutex-to-spin and

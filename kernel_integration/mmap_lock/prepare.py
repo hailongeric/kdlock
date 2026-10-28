@@ -41,7 +41,7 @@ def replace_once(text, old, new):
 def generated_sources(target):
     inputs, outputs = {}, {}
     private = target / 'kernel/locking/kd_mmap'
-    for name in ('include/kd_mutex_types.h', 'include/kd_rwsem_types.h',
+    for name in ('include/kd_config.h', 'include/kd_mutex_types.h', 'include/kd_rwsem_types.h',
                  'include/kd_mutex.h', 'include/kd_rwsem.h', 'include/kd_regs.h',
                  'include/kd_lock.h', 'kernel_module/kd_mutex_local.h',
                  'kernel_module/kd_mutex_local.c', 'kernel_module/kd_mutex_osq.c',
@@ -68,7 +68,8 @@ def generated_sources(target):
             text = re.sub(r'#include "(kd_(?:mutex|rwsem)_types.h)"',
                           r'#include <linux/\1>', text)
         filename = rename(Path(name).name)
-        dest = (target / 'include/linux' if name.endswith('_types.h') else private) / filename
+        public_header = name.endswith('_types.h') or name == 'include/kd_config.h'
+        dest = (target / 'include/linux' if public_header else private) / filename
         dest.parent.mkdir(parents=True, exist_ok=True)
         rt.require(not dest.exists(), 'generated source already exists: ' + str(dest))
         dest.write_text(rename(text))

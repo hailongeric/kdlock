@@ -2,6 +2,7 @@
 #ifndef KD_MUTEX_TYPES_H
 #define KD_MUTEX_TYPES_H
 
+#include "kd_config.h"
 #include <linux/atomic.h>
 #include <linux/spinlock.h>
 #include <linux/osq_lock.h>
