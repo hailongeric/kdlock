@@ -26,6 +26,19 @@ frequency at every instruction.
 a delegation gain. `NORMAL` proves publication only. Failed preparation or
 partial generated execution contributes no accepted throughput.
 
+## Cross-NUMA rwsem reader cohorts
+
+The [reader-cohort comparison](../bench/results/10.176.26.71/bench/rwsem-numa-20261028/README.md)
+at `acc4dbc2e283` gives queued readers a turn before a new writer phase. At 60
+workers with 20% writes and post256, KD c01 improved from 3.164 to 3.729 Mops/s
+and c16 from 2.390 to 3.600; fresh TCLock controls reached 4.542 and 3.713,
+leaving gaps of 17.9% and 3.0%. Each point has one round, so these are exploratory
+observations without repeat variability estimates. Readers remain local, and
+1024/1024 was already the baseline delegation policy. In separate instrumented
+c01 samples, the shared OSQ function's profile share fell from 79.787% to 25.571%;
+this does not identify its reader and writer callers separately. Existing
+positive writer cohorts can still accept reservations.
+
 ## KD rwsem c01, 20% writes: queued reader admission
 
 The [October 28 focused comparison](../bench/results/10.176.26.71/bench/rwsem-c01-w20-20261028/README.md)

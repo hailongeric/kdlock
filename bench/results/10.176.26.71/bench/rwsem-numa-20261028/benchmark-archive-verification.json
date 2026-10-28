@@ -1,0 +1,44 @@
+{
+  "completed": true,
+  "host": "380G10",
+  "inventory_paths": 13195,
+  "regular_files": 11456,
+  "verified_archives": [
+    {
+      "file": "baseline.tar.gz",
+      "sha256": "a6248d62cdf6f8aed8ed6bde18ac1f8ef4eca76df5ab5d040aceeae00eb7ed4f",
+      "regular_files": 2437
+    },
+    {
+      "file": "colocated.tar.gz",
+      "sha256": "985ef89e72f6f3fb4a68466669db9e069f30b8112edeca988aad3e6d144c5936",
+      "regular_files": 2437
+    },
+    {
+      "file": "striped.tar.gz",
+      "sha256": "ff145acd799223bb45f78ddc397a9d5b72018d45e25feb7802b216f47299af2c",
+      "regular_files": 2437
+    },
+    {
+      "file": "cohort.tar.gz",
+      "sha256": "cd19815b28cafa3099b2642cc94bf8d4969dfc4d81f62b587980a94353ab4996",
+      "regular_files": 2437
+    },
+    {
+      "file": "profile-baseline.tar.gz",
+      "sha256": "fd0f90c6ac7a91d6d5d25a2553550b9fc8d1e2ab1f5ce616deacb575878b6c0e",
+      "regular_files": 848
+    },
+    {
+      "file": "profile-cohort.tar.gz",
+      "sha256": "2f09b049b3746b75bc2da1709528ef03b0b002714794f8f33fa54eeba148033f",
+      "regular_files": 847
+    },
+    {
+      "file": "metadata.tar.gz",
+      "sha256": "d44f5dbb96c90197c72e548d333344347a94d96b3f725f01e7589d3e1b806701",
+      "regular_files": 13
+    }
+  ],
+  "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+}

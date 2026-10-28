@@ -6,6 +6,19 @@ performance qualification are separate observations. Basic plus directly affecte
 checks are the default; use [test selection](../tests/README.md) for commands.
 This index does not claim a full suite or arbitrary-kernel equivalence.
 
+## Rwsem reader-cohort admission
+
+The [cross-NUMA rwsem record](../bench/results/10.176.26.71/bench/rwsem-numa-20261028/README.md)
+binds source `acc4dbc2e283` to the passing affected unit fixture, including sixteen
+negative mutations, and live rwsem probe. The policy delays a new writer phase
+behind queued readers while preserving positive-cohort joins, exact reservations
+and local reader execution. The fixture covers the empty-reader-queue wake and
+full-barrier ordering; it does not establish global starvation freedom.
+Four-family basic checks passed with returned JIT bodies and final drain;
+two read-only and four ordinary-writer mixed controls also passed.
+The single-round throughput observations are exploratory, and the earlier MM
+results do not qualify this source or its changed admission policy.
+
 ## Linux 7 functional port
 
 The [port receipt](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
