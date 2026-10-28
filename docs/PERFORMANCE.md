@@ -26,6 +26,18 @@ frequency at every instruction.
 a delegation gain. `NORMAL` proves publication only. Failed preparation or
 partial generated execution contributes no accepted throughput.
 
+## Current full nano comparison
+
+The [single-round rerun](../bench/results/10.176.26.71/bench/nano-cohort-20261028/README.md)
+at `edf1cc06` includes the queued-reader preference and completes all 630 nano
+points, with no real-world API cases. At 60 workers, KD mutex c01/c16 reaches
+4.313/4.000 Mops/s and exceeds both controls. KD rwsem at 1% writes is near
+TCLock (7.569 versus 7.577 for c01; 10.064 versus 10.230 for c16). At 20%
+writes, KD reaches 3.772/3.608, leaving gaps to TCLock of 20.4%/3.5%.
+All four rwlock endpoints remain below TCLock; c16 at 1% writes also loses
+to Native. These post256 observations have one round per point and remain
+separate from the earlier focused comparisons below.
+
 ## Cross-NUMA rwsem reader cohorts
 
 The [reader-cohort comparison](../bench/results/10.176.26.71/bench/rwsem-numa-20261028/README.md)

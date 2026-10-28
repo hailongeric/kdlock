@@ -1,0 +1,64 @@
+{
+  "completed": true,
+  "host": "380G10",
+  "inventory_paths": 27203,
+  "regular_files": 23742,
+  "verified_archives": [
+    {
+      "file": "mutex-c01-w100.tar.gz",
+      "sha256": "5e3ce4daed8158e72f9608aa425fc350a33ab3b5bba979107f8b79bcc6eca22a",
+      "regular_files": 2372
+    },
+    {
+      "file": "mutex-c16-w100.tar.gz",
+      "sha256": "cd47dcc5d45f945b7664bf721aadf79fbd73392082b3e48a5c1b64c90770ebce",
+      "regular_files": 2372
+    },
+    {
+      "file": "rwsem-c01-w001.tar.gz",
+      "sha256": "fd1d1a0ffa4bee592a1c5d6a67eebe91edb9a2950e4d745dd098373ca2345804",
+      "regular_files": 2373
+    },
+    {
+      "file": "rwsem-c01-w020.tar.gz",
+      "sha256": "0de4ea19a1615a959ca4458102af40e38d2b0657afd813dad8233bd602ed4d99",
+      "regular_files": 2373
+    },
+    {
+      "file": "rwsem-c16-w001.tar.gz",
+      "sha256": "33cddb5b5c889dfe6373bc4df37af9c2c3f50bedef172e495d1b4fc8cdb33c30",
+      "regular_files": 2373
+    },
+    {
+      "file": "rwsem-c16-w020.tar.gz",
+      "sha256": "1825be513c05bb446db21e468828e8e8ba0dcf370358ba998124c8ac678cd36b",
+      "regular_files": 2373
+    },
+    {
+      "file": "rwlock-c01-w001.tar.gz",
+      "sha256": "6044f55851418184d3d411a0e953bc7a76b67e624ee8c8f2950950fad034b8ea",
+      "regular_files": 2371
+    },
+    {
+      "file": "rwlock-c01-w020.tar.gz",
+      "sha256": "d51a5ae7e2af809f2b0515f2c0d84d1ae18cc09524eb78b65bbd6433f8f93803",
+      "regular_files": 2371
+    },
+    {
+      "file": "rwlock-c16-w001.tar.gz",
+      "sha256": "3706beabb2503f393fb2207aa7307881e684be2cb862806bfa652fb6569702a9",
+      "regular_files": 2371
+    },
+    {
+      "file": "rwlock-c16-w020.tar.gz",
+      "sha256": "0916f4d2e862bfe2651ba6a3ca4dc13b4bdfed51e08cdaf265a6a2be0608e9b6",
+      "regular_files": 2371
+    },
+    {
+      "file": "metadata.tar.gz",
+      "sha256": "fa052d783da57b59e51ebe92e2474b064cba301d589b3c1cd77c63e633fe1ec9",
+      "regular_files": 22
+    }
+  ],
+  "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+}

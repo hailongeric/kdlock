@@ -6,6 +6,16 @@ performance qualification are separate observations. Basic plus directly affecte
 checks are the default; use [test selection](../tests/README.md) for commands.
 This index does not claim a full suite or arbitrary-kernel equivalence.
 
+## Current full nano rerun
+
+The [630-point nano rerun](../bench/results/10.176.26.71/bench/nano-cohort-20261028/README.md)
+at `edf1cc06` passed all 630 measured and 630 warmup receipt/oracle checks,
+including exact data, placement, frozen inputs, publication and final drain.
+Of 210 KD measured points, 130 recorded returned JIT bodies and 80 remained
+local NO_JIT. Each point has one measured round; no real-world API was run.
+The guest remained on the recorded Linux 7 boot and finished idle. Timing
+remains exploratory and does not qualify whole-kernel or MM execution.
+
 ## Rwsem reader-cohort admission
 
 The [cross-NUMA rwsem record](../bench/results/10.176.26.71/bench/rwsem-numa-20261028/README.md)
