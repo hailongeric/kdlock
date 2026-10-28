@@ -18,10 +18,6 @@
 #include "kd_mutex.h"
 #include "kd_mutex_local.h"
 
-#if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_DEBUG_LOCK_ALLOC)
-#error "KD mutex currently supports the captured non-RT, non-lockdep configuration"
-#endif
-
 #define KD_WAITERS 1UL
 #define KD_HANDOFF 2UL
 #define KD_PICKUP 4UL

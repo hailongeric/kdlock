@@ -2,6 +2,7 @@
  * Mutex acquisition records retain routing after admission closes or a waiter
  * renames. No global hooks are installed; teardown still requires the external
  * no-new-callers boundary and complete request/source retirement. */
+#include "kd_config.h"
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
