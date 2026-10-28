@@ -1,5 +1,6 @@
 """Run production rwlock algorithms against C atomics and concurrent callers.
 
+The inline API and out-of-line reader helper are compiled from production.
 Only kernel primitives and the embedded spin engine are substituted here.
 The live workload separately verifies the real queue and returned JIT bodies.
 """
@@ -14,9 +15,12 @@ ROOT = Path(__file__).resolve().parents[3]
 def main():
     header = (ROOT / "include/kd_rwlock.h").read_text()
     header = re.sub(r"^#include .*$", "", header, flags=re.M)
+    slowpath = (ROOT / "kernel_module/kd_rwlock.c").read_text()
+    slowpath = re.sub(r"^(?:#include |EXPORT_SYMBOL_GPL\().*$", "", slowpath, flags=re.M)
     with tempfile.TemporaryDirectory(prefix="kd-rwlock-") as directory:
         path = Path(directory)
         (path / "rwlock_production.h").write_text(header)
+        (path / "rwlock_reader_slowpath.h").write_text(slowpath)
         release = (ROOT / "kernel_module/spin/direct.inc").read_text()
         release = release[release.index('void\nkd_rwlock_fast_write_unlock('):
                           release.index('EXPORT_SYMBOL_GPL(kd_rwlock_fast_write_unlock)')]

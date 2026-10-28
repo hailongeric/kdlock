@@ -16,12 +16,13 @@ terms such as combiner, continuation, source lease and ACK.
 | Stage | Implementation |
 | --- | --- |
 | Object, reader operations and native writer admission | [kd_rwlock.h](../../include/kd_rwlock.h): reader count, writer bits, spin gate and all public pairs |
+| Contended local reader | [kd_rwlock.c](../../kernel_module/kd_rwlock.c): interrupt/BH bypass and task-context gate queueing after the inline speculative increment |
 | Writer preparation and pinned local entry | [spin/direct.inc](../../kernel_module/spin/direct.inc): `kd_spin_prepare` and `kd_rwlock_lock_pinned_clobber_v1` |
 | Delegated writer admission, refusal and retry | [spin/combiner.inc](../../kernel_module/spin/combiner.inc): `kd_spin_rw_begin`, `kd_spin_rw_cancel`, `kd_spin_rw_retry` |
 | Generated execution and waiter restoration | [spin/execute.inc](../../kernel_module/spin/execute.inc), [spin/restore.inc](../../kernel_module/spin/restore.inc), and shared execution frames |
 
-There is no separate `kd_rwlock.c` or rwlock queue implementation. The embedded
-gate uses KD's spin engine, while the header and writer-admission helpers add
+There is no separate rwlock queue implementation. The embedded gate uses KD's
+spin engine, while the header, contended-reader and writer-admission helpers add
 read/write exclusion. A gated writer needs both writer admission and exact spin
 ownership. The ungated fast writer instead retains its writer byte and exact
 nondelegated reference through unlock; it does not acquire the gate.
@@ -104,6 +105,14 @@ than the original eight-byte layout.
 | Bits 9..31 | Reader count; each reader adds `0x200`. |
 
 ### Readers
+
+The inline entry performs the speculative acquire increment and writer-mask
+test. Only contention calls `kd_rwlock_read_lock_slowpath`; that conventional
+provider symbol is required by module callers. It preserves the caller's pin
+and reader count contract, using the same interrupt exception and native gate
+sequence as the previous inline body. Moving the full slow path out of the
+caller reduces inline code but adds a contended CALL; its performance remains
+unmeasured until a matched comparison. No workload alignment is selected.
 
 1. Disable preemption and add to the reader count with acquire ordering.
 2. If there are no writer bits, enter the read body immediately.

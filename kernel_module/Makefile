@@ -39,7 +39,8 @@ kdlock_km-objs := \
 	kd_mutex_local.o \
 	kd_mutex_osq.o \
 	kd_rwsem.o \
-	kd_rwsem_api.o
+	kd_rwsem_api.o \
+	kd_rwlock.o
 
 OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 
