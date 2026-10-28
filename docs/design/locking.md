@@ -231,12 +231,18 @@ owner pointer under its wait lock. The owner word stays nonzero and preserves
 waiter/handoff flags; PICKUP lets the new owner consume the transfer with acquire
 ordering. This is uninterrupted exclusion, not unlock followed by relock.
 
-The original waiter resumes the pending spin CALL after pickup. The old executor
-retains the source lease, route and frame until that task physically releases A
+The original waiter W resumes the pending spin CALL after pickup. The old executor
+C retains the source lease, route and frame until that task physically releases A
 and the release ACK completes. Only then may the old executor retire its frame
 and reacquire A for its own original body. A transferred owner is not a completed
 unlock, so the outer release hook is marked only after the real release. The
-source and passing deterministic fixtures cover these intended transitions;
+current implementation does **not** exchange queue roles immediately. C's own
+request node remains reserved by its original wait invocation but is not
+republished. After W's unlock ACK, C waits for the gate/physical mutex through
+`kd_mutex_wait_and_lock(lock)`, which supplies no delegation node. W resumes its
+native suffix; it does not enter a new combiner loop to execute C's request.
+The requested full queued role exchange remains unimplemented. The
+source and passing deterministic fixtures cover only this owner-handoff path;
 a live failed-CAS transfer probe and matched performance qualification remain
 separate gates. See the [current checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
 

@@ -120,7 +120,9 @@ ticket. Success continues JIT with a ledger entry. A miss preserves the pending
 CALL; an eligible root holding only its outer mutex can transfer that physical
 owner directly to the original waiter. Other owner chains retain native borrowing.
 The former executor retains source/frame state through real unlock ACK and
-reacquires for its own request. This replaces the earlier blanket mixed-control
+reacquires for its own request without republishing a delegation node. The
+recipient resumes its native suffix, not a new combiner loop. Immediate queued
+role exchange is still unimplemented. This replaces the earlier blanket mixed-control
 `-EOPNOTSUPP`; it does not establish arbitrary mixed nesting or live transfer
 correctness. Pinned DIRECT controls and spin-to-mutex controls take pending native
 continuation; sleeping while a spinlock is held remains invalid. Translated

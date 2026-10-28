@@ -620,7 +620,10 @@ continues JIT; a miss preserves the pending CALL. Only a root with its sole oute
 mutex can transfer physical ownership to the original waiter. The owner word
 never opens during transfer, and the old executor retains source/frame state
 through actual unlock ACK before reacquiring for its own body. Multi-owner chains
-continue borrowing. This restricted implementation has separate unit, live
+continue borrowing. The old executor is not immediately requeued for delegation,
+and the recipient runs its native suffix rather than a new combiner loop. The
+requested full queued role exchange remains unimplemented. This restricted
+owner-handoff implementation has separate unit, live
 failed-CAS and timing gates; it is not arbitrary mixed-family support. The
 [ownership guide](locking.md#53-nested-ab-and-native-continuation) owns the detailed
 transfer conditions, logical spin pins, ACK routing and bounded-chain limits.
