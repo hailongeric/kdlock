@@ -82,15 +82,14 @@ backend selection. `prepare.py` namespaces the shared primitives, for example
 physical writer ownership behind that public family. Calling those functions
 directly on the embedded gate would bypass reader admission/drain and is invalid.
 Likewise, a caller selecting local mutex entry directly bypasses the source-level
-ABI2 facade. Public mutex unlock retains its provider routing; rwsem ordinary and
-outer acquisitions retain their distinct matching release protocols.
-`KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK` in
-`include/kd_rwsem_direct.h` explicitly opt eligible writers into delegation. They
-retain the originating task's phase reservation until the matching mutex
-unlock/ACK completes. They cannot downgrade, cancel after publication or nest
-inside another translated body. They do not transfer native MM bodies' task
-context. The mmap adapter uses ordinary acquisitions so every native MM body
-remains on its originating task.
+ABI2 facade. Public mutex unlock retains its provider routing. The loadable rwsem public
+facade in `include/kd_rwsem_api.h` uses one ordinary writer name family, with
+explicit quiescent preparation permitting writer delegation and imposing a
+no-downgrade obligation for those macro acquisitions. The MM generator instead
+uses the local declarations, removes delegated phase helpers and rewrites routed
+unlock to local gate release. It does not link the loadable public wrapper,
+prepare the MM object or transfer a native MM body's task context. Default
+ordinary, callable, signal and trylock local acquisitions retain downgrade.
 
 KD read trylock now accepts IRQ-disabled callers. Its fixed sequence is an
 admission check, ordered reader increment, admission recheck and, on collision,

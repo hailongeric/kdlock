@@ -38,18 +38,22 @@ only for its historical controls and is not selected by the active nano launcher
 [KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on c01/c08 or
 RCUHT. The waiting implementation in **`c21345b` is accepted as current**, including
 the low-count regressions recorded in its comparison. Readers execute locally.
-The default KD writer interface reserves a writer-only phase, blocks new readers,
-waits for existing readers while it can sleep, and then enters the unchanged KD
+The benchmark explicitly prepares the KD object, then ordinary public
+`kd_down_write/up_write` reserve a writer-only phase, block new readers,
+wait for existing readers while the caller can sleep, and then enter the unchanged KD
 mutex ABI2 protocol (its machine-level calling agreement). Its matching unlock finishes before the original
-caller releases that reservation. Ordinary writers, including downgrade callers,
+caller releases that reservation. Local writers, including downgrade callers,
 use a separate exclusive admission state on the same semaphore; they cannot add
 readers during a delegated writer phase. Separate queues for waiting to enter
 and waiting for readers to finish, plus limited condition checks before sleeping,
 are described in the rwsem design; the KD
 mutex protocol is unchanged.
 
-`--delegate off` compiles the ordinary local KD writer API and labels its variant
-`-local`; it requires zero JIT counts. `--require-jit` applies only to eligible
+`--delegate off` compiles callable local KD writer acquisition and labels its variant
+`-local`; it requires zero JIT counts. The prepared call shell is labelled `public-prepared-direct-abi2`; the local
+control is `callable-local`. This replaces the historical OUTER/cookie benchmark
+shell, so performance requires fresh measurements and separate source identities.
+`--require-jit` applies only to eligible
 multithreaded default-KD writers. TCLock uses its original writer-stack protocol
 and AQS reader gate, with per-worker registration and post-client retirement
 outside the measured loop. Its `upstream-stack` shell supports ordinary pairs,

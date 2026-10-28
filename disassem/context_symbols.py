@@ -59,6 +59,7 @@ CONTEXT_SYMBOLS = (
     # before publishing on the embedded mutex. That does not authorize calls
     # to ordinary rwsem APIs or phase helpers inside an enclosing JIT body.
     "kd_down_*", "kd_up_*", "kd_downgrade_write", "kd_rwsem_*",
+    "kd_init_rwsem", "__kd_init_rwsem",
     "schedule*",
     "__schedule*",
     "*cond_resched*",

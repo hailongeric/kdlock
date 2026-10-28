@@ -38,6 +38,7 @@
 void kd_rwsem_init(struct kd_rwsem *sem)
 {
 	kd_mutex_init(&sem->gate);
+	WRITE_ONCE(sem->prepared_writes, 0);
 	atomic_long_set(&sem->readers, 0);
 	atomic_long_set(&sem->admission, 0);
 	init_waitqueue_head(&sem->phase_wait);
@@ -45,6 +46,15 @@ void kd_rwsem_init(struct kd_rwsem *sem)
 	osq_lock_init(&sem->reader_osq);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
+
+void __kd_init_rwsem(struct kd_rwsem *sem, const char *name, struct lock_class_key *key)
+{
+	/* The supported non-lockdep configuration has no dependency metadata. */
+	(void)name;
+	(void)key;
+	kd_rwsem_init(sem);
+}
+EXPORT_SYMBOL_GPL(__kd_init_rwsem);
 
 static void kd_rwsem_wake(wait_queue_head_t *queue)
 {
@@ -260,9 +270,10 @@ EXPORT_SYMBOL_GPL(kd_down_write_trylock);
 
 void kd_up_write(struct kd_rwsem *sem)
 {
-	BUG_ON(atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER);
-	kd_mutex_local_unlock(&sem->gate);
-	kd_rwsem_release_local(sem);
+	/* Routing validates the exact successful physical/borrowed acquisition.
+	 * A reservation is released only after this unlock has completed its ACK. */
+	kd_mutex_api_unlock(&sem->gate);
+	kd_rwsem_write_release(sem);
 }
 EXPORT_SYMBOL_GPL(kd_up_write);
 
@@ -278,6 +289,51 @@ void kd_downgrade_write(struct kd_rwsem *sem)
 	kd_rwsem_release_local(sem);
 }
 EXPORT_SYMBOL_GPL(kd_downgrade_write);
+
+/* Non-owner read release is explicit: the caller transfers the retained read
+ * acquisition and object lifetime. This API does not infer transfer authority
+ * from the aggregate reader count. Readers never delegate. */
+void kd_down_read_non_owner(struct kd_rwsem *sem)
+{
+	kd_down_read(sem);
+}
+EXPORT_SYMBOL_GPL(kd_down_read_non_owner);
+
+void kd_up_read_non_owner(struct kd_rwsem *sem)
+{
+	kd_up_read(sem);
+}
+EXPORT_SYMBOL_GPL(kd_up_read_non_owner);
+
+int kd_rwsem_is_locked(struct kd_rwsem *sem)
+{
+	return atomic_long_read(&sem->readers) || atomic_long_read(&sem->admission);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_is_locked);
+
+int kd_rwsem_is_contended(struct kd_rwsem *sem)
+{
+	/* An implementation-specific waiting hint, never admission/ownership. */
+	return waitqueue_active(&sem->phase_wait) || waitqueue_active(&sem->reader_drain) ||
+		atomic_read(&sem->reader_osq.tail) || READ_ONCE(sem->gate.wait_head) ||
+		atomic_read(&sem->gate.osq.tail) || READ_ONCE(sem->gate.delegation_tail);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_is_contended);
+
+void kd_rwsem_assert_held(const struct kd_rwsem *sem)
+{
+	WARN_ON(!atomic_long_read(&sem->readers) && !atomic_long_read(&sem->admission));
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_assert_held);
+
+void kd_rwsem_assert_held_write(const struct kd_rwsem *sem)
+{
+	/* Like the non-lockdep native assertion, this checks a writer state, not
+	 * proof that the observing task owns an acquisition. */
+	WARN_ON(!atomic_long_read(&sem->admission) ||
+		!(atomic_long_read(&sem->gate.owner) & ~KD_MUTEX_OWNER_FLAGS));
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_assert_held_write);
 
 static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
 {
@@ -318,6 +374,19 @@ void kd_rwsem_delegate_exit(struct kd_rwsem *sem)
 		kd_rwsem_wake(&sem->phase_wait);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_delegate_exit);
+
+void kd_rwsem_write_release(struct kd_rwsem *sem)
+{
+	/* The successful mutex unlock/ACK precedes this internal call. A local
+	 * writer keeps -1 until release; a delegated origin retains its positive
+	 * reservation through ACK. The phase selects the reservation to retire,
+	 * and never substitutes for the mutex owner's exact acquisition record. */
+	if (atomic_long_read(&sem->admission) == KD_RWSEM_LOCAL_WRITER)
+		kd_rwsem_release_local(sem);
+	else
+		kd_rwsem_delegate_exit(sem);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_write_release);
 
 bool kd_rwsem_is_idle(struct kd_rwsem *sem)
 {

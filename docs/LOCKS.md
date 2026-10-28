@@ -23,7 +23,7 @@ the separate Linux implementation used as a benchmark comparator.
 | Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
 | Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase and encoded tail; reserved nodes hold exact waiter records | Direct public blocking calls permit delegation; callable lock symbols and task-sensitive variants execute locally. Published delegation waiters poll pinned; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
 | Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
-| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and ordinary writers run locally. Explicit outer writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
+| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and default ordinary writers run locally. Explicitly prepared ordinary writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
 
 Sizes describe the captured x86_64 configuration, not a portable binary
 interface. They exclude per-CPU queues, stacks, execution frames and translated
@@ -49,13 +49,13 @@ ownership. Those layers have separate responsibilities and must all remain live
 until their matching releases. Neither reader/writer lock adds a third JIT
 engine. JIT means just-in-time translation of the original protected code.
 
-Use [`include/kd_rwsem.h`](../include/kd_rwsem.h) and `struct kd_rwsem` for the unified concurrent-reader
+Use [`include/kd_rwsem_api.h`](../include/kd_rwsem_api.h) and `struct kd_rwsem` for the unified concurrent-reader
 API. Linux mmap callers retain their `mmap_*` wrappers. The internal
 `kd_mutex_local_*` gate implements physical writer exclusion; bypassing rwsem
-admission with that gate does not protect readers. Explicit delegation remains
-a separate interface in [`include/kd_rwsem_direct.h`](../include/kd_rwsem_direct.h),
-with its own publication and retirement obligations. The mmap adapter selects
-the local protocol and keeps native MM bodies on their original task.
+admission with that gate does not protect readers. Explicit quiescent preparation
+permits delegation through the same ordinary writer names. Prepared macro acquisitions cannot downgrade; unprepared ordinary
+and callable/signal/try/cleanup writer acquisitions remain local and can downgrade.
+The mmap adapter selects the local protocol and keeps native MM bodies on their original task.
 
 The provider builds both engines and shared execution helpers through
 [`kd_spin_runtime.c`](../kernel_module/kd_spin_runtime.c). Ordinary mutex physical
@@ -70,7 +70,7 @@ linked implementations. See the [code map](CODE_MAP.md).
 | Spinlock | The ordinary direct pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
 | Mutex | `kd_mutex_local_lock/unlock`; callable lock symbol, trylock, interruptible, killable and I/O forms | Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases; explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`; `KD_MUTEX_OUTER_LOCK/UNLOCK` retains its outer cookie | Unified calls capture an internal continuation; explicit named entries use `kd_mutex_prepare(lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
 | Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock`; local IRQ/BH and trylock forms | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
-| Rwsem | `kd_down_read/up_read`; `kd_down_write/up_write`; ordinary trylock, interruptible, killable and downgrade forms | `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK`; outer writers only | `kd_mutex_prepare(&sem->gate, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
+| Rwsem | `kd_down_read/up_read`; default `kd_down_write/up_write`; callable/signal/try/cleanup acquisitions stay local with downgrade | Same ordinary writer names after explicit preparation; no downgrade or translated nesting for prepared macro acquisitions | `kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` on a quiescent object; ABI2 |
 
 An **ABI**, or application binary interface, specifies registers and data layout.
 ABI1/2/3 are declared in [`exe_info.h`](../include/exe_info.h). ABI3 starts

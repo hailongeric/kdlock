@@ -58,7 +58,7 @@ def parser():
     p.add_argument('--mutex-numa-boundary', type=int, default=1024,
                    help='KD mutex NUMA cohort boundary; default 1024')
     p.add_argument('--delegate', choices=('on', 'off'), default='on',
-                   help='KD local control when off; rwsem compiles the ordinary API shell')
+                   help='KD local control when off; rwsem uses callable local API symbols')
     p.add_argument('--require-jit', action='store_true',
                    help='require complete delegation in each eligible multithread KD case')
     p.add_argument('--require-parity', action='store_true',
@@ -166,7 +166,7 @@ def make_plan(args):
                     (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
                 rwsem_writer_shell=('upstream-stack' if arm == 'tclock' else
-                    'delegated-epoch-abi2' if rwsem_direct else 'ordinary-local')
+                    'public-prepared-direct-abi2' if rwsem_direct else 'callable-local')
                     if args.lock_kind == 'rwsem' else None,
                 require_jit=args.require_jit and arm == 'kdlock' and
                     (percent < 100 if args.lock_kind == 'spin' else percent > 0) and n > 1,
@@ -345,10 +345,13 @@ def build(args, out, plan, *, mutex_diag=False):
                                    'tc_rwsem_worker_register'),
                         'kdlock': ('kd_down_read', 'kd_up_read', 'kd_down_write', 'kd_up_write')}[backend]
             if backend == 'kdlock' and spec['delegate']:
-                expected = ('kd_down_read', 'kd_up_read', 'kd_mutex_prepare',
-                            'kd_rwsem_delegate_enter', 'kd_rwsem_delegate_exit',
-                            'kd_mutex_outer_contended_clobber_v1',
-                            'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_local_unlock')
+                expected = ('kd_down_read', 'kd_up_read', 'kd_rwsem_prepare',
+                            'kd_rwsem_down_write_clobber_v1', 'kd_rwsem_write_release',
+                            'kd_mutex_direct_unlock_clobber_v1')
+                from mutex_api_audit import audit_public_entries
+                write_json(out / ('public-entry-' + variant + '.json'),
+                           audit_public_entries(binary, {'rb_entry': 'rb_write'},
+                               lock_symbol='kd_rwsem_down_write_clobber_v1'))
         elif spec['lock_kind'] == 'mutex':
             expected = {'native': ('mutex_lock', 'mutex_unlock'),
                         'tclock': ('komb_mutex_lock', 'komb_mutex_unlock', 'tc_mutex_worker_register',

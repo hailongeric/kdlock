@@ -200,7 +200,7 @@ class BenchTests(unittest.TestCase):
         for spec in plan:
             candidate.record = spec
             self.assertFalse(candidate.has_entry())
-            self.assertEqual(spec['rwsem_writer_shell'], 'ordinary-local')
+            self.assertEqual(spec['rwsem_writer_shell'], 'callable-local')
             if spec['arm'] == 'kdlock':
                 self.assertTrue(spec['variant'].endswith('-local'))
         args.require_jit = True
@@ -228,6 +228,8 @@ class BenchTests(unittest.TestCase):
             kd = spec['arm'] == 'kdlock'
             self.assertEqual(spec['delegate'], kd)
             self.assertEqual(spec['entry_abi'], 2 if kd else None)
+            self.assertEqual(spec['rwsem_writer_shell'],
+                             'public-prepared-direct-abi2' if kd else 'callable-local')
             self.assertEqual(spec['caller_abi'], 'clobber' if kd else 'c')
             self.assertEqual(spec['require_jit'], kd and spec['threads'] > 1)
             self.assertEqual(spec['delegation_batch_limit'], 1024 if kd else None)

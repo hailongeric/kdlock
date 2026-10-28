@@ -7,14 +7,16 @@
 #include <linux/kthread.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
+#include <linux/objtool.h>
 #include <linux/sched/task.h>
 #include <linux/sched/signal.h>
 #include <linux/uaccess.h>
 #include "kd_lock.h"
-#include "kd_rwsem.h"
-#include "kd_rwsem_direct.h"
+#include "kd_rwsem_api.h"
 
 static DEFINE_KD_RWSEM(sem);
+extern char rwsem_probe_entry[];
+int kd_rwsem_compat_checks(void);
 static DEFINE_KD_MUTEX(control);
 static atomic_t reading = ATOMIC_INIT(0), writing = ATOMIC_INIT(0), errors = ATOMIC_INIT(0);
 struct worker {
@@ -46,15 +48,17 @@ static void check_at(bool condition, unsigned int line)
  */
 static __attribute__((noipa)) void outer_body(struct worker *w)
 {
-	struct kd_rwsem_outer_cookie cookie;
 
-	KD_RWSEM_OUTER_WRITE_LOCK(&sem, cookie, "");
+	kd_down_write(&sem);
+	asm volatile(".globl rwsem_probe_entry\n.set rwsem_probe_entry, 1b\n\t"
+	             ".pushsection .discard.noendbr\n\t"
+	             _ASM_PTR " rwsem_probe_entry\n\t.popsection\n\t" : : : "memory");
 	check(!atomic_read(&reading));
 	check(atomic_inc_return(&writing) == 1);
 	complete(&w->entered);
 	wait_for_completion(&w->release);
 	atomic_dec(&writing);
-	KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
+	kd_up_write(&sem);
 }
 
 static int worker_main(void *data)
@@ -66,7 +70,7 @@ static int worker_main(void *data)
 		goto done;
 	}
 	if (w->kind == WRITER) {
-		kd_down_write(&sem);
+		(kd_down_write)(&sem);
 		check(!atomic_read(&reading));
 		check(atomic_inc_return(&writing) == 1);
 	} else {
@@ -170,7 +174,6 @@ static int cancel_worker(void *data)
 static int cancel_case(bool writer, bool drain, int signal, bool outer)
 {
 	struct cancellation c = { .writer = writer, .signal = signal, .result = 1 };
-	struct kd_rwsem_outer_cookie cookie;
 	struct task_struct *task;
 	unsigned long deadline;
 	bool queued = false;
@@ -180,15 +183,15 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	if (drain)
 		kd_down_read(&sem);
 	else if (outer)
-		KD_RWSEM_OUTER_WRITE_LOCK(&sem, cookie, "");
-	else
 		kd_down_write(&sem);
+	else
+		(kd_down_write)(&sem);
 	task = kthread_create(cancel_worker, &c, "kd_rwsem_cancel");
 	if (IS_ERR(task)) {
 		if (drain)
 			kd_up_read(&sem);
 		else if (outer)
-			KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
+			kd_up_write(&sem);
 		else
 			kd_up_write(&sem);
 		return PTR_ERR(task);
@@ -224,7 +227,7 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 			check(false);
 		kd_up_read(&sem);
 	} else if (outer) {
-		KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
+		kd_up_write(&sem);
 	} else {
 		kd_up_write(&sem);
 	}
@@ -353,7 +356,7 @@ static int downgrade_case(struct result *r)
 	int ret;
 
 	init_workers();
-	kd_down_write(&sem);
+	(kd_down_write)(&sem);
 	ret = start(0, OUTER_WRITER);
 	if (ret) {
 		kd_up_write(&sem);
@@ -382,6 +385,70 @@ static int downgrade_case(struct result *r)
 	check(entered(0));
 	join_workers();
 	r->downgrade_checks++;
+	return 0;
+}
+
+static DECLARE_COMPLETION(non_owner_done);
+
+static int non_owner_release(void *unused)
+{
+	(void)unused;
+	kd_up_read_non_owner(&sem);
+	complete(&non_owner_done);
+	return 0;
+}
+
+static int public_api_checks(void)
+{
+	struct task_struct *task;
+	struct lock_class_key key;
+	int annotations = 0, ret;
+	void (*local_write)(struct kd_rwsem *) = kd_down_write;
+	void (*routed_unlock)(struct kd_rwsem *) = kd_up_write;
+
+	__kd_init_rwsem(&sem, "rwsem_probe", &key);
+	check(!kd_rwsem_is_locked(&sem) && !kd_rwsem_is_contended(&sem));
+	kd_down_write_nested(&sem, annotations++);
+	check(!annotations && atomic_long_read(&sem.admission) == -1);
+	kd_rwsem_assert_held(&sem);
+	kd_rwsem_assert_held_write(&sem);
+	check(kd_rwsem_prepare(&sem, (unsigned long)rwsem_probe_entry,
+		KD_ENTRY_ABI_MUTEX_CLOBBER_V1) == -EBUSY);
+	check(!READ_ONCE(sem.prepared_writes));
+	kd_downgrade_write(&sem);
+	kd_up_read(&sem);
+	kd_down_read_non_owner(&sem);
+	reinit_completion(&non_owner_done);
+	task = kthread_create(non_owner_release, NULL, "kd_rwsem_nonown");
+	if (IS_ERR(task)) {
+		kd_up_read_non_owner(&sem);
+		return PTR_ERR(task);
+	}
+	/* Retain the task through its explicit non-owner release and join. */
+	get_task_struct(task);
+	wake_up_process(task);
+	check(wait_for_completion_timeout(&non_owner_done, 5 * HZ));
+	check(!kthread_stop(task));
+	put_task_struct(task);
+	check(kd_rwsem_is_idle(&sem));
+	{ guard(kd_rwsem_read)(&sem); check(kd_rwsem_is_locked(&sem)); }
+	{ guard(kd_rwsem_write)(&sem); check(atomic_long_read(&sem.admission) == -1); }
+	check(kd_rwsem_is_idle(&sem));
+	ret = kd_rwsem_prepare(&sem, (unsigned long)rwsem_probe_entry,
+		KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	if (ret)
+		return ret;
+	check(READ_ONCE(sem.prepared_writes) == 1);
+	local_write(&sem);
+	check(atomic_long_read(&sem.admission) == -1);
+	kd_downgrade_write(&sem);
+	kd_up_read(&sem);
+	{ guard(kd_rwsem_write)(&sem); check(atomic_long_read(&sem.admission) == -1); }
+	kd_down_write(&sem);
+	check(atomic_long_read(&sem.admission) == 1);
+	routed_unlock(&sem);
+	check(kd_rwsem_is_idle(&sem) && READ_ONCE(sem.prepared_writes) == 1);
+	check(!kd_rwsem_compat_checks());
 	return 0;
 }
 
@@ -444,6 +511,10 @@ static long run(void __user *user)
 			goto result;
 		r.cancellation_checks++;
 	}
+	ret = public_api_checks();
+	if (ret || atomic_read(&errors))
+		goto result;
+	r.api_checks += 9;
 	for (i = 0; i < 4; i++) {
 		ret = cancel_case(i / 2, false, i % 2 ? SIGKILL : SIGUSR1, true);
 		if (ret || atomic_read(&errors))

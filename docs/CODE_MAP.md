@@ -19,7 +19,7 @@ Build outputs and frozen result snapshots are evidence, not another source tree.
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_rwlock.h](../include/kd_rwlock.h), `spin/direct.inc`, `combiner.inc` | Concurrent local readers, exclusive writer admission and ABI3 retry/continuation |
 | [kd_rwsem.c](../kernel_module/kd_rwsem.c), [types](../include/kd_rwsem_types.h) | Reader/writer phases, reservations, waiting, cancellation, downgrade and atomic read release |
-| [kd_rwsem_direct.h](../include/kd_rwsem_direct.h) | Explicit outer ABI2 writers; reserve/drain before publication, origin release after mutex ACK |
+| [kd_rwsem_api.h](../include/kd_rwsem_api.h), [kd_rwsem_api.c](../kernel_module/kd_rwsem_api.c) | Unified ordinary writer names; explicitly prepared object permits ABI2 after reserve/drain; origin phase release follows exact unlock/ACK |
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |

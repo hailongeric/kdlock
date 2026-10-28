@@ -1,13 +1,13 @@
-"""Verify the literal public mutex caller's prepared ABI2 continuations."""
+"""Verify literal public mutex/rwsem prepared ABI2 continuations."""
 from pathlib import Path
 
 from elftools.elf.elffile import ELFFile
 
 
-def audit_public_entries(binary, expected):
+def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_clobber_v1'):
     """Inspect relocatable x86-64 ELF, never infer an entry from source labels.
 
-    The workload aliases DIRECT's private numeric continuation. Require the
+    The workload aliases the public clobber call's private numeric continuation. Require the
     exact emitted capture/CALL sequence and body extent before preparing it.
     Compiler changes that invalidate that observation must stop the run.
     """
@@ -42,7 +42,7 @@ def audit_public_entries(binary, expected):
                     offset = relocation['r_offset']
                     target = targets.get_symbol(relocation['r_info_sym']).name
                     if (start <= offset < start + size
-                            and target == 'kd_mutex_direct_lock_clobber_v1'):
+                            and target == lock_symbol):
                         calls.append(relocation)
                     if (start <= offset < start + size
                             and target == 'kd_mutex_direct_unlock_clobber_v1'):

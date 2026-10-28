@@ -29,7 +29,7 @@ def idle():
             continue
         # Inspect exact thread comm values, not command-line substrings: this
         # runner's own path contains rwsem and must not reject itself.
-        rt.require(name not in ('rb_worker', 'kd_rwsem_probe', 'kd_rwsem_cancel', 'kd-cancel')
+        rt.require(name not in ('rb_worker', 'kd_rwsem_probe', 'kd_rwsem_cancel', 'kd_rwsem_nonown', 'kd-cancel')
                    and not name.startswith(('kd-local/', 'kd_mtask_', 'kd_irq_api/')),
                    f'existing task: {path}: {name}')
 
@@ -72,7 +72,7 @@ def main():
                         'idle', 'outer_readers_slept', 'outer_writer_slept',
                         'downgrade_checks', 'publication_checks'), struct.unpack('=12Q', buffer)))
         print(json.dumps(row))
-        return 0 if row == dict(errors=0, api_checks=8, readers_slept=2,
+        return 0 if row == dict(errors=0, api_checks=17, readers_slept=2,
                                writer_slept=1, late_reader_slept=1,
                                cancellation_checks=10, colocated=1, idle=1,
                                outer_readers_slept=2, outer_writer_slept=1,
@@ -133,8 +133,8 @@ def main():
                               path / 'result.json', timeout=40)
             check_log()
             verify_inputs(source, hashes, binaries)
-            rt.command(['rmmod', 'rwsem_probe'], path / 'unload-probe.log')
             rt.command([sys.executable, source / 'disassem/device_session.py', 'retire'], path / 'retire.log')
+            rt.command(['rmmod', 'rwsem_probe'], path / 'unload-probe.log')
             rt.command(['rmmod', 'kdlock_km'], path / 'unload-provider.log')
             check_log()
             idle()

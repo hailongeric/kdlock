@@ -1,10 +1,10 @@
-# Sleeping rwsem and outer-writer admission checks
+# Sleeping rwsem public API and prepared-writer admission checks
 
 The reader/writer semaphore (rwsem) waiting implementation in `c21345b` remains
 the foundation for exact phases and sleeping waits. Ordinary read contention
 now queues optimistic admission attempts, and new writer phases yield while
 those readers remain queued. Admission means permission for a reader or writer
-to enter. An outer writer uses the explicit interface that may delegate its work
+to enter. A prepared ordinary writer may delegate its work
 to another lock holder. JIT means just-in-time compiled code for that delegated
 execution; a returned body must reach its matching unlock and finish the return
 protocol. See the [terminology guide](../../../docs/TERMINOLOGY.md) for other
@@ -13,8 +13,8 @@ implementation and result labels.
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). This probe exercises the
 [current KD rwsem](../../../docs/design/rwsem_implementation.md), including the
-outer-writer wrapper's local return path. It does not start a translator or
-register an image. These scheduling assertions do not count as returned JIT
+ordinary prepared wrapper's local return path. It registers a source entry but
+does not start a translator or register an image. These scheduling assertions do not count as returned JIT
 bodies; the mixed c08 benchmark checks reader consistency alongside actual
 entry and matching-unlock completion witnesses.
 
@@ -26,13 +26,20 @@ timeout 600s python3 tests/kernel/rwsem/run.py \
 Set the verified snapshot environment and pinned Python environment first. The
 runner freezes source (including `.inc` files), verifies kernel identity, builds
 provider/probe, saves commands and kernel logs, checks results, then retires the
-source session and unloads normally. A timeout or kernel fault retains modules
+source session before unloading the probe and provider normally. The source
+entry holds the probe module until that retirement. A timeout or kernel fault retains modules
 for diagnosis; it does not prove worker or source drain.
 
 The probe checks:
 
 - Static initialization, read/write trylocks, writer-to-reader downgrade and
   quiescent inspection.
+- Unified ordinary calls, ignored non-lockdep nested annotations, named init,
+  rejection of preparation on a live object, prepared flag retention, default
+  ordinary and prepared-object callable downgrade, local cleanup guards,
+  coordinated cross-task non-owner read release, and exact routed public unlock.
+  A separate translation unit uses Native aliases, callable query types,
+  guard/scoped/conditional guard helpers and `ACQUIRE_ERR` on KD objects.
 - Two readers that sleep concurrently while retaining their read counts; a
   writer that sleeps waiting for both; a late reader blocked behind that writer;
   and a writer that sleeps inside its body. All four workers share CPU 0, so
@@ -94,11 +101,11 @@ empty-queue wakeups, and exact writer reservation decisions across CAS races. It
 deterministic substitutes do not prove concurrent unlink or scheduling progress;
 the existing mutex OSQ fixtures and this live probe cover those separately.
 
-Expected result: `api_checks=8`, `cancellation_checks=10`, `readers_slept=2`,
+Expected result: `api_checks=17`, `cancellation_checks=10`, `readers_slept=2`,
 `writer_slept=1`, `late_reader_slept=1`, `outer_readers_slept=2`,
 `outer_writer_slept=1`, `downgrade_checks=1`, `publication_checks=3`,
-`colocated=1`, `errors=0`, `idle=1`. Outer acquisition has no cancellation or
-downgrade API; these cases exercise the supported ordinary operations mixed
+`colocated=1`, `errors=0`, `idle=1`. Prepared ordinary macro acquisition has no cancellation or
+downgrade contract; these cases exercise the supported ordinary operations mixed
 with outer callers. Returned JIT bodies are explicitly zero. See the
 [optimization validation receipt](../../../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
 for recorded outcomes and source identities, and the separate
@@ -110,3 +117,11 @@ The [previous local-only receipt](../../../bench/results/10.176.26.71/tests/feat
 records the earlier eight-field probe and separate workload checks. The historical
 [2026-10-15 receipt](../../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
 belongs to the archived owned-mutex implementation and is not current evidence.
+
+The guest-only [public facade fixture](../../unit/mutex/test_rwsem_api.py) compiles
+the production headers and phase-retirement helpers. It checks single evaluation,
+local/prepared routing, preparation failures, exact unlock-before-phase order,
+downgrade and the emitted ABI2 terminal boundary. Deterministic mutex/ACK stubs
+do not establish live scheduling or delegation. The Native header identity in
+[native-source.json](native-source.json) records the source used to compare API
+coverage; lockdep/RT/fairness and arbitrary kernel replacement remain unvalidated.

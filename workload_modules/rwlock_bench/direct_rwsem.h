@@ -1,23 +1,26 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* KD readers retain sleeping rwsem semantics. The explicit delegated writer
- * shell reserves a reader-free epoch before entering the unchanged KD mutex
- * protocol; the ordinary shell remains a distinct local control. */
+/* One ordinary public rwsem API. Quiescent preparation opts writer calls
+ * into ABI2 delegation; callable symbols provide the explicit local control. */
 #ifdef RB_KDLOCK
-#include "kd_rwsem.h"
+#include "kd_rwsem_api.h"
 static DEFINE_KD_RWSEM(rb_lock);
 #define RB_BACKEND 2
 #define RB_READ_LOCK() kd_down_read(&rb_lock)
 #define RB_READ_UNLOCK() kd_up_read(&rb_lock)
 #if RB_RWSEM_DELEGATE
-#include "kd_rwsem_direct.h"
 extern char rb_entry[];
-#define RB_WRITE_LOCK() struct kd_rwsem_outer_cookie rb_writer_cookie; \
-	KD_RWSEM_OUTER_WRITE_LOCK(&rb_lock, rb_writer_cookie, \
-	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
-#define RB_WRITE_UNLOCK() KD_RWSEM_OUTER_WRITE_UNLOCK(&rb_lock, rb_writer_cookie)
-#else
-#define RB_WRITE_LOCK() kd_down_write(&rb_lock)
+#define RB_WRITE_LOCK() do { \
+	kd_down_write(&rb_lock); \
+	asm volatile(".globl rb_entry\n.set rb_entry, 1b\n\t" \
+	             ".pushsection .discard.noendbr\n\t" \
+	             _ASM_PTR " rb_entry\n\t.popsection\n\t" : : : "memory"); \
+} while (0)
 #define RB_WRITE_UNLOCK() kd_up_write(&rb_lock)
+MODULE_INFO(kd_rwsem_api, "public-prepared-direct");
+#else
+#define RB_WRITE_LOCK() (kd_down_write)(&rb_lock)
+#define RB_WRITE_UNLOCK() (kd_up_write)(&rb_lock)
+MODULE_INFO(kd_rwsem_api, "callable-local");
 #endif
 #elif defined(RB_TCLOCK)
 #include "rwsem/komb_rwsem.h"
@@ -41,7 +44,7 @@ static DECLARE_RWSEM(rb_lock);
 static int rb_prepare(void)
 {
 #if defined(RB_KDLOCK) && RB_RWSEM_DELEGATE
-	return kd_mutex_prepare(&rb_lock.gate, (unsigned long)rb_entry,
+	return kd_rwsem_prepare(&rb_lock, (unsigned long)rb_entry,
 				KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 #else
 	return 0;
