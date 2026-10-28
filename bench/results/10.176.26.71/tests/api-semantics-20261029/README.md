@@ -132,7 +132,12 @@ only an eligible root holding its sole outer mutex may transfer physical
 ownership directly to its original waiter through PICKUP. The owner remains
 nonzero, queue flags survive, source/frame state lives through physical unlock
 ACK, and the former executor reacquires before running its own body. Other
-owner chains retain borrowing.
+owner chains retain borrowing. This is a partial implementation of the requested
+role exchange: the former combiner C waits for the original waiter W's physical
+unlock ACK and then reacquires without
+republishing its original request for delegation. W resumes its native suffix,
+not a new combiner loop. Immediate queued role exchange remains unimplemented;
+validating the owner handoff alone does not complete that requirement.
 
 These transitions are verified by static source inspection and affected
 production-code fixtures. Initial mixed units recorded eight passes and two

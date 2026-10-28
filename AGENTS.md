@@ -87,7 +87,11 @@ validate whole-kernel replacement.
    an eligible ABI2 root with its sole outer mutex may transfer that owner to the
    original waiter on contention; multi-owner chains retain borrowing. Transfer
    retains source/frame state through physical unlock ACK and the old executor
-   reacquires before its own body. Code support is not live transfer validation.
+   reacquires before its own body. This is only an owner handoff: the former
+   combiner is not immediately requeued/delegatable, and the recipient does not
+   start a new combiner loop.
+   The requested queued role exchange remains unimplemented; code support and
+   live owner-handoff validation cannot be reported as completing that request.
 7. Do not modify, build, install or reboot the guest kernel by default. Captured
    kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
