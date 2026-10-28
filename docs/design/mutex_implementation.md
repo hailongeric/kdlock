@@ -78,6 +78,16 @@ continuation whose lock remains physically owned by an executor. The last case
 requires an exact frame/lock match and an unlock ACK. Task membership is routing
 state, not a new admission decision at unlock.
 
+The provider first checks whether the physical owner is `current`, PICKUP is
+clear and an acquire read sees the delegation gate `FREE`. That completed local
+acquisition can release through the physical primitive without looking up task
+records. This branch never changes the gate or task references: a concurrent
+delegation head may claim `FREE` immediately after the check, and unrelated
+borrowed acquisitions must remain live. Transferred native owners retain
+`COMBINER` until their routed release, so still require the native unlock ACK.
+This provider optimization is a measurement candidate; no performance gain is
+established until a comparison with the same workload and call shell passes.
+
 The public macros evaluate the lock expression once and provide a void
 expression. Their internal numeric continuation requires no named label or
 caller cookie. Calls through a function pointer, or with the function name

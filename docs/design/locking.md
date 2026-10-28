@@ -126,9 +126,11 @@ acquisition enters the existing exact lock ledger; it never executes an inline
 physical-owner update outside that ledger.
 
 The addressable lock symbol, function-pointer calls and signal/try/I/O variants
-acquire locally. Their successful acquisitions can share public unlock: it checks
-retained native requests first, then exact gate ownership, otherwise local
-physical ownership. Native continuations retain their owner ACKs, and gate owners
+acquire locally. Their successful acquisitions can share public unlock. A
+completed physical owner with a `FREE` gate takes a local release without
+changing task records or the gate; other cases check retained native requests,
+then exact gate ownership, otherwise local physical ownership. Native
+continuations retain their owner ACKs, and gate owners
 retire their task reference only through the checked gate release. An explicit
 `kd_mutex_local_lock/unlock` pair remains local.
 Scope guards acquire through the conventional local lock function; guard/free

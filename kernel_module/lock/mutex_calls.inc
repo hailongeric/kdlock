@@ -94,10 +94,25 @@ void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
+	unsigned long owner;
 
 	(void)ret_rsp;
-	/* Always reached, even after CPU cooling, rename or source closing. Task
-	 * membership is an ownership lookup here, not a fresh-admission filter. */
+	/* Only current's completed acquisition orders these owner/gate reads.
+	 * PICKUP (bit 2) names a successor before its acquisition completes.
+	 * A local owner with a free gate owes no delegation release for this
+	 * lock; unrelated task records remain live. A transferred native owner
+	 * retains COMBINER until its routed release and ACK, so cannot enter here.
+	 * Another head may claim FREE immediately after this read: physical
+	 * unlock must not write its gate or drop any task reference. */
+	owner = atomic_long_read(&lock->owner);
+	if ((owner & ~KD_MUTEX_OWNER_FLAGS) == (unsigned long)current &&
+	    !(owner & 4UL) &&
+	    atomic_read_acquire(&lock->delegation_state) == KD_MUTEX_GATE_FREE) {
+		kd_origin_mutex_unlock(lock, ret_addr);
+		return;
+	}
+	/* Retained acquisitions still route after CPU cooling, rename or source
+	 * closing. Membership is ownership state, not a fresh-admission filter. */
 	if (!kd_mutex_task_reroute(current)) {
 		kd_origin_mutex_unlock(lock, ret_addr);
 		return;
