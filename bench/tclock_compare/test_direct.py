@@ -186,6 +186,61 @@ ret
                     with self.assertRaisesRegex(ValueError, 'captured RIP'):
                         audit_public_entries(binary, {'entry': 'body'})
 
+    def test_public_entry_audit_binds_each_of_two_calls_exactly(self):
+        # Nested public acquisitions share a function, but each admitted entry
+        # must still be exactly the captured return of its own relocation.
+        assembly = """
+.text
+.globl body
+.type body,@function
+body:
+mov %rsp,%rsi
+lea outer_after(%rip),%rdx
+mov %rbp,%rcx
+call kd_mutex_direct_lock_clobber_v1
+outer_after:
+nop
+mov %rsp,%rsi
+lea INNER_SAVED(%rip),%rdx
+mov %rbp,%rcx
+call INNER_TARGET
+inner_after:
+nop
+inner_shifted:
+call kd_mutex_direct_unlock_clobber_v1
+call kd_mutex_direct_unlock_clobber_v1
+ret
+.size body,.-body
+.globl outer_entry,inner_entry
+.set outer_entry,outer_after
+.set inner_entry,INNER_ENTRY
+"""
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            for entry, saved, target in (
+                    ('inner_after', 'inner_after', 'kd_mutex_direct_lock_clobber_v1'),
+                    ('inner_shifted', 'inner_after', 'kd_mutex_direct_lock_clobber_v1'),
+                    ('inner_after', 'inner_shifted', 'kd_mutex_direct_lock_clobber_v1'),
+                    ('inner_after', 'inner_after', 'another_lock')):
+                with self.subTest(entry=entry, saved=saved, target=target):
+                    source, binary = folder/'nested.S', folder/'nested.o'
+                    source.write_text(assembly.replace('INNER_SAVED', saved)
+                                      .replace('INNER_TARGET', target).replace('INNER_ENTRY', entry))
+                    subprocess.run(['gcc', '-c', str(source), '-o', str(binary)], check=True,
+                                   capture_output=True)
+                    # The independent outer capture remains exact in every case.
+                    outer = audit_public_entries(binary, {'outer_entry': 'body'})
+                    self.assertEqual(len(outer['outer_entry']['unlock_offsets']), 2)
+                    if entry == saved == 'inner_after' and target == 'kd_mutex_direct_lock_clobber_v1':
+                        both = audit_public_entries(binary, {'outer_entry': 'body', 'inner_entry': 'body'})
+                        self.assertNotEqual(both['outer_entry']['call_offset'],
+                                            both['inner_entry']['call_offset'])
+                        for result in both.values():
+                            self.assertEqual(result['entry_offset'], result['call_offset'] + 5)
+                    else:
+                        with self.assertRaisesRegex(ValueError, 'captured RIP'):
+                            audit_public_entries(binary, {'inner_entry': 'body'})
+
     def test_performance_diagnostics_are_unscored_for_every_backend(self):
         for mode in ('pmu', 'perf_record'):
             plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,

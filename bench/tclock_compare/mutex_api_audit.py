@@ -42,17 +42,20 @@ def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_
                 for relocation in relocs.iter_relocations():
                     offset = relocation['r_offset']
                     target = targets.get_symbol(relocation['r_info_sym']).name
-                    if (start <= offset < start + size
+                    if (start <= offset < start + size and address == offset + 4
                             and target == lock_symbol):
                         calls.append(relocation)
                     if (start <= offset < start + size
                             and target == unlock_symbol):
                         unlocks.append(relocation)
             if len(calls) != 1:
-                raise ValueError('expected one public lock CALL: ' + entry_name)
+                raise ValueError('expected one public lock CALL at captured RIP: ' + entry_name)
             call = calls[0]
             offset = call['r_offset']
             code = elf.get_section(section).data()
+            # Bind the named continuation to its exact predecessor CALL. A
+            # function may contain other public acquisitions (e.g. nested M);
+            # their unrelated return addresses do not select this entry.
             # mov rsp,rsi; lea after_call(%rip),rdx; mov rbp,rcx; call rel32.
             capture = bytes.fromhex('4889e6488d15080000004889e9e8')
             if (call['r_info_type'] not in (2, 4) or call['r_addend'] != -4
