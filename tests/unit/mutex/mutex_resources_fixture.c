@@ -367,8 +367,8 @@ static bool kd_mutex_task_active(struct task_struct *task)
 	CHECK(task == current);
 	return refs || active_override;
 }
-/* Task membership is a substitute; the real unlock hook must consult it
- * when the CPU cools, the name changes or source admission has closed. */
+/* Task membership is a substitute; retained acquisitions consult it even
+ * after the CPU cools, the name changes or source admission has closed. */
 static bool kd_mutex_task_reroute(struct task_struct *task)
 {
 	return kd_mutex_task_active(task);
@@ -938,7 +938,7 @@ static void check_slowpath_packets(void)
 				borrowed_lock = lock;
 				borrowed_task = current;
 				public_unlock(lock);
-				CHECK(notify_calls == 2 && releases == 1 &&
+				CHECK(notify_calls == 1 && releases == 1 &&
 				      !task_puts && refs == 1);
 				CHECK(fixture_gate_owner(gate) == &peer &&
 				      lock->owner == &peer);
@@ -1079,7 +1079,7 @@ static void check_outer_general_unlock(void)
 		public_unlock(lock);
 		CHECK(!lock->owner && releases == old_releases + 1 &&
 		      refs == inherited_refs && !task_puts && !borrowed_requests);
-		CHECK(notify_calls == !!inherited_refs && !cpu_shadows.node_slots &&
+		CHECK(!notify_calls && !cpu_shadows.node_slots &&
 		      !kd_mutex_reserved_nodes && !slow_calls);
 		CHECK(kd_mutex_origin_releases == origin_before &&
 		      current == &waiter && !preempt && !migration && !table_irq);
