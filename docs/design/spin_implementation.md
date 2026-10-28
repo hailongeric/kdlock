@@ -26,14 +26,18 @@ make the node pools or unlock protocols interchangeable.
 
 Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization and
 [`kd_spin_api.h`](../../include/kd_spin_api.h) for ordinary paired operations.
-The public macros expand through the existing DIRECT implementation; they do
-not add another provider call or capture registers outside ABI1.
+The public macros use the shared ABI1 assembly boundary to call
+`kd_spin_lock_clobber_v1` / `kd_spin_unlock_clobber_v1`. The provider acquires
+the native pin. No caller-side pin, heat read or acquisition precedes that
+control CALL, so a translated nested pair can reach the runtime's known-control
+handler before changing acquisition state. Runtime mixed-lock support and its
+validation remain separate from this compiler boundary.
 
 | Operation | Interface and contract |
 | --- | --- |
 | Initialize unused storage | `DEFINE_KD_SPINLOCK`, `KD_SPINLOCK_INITIALIZER` or `kd_spin_init` |
 | Ordinary acquisition/release | `kd_spin_lock(lock)` / `kd_spin_unlock(lock)`; evaluate the KD pointer once, pin once, preserve IRQ/BH state, permit eligible delegation |
-| Named benchmark continuation | `KD_SPIN_DIRECT_LOCK(lock, kd_spin_direct_cookie, continuation)` and `KD_SPIN_DIRECT_UNLOCK(lock, kd_spin_direct_cookie)`; the same implementation with an explicit preparation label |
+| Named benchmark continuation | `KD_SPIN_DIRECT_LOCK(lock, kd_spin_direct_cookie, continuation)` and `KD_SPIN_DIRECT_UNLOCK(lock, kd_spin_direct_cookie)`; retains its caller pin, inline heat/native prefix and explicit preparation label |
 | Opt-in helper entry | `KD_SPIN_DIRECT_HELPER_LOCK` with the ordinary direct unlock; establishes five scratch-register values in the original hot-entry code for callers that need that contract |
 | Save/restore interrupt state | `kd_spin_lock_irqsave` / `kd_spin_unlock_irqrestore`; original caller executes locally |
 | Disable/enable interrupts | `kd_spin_lock_irq` / `kd_spin_unlock_irq`; original caller executes locally |
@@ -67,9 +71,14 @@ the contended native finisher, preparation, the native unlock used by the IRQ
 probe, and the per-CPU fields read by public inline code. Internal ownership
 probes and the load-time `spin_delegate` parameter retain their implementation
 without exporting extra callable/data interfaces. The source-only facade and
-export change does not alter the existing benchmark call shells. Its focused
-compiler/relocation and live checks must be recorded separately before claiming
-validated execution or a performance result.
+export change does not alter the existing named benchmark call shells. The
+ordinary public pair now always makes the unpinned clobber CALL; it therefore
+has a different cold path from DIRECT. `spin/test_spin_api.py` checks generated
+root and mutex-nested calls against that raw clobber shell, executes destructive
+provider substitutes and checks exact metadata, spills and pin balance. It does
+not establish returned JIT execution or native provider behavior. Record focused
+VM checks and public-pair measurements separately before claiming validated
+execution or a performance result.
 
 ## Following one request in source
 

@@ -4,10 +4,11 @@
 
 #include "kd_spin_direct.h"
 
-/* Ordinary source calls use the same compiler-owned ABI1 spill boundary as
- * the named DIRECT shell. An anonymous continuation needs no preparation
- * label: the provider registers it on the contended path. Keep benchmark
- * continuations in DIRECT; both interfaces share its admission and unlock.
+/* Ordinary source calls expose an ABI1 control CALL before any acquisition
+ * pin or per-CPU operation. The provider owns the native pin, while a translated
+ * nested CALL can use the runtime's exact acquisition ledger. An anonymous
+ * continuation needs no preparation label: contention registers it. Named
+ * benchmark DIRECT shells retain their separate inline admission prefix.
  *
  * Capture the expression before DIRECT declares its private temporaries.
  * __auto_type also keeps a same-named caller variable visible in its own
@@ -18,14 +19,14 @@
 #define kd_spin_lock(lock) ({ \
 	__auto_type kd_spin_api_arg = (lock); \
 	kd_spinlock_t *kd_spin_api_word = kd_spin_api_arg; \
-	KD_SPIN_DIRECT_LOCK(kd_spin_api_word, kd_spin_direct_cookie, ""); \
+	KD_SPIN_DIRECT_CALL(kd_spin_lock_clobber_v1, kd_spin_api_word, ""); \
 	(void)0; \
 })
 
 #define kd_spin_unlock(lock) ({ \
 	__auto_type kd_spin_api_arg = (lock); \
 	kd_spinlock_t *kd_spin_api_word = kd_spin_api_arg; \
-	KD_SPIN_DIRECT_UNLOCK(kd_spin_api_word, kd_spin_direct_cookie); \
+	KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, kd_spin_api_word, ""); \
 	(void)0; \
 })
 
