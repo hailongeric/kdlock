@@ -1,0 +1,94 @@
+{
+  "baseline_source": "67361fee6440765e130385b2961246a41052b953",
+  "candidate_identity": "source-sha256.json",
+  "points": 12,
+  "repetitions": 1,
+  "passed_data_and_drain": true,
+  "performance_accepted": false,
+  "rows": [
+    {
+      "profile": "mutex-throughput",
+      "workers": 1,
+      "baseline_mops": 1.9156778303726838,
+      "candidate_mops": 1.9164214481086912,
+      "change_pct": 0.038817473596952645
+    },
+    {
+      "profile": "mutex-throughput",
+      "workers": 8,
+      "baseline_mops": 3.68796558418734,
+      "candidate_mops": 2.1331095915463747,
+      "change_pct": -42.16026308129405
+    },
+    {
+      "profile": "mutex-throughput",
+      "workers": 20,
+      "baseline_mops": 4.583609878459138,
+      "candidate_mops": 2.0982256144521663,
+      "change_pct": -54.22329408283931
+    },
+    {
+      "profile": "mutex-throughput",
+      "workers": 32,
+      "baseline_mops": 4.5738026544971175,
+      "candidate_mops": 2.09334406233698,
+      "change_pct": -54.231867431387016
+    },
+    {
+      "profile": "mutex-throughput",
+      "workers": 36,
+      "baseline_mops": 4.2574399916908146,
+      "candidate_mops": 2.0670818265553383,
+      "change_pct": -51.44777540987935
+    },
+    {
+      "profile": "mutex-throughput",
+      "workers": 60,
+      "baseline_mops": 4.33971320137778,
+      "candidate_mops": 2.026058618692874,
+      "change_pct": -53.31353652472617
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 1,
+      "baseline_mops": 1.9161910250103023,
+      "candidate_mops": 1.9174523012989082,
+      "change_pct": 0.06582205386329587
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 8,
+      "baseline_mops": 3.634284419077869,
+      "candidate_mops": 1.9830741458450265,
+      "change_pct": -45.43426113170872
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 20,
+      "baseline_mops": 4.033538047938766,
+      "candidate_mops": 1.9996060243956137,
+      "change_pct": -50.42550731813576
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 32,
+      "baseline_mops": 4.059558067975182,
+      "candidate_mops": 1.9683250899516573,
+      "change_pct": -51.51380872023308
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 36,
+      "baseline_mops": 3.915062083544596,
+      "candidate_mops": 1.9350502168140504,
+      "change_pct": -50.5742137539207
+    },
+    {
+      "profile": "mutex-locality",
+      "workers": 60,
+      "baseline_mops": 3.9143589364747005,
+      "candidate_mops": 1.939778204129327,
+      "change_pct": -50.44454952625512
+    }
+  ]
+}

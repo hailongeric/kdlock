@@ -24,7 +24,7 @@ own code, directly affected checks and performance evidence are recorded.
 
 | Step | Deliverable and acceptance boundary | Status |
 | --- | --- | --- |
-| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Planned |
+| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. Bounded-selection clarification pending. |
 | 2 | One public macro layer for spin and related ordinary APIs, using the compiler clobber wrappers. Retain only required cross-module provider symbols; callable interfaces must have an explicit conventional wrapper and execution contract. | Planned |
 | 3 | Assess rwlock recursive reads, upgrades and IRQ/BH pairs. Implement only cases with a stated ownership/context contract; distinguish unsupported blocking upgrade from feasible nonblocking conversion. | Planned |
 | 4 | One ordinary rwsem API family, with the widest compatible init/read/write/try/signal/downgrade/non-owner/annotation coverage. Explain any delegation eligibility restriction; never let a queued writer bypass a downgraded reader. | Planned |
@@ -38,6 +38,8 @@ step 1 changes sleeping-lock delegation waiting, not native spin semantics.
 The requested pin-on-proxy protocol supersedes the old permanent published-waiter
 pin as a development requirement. Until step 1 is implemented and validated,
 the baseline implementation still pins published waiters.
+The [October 29 checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)
+retains the rejected candidate, exact rates and functional/collector outcomes.
 
 Preserve a baseline source identity and matched c01/c16 nano observations before
 changing runtime behavior. Use the existing workload bodies, post256, 1024/1024
