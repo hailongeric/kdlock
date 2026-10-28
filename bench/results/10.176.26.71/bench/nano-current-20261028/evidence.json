@@ -1,0 +1,213 @@
+{
+  "source_commit": "6d8c8be736ecfc23e1470e3256ee51d6e16e666e",
+  "guest_health": {
+    "idle": true,
+    "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+    "kernel": "7.0.0-38-kdlock1",
+    "captured": 1793187703.5136664,
+    "new_faults_in_retained_dmesg": [],
+    "per_session_kernel_faults": [],
+    "session_kernel_logs": 630,
+    "collection_start_uptime_estimate": 61322.39074134827,
+    "scope": "Completed nano campaign idle and retained kernel-fault checks; no unload or new timing."
+  },
+  "host_captures": {
+    "before": {
+      "captured_utc": "2026-10-28T10:51:07.606789+00:00",
+      "pins_verified": true,
+      "frequency_verified": true,
+      "snapshot_listed": true,
+      "recovery_snapshot": "linux70-kdlock1-clean-20261027",
+      "host_boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+      "qemu_pid": 257489,
+      "qemu_start_ticks": 42969155,
+      "qemu_tasks": 67,
+      "sha256": "f376c014b84c33efa4583aa92fa2ddf36c6f7ee84b68ac47e9d876aceedfbbb8"
+    },
+    "after": {
+      "captured_utc": "2026-10-28T11:40:53.157310+00:00",
+      "pins_verified": true,
+      "frequency_verified": true,
+      "snapshot_listed": true,
+      "recovery_snapshot": "linux70-kdlock1-clean-20261027",
+      "host_boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+      "qemu_pid": 257489,
+      "qemu_start_ticks": 42969155,
+      "qemu_tasks": 76,
+      "sha256": "9e1be173137b8362decc928e55d9be11928a7e5ec9029176e16384078b8765c8"
+    }
+  },
+  "execution": {
+    "returncode": 0,
+    "started": 1793184811.6944077,
+    "finished": 1793187593.9685206,
+    "command": [
+      "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "/root/host_fs/kdlock/bench/nano/best_case.py",
+      "--repeats",
+      "1",
+      "--threads",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "12",
+      "16",
+      "20",
+      "24",
+      "28",
+      "32",
+      "36",
+      "40",
+      "44",
+      "48",
+      "52",
+      "56",
+      "60",
+      "--backends",
+      "native",
+      "tclock",
+      "kdlock",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028"
+    ]
+  },
+  "archive_manifest_sha256": "1c66e81a355fc416006324c51e999f2581b08157c47a0255d708a208032c0db1",
+  "archive_inventory_sha256": "68a72398bda5452dc4473de9d26a214b66c6094a6b50a8ca0e087f53d6313a5f",
+  "archives": [
+    {
+      "bytes": 10236512,
+      "file": "mutex-c01-w100.tar.gz",
+      "group": "mutex-c01-w100",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/mutex-c01-w100.tar.gz",
+      "roots": [
+        "nano-current-20261028/mutex-throughput"
+      ],
+      "sha256": "86b674077fcec6db6d3e11d41d6927015cf7d76a6fc645cab0e1fbea888c4285"
+    },
+    {
+      "bytes": 9997842,
+      "file": "mutex-c16-w100.tar.gz",
+      "group": "mutex-c16-w100",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/mutex-c16-w100.tar.gz",
+      "roots": [
+        "nano-current-20261028/mutex-locality"
+      ],
+      "sha256": "28e5026764dbfc0a66c30e8c517cde3f8d378c86bf080bfb81611215a14d5b0a"
+    },
+    {
+      "bytes": 10987139,
+      "file": "rwsem-c01-w001.tar.gz",
+      "group": "rwsem-c01-w001",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwsem-c01-w001.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwsem-throughput-read"
+      ],
+      "sha256": "4aed019af97122d9ada53629d9e101e5b8166907e79d3b494936ff9202098fe4"
+    },
+    {
+      "bytes": 10377977,
+      "file": "rwsem-c01-w020.tar.gz",
+      "group": "rwsem-c01-w020",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwsem-c01-w020.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwsem-throughput-mixed"
+      ],
+      "sha256": "8f065e292953d0067105309d839985c8f7e8cdef4a4149de2978b9afc459017a"
+    },
+    {
+      "bytes": 11069694,
+      "file": "rwsem-c16-w001.tar.gz",
+      "group": "rwsem-c16-w001",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwsem-c16-w001.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwsem-locality-read"
+      ],
+      "sha256": "c45634d38b21512bcca4c6e878e8434f86ff80df86ab4786238447b96ffe51f1"
+    },
+    {
+      "bytes": 10376161,
+      "file": "rwsem-c16-w020.tar.gz",
+      "group": "rwsem-c16-w020",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwsem-c16-w020.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwsem-locality-mixed"
+      ],
+      "sha256": "d0465b10d9e3bf376878242573bf49f0ee5269d6af6fe15b01183f49e52df855"
+    },
+    {
+      "bytes": 10944892,
+      "file": "rwlock-c01-w001.tar.gz",
+      "group": "rwlock-c01-w001",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwlock-c01-w001.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwlock-throughput-read"
+      ],
+      "sha256": "8a0bdb2f61f88fb0f81f9de526ae72ff9a35ddd3f596a10075c7777600f6443c"
+    },
+    {
+      "bytes": 10385085,
+      "file": "rwlock-c01-w020.tar.gz",
+      "group": "rwlock-c01-w020",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwlock-c01-w020.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwlock-throughput-mixed"
+      ],
+      "sha256": "357b7ad22610ddad8359a32016f9f80d1ccec9664e7ed4b741aad225eec92287"
+    },
+    {
+      "bytes": 11117587,
+      "file": "rwlock-c16-w001.tar.gz",
+      "group": "rwlock-c16-w001",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwlock-c16-w001.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwlock-locality-read"
+      ],
+      "sha256": "97bc2de42e421c291a1bc9d7548b03038f637682a4d9d3b8c6a660aa4b92c31e"
+    },
+    {
+      "bytes": 10357185,
+      "file": "rwlock-c16-w020.tar.gz",
+      "group": "rwlock-c16-w020",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/rwlock-c16-w020.tar.gz",
+      "roots": [
+        "nano-current-20261028/rwlock-locality-mixed"
+      ],
+      "sha256": "416a279839ec8932d871c18c1cedab7380ade7c6e40746801fe1ac02bc97a77a"
+    },
+    {
+      "bytes": 189228,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028-archives/metadata.tar.gz",
+      "roots": [
+        "nano-current-20261028/commands.json",
+        "nano-current-20261028/control",
+        "nano-current-20261028/final-dmesg.log",
+        "nano-current-20261028/final-health.json",
+        "nano-current-20261028/health-helper.py",
+        "nano-current-20261028/mutex-locality.log",
+        "nano-current-20261028/mutex-throughput.log",
+        "nano-current-20261028/owner.json",
+        "nano-current-20261028/rwlock-locality-mixed.log",
+        "nano-current-20261028/rwlock-locality-read.log",
+        "nano-current-20261028/rwlock-throughput-mixed.log",
+        "nano-current-20261028/rwlock-throughput-read.log",
+        "nano-current-20261028/rwsem-locality-mixed.log",
+        "nano-current-20261028/rwsem-locality-read.log",
+        "nano-current-20261028/rwsem-throughput-mixed.log",
+        "nano-current-20261028/rwsem-throughput-read.log",
+        "nano-current-20261028/source-sha256.json"
+      ],
+      "sha256": "ba0399632fb998ceeb3318732a9e29e1472f824d534a8f200a2e9cff34dfbf30"
+    }
+  ],
+  "raw_directory": "../../raw/bench/nano-current-20261028/",
+  "audit_sha256": "fb95652906981c42e3c44d99de1276e9ba9b051a77e40789b52aab03671e18c1",
+  "archive_verification_sha256": "6bc134a654aac726099f3898e9ef36f275ff3ce5c00d65992775910207e739ee",
+  "timing": "Exploratory single round; host endpoint policy checks do not establish strict timing qualification."
+}

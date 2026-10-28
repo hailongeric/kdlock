@@ -1,0 +1,5341 @@
+{
+  "audit_scope": "Retained receipt and frozen-oracle replay, exact JIT entry/return deltas, all frozen source hashes, data, placement, mix, post-work, and drain. No new workload, build or test execution.",
+  "backends": [
+    "native",
+    "tclock",
+    "kdlock"
+  ],
+  "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+  "campaign_source_manifest_sha256": "97f02d543bf305d88ce4a5be21adf5486af8276343157b17e169423fcd7adb4f",
+  "catalog_report_sha256": "ab08fe55656e4acab998d5feb0b806d87c37774f43de7de4a278be8b74679af2",
+  "duration_ms": 2000,
+  "errors": [],
+  "expected_measurements": 630,
+  "expected_profiles": 10,
+  "expected_warmups": 630,
+  "graphical_rendering": "pending_source_host",
+  "guest_idle_after_report": true,
+  "helper_sha256": "535ca1bb65d2d967a0bc229743f11a71868bec23a6248bd445c66f63d32d99da",
+  "input": "/root/kdlock-evidence/10.176.26.71/bench/nano-current-20261028",
+  "kd_execution_classes": {
+    "NO_JIT": 102,
+    "RETURNED_JIT": 108
+  },
+  "kernel_release": "7.0.0-38-kdlock1",
+  "owner_sha256": "3e02b3b23a66c01fb4c65dfe4444b010c619f54cca30aede0f10a437cf794208",
+  "passed": true,
+  "planned": 630,
+  "post_work_rounds": 256,
+  "profiles": [
+    {
+      "cachelines": 1,
+      "kd_execution_classes": {
+        "NO_JIT": 3,
+        "RETURNED_JIT": 18
+      },
+      "lock": "mutex",
+      "plan_sha256": "f7d39022302910f39928210995404728043acf7cb5b115b831482a5675b5c11f",
+      "planned": 63,
+      "plot_input": "plot-input/mutex-throughput",
+      "records_sha256": "1a2f003bee49a997512e91a4b6847695a0d7a2e8d65a14570c518b87bea52f52",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-kdlock-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-kdlock-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-kdlock-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 23021,
+          "jit_entries": 23021,
+          "session": "mutex-cacheline-c01-kdlock-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 439374,
+          "jit_entries": 439374,
+          "session": "mutex-cacheline-c01-kdlock-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 4338088,
+          "jit_entries": 4338088,
+          "session": "mutex-cacheline-c01-kdlock-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 6460418,
+          "jit_entries": 6460418,
+          "session": "mutex-cacheline-c01-kdlock-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7309676,
+          "jit_entries": 7309676,
+          "session": "mutex-cacheline-c01-kdlock-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8839105,
+          "jit_entries": 8839105,
+          "session": "mutex-cacheline-c01-kdlock-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8988642,
+          "jit_entries": 8988642,
+          "session": "mutex-cacheline-c01-kdlock-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8972431,
+          "jit_entries": 8972431,
+          "session": "mutex-cacheline-c01-kdlock-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8966501,
+          "jit_entries": 8966501,
+          "session": "mutex-cacheline-c01-kdlock-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8918191,
+          "jit_entries": 8918191,
+          "session": "mutex-cacheline-c01-kdlock-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 9053790,
+          "jit_entries": 9053790,
+          "session": "mutex-cacheline-c01-kdlock-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8662537,
+          "jit_entries": 8662537,
+          "session": "mutex-cacheline-c01-kdlock-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8548108,
+          "jit_entries": 8548108,
+          "session": "mutex-cacheline-c01-kdlock-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8731853,
+          "jit_entries": 8731853,
+          "session": "mutex-cacheline-c01-kdlock-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8643800,
+          "jit_entries": 8643800,
+          "session": "mutex-cacheline-c01-kdlock-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8831204,
+          "jit_entries": 8831204,
+          "session": "mutex-cacheline-c01-kdlock-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8709400,
+          "jit_entries": 8709400,
+          "session": "mutex-cacheline-c01-kdlock-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-native-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c01-tclock-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8557004,
+          "jit_entries": 8557004,
+          "session": "mutex-cacheline-c01-kdlock-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "mutex-throughput",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "mutex-c01-w100",
+      "write_percent": 100
+    },
+    {
+      "cachelines": 16,
+      "kd_execution_classes": {
+        "NO_JIT": 2,
+        "RETURNED_JIT": 19
+      },
+      "lock": "mutex",
+      "plan_sha256": "5c295857b917f24605f92f8f3a8a6a9050f6b8b1b5925b92783b31537c54621d",
+      "planned": 63,
+      "plot_input": "plot-input/mutex-locality",
+      "records_sha256": "82342dd5f099e7d3161a46d0cece9a80028cb3c19106915e8ae3ffbf292afbb5",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-kdlock-w100-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-kdlock-w100-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 148457,
+          "jit_entries": 148457,
+          "session": "mutex-cacheline-c16-kdlock-w100-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 952878,
+          "jit_entries": 952878,
+          "session": "mutex-cacheline-c16-kdlock-w100-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 1255560,
+          "jit_entries": 1255560,
+          "session": "mutex-cacheline-c16-kdlock-w100-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 2524361,
+          "jit_entries": 2524361,
+          "session": "mutex-cacheline-c16-kdlock-w100-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 6270134,
+          "jit_entries": 6270134,
+          "session": "mutex-cacheline-c16-kdlock-w100-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 6952878,
+          "jit_entries": 6952878,
+          "session": "mutex-cacheline-c16-kdlock-w100-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7704011,
+          "jit_entries": 7704011,
+          "session": "mutex-cacheline-c16-kdlock-w100-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8255011,
+          "jit_entries": 8255011,
+          "session": "mutex-cacheline-c16-kdlock-w100-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8211270,
+          "jit_entries": 8211270,
+          "session": "mutex-cacheline-c16-kdlock-w100-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8218145,
+          "jit_entries": 8218145,
+          "session": "mutex-cacheline-c16-kdlock-w100-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8255108,
+          "jit_entries": 8255108,
+          "session": "mutex-cacheline-c16-kdlock-w100-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8345856,
+          "jit_entries": 8345856,
+          "session": "mutex-cacheline-c16-kdlock-w100-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7549720,
+          "jit_entries": 7549720,
+          "session": "mutex-cacheline-c16-kdlock-w100-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7520105,
+          "jit_entries": 7520105,
+          "session": "mutex-cacheline-c16-kdlock-w100-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8136242,
+          "jit_entries": 8136242,
+          "session": "mutex-cacheline-c16-kdlock-w100-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7760619,
+          "jit_entries": 7760619,
+          "session": "mutex-cacheline-c16-kdlock-w100-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 8089617,
+          "jit_entries": 8089617,
+          "session": "mutex-cacheline-c16-kdlock-w100-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7880688,
+          "jit_entries": 7880688,
+          "session": "mutex-cacheline-c16-kdlock-w100-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-native-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "mutex-cacheline-c16-tclock-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 7894212,
+          "jit_entries": 7894212,
+          "session": "mutex-cacheline-c16-kdlock-w100-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "mutex-locality",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "mutex-c16-w100",
+      "write_percent": 100
+    },
+    {
+      "cachelines": 1,
+      "kd_execution_classes": {
+        "NO_JIT": 21
+      },
+      "lock": "rwsem",
+      "plan_sha256": "a566a13e7434af54c7cccdf0edbc0760f6b2080d822bb31bed447486bdb8d818",
+      "planned": 63,
+      "plot_input": "plot-input/rwsem-throughput-read",
+      "records_sha256": "d6193f6ed3d9d24fdd3ceffebb3d155412f683ed735de5ee3f8e281d0da64546",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwsem-throughput-read",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwsem-c01-w001",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_execution_classes": {
+        "NO_JIT": 14,
+        "RETURNED_JIT": 7
+      },
+      "lock": "rwsem",
+      "plan_sha256": "34c730fef30557d31da9319e50e624f6f6f5c13722a65ff9d15a9dde9f7dd80f",
+      "planned": 63,
+      "plot_input": "plot-input/rwsem-throughput-mixed",
+      "records_sha256": "b4db5ab93cf1ea139208fd911c2d793b511c1ee49c6033e7aac1f82943c1e387",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 16,
+          "jit_entries": 16,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 50,
+          "jit_entries": 50,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 392,
+          "jit_entries": 392,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 32,
+          "jit_entries": 32,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 4,
+          "jit_entries": 4,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 3,
+          "jit_entries": 3,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 15,
+          "jit_entries": 15,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-native-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-tclock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwsem-throughput-mixed",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwsem-c01-w020",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 16,
+      "kd_execution_classes": {
+        "NO_JIT": 21
+      },
+      "lock": "rwsem",
+      "plan_sha256": "a704f609d54135c322dc3d4d3939a3062e42484bba54c8ba002b24e1c6c2a595",
+      "planned": 63,
+      "plot_input": "plot-input/rwsem-locality-read",
+      "records_sha256": "d8bf4781d5f2e4d5e516ed17c1cbe7efe297bc727cdb846d58249f8d3ba92400",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwsem-locality-read",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwsem-c16-w001",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 16,
+      "kd_execution_classes": {
+        "NO_JIT": 3,
+        "RETURNED_JIT": 18
+      },
+      "lock": "rwsem",
+      "plan_sha256": "3feca883deb29a56eb1d71fdb4771c4bcdbe85cc47c8fc640fe068ba68b83e05",
+      "planned": 63,
+      "plot_input": "plot-input/rwsem-locality-mixed",
+      "records_sha256": "de4352c6c2ae3717764eb6a2dfae25104586c28a05907852a1903abc375a9942",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 4112,
+          "jit_entries": 4112,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 16474,
+          "jit_entries": 16474,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 24985,
+          "jit_entries": 24985,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 24166,
+          "jit_entries": 24166,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 32290,
+          "jit_entries": 32290,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 31522,
+          "jit_entries": 31522,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 31201,
+          "jit_entries": 31201,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 28588,
+          "jit_entries": 28588,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27887,
+          "jit_entries": 27887,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 26288,
+          "jit_entries": 26288,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27314,
+          "jit_entries": 27314,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 30495,
+          "jit_entries": 30495,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 31357,
+          "jit_entries": 31357,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27974,
+          "jit_entries": 27974,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27702,
+          "jit_entries": 27702,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 31014,
+          "jit_entries": 31014,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 28293,
+          "jit_entries": 28293,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-native-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "rwsem-cacheline-c16-tclock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27923,
+          "jit_entries": 27923,
+          "session": "rwsem-cacheline-c16-kdlock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwsem-locality-mixed",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwsem-c16-w020",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_execution_classes": {
+        "NO_JIT": 11,
+        "RETURNED_JIT": 10
+      },
+      "lock": "rwlock",
+      "plan_sha256": "3a2a947e89ed33df6b4e1337e968db4d1583fd08c621939f069fac112fe10e94",
+      "planned": 63,
+      "plot_input": "plot-input/rwlock-throughput-read",
+      "records_sha256": "b530715cec1569779c1f533ac4cc9f26cca799d724306405f73ac94f5d0654bc",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 12,
+          "jit_entries": 12,
+          "session": "cacheline-c01-kdlock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 143,
+          "jit_entries": 143,
+          "session": "cacheline-c01-kdlock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 4496,
+          "jit_entries": 4496,
+          "session": "cacheline-c01-kdlock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 6503,
+          "jit_entries": 6503,
+          "session": "cacheline-c01-kdlock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 16277,
+          "jit_entries": 16277,
+          "session": "cacheline-c01-kdlock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 26594,
+          "jit_entries": 26594,
+          "session": "cacheline-c01-kdlock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 19380,
+          "jit_entries": 19380,
+          "session": "cacheline-c01-kdlock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 27668,
+          "jit_entries": 27668,
+          "session": "cacheline-c01-kdlock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 21814,
+          "jit_entries": 21814,
+          "session": "cacheline-c01-kdlock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 21108,
+          "jit_entries": 21108,
+          "session": "cacheline-c01-kdlock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwlock-throughput-read",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwlock-c01-w001",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_execution_classes": {
+        "NO_JIT": 8,
+        "RETURNED_JIT": 13
+      },
+      "lock": "rwlock",
+      "plan_sha256": "1536101450cd379fa24cfab7e73d9979ff6d8ff0f5aaf8bdbf5d3c0a0a1f8841",
+      "planned": 63,
+      "plot_input": "plot-input/rwlock-throughput-mixed",
+      "records_sha256": "1721edaa8067f152b164891bc07ed51e3f3a8ebd5e2bcfdf8c40eeda7dac6d3b",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-kdlock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 23475,
+          "jit_entries": 23475,
+          "session": "cacheline-c01-kdlock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 81692,
+          "jit_entries": 81692,
+          "session": "cacheline-c01-kdlock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 84000,
+          "jit_entries": 84000,
+          "session": "cacheline-c01-kdlock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 105814,
+          "jit_entries": 105814,
+          "session": "cacheline-c01-kdlock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 79132,
+          "jit_entries": 79132,
+          "session": "cacheline-c01-kdlock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 87987,
+          "jit_entries": 87987,
+          "session": "cacheline-c01-kdlock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 59129,
+          "jit_entries": 59129,
+          "session": "cacheline-c01-kdlock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 55765,
+          "jit_entries": 55765,
+          "session": "cacheline-c01-kdlock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 50936,
+          "jit_entries": 50936,
+          "session": "cacheline-c01-kdlock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 57052,
+          "jit_entries": 57052,
+          "session": "cacheline-c01-kdlock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 34848,
+          "jit_entries": 34848,
+          "session": "cacheline-c01-kdlock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 46155,
+          "jit_entries": 46155,
+          "session": "cacheline-c01-kdlock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-native-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c01-tclock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 34567,
+          "jit_entries": 34567,
+          "session": "cacheline-c01-kdlock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwlock-throughput-mixed",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwlock-c01-w020",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 16,
+      "kd_execution_classes": {
+        "NO_JIT": 11,
+        "RETURNED_JIT": 10
+      },
+      "lock": "rwlock",
+      "plan_sha256": "396f9ace5520941dda0c1952aaee78aeff77f7bf1709906c4b5c339b3e9a3ddf",
+      "planned": 63,
+      "plot_input": "plot-input/rwlock-locality-read",
+      "records_sha256": "39827e9224728b1105833a5001911f3eba6744fdd508426152ca7e8fba6c9bb8",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w001-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 1,
+          "jit_entries": 1,
+          "session": "cacheline-c16-kdlock-w001-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 34,
+          "jit_entries": 34,
+          "session": "cacheline-c16-kdlock-w001-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 1320,
+          "jit_entries": 1320,
+          "session": "cacheline-c16-kdlock-w001-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 6461,
+          "jit_entries": 6461,
+          "session": "cacheline-c16-kdlock-w001-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 12802,
+          "jit_entries": 12802,
+          "session": "cacheline-c16-kdlock-w001-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 14987,
+          "jit_entries": 14987,
+          "session": "cacheline-c16-kdlock-w001-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 18148,
+          "jit_entries": 18148,
+          "session": "cacheline-c16-kdlock-w001-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 18336,
+          "jit_entries": 18336,
+          "session": "cacheline-c16-kdlock-w001-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 18941,
+          "jit_entries": 18941,
+          "session": "cacheline-c16-kdlock-w001-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 18402,
+          "jit_entries": 18402,
+          "session": "cacheline-c16-kdlock-w001-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwlock-locality-read",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwlock-c16-w001",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 16,
+      "kd_execution_classes": {
+        "NO_JIT": 8,
+        "RETURNED_JIT": 13
+      },
+      "lock": "rwlock",
+      "plan_sha256": "f6c6b9bdceee05dd2800cdb200f00f8e0472cfd363196f5c4e21010a25fe497b",
+      "planned": 63,
+      "plot_input": "plot-input/rwlock-locality-mixed",
+      "records_sha256": "89fae2128ff84d78e3bd2b17afb8963efc8908ca04f55007cbe262ff91ff0397",
+      "session_findings": [
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t01-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t02-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t03-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t04-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t05-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t06-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t07-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NO_JIT",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-kdlock-w020-t08-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 12805,
+          "jit_entries": 12805,
+          "session": "cacheline-c16-kdlock-w020-t12-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 34505,
+          "jit_entries": 34505,
+          "session": "cacheline-c16-kdlock-w020-t16-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 33265,
+          "jit_entries": 33265,
+          "session": "cacheline-c16-kdlock-w020-t20-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 35477,
+          "jit_entries": 35477,
+          "session": "cacheline-c16-kdlock-w020-t24-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 30313,
+          "jit_entries": 30313,
+          "session": "cacheline-c16-kdlock-w020-t28-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 28668,
+          "jit_entries": 28668,
+          "session": "cacheline-c16-kdlock-w020-t32-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 22030,
+          "jit_entries": 22030,
+          "session": "cacheline-c16-kdlock-w020-t36-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 26351,
+          "jit_entries": 26351,
+          "session": "cacheline-c16-kdlock-w020-t40-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 25496,
+          "jit_entries": 25496,
+          "session": "cacheline-c16-kdlock-w020-t44-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 25862,
+          "jit_entries": 25862,
+          "session": "cacheline-c16-kdlock-w020-t48-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 21784,
+          "jit_entries": 21784,
+          "session": "cacheline-c16-kdlock-w020-t52-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 25165,
+          "jit_entries": 25165,
+          "session": "cacheline-c16-kdlock-w020-t56-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-native-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "NATIVE",
+          "jit_completions": 0,
+          "jit_entries": 0,
+          "session": "cacheline-c16-tclock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        },
+        {
+          "execution_class": "RETURNED_JIT",
+          "jit_completions": 22316,
+          "jit_entries": 22316,
+          "session": "cacheline-c16-kdlock-w020-t60-r00",
+          "valid": true,
+          "warmup_valid": true
+        }
+      ],
+      "source_directory": "rwlock-locality-mixed",
+      "source_files_verified": 282,
+      "statuses": {
+        "OK": 63
+      },
+      "valid_measurements": 63,
+      "valid_warmups": 63,
+      "workload": "rwlock-c16-w020",
+      "write_percent": 20
+    }
+  ],
+  "provider_mutex_policy": {
+    "deferred_handoff": 8,
+    "numa_boundary": 1024,
+    "scan_budget": 64,
+    "total_cap": 1024
+  },
+  "reader_execution": "Every rwsem/rwlock read executes on its acquiring task",
+  "real_world_api_executed": false,
+  "repetitions_per_point": 1,
+  "schema": 1,
+  "source_commit": "6d8c8be736ecfc23e1470e3256ee51d6e16e666e",
+  "statuses": {
+    "OK": 630
+  },
+  "strict_timing_qualified": false,
+  "timing": "exploratory; n=1; no repeat variability estimate",
+  "valid_measurements": 630,
+  "valid_warmups": 630,
+  "warmup_jit_scope": "Warmup payload/progress/drain replay; no separate warmup JIT delta is recorded",
+  "workers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ]
+}

@@ -47,6 +47,22 @@ from actual-MM performance.
 
 ## Current nano measurements
 
+The [October 28 current-source round](../bench/results/10.176.26.71/bench/nano-current-20261028/README.md)
+at `6d8c8be7` completed all ten c01/c16 post256 workloads on the full worker
+grid: **630/630 timings and 630/630 warmups**, one repetition per point, with
+Native/TCLock/KD and no real-world API runs. It includes KD mutex 1024/1024,
+queued rwsem reader admission and the trusted-source translator policy.
+The report provides every worker count, execution class and scaling chart.
+
+At 60 workers, KD mutex c01/c16 reached 4.279/3.946 Mops/s versus TCLock's
+2.588/1.665. Every rwsem and rwlock workload remained below TCLock there;
+rwlock c16 with 1% writes also remained below Native. Rwsem c01 with 20% writes
+was nearly flat at 4.932–5.137 Mops/s over 16–32 workers, then fell to 3.146
+at 60. These are single observations with no repeat variability estimate;
+they remain separate from the earlier catalog and focused repeated experiment.
+
+## Earlier checked-source nano measurements
+
 The following **Linux 7 checked-source cohort** uses the maintained c01/c16
 padded-counter bodies, post256, mutex cap 1024 and locality boundary 768.
 That recorded policy predates the October 28 user-selected KD default of
