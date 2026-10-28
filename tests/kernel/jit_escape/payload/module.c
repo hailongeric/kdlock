@@ -22,7 +22,7 @@ static DEFINE_KD_RWLOCK(test_lock);
 static DEFINE_KD_SPINLOCK(test_lock);
 #endif
 #elif defined(JIT_ESCAPE_RWSEM)
-#include "kd_rwsem_direct.h"
+#include "kd_rwsem_api.h"
 static DEFINE_KD_RWSEM(test_lock);
 #else
 #include "kd_mutex_api.h"
@@ -106,10 +106,10 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 	KD_RWLOCK_DIRECT_WRITE_LOCK(&test_lock, kd_rwlock_direct_cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
 #elif defined(JIT_ESCAPE_RWSEM)
-	struct kd_rwsem_outer_cookie cookie;
-
-	KD_RWSEM_OUTER_WRITE_LOCK(&test_lock, cookie,
-		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
+	kd_down_write(&test_lock);
+	asm volatile(".globl jit_escape_entry\n.set jit_escape_entry, 1b\n\t"
+	             ".pushsection .discard.noendbr\n\t"
+	             _ASM_PTR " jit_escape_entry\n\t.popsection\n\t" : : : "memory");
 #elif defined(JIT_ESCAPE_SPIN)
 	KD_SPIN_DIRECT_LOCK(&test_lock, kd_spin_direct_cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
@@ -243,7 +243,7 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #ifdef JIT_ESCAPE_RWLOCK
 	KD_RWLOCK_DIRECT_WRITE_UNLOCK(&test_lock, kd_rwlock_direct_cookie);
 #elif defined(JIT_ESCAPE_RWSEM)
-	KD_RWSEM_OUTER_WRITE_UNLOCK(&test_lock, cookie);
+	kd_up_write(&test_lock);
 #elif defined(JIT_ESCAPE_SPIN)
 	KD_SPIN_DIRECT_UNLOCK(&test_lock, kd_spin_direct_cookie);
 #elif defined(JIT_ESCAPE_PUBLIC_API)
@@ -382,7 +382,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		ret = kd_rwlock_prepare(&test_lock, (unsigned long)jit_escape_entry,
 				       KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
 #elif defined(JIT_ESCAPE_RWSEM)
-		ret = kd_mutex_prepare(&test_lock.gate, (unsigned long)jit_escape_entry,
+		ret = kd_rwsem_prepare(&test_lock, (unsigned long)jit_escape_entry,
 				      KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 #elif defined(JIT_ESCAPE_SPIN)
 		ret = kd_spin_prepare(&test_lock, (unsigned long)jit_escape_entry,

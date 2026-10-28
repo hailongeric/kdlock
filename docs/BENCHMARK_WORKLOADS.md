@@ -34,7 +34,12 @@ variance estimate. Earlier failed/partial attempts remain outside those totals.
 | Spin | `KD_SPIN_DIRECT_LOCK/UNLOCK` | Eligible exclusive body, ABI1 |
 | Mutex nano and selected public API cases | Direct public `kd_mutex_lock/unlock` | Unified ABI2; callable/signal/try/I/O forms remain local |
 | Rwlock | Local read pair and `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK` | Writers only, ABI3 after native writer admission |
-| Rwsem | Local read pair and `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK` | Explicit writers only, ABI2 after reader drain |
+| Rwsem | `kd_down_read/up_read` and ordinary `kd_down_write/up_write` after explicit `kd_rwsem_prepare` | Prepared writers only, ABI2 after reader drain; `public-prepared-direct-abi2` shell |
+
+The unified prepared rwsem writer shell is a source change from the historical
+explicit OUTER/cookie shell. Compare separate frozen generations and report
+`rwsem_writer_shell`; old results do not qualify this call-path change. The
+explicit `--delegate off` control uses callable local acquisition.
 
 Current translation trusts kernel and module source, including loops. It skips
 semantic safety/context/value/input proofs. Complete leased text, faithful

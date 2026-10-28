@@ -28,7 +28,7 @@ changing a typedef or a subset of lock macros is insufficient.
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_api.h](kd_mutex_api.h), [kd_mutex_direct.h](kd_mutex_direct.h), [kd_mutex_compat.h](kd_mutex_compat.h) | KD-only object, unified ABI2 blocking calls, local task-sensitive APIs and separate outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
-| Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h), [kd_rwsem_direct.h](kd_rwsem_direct.h) | Ordinary sleeping APIs and outer ABI2 writers; phase reservations and reader drain precede the unchanged KD mutex queue |
+| Sleeping semaphore | [kd_rwsem_api.h](kd_rwsem_api.h), [kd_rwsem_compat.h](kd_rwsem_compat.h) | One ordinary family and Native source aliases; quiescent preparation permits ABI2 writer delegation with no-downgrade obligation |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
 | Image lifetime | [kd_image.h](kd_image.h) | Immutable mutex images and spin images requiring address checks or historical string services; upload identity and generation-bound frames |
@@ -195,13 +195,17 @@ See the [focused local probe](../tests/kernel/rwlock/irq_api/README.md); histori
 ordinary/JIT measurements do not validate these additional APIs.
 
 Rwsem readers use `kd_down_read/up_read`; ordinary writers use
-`kd_down_write/up_write`, with trylock, interruptible/killable and downgrade
-variants. Explicit outer writers pair `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK` with
-one `kd_rwsem_outer_cookie`. The pair reserves writer admission and drains
-readers before the mutex can publish a pinned request, then releases that
-reservation on the origin after the mutex unlock returns. It reuses ABI2 and
-does not support cancellation, downgrade or nested translated acquisition.
-See [the rwsem API and ordering](../docs/design/rwsem_implementation.md).
+`kd_down_write/up_write` from `kd_rwsem_api.h`. Default ordinary acquisition is
+local and supports downgrade. Explicit `kd_rwsem_prepare` on a quiescent object
+permits delegation through the same names; prepared macro acquisitions must not
+downgrade, cancel after publication or nest inside a translated body. Callable,
+signal, trylock and cleanup acquisitions stay local and retain downgrade even on
+a prepared object. Both public unlock forms route exact ownership before phase
+release. The prepared path drains readers before publication and keeps its
+reservation through the origin's mutex unlock/ACK. `kd_rwsem_compat.h` supplies
+Native source aliases and guards for exclusively KD objects; layout, lockdep,
+fairness and prepared execution context remain different. See
+[the full API contract](../docs/design/rwsem_implementation.md#api-and-scope).
 
 ## Preparing a delegating body
 
@@ -213,8 +217,8 @@ public unlock retains exact provider routing for all successful acquisitions.
 Scope guards acquire locally and guard/free cleanup uses routed public unlock;
 their C symbols remain native-only admission boundaries. The compatibility
 header explicitly redirects the captured Linux cleanup helper names to KD.
-Ordinary rwlock and rwsem writers run locally. Use an explicit direct/outer pair
-for those delegation interfaces, or to prepare named mutex entries; see the
+Ordinary rwlock writers use an explicit direct pair for delegation. Rwsem
+ordinary macro writers can delegate only after explicit quiescent preparation; see the
 [workload decisions](../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation).
 
 The following steps describe explicit named entries:
@@ -225,16 +229,17 @@ The following steps describe explicit named entries:
 2. Put the pair around the exact protected body in a function marked `noipa`,
    which prevents the compiler from inlining or cloning it across callers.
    Give its body-entry continuation a unique label. Retain the per-acquisition
-   cookie for mutex/rwsem outer pairs. Spin/rwlock pairs use the supplied shared
+   cookie only for the explicit mutex outer pair. Spin/rwlock pairs use the supplied shared
    per-CPU routing cookie without modifying it. Match every acquisition with
    its corresponding release.
 3. Before workers start, register that exact entry with `kd_spin_prepare()` for
-   spin, `kd_rwlock_prepare()` for rwlock writers, or `kd_mutex_prepare()` for
-   mutex. Their entry identities are ABI1, ABI3 and ABI2 respectively. The
-   current rwsem adapter registers its internal mutex gate with ABI2 as shown
-   in [direct_rwsem.h](../workload_modules/rwlock_bench/direct_rwsem.h), while
-   acquisition/release always uses the rwsem outer pair to preserve reader
-   exclusion. Do not use the gate directly to bypass that pair.
+   spin, `kd_rwlock_prepare()` for rwlock writers, `kd_mutex_prepare()` for
+   mutex or `kd_rwsem_prepare()` for rwsem. Their entry identities are ABI1, ABI3,
+   ABI2 and ABI2 respectively. Rwsem preparation opts all ordinary macro writers
+   on that quiescent object into the no-downgrade contract. The benchmark aliases
+   the captured public continuation in
+   [direct_rwsem.h](../workload_modules/rwlock_bench/direct_rwsem.h). Do not use
+   the embedded gate directly to bypass reader admission.
 4. Let the daemon translate and publish the compiled entry, retaining refusal
    diagnostics. A successful prepare call or `NORMAL` image is not evidence
    that the body executed remotely. Validate completed returned bodies,

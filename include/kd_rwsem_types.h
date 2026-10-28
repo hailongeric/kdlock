@@ -10,6 +10,9 @@
  * Participants must never acquire the embedded gate independently. */
 struct kd_rwsem {
 	struct kd_mutex gate;
+	/* Quiescent, monotonic preparation policy; not acquisition authority.
+	 * Fits the gate cacheline's existing padding, away from reader updates. */
+	unsigned int prepared_writes;
 	atomic_long_t readers __aligned(64);
 	atomic_long_t admission __aligned(64);
 	wait_queue_head_t phase_wait __aligned(64);
@@ -21,12 +24,15 @@ struct kd_rwsem {
 
 #define KD_RWSEM_INITIALIZER(name) { \
 	.gate = KD_MUTEX_INITIALIZER(name.gate), \
+	.prepared_writes = 0, \
 	.readers = ATOMIC_LONG_INIT(0), \
 	.admission = ATOMIC_LONG_INIT(0), \
 	.phase_wait = __WAIT_QUEUE_HEAD_INITIALIZER(name.phase_wait), \
 	.reader_drain = __WAIT_QUEUE_HEAD_INITIALIZER(name.reader_drain), \
 	.reader_osq = OSQ_LOCK_UNLOCKED, \
 }
+#define DECLARE_KD_RWSEM(name) \
+	struct kd_rwsem name = KD_RWSEM_INITIALIZER(name)
 #define DEFINE_KD_RWSEM(name) \
 	struct kd_rwsem name = KD_RWSEM_INITIALIZER(name)
 

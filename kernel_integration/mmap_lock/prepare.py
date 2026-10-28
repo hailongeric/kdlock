@@ -59,6 +59,12 @@ def generated_sources(target):
             text = replace_once(text, 'int old = kd_io_prepare();', 'int old = io_schedule_prepare();')
             text = replace_once(text, 'kd_io_finish(old);', 'io_schedule_finish(old);')
         if name.endswith('kd_rwsem.c'):
+            # Builtin MM never delegates: keep the ordinary local unlock and
+            # negative-phase release, without a loadable API-router dependency.
+            text = replace_once(text, 'kd_mutex_api_unlock(&sem->gate);',
+                                'kd_mutex_local_unlock(&sem->gate);')
+            text = replace_once(text, 'kd_rwsem_write_release(sem);',
+                                'kd_rwsem_release_local(sem);')
             start = text.index('static bool kd_rwsem_reserve_delegate(')
             end = text.index('bool kd_rwsem_is_idle(', start)
             # No executor or positive-phase admission exists in this builtin.

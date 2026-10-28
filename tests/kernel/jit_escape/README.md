@@ -69,8 +69,8 @@ operations contribute to prefix, suffix and taken-branch totals or qualify as
 marker-event tasks. Joined readers, zero active counts, zero rwlock admission
 count and a clear embedded gate are required before phase changes and retirement.
 
-For rwsem, the OUTER wrapper reserves its writer phase and drains accepted
-readers before publishing the mutex request. Native continuation uses the
+For rwsem, explicitly prepared ordinary `kd_down_write/up_write` reserve the
+writer phase and drain accepted readers before publishing the mutex request. Native continuation uses the
 unchanged ABI2 protocol; the original task releases the reservation only after
 the gate unlock ACK. The body checks positive admission, which can include other
 outer writers, and the probe's accepted-reader count. It does not demand a zero

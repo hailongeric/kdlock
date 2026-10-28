@@ -1,5 +1,5 @@
 obj-m := rwsem_probe.o
-rwsem_probe-objs := module.o
+rwsem_probe-objs := module.o payload/compat.o
 ccflags-y += -I$(KDLOCK_INCLUDE)
 UBSAN_SANITIZE := n
 KDIR ?= /lib/modules/$(shell uname -r)/build

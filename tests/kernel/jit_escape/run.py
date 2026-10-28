@@ -440,11 +440,9 @@ def main():
                        "spin/rwlock marker caller imports another lock family")
         elif args.family == "rwsem":
             names = set(imported.split())
-            rt.require({"kd_rwsem_delegate_enter", "kd_rwsem_delegate_exit",
+            rt.require({"kd_rwsem_down_write_clobber_v1", "kd_rwsem_write_release",
                         "kd_down_read", "kd_up_read", "kd_rwsem_is_idle",
-                        "kd_mutex_outer_contended_clobber_v1",
-                        "kd_mutex_direct_unlock_clobber_v1", "kd_mutex_local_unlock",
-                        "kd_mutex_prepare"} <= names and
+                        "kd_mutex_direct_unlock_clobber_v1", "kd_rwsem_prepare"} <= names and
                        not names & {"kd_mutex_direct_lock_clobber_v1", "kd_mutex_api_lock",
                                     "kd_mutex_api_unlock", "kd_mutex_lock_clobber_v1",
                                     "kd_mutex_unlock_clobber_v1",
@@ -453,7 +451,10 @@ def main():
                        not any(re.fullmatch(
                            r"(?:mutex\w*|__mutex\w*|down_(?:read|write)\w*|up_(?:read|write)|"
                            r"rwsem\w*|__rwsem\w*|osq_lock|osq_unlock)", name) for name in names),
-                       "rwsem marker caller lacks the phase reservation or uses another lock shell")
+                       "rwsem marker caller lacks the public prepared API or uses another lock shell")
+            rt.write_json(out / "public-entry-audit.json",
+                          audit_public_entries(workload, {"jit_escape_entry": "escape_body"},
+                              lock_symbol="kd_rwsem_down_write_clobber_v1"))
         elif args.mutex_api == "public":
             names = set(imported.split())
             rt.require({"kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_unlock_clobber_v1"} <= names and

@@ -11,6 +11,10 @@
  * Every participant must use this API; never access the embedded gate directly.
  */
 void kd_rwsem_init(struct kd_rwsem *sem);
+void __kd_init_rwsem(struct kd_rwsem *sem, const char *name, struct lock_class_key *key);
+#define kd_init_rwsem(sem) kd_rwsem_init(sem)
+/* Callable symbols acquire locally. Include kd_rwsem_api.h for the same public
+ * names with an optional, explicitly prepared ordinary writer continuation. */
 void kd_down_read(struct kd_rwsem *sem);
 int kd_down_read_interruptible(struct kd_rwsem *sem);
 int kd_down_read_killable(struct kd_rwsem *sem);
@@ -20,15 +24,23 @@ int kd_down_read_killable(struct kd_rwsem *sem);
 int kd_down_read_trylock(struct kd_rwsem *sem);
 void kd_up_read(struct kd_rwsem *sem);
 void kd_down_write(struct kd_rwsem *sem);
+/* KD extension: the target Linux rwsem has killable, not interruptible, writes. */
 int kd_down_write_interruptible(struct kd_rwsem *sem);
 int kd_down_write_killable(struct kd_rwsem *sem);
 int kd_down_write_trylock(struct kd_rwsem *sem);
 void kd_up_write(struct kd_rwsem *sem);
 void kd_downgrade_write(struct kd_rwsem *sem);
-/* Outer clobber wrappers only: reserve before publication and release on the
- * origin after the matching mutex unlock/ACK. Not nested JIT lock controls. */
+void kd_down_read_non_owner(struct kd_rwsem *sem);
+void kd_up_read_non_owner(struct kd_rwsem *sem);
+int kd_rwsem_is_locked(struct kd_rwsem *sem);
+int kd_rwsem_is_contended(struct kd_rwsem *sem);
+void kd_rwsem_assert_held(const struct kd_rwsem *sem);
+void kd_rwsem_assert_held_write(const struct kd_rwsem *sem);
+/* Provider implementation helpers: reservation before publication, release
+ * only on the origin after exact mutex unlock/ACK. Never nested JIT controls. */
 void kd_rwsem_delegate_enter(struct kd_rwsem *sem);
 void kd_rwsem_delegate_exit(struct kd_rwsem *sem);
+void kd_rwsem_write_release(struct kd_rwsem *sem);
 /* Quiescent inspection after stopping/joining every user, not admission. */
 bool kd_rwsem_is_idle(struct kd_rwsem *sem);
 

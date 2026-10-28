@@ -79,7 +79,7 @@ class NanoTests(unittest.TestCase):
             if kd['lock_kind'] == 'mutex':
                 self.assertEqual(kd['mutex_api'], 'callable-local')
             elif kd['lock_kind'] == 'rwsem':
-                self.assertEqual(kd['rwsem_writer_shell'], 'ordinary-local')
+                self.assertEqual(kd['rwsem_writer_shell'], 'callable-local')
 
     def test_derived_reader_profiles_keep_exact_counters_and_post_work(self):
         for family in ('rwsem', 'rwlock'):

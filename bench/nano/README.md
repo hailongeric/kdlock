@@ -145,7 +145,9 @@ All ten profiles below are selected by default and use post256.
 | `rwlock-locality-mixed` | Rwlock | 16 / 1,024 bytes | 20% |
 
 KD mutex uses public `kd_mutex_lock/unlock` through ABI2. Rwsem readers execute
-locally; explicit outer writers reserve a reader-free phase and may delegate.
+locally; explicitly prepared ordinary writers reserve a reader-free phase and may
+delegate. The current `public-prepared-direct-abi2` shell replaces the historical
+OUTER/cookie shell; keep measurements from these source versions separate.
 Rwlock readers also execute locally; direct writer pairs admit eligible
 exclusive bodies. Returned-body evidence, not publication alone, establishes
 successful delegation in each family. The 20%-write profiles retain distinct
