@@ -121,11 +121,14 @@ nesting, IRQ/BH/preemption, downgrade, non-owner release and destruction. Conver
 all users of an object together. Unsupported groups remain entirely Native.
 
 Retain KD physical exclusion, ABI2, the 32-byte mutex, preallocated separate queue
-memberships, pinned published waiters, immutable mutex images and exact
+memberships, exact waiter/executor pin lifetimes, immutable mutex images and exact
 owner/source/ACK/frame retirement. Runtime context obligations remain even though
 production trusts source and skips semantic analysis. Trust adds no missing ABI
-or backend support. Whole-kernel RT, ww_mutex, lockdep and oversubscription need
-separate designs and validation.
+or backend support. The October 29 requested pin-on-proxy handshake is tracked
+in [open work](TODO.md#october-29-api-and-execution-work); it is not yet baseline
+behavior. PREEMPT_RT, debug mutexes and lockdep configurations are explicitly
+excluded. Whole-kernel replacement and ww_mutex require separate integration;
+oversubscription remains deferred.
 
 Deliver a reviewable kernel patch/configuration and coverage map, then compare
 unchanged applications on matched kernels. TCLock is an optional comparator

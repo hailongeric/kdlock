@@ -99,6 +99,26 @@ rules. Internal pinned spin helpers are not interchangeable with public pairs.
 
 ## Compatibility and execution limits
 
+The static audit at `6a7350291ebab8c50a43431561e11085098d628b` does not
+qualify arbitrary Linux lock replacement. All users and containing objects must
+adopt the same KD protocol; native object layouts and internal ownership fields
+are not interchangeable with KD. Callable, signal, try and I/O mutex operations
+retain local execution, including signal results and I/O accounting. Nested
+mutex annotations match the non-lockdep configuration, not lockdep semantics.
+`CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and lockdep
+are explicitly outside support. Whole-kernel replacement and `ww_mutex` remain
+unvalidated.
+
+Same-backend nested mutex/spin mechanisms do not establish mixed-family support.
+The current known-control handler refuses delegated mutex-to-spin and
+spin-to-mutex calls. Production source trust skips the earlier mixed-kind
+analysis, so this refusal is not guaranteed to occur before execution; an
+already-progressed unsupported control can reach the backend fail-stop path.
+There is no general nested rwlock/rwsem mode ledger. The Linux 7 basic tests cover
+the four families separately, and the instruction-exit probes exclude nested
+acquisition. See [ownership](design/locking.md) and the
+[requested implementation sequence](TODO.md#october-29-api-and-execution-work).
+
 All users of one object must use the same protocol. KD local and delegating
 interfaces can share their corresponding KD object with matching unlocks.
 Linux and TCLock operations cannot operate on that object. The source aliases

@@ -13,7 +13,44 @@ recovery/history only. Fresh four-family functional checks and the selected
 are complete within their separate frozen scopes. All timing is exploratory,
 with one round per point and failed strict qualification.
 
-## Correctness and integration limits
+## October 29 API and execution work
+
+The source audit starts at `6a7350291ebab8c50a43431561e11085098d628b`;
+the latest implementation commit there is
+`acc4dbc2e28394522992469250a31da536c39fa7`. The audit is static inspection,
+not a new execution result. The user requested the following ordered work.
+Documentation is committed first; each implementation remains pending until its
+own code, directly affected checks and performance evidence are recorded.
+
+| Step | Deliverable and acceptance boundary | Status |
+| --- | --- | --- |
+| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Planned |
+| 2 | One public macro layer for spin and related ordinary APIs, using the compiler clobber wrappers. Retain only required cross-module provider symbols; callable interfaces must have an explicit conventional wrapper and execution contract. | Planned |
+| 3 | Assess rwlock recursive reads, upgrades and IRQ/BH pairs. Implement only cases with a stated ownership/context contract; distinguish unsupported blocking upgrade from feasible nonblocking conversion. | Planned |
+| 4 | One ordinary rwsem API family, with the widest compatible init/read/write/try/signal/downgrade/non-owner/annotation coverage. Explain any delegation eligibility restriction; never let a queued writer bypass a downgraded reader. | Planned |
+| 5 | Explicitly refuse `CONFIG_PREEMPT_RT`, `CONFIG_DEBUG_MUTEXES`, `CONFIG_DEBUG_LOCK_ALLOC` and lockdep. These configurations are excluded, not an integration milestone. | Planned |
+| 6 | Leave rwsem fairness unchanged. The writer reservation phase is distinct from the 1024-body mutex batch limit. | Deferred by user |
+| 7 | For delegated mutex-to-spin acquisition, attempt one runtime CAS. On success retain exact nested spin ownership and continue JIT. On contention transfer execution and physical ownership to the original waiter, preserving exclusion, source leases, queue obligations and the former owner's pending acquisition. | Planned |
+| 8 | Explain borrowing versus ownership transfer, including long-chain retention and resource bounds. Validate transfer before replacing an existing borrowed route; do not replay an executed prefix or substitute unlock/relock for uninterrupted exclusion. | Planned |
+
+The spin and rwlock ordinary atomic sections still require preemption exclusion;
+step 1 changes sleeping-lock delegation waiting, not native spin semantics.
+The requested pin-on-proxy protocol supersedes the old permanent published-waiter
+pin as a development requirement. Until step 1 is implemented and validated,
+the baseline implementation still pins published waiters.
+
+Preserve a baseline source identity and matched c01/c16 nano observations before
+changing runtime behavior. Use the existing workload bodies, post256, 1024/1024
+mutex limits, 1024 spin limit, worker placement, kernel and instrumentation.
+Run basic plus affected correctness checks before timing. Compare affected
+families at uncontended, local-NUMA and cross-NUMA counts, then check the complete
+maintained nano grid. Investigate any loss with matched repeated observations;
+do not retain a reproducible regression or describe a noisy one-round tie as
+proof of zero regression. Preserve rejected candidates and failures. Real-world
+API campaigns, kernel changes/reboots, oversubscription and rwsem fairness are
+outside this work.
+
+## Current implementation gaps
 
 | Area | Remaining limit |
 | --- | --- |
@@ -25,7 +62,7 @@ with one round per point and failed strict qualification.
 | Image replacement | Mutex images are immutable; ordinary spin/rwlock entries may still replace code in place until an immutable transition |
 | Source and object lifetime | Session source pins and image leases do not retain arbitrary data/lock allocations; stop/join, exact owners, ACKs and frame drain remain required |
 | Fairness | Bounded batching and NUMA grouping do not establish starvation freedom or a maximum acquisition latency |
-| API coverage | RT, ww_mutex, lockdep, general non-owner/cancellation nesting and unsupported IRQ/BH forms remain outside the declared support |
+| API coverage | RT, debug mutexes and lockdep configurations are explicitly excluded; ww_mutex, general non-owner/cancellation nesting and unsupported IRQ/BH forms remain outside the declared support |
 | Decoder/backend coverage | Source trust bypasses semantic proofs, not missing instruction lowering, text, return routing or runtime protocol support |
 
 Production uses `trusted_source=True`, including kernel and module loops and

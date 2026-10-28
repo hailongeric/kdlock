@@ -23,7 +23,7 @@ its return thunk violates the native-escape flags contract. Complete mitigation
 coverage of handwritten/generated returns remains a separate limitation.
 
 The maintained branch is `master`. Preserve the KD-only foundation selected at
-`d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
+`d2a2304`: KD physical exclusion, ABI2, exact delegation waiter/executor lifetimes,
 immutable mutex images and exact source/runtime lifetime accounting. The current mutex
 keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage
 between independent OSQ and delegation memberships. KD mutex defaults are total
@@ -39,8 +39,10 @@ owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
 Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
 ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.
 Public unlock retains exact provider routing for every successful acquisition.
-All users of an object must follow one protocol. Whole-kernel replacement,
-RT/ww_mutex and lockdep integration remain separately unvalidated.
+All users of an object must follow one protocol. Whole-kernel replacement and
+ww_mutex remain separately unvalidated. Explicitly refuse CONFIG_PREEMPT_RT,
+CONFIG_DEBUG_MUTEXES, CONFIG_DEBUG_LOCK_ALLOC and lockdep; these configurations
+are outside support, not pending integration targets.
 
 The user explicitly selected trusted kernel and module source on October 27.
 Current translation skips semantic safety admission, context/loop-value analysis
@@ -68,8 +70,12 @@ validate whole-kernel replacement.
    added only to simplify lifetime accounting. Retain required capture/restore.
 6. Preserve the two-word wrapper ABI. Spin/rwlock ordinary pairs protect
    preemption and IRQ/BH state. Explicit spin IRQ variants use native interfaces;
-   rwlock IRQ/BH variants are unsupported. Published mutex waiters poll pinned;
-   physical mutex owners/services can sleep. Oversubscription redesign is deferred.
+   rwlock IRQ/BH variants require their own local context-preserving contract.
+   The October 29 selected mutex policy permits preemption while merely queued
+   and requires an acknowledged pin before proxy execution, retained until all
+   executor accesses retire. The baseline still pins published waiters until
+   that change is implemented and checked. Physical mutex owners/services can
+   sleep. Oversubscription redesign and rwsem fairness changes are deferred.
 7. Do not modify, build, install or reboot the guest kernel by default. Captured
    kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.

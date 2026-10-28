@@ -28,6 +28,13 @@ Trust does not supply missing backend support or permit different semantics.
 Runtime probes and source/owner/ACK/frame checks must not be removed to hide
 failures.
 
+Deliberate translation refusal returns exit 2 and the daemon publishes
+`KD_EXE_NATIVE_ONLY`; other compiler/environment failures remain distinct retry
+errors. Source trust is not universal escape synthesis: only exact reviewed
+instruction descriptors receive native markers. The trusted ordinary-callee
+fixture even retains `UD2` bytes without executing them. A generic unsupported
+operation or post-progress runtime error is not guaranteed recoverable.
+
 ## Ordinary callees and strings
 
 `strcmp`, `strnlen`, `sized_strscpy`, `strscpy_pad` and `memcpy` use ordinary
