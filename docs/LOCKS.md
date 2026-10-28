@@ -69,7 +69,7 @@ linked implementations. See the [code map](CODE_MAP.md).
 | --- | --- | --- | --- |
 | Spinlock | The ordinary direct pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
 | Mutex | `kd_mutex_local_lock/unlock`; callable lock symbol, trylock, interruptible, killable and I/O forms | Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases; explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`; `KD_MUTEX_OUTER_LOCK/UNLOCK` retains its outer cookie | Unified calls capture an internal continuation; explicit named entries use `kd_mutex_prepare(lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
-| Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock` | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
+| Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock`; local IRQ/BH and trylock forms | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
 | Rwsem | `kd_down_read/up_read`; `kd_down_write/up_write`; ordinary trylock, interruptible, killable and downgrade forms | `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK`; outer writers only | `kd_mutex_prepare(&sem->gate, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
 
 An **ABI**, or application binary interface, specifies registers and data layout.
@@ -129,9 +129,10 @@ See [mutex replacement](design/kd_only_mutex.md) and its
 for native-object compatibility, original-task execution and unsupported integration.
 
 Ordinary spin and rwlock pairs preserve interrupt/bottom-half state and pair
-preemption protection. Spin's explicit interrupt and bottom-half variants stay
-on the calling CPU. Rwlock has no such variants. Mutex operations and sleeping
-rwsem acquisitions require task context. KD rwsem read trylock and matching read
+preemption protection. Spin and rwlock explicit interrupt and bottom-half variants
+stay on the calling CPU. Rwlock interrupt/BH readers bypass a waiting writer to
+avoid blocking an interrupted reader; active writers still exclude them. Mutex
+operations and sleeping rwsem acquisitions require task context. KD rwsem read trylock and matching read
 unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
 observed through timed writer-drain rechecks. Source trust does not switch hardware task identity or make unsupported
 execution/backend protocols available. Rwsem outer writers cannot cancel after publication,

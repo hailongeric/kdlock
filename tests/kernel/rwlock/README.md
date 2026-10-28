@@ -24,7 +24,11 @@ checks exact updates and mutual exclusion. It also verifies that writer unlock
 preserves reader counts and a queued writer's WAITING bit, shutdown tracks writers
 that skip the gate, and ABI3 acquires write access correctly after refusal and
 retry. Other checks cover argument evaluation, preparation identity and balanced
-preemption.
+preemption. The current fixture also exercises IRQ-save/IRQ/BH pairs, failed
+trylock count/reference rollback, no heat accounting for explicit local variants,
+and a reader interrupting an existing reader while a writer waits. Primitive
+substitutes do not prove real interrupt delivery; run the separate
+[IPI/local API probe](irq_api/README.md) for that ordering case.
 
 The fixture substitutes queue primitives; live runs are still needed to exercise
 the real queue and show that JIT bodies returned. The other selected drivers check

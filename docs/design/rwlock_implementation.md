@@ -5,8 +5,9 @@ once, but each writer needs exclusive access. Readers always run on their own
 CPUs. A writer can run locally or let a combiner execute its critical section
 through KD's spin JIT engine. Both routes use the same exclusion rules.
 
-This is an x86_64 spinning lock for ordinary task context. Code inside it must
-not sleep. The [lock catalog](../LOCKS.md) distinguishes this lock from sleeping
+This is an x86_64 spinning lock. Ordinary task-context writers may delegate;
+explicit IRQ/BH pairs and all readers execute locally. Code inside it must not
+sleep. The [lock catalog](../LOCKS.md) distinguishes this lock from sleeping
 rwsem. The [design overview](../DESIGN.md#terms-used-in-these-guides) explains
 terms such as combiner, continuation, source lease and ACK.
 
@@ -32,11 +33,24 @@ nondelegated reference through unlock; it does not acquire the gate.
 | Read | `kd_read_lock` / `kd_read_unlock` |
 | Write without delegation | `kd_write_lock` / `kd_write_unlock` |
 | Write with delegation available | `KD_RWLOCK_DIRECT_WRITE_LOCK` / `KD_RWLOCK_DIRECT_WRITE_UNLOCK` |
+| Try read/write without delegation | `kd_read_trylock` / `kd_write_trylock`; on success use the ordinary local unlock |
+| Local IRQ save/restore | `kd_read_lock_irqsave` / `kd_read_unlock_irqrestore`; corresponding `kd_write_*` pair |
+| Local IRQ disable/enable | `kd_read_lock_irq` / `kd_read_unlock_irq`; corresponding `kd_write_*` pair |
+| Local BH disable/enable | `kd_read_lock_bh` / `kd_read_unlock_bh`; corresponding `kd_write_*` pair |
+| Local writer trylock with IRQ save | `kd_write_trylock_irqsave`; on success use `kd_write_unlock_irqrestore` |
 | Initialize an unused object | `DEFINE_KD_RWLOCK` or `kd_rwlock_init` |
 
 Native and delegating writers may use the same object, but every acquisition must
 use its matching unlock API. Each pair disables preemption once and restores it
-on unlock. IRQ/BH state is preserved.
+on unlock. Ordinary pairs preserve IRQ/BH state. Explicit variants change only
+that caller's state, following the authenticated non-RT kernel's
+`include/linux/rwlock_api_smp.h` order. `irqsave` restores the incoming IRQ state;
+`irq` unlock enables IRQs, so use it only with its matching entry contract. BH
+protection does not disable hard IRQs. Trylocks return 1/true on success and
+0/false on failure; failures retain neither reader counts nor native references.
+Failed `kd_write_trylock_irqsave` restores preemption before IRQ flags, matching
+the native trylock wrapper. None of these new local variants records heat,
+captures a continuation or enters JIT.
 
 ```c
 #include <linux/objtool.h>
@@ -93,14 +107,19 @@ than the original eight-byte layout.
 
 1. Disable preemption and add to the reader count with acquire ordering.
 2. If there are no writer bits, enter the read body immediately.
-3. Otherwise, remove that speculative count **before** joining the native gate
+3. In interrupt/BH context, retain the speculative reader count and wait only
+   for an active writer's low byte to clear. Ignore WAITING and do not acquire
+   the gate: this reader may have interrupted a reader that the queued writer
+   is waiting for. This matches native `queued_read_lock_slowpath` and avoids
+   that circular wait. NMI use is outside the supported contract.
+4. Otherwise, remove that speculative count **before** joining the native gate
    queue. Keeping it while queued could make the writer ahead wait forever for
    this reader to finish.
-4. After acquiring the gate, add the reader count again. Wait for any native writer
+5. After acquiring the gate, add the reader count again. Wait for any native writer
    that acquired without the gate to release its writer byte. The reader count now
    prevents another such writer from entering. Release the gate, then run the read
    body locally.
-5. On read unlock, subtract the count with release ordering and enable preemption.
+6. On read unlock, subtract the count with release ordering and enable preemption.
    The x86 locked SUB avoids computing a return value that the caller does not use.
 
 ### Writers
@@ -115,8 +134,9 @@ busy.
 
 If the fast attempt fails, the writer takes the KD gate. It then tries to change a
 zero count to `0xff`. If readers or a fast writer are still active, it sets WAITING
-and waits for them to finish. New readers remove their speculative count and queue
-behind the gate while WAITING is set. The writer observes the last holder's release
+and waits for them to finish. New task-context readers remove their speculative
+count and queue behind the gate while WAITING is set. Interrupt/BH readers use
+the count-retaining exception described above. The writer observes the last holder's release
 with acquire ordering before entering its body.
 
 ### Write unlock
@@ -180,9 +200,25 @@ exits do not become ABI3 features merely by sharing the spin engine. Consult
 
 Readers must finish in bounded time: a spinning writer cannot make a stalled
 reader progress. Waiting for readers happens before JIT execution. This API does
-not support sleeping bodies, recursive reads, upgrades/downgrades, IRQ/BH variants,
-mixing with Linux or TCLock APIs, or general oversubscription. Nested translated
-operations keep the existing spin admission limits; ABI3 adds no new nested API.
+not support sleeping bodies, arbitrary task-context recursive reads,
+upgrades/downgrades, NMI use, mixing with Linux or TCLock APIs, or general
+oversubscription. Nested translated operations keep the existing spin admission limits; ABI3 adds no new nested API.
+
+Task-context recursive reads are not made safe by the uncontended fast path.
+If a writer publishes WAITING between two reads by one task, the inner read
+queues behind a writer waiting for that task's outer read. Distinct-object lock
+nesting and the interrupt-reader exception do not establish arbitrary recursive
+ownership. General recursion would require exact object/context/depth records;
+this implementation adds none.
+
+Blocking read-to-write promotion is unsupported and is not a native rwlock
+operation: two readers attempting it can wait for each other indefinitely.
+A separate nonblocking conversion could in principle reserve an exact native
+drain reference, then CAS a sole-reader count to writer ownership while keeping
+the caller's pin; failure would retire that reference and retain the read. It
+would need its own failure/ownership contract and concurrent reader/writer
+validation. No such API is exposed here, and releasing
+a read then taking a write is not an atomic upgrade.
 
 Keep the lock, protected data and source text alive while any reader, writer,
 queued request or frame can use them. For shutdown, stop new calls and join all
@@ -192,7 +228,13 @@ retirement succeeds. The [spin](spin_implementation.md), [frame](frames.md) and
 
 [Correctness tests](../../tests/kernel/rwlock/README.md) check simultaneous readers,
 writer exclusion, exact updates, worker progress and clean shutdown. They report
-native execution, publication and returned JIT bodies separately.
+native execution, publication and returned JIT bodies separately. The focused
+[local IRQ/BH probe](../../tests/kernel/rwlock/irq_api/README.md) adds actual IPI
+reader ordering, local state restoration and trylocks; it records `JIT=0`.
+The [native source manifest](../../tests/kernel/rwlock/irq_api/native-source.json)
+binds the IRQ/try and interrupt-reader comparisons to the authenticated
+`linux=7.0.0-38.38` source. These additions require their own guest validation;
+older ordinary rwlock results do not validate the new APIs.
 
 The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
 Native and TCLock using matched cacheline and hash workloads. The
