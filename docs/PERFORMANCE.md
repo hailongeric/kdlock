@@ -26,6 +26,25 @@ frequency at every instruction.
 a delegation gain. `NORMAL` proves publication only. Failed preparation or
 partial generated execution contributes no accepted throughput.
 
+## KD rwsem c01, 20% writes: queued reader admission
+
+The [October 28 focused comparison](../bench/results/10.176.26.71/bench/rwsem-c01-w20-20261028/README.md)
+measures c01, 20% writes and post256 on Linux 7 at 8/16/32/60 workers, with
+three rounds and fresh TCLock controls for each source. All readers execute
+locally. KD now makes eight short admission attempts before joining an abortable
+queue whose head alone performs the longer shared-count polling stage.
+
+At 16 and 32 workers, KD median rates changed from 4.225/3.174 to
+5.028/5.062 Mops/s; all those runs had zero writer JIT execution. At 60 workers,
+the implementation comparison is 1.875 to 3.139 Mops/s, with baseline returned
+writer JIT and final local execution retained as distinct classes. Final TCLock
+medians were 5.523/5.982/4.596 at 16/32/60. KD therefore still trails TCLock;
+eight-worker cases retain a regression and mixed execution classes. This fixes
+the observed within-node decline in the sampled 16–32 range, not every rwsem
+performance limitation. The first queued-only candidate and all adverse samples
+are preserved. Timing remains exploratory, separate from the catalog above and
+from actual-MM performance.
+
 ## Current nano measurements
 
 The following **Linux 7 checked-source cohort** uses the maintained c01/c16

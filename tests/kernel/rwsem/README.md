@@ -1,7 +1,8 @@
 # Sleeping rwsem and outer-writer admission checks
 
-The reader/writer semaphore (rwsem) waiting implementation in `c21345b` is the
-accepted current version. Admission means permission for a reader or writer to
+The reader/writer semaphore (rwsem) waiting implementation in `c21345b` remains
+the foundation for exact phases and sleeping waits. Ordinary read contention
+now queues optimistic admission attempts. Admission means permission for a reader or writer to
 enter. An outer writer uses the explicit interface that may delegate its work
 to another lock holder. JIT means just-in-time compiled code for that delegated
 execution; a returned body must reach its matching unlock and finish the return
@@ -54,14 +55,29 @@ The probe checks:
   remain empty at each controlled cancellation point.
 - Exact zero error result, expected sleeping transitions, all worker joins, zero
   readers and writer reservations, no phase or drain waiters and an idle
-  physical gate.
+  physical gate. Quiescent inspection also requires an empty read-admission OSQ.
 
-Before publishing a request, uninterruptible waits check their condition at most
-16,384 times before sleeping, and stop this polling earlier if the scheduler
-needs the CPU. The sleeping and same-CPU cases
-exercise the scheduling fallback after that stage. Interruptible and killable
-acquisitions retain their original cancellation path. Reader count acquisition
-runs on the reader's own task.
+Ordinary read acquisition first tries its exact reader count/phase protocol up
+to eight times, stopping early for rescheduling. After failure, it uses an
+abortable OSQ backed by an existing preallocated mutex
+CPU/slot reservation. Only the queue head polls shared admission, for at most
+16,384 condition checks and with an earlier exit when rescheduling is needed.
+The OSQ membership and slot retire before preemption is enabled, a reader body
+executes or the caller enters its sleeping fallback. Slot exhaustion and OSQ
+abort also fall back to the existing waitqueue path. The queue does not publish
+a delegation request or acquire the writer gate.
+
+Writer polling remains before publication with preemption enabled. The sleeping
+and same-CPU cases exercise scheduling fallback. Interruptible and killable
+acquisitions retain their original cancellation paths, and atomic read trylock
+does not enter OSQ. Every reader acquires and executes on its own task; only
+eligible writes may delegate.
+
+The guest-only [read-admission unit fixture](../../unit/mutex/test_rwsem_read_admission.py)
+extracts the production slowpath and checks fast success, bounded head polling,
+slot/OSQ abort, and release before reader return or sleeping fallback. Its
+deterministic substitutes do not prove concurrent unlink or scheduling progress;
+the existing mutex OSQ fixtures and this live probe cover those separately.
 
 Expected result: `api_checks=8`, `cancellation_checks=10`, `readers_slept=2`,
 `writer_slept=1`, `late_reader_slept=1`, `outer_readers_slept=2`,

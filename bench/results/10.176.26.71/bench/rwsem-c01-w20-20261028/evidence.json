@@ -1,0 +1,973 @@
+{
+  "archives": {
+    "performance": {
+      "archive_prefix": "rwsem-c01-w20-20261028",
+      "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+      "completed": true,
+      "finished_ns": 1793182699929107991,
+      "groups": [
+        {
+          "bytes": 8170074,
+          "file": "baseline.tar.gz",
+          "group": "baseline",
+          "path": "/root/kdlock-evidence/10.176.26.71/bench/rwsem-c01-w20-20261028-archives/baseline.tar.gz",
+          "roots": [
+            "rwsem-c01-w20-20261028/baseline"
+          ],
+          "sha256": "3374e73eb9ae00173d2679f247c066bb9356270b4c08216109f61f4fd352a5e8"
+        },
+        {
+          "bytes": 8186734,
+          "file": "queued.tar.gz",
+          "group": "queued",
+          "path": "/root/kdlock-evidence/10.176.26.71/bench/rwsem-c01-w20-20261028-archives/queued.tar.gz",
+          "roots": [
+            "rwsem-c01-w20-20261028/queued-readers"
+          ],
+          "sha256": "15575f03b02b2db4b66a799f82e9d9e4883141b107ad2108b4923cbcca0e9221"
+        },
+        {
+          "bytes": 8197150,
+          "file": "selected.tar.gz",
+          "group": "selected",
+          "path": "/root/kdlock-evidence/10.176.26.71/bench/rwsem-c01-w20-20261028-archives/selected.tar.gz",
+          "roots": [
+            "rwsem-c01-w20-20261028/short-retry"
+          ],
+          "sha256": "5d4e0cf233199362697fec9a4c5ec82ec46aff14e5fc68324ba042d95f416409"
+        },
+        {
+          "bytes": 422,
+          "file": "metadata.tar.gz",
+          "group": "metadata",
+          "path": "/root/kdlock-evidence/10.176.26.71/bench/rwsem-c01-w20-20261028-archives/metadata.tar.gz",
+          "roots": [
+            "rwsem-c01-w20-20261028/health.json"
+          ],
+          "sha256": "98ea31d35bdaebeab8ef1957751b7daf3233682f48c5ea0bd105b3481a60ac5b"
+        }
+      ],
+      "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/rwsem-c01-w20-20261028",
+      "guest_idle": true,
+      "health_path": "health.json",
+      "health_sha256": "ddfd09fee8b723055334d5dfd0e1b4fc4ea8a5d2e79f1930c42a8d1ac7b70a21",
+      "idle_source_sha256": "8caa897e49eb85eef619ad6acd96ee582db42b64449d55c746a3f938d1bf5434",
+      "input_inventory_sha256": "901db03a2b0a1f185a683cb3dbb6f31e86ac5c81f81055024f106a323d42356d",
+      "kernel_release": "7.0.0-38-kdlock1",
+      "schema": 1,
+      "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+      "script_sha256": "dfbd236aecdb4d7da796a8055dfcca5b791946a75a542c9822ce0babc6bd1b04",
+      "started_ns": 1793182694223803573
+    },
+    "validation": {
+      "archive_prefix": "rwsem-read-admission-20261028",
+      "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+      "completed": true,
+      "finished_ns": 1793182709272948045,
+      "groups": [
+        {
+          "bytes": 16793653,
+          "file": "basic.tar.gz",
+          "group": "basic",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/basic.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/basic"
+          ],
+          "sha256": "4e899b7155cedc9a051150038f54377bc030ccc77d9efa20568f969e68f00a52"
+        },
+        {
+          "bytes": 5337156,
+          "file": "read-only.tar.gz",
+          "group": "read-only",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/read-only.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/read-only"
+          ],
+          "sha256": "2ecd552e4447eb29987b27ef9f0af35476c1e0c29bfd4598c498c8ecc651aa2c"
+        },
+        {
+          "bytes": 5323895,
+          "file": "local-writers.tar.gz",
+          "group": "local-writers",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/local-writers.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/local-writers"
+          ],
+          "sha256": "a1260381b045f172a67d5f1c76a3b4b7ccda7630db69b421fda53a591aae422d"
+        },
+        {
+          "bytes": 4537062,
+          "file": "probe.tar.gz",
+          "group": "probe",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/probe.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/probe"
+          ],
+          "sha256": "3081b32ac46c3074457fc0c65eaab245b9be6c299fb48a29acb4a07abca4759f"
+        },
+        {
+          "bytes": 4569919,
+          "file": "probe-prepared.tar.gz",
+          "group": "probe-prepared",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/probe-prepared.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/probe-prepared"
+          ],
+          "sha256": "8b10a423b441c4f7f0970e43dbf2df5d412ae35c646ee306c5485d9fd5b5a133"
+        },
+        {
+          "bytes": 4571200,
+          "file": "probe-final.tar.gz",
+          "group": "probe-final",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/probe-final.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/probe-final"
+          ],
+          "sha256": "f93575b69cc5cf7ecb67bcf92e0c3cedb61d43a648cbd95be6634c2c6b65d6ef"
+        },
+        {
+          "bytes": 57543,
+          "file": "metadata.tar.gz",
+          "group": "metadata",
+          "path": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028-archives/metadata.tar.gz",
+          "roots": [
+            "rwsem-read-admission-20261028/basic-launch.log",
+            "rwsem-read-admission-20261028/health.json",
+            "rwsem-read-admission-20261028/host-selected.json",
+            "rwsem-read-admission-20261028/layout.txt",
+            "rwsem-read-admission-20261028/probe-final.log",
+            "rwsem-read-admission-20261028/probe-prepared.log",
+            "rwsem-read-admission-20261028/probe.log",
+            "rwsem-read-admission-20261028/unit-final.log",
+            "rwsem-read-admission-20261028/unit.log"
+          ],
+          "sha256": "1c729d826a31751808105bfed618e1c72eeb45024eef53f9b07153bdcde58f6d"
+        }
+      ],
+      "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028",
+      "guest_idle": true,
+      "health_path": "health.json",
+      "health_sha256": "ddfd09fee8b723055334d5dfd0e1b4fc4ea8a5d2e79f1930c42a8d1ac7b70a21",
+      "idle_source_sha256": "8caa897e49eb85eef619ad6acd96ee582db42b64449d55c746a3f938d1bf5434",
+      "input_inventory_sha256": "028a27d3a39462d64365d46bf5555145a69dea6505e7d6b5925597e8b6708be5",
+      "kernel_release": "7.0.0-38-kdlock1",
+      "schema": 1,
+      "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+      "script_sha256": "dfbd236aecdb4d7da796a8055dfcca5b791946a75a542c9822ce0babc6bd1b04",
+      "started_ns": 1793182700031624339
+    }
+  },
+  "basic_results": [
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "spin",
+      "jit_completions": 1597669,
+      "jit_entries": 1597669,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028/basic/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "receipt_sha256": "a18061499b753e6dfd80925018e908043c5633ac9588648d23043b16a85aa368"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "mutex",
+      "jit_completions": 1588637,
+      "jit_entries": 1588637,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028/basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "receipt_sha256": "5ea0da5ccddc6ca2f8439404006a686da7b12f21da69fd2258fd6f5fae4e1e9e"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "rwlock",
+      "jit_completions": 23415,
+      "jit_entries": 23415,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028/basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "receipt_sha256": "b9ab60a56834065d775f7a98955468974e26fdc5c1ceba634134e064376c0965"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "rwsem",
+      "jit_completions": 1576950,
+      "jit_entries": 1576950,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/rwsem-read-admission-20261028/basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "receipt_sha256": "2d47143cccc04575d350dfe34b584e70672bb7a6b696a51f5c950bb038ea1f0f"
+    }
+  ],
+  "final_source_sha256": {
+    "include/kd_rwsem_types.h": "c2c06bd74703abb72667cb5ee296de260d711f7819d5b8e600f28771c6e76be8",
+    "kernel_module/kd_rwsem.c": "c99efd6b0fcc72c25038a076c13233920df7614665428297b06c6ccf928afd7e",
+    "tests/unit/mutex/test_rwsem_read_admission.py": "0a72ad119644376e05a4be210f5f8e7126043e24d266adc057ea66325cfe57f2"
+  },
+  "host_capture_sha256": {
+    "baseline": "a3aebc67ebaa97c3e57401f8526307b4796f1f815b55584a4e9451929c79fc76",
+    "final": "7d252584b393a0715aaf248369e0d1f231c05e6c529f8871751055d7f956b3dc"
+  },
+  "local-writers": [
+    {
+      "completed": 100000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 1
+    },
+    {
+      "completed": 800000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 8
+    },
+    {
+      "completed": 3200000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 32
+    },
+    {
+      "completed": 6000000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 60
+    }
+  ],
+  "performance_qualified": false,
+  "probe_allocator_preparation": {
+    "action": "normal insmod then rmmod before probe-prepared and probe-final",
+    "module": "rwsem-c01-w20-20261028/baseline/build/guard/tc_allocator_guard.ko",
+    "sha256": "a5ee6d62503787d113f5972913546bedf99daa2ed0e6f8c204d064d29f125d04"
+  },
+  "production_sha256": {
+    "baseline": {
+      "include/kd_rwsem_types.h": "72c8a5c031f948ff7ee0e40334338e13d49722820c47e9e67a5b5191b0d4b7fd",
+      "kernel_module/kd_rwsem.c": "ca3a0893d6586ecce087639b827d73d7bcc14a0874cb201b3dd97412c06cf97e"
+    },
+    "queued-readers": {
+      "include/kd_rwsem_types.h": "c2c06bd74703abb72667cb5ee296de260d711f7819d5b8e600f28771c6e76be8",
+      "kernel_module/kd_rwsem.c": "bcc74ead23b06f9cc11b2de9ce8a3331323bb31fcd4b896eb321764ebcb2473d"
+    },
+    "short-retry": {
+      "include/kd_rwsem_types.h": "c2c06bd74703abb72667cb5ee296de260d711f7819d5b8e600f28771c6e76be8",
+      "kernel_module/kd_rwsem.c": "9edbadd62611ee75c92a8476298d69e04c6ea3d9fac482ad1ed3f60f81fef41a"
+    }
+  },
+  "read-only": [
+    {
+      "completed": 100000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 1
+    },
+    {
+      "completed": 800000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 8
+    },
+    {
+      "completed": 3200000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 32
+    },
+    {
+      "completed": 6000000,
+      "data_ok": true,
+      "drained": true,
+      "jit_entries": 0,
+      "threads": 60
+    }
+  ],
+  "semantic_probe": {
+    "binaries": {
+      "source/kernel_module/kdlock_km.ko": "7bde954fcb7f2d0a35b0736c252c0101c4fba7861d78f43b73af88cbf5877f39",
+      "source/tests/kernel/rwsem/rwsem_probe.ko": "98c33787ebdadccfe8d5aa7445406d52bde4722e09a24d3be5e5c48298970c02"
+    },
+    "drained": true,
+    "jit_bodies": 0,
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "passed": true,
+    "results": [
+      {
+        "api_checks": 8,
+        "cancellation_checks": 10,
+        "colocated": 1,
+        "downgrade_checks": 1,
+        "errors": 0,
+        "execution": "local",
+        "idle": 1,
+        "late_reader_slept": 1,
+        "outer_readers_slept": 2,
+        "outer_writer_slept": 1,
+        "publication_checks": 3,
+        "readers_slept": 2,
+        "writer_slept": 1
+      }
+    ],
+    "snapshot_tag": "linux70-kdlock1-clean-20261027"
+  },
+  "summaries": {
+    "baseline": [
+      {
+        "best_peak_ops_s": 5671196.772597522,
+        "complete": false,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 5671196.772597522,
+        "peak_median_ops_s": 5569637.229900702,
+        "peak_min_ops_s": 5468077.687203882,
+        "peak_spread_pct": 3.7146342282036016,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t08-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 2,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 5634417.109804338,
+        "whole_median_ops_s": 5531440.804845678,
+        "whole_min_ops_s": 5428464.499887017,
+        "whole_spread_pct": 3.7939385975833084,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4539767.4353678385,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4539767.4353678385,
+        "peak_median_ops_s": 4442447.839506172,
+        "peak_min_ops_s": 4205962.737469895,
+        "peak_spread_pct": 7.936463509868005,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t08-r00",
+          "rwsem-cacheline-c01-tclock-w020-t08-r01",
+          "rwsem-cacheline-c01-tclock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4512553.633088237,
+        "whole_median_ops_s": 4414679.9640850425,
+        "whole_min_ops_s": 4196590.11033637,
+        "whole_spread_pct": 7.529053694656431,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5734311.825398498,
+        "complete": false,
+        "expected_rounds": 3,
+        "jit_status": "PASS",
+        "peak_max_ops_s": 5734311.825398498,
+        "peak_median_ops_s": 5734311.825398498,
+        "peak_min_ops_s": 5734311.825398498,
+        "peak_spread_pct": 0.0,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t08-r01"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 1,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 5694687.167015065,
+        "whole_median_ops_s": 5694687.167015065,
+        "whole_min_ops_s": 5694687.167015065,
+        "whole_spread_pct": 0.0,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4356111.9169538235,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 4356111.9169538235,
+        "peak_median_ops_s": 4254704.7256100355,
+        "peak_min_ops_s": 3988641.9961099,
+        "peak_spread_pct": 9.212908082558295,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t16-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 4325311.52241892,
+        "whole_median_ops_s": 4224821.383043217,
+        "whole_min_ops_s": 3959577.991233879,
+        "whole_spread_pct": 9.236679565214772,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5515922.15758588,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 5515922.15758588,
+        "peak_median_ops_s": 5429008.544562832,
+        "peak_min_ops_s": 5202702.195051987,
+        "peak_spread_pct": 6.020332334835154,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t16-r00",
+          "rwsem-cacheline-c01-tclock-w020-t16-r01",
+          "rwsem-cacheline-c01-tclock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 5477184.6917991,
+        "whole_median_ops_s": 5389861.475404947,
+        "whole_min_ops_s": 5187853.0907133,
+        "whole_spread_pct": 5.577097038536578,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 3203364.7062570923,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 3203364.7062570923,
+        "peak_median_ops_s": 3200825.372791401,
+        "peak_min_ops_s": 3125658.8670570473,
+        "peak_spread_pct": 2.4860626992608643,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t32-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 3176912.514550142,
+        "whole_median_ops_s": 3174095.820914015,
+        "whole_min_ops_s": 3100796.1226345454,
+        "whole_spread_pct": 2.4547370709082736,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 6135412.061499319,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 6135412.061499319,
+        "peak_median_ops_s": 6002282.542281507,
+        "peak_min_ops_s": 5998889.241497409,
+        "peak_spread_pct": 2.2758016443696234,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t32-r00",
+          "rwsem-cacheline-c01-tclock-w020-t32-r01",
+          "rwsem-cacheline-c01-tclock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 6086909.541901566,
+        "whole_median_ops_s": 5954830.635668811,
+        "whole_min_ops_s": 5953025.239416698,
+        "whole_spread_pct": 2.2490128480958136,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 1928522.777885329,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "PASS",
+        "peak_max_ops_s": 1928522.777885329,
+        "peak_median_ops_s": 1898651.0660837404,
+        "peak_min_ops_s": 1890107.3380570773,
+        "peak_spread_pct": 2.032447525850072,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 1907836.7733747163,
+        "whole_median_ops_s": 1875047.1321019046,
+        "whole_min_ops_s": 1870645.7858028174,
+        "whole_spread_pct": 1.9881362818208657,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4730711.119889801,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4730711.119889801,
+        "peak_median_ops_s": 4698416.012248809,
+        "peak_min_ops_s": 4612138.063121949,
+        "peak_spread_pct": 2.5708913121215224,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t60-r00",
+          "rwsem-cacheline-c01-tclock-w020-t60-r01",
+          "rwsem-cacheline-c01-tclock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4693636.989842747,
+        "whole_median_ops_s": 4657734.383340757,
+        "whole_min_ops_s": 4522058.760011406,
+        "whole_spread_pct": 3.794250338996234,
+        "write_percent": 20
+      }
+    ],
+    "queued-readers": [
+      {
+        "best_peak_ops_s": 4634450.189375335,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 4634450.189375335,
+        "peak_median_ops_s": 4418180.144179064,
+        "peak_min_ops_s": 4411692.348711414,
+        "peak_spread_pct": 5.049260534429268,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t08-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t08-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 4620041.975425779,
+        "whole_median_ops_s": 4385241.815577875,
+        "whole_min_ops_s": 4379688.034851264,
+        "whole_spread_pct": 5.487923766759273,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4641240.750574052,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4641240.750574052,
+        "peak_median_ops_s": 4414237.066524859,
+        "peak_min_ops_s": 4357786.872579305,
+        "peak_spread_pct": 6.5045374242218275,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t08-r00",
+          "rwsem-cacheline-c01-tclock-w020-t08-r01",
+          "rwsem-cacheline-c01-tclock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4612454.519717133,
+        "whole_median_ops_s": 4383499.990344506,
+        "whole_min_ops_s": 4328705.125501017,
+        "whole_spread_pct": 6.555064066261007,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4571236.102018706,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 4571236.102018706,
+        "peak_median_ops_s": 4548219.122616105,
+        "peak_min_ops_s": 4414065.4351349175,
+        "peak_spread_pct": 3.5606782272130975,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t16-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 4538866.655364034,
+        "whole_median_ops_s": 4529409.971955837,
+        "whole_min_ops_s": 4381816.533973737,
+        "whole_spread_pct": 3.58413274888698,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5623462.82396707,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 5623462.82396707,
+        "peak_median_ops_s": 5508528.180318189,
+        "peak_min_ops_s": 5199257.626617332,
+        "peak_spread_pct": 8.1589570629861,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t16-r00",
+          "rwsem-cacheline-c01-tclock-w020-t16-r01",
+          "rwsem-cacheline-c01-tclock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 5594481.2996506,
+        "whole_median_ops_s": 5466726.858105904,
+        "whole_min_ops_s": 5163408.943247224,
+        "whole_spread_pct": 8.348599949015044,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4590687.35503207,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 4590687.35503207,
+        "peak_median_ops_s": 4543808.311873349,
+        "peak_min_ops_s": 4502989.881722616,
+        "peak_spread_pct": 1.94753876008944,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t32-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 4555141.838963736,
+        "whole_median_ops_s": 4472443.920525774,
+        "whole_min_ops_s": 4430775.071870586,
+        "whole_spread_pct": 2.8068851403157495,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 6092774.511893292,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 6092774.511893292,
+        "peak_median_ops_s": 6054061.974657547,
+        "peak_min_ops_s": 5971340.082151657,
+        "peak_spread_pct": 2.0336210644676336,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t32-r00",
+          "rwsem-cacheline-c01-tclock-w020-t32-r01",
+          "rwsem-cacheline-c01-tclock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 6048667.768541692,
+        "whole_median_ops_s": 6021637.81479795,
+        "whole_min_ops_s": 5923024.269434658,
+        "whole_spread_pct": 2.121272738242999,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 3118000.79157987,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 3118000.79157987,
+        "peak_median_ops_s": 3114088.7125622067,
+        "peak_min_ops_s": 3078806.4696962256,
+        "peak_spread_pct": 1.2730362323654465,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 3085748.9208921418,
+        "whole_median_ops_s": 3084911.564960599,
+        "whole_min_ops_s": 3045510.07773123,
+        "whole_spread_pct": 1.3212513547447555,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4772773.843216727,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4772773.843216727,
+        "peak_median_ops_s": 4767564.195501959,
+        "peak_min_ops_s": 4749629.710868951,
+        "peak_spread_pct": 0.48728287796442504,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t60-r00",
+          "rwsem-cacheline-c01-tclock-w020-t60-r01",
+          "rwsem-cacheline-c01-tclock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4735218.179541464,
+        "whole_median_ops_s": 4724850.855839293,
+        "whole_min_ops_s": 4708238.272919116,
+        "whole_spread_pct": 0.5730361349282513,
+        "write_percent": 20
+      }
+    ],
+    "short-retry": [
+      {
+        "best_peak_ops_s": 5329007.461393771,
+        "complete": false,
+        "expected_rounds": 3,
+        "jit_status": "PASS",
+        "peak_max_ops_s": 5329007.461393771,
+        "peak_median_ops_s": 5309533.339813832,
+        "peak_min_ops_s": 5290059.218233895,
+        "peak_spread_pct": 0.7362534435461238,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t08-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t08-r01"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 2,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 5292823.92657796,
+        "whole_median_ops_s": 5273840.505521186,
+        "whole_min_ops_s": 5254857.08446441,
+        "whole_spread_pct": 0.7225095088845696,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4633572.955379183,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4633572.955379183,
+        "peak_median_ops_s": 4594229.483186649,
+        "peak_min_ops_s": 4592637.734298718,
+        "peak_spread_pct": 0.8913226657254717,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t08-r00",
+          "rwsem-cacheline-c01-tclock-w020-t08-r01",
+          "rwsem-cacheline-c01-tclock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4603904.814380173,
+        "whole_median_ops_s": 4564684.315202462,
+        "whole_min_ops_s": 4561188.266848283,
+        "whole_spread_pct": 0.9365223497210802,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4966398.957056219,
+        "complete": false,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 4966398.957056219,
+        "peak_median_ops_s": 4966398.957056219,
+        "peak_min_ops_s": 4966398.957056219,
+        "peak_spread_pct": 0.0,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t08-r02"
+        ],
+        "score_eligible": true,
+        "threads": 8,
+        "valid_rounds": 1,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 4933505.706994629,
+        "whole_median_ops_s": 4933505.706994629,
+        "whole_min_ops_s": 4933505.706994629,
+        "whole_spread_pct": 0.0,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5299940.56826451,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 5299940.56826451,
+        "peak_median_ops_s": 5066197.697129783,
+        "peak_min_ops_s": 4964619.211568505,
+        "peak_spread_pct": 6.754221067240013,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t16-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 5262240.005158961,
+        "whole_median_ops_s": 5028074.426639125,
+        "whole_min_ops_s": 4929459.372909188,
+        "whole_spread_pct": 6.7508545476332324,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5588326.205184635,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 5588326.205184635,
+        "peak_median_ops_s": 5561254.621659938,
+        "peak_min_ops_s": 5450115.766696496,
+        "peak_spread_pct": 2.5359174814723793,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t16-r00",
+          "rwsem-cacheline-c01-tclock-w020-t16-r01",
+          "rwsem-cacheline-c01-tclock-w020-t16-r02"
+        ],
+        "score_eligible": true,
+        "threads": 16,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 5561976.771389027,
+        "whole_median_ops_s": 5523449.027168205,
+        "whole_min_ops_s": 5416719.533232813,
+        "whole_spread_pct": 2.681645916223426,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 5190818.049908704,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 5190818.049908704,
+        "peak_median_ops_s": 5102035.715183175,
+        "peak_min_ops_s": 5062586.90311117,
+        "peak_spread_pct": 2.5329174442167246,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t32-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 5150189.4377412135,
+        "whole_median_ops_s": 5062325.97691825,
+        "whole_min_ops_s": 5023781.4077822585,
+        "whole_spread_pct": 2.5161928774038294,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 6078256.053362872,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 6078256.053362872,
+        "peak_median_ops_s": 6027065.529776432,
+        "peak_min_ops_s": 5961960.223046542,
+        "peak_spread_pct": 1.9506307651429369,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t32-r00",
+          "rwsem-cacheline-c01-tclock-w020-t32-r01",
+          "rwsem-cacheline-c01-tclock-w020-t32-r02"
+        ],
+        "score_eligible": true,
+        "threads": 32,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 6030299.995094262,
+        "whole_median_ops_s": 5981527.490410762,
+        "whole_min_ops_s": 5920656.781806176,
+        "whole_spread_pct": 1.8518758531150379,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 3255703.098524548,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NO_JIT",
+        "peak_max_ops_s": 3255703.098524548,
+        "peak_median_ops_s": 3163250.4873380116,
+        "peak_min_ops_s": 3155620.7656558347,
+        "peak_spread_pct": 3.171557683925725,
+        "samples": [
+          "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+          "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-kdlock",
+        "whole_max_ops_s": 3226070.7992265066,
+        "whole_median_ops_s": 3138842.927463602,
+        "whole_min_ops_s": 3116746.6251634834,
+        "whole_spread_pct": 3.5076375211375668,
+        "write_percent": 20
+      },
+      {
+        "best_peak_ops_s": 4745922.705742653,
+        "complete": true,
+        "expected_rounds": 3,
+        "jit_status": "NATIVE",
+        "peak_max_ops_s": 4745922.705742653,
+        "peak_median_ops_s": 4665810.590638427,
+        "peak_min_ops_s": 4637795.476506102,
+        "peak_spread_pct": 2.3314359114000767,
+        "samples": [
+          "rwsem-cacheline-c01-tclock-w020-t60-r00",
+          "rwsem-cacheline-c01-tclock-w020-t60-r01",
+          "rwsem-cacheline-c01-tclock-w020-t60-r02"
+        ],
+        "score_eligible": true,
+        "threads": 60,
+        "valid_rounds": 3,
+        "variant": "rwsem-cacheline-c01-tclock",
+        "whole_max_ops_s": 4705496.498103114,
+        "whole_median_ops_s": 4596237.848663843,
+        "whole_min_ops_s": 4594227.405156947,
+        "whole_spread_pct": 2.4219326370581773,
+        "write_percent": 20
+      }
+    ]
+  },
+  "timed_vs_final_production_difference": "kd_rwsem.c polling comment only; exact non-comment bytes equal"
+}

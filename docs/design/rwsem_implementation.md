@@ -6,7 +6,8 @@ the stage 3 objective. The two current uses have distinct execution paths:
 eligible benchmark outer writers may delegate, while native MM bodies stay local.
 
 The waiting policy selected at `c21345b` and later IRQ-safe release correction
-remain the protocol foundation. Their historical acceptance and regressions do
+remain the protocol foundation. Ordinary read contention now queues optimistic
+admission attempts before the existing sleeping fallback. Historical acceptance and regressions do
 not qualify current performance. The current Linux 7 shared-MM comparison loses
 to Native at all measured counts; [performance](../PERFORMANCE.md) owns those
 results and [validation](../VALIDATION.md) owns exact source/check scopes.
@@ -22,6 +23,8 @@ Before a writer publishes a delegation request, it closes **reader admission**
 called **reader drain**. A published mutex waiter then polls with preemption
 disabled, so the scheduler cannot pause it in the ordinary way to run another
 task on that CPU; this is the **pinned waiter** restriction.
+Read bodies always execute on the acquiring task. Queuing a reader's admission
+attempt does not delegate its read operation.
 
 No Linux mutex or Linux rwsem backs the object. The KD mutex keeps the same
 physical ownership records, queue, and batching of several waiting operations.
@@ -41,13 +44,14 @@ rwlock and the two exclusive lock families.
 | --- | --- |
 | [kd_rwsem.h](../../include/kd_rwsem.h) | Public concurrent-reader/ordinary-writer operations on `struct kd_rwsem` |
 | [kd_rwsem_types.h](../../include/kd_rwsem_types.h) | Object layout, `DEFINE_KD_RWSEM` and `KD_RWSEM_INITIALIZER` |
-| [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Reader acquisition, exact writer reservations, bounded polling, sleeping waits, cancellation, downgrade and idle inspection |
+| [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Reader acquisition, queued ordinary-read polling, exact writer reservations, sleeping waits, cancellation, downgrade and idle inspection |
 | [kd_rwsem_direct.h](../../include/kd_rwsem_direct.h) | Outer-writer pair: reserve/drain before the mutex call, release the reservation on the origin after mutex unlock completes |
 | [KD mutex implementation](mutex_implementation.md) | Physical writer ownership, legacy delegation queue, generated execution and unlock acknowledgements |
 | [direct_rwsem.h](../../workload_modules/rwlock_bench/direct_rwsem.h) | Benchmark caller mapping for Linux Native, ordinary KD and delegation-capable KD |
 
-The current header gives a 320-byte object with 64-byte overall alignment in
-the captured configuration. The previous 512-byte object had 128-byte alignment;
+The October 28 Linux 7 emitted layout retains a 320-byte object with 64-byte
+overall alignment. The appended `reader_osq` occupies offset 280 in the final
+cacheline, preserving all existing field offsets. The previous 512-byte object had 128-byte alignment;
 the
 [layout receipt](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/object-layout.json)
 retains that accepted build's size evidence. Shrinking the embedded mutex changes
@@ -61,8 +65,10 @@ are arranged as follows:
 | `admission` | 128 | Open, ordinary-writer or outer-writer phase |
 | `phase_wait` | 192 | Sleeping callers waiting for an eligible admission phase |
 | `reader_drain` | 256 | Reserved writers waiting for existing readers to finish |
+| `reader_osq` | 280 | Abortable queue for optimistic ordinary-read admission; no reader payload runs under it |
 
-The last four fields start on separate 64-byte lines. These offsets do not
+The reader count, admission word and two waitqueues start on separate 64-byte
+lines. The new queue tail follows `reader_drain` within its region. These offsets do not
 describe a Linux rwsem-compatible layout. The embedded mutex now holds its own
 delegation phase and encoded tail without an auxiliary table. Exact waiter
 records occupy reserved queue nodes; provider-wide queues and execution stacks
@@ -97,8 +103,8 @@ mmap adapter's public facade and caller-task policy are described in the
 
 `kd_downgrade_write()` converts an ordinary writer to a reader without admitting
 an intervening writer; finish with `kd_up_read()`. `kd_rwsem_is_idle()` is an
-inspection helper after all callers stop and join. Its admission, reader and
-gate checks cannot replace provider source/frame drain.
+inspection helper after all callers stop and join. It also checks that the
+read-admission OSQ tail is empty. These checks cannot replace provider source/frame drain.
 
 `KD_RWSEM_OUTER_WRITE_LOCK()` / `KD_RWSEM_OUTER_WRITE_UNLOCK()` are a separate
 matched pair for delegation-capable outer writers. The caller supplies an opaque
@@ -146,8 +152,9 @@ keeps admission closed conservatively.
 
 A reader observes admission open, publishes its reader count with a fully
 ordered increment, then rechecks admission with acquire ordering. A failed
-speculation rolls back without touching protected data. A slow reader retries
-the same admission-aware acquisition, sleeping when needed; it cannot bypass a
+speculation rolls back without touching protected data. An ordinary slow reader
+queues its optimistic retries, then sleeps when needed; every retry uses the
+same admission-aware acquisition on its own task. It cannot bypass a
 closed phase by acquiring the physical gate. Speculative reader counts can
 briefly appear during a writer phase, but those callers never access the
 protected payload.
@@ -174,8 +181,9 @@ from the executor.
 Reader counts, admission reservations, and the two waitqueue heads occupy
 separate 64-byte-aligned regions. In the recorded accepted x86_64 build, this
 increased the object from 384 to 512 bytes; both historical layouts had 128-byte
-overall alignment through the former embedded mutex. The current compact gate
-reduces the containing object to 320 bytes while retaining those separate regions.
+overall alignment through the former embedded mutex. The compact gate reduced
+the containing object to 320 bytes while retaining those separate regions;
+the appended read-admission tail targets the spare space after `reader_drain`.
 `phase_wait` contains readers and writers
 waiting for an eligible admission phase. `reader_drain` contains writers that
 already hold an ordinary or outer reservation and are waiting for readers to
@@ -201,23 +209,47 @@ On the captured `HZ=250` configuration a jiffy is 4 ms. This introduces periodic
 writer wakeups while readers remain and possible additional wake latency after
 an atomic final decrement. Scheduling adds its own delay; there is no new latency
 guarantee or performance claim. IRQ-enabled, non-atomic final release still wakes
-immediately. Admission barriers, exact reservations, cancellation, physical
-ownership, static initialization and the 320-byte layout are unchanged.
+immediately. Admission barriers, exact reservations, cancellation and physical
+ownership remain unchanged. Static and dynamic initialization also clear the
+ordinary-read OSQ tail.
 Keep this validated baseline until measurements justify a safer alternative.
 An embedded `irq_work` wakeup would require proof of late-enqueue, cancellation
 and object-lifetime safety; it is not a validated replacement for the timed wait.
 
-Uninterruptible acquisitions poll, meaning they repeatedly check whether they
-can proceed before entering a sleeping wait. Each polling stage tries at most
-16,384 condition checks and stops early when the scheduler needs the CPU.
-Polling occurs before delegation publication, with preemption enabled;
-its finite fallback lets sleeping or colocated holders resume. A successful
+An ordinary `kd_down_read()` first tries up to eight reader acquisitions without
+queuing, stopping early for rescheduling. This short stage avoids a queue round
+trip when a brief writer phase ends. On continued failure, it disables
+preemption and reserves one of the existing preallocated
+mutex CPU/slot records for `reader_osq`. This uses that slot's independent OSQ
+links and exact reservation lifetime; it does not acquire the embedded writer
+gate, publish a delegation request or allocate new per-call storage. The queue
+head alone retries shared admission while queued callers poll their own nodes.
+The head tries at most 16,384 conditions and stops early for `need_resched()`.
+OSQ acquisition can also abort when rescheduling is needed or the predecessor's
+vCPU is preempted. An unavailable slot skips optimistic polling.
+
+Every success, abort or exhausted poll retires OSQ membership and releases the
+slot before enabling preemption. Only then may the reader enter its body or
+use the existing `wait_event()` enrolment/recheck fallback. A reader count is
+always acquired by the reader's own task; the queue head cannot grant ownership
+to another caller. Read trylock and interruptible/killable read APIs bypass this
+queue and retain their existing semantics. A speculative rollback while the
+ordinary-read poll is pinned omits the synchronous drain wake, as described
+above; the writer's timed drain recheck still guarantees an opportunity to
+observe completion.
+
+Uninterruptible writer admission and reader-drain waits retain their existing
+polling stages before sleeping. Each stage tries at most 16,384 condition checks
+and stops early when the scheduler needs the CPU. Those writer polls occur before
+delegation publication with preemption enabled; their finite fallback lets
+sleeping or colocated holders resume. A successful
 predicate may acquire a reader count or writer reservation, so it is consumed
 once without another acquisition attempt. The ordinary writer's read-only
 phase check is only a hint; its compare/exchange remains authoritative. The
 budget is the accepted tuning for the captured benchmark platform, not a
-universal optimum. It improves the measured 60-worker cases but substantially
-reduces throughput in some two-worker cases; acceptance retains that limitation.
+universal optimum. Earlier measurements of the unqueued policy improved some
+60-worker cases but substantially reduced throughput in some two-worker cases.
+Those observations do not establish performance for queued reader admission.
 
 The polling bound counts predicate invocations, not elapsed time: the existing
 outer-reservation predicate can retry its compare/exchange internally. The
