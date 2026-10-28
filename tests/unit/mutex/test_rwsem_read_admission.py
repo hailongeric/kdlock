@@ -1,7 +1,8 @@
 """Guest-only production rwsem read admission and OSQ lifetime checks.
 
 Deterministic queue/scheduler substitutes validate ordering and bounded control
-flow. They do not prove concurrent OSQ unlink or sleeping-reader progress;
+flow, including pinned NUMA stripe selection and matching queue retirement.
+They do not prove concurrent OSQ unlink or sleeping-reader progress;
 the existing mutex OSQ fixture and live rwsem probe cover those separately.
 """
 import os
@@ -21,23 +22,53 @@ FIXTURE = r'''
 
 struct kd_mutex { int unused; };
 struct kd_mutex_osq_node { int unused; };
-struct optimistic_spin_queue { int unused; };
+struct optimistic_spin_queue { int tail; };
 struct kd_rwsem {
     struct kd_mutex gate;
-    struct optimistic_spin_queue reader_osq;
-    int phase_wait;
+    long readers, admission;
+    int phase_wait, reader_drain;
+    struct optimistic_spin_queue reader_osq, reader_osq_alt;
 };
 static struct kd_rwsem sem;
 static struct kd_mutex_osq_node slot;
 static unsigned int pins, gets, locks, unlocks, put_calls, tries, pauses, waits;
 static unsigned int early_pauses, pinned_pauses;
 static unsigned int resched_calls, resched_at, acquire_at, owned, sleeps;
+static unsigned int current_numa_node, numa_calls;
+static struct optimistic_spin_queue *selected_queue, *held_queue;
 static bool available, grant, reserved, queued, waiting;
+
+static void kd_mutex_init(struct kd_mutex *gate)
+{ assert(gate == &sem.gate); gate->unused = 0; }
+static void atomic_long_set(long *value, long count) { *value = count; }
+static long atomic_long_read(const long *value) { return *value; }
+static int atomic_read(const int *value) { return *value; }
+static void init_waitqueue_head(int *queue) { *queue = 0; }
+static bool waitqueue_active(const int *queue) { return *queue != 0; }
+static bool kd_mutex_is_idle(const struct kd_mutex *gate) { return !gate->unused; }
+static void osq_lock_init(struct optimistic_spin_queue *queue)
+{
+    assert(queue == &sem.reader_osq || queue == &sem.reader_osq_alt);
+    queue->tail = 0;
+}
 
 static void preempt_disable(void)
 { assert(!pins && !owned); pins++; }
 static void preempt_enable(void)
-{ assert(pins == 1 && !reserved && !queued); pins--; }
+{ assert(pins == 1 && !reserved && !queued && !held_queue); pins--; }
+static int numa_node_id(void)
+{
+    /* Four explicit node IDs exercise both stripes and the 2/3 collisions.
+     * A topology query before pinning or a second selection before retirement
+     * is forbidden. Unlock must retain the original queue pointer. */
+    static const unsigned int expected_stripe[] = { 0, 1, 0, 1 };
+    assert(pins == 1 && !owned && !queued && !numa_calls && !held_queue);
+    assert(current_numa_node < sizeof(expected_stripe)/sizeof(expected_stripe[0]));
+    numa_calls++;
+    selected_queue = expected_stripe[current_numa_node] ?
+        &sem.reader_osq_alt : &sem.reader_osq;
+    return (int)current_numa_node;
+}
 static bool need_resched(void)
 {
     assert(pins <= 1 && (pins || (!reserved && !queued)));
@@ -56,29 +87,33 @@ static struct kd_mutex_osq_node *kd_mutex_osq_node_get(struct kd_mutex *gate)
 static bool kd_mutex_osq_lock(struct optimistic_spin_queue *queue,
                               struct kd_mutex_osq_node *node)
 {
-    assert(queue == &sem.reader_osq && node == &slot && pins == 1 && reserved);
-    assert(!queued && !owned);
+    assert(numa_calls == 1 && queue == selected_queue && node == &slot);
+    assert(pins == 1 && reserved && !queued && !owned && !held_queue);
     locks++;
     queued = grant;
+    held_queue = grant ? queue : NULL;
     return grant;
 }
 static void kd_mutex_osq_unlock(struct optimistic_spin_queue *queue,
                                 struct kd_mutex_osq_node *node)
 {
-    assert(queue == &sem.reader_osq && node == &slot && pins == 1 && reserved && queued);
+    assert(queue == held_queue && queue == selected_queue && node == &slot);
+    assert(numa_calls == 1 && pins == 1 && reserved && queued);
     unlocks++;
     queued = false;
+    held_queue = NULL;
 }
 static void kd_mutex_osq_node_put(struct kd_mutex_osq_node *node)
 {
-    assert(node == &slot && pins == 1 && reserved && !queued);
+    assert(node == &slot && pins == 1 && reserved && !queued && !held_queue);
     put_calls++;
     reserved = false;
 }
 static int kd_down_read_trylock(struct kd_rwsem *s)
 {
     assert(s == &sem && !owned);
-    assert(pins ? (pins == 1 && reserved && queued) : (!reserved && !queued));
+    assert(pins ? (pins == 1 && reserved && queued && held_queue == selected_queue) :
+                  (!reserved && !queued && !held_queue));
     tries++;
     if (waiting || (acquire_at && tries == acquire_at)) {
         owned++;
@@ -102,7 +137,7 @@ static void might_sleep(void)
 { assert(!pins && !reserved && !queued && !owned); sleeps++; }
 static void prepare_wait(int *queue)
 {
-    assert(queue == &sem.phase_wait && !pins && !reserved && !queued && !owned);
+    assert(queue == &sem.phase_wait && !pins && !reserved && !queued && !owned && !held_queue);
     waits++;
     waiting = true;
 }
@@ -116,8 +151,10 @@ static void prepare_wait(int *queue)
 
 static void reset(void)
 {
-    assert(!pins && !reserved && !queued);
+    assert(!pins && !reserved && !queued && !held_queue);
     pins=gets=locks=unlocks=put_calls=tries=pauses=waits=0;
+    numa_calls=0;
+    selected_queue=held_queue=NULL;
     early_pauses=pinned_pauses=0;
     resched_calls=resched_at=acquire_at=owned=sleeps=0;
     available=grant=true;
@@ -125,13 +162,14 @@ static void reset(void)
 }
 static void returned(bool acquired)
 {
-    assert(!pins && !reserved && !queued && !waiting);
+    assert(!pins && !reserved && !queued && !waiting && !held_queue);
     assert(owned == (unsigned int)acquired);
+    assert(numa_calls == (gets ? 1U : 0U));
     assert(put_calls == (available ? gets : 0));
     assert(unlocks == (grant ? locks : 0));
     assert(pauses == early_pauses+pinned_pauses);
 }
-int main(void)
+static void run_node_cases(void)
 {
     reset(); acquire_at=1;
     kd_down_read(&sem);
@@ -205,8 +243,56 @@ int main(void)
         if (mode==4) assert(tries==16393 && early_pauses==8 && pinned_pauses==16384);
         if (mode==5) assert(tries==9 && early_pauses==8 && !pinned_pauses && !gets);
     }
-    puts("PASS rwsem read admission: local fast path, bounded OSQ head polling, released fallback");
 }
+
+static void init_idle_cases(void)
+{
+    /* Dynamic initialization must clear both dirty tails and preserve the
+     * existing exact count/waitqueue/gate inspection. */
+    sem.gate.unused = sem.phase_wait = sem.reader_drain = 1;
+    sem.readers = 3;
+    sem.admission = 2;
+    sem.reader_osq.tail = 5;
+    sem.reader_osq_alt.tail = 7;
+    kd_rwsem_init(&sem);
+    assert(kd_rwsem_is_idle(&sem));
+    for (unsigned int tails=0; tails<4; tails++) {
+        sem.reader_osq.tail = tails & 1;
+        sem.reader_osq_alt.tail = (tails >> 1) & 1;
+        assert(kd_rwsem_is_idle(&sem) == (tails == 0));
+    }
+    sem.reader_osq.tail = sem.reader_osq_alt.tail = 0;
+    sem.readers = 1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.readers = 0;
+    sem.admission = -1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.admission = 1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.admission = 0;
+    sem.phase_wait = 1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.phase_wait = 0;
+    sem.reader_drain = 1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.reader_drain = 0;
+    sem.gate.unused = 1;
+    assert(!kd_rwsem_is_idle(&sem));
+    sem.gate.unused = 0;
+    assert(kd_rwsem_is_idle(&sem));
+}
+
+int main(void)
+{
+    init_idle_cases();
+    /* Run every success, budget and fallback case on nodes 0/1 and on nodes
+     * 2/3, which intentionally share those same stripes. Fast acquisitions
+     * must avoid a topology query entirely. */
+    for (current_numa_node=0; current_numa_node<4; current_numa_node++)
+        run_node_cases();
+    puts("PASS rwsem read admission: pinned NUMA stripes, local fast path, bounded OSQ heads, released fallback");
+}
+
 '''
 
 
@@ -214,11 +300,27 @@ def main():
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     poll = source[source.index('#define kd_rwsem_poll(condition)'):
                   source.index('#define kd_rwsem_wait(queue, condition)')]
-    code = poll + definition(source, 'static bool kd_rwsem_spin_read(struct kd_rwsem *sem)')
+    code = definition(source, 'void kd_rwsem_init(struct kd_rwsem *sem)') + poll
+    code += definition(source, 'static bool kd_rwsem_spin_read(struct kd_rwsem *sem)')
     code += definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
+    code += definition(source, 'bool kd_rwsem_is_idle(struct kd_rwsem *sem)')
     mutations = {
         'lost-slot-release': ('kd_mutex_osq_node_put(node);', '(void)kd_mutex_osq_node_put; (void)node;'),
-        'lost-queue-release': ('kd_mutex_osq_unlock(&sem->reader_osq, node);', '(void)kd_mutex_osq_unlock; (void)node;'),
+        'lost-queue-release': ('kd_mutex_osq_unlock(queue, node);', '(void)kd_mutex_osq_unlock; (void)node;'),
+        'wrong-numa-stripe': ('(numa_node_id() & 1)', '((numa_node_id() & 1) ^ 1)'),
+        'collapsed-numa-stripes': ('(numa_node_id() & 1)', '(numa_node_id() & 0)'),
+        'topology-before-pin': ('preempt_disable();',
+                               '(void)numa_node_id(); preempt_disable();'),
+        'wrong-unlock-queue': ('kd_mutex_osq_unlock(queue, node);',
+                               'kd_mutex_osq_unlock(queue == &sem->reader_osq ? '
+                               '&sem->reader_osq_alt : &sem->reader_osq, node);'),
+        'reselect-unlock-queue': ('kd_mutex_osq_unlock(queue, node);',
+                                  'kd_mutex_osq_unlock((numa_node_id() & 1) ? '
+                                  '&sem->reader_osq_alt : &sem->reader_osq, node);'),
+        'ignored-primary-idle-tail': ('!atomic_read(&sem->reader_osq.tail) &&', 'true &&'),
+        'ignored-alternate-idle-tail': ('!atomic_read(&sem->reader_osq_alt.tail) &&', 'true &&'),
+        'uncleared-primary-tail': ('osq_lock_init(&sem->reader_osq);', '(void)sem;'),
+        'uncleared-alternate-tail': ('osq_lock_init(&sem->reader_osq_alt);', '(void)sem;'),
         'failure-returns-ownership': ('return acquired;', '(void)acquired; return true;'),
         'early-retry-budget': ('unsigned int retries = 8;', 'unsigned int retries = 9;'),
         'unbounded-poll': ('while (--kd_rwsem_budget)', 'while (--kd_rwsem_budget || true)'),

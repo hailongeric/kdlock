@@ -2,6 +2,7 @@
 /* Reader/ordinary-writer/delegated-writer phases around an unchanged KD mutex. */
 #include <linux/module.h>
 #include <linux/limits.h>
+#include <linux/topology.h>
 #include "kd_rwsem.h"
 #include "kd_lock.h"
 #include "kd_mutex_local.h"
@@ -43,6 +44,7 @@ void kd_rwsem_init(struct kd_rwsem *sem)
 	init_waitqueue_head(&sem->phase_wait);
 	init_waitqueue_head(&sem->reader_drain);
 	osq_lock_init(&sem->reader_osq);
+	osq_lock_init(&sem->reader_osq_alt);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
 
@@ -110,22 +112,27 @@ EXPORT_SYMBOL_GPL(kd_down_read_trylock);
 static bool kd_rwsem_spin_read(struct kd_rwsem *sem)
 {
 	struct kd_mutex_osq_node *node;
+	struct optimistic_spin_queue *queue;
 	bool acquired = false;
 
-	/* Only the queue head retries shared reader admission. The other
-	 * unpublished callers poll their own OSQ nodes instead of repeatedly
-	 * invalidating the reader count when a writer closes the phase. Reuse
-	 * a reserved mutex slot with independent OSQ links, never a delegation
-	 * publication. Release it before scheduling or executing the read body. */
+	/* Each NUMA stripe has at most one optimistic admission head. Its other
+	 * unpublished callers poll their own nodes, avoiding a single FIFO that
+	 * hands admission between sockets. The authoritative predicate remains
+	 * the same exact global reader/phase protocol; this is only a waiting
+	 * policy. Reserve existing independent OSQ links, never publish a
+	 * delegated reader, and release membership before migration or payload. */
 	preempt_disable();
 	if (need_resched())
 		goto out;
+	/* Select while pinned and retain this exact queue through unlock. Node
+	 * IDs with the same low bit share a stripe without changing ownership. */
+	queue = (numa_node_id() & 1) ? &sem->reader_osq_alt : &sem->reader_osq;
 	node = kd_mutex_osq_node_get(&sem->gate);
 	if (!node)
 		goto out;
-	if (kd_mutex_osq_lock(&sem->reader_osq, node)) {
+	if (kd_mutex_osq_lock(queue, node)) {
 		acquired = kd_rwsem_poll(kd_down_read_trylock(sem));
-		kd_mutex_osq_unlock(&sem->reader_osq, node);
+		kd_mutex_osq_unlock(queue, node);
 	}
 	/* Abort also finishes all OSQ unlink accesses before returning. */
 	kd_mutex_osq_node_put(node);
@@ -140,8 +147,9 @@ void kd_down_read(struct kd_rwsem *sem)
 
 	might_sleep();
 	/* Avoid a queue round trip when a brief writer phase is about to end.
-	 * Longer contention uses one optimistic admission head, not an entire
-	 * cohort retrying the shared count for the full polling budget. */
+	 * Longer contention uses one optimistic admission head per NUMA stripe,
+	 * limiting concurrent shared-count retrying without running read bodies
+	 * under an admission queue. */
 	do {
 		if (kd_down_read_trylock(sem))
 			return;
@@ -309,6 +317,7 @@ bool kd_rwsem_is_idle(struct kd_rwsem *sem)
 		!atomic_long_read(&sem->readers) &&
 		!waitqueue_active(&sem->phase_wait) &&
 		!waitqueue_active(&sem->reader_drain) &&
-		!atomic_read(&sem->reader_osq.tail) && kd_mutex_is_idle(&sem->gate);
+		!atomic_read(&sem->reader_osq.tail) &&
+		!atomic_read(&sem->reader_osq_alt.tail) && kd_mutex_is_idle(&sem->gate);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_is_idle);
