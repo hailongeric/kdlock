@@ -10,12 +10,15 @@
  * Participants must never acquire the embedded gate independently. */
 struct kd_rwsem {
 	struct kd_mutex gate;
+	/* Reader admission consumes both exact counters. Keep them on one line
+	 * so reader/writer phase changes do not transfer two separate lines.
+	 * Their fully ordered RMW/recheck protocol remains unchanged. */
 	atomic_long_t readers __aligned(64);
-	atomic_long_t admission __aligned(64);
+	atomic_long_t admission;
 	wait_queue_head_t phase_wait __aligned(64);
 	wait_queue_head_t reader_drain __aligned(64);
-	/* Serialize optimistic read admission, never the reader payload. Fits in
-	 * the final cacheline without moving the existing counters/waitqueues. */
+	/* Serialize optimistic read admission, never the reader payload. The
+	 * queue tail shares the final cacheline with reader-drain waiters. */
 	struct optimistic_spin_queue reader_osq;
 };
 
