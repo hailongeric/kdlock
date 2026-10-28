@@ -19,7 +19,21 @@ typedef struct { int counter; } atomic_t;
 #define atomic_set(p, n) __atomic_store_n(&(p)->counter, (n), __ATOMIC_RELAXED)
 #define atomic_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_ACQUIRE)
 #define atomic_add(n, p) ((void)__atomic_fetch_add(&(p)->counter, (n), __ATOMIC_RELAXED))
-#define atomic_sub(n, p) atomic_add(-(n), (p))
+/* A one-shot primitive observer lets another real writer win between the
+ * production speculative rollback and interrupt-reader re-admission. */
+static _Thread_local atomic_t *rollback_target;
+static _Thread_local void (*rollback_observer)(atomic_t *);
+static void subtract_count(int n, atomic_t *p)
+{
+	atomic_add(-n, p);
+	if (p == rollback_target && rollback_observer) {
+		void (*observe)(atomic_t *) = rollback_observer;
+
+		rollback_observer = NULL;
+		observe(p);
+	}
+}
+#define atomic_sub(n, p) subtract_count((n), (p))
 static _Thread_local bool inject_reader_race, inject_writer_race;
 static int add_acquire(int n, atomic_t *p)
 {
@@ -130,6 +144,8 @@ static DEFINE_KD_RWLOCK(lock);
 static atomic_t active_readers, active_writers, data, mirror;
 static atomic_t ready, release_readers, writer_inside, release_writer, late_inside;
 static atomic_t fast_released, fast_reader_inside;
+static atomic_t gap_rolled_back, gap_writer_inside, gap_release_writer, gap_reader_inside;
+static unsigned int gap_value;
 static pthread_barrier_t start;
 
 static void wait_nonzero(atomic_t *p)
@@ -280,6 +296,78 @@ static void interrupt_readers(void)
 	}
 }
 
+static void gap_on_rollback(atomic_t *count)
+{
+	/* The main thread's preholder is still counted. Our speculative reader
+	 * is absent; the real queued writer may enter only after main releases. */
+	assert(count == &lock.cnts);
+	assert(atomic_read(count) == KD_RWLOCK_READER_BIAS + KD_RWLOCK_WRITER_WAITING);
+	smp_store_release(&gap_rolled_back.counter, 1);
+	wait_nonzero(&gap_writer_inside);
+}
+
+static void *gap_writer(void *unused)
+{
+	(void)unused;
+	kd_write_lock(&lock);
+	assert(pins == 1 && gates == 1 && !atomic_read(&gap_reader_inside));
+	smp_store_release(&gap_writer_inside.counter, 1);
+	wait_nonzero(&gap_release_writer);
+	gap_value = 0x12345678;
+	kd_write_unlock(&lock);
+	assert(!pins && !gates && !kd_spin_fast_cpu.nondelegated);
+	return NULL;
+}
+
+static void *gap_interrupt_reader(void *argument)
+{
+	bool bh = (uintptr_t)argument;
+
+	rollback_target = &lock.cnts;
+	rollback_observer = gap_on_rollback;
+	if (bh) kd_read_lock_bh(&lock);
+	else { hardirq_depth++; kd_read_lock(&lock); }
+	assert(!rollback_observer && pins == 1 && !gates);
+	assert(atomic_read(&gap_release_writer) && gap_value == 0x12345678);
+	assert(atomic_read(&lock.cnts) == KD_RWLOCK_READER_BIAS);
+	atomic_set(&gap_reader_inside, 1);
+	if (bh) kd_read_unlock_bh(&lock);
+	else { kd_read_unlock(&lock); hardirq_depth--; }
+	rollback_target = NULL;
+	assert(!pins && !gates && !hardirq_depth && !bh_depth);
+	return NULL;
+}
+
+static void interrupt_writer_wins_gap(void)
+{
+	for (uintptr_t bh = 0; bh < 2; bh++) {
+		pthread_t writer, reader;
+
+		atomic_set(&gap_rolled_back, 0);
+		atomic_set(&gap_writer_inside, 0);
+		atomic_set(&gap_release_writer, 0);
+		atomic_set(&gap_reader_inside, 0);
+		gap_value = 0;
+		kd_read_lock(&lock);
+		assert(!pthread_create(&writer, NULL, gap_writer, NULL));
+		while (!(atomic_read(&lock.cnts) & KD_RWLOCK_WRITER_WAITING)) sched_yield();
+		assert(!pthread_create(&reader, NULL, gap_interrupt_reader, (void *)bh));
+		wait_nonzero(&gap_rolled_back);
+		assert(!atomic_read(&gap_writer_inside));
+		kd_read_unlock(&lock);
+		wait_nonzero(&gap_writer_inside);
+		/* IRQ/BH must re-publish its count, then wait on actual ownership.
+		 * It must neither enter under this writer nor join the occupied gate. */
+		while (atomic_read(&lock.cnts) != KD_RWLOCK_WRITER_LOCKED + KD_RWLOCK_READER_BIAS)
+			sched_yield();
+		assert(!atomic_read(&gap_reader_inside) && atomic_read(&lock.gate.val));
+		smp_store_release(&gap_release_writer.counter, 1);
+		assert(!pthread_join(writer, NULL) && !pthread_join(reader, NULL));
+		assert(atomic_read(&gap_reader_inside));
+		assert(!pins && !gates && !atomic_read(&lock.cnts) && !atomic_read(&lock.gate.val));
+	}
+}
+
 static void local_api(void)
 {
 	unsigned long flags;
@@ -396,6 +484,7 @@ int main(void)
 	fast_ordering();
 	interrupt_readers();
 	interrupt_active_writer();
+	interrupt_writer_wins_gap();
 	local_api();
 	assert(!pthread_barrier_init(&start, NULL, 10));
 	for (uintptr_t i = 0; i < 10; i++)
@@ -417,5 +506,5 @@ int main(void)
 	KD_RWLOCK_DIRECT_WRITE_UNLOCK(locks[index++], 0);
 	assert(index == 2 && pins == 1);
 	preempt_enable();
-	puts("PASS rwlock: concurrent readers, writer exclusion/intent, mixed progress, release ordering, IRQ/BH/try APIs, interrupt reader bypass and balanced pins");
+	puts("PASS rwlock: concurrent readers, writer exclusion/intent, mixed progress, release ordering, IRQ/BH/try APIs, interrupt reader bypass, writer-wins-gap and balanced pins");
 }

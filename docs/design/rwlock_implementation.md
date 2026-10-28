@@ -107,20 +107,31 @@ than the original eight-byte layout.
 
 1. Disable preemption and add to the reader count with acquire ordering.
 2. If there are no writer bits, enter the read body immediately.
-3. In interrupt/BH context, retain the speculative reader count and wait only
-   for an active writer's low byte to clear. Ignore WAITING and do not acquire
-   the gate: this reader may have interrupted a reader that the queued writer
-   is waiting for. This matches native `queued_read_lock_slowpath` and avoids
-   that circular wait. NMI use is outside the supported contract.
-4. Otherwise, remove that speculative count **before** joining the native gate
-   queue. Keeping it while queued could make the writer ahead wait forever for
-   this reader to finish.
+3. Remove the speculative count before checking interrupt/BH context. Task
+   readers therefore stop delaying a draining writer before the CPU-local
+   context load and branch, and remain uncounted while joining the gate queue.
+4. In interrupt/BH context, add the count back before waiting only for an active
+   writer's low byte to clear. Ignore WAITING and do not acquire the gate: this
+   reader may have interrupted a reader that the queued writer is draining.
+   That interrupted reader remains counted throughout the temporary rollback,
+   preventing the writer from entering. Without an interrupted reader, a writer
+   may win the gap; the interrupt reader then waits for its real release with
+   acquire ordering. NMI use is outside the supported contract.
 5. After acquiring the gate, add the reader count again. Wait for any native writer
    that acquired without the gate to release its writer byte. The reader count now
    prevents another such writer from entering. Release the gate, then run the read
    body locally.
 6. On read unlock, subtract the count with release ordering and enable preemption.
    The x86 locked SUB avoids computing a return value that the caller does not use.
+
+This rollback-first candidate preserves native queued-rwlock interrupt-reader
+bypass, but differs from native `queued_read_lock_slowpath`, which retains the
+speculative count continuously in interrupt context. A contended IRQ/BH read
+now performs two additional count RMWs and can be overtaken by a writer during
+the temporary gap when no other reader prevents admission. The ordinary fast
+increment/test is unchanged. This is a source candidate, not a measured
+performance improvement; it does not include the separate out-of-line slowpath
+experiment `915a9258bc6d3318bf1383283167271ccc67a2a8`.
 
 ### Writers
 
@@ -136,7 +147,7 @@ If the fast attempt fails, the writer takes the KD gate. It then tries to change
 zero count to `0xff`. If readers or a fast writer are still active, it sets WAITING
 and waits for them to finish. New task-context readers remove their speculative
 count and queue behind the gate while WAITING is set. Interrupt/BH readers use
-the count-retaining exception described above. The writer observes the last holder's release
+the interrupt-reader bypass described above. The writer observes the last holder's release
 with acquire ordering before entering its body.
 
 ### Write unlock
@@ -237,6 +248,13 @@ binds the IRQ/try and interrupt-reader comparisons to the authenticated
 `428e068a`, as recorded in the [October 29 checkpoint](../../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md).
 Older ordinary rwlock results do not validate the new APIs or establish their
 performance.
+
+The rollback-first change adds a deterministic unit interleaving in which a real
+queued writer acquires during the temporary gap, then an IRQ/BH reader restores
+its count and waits for that writer's release. The existing interrupted-reader
+plus WAITING-writer and active-writer cases remain. These source checks have not
+yet been executed for this candidate; the focused unit driver, live IPI probe
+and matched `c01` read-mostly measurements are required before promotion.
 
 The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
 Native and TCLock using matched cacheline and hash workloads. The

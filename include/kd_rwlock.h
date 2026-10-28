@@ -61,18 +61,21 @@ static __always_inline void __kd_read_lock_pinned(kd_rwlock_t *lock)
 	if (likely(!(cnts & KD_RWLOCK_WRITER_MASK)))
 		return;
 
-	/* Match native queued rwlocks: an interrupt/BH reader may interrupt a
-	 * reader that a queued writer is draining. Joining that writer's gate
-	 * would deadlock the interrupted reader. Keep this count and wait only
-	 * for actual writer ownership, never for WAITING or the gate. */
+	/* Retire speculative task admission before the context read: a writer
+	 * draining this count need not wait for that CPU-local load and branch. */
+	atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
+	/* An interrupt/BH reader may interrupt a reader that a queued writer is
+	 * draining. That outer reader remains counted during this brief rollback.
+	 * Restore our count before waiting only for actual writer ownership, never
+	 * WAITING or the gate. Without an interrupted reader, a writer may win the
+	 * gap; the acquire observation below then waits for its real release. */
 	if (unlikely(in_interrupt())) {
+		atomic_add(KD_RWLOCK_READER_BIAS, &lock->cnts);
 		atomic_cond_read_acquire(&lock->cnts, !(VAL & KD_RWLOCK_WRITER_LOCKED));
 		return;
 	}
 
-	/* Do not wait in the admission queue while counted as an active reader:
-	 * its writer head may already be waiting for that count to reach zero. */
-	atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
+	/* No reader count is held while joining the task admission queue. */
 	kd_spin_direct_native_lock_inline(&lock->gate);
 	/* The count prevents another ungated writer from entering. A fast writer
 	 * which won before this increment can still be active: wait for its
@@ -122,8 +125,8 @@ static __always_inline int kd_read_trylock(kd_rwlock_t *lock)
 /* Called with the gate held, on either the physical caller or a JIT executor.
  * Admission precedes the prepared body, on both native and delegated paths.
  * Only the gate owner can publish WAITING. Once published, task readers
- * withdraw their speculative count and queue; interrupt/BH readers retain
- * theirs to avoid blocking the reader context they interrupted. The acquire
+ * withdraw their speculative count and queue; interrupt/BH readers restore
+ * theirs before waiting, so they do not block the reader they interrupted. The acquire
  * observation pairs with the final reader's release. */
 static __always_inline void kd_rwlock_writer_enter(kd_rwlock_t *lock)
 {
