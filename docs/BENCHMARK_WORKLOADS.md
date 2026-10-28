@@ -78,8 +78,8 @@ earlier count-based local cutoff while retaining terminal/deferred queue handlin
 KD spin retains its 1024-body cap. Historical favorable profiles used their
 recorded policy; they do not establish performance under the new default.
 
-Mutex uses public ABI2 calls; rwsem uses explicit outer writers; rwlock uses
-exclusive writer pairs. Readers remain local. `--delegate off` is a separately
+Mutex uses public ABI2 calls; rwsem uses prepared ordinary writer calls; rwlock
+uses exclusive writer pairs. Readers remain local. `--delegate off` is a separately
 labelled local control. See the [nano guide](../bench/nano/README.md).
 
 ## Synthetic cacheline updates

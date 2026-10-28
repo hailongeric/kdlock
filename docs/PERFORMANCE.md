@@ -28,6 +28,14 @@ partial generated execution contributes no accepted throughput.
 
 ## Current full nano comparison
 
+The later [API implementation comparison](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md#completed-api-candidate-comparison)
+compares 60 KD c01/c16 points at `5f96dd5c` with `67361fee`, one round each.
+All blocks completed with exact data/drain; losses remain unresolved, including
+rwlock c01/1% at eight workers (-14.38%) and rwsem c01/1% at 32 (-8.77%).
+The prepared rwsem call shell changed. A separate matched recheck is running;
+there is no performance-neutrality verdict or accepted gain from this cohort.
+These observations do not replace or pool with the Native/TCLock comparison below.
+
 The [single-round rerun](../bench/results/10.176.26.71/bench/nano-cohort-20261028/README.md)
 at `edf1cc06` includes the queued-reader preference and completes all 630 nano
 points, with no real-world API cases. At 60 workers, KD mutex c01/c16 reaches
