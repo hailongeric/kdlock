@@ -195,6 +195,24 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	return 0;
 }
 
+/* Prepare only the current selected ABI2 request while its pin ACK travels.
+ * The enclosing batch owns the source lease; node metadata is published and
+ * stable. This helper only initializes the executor's own frame. It neither
+ * accesses origin GS/stack contents nor prepares or invokes generated code.
+ * A NULL preparation still drains REQUEST: cancellation cannot race PINNED. */
+static __always_inline bool kd_mutex_proxy_prepare_batch(struct kd_mutex *lock,
+					struct kd_mutex_node *node,
+					struct kd_mutex_batch *batch,
+					struct kd_exec_frame **frame)
+{
+	if (!kd_mutex_proxy_request(node))
+		return false;
+	*frame = kd_exec_frame_push_mutex_batch(&node->regs, node->regs.ip,
+			node->gsbase, node->task_struct_ptr, lock, &batch->outer);
+	kd_mutex_proxy_wait_pinned(node);
+	return true;
+}
+
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
  *
@@ -233,6 +251,10 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		return KD_EXE_RUN_ERROR;
 
 	if (!clobber) {
+		/* Legacy capture decodes the original stack, so it cannot overlap
+		 * the pin handshake. ABI2 uses only published packet metadata. */
+		if (!kd_mutex_proxy_pin(curr_node))
+			return KD_EXE_NO_RUN;
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
@@ -278,19 +300,19 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			raw_smp_processor_id());
 		return KD_EXE_NO_RUN;
 	}
-	/* Publication lends storage, not the origin CPU. The origin acknowledges
-	 * preemption exclusion only when selected for this execution attempt. */
-	if (!kd_mutex_proxy_pin(curr_node))
+	/* The enclosing batch retains source residency through the last ACK/pop.
+	 * Only this already-selected MINIMAL request overlaps private setup with
+	 * its pin ACK. No successor is requested or pinned in advance. FULL and
+	 * legacy roots keep the existing acknowledged generic setup. */
+	frame = NULL;
+	if (clobber && curr_node->packet_state == KD_PACKET_MINIMAL) {
+		if (!kd_mutex_proxy_prepare_batch(lock, curr_node, batch, &frame))
+			return KD_EXE_NO_RUN;
+	} else if (clobber && !kd_mutex_proxy_pin(curr_node)) {
 		return KD_EXE_NO_RUN;
-
+	}
 	if (!clobber)
 		retry_regs = curr_node->regs;
-	/* The enclosing batch retains source residency through the last ACK/pop.
-	 * Legacy/nested roots keep their private frame lease and generic setup. */
-	frame = clobber && curr_node->packet_state == KD_PACKET_MINIMAL ?
-		kd_exec_frame_push_mutex_batch(&curr_node->regs, curr_node->regs.ip,
-			curr_node->gsbase, curr_node->task_struct_ptr, lock,
-			&batch->outer) : NULL;
 	if (frame)
 		goto prepared;
 	if (clobber)

@@ -4,6 +4,8 @@ The extracted helpers must permit scheduling before selection and physical
 acquisition, require an origin pin acknowledgement before proxy execution, and
 return with exactly the caller's pin. This fixture is not a weak-memory proof
 or a substitute for the live scheduler/preemption and JIT/drain checks.
+The current-request overlap helper runs against a private frame-construction
+substitute; the separate outer-progress fixture exercises its real caller.
 """
 import os
 import re
@@ -20,9 +22,21 @@ def main():
     source = read_source(ROOT / 'kernel_module/kd_mutex.c')
     code = '\n'.join(definition(source, signature) for signature in (
         'static void kd_mutex_wait_for_result(struct kd_mutex_node *node)',
+        'static bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
+        'static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)',
         'static bool kd_mutex_proxy_pin(struct kd_mutex_node *node)',
         'static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,',
     ))
+    prepare = definition(source,
+        'static __always_inline bool kd_mutex_proxy_prepare_batch(struct kd_mutex *lock,')
+    code += '\n' + prepare
+    guard = '\tif (!kd_mutex_proxy_request(node))\n\t\treturn false;\n'
+    wait = '\tkd_mutex_proxy_wait_pinned(node);'
+    assert prepare.count(guard) == prepare.count(wait) == 1
+    start = prepare.index('\t*frame = kd_exec_frame_push_mutex_batch(')
+    statement = prepare[start:prepare.index(';', start) + 1]
+    early_prepare = prepare.replace(guard, '', 1).replace(statement,
+        statement + '\n' + guard.rstrip(), 1)
     constants = '\n'.join(re.findall(
         r'^#define KD_MUTEX_(?:WAIT|PROXY_REQUEST|PROXY_PINNED) \d+$',
         (ROOT / 'include/kd_mutex.h').read_text(), re.M))
@@ -32,11 +46,17 @@ def main():
         'proxy-without-origin-pin': ('\t\t\tpreempt_disable();', '\t\t\t/* missing pin */', 1),
         'skip-origin-ack': (
             '\twhile (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED)\n\t\tcpu_relax();',
-            '\t/* no acknowledgement wait */', 1),
+            '\t(void)node; /* no acknowledgement wait */', 1),
         'self-cpu-selection': (' == raw_smp_processor_id())', ' == -99)', 1),
         'head-cannot-schedule': (
             '\tpreempt_enable();\n\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))',
             '\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))', 1),
+        'overlap-skips-ack': (prepare, prepare.replace(wait, '\t(void)node;', 1), 1),
+        'overlap-null-skips-ack': (prepare,
+            prepare.replace(wait, '\tif (*frame)\n\t\tkd_mutex_proxy_wait_pinned(node);', 1), 1),
+        'prepare-before-request': (prepare, early_prepare, 1),
+        'request-failure-ignored': (prepare,
+            prepare.replace(guard, '\t(void)kd_mutex_proxy_request(node);\n', 1), 1),
     }
     with tempfile.TemporaryDirectory(prefix='kd-mutex-proxy-pin-') as directory:
         path = Path(directory)

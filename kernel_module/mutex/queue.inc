@@ -121,14 +121,28 @@ queued:
 /* Only one physical owner selects a queued request. Never wait for a task
  * preempted on this executor's own CPU: it cannot acknowledge while we spin.
  * Refuse that still-unstarted request so the existing queue hands it off. */
-static bool kd_mutex_proxy_pin(struct kd_mutex_node *node)
+static bool kd_mutex_proxy_request(struct kd_mutex_node *node)
 {
 	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
 		return false;
 	BUG_ON(READ_ONCE(node->locked) != KD_MUTEX_WAIT);
 	smp_store_release(&node->locked, KD_MUTEX_PROXY_REQUEST);
+	return true;
+}
+
+/* REQUEST cannot be withdrawn while its origin may still publish PINNED.
+ * Even failed private preparation must observe this ACK before cancellation. */
+static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)
+{
 	while (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED)
 		cpu_relax();
+}
+
+static bool kd_mutex_proxy_pin(struct kd_mutex_node *node)
+{
+	if (!kd_mutex_proxy_request(node))
+		return false;
+	kd_mutex_proxy_wait_pinned(node);
 	return true;
 }
 

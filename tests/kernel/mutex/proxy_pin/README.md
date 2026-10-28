@@ -20,3 +20,47 @@ It freezes inputs, builds provider and payload, checks the exact kernel result
 and retires sources before unloading. The payload deliberately prepares no JIT
 image. Proxy execution and retirement require the separate affected basic/JIT
 checks; this scheduling probe alone cannot establish them.
+
+## Strict current-request preparation overlap candidate
+
+This separate candidate starts from the archived
+`658b918a05cb930d52ccf7307b8d44d54c6d6265` strict pin implementation. It has no
+permission to pin a successor or a selected group. The combiner publishes
+`KD_MUTEX_PROXY_REQUEST` for its one current ABI2 MINIMAL request only after
+the existing ready-image and executor-context checks. While that origin prepares
+its pin acknowledgement, the executor initializes its own frame from stable
+published node metadata. It then acquire-observes `KD_MUTEX_PROXY_PINNED` before
+image/call preparation, fallback dispatch or generated execution. Origin GS and
+native stack contents are never accessed during the overlap. Legacy stack
+decoding now obtains its pin acknowledgement before its first stack read.
+
+Even when the short frame preparation returns NULL, the executor must consume
+the requested pin acknowledgement before fallback or cancellation. It cannot
+withdraw REQUEST while an origin may still publish PINNED. If later setup or
+dispatch refuses the request, the existing frame retirement precedes the WAIT
+publication and queue handoff. Private frame construction retains its source-open
+check; final image/call preparation and dispatch checks stay after the ACK. The
+surrounding batch lease keeps published source storage resident. No ACK
+timeout authorizes cancellation. Node geometry, queue order, 1024/1024 limits,
+polling/scheduling behavior and the two-word ABI are unchanged.
+
+The archived candidate lost 42–54% at the measured contended c01/c16 points.
+At 20 workers, c01 ran entirely within NUMA node 0 and returned-JIT share rose
+from 99.2823% to 99.6205%; reduced delegation does not explain that loss. The
+strict protocol adds a serialized REQUEST/ACK round trip per body. Overlapping
+private preparation can hide some of that wait, but it does not remove the
+round trip or establish throughput parity. This candidate is source-only until
+its own checks and matched timings are recorded; archived passes and failures
+remain evidence for their original source version.
+
+Focused VM validation is basic plus `mutex/test_mutex_proxy_pin.py`,
+`mutex/test_mutex_outer_progress.py`, `mutex/test_mutex_terminal.py`,
+`mutex/test_mutex_policy.py`, `mutex/test_mutex_resources.py`,
+`mutex/test_mutex_head.py` and `mutex/test_mutex_wait_clobber.py`. The first
+fixture covers successful and failed private preparation, request refusal and
+ACK ordering with mutation checks. The outer-progress fixture compiles the real
+caller and combiner, including failed generic preparation and an unstarted
+dispatch refusal whose frame must retire before WAIT. Scheduler/frame/JIT
+primitives remain explicit substitutes. Follow with the live scheduling probe
+and the existing returned-JIT basic check before a separate matched c01/c16
+timing round. No kernel build or real-world API run is required.

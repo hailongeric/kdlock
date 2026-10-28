@@ -73,6 +73,10 @@ def main():
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
+        "static bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+        "static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+        "static bool kd_mutex_proxy_pin(struct kd_mutex_node *node)",
+        "static __always_inline bool kd_mutex_proxy_prepare_batch(struct kd_mutex *lock,",
         "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
@@ -105,12 +109,24 @@ def main():
         assert code.count("printk(KERN_INFO ") == 1
         # Each mutant must compile and then fail an explicit assertion. Turning
         # off trace records is not an acceptable cure for serial-console cost.
+        prepare = definition(mutex,
+            "static __always_inline bool kd_mutex_proxy_prepare_batch(struct kd_mutex *lock,")
         candidates = {
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
+            "skip-prepare-ack": code.replace(prepare, prepare.replace(
+                "\tkd_mutex_proxy_wait_pinned(node);", "\t/* skipped preparation ACK */", 1), 1),
+            "skip-legacy-pin": code.replace(
+                "\t\tif (!kd_mutex_proxy_pin(curr_node))\n\t\t\treturn KD_EXE_NO_RUN;\n\t\tcurr_node->regs.bx",
+                "\t\tcurr_node->regs.bx", 1),
+            "unpin-before-frame-retirement": code.replace(
+                "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);",
+                "\tsmp_store_release(&curr_node->locked, KD_MUTEX_WAIT);\n"
+                "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);", 1),
         }
         for name, candidate in candidates.items():
+            assert name == "production" or candidate != code, name
             (path / "mutex_outer_production.h").write_text(candidate)
             binary = path / name
             subprocess.run(
