@@ -70,7 +70,7 @@ int kd_hotlock_lifetime_check(void)
   ret = -EUCLEAN;
  pr_info("kd_hotlock role: type=spin address=%lx role=OWNER retained=%u full=%u owner=%d preparation=simulated_mcs\n",
          address, retained, t->used == KD_HOTLOCK_ENTRIES, current->pid);
- kd_spin_unlock(&lock);
+ kd_spin_unlock_legacy(&lock);
  if (atomic_read(&lock.val)) ret = -EUCLEAN;
  pr_info("kd_hotlock role: type=spin address=%lx role=DONE word=%x\n", address, atomic_read(&lock.val));
  if (ret) return ret;

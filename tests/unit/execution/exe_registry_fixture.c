@@ -208,8 +208,8 @@ static unsigned long kallsyms_lookup_name(const char *name)
 
 /* Registry init now links its direct API identities; this fixture never
  * executes a lock, only verifies allocation/publication/retirement. */
-static void kd_spin_lock(void) { CHECK(!"unexpected lock call"); }
-static void kd_spin_unlock(void) { CHECK(!"unexpected unlock call"); }
+static void kd_spin_lock_legacy(void) { CHECK(!"unexpected lock call"); }
+static void kd_spin_unlock_legacy(void) { CHECK(!"unexpected unlock call"); }
 static void kd_spin_lock_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_lock_pinned_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_direct_native_unlock(void) { CHECK(!"unexpected unlock call"); }

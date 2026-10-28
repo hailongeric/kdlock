@@ -109,6 +109,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Optional checked analysis (`trusted_source=False`) |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
+| Ordinary spin source API | `spin/test_spin_api.py`: production facade with destructive clobber callees, single evaluation, type checking, nested/early release and instruction/relocation equality with DIRECT. Queue concurrency and returned kernel bodies remain live checks. |
 | Original TCLock four-family port | [Pinned-source checks and serial live probes](kernel/tclock_original/README.md); ordinary rwsem API and IRQ-enabled rwlock caller scope |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
 | Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |

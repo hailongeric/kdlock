@@ -94,7 +94,7 @@ def main():
                'kd_spin_lock_clobber_v1': 0x3100,
                'kd_spin_unlock_clobber_v1': 0x4000,
                'kd_spin_direct_native_unlock': 0x6000,
-               'kd_spin_lock': 0x5000,
+               'kd_spin_lock_legacy': 0x5000,
                'kd_mutex_lock_clobber_v1': 0x3200,
                'kd_mutex_unlock_clobber_v1': 0x4200,
                'kd_mutex_direct_lock_clobber_v1': 0x3300,

@@ -177,21 +177,18 @@ int kd_spin_debug_waiter_count(raw_spinlock_t *lock)
 	slot = kd_spin_diag_find((unsigned long)lock);
 	return slot ? (int)kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) : -ENOSPC;
 }
-EXPORT_SYMBOL_GPL(kd_spin_debug_waiter_count);
 
 /* Test observers must not interpret the Linux lock word as our private queue. */
 unsigned int kd_spin_debug_word(raw_spinlock_t *lock)
 {
  return lock ? atomic_read(&((kd_spinlock_t *)lock)->val) : 0;
 }
-EXPORT_SYMBOL_GPL(kd_spin_debug_word);
 
 /* Only a physically held proxy gate has an owner; native Linux users do not. */
 unsigned long kd_spin_debug_owner(raw_spinlock_t *lock)
 {
  return kd_spin_entry_owner(lock);
 }
-EXPORT_SYMBOL_GPL(kd_spin_debug_owner);
 
 static void kd_spin_diag_record_nested(raw_spinlock_t *lock,
 				       enum kd_spin_diag_event event,

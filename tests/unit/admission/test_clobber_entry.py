@@ -23,7 +23,7 @@ class ClobberEntryTests(unittest.TestCase):
         self.assertTrue(assembly)
 
     def test_direct_unlock_is_the_critical_section_boundary(self):
-        direct = {'kd_spin_lock': 0x7000, 'kd_spin_unlock': 0x8000,
+        direct = {'kd_spin_lock_legacy': 0x7000, 'kd_spin_unlock_legacy': 0x8000,
                   'kd_spin_lock_clobber_v1': 0x5000,
                   'kd_spin_unlock_clobber_v1': 0x6000}
         # Set RDI and the clobber shell's RSI/RDX/RCX metadata; CALL direct

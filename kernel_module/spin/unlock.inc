@@ -132,11 +132,10 @@ kd_spin_unlock_core(struct qspinlock *lock)
 }
 
 __attribute__((noipa)) noinline notrace void
-kd_spin_unlock(struct qspinlock *lock)
+kd_spin_unlock_legacy(struct qspinlock *lock)
 {
 	kd_spin_unlock_core(lock);
 }
-EXPORT_SYMBOL_GPL(kd_spin_unlock);
 
 /* This ABI shell does not retain state after either helper. Permit sibling
  * calls locally so the common native release needs no C frame: rescheduling
@@ -177,7 +176,7 @@ kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 #endif
 		return;
 	}
-	kd_spin_unlock(lock);
+	kd_spin_unlock_legacy(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);
 

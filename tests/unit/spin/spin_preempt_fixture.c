@@ -120,7 +120,7 @@ int main(void)
   assert(reservations == (needs_ticket || scenario==TICKET_FULL));
   assert(ticket == needs_ticket && claims == needs_ticket);
   assert(clears == (scenario==PENDING_RACE));
-  if(entry==0) kd_spin_unlock(&lock);
+  if(entry==0) kd_spin_unlock_legacy(&lock);
   else kd_spin_unlock_clobber_v1(&lock,0,0,0);
   assert(pins==initial && disables==1 && enables==1 && !lock.locked && !ticket);
   assert(physical_entries==1); /* Native fallback and unlock never recount. */

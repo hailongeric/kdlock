@@ -94,11 +94,13 @@ struct kd_spin_node {
 int kd_spinlock_init(void);
 void kd_spinlock_exit(void);
 
-void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
-		  unsigned long rip);
+/* Provider-only compatibility controls retain exact JIT address identities.
+ * Public source calls use kd_spin_api.h and the compiler-owned ABI1 shell. */
+void kd_spin_lock_legacy(struct qspinlock *lock, unsigned long rsp_value,
+			unsigned long rip);
 void kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
                       unsigned long ip, unsigned long bp, unsigned int abi);
-void kd_spin_unlock(struct qspinlock *lock);
+void kd_spin_unlock_legacy(struct qspinlock *lock);
 void kd_spin_native_retire(struct kd_spin_ref *ref);
 /* Explicit callers prepare their continuation before starting the workload.
  * These clobber entries capture no registers themselves: use the caller shell
