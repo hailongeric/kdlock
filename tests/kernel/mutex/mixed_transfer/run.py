@@ -250,6 +250,27 @@ def validate_result(record, after, delta, messages):
                                            unlocks=str(int(native))))
 
 
+def validate_native_publication(record, after, messages, escape_delta):
+    """Only C's verified instruction escape may change NORMAL to NATIVE_ONLY."""
+    before = record["publication"]
+    entry = before["entry"]
+    rt.require(record["protocol"] == "role-swap" and record["case"] == "c-native" and
+               entry["status"] == 0 and entry["entry_abi"] == 2 and
+               entry["requirements"] & 1 and entry["generation"] > 0 and
+               "loaded_image" not in before,
+               "unexpected native-publication contract", "DATA_ERROR")
+    expected = dict(before, entry=dict(entry, status=-3))
+    rt.require(after == expected,
+               "native-only transition changed image identity, bytes or source state", "DATA_ERROR")
+    pids = {row["role"]: row["pid"] for row in record["workers"]}
+    events = trace_records(messages, "reason=NATIVE_ESCAPE ")
+    rt.require(escape_delta == 1 and events == [dict(entry=f"0x{entry['entry']:x}",
+               rip=f"0x{record['layout']['native_marker']:x}", generation=str(entry["generation"]),
+               waiter_pid=str(pids[COMBINER]), action="native_suffix_and_disable")],
+               "native-only status lacks the exact C instruction escape", "DATA_ERROR")
+    return events
+
+
 class MixedSession(Session):
     def __init__(self, out, spec, binaries, verify):
         super().__init__(out, spec, workload_module=binaries["workload"])
@@ -272,6 +293,29 @@ class MixedSession(Session):
     def counters(self):
         return {name: int((PARAMETERS / name).read_text())
                 for name in ("bench_jit_bodies", "bench_jit_completions")}
+
+    def native_escape_count(self):
+        return int((PARAMETERS / "native_escape_count").read_text())
+
+    def publication_after(self, escape_delta):
+        if self.record["protocol"] != "role-swap" or self.record["case"] != "c-native":
+            rt.require(escape_delta == 0 and not trace_records(self.messages, "reason=NATIVE_ESCAPE "),
+                       "unexpected instruction escape", "DATA_ERROR")
+            return self.publication()
+        # kd_jit_native_escape disables this exact entry without replacing its
+        # immutable image. Keep the full prior identity; only status may differ.
+        before = self.record["publication"]
+        rows, source = rt.registry(), rt.status()
+        rt.write_json(self.path / "post-native.registry.json", rows)
+        rt.require(len(rows) == 1 and set(before["images"]) == {"jit.bin", "jit.S", "bin.txt"},
+                   "native-only image/registry extent differs", "DATA_ERROR")
+        entry = before["entry"]
+        folder = self.path / "workspace/daemon" / hex(entry["entry"]) / str(entry["tgid"]) / "asm"
+        after = dict(entry=rows[0], source=source,
+                     images={name: rt.digest(folder / name) for name in before["images"]})
+        events = validate_native_publication(self.record, after, self.messages, escape_delta)
+        self.record["escape_events"] = events
+        return after
 
     def prepare(self):
         self.verify()
@@ -410,6 +454,7 @@ class MixedSession(Session):
         self.wait_receipts(probe, "test")
         self.warm()
         counters_before = self.counters()
+        escape_before = self.native_escape_count()
         rt.require(counters_before["bench_jit_bodies"] > 0,
                    "real warmup did not demonstrate delegation; no forced heat fallback", "DATA_ERROR")
         control(ARM)
@@ -442,11 +487,13 @@ class MixedSession(Session):
         delta = {key: self.counters()[key] - counters_before[key] for key in counters_before}
         # Save the joined observations even if a protocol-specific assertion
         # fails. Joined callers alone do not authorize skipping exact drain.
-        self.record.update(after=after, jit_delta=delta)
+        escape_delta = self.native_escape_count() - escape_before
+        self.record.update(after=after, jit_delta=delta, native_escape_delta=escape_delta)
         self.save()
         observations = validate_result(self.record, after, delta, self.messages)
-        publication_after = self.publication()
-        rt.require(publication_after == self.record["publication"], "immutable image changed", "DATA_ERROR")
+        publication_after = self.publication_after(escape_delta)
+        if self.record["case"] != "c-native":
+            rt.require(publication_after == self.record["publication"], "immutable image changed", "DATA_ERROR")
         self.record.update(observations, publication_after=publication_after)
         self.verify()
         self.save()

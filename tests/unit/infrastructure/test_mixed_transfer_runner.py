@@ -4,6 +4,7 @@ No device/module work here: real runner decisions use explicit process, clock
 and snapshot substitutes. The compiled payload and live staging remain separate.
 """
 import importlib.util
+import copy
 import json
 from pathlib import Path
 import struct
@@ -148,6 +149,7 @@ class MixedTransferRunnerTests(unittest.TestCase):
             probe.wait_receipts = Mock()
             probe.warm = Mock()
             probe.counters = Mock(return_value=dict(bench_jit_bodies=1, bench_jit_completions=1))
+            probe.native_escape_count = Mock(return_value=0)
             calls = []
             states = {
                 "preholder-held": dict(ready=16, owner=200, t_task=200, gate=0),
@@ -263,6 +265,41 @@ class MixedTransferRunnerTests(unittest.TestCase):
                     with self.assertRaises(runner.rt.Failure):
                         runner.validate_result(record, after,
                             dict(bench_jit_bodies=2, bench_jit_completions=1), messages)
+
+    def test_native_only_status_requires_exact_c_escape_and_immutable_identity(self):
+        record, _, _, _ = self.evidence(case="c-native")
+        record["publication"] = dict(
+            entry=dict(status=0, pid=0, tgid=0, lock_kind=2, entry=0x100, code=0x400,
+                       entry_abi=2, requirements=1, generation=7),
+            source=dict(state=0, frames=0, writers=1, modules=1),
+            images={name: name + "-hash" for name in ("jit.bin", "jit.S", "bin.txt")})
+        after = copy.deepcopy(record["publication"])
+        after["entry"]["status"] = -3
+        message = ("[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x100 rip=0x300 "
+                   "generation=7 waiter_pid=102 action=native_suffix_and_disable\n")
+        self.assertEqual(len(runner.validate_native_publication(record, after, message, 1)), 1)
+        for mutation in ("status", "code", "generation", "image", "frames", "wrong-case",
+                         "wrong-marker", "wrong-task", "wrong-count", "duplicate"):
+            with self.subTest(mutation=mutation):
+                changed, spec, trace, delta = copy.deepcopy(after), copy.deepcopy(record), message, 1
+                if mutation in ("status", "code", "generation"):
+                    changed["entry"][mutation] += 1
+                elif mutation == "image":
+                    changed["images"]["jit.bin"] = "replaced"
+                elif mutation == "frames":
+                    changed["source"]["frames"] = 1
+                elif mutation == "wrong-case":
+                    spec["case"] = "simple"
+                elif mutation == "wrong-marker":
+                    trace = trace.replace("rip=0x300", "rip=0x301")
+                elif mutation == "wrong-task":
+                    trace = trace.replace("waiter_pid=102", "waiter_pid=103")
+                elif mutation == "wrong-count":
+                    delta = 0
+                else:
+                    trace += trace
+                with self.assertRaises(runner.rt.Failure):
+                    runner.validate_native_publication(spec, changed, trace, delta)
 
 
 if __name__ == "__main__":
