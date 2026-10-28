@@ -67,7 +67,7 @@ linked implementations. See the [code map](CODE_MAP.md).
 
 | Family | Ordinary/local interface | Interface that permits delegation | Preparation and entry ABI |
 | --- | --- | --- | --- |
-| Spinlock | The ordinary direct pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
+| Spinlock | The ordinary pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `kd_spin_lock/unlock` source macros in `kd_spin_api.h`; named benchmark continuations retain `KD_SPIN_DIRECT_LOCK/UNLOCK` | Unified calls register their internal continuation on contention; named entries use `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
 | Mutex | `kd_mutex_local_lock/unlock`; callable lock symbol, trylock, interruptible, killable and I/O forms | Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases; explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`; `KD_MUTEX_OUTER_LOCK/UNLOCK` retains its outer cookie | Unified calls capture an internal continuation; explicit named entries use `kd_mutex_prepare(lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
 | Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock` | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
 | Rwsem | `kd_down_read/up_read`; `kd_down_write/up_write`; ordinary trylock, interruptible, killable and downgrade forms | `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK`; outer writers only | `kd_mutex_prepare(&sem->gate, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |

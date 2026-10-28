@@ -29,8 +29,9 @@ MODULE_INFO(spin_numa, "0");
 
 /* Fixed self-execution control for protocol comparisons. This changes only
  * fresh admission; unlock always follows the acquisition's ownership record. */
+/* No consumer needs a data export; admission and this load-time parameter
+ * belong to the provider. Public shells import the per-CPU heat gate only. */
 bool kd_spin_delegate __read_mostly = true;
-EXPORT_SYMBOL_GPL(kd_spin_delegate);
 module_param_named(spin_delegate, kd_spin_delegate, bool, 0400);
 MODULE_PARM_DESC(spin_delegate, "Allow JIT delegation; false keeps KD self-execution");
 

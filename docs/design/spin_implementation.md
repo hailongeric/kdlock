@@ -16,7 +16,7 @@ gate belong to a separate 128-byte object, not the four-byte spin object below.
 | --- | --- | --- |
 | Linux Native | `spin_lock/unlock` | Captured kernel `kernel/locking/qspinlock.c` and architecture/PV helpers |
 | TCLock | `komb_spin_lock/unlock` | [komb.c](../../tclock_backend/komb.c), private [spin components](../../tclock_backend/spin) |
-| KD | `KD_SPIN_DIRECT_LOCK/UNLOCK` | [kd_spin_direct.h](../../include/kd_spin_direct.h), [spin components](../../kernel_module/spin) |
+| KD | `kd_spin_lock/unlock`; named benchmark continuations use `KD_SPIN_DIRECT_LOCK/UNLOCK` | [kd_spin_api.h](../../include/kd_spin_api.h), [kd_spin_direct.h](../../include/kd_spin_direct.h), [spin components](../../kernel_module/spin) |
 
 The three workload arms share payload, post-lock work, timing and verification.
 Each target lock belongs exclusively to its backend; equal word size does not
@@ -25,19 +25,31 @@ make the node pools or unlock protocols interchangeable.
 ## Public API and caller state
 
 Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization and
-[`kd_spin_direct.h`](../../include/kd_spin_direct.h) for paired operations.
+[`kd_spin_api.h`](../../include/kd_spin_api.h) for ordinary paired operations.
+The public macros expand through the existing DIRECT implementation; they do
+not add another provider call or capture registers outside ABI1.
 
 | Operation | Interface and contract |
 | --- | --- |
 | Initialize unused storage | `DEFINE_KD_SPINLOCK`, `KD_SPINLOCK_INITIALIZER` or `kd_spin_init` |
-| Ordinary acquisition/release | `KD_SPIN_DIRECT_LOCK(lock, kd_spin_direct_cookie, continuation)` and `KD_SPIN_DIRECT_UNLOCK(lock, kd_spin_direct_cookie)`; pin once, preserve IRQ/BH state, permit eligible delegation |
+| Ordinary acquisition/release | `kd_spin_lock(lock)` / `kd_spin_unlock(lock)`; evaluate the KD pointer once, pin once, preserve IRQ/BH state, permit eligible delegation |
+| Named benchmark continuation | `KD_SPIN_DIRECT_LOCK(lock, kd_spin_direct_cookie, continuation)` and `KD_SPIN_DIRECT_UNLOCK(lock, kd_spin_direct_cookie)`; the same implementation with an explicit preparation label |
 | Opt-in helper entry | `KD_SPIN_DIRECT_HELPER_LOCK` with the ordinary direct unlock; establishes five scratch-register values in the original hot-entry code for callers that need that contract |
 | Save/restore interrupt state | `kd_spin_lock_irqsave` / `kd_spin_unlock_irqrestore`; original caller executes locally |
 | Disable/enable interrupts | `kd_spin_lock_irq` / `kd_spin_unlock_irq`; original caller executes locally |
 | Disable/enable bottom halves | `kd_spin_lock_bh` / `kd_spin_unlock_bh`; original caller executes locally |
 | Prepare a body | `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)` after the source module is live |
 
-The ordinary pair uses a unique named continuation in a `noipa` function so
+The ordinary macros use an internal numeric continuation registered by contended
+admission. They are void expressions and have no addressable conventional C
+function of the same name. The former ABI0 function is provider-internal
+`kd_spin_lock_legacy`; its routed unlock is `kd_spin_unlock_legacy`. Runtime and
+translator control lookup retain those exact symbol identities. Neither is a
+public module export. A caller that needs a function pointer must provide and
+validate an explicit conventional wrapper; it cannot call a clobber symbol with
+the ordinary C calling convention.
+
+Explicit preparation uses a unique named continuation in a `noipa` function so
 compiler cloning cannot duplicate that entry label. Preparation does not force
 delegation: source readiness, runtime eligibility and the current heat policy also
 apply. `kd_spin_direct_cookie` names the provider's per-CPU heat indicator, not
@@ -49,6 +61,15 @@ ordinary call shell. Native/IRQ variants use the same KD word and queue with
 non-combinable nodes, so matching KD pairs can share one object. Never call Linux
 or TCLock spin APIs on it. Internal `kd_spin_direct_native_lock` assumes a caller
 already pinned; it is not a drop-in ordinary lock function.
+
+Cross-module exports remain for actual caller relocations: clobber entries,
+the contended native finisher, preparation, the native unlock used by the IRQ
+probe, and the per-CPU fields read by public inline code. Internal ownership
+probes and the load-time `spin_delegate` parameter retain their implementation
+without exporting extra callable/data interfaces. The source-only facade and
+export change does not alter the existing benchmark call shells. Its focused
+compiler/relocation and live checks must be recorded separately before claiming
+validated execution or a performance result.
 
 ## Following one request in source
 

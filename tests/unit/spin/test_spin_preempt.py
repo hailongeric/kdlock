@@ -29,7 +29,7 @@ def main():
     code += 'void ' + definition(source, 'kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     code += 'void ' + definition(source, 'kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *lock, unsigned long sp,')
     code += 'static inline void ' + definition(source, 'kd_spin_unlock_core(struct qspinlock *lock)')
-    code += 'void ' + definition(source, 'kd_spin_unlock(struct qspinlock *lock)')
+    code += 'void ' + definition(source, 'kd_spin_unlock_legacy(struct qspinlock *lock)')
     code += 'void ' + definition(source, 'kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     with tempfile.TemporaryDirectory(prefix='kd-preempt-') as directory:
         path = Path(directory)

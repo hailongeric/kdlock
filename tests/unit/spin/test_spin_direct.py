@@ -51,7 +51,7 @@ int main(void) {
     for (int mode = 0; mode < 4; mode++) {
         fast_owned = mode == 0; native_ack = mode == 1; ticket = mode == 2 ? 7 : 0;
         releases = lookups = 0; preempt = 1;
-        kd_spin_unlock(&lock);
+        kd_spin_unlock_legacy(&lock);
         assert(releases == 1 && preempt == 0);
         assert(lookups == (mode >= 2));
     }
@@ -62,8 +62,8 @@ int main(void) {
 
 def main():
     source = read_source(ROOT/'kernel_module/kd_spinlock.c')
-    code = PRELUDE + 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)') + 'static inline void ' + definition(source, 'kd_spin_unlock_core(struct qspinlock *lock)') + definition(source, 'kd_spin_unlock(struct qspinlock *lock)').replace(
-        'kd_spin_unlock(', 'void kd_spin_unlock(', 1) + MAIN
+    code = PRELUDE + 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)') + 'static inline void ' + definition(source, 'kd_spin_unlock_core(struct qspinlock *lock)') + definition(source, 'kd_spin_unlock_legacy(struct qspinlock *lock)').replace(
+        'kd_spin_unlock_legacy(', 'void kd_spin_unlock_legacy(', 1) + MAIN
     with tempfile.TemporaryDirectory(prefix='kd-direct-unlock-') as temporary:
         path = Path(temporary)
         (path/'test.c').write_text(code)

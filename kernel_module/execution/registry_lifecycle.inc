@@ -88,8 +88,8 @@ int kd_exe_init(void)
 	end_point_count = 0;
 	/* Direct APIs are linked into this provider; kallsyms need not expose a
 	 * module's symbols while its init function is still running. */
-	raw_spin_lock_addr = (unsigned long)kd_spin_lock;
-	raw_spin_unlock_addr = (unsigned long)kd_spin_unlock;
+	raw_spin_lock_addr = (unsigned long)kd_spin_lock_legacy;
+	raw_spin_unlock_addr = (unsigned long)kd_spin_unlock_legacy;
 	end_points[end_point_count] = raw_spin_unlock_addr;
 	if (raw_spin_unlock_addr)
 		end_point_count++;

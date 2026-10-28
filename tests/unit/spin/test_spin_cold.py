@@ -27,7 +27,7 @@ def main():
         'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
-    code += 'void ' + definition(source, 'kd_spin_unlock(struct qspinlock *lock)')
+    code += 'void ' + definition(source, 'kd_spin_unlock_legacy(struct qspinlock *lock)')
     code += 'void ' + definition(source,
         'kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     code += definition((ROOT / 'include/kd_spin_fast.h').read_text(),

@@ -155,8 +155,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
-    raw_spin_lock = get_kernel_symbol("kd_spin_lock") or control_symbols["_raw_spin_lock"]
-    raw_spin_unlock = get_kernel_symbol("kd_spin_unlock") or control_symbols["_raw_spin_unlock"]
+    raw_spin_lock = get_kernel_symbol("kd_spin_lock_legacy") or control_symbols["_raw_spin_lock"]
+    raw_spin_unlock = get_kernel_symbol("kd_spin_unlock_legacy") or control_symbols["_raw_spin_unlock"]
     mutex_lock = get_kernel_symbol("kd_mutex_local_lock")
     mutex_unlock = get_kernel_symbol("kd_mutex_local_unlock")
     clobber_lock = (get_kernel_symbol("kd_spin_lock_clobber_v1") or

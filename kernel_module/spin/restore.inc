@@ -11,7 +11,7 @@
  * ...<prepare arguments>...
  * .- push eip+1				(eip + 1 == pop insn)
  * callq |
- * `- jmp kd_spin_lock
+ * `- jmp kd_spin_lock_legacy
  * pop caller-saved-regs
  *
  * This means that the following function must in no way modify the the rsp

@@ -14,13 +14,13 @@ kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)
 }
 EXPORT_SYMBOL_GPL(kd_spin_direct_native_contended);
 
-/* Retain the out-of-line API for existing pinned callers. */
+/* Provider-only compatibility helper; public native calls inline the first
+ * CAS and import only the contended finisher. Retain its exact code identity. */
 __attribute__((noipa)) noinline notrace void
 kd_spin_direct_native_lock(kd_spinlock_t *lock)
 {
 	kd_spin_direct_native_lock_inline(lock);
 }
-EXPORT_SYMBOL_GPL(kd_spin_direct_native_lock);
 
 __attribute__((noipa)) noinline notrace void
 kd_spin_direct_native_unlock(kd_spinlock_t *lock)
@@ -60,11 +60,11 @@ kd_rwlock_fast_write_unlock(kd_rwlock_t *lock)
 }
 EXPORT_SYMBOL_GPL(kd_rwlock_fast_write_unlock);
 
-void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
+/* ABI0 remains an internal control identity, never an ordinary public call. */
+void kd_spin_lock_legacy(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 {
 	kd_spin_lock_abi(lock, sp, ip, 0, KD_ENTRY_ABI_LEGACY);
 }
-EXPORT_SYMBOL_GPL(kd_spin_lock);
 
 /* Preparation is explicitly outside the operation loop and after the source
  * module is LIVE, so its text can be pinned until retirement. */
