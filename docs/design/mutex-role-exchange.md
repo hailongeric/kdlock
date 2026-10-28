@@ -2,9 +2,10 @@
 
 This source adds a scoped queued role exchange to the owner handoff introduced
 at `ee7ace6684b5257ae08d82648e9e2dcb4ceb8986`. It starts from
-`40353f4f00d8ce571e8de7e57edac930e369e3f7`. Static source review and new fixtures
-are implementation work only: this candidate has not been built, executed or
-timed. Earlier owner-handoff passes do not validate it.
+`40353f4f00d8ce571e8de7e57edac930e369e3f7`. Initial source review and fixtures
+were implementation work only. Subsequent live work exposed the native-mutex
+accounting failure recorded below; the source correction requires its own
+validation. Earlier owner-handoff passes do not validate queued role exchange.
 
 The case is a delegated ABI2 mutex body executing on combiner C for waiter W.
 A recognized ordinary spin acquisition makes one CAS. If it fails while the
@@ -108,10 +109,36 @@ is added here; its API and generated-MM dependencies require a separate change.
 These are runtime context limitations, not a change to trusted translation.
 The candidate does not establish arbitrary nesting or whole-kernel replacement.
 
+## Observed native-mutex accounting failure
+
+The live `w-early-mutex` case at `2d4ee3df` reached the duplicate-lock BUG in
+`kd_mutex_custody_native_acquire`. W stopped while holding A and its native inner
+mutex M, and C remained waiting. This is a failed, undrained execution, not a
+timeout-based cleanup opportunity or a completed correctness checkpoint.
+
+The composed source path explains the failure:
+`kd_mutex_lock_entry` calls `kd_mutex_trylock_fast`, which calls
+`kd_mutex_outer_trylock`. The successful inline CAS already records M through
+`kd_mutex_note_native_acquire`; the public-entry layer then recorded that same
+acquisition again. The correction removes only the second note. The inline
+OUTER pair still records its successful CAS, and the exact duplicate-entry BUG
+remains. Local/signal/I/O success is recorded by `kd_local_lock_state`; trylock
+records its own success. Failed acquisition and continuation pickup through
+`kd_mutex_transfer_pickup` add no acquisition event.
+
+The earlier resource fixture substituted the fast helper, while the custody
+fixture called its ledger directly. Neither composed these layers. The new
+`mutex/test_mutex_custody_acquire.py` compiles the actual aliases, fast helper,
+inline CAS, note hooks and exact ledger together. It also exercises local and
+trylock success, failed acquisition and no-custody cases, and reinserts the
+duplicate note as a negative mutation. This source-only correction does not
+establish guest recovery, successful retest or performance parity.
+
 ## Validation gates
 
 All builds and execution belong in the maintained VM after the recovery and
-idle checks. No test result is claimed by this candidate commit.
+idle checks. The accounting correction and its new fixture remain unexecuted
+until a new frozen-source validation record establishes otherwise.
 
 - `mutex/test_mutex_custody.py` compiles the actual queue exchange, pickup,
   native ledger, custody unlock, transferred event and frame pop. Two threads
