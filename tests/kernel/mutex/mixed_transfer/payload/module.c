@@ -20,6 +20,10 @@
 
 static DEFINE_KD_MUTEX(a);
 static DEFINE_KD_SPINLOCK(b);
+static DEFINE_KD_MUTEX(m);
+static unsigned int protocol, test_case;
+module_param(protocol, uint, 0444);
+module_param(test_case, uint, 0444);
 static DECLARE_WAIT_QUEUE_HEAD(gate_wait);
 static atomic_t active = ATOMIC_INIT(0), failures = ATOMIC_INIT(0);
 static unsigned long started, ready, done;
@@ -31,7 +35,9 @@ static unsigned long warm_eligible, entry_checked, entry_eligible;
 static u64 warm_ops;
 static u64 prefix, suffix, combiner_bodies, owner_before, owner_after;
 static u64 combiner_owner, samples, steal_attempts, steals;
-extern char mixed_transfer_entry[];
+static u64 c_native_task, c_native_owner, c_native_flags, c_native_visits;
+static u64 early_unlocked, early_inner_held;
+extern char mixed_transfer_entry[], mixed_transfer_native_marker[];
 
 static unsigned long owner(void)
 {
@@ -81,7 +87,10 @@ static __attribute__((noipa)) void protected_body(unsigned int role)
 		    !(preempt_count() & PREEMPT_MASK))
 			atomic_inc(&failures);
 		WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
-		kd_spin_unlock(&b);
+		if (READ_ONCE(test_case) != MIXED_W_EARLY_SPIN)
+			kd_spin_unlock(&b);
+		if (READ_ONCE(test_case) == MIXED_W_EARLY_MUTEX)
+			kd_mutex_lock(&m);
 		/* Stop and acknowledge the thief before A's legitimate final unlock,
 		 * so an acquisition after the protected suffix cannot be misclassified. */
 		WRITE_ONCE(thief_stop, true);
@@ -89,14 +98,82 @@ static __attribute__((noipa)) void protected_body(unsigned int role)
 			cpu_relax();
 		if (!READ_ONCE(thief_done))
 			atomic_inc(&failures);
+		if (READ_ONCE(test_case) == MIXED_W_EARLY_SPIN ||
+		    READ_ONCE(test_case) == MIXED_W_EARLY_MUTEX) {
+			/* Native W must release A and wake C without running C under its
+			 * still-held inner lock. C's body independently observes that lock. */
+			kd_mutex_unlock(&a);
+			WRITE_ONCE(early_unlocked, 1);
+			for (polls = 0; polls < 100000000 && !READ_ONCE(combiner_bodies); polls++)
+				cpu_relax();
+			if (!READ_ONCE(combiner_bodies))
+				atomic_inc(&failures);
+			if (READ_ONCE(test_case) == MIXED_W_EARLY_SPIN)
+				kd_spin_unlock(&b);
+			else
+				kd_mutex_unlock(&m);
+			return;
+		}
 	} else {
+		unsigned long wanted_owner = READ_ONCE(task[MIXED_COMBINER]);
+
+		if (READ_ONCE(protocol) == MIXED_ROLE_SWAP &&
+		    READ_ONCE(test_case) != MIXED_W_EARLY_SPIN &&
+		    READ_ONCE(test_case) != MIXED_W_EARLY_MUTEX)
+			wanted_owner = READ_ONCE(task[MIXED_WAITER]);
 		WRITE_ONCE(combiner_owner, atomic_long_read(&a.owner) & ~KD_MUTEX_OWNER_FLAGS);
 		if (role != MIXED_COMBINER || READ_ONCE(combiner_owner) !=
-		    READ_ONCE(task[MIXED_COMBINER]) || READ_ONCE(prefix) != 1 ||
+		    wanted_owner || READ_ONCE(prefix) != 1 ||
 		    READ_ONCE(suffix) != 1 || !READ_ONCE(thief_done) ||
 		    READ_ONCE(combiner_bodies))
 			atomic_inc(&failures);
+		if (READ_ONCE(test_case) == MIXED_W_EARLY_SPIN ||
+		    READ_ONCE(test_case) == MIXED_W_EARLY_MUTEX) {
+			bool held = READ_ONCE(test_case) == MIXED_W_EARLY_SPIN ?
+				atomic_read(&b.val) != 0 :
+				(atomic_long_read(&m.owner) & ~KD_MUTEX_OWNER_FLAGS) ==
+				READ_ONCE(task[MIXED_WAITER]);
+
+			WRITE_ONCE(early_inner_held, held);
+			if (!held)
+				atomic_inc(&failures);
+		}
 		WRITE_ONCE(combiner_bodies, READ_ONCE(combiner_bodies) + 1);
+		if (READ_ONCE(test_case) == MIXED_C_NATIVE) {
+			unsigned long actual_task;
+			unsigned int flags;
+
+			/* The existing safe instruction escape restores original C and
+			 * arithmetic flags. A stays physically owned by W until C's ACK. */
+			asm volatile("movl $1, %%eax\n\tcmpl $2, %%eax\n\t"
+				     "jmp mixed_transfer_native_marker\n\t"
+				     ".globl mixed_transfer_native_marker\n"
+				     "mixed_transfer_native_marker:\n\trdtsc\n\t"
+				     "lahf\n\tmovzbl %%ah, %%eax\n\tmovl %%eax, %0\n\t"
+				     "movq %%gs:current_task, %%rax\n\tmovq %%rax, %1\n\t"
+				     : "=m"(flags), "=m"(actual_task)
+				     : : "rax", "rdx", "cc", "memory");
+			WRITE_ONCE(c_native_task, actual_task);
+			WRITE_ONCE(c_native_owner, atomic_long_read(&a.owner) & ~KD_MUTEX_OWNER_FLAGS);
+			WRITE_ONCE(c_native_flags, flags & 0xd5);
+			WRITE_ONCE(c_native_visits, READ_ONCE(c_native_visits) + 1);
+			if (actual_task != READ_ONCE(task[MIXED_COMBINER]) ||
+			    READ_ONCE(c_native_owner) != READ_ONCE(task[MIXED_WAITER]) ||
+			    (flags & 0xd5) != 0x95 || READ_ONCE(c_native_visits) != 1)
+				atomic_inc(&failures);
+		} else if (READ_ONCE(test_case) == MIXED_C_EARLY_SPIN) {
+			/* W's new frame owns C's inner B ticket. Releasing A early must
+			 * retain B, then finish without reacquiring A for another W body. */
+			kd_spin_lock(&b);
+			kd_mutex_unlock(&a);
+			WRITE_ONCE(early_inner_held, atomic_read(&b.val) != 0);
+			WRITE_ONCE(early_unlocked, !atomic_long_read(&a.owner) &&
+				   !atomic_read(&a.delegation_state));
+			if (!READ_ONCE(early_inner_held) || !READ_ONCE(early_unlocked))
+				atomic_inc(&failures);
+			kd_spin_unlock(&b);
+			return;
+		}
 	}
 	kd_mutex_unlock(&a);
 }
@@ -275,7 +352,7 @@ finished:
 	}
 	if (cmd == MIXED_ARM) {
 		if (atomic_read(&active) || READ_ONCE(started) || !READ_ONCE(warm_ops) ||
-		    !kd_mutex_is_idle(&a) || atomic_read(&b.val))
+		    !kd_mutex_is_idle(&a) || !kd_mutex_is_idle(&m) || atomic_read(&b.val))
 			return -EBUSY;
 		WRITE_ONCE(armed, true);
 		return 0;
@@ -284,7 +361,7 @@ finished:
 		/* The runner calls only after all five process joins. Active==0 is
 		 * an additional observation, never the authority to infer a join. */
 		return atomic_read(&active) || READ_ONCE(done) != (1UL << MIXED_ROLES) - 1 ||
-		       !kd_mutex_is_idle(&a) || atomic_read(&b.val) ? -EBUSY : 0;
+		       !kd_mutex_is_idle(&a) || !kd_mutex_is_idle(&m) || atomic_read(&b.val) ? -EBUSY : 0;
 	}
 	if (cmd == MIXED_SNAPSHOT) {
 		struct mixed_snapshot s = {
@@ -309,6 +386,12 @@ finished:
 			.preholder_release = READ_ONCE(preholder_release),
 			.preholder_done = READ_ONCE(preholder_done),
 			.g_task = READ_ONCE(task[MIXED_GATE]), .t_task = READ_ONCE(task[MIXED_THIEF]),
+			.protocol = protocol, .test_case = test_case,
+			.native_marker = (unsigned long)mixed_transfer_native_marker,
+			.m = (unsigned long)&m, .m_owner = atomic_long_read(&m.owner),
+			.c_native_task = READ_ONCE(c_native_task), .c_native_owner = READ_ONCE(c_native_owner),
+			.c_native_flags = READ_ONCE(c_native_flags), .c_native_visits = READ_ONCE(c_native_visits),
+			.early_unlocked = READ_ONCE(early_unlocked), .early_inner_held = READ_ONCE(early_inner_held),
 			.waiters = kd_mutex_debug_waiter_count(&a),
 		};
 		ret = copy_to_user(user, &s, sizeof(s)) ? -EFAULT : 0;
@@ -328,12 +411,15 @@ static struct miscdevice mixed_device = {
 static int __init mixed_init(void)
 {
 	BUILD_BUG_ON(sizeof(struct mixed_run) != 24);
-	BUILD_BUG_ON(sizeof(struct mixed_snapshot) != 296);
+	BUILD_BUG_ON(sizeof(struct mixed_snapshot) != 384);
+	if (protocol > MIXED_ROLE_SWAP || test_case >= MIXED_CASES ||
+	    (protocol == MIXED_OWNER_HANDOFF && test_case != MIXED_SIMPLE))
+		return -EINVAL;
 	return misc_register(&mixed_device);
 }
 static void __exit mixed_exit(void)
 {
-	WARN_ON(atomic_read(&active) || !kd_mutex_is_idle(&a) || atomic_read(&b.val));
+	WARN_ON(atomic_read(&active) || !kd_mutex_is_idle(&a) || !kd_mutex_is_idle(&m) || atomic_read(&b.val));
 	misc_deregister(&mixed_device);
 }
 module_init(mixed_init);

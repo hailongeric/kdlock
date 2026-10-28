@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only public mutex -> spin failed-CAS owner transfer and exact drain."""
+"""Guest-only public mutex -> spin owner handoff or queued role swap and exact drain."""
 import argparse
 import ctypes
 import fcntl
@@ -27,16 +27,21 @@ MODULE = "kd_mutex_mixed_transfer"
 COMM = ("kmx_worker", "kmx_spin", "kmx_worker", "kmx_worker", "kmx_thief")
 GATE, SPIN, COMBINER, WAITER, THIEF = range(5)
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
-RUN, SNAPSHOT = 0xC0184D01, 0x81284D02
+RUN, SNAPSHOT = 0xC0184D01, 0x81804D02
 PREPARE, RELEASE, DRAIN, WARMUP, ARM = 0x4D03, 0x4D04, 0x4D05, 0xC0184D06, 0x4D07
 PREHOLDER_RELEASE = 0x4D08
 REQUIRED_ELIGIBILITY = (1 << GATE) | (1 << COMBINER) | (1 << WAITER)
+PROTOCOLS = ("owner-handoff", "role-swap")
+CASES = ("simple", "c-native", "c-early-spin", "w-early-spin", "w-early-mutex")
 FIELDS = ("a", "b", "entry", "spin_call", "active", "failures", "started", "ready",
           "done", "release_gate", "owner", "gate", "tail", "b_word", "prefix", "suffix",
           "combiner_bodies", "owner_before", "owner_after", "combiner_owner", "samples",
           "steal_attempts", "steals", "prefix_observed", "thief_done", "c_task", "w_task",
           "warm_ops", "armed", "warm_eligible", "entry_checked", "entry_eligible",
-          "preholder_release", "preholder_done", "g_task", "t_task", "waiters")
+          "preholder_release", "preholder_done", "g_task", "t_task",
+          "protocol", "test_case", "native_marker", "m", "m_owner", "c_native_task",
+          "c_native_owner", "c_native_flags", "c_native_visits", "early_unlocked",
+          "early_inner_held", "waiters")
 
 
 def control(command):
@@ -45,10 +50,10 @@ def control(command):
 
 
 def snapshot():
-    buffer = bytearray(296)
+    buffer = bytearray(384)
     with open(DEVICE, "rb", buffering=0) as device:
         fcntl.ioctl(device, SNAPSHOT, buffer, True)
-    return dict(zip(FIELDS, struct.unpack("=36Qq", buffer)))
+    return dict(zip(FIELDS, struct.unpack("=47Qq", buffer)))
 
 
 def publish(path, value):
@@ -153,6 +158,82 @@ def observe_hotlock(provider_root):
     return record
 
 
+def validate_result(record, after, delta, messages):
+    """Require effects and returned execution evidence, not an exchange offer alone."""
+    protocol, case = record["protocol"], record["case"]
+    swapped = protocol == "role-swap"
+    early_waiter = case in ("w-early-spin", "w-early-mutex")
+    expected_delta = dict(bench_jit_bodies=2 if swapped and not early_waiter else 1,
+                          bench_jit_completions=int(swapped and case in ("simple", "c-early-spin")))
+    rt.require(delta == expected_delta, "returned JIT evidence differs: " + str(delta), "DATA_ERROR")
+    wanted_owner = after["w_task"] if swapped and not early_waiter else after["c_task"]
+    rt.require(after["prefix"] == after["suffix"] == after["combiner_bodies"] == 1 and
+               after["owner_before"] == after["c_task"] != 0 and
+               after["combiner_owner"] == wanted_owner and
+               after["owner_after"] == after["w_task"] != after["c_task"] and
+               after["samples"] >= 2 and after["steal_attempts"] >= 10000 and
+               after["steals"] == 0 and after["done"] == after["ready"] == after["started"] == 31 and
+               after["prefix_observed"] == after["thief_done"] == 1,
+               "owner/effect/no-gap observations differ: " + str(after), "DATA_ERROR")
+    rt.require(after["protocol"] == PROTOCOLS.index(protocol) and
+               after["test_case"] == CASES.index(case), "payload mode differs", "DATA_ERROR")
+    early = case in ("c-early-spin", "w-early-spin", "w-early-mutex")
+    rt.require(after["early_unlocked"] == after["early_inner_held"] == int(early),
+               "early A release did not preserve the inner lock", "DATA_ERROR")
+    pids = {row["role"]: row["pid"] for row in record["workers"]}
+    layout = record["layout"]
+    transfers = trace_records(messages, "kd_mutex transfer: ")
+    exchanges = trace_records(messages, "kd_mutex role exchange: ")
+    if swapped:
+        rt.require(not transfers and len(exchanges) == 1 and
+                   set(exchanges[0]) == {"outer", "executor", "owner", "queued", "head"} and
+                   exchanges[0]["outer"] == f"{layout['a']:x}" and
+                   exchanges[0]["executor"] == str(pids[COMBINER]) and
+                   exchanges[0]["owner"] == str(pids[WAITER]) and
+                   int(exchanges[0]["queued"], 16) and int(exchanges[0]["head"], 16),
+                   "queued exchange offer differs: " + str(exchanges), "DATA_ERROR")
+    else:
+        rt.require(not exchanges and transfers == [dict(outer=f"{layout['a']:x}",
+                   executor=str(pids[COMBINER]), owner=str(pids[WAITER]),
+                   target=f"{layout['spin_call']:x}", pending="1")],
+                   "physical owner handoff differs: " + str(transfers), "DATA_ERROR")
+    native = not swapped or case == "c-native"
+    native_role, executor = (COMBINER, WAITER) if swapped else (WAITER, COMBINER)
+    native_ip = layout["native_marker"] if swapped else layout["spin_call"]
+    begins = trace_records(messages, "kd_native begin: ")
+    acks = trace_records(messages, "kd_native ack: ")
+    completions = trace_records(messages, "kd_native complete: ")
+    if native:
+        rt.require(len(begins) == 1 and begins[0]["task"] == str(pids[native_role]) and
+                   int(begins[0]["outer"], 16) == layout["a"] and
+                   int(begins[0]["entry"], 16) == layout["entry"] and
+                   int(begins[0]["ip"], 16) == native_ip and
+                   int(begins[0]["cpu"]) == record["cpus"][executor] and
+                   int(begins[0]["sp"], 16) and begins[0]["held"] == begins[0]["remaining"] == "1" and
+                   begins[0]["mutex"] == "1" and begins[0]["outer_released"] == "0",
+                   "native continuation identity differs: " + str(begins), "DATA_ERROR")
+        rt.require(acks == [dict(task=str(pids[native_role]), lock=f"{layout['a']:x}",
+                                mutex="1", last_spin="0")] and
+                   completions == [dict(task=str(pids[native_role]), outer=f"{layout['a']:x}", mutex="1")],
+                   "physical unlock/retirement ACK differs", "DATA_ERROR")
+    else:
+        rt.require(not begins and not acks and not completions,
+                   "unexpected native relay in custody path", "DATA_ERROR")
+    expected_native = (after["c_task"], after["w_task"], 0x95, 1) if case == "c-native" else (0, 0, 0, 0)
+    rt.require(tuple(after[key] for key in ("c_native_task", "c_native_owner", "c_native_flags",
+                                          "c_native_visits")) == expected_native,
+               "C instruction escape task/owner/flags/effects differ", "DATA_ERROR")
+    outer = trace_records(messages, "kd_mutex outer release: ")
+    expected_outer = [dict(task=str(pids[COMBINER]), owner=str(pids[WAITER]),
+                           owner_task=f"{after['w_task']:x}", outer=f"{layout['a']:x}",
+                           next_task="0", remaining="1")] if case == "c-early-spin" else []
+    rt.require(outer == expected_outer, "after-body early release differs: " + str(outer), "DATA_ERROR")
+    return dict(owner_transfers=transfers, role_exchanges=exchanges, native_begin=begins,
+                native_acks=acks, native_completions=completions, outer_releases=outer,
+                expected_native_stats=dict(started=str(int(native)), completed=str(int(native)),
+                                           unlocks=str(int(native))))
+
+
 class MixedSession(Session):
     def __init__(self, out, spec, binaries, verify):
         super().__init__(out, spec, workload_module=binaries["workload"])
@@ -165,7 +246,7 @@ class MixedSession(Session):
         row = snapshot()
         rt.write_json(self.path / (label + ".counts.json"), row)
         rt.require(row["active"] == row["owner"] == row["gate"] == row["tail"] ==
-                   row["b_word"] == row["waiters"] == 0,
+                   row["b_word"] == row["m_owner"] == row["waiters"] == 0,
                    "caller/lock records have not drained: " + str(row), "UNDRAINED")
         rt.require(row["failures"] == 0, "payload observation failure: " + str(row), "DATA_ERROR")
         if self.record.get("callers_joined"):
@@ -183,11 +264,17 @@ class MixedSession(Session):
         self.run(["insmod", self.binaries["provider"], "bench_quiet=1", "bench_complete_probe=1",
                   "jit_timing=0", "target_process=kmx_worker"], "load-provider.log")
         self.loaded_kd = True
-        self.run(["insmod", self.workload_module], "load-payload.log")
+        self.run(["insmod", self.workload_module,
+                  f"protocol={PROTOCOLS.index(self.record['protocol'])}",
+                  f"test_case={CASES.index(self.record['case'])}"], "load-payload.log")
         self.loaded_source = True
         layout = self.counts("initial")
         rt.require(layout["a"] and layout["b"] and layout["entry"] and layout["spin_call"],
                    "missing physical/control identity")
+        rt.require(layout["m"] and layout["native_marker"] and
+                   layout["protocol"] == PROTOCOLS.index(self.record["protocol"]) and
+                   layout["test_case"] == CASES.index(self.record["case"]),
+                   "payload case/control identity differs")
         self.record.update(layout=layout, entry_range=[layout["entry"], layout["entry"] + 1],
                            caller_abi="clobber")
         (PARAMETERS / "bench_lock_addr").write_text(str(layout["a"]))
@@ -337,39 +424,14 @@ class MixedSession(Session):
         self.faults()
         after = self.counts("transfer-drain")
         delta = {key: self.counters()[key] - counters_before[key] for key in counters_before}
-        rt.require(delta == dict(bench_jit_bodies=1, bench_jit_completions=0),
-                   "expected one partial delegated W body: " + str(delta), "DATA_ERROR")
-        rt.require(after["prefix"] == after["suffix"] == after["combiner_bodies"] == 1 and
-                   after["owner_before"] == after["combiner_owner"] == after["c_task"] != 0 and
-                   after["owner_after"] == after["w_task"] != after["c_task"] and
-                   after["samples"] >= 2 and after["steal_attempts"] >= 10000 and
-                   after["steals"] == 0 and after["done"] == after["ready"] == after["started"] == 31 and
-                   after["prefix_observed"] == after["thief_done"] == 1,
-                   "owner/effect/no-gap/reacquisition observations differ: " + str(after), "DATA_ERROR")
-        pids = {row["role"]: row["pid"] for row in self.record["workers"]}
-        layout = self.record["layout"]
-        transfers = trace_records(self.messages, "kd_mutex transfer: ")
-        rt.require(transfers == [dict(outer=f"{layout['a']:x}", executor=str(pids[COMBINER]),
-                                    owner=str(pids[WAITER]), target=f"{layout['spin_call']:x}", pending="1")],
-                   "missing/extraneous actual owner exchange: " + str(transfers), "DATA_ERROR")
-        begins = trace_records(self.messages, "kd_native begin: ")
-        rt.require(len(begins) == 1 and begins[0]["task"] == str(pids[WAITER]) and
-                   int(begins[0]["outer"], 16) == layout["a"] and
-                   int(begins[0]["entry"], 16) == layout["entry"] and
-                   int(begins[0]["ip"], 16) == layout["spin_call"] and
-                   int(begins[0]["cpu"]) == self.record["cpus"][COMBINER] and
-                   int(begins[0]["sp"], 16) != 0 and begins[0]["held"] == begins[0]["remaining"] == "1" and
-                   begins[0]["mutex"] == "1" and begins[0]["outer_released"] == "0",
-                   "native resume did not preserve the pending B CALL: " + str(begins), "DATA_ERROR")
-        rt.require(trace_records(self.messages, "kd_native ack: ") ==
-                   [dict(task=str(pids[WAITER]), lock=f"{layout['a']:x}", mutex="1", last_spin="0")] and
-                   trace_records(self.messages, "kd_native complete: ") ==
-                   [dict(task=str(pids[WAITER]), outer=f"{layout['a']:x}", mutex="1")],
-                   "physical unlock/retirement ACK differs", "DATA_ERROR")
+        # Save the joined observations even if a protocol-specific assertion
+        # fails. Joined callers alone do not authorize skipping exact drain.
+        self.record.update(after=after, jit_delta=delta)
+        self.save()
+        observations = validate_result(self.record, after, delta, self.messages)
         publication_after = self.publication()
         rt.require(publication_after == self.record["publication"], "immutable image changed", "DATA_ERROR")
-        self.record.update(after=after, jit_delta=delta, owner_transfers=transfers,
-                           native_begin=begins, publication_after=publication_after)
+        self.record.update(observations, publication_after=publication_after)
         self.verify()
         self.save()
 
@@ -381,7 +443,7 @@ class MixedSession(Session):
             self.measure()
             self.cleanup()
             stats = trace_records(self.messages, "kd_native stats: ")
-            rt.require(stats == [dict(started="1", completed="1", unlocks="1")],
+            rt.require(stats == [self.record["expected_native_stats"]],
                        "final exact native counters differ: " + str(stats), "DATA_ERROR")
             self.record.update(execution_status="OK", native_stats=stats)
         except Exception as error:
@@ -408,6 +470,10 @@ def main():
     parser.add_argument("--cpus", type=rt.cpu_list, default=rt.cpu_list("0-4"),
                         help="five distinct CPUs: delegation holder G, B holder, C, W, predecessor/thief T")
     parser.add_argument("--warmup-iterations", type=int, default=50000)
+    parser.add_argument("--protocol", choices=PROTOCOLS, default="owner-handoff",
+                        help="explicit runtime expectation; role-swap requires its source candidate")
+    parser.add_argument("--case", choices=CASES, default="simple",
+                        help="one bounded scenario; non-simple cases require role-swap")
     parser.add_argument("--warmup-rounds", type=int, default=4,
                         help="maximum real warmup rounds before refusing cold G/C/W CPUs (1..4)")
     kernel_identity.arguments(parser)
@@ -419,6 +485,11 @@ def main():
                "select five distinct available CPUs")
     rt.require(5000 <= args.warmup_iterations <= 200000, "warmup iterations out of range")
     rt.require(1 <= args.warmup_rounds <= 4, "warmup rounds out of range")
+    rt.require(args.protocol == "role-swap" or args.case == "simple",
+               "non-simple cases require --protocol role-swap")
+    if args.protocol == "role-swap":
+        rt.require("kd_mutex role exchange:" in (ROOT / "kernel_module/mutex/combiner.inc").read_text(),
+                   "role-swap runtime is absent; integrate its reviewed candidate before this probe")
     out = args.output.resolve()
     rt.require(not out.exists() and not out.is_relative_to(ROOT), "new output outside source required")
     idle()
@@ -497,16 +568,17 @@ def main():
         idle()
         session = MixedSession(out, dict(name="session", arm="kdlock", lock_kind="mutex", entry_abi=2,
             delegate=True, cpus=args.cpus, warmup_iterations=args.warmup_iterations,
-            warmup_rounds=args.warmup_rounds,
+            warmup_rounds=args.warmup_rounds, protocol=args.protocol, case=args.case,
             kernel_identity=identity, snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]), binaries, verify)
         session.execute()
         verify()
         idle()
-        rt.write_json(out / "result.json", dict(passed=True, drained=True, after=session.record["after"],
+        rt.write_json(out / "result.json", dict(passed=True, drained=True, protocol=args.protocol,
+            case=args.case, after=session.record["after"],
             jit_delta=session.record["jit_delta"], native_stats=session.record["native_stats"],
             source_retirement=session.record["retired"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
-        print("PASS: actual failed CAS; C -> W physical owner; no thief acquisition; exact suffix, ACK, C reacquisition and drain")
+        print(f"PASS: {args.protocol}/{args.case}; failed CAS, exact owner/body/ACK evidence and drain")
         return 0
     except Exception as error:
         rt.write_json(out / "failure.json", dict(error=str(error), status=getattr(error, "status", "RUN_FAILED"),

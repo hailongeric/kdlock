@@ -6,6 +6,9 @@
 
 enum mixed_role { MIXED_GATE, MIXED_SPIN, MIXED_COMBINER, MIXED_WAITER,
 		  MIXED_THIEF, MIXED_ROLES };
+enum mixed_protocol { MIXED_OWNER_HANDOFF, MIXED_ROLE_SWAP };
+enum mixed_case { MIXED_SIMPLE, MIXED_C_NATIVE, MIXED_C_EARLY_SPIN,
+		  MIXED_W_EARLY_SPIN, MIXED_W_EARLY_MUTEX, MIXED_CASES };
 struct mixed_run {
 	__u32 role, iterations;
 	__u64 returned, errors;
@@ -20,6 +23,9 @@ struct mixed_snapshot {
 	__u64 c_task, w_task, warm_ops, armed;
 	__u64 warm_eligible, entry_checked, entry_eligible;
 	__u64 preholder_release, preholder_done, g_task, t_task;
+	__u64 protocol, test_case, native_marker, m, m_owner;
+	__u64 c_native_task, c_native_owner, c_native_flags, c_native_visits;
+	__u64 early_unlocked, early_inner_held;
 	__s64 waiters;
 };
 #define MIXED_RUN _IOWR('M', 1, struct mixed_run)
