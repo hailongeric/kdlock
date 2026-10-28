@@ -1,0 +1,192 @@
+{
+  "baseline_commit": "67361fee6440765e130385b2961246a41052b953",
+  "candidate_commit": "738770bb07bfbb8cba2e6efb2cb6a444bf35be5f",
+  "guest_evidence": "/root/kdlock-evidence/10.176.26.71/bench/api-spin-20261029",
+  "duration_ms": 2000,
+  "post_work_rounds": 64,
+  "observations_per_coordinate": 1,
+  "performance_accepted": false,
+  "scope": "18 completed individual observations; initial controller owner.json remains failed; DIRECT and public call shells remain separate.",
+  "rows": [
+    {
+      "arm": "baseline-direct",
+      "cachelines": 1,
+      "workers": 1,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 7698828.235132768,
+      "peak_ops_s": 7705582.688124227,
+      "execution_class": "NO_JIT",
+      "session": "c01-t01-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "baseline-direct",
+      "cachelines": 1,
+      "workers": 20,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6486874.599825896,
+      "peak_ops_s": 6498003.373265868,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t20-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "baseline-direct",
+      "cachelines": 1,
+      "workers": 36,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6102307.5397253875,
+      "peak_ops_s": 6115834.35304628,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t36-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "baseline-direct",
+      "cachelines": 8,
+      "workers": 1,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 7689144.888398157,
+      "peak_ops_s": 7697894.673926523,
+      "execution_class": "NO_JIT",
+      "session": "c08-t01-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "baseline-direct",
+      "cachelines": 8,
+      "workers": 20,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6429628.9424642185,
+      "peak_ops_s": 6440047.9978294065,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t20-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "baseline-direct",
+      "cachelines": 8,
+      "workers": 36,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 5934755.4901908925,
+      "peak_ops_s": 6040065.291586289,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t36-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 1,
+      "workers": 1,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 7698811.937087639,
+      "peak_ops_s": 7703845.4667735,
+      "execution_class": "NO_JIT",
+      "session": "c01-t01-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 1,
+      "workers": 20,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 7055433.364442745,
+      "peak_ops_s": 7063885.774975554,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t20-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 1,
+      "workers": 36,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 5856153.720484932,
+      "peak_ops_s": 6754316.003777999,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t36-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 8,
+      "workers": 1,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 7697771.705332264,
+      "peak_ops_s": 7702358.950343633,
+      "execution_class": "NO_JIT",
+      "session": "c08-t01-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 8,
+      "workers": 20,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 6941598.7706183195,
+      "peak_ops_s": 6950364.066617776,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t20-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-public",
+      "cachelines": 8,
+      "workers": 36,
+      "caller_shell": "spin_public_clobber",
+      "whole_ops_s": 6549146.704270407,
+      "peak_ops_s": 6624360.908844044,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t36-r00-direct-kdlock-adaptive-public"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 1,
+      "workers": 1,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 7703062.65318247,
+      "peak_ops_s": 7707230.056799902,
+      "execution_class": "NO_JIT",
+      "session": "c01-t01-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 1,
+      "workers": 20,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6475412.350368952,
+      "peak_ops_s": 6481941.332950307,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t20-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 1,
+      "workers": 36,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 5968341.662581752,
+      "peak_ops_s": 6171242.012621181,
+      "execution_class": "RETURNED_JIT",
+      "session": "c01-t36-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 8,
+      "workers": 1,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 7697230.658557006,
+      "peak_ops_s": 7702906.407492607,
+      "execution_class": "NO_JIT",
+      "session": "c08-t01-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 8,
+      "workers": 20,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6438027.356657736,
+      "peak_ops_s": 6444347.061878478,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t20-r00-direct-kdlock-adaptive"
+    },
+    {
+      "arm": "candidate-direct",
+      "cachelines": 8,
+      "workers": 36,
+      "caller_shell": "cold_clobber",
+      "whole_ops_s": 6008624.192891341,
+      "peak_ops_s": 6065490.725172321,
+      "execution_class": "RETURNED_JIT",
+      "session": "c08-t36-r00-direct-kdlock-adaptive"
+    }
+  ]
+}

@@ -1,0 +1,913 @@
+{
+  "baseline_commit": "67361fee6440765e130385b2961246a41052b953",
+  "prior_api_commit": "5f96dd5c42a27583aef679554f31e41bcafef793",
+  "candidate_commit": "d9b2c57f6c2cf71019c1faea8711dc88425e33c7",
+  "guest_evidence": "/root/kdlock-evidence/10.176.26.71/bench/api-performance-20261029",
+  "duration_ms": 2000,
+  "post_work_rounds": 256,
+  "observations_per_coordinate": 1,
+  "performance_accepted": false,
+  "scope": "60 completed observations; one-round request fulfilled, runner three-round default completeness remains false; source generations and observations are not pooled.",
+  "rows": [
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 1,
+      "baseline_ops_s": 1915677.8303726837,
+      "prior_api_candidate_ops_s": 1915999.88289635,
+      "isolated_candidate_ops_s": 1911699.0029394575,
+      "change_from_baseline_percent": -0.20769815102219535,
+      "change_from_prior_api_percent": -0.22447182775350294,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t01-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 8,
+      "baseline_ops_s": 3687965.58418734,
+      "prior_api_candidate_ops_s": 3650750.5159658412,
+      "isolated_candidate_ops_s": 3609353.4335604203,
+      "change_from_baseline_percent": -2.1315857979797848,
+      "change_from_prior_api_percent": -1.1339334809206791,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t08-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 20,
+      "baseline_ops_s": 4583609.878459139,
+      "prior_api_candidate_ops_s": 4532490.939881351,
+      "isolated_candidate_ops_s": 4602620.443168722,
+      "change_from_baseline_percent": 0.4147509324238907,
+      "change_from_prior_api_percent": 1.54726185264491,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t20-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 32,
+      "baseline_ops_s": 4573802.654497118,
+      "prior_api_candidate_ops_s": 4500463.399670179,
+      "isolated_candidate_ops_s": 4466283.260657512,
+      "change_from_baseline_percent": -2.350765915400599,
+      "change_from_prior_api_percent": -0.7594804351741313,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t32-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 36,
+      "baseline_ops_s": 4257439.9916908145,
+      "prior_api_candidate_ops_s": 4330481.317504303,
+      "isolated_candidate_ops_s": 4238413.412366805,
+      "change_from_baseline_percent": -0.4469018790903445,
+      "change_from_prior_api_percent": -2.1260432360104886,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t36-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 1,
+      "write_percent": 100,
+      "workers": 60,
+      "baseline_ops_s": 4339713.20137778,
+      "prior_api_candidate_ops_s": 4345805.200514357,
+      "isolated_candidate_ops_s": 4347829.959165265,
+      "change_from_baseline_percent": 0.1870344285633374,
+      "change_from_prior_api_percent": 0.04659110469720229,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c01-kdlock-w100-t60-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 1,
+      "baseline_ops_s": 1916191.0250103022,
+      "prior_api_candidate_ops_s": 1916668.3932847052,
+      "isolated_candidate_ops_s": 1909824.3221063514,
+      "change_from_baseline_percent": -0.33225825718062874,
+      "change_from_prior_api_percent": -0.3570816528478793,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t01-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 8,
+      "baseline_ops_s": 3634284.419077869,
+      "prior_api_candidate_ops_s": 3636724.8518369477,
+      "isolated_candidate_ops_s": 3542705.5127055966,
+      "change_from_baseline_percent": -2.5198607431916042,
+      "change_from_prior_api_percent": -2.5852750197436825,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t08-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 20,
+      "baseline_ops_s": 4033538.047938766,
+      "prior_api_candidate_ops_s": 4100751.7457352495,
+      "isolated_candidate_ops_s": 4220505.882562048,
+      "change_from_baseline_percent": 4.635330878280097,
+      "change_from_prior_api_percent": 2.9202971614007422,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t20-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 32,
+      "baseline_ops_s": 4059558.067975182,
+      "prior_api_candidate_ops_s": 4152810.339510664,
+      "isolated_candidate_ops_s": 4159808.4486956974,
+      "change_from_baseline_percent": 2.469490004623043,
+      "change_from_prior_api_percent": 0.16851502026113963,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t32-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 36,
+      "baseline_ops_s": 3915062.083544596,
+      "prior_api_candidate_ops_s": 3972205.8593924236,
+      "isolated_candidate_ops_s": 3874720.5948549313,
+      "change_from_baseline_percent": -1.0304175982093433,
+      "change_from_prior_api_percent": -2.454184601409437,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t36-r00"
+      ]
+    },
+    {
+      "family": "mutex",
+      "cachelines": 16,
+      "write_percent": 100,
+      "workers": 60,
+      "baseline_ops_s": 3914358.9364747005,
+      "prior_api_candidate_ops_s": 4102452.5740894633,
+      "isolated_candidate_ops_s": 4004992.2113822056,
+      "change_from_baseline_percent": 2.3154053161289934,
+      "change_from_prior_api_percent": -2.375660923487677,
+      "jit_status": "PASS",
+      "samples": [
+        "mutex-cacheline-c16-kdlock-w100-t60-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 1,
+      "baseline_ops_s": 1787356.5842309317,
+      "prior_api_candidate_ops_s": 1787430.3658260938,
+      "isolated_candidate_ops_s": 1786567.8170880694,
+      "change_from_baseline_percent": -0.044130373861672734,
+      "change_from_prior_api_percent": -0.04825635473780787,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t01-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 8,
+      "baseline_ops_s": 11391449.701909939,
+      "prior_api_candidate_ops_s": 11454644.179061094,
+      "isolated_candidate_ops_s": 11328566.653345339,
+      "change_from_baseline_percent": -0.5520197183862985,
+      "change_from_prior_api_percent": -1.1006673253650567,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t08-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 20,
+      "baseline_ops_s": 8734872.716453027,
+      "prior_api_candidate_ops_s": 8933169.663159197,
+      "isolated_candidate_ops_s": 8935368.134977257,
+      "change_from_baseline_percent": 2.295344477619876,
+      "change_from_prior_api_percent": 0.024610210048137127,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t20-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 32,
+      "baseline_ops_s": 8587944.937905334,
+      "prior_api_candidate_ops_s": 7834819.4404125055,
+      "isolated_candidate_ops_s": 8423987.578299623,
+      "change_from_baseline_percent": -1.9091570892826648,
+      "change_from_prior_api_percent": 7.519868739388547,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t32-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 36,
+      "baseline_ops_s": 7448045.1505787,
+      "prior_api_candidate_ops_s": 6877999.916208952,
+      "isolated_candidate_ops_s": 7302670.710869078,
+      "change_from_baseline_percent": -1.9518469178228193,
+      "change_from_prior_api_percent": 6.1743355602452255,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t36-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 60,
+      "baseline_ops_s": 7388156.4217507895,
+      "prior_api_candidate_ops_s": 7349077.673420776,
+      "isolated_candidate_ops_s": 7254825.718039028,
+      "change_from_baseline_percent": -1.8046545863489638,
+      "change_from_prior_api_percent": -1.282500465638381,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w001-t60-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 1,
+      "baseline_ops_s": 1809840.9833856288,
+      "prior_api_candidate_ops_s": 1809079.5829973903,
+      "isolated_candidate_ops_s": 1807077.6984009119,
+      "change_from_baseline_percent": -0.15268109243209427,
+      "change_from_prior_api_percent": -0.11065763028299536,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t01-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 8,
+      "baseline_ops_s": 5918226.660870022,
+      "prior_api_candidate_ops_s": 5981087.104125345,
+      "isolated_candidate_ops_s": 5424865.470834688,
+      "change_from_baseline_percent": -8.33630102911277,
+      "change_from_prior_api_percent": -9.299674517480494,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t08-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 20,
+      "baseline_ops_s": 4973463.404812132,
+      "prior_api_candidate_ops_s": 5369000.013118479,
+      "isolated_candidate_ops_s": 4926285.463132443,
+      "change_from_baseline_percent": -0.9485933209851583,
+      "change_from_prior_api_percent": -8.245754310007802,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t20-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 32,
+      "baseline_ops_s": 4961043.4147226745,
+      "prior_api_candidate_ops_s": 5230251.556158547,
+      "isolated_candidate_ops_s": 4909780.435999468,
+      "change_from_baseline_percent": -1.0333104235910495,
+      "change_from_prior_api_percent": -6.1272601655599,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t32-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 36,
+      "baseline_ops_s": 4129385.391706142,
+      "prior_api_candidate_ops_s": 3863506.728449512,
+      "isolated_candidate_ops_s": 3935735.0926856413,
+      "change_from_baseline_percent": -4.689567106268333,
+      "change_from_prior_api_percent": 1.8695027422694688,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t36-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 60,
+      "baseline_ops_s": 3773406.2908961657,
+      "prior_api_candidate_ops_s": 3684419.171331722,
+      "isolated_candidate_ops_s": 3525726.64496232,
+      "change_from_baseline_percent": -6.563821302026362,
+      "change_from_prior_api_percent": -4.307124650858951,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c01-kdlock-w020-t60-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 1,
+      "baseline_ops_s": 1782254.5611412774,
+      "prior_api_candidate_ops_s": 1781959.5644963456,
+      "isolated_candidate_ops_s": 1778297.0385037416,
+      "change_from_baseline_percent": -0.22205148040140843,
+      "change_from_prior_api_percent": -0.20553361959361194,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t01-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 8,
+      "baseline_ops_s": 10081783.382559331,
+      "prior_api_candidate_ops_s": 10456458.950838832,
+      "isolated_candidate_ops_s": 10382109.36143593,
+      "change_from_baseline_percent": 2.9788973585381573,
+      "change_from_prior_api_percent": -0.711039843913297,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t08-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 20,
+      "baseline_ops_s": 10817592.314168606,
+      "prior_api_candidate_ops_s": 9916494.569845378,
+      "isolated_candidate_ops_s": 10682623.956633624,
+      "change_from_baseline_percent": -1.2476746545366124,
+      "change_from_prior_api_percent": 7.725808564630632,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t20-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 32,
+      "baseline_ops_s": 11018969.818171948,
+      "prior_api_candidate_ops_s": 10797553.978390854,
+      "isolated_candidate_ops_s": 11075774.608510721,
+      "change_from_baseline_percent": 0.5155181589216573,
+      "change_from_prior_api_percent": 2.576700525662301,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t32-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 36,
+      "baseline_ops_s": 9347115.017243534,
+      "prior_api_candidate_ops_s": 9206613.968145903,
+      "isolated_candidate_ops_s": 9695038.455891369,
+      "change_from_baseline_percent": 3.722254813447634,
+      "change_from_prior_api_percent": 5.305147901664742,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t36-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 60,
+      "baseline_ops_s": 9877021.881164715,
+      "prior_api_candidate_ops_s": 9609214.954179998,
+      "isolated_candidate_ops_s": 9746269.643550823,
+      "change_from_baseline_percent": -1.3238022471453115,
+      "change_from_prior_api_percent": 1.4262839370785985,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w001-t60-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 1,
+      "baseline_ops_s": 1804922.9832198785,
+      "prior_api_candidate_ops_s": 1804272.982539215,
+      "isolated_candidate_ops_s": 1801343.631562954,
+      "change_from_baseline_percent": -0.19831049248091315,
+      "change_from_prior_api_percent": -0.1623563066459166,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t01-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 8,
+      "baseline_ops_s": 4081102.4383964813,
+      "prior_api_candidate_ops_s": 3933356.443443088,
+      "isolated_candidate_ops_s": 4013981.311901995,
+      "change_from_baseline_percent": -1.6446812474733896,
+      "change_from_prior_api_percent": 2.0497727479874994,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t08-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 20,
+      "baseline_ops_s": 4695769.050846229,
+      "prior_api_candidate_ops_s": 4867493.846446267,
+      "isolated_candidate_ops_s": 4870313.476402579,
+      "change_from_baseline_percent": 3.717057284256664,
+      "change_from_prior_api_percent": 0.05792775595125921,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t20-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 32,
+      "baseline_ops_s": 4683603.985427412,
+      "prior_api_candidate_ops_s": 4669795.677806517,
+      "isolated_candidate_ops_s": 4691375.196639485,
+      "change_from_baseline_percent": 0.165923746675678,
+      "change_from_prior_api_percent": 0.46210841591047824,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t32-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 36,
+      "baseline_ops_s": 3762682.006041453,
+      "prior_api_candidate_ops_s": 3754545.998350742,
+      "isolated_candidate_ops_s": 3736626.8540738397,
+      "change_from_baseline_percent": -0.6924622363988941,
+      "change_from_prior_api_percent": -0.4772652748101458,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t36-r00"
+      ]
+    },
+    {
+      "family": "rwsem",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 60,
+      "baseline_ops_s": 3593286.227067967,
+      "prior_api_candidate_ops_s": 3665720.077296713,
+      "isolated_candidate_ops_s": 3537720.7378699393,
+      "change_from_baseline_percent": -1.5463696929973736,
+      "change_from_prior_api_percent": -3.491792519006709,
+      "jit_status": "PASS",
+      "samples": [
+        "rwsem-cacheline-c16-kdlock-w020-t60-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 1,
+      "baseline_ops_s": 1917897.8521463268,
+      "prior_api_candidate_ops_s": 1917449.9005132143,
+      "isolated_candidate_ops_s": 1915338.0820718159,
+      "change_from_baseline_percent": -0.13346748741839276,
+      "change_from_prior_api_percent": -0.11013682500039534,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t01-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 8,
+      "baseline_ops_s": 9316988.950720765,
+      "prior_api_candidate_ops_s": 7977197.510290264,
+      "isolated_candidate_ops_s": 8816805.534987202,
+      "change_from_baseline_percent": -5.368509272460487,
+      "change_from_prior_api_percent": 10.525100119608144,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t08-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 20,
+      "baseline_ops_s": 8997734.646001365,
+      "prior_api_candidate_ops_s": 8366597.115820042,
+      "isolated_candidate_ops_s": 8342836.462181271,
+      "change_from_baseline_percent": -7.278478523604093,
+      "change_from_prior_api_percent": -0.28399423696215953,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t20-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 32,
+      "baseline_ops_s": 8385845.472819667,
+      "prior_api_candidate_ops_s": 8703120.14630787,
+      "isolated_candidate_ops_s": 8429838.112229956,
+      "change_from_baseline_percent": 0.5246058915929108,
+      "change_from_prior_api_percent": -3.1400466669858518,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t32-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 36,
+      "baseline_ops_s": 7692099.18576415,
+      "prior_api_candidate_ops_s": 7542677.063413469,
+      "isolated_candidate_ops_s": 7621414.07364096,
+      "change_from_baseline_percent": -0.9189313660178389,
+      "change_from_prior_api_percent": 1.0438867999455148,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t36-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "workers": 60,
+      "baseline_ops_s": 7481145.269748511,
+      "prior_api_candidate_ops_s": 7568896.349350873,
+      "isolated_candidate_ops_s": 7096407.15616168,
+      "change_from_baseline_percent": -5.142770253942208,
+      "change_from_prior_api_percent": -6.24251107930307,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w001-t60-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 1,
+      "baseline_ops_s": 1918132.3898699256,
+      "prior_api_candidate_ops_s": 1916848.9555700643,
+      "isolated_candidate_ops_s": 1918008.5070995102,
+      "change_from_baseline_percent": -0.0064585099062819395,
+      "change_from_prior_api_percent": 0.06049258738287655,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t01-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 8,
+      "baseline_ops_s": 5924163.98499595,
+      "prior_api_candidate_ops_s": 5865334.123138883,
+      "isolated_candidate_ops_s": 5940621.364401308,
+      "change_from_baseline_percent": 0.2778008753140382,
+      "change_from_prior_api_percent": 1.2835968025319167,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t08-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 20,
+      "baseline_ops_s": 5656721.574396582,
+      "prior_api_candidate_ops_s": 5595929.258290761,
+      "isolated_candidate_ops_s": 5731520.64700616,
+      "change_from_baseline_percent": 1.3223042998639523,
+      "change_from_prior_api_percent": 2.4230361474729234,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t20-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 32,
+      "baseline_ops_s": 5547628.163875221,
+      "prior_api_candidate_ops_s": 5491260.39104996,
+      "isolated_candidate_ops_s": 5531606.348369368,
+      "change_from_baseline_percent": -0.28880478346012817,
+      "change_from_prior_api_percent": 0.7347303614515743,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t32-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 36,
+      "baseline_ops_s": 4419587.859233368,
+      "prior_api_candidate_ops_s": 4223381.69131892,
+      "isolated_candidate_ops_s": 4511560.816798718,
+      "change_from_baseline_percent": 2.0810301886679428,
+      "change_from_prior_api_percent": 6.823421289914311,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t36-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "workers": 60,
+      "baseline_ops_s": 3564493.5807453673,
+      "prior_api_candidate_ops_s": 3523608.842584235,
+      "isolated_candidate_ops_s": 3579899.697583686,
+      "change_from_baseline_percent": 0.4322105367656981,
+      "change_from_prior_api_percent": 1.5975341621111028,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c01-kdlock-w020-t60-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 1,
+      "baseline_ops_s": 1918119.2555439323,
+      "prior_api_candidate_ops_s": 1918610.208163116,
+      "isolated_candidate_ops_s": 1917917.6886843296,
+      "change_from_baseline_percent": -0.010508567651368317,
+      "change_from_prior_api_percent": -0.036094850107637466,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t01-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 8,
+      "baseline_ops_s": 10834296.287558287,
+      "prior_api_candidate_ops_s": 11282957.25224204,
+      "isolated_candidate_ops_s": 11019944.012287209,
+      "change_from_baseline_percent": 1.7135189937727002,
+      "change_from_prior_api_percent": -2.3310665287025523,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t08-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 20,
+      "baseline_ops_s": 10189993.720621178,
+      "prior_api_candidate_ops_s": 10129372.327677423,
+      "isolated_candidate_ops_s": 9564310.0769928,
+      "change_from_baseline_percent": -6.140176930258557,
+      "change_from_prior_api_percent": -5.57845276494231,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t20-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 32,
+      "baseline_ops_s": 10178160.287274908,
+      "prior_api_candidate_ops_s": 9909128.135794243,
+      "isolated_candidate_ops_s": 10268479.817019692,
+      "change_from_baseline_percent": 0.8873856099289812,
+      "change_from_prior_api_percent": 3.626471232392081,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t32-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 36,
+      "baseline_ops_s": 8339045.2216266105,
+      "prior_api_candidate_ops_s": 8475154.608370863,
+      "isolated_candidate_ops_s": 8502192.837219462,
+      "change_from_baseline_percent": 1.9564303976880026,
+      "change_from_prior_api_percent": 0.31902932864367184,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t36-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "workers": 60,
+      "baseline_ops_s": 8253378.15314175,
+      "prior_api_candidate_ops_s": 8283740.398276613,
+      "isolated_candidate_ops_s": 8341206.5080421325,
+      "change_from_baseline_percent": 1.064150379041462,
+      "change_from_prior_api_percent": 0.6937217609749746,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w001-t60-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 1,
+      "baseline_ops_s": 1918360.0097677782,
+      "prior_api_candidate_ops_s": 1918717.9275675137,
+      "isolated_candidate_ops_s": 1918015.42647098,
+      "change_from_baseline_percent": -0.01796238949121065,
+      "change_from_prior_api_percent": -0.03661304699561496,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t01-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 8,
+      "baseline_ops_s": 4306389.2469407655,
+      "prior_api_candidate_ops_s": 4275796.942853713,
+      "isolated_candidate_ops_s": 4307166.781579491,
+      "change_from_baseline_percent": 0.01805537293866344,
+      "change_from_prior_api_percent": 0.733660628533972,
+      "jit_status": "NO_JIT",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t08-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 20,
+      "baseline_ops_s": 4072815.003190648,
+      "prior_api_candidate_ops_s": 4196786.049467847,
+      "isolated_candidate_ops_s": 4278466.46819247,
+      "change_from_baseline_percent": 5.049369167043305,
+      "change_from_prior_api_percent": 1.9462612046897254,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t20-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 32,
+      "baseline_ops_s": 4184995.7822069833,
+      "prior_api_candidate_ops_s": 4185378.7000047234,
+      "isolated_candidate_ops_s": 4257030.560822206,
+      "change_from_baseline_percent": 1.7212628725096213,
+      "change_from_prior_api_percent": 1.711956454917729,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t32-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 36,
+      "baseline_ops_s": 3231127.534945319,
+      "prior_api_candidate_ops_s": 3250112.496189061,
+      "isolated_candidate_ops_s": 3281910.0843458106,
+      "change_from_baseline_percent": 1.5716665111874306,
+      "change_from_prior_api_percent": 0.9783534629657975,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t36-r00"
+      ]
+    },
+    {
+      "family": "rwlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "workers": 60,
+      "baseline_ops_s": 2439121.187480145,
+      "prior_api_candidate_ops_s": 2501260.7323358944,
+      "isolated_candidate_ops_s": 2456728.672017714,
+      "change_from_baseline_percent": 0.7218782169556404,
+      "change_from_prior_api_percent": -1.7803845773644134,
+      "jit_status": "PASS",
+      "samples": [
+        "cacheline-c16-kdlock-w020-t60-r00"
+      ]
+    }
+  ]
+}

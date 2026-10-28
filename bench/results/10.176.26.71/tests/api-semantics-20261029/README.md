@@ -295,8 +295,9 @@ output creation or module work; its log remains
 is `/tmp/kdlock-mixed-transfer-20261029-r2-live.log`. The older setup failure
 below remains failed. The successful probe validates physical handoff, retained
 unlock ACK and C's later reacquisition. It does not validate queued role exchange,
-multiple-owner chains or performance. New recheck/probe archives are pending;
-the original thirteen-tree archive receipt below has its original scope.
+multiple-owner chains or performance. The follow-up archive receipt below
+preserves this probe and the recheck;
+the original thirteen-tree archive receipt retains its original scope.
 
 ## Failed live owner-handoff setup
 
@@ -328,3 +329,55 @@ compressed-hash and complete path/type/size/mode/owner/link inventory checks on
 `380G10`, without extraction or guest execution. It includes both comparison
 trees, strict-pin runs/failures, API/basic/JIT runs and the failed transfer setup.
 Archive integrity and archive-time idle do not change any original test verdict.
+
+## Public spin comparison and isolated performance candidates
+
+The [spin comparison](spin-api-comparison.json) preserves 18 completed two-second
+observations: baseline DIRECT and candidate DIRECT/public, c01/c08, post64,
+workers 1/20/36. All contended points returned JIT bodies and drained. The initial
+orchestration attempted a noncanonical source path and failed before build;
+its `owner.json` remains failed. The three subsequent canonical-source commands
+completed separately. Their rates must not be pooled with the post256 comparison.
+
+| Body / workers | Baseline DIRECT Mops/s | Candidate DIRECT | Candidate public |
+| --- | ---: | ---: | ---: |
+| c01 / 1 | 7.698828 | 7.703063 | 7.698812 |
+| c01 / 20 | 6.486875 | 6.475412 | 7.055433 |
+| c01 / 36 | 6.102308 | 5.968342 | 5.856154 |
+| c08 / 1 | 7.689145 | 7.697231 | 7.697772 |
+| c08 / 20 | 6.429629 | 6.438027 | 6.941599 |
+| c08 / 36 | 5.934755 | 6.008624 | 6.549147 |
+
+The public c01/36 point measured 5.856154 Mops/s over the whole interval and
+6.754316 in its peak window; wall time was 2.000997 seconds. This difference does
+not establish a long drain or a causal regression. Single observations and
+changed call shells do not establish a general gain or neutrality.
+
+The separate candidate `d9b2c57f6c2cf71019c1faea8711dc88425e33c7` combines the
+local mutex unlock bypass from `667cb8f46e56fc6c1e3bf1c0cfb3d2547fbf99b8` and
+rwlock contended-reader outlining from `915a9258bc6d3318bf1383283167271ccc67a2a8`.
+It remains isolated; neither optimization is promoted. Its
+[60-point comparison](isolated-performance-comparison.json) completed all three
+family blocks, one observation per point. The runner's default three-round
+summary still reports `complete: false`; this is not a claim of three rounds.
+The candidate did not consistently improve throughput. In particular, rwlock
+c01/1% still loses 5.37% at eight workers and 7.28% at twenty against the original
+baseline. The no-regression gate remains open.
+
+For this isolated source, two basic unit programs and five directly affected
+drivers passed (7/7), including eight unlock mutations. The four-family live basic
+run passed with final idle, and the live rwlock reader IPI probe passed. The first
+owner-handoff attempt failed warmup eligibility before arming: one million warmup
+acquisitions left CPU mask 30. All callers exited; exact source/frame state and
+normal daemon/retirement/module cleanup were verified. The retry with 200,000
+iterations per role passed failed-CAS owner handoff and drain. The failed attempt
+remains failed and does not count as a transfer exercise. Neither attempt tests
+the later queued role-exchange candidate.
+
+Nine additional evidence trees (18 archives, 16,337 inventory paths) are retained
+under `bench/results/10.176.26.71/raw/tests/api-followup-20261029/`. Their
+[offline verification](followup-archive-verification.json) checked every compressed
+hash and complete inventory on `380G10`. They include the recheck, spin comparison,
+isolated performance round, corrected owner-handoff probe, candidate basic/IPI
+checks, failed/retried warmup and original unit/controller logs. Archive-time idle
+and integrity do not change the recorded test or performance verdicts.
