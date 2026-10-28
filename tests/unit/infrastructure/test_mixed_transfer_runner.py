@@ -66,6 +66,28 @@ class MixedTransferRunnerTests(unittest.TestCase):
         with patch("builtins.open", mock_open()), patch.object(runner.fcntl, "ioctl", ioctl):
             self.assertEqual(runner.snapshot(), dict(zip(runner.FIELDS, values)))
 
+    def test_outer_release_overlay_changes_only_existing_quiet_sink(self):
+        source = (ROOT / "kernel_module/mutex/combiner.inc").read_text()
+        loud = 'pr_info("kd_mutex outer release:'
+        quiet = 'KD_PR_ROUTINE("kd_mutex outer release:'
+        self.assertEqual(source.count(loud), 1)
+        prepared = source.replace(loud, quiet, 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "kernel_module/mutex/combiner.inc"
+            path.parent.mkdir(parents=True)
+            path.write_text(prepared)
+            receipt = runner.observe_outer_release(root)
+            self.assertEqual(path.read_text(), source)
+            self.assertEqual(receipt["path"], "kernel_module/mutex/combiner.inc")
+            self.assertEqual(receipt["sites"], ["kd_mutex outer release:"])
+            self.assertNotEqual(receipt["before"], receipt["after"])
+            for invalid in (source, prepared + "\n" + quiet):
+                path.write_text(invalid)
+                with self.assertRaises(runner.rt.Failure):
+                    runner.observe_outer_release(root)
+                self.assertEqual(path.read_text(), invalid)
+
     def test_failed_wait_preserves_last_snapshot_and_process_status(self):
         for reason in ("timeout", "payload", "exit"):
             with self.subTest(reason=reason), tempfile.TemporaryDirectory() as tmp:
