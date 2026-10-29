@@ -1,5 +1,77 @@
 # Best-case nano profiles and controls
 
+## October 29 baseline profiling overlay
+
+This isolated tools-only branch starts from
+`1c86d6d1a15d96d75c09504f1041772247707804` to compare its c01 mutex hot path with
+`99f383624faa872a76521d1b5be7faea586591c1`. The overlay must leave every file under
+`kernel_module/`, `include/` and `workload_modules/` byte-identical to the baseline.
+Only the profiling driver's Linux 7 kernel/bundle/recovery argument handling and
+20-worker selection need adaptation, with focused tests. The existing baseline
+runner already supports Linux 7 and validates the baseline's actual module
+metadata. Do not fabricate READY policy, spin-budget or pin-diagnostic fields
+that this provider does not export.
+
+The stat/record collection, parsing, flat-IP summary, symbol retention and
+diagnostic-report functions are AST-identical between these source versions.
+Retain that common measurement core; preserve each arm's real source/driver hash
+and identify the baseline runtime separately from its tools-overlay commit.
+Historical batch utilities remain present but are outside this experiment.
+Implementation, focused VM checks, both profiling arms and their results are
+pending. No performance gain follows from this plan.
+
+After the scored nano campaign is drained and archived, run only c01 at 20
+workers, once per mode for each frozen source. Use `/usr/bin/perf` (verified
+version 7.0.14) through the explicit `--perf` path, retain its bytes/SHA and
+version, and use the same binary for both arms. The driver fixes the same bulk
+ioctl, ABI2 shell, post256 work, CPU 0–19 workers, collector CPU 63, warmup and
+2-second measurement. `mutex-throughput` below is the existing CLI identifier
+for c01; it is not a different workload.
+
+Set `KDPROFILE_SOURCE_COMMIT`, `KDPROFILE_PERF` and `KDPROFILE_OUTPUT` to the full
+frozen tools/source commit, authenticated tool path and a new external evidence
+directory. The recovery environment must satisfy [VM operations](../../docs/operations/VM.md).
+The baseline and candidate are synchronized/run only at separate confirmed-idle
+boundaries. Use the same command shape on each arm:
+
+```sh
+/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3 \
+  /root/host_fs/kdlock/bench/nano/profile.py \
+  --source-root /root/host_fs/kdlock --source-commit "$KDPROFILE_SOURCE_COMMIT" \
+  --profiles mutex-throughput --threads 20 --backends kdlock \
+  --perf "$KDPROFILE_PERF" --mode stat \
+  --events cycles:k instructions:k cache-misses:k task-clock context-switches cpu-migrations page-faults \
+  --mutex-batch-limit 1024 --mutex-numa-boundary 1024 \
+  --kernel-source /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build \
+  --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdlock1-20261027 \
+  --kernel-variant kdlock1 --output "$KDPROFILE_OUTPUT"
+```
+
+For the separate record observation, use a new output directory and replace
+`--mode stat --events ...` with
+`--mode record --record-event cycles:k --frequency 997`. Do not enable
+`--allow-multiplex`, call-chain unwinding, batch counters or pin counters. Missing
+PMU events, unsuccessful capability checks, lost/invalid samples or an unconfirmed
+drain are not passes; preserve the failure before selecting any further action.
+
+Stat inherits only the measured client and includes its startup/collection;
+warmup and translation are outside the scope. Normalize counts by that session's
+completed operations and retain raw running-time ratios. The flat-IP summary
+separately selects `rb_worker` samples within the settled full-cohort interval.
+Use retained exact provider/workload ELFs and JIT address ranges to distinguish
+combiner preparation/completion, origin polling, JIT body, local mutex/OSQ and
+other kernel work. Flat samples do not unwind across borrowed/generated stacks,
+and an IP near a load does not establish a cache-miss cause. Stat context switches
+and task-clock can expose a broad off-CPU change, but are not per-lock parking
+counts or a scheduler latency trace.
+
+Keep all four observations diagnostic and unscored, separate from the one-round
+nano tables. Cycles/instructions per operation, IPC and settled-IP distributions
+can guide a subsequent narrowly targeted cache/branch diagnostic; they cannot
+by themselves establish exact per-instruction cost, physical-cache placement,
+or a performance gain. Do not add another runtime refinement before inspecting
+these matched observations.
+
 This is stage 1 of the [project roadmap](../../docs/ROADMAP.md): establish the
 mechanism's favorable regime and retain its costs elsewhere. Gains here motivate
 the scoped MM experiments; they do not predict gains from local mmap locking or
