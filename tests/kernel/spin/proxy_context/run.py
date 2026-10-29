@@ -17,6 +17,7 @@ probe.RUNNER = 'tests/kernel/spin/proxy_context'
 probe.PAYLOAD = probe.RUNNER+'/payload'
 probe.MODULE = 'kd_spin_proxy_context_test'
 probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (12,), 6, 0
+probe.IMAGE_GENERATION_REQUIRED = False
 probe.SUCCESS_MESSAGE = ('PASS: ordinary IF-on/off returned delegation; homogeneous BH/RCU/preempt/migration local; '
                          'mixed-IF stress only; exact effects/state and source drain')
 BIND, MODE = 0x40084505, 0x40044504
@@ -118,7 +119,7 @@ class ContextSession(probe.EscapeSession):
             row=self.phase(name,self.record['iterations'],mode)
             row['context_oracle']=phase_result(row['jit_delta'],expected)
             probe.rt.require(self.registry(name,0)==self.record['image_registry'] and
-                             self.publication()==self.record['publication'], 'immutable root image changed')
+                             self.publication()==self.record['publication'], 'published root image changed')
             self.save()
         self.record.update(jit_status='IF_MATCHED_COMPLETE_AND_LOCAL_CONTEXTS',escape_events=[],accepted=True,
                            mixed_if_scope='stress only; deterministic mismatch proof belongs to production unit fixture',

@@ -18,7 +18,9 @@ The original ordinary macro's anonymous return address is resolved from the
 single actual clobber-lock CALL relocation in the built payload, checked against
 the loaded module's own function bounds and direct CALL bytes, and registered
 outside execution. The payload is not rewritten to use the named DIRECT shell.
-One immutable published image is retained through every phase. Warmup runs with
+One unchanged published image is checked through every phase. Ordinary spin
+images with requirements zero use registry generation zero; this probe does
+not claim the immutable marker-image generation contract. Warmup runs with
 IRQs enabled and must establish actual returned delegation; publication alone
 is insufficient.
 

@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location('proxy_context_live_checks',
@@ -28,6 +29,14 @@ class ContextWitness(unittest.TestCase):
                          (self.row(1,guards=1),'delegated'),(self.row(-1),'stress')):
             with self.subTest(row=row,mode=mode),self.assertRaises(runner.probe.rt.Failure):
                 runner.phase_result(row,mode)
+
+    def test_exact_ordinary_and_marker_image_contracts(self):
+        for required,requirement,accepted in ((False,0,0),(True,2,1)):
+            with patch.object(runner.probe,'IMAGE_GENERATION_REQUIRED',required), \
+                 patch.object(runner.probe,'IMAGE_REQUIREMENT',requirement):
+                self.assertTrue(runner.probe.image_contract(dict(requirements=requirement,generation=accepted)))
+                self.assertFalse(runner.probe.image_contract(dict(requirements=requirement^2,generation=accepted)))
+                self.assertFalse(runner.probe.image_contract(dict(requirements=requirement,generation=1-accepted)))
 
     def test_mixed_stress_never_claims_mismatch_refusal(self):
         for bodies in (0,3):
