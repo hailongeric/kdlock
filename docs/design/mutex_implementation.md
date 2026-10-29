@@ -497,6 +497,54 @@ between proof and first origin use. All new source/VM gates and any performance
 benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
 fairness are unchanged.
 
+### READY-first waiter and initial-budget split candidate
+
+This isolated candidate starts from
+`99f383624faa872a76521d1b5be7faea586591c1`. It changes only the origin's
+`kd_mutex_wait_for_result` control flow; joint COMPLETE retirement, the separate
+exact-phase ownership predicate and successor notification prefetch are excluded.
+The existing default is 65,536 PAUSEs before the first scheduling decision, with
+positive compile-time budget overrides. Keep publication, physical ownership,
+source/frame lifetimes, withdrawal arbitration and the 1024/1024 limits intact.
+
+An acquire-loaded READY equality is a complete validation of that snapshot. It
+may take the common initial-spin arm directly to one PAUSE and one decrement.
+The non-READY arm must handle zero as retained completion, WAIT as forced
+cancellation, CLAIMED as the same PAUSE/decrement, and reject every other byte.
+Each continuing iteration still loads the notification afresh. The positive
+initial budget permits a finite loop without a repeated budget-is-zero test.
+The helper remains always inline in the notrace shadow-stack slowpath; no new
+helper entry, callback, per-CPU access or scheduler action may enter that loop.
+
+After the final initial PAUSE, mark expiry once and enter the expired decision
+with the **same pre-PAUSE READY or CLAIMED snapshot**. Do not reload or PAUSE at
+this transition. READY alone considers rescheduling and the existing one-shot
+gate reservation/node CAS. Release the reservation before examining the CAS
+result or unpinning. A lost CAS returning zero, WAIT or CLAIMED still takes the
+next acquire-load before choosing completion or forced cancellation. CLAIMED
+consumes the initial budget but never authorizes withdrawal on that snapshot.
+The expired loop retains the exact existing load/classify/PAUSE/decision order.
+
+Shared exits merge each origin observation exactly once while pinned. Zero at
+entry still counts as a retained, within-budget episode with no PAUSE. A result
+published during the final initial PAUSE still counts as budget-expired. Keep
+WAIT/zero-only withdrawn polling, conditional rescheduling and restoration of
+exactly one preemption pin. No WAIT rearm or notification store is added.
+Diagnostic denominators remain helper episodes, not CPU time or acquisitions;
+mode 0 erases observations and mode 2 retains the same schema and counters.
+
+Focused source-derived fixtures must cover budgets one and greater than one,
+exact threshold snapshots, CLAIMED through expiry, zero/WAIT races, failed gate
+reservation and node CAS, invalid states in each phase, and exact pin/counter
+ordering. Retain existing proxy-origin and diagnostic fixture receipts. Their
+modeled scheduling/atomics do not establish live scheduler or weak-memory
+correctness. Both default-off and mode-2 emitted code must preserve the checks,
+barriers and publication-to-poll contract without outlined calls. The possible
+six-instruction READY poll versus thirteen in the preserved predecessor ELF is
+an emission hypothesis, not a measured path, latency estimate or performance
+gain. VM correctness, emitted-code inspection and matched timing remain pending;
+this candidate is not promoted.
+
 ### Optional READY diagnostics and prior experiments
 
 Mode 0 compiles observations out. Mode 1 emits batch schema 5: `body_unavailable`
