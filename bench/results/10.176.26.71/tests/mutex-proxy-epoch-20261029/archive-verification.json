@@ -1,0 +1,207 @@
+{
+  "completed": true,
+  "transport_sha256": "cd382fcf918726b254cf89cfcaede613f2369c18ad37b80a47cd21df0bc90769",
+  "trees": [
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/bench/mutex-proxy-epoch-diagnostics-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 735,
+        "regular_files": 643,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "a8e6e51b615da1db1cfd5a64ec98fbf6df6f8054b044317927e38a186f2739db",
+            "regular_files": 639
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "1a02e548dca6c2dc39386cc132e2156bfbc314781700e3f0127b24a00797cbc0",
+            "regular_files": 4
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/bench/mutex-proxy-epoch-nano-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 2924,
+        "regular_files": 2420,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "2f2b4b7fb336ac190045a135610c5d42bb8f46418cc963a8e135db65077b8f12",
+            "regular_files": 2414
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "57098bd2eb07b2cfd261770e4046031115d96a7e44c352820a60a55e0401afcb",
+            "regular_files": 6
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 4,
+        "regular_files": 4,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "865cd09be806144a14c0fcf9cd35cbff17d5bd887cda50455926a3bff0de00c4",
+            "regular_files": 3
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "406669e90ccb9eafcef9b8f60cfb884740e1db70534e4a7389f95b878c7fe185",
+            "regular_files": 1
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-debug-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 112,
+        "regular_files": 98,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "d6ef0b1c1bcb1258301755a9aafb19f0758785b9371e91084a1c8ce4c316b3d3",
+            "regular_files": 88
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "f56be65b1cd67c95d9aee66dd5824f09a441e4e76e1c177e8f241fcb123f5efe",
+            "regular_files": 10
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-inline-debug-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 271,
+        "regular_files": 263,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "62c1857b931ca8a9c1b2b5588bd8504caea32fcaace9af8f80c4c38b0deb8db1",
+            "regular_files": 258
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "841f9ba1a2f3be512dc342c23ecbfccb231637316adddd2273d9814b60bde88e",
+            "regular_files": 5
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-live-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 5302,
+        "regular_files": 4707,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "a25f4c4daf7f676006d6946249294de4584c659e52e6dd4ba33eff479395f0b7",
+            "regular_files": 4695
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "8df293aff5f0cb35817076ca69a36ac8cec239f7ecc4f1a4d662d8a582ed820f",
+            "regular_files": 12
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-opt-debug-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 271,
+        "regular_files": 263,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "dc4938a3170d3db1b5f284c83afc52c6f81bc91e3719e24005ffda33450492c0",
+            "regular_files": 258
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "704b980511c5ad04062c7b88d4de1763304987364aa4c32a520dd277219eb293",
+            "regular_files": 5
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-r2-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 4,
+        "regular_files": 4,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "df4c43c1a2c919de8b6953d5254cc770735d0ba49fb09c26bbd64ab886196261",
+            "regular_files": 3
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "39acc792c2fb448406069af41534caba4d584eb077172a534318d251cf1ce300",
+            "regular_files": 1
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-proxy-epoch-20261029/tests/mutex-proxy-epoch-r3-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 161,
+        "regular_files": 154,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "0adf1466ec62a09c722b141e8b5ec62c4b4d514c62aa26b1e7dd281efe1f658d",
+            "regular_files": 149
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "2cffc5c8a5383d939ac1c15772a83d4b3741ea61a5647254df3f3c67f306194c",
+            "regular_files": 5
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    }
+  ],
+  "inventory_paths": 9784,
+  "archives": 18,
+  "scope": "Read-only offline archive verification; archived code was not executed."
+}

@@ -1,0 +1,89 @@
+[
+  {
+    "name": "mutex-proxy-epoch-20261029",
+    "owner": {
+      "completed": false,
+      "source_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "blocks": [
+        {
+          "name": "unit",
+          "argv": [
+            "make",
+            "-C",
+            "/root/host_fs/kdlock/tests/unit",
+            "run",
+            "PY_TESTS=mutex/test_mutex_proxy_pin.py mutex/test_mutex_pin_window.py mutex/test_mutex_resources.py mutex/test_mutex_terminal.py mutex/test_mutex_policy.py mutex/test_mutex_outer_progress.py mutex/test_mutex_custody.py mutex/test_mutex_custody_acquire.py mutex/test_mutex_batch_diag.py mutex/test_mutex_pin_diag.py mutex/test_mutex_state.py mutex/test_mutex_count.py mutex/test_mutex_balances.py mutex/test_mutex_api.py mutex/test_mutex_outer_api.py bench/test_nano_profile.py"
+          ],
+          "returncode": 2
+        }
+      ]
+    },
+    "unit_log_tail": " exact FULL\nPASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata\nPASS actual compiled outer continuation: strict ABI2 admission and generated execution\n\n...........................................\n----------------------------------------------------------------------\nRan 43 tests in 0.053s\n\nOK\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nUnit tests: 12 passed, 6 failed\nmake: *** [Makefile:32: run] Error 1\nmake: Leaving directory '/root/host_fs/kdlock/tests/unit'\n"
+  },
+  {
+    "name": "mutex-proxy-epoch-r2-20261029",
+    "owner": {
+      "completed": false,
+      "source_commit": "3088f12b81b7fe827bd2f99c4e8fb7aae2224144",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "blocks": [
+        {
+          "name": "unit",
+          "argv": [
+            "make",
+            "-C",
+            "/root/host_fs/kdlock/tests/unit",
+            "run",
+            "TESTS=",
+            "PY_TESTS=mutex/test_mutex_proxy_pin.py mutex/test_mutex_terminal.py mutex/test_mutex_policy.py mutex/test_mutex_batch_diag.py mutex/test_mutex_pin_diag.py mutex/test_mutex_state.py"
+          ],
+          "returncode": 2
+        }
+      ]
+    },
+    "unit_log_tail": "thorized\nmutex state mutation detected: releasing-authorized\nmutex state mutation detected: combiner-not-authorized\nmutex state mutation detected: held-before-physical\nmutex state mutation detected: free-before-physical-release\nmutex state mutation detected: releasing-phase-skipped\nmutex state mutation detected: post-release-clears-successor\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nUnit tests: 4 passed, 2 failed\nmake: *** [Makefile:32: run] Error 1\nmake: Leaving directory '/root/host_fs/kdlock/tests/unit'\n"
+  },
+  {
+    "name": "mutex-proxy-epoch-r3-20261029",
+    "owner": {
+      "completed": true,
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "blocks": [
+        {
+          "name": "unit",
+          "argv": [
+            "make",
+            "-C",
+            "/root/host_fs/kdlock/tests/unit",
+            "run",
+            "TESTS=",
+            "PY_TESTS=mutex/test_mutex_proxy_pin.py mutex/test_mutex_pin_diag.py"
+          ],
+          "returncode": 0
+        },
+        {
+          "name": "build-default-off",
+          "argv": [
+            "make",
+            "-C",
+            "/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-epoch-r3-20261029/default-off/kernel_module",
+            "KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+            "W=1",
+            "KDLOCK_SELFTEST=0",
+            "KDLOCK_NUMA=1",
+            "KDLOCK_SPIN_BATCH=1024",
+            "KDLOCK_MUTEX_BATCH=1024",
+            "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+            "KDLOCK_MUTEX_DIAGNOSTICS=0",
+            "KDLOCK_MUTEX_PIN_TSC_SHIFT=0",
+            "UBSAN_SANITIZE=n"
+          ],
+          "returncode": 0
+        }
+      ]
+    },
+    "unit_log_tail": "on detected: missing-episode-finish\norigin diagnostic mutation detected: missing-budget-expiry\norigin diagnostic mutation detected: missing-expiry-check\norigin diagnostic mutation detected: missing-withdrawal\norigin diagnostic mutation detected: missing-reservation\norigin diagnostic mutation detected: missing-forced-cancel\norigin diagnostic mutation detected: finish-after-unpin\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nUnit tests: 2 passed, 0 failed\nmake: Leaving directory '/root/host_fs/kdlock/tests/unit'\n"
+  }
+]

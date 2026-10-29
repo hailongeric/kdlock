@@ -1,0 +1,412 @@
+{
+  "scope": "Read-only offline validation of fetched controller/result receipts and committed probe contracts; no VM access, tests, builds, or timing.",
+  "verified": true,
+  "input_file": "/tmp/kdlock-epoch-live-results-20261029.json",
+  "input_sha256": "5e3a8dbcbac785e402f133bfac25e371e26bfc94b37a6d0c9b803b25ad0e69d5",
+  "controller_source": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+  "runtime_source": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+  "runtime_headers_and_kernel_module_identical_between_runtime_and_controller": true,
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "kernel_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "blocks_completed": 9,
+  "blocks_serial": true,
+  "basic": {
+    "families": [
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "mutex",
+        "jit_completions": 1587473,
+        "jit_entries": 1587473,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-epoch-live-20261029/basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+        "receipt_sha256": "ea946d717d965d76771fa78338a80fcc3b90f65321a88b9245706018f6acc032"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "rwsem",
+        "jit_completions": 1590206,
+        "jit_entries": 1590206,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-proxy-epoch-live-20261029/basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+        "receipt_sha256": "988f5aac6ccc08b616ace2af33dd583d9b382e1cec9f5a69aff59495f490afe0"
+      }
+    ],
+    "final_idle": true,
+    "functional_only": true
+  },
+  "local_api": {
+    "passed": true,
+    "execution": "ordinary-local",
+    "drained": true,
+    "final_idle": true,
+    "jit_bodies": 0,
+    "probe": {
+      "address_reuse": "PASS",
+      "api_helpers": "PASS",
+      "containing_layout": "PASS",
+      "drain": "PASS",
+      "interruptible": "EINTR",
+      "io": "PASS",
+      "killable": "EINTR",
+      "lock_align": 8,
+      "lock_size": 32,
+      "nested_sleep": "PASS",
+      "no_aux": "PASS",
+      "no_destroy": "PASS",
+      "objects": 2048,
+      "operations": 160000,
+      "ring_cancel": "PASS",
+      "ring_handoff": "PASS",
+      "workers": 8
+    },
+    "binaries": {
+      "source/kernel_module/kdlock_km.ko": "2a57124cdc35db9c3fddf232bc00ec8f1083bea9c7353bf439ccc3c410dcdc8b",
+      "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "d3a0f5811aa06f782a2c6f01a05f8c3774a3440f11f400d187b1c09983353378"
+    },
+    "source_retirement": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    }
+  },
+  "queued": {
+    "passed": true,
+    "drained": true,
+    "final_idle": true,
+    "jit_bodies": 0,
+    "ready_policy": {
+      "mutex_ready_window": 8,
+      "mutex_spin_budget": 65536
+    },
+    "context_rows": 14,
+    "all_context_fields_zero": true,
+    "source_retirement": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    }
+  },
+  "role_cases": [
+    {
+      "name": "simple",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10008,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-native",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "1",
+          "started": "1",
+          "unlocks": "1"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10010,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-mutex",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10013,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "simple-cross-numa",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        33,
+        34
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 33,
+      "combiner_node": 0,
+      "waiter_node": 1,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10016,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "total_context_rows": 74,
+  "all_context_fields_zero": true,
+  "probe_sources": [
+    {
+      "path": "tests/kernel/mutex/local/run.py",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "d1366965749a757787ec63636b25fe81c61d4e27",
+      "sha256": "f58bd3c1e62201e818832133626adeb16efe627fa669c6fa45810cb9d97653f2",
+      "latest_path_commit": "1657644c20d43897653c946a899c5c04189eac55"
+    },
+    {
+      "path": "tests/kernel/mutex/local/kd_mutex_local_probe.c",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "039ad1a5041d40c3cd4849ef6016eecff86f0c1e",
+      "sha256": "5a1361653c07e4d3596c0815afba3126d8069bb69f02ee74559ce5be9ab9ecdf",
+      "latest_path_commit": "e25c3380bcc3043613f05024bdb795e7d8a49598"
+    },
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/run.py",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "62ed67a8b9573629702f722815c4f80d0d237c0c",
+      "sha256": "9eb37983b8d72dcdc7ec32a9fbe3fc82b638e1ff19c0575298caa4ac753aca4c",
+      "latest_path_commit": "39abf5b13e0cf272a8775622c081d7bdfb530a81"
+    },
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/payload/module.c",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "4943ee0d471435bba33cce74529fba49bdcb35a3",
+      "sha256": "50b79264cbfa4b1a1c93b02f67e79de301ffeac8608c77affec82dc4d16c44b4",
+      "latest_path_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/run.py",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "6c01ce380884f3495486c44efef20aeaf330fb73",
+      "sha256": "619cf49e04f15b074b02cce66c14874d266b433e5188e5772b54b8a9a9610ff0",
+      "latest_path_commit": "43418d5a3c8659311b0d008310f70e78f245eeee"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/payload/kd_mutex_proxy_pin_probe.c",
+      "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+      "blob": "dfbba3516a680ad6f39eec1d7de58aed55378f2e",
+      "sha256": "81c316fc49780e77182930ff2b2e29a63280960ac28fc25f003c16c110cfcecf",
+      "latest_path_commit": "43418d5a3c8659311b0d008310f70e78f245eeee"
+    }
+  ],
+  "mixed_probe_integrated_ancestor": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+  "gate_probe_review": {
+    "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+    "changed_in": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+    "path": "tests/kernel/mutex/mixed_transfer/payload/module.c",
+    "mask": "~KD_MUTEX_GATE_WITHDRAW",
+    "expected_phase": "KD_MUTEX_GATE_HELD",
+    "affected_sites": [
+      "hold_spin observes physical owner W before native suffix",
+      "MIXED_RELEASE observes G ownership with exactly two queued producers"
+    ],
+    "unknown_bits_still_rejected": true,
+    "physical_owner_checks_preserved": true,
+    "exact_waiter_count_preserved": true,
+    "rationale": "The proxy epoch closes before native W continuation. A concurrent origin withdrawal may set WITHDRAW while phase remains HELD; masking only that flag retains rejection of every other unexpected bit.",
+    "source_diff_sha256": "70ed92dcd652b39ee754be6fb57629b461125797519834e36dd693c4a1944a5a"
+  },
+  "analyzer_sha256": "4500e6bc67774115b177bf5454918e0cc080fbda441edd102cdeb71413386b5d",
+  "limits": [
+    "Frozen source/binary archive integrity is a separate preservation check; this input contains summary receipts rather than the archive trees.",
+    "Raw kernel logs, exact role-exchange/native ACK trace rows, publication hashes and module/task listings are not included; their validation is reported by the captured runners, whose source contracts were inspected.",
+    "The cross-NUMA controller requests C on CPU2/node0 and W on CPU33/node1 using the captured topology. Role context summaries do not repeat CPU IDs; actual affinity validation is performed by the runner.",
+    "The queued probe reports eventual scheduling and balanced joined-task contexts; it does not measure initial-budget duration, the greater-than-99-percent target, actual parking, or sleep frequency.",
+    "Correctness covers these bounded cases and original-task returns, not arbitrary nesting or all weak-memory interleavings.",
+    "The local API module and mixed/queued ioctl payloads provide bounded mechanism evidence, not real-world syscall workload validation.",
+    "No performance acceptance or unit-gate result follows from these live receipts."
+  ]
+}

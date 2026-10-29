@@ -1,0 +1,669 @@
+{
+  "schema": 1,
+  "kind": "compiler isolation evidence summary",
+  "reviewer": "/root/translation_limits_audit",
+  "compiler": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "execution_location": "VM on10.176.26.71, kernel7.0.0-38-kdlock1",
+  "original_fixture_commit": "3088f12b81b7fe827bd2f99c4e8fb7aae2224144",
+  "production_runtime_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+  "original_fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+  "original_generated_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+  "isolation_counts": {
+    "arms": 21,
+    "passed": 8,
+    "failed": 13,
+    "timeouts": 0,
+    "interpretation": "Diagnostic compiler arms, not a count of functional protocol tests. Every arm and failure remains recorded."
+  },
+  "diagnostic_trees": [
+    {
+      "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029",
+      "receipt": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/receipt.json",
+        "bytes": 27384,
+        "sha256": "e7ab163aec33dd496fdb1d75981ccc21c177f8552bab75b527e1f4acae7a8d63"
+      },
+      "archive": {
+        "path": "/tmp/kdlock-epoch-proxy-debug-evidence-20261029.tar",
+        "bytes": 1925120,
+        "sha256": "e9e12064f888cbf4983ab69b21bdfa6ae38be269ceef130027dcc2c82741d502"
+      },
+      "completed": true,
+      "arm_counts": {
+        "total": 5,
+        "passed": 2,
+        "failed": 3
+      },
+      "arms": [
+        {
+          "header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "observation_added": false,
+          "optimization": "-O2",
+          "uses_original_source_path": true,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "source-path-o2",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o2",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o2/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o2/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "observation_added": false,
+          "optimization": "-O2",
+          "uses_original_source_path": false,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "copy-original-o2",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o2",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o2/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o2/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "header_sha256": "7b33fec5d549d2617ecb70bcf81a489aaf43e9fa0364b142accbea9f1c75f321",
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "observation_added": true,
+          "optimization": "-O2",
+          "uses_original_source_path": false,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "copy-state-observed-o2",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2/run.stderr",
+            "bytes": 221,
+            "sha256": "e1ea2e1f1609c4f4dbe9b2a34d93d3f03fbacedba610d8f7c6d4c662fb9e594e"
+          }
+        },
+        {
+          "header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "observation_added": false,
+          "optimization": "-O0",
+          "uses_original_source_path": true,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "source-path-o0",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o0",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o0/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/source-path-o0/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "observation_added": false,
+          "optimization": "-O0",
+          "uses_original_source_path": false,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "copy-original-o0",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o0",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o0/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-original-o0/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029",
+      "receipt": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/receipt.json",
+        "bytes": 54220,
+        "sha256": "17d15c34ceabe21491765875d67cebfba64e6336ca8b7e9526f267369f8604a2"
+      },
+      "archive": {
+        "path": "/tmp/kdlock-epoch-proxy-opt-debug-evidence-20261029.tar",
+        "bytes": 12871680,
+        "sha256": "39e0d6d76b6eec50c2d68c63333032b2175f367c61f48cccc62933fee04c101b"
+      },
+      "completed": true,
+      "arm_counts": {
+        "total": 8,
+        "passed": 1,
+        "failed": 7
+      },
+      "arms": [
+        {
+          "flags": [
+            "-O1"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o1",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o1",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o1/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o1/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "flags": [
+            "-O2"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-ipa-vrp"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-ipa-vrp",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-vrp",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-vrp/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-vrp/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-tree-vrp"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-tree-vrp",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-vrp",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-vrp/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-vrp/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-ipa-cp"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-ipa-cp",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-cp",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-cp/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-cp/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-strict-aliasing"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-strict-aliasing",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-strict-aliasing",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-strict-aliasing/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-strict-aliasing/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-tree-dominator-opts"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-tree-dominator",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-dominator",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-dominator/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-tree-dominator/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-ipa-pure-const"
+          ],
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-no-ipa-pure-const",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-pure-const",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-pure-const/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2-no-ipa-pure-const/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        }
+      ]
+    },
+    {
+      "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029",
+      "receipt": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/receipt.json",
+        "bytes": 56260,
+        "sha256": "1dca4a6c365d822b7f77840e0e44227cc9ac693bac24065b4d0533cc43261a28"
+      },
+      "archive": {
+        "path": "/tmp/kdlock-epoch-proxy-inline-debug-evidence-20261029.tar",
+        "bytes": 13066240,
+        "sha256": "90b358df8040133210ce7acd55008d6f8b72deadf00b6d2908d2ea77db6dc3fe"
+      },
+      "completed": true,
+      "arm_counts": {
+        "total": 8,
+        "passed": 5,
+        "failed": 3
+      },
+      "arms": [
+        {
+          "flags": [
+            "-O2"
+          ],
+          "peer_annotation": null,
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-inline-small-functions"
+          ],
+          "peer_annotation": null,
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o2-no-inline-small",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-small",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-small/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-small/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-inline-functions"
+          ],
+          "peer_annotation": null,
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o2-no-inline-functions",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-functions",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-functions/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-functions/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "flags": [
+            "-O2",
+            "-fno-inline-functions",
+            "-fno-inline-small-functions"
+          ],
+          "peer_annotation": null,
+          "fixture_sha256": "d540ed3319d9bf697b6df370c5130b6d7f9e25b0c03a157f605bcb046c811a41",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o2-no-inline-both",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-both",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-both/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-no-inline-both/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "flags": [
+            "-O2"
+          ],
+          "peer_annotation": "noinline",
+          "fixture_sha256": "3f19e2069e86e43e18b23d2840c81a8f9a7d17ec9a227404670f2eeae8bf51fd",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-peer-noinline",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noinline",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noinline/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noinline/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          },
+          "annotation_target": "fixture gate_cas declaration and definition"
+        },
+        {
+          "flags": [
+            "-O2"
+          ],
+          "peer_annotation": "noipa",
+          "fixture_sha256": "fa8158fe103371a69a52bce1f5eac5cb25235448fe6947b1cf584115c220e4c3",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 1,
+          "run_timed_out": false,
+          "name": "o2-peer-noipa",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noipa",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noipa/run.stdout",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-peer-noipa/run.stderr",
+            "bytes": 183,
+            "sha256": "526c9c37264843a7cf04f01171e99bc194bedc38a12e76fad95511445e215d79"
+          },
+          "annotation_target": "fixture gate_cas declaration and definition"
+        },
+        {
+          "flags": [
+            "-O2"
+          ],
+          "peer_annotation": "load:noinline",
+          "fixture_sha256": "c55517d152e9111b14ba3346452d30bd8de563fe59d1bc8432812950c0de4fd2",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o2-load-noinline",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noinline",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noinline/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noinline/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "annotation_target": "fixture node_acquire declaration and definition"
+        },
+        {
+          "flags": [
+            "-O2"
+          ],
+          "peer_annotation": "load:noipa",
+          "fixture_sha256": "f82ac924d816941f8dfabaf22b1f680ece2e4e52990751601e2cb666c8d06c89",
+          "production_header_sha256": "3b67f43a0de8035e7e48e25266b6d0334eb57547dd34c4a7d166dc3f5e437f13",
+          "build_returncode": 0,
+          "run_returncode": 0,
+          "run_timed_out": false,
+          "name": "o2-load-noipa",
+          "directory": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noipa",
+          "run_stdout": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noipa/run.stdout",
+            "bytes": 176,
+            "sha256": "4fea7b24ae1b2ea38040042da0a140a810dd7e44cb978b305e25fed3baf08cc7"
+          },
+          "run_stderr": {
+            "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-inline-debug-20261029/o2-load-noipa/run.stderr",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "annotation_target": "fixture node_acquire declaration and definition"
+        }
+      ]
+    }
+  ],
+  "observed_failure": {
+    "route": "EARLY_DONE (0)",
+    "local_state_before_guard": 4,
+    "node_after_cas": 2,
+    "gate": 1,
+    "pins": 1,
+    "migration": 1,
+    "pauses": 0,
+    "need_resched_checks": 0,
+    "last_node_cas": {
+      "before": 4,
+      "after": 2,
+      "observed": 4
+    },
+    "stderr": {
+      "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2/run.stderr",
+      "bytes": 221,
+      "sha256": "e1ea2e1f1609c4f4dbe9b2a34d93d3f03fbacedba610d8f7c6d4c662fb9e594e"
+    },
+    "preprocessed_source": {
+      "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2/proxy-fixture.i",
+      "bytes": 132769,
+      "sha256": "d58bdab1bb8ac47801670f594e69a25df7ae356943d3d8ab8d41675c8b804986"
+    },
+    "assembly": {
+      "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-debug-20261029/copy-state-observed-o2/proxy-fixture.s",
+      "bytes": 21458,
+      "sha256": "5acfed9ae1877494a3f9b2b6d10c3249ac8ca9389325336a5db196acc6edfc78"
+    },
+    "assembly_observation": "Lines1120\u20131137 call fixture_cas, print its returned AL, then unconditionally print the initial-state BUG and exit; no predicate branch remains."
+  },
+  "first_observed_invalid_transform": {
+    "pass": "090i.inline",
+    "previous_pass": "089i.fnsummary",
+    "before": {
+      "file": "proxy-fixture.c.089i.fnsummary",
+      "line": 1587,
+      "function": "node_acquire/86",
+      "atomic_load_predicate": "op0 == &node.locked",
+      "failure_split_predicate": "op0 != &node.locked"
+    },
+    "after": {
+      "file": "proxy-fixture.c.090i.inline",
+      "lines": [
+        3688,
+        3701
+      ],
+      "functions": [
+        "node_acquire/203",
+        "node_acquire/202"
+      ],
+      "finding": "Both complementary call predicates become false in wait_case inline clones; both the valid atomic-load callee and failure split are replaced with __builtin_unreachable."
+    },
+    "later_effect": {
+      "file": "proxy-fixture.c.207t.dom3",
+      "line": 1886,
+      "finding": "The surviving wait_case invokes fixture_cas then unconditionally prints the initial-state failure and exits; the earlier unreachable valid continuation enables this collapse."
+    },
+    "artifacts": {
+      "proxy-fixture.c.089i.fnsummary": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/proxy-fixture.c.089i.fnsummary",
+        "bytes": 211115,
+        "sha256": "e5ed98b3db88d5c4a99129a83782e699a013c9f2863506c4086cf2a9342ebfa3"
+      },
+      "proxy-fixture.c.090i.inline": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/proxy-fixture.c.090i.inline",
+        "bytes": 295000,
+        "sha256": "4b7c46544d42ba372644b028b98c702556e776e23549f18891b46cd2008dede8"
+      },
+      "proxy-fixture.c.100t.fixup_cfg3": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/proxy-fixture.c.100t.fixup_cfg3",
+        "bytes": 39823,
+        "sha256": "a6a9f685044fbb0fc7bace58574b194f73f5e349834e11ba28ced01f32a82f48"
+      },
+      "proxy-fixture.c.109t.ccp2": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/proxy-fixture.c.109t.ccp2",
+        "bytes": 39327,
+        "sha256": "df578087f88aa7906b1b0f323b268e5b3942c310fc9f51aa4456fd3c98466ba6"
+      },
+      "proxy-fixture.c.207t.dom3": {
+        "path": "/tmp/kdlock-epoch-debug-inspect-20261029/mutex-proxy-epoch-opt-debug-20261029/o2/proxy-fixture.c.207t.dom3",
+        "bytes": 46470,
+        "sha256": "09534fa1ed252ac95a6965e1497f3b23099fcb9661f2f9b092b779d6e460f918"
+      }
+    }
+  },
+  "isolation_conclusion": {
+    "passed": [
+      "Both original O0 arms",
+      "O1 arm",
+      "O2 -fno-inline-small-functions",
+      "O2 -fno-inline-functions",
+      "O2 with both inlining flags disabled",
+      "O2 with node_acquire noinline only",
+      "O2 with node_acquire noipa only"
+    ],
+    "did_not_fix": [
+      "Unmodified O2",
+      "O2 with gate_cas noinline only",
+      "O2 with gate_cas noipa only",
+      "O2 with individually disabled ipa-vrp, tree-vrp, ipa-cp, strict-aliasing, tree-dominator or ipa-pure-const"
+    ],
+    "finding": "The observed failure is isolated to this fixture optimization context involving node_acquire inlining; the initial u8 predicate is not the first invalid transform."
+  },
+  "fix": {
+    "commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+    "path": "tests/unit/mutex/mutex_proxy_pin_fixture.c",
+    "change": "Add __attribute__((noinline)) to node_acquire declaration and definition and explain the captured compiler behavior.",
+    "source_artifact": {
+      "path": "/tmp/kdlock-mutex-proxy-epoch-20261029/tests/unit/mutex/mutex_proxy_pin_fixture.c",
+      "bytes": 11832,
+      "sha256": "31718094f3dd06bba23d07758e789e141e1ac08b6bf7a9168d018676f80b9e3b"
+    },
+    "scope": "Fixture-only call boundary. No production source, assertion, mutation or O2 flag changed.",
+    "validation_scope": "The recorded isolated node_acquire-noinline O2 arm passes. Subsequent affected-driver and live results belong to separate root receipts."
+  },
+  "production_crosscheck": "/tmp/kdlock-epoch-off-elf-independent-20261029.json",
+  "limits": [
+    "No source undefined behavior or macro name capture was identified in the independent review; this is not a proof that no UB exists in every execution.",
+    "The compiler implementation root cause and a minimal standalone reproducer remain unproved; no universal GCC15.2 correctness or failure claim is made.",
+    "All compiler execution was performed in the VM by root. This summary only reads preserved artifacts and writes JSON on the host.",
+    "No failed arm was discarded or promoted to a protocol pass; no performance claim follows from these isolation runs."
+  ]
+}

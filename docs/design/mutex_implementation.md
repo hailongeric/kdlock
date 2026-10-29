@@ -168,7 +168,7 @@ the saved pinned 4.590029 Mops/s. The budget target was met in those observation
 the no-regression target was not. Per-request claim traffic and cohort work
 remain hypotheses, not a measured causal breakdown.
 
-The next isolated plan amortizes withdrawal exclusion across an ordinary proxy
+The isolated batch-gate candidate amortizes withdrawal exclusion across an ordinary proxy
 batch using one additional bit in the existing full-word gate. After budget
 expiry and a scheduling request, an origin may reserve a short WITHDRAW phase
 only outside COMBINER, withdraw its exact READY node, and clear that bit before
@@ -189,6 +189,26 @@ requires fresh admission. An early outer unlock forbids re-entry into that
 detached queue. Verify both admission-race winners, flag preservation through
 physical release/acquisition, result-before-withdrawal, cold-service scheduling,
 role exchange and exact terminal cleanup before timing this alternative.
+
+The [batch-gate measurements](../../bench/results/10.176.26.71/tests/mutex-proxy-epoch-20261029/README.md)
+at runtime `41d887bd2bbf7e11b16635db3fb0f812290d9b02`, validated through
+`2d6e313b294632485ee973606813c1c14b6c3cc9`, passed the affected checks and nine
+live blocks. Both instrumented points again completed all wait episodes before
+budget expiry, without withdrawal or admission refusal. The diagnostics-free
+contended mutex points still lost 17.63–34.72% against pinned `1c86d6d1`;
+rwsem also has negative points. This candidate remains isolated.
+
+The next candidate removes future CLAIMED descriptors and their rolling refill
+and duplicate-CPU scans. The admitted epoch already prevents every READY origin
+from withdrawing. Keep one exact current invocation descriptor, fresh READY and
+self-CPU checks, current source/frame retirement and unconditional closure at
+every cold boundary. After closure, unselected READY origins may withdraw;
+they must be checked anew after fresh admission. Preserve the existing successor
+prefetch, 65536 initial budget and 1024/1024 limits. Optional diagnostics may
+observe up to eight distinct READY candidates once per admission, never wait for
+that count, and distinguish this cohort from the one current CLAIMED slot.
+This removes bookkeeping without substituting approximate ownership counters;
+correctness and performance acceptance remain open.
 
 ### Physical exclusion for ordinary and delegated callers
 

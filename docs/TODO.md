@@ -50,10 +50,14 @@ at `43418d5a`, validated through fixture correction `406c679b`, passed all affec
 checks and live mutex/rwsem, queued scheduling and six role placements. Its two
 instrumented points recorded 100% completion before the initial budget expired,
 but the one-round contended mutex measurements lost 26.60–39.89% versus the saved
-pinned baseline. It is not promoted. The next isolated plan uses the existing
-gate to arbitrate withdrawal once per ordinary batch, with admission ended
-before every sleepable/native boundary; the correctness and performance gates
-remain open.
+pinned baseline. It is not promoted. The [batch-gate follow-up](../bench/results/10.176.26.71/tests/mutex-proxy-epoch-20261029/README.md)
+at `41d887bd`, validated through `2d6e313b`, passed all 18 selected drivers and
+nine live blocks; two instrumented points again completed every wait episode
+before expiry. Its 36-point round still lost 17.63–34.72% at contended mutex
+points, with additional negative rwsem points. It is not promoted. The next
+isolated plan retains one exact current claim while the epoch protects all
+READY origins, removes future-claim refill bookkeeping, and preserves every
+sleepable/native boundary closure. The no-regression gate remains open.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.

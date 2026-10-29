@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "kind": "independent read-only emitted-code review",
+  "reviewer": "/root/translation_limits_audit",
+  "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+  "runtime_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+  "elf": {
+    "path": "/tmp/kdlock-epoch-r3-inspect-20261029/default-off/kernel_module/kdlock_km.ko",
+    "bytes": 4931128,
+    "sha256": "683596f65c98da05a55caed51114db738d352bdae5e7c7d0541f88fe75a42ae3"
+  },
+  "supporting_artifacts": {
+    "disassembly.txt": {
+      "path": "/tmp/kdlock-epoch-r3-inspect-20261029/disassembly.txt",
+      "bytes": 2290321,
+      "sha256": "a102f08851386e24f30412d96891de41949fd5473eec2e5bec70d4501920eef4"
+    },
+    "symbols.txt": {
+      "path": "/tmp/kdlock-epoch-r3-inspect-20261029/symbols.txt",
+      "bytes": 60925,
+      "sha256": "1bed0cf7829c8570fd0db5af391a8ffeb418838aec6bc8eacf75c2f49c3cacee"
+    },
+    "sections.txt": {
+      "path": "/tmp/kdlock-epoch-r3-inspect-20261029/sections.txt",
+      "bytes": 7288,
+      "sha256": "ae6ecfb84dbd4489c30ab44056745029432192e4f09c12fe8c47c9f0979cd103"
+    },
+    "modinfo.txt": {
+      "path": "/tmp/kdlock-epoch-r3-inspect-20261029/modinfo.txt",
+      "bytes": 2692,
+      "sha256": "681cca454cde095b9c3013f1fd7ba30f4b1ab9c85cfb000aa65f1333d20ae161"
+    }
+  },
+  "finding": "Requested narrow emitted-code gates pass; the fixture unconditional initial BUG is absent from this provider.",
+  "checks": {
+    "initial_state_guard": {
+      "symbol": "__kd_mutex_lock_slowpath",
+      "helper": "kd_mutex_wait_for_result (inlined)",
+      "cas_address": "0x19c19",
+      "operation": "locked byte cmpxchg INIT=4 to READY=2 at node offset0x131",
+      "compare_address": "0x19c23",
+      "compare": "cmp $0x4,%al",
+      "conditional_branch_address": "0x19c25",
+      "conditional_branch": "ja 0x1a155",
+      "invalid_target": "0x1a155: ud2",
+      "accepted_states": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "unconditional_bug": false
+    },
+    "initial_spin_budget": {
+      "load_address": "0x19c40",
+      "value": 65536,
+      "pause_address": "0x19c5a",
+      "decrement_address": "0x19c60",
+      "nonzero_budget_backedge": "0x19c63 ->0x19c77",
+      "ready_check_after_expiry": "0x19c65",
+      "first_need_resched_flag_load": "0x19c6a",
+      "flag_test": "0x19c6d: test $0x10,%al",
+      "finding": "The positive budget bypasses the scheduling flag read; initial READY origins reach it only after countdown expiry. Already withdrawn WAIT origins use the separate preemptible path."
+    },
+    "withdrawal_before_unpin": {
+      "gate_reservation_cas": "0x19eaf",
+      "node_READY_to_WAIT_cas": "0x19ec4",
+      "full_u32_withdraw_flag_clear_cas": "0x19edf",
+      "clear_retry": "0x19ee4 ->0x19ed6",
+      "preempt_count_decrement": "0x19fc5",
+      "finding": "Successful withdrawal clears WITHDRAW through the full-width release primitive before preempt_enable."
+    },
+    "ordinary_proxy_claim": {
+      "symbol": "kd_mutex_execute_cs",
+      "node_state_offset": "0x131",
+      "claim_value": 3,
+      "plain_store_addresses": [
+        "0x142a2",
+        "0x150b1",
+        "0x15bed"
+      ],
+      "READY_compare_addresses": [
+        "0x14299",
+        "0x150a8",
+        "0x15be1"
+      ],
+      "locked_node_claim_cas": false,
+      "finding": "Each observed claim is a plain byte store after READY and owner/epoch checks. Other tail/ownership CAS operations remain."
+    },
+    "owner_check_inlining": {
+      "execute_cs_outlined_kd_mutex_delegation_owned_calls": [],
+      "only_observed_whole_text_call": {
+        "caller": "__kd_mutex_unlock",
+        "address": "0x706"
+      },
+      "finding": "Exact owner and gate checks are emitted inline at proxy admission; the public callable ownership helper remains for its required caller."
+    },
+    "configuration": {
+      "mutex_batch_diag": 0,
+      "mutex_pin_tsc_shift": 0,
+      "mutex_ready_window": 8,
+      "mutex_spin_budget": 65536,
+      "mutex_batch": 1024,
+      "mutex_numa_boundary": 1024,
+      "percpu_section_hex": "0x1db0",
+      "percpu_bytes": 7600,
+      "optional_mutex_pin_or_batch_stats_symbols": [],
+      "vermagic": "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+    }
+  },
+  "scope": {
+    "host_actions": "Read-only source, saved disassembly/metadata and ELF hashing; no compilation, execution, module loading or VM access.",
+    "not_established": [
+      "Live correctness",
+      "Performance acceptance",
+      "All possible compiler transformations",
+      "Complete mitigation coverage"
+    ],
+    "timing_claim": false
+  }
+}
