@@ -14,9 +14,11 @@ and the three documented scope configuration changes. The diagnostic avoids a
 kernel rebuild solely to enable the page-table debugfs view.
 
 The module must be built only inside VM `10.176.26.71`, against
-`/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build`. First check its actual
-`Module.symvers` exports `lookup_address` and `kd_api_sites`; declaration in the
-captured Linux 7 header alone does not prove either export is available. A missing
+`/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build`. The fetched actual `Module.symvers` (SHA-256
+`e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b`)
+exports `lookup_address` (CRC `0x448a179e`) and `kd_api_sites`
+(CRC `0x4df9740c`) as GPL symbols from `vmlinux`. The runner rechecks these
+exports; declaration in a header alone would not establish availability. A missing
 export or failed build is a blocker, not a skip/pass. Keep this probe's source
 commit and complete file hashes separate from the frozen provider generation.
 Copy its reviewed files to an external DATA directory; never synchronize this
@@ -55,5 +57,5 @@ Boot orchestration must account for that persistent observation explicitly;
 unloading the module does not reset taint. A failed page-permission assertion
 never becomes a successful proof because the module unloaded.
 
-Status: source and static review only. No build, exported-symbol check, live load,
-unload or page-permission validation has run for this probe.
+Status: source, static review and saved actual exported-symbol evidence only.
+No build, live load, unload or page-permission validation has run for this probe.
