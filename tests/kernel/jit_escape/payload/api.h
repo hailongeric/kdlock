@@ -32,4 +32,6 @@ struct jit_escape_snapshot {
 #define JIT_ESCAPE_HOT _IO('E', 4)
 /* Rwlock/rwsem shared-reader control; the command layouts stay fixed. */
 #define JIT_ESCAPE_READ _IOWR('E', 5, struct jit_escape_run)
+/* Change only the next idle phase; existing RUN/SNAPSHOT layouts stay fixed. */
+#define JIT_ESCAPE_COLD _IO('E', 6)
 #endif

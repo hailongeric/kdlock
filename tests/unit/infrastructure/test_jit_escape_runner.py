@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -177,6 +177,99 @@ class CallerLifetimeTests(unittest.TestCase):
                 self.assertTrue(all(p.returncode == 1 for p in callers))
                 self.assertEqual(session.cleanups, 1)
                 self.assertTrue(session.record["drained"])
+
+
+class RepeatedMarkerProbe(runner.EscapeSession):
+    """Drive real measure/registry validators; only device/work receipts are fake."""
+    def __init__(self, path, failure=None, family="mutex"):
+        self.path, self.failure = path, failure
+        self.current_phase = None
+        self.names = []
+        self.messages = ""
+        self.image = dict(status=0, entry=0x1000, lock_kind=2 if family in ("mutex", "rwsem") else 1,
+                          entry_abi={"mutex": 2, "rwsem": 2, "spin": 1, "rwlock": 3}[family],
+                          generation=7, code=0x9000, requirements=1 if family in ("mutex", "rwsem") else 33)
+        self.record = dict(warmup_iterations=10, iterations=10,
+                           layout=dict(entry=0x1000, marker=0x1010),
+                           registry_kind=self.image["lock_kind"], entry_abi=self.image["entry_abi"],
+                           image_registry=[dict(self.image)], publication={"image": "exact-bytes"})
+
+    def phase(self, name, iterations, hot):
+        self.current_phase = name
+        self.names.append(name)
+        delta = dict(bench_jit_bodies=5, bench_jit_completions=0 if hot else 5,
+                     native_escape_count=5 if hot else 0)
+        if self.failure == "no-cold-return" and name == "cold-after-escape":
+            delta = dict.fromkeys(delta, 0)
+        if self.failure == "no-repeated-marker" and name == "hot-repeat":
+            delta = dict.fromkeys(delta, 0)
+        if self.failure == "marker-count-mismatch" and hot:
+            delta["native_escape_count"] = 4
+        if self.failure == "native-counted-complete" and hot:
+            delta["bench_jit_completions"] = 1
+        if hot:
+            (self.path / (name + "-callers.json")).write_text(json.dumps([
+                dict(pid=123, role="writer"), dict(pid=124, role="reader")]))
+            # Rate limiting may suppress the second phase's log entirely.
+            if name == "hot-escape":
+                pid = 124 if self.failure == "reader-marker" else 123
+                action = ("native_suffix_and_disable" if self.failure == "old-action" else
+                          "native_suffix_keep_eligible")
+                self.messages += (f"reason=NATIVE_ESCAPE entry=0x1000 rip=0x1010 generation=7 "
+                                  f"waiter_pid={pid} action={action}\n")
+        return dict(name=name, jit_delta=delta)
+
+    def current_registry(self):
+        image = dict(self.image)
+        if self.current_phase == "hot-escape":
+            if self.failure == "sticky-ban":
+                image["status"] = -3
+            elif self.failure == "new-generation":
+                image["generation"] += 1
+        return [image]
+
+    def publication(self):
+        if self.failure == "changed-bytes" and self.current_phase == "hot-repeat":
+            return {"image": "different-bytes"}
+        return dict(self.record["publication"])
+
+    def verify(self):
+        pass
+
+    def save(self):
+        pass
+
+    def faults(self):
+        pass
+
+
+class RepeatedMarkerTests(unittest.TestCase):
+    def exercise(self, failure=None, family="mutex"):
+        with tempfile.TemporaryDirectory() as directory:
+            session = RepeatedMarkerProbe(Path(directory), failure, family)
+            with patch("builtins.open", mock_open()), \
+                    patch.object(runner.fcntl, "ioctl") as ioctl, \
+                    patch.object(runner, "image_registry", side_effect=session.current_registry), \
+                    patch.object(runner.rt, "parameters", return_value={}):
+                runner.EscapeSession.measure(session)
+            self.assertEqual([call.args[1] for call in ioctl.call_args_list],
+                             [runner.COLD, runner.HOT, runner.COLD, runner.HOT])
+            self.assertEqual(session.names, ["cold-warmup", "cold-delegated", "hot-escape",
+                                             "cold-after-escape", "hot-repeat"])
+            self.assertTrue(session.record["accepted"])
+            self.assertEqual(session.record["jit_status"], "COLD_JIT_TAKEN_NATIVE_COLD_JIT_TAKEN_NATIVE")
+
+    def test_each_family_requires_cold_taken_cold_taken_same_image(self):
+        for family in ("mutex", "spin", "rwlock", "rwsem"):
+            with self.subTest(family=family):
+                self.exercise(family=family)
+
+    def test_lost_eligibility_identity_and_completion_are_failures(self):
+        for failure in ("no-cold-return", "no-repeated-marker", "marker-count-mismatch",
+                        "native-counted-complete", "reader-marker", "old-action", "sticky-ban",
+                        "new-generation", "changed-bytes"):
+            with self.subTest(failure=failure), self.assertRaises(runner.rt.Failure):
+                self.exercise(failure)
 
 
 if __name__ == "__main__":

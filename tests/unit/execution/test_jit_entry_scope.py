@@ -128,6 +128,14 @@ def main(executor=None, benchmark=False):
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "instruction-marker-still-disables": (
+            "atomic64_inc(&kd_native_escape_count);",
+            "kd_image_disable(exe); atomic64_inc(&kd_native_escape_count);",
+        ),
+        "instruction-marker-reopens-entry": (
+            "atomic64_inc(&kd_native_escape_count);",
+            "exe->status_code = KD_EXE_NORMAL; atomic64_inc(&kd_native_escape_count);",
+        ),
         "direct-entry-executor-is-waiter": (
             "frame->logical_task && frame->logical_task != current &&",
             "frame->logical_task &&",

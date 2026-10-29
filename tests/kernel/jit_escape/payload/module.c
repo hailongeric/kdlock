@@ -397,7 +397,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		return copy_to_user(user, &run, sizeof(run)) ? -EFAULT : 0;
 	}
 	if (cmd != JIT_ESCAPE_SNAPSHOT && cmd != JIT_ESCAPE_PREPARE &&
-	    cmd != JIT_ESCAPE_HOT)
+	    cmd != JIT_ESCAPE_HOT && cmd != JIT_ESCAPE_COLD)
 		return -ENOTTY;
 	/* Phase changes and inspection require every workload caller to join. */
 	if (atomic_cmpxchg_acquire(&control, 0, -1))
@@ -416,11 +416,11 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		ret = kd_mutex_prepare(&test_lock, (unsigned long)jit_escape_entry,
 				       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 #endif
-	} else if (cmd == JIT_ESCAPE_HOT) {
+	} else if (cmd == JIT_ESCAPE_HOT || cmd == JIT_ESCAPE_COLD) {
 		if (!escape_idle())
 			ret = -EBUSY;
 		else
-			WRITE_ONCE(hot, 1);
+			WRITE_ONCE(hot, cmd == JIT_ESCAPE_HOT);
 	} else {
 		snapshot.prefix = prefix;
 		snapshot.suffix = suffix;

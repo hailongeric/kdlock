@@ -20,7 +20,10 @@ shell's named entry aliases DIRECT's actual captured continuation and must pass
 the runner's ELF audit before loading. Atomic active-writer counts
 check that no two tasks execute the protected operation simultaneously.
 
-After all workers finish, the runner makes the condition true. That branch uses
+After all workers finish, the runner makes the condition true. It later clears
+and sets the condition again through idle-only controls, without preparing or
+replacing the image. Both cold phases must complete delegated bodies and both
+taken phases must reach validated markers. That branch uses
 `RDTSC`, the x86 read-timestamp-counter instruction. It safely reads a processor
 counter on the designated guest and leaves arithmetic condition flags unchanged.
 The instruction does not change interrupt enable state or write privileged

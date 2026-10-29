@@ -25,7 +25,8 @@ Add `--mutex-api public` to exercise literal `kd_mutex_lock/unlock` calls and
 their exact native-continuation unlock routing. The default `outer` retains
 the existing cookie shell. Public runs audit the compiled lock capture, named
 continuation and unlock imports before loading the module; metadata and result
-files keep the two shells distinct. Both execute the same four phases below.
+files keep the two shells distinct. Both execute the same warmup and four
+asserted phases below.
 
 `--family mutex --mixed-spin` adds literal public `kd_spin_lock/unlock` calls
 inside the outer mutex. These macros emit the shared unpinned clobber shell.
@@ -109,7 +110,7 @@ encoding. The named first marker remains `RDTSC`, and the suffix still records
 the physical current task. These new families do not use IRQ/BH lock variants,
 nested acquisition, cancellation or a checked memory-fault continuation.
 
-The four phases remain in one provider/source session:
+The warmup and four asserted phases remain in one provider/source session:
 
 1. `cold-warmup`: run with the unusual-instruction branch disabled, leaving it
    present in the code. The image must publish as `NORMAL`, which means ready
@@ -119,14 +120,23 @@ The four phases remain in one provider/source session:
    publication alone is insufficient.
 3. `hot-escape`: after all callers join, enable the branch and run contention.
    Require a validated instruction-exit count, an event naming this exact
-   instruction address and one of these worker tasks, and the terminal registry
-   state `NATIVE_ONLY`. That state disables future delegation for the entry.
+   instruction address and one of the taken-phase worker tasks, and registry
+   state `NORMAL`. Every delegated body in this phase must produce a marker;
+   none may be reported as a returned JIT completion.
    Prefix/suffix counters, the original-task check and arithmetic condition-flag
    checks must still pass for every operation.
-4. `post-ban`: after the prior callers join, run the same taken branch again.
-   Neither generated-code entries nor instruction exits may increase, and the
-   registry must remain `NATIVE_ONLY`. Operations still execute correctly on
-   their original tasks.
+4. `cold-after-escape`: clear the condition only after the prior callers join.
+   Require positive matching JIT entries/completions and zero instruction exits.
+   This demonstrates that the earlier native suffix did not ban later requests.
+5. `hot-repeat`: enable the condition again and require new positive matching
+   JIT-entry/marker counts, zero JIT completions, and all native effect checks.
+   This detects a one-shot marker or lost future eligibility.
+
+Every asserted phase requires the same registry record, immutable generation,
+code address and published image bytes. No re-preparation or replacement can
+stand in for persistent eligibility. A marker finishes the current invocation's
+entire native suffix; it does not return that invocation to the JIT. Independent
+entry bans remain sticky and are covered separately by the image/registry tests.
 
 The mutex/rwsem controls accept capability versions 6 through 12 only when feature
 bit 5 (native instruction exit) is present. Spin/rwlock require the additional
@@ -137,7 +147,9 @@ after helper services; the production `native_escape_count` counts validated
 marker events. That count does not by itself prove that a native continuation
 completed. The operation and final-retirement checks supply the additional
 evidence. The marker log is rate limited, so the test does not require one
-printed line per count.
+printed line per count or a printed event in each taken phase. Each taken phase
+must independently increment its marker counter; all retained events must match
+the exact image, instruction and writer tasks from those two phases.
 
 Version 11's optional [direct original-helper route](../../../docs/design/admission.md#direct-original-helper-calls)
 is a separate ABI1 spin feature; it does not change this ABI2 mutex marker or
@@ -176,4 +188,4 @@ separate negotiated boundaries. Their feature bits do not authorize arbitrary
 instruction traps, memory faults or replay of a partially executed body.
 The string probe now requires valid short and 300-character inputs to complete
 delegated comparison calls, without the former helper prechecks. That change
-does not alter this instruction marker's continuation or permanent-disable checks.
+does not alter this instruction marker's continuation or repeated-eligibility checks.

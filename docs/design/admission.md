@@ -102,9 +102,17 @@ does not establish arbitrary-source equivalence or whole-kernel replacement.
 
 Supported instruction markers stop before a reviewed original instruction. The
 origin resumes there with earlier effects retained and the documented arithmetic
-flags restored; future delegation of that entry is disabled for that registry
-entry’s lifetime. A generic fault, unsupported lowering or budget failure cannot be
+flags restored. That invocation finishes its native suffix; the marker leaves
+registry status and immutable image identity unchanged, so a later invocation can
+delegate a different path or reach the same marker again. It cannot reopen an
+independently disabled entry. A generic fault, unsupported lowering or budget failure cannot be
 converted into an arbitrary safe native restart.
+
+The pinned decoder's exact F3 90 NOP alias emits physical `PAUSE`; ordinary NOPs
+retain their existing lowering. `PAUSE`, fences and supported LOCK instructions
+remain generated instructions, without a runtime exit per iteration. Focused
+generated-byte and effect checks are required; this is not a claim of arbitrary
+opcode support or a completed kernel memory-ordering proof.
 
 Mutex/rwsem use the ABI2 marker contract. Supported pristine root spin/rwlock
 ABI1/3 images require immutable requirements 33 and the matching provider bits.

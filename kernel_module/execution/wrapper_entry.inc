@@ -239,10 +239,13 @@ static int kd_jit_native_escape(struct kd_exe_info *exe,
 	frame->control_call.phase = KD_CALL_NONE;
 	regs->orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
 	kd_exec_frame_save_continuation(frame, regs);
-	kd_image_disable(exe);
+	/* This reached instruction ends only this invocation. The immutable
+	 * image and source lease survive through native completion and unlock ACK.
+	 * Leave registry state untouched: an older retained image must neither
+	 * disable a newer image nor reopen an independently disabled entry. */
 	atomic64_inc(&kd_native_escape_count);
 	pr_warn_ratelimited(
-		"[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x%lx rip=0x%lx generation=%lu waiter_pid=%d action=native_suffix_and_disable\n",
+		"[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x%lx rip=0x%lx generation=%lu waiter_pid=%d action=native_suffix_keep_eligible\n",
 		frame->entry_ip, regs->ip, frame->image->generation,
 		frame->logical_task->pid);
 	return 0;

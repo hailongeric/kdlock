@@ -273,7 +273,7 @@ separate obligations; materializing FULL releases neither admission nor the gate
 | 5 HOSTCALL | Allowlisted typed service |
 | 6 ENTRY_REFUSED | Predicate failed before body execution |
 | 7 CLOBBER_COMPLETE | Body reached the validated final unlock using the minimal completion packet |
-| 8 NATIVE_ESCAPE | Checked mutex instruction marker; resume the waiter at the original instruction and disable future delegation |
+| 8 NATIVE_ESCAPE | Validated instruction marker; resume the waiter at the original instruction for this invocation's native suffix, preserving later eligibility |
 | 9 ADDRESS_GUARD | Checked ABI1 spin load would overlap recorded stack writes; resume the waiter before that load and disable future delegation |
 | 10 DIRECT_CALL_LIMIT | Direct helper allowance exhausted before that helper executes; preserve its pending CALL word and finish on the original waiter |
 
@@ -333,11 +333,12 @@ entry flags.
 
 The runtime validates the image, packet, source instruction, stack bounds and
 ownership state. It tags `orig_AX` with `KD_REG_NATIVE_ESCAPE_TAG`, retains the
-existing native-continuation ownership obligations, and marks the entry
-`NATIVE_ONLY` under the same serialization gate used by image publication.
-Even an older retained image disables the stable entry. Already admitted work
-may finish; no new delegation is admitted after the disable takes effect.
-The disable lasts until the source session is retired, not across source reloads.
+existing native-continuation ownership obligations, and leaves registry status
+untouched. An older retained image can finish without changing a newer image's
+generation or eligibility. The marker never writes `NORMAL`, so an independently
+disabled entry stays disabled. Existing immutable-image residency, source leases,
+native unlock ACK and frame retirement protect this continuation; persistent
+eligibility adds no same-invocation native-to-JIT return bridge.
 
 The original waiter restores current GPRs and merges only the saved arithmetic
 flags into its own processor flags after all C cleanup and scheduling helpers.
@@ -366,6 +367,10 @@ change ABI2 nesting or ordinary spin/rwlock packet restoration.
 The read-only `native_escape_count` module parameter counts validated markers.
 It is diagnostic evidence, not an ownership record. Publication, a marker count,
 a returned JIT body and complete drain remain distinct observations.
+The conditional live probe keeps one image through cold → taken → cold → taken
+phases: both cold phases require returned JIT bodies, and both taken phases
+require native markers plus exact final effects and drain. The original sticky
+marker-disable results remain evidence for their frozen historical sources.
 
 ### Checked spin address exit
 

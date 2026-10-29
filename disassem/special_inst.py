@@ -104,7 +104,12 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
     ret_str = ""
     name = get_inst_name(line)
     if name == "ENDBR64" or line.name == "NOP":
-        ret_str += "NOP\n"
+        # The pinned x86 decoder represents F3 90 as the prefixed NOP alias.
+        # Retain its physical spin hint without introducing a runtime exit.
+        # Do not reinterpret other NOP encodings or redundant prefixes.
+        pause = (line.name == "NOP" and line.l == 2 and
+                 bytes(getattr(line, "b", b"")) == b"\xf3\x90")
+        ret_str += "PAUSE\n" if pause else "NOP\n"
         ret_str += release_conflict(reg_map, block_end)
     elif name == "CALL":
         ret_str += conflict_resolve(reg_map, {"T2"})

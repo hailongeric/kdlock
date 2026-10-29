@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only conditional instruction escape, original-task resume and sticky ban."""
+"""Guest-only conditional instruction escape and repeated per-path delegation."""
 import argparse
 import ctypes
 import fcntl
@@ -28,6 +28,7 @@ DEVICE = "/dev/kd_jit_escape_test"
 WORKER_COMM = "ke_worker"
 RUN, SNAPSHOT, PREPARE, HOT = 0xC0204501, 0x80504502, 0x4503, 0x4504
 READ = 0xC0204505
+COLD = 0x4506
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
 FIELDS = ("prefix", "suffix", "hot_taken", "lock_address", "entry", "marker",
           "failures", "active", "hot", "idle")
@@ -311,37 +312,47 @@ class EscapeSession(Session):
     def measure(self):
         self.record["execution_status"] = "MEASURING"
         self.phase("cold-warmup", self.record["warmup_iterations"], 0)
-        cold = self.phase("cold-delegated", self.record["iterations"], 0)
-        rt.require(cold["jit_delta"]["bench_jit_bodies"] == cold["jit_delta"]["bench_jit_completions"] > 0,
-                   "cold branch lacks completed delegated bodies", "NO_JIT")
-        self.registry("cold", 0)
-        rt.require(self.publication() == self.record["publication"], "cold image changed")
-        with open(DEVICE, "rb", buffering=0) as device:
-            fcntl.ioctl(device, HOT)
-        hot = self.phase("hot-escape", self.record["iterations"], 1)
-        rt.require(hot["jit_delta"]["native_escape_count"] > 0,
-                   "hot branch did not execute a validated instruction marker", "DATA_ERROR")
-        self.registry("hot", -3)
+        taken = []
+        for name, hot in (("cold-delegated", 0), ("hot-escape", 1),
+                          ("cold-after-escape", 0), ("hot-repeat", 1)):
+            # phase() returns only after every caller joins and the source
+            # frames drain. The payload also requires exclusive idle control.
+            with open(DEVICE, "rb", buffering=0) as device:
+                fcntl.ioctl(device, HOT if hot else COLD)
+            phase = self.phase(name, self.record["iterations"], hot)
+            delta = phase["jit_delta"]
+            if hot:
+                rt.require(delta["bench_jit_bodies"] == delta["native_escape_count"] > 0 and
+                           delta["bench_jit_completions"] == 0,
+                           f"{name} lacks exact reached-marker/native-suffix evidence", "DATA_ERROR")
+                taken.append(phase)
+            else:
+                rt.require(delta["bench_jit_bodies"] == delta["bench_jit_completions"] > 0 and
+                           delta["native_escape_count"] == 0,
+                           f"{name} lacks completed delegated bodies", "NO_JIT")
+            rows = self.registry(name, 0)
+            rt.require(rows == self.record["image_registry"] and
+                       self.publication() == self.record["publication"],
+                       f"{name} changed the immutable image or registry identity", "DATA_ERROR")
         self.faults()
         pattern = re.compile(r"reason=NATIVE_ESCAPE\s+entry=(0x[0-9a-f]+)\s+rip=(0x[0-9a-f]+)\s+"
-                             r"generation=(\d+)\s+waiter_pid=(\d+)\s+action=native_suffix_and_disable", re.I)
+                             r"generation=(\d+)\s+waiter_pid=(\d+)\s+action=native_suffix_keep_eligible", re.I)
         events = [dict(entry=int(m[1], 16), rip=int(m[2], 16), generation=int(m[3]), waiter_pid=int(m[4]))
                   for m in pattern.finditer(self.messages)]
         self.record["escape_events"] = events
         self.save()
-        pids = {row["pid"] for row in json.loads((self.path / "hot-escape-callers.json").read_text())
+        pids = {row["pid"] for phase in taken
+                for row in json.loads((self.path / (phase["name"] + "-callers.json")).read_text())
                 if row["role"] == "writer"}
-        rt.require(events and len(events) <= hot["jit_delta"]["native_escape_count"] and
+        # Logs are rate limited; counters prove a reached marker in EACH taken
+        # phase. Every retained log must still name one exact eligible caller.
+        rt.require(events and len(events) <= sum(p["jit_delta"]["native_escape_count"] for p in taken) and
                    all(event["entry"] == self.record["layout"]["entry"] and
                    event["rip"] == self.record["layout"]["marker"] and
                    event["generation"] == self.record["image_registry"][0]["generation"] and
                    event["waiter_pid"] in pids for event in events),
                    "missing or mismatched native-escape event", "DATA_ERROR")
-        post = self.phase("post-ban", self.record["iterations"], 1)
-        rt.require(all(value == 0 for value in post["jit_delta"].values()),
-                   "delegation resumed after terminal rejection", "DATA_ERROR")
-        self.registry("post-ban", -3)
-        self.record.update(jit_status="COLD_JIT_THEN_NATIVE_ONLY", accepted=True,
+        self.record.update(jit_status="COLD_JIT_TAKEN_NATIVE_COLD_JIT_TAKEN_NATIVE", accepted=True,
                            final_parameters=rt.parameters())
         self.verify()
 
