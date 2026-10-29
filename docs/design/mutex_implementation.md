@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch implements the admission consolidation candidate
-below; its VM correctness and timing gates are pending.
+delegation waiters. This branch starts the single notification-line read-prefetch
+experiment below; implementation and VM correctness/timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -496,6 +496,42 @@ The emitted-code gate must confirm the retained checks and lack of a callback
 between proof and first origin use. All new source/VM gates and any performance
 benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
 fairness are unchanged.
+
+### Successor notification-line read-prefetch design (October 29)
+
+This isolated experiment starts from
+`99f383624faa872a76521d1b5be7faea586591c1`, which passed nine selected unit checks,
+both provider builds, the emitted-code review and eight live blocks. Its c01
+mutex point at 20 workers still measured 4.054040 Mops/s versus 4.590029 at
+`1c86d6d1`; the remaining performance gap is not explained by source inspection.
+Matched unscored profiling is being collected separately from the scored nano
+rounds. A sample IP near READY is not a measurement of that load's latency or
+proof of a cache miss.
+
+Add only `prefetch(&next->locked)` to the existing successor-preheat helper.
+It already hints the queued successor's header, identity, packet and saved stack
+lines before executing the current body. On the validated target the notification
+byte is on a different node line, at offset `0x131`; the added read hint aims to
+fetch that line before the next iteration's mandatory acquire READY check.
+Do not add a write hint, an origin-state load, another lookahead link or a new
+descriptor. The hint does not select a request or authorize proxy execution.
+
+The existing non-NULL successor remains reserved in this owner's queue. Its
+origin cannot retire or reuse the node before this owner publishes a result or
+head wake; an unselected origin may withdraw READY but must retain its queue
+storage. This same executor controls NUMA detach/rejoin and retirement. Compute
+the address only inside the existing helper, before current-body dispatch, and
+retain no new pointer after it returns. Source-image residency and the origin's
+READY/CLAIMED pin proof remain separate obligations.
+
+Keep every actual readiness, owner/PICKUP, private epoch, generation/key,
+same-CPU, cold promotion and descriptor-removal check. No predicate factoring,
+layout, publication, budget, 1024/1024 policy, ABI or fairness change belongs in
+this experiment. The earlier notification hint in the four-request ring used a
+different protocol and cannot establish this candidate's effect. Existing basic
+and directly affected composed fixtures, emitted-code inspection, live drain and
+matched timing remain required before any performance claim. No new broad test
+suite or runtime instrumentation is introduced for this nonarchitectural hint.
 
 ### Optional READY diagnostics and prior experiments
 
