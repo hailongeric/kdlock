@@ -1,0 +1,7 @@
+{
+  "capture_completed": false,
+  "stage": "before any nano launch",
+  "error": "QEMU process/task identities or placement changed across monitor observation",
+  "empty_stdout": "/tmp/kdlock-proxy-nano-baseline-host-before.json",
+  "performance_measurement_started": false
+}

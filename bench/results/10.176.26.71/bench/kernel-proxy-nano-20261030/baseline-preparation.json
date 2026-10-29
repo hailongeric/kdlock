@@ -1,0 +1,47 @@
+{
+  "scope": "Preparation/capture/archive attempts; no measured point retried",
+  "files": [
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-sync.log",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-sync.log",
+      "bytes": 41,
+      "sha256": "a028a2a75ddad3024fa0bd7b728fe1165d573e531b1a8fd26658b6855ae3bab8"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-sync-r2.log",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-sync-r2.log",
+      "bytes": 5356,
+      "sha256": "73c6e84e3c2c8c171918710a36a6c76b4fb8aaba12a4236c24a35b97fed023f6"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-host-before-failure.json",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-host-before-failure.json",
+      "bytes": 275,
+      "sha256": "f3ae010677a4284d0bad2360ca4d8ad04b11bb66b4254177bb09430e8824671f"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-host-before.json",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-host-before.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-host-before-r2.log",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-host-before-r2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-archive-20261030.log",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-archive-20261030.log",
+      "bytes": 331,
+      "sha256": "e7c6096fb3a99daa537fe456e4332b34b6520f67bbd2731914cd6e8deb191d0a"
+    },
+    {
+      "original_path": "/tmp/kdlock-proxy-nano-baseline-archive-r2-20261030.log",
+      "retained_path": "preparation/kdlock-proxy-nano-baseline-archive-r2-20261030.log",
+      "bytes": 5463,
+      "sha256": "c7b827c5321ccd9202d27d3d9c55e6fc12fe9a0fc28967ff20159191b97fb1a1"
+    }
+  ]
+}

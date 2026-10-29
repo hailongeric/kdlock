@@ -1,0 +1,3 @@
+usage: archive_run.py [-h] --base BASE --output OUTPUT --health HEALTH
+                      --group NAME=PATH [--timeout-seconds TIMEOUT_SECONDS]
+archive_run.py: error: unrecognized arguments: --kernel-source /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdlock1-20261027
