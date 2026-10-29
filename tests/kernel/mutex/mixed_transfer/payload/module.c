@@ -264,9 +264,9 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	void __user *user = (void __user *)arg;
 	struct mixed_run run;
-	unsigned int before_preempt;
+	unsigned int before_preempt, before_migration, after_preempt, after_migration;
 	int ret = 0;
-	bool before_irqs;
+	bool before_irqs, after_irqs;
 
 	(void)file;
 	if (cmd == MIXED_RUN || cmd == MIXED_WARMUP) {
@@ -282,6 +282,7 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (cmd == MIXED_RUN)
 			WRITE_ONCE(task[run.role], (unsigned long)current);
 		before_preempt = preempt_count();
+		before_migration = READ_ONCE(current->migration_disabled);
 		before_irqs = irqs_disabled();
 		run.returned = run.errors = 0;
 		if (cmd == MIXED_WARMUP) {
@@ -314,7 +315,17 @@ static long mixed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}
 		run.returned = run.iterations;
 finished:
-		run.errors += preempt_count() != before_preempt || irqs_disabled() != before_irqs;
+		after_preempt = preempt_count();
+		after_migration = READ_ONCE(current->migration_disabled);
+		after_irqs = irqs_disabled();
+		/* CPU affinity is not a migration pin. The reservation's one pin must
+		 * retire after COMPLETE, native relay or final queue-custody release. */
+		run.errors += after_preempt != before_preempt || after_irqs != before_irqs ||
+			before_migration || after_migration != before_migration;
+		pr_info("KD_MIXED_CONTEXT phase=%s role=%u pid=%d preempt_before=%u preempt_after=%u migration_before=%u migration_after=%u irqs_before=%u irqs_after=%u errors=%llu\n",
+			cmd == MIXED_WARMUP ? "warmup" : "run", run.role, current->pid,
+			before_preempt, after_preempt, before_migration, after_migration,
+			(unsigned int)before_irqs, (unsigned int)after_irqs, run.errors);
 		if (run.errors)
 			atomic_inc(&failures);
 		if (cmd == MIXED_RUN) {
