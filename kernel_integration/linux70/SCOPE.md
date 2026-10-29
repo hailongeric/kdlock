@@ -82,3 +82,22 @@ Before a new kernel build: finish directly affected module/unit/ABI checks on th
 Boot Native mode first with no API selector and no provider. Validate clean identity and basic kernel behavior. Load the single matching provider, validate selected object creation/cancellation/normal destruction and actual syscall bodies, then the bounded syscall comparison. API comparison arms keep one MM boot mode. Separately boot `kd_mmap=on`, satisfy all enabled-MM native/KD/cancellation/non-owner prerequisites and actual mmap1 lock-identity observations before claiming mmap improvement/parity. User-facing scores remain one-round workload results, separated from diagnostics and system correctness evidence.
 
 Keep `7.0.0-38-kdlock1` as the ordinary recovery/default until root explicitly reviews a promotion. Do not infer promotion from a successful new build or boot.
+
+## October 30 build storage plan
+
+The initial VM check found 28 GiB free on the data disk and 36 GiB free on
+root; each retained full kernel build occupies approximately 31 GiB. Preserve
+those builds and all evidence. The new output may use a fresh root-filesystem
+backing directory `/root/kdlock-build-output/linux-7.0.0-38-kdscope1`, bind-mounted
+at the canonical build path above. The source remains on the data disk. This is
+an output-storage mapping, not a source or identity alias: no symbolic link and
+no shared writable old output is allowed. Record both paths, filesystem identity,
+mount options and available space before building and after any boot. Reestablish
+that exact mount before verification or external-module compilation; a missing
+mount is not an empty build to initialize. Do not alter the existing boot default.
+
+Before a full build, account for the observed build footprint, link intermediates,
+installed stripped modules/initramfs and a reserve on root. Freeze source/config
+and verify the bounded API/MM objects first. Preserve any preparation/compile
+failure as a separate attempt. A deadline or insufficient-space stop must record
+actual compiler process state; it does not establish drain or authorize deletion.
