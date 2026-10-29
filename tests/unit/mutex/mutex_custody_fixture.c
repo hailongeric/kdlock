@@ -139,6 +139,7 @@ int kd_mutex_transfer_owner(struct kd_mutex *mutex, struct task_struct *next)
 {
 	CHECK(current == &ctask && next == &wtask);
 	CHECK(batch.nr_pins==1 && batch.pin.node==&wnode);
+ CHECK(wnode.locked==KD_MUTEX_PROXY_CLAIMED);
  CHECK(next_node.locked==((shape==1 || shape==3)?KD_MUTEX_PROXY_READY:KD_MUTEX_WAIT));
  CHECK(!batch.proxy_epoch && kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_HELD);
  /* Unselected READY origins can reserve withdrawal before native owner wake. */
@@ -237,7 +238,7 @@ static void setup(void)
 	cnode.count_seq=wnode.count_seq=2; cnode.task_struct_ptr=&ctask; wnode.task_struct_ptr=&wtask;
 	cnode.entry_abi=wnode.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	cnode.packet_state=wnode.packet_state=KD_PACKET_MINIMAL;
-	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=KD_MUTEX_PROXY_CLAIMED; next_node.locked=KD_MUTEX_WAIT; deferred.locked=1;
+	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=KD_MUTEX_PROXY_READY; next_node.locked=KD_MUTEX_WAIT; deferred.locked=1;
 	frame.mutex_backend=frame.complex_ready=frame.batch_lease=true;
 	frame.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1; frame.logical_task=&wtask;
 	frame.outer_lock_addr=(unsigned long)&lock; frame.jit_lock_addr[0]=(unsigned long)&lock;

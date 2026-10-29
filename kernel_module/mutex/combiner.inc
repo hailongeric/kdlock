@@ -65,8 +65,8 @@ static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)
 }
 
 /* Even an empty descriptor must reopen withdrawal for every READY origin
- * before cold/sleepable service. Keep an actual current frame's CLAIMED pin
- * separately; no old epoch survives native publication. */
+ * before cold/sleepable service. Promote a retained current to CLAIMED before
+ * opening the gate; no old epoch survives native publication. */
 static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)
 {
 	kd_mutex_batch_unpin(batch, keep_current);
@@ -255,6 +255,8 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
 	kd_mutex_batch_epoch_end(batch, true);
+	/* A native callback may already have consumed and retired its node. */
+	kd_mutex_batch_assert_cold(batch);
 	kd_mutex_batch_retire_current(lock, batch);
 	batch->next = kd_mutex_batch_rejoin(batch, batch->next);
 	if (batch->next && !batch->next->task_struct_ptr)
@@ -308,6 +310,7 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 		return false;
 	}
 	kd_mutex_batch_epoch_end(batch, true);
+	kd_mutex_batch_pin_assert_retained(batch, node);
 	BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 	node->regs = *kd_exec_frame_regs(frame);
 	node->packet_state = KD_PACKET_FULL;
@@ -338,7 +341,7 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 	node->native_spin_pins = 0;
 	node->native_transfer = frame;
 	WRITE_ONCE(node->native_resume, true);
-	kd_mutex_batch_pin_complete(batch, node);
+	kd_mutex_batch_pin_complete_retained(batch, node);
 	smp_store_release(&node->locked, 0);
 	/* W's last frame access acknowledges copied packet, owner pickup, exact
 	 * task routing and source/queue custody. No native relay was published. */
@@ -421,6 +424,8 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * no retained origin pin. Epoch closure also releases withdrawal
 		 * exclusion for every other READY origin. */
 		kd_mutex_batch_epoch_end(batch, false);
+		kd_mutex_batch_assert_cold(batch);
+		BUG_ON(batch->nr_pins);
 		this_cpu_inc(kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
 		 * frame failure. Keep its identity distinct from context refusal. */
@@ -456,7 +461,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 		if (!kd_mutex_batch_pin_select(batch, curr_node))
 			return KD_EXE_NO_RUN;
-		/* The successful READY claim already proves origin pin/quiescence.
+		/* READY under this owned epoch proves origin pin/quiescence.
 		 * Keep its exact assertion before preparing borrowed origin state. */
 		KD_MUTEX_PIN_ASSERT(batch, curr_node);
 		if (minimal)
@@ -467,6 +472,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (frame)
 		goto prepared;
 	kd_mutex_batch_epoch_end(batch, true);
+	kd_mutex_batch_pin_assert_retained(batch, curr_node);
 	if (clobber)
 		frame = kd_exec_frame_push_borrowed(
 			&curr_node->regs, curr_node->regs.ip, (unsigned long)lock, 1,
@@ -529,10 +535,12 @@ prepared:
 		/* The dispatcher may sleep or transfer ownership. Unselected READY
 		 * origins must be able to withdraw before any FULL service begins. */
 		kd_mutex_batch_epoch_end(batch, true);
+		kd_mutex_batch_pin_assert_retained(batch, curr_node);
 		KD_MUTEX_PIN_INC(batch, full_resumes);
 		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
 	} else {
 		kd_mutex_batch_epoch_end(batch, true);
+		kd_mutex_batch_pin_assert_retained(batch, curr_node);
 		ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
 						 frame->outer_lock_addr);
 	}
@@ -553,6 +561,7 @@ prepared:
 			return KD_MUTEX_EXEC_SWAPPED;
 		}
 		kd_mutex_batch_epoch_end(batch, true);
+		kd_mutex_batch_pin_assert_retained(batch, curr_node);
 		BUG_ON(kd_exec_native_begin(frame, true));
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 		curr_node->regs = *regs;
@@ -582,7 +591,7 @@ prepared:
 			batch->next = NULL;
 		}
 		WRITE_ONCE(curr_node->native_resume, true);
-		kd_mutex_batch_pin_complete(batch, curr_node);
+		kd_mutex_batch_pin_complete_retained(batch, curr_node);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
 		BUG_ON(kd_exec_native_wait(frame));
@@ -833,9 +842,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * the racing publisher finishes its link. Retire before the one
 		 * completion wake; only saved batch state is read after that wake. */
 		kd_mutex_batch_epoch_end(&batch, true);
+		kd_mutex_batch_pin_assert_retained(&batch, curr_node);
 		kd_mutex_batch_retire_current(lock, &batch);
 		this_cpu_inc(kd_mutex_jit_success_count);
-		kd_mutex_batch_pin_complete(&batch, curr_node);
+		kd_mutex_batch_pin_complete_retained(&batch, curr_node);
 		kd_mutex_clear_locked_set_completed(curr_node);
 		next_node = batch.next;
 	}
@@ -845,6 +855,8 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	 * Keep the real mutex and gate for this physical owner's original body. */
 handoff:
 	kd_mutex_batch_epoch_end(&batch, false);
+	kd_mutex_batch_assert_cold(&batch);
+	BUG_ON(batch.nr_pins);
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
 	if (after_body)
 		BUG_ON(_kd_mutex_unlock_checked(lock));

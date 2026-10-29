@@ -126,14 +126,14 @@ def main():
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
-            "claim-does-not-pin": code.replace(
+            "cold-retention-does-not-pin": code.replace(
                 "smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);",
                 "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", 1),
             "reject-completed-full-tail": code.replace("curr_node->packet_state != KD_PACKET_FULL", "true", 1),
             "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_epoch_end(batch, false);", "", 1),
             "resume-keeps-epoch-closed": code.replace(
-                "\t\tkd_mutex_batch_epoch_end(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
-                "\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
+                "\t\tkd_mutex_batch_epoch_end(batch, true);\n\t\tkd_mutex_batch_pin_assert_retained(batch, curr_node);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
+                "\t\tkd_mutex_batch_pin_assert_retained(batch, curr_node);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
             "unpin-before-frame-retirement": code.replace(
                 "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);",
                 "\tsmp_store_release(&curr_node->locked, KD_MUTEX_WAIT);\n"
@@ -165,7 +165,7 @@ def main():
                 assert result.returncode == 0, (result.stdout, result.stderr)
                 print(result.stdout, end="")
             else:
-                expected = 2 if name in {"claim-does-not-pin", "reject-completed-full-tail", "unpin-before-frame-retirement"} else 1
+                expected = 2 if name in {"cold-retention-does-not-pin", "reject-completed-full-tail", "unpin-before-frame-retirement", "resume-keeps-epoch-closed", "registration-keeps-pin"} else 1
                 assert result.returncode == expected and "FAIL mode=" in result.stderr, (
                     name, result.returncode, result.stdout, result.stderr)
                 print(f"mutation detected: {name}")

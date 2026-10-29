@@ -320,13 +320,15 @@ explicit `--mutex-spin-budget` and verifies matching module metadata. Keep each
 threshold and source version separate. `c01` is the one-cacheline throughput
 profile; `c16` is the sixteen-cacheline locality profile.
 
-Executor counters record selections, successful exact READY claim admissions,
-retired and cancelled claims, drain calls and current-claim retention calls.
-Two-bin histograms record exact claim occupancy `0..1` before and after selection;
-each selection starts empty. `selection_result` distinguishes a successful claim,
-a self-CPU refusal and a current request that is no longer READY. `drain_nonempty`
+Executor counters record selections, successful exact current descriptor
+reservations admitted from READY, retired and cancelled reservations, drain calls
+and retention calls. `claims`, `selection_result.claimed` and the two-bin
+occupancy histograms count these descriptors, not stores of notification value
+CLAIMED. Occupancy is `0..1`, and each selection starts empty. `selection_result`
+distinguishes a successful reservation, a self-CPU refusal and a current request that is no longer READY. `drain_nonempty`
 counts one cancelled current claim; `retain_current_calls` counts retaining the
-current claim across a cold boundary. The two outcomes are disjoint.
+current descriptor across a cold boundary, including repeated retention calls;
+it does not count promotion stores. Cancellation and retention are disjoint.
 
 The independent `epoch_ready_candidates` histogram samples a linked prefix once
 per successful epoch admission, up to eight candidates. A candidate is already
@@ -340,10 +342,13 @@ never waits, claims a node, reads its stack, or authorizes ownership; it compile
 out in ordinary builds. Histogram totals equal admitted epochs, independently of
 selection and waiter counts.
 
-Epoch admission attempts and refusals are counted once per gate attempt. Inside
-an admitted epoch, READY is read and CLAIMED is stored while withdrawal is
-excluded; `claims` counts exact current descriptors, not per-node CAS operations.
-The ordinary proxy round has no ACK polling loop. Successful origin withdrawal
+Epoch admission attempts and refusals are counted once per gate attempt. An
+ordinary current remains READY while its exact descriptor, private epoch and
+physical owner prove that COMBINER excludes withdrawal. A current that must
+survive a cold boundary is promoted to CLAIMED before withdrawal opens; repeated
+cold closures retain that marker without another promotion. Hot completion can retire
+the descriptor and publish result zero without any CLAIMED store. The ordinary
+proxy round has no ACK polling loop. Successful origin withdrawal
 reservations accumulate locally and merge with the origin phase; a reservation
 can end without withdrawal if a result arrived first. Schema 4 uses 296 dynamic
 bytes per CPU (bounded at 304); mode 1 remains a 384-byte static record.
@@ -360,6 +365,9 @@ is unnecessary or a claim has won. The report therefore separates
 unavailable when the episode count is zero. No greater-than-99% claim follows
 until quiescent measurements support it. Per-poll expiry checks accumulate in a
 local variable; origin totals merge once before the first unpin or pinned return.
+A running current left READY can accumulate more post-budget scheduling checks
+while its epoch blocks withdrawal. That changes observed traffic, not the
+meaning of either wait-episode fraction; compare separately frozen versions.
 
 Both occupancy totals and selection-result totals must equal selections. Claims equal
 retired plus cancelled claims at quiescence. Origin episodes equal retained plus

@@ -209,12 +209,12 @@ def check_origin_hooks():
     assert fixture.count(anchor) == 1
     fixture = fixture.replace(anchor, 'memset(&kd_mutex_pin_totals,0,sizeof(kd_mutex_pin_totals));\n ' + anchor + r'''
  bool dropped=selected==EXPIRE || selected==CANCEL || selected==CANCEL_AT_ENTRY || selected==WAKE_AT_UNPIN || selected==RELEASE_RACE;
- bool expired=selected==EXPIRE || selected==CLAIM_RACE || selected==WAKE_RACE || selected==WAKE_AT_UNPIN || selected==NO_RESCHED || selected==RELEASE_RACE || selected==STALE_READY;
+ bool expired=selected==EXPIRE || selected==CLAIM_RACE || selected==WAKE_RACE || selected==WAKE_AT_UNPIN || selected==NO_RESCHED || selected==RELEASE_RACE || selected==STALE_READY || selected==READY_EPOCH;
  CHECK(kd_mutex_pin_totals.wait_episodes==1);
  CHECK(kd_mutex_pin_totals.initial_pin_retained==!dropped && kd_mutex_pin_totals.initial_pin_dropped==dropped);
  CHECK(kd_mutex_pin_totals.initial_budget_completed==(!dropped && !expired));
  CHECK(kd_mutex_pin_totals.budget_expired_episodes==expired);
- CHECK(kd_mutex_pin_totals.expiry_checks==(selected==NO_RESCHED?3U:expired?1U:0U));
+ CHECK(kd_mutex_pin_totals.expiry_checks==((selected==NO_RESCHED || selected==READY_EPOCH)?3U:expired?1U:0U));
  CHECK(kd_mutex_pin_totals.withdrawals==(selected==EXPIRE || selected==WAKE_AT_UNPIN || selected==RELEASE_RACE));
  CHECK(kd_mutex_pin_totals.forced_cancellations==(selected==CANCEL || selected==CANCEL_AT_ENTRY));
  CHECK(kd_mutex_pin_totals.withdrawal_reservations==(selected==EXPIRE || selected==WAKE_RACE ||

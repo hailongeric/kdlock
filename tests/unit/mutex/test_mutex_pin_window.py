@@ -51,6 +51,12 @@ def main():
         "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,")
     check = definition(window,
         "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)")
+    proof = definition(window,
+        "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch,")
+    retained_complete = definition(window,
+        "static __always_inline void\nkd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,")
+    epoch_end = definition(source,
+        "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)")
     mutations = {
         "claim-successor-instead": (
             "if (!kd_mutex_batch_pin_add(batch, node))",
@@ -72,6 +78,23 @@ def main():
         "epoch-exit-keeps-gate-closed": (
             "\tkd_mutex_set_locked(batch->lock);",
             "\tif (false) kd_mutex_set_locked(batch->lock);", "", 1),
+        "omit-cold-promotion": (
+            "smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);",
+            "(void)node;", "", 1),
+        "promote-after-epoch-open": (epoch_end,
+            epoch_end.replace("\tkd_mutex_batch_unpin(batch, keep_current);\n", "", 1)
+                     .replace("\tkd_mutex_set_locked(batch->lock);",
+                              "\tkd_mutex_set_locked(batch->lock);\n\tkd_mutex_batch_unpin(batch, keep_current);", 1), "", 1),
+        "ignore-private-epoch": (proof,
+            proof.replace("!batch->proxy_epoch ||", "false ||", 1), "ready-without-epoch", 1),
+        "ignore-ready-owner": (proof,
+            proof.replace("!kd_mutex_delegation_owned(batch->lock, current) ||", "false ||", 1), "later-owner-combiner", 1),
+        "ignore-released-epoch": (proof,
+            proof.replace("batch->outer.released ||", "false ||", 1), "released-epoch", 1),
+        "ignore-ready-gate": (proof,
+            proof.replace("kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER", "false", 1), "ready-held", 1),
+        "cold-completion-skips-strict-proof": (retained_complete,
+            retained_complete.replace("\tkd_mutex_batch_pin_assert_retained(batch, node);\n", "", 1), "retained-open-epoch", 1),
         "ignore-generation": (check,
             check.replace("READ_ONCE(node->count_seq) != batch->pin.generation", "false", 1), "generation", 1),
         "ignore-lock-identity": (check,
@@ -104,7 +127,9 @@ def main():
             else:
                 print(result.stdout, end="")
                 for invalid in ("generation", "wrong-lock", "odd-generation",
-                                "wrong-current", "complete-unclaimed", "occupied-slot", "excess-count", "without-epoch"):
+                                "wrong-current", "complete-unclaimed", "occupied-slot", "excess-count", "without-epoch",
+                                "ready-without-epoch", "later-owner-combiner", "released-epoch", "expiry-before-promotion",
+                                "ready-held", "retained-ready", "retained-open-epoch"):
                     rejected = subprocess.run([binary, invalid], capture_output=True,
                                               text=True, timeout=10)
                     assert rejected.returncode == 86 and "BUG pin window:" in rejected.stderr, (

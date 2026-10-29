@@ -130,7 +130,11 @@ static void cpu_relax(void)
 }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
-    CHECK(leases==1 && node->locked==KD_MUTEX_PROXY_CLAIMED && lock.delegation_tail!=(u32)node->tail);
+    CHECK(leases==1 && lock.delegation_tail!=(u32)node->tail);
+    CHECK(node->locked==KD_MUTEX_PROXY_CLAIMED ||
+          (node->locked==KD_MUTEX_PROXY_READY && active_batch &&
+           active_batch->proxy_epoch && !active_batch->outer.released &&
+           lock.owner==current && kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_COMBINER));
     CHECK(active_batch && active_batch->current_retired);
     CHECK(!active_batch->nr_pins && active_batch->pin.node!=node);
     node->completed=1;node->locked=0;completed++;
@@ -145,20 +149,22 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
     if(!kd_mutex_batch_pin_select(batch,node))return KD_EXE_NO_RUN;
-    kd_mutex_proxy_assert_claimed(node);
+    kd_mutex_batch_pin_assert(batch,node);
+    CHECK(node->locked==KD_MUTEX_PROXY_READY);
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
             .outer_lock_addr=(unsigned long)p,.jit_lock_depth=2};
         frame.jit_lock_kind[0]=KD_EXEC_LOCK_QUEUE_OWNER;frame.jit_lock_node[0]=p;
         CHECK(!batch->outer.release(&frame,&batch->outer));batch->outer.released=true;
         CHECK(!kd_mutex_gate_read(&lock) && !lock.owner);
+        CHECK(node->locked==KD_MUTEX_PROXY_CLAIMED && !batch->proxy_epoch);
     }
     if(i==native_at) {
         /* Mirrors the publication boundary; the separate outer fixture runs
          * the actual execute_cs/FULL/native path with node reuse before ACK. */
         kd_mutex_batch_epoch_end(batch,true);
         kd_mutex_batch_retire_current(p,batch);
-        kd_mutex_batch_pin_complete(batch,node);
+        kd_mutex_batch_pin_complete_retained(batch,node);
         CHECK(lock.delegation_tail!=(u32)node->tail);
         node->locked=0;node->native_resume=true;
         node->tail=0xdead;node->next=(void *)1;

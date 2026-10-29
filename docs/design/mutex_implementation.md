@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch starts the delayed-CLAIMED design below from the
-single-current proxy-epoch candidate; implementation and its VM gates are pending.
+delegation waiters. This branch implements the delayed-CLAIMED candidate below
+from the single-current proxy epoch; its VM correctness and timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -360,7 +360,7 @@ compile out of timing builds and never authorize ownership or origin access.
 The existing current CLAIMED store and origin INIT-to-READY publication remain
 part of this candidate; any later publication optimization requires its own proof.
 
-### Delayed-CLAIMED design (October 29)
+### Delayed-CLAIMED candidate (October 29)
 
 This isolated follow-up starts from
 `82bfc1006c25767d7a319fcf175c548dcf24824a`, whose production runtime is
@@ -370,7 +370,7 @@ failed the no-regression gate: ten contended points lost 3.05–14.82% against
 36 workers 3.697546 versus 4.209552. These separate one-round measurements do
 not establish which instruction or cache transfer caused the remaining loss.
 
-The planned current retains its exact `{node, count_seq}` descriptor and stays
+The current retains its exact `{node, count_seq}` descriptor and stays
 READY during ordinary execution. READY authorizes origin access only with that
 descriptor, its counted lock and generation, this batch's private epoch, current
 physical ownership and COMBINER phase. An unrelated later owner's COMBINER must
@@ -389,7 +389,7 @@ Descriptor removal still precedes WAIT/zero publication, with no later origin
 access. Empty-descriptor epoch closure remains mandatory before cold services.
 
 No frame/node/mutex layout, source lease, queue policy or native/custody ACK
-changes are planned. Terminal bodies still execute once, including COMPLETE and
+changes are made. Terminal bodies still execute once, including COMPLETE and
 FULL delayed-tail cleanup. Caps remain 1024/1024 and the initial spin budget is
 65,536. Origin INIT-to-READY publication and one-successor prefetch remain
 unchanged; early READY publication is a separate option outside this candidate.

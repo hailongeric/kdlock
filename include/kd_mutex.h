@@ -97,6 +97,7 @@ struct kd_mutex_osq_node {
 
 /* READY is published only by a pinned, quiescent origin. The gate excludes
  * withdrawal during a proxy epoch; no REQUEST/ACK round trip exists.
+ * CLAIMED is needed only when the exact current survives epoch closure.
  * INIT distinguishes never-ready publication from irrevocably withdrawn WAIT.
  * Zero remains the exact completion/native/head result publication. */
 #define KD_MUTEX_WAIT 1

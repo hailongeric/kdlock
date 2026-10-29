@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
-/* One exact current claim under the enclosing proxy epoch. COMBINER prevents
- * every READY origin from withdrawing, so future claims are unnecessary for
- * pin safety. Queue reservation protects node storage; the batch source lease
+/* One exact current descriptor under the enclosing proxy epoch. COMBINER
+ * protects READY during ordinary execution; CLAIMED retains a current across
+ * cold epoch closure. Queue reservation protects node storage; the batch lease
  * separately protects executable text until final retirement.
  * No descriptor is carried across queue handoff or a completed-node wake. */
 static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)
@@ -11,6 +11,49 @@ static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batc
 	BUG_ON(batch->nr_pins != 1 || !node ||
 	       READ_ONCE(node->counted_lock) != batch->lock ||
 	       READ_ONCE(node->count_seq) != batch->pin.generation);
+}
+
+/* A later owner's COMBINER phase cannot authorize this old frame. READY needs
+ * this private epoch and its actual physical owner; CLAIMED already carries
+ * an independent pin through cold services, early release and owner transfer. */
+static __always_inline void
+kd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
+{
+	u8 state;
+
+	BUG_ON(batch->pin.node != node);
+	kd_mutex_batch_pin_check(batch);
+	state = smp_load_acquire(&node->locked);
+	if (state == KD_MUTEX_PROXY_READY) {
+		BUG_ON(!batch->proxy_epoch || batch->outer.released ||
+		       !kd_mutex_delegation_owned(batch->lock, current) ||
+		       kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER);
+	} else {
+		BUG_ON(state != KD_MUTEX_PROXY_CLAIMED);
+	}
+}
+
+/* Cold callers must not let the dual READY proof conceal a missed epoch close.
+ * Physical ownership may legitimately have moved after this retained pin was
+ * established; exact descriptor identity and CLAIMED remain mandatory. */
+static __always_inline void
+kd_mutex_batch_pin_assert_retained(struct kd_mutex_batch *batch,
+				   struct kd_mutex_node *node)
+{
+	BUG_ON(batch->proxy_epoch || batch->pin.node != node);
+	kd_mutex_batch_pin_check(batch);
+	kd_mutex_proxy_assert_claimed(node);
+}
+
+/* A native outer callback can arrive after result0 already removed the node
+ * descriptor. Check saved batch state only in that case, never its old node. */
+static __always_inline void kd_mutex_batch_assert_cold(struct kd_mutex_batch *batch)
+{
+	BUG_ON(batch->proxy_epoch);
+	if (batch->nr_pins)
+		kd_mutex_batch_pin_assert_retained(batch, batch->pin.node);
+	else
+		BUG_ON(batch->pin.node);
 }
 
 static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
@@ -44,8 +87,13 @@ static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current
 	node = batch->pin.node;
 	kd_mutex_batch_pin_check(batch);
 	KD_MUTEX_PIN_ASSERT(batch, node);
-	if (keep)
+	if (keep) {
+		/* Promotion precedes the gate's release of withdrawal exclusion. A
+		 * later expiry CAS then sees CLAIMED and cannot abandon this pin. */
+		if (smp_load_acquire(&node->locked) == KD_MUTEX_PROXY_READY)
+			smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);
 		return;
+	}
 	batch->pin.node = NULL;
 	batch->nr_pins = 0;
 	KD_MUTEX_PIN_INC(batch, cancelled_claims);
@@ -58,12 +106,18 @@ static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current
 static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,
 					struct kd_mutex_node *node)
 {
-	BUG_ON(batch->nr_pins != 1 || batch->pin.node != node ||
-	       smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_CLAIMED);
-	kd_mutex_batch_pin_check(batch);
+	kd_mutex_batch_pin_assert(batch, node);
 	batch->pin.node = NULL;
 	batch->nr_pins = 0;
 	KD_MUTEX_PIN_INC(batch, retired_claims);
+}
+
+static __always_inline void
+kd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,
+				     struct kd_mutex_node *node)
+{
+	kd_mutex_batch_pin_assert_retained(batch, node);
+	kd_mutex_batch_pin_complete(batch, node);
 }
 
 /* Each ordinary iteration claims its own current anew. Same-CPU refusal and

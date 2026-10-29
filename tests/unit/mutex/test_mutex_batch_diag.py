@@ -234,14 +234,16 @@ def main():
                 'mutex diagnostic completed histogram does not cover KDLOCK_MUTEX_BATCH'
                 in rejected.stderr), (cap, rejected.returncode, rejected.stderr)
 
-        # Undefined poisoned arguments must disappear before compilation. The
-        # condition's own side effect still occurs once with short circuiting.
+        # Optional poisoned arguments disappear before compilation. The real
+        # pin assertion must evaluate both batch and node even in off mode.
+        # The condition's own side effect occurs once with short circuiting.
         off = '#define MODULE_INFO(...)\n'
         off += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))
         off += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))
         off += r'''
-static unsigned int asserted;
-static void kd_mutex_proxy_assert_claimed(unsigned int value) { asserted += value; }
+static unsigned int asserted, batch_checks, node_checks;
+static void kd_mutex_batch_pin_assert(unsigned int batch, unsigned int node)
+{ asserted += batch * 10 + node; }
 struct off_layout { int original; KD_MUTEX_DIAG_MEMBER };
 _Static_assert(sizeof(struct off_layout) == sizeof(int), "off adds storage");
 int main(void)
@@ -264,7 +266,7 @@ int main(void)
     KD_MUTEX_PIN_EPOCH_RESULT(poison(), poison());
     KD_MUTEX_PIN_EPOCH_READY(poison(), poison());
     if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
-    KD_MUTEX_PIN_ASSERT(poison(), 1);
+    KD_MUTEX_PIN_ASSERT(++batch_checks, ++node_checks);
     KD_MUTEX_PIN_WAIT_ENTER();
     KD_MUTEX_PIN_BUDGET_EXPIRED();
     KD_MUTEX_PIN_EXPIRY_CHECK();
@@ -274,7 +276,7 @@ int main(void)
     KD_MUTEX_PIN_INITIAL_FINISH(poison());
     if (KD_MUTEX_PIN_DIAG_INIT()) return 3;
     KD_MUTEX_PIN_DIAG_EXIT();
-    return calls != 1 || asserted != 1;
+    return calls != 1 || asserted != 11 || batch_checks != 1 || node_checks != 1;
 }
 '''
         (path/'off.c').write_text(off)

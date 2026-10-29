@@ -36,8 +36,12 @@ def main():
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
     for marker in ("static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
                    "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)",
+                   "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch,",
+                   "static __always_inline void\nkd_mutex_batch_pin_assert_retained(struct kd_mutex_batch *batch,",
+                   "static __always_inline void kd_mutex_batch_assert_cold(struct kd_mutex_batch *batch)",
                    "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)",
-                   "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):
+                   "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,",
+                   "static __always_inline void\nkd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,"):
         queue += definition(mutex, marker) + "\n"
     for marker in ("static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)",
                    "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)"):
@@ -66,7 +70,7 @@ def main():
             "production": code,
             "ready-before-source-release": code,
             "transfer-keeps-epoch-closed": code.replace("\tkd_mutex_batch_epoch_end(batch, true);", "", 1),
-            "transfer-keeps-current-descriptor": code.replace("\tkd_mutex_batch_pin_complete(batch, node);", "\tif (false) kd_mutex_batch_pin_complete(batch, node);", 1),
+            "transfer-keeps-current-descriptor": code.replace("\tkd_mutex_batch_pin_complete_retained(batch, node);", "\tif (false) kd_mutex_batch_pin_complete_retained(batch, node);", 1),
             "missing-pickup-ack": code.replace("!smp_load_acquire(&frame->mutex_mixed.picked_up) ||", "false ||", 1),
             "wrong-queue-custody": code.replace("node->custody.head != frame->mutex_mixed.queue.head ||", "false ||", 1),
             "miss-native-mutex": code.replace("custody->native_locks[custody->native_count++] = lock;", "(void)lock;", 1),

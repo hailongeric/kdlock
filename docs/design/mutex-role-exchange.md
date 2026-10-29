@@ -215,3 +215,14 @@ before custody wake, and terminal C delegation remain unchanged. One claim slot
 does not limit the number of READY origins protected by the epoch. The same five
 role cases, actual C2-to-W33 exchange and balanced context/drain checks remain
 pending validation for this new candidate.
+
+The delayed-CLAIMED candidate keeps an ordinary current READY under the exact
+descriptor, private epoch and physical owner. Before root owner transfer or any
+cold service, it promotes that current to CLAIMED while the epoch still prevents
+withdrawal, then opens withdrawal and checks the strict retained-pin state.
+Native and role completion still require CLAIMED before the one result wake.
+An early outer callback after native result zero checks only saved batch state
+when its descriptor has already retired; it must not inspect the reused node.
+The old frame/source retirement barrier, C's INIT-to-READY publication, W's native
+HELD suffix and fresh after-body epoch are unchanged. The existing five local
+role cases and actual C2-to-W33 case remain pending VM gates for this candidate.

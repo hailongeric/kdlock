@@ -584,12 +584,12 @@ def profiled_session(runner, args, perf, perf_sha):
                 save(self.path / 'pin-delta.json', delta)
                 self.record['pin_diagnostics'].update(status='OBSERVED', after=pin_after, delta=delta,
                     scope='Quiescent pre/post reads after warmup and joined measurement; optional compiled pin observations, no perf process',
-                    occupancy_bins='Exact current claim occupancy 0..1 before and after selection',
+                    occupancy_bins='Exact current descriptor reservation occupancy 0..1 before and after selection',
                     ready_candidates='Once per admitted epoch, bounded compatible READY prefix on distinct nonself CPUs; bin 8 means at least eight, not future executions',
                     retirement='Retired claims are not returned JIT bodies; native exits and FULL resumes remain separate',
                     initial_spin_fractions=pin_fractions(delta),
                     fraction_scope='Wait episodes completing before the initial budget expires; retained pin also includes later completion without unpinning',
-                    admission='Epoch gate excludes withdrawal while READY is acquired and CLAIMED is stored; claims count exact descriptor admissions, not per-node CAS operations')
+                    admission='Claims count exact current descriptor reservations admitted from READY; cold retention promotes to CLAIMED before reopening withdrawal, while hot completion needs no CLAIMED store')
                 self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
                 self.save()
 

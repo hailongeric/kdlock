@@ -147,9 +147,9 @@ withdrawn:
 }
 
 /* The exact physical owner has closed withdrawal for this proxy epoch.
- * Its READY load can therefore precede a plain CLAIMED publication: no origin
- * can concurrently withdraw and no other executor owns this queue. The caller
- * also checks its private epoch and exact invocation generation. */
+ * READY therefore proves the ordinary origin pin without another notification
+ * store. The caller retains its private epoch and exact invocation generation;
+ * a current that outlives that epoch must first be promoted to CLAIMED. */
 static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,
 						 struct kd_mutex_node *node)
 {
@@ -159,7 +159,6 @@ static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,
 		return false;
 	if (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)
 		return false;
-	smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);
 	return true;
 }
 

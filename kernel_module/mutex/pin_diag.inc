@@ -270,7 +270,7 @@ MODULE_PARM_DESC(mutex_pin_stats, "Single-current claim, READY candidates and in
 #define KD_MUTEX_PIN_STOP(batch, why) ((batch)->diag.reason = (why))
 #define KD_MUTEX_PIN_CONDITION(batch, condition, why) \
 	kd_mutex_pin_diag_condition(&(batch)->diag, (condition), (why))
-#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_proxy_assert_claimed(node)
+#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_batch_pin_assert(batch, node)
 #define KD_MUTEX_PIN_DRAIN(batch, keep) do { \
 	(batch)->diag.drain_calls++; \
 	if ((batch)->nr_pins > (keep)) { \
@@ -288,6 +288,6 @@ MODULE_PARM_DESC(mutex_pin_stats, "Single-current claim, READY candidates and in
 #define KD_MUTEX_PIN_END(batch) do { } while (0)
 #define KD_MUTEX_PIN_STOP(batch, why) do { } while (0)
 #define KD_MUTEX_PIN_CONDITION(batch, condition, why) (condition)
-#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_proxy_assert_claimed(node)
+#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_batch_pin_assert(batch, node)
 #define KD_MUTEX_PIN_DRAIN(batch, keep) do { } while (0)
 #endif

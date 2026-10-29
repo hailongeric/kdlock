@@ -101,9 +101,16 @@ static void diag_check_zero(void)
         CHECK(observed.diag.claims==observed.nr_pins && !polls);
         for(unsigned int i=1;i<12;i++)CHECK(nodes[i].locked==KD_MUTEX_PROXY_READY);
         if(accepted) {
+            /* A logical claim is an exact descriptor, not notification 3. */
+            CHECK(nodes[0].locked==KD_MUTEX_PROXY_READY && observed.diag.claims==1);
+            KD_MUTEX_PIN_ASSERT(&observed,&nodes[0]);
             kd_mutex_batch_epoch_end(&observed,true);
             CHECK(observed.nr_pins==1 && nodes[0].locked==KD_MUTEX_PROXY_CLAIMED);
             CHECK(observed.diag.retain_current_calls==1 && !observed.diag.drain_nonempty);
+            kd_mutex_batch_pin_assert_retained(&observed,&nodes[0]);
+            kd_mutex_batch_epoch_end(&observed,true);
+            CHECK(nodes[0].locked==KD_MUTEX_PROXY_CLAIMED && observed.diag.claims==1);
+            CHECK(observed.diag.retain_current_calls==2 && !observed.diag.cancelled_claims);
         }
         kd_mutex_batch_epoch_end(&observed,false);
         CHECK(!observed.proxy_epoch && !observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);

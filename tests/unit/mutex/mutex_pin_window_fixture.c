@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Production single-current claim helpers; atomic observers substitute origin execution.
- * Actual gate epochs exclude withdrawal while plain stores claim pinned origins. No kernel, JIT or scheduler runs. */
+ * Actual gate epochs protect READY reservations; cold boundaries promote retained pins. No kernel, JIT or scheduler runs. */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -25,11 +25,12 @@ struct kd_exec_frame;
 static struct kd_mutex lock, other_lock;
 static struct kd_mutex_node nodes[NODE_COUNT];
 static struct kd_mutex_batch batch;
-static unsigned int checks, requests, cancellations, completions, cas_attempts;
+static unsigned int checks, requests, promotions, cancellations, completions, cas_attempts, expiry_probes;
 static unsigned int requested[NODE_COUNT];
 static bool poisoned[NODE_COUNT];
+static bool require_withdrawn_on_bug;
 static int executor_cpu;
-static struct task_struct owner={1};
+static struct task_struct owner={1}, later_owner={2};
 static struct task_struct *current=&owner;
 static int allowed_node = -1;
 
@@ -37,6 +38,7 @@ static int allowed_node = -1;
  fprintf(stderr, "FAIL pin window line %d: %s\n", __LINE__, #value); exit(1); \
 } } while (0)
 #define BUG_ON(value) do { if (value) { \
+ if(require_withdrawn_on_bug)CHECK(nodes[0].locked==KD_MUTEX_WAIT && !promotions); \
  fprintf(stderr, "BUG pin window: %s\n", #value); exit(86); \
 } } while (0)
 
@@ -72,12 +74,16 @@ static void observe_store(void *address, unsigned long value)
  CHECK(index >= 0 && address == &nodes[index].locked && !poisoned[index]);
  if(value==KD_MUTEX_PROXY_CLAIMED) {
   CHECK(batch.proxy_epoch && lock.delegation_state.counter==KD_MUTEX_GATE_COMBINER);
-  CHECK(!batch.nr_pins && !batch.pin.node && (allowed_node < 0 || index == allowed_node));
-  CHECK(nodes[index].locked==KD_MUTEX_PROXY_READY && !requested[index]);
-  requested[index]=1;requests++;return;
+  CHECK(batch.nr_pins==1 && batch.pin.node==&nodes[index]);
+  CHECK(nodes[index].locked==KD_MUTEX_PROXY_READY && requested[index]);
+  promotions++;return;
  }
  CHECK(value == KD_MUTEX_WAIT || value == 0);
- CHECK(requested[index] && nodes[index].locked == KD_MUTEX_PROXY_CLAIMED);
+ CHECK(requested[index]);
+ CHECK(nodes[index].locked==KD_MUTEX_PROXY_CLAIMED ||
+       (nodes[index].locked==KD_MUTEX_PROXY_READY && batch.proxy_epoch &&
+        !batch.outer.released && lock.owner==(unsigned long)current &&
+        lock.delegation_state.counter==KD_MUTEX_GATE_COMBINER));
  descriptor_absent(&nodes[index]);
  requested[index] = 0;
  if (value == KD_MUTEX_WAIT) cancellations++;
@@ -94,7 +100,21 @@ static void observe_store(void *address, unsigned long value)
 #define WRITE_ONCE(value,after) ((value)=(after))
 #include "mutex_state_mock.h"
 static void kd_mutex_set_locked(struct kd_mutex *value)
-{ kd_mutex_gate_set(value,KD_MUTEX_GATE_HELD); }
+{
+ CHECK(value==&lock);
+ /* No unpin window may open before a live current is independently retained. */
+ if(batch.nr_pins)CHECK(batch.pin.node && batch.pin.node->locked==KD_MUTEX_PROXY_CLAIMED);
+ kd_mutex_gate_set(value,KD_MUTEX_GATE_HELD);
+ if(batch.nr_pins) {
+  u8 ready=KD_MUTEX_PROXY_READY;
+  CHECK(kd_mutex_gate_try_withdraw(value));
+  /* An origin with a stale READY poll cannot withdraw the promoted current. */
+  CHECK(!__atomic_compare_exchange_n(&batch.pin.node->locked,&ready,KD_MUTEX_WAIT,
+                                    false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST));
+  CHECK(ready==KD_MUTEX_PROXY_CLAIMED);expiry_probes++;
+  kd_mutex_gate_end_withdraw(value);
+ }
+}
 static bool kd_mutex_delegation_owned(struct kd_mutex *value,struct task_struct *task)
 { return value==&lock && value->owner==(unsigned long)task; }
 static int raw_smp_processor_id(void) { return executor_cpu; }
@@ -107,8 +127,8 @@ static void setup(void)
  memset(nodes, 0, sizeof(nodes));
  memset(requested, 0, sizeof(requested));
  memset(poisoned, 0, sizeof(poisoned));
- requests = cancellations = completions = cas_attempts = 0;
- allowed_node = -1; executor_cpu = 0;
+ requests = promotions = cancellations = completions = cas_attempts = expiry_probes = 0;
+ allowed_node = -1; executor_cpu = 0; current=&owner;require_withdrawn_on_bug=false;
  batch.lock = &lock; lock.owner = (unsigned long)current;
  lock.delegation_state.counter = KD_MUTEX_GATE_HELD;
  for (unsigned int i = 0; i < NODE_COUNT; i++) {
@@ -129,15 +149,20 @@ static bool select_current(unsigned int index)
  bool selected;
  allowed_node = (int)index;
  selected = kd_mutex_batch_pin_select(&batch, &nodes[index]);
+ if(selected) {
+  CHECK(nodes[index].locked==KD_MUTEX_PROXY_READY && !requested[index]);
+  requested[index]=1;requests++;
+ }
  allowed_node = -1;
  return selected;
 }
 
 static void consume(unsigned int index)
 {
- kd_mutex_proxy_assert_claimed(&nodes[index]);
+ kd_mutex_batch_pin_assert(&batch,&nodes[index]);
  CHECK(requested[index]);
- kd_mutex_batch_pin_complete(&batch, &nodes[index]);
+ if(batch.proxy_epoch)kd_mutex_batch_pin_complete(&batch,&nodes[index]);
+ else kd_mutex_batch_pin_complete_retained(&batch,&nodes[index]);
  descriptor_absent(&nodes[index]);
  smp_store_release(&nodes[index].locked, 0);
  /* Completed slots may be reused immediately; stale descriptor reads fail. */
@@ -159,7 +184,7 @@ static void sequential_currents(void)
   consume(i);
  }
  CHECK(!batch.nr_pins && !batch.pin.node && requests == 24 && completions == 24);
- CHECK(!cancellations && !cas_attempts);
+ CHECK(!cancellations && !promotions && !cas_attempts);
  kd_mutex_batch_epoch_end(&batch, true);
  CHECK(!batch.proxy_epoch && kd_mutex_gate_read(&lock) == KD_MUTEX_GATE_HELD);
  /* Reuse the same slot with a fresh generation after the previous wake. */
@@ -168,7 +193,7 @@ static void sequential_currents(void)
  CHECK(kd_mutex_batch_epoch_begin(&batch));
  CHECK(select_current(0)); consume(0);
  kd_mutex_batch_epoch_end(&batch, false);
- CHECK(requests == completions && !cancellations && !cas_attempts);
+ CHECK(requests == completions && !promotions && !cancellations && !cas_attempts);
 }
 
 static void selection_boundaries(void)
@@ -205,7 +230,10 @@ static void cold_boundaries(void)
  kd_mutex_batch_epoch_end(&batch, true);
  CHECK(!batch.proxy_epoch && batch.nr_pins == 1 && batch.pin.node == &nodes[0]);
  CHECK(nodes[0].locked == KD_MUTEX_PROXY_CLAIMED && nodes[1].locked == KD_MUTEX_PROXY_READY);
- CHECK(!cancellations && kd_mutex_gate_try_withdraw(&lock));
+ CHECK(!cancellations && promotions==1 && expiry_probes==1);
+ kd_mutex_batch_pin_assert_retained(&batch,&nodes[0]);
+ kd_mutex_batch_epoch_end(&batch,true); /* Already retained: no new promotion. */
+ CHECK(promotions==1 && expiry_probes==1 && kd_mutex_gate_try_withdraw(&lock));
  nodes[1].locked = KD_MUTEX_WAIT; kd_mutex_gate_end_withdraw(&lock);
  consume(0); /* Current's exact claim survives the cold service. */
  CHECK(kd_mutex_batch_epoch_begin(&batch));
@@ -223,6 +251,13 @@ static void cold_boundaries(void)
  CHECK(kd_mutex_batch_epoch_begin(&batch));
  CHECK(!select_current(0)); /* Cancellation never rearms the invocation. */
  kd_mutex_batch_epoch_end(&batch, false);
+ /* Retained cold proof survives early release and an unrelated later owner. */
+ setup();CHECK(select_current(0));kd_mutex_batch_epoch_end(&batch,true);
+ batch.outer.released=true;lock.owner=(unsigned long)&later_owner;
+ lock.delegation_state.counter=KD_MUTEX_GATE_COMBINER;
+ kd_mutex_batch_pin_assert_retained(&batch,&nodes[0]);consume(0);
+ kd_mutex_batch_assert_cold(&batch); /* Empty native callback must not read reused node. */
+ CHECK(promotions==1 && completions==1 && !batch.nr_pins);
 }
 
 static void invalid_identity(const char *name)
@@ -242,8 +277,33 @@ static void invalid_identity(const char *name)
   else if (!strcmp(name, "wrong-lock")) nodes[0].counted_lock = &other_lock;
   else if (!strcmp(name, "wrong-current")) { select_current(1); CHECK(false); }
   else if (!strcmp(name, "complete-unclaimed")) {
-   nodes[0].locked = KD_MUTEX_PROXY_READY;
+   nodes[0].locked = KD_MUTEX_WAIT;
    kd_mutex_batch_pin_complete(&batch, &nodes[0]); CHECK(false);
+  } else if (!strcmp(name,"expiry-before-promotion")) {
+   /* Deliberately violate the ordering: expiry owns the pin before retention. */
+   kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);
+   CHECK(kd_mutex_gate_try_withdraw(&lock));
+   u8 ready=KD_MUTEX_PROXY_READY;
+   CHECK(__atomic_compare_exchange_n(&nodes[0].locked,&ready,KD_MUTEX_WAIT,
+                                     false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST));
+   kd_mutex_gate_end_withdraw(&lock);require_withdrawn_on_bug=true;
+   kd_mutex_batch_epoch_end(&batch,true);CHECK(false);
+  } else if (!strcmp(name,"ready-without-epoch")) {
+   batch.proxy_epoch=false;kd_mutex_batch_pin_complete(&batch,&nodes[0]);CHECK(false);
+  } else if (!strcmp(name,"later-owner-combiner")) {
+   lock.owner=(unsigned long)&later_owner;
+   kd_mutex_batch_pin_assert(&batch,&nodes[0]);CHECK(false);
+  } else if (!strcmp(name,"released-epoch")) {
+   batch.outer.released=true;kd_mutex_batch_pin_assert(&batch,&nodes[0]);CHECK(false);
+  } else if (!strcmp(name,"ready-held")) {
+   lock.delegation_state.counter=KD_MUTEX_GATE_HELD;
+   kd_mutex_batch_pin_assert(&batch,&nodes[0]);CHECK(false);
+  } else if (!strcmp(name,"retained-ready")) {
+   batch.proxy_epoch=false;lock.delegation_state.counter=KD_MUTEX_GATE_HELD;
+   kd_mutex_batch_pin_complete_retained(&batch,&nodes[0]);CHECK(false);
+  } else if (!strcmp(name,"retained-open-epoch")) {
+   smp_store_release(&nodes[0].locked,KD_MUTEX_PROXY_CLAIMED);
+   kd_mutex_batch_pin_complete_retained(&batch,&nodes[0]);CHECK(false);
   } else CHECK(false);
   kd_mutex_batch_unpin(&batch, false);
  }
@@ -255,6 +315,6 @@ int main(int argc, char **argv)
  if (argc == 2) invalid_identity(argv[1]);
  CHECK(argc == 1);
  sequential_currents(); selection_boundaries(); cold_boundaries();
- printf("PASS pin window: %u checks; one exact current, sequential slot reuse, no future access, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
+ printf("PASS pin window: %u checks; one exact READY current, delayed cold promotion, sequential slot reuse, no future access, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
  return 0;
 }

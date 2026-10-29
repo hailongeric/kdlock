@@ -36,7 +36,7 @@ static int gate_clear(unsigned int mask,atomic_t *word);
 #define atomic_fetch_andnot_release(mask,word) gate_clear((mask),(word))
 
 enum route { EARLY_DONE, EXPIRE, CLAIM_RACE, WAKE_RACE, CANCEL, CANCEL_AT_ENTRY,
- CLAIMED_AT_ENTRY, DONE_AT_ENTRY, WAKE_AT_UNPIN, NO_RESCHED, EXECUTOR, PHYSICAL, RELEASE_RACE, STALE_READY };
+ CLAIMED_AT_ENTRY, DONE_AT_ENTRY, WAKE_AT_UNPIN, NO_RESCHED, EXECUTOR, PHYSICAL, RELEASE_RACE, STALE_READY, READY_EPOCH };
 static enum route route;
 static struct kd_mutex_node node;
 static struct kd_mutex lock;
@@ -112,7 +112,8 @@ static int gate_cas(atomic_t *word,int before,int after)
  if(!raced && route==CLAIM_RACE && (after&KD_MUTEX_GATE_WITHDRAW)) {
   raced=true;executor=true;
   CHECK(kd_mutex_gate_try_combine(&lock));
-  CHECK(kd_mutex_proxy_request(&lock,&node));executor=false;
+  CHECK(kd_mutex_proxy_request(&lock,&node));
+  smp_store_release(&node.locked,KD_MUTEX_PROXY_CLAIMED);executor=false;
  }
  int seen=atomic_read(word);
  if(seen==before)__atomic_store_n(&word->counter,after,__ATOMIC_SEQ_CST);
@@ -155,7 +156,9 @@ static void peer_claim(void)
 {
  executor=true;
  if(kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD)CHECK(kd_mutex_gate_try_combine(&lock));
- CHECK(kd_mutex_proxy_request(&lock,&node));executor=false;
+ CHECK(kd_mutex_proxy_request(&lock,&node));
+ /* Model the cold boundary only; ordinary readiness admission does not store. */
+ smp_store_release(&node.locked,KD_MUTEX_PROXY_CLAIMED);executor=false;
  kd_mutex_proxy_assert_claimed(&node);
 }
 static bool need_resched(void)
@@ -174,7 +177,14 @@ static void cpu_relax(void)
  if(route==PHYSICAL) { CHECK(!pins);return; }
  if(!pins) { CHECK(node.locked==KD_MUTEX_WAIT);return; }
  CHECK(node.locked==KD_MUTEX_PROXY_READY || node.locked==KD_MUTEX_PROXY_CLAIMED);
- if(route==EARLY_DONE || (route==NO_RESCHED && pauses==KDLOCK_MUTEX_SPIN_BUDGET+2)) {
+ if(route==READY_EPOCH) {
+  if(pauses==1) {
+   executor=true;CHECK(kd_mutex_gate_try_combine(&lock));
+   CHECK(kd_mutex_proxy_request(&lock,&node));executor=false;
+  }
+  CHECK(node.locked==KD_MUTEX_PROXY_READY && !claims);
+  if(pauses==KDLOCK_MUTEX_SPIN_BUDGET+2)node.locked=0;
+ } else if(route==EARLY_DONE || (route==NO_RESCHED && pauses==KDLOCK_MUTEX_SPIN_BUDGET+2)) {
   peer_claim();node.locked=0;kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);
  } else if(route==CANCEL) {
   if(node.locked==KD_MUTEX_PROXY_READY)peer_claim();
@@ -226,11 +236,14 @@ int main(void)
  CHECK(withdrawals==1 && pin_calls==1 && !atomic_read(&lock.delegation_state));
  wait_case(STALE_READY,KD_MUTEX_QUEUE_INIT);
  CHECK(claims==1 && withdraw_attempts==1 && !withdrawals && !unpin_calls);
+ wait_case(READY_EPOCH,KD_MUTEX_QUEUE_INIT);
+ CHECK(!claims && claim_attempts==1 && need_checks>=2 && !withdraw_attempts && !withdrawals && !unpin_calls && !schedules);
+ kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);
  for(unsigned int state=0;state<=KD_MUTEX_QUEUE_INIT;state++) {
   reset(EXECUTOR);node.locked=state;executor=true;CHECK(kd_mutex_gate_try_combine(&lock));
   CHECK(kd_mutex_proxy_request(&lock,&node)==(state==KD_MUTEX_PROXY_READY));
-  CHECK(claim_attempts==1 && claims==(state==KD_MUTEX_PROXY_READY) && !pauses);
-  CHECK(node.locked==(state==KD_MUTEX_PROXY_READY?KD_MUTEX_PROXY_CLAIMED:state));
+  CHECK(claim_attempts==1 && !claims && !pauses);
+  CHECK(node.locked==state);
  }
  reset(EXECUTOR);executor=true;node.locked=KD_MUTEX_PROXY_READY;CHECK(kd_mutex_gate_try_combine(&lock));
  node.tail=(cpu+1)<<KD_MUTEX_TAIL_CPU_OFFSET;
@@ -239,6 +252,6 @@ int main(void)
  kd_mutex_wait_and_lock_node(&lock,&node);
  CHECK(pins==1 && migration==1 && schedules==1 && acquired==1 && kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD);
  CHECK(pin_calls==1 && unpin_calls==1);
- puts("PASS production READY pin: initial grace, both claim/expiry winners, wake/cancel races, no rearm, balanced pins and gate epochs, non-RMW claims and flag clearance before unpin");
+ puts("PASS production READY pin: initial grace, both claim/expiry winners, wake/cancel races, no rearm, balanced pins and gate epochs, read-only readiness admission, READY epoch completion, cold promotion and flag clearance before unpin");
  return 0;
 }
