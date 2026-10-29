@@ -1,0 +1,89 @@
+{
+  "completed": true,
+  "transport_sha256": "88661ec65870e98a7b2199de6959f88d36a109f430d3bbf236117df7e399343a",
+  "trees": 4,
+  "archives": 8,
+  "inventory_paths": 8957,
+  "receipts": [
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 735,
+      "regular_files": 643,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "c0e41e3a5b59ff547ad1826c3597d9c2ab7211827bdf8143577e6dcad0c98d35",
+          "regular_files": 639
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "f210bb58c2f9b3273070c99b19ae578d28d2ac5c2e5a790db22d229739cc3b1d",
+          "regular_files": 4
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-early-ready-20261029/bench/mutex-early-ready-diagnostics-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 2924,
+      "regular_files": 2420,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "5011da36998af151c2631b8cd3ec8a52984fd1080707291a05e6ce9b2e5b67ab",
+          "regular_files": 2414
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "3a3ac24c1f25a3ed14ecbf3b2a66e8090f7b13fb069a82188a79bceb27a57f9e",
+          "regular_files": 6
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-early-ready-20261029/bench/mutex-early-ready-nano-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 4980,
+      "regular_files": 4423,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "74f0b4a311240e4d8cd43f380e21867152c7371e7c2b5e15424ea88148b1c53b",
+          "regular_files": 4412
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "bec31f10b7ad6ae175373015584040359d16fc671bd298cce985e70b8abd2363",
+          "regular_files": 11
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-early-ready-20261029/tests/mutex-early-ready-live-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 318,
+      "regular_files": 304,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "321df18e584ec5a7872657e707de59864ee5c98bdf261e9c7d1964555136ba3c",
+          "regular_files": 298
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "c7b93710775e0fb067a2ee931e10b94db4d27e4f9534ef24549402697a4fea97",
+          "regular_files": 6
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-early-ready-20261029/tests/mutex-early-ready-unit-20261029-archives"
+    }
+  ]
+}

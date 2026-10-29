@@ -64,10 +64,13 @@ isolated. The [retained-current follow-up](../bench/results/10.176.26.71/tests/m
 at `e2b68515`, validated through `2af70f39`, passed all fourteen selected drivers
 and eight live blocks. Both instrumented points again met the spin target, but
 contended mutex still lost 1.65–14.26%; rwsem also has negative points. It is not
-promoted. The next isolated experiment moves ordinary READY publication before
-the release queue link and makes wait entry observe-only. Preserve private-head
-and post-frame role-C transitions, exact ownership/lifetime checks and the
-no-regression gate.
+promoted. The [early-READY follow-up](../bench/results/10.176.26.71/tests/mutex-early-ready-20261029/README.md)
+at `a46bf63c` passed fifteen selected drivers, both ordinary/diagnostic builds
+and eight live blocks. Both counter points meet the scoped spin target, but
+contended mutex still lost 2.55–11.53%. It is not promoted. The next hypothesis
+consolidates duplicate checks at ordinary admission, retaining every exact
+predicate, stable generation/key revalidation and all later fresh lifetime proofs.
+No performance acceptance follows from source simplification alone.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.

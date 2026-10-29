@@ -220,16 +220,25 @@ spin target, but contended mutex still loses 1.65–14.26% in the 36-point nano
 round. Rwsem also has losses, including a NO_JIT point; no proxy-execution cause
 is established for that point. The candidate remains isolated.
 
-The next experiment moves ordinary READY publication after every packet,
-count/generation and debug access, before the release incoming queue link.
-Wait entry then only observes READY/CLAIMED/WAIT/result0 and rejects INIT,
-avoiding the post-link INIT-to-READY RMW without rearming early completion.
-Keep the private first head's INIT-to-WAIT CAS and role-C's checked READY
-publication after old frame/source retirement. Preserve shadow-stack switching,
-withdrawal arbitration, cold promotion, exact source/frame/ACK obligations,
-65536 budget and 1024/1024 limits. Publication order, early result/cancellation,
-slot reuse and negative mutation checks precede live validation and timing.
-This is a performance hypothesis; the no-regression gate remains open.
+The [early-READY candidate](../../bench/results/10.176.26.71/tests/mutex-early-ready-20261029/README.md)
+at `a46bf63c44bc81a32901dfd55e3c88a16954e262` moves ordinary publication after
+packet/count/debug work and before a release incoming link. The explicitly
+inlined wait helper observes without an entry RMW. All fifteen selected drivers,
+both ordinary/diagnostic builds and eight live blocks passed. Emitted-code
+inspection preserves the distinct private-head and post-source role-C CAS paths.
+Both counter points meet the scoped spin target, but contended mutex still loses
+2.55–11.53% in the 36-point round. It remains isolated.
+
+The next hypothesis consolidates duplicate admission checks at the two existing
+boundaries before legacy stack reads or ABI2 borrowed preparation. Preserve
+exact expected node, stable generation/key revalidation, private epoch,
+unreleased outer, current physical owner including PICKUP refusal, COMBINER,
+READY and self-CPU checks. No callback or scheduling boundary may intervene.
+Initial execute_cs checks across image/context work, and every later completion,
+cold, role and tail proof remain fresh. Keep publication, threshold, limits and
+layout unchanged. Source review, negative mutation checks, live validation and
+measurement must establish whether this removes cost without weakening a proof;
+the no-regression gate remains open.
 
 ### Physical exclusion for ordinary and delegated callers
 
