@@ -25,9 +25,11 @@ rwsem 1,590,187. Later fixture/probe-only changes passed custody-idle checks,
 | W releases A with native spin B held | Controller reported passed at `2d4ee3df` |
 | W releases A with native mutex M held | Kernel assertion at `2d4ee3df`; undrained and not accepted |
 
-The [simple-case proof](simple-proof.json) is copied to this host. Other complete
-guest receipts remain on the current disk and in the failure snapshot; their
-offline archives have not yet been made. Do not treat this table as whole-kernel,
+The [simple-case proof](simple-proof.json) is copied to this host. The other complete guest receipts were recovered from the current disk after
+the approved reset and archived, with [offline verification](prereset-archive-verification.json).
+Eight archives cover four trees and 6,446 inventory paths; the original failed
+verdicts are unchanged. Pre-reset temporary unit logs were cleared from the
+current `/tmp` at boot and remain in the failure-state snapshot. Do not treat this table as whole-kernel,
 arbitrary nesting, long-chain, source-close race or performance qualification.
 
 Two preceding probe failures remain failed. The first stopped before module
@@ -53,8 +55,8 @@ The `w-early-mutex` run at
 `kd_mutex_custody_native_acquire+0x6e/0xb0`. W, PID 532712 on CPU 3,
 hit the exact duplicate-entry BUG after acquiring M. C, PID 532711 on CPU 2,
 remained in `__kd_mutex_lock_slowpath`; serial evidence records soft lockup and
-RCU stall. Guest reads timed out. No force unload, reset, reboot or source sync
-was attempted after this failure.
+RCU stall. Guest reads timed out. No force unload or source sync was attempted on that undrained boot. A
+subsequent user-approved reset is recorded below.
 
 Source inspection identifies double accounting of one physical acquisition:
 `kd_mutex_lock_entry` calls `kd_mutex_trylock_fast`, which calls
@@ -67,10 +69,11 @@ The fix and composed regression fixture are committed at
 `5b9fce4c41a636ac3aea4cea2a7b821e1de51040`. The fixture composes the actual
 entry aliases, fast helper, inline CAS, note and custody ledger, with a mutation
 that reinstates the observed error. Static review, Python parsing and whitespace
-checks passed. This correction has not been built or executed; the VM must be
-recovered before its basic, affected and live retest can run.
+checks passed. After the approved recovery, two basic programs and nine directly affected
+drivers passed at `1c86d6d1` (11/11), including the new composed acquisition
+regression. Live retest and timing remain separate pending gates.
 
-## Preserved state and proposed recovery
+## Preserved state and approved recovery
 
 The [host evidence manifest](preserved-host-evidence.json) records hashes of the
 full serial capture, simple-case proof, host identity and monitor receipt.
@@ -81,14 +84,15 @@ QEMU PID 257489 successfully created the new snapshot
 The failure checkpoint preserves the nondrained state and current disks; it is
 not a successful recovery or drain assertion.
 
-The proposed next action is one QEMU monitor `system_reset`, booting the same
-installed kernel from the current disks. This preserves the on-disk evidence
-instead of reverting to an older disk snapshot. No kernel change or installation
-is proposed. After boot, verify identity, pins/frequency, snapshots and idle;
-copy and archive the retained evidence; then synchronize the isolated correction
-and rerun basic, directly affected and live cases before timing. This reset has
-not been executed. [AGENTS.md rule 7](../../../../../AGENTS.md) excludes guest
-kernel reboot by default, so explicit approval is required.
+The user approved one QEMU monitor `system_reset`, which booted the same
+installed kernel from the current disks. The on-disk evidence was preserved;
+no older disk snapshot was restored and no kernel change or installation ran.
+The [recovery receipt](approved-recovery.json) records the completed reset,
+new boot `677b7afa-5358-4ece-a650-5f4a4adecd55`, initial taint 0, verified
+kernel bundle/runtime policy, host pins/frequency and snapshots. The fix was
+then synchronized to the idle VM. Its affected validation is in progress.
+[AGENTS.md rule 7](../../../../../AGENTS.md) required the explicit approval;
+recovery does not change the failed run into a drain or correctness pass.
 
 Strict pin overlap `f9f2118823aab58f03d7f6033ce6b2833cd799a6` and rwlock
 rollback-first `233f3f50d8abd9c5ffba390400024ca52922d6cb` remain separate,

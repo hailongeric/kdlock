@@ -79,9 +79,11 @@ validate whole-kernel replacement.
    rwlock IRQ/BH variants require their own local context-preserving contract.
    The maintained mutex still pins published waiters. The October 29 strict
    queued/preemptible to selected/pinned candidate passed focused correctness but
-   was archived after a measured regression; bounded selection remains undecided.
-   Do not promote it or restore a queue-wide pin as a claimed solution to that
-   request. Physical mutex owners/services can sleep. Oversubscription redesign
+   was archived after a measured regression. The user approved a small bounded
+   immediately selected group on October 29, subject to correctness and timing;
+   its implementation remains a separate candidate pending those checks.
+   Do not promote the regressed strict candidate or describe queue-wide pinning
+   as satisfying that request. Physical mutex owners/services can sleep. Oversubscription redesign
    and rwsem fairness changes are deferred.
    Mixed mutex-to-spin known CALLs now have a one-CAS exact-ticket path. Only
    an eligible ABI2 root with its sole outer mutex may transfer that owner to the
