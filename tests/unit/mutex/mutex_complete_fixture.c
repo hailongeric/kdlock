@@ -86,7 +86,7 @@ static bool list_empty(const struct list_head *p) { return p->next == p; }
 #define prefetch(p) ((void)(p))
 #define prefetchw(p) ((void)(p))
 #define container_of(p, type, member) ((type *)((char *)(p) - offsetof(type, member)))
-static unsigned int raw_smp_processor_id(void) { return 0; }
+static int raw_smp_processor_id(void) { return 0; }
 static int numa_node_id(void) { return 0; }
 static void observe_address(const void *p)
 {
@@ -423,7 +423,7 @@ static void caller_cases(void)
         CHECK(gate.owner == (route == 5 ? NULL : current) &&
               kd_mutex_gate_read(&gate) == (route == 5 ? KD_MUTEX_GATE_FREE : KD_MUTEX_GATE_HELD));
         CHECK(physical_releases == (route == 5 ? 1U : 0U));
-        CHECK(!insert_head || gate.delegation_tail == nodes[2].tail);
+        CHECK(!insert_head || gate.delegation_tail == (u32)nodes[2].tail);
         for (unsigned int i = 0; i < completed; i++)
             CHECK(node_poisoned[i] && !memcmp(poisoned[i], &nodes[i], sizeof(nodes[i])));
 #ifdef KDLOCK_SELFTEST
