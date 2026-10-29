@@ -1,0 +1,259 @@
+{
+  "verified": true,
+  "scope": "Independent offline arithmetic, recorded receipt identity, and committed instrumentation-semantics review; no VM, source edits, builds or tests.",
+  "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+  "runtime_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+  "prior_source_commit": "99f383624faa872a76521d1b5be7faea586591c1",
+  "runtime_changed_files": [
+    "kernel_module/kd_mutex.c",
+    "kernel_module/mutex/combiner.inc",
+    "kernel_module/mutex/pin_window.inc",
+    "kernel_module/mutex/queue.inc"
+  ],
+  "profile_arithmetic_ast_unchanged": true,
+  "profile_bytes_unchanged": true,
+  "prior_driver_sha256": "84fbf77da1898566925b18d41bf101e91c15e2115488748f817a77158581d809",
+  "input_file": "/tmp/kdlock-phase-diagnostics-20261029.json",
+  "input_sha256": "63bba53797d221e1e5eba654a78c599dfe5ea3f4ba63f4097c420c3dd5a7cff6",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "controller_completed": true,
+  "profile_receipt_complete": true,
+  "final_idle_reported": true,
+  "diagnostic": true,
+  "score_eligible": false,
+  "provider_diagnostics": {
+    "mutex_diag": 2,
+    "mutex_pin_tsc_shift": 0,
+    "mutex_spin_budget": 65536
+  },
+  "provider_mutex_policy": {
+    "deferred_handoff": 8,
+    "numa_boundary": 1024,
+    "scan_budget": 64,
+    "total_cap": 1024
+  },
+  "driver_sha256": "84fbf77da1898566925b18d41bf101e91c15e2115488748f817a77158581d809",
+  "rows": [
+    {
+      "workload": "c01",
+      "cachelines": 1,
+      "write_percent": 100,
+      "threads": 20,
+      "repeat": 0,
+      "wait_episodes": 8268001,
+      "completed_within_initial_budget": 8268001,
+      "completed_before_budget_pct": 100.0,
+      "retained_initial_pin": 8268001,
+      "retained_initial_pin_pct": 100.0,
+      "greater_than_99_percent_observed": true,
+      "epoch_admissions": 8093,
+      "epoch_ready_histogram": [
+        0,
+        7,
+        8,
+        2,
+        3,
+        2,
+        1,
+        2,
+        8068
+      ],
+      "ready_at_least_eight": 8068,
+      "ready_at_least_eight_pct": 99.69109106635364,
+      "selections": 8259925,
+      "selection_result": {
+        "claimed": 8259925,
+        "current_not_ready": 0,
+        "self_current": 0
+      },
+      "occupancy_before": [
+        8259925,
+        0
+      ],
+      "occupancy_after": [
+        0,
+        8259925
+      ],
+      "claims": 8259925,
+      "retired_claims": 8259925,
+      "cancelled_claims": 0,
+      "retain_current_calls": 12,
+      "zero_counters": [
+        "budget_expired_episodes",
+        "expiry_checks",
+        "withdrawal_reservations",
+        "withdrawals",
+        "initial_pin_dropped",
+        "forced_cancellations",
+        "cancelled_claims",
+        "drain_nonempty",
+        "full_resumes",
+        "epoch_admission_refusals"
+      ],
+      "nonzero_boundary_counters": {},
+      "all_counter_deltas": {
+        "batches": 8093,
+        "selections": 8259925,
+        "claims": 8259925,
+        "retired_claims": 8259925,
+        "cancelled_claims": 0,
+        "drain_calls": 8105,
+        "drain_nonempty": 0,
+        "retain_current_calls": 12,
+        "full_resumes": 0,
+        "wait_episodes": 8268001,
+        "initial_pin_retained": 8268001,
+        "initial_pin_dropped": 0,
+        "initial_budget_completed": 8268001,
+        "budget_expired_episodes": 0,
+        "expiry_checks": 0,
+        "withdrawals": 0,
+        "forced_cancellations": 0,
+        "epoch_admission_attempts": 8093,
+        "epoch_admission_refusals": 0,
+        "withdrawal_reservations": 0
+      },
+      "before_after_delta_exact": true,
+      "all_three_snapshots_conserve": true
+    },
+    {
+      "workload": "c01",
+      "cachelines": 1,
+      "write_percent": 100,
+      "threads": 36,
+      "repeat": 0,
+      "wait_episodes": 7789653,
+      "completed_within_initial_budget": 7789653,
+      "completed_before_budget_pct": 100.0,
+      "retained_initial_pin": 7789653,
+      "retained_initial_pin_pct": 100.0,
+      "greater_than_99_percent_observed": true,
+      "epoch_admissions": 15144,
+      "epoch_ready_histogram": [
+        0,
+        5,
+        12,
+        4,
+        3,
+        1,
+        1,
+        0,
+        15118
+      ],
+      "ready_at_least_eight": 15118,
+      "ready_at_least_eight_pct": 99.8283148441627,
+      "selections": 7774526,
+      "selection_result": {
+        "claimed": 7774526,
+        "current_not_ready": 0,
+        "self_current": 0
+      },
+      "occupancy_before": [
+        7774526,
+        0
+      ],
+      "occupancy_after": [
+        0,
+        7774526
+      ],
+      "claims": 7774526,
+      "retired_claims": 7774526,
+      "cancelled_claims": 0,
+      "retain_current_calls": 12,
+      "zero_counters": [
+        "budget_expired_episodes",
+        "expiry_checks",
+        "withdrawal_reservations",
+        "withdrawals",
+        "initial_pin_dropped",
+        "forced_cancellations",
+        "cancelled_claims",
+        "drain_nonempty",
+        "full_resumes",
+        "epoch_admission_refusals"
+      ],
+      "nonzero_boundary_counters": {},
+      "all_counter_deltas": {
+        "batches": 15144,
+        "selections": 7774526,
+        "claims": 7774526,
+        "retired_claims": 7774526,
+        "cancelled_claims": 0,
+        "drain_calls": 15156,
+        "drain_nonempty": 0,
+        "retain_current_calls": 12,
+        "full_resumes": 0,
+        "wait_episodes": 7789653,
+        "initial_pin_retained": 7789653,
+        "initial_pin_dropped": 0,
+        "initial_budget_completed": 7789653,
+        "budget_expired_episodes": 0,
+        "expiry_checks": 0,
+        "withdrawals": 0,
+        "forced_cancellations": 0,
+        "epoch_admission_attempts": 15144,
+        "epoch_admission_refusals": 0,
+        "withdrawal_reservations": 0
+      },
+      "before_after_delta_exact": true,
+      "all_three_snapshots_conserve": true
+    }
+  ],
+  "semantics": {
+    "greater_than_99_denominator": "wait_episodes: one episode per actual delegation result-wait helper entry, including an already-zero result; not all lock acquisitions, descriptor claims, returned JIT bodies, CPU time or parking rate.",
+    "numerator": "initial_budget_completed: retained initial pin and budget_expired false at the initial wait-phase finish. An already-zero entry counts once with no PAUSE; the 65536 budget starts in the observe-only helper, after earlier READY/link publication. This is not elapsed time since READY or an amount of CPU spinning.",
+    "claims": "Exact private current-descriptor reservations. Ordinary READY execution does not store CLAIMED; claims and retired_claims are not notification-store counts or returned-body counts.",
+    "retain_current_calls": "Calls retaining an existing current at epoch closure, including already-CLAIMED retention; not exact promotion-store count.",
+    "ready_cohort": "Once per successful epoch admission, before selecting a current, observe a bounded compatible linked READY prefix on distinct nonself CPUs. Bin8 means at least8 observed candidates; it does not promise8 future executions or describe every iteration.",
+    "unavailable_selections": "Every self_current/current_not_ready selection is preserved in selection_result and occupancy_after[0]. No bin is discarded; these snapshots do not record the underlying state or establish its cause."
+  },
+  "source_evidence": [
+    {
+      "path": "bench/nano/profile.py",
+      "sha256": "84fbf77da1898566925b18d41bf101e91c15e2115488748f817a77158581d809",
+      "blob": "622db9d59dcbc9e3a136d59443810ecea801a36e"
+    },
+    {
+      "path": "kernel_module/kd_mutex.c",
+      "sha256": "dd160ec096b22485007b7dab0da869a179f9d3854f5b9fac4d11a6988505841a",
+      "blob": "70d4810c576750ceb65e1123de9b53852d402a43"
+    },
+    {
+      "path": "kernel_module/mutex/pin_diag.inc",
+      "sha256": "4553bb588045b370b68f140e382c120c4c89efd54d962c883d239867e6ac1a1e",
+      "blob": "b7c87dbdbb659455ab8af3be02a38ad4c3e53fd6"
+    },
+    {
+      "path": "kernel_module/mutex/pin_origin.inc",
+      "sha256": "cab1a2d4713d0a59a5fd6dc9bac7512c88ab5de8514fbb1a67b4872fa0623845",
+      "blob": "225a5b885477330320bed0491b0256f5b800df94"
+    },
+    {
+      "path": "kernel_module/mutex/queue.inc",
+      "sha256": "31b428461e2e694c1869fe48edaed71ed2c103a21f1ad543b842f813cb0b6bea",
+      "blob": "5f1d27134db7d1930a69b90bcb0c4d9135755df3"
+    },
+    {
+      "path": "kernel_module/mutex/waiter.inc",
+      "sha256": "adf5fb9ecaa36927832de918d7004b356588929a6797ae845d0ff1a098572480",
+      "blob": "378281a5d7cc4cb8f243cb397bfbd2aadf564882"
+    },
+    {
+      "path": "kernel_module/mutex/pin_window.inc",
+      "sha256": "e181af5ac610877f2bd58074cff23f4086b9a394bdde646e6cdcab8516f0bdda",
+      "blob": "9023b40ac1143afe33ea87ea49f3e7d0e0a6e18a"
+    },
+    {
+      "path": "kernel_module/mutex/combiner.inc",
+      "sha256": "a35391034766d3ecc2344836bc6e0c7bbd75bee095e41f6a2e971d29aa400178",
+      "blob": "6034d29e41c1f640e4bcb0ee3e79dcd76ef89bc7"
+    }
+  ],
+  "analyzer_sha256": "052bb9ff74ea508b4cf78c8198e7649627d03ce90ef029b93b3a4387c4ffdeed",
+  "limits": [
+    "Both are optional mode2 instrumented, single-round c01 points; no performance comparison or acceptance is made.",
+    "Any observed within-budget fraction applies only to these helper-entry episodes, including already-completed entries. No universal >99% guarantee, READY-to-completion wall-time fraction, CPU spinning fraction, absence of all scheduling, or lock-parking rate is established.",
+    "The supplied bundle contains result.json plus before/after/delta counters, but no raw session/measurement logs, per-session returned-body counters, source-retirement receipts, or provider ELF/modinfo. Complete/final-idle identities are verified as recorded; those missing raw facts cannot be independently revalidated from this input.",
+    "The diagnostic schema conservation checks cannot themselves prove execution, ownership or source/frame drain. Full archive integrity and live validation remain separate evidence."
+  ]
+}

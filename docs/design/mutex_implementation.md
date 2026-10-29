@@ -254,12 +254,23 @@ both counter points meet the helper-episode budget target. The 36-point round
 still loses 1.38–11.60% at all ten contended mutex points; c01/20 stays near
 4.06 Mops/s. It is isolated and is not carried into the next candidate.
 
-The next bounded change starts from `99f38362` and consolidates the redundant
-HELD-or-COMBINER plus exact-COMBINER tests within one fresh ownership predicate
-at each of the same three boundaries. Keep every owner/PICKUP/current-task,
-private-epoch, exact invocation, origin and later cold/completion proof. Preserve
-the old phase mask rather than inventing a stronger transition check. No cached
-proof crosses a body or callback; correctness and performance remain to be measured.
+The [exact-phase candidate](../../bench/results/10.176.26.71/tests/mutex-exact-phase-20261029/README.md)
+at `ff69c57a3746634e6ba82b977c1f05ba544d065a` combines redundant phase tests
+inside one fresh ownership predicate at the same three boundaries. Twelve selected
+drivers, both builds and eight live blocks passed; emitted code retains the exact
+owner/PICKUP, origin, READY and invocation proofs. Both counter points meet the
+helper-episode budget target. All ten contended mutex points still lose 0.17–12.46%
+against pinned `1c86d6d1`; the candidate remains isolated.
+
+The next broader experiment starts again from `99f38362`: compose only ordinary
+ABI2 COMPLETE frame/pin retirement inside one uninterrupted transition. Retain
+all frame/routing, strict READY, exact invocation and physical-owner proofs, then
+retire frame storage before descriptor removal and the last node wake. Explicit
+private outcomes must prevent caller replay or post-wake node access. A delayed
+terminal link retains its exact descriptor/source lease for cold cleanup; SELFTEST
+keeps its old observer path. The generic frame API must remain unchanged. Existing
+outer-progress stubs do not exercise this real composed path, so a meaningful
+composed fixture and all affected emitted/live/performance gates are required.
 
 ### Physical exclusion for ordinary and delegated callers
 

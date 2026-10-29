@@ -1,0 +1,376 @@
+{
+  "scope": "Read-only offline validation of fetched controller/result receipts and committed probe contracts; no VM access, tests, builds, or timing.",
+  "verified": true,
+  "input_file": "/tmp/kdlock-phase-live-results-20261029.json",
+  "input_sha256": "3aa587a48ea303683036dcad73a8062bfc56a3888ad007f7bb7e8ac3c4675e45",
+  "controller_source": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+  "runtime_source": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+  "runtime_identity_review": {
+    "kernel_module_identical": true,
+    "include_identical": true,
+    "kernel_module_tree": "5927f0e04a23932186a97dbdbbaef0da838684c1",
+    "kernel_module_runtime_tree": "5927f0e04a23932186a97dbdbbaef0da838684c1",
+    "include_tree": "23aa63613c3542073d6248c63bb4ede1d8d43628",
+    "include_runtime_tree": "23aa63613c3542073d6248c63bb4ede1d8d43628",
+    "include_changed_paths": [],
+    "include_header_bytes_identical": true,
+    "changed_paths": [],
+    "fixture_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "explanation": "Runtime and controller source are the same committed candidate; no later fixture or source correction was needed for the selected gate."
+  },
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "kernel_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "blocks_completed": 8,
+  "blocks_serial": true,
+  "basic": {
+    "families": [
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "mutex",
+        "jit_completions": 1589592,
+        "jit_entries": 1589592,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-exact-phase-live-20261029/basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+        "receipt_sha256": "47edf2c22a45efcdc50af1dbb07581bf7ff3f9147a1218dae32f5d80d61ecb29"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "rwsem",
+        "jit_completions": 1589029,
+        "jit_entries": 1589029,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-exact-phase-live-20261029/basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+        "receipt_sha256": "b1ef2bb28f890bbe691a1e6b6ad4d029cae888d51623dcdd22424588b27b901e"
+      }
+    ],
+    "final_idle": true,
+    "functional_only": true
+  },
+  "local_api_repeated": false,
+  "queued": {
+    "passed": true,
+    "drained": true,
+    "final_idle": true,
+    "jit_bodies": 0,
+    "ready_policy": {
+      "mutex_claim_slots": 1,
+      "mutex_ready_policy": "epoch",
+      "mutex_spin_budget": 65536
+    },
+    "context_rows": 14,
+    "all_context_fields_zero": true,
+    "source_retirement": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    }
+  },
+  "role_cases": [
+    {
+      "name": "simple",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-native",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "1",
+          "started": "1",
+          "unlocks": "1"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10014,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10014,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-mutex",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10017,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "simple-cross-numa",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        33,
+        34
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 33,
+      "combiner_node": 0,
+      "waiter_node": 1,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10012,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "total_context_rows": 74,
+  "all_context_fields_zero": true,
+  "probe_sources": [
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/run.py",
+      "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+      "blob": "62ed67a8b9573629702f722815c4f80d0d237c0c",
+      "sha256": "9eb37983b8d72dcdc7ec32a9fbe3fc82b638e1ff19c0575298caa4ac753aca4c",
+      "latest_path_commit": "39abf5b13e0cf272a8775622c081d7bdfb530a81"
+    },
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/payload/module.c",
+      "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+      "blob": "4943ee0d471435bba33cce74529fba49bdcb35a3",
+      "sha256": "50b79264cbfa4b1a1c93b02f67e79de301ffeac8608c77affec82dc4d16c44b4",
+      "latest_path_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/run.py",
+      "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+      "blob": "e144f708c074cf1ef17d4df5bd3508b88389ab3a",
+      "sha256": "c299a66ef7ebe2072549e152e35f9d317c1c084508552a945d9070173b5116d0",
+      "latest_path_commit": "14975b6a0522b670e334e536ba079e320e8d3c85"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/payload/kd_mutex_proxy_pin_probe.c",
+      "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+      "blob": "dfbba3516a680ad6f39eec1d7de58aed55378f2e",
+      "sha256": "81c316fc49780e77182930ff2b2e29a63280960ac28fc25f003c16c110cfcecf",
+      "latest_path_commit": "43418d5a3c8659311b0d008310f70e78f245eeee"
+    }
+  ],
+  "mixed_probe_integrated_ancestor": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+  "gate_probe_review": {
+    "source_commit": "ff69c57a3746634e6ba82b977c1f05ba544d065a",
+    "changed_in": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+    "path": "tests/kernel/mutex/mixed_transfer/payload/module.c",
+    "mask": "~KD_MUTEX_GATE_WITHDRAW",
+    "expected_phase": "KD_MUTEX_GATE_HELD",
+    "affected_sites": [
+      "hold_spin observes physical owner W before native suffix",
+      "MIXED_RELEASE observes G ownership with exactly two queued producers"
+    ],
+    "unknown_bits_still_rejected": true,
+    "physical_owner_checks_preserved": true,
+    "exact_waiter_count_preserved": true,
+    "rationale": "The proxy epoch closes before native W continuation. A concurrent origin withdrawal may set WITHDRAW while phase remains HELD; masking only that flag retains rejection of every other unexpected bit.",
+    "source_diff_sha256": "70ed92dcd652b39ee754be6fb57629b461125797519834e36dd693c4a1944a5a"
+  },
+  "analyzer_sha256": "17d49d3585a846ff23d2e741382e03b917c77c846acbbae1f15277e470fa59a0",
+  "limits": [
+    "Frozen source/binary archive integrity is a separate preservation check; this input contains summary receipts rather than the archive trees.",
+    "Raw kernel logs, exact role-exchange/native ACK trace rows, publication hashes and module/task listings are not included; their validation is reported by the captured runners, whose source contracts were inspected.",
+    "The cross-NUMA controller requests C on CPU2/node0 and W on CPU33/node1 using the captured topology. Role context summaries do not repeat CPU IDs; actual affinity validation is performed by the runner.",
+    "The queued probe reports eventual scheduling and balanced joined-task contexts; it does not measure initial-budget duration, the greater-than-99-percent target, actual parking, or sleep frequency.",
+    "Correctness covers these bounded cases and original-task returns, not arbitrary nesting or all weak-memory interleavings.",
+    "The mixed/queued ioctl payloads provide bounded mechanism evidence, not real-world syscall workload validation; the local API probe was not repeated in these eight blocks.",
+    "No performance acceptance or unit-gate result follows from these live receipts."
+  ]
+}

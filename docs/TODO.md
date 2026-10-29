@@ -80,9 +80,13 @@ instrumented observations are excluded from nano scores.
 The [successor READY read hint](../bench/results/10.176.26.71/tests/mutex-ready-prefetch-20261029/README.md)
 at `bb3b78e9` passed five selected drivers, both builds and three live blocks,
 but all ten contended mutex points remain below the pinned baseline (1.38–11.60%).
-It remains isolated. The next candidate starts from `99f38362` and consolidates
-redundant phase reads inside the same fresh physical-owner predicates, preserving
-all logical and lifetime boundaries. No performance benefit is assumed.
+It remains isolated. The [exact-phase follow-up](../bench/results/10.176.26.71/tests/mutex-exact-phase-20261029/README.md)
+at `ff69c57a` passed twelve selected drivers, both builds and eight live blocks,
+but all ten contended mutex points remain below pinned performance (0.17–12.46%).
+It is not promoted. A broader ordinary COMPLETE frame/pin transition is being
+explored from `99f38362`, preserving every exact proof and generic API while
+retiring frame/descriptor/wake together. It requires real composed-fixture,
+emitted-code, live and performance evidence; no gain is assumed.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
