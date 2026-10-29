@@ -31,7 +31,7 @@ static bool raced, executor;
 static int cpu;
 static void preempt_disable(void) { CHECK(!pins && migration==1);pins++;pin_calls++; }
 static void preempt_enable(void);
-static int raw_smp_processor_id(void) { return cpu; }
+static inline int raw_smp_processor_id(void) { return cpu; }
 static bool need_resched(void);
 static void cond_resched(void);
 static unsigned int kd_mutex_gate_read(struct kd_mutex *value)
