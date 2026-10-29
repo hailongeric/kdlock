@@ -204,8 +204,9 @@ static void finish(void)
     CHECK(kd_mutex_gate_read(&lock)==1);
 }
 /* Deferral can first appear after the locality count has already been crossed.
- * Its first eight-node prefix then wins the next boundary; no future pin may
- * survive the current body's clamp-to-one into that physical handoff. */
+ * Its first eight-node prefix then wins the next boundary. The completed
+ * current claim is retired before that physical handoff; future nodes remain
+ * READY until they are claimed or selected for native handoff. */
 static void late_first_deferred(void)
 {
     const unsigned int boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
@@ -221,9 +222,9 @@ static void late_first_deferred(void)
     finish();
 }
 
-/* Ten successful bodies wrap the eight-slot ring before exceptional dispatch
- * drains the seven still-selected successors without an origin reply. */
-static void wrapped_release_boundaries(void)
+/* Exceptional dispatch after ten successful bodies releases only the current
+ * claim. Native handoff wakes its successor; untouched future nodes stay READY. */
+static void current_release_boundaries(void)
 {
     if(kd_mutex_batch_size < 12)return;
     for(unsigned int early=0;early<2;early++) {
@@ -231,7 +232,12 @@ static void wrapped_release_boundaries(void)
         if(early)early_at=10;else native_at=10;
         CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
         CHECK(calls==11 && completed==(early?11U:10U) && wakes==1 && !nodes[11].locked);
-        for(unsigned int i=12;i<18;i++)CHECK(nodes[i].locked==KD_MUTEX_WAIT);
+        for(unsigned int i=12;i<20;i++) {
+            CHECK(nodes[i].locked==KD_MUTEX_PROXY_READY);
+            CHECK(!nodes[i].completed && !nodes[i].native_resume);
+            CHECK(nodes[i].counted_lock==&lock && nodes[i].count_seq==2);
+            CHECK(nodes[i].next==(i+1<20?&nodes[i+1]:NULL));
+        }
         CHECK(reclaims==early && nodes[10].native_resume==!early);
         finish();
     }
@@ -350,7 +356,7 @@ int main(void)
     for(unsigned int i=0;i<135;i++)CHECK(order[i]==i+64);
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();
     late_first_deferred();
-    wrapped_release_boundaries();
+    current_release_boundaries();
     epoch_boundaries();
     printf("PASS terminal queue: %u checks; terminal bodies, nonblocking hot retirement, exact cold pending completion, independent new head, native reuse and bounds\n",checks);
 }
