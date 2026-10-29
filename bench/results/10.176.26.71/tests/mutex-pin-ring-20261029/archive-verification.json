@@ -1,0 +1,71 @@
+{
+  "completed": true,
+  "groups": [
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-ring-20261029/bench/pin-ring-nano-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 1193,
+        "regular_files": 1001,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "c5259a8b5fe59ffa5ce415e77c0bb5f57d8adf81b62ec8e163f408847cf13cf6",
+            "regular_files": 995
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "15cfec4379896c458d3d4d6daec2a7e090009add1839ccaaa1bd342be1fc2fa6",
+            "regular_files": 6
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-ring-20261029/tests/pin-ring-live-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 6189,
+        "regular_files": 5469,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "edc76d3a73722198d014f0c9da362361d8e10d027d22d6b68ca75ce519760582",
+            "regular_files": 5457
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "c23f8d24830f660e91329a02e971bae79adb8ced3392fdcf2a00d9c23077f931",
+            "regular_files": 12
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-ring-20261029/tests/pin-ring-units-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 2,
+        "regular_files": 2,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "1a8fc0b95a06d196573a357f0dae9a701362d91a76274e96be2e2088999c9d9f",
+            "regular_files": 1
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "892ab4fb199a289ab53f0eaf09e38ef33880e8015d5afce5e1f3a70687491941",
+            "regular_files": 1
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    }
+  ]
+}
