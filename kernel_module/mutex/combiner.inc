@@ -124,6 +124,11 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	prefetch(next);
 	prefetchw(&next->entry_abi);
 	prefetchw(&next->regs);
+	/* A selected origin's ACK invalidates the executor's notification line.
+	 * Fetch the next result line while the current body can hide that latency.
+	 * This hint neither observes an ACK nor authorizes origin stack/GS access;
+	 * the existing acquire acknowledgement remains mandatory. */
+	prefetch(&next->locked);
 	sp = READ_ONCE(next->regs.sp);
 	if (sp) {
 		prefetchw((void *)sp);
