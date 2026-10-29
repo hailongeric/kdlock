@@ -197,3 +197,74 @@ The [killable mmap writer polling review](mmap-killable-poll-plan.md) is a
 this campaign. It requires condition-before-signal cancellation, exact reader
 drain and downgrade behavior, original-task execution, and a fresh matched
 Native/KD comparison before any performance claim.
+
+## Later full-archive verification milestone
+
+The earlier receipt-only audit above remains unchanged. A subsequent read-only
+capture now retains the full closed source/build/ELF evidence for 16 attempt
+directories, including `kernel-proxy-profiles-r2-unit-20261030`. The archive and
+its capture metadata are in the main checkout's ignored raw directory:
+
+```
+bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/full-evidence.tar.gz
+bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/full-result.json
+bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/full-input-inventory.json
+bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/full-controller.py
+```
+
+The archive is **79,815,057 bytes**, SHA256
+`11d1aa58597f7aa08bdb7643190a5e21d83c53b3f4679a53a211ef32c7067f0c`.
+The inventory SHA256 is
+`783a08938732e255b964557a5fddd88809ff20eced85f9f8aa263f9d7032cad5`.
+The [independent full-archive verification](full-archive-verification.json)
+checked the exact **9,497 inventoried paths**: 8,551 regular files, 922 directories
+and 24 symlinks, plus the 16 root-directory tar headers. Types, permissions,
+UID/GID, regular-file sizes, archive-representable mtimes and symlink targets
+match. Device/inode/ctime/link-count and sub-floating-point mtime precision
+remain capture-inventory facts; tar does not independently reproduce them.
+The controller records unchanged pre/post inventory and boot identity. All
+**1,921 earlier receipt files are byte-identical** in the full archive.
+
+Rehashing the actual archived bytes produced:
+
+| Evidence | Matching hash references | Distinct retained files |
+| --- | ---: | ---: |
+| Original source manifests | 3,444 | 3,444 |
+| Final prepared-source manifests | 870 | 870 |
+| Binary manifests, including provider/payload ELFs | 50 | 50 |
+| Recorded image publications (`jit.bin`, `jit.S`, `bin.txt`) | 54 | 36 |
+| Maintained provider-preparation manifests, direct matches | 1,870 | 1,870 |
+
+There are no missing or unexplained mismatched references. Six additional
+provider-preparation references describe the **earlier layer** of the two files
+modified by the Native CALL probe's recorded observation patch, across its three
+attempt directories. The verifier reverses those exact textual hunks as data,
+checks their context/counts and reproduces all six original hashes. Successful
+live attempts also have matching final prepared-source manifests. The detailed
+base/final/patch hashes are retained; the probe is not relabelled an unmodified
+provider. Some references in the table overlap between manifest families, so
+the columns are not additive counts of independent artifacts.
+
+This closes the earlier absence of archived ELF/image bytes for these manifest
+checks. It does not make historical untracked source leaves compiler inputs,
+prove every runtime instruction or mitigation path, or turn a NORMAL image from
+failed preparation into returned-JIT evidence. Functional acceptance still comes
+from the phase/counter/effect/retirement checks recorded above.
+
+The newly included `kernel-proxy-profiles-r2-unit-20261030` belongs to
+`8446f4ecb08816380a4c233197a8ce5e4d333aac`: **4 unit drivers passed** (basic two plus
+provider admission and kernel-profile drivers), with **9 basic-runner cases** and
+**12 nano-runner cases** in separate commands. Its W=1 default-off provider build
+passed. The expected negative daemon launch messages are not failed test cases.
+These are provider/runner checks and compilation; they add no new syscall/MM live
+execution, kernel boot or performance result.
+
+Reproduce this independent offline check:
+
+```
+python3 bench/results/10.176.26.71/tests/kernel-proxy-functional-20261030/verify_full_archive.py \
+  --raw /home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030
+```
+
+The verifier streams archive members as data, never follows archived symlinks,
+and never imports or executes captured scripts, tests, modules or binaries.
