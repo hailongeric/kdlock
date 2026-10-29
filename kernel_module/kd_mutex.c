@@ -123,6 +123,24 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 DEFINE_PER_CPU(unsigned long, kd_mutex_custody_slots);
 EXPORT_SYMBOL_GPL(kd_mutex_custody_slots);
 
+/* Fresh proof for a boundary that requires this task's COMBINER acquisition.
+ * Read owner before the acquire phase, as in the generic ownership predicate,
+ * but require the exact masked phase with one read. Never carry this result
+ * across a body, callback or epoch change. Generic HELD routing remains separate. */
+static __always_inline bool
+kd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)
+{
+	unsigned long owner;
+
+	if (!lock || task != current)
+		return false;
+	owner = atomic_long_read(&lock->owner);
+	if ((owner & ~KD_MUTEX_OWNER_FLAGS) != (unsigned long)current ||
+	    (owner & 4UL))
+		return false;
+	return kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER;
+}
+
 #include "mutex/pin_origin.inc"
 #include "mutex/queue.inc"
 #include "mutex/count.inc"

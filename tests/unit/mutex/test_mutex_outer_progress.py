@@ -69,7 +69,8 @@ def main():
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
-    for marker in ("static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+    for marker in ("static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)",
+                   "static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
                    "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
                    "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)"):
         code += definition(mutex, marker) + "\n"

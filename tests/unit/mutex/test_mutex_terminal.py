@@ -27,7 +27,10 @@ def production_sources():
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
-    for marker in ('static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
+    helpers += next(line for line in (ROOT/'include/kd_lock.h').read_text().splitlines()
+                    if line.startswith('#define KD_MUTEX_OWNER_FLAGS '))+'\n'
+    for marker in ('static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)',
+                   'static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
                    'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)'):
         helpers += definition(source, marker)+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_window.inc'))+'\n'

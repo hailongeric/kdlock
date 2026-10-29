@@ -185,6 +185,8 @@ def check_origin_hooks():
         (ROOT / 'include/kd_mutex.h').read_text(), re.M))
     constants += '\n' + '\n'.join(line for line in (ROOT / 'include/kd_mutex.h').read_text().splitlines()
                                      if line.startswith('#define KD_MUTEX_GATE_'))
+    constants += '\n' + next(line for line in read_source(ROOT / 'include/kd_lock.h').splitlines()
+                              if line.startswith('#define KD_MUTEX_OWNER_FLAGS '))
     state = without_includes(read_source(ROOT / 'include/kd_mutex_state.h'))
     declarations = diag[diag.index('#define KD_MUTEX_PIN_REASONS'):diag.index('static int kd_mutex_pin_diag_init')]
     merge = definition(diag, 'static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,')
@@ -196,6 +198,7 @@ def check_origin_hooks():
 #define this_cpu_inc(name) do { CHECK(pins==1); (name)++; } while(0)
 ''' + state + '\n' + origin + '\n' + declarations + '\n' + merge + '\n'
     code += '\n'.join(definition(source, signature) for signature in (
+        'static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)',
         'static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)',
         'static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
         'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)',

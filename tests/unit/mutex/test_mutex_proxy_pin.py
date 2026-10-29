@@ -18,6 +18,7 @@ def main():
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
     code = without_includes(read_source(ROOT / "include/kd_mutex_state.h")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
     code += "\n".join(definition(source, signature) for signature in (
+        "static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)",
         "static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
@@ -32,6 +33,8 @@ def main():
                       " && state != " + state_values["KD_MUTEX_PROXY_CLAIMED"] + ")")
     constants += "\n" + "\n".join(line for line in (ROOT / "include/kd_mutex.h").read_text().splitlines()
                                   if line.startswith("#define KD_MUTEX_GATE_"))
+    constants += "\n" + next(line for line in (ROOT / "include/kd_lock.h").read_text().splitlines()
+                               if line.startswith("#define KD_MUTEX_OWNER_FLAGS "))
     mutations = {
         "schedule-before-budget": ("if (budget) {", "if (false && budget) {"),
         "withdraw-without-unpin": ("\tpreempt_enable();\n\twhile ((state =", "\twhile ((state ="),

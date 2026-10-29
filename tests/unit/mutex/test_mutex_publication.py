@@ -27,9 +27,12 @@ def production():
     constants += "\n" + definition((ROOT / "include/exe_info.h").read_text(),
                                     "enum kd_entry_abi {").rstrip() + ";\n"
     constants += "\n" + definition(source, "enum kd_mutex_batch_result {").rstrip() + ";\n"
+    constants += "\n" + next(line for line in (ROOT / "include/kd_lock.h").read_text().splitlines()
+                               if line.startswith("#define KD_MUTEX_OWNER_FLAGS ")) + "\n"
     code = constants + without_includes(read_source(ROOT / "include/kd_mutex_state.h"))
     code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc"))
     for marker in (
+        "static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)",
         "static inline u32 kd_mutex_xchg_tail(struct kd_mutex *lock, u32 tail)",
         "static void kd_mutex_update_max_waiters(int active)",
         "static void kd_mutex_waiter_enter(struct kd_mutex *lock, struct kd_mutex_node *node)",

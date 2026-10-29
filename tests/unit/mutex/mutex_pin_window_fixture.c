@@ -34,7 +34,7 @@ static struct task_struct owner={1}, later_owner={2};
 static struct task_struct *current=&owner;
 static int allowed_node = -1;
 static bool admission_active, admission_injected;
-static unsigned int owner_reads, ready_reads, generation_reads, key_reads, cpu_reads;
+static unsigned int owner_reads, gate_reads, ready_reads, generation_reads, key_reads, cpu_reads;
 enum admission_change { ADMISSION_STABLE, ADMISSION_GENERATION, ADMISSION_KEY, ADMISSION_NODE };
 static enum admission_change admission_change;
 
@@ -125,7 +125,16 @@ static void observe_store(void *address, unsigned long value)
 /* A per-node RMW in the claim path violates the gate-amortized contract. */
 #define cmpxchg(word,before,after) ({ (void)(word);(void)(before);(void)(after);cas_attempts++;CHECK(false);(u8)0; })
 #define WRITE_ONCE(value,after) ((value)=(after))
+/* Count accesses at the actual gate helper boundary; keep its masked acquire
+ * read unchanged, including its treatment of withdrawal and unrelated bits. */
+#define kd_mutex_gate_read kd_mutex_gate_read_unobserved
 #include "mutex_state_mock.h"
+#undef kd_mutex_gate_read
+static u32 kd_mutex_gate_read(struct kd_mutex *value)
+{
+ if(admission_active)gate_reads++;
+ return kd_mutex_gate_read_unobserved(value);
+}
 static void kd_mutex_set_locked(struct kd_mutex *value)
 {
  CHECK(value==&lock);
@@ -165,7 +174,7 @@ static void setup(void)
  requests = promotions = cancellations = completions = cas_attempts = expiry_probes = 0;
  allowed_node = -1; executor_cpu = 0; current=&owner;require_withdrawn_on_bug=false;
  admission_active=admission_injected=false;admission_change=ADMISSION_STABLE;
- owner_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
+ owner_reads=gate_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
  batch.lock = &lock; lock.owner = (unsigned long)current;
  lock.delegation_state.counter = KD_MUTEX_GATE_HELD;
  for (unsigned int i = 0; i < NODE_COUNT; i++) {
@@ -185,7 +194,7 @@ static bool select_current(unsigned int index)
 {
  bool selected;
  allowed_node = (int)index;
- owner_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
+ owner_reads=gate_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
  admission_active=true;
  selected = kd_mutex_batch_pin_select(&batch, &nodes[index]);
  admission_active=false;
@@ -263,6 +272,46 @@ static void selection_boundaries(void)
  }
 }
 
+static void predicate_contract(void)
+{
+ const u32 extra_bits[]={0,KD_MUTEX_GATE_WITHDRAW,0x10U,0x80000000U,
+                         U32_MAX & ~KD_MUTEX_GATE_PHASE_MASK};
+ struct task_struct *tasks[]={current,&later_owner,NULL};
+ unsigned long owners[]={0,(unsigned long)current,(unsigned long)&later_owner};
+
+ setup();
+ admission_active=true;owner_reads=gate_reads=0;
+ CHECK(!kd_mutex_combiner_owned(NULL,current));
+ CHECK(!kd_mutex_combiner_owned(&lock,&later_owner));
+ CHECK(!kd_mutex_combiner_owned(&lock,NULL));
+ admission_active=false;
+ CHECK(!owner_reads && !gate_reads);
+ lock.delegation_state.counter=KD_MUTEX_GATE_COMBINER|KD_MUTEX_GATE_WITHDRAW|0x10U;
+ CHECK(kd_mutex_combiner_owned(&lock,current));
+ /* The old conjunction and specialized helper must agree on snapshots.
+  * Impossible phase/extra-bit combinations are predicate compatibility cases,
+  * not states the gate transition protocol is permitted to publish. */
+ for(unsigned int owner_index=0;owner_index<3;owner_index++)
+  for(unsigned long flags=0;flags<8;flags++)
+   for(unsigned int task_index=0;task_index<3;task_index++)
+    for(u32 phase=0;phase<=KD_MUTEX_GATE_PHASE_MASK;phase++)
+     for(unsigned int extra=0;extra<sizeof(extra_bits)/sizeof(extra_bits[0]);extra++) {
+      bool actual,previous,owned;
+      struct task_struct *task=tasks[task_index];
+      lock.owner=owners[owner_index]|flags;
+      lock.delegation_state.counter=phase|extra_bits[extra];
+      owner_reads=gate_reads=0;admission_active=true;
+      actual=kd_mutex_combiner_owned(&lock,task);
+      admission_active=false;
+      previous=kd_mutex_delegation_owned(&lock,task) &&
+               kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_COMBINER;
+      CHECK(actual==previous);
+      owned=task==current && owner_index==1 && !(flags&4UL);
+      CHECK(owner_reads==(unsigned int)(task==current));
+      CHECK(gate_reads==(unsigned int)owned);
+     }
+}
+
 static void admission_contract(void)
 {
  /* Count only the actual selection region, not prior epoch admission or the
@@ -270,9 +319,14 @@ static void admission_contract(void)
  for (unsigned long flags=0;flags<4;flags++) {
   setup();lock.owner=(unsigned long)current|flags;
   CHECK(select_current(0));
-  CHECK(owner_reads==1 && ready_reads==1 && cpu_reads==1);
+  CHECK(owner_reads==1 && gate_reads==1 && ready_reads==1 && cpu_reads==1);
   CHECK(generation_reads==2 && key_reads==2 && !promotions && !cas_attempts);
   CHECK(batch.nr_pins==1 && batch.pin.node==&nodes[0] && batch.pin.generation==2);
+  /* A later READY boundary performs its own fresh exact-phase proof. */
+  owner_reads=gate_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
+  admission_active=true;kd_mutex_batch_pin_assert(&batch,&nodes[0]);admission_active=false;
+  CHECK(owner_reads==1 && gate_reads==1 && ready_reads==1 && !cpu_reads);
+  CHECK(generation_reads==1 && key_reads==1);
   lock.owner=(unsigned long)current;consume(0);kd_mutex_batch_epoch_end(&batch,false);
  }
  for (unsigned int state=0;state<=KD_MUTEX_QUEUE_INIT;state++) {
@@ -280,7 +334,7 @@ static void admission_contract(void)
   setup();nodes[0].locked=state;
   CHECK(!select_current(0));
   CHECK(!batch.nr_pins && !batch.pin.node && !requests && !requested[0]);
-  CHECK(nodes[0].locked==state && owner_reads==1 && ready_reads==1 && cpu_reads==2);
+  CHECK(nodes[0].locked==state && owner_reads==1 && gate_reads==1 && ready_reads==1 && cpu_reads==2);
   CHECK(generation_reads==1 && key_reads==1 && !promotions && !cas_attempts);
   kd_mutex_batch_epoch_end(&batch,false);
  }
@@ -288,7 +342,7 @@ static void admission_contract(void)
   setup();nodes[0].tail=(executor_cpu+1)<<KD_MUTEX_TAIL_CPU_OFFSET;nodes[0].locked=state;
   CHECK(!select_current(0));
   CHECK(!batch.nr_pins && !batch.pin.node && !requests && nodes[0].locked==state);
-  CHECK(owner_reads==1 && !ready_reads && cpu_reads==2 && generation_reads==1 && key_reads==1);
+  CHECK(owner_reads==1 && gate_reads==1 && !ready_reads && cpu_reads==2 && generation_reads==1 && key_reads==1);
   kd_mutex_batch_epoch_end(&batch,false);
  }
 }
@@ -402,7 +456,7 @@ int main(int argc, char **argv)
 {
  if (argc == 2) invalid_identity(argv[1]);
  CHECK(argc == 1);
- sequential_currents(); selection_boundaries(); admission_contract(); cold_boundaries();
- printf("PASS pin window: %u checks; one exact READY current, delayed cold promotion, sequential slot reuse, no future access, exact admission loads and real owner flags, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
+ predicate_contract(); sequential_currents(); selection_boundaries(); admission_contract(); cold_boundaries();
+ printf("PASS pin window: %u checks; one exact READY current, delayed cold promotion, sequential slot reuse, no future access, exact admission loads and real owner flags, one fresh gate read, masked-phase predicate equivalence, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
  return 0;
 }

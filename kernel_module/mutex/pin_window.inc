@@ -26,8 +26,7 @@ kd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *no
 	state = smp_load_acquire(&node->locked);
 	if (state == KD_MUTEX_PROXY_READY) {
 		BUG_ON(!batch->proxy_epoch || batch->outer.released ||
-		       !kd_mutex_delegation_owned(batch->lock, current) ||
-		       kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER);
+		       !kd_mutex_combiner_owned(batch->lock, current));
 	} else {
 		BUG_ON(state != KD_MUTEX_PROXY_CLAIMED);
 	}

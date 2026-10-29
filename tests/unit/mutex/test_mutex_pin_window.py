@@ -37,9 +37,11 @@ def main():
                         "struct kd_exec_outer_unlock {") + ";\n"
     types += definition(source, "struct kd_mutex_batch {") + ";\n"
     code = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
-    owned = definition(source,
+    generic_owned = definition(source,
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)")
-    code += "static __always_inline " + owned + "\n"
+    owned = definition(source,
+        "static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)")
+    code += "static __always_inline " + generic_owned + "\n" + owned + "\n"
     for marker in (
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
@@ -84,12 +86,22 @@ def main():
             owned.replace("(owner & 4UL)", "false", 1), "admission-pickup", 1),
         "admission-accepts-other-owner": (owned,
             owned.replace("(owner & ~KD_MUTEX_OWNER_FLAGS) != (unsigned long)current", "false", 1), "admission-other-owner", 1),
+        "combiner-ignores-supplied-task": (owned,
+            owned.replace("task != current", "((void)task, false)", 1), "", 1),
+        "combiner-compares-unmasked-state": (owned,
+            owned.replace("kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER",
+                          "(u32)atomic_read_acquire(&lock->delegation_state) == KD_MUTEX_GATE_COMBINER", 1), "", 1),
         "admission-accepts-released-outer": (add,
             add.replace("batch->outer.released", "false", 1), "admission-released", 1),
         "admission-accepts-no-private-epoch": (add,
             add.replace("!batch->proxy_epoch", "false", 1), "admission-private-epoch", 1),
         "admission-accepts-held-gate": (request,
-            request.replace("kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER", "false", 1), "admission-held", 1),
+            request.replace("kd_mutex_combiner_owned(lock, current)",
+                            "kd_mutex_delegation_owned(lock, current)", 1), "admission-held", 1),
+        "combiner-adds-second-gate-read": (owned,
+            owned.replace("return kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER;",
+                          "return kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER && "
+                          "kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER;", 1), "", 1),
         "admission-adds-second-ready-check": (select,
             select.replace("\tBUG_ON(batch->pin.node != node);", "\tBUG_ON(batch->pin.node != node);\n\tKD_MUTEX_PIN_ASSERT(batch, node);", 1), "", 1),
         "cancel-rearms-ready": (
@@ -119,11 +131,13 @@ def main():
         "ignore-private-epoch": (proof,
             proof.replace("!batch->proxy_epoch ||", "false ||", 1), "ready-without-epoch", 1),
         "ignore-ready-owner": (proof,
-            proof.replace("!kd_mutex_delegation_owned(batch->lock, current) ||", "false ||", 1), "later-owner-combiner", 1),
+            proof.replace("!kd_mutex_combiner_owned(batch->lock, current)",
+                          "kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER", 1), "later-owner-combiner", 1),
         "ignore-released-epoch": (proof,
             proof.replace("batch->outer.released ||", "false ||", 1), "released-epoch", 1),
         "ignore-ready-gate": (proof,
-            proof.replace("kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER", "false", 1), "ready-held", 1),
+            proof.replace("kd_mutex_combiner_owned(batch->lock, current)",
+                          "kd_mutex_delegation_owned(batch->lock, current)", 1), "ready-held", 1),
         "cold-completion-skips-strict-proof": (retained_complete,
             retained_complete.replace("\tkd_mutex_batch_pin_assert_retained(batch, node);\n", "", 1), "retained-open-epoch", 1),
         "ignore-generation": (check,

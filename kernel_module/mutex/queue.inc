@@ -152,8 +152,7 @@ withdrawn:
 static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,
 						 struct kd_mutex_node *node)
 {
-	BUG_ON(!kd_mutex_delegation_owned(lock, current) ||
-	       kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER);
+	BUG_ON(!kd_mutex_combiner_owned(lock, current));
 	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
 		return false;
 	if (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)

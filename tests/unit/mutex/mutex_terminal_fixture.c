@@ -32,6 +32,7 @@ struct list_head { struct list_head *next, *prev; };
 #define KD_EXE_NO_RUN 2
 #define KD_EXE_NATIVE_DONE 7
 #define READ_ONCE(x) (x)
+#define atomic_long_read(p) ((unsigned long)READ_ONCE(*(p)))
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define NUMA_AWARE 1
 #define KD_MUTEX_TAIL_CPU_OFFSET 4

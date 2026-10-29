@@ -12,7 +12,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef struct { int counter; } atomic_t;
-struct task_struct { int id; };
+struct task_struct { int id; } __attribute__((aligned(8)));
 struct kd_mutex { atomic_t delegation_state; u32 delegation_tail; struct task_struct *owner; };
 struct kd_mutex_node {
  struct kd_mutex_node *next;
@@ -53,6 +53,7 @@ static void before_cas(const void *word,uintptr_t before,uintptr_t after);
  publication_expected; })
 #define atomic_read(word) __atomic_load_n(&(word)->counter,__ATOMIC_RELAXED)
 #define atomic_read_acquire(word) __atomic_load_n(&(word)->counter,__ATOMIC_ACQUIRE)
+#define atomic_long_read(word) ((unsigned long)__atomic_load_n((word),__ATOMIC_RELAXED))
 #define atomic_cmpxchg(word,before,after) ({ int gate_expected=(before); \
  __atomic_compare_exchange_n(&(word)->counter,&gate_expected,(after),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); gate_expected; })
 #define atomic_fetch_andnot_release(mask,word) __atomic_fetch_and(&(word)->counter,~(u32)(mask),__ATOMIC_RELEASE)
@@ -92,8 +93,6 @@ static int kd_mutex_run_combiner(struct kd_mutex *value,struct kd_mutex_node *ne
 static void debug_waiter(const char *format);
 #define mutex_debug(format) debug_waiter(format)
 static inline int raw_smp_processor_id(void) { return 0; }
-static bool kd_mutex_delegation_owned(struct kd_mutex *value,struct task_struct *owner)
-{ return value==&lock && value->owner==owner; }
 #include "publication_production.h"
 
 static void exact_packet(void)

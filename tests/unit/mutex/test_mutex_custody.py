@@ -34,7 +34,8 @@ def main():
     queue = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/batch_diag.inc")) + "\n"
     queue += "static struct kd_mutex_node *\n" + definition(mutex, "kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)") + "\n"
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
-    for marker in ("static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
+    for marker in ("static __always_inline bool\nkd_mutex_combiner_owned(struct kd_mutex *lock, struct task_struct *task)",
+                   "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
                    "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)",
                    "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *node)",
                    "static __always_inline void\nkd_mutex_batch_pin_assert_retained(struct kd_mutex_batch *batch,",

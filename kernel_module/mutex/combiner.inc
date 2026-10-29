@@ -386,8 +386,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	u64 queue_end;
 
 	BUG_ON(!batch->proxy_epoch ||
-	       kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER ||
-	       !kd_mutex_delegation_owned(lock, current));
+	       !kd_mutex_combiner_owned(lock, current));
 	BUG_ON(!kd_origin_mutex_owned(lock,
 				      current));
 	if (!incoming_rsp_ptr)

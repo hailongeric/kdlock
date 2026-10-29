@@ -10,7 +10,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef struct { int counter; } atomic_t;
-struct task_struct { int id; };
+struct task_struct { int id; } __attribute__((aligned(8)));
 struct kd_mutex { atomic_t delegation_state; struct task_struct *owner; };
 struct kd_mutex_node { int tail; u8 locked; struct kd_mutex *lock, *counted_lock; u64 count_seq; };
 #define U64_MAX UINT64_MAX
@@ -30,6 +30,7 @@ static __attribute__((noinline)) u8 node_acquire(const u8 *word);
 #define WRITE_ONCE(value,after) __atomic_store_n(&(value),(after),__ATOMIC_RELAXED)
 #define atomic_read(word) __atomic_load_n(&(word)->counter,__ATOMIC_RELAXED)
 #define atomic_read_acquire(word) __atomic_load_n(&(word)->counter,__ATOMIC_ACQUIRE)
+#define atomic_long_read(word) ((unsigned long)__atomic_load_n((word),__ATOMIC_RELAXED))
 static int gate_cas(atomic_t *word,int before,int after);
 static int gate_clear(unsigned int mask,atomic_t *word);
 #define atomic_cmpxchg(word,before,after) gate_cas((word),(before),(after))
@@ -59,8 +60,6 @@ static void preempt_enable(void);
 static inline int raw_smp_processor_id(void) { return cpu; }
 static bool need_resched(void);
 static void cond_resched(void);
-static bool kd_mutex_delegation_owned(struct kd_mutex *value,struct task_struct *task)
-{ return value==&lock && value->owner==task; }
 static void kd_mutex_claim_origin_node(struct kd_mutex *value,struct kd_mutex_node *request);
 static void cpu_relax(void);
 static u8 fixture_cas(u8 *word,u8 before,u8 after);
