@@ -14,7 +14,7 @@ typedef unsigned long atomic_long_t;
 typedef struct { int counter; } atomic_t;
 typedef unsigned int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
-struct task_struct { unsigned int pid; };
+struct task_struct { unsigned int pid; } __attribute__((aligned(8)));
 struct kd_exec_frame;
 #include "kd_regs.h"
 #define KD_MUTEX_DIAG_MEMBER
@@ -33,12 +33,17 @@ static int executor_cpu;
 static struct task_struct owner={1}, later_owner={2};
 static struct task_struct *current=&owner;
 static int allowed_node = -1;
+static bool admission_active, admission_injected;
+static unsigned int owner_reads, ready_reads, generation_reads, key_reads, cpu_reads;
+enum admission_change { ADMISSION_STABLE, ADMISSION_GENERATION, ADMISSION_KEY, ADMISSION_NODE };
+static enum admission_change admission_change;
 
 #define CHECK(value) do { checks++; if (!(value)) { \
  fprintf(stderr, "FAIL pin window line %d: %s\n", __LINE__, #value); exit(1); \
 } } while (0)
 #define BUG_ON(value) do { if (value) { \
  if(require_withdrawn_on_bug)CHECK(nodes[0].locked==KD_MUTEX_WAIT && !promotions); \
+ if(admission_change!=ADMISSION_STABLE)CHECK(admission_injected); \
  fprintf(stderr, "BUG pin window: %s\n", #value); exit(86); \
 } } while (0)
 
@@ -59,6 +64,28 @@ static void observe_read(const void *address)
  if (index < 0) return;
  CHECK(!poisoned[index]);
  CHECK(allowed_node < 0 || index == allowed_node);
+ if (!admission_active) return;
+ if (address==&nodes[index].count_seq) {
+  generation_reads++;
+  if (admission_change==ADMISSION_NODE && generation_reads==2) {
+   /* Deliberate descriptor corruption after the checked node was captured.
+    * The selector must still reject a different successfully recorded node. */
+   CHECK(batch.nr_pins==1 && batch.pin.node==&nodes[index]);
+   batch.pin.node=&nodes[index+1];admission_injected=true;
+  }
+ }
+ if (address==&nodes[index].counted_lock)key_reads++;
+ if (address==&nodes[index].locked) {
+  ready_reads++;
+  if (admission_change==ADMISSION_GENERATION || admission_change==ADMISSION_KEY) {
+   CHECK(generation_reads==1 && key_reads==1 && !admission_injected);
+   /* Inject only after preflight captured both fields and before the final
+    * production re-read. Valid execution cannot recycle a live reservation. */
+   if (admission_change==ADMISSION_GENERATION)nodes[index].count_seq+=2;
+   else nodes[index].counted_lock=&other_lock;
+   admission_injected=true;
+  }
+ }
 }
 
 static void descriptor_absent(struct kd_mutex_node *node)
@@ -115,9 +142,17 @@ static void kd_mutex_set_locked(struct kd_mutex *value)
   kd_mutex_gate_end_withdraw(value);
  }
 }
-static bool kd_mutex_delegation_owned(struct kd_mutex *value,struct task_struct *task)
-{ return value==&lock && value->owner==(unsigned long)task; }
-static int raw_smp_processor_id(void) { return executor_cpu; }
+/* The generated production predicate reads the actual owner word. Explicit
+ * task alignment keeps its three flag bits independent of pointer identity. */
+static unsigned long owner_read(const atomic_long_t *word)
+{
+ CHECK(word==&lock.owner);
+ if(admission_active)owner_reads++;
+ return __atomic_load_n(word,__ATOMIC_RELAXED);
+}
+#define atomic_long_read(word) owner_read(word)
+static int raw_smp_processor_id(void)
+{ if(admission_active)cpu_reads++;return executor_cpu; }
 static void __attribute__((unused)) cpu_relax(void) { CHECK(false); }
 #include "pin_window_production.h"
 
@@ -129,6 +164,8 @@ static void setup(void)
  memset(poisoned, 0, sizeof(poisoned));
  requests = promotions = cancellations = completions = cas_attempts = expiry_probes = 0;
  allowed_node = -1; executor_cpu = 0; current=&owner;require_withdrawn_on_bug=false;
+ admission_active=admission_injected=false;admission_change=ADMISSION_STABLE;
+ owner_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
  batch.lock = &lock; lock.owner = (unsigned long)current;
  lock.delegation_state.counter = KD_MUTEX_GATE_HELD;
  for (unsigned int i = 0; i < NODE_COUNT; i++) {
@@ -148,7 +185,10 @@ static bool select_current(unsigned int index)
 {
  bool selected;
  allowed_node = (int)index;
+ owner_reads=ready_reads=generation_reads=key_reads=cpu_reads=0;
+ admission_active=true;
  selected = kd_mutex_batch_pin_select(&batch, &nodes[index]);
+ admission_active=false;
  if(selected) {
   CHECK(nodes[index].locked==KD_MUTEX_PROXY_READY && !requested[index]);
   requested[index]=1;requests++;
@@ -223,6 +263,36 @@ static void selection_boundaries(void)
  }
 }
 
+static void admission_contract(void)
+{
+ /* Count only the actual selection region, not prior epoch admission or the
+  * fresh post-execution/cold assertions. The capture and re-read both remain. */
+ for (unsigned long flags=0;flags<4;flags++) {
+  setup();lock.owner=(unsigned long)current|flags;
+  CHECK(select_current(0));
+  CHECK(owner_reads==1 && ready_reads==1 && cpu_reads==1);
+  CHECK(generation_reads==2 && key_reads==2 && !promotions && !cas_attempts);
+  CHECK(batch.nr_pins==1 && batch.pin.node==&nodes[0] && batch.pin.generation==2);
+  lock.owner=(unsigned long)current;consume(0);kd_mutex_batch_epoch_end(&batch,false);
+ }
+ for (unsigned int state=0;state<=KD_MUTEX_QUEUE_INIT;state++) {
+  if(state==KD_MUTEX_PROXY_READY)continue;
+  setup();nodes[0].locked=state;
+  CHECK(!select_current(0));
+  CHECK(!batch.nr_pins && !batch.pin.node && !requests && !requested[0]);
+  CHECK(nodes[0].locked==state && owner_reads==1 && ready_reads==1 && cpu_reads==2);
+  CHECK(generation_reads==1 && key_reads==1 && !promotions && !cas_attempts);
+  kd_mutex_batch_epoch_end(&batch,false);
+ }
+ for (unsigned int state=0;state<=KD_MUTEX_QUEUE_INIT;state++) {
+  setup();nodes[0].tail=(executor_cpu+1)<<KD_MUTEX_TAIL_CPU_OFFSET;nodes[0].locked=state;
+  CHECK(!select_current(0));
+  CHECK(!batch.nr_pins && !batch.pin.node && !requests && nodes[0].locked==state);
+  CHECK(owner_reads==1 && !ready_reads && cpu_reads==2 && generation_reads==1 && key_reads==1);
+  kd_mutex_batch_epoch_end(&batch,false);
+ }
+}
+
 static void cold_boundaries(void)
 {
  setup(); CHECK(select_current(0));
@@ -263,7 +333,25 @@ static void cold_boundaries(void)
 static void invalid_identity(const char *name)
 {
  setup();
- if (!strcmp(name, "occupied-slot")) {
+ if (!strcmp(name,"admission-generation-change") || !strcmp(name,"admission-key-change") ||
+     !strcmp(name,"admission-wrong-current")) {
+  admission_change=!strcmp(name,"admission-generation-change")?ADMISSION_GENERATION:
+                   !strcmp(name,"admission-key-change")?ADMISSION_KEY:ADMISSION_NODE;
+  select_current(0);CHECK(false);
+ } else if (!strcmp(name,"admission-pickup") || !strcmp(name,"admission-other-owner") ||
+            !strcmp(name,"admission-released") || !strcmp(name,"admission-private-epoch") ||
+            !strcmp(name,"admission-wrong-key") || !strcmp(name,"admission-held") ||
+            !strcmp(name,"admission-free") || !strcmp(name,"admission-acquiring")) {
+  if(!strcmp(name,"admission-pickup"))lock.owner|=4UL;
+  else if(!strcmp(name,"admission-other-owner"))lock.owner=(unsigned long)&later_owner;
+  else if(!strcmp(name,"admission-released"))batch.outer.released=true;
+  else if(!strcmp(name,"admission-private-epoch"))batch.proxy_epoch=false;
+  else if(!strcmp(name,"admission-wrong-key"))nodes[0].counted_lock=&other_lock;
+  else if(!strcmp(name,"admission-held"))lock.delegation_state.counter=KD_MUTEX_GATE_HELD;
+  else if(!strcmp(name,"admission-free"))lock.delegation_state.counter=KD_MUTEX_GATE_FREE;
+  else lock.delegation_state.counter=KD_MUTEX_GATE_ACQUIRING;
+  select_current(0);CHECK(false);
+ } else if (!strcmp(name, "occupied-slot")) {
   batch.pin.node = &nodes[7]; select_current(0);
  } else if (!strcmp(name, "excess-count")) {
   batch.nr_pins = 2; kd_mutex_batch_unpin(&batch, false);
@@ -314,7 +402,7 @@ int main(int argc, char **argv)
 {
  if (argc == 2) invalid_identity(argv[1]);
  CHECK(argc == 1);
- sequential_currents(); selection_boundaries(); cold_boundaries();
- printf("PASS pin window: %u checks; one exact READY current, delayed cold promotion, sequential slot reuse, no future access, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
+ sequential_currents(); selection_boundaries(); admission_contract(); cold_boundaries();
+ printf("PASS pin window: %u checks; one exact READY current, delayed cold promotion, sequential slot reuse, no future access, exact admission loads and real owner flags, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
  return 0;
 }

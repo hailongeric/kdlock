@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch starts the admission consolidation design below;
-its implementation and VM correctness/timing gates are pending.
+delegation waiters. This branch implements the admission consolidation candidate
+below; its VM correctness and timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -441,11 +441,12 @@ frame/source lease retires; its checked INIT-to-READY CAS still precedes W's
 custody-ready barrier. The role-exchange `goto wait_result` then shares the same
 observe-only helper. Withdrawal arbitration, delayed cold CLAIMED promotion,
 exact descriptor/source/owner/ACK checks, 32/320-byte layouts, 1024/1024 caps,
-65,536 spin budget and one-successor prefetch remain unchanged. Source-derived
-publication/ordering mutations, invalid INIT and early result/cancellation cases,
-emitted-code inspection, live validation and matched timing remain pending.
+65,536 spin budget and one-successor prefetch remain unchanged. The scoped unit,
+build and emitted-code gates passed through
+`a46bf63c44bc81a32901dfd55e3c88a16954e262`; the separate matched mutex timing gate
+failed as recorded below.
 
-### One complete admission proof design (October 29)
+### One complete admission proof candidate (October 29)
 
 This separate follow-up starts from
 `a46bf63c44bc81a32901dfd55e3c88a16954e262`. Its 15-driver unit gate, both provider
@@ -455,10 +456,10 @@ still failed the mutex performance gate. For example, c01 at 20 workers measured
 versus 3.678105, and c16 at 20 workers 3.889928 versus 4.227567. These observations
 do not establish which admission instructions account for the remaining cost.
 
-The current selection, descriptor addition, proxy-readiness predicate and
-immediate caller assertion repeat some checks without an intervening callback,
-origin use or scheduling operation. Consolidate only this short admission
-region. Keep one complete proof before legacy origin-stack decoding or ABI2
+The predecessor's selection, descriptor addition, proxy-readiness predicate and
+immediate caller assertion repeated some checks without an intervening callback,
+origin use or scheduling operation. This candidate consolidates only that short
+admission region. It keeps one complete proof before legacy origin-stack decoding or ABI2
 borrowed-frame preparation: an empty descriptor, the exact expected current,
 an even captured generation and exact counted lock, this batch's private epoch,
 an unreleased outer acquisition, current's physical ownership excluding PICKUP,
@@ -473,6 +474,10 @@ diagnostic reasons by identifying same-CPU refusal on the cold false path; the
 successful path should check that CPU only once. Mode 2 still counts logical
 descriptor reservations, with unchanged schema and accounting. Its intervening
 counter macros are private inline bookkeeping; mode 0 erases them.
+The earlier identity guards also apply to same-CPU refusal: every reachable
+queued invocation is already counted before its incoming link, including C's
+still-counted INIT during role exchange. Invalid metadata or a closed private
+epoch is an invariant failure, not a valid refusal that skips those guards.
 
 Only the two immediate admission assertions become redundant. The initial
 execute-function guards remain because image/context/debug work separates them

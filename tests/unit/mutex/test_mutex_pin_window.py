@@ -22,6 +22,8 @@ def main():
         r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT|CLAIM_SLOTS|CUSTODY_LOCKS) \d+$",
         header, re.M))
     assert len(constants.splitlines()) == 6
+    constants += "\n" + next(line for line in read_source(ROOT / "include/kd_lock.h").splitlines()
+                              if line.startswith("#define KD_MUTEX_OWNER_FLAGS "))
     types = constants + "\n" + "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_GATE_")) + "\n"
     types += definition(read_source(ROOT / "include/kd_mutex_types.h"),
                         "struct kd_mutex {") + ";\n"
@@ -35,6 +37,9 @@ def main():
                         "struct kd_exec_outer_unlock {") + ";\n"
     types += definition(source, "struct kd_mutex_batch {") + ";\n"
     code = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
+    owned = definition(source,
+        "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)")
+    code += "static __always_inline " + owned + "\n"
     for marker in (
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
@@ -57,10 +62,36 @@ def main():
         "static __always_inline void\nkd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,")
     epoch_end = definition(source,
         "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)")
+    add = definition(window,
+        "static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,")
+    select = definition(window,
+        "static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,")
+    request = definition(source,
+        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,")
     mutations = {
         "claim-successor-instead": (
             "if (!kd_mutex_batch_pin_add(batch, node))",
             "if (!kd_mutex_batch_pin_add(batch, node->next))", "", 1),
+        "admission-skips-stability-reread": (add,
+            add.replace("\tkd_mutex_batch_pin_check(batch);\n", "", 1), "admission-generation-change", 1),
+        "admission-misses-key-change": (check,
+            check.replace("READ_ONCE(node->counted_lock) != batch->lock ||", "false ||", 1), "admission-key-change", 1),
+        "admission-misses-generation-change": (check,
+            check.replace("READ_ONCE(node->count_seq) != batch->pin.generation", "false", 1), "admission-generation-change", 1),
+        "admission-accepts-different-current": (select,
+            select.replace("\tBUG_ON(batch->pin.node != node);\n", "", 1), "admission-wrong-current", 1),
+        "admission-accepts-pickup": (owned,
+            owned.replace("(owner & 4UL)", "false", 1), "admission-pickup", 1),
+        "admission-accepts-other-owner": (owned,
+            owned.replace("(owner & ~KD_MUTEX_OWNER_FLAGS) != (unsigned long)current", "false", 1), "admission-other-owner", 1),
+        "admission-accepts-released-outer": (add,
+            add.replace("batch->outer.released", "false", 1), "admission-released", 1),
+        "admission-accepts-no-private-epoch": (add,
+            add.replace("!batch->proxy_epoch", "false", 1), "admission-private-epoch", 1),
+        "admission-accepts-held-gate": (request,
+            request.replace("kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER", "false", 1), "admission-held", 1),
+        "admission-adds-second-ready-check": (select,
+            select.replace("\tBUG_ON(batch->pin.node != node);", "\tBUG_ON(batch->pin.node != node);\n\tKD_MUTEX_PIN_ASSERT(batch, node);", 1), "", 1),
         "cancel-rearms-ready": (
             "smp_store_release(&node->locked, KD_MUTEX_WAIT);",
             "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", "", 1),
@@ -126,7 +157,10 @@ def main():
                 print("pin-window mutation detected:", name)
             else:
                 print(result.stdout, end="")
-                for invalid in ("generation", "wrong-lock", "odd-generation",
+                for invalid in ("admission-generation-change", "admission-key-change", "admission-wrong-current",
+                                "admission-pickup", "admission-other-owner", "admission-released", "admission-private-epoch",
+                                "admission-wrong-key", "admission-held", "admission-free", "admission-acquiring",
+                                "generation", "wrong-lock", "odd-generation",
                                 "wrong-current", "complete-unclaimed", "occupied-slot", "excess-count", "without-epoch",
                                 "ready-without-epoch", "later-owner-combiner", "released-epoch", "expiry-before-promotion",
                                 "ready-held", "retained-ready", "retained-open-epoch"):

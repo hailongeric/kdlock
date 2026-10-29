@@ -398,7 +398,8 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * follow the current origin's successful readiness claim. */
 		if (!kd_mutex_batch_pin_select(batch, curr_node))
 			return KD_EXE_NO_RUN;
-		KD_MUTEX_PIN_ASSERT(batch, curr_node);
+		/* Selection has completed the exact admission proof immediately
+		 * before this first borrowed origin-stack access. */
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
@@ -461,9 +462,8 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 		if (!kd_mutex_batch_pin_select(batch, curr_node))
 			return KD_EXE_NO_RUN;
-		/* READY under this owned epoch proves origin pin/quiescence.
-		 * Keep its exact assertion before preparing borrowed origin state. */
-		KD_MUTEX_PIN_ASSERT(batch, curr_node);
+		/* Selection has completed the exact admission proof; no callback or
+		 * origin access intervenes before borrowed-frame preparation. */
 		if (minimal)
 			frame = kd_exec_frame_push_mutex_batch(&curr_node->regs,
 				curr_node->regs.ip, curr_node->gsbase,

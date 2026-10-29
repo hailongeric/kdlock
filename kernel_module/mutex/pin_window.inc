@@ -62,12 +62,16 @@ static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
 	u64 generation = READ_ONCE(node->count_seq);
 
 	BUG_ON(batch->nr_pins || batch->pin.node || (generation & 1) ||
-	       READ_ONCE(node->counted_lock) != batch->lock || !batch->proxy_epoch);
+	       READ_ONCE(node->counted_lock) != batch->lock || !batch->proxy_epoch ||
+	       batch->outer.released);
 	if (!kd_mutex_proxy_request(batch->lock, node))
 		return false;
 	batch->pin.node = node;
 	batch->pin.generation = generation;
 	batch->nr_pins = 1;
+	/* Capture alone is not stable identity. Re-read the exact counted key and
+	 * generation after READY, before any borrowed origin state is prepared. */
+	kd_mutex_batch_pin_check(batch);
 	KD_MUTEX_PIN_INC(batch, claims);
 	return true;
 }
@@ -120,24 +124,26 @@ kd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,
 	kd_mutex_batch_pin_complete(batch, node);
 }
 
-/* Each ordinary iteration claims its own current anew. Same-CPU refusal and
- * exact lock/generation checks remain; no future-node walk, response wait or
- * queue reordering is needed to establish this current's readiness. */
+/* This uninterrupted inline chain supplies the complete admission proof once:
+ * private epoch/unreleased outer, exact owner excluding PICKUP, COMBINER,
+ * different CPU, acquire READY, and a stable counted key/generation. Only
+ * private diagnostic bookkeeping follows before the caller's first origin use.
+ * Execution and every cold boundary still require their own fresh proof. */
 static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
 				      struct kd_mutex_node *node)
 {
-	BUG_ON(batch->nr_pins || batch->pin.node);
 	KD_MUTEX_PIN_BEGIN(batch);
-	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id()) {
-		KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_SELF_CURRENT);
-		KD_MUTEX_PIN_END(batch);
-		return false;
-	}
 	if (!kd_mutex_batch_pin_add(batch, node)) {
-		KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_CURRENT_NOT_READY);
+		/* Preserve the refusal reason without a duplicate CPU check on the
+		 * successful path. No descriptor or origin access was admitted. */
+		if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
+			KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_SELF_CURRENT);
+		else
+			KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_CURRENT_NOT_READY);
 		KD_MUTEX_PIN_END(batch);
 		return false;
 	}
+	BUG_ON(batch->pin.node != node);
 	KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_CLAIMED);
 	KD_MUTEX_PIN_END(batch);
 	return true;
