@@ -55,28 +55,32 @@ static inline u32 kd_rwlock_state(kd_rwlock_t *lock)
 
 static __always_inline void __kd_read_lock_pinned(kd_rwlock_t *lock)
 {
-	u32 cnts;
+	u32 cnts, failed;
 
 	cnts = atomic_add_return_acquire(KD_RWLOCK_READER_BIAS, &lock->cnts);
 	if (likely(!(cnts & KD_RWLOCK_WRITER_MASK)))
 		return;
 
-	/* Retire speculative task admission before the context read: a writer
-	 * draining this count need not wait for that CPU-local load and branch. */
+	/* Withdraw before attempting the gate, so a writer can drain readers.
+	 * The successful native CAS needs no context lookup. Even an IRQ/BH
+	 * reader may own a free gate; only queueing behind a writer can deadlock
+	 * with the outer reader that it interrupted. */
 	atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
-	/* An interrupt/BH reader may interrupt a reader that a queued writer is
-	 * draining. That outer reader remains counted during this brief rollback.
-	 * Restore our count before waiting only for actual writer ownership, never
-	 * WAITING or the gate. Without an interrupted reader, a writer may win the
-	 * gap; the acquire observation below then waits for its real release. */
-	if (unlikely(in_interrupt())) {
+	failed = kd_spin_direct_native_reserve_inline(&lock->gate);
+	if (unlikely(failed && in_interrupt())) {
+		/* No gate ownership was acquired. Retire the temporary native
+		 * reference without sampling heat or joining the queue. Restore
+		 * our count, then wait only for real writer ownership. An outer
+		 * interrupted reader stays counted throughout this gap; without
+		 * one a writer may win, and this acquire wait observes its release. */
+		kd_spin_direct_native_cancel_inline();
 		atomic_add(KD_RWLOCK_READER_BIAS, &lock->cnts);
 		atomic_cond_read_acquire(&lock->cnts, !(VAL & KD_RWLOCK_WRITER_LOCKED));
 		return;
 	}
 
 	/* No reader count is held while joining the task admission queue. */
-	kd_spin_direct_native_lock_inline(&lock->gate);
+	kd_spin_direct_native_finish_inline(&lock->gate, failed);
 	/* The count prevents another ungated writer from entering. A fast writer
 	 * which won before this increment can still be active: wait for its
 	 * release while holding the gate, before allowing the reader body. */
@@ -126,8 +130,8 @@ static __always_inline int kd_read_trylock(kd_rwlock_t *lock)
  * Admission precedes the prepared body, on both native and delegated paths.
  * Only the gate owner can publish WAITING. Once published, task readers
  * withdraw their speculative count and queue; interrupt/BH readers restore
- * theirs before waiting, so they do not block the reader they interrupted. The acquire
- * observation pairs with the final reader's release. */
+ * theirs and bypass an occupied gate, so they do not block the reader they
+ * interrupted. The acquire observation pairs with the final reader's release. */
 static __always_inline void kd_rwlock_writer_enter(kd_rwlock_t *lock)
 {
 	if (atomic_cmpxchg_acquire(&lock->cnts, 0,

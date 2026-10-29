@@ -107,31 +107,39 @@ than the original eight-byte layout.
 
 1. Disable preemption and add to the reader count with acquire ordering.
 2. If there are no writer bits, enter the read body immediately.
-3. Remove the speculative count before checking interrupt/BH context. Task
-   readers therefore stop delaying a draining writer before the CPU-local
-   context load and branch, and remain uncounted while joining the gate queue.
-4. In interrupt/BH context, add the count back before waiting only for an active
-   writer's low byte to clear. Ignore WAITING and do not acquire the gate: this
-   reader may have interrupted a reader that the queued writer is draining.
-   That interrupted reader remains counted throughout the temporary rollback,
-   preventing the writer from entering. Without an interrupted reader, a writer
-   may win the gap; the interrupt reader then waits for its real release with
-   acquire ordering. NMI use is outside the supported contract.
-5. After acquiring the gate, add the reader count again. Wait for any native writer
-   that acquired without the gate to release its writer byte. The reader count now
-   prevents another such writer from entering. Release the gate, then run the read
-   body locally.
+3. Remove the speculative count, reserve one exact native reference, and try a
+   single acquire CAS on the gate. A successful gate acquisition needs no
+   interrupt/BH context lookup. No reader count is held during this attempt.
+4. Only after a failed gate CAS, check interrupt/BH context before any queue
+   publication. An interrupt reader cancels that exact native reference without
+   touching the gate or sampling heat, restores its reader count, then waits only
+   for an active writer's low byte to clear. It ignores WAITING: the reader may
+   have interrupted a reader that the queued writer is draining. That outer
+   reader remains counted throughout the temporary rollback. Without one, a
+   writer may win the gap; the interrupt reader waits for its real release with
+   acquire ordering. A later gate release does not change this bypass decision.
+   NMI use is outside the supported contract.
+5. A successful CAS, including one in interrupt/BH context, samples heat once and
+   retains the native reference until physical gate release. A task-context miss
+   samples once before entering the existing native queue. After acquiring the
+   gate, restore the reader count and wait for any ungated native writer to
+   release its writer byte. Release the gate and its reference, then run the
+   read body locally.
 6. On read unlock, subtract the count with release ordering and enable preemption.
    The x86 locked SUB avoids computing a return value that the caller does not use.
 
-This rollback-first candidate preserves native queued-rwlock interrupt-reader
-bypass, but differs from native `queued_read_lock_slowpath`, which retains the
-speculative count continuously in interrupt context. A contended IRQ/BH read
-now performs two additional count RMWs and can be overtaken by a writer during
-the temporary gap when no other reader prevents admission. The ordinary fast
-increment/test is unchanged. This is a source candidate, not a measured
-performance improvement; it does not include the separate out-of-line slowpath
-experiment `915a9258bc6d3318bf1383283167271ccc67a2a8`.
+The gate-first candidate keeps the rollback-first interrupt-reader exception.
+Native `queued_read_lock_slowpath` retains its speculative count continuously in
+interrupt context; KD still performs two additional count RMWs and can be
+overtaken during that gap when no other reader prevents writer admission. It
+also attempts one gate CAS: successful IRQ/BH gate ownership takes one heat sample,
+while a failed IRQ/BH attempt takes none and never queues. It may briefly delay a
+queued writer through an acquired gate but cannot wait behind that writer's gate.
+The ordinary reader fast increment/test is unchanged. Moving the context load
+behind a failed gate CAS removes it from successful slow-reader admission; this
+is a source optimization proposal, not a measured performance improvement. It
+does not include the separate out-of-line slowpath experiment
+`915a9258bc6d3318bf1383283167271ccc67a2a8`.
 
 ### Writers
 
@@ -249,12 +257,15 @@ binds the IRQ/try and interrupt-reader comparisons to the authenticated
 Older ordinary rwlock results do not validate the new APIs or establish their
 performance.
 
-The rollback-first change adds a deterministic unit interleaving in which a real
-queued writer acquires during the temporary gap, then an IRQ/BH reader restores
-its count and waits for that writer's release. The existing interrupted-reader
-plus WAITING-writer and active-writer cases remain. These source checks have not
-yet been executed for this candidate; the focused unit driver, live IPI probe
-and matched `c01` read-mostly measurements are required before promotion.
+The unit fixture extracts the production native reserve, cancel, finish and
+release helpers as well as the rwlock reader algorithm. Its primitive observers
+exercise a writer winning the rollback gap, a gate becoming free after a failed
+CAS, successful gate acquisition from task/IRQ/BH contexts, and exact native
+reference and heat balances. Existing interrupted-reader plus WAITING-writer
+and active-writer cases remain. The pthread queue substitute does not validate
+real MCS scheduling, live interrupt delivery or performance. The focused unit
+drivers, live IPI probe, basic checks and matched measurements are required before
+promotion; no such result is claimed for this isolated candidate.
 
 The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
 Native and TCLock using matched cacheline and hash workloads. The

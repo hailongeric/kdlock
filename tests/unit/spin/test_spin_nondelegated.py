@@ -32,8 +32,13 @@ def main():
         direct = (ROOT/'include/kd_spin_direct.h').read_text()
         paired = 'void ' + definition(source,
             'kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)')
-        paired += definition(direct,
-            'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)')
+        for signature in (
+            'static __always_inline u32 kd_spin_direct_native_reserve_inline(kd_spinlock_t *lock)',
+            'static __always_inline void kd_spin_direct_native_cancel_inline(void)',
+            'static __always_inline void\nkd_spin_direct_native_finish_inline(kd_spinlock_t *lock, u32 failed)',
+            'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)',
+        ):
+            paired += definition(direct, signature)
         paired += 'void ' + definition(source,
             'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
         paired += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')

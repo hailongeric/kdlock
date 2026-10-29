@@ -22,19 +22,39 @@ void kd_spin_unlock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			     unsigned long);
 void kd_spin_direct_native_lock(kd_spinlock_t *lock);
 void kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed);
-/* The caller already pinned and selected self-execution. Keep the common CAS
- * here; a failed attempt retains that pin and enters the complete native queue.
- * The drain count stays live through the generic byte-5 unlock. */
+/* Reserve an exact native acquisition reference before the physical attempt. A miss
+ * retains this reference: the caller must either finish native admission or
+ * cancel it before taking a route that never owns this gate. No heat is sampled
+ * until that choice is made. The caller already pinned preemption. */
+static __always_inline u32 kd_spin_direct_native_reserve_inline(kd_spinlock_t *lock)
+{
+	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
+	return atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
+}
+
+/* Only a failed reserve may be cancelled; no physical lock word is changed. */
+static __always_inline void kd_spin_direct_native_cancel_inline(void)
+{
+	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+}
+
+/* Both physical outcomes count once before any possible MCS publication.
+ * A failed attempt keeps its exact reference through the native queue. */
+static __always_inline void
+kd_spin_direct_native_finish_inline(kd_spinlock_t *lock, u32 failed)
+{
+	kd_hotlock_spin_entry_pinned();
+	if (failed)
+		kd_spin_direct_native_contended(lock, failed);
+}
+
+/* The caller selected self-execution. The drain reference stays live through
+ * the generic byte-5 unlock, whether the CAS or the queue acquired the gate. */
 static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)
 {
-	u32 val;
+	u32 failed = kd_spin_direct_native_reserve_inline(lock);
 
-	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
-	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
-	/* Both outcomes count once before any possible MCS publication. */
-	kd_hotlock_spin_entry_pinned();
-	if (val)
-		kd_spin_direct_native_contended(lock, val);
+	kd_spin_direct_native_finish_inline(lock, failed);
 }
 /* Native-only callers own byte 5 and retain their acquisition pin. Separate
  * physical release from unpinning so IRQ/BH restoration can precede scheduling.
