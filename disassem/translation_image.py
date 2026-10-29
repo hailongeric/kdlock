@@ -183,7 +183,7 @@ def emit_jit_assembly(
                 f.write(address_guards.emit(line, reg_map))
             if native_escapes and native_escape.descriptor(line):
                 diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
-                                 "stop before source instruction and disable future delegation",
+                                 "resume this invocation's native suffix before the source instruction",
                                  source_ip=hex(line.offset), instruction=line.name)
                 f.write(special_inst.native_escape_marker(line, reg_map))
             elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
