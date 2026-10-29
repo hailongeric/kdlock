@@ -280,3 +280,47 @@ or folio-related work. Any later implementation still needs basic and affected
 correctness checks and a separately matched nano comparison; this static audit
 establishes neither a speedup nor a no-regression result. PREEMPT_RT,
 DEBUG_MUTEXES and DEBUG_LOCK_ALLOC/lockdep remain explicitly unsupported.
+
+## October 30 implementation plan and acceptance gates
+
+The user authorized implementation after this audit, in the order below.
+This section is a plan, not a claim that any gap is already repaired. Start
+from `acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f`; preserve the unpromoted
+`2dbcd7afbf141dd63dcf0086b65fd0da4b32d6f7` optimization and its failed nano gate
+as separate evidence. Do not promote that regression as an implementation base.
+Keep independent candidate commits until their required checks pass. The
+maintained source-trust policy, two-word wrapper ABI, 1024/1024 limits and exact
+physical owner/source/frame/unlock-ACK records remain requirements.
+
+| Order | Concrete work | Gate before advancing |
+| --- | --- | --- |
+| 1a | Preserve exact F3 90 PAUSE while retaining ordinary fences/atomics. Change supported reached instruction exits from registry-wide disable to per-invocation native continuation, with immutable image/source lifetime and repeated-exit behavior intact. | Generated-byte/behavior checks; cold → taken → cold → taken live phases, exact prefix/suffix/flags/owner results and normal retirement. No permanent loss of cold-path JIT eligibility. |
+| 1b | Add saved origin/executor context admission for supported task-context spin intervals. Keep incompatible IRQ/BH/preempt/CPU-local paths on the origin with the same KD physical protocol. Establish explicit Native-inner/context CALL boundaries that learning cannot silently cross. Extend exact instruction boundaries only with corresponding state/ownership proofs. | Context-matched delegation and mismatched local completion; no replay, lost pin, changed IF, double release or invalid native stack. A terminal native suffix is distinguished from a resumable typed runtime operation. |
+| 1c | Prepare minimal lock-call/binding integration for `files_struct.file_lock` and `pipe_inode_info.mutex`, first for setfd and FIONREAD/F_GETPIPE_SZ. Preserve original function bodies, command branches and user-copy position. Every other participant on a bound object uses the same KD object with local semantics where delegation is unsupported. | Initialization/quiescent binding, callable/try/local routing and teardown checks; actual syscall result/concurrency checks, including operations outside the proxied subset. A copied/specialized adapter is not acceptance evidence for unchanged bodies. |
+| 2 | Freeze baseline/candidate inputs. Run the ten maintained nano profiles, then the bounded real syscall cases. Use Native/KD and a supported TCLock arm only where its scope is equivalent. | One measurement round per point. Publish correctness, returned-JIT/local counts, drain and throughput separately. Any measured nano regression fails promotion and requires diagnosis plus optimization or path-specific rollback; no averaging across versions or topologies. |
+| 3 | Validate the localized mmap backend and run the existing shared-mm mapping workload with exact original-task reader/phase/lifetime behavior. Prepare unchanged pinned will-it-scale mmap1 as a distinct driver. | Basic plus affected API, mapping, fault and completed-fault checks; explicit kernel/backend/boot identity; one-round localized Native/KD comparison. Device mapping is not relabelled mmap1. |
+| 4 | Integrate the corresponding kernel object groups and all required local/delegated API participants. For mmap writers preserve killable cancellation, writer/per-VMA sequence ordering, downgrade and asynchronous read-token lifetime. Keep unsupported bit/per-VMA protocols Native. | Exact source diff restricted to lock API and necessary binding/lifetime glue; unchanged native bodies; fresh recovery/boot identity and directly affected execution checks. Native suffixes retain every acquired lock and committed effect. |
+| 5 | Run unchanged will-it-scale mmap1 against matched Native/KD kernels, shared-mm thread mode first and independent processes as a separate control. Recheck affected nano/syscall cases for the final source/kernel generation. | Correct data/progress/drain and measured mmap1 performance. Publish every one-round point; require measured parity or improvement against Native at the declared shared-mm points and no nano regression. One round supplies no variance estimate or statistical guarantee. |
+
+Source edits, Git and static/archive inspection run on 380G10. All compilation,
+unit/live checks and timing run in the designated VM. Synchronize only while
+idle; freeze the running generation. Before module/JIT or kernel work verify a
+real recovery snapshot and bound every remote command. The user authorized
+kernel build/install/reboot for this task; no unreviewed native-body rewrite is
+authorized by that permission. Preserve unrelated work and every failed attempt.
+
+The initial comparison grid uses the maintained `1..8,12..60` worker counts,
+CPUs `0..N-1`, collector63, fixed host policy and one two-second measurement
+round per coordinate. Freeze the exact workload parameters and source/kernel
+identities in each campaign before execution. Diagnostic runs are separate from
+timing and cannot replace a failed coordinate. Oversubscription and rwsem
+fairness redesign remain deferred. Full suites require a separate explicit
+request; use basic plus directly affected checks.
+
+The first functional milestones deliberately distinguish persistent eligibility
+from arbitrary re-entry: after a reached exact native exit, that invocation can
+finish its native suffix without disabling later requests. Resuming the same
+JIT after a native interval additionally requires a validated return/state merge
+and acquisition contract. Preserve actual CALL/RET words; do not create a fake
+general native return bridge to satisfy a coverage count. Any remaining coarse
+fallback or unsupported context must stay explicit in the completion report.

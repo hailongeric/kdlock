@@ -155,6 +155,13 @@ outside this work.
 
 ## Current implementation gaps
 
+The user authorized the [October 30 integration sequence](design/kernel_cs_semantics.md#october-30-implementation-plan-and-acceptance-gates): semantic/function repairs,
+one-round nano and bounded syscall comparisons, localized mmap, full selected
+kernel object binding, then unchanged mmap1 acceptance. Implementation begins
+from `acfa33a5`; prior regressed mutex candidates remain unpromoted. The plan's
+gates are pending, and no claimed coverage or performance changes merely because
+implementation is authorized.
+
 The [per-lock native critical-section map](design/kernel_cs_semantics.md) records
 the October 30 source/object analysis before implementation. Newly identified
 work includes preserving the decoder's prefixed-NOP PAUSE path, stable local
