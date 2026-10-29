@@ -119,8 +119,8 @@ requirement: use a long initial pinned spin period, with more than 99% remaining
 in that state as a measurement target. Check scheduling and possible sleeping
 only after that budget expires. Keep at least eight proxy-eligible requests
 ready during combining, and eliminate queue-response polling from the ordinary
-proxy round. This section is the next implementation plan, not a claim about
-the maintained runtime or achieved performance.
+proxy round. This remains a development requirement; the first READY candidate
+passed scoped correctness but failed the performance gate and is not maintained.
 
 Physical OSQ membership orders attempts to acquire the real mutex. Delegation
 membership publishes a continuation for proxy execution. They share reserved
@@ -158,6 +158,37 @@ handoff transition; then run basic plus affected race/protocol checks. Measure
 the fraction staying in the initial spin state separately from diagnostics-free
 c01/c16 nano throughput. More than 99% spinning and no performance regression
 remain acceptance targets, not facts inferred from a large threshold.
+
+The [first READY measurements](../../bench/results/10.176.26.71/tests/mutex-ready-window-20261029/README.md)
+at runtime `43418d5a3c8659311b0d008310f70e78f245eeee` used a 65,536-PAUSE
+budget and eight claimed requests. At c01/20 and c01/36, all measured wait
+episodes completed before expiry, with zero withdrawal, cancellation or FULL
+resumes. Nevertheless, diagnostics-free c01/20 fell to 2.759128 Mops/s versus
+the saved pinned 4.590029 Mops/s. The budget target was met in those observations;
+the no-regression target was not. Per-request claim traffic and cohort work
+remain hypotheses, not a measured causal breakdown.
+
+The next isolated plan amortizes withdrawal exclusion across an ordinary proxy
+batch using one additional bit in the existing full-word gate. After budget
+expiry and a scheduling request, an origin may reserve a short WITHDRAW phase
+only outside COMBINER, withdraw its exact READY node, and clear that bit before
+unpinning. A combiner makes one HELD-to-COMBINER CAS requiring no withdrawal in
+progress. Failure performs native head handoff without waiting. Successful
+admission makes READY stable against withdrawal, permitting ordinary claims by
+load/store while retaining exact invocation descriptors and retirement probes.
+All gate phase changes must preserve the withdrawal bit; no mixed-width atomic
+access, extra mutex storage or global lock is proposed.
+
+This admission must end before registration, FULL/generic dispatch, sleepable
+services, native custody or delayed terminal polling. Otherwise an unselected
+pinned waiter could prevent a dependency of the sleeping executor from running.
+Keep the current CLAIMED request protected, release future claims, reopen
+withdrawal, and require fresh nonblocking admission before another ordinary
+claim. W's native suffix runs with withdrawal open and its after-body combining
+requires fresh admission. An early outer unlock forbids re-entry into that
+detached queue. Verify both admission-race winners, flag preservation through
+physical release/acquisition, result-before-withdrawal, cold-service scheduling,
+role exchange and exact terminal cleanup before timing this alternative.
 
 ### Physical exclusion for ordinary and delegated callers
 

@@ -1,0 +1,344 @@
+{
+  "scope": "Read-only offline validation of fetched controller/result receipts and committed probe contracts; no VM access, tests, builds, or timing.",
+  "verified": true,
+  "input_file": "/tmp/kdlock-ready-live-results-20261029.json",
+  "input_sha256": "bd0c23d64e00d9b2a0966bf9a755dfcca4c11024281373b24c56768a65ac60c8",
+  "controller_source": "406c679bd70c1589754c5083039b95051aba297a",
+  "runtime_source": "43418d5a3c8659311b0d008310f70e78f245eeee",
+  "runtime_headers_and_kernel_module_identical_between_runtime_and_controller": true,
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "kernel_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "blocks_completed": 8,
+  "blocks_serial": true,
+  "basic": {
+    "families": [
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "mutex",
+        "jit_completions": 1586318,
+        "jit_entries": 1586318,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-ready-live-20261029/basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+        "receipt_sha256": "b80d63e9faa359041d3d106faddb07be4d296aa18678fc74ed8dfc930024e9a9"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "rwsem",
+        "jit_completions": 1590670,
+        "jit_entries": 1590670,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mutex-ready-live-20261029/basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+        "receipt_sha256": "534adc153c15f9f38e5f30b0dacf7404dcfbdfaa5622d7f55b348afc6f7e1371"
+      }
+    ],
+    "final_idle": true,
+    "functional_only": true
+  },
+  "queued": {
+    "passed": true,
+    "drained": true,
+    "final_idle": true,
+    "jit_bodies": 0,
+    "ready_policy": {
+      "mutex_ready_window": 8,
+      "mutex_spin_budget": 65536
+    },
+    "context_rows": 14,
+    "all_context_fields_zero": true,
+    "source_retirement": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    }
+  },
+  "role_cases": [
+    {
+      "name": "simple",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-native",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "1",
+          "started": "1",
+          "unlocks": "1"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10018,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10011,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10013,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "w-early-mutex",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 3,
+      "combiner_node": 0,
+      "waiter_node": 0,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "C",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": true,
+      "steal_attempts": 10021,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "simple-cross-numa",
+      "passed": true,
+      "drained": true,
+      "cpus": [
+        0,
+        1,
+        2,
+        33,
+        34
+      ],
+      "combiner_cpu": 2,
+      "waiter_cpu": 33,
+      "combiner_node": 0,
+      "waiter_node": 1,
+      "physical_owner_changed_c_to_w": true,
+      "original_combiner_body_executor": "W",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "early_outer_released_with_inner_held": false,
+      "steal_attempts": 10013,
+      "steals": 0,
+      "context_rows": 10,
+      "all_context_fields_zero": true,
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "total_context_rows": 74,
+  "all_context_fields_zero": true,
+  "probe_sources": [
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/run.py",
+      "source_commit": "406c679bd70c1589754c5083039b95051aba297a",
+      "blob": "62ed67a8b9573629702f722815c4f80d0d237c0c",
+      "sha256": "9eb37983b8d72dcdc7ec32a9fbe3fc82b638e1ff19c0575298caa4ac753aca4c",
+      "latest_path_commit": "39abf5b13e0cf272a8775622c081d7bdfb530a81"
+    },
+    {
+      "path": "tests/kernel/mutex/mixed_transfer/payload/module.c",
+      "source_commit": "406c679bd70c1589754c5083039b95051aba297a",
+      "blob": "83c56b553785a52f6584da45a001a83b0a3c323e",
+      "sha256": "310ccb97dfe438c9bd3f413f62beee3425ce856b7199f3e79f1b95c75cb4ccff",
+      "latest_path_commit": "39abf5b13e0cf272a8775622c081d7bdfb530a81"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/run.py",
+      "source_commit": "406c679bd70c1589754c5083039b95051aba297a",
+      "blob": "6c01ce380884f3495486c44efef20aeaf330fb73",
+      "sha256": "619cf49e04f15b074b02cce66c14874d266b433e5188e5772b54b8a9a9610ff0",
+      "latest_path_commit": "43418d5a3c8659311b0d008310f70e78f245eeee"
+    },
+    {
+      "path": "tests/kernel/mutex/proxy_pin/payload/kd_mutex_proxy_pin_probe.c",
+      "source_commit": "406c679bd70c1589754c5083039b95051aba297a",
+      "blob": "dfbba3516a680ad6f39eec1d7de58aed55378f2e",
+      "sha256": "81c316fc49780e77182930ff2b2e29a63280960ac28fc25f003c16c110cfcecf",
+      "latest_path_commit": "43418d5a3c8659311b0d008310f70e78f245eeee"
+    }
+  ],
+  "mixed_probe_integrated_ancestor": "39abf5b13e0cf272a8775622c081d7bdfb530a81",
+  "limits": [
+    "Frozen source/binary archive integrity is a separate preservation check; this input contains summary receipts rather than the archive trees.",
+    "Raw kernel logs, exact role-exchange/native ACK trace rows, publication hashes and module/task listings are not included; their validation is reported by the captured runners, whose source contracts were inspected.",
+    "The cross-NUMA controller requests C on CPU2/node0 and W on CPU33/node1 using the captured topology. Role context summaries do not repeat CPU IDs; actual affinity validation is performed by the runner.",
+    "The queued probe reports eventual scheduling and balanced joined-task contexts; it does not measure initial-budget duration, the greater-than-99-percent target, actual parking, or sleep frequency.",
+    "Correctness covers these bounded cases and original-task returns, not arbitrary nesting or all weak-memory interleavings.",
+    "No performance acceptance or unit-gate result follows from these live receipts."
+  ]
+}

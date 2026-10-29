@@ -45,6 +45,16 @@ not authorize weakening pin proofs or physical/source/frame retirement. The
 more-than-99% spinning target and nano no-regression gate require measurements.
 The optional profiling follow-up is deferred while this protocol is developed.
 
+The first [long-spin READY candidate](../bench/results/10.176.26.71/tests/mutex-ready-window-20261029/README.md)
+at `43418d5a`, validated through fixture correction `406c679b`, passed all affected
+checks and live mutex/rwsem, queued scheduling and six role placements. Its two
+instrumented points recorded 100% completion before the initial budget expired,
+but the one-round contended mutex measurements lost 26.60–39.89% versus the saved
+pinned baseline. It is not promoted. The next isolated plan uses the existing
+gate to arbitrate withdrawal once per ordinary batch, with admission ended
+before every sleepable/native boundary; the correctness and performance gates
+remain open.
+
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
 The latest long-spin/readiness protocol supersedes permanent queue-wide pinning
