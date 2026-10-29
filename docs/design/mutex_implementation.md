@@ -1,8 +1,9 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch carries the proxy-epoch candidate
-below; its VM correctness and performance gates are pending. New delegation callers use ABI2; ABI0 remains an internal legacy
+delegation waiters. This branch starts the single-current proxy-epoch design
+below; implementation and its VM correctness/performance gates are pending.
+New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
 locality boundary both default to 1024 bodies. Bounded NUMA selection retains
@@ -316,6 +317,47 @@ before its wait-loop entry, the separate INIT/WAIT states prevent resurrection.
 C may still be proxied as the sole terminal request; a delayed successor only
 ends that execution round after its body completes. FULL recovery preserves the
 existing native/control semantics and is not a translation admission rejection.
+
+### Single-current epoch design (October 29)
+
+The next isolated candidate starts from
+`2d6e313b294632485ee973606813c1c14b6c3cc9`. Its eight-claim epoch implementation
+passed the scoped live gates but failed the mutex timing gate: the ten contended
+points lost 17.63–34.72% against `1c86d6d1`; c01 at 20 workers measured
+2.996456 Mops/s versus 4.590029, and at 36 workers 3.334995 versus 4.209552.
+These separate one-round source measurements motivate the following change;
+they do not prove which instruction or cache transfer caused the loss.
+
+An admitted COMBINER epoch already prevents every READY origin from withdrawing.
+The planned executor therefore retains only the current exact `{node, count_seq}`
+claim. Each ordinary iteration checks the private epoch, physical owner, gate
+phase, self CPU, counted lock and even generation, then acquire-reads READY and
+release-stores CLAIMED. No future node is claimed, scanned for duplicate CPUs or
+stored in a ring. The existing loop still enforces total/local limits of
+1024/1024 and its NUMA/deferred/terminal rules. The one-successor metadata and
+stack prefetch remains unchanged. Mutex/node layouts stay 32/320 bytes and the
+initial pinned spin budget stays 65,536 iterations.
+
+Cold registration, generic/FULL dispatch, native handoff, role exchange, early
+outer release and delayed-tail cleanup must close the epoch even when no claim
+exists. A real current CLAIMED descriptor survives only as required by its
+existing frame or completed-tail lifetime; all exact generation/owner/ACK checks
+remain. Unselected origins stay READY until their own withdrawal wins, rather
+than receiving forced WAIT from a future-window cancellation. The next body
+always needs a fresh READY check; a closed epoch needs fresh nonblocking
+admission. C remains INIT until its old frame/source lease retire, and W's native
+suffix remains HELD. This preserves the existing two-party terminal delegation.
+
+Metadata will distinguish one claim slot from the epoch's protection of all
+READY origins. Optional diagnostics may count up to eight distinct READY
+same-entry candidates once after successful epoch admission, without waiting for
+eight or walking the queue per body. The result is an observed simultaneous
+pinned lower bound, not a returned-body or future-executability guarantee.
+Within-budget evidence continues to use `initial_budget_completed / wait_episodes`
+for actual delegation waits, separately from retained-pin fraction. Observations
+compile out of timing builds and never authorize ownership or origin access.
+The existing current CLAIMED store and origin INIT-to-READY publication remain
+part of this candidate; any later publication optimization requires its own proof.
 
 ### Optional READY diagnostics and prior experiments
 
