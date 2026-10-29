@@ -262,15 +262,23 @@ owner/PICKUP, origin, READY and invocation proofs. Both counter points meet the
 helper-episode budget target. All ten contended mutex points still lose 0.17–12.46%
 against pinned `1c86d6d1`; the candidate remains isolated.
 
-The next broader experiment starts again from `99f38362`: compose only ordinary
-ABI2 COMPLETE frame/pin retirement inside one uninterrupted transition. Retain
-all frame/routing, strict READY, exact invocation and physical-owner proofs, then
-retire frame storage before descriptor removal and the last node wake. Explicit
-private outcomes must prevent caller replay or post-wake node access. A delayed
-terminal link retains its exact descriptor/source lease for cold cleanup; SELFTEST
-keeps its old observer path. The generic frame API must remain unchanged. Existing
-outer-progress stubs do not exercise this real composed path, so a meaningful
-composed fixture and all affected emitted/live/performance gates are required.
+The [joint COMPLETE candidate](../../bench/results/10.176.26.71/tests/mutex-complete-joint-20261029/README.md)
+at runtime `3232d47ca4d9d90a4ec576d55ac028be3c9da7ba`, validated through
+`965156ff660b0c2ae5942b73033f743585270bbf`, composes fresh frame/owner/pin
+validation, nonblocking tail retirement, frame retirement and final wake. The
+caller skips the completed node afterward. Twelve selected drivers ultimately
+passed, as did three builds and eight live blocks covering four basic families;
+the initial fixture compile failure and missing SELFTEST input failure remain
+recorded. Both counter points meet the scoped spin target. All ten contended
+mutex points still lose 0.98–11.98% in the 36-point round, so it remains isolated.
+
+The next narrow experiment starts again from `99f38362`: split positive-budget
+polling from expired polling and test READY first. Equality proves the common
+state; zero, WAIT, CLAIMED and invalid values retain their exact checks. Preserve
+the last pre-PAUSE snapshot at expiry and the next acquire load after a lost
+withdrawal CAS. The saved parent ELF executes thirteen instructions per ordinary
+READY poll versus four in the pinned baseline. This is a cost hypothesis, not a
+measured cause; the generated loop and all affected gates still need validation.
 
 ### Physical exclusion for ordinary and delegated callers
 

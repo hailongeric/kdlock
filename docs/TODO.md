@@ -83,10 +83,14 @@ but all ten contended mutex points remain below the pinned baseline (1.38–11.6
 It remains isolated. The [exact-phase follow-up](../bench/results/10.176.26.71/tests/mutex-exact-phase-20261029/README.md)
 at `ff69c57a` passed twelve selected drivers, both builds and eight live blocks,
 but all ten contended mutex points remain below pinned performance (0.17–12.46%).
-It is not promoted. A broader ordinary COMPLETE frame/pin transition is being
-explored from `99f38362`, preserving every exact proof and generic API while
-retiring frame/descriptor/wake together. It requires real composed-fixture,
-emitted-code, live and performance evidence; no gain is assumed.
+It is not promoted. The [joint COMPLETE follow-up](../bench/results/10.176.26.71/tests/mutex-complete-joint-20261029/README.md)
+at runtime `3232d47c`, validated through `965156ff`, ultimately passed twelve
+selected drivers, three builds and eight live blocks. The two failed setup/gate
+attempts are preserved. Both counter points meet the scoped spin target, but all
+ten contended mutex points still lose 0.98–11.98%; it remains isolated. A separate
+READY-first waiter loop starts from `99f38362` and preserves every state predicate
+and threshold race. Its shorter-loop hypothesis requires actual emitted-code and
+performance evidence before any promotion.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
