@@ -90,6 +90,21 @@ class StringProbe(Probe):
     phase = string_runner.StringSession.phase
 
 
+native_spec = importlib.util.spec_from_file_location(
+    "jit_native_call_runner", ROOT / "tests/kernel/jit_native_call/run.py")
+native_runner = importlib.util.module_from_spec(native_spec)
+native_spec.loader.exec_module(native_runner)
+
+
+class NativeCallProbe(Probe):
+    phase = native_runner.NativeCallSession.phase
+
+    def counters(self):
+        return dict(bench_jit_bodies=0, bench_jit_completions=0,
+                    native_escape_count=0, native_call_probe_count=0,
+                    native_started=0, native_completed=0, native_unlocks=0)
+
+
 class CallerLifetimeTests(unittest.TestCase):
     def exercise(self, failure, runner=runner, probe=Probe):
         with tempfile.TemporaryDirectory() as temporary:
@@ -160,9 +175,10 @@ class CallerLifetimeTests(unittest.TestCase):
         self.assertEqual(session.cleanups, 1)
         self.assertTrue(session.record["drained"])
 
-    def test_address_and_string_callers_follow_the_same_join_rule(self):
+    def test_address_string_and_native_callers_follow_the_same_join_rule(self):
         for module, probe in ((address_runner, AddressProbe),
-                              (string_runner.probe, StringProbe)):
+                              (string_runner.probe, StringProbe),
+                              (native_runner, NativeCallProbe)):
             for failure in ("spawn", "receipt", "wait-timeout", "wait-io", "partial-join"):
                 with self.subTest(probe=probe.__name__, failure=failure):
                     session, callers, error = self.exercise(failure, module, probe)
