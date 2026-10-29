@@ -32,8 +32,8 @@ def solve_cond_jmp_lock_cmpxchg(file_path):
         if (len(first) != 1 or len(second) != 1 or
                 first[0][0] != "LOCK" or first[0][1:] != second[0]):
             continue
-        next_before = re.findall(r"t_next:(loc_[0-9a-fA-F]+)", before[2])
-        next_after = re.findall(r"t_next:(loc_[0-9a-fA-F]+)", after[2])
+        next_before = re.findall(r"c_next:(loc_[0-9a-fA-F]+)", before[2])
+        next_after = re.findall(r"c_next:(loc_[0-9a-fA-F]+)", after[2])
         if len(next_before) != 1 or next_before != next_after:
             continue
         insertions.append((after.start(), "JMP             " + next_before[0] + "\n"))
