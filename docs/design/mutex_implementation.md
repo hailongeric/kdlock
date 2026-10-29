@@ -137,9 +137,16 @@ pin proof, not an estimate from elapsed spinning or a sampled task state.
 The planned cohort contains at least eight exact invocation descriptors. Its
 admission may attempt a nonblocking readiness claim; an unavailable request
 ends or limits the round instead of starting an ACK polling loop. Preserve
-continuous combining where safe. Fully linked nodes or a retained queued anchor
-must prevent delayed successor publication from forcing a wait in the ordinary
-body loop. Threshold expiry, cancellation, terminal handoff, FULL/native escape
+continuous combining where safe. Preserve terminal delegation: requiring a
+linked unexecuted anchor would prevent the new combiner from proxying the former
+combiner in some existing two-party exchanges. Normal retirement instead makes
+one nonblocking link/tail attempt. If successor publication is delayed after a
+body completes, leave the ordinary execution loop while retaining that completed
+request's claimed descriptor, node and batch source lease. Cold cleanup then
+finishes linking, retires the node, removes its descriptor and publishes the
+result exactly once. It must never replay the body, unpin an accessed node or
+wake a node that can still receive a predecessor's link write.
+Threshold expiry, cancellation, terminal handoff, FULL/native escape
 and role exchange remain explicit boundaries with exact node, task, source,
 physical-owner and frame obligations. Required exceptional ownership ACKs must
 not be removed or misreported as ordinary ready-body execution.
