@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch starts the single notification-line read-prefetch
-experiment below; implementation and VM correctness/timing gates are pending.
+delegation waiters. This branch implements the single notification-line read-prefetch
+experiment below; its VM correctness and timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -497,7 +497,7 @@ between proof and first origin use. All new source/VM gates and any performance
 benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
 fairness are unchanged.
 
-### Successor notification-line read-prefetch design (October 29)
+### Successor notification-line read-prefetch candidate (October 29)
 
 This isolated experiment starts from
 `99f383624faa872a76521d1b5be7faea586591c1`, which passed nine selected unit checks,

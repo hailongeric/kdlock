@@ -152,6 +152,8 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	if (!next)
 		return;
 	prefetch(next);
+	/* Hint only: the next admission still acquire-checks READY and identity. */
+	prefetch(&next->locked);
 	prefetchw(&next->entry_abi);
 	prefetchw(&next->regs);
 	sp = READ_ONCE(next->regs.sp);
