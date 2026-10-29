@@ -52,7 +52,7 @@ def main():
     check = definition(window,
         "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)")
     proof = definition(window,
-        "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch,")
+        "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *node)")
     retained_complete = definition(window,
         "static __always_inline void\nkd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,")
     epoch_end = definition(source,
