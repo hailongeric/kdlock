@@ -56,8 +56,8 @@ def main():
         "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,")
     check = definition(window,
         "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)")
-    proof = definition(window,
-        "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *node)")
+    ready_owned = definition(window,
+        "static __always_inline bool kd_mutex_batch_ready_owned(struct kd_mutex_batch *batch)")
     retained_complete = definition(window,
         "static __always_inline void\nkd_mutex_batch_pin_complete_retained(struct kd_mutex_batch *batch,")
     epoch_end = definition(source,
@@ -116,14 +116,14 @@ def main():
             epoch_end.replace("\tkd_mutex_batch_unpin(batch, keep_current);\n", "", 1)
                      .replace("\tkd_mutex_set_locked(batch->lock);",
                               "\tkd_mutex_set_locked(batch->lock);\n\tkd_mutex_batch_unpin(batch, keep_current);", 1), "", 1),
-        "ignore-private-epoch": (proof,
-            proof.replace("!batch->proxy_epoch ||", "false ||", 1), "ready-without-epoch", 1),
-        "ignore-ready-owner": (proof,
-            proof.replace("!kd_mutex_delegation_owned(batch->lock, current) ||", "false ||", 1), "later-owner-combiner", 1),
-        "ignore-released-epoch": (proof,
-            proof.replace("batch->outer.released ||", "false ||", 1), "released-epoch", 1),
-        "ignore-ready-gate": (proof,
-            proof.replace("kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER", "false", 1), "ready-held", 1),
+        "ignore-private-epoch": (ready_owned,
+            ready_owned.replace("batch->proxy_epoch &&", "true &&", 1), "ready-without-epoch", 1),
+        "ignore-ready-owner": (ready_owned,
+            ready_owned.replace("kd_mutex_delegation_owned(batch->lock, current) &&", "true &&", 1), "later-owner-combiner", 1),
+        "ignore-released-epoch": (ready_owned,
+            ready_owned.replace("!batch->outer.released &&", "true &&", 1), "released-epoch", 1),
+        "ignore-ready-gate": (ready_owned,
+            ready_owned.replace("kd_mutex_gate_read(batch->lock) == KD_MUTEX_GATE_COMBINER", "true", 1), "ready-held", 1),
         "cold-completion-skips-strict-proof": (retained_complete,
             retained_complete.replace("\tkd_mutex_batch_pin_assert_retained(batch, node);\n", "", 1), "retained-open-epoch", 1),
         "ignore-generation": (check,

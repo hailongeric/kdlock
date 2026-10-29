@@ -551,6 +551,16 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 /* This existing fixture has no retained original combiner node. The separate
  * custody fixture runs the real role-exchange commit and ACK helpers. */
 struct kd_mutex_batch;
+/* This fixture deliberately drives FULL returns; its first-wrapper completion
+ * substitute is always false. The joint COMPLETE transition is exercised with
+ * its actual frame helpers in test_mutex_complete.py, not through this stub. */
+static __always_inline int
+kd_mutex_batch_complete_inline(struct kd_mutex *lock, struct kd_mutex_node *node,
+ struct kd_mutex_batch *batch, struct kd_exec_frame *frame)
+{
+ (void)lock; (void)node; (void)batch; (void)frame;
+ abort();
+}
 static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)
 {
  (void)frame;

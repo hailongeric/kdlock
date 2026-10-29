@@ -23,7 +23,9 @@ def production_sources():
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
     helpers = '#define MODULE_INFO(...)\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))+'\n'
-    helpers += next(line for line in source.splitlines() if line.startswith('#define KD_MUTEX_EXEC_SWAPPED '))+'\n'
+    for name in ('SWAPPED', 'COMPLETE_PUBLISHED', 'COMPLETE_PENDING_TAIL'):
+        helpers += next(line for line in source.splitlines()
+                        if line.startswith(f'#define KD_MUTEX_EXEC_{name} '))+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
@@ -39,7 +41,7 @@ def production_sources():
         helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
     for marker in (
         'static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)',
-        'static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,',
+        'static __always_inline bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,',
         'static void kd_mutex_batch_retire_current(struct kd_mutex *lock,',
     ):
         helpers += definition(source, marker)+'\n'

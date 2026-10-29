@@ -194,6 +194,8 @@ def main():
     ))
     for marker in ("int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)",
                    "struct kd_exec_frame *kd_exec_frame_push_mutex_batch(",
+                   "static __always_inline bool\nkd_exec_frame_mutex_batch_valid(struct kd_exec_context *ctx,",
+                   "static __always_inline int\nkd_exec_frame_mutex_batch_commit(struct kd_exec_context *ctx,",
                    "int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,"):
         extra += definition(source, marker) + "\n"
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (p)\n"

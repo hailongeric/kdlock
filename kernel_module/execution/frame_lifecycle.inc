@@ -334,16 +334,13 @@ int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)
 	return 0;
 }
 
-/* COMPLETE proves the first wrapper reached this root's exact unlock. Keep
- * all owner/routing/ledger checks, then retire without revalidating that same
- * one-entry ledger through three generic transitions. No waiter is woken here;
- * the queue publishes its packet only after this frame is inaccessible. */
-__always_inline __gnu_inline
-int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
-				    struct kd_mutex *lock)
+/* Shape alone grants no physical ownership. Private callers complete a fresh
+ * owner/origin proof before this frame can be committed; never retain a shape
+ * result across a wrapper, service, observer or scheduling boundary. */
+static __always_inline bool
+kd_exec_frame_mutex_batch_valid(struct kd_exec_context *ctx,
+				struct kd_exec_frame *frame, struct kd_mutex *lock)
 {
-	struct kd_exec_context *ctx = kd_exec_current_context();
-
 	if (!frame || !lock || !frame->mutex_backend || !frame->batch_lease ||
 	    frame->spin_simple || frame->request_frame ||
 	    !frame->regs_borrowed || frame->parent || frame->depth ||
@@ -368,15 +365,24 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	      kd_exec_frame_remote_pending(frame) || frame->resume_target ||
 	      frame->remote_request || frame->native_request ||
 	      !list_empty(&frame->native_link))) ||
-	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released ||
-	    !kd_mutex_delegation_owned(lock, current) ||
-	    !kd_origin_mutex_owned(lock, current))
-		return -EINVAL;
+	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released)
+		return false;
+	return true;
+}
+
+/* Called only immediately after complete shape/ownership validation. The
+ * ordinary shared-TU specialization has no callback between proof and commit.
+ * SELFTEST retains its real state/pop observers through the generic path. */
+static __always_inline int
+kd_exec_frame_mutex_batch_commit(struct kd_exec_context *ctx,
+				 struct kd_exec_frame *frame)
+{
 	frame->jit_lock_released[0] = true;
 	frame->outer_unlock_seen = true;
 	frame->completion_seen = true;
 #ifdef KDLOCK_SELFTEST
 	/* Observers see the ordinary terminal ledger and retirement boundary. */
+	(void)ctx; /* Generic pop obtains and validates its current context. */
 	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_COMPLETE);
 	return kd_exec_frame_pop(frame, NULL);
 #else
@@ -387,6 +393,22 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	return 0;
 #endif
+}
+
+/* COMPLETE proves the first wrapper reached this root's exact unlock. Keep
+ * the generic API's owner/routing/ledger checks and error behavior. No waiter
+ * is woken here; queue publication follows this frame's inaccessibility. */
+__always_inline __gnu_inline
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
+				    struct kd_mutex *lock)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	if (!kd_exec_frame_mutex_batch_valid(ctx, frame, lock) ||
+	    !kd_mutex_delegation_owned(lock, current) ||
+	    !kd_origin_mutex_owned(lock, current))
+		return -EINVAL;
+	return kd_exec_frame_mutex_batch_commit(ctx, frame);
 }
 
 /* Retire only after remote dependencies and native routing/requests are gone.

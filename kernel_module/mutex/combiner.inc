@@ -8,6 +8,8 @@
  */
 
 #define KD_MUTEX_EXEC_SWAPPED 0x100
+#define KD_MUTEX_EXEC_COMPLETE_PUBLISHED 0x101
+#define KD_MUTEX_EXEC_COMPLETE_PENDING_TAIL 0x102
 #include "batch_diag.inc"
 
 enum kd_mutex_batch_result {
@@ -173,7 +175,7 @@ static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
 /* Ordinary completed-body retirement never waits for queue response. A lost
  * terminal tail CAS means an enqueuer still owns the missing link. Keep the
  * current claim/node and batch lease live, then leave the execution loop. */
-static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,
+static __always_inline bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,
 					    struct kd_mutex_batch *batch)
 {
 	struct kd_mutex_node *node, *next;
@@ -195,6 +197,45 @@ static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,
 	batch->current_retired = true;
 	return true;
 }
+
+#ifndef KDLOCK_SELFTEST
+/* This is an actual joint transition, not a proof carried into the caller.
+ * Every wrapper/timing hook has finished before entry. From validation through
+ * publication only inline queue arbitration, private stores and counters run.
+ * The generic frame API and retained/FULL paths keep their separate proofs. */
+static __always_inline int
+kd_mutex_batch_complete_inline(struct kd_mutex *lock, struct kd_mutex_node *node,
+			       struct kd_mutex_batch *batch, struct kd_exec_frame *frame)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+	bool retired;
+
+	BUG_ON(!kd_exec_frame_mutex_batch_valid(ctx, frame, lock));
+	BUG_ON(!node || batch->lock != lock || batch->current_node != node ||
+	       batch->current_retired || frame->regs_ref ||
+	       frame->borrowed_regs != &node->regs ||
+	       frame->outer_unlock_hook != &batch->outer || batch->pin.node != node);
+	kd_mutex_batch_pin_check(batch);
+	/* CLAIMED's cold proof cannot replace this joint physical-owner proof. */
+	BUG_ON(smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY ||
+	       !kd_mutex_batch_ready_owned(batch) ||
+	       !kd_origin_mutex_owned(lock, current));
+	retired = kd_mutex_batch_try_retire_current(lock, batch);
+	BUG_ON(kd_exec_frame_mutex_batch_commit(ctx, frame));
+	node->packet_state = KD_PACKET_COMPLETE;
+	if (!retired)
+		return KD_MUTEX_EXEC_COMPLETE_PENDING_TAIL;
+	/* Frame storage is inaccessible before this descriptor can disappear.
+	 * Origin membership/count_seq remains the waiter's responsibility. */
+	batch->pin.node = NULL;
+	batch->nr_pins = 0;
+	KD_MUTEX_PIN_INC(batch, retired_claims);
+	this_cpu_inc(kd_mutex_jit_success_count);
+	/* Final node access: an origin can immediately restore and reuse it. */
+	kd_mutex_clear_locked_set_completed(node);
+	return KD_MUTEX_EXEC_COMPLETE_PUBLISHED;
+}
+#endif
 
 /* Retire queue publication before letting a committed waiter reuse its node.
  * A successful tail CAS makes later arrivals independent heads. A failed CAS
@@ -526,9 +567,13 @@ prepared:
 		kd_jit_clobber_call_v1(&call);
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
 			kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
+#ifndef KDLOCK_SELFTEST
+			return kd_mutex_batch_complete_inline(lock, curr_node, batch, frame);
+#else
 			BUG_ON(kd_exec_frame_retire_mutex_batch(frame, lock));
 			curr_node->packet_state = KD_PACKET_COMPLETE;
 			return 0;
+#endif
 		}
 		/* FULL, or a checked pre-entry refusal: the pending return is
 		 * consumed once by the existing dispatcher, never re-entered. */
@@ -751,7 +796,18 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		KD_MUTEX_DIAG_REQUEST(&batch, curr_node);
 
 		int exe_flag = kd_mutex_execute_cs(lock, curr_node, &batch);
-		KD_MUTEX_DIAG_RESULT(&batch, exe_flag);
+		/* Both joint outcomes are one completed body. PUBLISHED has already
+		 * woken/released its node; use only saved batch state from here. */
+		KD_MUTEX_DIAG_RESULT(&batch,
+			exe_flag == KD_MUTEX_EXEC_COMPLETE_PUBLISHED ||
+			exe_flag == KD_MUTEX_EXEC_COMPLETE_PENDING_TAIL ? 0 : exe_flag);
+		if (exe_flag == KD_MUTEX_EXEC_COMPLETE_PENDING_TAIL) {
+			completed_pending_tail = true;
+			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_DELAYED_TAIL);
+			break;
+		}
+		if (exe_flag == KD_MUTEX_EXEC_COMPLETE_PUBLISHED)
+			goto current_completed;
 		if (exe_flag == KD_MUTEX_EXEC_SWAPPED) {
 			struct kd_mutex_node *owner = batch.swapped_owner;
 
@@ -802,6 +858,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			kd_mutex_clear_locked_set_completed(curr_node);
 		}
 
+current_completed:
 		if (batch.outer.released) {
 			/* A's queue already runs independently. B and the frame are
 			 * now finished; reacquire A for our own original request.

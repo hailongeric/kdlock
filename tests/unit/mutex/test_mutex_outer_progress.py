@@ -64,7 +64,9 @@ def main():
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     code += '#define MODULE_INFO(...)\n'
     code += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))+'\n'
-    code += next(line for line in mutex.splitlines() if line.startswith("#define KD_MUTEX_EXEC_SWAPPED ")) + "\n"
+    for name in ('SWAPPED', 'COMPLETE_PUBLISHED', 'COMPLETE_PENDING_TAIL'):
+        code += next(line for line in mutex.splitlines()
+                     if line.startswith(f'#define KD_MUTEX_EXEC_{name} ')) + "\n"
     code += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
@@ -83,7 +85,7 @@ def main():
     code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
         "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",
-        "static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,",
+        "static __always_inline bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",

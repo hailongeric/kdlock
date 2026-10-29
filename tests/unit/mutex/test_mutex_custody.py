@@ -36,6 +36,7 @@ def main():
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
     for marker in ("static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
                    "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)",
+                   "static __always_inline bool kd_mutex_batch_ready_owned(struct kd_mutex_batch *batch)",
                    "static __always_inline void\nkd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *node)",
                    "static __always_inline void\nkd_mutex_batch_pin_assert_retained(struct kd_mutex_batch *batch,",
                    "static __always_inline void kd_mutex_batch_assert_cold(struct kd_mutex_batch *batch)",

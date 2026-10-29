@@ -13,6 +13,15 @@ static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batc
 	       READ_ONCE(node->count_seq) != batch->pin.generation);
 }
 
+/* Shared only within a fresh READY proof. This private predicate is not a
+ * cached capability: each use reads current's actual physical owner and phase. */
+static __always_inline bool kd_mutex_batch_ready_owned(struct kd_mutex_batch *batch)
+{
+	return batch->proxy_epoch && !batch->outer.released &&
+		kd_mutex_delegation_owned(batch->lock, current) &&
+		kd_mutex_gate_read(batch->lock) == KD_MUTEX_GATE_COMBINER;
+}
+
 /* A later owner's COMBINER phase cannot authorize this old frame. READY needs
  * this private epoch and its actual physical owner; CLAIMED already carries
  * an independent pin through cold services, early release and owner transfer. */
@@ -25,9 +34,7 @@ kd_mutex_batch_pin_assert(struct kd_mutex_batch *batch, struct kd_mutex_node *no
 	kd_mutex_batch_pin_check(batch);
 	state = smp_load_acquire(&node->locked);
 	if (state == KD_MUTEX_PROXY_READY) {
-		BUG_ON(!batch->proxy_epoch || batch->outer.released ||
-		       !kd_mutex_delegation_owned(batch->lock, current) ||
-		       kd_mutex_gate_read(batch->lock) != KD_MUTEX_GATE_COMBINER);
+		BUG_ON(!kd_mutex_batch_ready_owned(batch));
 	} else {
 		BUG_ON(state != KD_MUTEX_PROXY_CLAIMED);
 	}
