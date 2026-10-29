@@ -237,11 +237,15 @@ drivers, both provider builds and eight live blocks passed. Both counter points
 meet the scoped helper-episode budget target. In the 36-point round, the ten
 contended mutex points span -11.68% to +1.06%, with nine negative; it is not promoted.
 
-Focused PMU and flat-IP profiling at c01/20 is the next diagnostic step. Use the
-same frozen runtime and a tools-only Linux 7 overlay for the saved pinned baseline;
-verify unchanged runtime/include/workload trees. Keep instrumented observations
-separate from single-round nano scores. Unsupported counters are failures, never
-zeros. Preserve exact ownership and retirement probes while identifying cost.
+The [matched c01/20 diagnostic pair](../../bench/results/10.176.26.71/tests/mutex-matched-perf-20261029/README.md)
+used ordinary mode0 and the unchanged pinned runtime through a tools-only Linux 7
+overlay. Actual baseline executable text and relocations match its original nano
+provider. Whole-client kernel instructions per operation increased 42.80%, while
+flat samples show added combiner work and amplified waiter polling. Shared initial
+owner/gate and frame-retirement regions did not increase in the sampled pair;
+no dominant shared-owner-check or parking cause is established. The sampling-rate
+ceiling differed, and each mode has one observation. These diagnostics remain
+outside nano scores and do not close the performance gate.
 
 ### Physical exclusion for ordinary and delegated callers
 

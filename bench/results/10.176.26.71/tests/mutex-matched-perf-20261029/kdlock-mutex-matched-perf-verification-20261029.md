@@ -1,0 +1,35 @@
+# Matched c01 / post256 / 20-worker profiling verification
+
+The four saved sessions pass the offline identity, completion, drain and arithmetic checks. These are one unscored `stat` and one unscored `record` observation per source. They are not additional nano scores. The recorded sampling cap differs between sources, so the perf environment is not identical.
+
+The candidate source is `99f383624faa872a76521d1b5be7faea586591c1`. The baseline profiling overlay is `c8c98f1167ce6be2f5e992cabb4d822307d3b986`; its runtime, headers, workload and ordinary runner remain exactly `1c86d6d1a15d96d75c09504f1041772247707804`. The overlay changes only the profile guide, driver and its tests. The six stat/record core functions are AST-identical: `parse_stat`, `summarize_samples`, `perf_command`, `launch_profiled_client`, `capture_symbols` and `diagnostic_report`. Whole-driver bytes intentionally differ; all four recorded driver hashes match their declared Git source.
+
+Both sources use c01, post256, public mutex ABI2, `bulk_ioctl`, 20 workers on CPUs 0–19/node0, collector CPU 63, a two-second measurement, 48,000 warmup iterations per worker, and total/local caps 1024/1024. Both stat commands request `cycles:k`, `instructions:k`, `cache-misses:k`, `task-clock`, `context-switches`, `cpu-migrations` and `page-faults`. Both record commands request `cycles:k` at 997 Hz with `CLOCK_MONOTONIC`, inherited client threads and no call graph. Provider diagnostics are off; absent READY-only baseline metadata is not synthesized.
+
+I reread both full local archives without executing their contents. Every compact result member matches its archived member. All four 293-file snapshots match their SHA256 manifests; outer profile manifests match the same captured source. Baseline snapshots contain 288 Git-tracked matches plus five retained synchronization leaves; candidate snapshots contain 291 tracked matches plus two leaves. The extras are `include/kd_rwsem_direct.h` and `kernel_module/kd_rwlock.c` in both arms, plus `kernel_module/mutex/pin_diag.inc`, `pin_origin.inc` and `pin_window.inc` in the baseline. All tracked snapshot bytes match the declared Git blobs. None of these extra paths appears in the archived build `.cmd` files, and baseline tracked runtime/header sources contain no references to them. The entire snapshot must not be described as identical to Git. The independent baseline ELF review separately establishes original 1c executable-text/relocation equality. All four binary manifests match retained bytes. All retained `perf` binaries hash to `1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531`, with recorded version `perf version 7.0.14`. The four recorded kernel/schema-2, topology, preemption and live boot-policy receipts agree: boot `677b7afa-5358-4ece-a650-5f4a4adecd55`, kernel `7.0.0-38-kdlock1`, running build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`. This verifies saved evidence consistency; it is not a new live kernel attestation.
+
+All commands exited 0. All sessions report `OK`, complete data validation and drain, with retired state 2 and zero frames/modules/writers. The after-minus-before payload counters equal the summed worker writes; every worker reports its intended CPU. Returned JIT body and completion deltas agree and exceed 99% of completed operations in all four sessions. No address-guard exit occurred. These checks use actual returned-body counters, not image publication alone.
+
+| Whole-client stat quantity | Baseline 1c | Candidate 99 |
+|---|---:|---:|
+| Completed operations | 9,020,416 | 7,902,720 |
+| Kernel cycles | 79,057,911,161 | 79,015,967,051 |
+| Kernel instructions | 22,125,290,671 | 27,679,118,292 |
+| Kernel cache misses | 340,874 | 283,100 |
+| Task-clock, milliseconds | 40,118.57 | 40,108.42 |
+| Context switches | 475 | 451 |
+| CPU migrations | 20 | 20 |
+| Page faults | 5,186 | 5,153 |
+| Kernel cycles / completed operation | 8,764.33 | 9,998.58 |
+| Kernel instructions / completed operation | 2,452.80 | 3,502.48 |
+| Kernel instructions / kernel cycle | 0.27986 | 0.35030 |
+
+The raw stat CSV fields agree with the parsed receipts. Every event reports 100% runtime, no multiplexing and `FULL_RUNTIME`. Normalization uses all completed operations, not JIT completions or the peak-window count. Task-clock retains its reported millisecond unit. Candidate kernel cycles/op increase 14.08%, instructions/op 42.80%, while total cycles differ by −0.053%. Thus this observation shows more retired instructions per completed operation and fewer operations under nearly equal aggregate CPU time. It does not locate those extra instructions or establish that ownership checks, waiter polling or a cache load caused the difference. Cache misses/op decrease 5.20%; that does not exclude coherence stalls or establish cache-access latency.
+
+Stat includes measured-client startup and collection, while preparation, translation and warmup precede it. Software events include those client phases. In particular, 451 versus 475 switches and 20 migrations in each run are absolute inherited-client counts, not worker-only park events, reasons or off-CPU durations. Dividing them by a smaller operation count cannot establish more parking.
+
+The record summaries independently conserve all sample counts and weighted periods, and every hot-path share recomputes exactly. Their settled worker intervals are derived from the latest active worker start plus 300 ms through the earliest deadline/kernel finish: baseline 1,698,721,906ns and candidate 1,698,649,864ns. Each contains only `rb_worker` samples on CPUs 0–19. Baseline has 33,870 settled samples; candidate 33,872. Whole-client sample counts are 40,041 and 40,043. Both reports show zero lost samples and no parsed lost-event lines. These ~1.699-second windows are distinct from whole-client stat scope and the separately selected ~300ms peak windows. Flat sampled periods are not elapsed latency or inclusive function time, and a physical executor may be running another task's delegated body. Do not multiply a stat total by a separately collected settled-IP share and treat the result as an exact function cost. Detailed address attribution is in the independent `kdlock-matched-perf-ip-review-20261029` report.
+
+`perf_event_max_sample_rate` is 100000 in candidate receipts and 9000 in baseline receipts; the other recorded perf sysctls agree. Both caps exceed the requested 997 Hz, but that does not prove equivalent delivery or exclude dynamic throttling. This review did not decode `PERF_RECORD_THROTTLE`/`PERF_RECORD_UNTHROTTLE`. No sysctl was reset and no profiling run was repeated. Fixed run order, one observation per arm/mode, sampling limitations and whole-client counter scope remain explicit.
+
+The companion JSON records exact inputs, hashes, commands, manifest checks, per-session counts, arithmetic and scope limits. Analysis used read-only Git/archive/JSON inspection and a new offline receipt-checking script; no repository driver, archived code, build, test, perf command or VM operation was executed.

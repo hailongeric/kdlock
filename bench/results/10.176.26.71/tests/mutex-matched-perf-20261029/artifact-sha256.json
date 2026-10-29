@@ -1,0 +1,47 @@
+[
+  {
+    "file": "kdlock-matched-perf-ip-review-20261029.json",
+    "sha256": "c47424c55ec5667beafa49a3da82547bc9b3edbe237e461805dc64a89b51cb3b",
+    "bytes": 443555
+  },
+  {
+    "file": "kdlock-matched-perf-ip-review-20261029.md",
+    "sha256": "ba55234ad8b46dda408c3c2e888a347c672b9f9479da3bb191fe6c364579b9ef",
+    "bytes": 5433
+  },
+  {
+    "file": "kdlock-baseline-perf-elf-identity-20261029.json",
+    "sha256": "d3e1c2d8200dd25382f916e7a2d3b37d8ca95dbe1912f0f1b69630bd270c8cc7",
+    "bytes": 67355
+  },
+  {
+    "file": "kdlock-mutex-matched-perf-verification-20261029.json",
+    "sha256": "e81b26a2f2b5bfa703cd6c5f3abd465d59ac82088d21a9ba1d9092e450eaff74",
+    "bytes": 39584
+  },
+  {
+    "file": "kdlock-mutex-matched-perf-verification-20261029.md",
+    "sha256": "5932e6aeec589d97623aafa21bce15045bcb413df40debd105e7e11cea527308",
+    "bytes": 7059
+  },
+  {
+    "file": "kdlock-once-perf-results-20261029.json",
+    "sha256": "ae651099e4720f5f9f50766c0e2e23e93a35022a85554d1102dd88d70c391e93",
+    "bytes": 149254
+  },
+  {
+    "file": "kdlock-once-perf-archive-verification-20261029.json",
+    "sha256": "760a30731406a3319f469d77e89a00beb57193a9f94165be13f14114d7dd5d3c",
+    "bytes": 967
+  },
+  {
+    "file": "kdlock-baseline-perf-results-20261029.json",
+    "sha256": "8a7acbcb1fe9595b5614f3562f930fa414a2cef42ff8eb745745b8ec09182ebf",
+    "bytes": 148842
+  },
+  {
+    "file": "kdlock-baseline-perf-archive-verification-20261029.json",
+    "sha256": "9034fa5cc32dbbb492aa8a58f208fb07e224af4878930cccef0d806a4ac37e2d",
+    "bytes": 969
+  }
+]

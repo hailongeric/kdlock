@@ -1,0 +1,29 @@
+{
+  "completed": true,
+  "transport_sha256": "c26c03cb3dd1b17cbd020db2cdcd377258f090d8a939277309be43a308dbbdd7",
+  "trees": 1,
+  "archives": 2,
+  "inventory_paths": 1391,
+  "receipts": [
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 1391,
+      "regular_files": 1225,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "db06ec6b78465fc9b24afb848a69bb2dfcb0dd0966912a43d78c1891955e50ed",
+          "regular_files": 1218
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "18308b014b530c89f7d66dabd5ad53fc59bf663953468a48b89cf70176b73912",
+          "regular_files": 7
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-pinned-baseline-perf-20261029/bench/mutex-pinned-baseline-perf-20261029-archives"
+    }
+  ]
+}

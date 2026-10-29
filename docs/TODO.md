@@ -71,8 +71,12 @@ contended mutex still lost 2.55–11.53%. It is not promoted. The [consolidated-
 at `99f38362` passed nine selected drivers, both provider builds and eight live
 blocks. Its two counter points meet the helper-episode budget target; nine of ten contended mutex
 points remain negative, with changes spanning -11.68% to +1.06%. It is not
-promoted. Focused c01/20 PMU and flat-IP diagnostics against the unchanged pinned
-runtime are next; their instrumented observations cannot become nano scores.
+promoted. The [matched c01/20 profiling pair](../bench/results/10.176.26.71/tests/mutex-matched-perf-20261029/README.md)
+verified unchanged baseline executable text/relocations and all four sessions.
+Candidate whole-client instructions per operation increased 42.80%; samples show
+additional combiner work and waiting amplification, without establishing parking
+or shared owner checks as the cause. Sampling limits remain explicit, and these
+instrumented observations are excluded from nano scores.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
