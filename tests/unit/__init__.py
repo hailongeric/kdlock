@@ -10,7 +10,7 @@ def configure_paths():
     unit = Path(__file__).resolve().parent
     paths = [unit.parent, unit.parent / "protocols", unit.parent / "tools"]
     paths.extend(unit / group for group in (
-        "admission", "codegen", "execution", "infrastructure", "mutex", "spin",
+        "admission", "codegen", "execution", "infrastructure", "lock_api", "mutex", "spin",
     ))
     for path in reversed(paths):
         if str(path) not in sys.path:
