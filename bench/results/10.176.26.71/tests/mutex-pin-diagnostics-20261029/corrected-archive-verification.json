@@ -1,0 +1,43 @@
+{
+  "completed": true,
+  "trees": [
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 161,
+      "regular_files": 154,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "11050fb095a4b760d3f47685ecaa9688694063a7015a30abbb1385c4ee633180",
+          "regular_files": 148
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "bca95b71717cbf6d1ae8672116a20b2ed7a77dc67d643b863de4070750e07fad",
+          "regular_files": 6
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 1460,
+      "regular_files": 1276,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "aab34de18946940689b0a1f9b73c7d728224bb2f631fc53af4d733a9e8b2405e",
+          "regular_files": 1270
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "755e45b49fda8f7212666b3cf9831adb27acf49a354d2b01ba8142e86dbf66c1",
+          "regular_files": 6
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+    }
+  ]
+}

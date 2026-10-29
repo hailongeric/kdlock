@@ -29,12 +29,44 @@ not run. This is a preparation failure, not a pass or a zero counter observation
 The module never entered its initializer. No project workers or modules remained,
 and archive-time idle was verified. No reset or kernel change was required.
 
-The correction under development moves optional mode-2 storage to a single
-preallocated dynamic per-CPU allocation, with module-lifetime cleanup and
-serialization against the parameter getter. It must pass focused allocation,
-cleanup, default-off and live diagnostic checks before interpreting counters.
-Neither these diagnostics nor the earlier window candidates have closed the
-mutex no-regression gate.
+Correction `6b97a00f3dbcad12a2690732069dd2411c15c4cd`, integrated and tested as
+`4a46795e3f052282a5a0593f4cb85cf8e5901a05`, moves optional mode-2 storage to
+one preallocated dynamic per-CPU allocation. Module-lifetime cleanup is
+serialized against the parameter getter. Basic plus directly affected
+allocation/cleanup, batch diagnostic and resource checks passed (5/5).
+The [corrected default-off ELF](corrected-default-off-elf-audit.json) matches
+all 135,567 code bytes and all 4,415 relocations of the earlier default-off
+provider exactly. Its ordinary per-CPU storage remains 7,600 bytes.
+
+Both corrected mode-2 providers compiled and loaded; their static per-CPU
+sections also remain [7,600 bytes](corrected-provider-audit.json). Counter-only
+and one-in-64 TSC arms each ran c01/20 and c01/36 once for two seconds, post256,
+CPUs0..N-1 and collector63. Every run had correct data, matching JIT entry/return
+counts and exact drain. These are unscored diagnostic observations, not an
+ordinary throughput comparison. [Full receipts](corrected-results.json) retain
+source, modes, policy, before/after snapshots and deltas.
+
+| Mode | Workers | Consumed selections | Full window | ACK checks that polled | Mean sampled ACK-region cycles |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Counters | 20 | 6,644,456 | 99.703% | 0.0353% | Not sampled |
+| Counters | 36 | 7,003,487 | 99.122% | 0.0979% | Not sampled |
+| Sampled | 20 | 6,516,428 | 99.702% | 0.0362% | 179.13 |
+| Sampled | 36 | 6,984,963 | 99.120% | 0.0739% | 116.11 |
+
+All four observations have **zero cancelled selections, FULL resumes and
+nonempty pin drains**. Requested equals consumed, independently of the exact
+returned-body and retirement checks. Repeated FULL fallback/cancellation is
+therefore absent from these measured intervals. The rolling window remains
+populated; increasing its size is not justified by frequent empty-window or
+polling evidence here. An immediately satisfied ACK still requires a cacheline
+load. Sampled regions include fences/timestamps and are neither pure ACK
+latency nor an attributable percentage of total runtime.
+
+Source inspection identifies another cost to test: steady refill fetches one
+new request's metadata several nodes ahead of the existing immediate-successor
+preheat. A narrowly scoped metadata-prefetch ablation is being reviewed. This
+is an inference, not a demonstrated cache-miss explanation. Neither these
+diagnostics nor the earlier window candidates close the no-regression gate.
 
 Both trees on boot `677b7afa-5358-4ece-a650-5f4a4adecd55` are preserved in four
 archives. Their hashes and all 1,920 paths were
@@ -42,3 +74,7 @@ archives. Their hashes and all 1,920 paths were
 `bench/results/10.176.26.71/raw/tests/mutex-pin-diagnostics-20261029/`.
 Guest roots are `tests/pin-diagnostics-20261029` and
 `bench/pin-diagnostics-20261029` below `/root/kdlock-evidence/10.176.26.71/`.
+The corrected `tests/pin-diagnostics-r2-20261029` and
+`bench/pin-diagnostics-r2-20261029` trees are retained separately in four more
+archives, with all 1,621 paths [verified offline](corrected-archive-verification.json).
+Their raw copies are in the `corrected/` subdirectory of the same raw root.
