@@ -35,13 +35,23 @@ remain separate acceptance boundaries.
 | 7 | For delegated mutex-to-spin acquisition, attempt one runtime CAS. On success retain exact nested spin ownership and continue JIT. On contention transfer execution and physical ownership to the original waiter, preserving exclusion, source leases, queue obligations and making the former combiner an immediately delegatable queued waiter. | Maintained `ee7ace66` implements the one-CAS path and scoped physical owner handoff; the corrected `20baf5c2` live probe passed. Full queued role exchange is implemented only on an isolated candidate. The duplicate native-mutex accounting BUG at `2d4ee3df` is preserved as a failed, undrained run. Correction `1c86d6d1` passed 11 affected checks, four-family live basic and all five role cases after the approved reset. Its 60-point nano round completed, but performance acceptance remains open and the candidate is not promoted. |
 | 8 | Explain borrowing versus ownership transfer, including long-chain retention and resource bounds. Validate transfer before replacing an existing borrowed route; do not replay an executed prefix or substitute unlock/relock for uninterrupted exclusion. | Ownership guide now distinguishes root transfer from retained multi-owner borrowing and its eight-frame/eight-lock bounds. The first failed-CAS live attempt failed during setup without exercising transfer; the corrected `20baf5c2` owner-handoff probe passed. Five scoped queued-role cases passed at isolated `1c86d6d1`; long-chain qualification and promotion remain pending. |
 
+The user's latest October 29 direction revises step 1: use a long initial pinned
+spin period, check scheduling/sleep only after expiry, and maintain at least
+eight ready proxy requests without response polling in the ordinary proxy round.
+The proposed `READY`/`CLAIMED` arbitration and validation order are recorded in
+[the mutex implementation plan](design/mutex_implementation.md#revised-waiter-requirement-october-29).
+This supersedes the earlier immediate queued/preemptible requirement; it does
+not authorize weakening pin proofs or physical/source/frame retirement. The
+more-than-99% spinning target and nano no-regression gate require measurements.
+The optional profiling follow-up is deferred while this protocol is developed.
+
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
-The requested pin-on-proxy protocol supersedes the old permanent published-waiter
-pin as a development requirement. The strict candidate is archived rather than promoted, so the maintained
-implementation still pins published waiters. The user now permits a small
-bounded group selected for immediate service; this does not authorize pinning
-the whole queue or close the correctness/performance gates.
+The latest long-spin/readiness protocol supersedes permanent queue-wide pinning
+as the current development requirement. The strict candidate is archived rather than promoted, so the maintained
+implementation still pins published waiters. The latest request permits initial pinned spinning with a bounded scheduling
+threshold and a larger ready cohort; it does not authorize indefinite queue-wide
+pinning or close the correctness/performance gates.
 The [October 29 checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)
 retains the rejected candidate, exact rates, the completed 60-point comparison,
 failed transfer setup/normal cleanup, and functional/collector outcomes. The

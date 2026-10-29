@@ -112,6 +112,46 @@ occur after a local fallback. It is not a delegation-success flag.
 
 ## KD implementation
 
+### Revised waiter requirement, October 29
+
+The latest user request changes the earlier queued/preemptible selection
+requirement: use a long initial pinned spin period, with more than 99% remaining
+in that state as a measurement target. Check scheduling and possible sleeping
+only after that budget expires. Keep at least eight proxy-eligible requests
+ready during combining, and eliminate queue-response polling from the ordinary
+proxy round. This section is the next implementation plan, not a claim about
+the maintained runtime or achieved performance.
+
+Physical OSQ membership orders attempts to acquire the real mutex. Delegation
+membership publishes a continuation for proxy execution. They share reserved
+node storage but retain separate links and retirement; the requested spin
+policy must not collapse these two protocols.
+
+The proposed readiness protocol publishes `READY` only with preemption disabled.
+A combiner claims it with one `READY` to `CLAIMED` CAS. After the long spin
+budget expires, a waiter must win the competing transition out of `READY`
+before enabling preemption or sleeping. A successful combiner claim keeps the
+origin pinned until completion or explicit cancellation. Thus readiness is a
+pin proof, not an estimate from elapsed spinning or a sampled task state.
+
+The planned cohort contains at least eight exact invocation descriptors. Its
+admission may attempt a nonblocking readiness claim; an unavailable request
+ends or limits the round instead of starting an ACK polling loop. Preserve
+continuous combining where safe. Fully linked nodes or a retained queued anchor
+must prevent delayed successor publication from forcing a wait in the ordinary
+body loop. Threshold expiry, cancellation, terminal handoff, FULL/native escape
+and role exchange remain explicit boundaries with exact node, task, source,
+physical-owner and frame obligations. Required exceptional ownership ACKs must
+not be removed or misreported as ordinary ready-body execution.
+
+Implementation order: define the state/threshold contract; implement readiness
+publication and claim/expiry arbitration; enlarge ready selection without
+request/ACK round trips; verify every cancellation, sleep/wake and exceptional
+handoff transition; then run basic plus affected race/protocol checks. Measure
+the fraction staying in the initial spin state separately from diagnostics-free
+c01/c16 nano throughput. More than 99% spinning and no performance regression
+remain acceptance targets, not facts inferred from a large threshold.
+
 ### Physical exclusion for ordinary and delegated callers
 
 The `owner` word stores the actual owning task plus three low flag bits:
