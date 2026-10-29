@@ -26,6 +26,10 @@ def production_sources():
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
+    for marker in ('static bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
+                   'static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)'):
+        helpers += definition(source, marker)+'\n'
+    helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_window.inc'))+'\n'
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in source.splitlines() if line.startswith(name+'('))
         helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
@@ -50,6 +54,8 @@ def main():
         assert loop.count('kd_mutex_set_locked(lock);') == 2
         mutations = {
             'production': (helpers, loop),
+            'ignore-local-pin-budget': (helpers.replace('if (left > local_left)', 'if (false && left > local_left)'), loop),
+            'underflow-late-local-budget': (helpers.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?', 'false ?'), loop),
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
             'skip-delayed-link': (helpers.replace('} while (!next);', '} while (false);'), loop),
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),

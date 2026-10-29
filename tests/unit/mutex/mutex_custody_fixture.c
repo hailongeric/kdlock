@@ -52,7 +52,10 @@ static struct kd_regs captured;
 #define READ_ONCE(x) __atomic_load_n(&(x),__ATOMIC_RELAXED)
 #define WRITE_ONCE(x,v) __atomic_store_n(&(x),(v),__ATOMIC_RELAXED)
 #define smp_load_acquire(p) __atomic_load_n((p),__ATOMIC_ACQUIRE)
-#define smp_store_release(p,v) __atomic_store_n((p),(v),__ATOMIC_RELEASE)
+#define smp_store_release(p,v) do { \
+    if ((void *)(p)==&wnode.locked && (v)==0) CHECK(batch.nr_pins==0); \
+    __atomic_store_n((p),(v),__ATOMIC_RELEASE); \
+} while (0)
 #define BIT(n) (1UL << (n))
 #define this_cpu_read(x) (x)
 #define this_cpu_or(x,v) ((x) |= (v))
@@ -62,6 +65,10 @@ static struct kd_regs captured;
 #define cmpxchg(p,o,n) ({ __typeof__(*(p)) old_=(o); __atomic_compare_exchange_n((p),&old_,(n),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); old_; })
 static void cpu_relax(void)
 {
+	if (current == &ctask && READ_ONCE(next_node.locked)==KD_MUTEX_PROXY_REQUEST) {
+		CHECK(batch.nr_pins==2 && batch.pins[1].node==&next_node);
+		smp_store_release(&next_node.locked,KD_MUTEX_PROXY_PINNED);
+	}
 	if (current == &ctask && delayed_link) {
 		delayed_link = false;
 		smp_store_release(&wnode.next, &next_node);
@@ -109,6 +116,7 @@ void kd_mutex_task_put(struct task_struct *task)
 int kd_mutex_transfer_owner(struct kd_mutex *mutex, struct task_struct *next)
 {
 	CHECK(current == &ctask && next == &wtask);
+	CHECK(batch.nr_pins==1 && next_node.locked==KD_MUTEX_WAIT);
 	CHECK((mutex->owner & ~7UL) == (unsigned long)&ctask);
 	smp_store_release(&mutex->owner, (unsigned long)next | (mutex->owner & 7UL) | 4UL);
 	return 0;
@@ -184,7 +192,7 @@ static void setup(void)
 	cnode.count_seq=wnode.count_seq=2; cnode.task_struct_ptr=&ctask; wnode.task_struct_ptr=&wtask;
 	cnode.entry_abi=wnode.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	cnode.packet_state=wnode.packet_state=KD_PACKET_MINIMAL;
-	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=1; next_node.locked=1; deferred.locked=1;
+	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=KD_MUTEX_PROXY_PINNED; next_node.locked=KD_MUTEX_WAIT; deferred.locked=1;
 	frame.mutex_backend=frame.complex_ready=frame.batch_lease=true;
 	frame.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1; frame.logical_task=&wtask;
 	frame.outer_lock_addr=(unsigned long)&lock; frame.jit_lock_addr[0]=(unsigned long)&lock;
@@ -195,6 +203,12 @@ static void setup(void)
 	frame.native_link.next=frame.native_link.prev=&frame.native_link;
 	context.owner=&ctask; context.depth=1; context.top=&frame;
 	batch.lock=&lock; batch.current_node=&wnode; batch.own_node=&cnode;
+	batch.pins[0].node=&wnode; batch.pins[0].generation=wnode.count_seq; batch.nr_pins=1;
+	if (shape==1 || shape==3) {
+		next_node.counted_lock=&lock; next_node.count_seq=2;
+		next_node.locked=KD_MUTEX_PROXY_REQUEST;
+		batch.pins[1].node=&next_node; batch.pins[1].generation=2; batch.nr_pins=2;
+	}
 	delayed_link=shape==2;
 	if (shape==1 || shape==2) {
 		lock.delegation_tail=next_node.tail;
@@ -274,6 +288,8 @@ int main(void)
 	source_closed=0; batch.after_body=true;
 	CHECK(!kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 	CHECK(!route && source_refs==1);
+	kd_mutex_batch_unpin(&batch,false);
+	CHECK(!batch.nr_pins && wnode.locked==KD_MUTEX_WAIT);
 	printf("custody protocol checks=%u failures=%u\n",checks,failures);
 	return failures ? 1 : 0;
 }

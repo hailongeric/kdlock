@@ -18,6 +18,7 @@ _Static_assert(KDLOCK_MUTEX_BATCH==1024 && KDLOCK_MUTEX_NUMA_BOUNDARY==1024,
 int main(void)
 {
     const unsigned int cap=KDLOCK_MUTEX_BATCH, boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
+    late_first_deferred();
     scenario=1;reset(cap+2);
     CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==cap && completed==cap && wakes==1 && !nodes[cap].locked);

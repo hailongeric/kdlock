@@ -34,8 +34,18 @@ struct kd_mutex_batch {
 	unsigned int deferred_count;
 	unsigned int scan_left;
 	int numa_node;
+	/* Exact selected invocations, never carried across queue handoff. A
+	 * notification byte alone cannot authorize access to a recycled slot. */
+	struct {
+		struct kd_mutex_node *node;
+		u64 generation;
+	} pins[KD_MUTEX_PIN_WINDOW];
+	unsigned int nr_pins;
+	unsigned int pin_budget;
 	KD_MUTEX_DIAG_MEMBER
 };
+
+#include "pin_window.inc"
 
 /* Only detach a fully linked node. Its successor remains the published tail
  * chain, so no enqueuer can subsequently write the detached node's next link.
@@ -185,6 +195,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 		return -EINVAL;
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
+	kd_mutex_batch_unpin(batch, true);
 	kd_mutex_batch_retire_current(lock, batch);
 	batch->next = kd_mutex_batch_rejoin(batch, batch->next);
 	if (batch->next && !batch->next->task_struct_ptr)
@@ -237,6 +248,7 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 		kd_source_frame_put();
 		return false;
 	}
+	kd_mutex_batch_unpin(batch, true);
 	BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 	node->regs = *kd_exec_frame_regs(frame);
 	node->packet_state = KD_PACKET_FULL;
@@ -265,6 +277,7 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 	node->native_spin_pins = 0;
 	node->native_transfer = frame;
 	WRITE_ONCE(node->native_resume, true);
+	kd_mutex_batch_pin_complete(batch, node);
 	smp_store_release(&node->locked, 0);
 	/* W's last frame access acknowledges copied packet, owner pickup, exact
 	 * task routing and source/queue custody. No native relay was published. */
@@ -315,6 +328,11 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		return KD_EXE_RUN_ERROR;
 
 	if (!clobber) {
+		/* Legacy decoding reads the origin stack, so even image lookup must
+		 * follow the current origin's pin acknowledgement. */
+		if (!kd_mutex_batch_pin_select(batch, curr_node, false))
+			return KD_EXE_NO_RUN;
+		kd_mutex_proxy_wait_pinned(curr_node);
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
@@ -336,6 +354,9 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	exe = kd_mutex_batch_find_ready(batch, curr_node->regs.ip);
 	if (!exe) {
+		/* Registration can take provider locks. An unstarted request needs
+		 * no retained origin pin, including a prior lookahead selection. */
+		kd_mutex_batch_unpin(batch, false);
 		this_cpu_inc(kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
 		 * frame failure. Keep its identity distinct from context refusal. */
@@ -365,12 +386,23 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		retry_regs = curr_node->regs;
 	/* The enclosing batch retains source residency through the last ACK/pop.
 	 * Legacy/nested roots keep their private frame lease and generic setup. */
-	frame = clobber && curr_node->packet_state == KD_PACKET_MINIMAL ?
-		kd_exec_frame_push_mutex_batch(&curr_node->regs, curr_node->regs.ip,
-			curr_node->gsbase, curr_node->task_struct_ptr, lock,
-			&batch->outer) : NULL;
+	frame = NULL;
+	if (clobber) {
+		bool minimal = curr_node->packet_state == KD_PACKET_MINIMAL;
+
+		if (!kd_mutex_batch_pin_select(batch, curr_node, minimal))
+			return KD_EXE_NO_RUN;
+		/* Only stable published metadata/private executor storage is used
+		 * here. No origin stack/GS access precedes the acquire ACK. */
+		if (minimal)
+			frame = kd_exec_frame_push_mutex_batch(&curr_node->regs,
+				curr_node->regs.ip, curr_node->gsbase,
+				curr_node->task_struct_ptr, lock, &batch->outer);
+		kd_mutex_proxy_wait_pinned(curr_node);
+	}
 	if (frame)
 		goto prepared;
+	kd_mutex_batch_unpin(batch, true);
 	if (clobber)
 		frame = kd_exec_frame_push_borrowed(
 			&curr_node->regs, curr_node->regs.ip, (unsigned long)lock, 1,
@@ -430,8 +462,12 @@ prepared:
 		}
 		/* FULL, or a checked pre-entry refusal: the pending return is
 		 * consumed once by the existing dispatcher, never re-entered. */
+		/* The dispatcher may sleep or transfer ownership. Future selected
+		 * origins must be free to schedule before any FULL service begins. */
+		kd_mutex_batch_unpin(batch, true);
 		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
 	} else {
+		kd_mutex_batch_unpin(batch, true);
 		ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
 						 frame->outer_lock_addr);
 	}
@@ -451,6 +487,7 @@ prepared:
 			kd_exe_native_handoff_timing_end(true, handoff_start);
 			return KD_MUTEX_EXEC_SWAPPED;
 		}
+		kd_mutex_batch_unpin(batch, true);
 		BUG_ON(kd_exec_native_begin(frame, true));
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 		curr_node->regs = *regs;
@@ -480,6 +517,7 @@ prepared:
 			batch->next = NULL;
 		}
 		WRITE_ONCE(curr_node->native_resume, true);
+		kd_mutex_batch_pin_complete(batch, curr_node);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
 		BUG_ON(kd_exec_native_wait(frame));
@@ -597,6 +635,9 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * that owner can serve the cohort on its own socket. */
 		if (batch.deferred_head &&
 		    (counter >= KDLOCK_MUTEX_NUMA_BOUNDARY || !smp_load_acquire(&curr_node->next))) {
+			/* Lookahead stops before this terminal/count reorder. No selected
+			 * origin may be carried into the deferred prefix. */
+			BUG_ON(batch.nr_pins);
 			if (batch.deferred_count >= 8) {
 				KD_MUTEX_DIAG_STOP(&batch,
 					counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ? KD_MUTEX_DIAG_NUMA_BOUNDARY :
@@ -622,6 +663,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		batch.next = next_node;
 		batch.current_node = curr_node;
 		batch.current_retired = false;
+		kd_mutex_batch_pin_budget(&batch, counter);
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
 		KD_MUTEX_DIAG_REQUEST(&batch, curr_node);
@@ -658,6 +700,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
 			kd_mutex_batch_retire_current(lock, &batch);
 			this_cpu_inc(kd_mutex_jit_success_count);
+			kd_mutex_batch_pin_complete(&batch, curr_node);
 			kd_mutex_clear_locked_set_completed(curr_node);
 		}
 
@@ -690,6 +733,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	/* The failed current request or a retained successor becomes queue head.
 	 * An empty retired tail needs no wake; future heads already poll the gate.
 	 * Keep the real mutex and gate for this physical owner's original body. */
+	kd_mutex_batch_unpin(&batch, false);
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
 	kd_mutex_set_locked(lock);
 	if (after_body)

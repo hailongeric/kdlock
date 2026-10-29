@@ -192,7 +192,9 @@ pin acknowledgement before accessing origin CPU storage or executing its body,
 and must acknowledge retirement before the origin unpins. Migration stability,
 slot ownership and frame exclusion remain independent obligations. The strict one-request handshake candidate was archived after a measured
 42–54% contended nano regression; it is not the maintained implementation.
-Bounded-selection policy remains pending. This work does not redesign
+The user then authorized a small immediate selected group. This branch implements
+a four-request candidate with VM validation pending; see the exact
+[window contract](mutex_implementation.md#bounded-selected-group-candidate-october-29). This work does not redesign
 oversubscription and is tracked in [open work](../TODO.md#october-29-api-and-execution-work).
 
 After publishing a request, a KD waiter stays preemption-disabled and polls with

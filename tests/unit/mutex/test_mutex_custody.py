@@ -28,10 +28,16 @@ def main():
     types += definition(read_source(ROOT / "include/kd_spin_entry.h"), "struct kd_spin_ref {") + ";\n"
     for name in ("include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source(ROOT / name)) + "\n"
+    types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "PIN_WINDOW"))) + "\n"
     types += definition(mutex, "enum kd_mutex_batch_result {") + ";\n"
     types += definition(mutex, "struct kd_mutex_batch {") + ";\n"
     queue = "static struct kd_mutex_node *\n" + definition(mutex, "kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)") + "\n"
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
+    for marker in ("static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+                   "static void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,",
+                   "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)",
+                   "static void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):
+        queue += definition(mutex, marker) + "\n"
     code = definition(frame, "static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)") + "\n"
     code += definition(frame, "int kd_exec_frame_record_event(struct kd_exec_frame *frame,") + "\n"
     code += definition(frame, "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)") + "\n"
@@ -43,6 +49,8 @@ def main():
         (path / "custody_queue.h").write_text(queue)
         variants = {
             "production": code,
+            "transfer-keeps-future-pins": code.replace("\tkd_mutex_batch_unpin(batch, true);", "", 1),
+            "transfer-keeps-current-descriptor": code.replace("\tkd_mutex_batch_pin_complete(batch, node);", "\tif (false) kd_mutex_batch_pin_complete(batch, node);", 1),
             "missing-pickup-ack": code.replace("!smp_load_acquire(&frame->mutex_mixed.picked_up) ||", "false ||", 1),
             "wrong-queue-custody": code.replace("node->custody.head != frame->mutex_mixed.queue.head ||", "false ||", 1),
             "miss-native-mutex": code.replace("custody->native_locks[custody->native_count++] = lock;", "(void)lock;", 1),

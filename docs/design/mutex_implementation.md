@@ -1,7 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
-`master` retains KD-only physical ownership and pinned published delegation
-waiters. New delegation callers use ABI2; ABI0 remains an internal legacy
+The maintained baseline retains KD-only physical ownership and pinned published
+delegation waiters. This branch carries the bounded selected-group candidate
+below; its VM correctness and performance gates are pending. New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
 locality boundary both default to 1024 bodies. Bounded NUMA selection retains
@@ -196,6 +197,74 @@ outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
 
+### Bounded selected-group candidate (October 29)
+
+This source-only candidate starts from `1c86d6d1`, including the corrected single
+native-acquisition custody event. The user approved a small group of immediately
+selected requests after the strict single-request candidate
+`658b918a05cb930d52ccf7307b8d44d54c6d6265` lost 42–54% at measured contended points.
+The earlier timing result remains rejected evidence; no gain or parity has been
+measured for this window.
+
+[`pin_window.inc`](../../kernel_module/mutex/pin_window.inc) keeps at most four
+exact `{node, count_seq}` descriptors on the combiner's stack. Queue reservation
+retains node storage; the independent batch source lease retains executable text.
+Neither changes the 32-byte mutex or 320-byte node layout. The window includes
+current plus up to three consecutive, fully published ABI2 MINIMAL requests with
+the same entry IP and local NUMA identity. It stops at another entry/ABI/packet,
+an executor-CPU or duplicate-origin-CPU request, a missing link, or the remaining
+batch budget. An existing deferred prefix is untouched: lookahead stops before
+a terminal successor or the locality count boundary that would rejoin/hand off
+that prefix. A first deferral after the locality boundary clamps selection to
+current, avoiding unsigned budget underflow. It does not perform NUMA selection ahead of
+the existing queue loop. Every current image is rechecked before execution.
+The total and locality limits remain 1024/1024.
+
+The origin stays migration-disabled while its slot is reserved, but a merely
+queued `KD_MUTEX_WAIT` task can schedule. The combiner release-publishes
+`KD_MUTEX_PROXY_REQUEST`; the selected origin disables preemption and
+release-publishes `KD_MUTEX_PROXY_PINNED`. The executor acquire-observes that ACK
+before delegated stack loads/stores or GS execution. Only stable published
+metadata and private executor frame preparation overlap the handshake. Existing
+successor `PREFETCHW` hints may touch still-reserved stack cache lines before ACK;
+they do not read architectural stack values. Legacy stack decoding waits for its
+single current ACK before decoding; generic/FULL paths select only current.
+
+After each ordinary completion, the exact descriptor is removed before the
+result wake permits node reuse. Remaining immediate requests can stay selected
+and the window can refill. A non-complete short-wrapper return first acknowledges
+and releases every future selection **before** calling the dispatcher, which may
+sleep, execute a known service or hand execution to an origin. Generic setup,
+early outer release, native handoff, role exchange, refusal and final queue
+handoff obey the same boundary. Current remains pinned through its actual frame
+retirement or native publication. Role exchange moves no window descriptors:
+W receives the existing node/source custody, and C requeues its own node as WAIT.
+W's later after-body combiner starts a new independent window.
+
+Cancellation waits for every outstanding REQUEST to become PINNED before
+publishing WAIT. It never overwrites an unacknowledged request, which could race
+a late ACK. After WAIT, an origin can unpin or acknowledge a new selection; an
+immediate head result still returns with the caller's expected one pin. Four
+bounds outstanding selection descriptors, not the time to receive an ACK or the
+number of CPUs momentarily finishing previously completed results. Same-CPU
+refusal and reserved local predecessor checks remain. This is not an
+oversubscription or fairness redesign, and arbitrary Native sleeping locks or
+KD rwsem reads in a custody suffix retain the existing unsupported context limit.
+
+Validation remains pending in the VM. Source-derived fixtures cover the real
+origin wait/ACK/reselection loop, bounded refill and late cancellation, exact
+identities and post-wake reuse, real combiner terminal/deferred/cap paths, failed
+private preparation, FULL dispatcher entry with future pins drained, native and
+early-outer paths, and actual queued custody transfer with a delayed future ACK.
+Mutation checks retain the ownership/duplicate-acquisition BUG probes. Required
+VM checks are basic plus `test_mutex_proxy_pin`, `test_mutex_pin_window`,
+`test_mutex_resources`, `test_mutex_outer_progress`, `test_mutex_terminal`,
+`test_mutex_policy`, `test_mutex_custody`, `test_mutex_custody_acquire`,
+`test_mutex_batch_diag`, and the existing mixed/frame/source-lifetime checks.
+Then run the five scoped role-exchange live cases and matched nano points with
+identical workloads, call shells, topology and instrumentation. Source-only
+fixtures do not establish scheduler progress, actual JIT returns or performance.
+
 ### Unified lock/unlock protocol
 
 The following pseudocode describes control flow, not a replacement for the
@@ -240,7 +309,9 @@ kd_mutex_lock(A):
             initialize MINIMAL packet, task/GS identity and independent links
             exchange delegation_tail; record this exact counted interval
             if there is a predecessor:
-                publish predecessor.next; poll node.locked with acquire ordering
+                publish predecessor.next; enable preemption while unselected
+                acknowledge a selected pin before proxy execution
+                poll node.locked with acquire ordering; return with one pin
                 if native_resume:
                     retire counted interval; preserve FULL before node reuse
                     release node; restore scheduler state; resume native suffix
@@ -327,7 +398,7 @@ flowchart TD
     R -->|no| GW["Retain routing reference; wait for gate; acquire physically"]
     GW --> RS["Restore scheduler state"]
     RS --> B
-    R -->|yes| Q["Initialize packet; exchange tail; link predecessor; poll"]
+    R -->|yes| Q["Publish packet and link; queue preemptibly; ACK selected pin"]
     Q --> W{"Published result"}
     W -->|completed| C["Retire node; resume after unlock"]
     W -->|native suffix| S["Retire node; restore scheduler state; resume exact FULL state"]
@@ -722,7 +793,8 @@ unload frees preallocated contexts/stacks; no forced context release is used.
 
 ## Scope and evidence
 
-KD keeps pinned published waiters and bounded NUMA queue grouping. Stack
+The maintained baseline pins published waiters; the bounded selected-group
+candidate above remains unqualified. Both retain bounded NUMA queue grouping. Stack
 allocation, request selection and KD physical ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does
 not validate arbitrary oversubscription. Both stack/context protocols require

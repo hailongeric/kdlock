@@ -34,6 +34,8 @@ struct list_head { struct list_head *next, *prev; };
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define NUMA_AWARE 1
+#define KD_MUTEX_TAIL_CPU_OFFSET 4
+static int raw_smp_processor_id(void) { return 65535; }
 static int numa_node_id(void) { return 0; }
 #define smp_load_acquire(p) (*(p))
 #define this_cpu_inc(x) (++(x))
@@ -80,8 +82,9 @@ static u32 tail_cas(u32 *p,u32 old,u32 value)
 #define cmpxchg(p,o,n) tail_cas((p),(o),(n))
 static void publish(void *p,int value)
 {
-    CHECK(value==0);
-    *(u8 *)p=value;wakes++;
+    if(value==KD_MUTEX_PROXY_REQUEST) { *(u8 *)p=KD_MUTEX_PROXY_PINNED;return; }
+    if(value==KD_MUTEX_WAIT) { *(u8 *)p=value;return; }
+    CHECK(value==0);*(u8 *)p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
@@ -104,6 +107,8 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     CHECK(p==&lock && leases==1 && lock.owner==current);
     CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
+    CHECK(kd_mutex_batch_pin_select(batch,node,true));
+    kd_mutex_proxy_wait_pinned(node);
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
             .outer_lock_addr=(unsigned long)p,.jit_lock_depth=2};
@@ -114,7 +119,9 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     if(i==native_at) {
         /* Mirrors the publication boundary; the separate outer fixture runs
          * the actual execute_cs/FULL/native path with node reuse before ACK. */
+        kd_mutex_batch_unpin(batch,true);
         kd_mutex_batch_retire_current(p,batch);
+        kd_mutex_batch_pin_complete(batch,node);
         CHECK(lock.delegation_tail!=(u32)node->tail);
         node->locked=0;node->native_resume=true;
         node->tail=0xdead;node->next=(void *)1;
@@ -140,6 +147,7 @@ static void reset(unsigned int count)
         nodes[i].tail=(i+1)<<4;nodes[i].locked=1;
         nodes[i].entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
         nodes[i].packet_state=KD_PACKET_MINIMAL;nodes[i].task_struct_ptr=&waiter;
+        nodes[i].counted_lock=&lock;nodes[i].count_seq=2;
     }
     lock.delegation_tail=nodes[count-1].tail;
 }
@@ -148,6 +156,24 @@ static void finish(void)
     CHECK(!leases && lease_gets==lease_puts && lock.owner==current);
     CHECK(kd_mutex_gate_read(&lock)==1);
 }
+/* Deferral can first appear after the locality count has already been crossed.
+ * Its first eight-node prefix then wins the next boundary; no future pin may
+ * survive the current body's clamp-to-one into that physical handoff. */
+static void late_first_deferred(void)
+{
+    const unsigned int boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
+    if(kd_mutex_batch_size <= KDLOCK_MUTEX_NUMA_BOUNDARY+20)return;
+    scenario=23;reset(boundary+20);
+    for(unsigned int i=boundary+4;i<boundary+12;i++)nodes[i].numa_node=1;
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
+    CHECK(calls==boundary+4 && completed==boundary+4 && wakes==1 && !cas_calls);
+    for(unsigned int i=0;i<boundary+4;i++)CHECK(order[i]==i);
+    CHECK(!nodes[boundary+4].locked && !nodes[boundary+4].completed);
+    for(unsigned int i=boundary+4;i<boundary+11;i++)CHECK(nodes[i].next==&nodes[i+1]);
+    CHECK(nodes[boundary+11].next==&nodes[boundary+12] && nodes[boundary+12].locked);
+    finish();
+}
+
 int main(void)
 {
     /* Ordinary pre-body mode has no retained owner node in this fixture.
@@ -240,5 +266,6 @@ int main(void)
     CHECK(calls==135 && completed==135 && wakes==1 && !nodes[0].locked && !cas_calls);
     for(unsigned int i=0;i<135;i++)CHECK(order[i]==i+64);
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();
+    late_first_deferred();
     printf("PASS terminal queue: %u checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries\n",checks);
 }

@@ -20,7 +20,7 @@ storage, source files and execution details. KD's nested ownership, recovery and
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | 32-byte KD physical mutex with embedded delegation phase and encoded tail | Actual KD owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Every caller must use the KD object and APIs |
+| KD mutex | 32-byte KD physical mutex with embedded delegation phase and encoded tail | Actual KD owner executes JIT, or services a borrowed native suffix | Baseline waiters poll pinned; this branch tests a bounded selected-group handshake; physical owners may sleep | Every caller must use the KD object and APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
@@ -198,6 +198,10 @@ KD acquisition reference returns an exact native result. A queued acquisition
 returns route zero, including local native fallbacks that still need KD-aware
 unlock routing. General `KD_MUTEX_DIRECT_LOCK/UNLOCK` and bridge entries keep
 their void ABI and are also used by translated nested control calls.
+
+The following is the pinned baseline. This branch changes queued waiting under
+the [bounded selected-group candidate](mutex_implementation.md#bounded-selected-group-candidate-october-29),
+whose correctness and timing gates remain pending.
 
 An eligible acquisition holds an exact task routing reference, uses the embedded
 queue, and reserves a CPU-local node/stack. A delegation

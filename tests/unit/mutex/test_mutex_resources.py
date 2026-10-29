@@ -139,14 +139,13 @@ def main():
             "WRITE_ONCE(shadow->node_slots, slots | BIT(idx));",
             "WRITE_ONCE(shadow->node_slots, slots);",
         ),
-        "poll-enables-preemption": (
-            "while (smp_load_acquire(&node->locked))\n\t\tcpu_relax();",
-            "while (smp_load_acquire(&node->locked)) { "
-            "preempt_enable(); cpu_relax(); preempt_disable(); }",
+        "queue-prevents-preemption": (
+            "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)\n{\n\tpreempt_enable();",
+            "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)\n{",
         ),
         "poll-returns-before-publication": (
-            "while (smp_load_acquire(&node->locked))",
-            "if (smp_load_acquire(&node->locked))",
+            "if (state != KD_MUTEX_WAIT)",
+            "if (true)",
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
@@ -234,7 +233,9 @@ def main():
                 [str(binary)], capture_output=True, text=True, timeout=15, check=False
             )
             if mutation:
-                assert result.returncode == 1 and "FAIL line" in result.stderr, (
+                expected_code, expected_message = ((2, "BUG line") if
+                    name == "poll-returns-before-publication" else (1, "FAIL line"))
+                assert result.returncode == expected_code and expected_message in result.stderr, (
                     name,
                     result.returncode,
                     result.stdout,

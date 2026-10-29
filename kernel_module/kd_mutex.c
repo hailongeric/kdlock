@@ -228,9 +228,9 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		return;
 	}
 
-	/* Published waiters keep preemption disabled until completion or native
-	 * handoff: their origin GS storage must not be reused by another task.
-	 * Migration stays pinned when an executor acquires a real sleeping mutex. */
+	/* Migration protects the reserved CPU/slot while queued tasks schedule.
+	 * Only the bounded selected group disables preemption and acknowledges
+	 * that pin before any executor may use its origin stack or GS state. */
 	migrate_disable();
 	preempt_disable();
 	if (unlikely(kd_mutex_has_local_predecessor(lock))) {

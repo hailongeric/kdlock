@@ -77,11 +77,13 @@ validate whole-kernel replacement.
 6. Preserve the two-word wrapper ABI. Spin/rwlock ordinary pairs protect
    preemption and IRQ/BH state. Explicit spin IRQ variants use native interfaces;
    rwlock IRQ/BH variants require their own local context-preserving contract.
-   The maintained mutex still pins published waiters. The October 29 strict
-   queued/preemptible to selected/pinned candidate passed focused correctness but
-   was archived after a measured regression; bounded selection remains undecided.
-   Do not promote it or restore a queue-wide pin as a claimed solution to that
-   request. Physical mutex owners/services can sleep. Oversubscription redesign
+   The October 29 strict single-request pin candidate remains archived after
+   its measured regression. The user subsequently authorized a small immediate
+   selected group. This branch implements a source-only four-request window:
+   unselected queue waiters remain preemptible, and every requested pin must be
+   acknowledged and retired before refusal, dispatcher service or queue handoff.
+   Preserve the exact window and origin lifetime checks; do not restore queue-wide
+   pinning or claim correctness/performance qualification before VM validation. Physical mutex owners/services can sleep. Oversubscription redesign
    and rwsem fairness changes are deferred.
    Mixed mutex-to-spin known CALLs now have a one-CAS exact-ticket path. Only
    an eligible ABI2 root with its sole outer mutex may transfer that owner to the

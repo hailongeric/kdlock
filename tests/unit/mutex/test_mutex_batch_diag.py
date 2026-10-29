@@ -51,10 +51,11 @@ CHECKS = r'''
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_TOTAL_CAP,
         KD_MUTEX_DIAG_EXECUTION_REFUSAL, KD_MUTEX_DIAG_NUMA_TAIL,
         KD_MUTEX_DIAG_UNSUPPORTED_TAIL, KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE,
+        KD_MUTEX_DIAG_NUMA_BOUNDARY,
     };
     static const unsigned int deferred[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        2, 2, 1, 1, 8, 64, 1, 7, 7, 64, 0, 0,
+        2, 2, 1, 1, 8, 64, 1, 7, 7, 64, 0, 0, 8,
     };
     static struct kd_mutex_batch_totals expected;
     unsigned int native = calls && (int)order[calls - 1] == native_at;
@@ -171,7 +172,7 @@ def main():
         assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
         assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
         assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
-        assert sample['batches'] == 22 == sum(sample['completed_hist'])
+        assert sample['batches'] == 23 == sum(sample['completed_hist'])
         assert sample['batches'] == sum(sample['deferred_peak_hist'])
         assert sample['batches'] == sum(sample['stop_reason'].values())
         assert sample['stop_reason']['unclassified'] == 0

@@ -261,8 +261,10 @@ public unlock. Signal, trylock and I/O forms remain local. This does not make a
 Linux object compatible with KD or add unsupported nested/cancellation protocols.
 Generic JIT faults are errors; a progressed body cannot restart from entry.
 
-Published delegation waiters poll pinned even though physical owners and supported
-service paths may sleep. Broad oversubscription and scheduler-independent
+The maintained baseline pins published delegation waiters even though physical
+owners and supported service paths may sleep. This branch separately tests the
+[bounded selected-group candidate](mutex_implementation.md#bounded-selected-group-candidate-october-29);
+its validation is pending. Broad oversubscription and scheduler-independent
 starvation freedom remain unvalidated. Bounded NUMA grouping changes service
 order without changing exact physical ownership.
 

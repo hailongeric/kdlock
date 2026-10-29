@@ -68,6 +68,10 @@ def main():
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
+    for marker in ("static bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+                   "static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)"):
+        code += definition(mutex, marker) + "\n"
+    code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_window.inc")) + "\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in mutex.splitlines() if line.startswith(name+'('))
         code += 'static struct kd_mutex_node *\n' + definition(mutex, marker)+'\n'
@@ -113,8 +117,19 @@ def main():
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
+            "skip-prepare-ack": code.replace("\t\tkd_mutex_proxy_wait_pinned(curr_node);\n\t}\n\tif (frame)",
+                                               "\t}\n\tif (frame)", 1),
+            "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_unpin(batch, false);", "", 1),
+            "resume-keeps-future-pins": code.replace(
+                "\t\tkd_mutex_batch_unpin(batch, true);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
+                "\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
+            "unpin-before-frame-retirement": code.replace(
+                "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);",
+                "\tsmp_store_release(&curr_node->locked, KD_MUTEX_WAIT);\n"
+                "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);", 1),
         }
         for name, candidate in candidates.items():
+            assert name == "production" or candidate != code, name
             (path / "mutex_outer_production.h").write_text(candidate)
             binary = path / name
             subprocess.run(
@@ -139,7 +154,8 @@ def main():
                 assert result.returncode == 0, (result.stdout, result.stderr)
                 print(result.stdout, end="")
             else:
-                assert result.returncode == 1 and "FAIL mode=" in result.stderr, (
+                expected = 2 if name in {"skip-prepare-ack", "unpin-before-frame-retirement"} else 1
+                assert result.returncode == expected and "FAIL mode=" in result.stderr, (
                     name, result.returncode, result.stdout, result.stderr)
                 print(f"mutation detected: {name}")
 

@@ -164,3 +164,11 @@ The offer log `kd_mutex role exchange:` records the committed physical transfer
 before pickup ACK. It alone proves neither accepted custody nor C execution.
 Optional batch diagnostics record ownership transfers separately from refusals
 and completed JIT/native bodies; those measurement schemas must not be pooled.
+
+The separate four-request pin-window candidate drains every future selected
+origin before FULL dispatcher entry and before committing queue custody. It
+removes W's exact current descriptor before the native wake; no window pointer
+survives into W's custody. C is requeued as WAIT and may schedule until selected
+again. W's after-body combining creates a fresh bounded window. These additions
+are source-reviewed only until their own VM checks pass; they do not change the
+unsupported native-lock context limits above.

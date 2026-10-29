@@ -90,6 +90,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 
 | Changed area | Relevant drivers under `tests/unit` |
 | --- | --- |
+| Bounded mutex pin-window candidate | `mutex/test_mutex_proxy_pin.py`, `test_mutex_pin_window.py`, `test_mutex_resources.py`, `test_mutex_outer_progress.py`, `test_mutex_terminal.py`, `test_mutex_policy.py`, `test_mutex_batch_diag.py`, `test_mutex_custody.py`, `test_mutex_custody_acquire.py`; the real origin ACK loop, selected descriptors, FULL dispatcher boundary and queue/custody transfer use production source with explicit scheduling/JIT substitutes. These source-only additions await VM execution. |
 | Spin entry/tickets |`spin/test_spin_direct.py`, `test_spin_entry.py`, `test_spin_preempt.py` |
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |

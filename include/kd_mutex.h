@@ -87,13 +87,21 @@ struct kd_mutex_osq_node {
 	u32 tail; /* immutable encoded CPU and slot, initialized with the pool */
 };
 
+/* Queue result byte: only the selected executor requests an origin pin.
+ * A PINNED release ACK precedes any delegated stack/GS access. */
+#define KD_MUTEX_WAIT 1
+#define KD_MUTEX_PROXY_REQUEST 2
+#define KD_MUTEX_PROXY_PINNED 3
+#define KD_MUTEX_PIN_WINDOW 4
+
 /*
  * kd_mutex_node — per-waiter queue node.
  *
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
  * owns its shadow stack, so an executor acquiring a sleeping KD mutex cannot
  * have its stack reused by another target task running on the same CPU.
- * A published delegation waiter keeps preemption disabled while polling.
+ * Queued unselected waiters are preemptible; at most four immediate selected
+ * requests per batch acknowledge a pin before delegated execution.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.

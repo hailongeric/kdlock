@@ -33,7 +33,7 @@ preheld locks remain unsupported contexts; trusted-source translation is unchang
 
 | Step | Deliverable and acceptance boundary | Status |
 | --- | --- | --- |
-| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. Bounded-selection clarification pending. |
+| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. The user approved a small immediate selected group. This branch has a fixed four-request source-only candidate with exact ACK cancellation and drain before FULL service/queue transfer; independent source review, VM correctness and matched timing are promotion gates. |
 | 2 | One public macro layer for spin and related ordinary APIs, using the compiler clobber wrappers. Retain only required cross-module provider symbols; callable interfaces must have an explicit conventional wrapper and execution contract. | Public raw-clobber spin macros and export reduction implemented at `893c16b5`; ten selected VM checks passed. Their cold path differs from the named DIRECT benchmark shell; public-pair timing remains pending. |
 | 3 | Assess rwlock recursive reads, upgrades and IRQ/BH pairs. Implement only cases with a stated ownership/context contract; distinguish unsupported blocking upgrade from feasible nonblocking conversion. | Local IRQ/BH and trylock APIs plus interrupt-reader bypass implemented at `428e068a`; affected units and live IPI reader probe passed with exact drain and no JIT. Arbitrary task recursive reads, blocking upgrades and NMI use remain unsupported; nonblocking conversion is an exploration, not an exposed API. |
 | 4 | One ordinary rwsem API family, with the widest compatible init/read/write/try/signal/downgrade/non-owner/annotation coverage. Explain any delegation eligibility restriction; never let a queued writer bypass a downgraded reader. | Unified ordinary API implemented at `6099baf3`; default/local downgrade and explicit prepared writer eligibility are documented. At `1b186f5d`, API/cancellation/live JIT escape and affected unit/runner checks passed. Changed prepared DIRECT shell was measured in the completed 60-point comparison at `5f96dd5c`; losses remain unresolved after the completed 44-observation frozen-input matched recheck. |
@@ -46,8 +46,9 @@ The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
 The requested pin-on-proxy protocol supersedes the old permanent published-waiter
 pin as a development requirement. The strict candidate is archived rather than promoted, so the maintained
-implementation still pins published waiters. Bounded-selection policy remains
-pending; later API checks do not overturn the rejected timing result.
+baseline still pins published waiters. The separately authorized four-request
+candidate is described in [mutex implementation](design/mutex_implementation.md#bounded-selected-group-candidate-october-29).
+Its validation is pending; later API checks do not overturn the rejected timing result.
 The [October 29 checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)
 retains the rejected candidate, exact rates, the completed 60-point comparison,
 failed transfer setup/normal cleanup, and functional/collector outcomes. Thirteen
