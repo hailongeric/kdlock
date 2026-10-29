@@ -1,0 +1,49 @@
+{
+  "completed": true,
+  "groups": [
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/rwlock-rollback-20261029/bench/rwlock-api-matched-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 3437,
+        "regular_files": 2811,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "4312d28d61e608f74a57ae4ea0085da08af17cf08908058ddc6286d02072d81b",
+            "regular_files": 2810
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "c4dce1412465ccde00acf5d60714c7cf6f86e60e65e106418fe82d6ed4a7d362",
+            "regular_files": 1
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/rwlock-rollback-20261029/tests/rwlock-rollback-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 997,
+        "regular_files": 877,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "f69ea3afcf6ba2bb0bc63d4bca61110c1ffe509152e99928d0603323cd49e123",
+            "regular_files": 873
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "cb9fc45fd9854d99ebeec4cf1b4374e0792c5b7efe7675f3b58447c4d0b486bb",
+            "regular_files": 4
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    }
+  ]
+}

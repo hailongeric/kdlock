@@ -54,8 +54,10 @@ implement a full queued role exchange. Emitted rwlock fast-path
 instructions are unchanged, while its contended path and subsequent code
 placement change; neither is a measured explanation for the losses. The isolated
 local-unlock/outlined-reader candidate `d9b2c57f` completed 60 observations without
-consistent benefit and remains isolated. A separate rollback-first rwlock
-candidate `233f3f50` is unexecuted. No observed single-round increase or completed
+consistent benefit and remains isolated. The separate rollback-first rwlock candidate `233f3f50`, integrated at `1ad2ef7f`,
+passed affected units, live IPI and rwlock basic. Its [same-boot 48-observation pair](../bench/results/10.176.26.71/tests/rwlock-rollback-20261029/README.md)
+removed the observed c01/1% eight-worker loss, but other points still lost
+approximately 3–7%; it remains isolated. No observed single-round increase or completed
 correctness check closes the no-regression gate.
 
 The [queued-exchange failure record](../bench/results/10.176.26.71/tests/mutex-roleswap-20261029/README.md)
