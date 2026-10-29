@@ -71,7 +71,8 @@ static const unsigned int kd_mutex_batch_size = KDLOCK_MUTEX_BATCH;
 MODULE_INFO(mutex_batch, __stringify(KDLOCK_MUTEX_BATCH));
 MODULE_INFO(mutex_numa_boundary, __stringify(KDLOCK_MUTEX_NUMA_BOUNDARY));
 MODULE_INFO(mutex_spin_budget, __stringify(KDLOCK_MUTEX_SPIN_BUDGET));
-MODULE_INFO(mutex_ready_window, __stringify(KD_MUTEX_PIN_WINDOW));
+MODULE_INFO(mutex_claim_slots, __stringify(KD_MUTEX_CLAIM_SLOTS));
+MODULE_INFO(mutex_ready_policy, "epoch");
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
 KD_MUTEX_STAT(kd_mutex_slowpath_count);

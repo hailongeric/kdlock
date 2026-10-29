@@ -74,10 +74,8 @@ def main():
                 '\tif (completed_pending_tail) {',
                 '\tif (completed_pending_tail) {\n\t\tkd_mutex_clear_locked_set_completed(curr_node);', 1)),
             'cold-body-skips-fresh-admission': (helpers, loop.replace(
-                'if (!batch.proxy_epoch && !kd_mutex_batch_epoch_begin(&batch)) {',
-                'if (false && !batch.proxy_epoch && !kd_mutex_batch_epoch_begin(&batch)) {', 1)),
-            'ignore-local-pin-budget': (helpers.replace('if (left > local_left)', 'if (false && left > local_left)'), loop),
-            'underflow-late-local-budget': (helpers.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?', 'false ?'), loop),
+                '\t\t\tif (!kd_mutex_batch_epoch_begin(&batch)) {',
+                '\t\t\tif (false && !kd_mutex_batch_epoch_begin(&batch)) {', 1)),
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
             'skip-delayed-link': (helpers.replace('} while (!next);', '} while (false);'), loop),
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),

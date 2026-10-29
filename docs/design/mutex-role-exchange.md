@@ -202,5 +202,16 @@ batch and physical owner under HELD or the batch's own active COMBINER epoch;
 an unrelated later owner's COMBINER phase cannot authorize an old frame. Cold
 completed-tail retirement reopens READY withdrawal while retaining its current
 claim. No new ownership inference, packet copy or wait for origin ACK is added.
-The original five role cases and actual C2-to-W33 exchange remain required VM
-gates for this candidate, with separate performance validation.
+The original five role cases and actual C2-to-W33 exchange passed the scoped VM
+gate through `2d6e313b294632485ee973606813c1c14b6c3cc9`; that version failed the
+separate performance gate.
+
+The single-current follow-up retains only the current `{node, count_seq}` claim
+under this epoch. Unselected origins stay READY, with withdrawal reopened by
+every cold epoch closure, rather than being forced to WAIT by future-window
+cancellation. C's INIT-to-READY publication after real old-frame/source retirement,
+W's HELD native suffix, fresh admission at W's unlock, exact current retirement
+before custody wake, and terminal C delegation remain unchanged. One claim slot
+does not limit the number of READY origins protected by the epoch. The same five
+role cases, actual C2-to-W33 exchange and balanced context/drain checks remain
+pending validation for this new candidate.

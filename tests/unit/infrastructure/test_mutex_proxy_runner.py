@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location(
@@ -17,6 +18,18 @@ def receipt():
 
 
 class ContextReceipts(unittest.TestCase):
+    def test_exact_single_current_epoch_metadata(self):
+        good = dict(mutex_spin_budget='65536', mutex_claim_slots='1', mutex_ready_policy='epoch')
+        with patch.object(runner.rt, 'command', side_effect=lambda args, log: good[args[2]]):
+            self.assertEqual(runner.provider_ready_policy(Path('/provider.ko'), Path('/out')),
+                             dict(mutex_spin_budget=65536, mutex_claim_slots=1, mutex_ready_policy='epoch'))
+        for field, invalid in (('mutex_spin_budget', '0'), ('mutex_claim_slots', '8'),
+                               ('mutex_claim_slots', ''), ('mutex_ready_policy', 'window')):
+            values = dict(good, **{field: invalid})
+            with self.subTest(field=field), patch.object(runner.rt, 'command',
+                    side_effect=lambda args, log: values[args[2]]), self.assertRaises(runner.rt.Failure):
+                runner.provider_ready_policy(Path('/provider.ko'), Path('/out'))
+
     def test_complete_joined_cohort(self):
         rows = runner.contexts('\n'.join(receipt()))
         self.assertEqual(len(rows), 14)

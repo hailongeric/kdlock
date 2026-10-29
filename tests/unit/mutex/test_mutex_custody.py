@@ -28,15 +28,14 @@ def main():
     types += definition(read_source(ROOT / "include/kd_spin_entry.h"), "struct kd_spin_ref {") + ";\n"
     for name in ("include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source(ROOT / name)) + "\n"
-    types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "QUEUE_INIT", "PIN_WINDOW", "GATE_"))) + "\n"
+    types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "QUEUE_INIT", "CLAIM_SLOTS", "GATE_"))) + "\n"
     types += definition(mutex, "enum kd_mutex_batch_result {") + ";\n"
     types += definition(mutex, "struct kd_mutex_batch {") + ";\n"
     queue = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/batch_diag.inc")) + "\n"
     queue += "static struct kd_mutex_node *\n" + definition(mutex, "kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)") + "\n"
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
-    queue += "static __always_inline unsigned int\n" + definition(mutex, "kd_mutex_batch_pin_slot(struct kd_mutex_batch *batch, unsigned int offset)") + "\n"
     for marker in ("static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
-                   "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,",
+                   "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)",
                    "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)",
                    "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):
         queue += definition(mutex, marker) + "\n"
@@ -66,7 +65,7 @@ def main():
         variants = {
             "production": code,
             "ready-before-source-release": code,
-            "transfer-keeps-future-pins": code.replace("\tkd_mutex_batch_epoch_end(batch, true);", "", 1),
+            "transfer-keeps-epoch-closed": code.replace("\tkd_mutex_batch_epoch_end(batch, true);", "", 1),
             "transfer-keeps-current-descriptor": code.replace("\tkd_mutex_batch_pin_complete(batch, node);", "\tif (false) kd_mutex_batch_pin_complete(batch, node);", 1),
             "missing-pickup-ack": code.replace("!smp_load_acquire(&frame->mutex_mixed.picked_up) ||", "false ||", 1),
             "wrong-queue-custody": code.replace("node->custody.head != frame->mutex_mixed.queue.head ||", "false ||", 1),

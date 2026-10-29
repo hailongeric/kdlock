@@ -1,6 +1,6 @@
-"""Guest-only bounded pin-window protocol with deterministic READY claims.
+"""Guest-only single-current epoch claims with deterministic READY peers.
 
-Compile production descriptors, selection, cancellation and consumption helpers.
+Compile production descriptors, selection, cancellation and consumption helpers. Future origins remain READY.
 Atomic access observers model expiry races and slot reuse. This does not prove
 live scheduler/JIT behavior or execute the enclosing combiner's body boundaries.
 """
@@ -19,7 +19,7 @@ def main():
     header = read_source(ROOT / "include/kd_mutex.h")
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
     constants = "\n".join(re.findall(
-        r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT|PIN_WINDOW|CUSTODY_LOCKS) \d+$",
+        r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT|CLAIM_SLOTS|CUSTODY_LOCKS) \d+$",
         header, re.M))
     assert len(constants.splitlines()) == 6
     types = constants + "\n" + "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_GATE_")) + "\n"
@@ -47,54 +47,35 @@ def main():
         code += definition(source, marker) + "\n"
     unpin = definition(window,
         "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)")
-    remove_before_wait = (
-        "\t\tbatch->pins[index].node = NULL;\n"
-        "\t\tbatch->nr_pins = count;\n"
-        "\t\tKD_MUTEX_PIN_INC(batch, cancelled_claims);\n"
-        "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);")
-    assert remove_before_wait in unpin
+    complete = definition(window,
+        "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,")
+    check = definition(window,
+        "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch)")
     mutations = {
-        "ignore-window-bound": (
-            "\t\tlimit = KD_MUTEX_PIN_WINDOW;", "\t\tlimit = batch->pin_budget;", "", 86),
-        "ignore-total-budget": (
-            "unsigned int i, limit = batch->pin_budget;",
-            "unsigned int i, limit = KD_MUTEX_PIN_WINDOW;", "", 1),
-        "ignore-duplicate-cpu": (
-            "if ((batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)",
-            "if (false && (batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)", "", 1),
-        "ignore-image-boundary": (
-            "READ_ONCE(next->regs.ip) != READ_ONCE(node->regs.ip), KD_MUTEX_PIN_ENTRY)", "false, KD_MUTEX_PIN_ENTRY)", "", 1),
-        "ignore-numa-boundary": (
-            "(batch->numa_node >= 0 && next->numa_node != batch->numa_node)", "false", "", 1),
-        "ignore-deferred-terminal": (
-            "(batch->deferred_head && !smp_load_acquire(&next->next))", "false", "", 1),
-        "ignore-local-budget": (
-            "if (left > local_left)", "if (false && left > local_left)", "", 1),
-        "underflow-local-budget": (
-            "counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?", "false ?", "", 1),
+        "claim-successor-instead": (
+            "if (!kd_mutex_batch_pin_add(batch, node))",
+            "if (!kd_mutex_batch_pin_add(batch, node->next))", "", 1),
         "cancel-rearms-ready": (
             "smp_store_release(&node->locked, KD_MUTEX_WAIT);",
             "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", "", 1),
         "cancel-before-descriptor-removal": (unpin,
-            unpin.replace(remove_before_wait,
-                "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);\n"
-                "\t\tbatch->pins[index].node = NULL;\n\t\tbatch->nr_pins = count;", 1), "", 1),
-        "retain-consumed-descriptor": (
-            "\tbatch->pins[index].node = NULL;\n\tbatch->nr_pins--;",
-            "\tbatch->nr_pins--;", "", 1),
-        "advance-by-two": (
-            "batch->pin_head = (index + 1) % KD_MUTEX_PIN_WINDOW;",
-            "batch->pin_head = (index + 2) % KD_MUTEX_PIN_WINDOW;", "", 86),
-        "forget-ring-head": (
-            "return (batch->pin_head + offset) % KD_MUTEX_PIN_WINDOW;",
-            "return offset;", "", 86),
-        "cancel-moves-head": (
-            "\t\tbatch->nr_pins = count;",
-            "\t\tbatch->nr_pins = count; batch->pin_head = (batch->pin_head + 1) % KD_MUTEX_PIN_WINDOW;", "", 86),
-        "ignore-generation": (
-            "READ_ONCE(node->count_seq) != batch->pins[index].generation", "false", "generation", 1),
-        "ignore-lock-identity": (
-            "READ_ONCE(node->counted_lock) != batch->lock ||", "false ||", "wrong-lock", 1),
+            unpin.replace("\tbatch->pin.node = NULL;", "\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);\n\tbatch->pin.node = NULL;", 1)
+                 .replace("\t/* Last access: the origin may unpin after observing this publication. */\n\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);", "", 1), "", 1),
+        "retain-consumed-descriptor": (complete,
+            complete.replace("\tbatch->pin.node = NULL;\n", "", 1), "", 1),
+        "empty-current-keeps-epoch-closed": (
+            "\tkd_mutex_batch_unpin(batch, keep_current);",
+            "\tif (!batch->nr_pins) return;\n\tkd_mutex_batch_unpin(batch, keep_current);", "", 1),
+        "cold-exit-cancels-current": (
+            "\tkd_mutex_batch_unpin(batch, keep_current);",
+            "\t(void)keep_current;\n\tkd_mutex_batch_unpin(batch, false);", "", 1),
+        "epoch-exit-keeps-gate-closed": (
+            "\tkd_mutex_set_locked(batch->lock);",
+            "\tif (false) kd_mutex_set_locked(batch->lock);", "", 1),
+        "ignore-generation": (check,
+            check.replace("READ_ONCE(node->count_seq) != batch->pin.generation", "false", 1), "generation", 1),
+        "ignore-lock-identity": (check,
+            check.replace("READ_ONCE(node->counted_lock) != batch->lock ||", "false ||", 1), "wrong-lock", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kd-pin-window-") as directory:
         path = Path(directory)
@@ -123,7 +104,7 @@ def main():
             else:
                 print(result.stdout, end="")
                 for invalid in ("generation", "wrong-lock", "odd-generation",
-                                "wrong-current", "complete-unclaimed", "bad-head", "occupied-slot"):
+                                "wrong-current", "complete-unclaimed", "occupied-slot", "excess-count", "without-epoch"):
                     rejected = subprocess.run([binary, invalid], capture_output=True,
                                               text=True, timeout=10)
                     assert rejected.returncode == 86 and "BUG pin window:" in rejected.stderr, (

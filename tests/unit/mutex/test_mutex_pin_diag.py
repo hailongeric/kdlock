@@ -21,11 +21,25 @@ from test_spin_shadow import definition
 def main():
     types, helpers, loop = production_sources()
     fixture = (ROOT / 'tests/unit/mutex/mutex_terminal_fixture.c').read_text()
+    # The terminal body substitute does not inspect entry IP. READY candidate
+    # observations require a concrete nonzero same-entry prefix.
+    node_init = 'nodes[i].counted_lock=&lock;nodes[i].count_seq=2;'
+    assert fixture.count(node_init) == 1
+    fixture = fixture.replace(node_init, node_init + 'nodes[i].regs.ip=0xcafe;')
     mocks = MOCKS.replace('#define KDLOCK_MUTEX_DIAGNOSTICS 1',
                           '#define KDLOCK_MUTEX_DIAGNOSTICS 2')
     mocks = mocks[:mocks.index('static unsigned int fls')]
     mocks += r'''
 #define __percpu
+static u64 *diag_generation_target;
+static unsigned int diag_generation_reads;
+#undef READ_ONCE
+#define READ_ONCE(field) ({ \
+    __auto_type diag_address=&(field); \
+    if((void *)diag_address==(void *)diag_generation_target && ++diag_generation_reads==2) \
+        *diag_generation_target+=2; \
+    __atomic_load_n(diag_address,__ATOMIC_RELAXED); \
+})
 static int diag_module;
 #define THIS_MODULE (&diag_module)
 static bool diag_params_locked,diag_fail_alloc;
@@ -99,6 +113,9 @@ static void __attribute__((unused)) diag_free_percpu(void *storage);
             'lost-cancellation': helpers.replace('KD_MUTEX_PIN_INC(batch, cancelled_claims);', '', 1),
             'lost-occupancy': helpers.replace('(batch)->diag.occupancy_after[(batch)->nr_pins]++;', '', 1),
             'lost-epoch-attempt': helpers.replace('(batch)->diag.epoch_admission_attempts++;', '', 1),
+            'lost-ready-observation': helpers.replace('diag->epoch_ready_candidates[count]++;', '(void)diag;', 1),
+            'missing-ready-generation-recheck': helpers.replace('READ_ONCE(node->count_seq) != generation ||', 'false ||', 1),
+            'duplicate-ready-cpu': helpers.replace('i != count || READ_ONCE(node->count_seq)', 'false || READ_ONCE(node->count_seq)', 1),
             'lost-epoch-refusal': helpers.replace('(batch)->diag.epoch_admission_refusals += !(accepted);', '', 1),
             'lost-expiry-checks': helpers.replace(
                 'this_cpu_add(kd_mutex_pin_totals.expiry_checks, origin->expiry_checks);', '', 1),
@@ -124,21 +141,24 @@ static void __attribute__((unused)) diag_free_percpu(void *storage);
                       for line in result.stdout.splitlines()
                       if line.startswith(('PIN ', 'PINMAX ', 'PINRESET '))}
             sample = values['PIN']
-            assert sample['schema'] == 3 and sample['compiled'] == 2
-            assert sample['window'] == 8 and sample['initial_spin_budget'] == 65536
+            assert sample['schema'] == 4 and sample['compiled'] == 2
+            assert sample['claim_slots'] == 1 and sample['ready_policy'] == 'epoch' and sample['initial_spin_budget'] == 65536
             assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
             assert sample['selections'] == sum(sample['occupancy_before']) == sum(sample['occupancy_after'])
-            assert sample['selections'] == sum(sample['refill_stop'].values())
+            assert sample['selections'] == sum(sample['selection_result'].values())
             assert sample['claims'] == sample['retired_claims'] + sample['cancelled_claims']
+            assert sample['claims'] == sample['occupancy_after'][1] == sample['selection_result']['claimed']
+            assert sum(sample['epoch_ready_candidates']) == sample['epoch_admission_attempts'] - sample['epoch_admission_refusals']
             assert sample['wait_episodes'] == sample['initial_pin_retained'] + sample['initial_pin_dropped'] == 4
             assert sample['initial_budget_completed'] == 1 and sample['initial_pin_retained'] == 2
             assert not any('ack' in key or 'tsc' in key or key == 'requested' for key in sample)
             maximum = (1 << 64) - 1
             assert values['PINMAX']['expiry_checks'] == maximum
-            assert values['PINMAX']['occupancy_after'] == [maximum] * 9
-            assert all(value == maximum for value in values['PINMAX']['refill_stop'].values())
+            assert values['PINMAX']['occupancy_after'] == [maximum] * 2
+            assert values['PINMAX']['epoch_ready_candidates'] == [maximum] * 9
+            assert all(value == maximum for value in values['PINMAX']['selection_result'].values())
             reset = values['PINRESET']
-            metadata = ('schema', 'compiled', 'window', 'total_cap', 'numa_boundary', 'initial_spin_budget')
+            metadata = ('schema', 'compiled', 'claim_slots', 'ready_policy', 'total_cap', 'numa_boundary', 'initial_spin_budget')
             assert all(reset[key] == sample[key] for key in metadata)
             for key, value in reset.items():
                 if key not in metadata:
@@ -170,7 +190,7 @@ def check_origin_hooks():
     merge = definition(diag, 'static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,')
     code = constants + r'''
 #define KDLOCK_MUTEX_DIAGNOSTICS 2
-#define KD_MUTEX_PIN_WINDOW 8
+#define KD_MUTEX_CLAIM_SLOTS 1
 #define __percpu
 #define this_cpu_add(name,value) do { CHECK(pins==1); (name)+=(value); } while(0)
 #define this_cpu_inc(name) do { CHECK(pins==1); (name)++; } while(0)

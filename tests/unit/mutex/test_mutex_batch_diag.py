@@ -262,6 +262,7 @@ int main(void)
     KD_MUTEX_PIN_STOP(poison(), poison());
     KD_MUTEX_PIN_DRAIN(poison(), poison());
     KD_MUTEX_PIN_EPOCH_RESULT(poison(), poison());
+    KD_MUTEX_PIN_EPOCH_READY(poison(), poison());
     if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
     KD_MUTEX_PIN_ASSERT(poison(), 1);
     KD_MUTEX_PIN_WAIT_ENTER();

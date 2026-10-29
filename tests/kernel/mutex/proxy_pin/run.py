@@ -59,6 +59,16 @@ def idle():
             pass
 
 
+def provider_ready_policy(provider, out):
+    result = {}
+    for field, expected in (('mutex_spin_budget', '65536'), ('mutex_claim_slots', '1'),
+                            ('mutex_ready_policy', 'epoch')):
+        value = rt.command(['modinfo', '-F', field, provider], out / (field + '.txt')).strip()
+        rt.require(value == expected, 'provider READY policy differs')
+        result[field] = int(value) if value.isdecimal() else value
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
@@ -117,11 +127,7 @@ def main():
             rt.command(['make', '-C', binary.parent, f'KDIR={args.kernel_source}',
                         'W=1', 'KDLOCK_SELFTEST=0', 'UBSAN_SANITIZE=n'],
                        out / f'build-{name}.log', timeout=180)
-        result['ready_policy'] = {}
-        for field, expected in (('mutex_spin_budget', '65536'), ('mutex_ready_window', '8')):
-            value = rt.command(['modinfo', '-F', field, provider], out / (field + '.txt')).strip()
-            rt.require(value == expected, 'unexpected ready-spin policy: ' + field)
-            result['ready_policy'][field] = int(value)
+        result['ready_policy'] = provider_ready_policy(provider, out)
         rt.require(sources(ROOT) == sources(source) == frozen, 'source inputs changed')
         binaries = {str(path): rt.digest(path) for path in (provider, payload)}
         rt.write_json(out / 'binary-sha256.json', binaries)

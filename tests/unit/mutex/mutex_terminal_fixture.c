@@ -122,7 +122,7 @@ static void cpu_relax(void)
     CHECK(!normal_proxy_loop && delayed_link && delayed_from && delayed_to && polls<3);
     CHECK(active_batch && active_batch->nr_pins==1 && body_completed);
     CHECK(!active_batch->proxy_epoch && kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD);
-    CHECK(active_batch->pins[active_batch->pin_head].node==delayed_from);
+    CHECK(active_batch->pin.node==delayed_from);
     CHECK(delayed_from->locked==KD_MUTEX_PROXY_CLAIMED && !delayed_from->completed);
     CHECK(delayed_from->packet_state==KD_PACKET_COMPLETE && !active_batch->current_retired);
     CHECK(leases==1 && lock.owner==current && completed==0 && calls==1 && !wakes);
@@ -132,7 +132,7 @@ static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
     CHECK(leases==1 && node->locked==KD_MUTEX_PROXY_CLAIMED && lock.delegation_tail!=(u32)node->tail);
     CHECK(active_batch && active_batch->current_retired);
-    for(unsigned int i=0;i<KD_MUTEX_PIN_WINDOW;i++)CHECK(active_batch->pins[i].node!=node);
+    CHECK(!active_batch->nr_pins && active_batch->pin.node!=node);
     node->completed=1;node->locked=0;completed++;
     node->next=(void *)1;node->tail=0xdead;
 }
@@ -144,7 +144,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     CHECK(p==&lock && leases==1 && lock.owner==current);
     CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
-    if(!kd_mutex_batch_pin_select(batch,node,scenario!=27 && scenario!=28))return KD_EXE_NO_RUN;
+    if(!kd_mutex_batch_pin_select(batch,node))return KD_EXE_NO_RUN;
     kd_mutex_proxy_assert_claimed(node);
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,

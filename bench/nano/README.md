@@ -311,27 +311,42 @@ per-CPU section. Exact drain precedes teardown, and the existing parameter mutex
 serializes sysfs reads with final detach. The getter returns `-ENODEV` without
 storage. The original static-counter candidate failed reserved-chunk allocation
 at 7984 bytes before provider initialization; that is a preparation failure, not
-a measured workload. This READY candidate requires fresh VM validation.
+a measured workload. This single-current epoch candidate requires fresh VM validation.
 The runner reads `mutex_pin_stats` after warmup and after the joined measurement,
-saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 3
-binds compiled mode 2, an eight-claim window, both mutex policy limits and
+saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 4
+binds compiled mode 2, `claim_slots=1`, `ready_policy="epoch"`, both mutex policy limits and
 `initial_spin_budget` (default 65536 PAUSE iterations). The profiler accepts an
 explicit `--mutex-spin-budget` and verifies matching module metadata. Keep each
 threshold and source version separate. `c01` is the one-cacheline throughput
 profile; `c16` is the sixteen-cacheline locality profile.
 
 Executor counters record selections, successful exact READY claim admissions,
-retired and cancelled claims, drains and FULL resume calls. Nine-bin histograms
-record exact cohort occupancy `0..8` before and after each selection. Refill-stop
-reasons include current/future readiness and deferred-prefix boundaries. Epoch
-admission attempts and refusals are counted once per gate attempt. Inside an
-admitted epoch, READY is read and CLAIMED is stored while withdrawal is excluded;
-`claims` counts descriptors, not per-node CAS operations. The ordinary proxy
-round has no ACK polling loop. Successful origin withdrawal reservations are
-accumulated locally and merged with the origin phase; a reservation can end
-without withdrawal if a result arrived first. The three schema-3 counters grow
-only the dynamically allocated mode-2 record from 384 to 408 bytes per CPU
-(bounded at 416); mode 1 remains a 384-byte static record.
+retired and cancelled claims, drain calls and current-claim retention calls.
+Two-bin histograms record exact claim occupancy `0..1` before and after selection;
+each selection starts empty. `selection_result` distinguishes a successful claim,
+a self-CPU refusal and a current request that is no longer READY. `drain_nonempty`
+counts one cancelled current claim; `retain_current_calls` counts retaining the
+current claim across a cold boundary. The two outcomes are disjoint.
+
+The independent `epoch_ready_candidates` histogram samples a linked prefix once
+per successful epoch admission, up to eight candidates. A candidate is already
+READY, belongs to this lock with an unchanged even generation, uses ABI2 MINIMAL
+with the same nonzero entry as the prefix head, and has a distinct nonself CPU. A missing
+link or incompatible node stops the observation. Bins `0..7` count the observed
+prefix; bin `8` means at least eight simultaneously pinned READY candidates.
+This is a lower bound on candidates under that epoch, not a promise of future
+execution, an execution budget, or eight claimed descriptors. The optional scan
+never waits, claims a node, reads its stack, or authorizes ownership; it compiles
+out in ordinary builds. Histogram totals equal admitted epochs, independently of
+selection and waiter counts.
+
+Epoch admission attempts and refusals are counted once per gate attempt. Inside
+an admitted epoch, READY is read and CLAIMED is stored while withdrawal is
+excluded; `claims` counts exact current descriptors, not per-node CAS operations.
+The ordinary proxy round has no ACK polling loop. Successful origin withdrawal
+reservations accumulate locally and merge with the origin phase; a reservation
+can end without withdrawal if a result arrived first. Schema 4 uses 296 dynamic
+bytes per CPU (bounded at 304); mode 1 remains a 384-byte static record.
 `full_resumes` counts calls to `kd_exe_mutex_batch_resume`, including checked
 pre-entry refusals; it does not assert that a FULL service or body returned.
 
@@ -346,7 +361,7 @@ unavailable when the episode count is zero. No greater-than-99% claim follows
 until quiescent measurements support it. Per-poll expiry checks accumulate in a
 local variable; origin totals merge once before the first unpin or pinned return.
 
-Both occupancy totals and refill-stop totals must equal selections. Claims equal
+Both occupancy totals and selection-result totals must equal selections. Claims equal
 retired plus cancelled claims at quiescence. Origin episodes equal retained plus
 dropped initial pins; successful withdrawals and forced cancellations account
 for drops. Retired claims are not returned JIT bodies. Neither diagnostic
@@ -356,8 +371,10 @@ ownership/ACK checks and source/frame retirement remain required.
 Historical schema 1 REQUEST/ACK records remain readable offline with their
 original seventeen counters, four-request window, five-bin histograms and
 optional TSC sample shift. Historical schema 2 retains its per-node CAS READY
-claims and original fields. Neither historical schema can be mixed with current
-schema 3; absent epoch observations are unavailable rather than zero. The current protocol has no ACK timing samples: `--pin-tsc` and a
+claims and original fields. Historical schema 3 preserves its eight-claim epoch
+window, refill reasons and 408-byte dynamic record. These historical schemas
+cannot be mixed with schema 4; missing observations remain unavailable rather
+than zero. The current protocol has no ACK timing samples: `--pin-tsc` and a
 nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` are explicitly rejected.
 
 Both perf collection and compiled counters perturb execution. Keep their rates

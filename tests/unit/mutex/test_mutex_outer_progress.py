@@ -111,11 +111,6 @@ def main():
             line for line in mutex.splitlines() if line.startswith(name + "(")
         )
         code += prefix + definition(mutex, marker) + "\n"
-    # Seed only private fixture state. Exercise the unchanged real FULL-resume
-    # path with each valid ring head, including successor slot zero after wrap.
-    batch_init = "\tstruct kd_mutex_batch batch = {\n"
-    assert code.count(batch_init) == 1
-    code = code.replace(batch_init, batch_init + "\t\t.pin_head = test_pin_head,\n", 1)
     # Observe the actual loop/cold boundary without replacing its transitions.
     code = code.replace("\twhile (curr_node) {", "\tnormal_proxy_loop = true;\n\twhile (curr_node) {", 1)
     code = code.replace("\tif (completed_pending_tail) {", "\tnormal_proxy_loop = false;\n\tif (completed_pending_tail) {", 1)
@@ -136,7 +131,7 @@ def main():
                 "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", 1),
             "reject-completed-full-tail": code.replace("curr_node->packet_state != KD_PACKET_FULL", "true", 1),
             "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_epoch_end(batch, false);", "", 1),
-            "resume-keeps-future-pins": code.replace(
+            "resume-keeps-epoch-closed": code.replace(
                 "\t\tkd_mutex_batch_epoch_end(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
                 "\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
             "unpin-before-frame-retirement": code.replace(

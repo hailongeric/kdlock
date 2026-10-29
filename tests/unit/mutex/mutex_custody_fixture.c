@@ -41,7 +41,7 @@ static struct kd_exec_frame frame;
 static struct kd_exec_context context;
 static struct kd_mutex_batch batch;
 static int source_refs, source_closed, task_puts, pops, releases, combines;
-static unsigned int mode, shape, start_head, checks, failures;
+static unsigned int mode, shape, checks, failures;
 static bool delayed_link;
 static unsigned int refused_epochs;
 static struct kd_regs captured;
@@ -138,8 +138,11 @@ void kd_mutex_task_put(struct task_struct *task)
 int kd_mutex_transfer_owner(struct kd_mutex *mutex, struct task_struct *next)
 {
 	CHECK(current == &ctask && next == &wtask);
-	CHECK(batch.nr_pins==1 && next_node.locked==KD_MUTEX_WAIT);
+	CHECK(batch.nr_pins==1 && batch.pin.node==&wnode);
+ CHECK(next_node.locked==((shape==1 || shape==3)?KD_MUTEX_PROXY_READY:KD_MUTEX_WAIT));
  CHECK(!batch.proxy_epoch && kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_HELD);
+ /* Unselected READY origins can reserve withdrawal before native owner wake. */
+ CHECK(kd_mutex_gate_try_withdraw(mutex));kd_mutex_gate_end_withdraw(mutex);
 	CHECK((mutex->owner & ~7UL) == (unsigned long)&ctask);
 	smp_store_release(&mutex->owner, (unsigned long)next | (mutex->owner & 7UL) | 4UL);
 	return 0;
@@ -245,13 +248,10 @@ static void setup(void)
 	frame.native_link.next=frame.native_link.prev=&frame.native_link;
 	context.owner=&ctask; context.depth=1; context.top=&frame;
 	batch.lock=&lock; batch.current_node=&wnode; batch.own_node=&cnode;
-	batch.pin_head=start_head;
-	batch.pins[start_head].node=&wnode; batch.pins[start_head].generation=wnode.count_seq; batch.nr_pins=1;
+	batch.pin.node=&wnode; batch.pin.generation=wnode.count_seq; batch.nr_pins=1;
 	if (shape==1 || shape==3) {
 		next_node.counted_lock=&lock; next_node.count_seq=2;
-		next_node.locked=KD_MUTEX_PROXY_CLAIMED;
-		unsigned int index=(start_head+1)%KD_MUTEX_PIN_WINDOW;
-		batch.pins[index].node=&next_node; batch.pins[index].generation=2; batch.nr_pins=2;
+		next_node.locked=KD_MUTEX_PROXY_READY;
 	}
 	delayed_link=shape==2;
 	if (shape==1 || shape==2) {
@@ -317,7 +317,6 @@ static void receipt_checks(void)
 int main(void)
 {
 	receipt_checks();
-	for(start_head=0;start_head<KD_MUTEX_PIN_WINDOW;start_head++)
 	for(shape=0;shape<4;shape++) for(mode=0;mode<9;mode++) {
 		pthread_t worker; setup();
 		CHECK(!pthread_create(&worker,NULL,native_owner,NULL));
@@ -327,7 +326,7 @@ int main(void)
 		#include "custody_swap_publication.h"
 		CHECK(!pthread_join(worker,NULL));
 	}
-	start_head=7; shape=mode=0; setup(); source_closed=1;
+	shape=mode=0; setup(); source_closed=1;
 	CHECK(!kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 	CHECK(!route && source_refs==1 && lock.delegation_tail==(u32)wnode.tail && !cnode.locked);
 	source_closed=0; batch.after_body=true;

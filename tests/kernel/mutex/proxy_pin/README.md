@@ -1,9 +1,11 @@
 # Mutex producer preemption
 
 The production-extraction unit driver is `mutex/test_mutex_proxy_pin.py`.
-The READY candidate's initial pinned spin budget is 65,536 loop iterations and
-its rolling ready window has eight slots. This live runner records those
-provider metadata values. The unit driver separately forces expiry, claim and
+The single-current epoch candidate's initial pinned spin budget is 65,536 loop
+iterations. Its provider metadata declares `mutex_claim_slots=1` and
+`mutex_ready_policy=epoch`: one exact current claim is recorded while the
+COMBINER epoch prevents every READY origin from withdrawing. This live runner
+records those values and rejects the retired eight-claim metadata. The unit driver separately forces expiry, claim and
 wake interleavings; no real-time duration is inferred from the iteration count.
 
 The live payload first performs 400,000 lock acquisitions under contention on CPUs 0–3

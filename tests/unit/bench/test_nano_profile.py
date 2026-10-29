@@ -79,9 +79,9 @@ def historical_pin_snapshot(scale=1, *, shift=0):
     return result
 
 
-def pin_snapshot(scale=1, *, schema=3):
-    """READY claims and origin phases have independent lifetime denominators."""
-    result = dict(profile.PIN_METADATA, schema=schema, batches=2, selections=5,
+def pin_snapshot(scale=1, *, schema=4):
+    """Claim descriptors, READY candidates and origin phases are distinct."""
+    result = dict(profile.pin_metadata(schema=schema), batches=2, selections=5,
         claims=10, retired_claims=7, cancelled_claims=3, drain_calls=6,
         drain_nonempty=3, drain_keep_current=1, full_resumes=1,
         wait_episodes=10, initial_pin_retained=7, initial_pin_dropped=3,
@@ -89,15 +89,23 @@ def pin_snapshot(scale=1, *, schema=3):
         withdrawals=2, forced_cancellations=1,
         occupancy_before=[2, 1, 0, 1, 1, 0, 0, 0, 0],
         occupancy_after=[1, 0, 1, 1, 1, 0, 0, 0, 1],
-        refill_stop={key: 0 for key in profile.PIN_REASONS})
+        refill_stop={key: 0 for key in profile.PIN_V2_REASONS})
     result['refill_stop'].update(self_current=1, window=2, no_link=1, future_not_ready=1)
-    if schema == 3:
+    if schema >= 3:
         result.update(epoch_admission_attempts=3, epoch_admission_refusals=1, withdrawal_reservations=3)
+    if schema == 4:
+        del result['refill_stop'], result['drain_keep_current']
+        result.update(claims=3, retired_claims=2, cancelled_claims=1,
+            drain_nonempty=1, retain_current_calls=1,
+            occupancy_before=[5, 0], occupancy_after=[2, 3],
+            selection_result=dict(claimed=3, self_current=1, current_not_ready=1),
+            epoch_ready_candidates=[0, 0, 1, 0, 0, 0, 0, 0, 1])
     for key in profile.pin_fields(schema)[0]:
         result[key] *= scale
-    for key in profile.PIN_HISTOGRAMS:
+    for key in profile.pin_histograms(schema):
         result[key] = [value * scale for value in result[key]]
-    result['refill_stop'] = {key: value * scale for key, value in result['refill_stop'].items()}
+    results = profile.pin_result_key(schema)
+    result[results] = {key: value * scale for key, value in result[results].items()}
     return result
 
 
@@ -365,11 +373,11 @@ class NanoProfileTests(unittest.TestCase):
             session.loaded_kd, session.path = True, Path(temporary)
             session.record = dict(provider_mutex_policy=dict(total_cap=1024, numa_boundary=1024,
                                                             deferred_handoff=8, scan_budget=64))
-            for historical in (historical_pin_snapshot(), pin_snapshot(schema=2)):
+            for historical in (historical_pin_snapshot(), pin_snapshot(schema=2), pin_snapshot(schema=3)):
                 with self.subTest(schema=historical['schema']), \
                         patch.object(profile, 'observations', return_value=dict(values={'n': 0})), \
                         patch.object(Path, 'read_text', return_value=json.dumps(historical)), \
-                        self.assertRaisesRegex(ValueError, 'live pin collection requires epoch READY schema 3'):
+                        self.assertRaisesRegex(ValueError, 'live pin collection requires single-current epoch schema 4'):
                     session.measure()
 
 
@@ -405,12 +413,46 @@ class NanoPinSnapshotTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 profile.validate_pin(dict(before, **{key: 0}))
 
+    def test_historical_epoch_window_remains_distinct_from_one_current_claim(self):
+        before, after = pin_snapshot(schema=3), pin_snapshot(2, schema=3)
+        self.assertEqual(profile.validate_pin(before), before)
+        self.assertEqual(profile.pin_delta(before, after), before)
+        self.assertEqual(before['window'], 8)
+        self.assertNotIn('claim_slots', before)
+        self.assertNotIn('epoch_ready_candidates', before)
+        self.assertEqual(profile.pin_fractions(before), profile.pin_fractions(pin_snapshot()))
+        with self.assertRaisesRegex(ValueError, 'schema changed'):
+            profile.pin_delta(before, pin_snapshot(2))
+        for key, value in (('claim_slots', 1), ('ready_policy', 'epoch'),
+                           ('epoch_ready_candidates', [0] * 9), ('retain_current_calls', 0)):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                profile.validate_pin(dict(before, **{key: value}))
+
+    def test_ready_candidates_count_epochs_and_do_not_change_wait_fractions(self):
+        sample = pin_snapshot()
+        fractions = profile.pin_fractions(sample)
+        sample['epoch_ready_candidates'] = [2] + [0] * 8
+        self.assertEqual(profile.validate_pin(sample), sample)
+        self.assertEqual(profile.pin_fractions(sample), fractions)
+        for values in ([0] * 9, [3] + [0] * 8, [0] * 8, [0] * 10):
+            with self.subTest(histogram=values), self.assertRaises(ValueError):
+                profile.validate_pin(dict(sample, epoch_ready_candidates=values))
+        invalid = pin_snapshot()
+        invalid['occupancy_before'] = [4, 1]
+        with self.assertRaisesRegex(ValueError, 'single-current selection'):
+            profile.validate_pin(invalid)
+        invalid = pin_snapshot()
+        invalid['selection_result'].update(claimed=2, self_current=2)
+        with self.assertRaisesRegex(ValueError, 'single-current selection'):
+            profile.validate_pin(invalid)
+
     def test_epoch_admission_and_withdrawal_reservation_subsets(self):
         for changes in (dict(epoch_admission_refusals=4), dict(withdrawal_reservations=1),
                         dict(withdrawal_reservations=7)):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 profile.validate_pin(dict(pin_snapshot(), **changes))
         after = dict(pin_snapshot(2), epoch_admission_refusals=0)
+        after['epoch_ready_candidates'][0] += 2
         profile.validate_pin(after)
         with self.assertRaises(ValueError):
             profile.pin_delta(pin_snapshot(), after)
@@ -426,7 +468,7 @@ class NanoPinSnapshotTests(unittest.TestCase):
                 profile.validate_pin(before, selected, initial_spin_budget=budget)
         for key in profile.PIN_METADATA:
             changed = deepcopy(after)
-            changed[key] += 1
+            changed[key] = changed[key] + "x" if isinstance(changed[key], str) else changed[key] + 1
             with self.subTest(metadata=key), self.assertRaises(ValueError):
                 profile.pin_delta(before, changed, policy, initial_spin_budget=131072)
         with self.assertRaises(ValueError):
@@ -439,19 +481,20 @@ class NanoPinSnapshotTests(unittest.TestCase):
             del invalid[key]
             with self.subTest(missing=key), self.assertRaises(ValueError):
                 profile.validate_pin(invalid)
-        for key, value in (('schema', True), ('window', 4), ('compiled', 1),
-                ('occupancy_before', [0] * 8), ('occupancy_after', [0] * 10),
-                ('occupancy_after', {}), ('refill_stop', []), ('requested', 0),
+        for key, value in (('schema', True), ('claim_slots', 8), ('ready_policy', 'cas'), ('window', 1), ('compiled', 1),
+                ('occupancy_before', [0] * 9), ('occupancy_after', [0] * 3),
+                ('epoch_ready_candidates', [0] * 8),
+                ('occupancy_after', {}), ('selection_result', []), ('refill_stop', {}), ('requested', 0),
                 ('current_ack_loops', 0), ('tsc_sample_shift', 0)):
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 profile.validate_pin(dict(valid, **{key: value}))
         for key in profile.PIN_REASONS:
             invalid = deepcopy(valid)
-            del invalid['refill_stop'][key]
+            del invalid['selection_result'][key]
             with self.subTest(reason=key), self.assertRaises(ValueError):
                 profile.validate_pin(invalid)
         for keys in (*((key,) for key in profile.PIN_COUNTERS),
-                     ('occupancy_before', 0), ('occupancy_after', 8), ('refill_stop', 'no_link')):
+                     ('occupancy_before', 0), ('occupancy_after', 1), ('selection_result', 'current_not_ready'), ('epoch_ready_candidates', 8)):
             for value in (-1, True, 1.0, '1', None, 1 << 64):
                 invalid = deepcopy(valid)
                 target = invalid if len(keys) == 1 else invalid[keys[0]]
@@ -461,7 +504,7 @@ class NanoPinSnapshotTests(unittest.TestCase):
 
     def test_current_quiescent_lifetime_and_origin_identities(self):
         for changes in (dict(selections=6), dict(claims=11), dict(retired_claims=8),
-                dict(cancelled_claims=4), dict(drain_nonempty=7), dict(drain_keep_current=4),
+                dict(cancelled_claims=4), dict(drain_nonempty=7), dict(retain_current_calls=6),
                 dict(wait_episodes=11), dict(initial_pin_retained=8), dict(initial_pin_dropped=4),
                 dict(initial_budget_completed=8), dict(budget_expired_episodes=1),
                 dict(budget_expired_episodes=6), dict(withdrawals=4), dict(expiry_checks=1),
@@ -472,8 +515,8 @@ class NanoPinSnapshotTests(unittest.TestCase):
         invalid['expiry_checks'] = 1
         with self.assertRaises(ValueError):
             profile.validate_pin(invalid)
-        for group, bucket in (('occupancy_before', 0), ('occupancy_after', 8),
-                              ('refill_stop', 'no_link')):
+        for group, bucket in (('occupancy_before', 0), ('occupancy_after', 1),
+                              ('selection_result', 'current_not_ready'), ('epoch_ready_candidates', 8)):
             invalid = pin_snapshot()
             invalid[group][bucket] += 1
             with self.subTest(group=group), self.assertRaises(ValueError):
@@ -495,8 +538,8 @@ class NanoPinSnapshotTests(unittest.TestCase):
     def test_current_delta_rejects_counter_bin_reason_and_origin_resets(self):
         with self.assertRaises(ValueError):
             profile.pin_delta(pin_snapshot(2), pin_snapshot())
-        for group, bucket, destination in (('occupancy_before', 1, 0),
-                ('occupancy_after', 8, 0), ('refill_stop', 'no_link', 'window')):
+        for group, bucket, destination in (('epoch_ready_candidates', 8, 0),
+                ('selection_result', 'self_current', 'current_not_ready')):
             after = pin_snapshot(2)
             after[group][destination] += after[group][bucket]
             after[group][bucket] = 0

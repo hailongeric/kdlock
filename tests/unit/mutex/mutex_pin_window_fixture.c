@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Production pin-window helpers; atomic observers substitute origin execution.
+/* Production single-current claim helpers; atomic observers substitute origin execution.
  * Actual gate epochs exclude withdrawal while plain stores claim pinned origins. No kernel, JIT or scheduler runs. */
 #include <stdbool.h>
 #include <stdint.h>
@@ -19,8 +19,6 @@ struct kd_exec_frame;
 #include "kd_regs.h"
 #define KD_MUTEX_DIAG_MEMBER
 #define KD_MUTEX_TAIL_CPU_OFFSET 4
-#define KDLOCK_MUTEX_NUMA_BOUNDARY 256
-static const int kd_mutex_batch_size = 1024;
 #include "pin_window_types.h"
 
 #define NODE_COUNT 40
@@ -33,7 +31,7 @@ static bool poisoned[NODE_COUNT];
 static int executor_cpu;
 static struct task_struct owner={1};
 static struct task_struct *current=&owner;
-static unsigned int start_head;
+static int allowed_node = -1;
 
 #define CHECK(value) do { checks++; if (!(value)) { \
  fprintf(stderr, "FAIL pin window line %d: %s\n", __LINE__, #value); exit(1); \
@@ -58,15 +56,13 @@ static void observe_read(const void *address)
 
  if (index < 0) return;
  CHECK(!poisoned[index]);
-
+ CHECK(allowed_node < 0 || index == allowed_node);
 }
 
 static void descriptor_absent(struct kd_mutex_node *node)
 {
- CHECK(batch.nr_pins <= KD_MUTEX_PIN_WINDOW);
- /* Also inspect inactive slots: they must not retain a consumed identity. */
- for (unsigned int i = 0; i < KD_MUTEX_PIN_WINDOW; i++)
-  CHECK(batch.pins[i].node != node);
+ CHECK(batch.nr_pins <= KD_MUTEX_CLAIM_SLOTS);
+ CHECK(batch.pin.node != node);
 }
 
 static void observe_store(void *address, unsigned long value)
@@ -76,6 +72,7 @@ static void observe_store(void *address, unsigned long value)
  CHECK(index >= 0 && address == &nodes[index].locked && !poisoned[index]);
  if(value==KD_MUTEX_PROXY_CLAIMED) {
   CHECK(batch.proxy_epoch && lock.delegation_state.counter==KD_MUTEX_GATE_COMBINER);
+  CHECK(!batch.nr_pins && !batch.pin.node && (allowed_node < 0 || index == allowed_node));
   CHECK(nodes[index].locked==KD_MUTEX_PROXY_READY && !requested[index]);
   requested[index]=1;requests++;return;
  }
@@ -107,15 +104,13 @@ static void __attribute__((unused)) cpu_relax(void) { CHECK(false); }
 static void setup(void)
 {
  memset(&batch, 0, sizeof(batch));
- batch.pin_head = start_head;
  memset(nodes, 0, sizeof(nodes));
  memset(requested, 0, sizeof(requested));
  memset(poisoned, 0, sizeof(poisoned));
  requests = cancellations = completions = cas_attempts = 0;
- executor_cpu = 0;
- batch.lock = &lock;lock.owner=(unsigned long)current;lock.delegation_state.counter=KD_MUTEX_GATE_HELD;
- batch.numa_node = 0;
- batch.pin_budget = 20;
+ allowed_node = -1; executor_cpu = 0;
+ batch.lock = &lock; lock.owner = (unsigned long)current;
+ lock.delegation_state.counter = KD_MUTEX_GATE_HELD;
  for (unsigned int i = 0; i < NODE_COUNT; i++) {
   nodes[i].next = i + 1 < NODE_COUNT ? &nodes[i + 1] : NULL;
   nodes[i].tail = (i + 2) << KD_MUTEX_TAIL_CPU_OFFSET;
@@ -129,6 +124,15 @@ static void setup(void)
  CHECK(kd_mutex_batch_epoch_begin(&batch));
 }
 
+static bool select_current(unsigned int index)
+{
+ bool selected;
+ allowed_node = (int)index;
+ selected = kd_mutex_batch_pin_select(&batch, &nodes[index]);
+ allowed_node = -1;
+ return selected;
+}
+
 static void consume(unsigned int index)
 {
  kd_mutex_proxy_assert_claimed(&nodes[index]);
@@ -136,8 +140,7 @@ static void consume(unsigned int index)
  kd_mutex_batch_pin_complete(&batch, &nodes[index]);
  descriptor_absent(&nodes[index]);
  smp_store_release(&nodes[index].locked, 0);
- /* Result publication permits immediate slot reuse. Any remaining helper
-  * read through a stale descriptor now fails the access observer. */
+ /* Completed slots may be reused immediately; stale descriptor reads fail. */
  poisoned[index] = true;
  nodes[index].counted_lock = NULL;
  nodes[index].count_seq += 2;
@@ -145,170 +148,113 @@ static void consume(unsigned int index)
  nodes[index].regs.ip = 0xdead;
 }
 
-static void bounded_refill(void)
+static void sequential_currents(void)
 {
- setup();
- CHECK(KD_MUTEX_PIN_WINDOW == 8);
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 8 && requests == 8 && cas_attempts == 0);
- kd_mutex_proxy_assert_claimed(&nodes[0]);
- CHECK(nodes[8].locked == KD_MUTEX_PROXY_READY && !requested[8]);
- /* Three full ring turns, with an unselected linked anchor throughout. */
+ setup(); CHECK(KD_MUTEX_CLAIM_SLOTS == 1);
  for (unsigned int i = 0; i < 24; i++) {
-  batch.pin_budget = 24 - i;
-  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[i], true));
-  CHECK(batch.nr_pins <= 8 && batch.nr_pins <= batch.pin_budget);
+  CHECK(select_current(i));
+  CHECK(batch.nr_pins == 1 && batch.pin.node == &nodes[i]);
+  CHECK(batch.pin.generation == nodes[i].count_seq);
+  CHECK(nodes[i + 1].locked == KD_MUTEX_PROXY_READY && !requested[i + 1]);
   consume(i);
  }
- CHECK(!batch.nr_pins && requests == 24 && completions == 24 && cas_attempts == 0);
- CHECK(!requested[24] && !requested[25] && !cancellations);
- CHECK(batch.pin_head == start_head);
- kd_mutex_batch_unpin(&batch, false);
+ CHECK(!batch.nr_pins && !batch.pin.node && requests == 24 && completions == 24);
+ CHECK(!cancellations && !cas_attempts);
+ kd_mutex_batch_epoch_end(&batch, true);
+ CHECK(!batch.proxy_epoch && kd_mutex_gate_read(&lock) == KD_MUTEX_GATE_HELD);
+ /* Reuse the same slot with a fresh generation after the previous wake. */
+ poisoned[0] = false; nodes[0].locked = KD_MUTEX_PROXY_READY;
+ nodes[0].counted_lock = &lock; nodes[0].next = NULL;
+ CHECK(kd_mutex_batch_epoch_begin(&batch));
+ CHECK(select_current(0)); consume(0);
+ kd_mutex_batch_epoch_end(&batch, false);
+ CHECK(requests == completions && !cancellations && !cas_attempts);
 }
 
 static void selection_boundaries(void)
 {
  setup();
- nodes[0].tail = (raw_smp_processor_id() + 1) << KD_MUTEX_TAIL_CPU_OFFSET;
- CHECK(!kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(!batch.nr_pins && !requests);
- for (unsigned int duplicate = 0; duplicate < 2; duplicate++) {
+ nodes[0].tail = (executor_cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET;
+ CHECK(!select_current(0) && !batch.nr_pins && !requests);
+ kd_mutex_batch_epoch_end(&batch, false);
+ /* A later invocation on the same origin CPU is legal after current retired;
+  * no simultaneous future claim is retained to justify a duplicate-CPU walk. */
+ setup(); nodes[1].tail = nodes[0].tail;
+ CHECK(select_current(0)); consume(0);
+ CHECK(select_current(1)); consume(1);
+ kd_mutex_batch_epoch_end(&batch, false);
+ /* Future packet/NUMA fields and terminal links are not claim inputs. The
+  * actual combiner fixtures retain queue policy, total and locality limits. */
+ for (unsigned int shape = 0; shape < 5; shape++) {
   setup();
-  nodes[2].tail = duplicate ? nodes[1].tail + 1 :
-      (raw_smp_processor_id() + 1) << KD_MUTEX_TAIL_CPU_OFFSET;
-  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
-  CHECK(batch.nr_pins == 2 && requests == 2 && !requested[2]);
-  kd_mutex_batch_unpin(&batch, false);
-  CHECK(cancellations == 2);
+  if (shape == 0) nodes[0].next = NULL;
+  if (shape == 1) { nodes[1].regs.ip++; nodes[1].numa_node = 1; }
+  if (shape == 2) nodes[1].packet_state = KD_PACKET_FULL;
+  if (shape == 3) { batch.deferred_head = &nodes[7]; nodes[1].next = NULL; }
+  if (shape == 4) nodes[1].locked = KD_MUTEX_WAIT;
+  CHECK(select_current(0)); CHECK(requests == 1 && !requested[1]);
+  kd_mutex_batch_epoch_end(&batch, false);
+  CHECK(cancellations == 1 && nodes[0].locked == KD_MUTEX_WAIT);
  }
- /* Stop at the first boundary; do not skip it to select a later request. */
- for (unsigned int reason = 0; reason < 7; reason++) {
-  setup();
-  if (reason == 0) nodes[1].regs.ip++;
-  if (reason == 1) nodes[1].numa_node = 1;
-  if (reason == 2) nodes[1].entry_abi = KD_ENTRY_ABI_LEGACY;
-  if (reason == 3) nodes[1].packet_state = KD_PACKET_FULL;
-  if (reason == 4) nodes[0].next = NULL;
-  if (reason == 5) { batch.deferred_head = &nodes[7]; nodes[1].next = NULL; }
-  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], reason != 6));
-  CHECK(batch.nr_pins == 1 && requests == 1 && !requested[1]);
-  kd_mutex_batch_unpin(&batch, false);
- }
- for (unsigned int limit = 1; limit < KD_MUTEX_PIN_WINDOW; limit++) {
-  setup(); batch.pin_budget = limit;
-  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
-  CHECK(batch.nr_pins == limit && requests == limit);
-  kd_mutex_batch_unpin(&batch, false);
- }
- /* Existing detached prefix does not stop immediate linked local service. */
- setup(); batch.deferred_head = &nodes[7]; nodes[4].next = NULL;
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 4 && !requested[4]);
- consume(0);
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[1], true));
- CHECK(batch.nr_pins == 3 && !requested[4]); /* Terminal stays unselected. */
- kd_mutex_batch_unpin(&batch, false);
- setup(); batch.deferred_head = &nodes[7];
- kd_mutex_batch_pin_budget(&batch, KDLOCK_MUTEX_NUMA_BOUNDARY - 2);
- CHECK(batch.pin_budget == 3);
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 3); kd_mutex_batch_unpin(&batch, false);
- kd_mutex_batch_pin_budget(&batch, KDLOCK_MUTEX_NUMA_BOUNDARY);
- CHECK(batch.pin_budget == 1);
- kd_mutex_batch_pin_budget(&batch, KDLOCK_MUTEX_NUMA_BOUNDARY + 1);
- CHECK(batch.pin_budget == 1); /* Late first deferral cannot underflow. */
- batch.deferred_head = NULL;
- kd_mutex_batch_pin_budget(&batch, kd_mutex_batch_size - 1);
- CHECK(batch.pin_budget == 2);
- kd_mutex_batch_pin_budget(&batch, kd_mutex_batch_size);
- CHECK(batch.pin_budget == 1);
- setup(); batch.numa_node = -1; nodes[1].numa_node = 1;
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 8); /* Existing FIFO rejoin permits other NUMA nodes. */
- kd_mutex_batch_unpin(&batch, false);
 }
 
-static void cancellation(void)
+static void cold_boundaries(void)
 {
- setup();
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- kd_mutex_batch_unpin(&batch, true);
- CHECK(batch.nr_pins == 1 && batch.pins[batch.pin_head].node == &nodes[0]);
- CHECK(cancellations == 7 && requests == 8 && cas_attempts == 0);
- for (unsigned int i = 1; i < 8; i++) CHECK(nodes[i].locked == KD_MUTEX_WAIT);
- kd_mutex_batch_unpin(&batch, false);
- CHECK(!batch.nr_pins && cancellations == 8);
- /* Withdrawn invocations never rearm. A later executor may hand them off,
-  * but a fresh nonblocking claim must fail without a descriptor or PAUSE. */
- batch.pin_budget = 1;
- CHECK(!kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(!batch.nr_pins && requests == 8 && cas_attempts == 0);
-}
-
-static void claim_expiry_and_terminal(void)
-{
- setup();kd_mutex_batch_epoch_end(&batch,false);
- CHECK(kd_mutex_gate_try_withdraw(&lock));nodes[0].locked=KD_MUTEX_WAIT;
- kd_mutex_gate_end_withdraw(&lock);CHECK(kd_mutex_batch_epoch_begin(&batch));
- CHECK(!kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(!batch.nr_pins && !requests && cas_attempts == 0 && nodes[0].locked == KD_MUTEX_WAIT);
- setup();kd_mutex_batch_epoch_end(&batch,false);
- CHECK(kd_mutex_gate_try_withdraw(&lock));nodes[3].locked=KD_MUTEX_WAIT;
- kd_mutex_gate_end_withdraw(&lock);CHECK(kd_mutex_batch_epoch_begin(&batch));
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 3 && requests == 3 && cas_attempts == 0);
- CHECK(nodes[3].locked == KD_MUTEX_WAIT && !requested[3] && !requested[4]);
- kd_mutex_batch_unpin(&batch, false);
- setup(); nodes[0].next = NULL;
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 1 && requests == 1 && cas_attempts == 0);
- kd_mutex_batch_unpin(&batch, false);
- setup(); nodes[5].next = NULL;
- CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
- CHECK(batch.nr_pins == 6 && requests == 6 && requested[5]);
- CHECK(nodes[5].locked == KD_MUTEX_PROXY_CLAIMED);
- kd_mutex_batch_unpin(&batch, false);
+ setup(); CHECK(select_current(0));
+ CHECK(!kd_mutex_gate_try_withdraw(&lock)); /* Epoch blocks every READY origin. */
+ kd_mutex_batch_epoch_end(&batch, true);
+ CHECK(!batch.proxy_epoch && batch.nr_pins == 1 && batch.pin.node == &nodes[0]);
+ CHECK(nodes[0].locked == KD_MUTEX_PROXY_CLAIMED && nodes[1].locked == KD_MUTEX_PROXY_READY);
+ CHECK(!cancellations && kd_mutex_gate_try_withdraw(&lock));
+ nodes[1].locked = KD_MUTEX_WAIT; kd_mutex_gate_end_withdraw(&lock);
+ consume(0); /* Current's exact claim survives the cold service. */
+ CHECK(kd_mutex_batch_epoch_begin(&batch));
+ CHECK(!select_current(1) && !batch.nr_pins && !batch.pin.node);
+ CHECK(select_current(2)); consume(2); kd_mutex_batch_epoch_end(&batch, false);
+ CHECK(!cas_attempts);
+ /* Even an empty current must reopen withdrawal before a cold service. */
+ setup(); kd_mutex_batch_epoch_end(&batch, true);
+ CHECK(!batch.proxy_epoch && kd_mutex_gate_try_withdraw(&lock));
+ CHECK(!kd_mutex_batch_epoch_begin(&batch) && !batch.proxy_epoch && !batch.nr_pins);
+ kd_mutex_gate_end_withdraw(&lock); CHECK(kd_mutex_batch_epoch_begin(&batch));
+ CHECK(select_current(0)); kd_mutex_batch_epoch_end(&batch, false);
+ CHECK(!batch.pin.node && !batch.nr_pins && cancellations == 1);
+ CHECK(nodes[0].locked == KD_MUTEX_WAIT && nodes[1].locked == KD_MUTEX_PROXY_READY);
+ CHECK(kd_mutex_batch_epoch_begin(&batch));
+ CHECK(!select_current(0)); /* Cancellation never rearms the invocation. */
+ kd_mutex_batch_epoch_end(&batch, false);
 }
 
 static void invalid_identity(const char *name)
 {
  setup();
- if (!strcmp(name, "bad-head")) {
-  batch.pin_head = KD_MUTEX_PIN_WINDOW;
-  kd_mutex_batch_pin_select(&batch, &nodes[0], false);
- } else if (!strcmp(name, "occupied-slot")) {
-  batch.pins[batch.pin_head].node = &nodes[7];
-  kd_mutex_batch_pin_select(&batch, &nodes[0], false);
+ if (!strcmp(name, "occupied-slot")) {
+  batch.pin.node = &nodes[7]; select_current(0);
+ } else if (!strcmp(name, "excess-count")) {
+  batch.nr_pins = 2; kd_mutex_batch_unpin(&batch, false);
  } else if (!strcmp(name, "odd-generation")) {
-  nodes[0].count_seq++;
-  kd_mutex_batch_pin_select(&batch, &nodes[0], false);
+  nodes[0].count_seq++; select_current(0);
+ } else if (!strcmp(name, "without-epoch")) {
+  kd_mutex_batch_epoch_end(&batch, false); select_current(0);
  } else {
-  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], false));
+  CHECK(select_current(0));
   if (!strcmp(name, "generation")) nodes[0].count_seq += 2;
   else if (!strcmp(name, "wrong-lock")) nodes[0].counted_lock = &other_lock;
-  else if (!strcmp(name, "wrong-current")) {
-   kd_mutex_batch_pin_select(&batch, &nodes[1], false);
-   CHECK(false);
-  } else if (!strcmp(name, "complete-unclaimed")) {
+  else if (!strcmp(name, "wrong-current")) { select_current(1); CHECK(false); }
+  else if (!strcmp(name, "complete-unclaimed")) {
    nodes[0].locked = KD_MUTEX_PROXY_READY;
-   kd_mutex_batch_pin_complete(&batch, &nodes[0]);
-   CHECK(false);
+   kd_mutex_batch_pin_complete(&batch, &nodes[0]); CHECK(false);
   } else CHECK(false);
   kd_mutex_batch_unpin(&batch, false);
  }
- CHECK(false); /* Production must reject an invalid exact invocation. */
+ CHECK(false);
 }
 
 int main(int argc, char **argv)
 {
  if (argc == 2) invalid_identity(argv[1]);
  CHECK(argc == 1);
- for (start_head = 0; start_head < KD_MUTEX_PIN_WINDOW; start_head++) {
-  bounded_refill();
-  selection_boundaries();
-  cancellation();
-  claim_expiry_and_terminal();
- }
- printf("PASS pin window: %u checks; bound8/three ring turns/all heads, exact nonblocking claims, CPU/image/NUMA/deferred/cap boundaries, expiry arbitration, no rearm and slot reuse\n", checks);
+ sequential_currents(); selection_boundaries(); cold_boundaries();
+ printf("PASS pin window: %u checks; one exact current, sequential slot reuse, no future access, self-CPU refusal, cold epoch closure, fresh arbitration and no rearm\n", checks);
  return 0;
 }

@@ -59,10 +59,9 @@ static unsigned int checks, failures, mode, wakes, scripts, native_waits, pops;
 static unsigned int release_traces;
 static unsigned int routine_traces;
 static int preempt = 1;
-static bool other_holds, terminal, fast_window;
+static bool other_holds, terminal, fast_minimal;
 static bool delayed_full, pending_link, normal_proxy_loop;
 static unsigned int pending_polls, terminal_attempts;
-static unsigned int test_pin_head;
 static unsigned int source_leases;
 static int kd_mutex_batch_size = 16;
 static unsigned int queue_finishes;
@@ -109,8 +108,8 @@ static int raw_smp_processor_id(void)
   CHECK(request.locked==KD_MUTEX_PROXY_CLAIMED || (!(v) && request.locked==KD_MUTEX_WAIT)); \
   if(mode==8)CHECK(pops==1); \
  } \
- if ((void *)(p)==&successor.locked && (v)==KD_MUTEX_WAIT && future_requests) \
-  CHECK(successor.locked==KD_MUTEX_PROXY_CLAIMED); \
+ if ((void *)(p)==&successor.locked && (v)==KD_MUTEX_WAIT) \
+  CHECK(false); /* An unselected successor must not be forced withdrawn. */ \
  if ((void *)(p)==&successor.locked && !(v))wakes++; \
  *(p)=(v); \
 } while(0)
@@ -317,7 +316,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned
  private_prepares++;
  /* Generic fallback/NULL refusal and successful private preparation both
   * occur after the READY claim; no origin acknowledgement is polled. */
- if (!fast_window || mode == 7) return NULL;
+ if (!fast_minimal || mode == 7) return NULL;
  memset(&active, 0, sizeof(active));
  active.native_link.next = active.native_link.prev = &active.native_link;
  active.regs = *r; active.entry_ip = ip; active.outer_lock_addr = (unsigned long)lock;
@@ -334,20 +333,20 @@ static bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
  struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
 {
  (void)call;
- CHECK(fast_window && exe == &ready_entry && frame == &active);
+ CHECK(fast_minimal && exe == &ready_entry && frame == &active);
  CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
- CHECK(future_requests == 1 && successor.locked == KD_MUTEX_PROXY_CLAIMED);
+ CHECK(!future_requests && successor.locked == KD_MUTEX_PROXY_READY);
  return mode != 8;
 }
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
  (void)call;
- CHECK(fast_window && active.executed && request.locked == KD_MUTEX_PROXY_CLAIMED);
+ CHECK(fast_minimal && active.executed && request.locked == KD_MUTEX_PROXY_CLAIMED);
  active.packet_state = KD_PACKET_FULL;
 }
 static bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
  const struct kd_exec_frame *frame)
-{ (void)call; CHECK(fast_window && frame == &active); return false; }
+{ (void)call; CHECK(fast_minimal && frame == &active); return false; }
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame, struct kd_mutex *lock)
 { (void)frame; (void)lock; abort(); }
 static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
@@ -356,8 +355,8 @@ static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_ji
 {
  (void)call;
  cold_origin_progress();
- CHECK(fast_window && future_requests == 1);
- CHECK(successor.locked == KD_MUTEX_WAIT && request.locked == KD_MUTEX_PROXY_CLAIMED);
+ CHECK(fast_minimal && !future_requests);
+ CHECK(successor.locked == KD_MUTEX_PROXY_READY && request.locked == KD_MUTEX_PROXY_CLAIMED);
  return kd_exe_on_call_hl_entry(exe, &active.regs, active.entry_ip, active.outer_lock_addr);
 }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
@@ -368,7 +367,7 @@ static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi
 	CHECK(request.locked == (pin_requests ? KD_MUTEX_WAIT : KD_MUTEX_PROXY_READY));
 	CHECK(successor.locked == KD_MUTEX_PROXY_READY);
 	CHECK(kind == KD_EXE_LOCK_MUTEX);
-	CHECK(abi == ((terminal || fast_window) ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY));
+	CHECK(abi == ((terminal || fast_minimal) ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY));
 }
 bool kd_exec_context_busy(void)
 {
@@ -462,7 +461,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	CHECK(exe == &ready_entry);
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&gate);
 	CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
-	if (fast_window) CHECK(successor.locked == KD_MUTEX_WAIT && future_requests == 1);
+	if (fast_minimal) CHECK(successor.locked == KD_MUTEX_PROXY_READY && !future_requests);
 	if (mode == 8)
 		return KD_EXE_NO_RUN;
 	scripts++;
@@ -569,17 +568,15 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 
 int main(void)
 {
-	for (test_pin_head = 0; test_pin_head < KD_MUTEX_PIN_WINDOW; test_pin_head++)
 	for (unsigned int after_body_case = 0; after_body_case < 2; after_body_case++)
 	for (unsigned int terminal_case = 0; terminal_case < 3; terminal_case++)
 	for (mode = 0; mode < 9; mode++) {
 		terminal = terminal_case == 1;
-		fast_window = terminal_case == 2;
+		fast_minimal = terminal_case == 2;
 		delayed_full = terminal && mode == 0;
 		pending_link = normal_proxy_loop = false;
 		pending_polls = terminal_attempts = 0;
-		if (test_pin_head && !fast_window) continue;
-		if (fast_window && mode == 0) continue;
+		if (fast_minimal && mode == 0) continue;
 		unsigned long stack[8] = { 0 };
 		unsigned int expected = mode == 4 || mode >= 7 ? 0 : 1;
 		bool early = mode >= 1 && mode <= 3;
@@ -599,8 +596,8 @@ int main(void)
 		request.tail = 2U << KD_MUTEX_TAIL_CPU_OFFSET;
 		request.next = terminal ? NULL : &successor;
 		gate.delegation_tail = terminal ? (unsigned int)request.tail : 3U << KD_MUTEX_TAIL_CPU_OFFSET;
-		request.entry_abi = terminal || fast_window || mode == 6 ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
-		request.packet_state = terminal || fast_window ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
+		request.entry_abi = terminal || fast_minimal || mode == 6 ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
+		request.packet_state = terminal || fast_minimal ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 		request.regs.ip = 0x800;
 		successor.task_struct_ptr = &other;
 		successor.tail = 3U << KD_MUTEX_TAIL_CPU_OFFSET;
@@ -611,7 +608,7 @@ int main(void)
 		request.counted_lock = &gate;
 		request.count_seq = 2;
 		future_requests = 0;
-		if (fast_window) {
+		if (fast_minimal) {
 			successor.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 			successor.packet_state = KD_PACKET_MINIMAL;
 			successor.regs.ip = 0x800; successor.tail = 3U << KD_MUTEX_TAIL_CPU_OFFSET;
@@ -633,9 +630,9 @@ int main(void)
 		CHECK(kd_mutex_run_combiner(&gate, &request, NULL, after_body) ==
 		      (after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED));
 		CHECK(scripts == expected && pops == expected + (mode == 8));
-		CHECK(pin_requests == ((terminal || fast_window) && mode == 4 ? 0U : 1U));
-		CHECK(private_prepares == ((terminal || fast_window) && mode != 4));
-		CHECK(future_requests == (fast_window && mode != 4));
+		CHECK(pin_requests == ((terminal || fast_minimal) && mode == 4 ? 0U : 1U));
+		CHECK(private_prepares == ((terminal || fast_minimal) && mode != 4));
+		CHECK(!future_requests);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5 || mode == 6));
@@ -684,9 +681,9 @@ int main(void)
 		CHECK(!enclosing.counted_lock && !(enclosing.count_seq & 1));
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
-	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 20);
-	CHECK(routine_traces == 164);
-	printf("mutex outer production progress: %u checks, %u failures, 164 scenarios\n",
+	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 6);
+	CHECK(routine_traces == 52);
+	printf("mutex outer production progress: %u checks, %u failures, 52 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

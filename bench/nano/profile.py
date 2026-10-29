@@ -59,17 +59,22 @@ PIN_V1_COUNTERS = ('batches', 'selections', 'requested', 'consumed', 'cancelled'
 PIN_HISTOGRAMS = ('occupancy_before', 'occupancy_after')
 PIN_V1_REASONS = ('self_current', 'single', 'budget', 'window', 'no_link', 'entry',
                'numa', 'deferred_tail', 'duplicate_cpu', 'self_future')
-# Historical REQUEST/ACK and per-node CAS records keep their exact schemas.
-PIN_METADATA = dict(schema=3, compiled=2, window=8, total_cap=1024,
-                    numa_boundary=1024, initial_spin_budget=65536)
+# Historical REQUEST/ACK and multi-claim READY records keep their exact schemas.
+PIN_V3_METADATA = dict(schema=3, compiled=2, window=8, total_cap=1024,
+                       numa_boundary=1024, initial_spin_budget=65536)
+PIN_METADATA = dict(schema=4, compiled=2, claim_slots=1, ready_policy="epoch",
+                    total_cap=1024, numa_boundary=1024, initial_spin_budget=65536)
 PIN_V2_COUNTERS = ('batches', 'selections', 'claims', 'retired_claims', 'cancelled_claims',
     'drain_calls', 'drain_nonempty', 'drain_keep_current', 'full_resumes',
     'wait_episodes', 'initial_pin_retained', 'initial_pin_dropped',
     'initial_budget_completed', 'budget_expired_episodes', 'expiry_checks',
     'withdrawals', 'forced_cancellations')
-PIN_COUNTERS = PIN_V2_COUNTERS + ('epoch_admission_attempts', 'epoch_admission_refusals',
-                                  'withdrawal_reservations')
-PIN_REASONS = PIN_V1_REASONS + ('current_not_ready', 'future_not_ready')
+PIN_V3_COUNTERS = PIN_V2_COUNTERS + ('epoch_admission_attempts', 'epoch_admission_refusals',
+                                     'withdrawal_reservations')
+PIN_COUNTERS = tuple('retain_current_calls' if key == 'drain_keep_current' else key
+                     for key in PIN_V3_COUNTERS)
+PIN_V2_REASONS = PIN_V1_REASONS + ('current_not_ready', 'future_not_ready')
+PIN_REASONS = ('claimed', 'self_current', 'current_not_ready')
 COMPILED_MODES = ('batch', 'pin')
 
 
@@ -210,13 +215,23 @@ def batch_delta(before, after, expected_completions=None, policy=None):
 
 
 def pin_fields(schema):
-    require(type(schema) is int and schema in (1, 2, 3), 'unsupported pin diagnostic schema')
+    require(type(schema) is int and schema in (1, 2, 3, 4), 'unsupported pin diagnostic schema')
     if schema == 1:
         return PIN_V1_COUNTERS, PIN_V1_REASONS
-    return PIN_V2_COUNTERS if schema == 2 else PIN_COUNTERS, PIN_REASONS
+    if schema < 4:
+        return PIN_V2_COUNTERS if schema == 2 else PIN_V3_COUNTERS, PIN_V2_REASONS
+    return PIN_COUNTERS, PIN_REASONS
 
 
-def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=3, initial_spin_budget=65536):
+def pin_histograms(schema):
+    return PIN_HISTOGRAMS + (('epoch_ready_candidates',) if schema == 4 else ())
+
+
+def pin_result_key(schema):
+    return 'selection_result' if schema == 4 else 'refill_stop'
+
+
+def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=4, initial_spin_budget=65536):
     pin_fields(schema)
     require(type(tsc_sample_shift) is int and tsc_sample_shift in (0, 6),
             'invalid pin TSC sample shift')
@@ -227,7 +242,7 @@ def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=3, initial_spin_budg
     require(tsc_sample_shift == 0, 'READY schemas have no ACK TSC sampling')
     require(type(initial_spin_budget) is int and 1 <= initial_spin_budget <= 2**31 - 1,
             'invalid initial mutex spin budget')
-    return dict(PIN_METADATA, schema=schema, total_cap=selected['total_cap'],
+    return dict(PIN_METADATA if schema == 4 else PIN_V3_METADATA, schema=schema, total_cap=selected['total_cap'],
                 numa_boundary=selected['numa_boundary'], initial_spin_budget=initial_spin_budget)
 
 
@@ -237,25 +252,42 @@ def validate_pin(snapshot, policy=None, tsc_sample_shift=0, *, initial_spin_budg
     counters, reasons = pin_fields(snapshot.get('schema'))
     metadata = pin_metadata(policy, tsc_sample_shift, schema=snapshot['schema'],
                             initial_spin_budget=initial_spin_budget)
-    require(set(snapshot) == set(metadata) | set(counters) | set(PIN_HISTOGRAMS) | {'refill_stop'},
+    result_key = pin_result_key(snapshot['schema'])
+    histograms = pin_histograms(snapshot['schema'])
+    require(set(snapshot) == set(metadata) | set(counters) | set(histograms) | {result_key},
             'unexpected pin diagnostic schema')
-    require(all(type(snapshot[key]) is int and snapshot[key] == value
+    require(all(type(snapshot[key]) is type(value) and snapshot[key] == value
                 for key, value in metadata.items()), 'pin diagnostic metadata differs')
     def counter(value):
         return type(value) is int and 0 <= value <= 2**64 - 1
     require(all(counter(snapshot[key]) for key in counters), 'invalid pin counter')
-    for key in PIN_HISTOGRAMS:
-        require(isinstance(snapshot[key], list) and len(snapshot[key]) == metadata['window'] + 1 and
+    for key in histograms:
+        bins = 9 if key == 'epoch_ready_candidates' else metadata.get('window', metadata.get('claim_slots')) + 1
+        require(isinstance(snapshot[key], list) and len(snapshot[key]) == bins and
                 all(counter(value) for value in snapshot[key]), 'invalid pin histogram: ' + key)
-    require(isinstance(snapshot['refill_stop'], dict) and
-            set(snapshot['refill_stop']) == set(reasons) and
-            all(counter(value) for value in snapshot['refill_stop'].values()),
-            'invalid pin refill stop mapping')
+    require(isinstance(snapshot[result_key], dict) and
+            set(snapshot[result_key]) == set(reasons) and
+            all(counter(value) for value in snapshot[result_key].values()),
+            'invalid pin selection result mapping')
     require(snapshot['selections'] == sum(snapshot['occupancy_before']) ==
-            sum(snapshot['occupancy_after']) == sum(snapshot['refill_stop'].values()),
-            'pin selections/occupancy/refill stops differ')
-    require(snapshot['drain_keep_current'] <= snapshot['drain_nonempty'] <= snapshot['drain_calls'],
+            sum(snapshot['occupancy_after']) == sum(snapshot[result_key].values()),
+            'pin selections/occupancy/results differ')
+    require(snapshot['drain_nonempty'] <= snapshot['drain_calls'],
             'pin drain subset accounting differs')
+    if snapshot['schema'] == 4:
+        require(snapshot['retain_current_calls'] + snapshot['drain_nonempty'] <= snapshot['drain_calls'],
+                'single-current retain/drain subsets differ')
+        require(snapshot['occupancy_before'][1] == 0 and
+                snapshot['occupancy_after'][1] == snapshot['selection_result']['claimed'] == snapshot['claims'],
+                'single-current selection accounting differs')
+        require(snapshot['cancelled_claims'] == snapshot['drain_nonempty'],
+                'single-current cancellation accounting differs')
+        require(sum(snapshot['epoch_ready_candidates']) ==
+                snapshot['epoch_admission_attempts'] - snapshot['epoch_admission_refusals'],
+                'READY candidate observations differ from admitted epochs')
+    else:
+        require(snapshot['drain_keep_current'] <= snapshot['drain_nonempty'],
+                'pin drain subset accounting differs')
     if snapshot['schema'] == 1:
         require(snapshot['requested'] == snapshot['consumed'] + snapshot['cancelled'],
                 'pin request retirement accounting differs')
@@ -287,7 +319,7 @@ def validate_pin(snapshot, policy=None, tsc_sample_shift=0, *, initial_spin_budg
                 'initial pin withdrawal/cancellation accounting differs')
         require(expired != 0 or snapshot['expiry_checks'] == 0,
                 'expiry checks without an expired initial budget')
-        if snapshot['schema'] == 3:
+        if snapshot['schema'] >= 3:
             require(snapshot['epoch_admission_refusals'] <= snapshot['epoch_admission_attempts'],
                     'epoch admission refusals exceed attempts')
             require(snapshot['withdrawals'] <= snapshot['withdrawal_reservations'] <= snapshot['expiry_checks'],
@@ -303,17 +335,17 @@ def pin_delta(before, after, policy=None, tsc_sample_shift=0, *, initial_spin_bu
     result = pin_metadata(policy, tsc_sample_shift, schema=before['schema'],
                           initial_spin_budget=initial_spin_budget)
     result.update({key: after[key] - before[key] for key in counters})
-    for key in PIN_HISTOGRAMS:
+    for key in pin_histograms(before['schema']):
         result[key] = [b - a for a, b in zip(before[key], after[key])]
-    result['refill_stop'] = {key: after['refill_stop'][key] - before['refill_stop'][key]
-                           for key in reasons}
+    result_key = pin_result_key(before['schema'])
+    result[result_key] = {key: after[result_key][key] - before[result_key][key] for key in reasons}
     validate_pin(result, policy, tsc_sample_shift, initial_spin_budget=initial_spin_budget)
     return result
 
 
 def pin_fractions(snapshot):
     """Empty observations are unavailable, not evidence of a perfect fraction."""
-    require(snapshot['schema'] in (2, 3), 'initial spin fractions require a READY schema')
+    require(snapshot['schema'] in (2, 3, 4), 'initial spin fractions require a READY schema')
     episodes = snapshot['wait_episodes']
     return {name: snapshot[counter] / episodes if episodes else None for name, counter in (
         ('completed_within_initial_budget', 'initial_budget_completed'),
@@ -519,7 +551,7 @@ def profiled_session(runner, args, perf, perf_sha):
                 spin_budget = args.mutex_spin_budget
                 pin_before = validate_pin(json.loads(pin_path.read_text()), policy,
                                           initial_spin_budget=spin_budget)
-                require(pin_before['schema'] == 3, 'live pin collection requires epoch READY schema 3')
+                require(pin_before['schema'] == 4, 'live pin collection requires single-current epoch schema 4')
                 save(self.path / 'pin-before.json', pin_before)
                 self.record['pin_diagnostics'] = dict(status='BEFORE_ONLY', before=pin_before)
             self.save()
@@ -552,7 +584,8 @@ def profiled_session(runner, args, perf, perf_sha):
                 save(self.path / 'pin-delta.json', delta)
                 self.record['pin_diagnostics'].update(status='OBSERVED', after=pin_after, delta=delta,
                     scope='Quiescent pre/post reads after warmup and joined measurement; optional compiled pin observations, no perf process',
-                    occupancy_bins='Exact claimed cohort occupancy 0..8 before and after selection',
+                    occupancy_bins='Exact current claim occupancy 0..1 before and after selection',
+                    ready_candidates='Once per admitted epoch, bounded compatible READY prefix on distinct nonself CPUs; bin 8 means at least eight, not future executions',
                     retirement='Retired claims are not returned JIT bodies; native exits and FULL resumes remain separate',
                     initial_spin_fractions=pin_fractions(delta),
                     fraction_scope='Wait episodes completing before the initial budget expires; retained pin also includes later completion without unpinning',

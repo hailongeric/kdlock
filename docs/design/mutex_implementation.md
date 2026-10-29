@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch starts the single-current proxy-epoch design
-below; implementation and its VM correctness/performance gates are pending.
+delegation waiters. This branch implements the single-current proxy-epoch candidate
+below; its VM correctness and performance gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -198,7 +198,7 @@ outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
 
-### Long-spin proxy-epoch candidate (October 29)
+### Eight-claim proxy-epoch predecessor (October 29)
 
 This isolated implementation starts from
 `406c679bd70c1589754c5083039b95051aba297a`. Its predecessor's runtime
@@ -215,8 +215,9 @@ duplicate-CPU checks and workload shells so the admission change remains scoped.
 The user direction still calls for a long initial pinned interval, scheduling
 checks after its budget and no origin-response waits in normal proxy execution.
 More than 99% within-budget completion and no nano regression remain measurement
-targets. VM correctness, context restoration, emitted-code and performance gates
-for this follow-up are pending.
+targets. The implementation through `2d6e313b294632485ee973606813c1c14b6c3cc9`
+passed its scoped live and context-restoration gates, but failed performance as
+recorded below. The following paragraphs describe that eight-claim predecessor.
 
 The finite initial budget is `KDLOCK_MUTEX_SPIN_BUDGET`, default 65,536 PAUSE
 iterations. A small build override supports forced expiry tests; it is not a
@@ -318,9 +319,9 @@ C may still be proxied as the sole terminal request; a delayed successor only
 ends that execution round after its body completes. FULL recovery preserves the
 existing native/control semantics and is not a translation admission rejection.
 
-### Single-current epoch design (October 29)
+### Single-current epoch candidate (October 29)
 
-The next isolated candidate starts from
+This isolated candidate starts from
 `2d6e313b294632485ee973606813c1c14b6c3cc9`. Its eight-claim epoch implementation
 passed the scoped live gates but failed the mutex timing gate: the ten contended
 points lost 17.63–34.72% against `1c86d6d1`; c01 at 20 workers measured
@@ -329,7 +330,7 @@ These separate one-round source measurements motivate the following change;
 they do not prove which instruction or cache transfer caused the loss.
 
 An admitted COMBINER epoch already prevents every READY origin from withdrawing.
-The planned executor therefore retains only the current exact `{node, count_seq}`
+The executor therefore retains only the current exact `{node, count_seq}`
 claim. Each ordinary iteration checks the private epoch, physical owner, gate
 phase, self CPU, counted lock and even generation, then acquire-reads READY and
 release-stores CLAIMED. No future node is claimed, scanned for duplicate CPUs or
@@ -348,8 +349,8 @@ always needs a fresh READY check; a closed epoch needs fresh nonblocking
 admission. C remains INIT until its old frame/source lease retire, and W's native
 suffix remains HELD. This preserves the existing two-party terminal delegation.
 
-Metadata will distinguish one claim slot from the epoch's protection of all
-READY origins. Optional diagnostics may count up to eight distinct READY
+Metadata distinguishes `mutex_claim_slots=1` from `mutex_ready_policy=epoch`,
+which protects all READY origins. Optional diagnostics count up to eight distinct READY
 same-entry candidates once after successful epoch admission, without waiting for
 eight or walking the queue per body. The result is an observed simultaneous
 pinned lower bound, not a returned-body or future-executability guarantee.
@@ -370,10 +371,13 @@ Its record remains 384 bytes by deriving `unclassified` from finished batches
 minus the sum of all stored classified exit bins at the quiescent getter. A
 missing classification stays visible as a nonzero gap; excess classifications
 or arithmetic overflow produce a nonzero failure sentinel. Mode 1 loadability
-remains a separate VM check. Optional mode 2 now emits schema 3 with window eight,
-the initial spin budget, epoch admission attempts/refusals, withdrawal reservations,
-ready claims,
-retired/cancelled claims, refill stop reasons, occupancy and FULL/drain counts.
+remains a separate VM check. Optional mode 2 emits schema 4 with one claim slot,
+the epoch readiness policy, initial spin budget, epoch admission attempts/refusals,
+withdrawal reservations, current claims, retired/cancelled claims, current
+selection results, occupancy and FULL/release/retain counts. A bounded readiness
+candidate histogram is sampled once per successful admission; it does not control
+admission or replace the exact current descriptor. Historical schema 3 describes
+the predecessor's eight-claim ring and remains separately readable.
 Origin observations merge once per actual delegation wait episode: retained or
 dropped initial pin, completion within budget, budget expiry, scheduling checks,
 successful withdrawal and forced cancellation. `initial_budget_completed /
@@ -382,10 +386,11 @@ also include post-budget completion and must be reported separately. Uncontended
 acquisitions are not in either denominator. Claims are not returned JIT bodies.
 
 Mode 2 storage remains dynamically preallocated per CPU and freed after exact
-drain, serialized with parameter reads. Its record grows from 384 to 408 bytes
-under an explicit 416-byte bound; this does not enlarge the module loader's
-reserved static per-CPU chunk or mode 1's 384-byte record. Historical mode 2
-schema 2 describes per-request CAS admission and remains separately readable. The earlier static 7984-byte
+drain, serialized with parameter reads. Schema 4 uses a 296-byte record under
+an explicit 304-byte bound; predecessor schema 3 used 408 bytes. This does not
+enlarge the module loader's reserved static per-CPU chunk or mode 1's 384-byte
+record. Historical mode 2 schema 2 describes per-request CAS admission and remains
+separately readable. The earlier static 7984-byte
 per-CPU allocation failure remains a preparation failure; ordinary storage was
 7600 bytes. Schema 1 REQUEST/ACK/TSC records retain their historical meaning.
 Nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` is refused here because READY claims have no

@@ -35,15 +35,13 @@ struct kd_mutex_batch {
 	unsigned int deferred_count;
 	unsigned int scan_left;
 	int numa_node;
-	/* Exact selected invocations, never carried across queue handoff. A
+	/* Exact current invocation, never carried across queue handoff. A
 	 * notification byte alone cannot authorize access to a recycled slot. */
 	struct {
 		struct kd_mutex_node *node;
 		u64 generation;
-	} pins[KD_MUTEX_PIN_WINDOW];
+	} pin;
 	unsigned int nr_pins;
-	unsigned int pin_head;
-	unsigned int pin_budget;
 	KD_MUTEX_DIAG_MEMBER
 };
 
@@ -66,9 +64,9 @@ static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)
 	return accepted;
 }
 
-/* Future selected origins must be released before reopening withdrawal for
- * every other READY origin. Keep only an actual current frame's CLAIMED pin
- * across a cold/sleepable service; no old epoch survives native publication. */
+/* Even an empty descriptor must reopen withdrawal for every READY origin
+ * before cold/sleepable service. Keep an actual current frame's CLAIMED pin
+ * separately; no old epoch survives native publication. */
 static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)
 {
 	kd_mutex_batch_unpin(batch, keep_current);
@@ -395,7 +393,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (!clobber) {
 		/* Legacy decoding reads the origin stack, so even image lookup must
 		 * follow the current origin's successful readiness claim. */
-		if (!kd_mutex_batch_pin_select(batch, curr_node, false))
+		if (!kd_mutex_batch_pin_select(batch, curr_node))
 			return KD_EXE_NO_RUN;
 		KD_MUTEX_PIN_ASSERT(batch, curr_node);
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
@@ -420,7 +418,8 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	exe = kd_mutex_batch_find_ready(batch, curr_node->regs.ip);
 	if (!exe) {
 		/* Registration can take provider locks. An unstarted request needs
-		 * no retained origin pin, including a prior lookahead selection. */
+		 * no retained origin pin. Epoch closure also releases withdrawal
+		 * exclusion for every other READY origin. */
 		kd_mutex_batch_epoch_end(batch, false);
 		this_cpu_inc(kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
@@ -455,7 +454,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (clobber) {
 		bool minimal = curr_node->packet_state == KD_PACKET_MINIMAL;
 
-		if (!kd_mutex_batch_pin_select(batch, curr_node, minimal))
+		if (!kd_mutex_batch_pin_select(batch, curr_node))
 			return KD_EXE_NO_RUN;
 		/* The successful READY claim already proves origin pin/quiescence.
 		 * Keep its exact assertion before preparing borrowed origin state. */
@@ -527,8 +526,8 @@ prepared:
 		}
 		/* FULL, or a checked pre-entry refusal: the pending return is
 		 * consumed once by the existing dispatcher, never re-entered. */
-		/* The dispatcher may sleep or transfer ownership. Future selected
-		 * origins must be free to schedule before any FULL service begins. */
+		/* The dispatcher may sleep or transfer ownership. Unselected READY
+		 * origins must be able to withdraw before any FULL service begins. */
 		kd_mutex_batch_epoch_end(batch, true);
 		KD_MUTEX_PIN_INC(batch, full_resumes);
 		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
@@ -700,6 +699,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		next_node = curr_node;
 		goto handoff;
 	}
+	KD_MUTEX_PIN_EPOCH_READY(&batch, curr_node);
 
 	while (curr_node) {
 		curr_node = kd_mutex_batch_select(&batch, curr_node);
@@ -709,8 +709,8 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * that owner can serve the cohort on its own socket. */
 		if (batch.deferred_head &&
 		    (counter >= KDLOCK_MUTEX_NUMA_BOUNDARY || !smp_load_acquire(&curr_node->next))) {
-			/* Lookahead stops before this terminal/count reorder. No selected
-			 * origin may be carried into the deferred prefix. */
+			/* The preceding current descriptor retired before this reorder;
+			 * no origin claim may be carried into the deferred prefix. */
 			BUG_ON(batch.nr_pins);
 			if (batch.deferred_count >= 8) {
 				KD_MUTEX_DIAG_STOP(&batch,
@@ -737,7 +737,6 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		batch.next = next_node;
 		batch.current_node = curr_node;
 		batch.current_retired = false;
-		kd_mutex_batch_pin_budget(&batch, counter);
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
 		KD_MUTEX_DIAG_REQUEST(&batch, curr_node);
@@ -817,10 +816,13 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 				next_node ? KD_MUTEX_DIAG_UNSUPPORTED_TAIL : KD_MUTEX_DIAG_EMPTY_TAIL))
 			break;
 
-		if (!batch.proxy_epoch && !kd_mutex_batch_epoch_begin(&batch)) {
-			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_BODY_UNAVAILABLE);
-			this_cpu_inc(kd_mutex_handoff_count);
-			break;
+		if (!batch.proxy_epoch) {
+			if (!kd_mutex_batch_epoch_begin(&batch)) {
+				KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_BODY_UNAVAILABLE);
+				this_cpu_inc(kd_mutex_handoff_count);
+				break;
+			}
+			KD_MUTEX_PIN_EPOCH_READY(&batch, next_node);
 		}
 		curr_node = next_node;
 	}

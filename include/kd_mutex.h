@@ -103,7 +103,7 @@ struct kd_mutex_osq_node {
 #define KD_MUTEX_PROXY_READY 2
 #define KD_MUTEX_PROXY_CLAIMED 3
 #define KD_MUTEX_QUEUE_INIT 4
-#define KD_MUTEX_PIN_WINDOW 8
+#define KD_MUTEX_CLAIM_SLOTS 1
 
 /*
  * kd_mutex_node — per-waiter queue node.

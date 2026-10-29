@@ -47,16 +47,23 @@ static void diag_check_zero(void)
 #else
     char pin_json[PAGE_SIZE];
     unsigned long long before_sum=0,after_sum=0,reason_sum=0;
-    for(unsigned int i=0;i<=KD_MUTEX_PIN_WINDOW;i++) {
+    for(unsigned int i=0;i<=KD_MUTEX_CLAIM_SLOTS;i++) {
         before_sum+=kd_mutex_pin_totals.occupancy_before[i];
         after_sum+=kd_mutex_pin_totals.occupancy_after[i];
     }
     for(unsigned int i=0;i<KD_MUTEX_PIN_REASON_COUNT;i++)
-        reason_sum+=kd_mutex_pin_totals.refill_stop[i];
+        reason_sum+=kd_mutex_pin_totals.selection_result[i];
     CHECK(kd_mutex_pin_totals.selections==before_sum && before_sum==after_sum && after_sum==reason_sum);
     CHECK(kd_mutex_pin_totals.claims==kd_mutex_pin_totals.retired_claims+kd_mutex_pin_totals.cancelled_claims);
     CHECK(kd_mutex_pin_totals.batches==kd_mutex_combiner_count);
-    CHECK(kd_mutex_pin_totals.occupancy_after[8]>0 && kd_mutex_pin_totals.occupancy_before[7]>0);
+    CHECK(kd_mutex_pin_totals.occupancy_after[1]>0 && !kd_mutex_pin_totals.occupancy_before[1]);
+    CHECK(kd_mutex_pin_totals.occupancy_after[1]==kd_mutex_pin_totals.claims);
+    unsigned long long epoch_sum=0;
+    for(unsigned int i=0;i<=KD_MUTEX_PIN_READY_LIMIT;i++)
+        epoch_sum+=kd_mutex_pin_totals.epoch_ready_candidates[i];
+    CHECK(epoch_sum==kd_mutex_pin_totals.epoch_admission_attempts-kd_mutex_pin_totals.epoch_admission_refusals);
+    CHECK(kd_mutex_pin_totals.epoch_ready_candidates[8]>0);
+    CHECK(kd_mutex_pin_totals.drain_nonempty==kd_mutex_pin_totals.cancelled_claims);
     /* Real accumulator/merge code, distinct from the actual wait-helper
      * interleavings exercised by the companion generated origin fixture. */
     { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_INITIAL_FINISH(true); }
@@ -75,37 +82,70 @@ static void diag_check_zero(void)
     CHECK(kd_mutex_pin_totals.epoch_admission_refusals<=kd_mutex_pin_totals.epoch_admission_attempts);
     CHECK(diag_stats_get(pin_json)>0);printf("PIN %s",pin_json);
 
-    /* Each stop has one selection receipt. Terminal requests remain eligible;
-     * no-link stops the refill without waiting for another producer. */
+    /* Selection describes only this invocation. Future READY origins stay
+     * unchanged even when the separate epoch observation counts eight. */
     for(unsigned int stop=0;stop<KD_MUTEX_PIN_REASON_COUNT;stop++) {
-        struct kd_mutex_batch observed={.lock=&lock,.numa_node=0,.pin_budget=KD_MUTEX_PIN_WINDOW};
-        bool ahead=true,accepted;
-        reset(stop==KD_MUTEX_PIN_NO_LINK?1:stop==KD_MUTEX_PIN_DEFERRED_TAIL?2:12);
-        switch(stop) {
-        case KD_MUTEX_PIN_SELF_CURRENT: nodes[0].tail=65536U<<4;break;
-        case KD_MUTEX_PIN_SINGLE: ahead=false;break;
-        case KD_MUTEX_PIN_BUDGET: observed.pin_budget=2;break;
-        case KD_MUTEX_PIN_WINDOW_FULL: break;
-        case KD_MUTEX_PIN_NO_LINK: break;
-        case KD_MUTEX_PIN_DEFERRED_TAIL: observed.deferred_head=&nodes[11];break;
-        case KD_MUTEX_PIN_ENTRY: nodes[1].regs.ip=0xbad;break;
-        case KD_MUTEX_PIN_NUMA: nodes[1].numa_node=1;break;
-        case KD_MUTEX_PIN_DUPLICATE_CPU: nodes[1].tail=nodes[0].tail;break;
-        case KD_MUTEX_PIN_SELF_FUTURE: nodes[1].tail=65536U<<4;break;
-        case KD_MUTEX_PIN_CURRENT_NOT_READY: nodes[0].locked=KD_MUTEX_WAIT;break;
-        case KD_MUTEX_PIN_FUTURE_NOT_READY: nodes[1].locked=KD_MUTEX_WAIT;break;
+        struct kd_mutex_batch observed={.lock=&lock,.numa_node=0};
+        bool accepted;
+        reset(12);
+        if(stop==KD_MUTEX_PIN_SELF_CURRENT)nodes[0].tail=65536U<<4;
+        if(stop==KD_MUTEX_PIN_CURRENT_NOT_READY)nodes[0].locked=KD_MUTEX_WAIT;
+        CHECK(kd_mutex_batch_epoch_begin(&observed));
+        KD_MUTEX_PIN_EPOCH_READY(&observed,&nodes[0]);
+        CHECK(observed.diag.epoch_admission_attempts==1 && !observed.diag.epoch_admission_refusals);
+        accepted=kd_mutex_batch_pin_select(&observed,&nodes[0]);
+        CHECK(accepted==(stop==KD_MUTEX_PIN_CLAIMED));
+        CHECK(observed.diag.selections==1 && observed.diag.occupancy_before[0]==1);
+        CHECK(observed.diag.selection_result[stop]==1);
+        CHECK(observed.diag.occupancy_after[observed.nr_pins]==1);
+        CHECK(observed.diag.claims==observed.nr_pins && !polls);
+        for(unsigned int i=1;i<12;i++)CHECK(nodes[i].locked==KD_MUTEX_PROXY_READY);
+        if(accepted) {
+            kd_mutex_batch_epoch_end(&observed,true);
+            CHECK(observed.nr_pins==1 && nodes[0].locked==KD_MUTEX_PROXY_CLAIMED);
+            CHECK(observed.diag.retain_current_calls==1 && !observed.diag.drain_nonempty);
+        }
+        kd_mutex_batch_epoch_end(&observed,false);
+        CHECK(!observed.proxy_epoch && !observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);
+    }
+
+    /* Bound the separate prefix observation. Incompatible entries stop the
+     * sample; it neither claims future nodes nor authorizes a body. A changed
+     * exact generation at the second read must not enter the histogram. */
+    for(unsigned int boundary=0;boundary<12;boundary++) {
+        struct kd_mutex_batch observed={.lock=&lock};
+        unsigned int expected=boundary==11?0:boundary?1:8;
+        reset(12);
+        switch(boundary) {
+        case 0: nodes[7].next=(void *)1;break; /* Never read a ninth link. */
+        case 1: nodes[1].locked=KD_MUTEX_WAIT;break;
+        case 2: nodes[1].entry_abi=KD_ENTRY_ABI_LEGACY;break;
+        case 3: nodes[1].packet_state=KD_PACKET_FULL;break;
+        case 4: nodes[1].regs.ip++;break;
+        case 5: nodes[1].tail=nodes[0].tail;break;
+        case 6: nodes[1].tail=65536U<<4;break;
+        case 7: nodes[1].counted_lock=NULL;break;
+        case 8: nodes[1].count_seq++;break;
+        case 9: diag_generation_target=&nodes[1].count_seq;diag_generation_reads=0;break;
+        case 10: nodes[1].regs.ip=0;break;
+        case 11: nodes[0].regs.ip=0;break;
         default: CHECK(false);
         }
         CHECK(kd_mutex_batch_epoch_begin(&observed));
-        CHECK(observed.diag.epoch_admission_attempts==1 && !observed.diag.epoch_admission_refusals);
-        accepted=kd_mutex_batch_pin_select(&observed,&nodes[0],ahead);
-        CHECK(accepted==(stop!=KD_MUTEX_PIN_SELF_CURRENT && stop!=KD_MUTEX_PIN_CURRENT_NOT_READY));
-        CHECK(observed.diag.selections==1 && observed.diag.occupancy_before[0]==1);
-        CHECK(observed.diag.refill_stop[stop]==1);
-        CHECK(observed.diag.occupancy_after[observed.nr_pins]==1);
-        CHECK(observed.diag.claims==observed.nr_pins && !polls);
+        KD_MUTEX_PIN_EPOCH_READY(&observed,&nodes[0]);
+        CHECK(observed.diag.epoch_ready_candidates[expected]==1);
+        CHECK(!observed.nr_pins && !observed.diag.claims && !polls);
+        if(boundary==9)CHECK(diag_generation_reads==2);
+        diag_generation_target=NULL;
         kd_mutex_batch_epoch_end(&observed,false);
-        CHECK(!observed.proxy_epoch && !observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);
+    }
+    for(unsigned int length=0;length<8;length++) {
+        struct kd_mutex_batch observed={.lock=&lock};
+        reset(length?length:1);
+        CHECK(kd_mutex_batch_epoch_begin(&observed));
+        KD_MUTEX_PIN_EPOCH_READY(&observed,length?&nodes[0]:NULL);
+        CHECK(observed.diag.epoch_ready_candidates[length]==1 && !observed.diag.claims);
+        kd_mutex_batch_epoch_end(&observed,false);
     }
 
     /* A real gate reservation refuses one epoch without claiming a node or
@@ -119,6 +159,8 @@ static void diag_check_zero(void)
     kd_mutex_gate_end_withdraw(&lock);
     CHECK(kd_mutex_batch_epoch_begin(&refused_epoch));
     CHECK(refused_epoch.diag.epoch_admission_attempts==2 && refused_epoch.diag.epoch_admission_refusals==1);
+    KD_MUTEX_PIN_EPOCH_READY(&refused_epoch,&nodes[0]);
+    CHECK(refused_epoch.diag.epoch_ready_candidates[2]==1);
     kd_mutex_batch_epoch_end(&refused_epoch,false);
 
     /* Maximal numeric values still serialize as complete JSON within sysfs. */
