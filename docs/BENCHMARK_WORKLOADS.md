@@ -167,11 +167,16 @@ Review its source differences against the bound kernel before making that claim.
 | Pipebytes | Sum prepared ring-buffer lengths | Mutex; user copy occurs after unlock |
 | Pipecap | Read ring capacity | Mutex; no concurrent pipe mutation/resizing while bound |
 | Seek | Validate and update `f_pos` for set/end | Mutex; references outside the body; Linux 7 has no retired `f_version` store |
-| UTS names | Copy/update the selected fixed-size name | Local rwlock readers and eligible writers; permission checks, user copies and notifications stay on the caller |
+| UTS names | Copy/update the selected fixed-size name | Private rwlock specialization for KD/TC; native UTS uses global `uts_sem` rwsem. The adapter moves native in-lock notification after unlock |
 | Xattr | Read the Linux 7 rb-tree, compare names and copy/query the value | Concurrent local rwlock readers; no prepared image, helper learning or JIT-eligible operation |
 
-These scoped adapters bind private/frozen objects and correctly typed locks.
-They do not reinterpret an existing Linux lock or convert all subsystem users.
+These scoped adapters bind restricted objects and participants. OFD and setfd
+use the actual native spinlock storage under a four-byte layout/frozen-user
+contract; they do not permit ordinary Linux queue users concurrently. The mutex,
+UTS and xattr KD arms use separate private locks. None converts all subsystem
+users, and UTS additionally changes native lock type, scope and notification
+ordering. See the [per-lock semantic map](design/kernel_cs_semantics.md) before
+using these results as evidence for minimal native lock-call replacement.
 Source is in [real_api](../workload_modules/real_api); runner/oracle details are
 in its [guide](../bench/real_api/README.md).
 

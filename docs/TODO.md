@@ -155,6 +155,14 @@ outside this work.
 
 ## Current implementation gaps
 
+The [per-lock native critical-section map](design/kernel_cs_semantics.md) records
+the October 30 source/object analysis before implementation. Newly identified
+work includes preserving the decoder's prefixed-NOP PAUSE path, stable local
+boundaries for learned Native inner-lock calls, saved waiter/executor context
+comparison, exact cross-function acquire/return/release graphs, and cancellable
+delegated mmap writers with downgrade. These are unresolved; no runtime change,
+new test pass, hotspot profile or performance claim accompanies the audit.
+
 | Area | Remaining limit |
 | --- | --- |
 | Whole-kernel replacement | Loading the provider does not convert kernel objects; each object and all its users require one protocol and lifecycle integration |

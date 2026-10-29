@@ -23,6 +23,12 @@ Each dynamic mm selects Native or KD once before publication; `kd_mmap=on` selec
 KD only when the option is compiled in. Static mms, including `init_mm`, stay
 Native. No body delegation, prepared teardown or mapping algorithm is added.
 
+The [per-critical-section semantic map](../../docs/design/kernel_cs_semantics.md)
+separates this local backend from future writer delegation, exact `mmap1` from
+page-fault workloads, and mmap rwsem from split page-table, per-VMA and folio
+protocols. Killable mmap writers and munmap's downgrade remain local; the map is
+static feasibility analysis, not newly enabled MM delegation or a hotspot profile.
+
 The revision 2 patch changes exactly ten files: `include/linux/mm_types.h`,
 `include/linux/mmap_lock.h`, `include/linux/sched/mm.h`,
 `kernel/bpf/mmap_unlock_work.h`, `kernel/bpf/task_iter.c`,

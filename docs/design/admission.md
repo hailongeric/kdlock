@@ -28,6 +28,13 @@ Trust does not supply missing backend support or permit different semantics.
 Runtime probes and source/owner/ACK/frame checks must not be removed to hide
 failures.
 
+The [October 30 native-section audit](kernel_cs_semantics.md#mandatory-instructions-and-operations)
+found a concrete source-level PAUSE fidelity gap: the pinned decoder's F3 90
+NOP-alias path reaches a special handler that emits bare NOP and loses its
+prefix. Fence mnemonics and LOCK prefixes use separate ordinary emission paths.
+No new decoder/JIT execution test accompanies that audit. Do not infer faithful
+PAUSE handling from source trust or from the checked mnemonic allowlist.
+
 Deliberate translation refusal returns exit 2 and the daemon publishes
 `KD_EXE_NATIVE_ONLY`; other compiler/environment failures remain distinct retry
 errors. Source trust is not universal escape synthesis: only exact reviewed
@@ -95,8 +102,8 @@ does not establish arbitrary-source equivalence or whole-kernel replacement.
 
 Supported instruction markers stop before a reviewed original instruction. The
 origin resumes there with earlier effects retained and the documented arithmetic
-flags restored; future delegation of that entry is disabled for the source
-session. A generic fault, unsupported lowering or budget failure cannot be
+flags restored; future delegation of that entry is disabled for that registry
+entry’s lifetime. A generic fault, unsupported lowering or budget failure cannot be
 converted into an arbitrary safe native restart.
 
 Mutex/rwsem use the ABI2 marker contract. Supported pristine root spin/rwlock
