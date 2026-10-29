@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch implements the single-current proxy-epoch candidate
-below; its VM correctness and performance gates are pending.
+delegation waiters. This branch starts the delayed-CLAIMED design below from the
+single-current proxy-epoch candidate; implementation and its VM gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -359,6 +359,45 @@ for actual delegation waits, separately from retained-pin fraction. Observations
 compile out of timing builds and never authorize ownership or origin access.
 The existing current CLAIMED store and origin INIT-to-READY publication remain
 part of this candidate; any later publication optimization requires its own proof.
+
+### Delayed-CLAIMED design (October 29)
+
+This isolated follow-up starts from
+`82bfc1006c25767d7a319fcf175c548dcf24824a`, whose production runtime is
+`14975b6a0522b670e334e536ba079e320e8d3c85`. The single-current mutex timing still
+failed the no-regression gate: ten contended points lost 3.05–14.82% against
+`1c86d6d1`; c01 at 20 workers measured 3.952647 Mops/s versus 4.590029, and at
+36 workers 3.697546 versus 4.209552. These separate one-round measurements do
+not establish which instruction or cache transfer caused the remaining loss.
+
+The planned current retains its exact `{node, count_seq}` descriptor and stays
+READY during ordinary execution. READY authorizes origin access only with that
+descriptor, its counted lock and generation, this batch's private epoch, current
+physical ownership and COMBINER phase. An unrelated later owner's COMBINER must
+never authorize an old frame. Self-CPU refusal, source/image/packet checks and
+every existing owner/retirement probe remain.
+
+Before closing an epoch that retains the current, release-store CLAIMED while
+the exact owned epoch still excludes withdrawal. Only then clear the private
+epoch and publish HELD. Generic frame construction, FULL/generic dispatch,
+native/role transfer, early outer release and delayed-tail cleanup all require
+this independent retained pin. Repeated cold closures retain an already-CLAIMED
+current. Explicit retained-only assertions at cold entry and native/role/tail
+completion must detect a missed closure; the ordinary completion path may
+accept READY only under its live ownership proof, or CLAIMED after cold work.
+Descriptor removal still precedes WAIT/zero publication, with no later origin
+access. Empty-descriptor epoch closure remains mandatory before cold services.
+
+No frame/node/mutex layout, source lease, queue policy or native/custody ACK
+changes are planned. Terminal bodies still execute once, including COMPLETE and
+FULL delayed-tail cleanup. Caps remain 1024/1024 and the initial spin budget is
+65,536. Origin INIT-to-READY publication and one-successor prefetch remain
+unchanged; early READY publication is a separate option outside this candidate.
+Schema 4 claims continue to count exact descriptor reservations, not CLAIMED
+stores. A long-running READY current may perform additional post-budget expiry
+checks, but cannot withdraw during the owned epoch. The greater-than-99% target
+still uses actual wait episodes. Source-derived mutation, live correctness,
+emitted-code and matched timing gates are pending; no benefit is presumed.
 
 ### Optional READY diagnostics and prior experiments
 
