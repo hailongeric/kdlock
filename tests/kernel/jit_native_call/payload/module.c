@@ -66,9 +66,9 @@ static __attribute__((noipa)) void native_call_body(struct call_result *result)
 		 * the exact exported Native function; no user controls this operand.
 		 * Name the instruction itself for source/return-PC verification. */
 		asm volatile(".globl jit_native_call_site\njit_native_call_site:\n\t"
-			     ANNOTATE_NOENDBR
+			     ANNOTATE_NOENDBR "\n\t"
 #ifdef NATIVE_CALL_INDIRECT
-			     ANNOTATE_RETPOLINE_SAFE
+			     ANNOTATE_RETPOLINE_SAFE "\n\t"
 			     "call *%[target]\n\t"
 #else
 			     "call _raw_spin_trylock\n\t"
