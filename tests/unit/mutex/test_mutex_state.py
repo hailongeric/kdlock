@@ -84,7 +84,14 @@ def main():
             result = subprocess.run([str(binary)], capture_output=True,
                                     text=True, timeout=20)
             if mutation:
-                assert result.returncode == 1 and 'FAIL line' in result.stderr, (
+                if name == 'combine-accepts-withdrawal':
+                    # This broken admission consumes another origin's flag.
+                    # Its later clear must hit the retained ownership BUG.
+                    rejected = (result.returncode == 2 and 'BUG line' in result.stderr and
+                                '!(state & KD_MUTEX_GATE_WITHDRAW)' in result.stderr)
+                else:
+                    rejected = result.returncode == 1 and 'FAIL line' in result.stderr
+                assert rejected, (
                     name, result.returncode, result.stdout, result.stderr)
                 print('mutex state mutation detected:', name)
             else:

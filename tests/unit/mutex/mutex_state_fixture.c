@@ -34,7 +34,7 @@ static _Thread_local bool expected_bug;
 static _Thread_local jmp_buf bug_target;
 #define BUG_ON(c) do { if (c) { \
  if (expected_bug) longjmp(bug_target, 1); \
- fprintf(stderr, "BUG line %d\n", __LINE__); exit(2); } } while (0)
+ fprintf(stderr, "BUG line %d: %s\n", __LINE__, #c); exit(2); } } while (0)
 #define U64_MAX UINT64_MAX
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_SEQ_CST)
 #define WRITE_ONCE(x,v) __atomic_store_n(&(x), (v), __ATOMIC_SEQ_CST)

@@ -17,8 +17,9 @@ struct kd_mutex_node { int tail; u8 locked; struct kd_mutex *lock, *counted_lock
 #define smp_wmb() __atomic_thread_fence(__ATOMIC_RELEASE)
 #define KD_MUTEX_TAIL_CPU_OFFSET 8
 #define KDLOCK_MUTEX_SPIN_BUDGET 8
+static void failure_context(void);
 #define CHECK(value) do { if (!(value)) { \
- fprintf(stderr, "FAIL proxy pin line %d: %s\n", __LINE__, #value); exit(1); \
+ fprintf(stderr, "FAIL proxy pin line %d: %s\n", __LINE__, #value); failure_context(); exit(1); \
 } } while (0)
 #define BUG_ON(value) CHECK(!(value))
 #define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
@@ -44,8 +45,15 @@ static struct task_struct *current=&owner;
 static unsigned int pins, migration, pauses, schedules, need_checks, acquired;
 static unsigned int pin_calls, unpin_calls, publish_attempts, publications;
 static unsigned int claim_attempts, claims, withdraw_attempts, withdrawals;
+static unsigned int last_cas_before, last_cas_after, last_cas_seen;
 static bool raced, executor;
 static int cpu;
+static void failure_context(void)
+{
+ fprintf(stderr,"proxy context route=%u node=%u gate=%u pins=%u migration=%u pauses=%u checks=%u last_node_cas=%u/%u/%u\n",
+         (unsigned int)route,(unsigned int)node.locked,(unsigned int)lock.delegation_state.counter,
+         pins,migration,pauses,need_checks,last_cas_before,last_cas_after,last_cas_seen);
+}
 static void preempt_disable(void) { CHECK(!pins && migration==1);pins++;pin_calls++; }
 static void preempt_enable(void);
 static inline int raw_smp_processor_id(void) { return cpu; }
@@ -130,6 +138,7 @@ static u8 fixture_cas(u8 *word,u8 before,u8 after)
   }
  }
  u8 seen=*word;
+ last_cas_before=before;last_cas_after=after;last_cas_seen=seen;
  if(seen==before) {
   *word=after;
   if(before==KD_MUTEX_QUEUE_INIT)publications++;
@@ -175,6 +184,7 @@ static void reset(enum route selected)
  node.locked=KD_MUTEX_QUEUE_INIT;node.lock=&lock;lock.owner=current;lock.delegation_state.counter=KD_MUTEX_GATE_HELD;
  pauses=schedules=need_checks=acquired=pin_calls=unpin_calls=0;
  publish_attempts=publications=claim_attempts=claims=withdraw_attempts=withdrawals=0;
+ last_cas_before=last_cas_after=last_cas_seen=0;
  raced=executor=false;
 }
 static void wait_case(enum route selected,u8 initial)

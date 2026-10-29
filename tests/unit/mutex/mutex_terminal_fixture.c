@@ -107,7 +107,7 @@ static void publish(void *p,int value)
     CHECK(value==0);*(u8 *)p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
-static bool kd_mutex_delegation_owned(struct kd_mutex *p,struct task_struct *task)
+bool kd_mutex_delegation_owned(struct kd_mutex *p,struct task_struct *task)
 { return p==&lock && p->owner==task; }
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node);
