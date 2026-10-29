@@ -218,6 +218,8 @@ def main():
         off = '#define MODULE_INFO(...)\n'
         off += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))
         off += r'''
+static unsigned int waits;
+static void kd_mutex_proxy_wait_pinned(unsigned int value) { waits += value; }
 struct off_layout { int original; KD_MUTEX_DIAG_MEMBER };
 _Static_assert(sizeof(struct off_layout) == sizeof(int), "off adds storage");
 int main(void)
@@ -232,7 +234,14 @@ int main(void)
     KD_MUTEX_DIAG_RESULT(poison(), poison());
     KD_MUTEX_DIAG_STOP(poison(), poison());
     KD_MUTEX_DIAG_FINISH(poison());
-    return calls != 1;
+    KD_MUTEX_PIN_INC(poison(), poison);
+    KD_MUTEX_PIN_BEGIN(poison());
+    KD_MUTEX_PIN_END(poison());
+    KD_MUTEX_PIN_STOP(poison(), poison());
+    KD_MUTEX_PIN_DRAIN(poison(), poison());
+    if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
+    KD_MUTEX_PIN_WAIT(poison(), 1, poison());
+    return calls != 1 || waits != 1;
 }
 '''
         (path/'off.c').write_text(off)

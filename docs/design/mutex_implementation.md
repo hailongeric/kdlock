@@ -283,6 +283,27 @@ not generated JIT or scheduler evidence. Build, emitted-code verification and
 matched timing remain pending for this candidate; no gain is claimed and no
 diagnostic counter is added.
 
+The separate diagnostic candidate adds `KDLOCK_MUTEX_DIAGNOSTICS=2` on this ring
+baseline. It replaces mode 1 batch counters within the same bounded per-CPU
+storage budget. Invocation-local counts merge only at the existing finished-batch
+boundaries; the default build removes observations, their storage, and their node
+reads. Mode 2 records selection occupancy, exact requested/consumed/cancelled
+notification lifetimes, selection stop reasons, drain calls, and current versus
+cancellation ACK polling. Consumed pins include native and role-transfer result
+publication; they are not returned JIT bodies. `full_resumes` counts actual
+`kd_exe_mutex_batch_resume` calls, including checked pre-entry refusals.
+
+Optional `KDLOCK_MUTEX_PIN_TSC_SHIFT=6` samples one in 64 current ACK waits using
+a diagnostic CPU-local ordinal. It includes the first acquire load even when that
+load is already PINNED. The authenticated Linux 7 `asm/tsc.h` defines
+`rdtsc_ordered()` without a compiler memory clobber or following load fence, so
+sample timestamps add LFENCE and compiler memory barriers on both sides. Sampled
+TSC deltas include serialization overhead and interruptions; they cannot alone
+attribute latency to cache coherence. The original migration pin remains intact.
+Sampling defaults off, and both sampled and unsampled diagnostics remain unscored.
+No count replaces exact ownership, PINNED ACK, source leases or final drain.
+Build, fixture and live validation remain pending for this source candidate.
+
 ### Unified lock/unlock protocol
 
 The following pseudocode describes control flow, not a replacement for the

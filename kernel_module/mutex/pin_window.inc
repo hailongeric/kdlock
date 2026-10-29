@@ -40,6 +40,7 @@ static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
 	batch->pins[index].node = node;
 	batch->pins[index].generation = generation;
 	batch->nr_pins = count + 1;
+	KD_MUTEX_PIN_INC(batch, requested);
 	return true;
 }
 
@@ -50,15 +51,17 @@ static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current
 {
 	unsigned int keep = keep_current && batch->nr_pins ? 1 : 0;
 
+	KD_MUTEX_PIN_DRAIN(batch, keep);
 	while (batch->nr_pins > keep) {
 		unsigned int count = batch->nr_pins - 1;
 		unsigned int index = kd_mutex_batch_pin_slot(batch, count);
 		struct kd_mutex_node *node = batch->pins[index].node;
 
 		kd_mutex_batch_pin_check(batch, index);
-		kd_mutex_proxy_wait_pinned(node);
+		KD_MUTEX_PIN_WAIT(batch, node, true);
 		batch->pins[index].node = NULL;
 		batch->nr_pins = count;
+		KD_MUTEX_PIN_INC(batch, cancelled);
 		smp_store_release(&node->locked, KD_MUTEX_WAIT);
 	}
 }
@@ -76,6 +79,7 @@ static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *b
 	batch->pins[index].node = NULL;
 	batch->nr_pins--;
 	batch->pin_head = (index + 1) % KD_MUTEX_PIN_WINDOW;
+	KD_MUTEX_PIN_INC(batch, consumed);
 }
 
 /* The caller has already incremented counter for current. A deferred prefix
@@ -106,18 +110,26 @@ static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *bat
 	struct kd_mutex_node *next;
 	unsigned int i, limit = batch->pin_budget;
 
+	KD_MUTEX_PIN_BEGIN(batch);
 	if (batch->nr_pins) {
 		unsigned int index = kd_mutex_batch_pin_slot(batch, 0);
 
 		BUG_ON(batch->pins[index].node != node);
 		kd_mutex_batch_pin_check(batch, index);
 	} else if (!kd_mutex_batch_pin_add(batch, node)) {
+		KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_SELF_CURRENT);
+		KD_MUTEX_PIN_END(batch);
 		return false;
 	}
-	if (!ahead)
+	if (!ahead) {
+		KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_SINGLE);
+		KD_MUTEX_PIN_END(batch);
 		return true;
+	}
 	if (limit > KD_MUTEX_PIN_WINDOW)
 		limit = KD_MUTEX_PIN_WINDOW;
+	KD_MUTEX_PIN_STOP(batch, limit < KD_MUTEX_PIN_WINDOW ?
+		KD_MUTEX_PIN_BUDGET : KD_MUTEX_PIN_WINDOW_FULL);
 	while (batch->nr_pins < limit) {
 		unsigned int count = batch->nr_pins;
 		struct kd_mutex_node *last;
@@ -129,21 +141,31 @@ static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *bat
 		BUG_ON(!count || count > KD_MUTEX_PIN_WINDOW);
 		last = batch->pins[kd_mutex_batch_pin_slot(batch, count - 1)].node;
 		next = smp_load_acquire(&last->next);
-		if (!next || next->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-		    next->packet_state != KD_PACKET_MINIMAL ||
-		    READ_ONCE(next->regs.ip) != READ_ONCE(node->regs.ip) ||
-		    (batch->numa_node >= 0 && next->numa_node != batch->numa_node) ||
-		    (batch->deferred_head && !smp_load_acquire(&next->next)))
+		if (KD_MUTEX_PIN_CONDITION(batch, !next, KD_MUTEX_PIN_NO_LINK) ||
+		    KD_MUTEX_PIN_CONDITION(batch,
+			next->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+			next->packet_state != KD_PACKET_MINIMAL ||
+			READ_ONCE(next->regs.ip) != READ_ONCE(node->regs.ip), KD_MUTEX_PIN_ENTRY) ||
+		    KD_MUTEX_PIN_CONDITION(batch,
+			(batch->numa_node >= 0 && next->numa_node != batch->numa_node), KD_MUTEX_PIN_NUMA) ||
+		    KD_MUTEX_PIN_CONDITION(batch,
+			(batch->deferred_head && !smp_load_acquire(&next->next)), KD_MUTEX_PIN_DEFERRED_TAIL))
 			break;
 		cpu = next->tail >> KD_MUTEX_TAIL_CPU_OFFSET;
 		for (i = 0; i < batch->nr_pins; i++) {
 			unsigned int index = kd_mutex_batch_pin_slot(batch, i);
 
-			if ((batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)
+			if ((batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu) {
+				KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_DUPLICATE_CPU);
+				KD_MUTEX_PIN_END(batch);
 				return true;
+			}
 		}
-		if (!kd_mutex_batch_pin_add(batch, next))
+		if (!kd_mutex_batch_pin_add(batch, next)) {
+			KD_MUTEX_PIN_STOP(batch, KD_MUTEX_PIN_SELF_FUTURE);
 			break;
+		}
 	}
+	KD_MUTEX_PIN_END(batch);
 	return true;
 }

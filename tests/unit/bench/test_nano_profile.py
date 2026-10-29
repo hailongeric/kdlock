@@ -55,6 +55,25 @@ def batch_snapshot(scale=1, *, schema=3):
     return result
 
 
+def pin_snapshot(scale=1, *, shift=0):
+    """Pins can be consumed by native exits or repeated FULL continuations."""
+    result = dict(schema=1, compiled=2, window=4, total_cap=1024, numa_boundary=1024,
+        tsc_sample_shift=shift, batches=2, selections=5, requested=10, consumed=7, cancelled=3,
+        drain_calls=6, drain_nonempty=3, drain_keep_current=1,
+        current_ack_immediate=6, current_ack_stalled=2, current_ack_loops=5,
+        cancel_ack_immediate=2, cancel_ack_stalled=1, cancel_ack_loops=3,
+        full_resumes=1, tsc_samples=2 if shift else 0, tsc_cycles=200 if shift else 0,
+        occupancy_before=[2, 1, 0, 1, 1], occupancy_after=[1, 0, 1, 1, 2],
+        refill_stop=dict(self_current=1, single=0, budget=0, window=2, no_link=1,
+                         entry=0, numa=0, deferred_tail=0, duplicate_cpu=1, self_future=0))
+    for key in profile.PIN_COUNTERS:
+        result[key] *= scale
+    for key in profile.PIN_HISTOGRAMS:
+        result[key] = [value * scale for value in result[key]]
+    result['refill_stop'] = {key: value * scale for key, value in result['refill_stop'].items()}
+    return result
+
+
 class NanoProfileTests(unittest.TestCase):
     def test_stat_requires_every_event_and_valid_runtime(self):
         valid = '100;;cycles:k;2000000;100.00;;\n0;;cache-misses:k;2000000;100.00;;\n'
@@ -226,6 +245,179 @@ class NanoProfileTests(unittest.TestCase):
         with patch.object(profile, 'launch_profiled_client') as launch:
             self.assertEqual(cls().run(['client'], 'measure.json'), (['client'], 'measure.json'))
             launch.assert_not_called()
+
+
+    def test_pin_mode_and_tsc_guards_precede_live_work(self):
+        base = ['--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
+        for sampled in (False, True):
+            args = profile.parser().parse_args(base + ['--mode', 'pin', '--threads', '20'] +
+                                               (['--pin-tsc'] if sampled else []))
+            self.assertEqual(profile.selected_backends(args), ['kdlock'])
+            self.assertEqual(profile.diagnostic_settings(args),
+                dict(mutex_diag=2, mutex_pin_tsc_shift=6 if sampled else 0))
+            self.assertEqual(args.threads, [20])
+        for mode, expected in (('stat', 0), ('record', 0), ('batch', 1)):
+            args = profile.parser().parse_args(base + ['--mode', mode])
+            self.assertEqual(profile.diagnostic_settings(args),
+                             dict(mutex_diag=expected, mutex_pin_tsc_shift=0))
+        for options in (['--mode', 'pin', '--backends', 'native'],
+                        ['--mode', 'pin', '--backends', 'native', 'kdlock'],
+                        ['--mode', 'batch', '--backends', 'native'],
+                        *(['--mode', mode, '--pin-tsc'] for mode in ('stat', 'record', 'batch'))):
+            with self.subTest(options=options), \
+                    patch.object(profile.sys, 'argv', ['profile.py', *base, *options]), \
+                    patch.object(profile.os, 'geteuid') as identity, self.assertRaises(ValueError):
+                profile.main()
+            identity.assert_not_called()
+
+    def test_current_kernel_defaults_and_explicit_identity_are_forwarded(self):
+        base = ['--mode', 'pin', '--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
+        args = profile.parser().parse_args(base)
+        self.assertEqual(args.kernel_source, Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'))
+        self.assertEqual(args.kernel_baseline, Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027'))
+        for args in (args, profile.parser().parse_args(base + ['--kernel-source', '/selected/build',
+                '--kernel-baseline', '/selected/bundle', '--kernel-variant', 'kdmm1-native'])):
+            argv = profile.runner_arguments(args, 'mutex-throughput')
+            for option, expected in (('--kernel-source', args.kernel_source),
+                    ('--kernel-baseline', args.kernel_baseline), ('--kernel-variant', args.kernel_variant)):
+                self.assertEqual(argv[argv.index(option) + 1], str(expected))
+
+    def test_pin_measurement_passes_through_without_perf(self):
+        class Base:
+            def run(self, command, log, **kwargs):
+                return (command, log)
+        runner = types.SimpleNamespace(RWSession=Base)
+        cls = profile.profiled_session(runner, types.SimpleNamespace(mode='pin'), None, None)
+        with patch.object(profile, 'launch_profiled_client') as launch:
+            self.assertEqual(cls().run(['client'], 'measure.json'), (['client'], 'measure.json'))
+            launch.assert_not_called()
+
+    def test_pin_snapshots_bracket_joined_measurement_without_body_equivalence(self):
+        events = []
+        class Base:
+            def measure(self):
+                events.append('joined measurement')
+                self.record['jit_completions'] = 999
+            def save(self):
+                pass
+        with tempfile.TemporaryDirectory() as temporary:
+            cls = profile.profiled_session(types.SimpleNamespace(RWSession=Base),
+                types.SimpleNamespace(mode='pin', pin_tsc=True), None, None)
+            session = cls()
+            session.loaded_kd, session.path = True, Path(temporary)
+            session.record = dict(provider_mutex_policy=dict(total_cap=1024, numa_boundary=1024,
+                                                            deferred_handoff=8, scan_budget=64))
+            snapshots = iter((pin_snapshot(shift=6), pin_snapshot(2, shift=6)))
+            def read_snapshot(path):
+                self.assertEqual(path.name, 'mutex_pin_stats')
+                events.append('pin snapshot')
+                return json.dumps(next(snapshots))
+            with patch.object(profile, 'observations', side_effect=[dict(values={'n': 0}), dict(values={'n': 1})]), \
+                    patch.object(Path, 'read_text', read_snapshot):
+                session.measure()
+            self.assertEqual(events, ['pin snapshot', 'joined measurement', 'pin snapshot'])
+            self.assertEqual(session.record['pin_diagnostics']['delta'], pin_snapshot(shift=6))
+            self.assertEqual(json.loads((session.path / 'pin-delta.json').read_text()), pin_snapshot(shift=6))
+            self.assertTrue(session.record['diagnostic'])
+            self.assertFalse(session.record['score_eligible'])
+            self.assertNotIn('drained', session.record)
+
+
+class NanoPinSnapshotTests(unittest.TestCase):
+    def test_valid_snapshot_and_delta_preserve_metadata_and_inputs(self):
+        for shift in (0, 6):
+            zero, before, after = (pin_snapshot(n, shift=shift) for n in (0, 1, 2))
+            original = deepcopy((zero, before, after))
+            for snapshot in (zero, before, after):
+                self.assertEqual(profile.validate_pin(snapshot, tsc_sample_shift=shift), snapshot)
+            self.assertEqual(profile.pin_delta(before, after, tsc_sample_shift=shift), before)
+            self.assertEqual(profile.pin_delta(zero, before, tsc_sample_shift=shift), before)
+            self.assertEqual(profile.pin_delta(before, before, tsc_sample_shift=shift), zero)
+            self.assertEqual((zero, before, after), original)
+
+    def test_policy_and_tsc_metadata_must_match_explicit_selection(self):
+        policy = dict(total_cap=4096, numa_boundary=768, deferred_handoff=8, scan_budget=64)
+        before, after = pin_snapshot(shift=6), pin_snapshot(2, shift=6)
+        for snapshot in (before, after):
+            snapshot.update(total_cap=4096, numa_boundary=768)
+        self.assertEqual(profile.pin_delta(before, after, policy, 6), before)
+        for selected, shift in ((None, 6), (policy, 0), (policy, 1), (policy, True)):
+            with self.subTest(policy=selected, shift=shift), self.assertRaises(ValueError):
+                profile.validate_pin(before, selected, shift)
+        for key in profile.PIN_METADATA:
+            changed = deepcopy(after)
+            changed[key] += 1
+            with self.subTest(metadata=key), self.assertRaises(ValueError):
+                profile.pin_delta(before, changed, policy, 6)
+
+    def test_schema_and_exact_shapes_are_required(self):
+        valid = pin_snapshot()
+        for key in valid:
+            invalid = deepcopy(valid)
+            del invalid[key]
+            with self.subTest(missing=key), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+        for key, value in (('schema', True), ('window', 3), ('compiled', 1),
+                ('occupancy_before', [0] * 4), ('occupancy_after', [0] * 6),
+                ('occupancy_after', {}), ('refill_stop', []), ('unexpected', 0)):
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                profile.validate_pin(dict(valid, **{key: value}))
+        for key in profile.PIN_REASONS:
+            invalid = deepcopy(valid)
+            del invalid['refill_stop'][key]
+            with self.subTest(missing_reason=key), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+        invalid = deepcopy(valid)
+        invalid['refill_stop']['unexpected'] = 0
+        with self.assertRaises(ValueError):
+            profile.validate_pin(invalid)
+
+    def test_counters_require_nonnegative_u64_integers(self):
+        for keys in (*((key,) for key in profile.PIN_COUNTERS),
+                     ('occupancy_before', 0), ('occupancy_after', 0), ('refill_stop', 'window')):
+            for value in (-1, True, 1.0, '1', None, 1 << 64):
+                invalid = pin_snapshot()
+                target = invalid if len(keys) == 1 else invalid[keys[0]]
+                target[keys[-1]] = value
+                with self.subTest(keys=keys, value=value), self.assertRaises(ValueError):
+                    profile.validate_pin(invalid)
+
+    def test_quiescent_accounting_identities_and_ack_bounds(self):
+        for changes in (dict(selections=6), dict(requested=11), dict(consumed=8), dict(cancelled=4),
+                dict(cancel_ack_immediate=3), dict(current_ack_loops=1),
+                dict(current_ack_stalled=0), dict(cancel_ack_loops=0),
+                dict(cancel_ack_stalled=0, cancel_ack_immediate=3),
+                dict(drain_nonempty=7), dict(drain_keep_current=4),
+                dict(tsc_samples=1), dict(tsc_cycles=1)):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                profile.validate_pin(dict(pin_snapshot(), **changes))
+        for key in profile.PIN_HISTOGRAMS:
+            invalid = pin_snapshot()
+            invalid[key][0] += 1
+            with self.subTest(histogram=key), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+        invalid = pin_snapshot()
+        invalid['refill_stop']['window'] += 1
+        with self.assertRaises(ValueError):
+            profile.validate_pin(invalid)
+        with self.assertRaises(ValueError):
+            profile.validate_pin(dict(pin_snapshot(shift=6), tsc_samples=9), tsc_sample_shift=6)
+
+    def test_delta_rejects_counter_bin_and_reason_resets(self):
+        with self.assertRaises(ValueError):
+            profile.pin_delta(pin_snapshot(2), pin_snapshot())
+        for group, bucket, destination in (('occupancy_before', 1, 0),
+                ('occupancy_after', 2, 0), ('refill_stop', 'self_current', 'no_link')):
+            after = pin_snapshot(2)
+            after[group][destination] += after[group][bucket]
+            after[group][bucket] = 0
+            profile.validate_pin(after)
+            with self.subTest(group=group), self.assertRaises(ValueError):
+                profile.pin_delta(pin_snapshot(), after)
+        after = dict(pin_snapshot(2), full_resumes=0)
+        profile.validate_pin(after)
+        with self.assertRaises(ValueError):
+            profile.pin_delta(pin_snapshot(), after)
 
 
 class NanoBatchSnapshotTests(unittest.TestCase):
