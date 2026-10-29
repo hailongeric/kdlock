@@ -4,6 +4,7 @@ The real header owns acquisition, release, flags and nesting decisions. IRQ/BH
 instructions and the contended finisher are substitutes; real MCS and live
 kernel context tests remain separate evidence.
 """
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -17,12 +18,18 @@ ROOT = Path(__file__).resolve().parents[3]
 def main():
     header = (ROOT / "include/kd_spin_direct.h").read_text()
     header = re.sub(r"^#include .*$", "", header, flags=re.M)
-    kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    typecheck = (kernel / "include/linux/typecheck.h").read_text()
+    # Linux O= builds keep source-only headers outside the output tree. The
+    # verified installed source link is the default; an explicit source root
+    # supports the same separated layout in a frozen validation environment.
+    kernel = Path(os.environ.get("KDLOCK_KERNEL_SOURCE",
+                                 f"/lib/modules/{os.uname().release}/source"))
+    typecheck_path = (kernel / "include/linux/typecheck.h").resolve(strict=True)
+    typecheck = typecheck_path.read_bytes()
+    print(f"Kernel typecheck: {typecheck_path} sha256={hashlib.sha256(typecheck).hexdigest()}")
     with tempfile.TemporaryDirectory(prefix="kd-spin-irq-") as directory:
         path = Path(directory)
         (path / "irq_production.h").write_text(header)
-        (path / "irq_typecheck.h").write_text(typecheck)
+        (path / "irq_typecheck.h").write_bytes(typecheck)
         command = shlex.split(os.environ.get("CC", "cc")) + [
             "-O2", "-std=gnu11", "-Wall", "-Wextra", "-Werror",
             "-I", str(path), str(ROOT / "tests/unit/spin/spin_irq_fixture.c"),
