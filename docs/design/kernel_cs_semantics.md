@@ -387,3 +387,38 @@ is after unlock; SETPIPE_SZ is a separate local branch. Therefore this missing
 re-entry mechanism does not itself prevent complete proxying of the three
 bounded selected bodies. Their changed lock shells still require their own
 linked-image and actual syscall execution evidence.
+
+### Bounded original-task instruction service candidate
+
+The next isolated candidate implements only exact `RDTSC`, `RDTSCP` and `CPUID`
+instructions in an ABI2 mutex root with its sole outer acquisition. This is a
+new optional image/provider contract. It preserves the pending request, frame,
+FULL packet, physical owner and source/image leases while the original task
+executes one instruction on its reserved shadow stack, then returns that same
+invocation to an emitted JIT successor. There is no source CALL/RET interception
+or replacement return word. Ordinary images and the inner waiter polling loop
+retain their existing paths.
+
+The rare waiter wake distinguishes a service from native completion. The waiter
+rearms its existing notification before release-publishing the returned result;
+after publication it never touches the transaction or packet again and resumes
+polling. The combiner acquire-observes this quiescent result before importing
+registers/flags and continuing. The node, queue count and outer lock are not
+released at an intermediate service boundary. Exact transaction identity and
+source continuation checks remain mandatory. A refused service executes its
+original marker natively; a completed service can fall forward only from its
+post-instruction state, never replay the instruction.
+
+Only arithmetic flags cross the new continuation boundary. The JIT imports them
+after runtime checks and dispatch comparisons, immediately before its emitted
+successor. Waiter IF/DF/AC are never installed on the combiner. CLI/STI, CLD/STD,
+MSR/PMC operations, unsupported encodings, mixed ownership and arbitrary Native
+CALL intervals keep the native suffix. This does not establish universal
+branch-only continuation or Native lock replacement. Active call-depth tracking
+remains refused; complete return mitigation coverage remains a separate limit.
+
+This section records the contract before code. The candidate requires basic and
+directly affected VM checks, exact original-task execution and same-image JIT
+reentry witnesses, repeated/interleaved service and post-service fallback tests,
+complete owner/source/frame drain, and a new matched one-round nano comparison.
+No implementation, correctness or performance pass is implied by this plan.
