@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "kind": "independent read-only emitted-code review",
+  "reviewer": "/root/translation_limits_audit",
+  "source_commit": "82bfc1006c25767d7a319fcf175c548dcf24824a",
+  "runtime_commit": "14975b6a0522b670e334e536ba079e320e8d3c85",
+  "elf": {
+    "path": "/tmp/kdlock-current-r2-inspect-20261029/default-off/kernel_module/kdlock_km.ko",
+    "bytes": 4903408,
+    "sha256": "329d3a2ee9e42b6fb0357a84cde47b9eea3a2937d7a67173409b8ebefbbfc4c3"
+  },
+  "supporting_artifacts": {
+    "disassembly.txt": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/disassembly.txt",
+      "bytes": 2272003,
+      "sha256": "f3cbf8eabadcac3272e0b827954f2db5e50506aa1af3a8736edc9c7fcddb8384"
+    },
+    "symbols.txt": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/symbols.txt",
+      "bytes": 60968,
+      "sha256": "593b8e34a79527d9fa61ac19e30c3e040a88895479433f775fd5165931cbeaea"
+    },
+    "sections.txt": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/sections.txt",
+      "bytes": 7288,
+      "sha256": "541c69c09842538fde1593503b432734377723ffe2cdf49e775ea872c70eecea"
+    },
+    "modinfo.txt": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/modinfo.txt",
+      "bytes": 2728,
+      "sha256": "9c05cc304b9430ccd619e41e5296d841e37b9994a107f2d790f36d752883ea0c"
+    },
+    "owner.json": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/owner.json",
+      "bytes": 1071,
+      "sha256": "17996f72d3da07dddd07f8cd0731a98985298ed9d1cb6e297f205add37a88f9d"
+    },
+    "build-default-off.log": {
+      "path": "/tmp/kdlock-current-r2-inspect-20261029/build-default-off.log",
+      "bytes": 2213,
+      "sha256": "3d6606b94a88ced3017d3b5b743ecd76e227eb9ce6647b4b8590899fd770d943"
+    }
+  },
+  "comparison_parent": {
+    "source_commit": "2d6e313b294632485ee973606813c1c14b6c3cc9",
+    "runtime_commit": "41d887bd2bbf7e11b16635db3fb0f812290d9b02",
+    "elf": {
+      "path": "/tmp/kdlock-epoch-r3-inspect-20261029/default-off/kernel_module/kdlock_km.ko",
+      "bytes": 4931128,
+      "sha256": "683596f65c98da05a55caed51114db738d352bdae5e7c7d0541f88fe75a42ae3"
+    }
+  },
+  "finding": "Narrow emitted-code checks pass: exact single-current claim, preserved initial state guard/spin budget, optional diagnostics absent. This does not establish performance acceptance.",
+  "checks": {
+    "ordinary_claim": {
+      "symbol": "kd_mutex_execute_cs",
+      "plain_READY_to_CLAIMED_store_addresses": [
+        "0x1423a",
+        "0x1490d"
+      ],
+      "READY_compare_addresses": [
+        "0x1422b",
+        "0x148fe"
+      ],
+      "node_state_offset": "0x131",
+      "claim_value": 3,
+      "locked_node_claim_instructions": [],
+      "descriptor_stores": [
+        {
+          "node": "0x14241",
+          "generation": "0x14245",
+          "count_one": "0x14249"
+        },
+        {
+          "node": "0x14914",
+          "generation": "0x14918",
+          "count_one": "0x1491c"
+        }
+      ],
+      "descriptor_offsets": {
+        "node": "0x70",
+        "generation": "0x78",
+        "count": "0x80"
+      },
+      "source_and_emitted_scope": "Both inlined admission paths check the current node only, write fixed descriptor offsets and count1, and then validate current CLAIMED. No future-node chain walk or duplicate-origin scan remains in admission. Ordinary combiner queue/NUMA traversal and one-successor metadata prefetch remain intentionally present."
+    },
+    "exact_admission_checks": {
+      "legacy_span": "0x14151..0x1425c",
+      "clobber_span": "0x1480d..0x1492f",
+      "verified": [
+        "empty descriptor/count",
+        "executor CPU refusal",
+        "even invocation generation",
+        "exact counted_lock",
+        "private proxy epoch",
+        "physical current owner and no PICKUP",
+        "gate COMBINER",
+        "READY before plain CLAIMED store"
+      ],
+      "note": "These checks remain emitted; code size alone does not measure their hot-path latency."
+    },
+    "owner_check_inlining": {
+      "execute_cs_outlined_kd_mutex_delegation_owned_calls": [],
+      "whole_text_callable_reference": "__kd_mutex_unlock at0x706, relocation0x707; required callable helper remains"
+    },
+    "initial_state_guard": {
+      "symbol": "__kd_mutex_lock_slowpath",
+      "inlined_helper": "kd_mutex_wait_for_result",
+      "cas_address": "0x19619",
+      "operation": "locked byte INIT4 to READY2 cmpxchg at node offset0x131",
+      "compare_address": "0x19623",
+      "comparison": "cmp $0x4,%al",
+      "branch": "0x19625 ja0x19b55",
+      "invalid_target": "0x19b55 ud2",
+      "accepted_states": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "unconditional_bug": false
+    },
+    "initial_spin_budget": {
+      "load_address": "0x19640",
+      "value": 65536,
+      "pause_address": "0x1965a",
+      "decrement_address": "0x19660",
+      "nonzero_backedge": "0x19663 ->0x19677",
+      "first_need_resched_load": "0x1966a",
+      "finding": "Initial READY positive-budget iterations bypass the scheduling flag read. Withdrawn WAIT origins retain their separate preemptible path."
+    },
+    "configuration": {
+      "metadata": {
+        "mutex_pin_tsc_shift": "0",
+        "mutex_batch_diag": "0",
+        "mutex_ready_policy": "epoch",
+        "mutex_claim_slots": "1",
+        "mutex_spin_budget": "65536",
+        "mutex_numa_boundary": "1024",
+        "mutex_batch": "1024"
+      },
+      "percpu_hex": "0x1db0",
+      "percpu_bytes": 7600,
+      "optional_diagnostic_symbols": [],
+      "note": "Optional batch/pin instrumentation is disabled. Existing ordinary correctness/benchmark counters are not asserted absent."
+    }
+  },
+  "emitted_size_comparison": {
+    "text_previous_bytes": 137301,
+    "text_current_bytes": 135733,
+    "text_delta_bytes": -1568,
+    "functions": [
+      {
+        "symbol": "kd_mutex_execute_cs",
+        "previous": {
+          "address": "0x14080",
+          "bytes": 8359
+        },
+        "current": {
+          "address": "0x14040",
+          "bytes": 7155
+        },
+        "size_delta_bytes": -1204
+      },
+      {
+        "symbol": "kd_mutex_execute_cs.cold",
+        "previous": {
+          "address": "0x21291",
+          "bytes": 773
+        },
+        "current": {
+          "address": "0x20c91",
+          "bytes": 741
+        },
+        "size_delta_bytes": -32
+      },
+      {
+        "symbol": "kd_mutex_run_combiner",
+        "previous": {
+          "address": "0x19290",
+          "bytes": 2176
+        },
+        "current": {
+          "address": "0x18d90",
+          "bytes": 1914
+        },
+        "size_delta_bytes": -262
+      },
+      {
+        "symbol": "kd_mutex_batch_epoch_begin",
+        "previous": {
+          "address": "0x3c20",
+          "bytes": 147
+        },
+        "current": {
+          "address": "0x3c20",
+          "bytes": 147
+        },
+        "size_delta_bytes": 0
+      },
+      {
+        "symbol": "kd_mutex_batch_epoch_end",
+        "previous": {
+          "address": "0x4c80",
+          "bytes": 310
+        },
+        "current": {
+          "address": "0x4c80",
+          "bytes": 282
+        },
+        "size_delta_bytes": -28
+      },
+      {
+        "symbol": "__kd_mutex_lock_slowpath",
+        "previous": {
+          "address": "0x19b20",
+          "bytes": 1591
+        },
+        "current": {
+          "address": "0x19520",
+          "bytes": 1591
+        },
+        "size_delta_bytes": 0
+      }
+    ],
+    "interpretation": "Static size comparison only; relocations/layout also move. No throughput or instruction-cycle gain is inferred."
+  },
+  "scope": {
+    "host_actions": "Read saved VM-built ELF/disassembly/metadata, run read-only nm, hash inputs and write this JSON. No builds, test execution, modules or VM access.",
+    "not_established": [
+      "Live correctness",
+      "Performance acceptance",
+      "Complete compiler correctness",
+      "Complete mitigation coverage"
+    ],
+    "timing_claim": false
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "verified": true,
+  "source_commit": "82bfc1006c25767d7a319fcf175c548dcf24824a",
+  "input_sha256": "52cac427d00f01de7e2d00c4ccc3bb1421d180a8bc34be00efc3a2288db1ed23",
+  "rows": [
+    {
+      "threads": 20,
+      "wait_episodes": 7759558,
+      "completed_before_budget_pct": 100.0,
+      "epoch_admissions": 7600,
+      "ready_at_least_eight": 7575,
+      "ready_at_least_eight_pct": 99.67105263157895,
+      "claims": 7751979,
+      "retired_claims": 7751979,
+      "current_not_ready": 1,
+      "retain_current_calls": 11
+    },
+    {
+      "threads": 36,
+      "wait_episodes": 7198750,
+      "completed_before_budget_pct": 100.0,
+      "epoch_admissions": 14022,
+      "ready_at_least_eight": 13972,
+      "ready_at_least_eight_pct": 99.64341748680644,
+      "claims": 7184755,
+      "retired_claims": 7184755,
+      "current_not_ready": 0,
+      "retain_current_calls": 28
+    }
+  ],
+  "scope": "Read-only analysis of optional instrumented counters, not performance scores.",
+  "limits": [
+    "Within-budget percentage uses actual delegation wait episodes, not all acquisitions, CPU time or returned JIT bodies.",
+    "READY histogram is sampled once per accepted epoch; >=8 is a bounded compatible-prefix observation, not every iteration or eventual JIT execution.",
+    "No universal >99% guarantee follows from these two single-round c01 samples.",
+    "One exact current claim is distinct from the larger READY population protected by the epoch."
+  ]
+}

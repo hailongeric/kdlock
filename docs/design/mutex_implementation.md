@@ -198,17 +198,27 @@ budget expiry, without withdrawal or admission refusal. The diagnostics-free
 contended mutex points still lost 17.63–34.72% against pinned `1c86d6d1`;
 rwsem also has negative points. This candidate remains isolated.
 
-The next candidate removes future CLAIMED descriptors and their rolling refill
-and duplicate-CPU scans. The admitted epoch already prevents every READY origin
-from withdrawing. Keep one exact current invocation descriptor, fresh READY and
-self-CPU checks, current source/frame retirement and unconditional closure at
-every cold boundary. After closure, unselected READY origins may withdraw;
-they must be checked anew after fresh admission. Preserve the existing successor
-prefetch, 65536 initial budget and 1024/1024 limits. Optional diagnostics may
-observe up to eight distinct READY candidates once per admission, never wait for
-that count, and distinguish this cohort from the one current CLAIMED slot.
-This removes bookkeeping without substituting approximate ownership counters;
-correctness and performance acceptance remain open.
+The [one-current candidate](../../bench/results/10.176.26.71/tests/mutex-epoch-current-20261029/README.md)
+at runtime `14975b6a0522b670e334e536ba079e320e8d3c85`, validated through
+`82bfc1006c25767d7a319fcf175c548dcf24824a`, removed future CLAIMED descriptors,
+rolling refill and duplicate-CPU scans. The epoch protects all READY origins;
+one exact current descriptor retains source/frame and invocation checks. All
+13 selected drivers and eight live blocks have successful applicable receipts.
+Instrumented c01/20 and c01/36 completed every wait episode before expiry, and
+observed at least eight READY origins in over 99.6% of admitted epochs. Still,
+all ten contended mutex points lost 3.05–14.82% against the saved pinned baseline;
+it remains isolated. The ordinary path does not wait for future readiness.
+
+The next isolated candidate retains an exact current READY descriptor under its
+private epoch and exact physical-owner/COMBINER proof, without a per-body CLAIMED
+store. Before a cold boundary reopens withdrawal, it must promote that current
+to CLAIMED. Cold/native/role/tail paths require this strict retained proof; READY
+is valid only in the owned ordinary epoch. Discard and completion still remove
+the descriptor before wakeup or reuse. Preserve all source/frame/ACK obligations,
+65536 initial budget, successor prefetch and 1024/1024 limits. Optional schema4
+claims count exact current descriptors, not notification stores. Actual origin
+withdrawal races and negative closure checks must pass before live validation;
+correctness and no-regression acceptance remain open.
 
 ### Physical exclusion for ordinary and delegated callers
 

@@ -54,10 +54,15 @@ pinned baseline. It is not promoted. The [batch-gate follow-up](../bench/results
 at `41d887bd`, validated through `2d6e313b`, passed all 18 selected drivers and
 nine live blocks; two instrumented points again completed every wait episode
 before expiry. Its 36-point round still lost 17.63–34.72% at contended mutex
-points, with additional negative rwsem points. It is not promoted. The next
-isolated plan retains one exact current claim while the epoch protects all
-READY origins, removes future-claim refill bookkeeping, and preserves every
-sleepable/native boundary closure. The no-regression gate remains open.
+points, with additional negative rwsem points. It is not promoted. The
+[one-current follow-up](../bench/results/10.176.26.71/tests/mutex-epoch-current-20261029/README.md)
+at `14975b6a`, validated through `82bfc100`, passed all 13 selected drivers and
+eight live blocks. Both instrumented points completed every wait episode before
+expiry; over 99.6% of admitted epochs observed at least eight READY origins.
+Its 36-point round still lost 3.05–14.82% at contended mutex points, so it remains
+isolated. The next candidate removes the ordinary per-body CLAIMED store under
+the exact epoch proof and promotes the retained current before every cold closure.
+Exact ownership/lifetime checks and the no-regression gate remain required.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
