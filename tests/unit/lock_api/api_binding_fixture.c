@@ -37,7 +37,9 @@ static unsigned int checks, spin_native, mutex_native, spin_kd, mutex_kd;
 static bool capable(int cap) { CHECK(cap == CAP_SYS_ADMIN); return admin; }
 static void mutex_lock(struct mutex *m) { CHECK(!m->words[0]); m->words[0] = 1; mutex_native++; }
 static void mutex_unlock(struct mutex *m) { CHECK(m->words[0] == 1); m->words[0] = 0; }
-static void mutex_init(struct mutex *m) { memset(m, 0, sizeof(*m)); }
+/* Linux mutex_init is a function-like statement macro. Keep that spelling so
+ * the provider member call must remain parenthesized, just as in Kbuild. */
+#define mutex_init(m) do { memset((m), 0, sizeof(*(m))); } while (0)
 static void spin_lock(spinlock_t *s) { CHECK(!s->held); s->held = 1; spin_native++; }
 static void spin_unlock(spinlock_t *s) { CHECK(s->held == 1); s->held = 0; }
 static void spin_lock_init(spinlock_t *s) { s->held = 0; }

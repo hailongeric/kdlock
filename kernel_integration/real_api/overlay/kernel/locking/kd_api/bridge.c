@@ -215,7 +215,7 @@ int kd_api_pipe_init(struct pipe_inode_info *pipe)
 		return PTR_ERR(ops);
 	pipe->kd_lock_provider = ops;
 	if (ops)
-		ops->mutex_init(&pipe->mutex.kd);
+		(ops->mutex_init)(&pipe->mutex.kd);
 	else
 		mutex_init(&pipe->mutex.native);
 	return 0;
