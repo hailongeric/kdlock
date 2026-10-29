@@ -36,8 +36,8 @@ def main():
     types += definition(source, "struct kd_mutex_batch {") + ";\n"
     code = ""
     for marker in (
-        "static bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-        "static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
     ):
         code += definition(source, marker) + "\n"
     window = read_source(ROOT / "kernel_module/mutex/pin_window.inc")
@@ -45,8 +45,8 @@ def main():
     unpin = definition(window,
         "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)")
     remove_before_wait = (
-        "\t\tbatch->pins[i].node = NULL;\n"
-        "\t\tbatch->nr_pins = i;\n"
+        "\t\tbatch->pins[index].node = NULL;\n"
+        "\t\tbatch->nr_pins = count;\n"
         "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);")
     assert remove_before_wait in unpin
     mutations = {
@@ -56,8 +56,8 @@ def main():
             "unsigned int i, limit = batch->pin_budget;",
             "unsigned int i, limit = KD_MUTEX_PIN_WINDOW;", "", 1),
         "ignore-duplicate-cpu": (
-            "if ((batch->pins[i].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)",
-            "if (false && (batch->pins[i].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)", "", 1),
+            "if ((batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)",
+            "if (false && (batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)", "", 1),
         "ignore-image-boundary": (
             "READ_ONCE(next->regs.ip) != READ_ONCE(node->regs.ip) ||", "false ||", "", 1),
         "ignore-numa-boundary": (
@@ -73,9 +73,19 @@ def main():
         "cancel-before-descriptor-removal": (unpin,
             unpin.replace(remove_before_wait,
                 "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);\n"
-                "\t\tbatch->pins[i].node = NULL;\n\t\tbatch->nr_pins = i;", 1), "", 1),
+                "\t\tbatch->pins[index].node = NULL;\n\t\tbatch->nr_pins = count;", 1), "", 1),
         "retain-consumed-descriptor": (
-            "batch->pins[batch->nr_pins].node = NULL;", "(void)batch;", "", 1),
+            "\tbatch->pins[index].node = NULL;\n\tbatch->nr_pins--;",
+            "\tbatch->nr_pins--;", "", 1),
+        "advance-by-two": (
+            "batch->pin_head = (index + 1) % KD_MUTEX_PIN_WINDOW;",
+            "batch->pin_head = (index + 2) % KD_MUTEX_PIN_WINDOW;", "", 86),
+        "forget-ring-head": (
+            "return (batch->pin_head + offset) % KD_MUTEX_PIN_WINDOW;",
+            "return offset;", "", 86),
+        "cancel-moves-head": (
+            "\t\tbatch->nr_pins = count;",
+            "\t\tbatch->nr_pins = count; batch->pin_head = (batch->pin_head + 1) % KD_MUTEX_PIN_WINDOW;", "", 86),
         "ignore-generation": (
             "READ_ONCE(node->count_seq) != batch->pins[index].generation", "false", "generation", 1),
         "ignore-lock-identity": (
@@ -107,7 +117,7 @@ def main():
             else:
                 print(result.stdout, end="")
                 for invalid in ("generation", "wrong-lock", "odd-generation",
-                                "wrong-current", "complete-unacked"):
+                                "wrong-current", "complete-unacked", "bad-head", "occupied-slot"):
                     rejected = subprocess.run([binary, invalid], capture_output=True,
                                               text=True, timeout=10)
                     assert rejected.returncode == 86 and "BUG pin window:" in rejected.stderr, (

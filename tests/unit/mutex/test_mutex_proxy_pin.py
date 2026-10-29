@@ -20,8 +20,8 @@ def main():
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
     code = "\n".join(definition(source, signature) for signature in (
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-        "static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
     ))
     constants = "\n".join(re.findall(

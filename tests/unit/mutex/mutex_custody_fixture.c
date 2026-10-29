@@ -41,7 +41,7 @@ static struct kd_exec_frame frame;
 static struct kd_exec_context context;
 static struct kd_mutex_batch batch;
 static int source_refs, source_closed, task_puts, pops, releases, combines;
-static unsigned int mode, shape, checks, failures;
+static unsigned int mode, shape, start_head, checks, failures;
 static bool delayed_link;
 static struct kd_regs captured;
 
@@ -73,7 +73,7 @@ static void observe_owner_wake(const void *address, bool zero)
 static void cpu_relax(void)
 {
 	if (current == &ctask && READ_ONCE(next_node.locked)==KD_MUTEX_PROXY_REQUEST) {
-		CHECK(batch.nr_pins==2 && batch.pins[1].node==&next_node);
+		CHECK(batch.nr_pins==2 && batch.pins[(batch.pin_head+1)%KD_MUTEX_PIN_WINDOW].node==&next_node);
 		smp_store_release(&next_node.locked,KD_MUTEX_PROXY_PINNED);
 	}
 	if (current == &ctask && delayed_link) {
@@ -210,11 +210,13 @@ static void setup(void)
 	frame.native_link.next=frame.native_link.prev=&frame.native_link;
 	context.owner=&ctask; context.depth=1; context.top=&frame;
 	batch.lock=&lock; batch.current_node=&wnode; batch.own_node=&cnode;
-	batch.pins[0].node=&wnode; batch.pins[0].generation=wnode.count_seq; batch.nr_pins=1;
+	batch.pin_head=start_head;
+	batch.pins[start_head].node=&wnode; batch.pins[start_head].generation=wnode.count_seq; batch.nr_pins=1;
 	if (shape==1 || shape==3) {
 		next_node.counted_lock=&lock; next_node.count_seq=2;
 		next_node.locked=KD_MUTEX_PROXY_REQUEST;
-		batch.pins[1].node=&next_node; batch.pins[1].generation=2; batch.nr_pins=2;
+		unsigned int index=(start_head+1)%KD_MUTEX_PIN_WINDOW;
+		batch.pins[index].node=&next_node; batch.pins[index].generation=2; batch.nr_pins=2;
 	}
 	delayed_link=shape==2;
 	if (shape==1 || shape==2) {
@@ -278,6 +280,7 @@ static void receipt_checks(void)
 int main(void)
 {
 	receipt_checks();
+	for(start_head=0;start_head<KD_MUTEX_PIN_WINDOW;start_head++)
 	for(shape=0;shape<4;shape++) for(mode=0;mode<7;mode++) {
 		pthread_t worker; setup();
 		CHECK(!pthread_create(&worker,NULL,native_owner,NULL));
@@ -289,7 +292,7 @@ int main(void)
 		smp_store_release(&wnode.custody.ready,true);
 		CHECK(!pthread_join(worker,NULL));
 	}
-	shape=mode=0; setup(); source_closed=1;
+	start_head=3; shape=mode=0; setup(); source_closed=1;
 	CHECK(!kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 	CHECK(!route && source_refs==1 && lock.delegation_tail==(u32)wnode.tail && !cnode.locked);
 	source_closed=0; batch.after_body=true;

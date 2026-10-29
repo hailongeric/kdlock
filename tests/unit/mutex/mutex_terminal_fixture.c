@@ -174,6 +174,22 @@ static void late_first_deferred(void)
     finish();
 }
 
+/* Six successful bodies move the ring head through a wrap before a FULL/native
+ * or early-outer path drains its three selected successors. */
+static void wrapped_release_boundaries(void)
+{
+    if(kd_mutex_batch_size < 8)return;
+    for(unsigned int early=0;early<2;early++) {
+        scenario=24+early;reset(12);
+        if(early)early_at=6;else native_at=6;
+        CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
+        CHECK(calls==7 && completed==(early?7U:6U) && wakes==1 && !nodes[7].locked);
+        CHECK(nodes[8].locked==KD_MUTEX_WAIT && nodes[9].locked==KD_MUTEX_WAIT);
+        CHECK(reclaims==early && nodes[6].native_resume==!early);
+        finish();
+    }
+}
+
 int main(void)
 {
     /* Ordinary pre-body mode has no retained owner node in this fixture.
@@ -267,5 +283,6 @@ int main(void)
     for(unsigned int i=0;i<135;i++)CHECK(order[i]==i+64);
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();
     late_first_deferred();
+    wrapped_release_boundaries();
     printf("PASS terminal queue: %u checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries\n",checks);
 }

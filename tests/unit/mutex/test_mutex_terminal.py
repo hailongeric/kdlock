@@ -26,8 +26,8 @@ def production_sources():
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
-    for marker in ('static bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
-                   'static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)'):
+    for marker in ('static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
+                   'static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)'):
         helpers += definition(source, marker)+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_window.inc'))+'\n'
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):

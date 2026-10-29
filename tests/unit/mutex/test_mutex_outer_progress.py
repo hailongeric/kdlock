@@ -68,8 +68,8 @@ def main():
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
-    for marker in ("static bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-                   "static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)"):
+    for marker in ("static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+                   "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)"):
         code += definition(mutex, marker) + "\n"
     code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_window.inc")) + "\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
@@ -105,6 +105,11 @@ def main():
             line for line in mutex.splitlines() if line.startswith(name + "(")
         )
         code += prefix + definition(mutex, marker) + "\n"
+    # Seed only private fixture state. Exercise the unchanged real FULL-resume
+    # path with each valid ring head, including successor slot zero after wrap.
+    batch_init = "\tstruct kd_mutex_batch batch = {\n"
+    assert code.count(batch_init) == 1
+    code = code.replace(batch_init, batch_init + "\t\t.pin_head = test_pin_head,\n", 1)
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-outer-unit-") as directory:
         path = Path(directory)
         (path / "mutex_outer_types.h").write_text(types)
