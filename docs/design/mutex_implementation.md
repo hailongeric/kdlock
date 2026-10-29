@@ -127,14 +127,14 @@ membership publishes a continuation for proxy execution. They share reserved
 node storage but retain separate links and retirement; the requested spin
 policy must not collapse these two protocols.
 
-The proposed readiness protocol publishes `READY` only with preemption disabled.
-A combiner claims it with one `READY` to `CLAIMED` CAS. After the long spin
+The first readiness candidate published `READY` only with preemption disabled.
+Its combiner claimed it with one `READY` to `CLAIMED` CAS. After the long spin
 budget expires, a waiter must win the competing transition out of `READY`
 before enabling preemption or sleeping. A successful combiner claim keeps the
 origin pinned until completion or explicit cancellation. Thus readiness is a
 pin proof, not an estimate from elapsed spinning or a sampled task state.
 
-The planned cohort contains at least eight exact invocation descriptors. Its
+That initial cohort contained eight exact invocation descriptors. Its
 admission may attempt a nonblocking readiness claim; an unavailable request
 ends or limits the round instead of starting an ACK polling loop. Preserve
 continuous combining where safe. Preserve terminal delegation: requiring a
@@ -209,16 +209,27 @@ observed at least eight READY origins in over 99.6% of admitted epochs. Still,
 all ten contended mutex points lost 3.05–14.82% against the saved pinned baseline;
 it remains isolated. The ordinary path does not wait for future readiness.
 
-The next isolated candidate retains an exact current READY descriptor under its
-private epoch and exact physical-owner/COMBINER proof, without a per-body CLAIMED
-store. Before a cold boundary reopens withdrawal, it must promote that current
-to CLAIMED. Cold/native/role/tail paths require this strict retained proof; READY
-is valid only in the owned ordinary epoch. Discard and completion still remove
-the descriptor before wakeup or reuse. Preserve all source/frame/ACK obligations,
-65536 initial budget, successor prefetch and 1024/1024 limits. Optional schema4
-claims count exact current descriptors, not notification stores. Actual origin
-withdrawal races and negative closure checks must pass before live validation;
-correctness and no-regression acceptance remain open.
+The [retained-current candidate](../../bench/results/10.176.26.71/tests/mutex-epoch-retained-20261029/README.md)
+at runtime `e2b685157cae904ece7a2ea62379cfcf82121794`, validated through
+`2af70f39a7091c34b5ccab98452f0726336cb2c0`, keeps ordinary READY under its
+exact private epoch/physical-owner proof and promotes a retained current to
+CLAIMED before reopening withdrawal. All fourteen selected drivers and eight
+live blocks have successful applicable receipts; actual code preserves strict
+cold and ordinary ownership checks. Both instrumented points meet the initial
+spin target, but contended mutex still loses 1.65–14.26% in the 36-point nano
+round. Rwsem also has losses, including a NO_JIT point; no proxy-execution cause
+is established for that point. The candidate remains isolated.
+
+The next experiment moves ordinary READY publication after every packet,
+count/generation and debug access, before the release incoming queue link.
+Wait entry then only observes READY/CLAIMED/WAIT/result0 and rejects INIT,
+avoiding the post-link INIT-to-READY RMW without rearming early completion.
+Keep the private first head's INIT-to-WAIT CAS and role-C's checked READY
+publication after old frame/source retirement. Preserve shadow-stack switching,
+withdrawal arbitration, cold promotion, exact source/frame/ACK obligations,
+65536 budget and 1024/1024 limits. Publication order, early result/cancellation,
+slot reuse and negative mutation checks precede live validation and timing.
+This is a performance hypothesis; the no-regression gate remains open.
 
 ### Physical exclusion for ordinary and delegated callers
 

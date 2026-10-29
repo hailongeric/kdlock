@@ -1,0 +1,109 @@
+{
+  "completed": true,
+  "transport_sha256": "af864458a8fabe53ba019ae18e35f2403369f4d2f8ece072d70c222c89e8ef65",
+  "trees": 5,
+  "archives": 10,
+  "inventory_paths": 8804,
+  "receipts": [
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 735,
+      "regular_files": 643,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "5de236f0808bcd823eb41d9706b5aece71181e2429fc5c56107708f4bde3927b",
+          "regular_files": 639
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "3ce27a78a06bef0a8a71823c564793f45d516020f33ba54ad108e85100d628f6",
+          "regular_files": 4
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-epoch-retained-20261029/bench/mutex-epoch-retained-diagnostics-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 2924,
+      "regular_files": 2420,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "41ac4bdb7b8ecce83ab6a830800a73c51bbff76947eda17bf5f46a195bd74bab",
+          "regular_files": 2414
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "d2b576dc12e1b3bfd2c7825e794f77530edd0c926ed0b0c4d39e8ab171118476",
+          "regular_files": 6
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-epoch-retained-20261029/bench/mutex-epoch-retained-nano-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 4980,
+      "regular_files": 4423,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "a7eb19e623ab0616e5b65f4f443896276bcdff0ac46782546acb9eb7c72f0081",
+          "regular_files": 4412
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "84ec5e5affa27829916bc8853547b49d9705b47f950007787e7a18a1ca668f5d",
+          "regular_files": 11
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-epoch-retained-20261029/tests/mutex-epoch-retained-live-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 4,
+      "regular_files": 4,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "80b63ad7848bb9248237396b9cc803d0d990ce68e2e1e90b9369d99902ff3048",
+          "regular_files": 3
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "d9a3939df19d18742ab17df921a7814b168bfc224c2e9d2b802f56d0321e16c6",
+          "regular_files": 1
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-epoch-retained-20261029/tests/mutex-epoch-retained-unit-20261029-archives"
+    },
+    {
+      "completed": true,
+      "host": "380G10",
+      "inventory_paths": 161,
+      "regular_files": 154,
+      "verified_archives": [
+        {
+          "file": "evidence.tar.gz",
+          "sha256": "83186e3f9d76dbe94d1bcdd625a381340ca488d56c6049b4b41bae7c3fde40a3",
+          "regular_files": 149
+        },
+        {
+          "file": "metadata.tar.gz",
+          "sha256": "38339ec81c8bffed366a6aa38d81eb64439dbe95e21e77d29d685e4853406719",
+          "regular_files": 5
+        }
+      ],
+      "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction.",
+      "path": "bench/results/10.176.26.71/raw/tests/mutex-epoch-retained-20261029/tests/mutex-epoch-retained-unit-r2-20261029-archives"
+    }
+  ]
+}

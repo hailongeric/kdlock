@@ -60,9 +60,14 @@ at `14975b6a`, validated through `82bfc100`, passed all 13 selected drivers and
 eight live blocks. Both instrumented points completed every wait episode before
 expiry; over 99.6% of admitted epochs observed at least eight READY origins.
 Its 36-point round still lost 3.05–14.82% at contended mutex points, so it remains
-isolated. The next candidate removes the ordinary per-body CLAIMED store under
-the exact epoch proof and promotes the retained current before every cold closure.
-Exact ownership/lifetime checks and the no-regression gate remain required.
+isolated. The [retained-current follow-up](../bench/results/10.176.26.71/tests/mutex-epoch-retained-20261029/README.md)
+at `e2b68515`, validated through `2af70f39`, passed all fourteen selected drivers
+and eight live blocks. Both instrumented points again met the spin target, but
+contended mutex still lost 1.65–14.26%; rwsem also has negative points. It is not
+promoted. The next isolated experiment moves ordinary READY publication before
+the release queue link and makes wait entry observe-only. Preserve private-head
+and post-frame role-C transitions, exact ownership/lifetime checks and the
+no-regression gate.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.

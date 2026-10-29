@@ -1,0 +1,189 @@
+{
+  "verified": true,
+  "scope": "Independent offline arithmetic, recorded receipt identity, and committed instrumentation-semantics review; no VM, source edits, builds or tests.",
+  "source_commit": "2af70f39a7091c34b5ccab98452f0726336cb2c0",
+  "runtime_commit": "e2b685157cae904ece7a2ea62379cfcf82121794",
+  "runtime_include_kernel_module_identical": true,
+  "input_file": "/tmp/kdlock-retained-diagnostics-20261029.json",
+  "input_sha256": "a785c73e026b682cb9f65bd875abe2dba2db458af628c472af259671a1025dd2",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "controller_completed": true,
+  "profile_receipt_complete": true,
+  "final_idle_reported": true,
+  "diagnostic": true,
+  "score_eligible": false,
+  "provider_diagnostics": {
+    "mutex_diag": 2,
+    "mutex_pin_tsc_shift": 0,
+    "mutex_spin_budget": 65536
+  },
+  "provider_mutex_policy": {
+    "deferred_handoff": 8,
+    "numa_boundary": 1024,
+    "scan_budget": 64,
+    "total_cap": 1024
+  },
+  "driver_sha256": "10b19ff1dc63cfb5a89b90eb5d59ecfdbc8b837606646ad1b2afc674a6925857",
+  "rows": [
+    {
+      "workload": "c01",
+      "cachelines": 1,
+      "write_percent": 100,
+      "threads": 20,
+      "repeat": 0,
+      "wait_episodes": 8067247,
+      "completed_within_initial_budget": 8067247,
+      "completed_before_budget_pct": 100.0,
+      "retained_initial_pin": 8067247,
+      "retained_initial_pin_pct": 100.0,
+      "greater_than_99_percent_observed": true,
+      "epoch_admissions": 7897,
+      "epoch_ready_histogram": [
+        0,
+        6,
+        9,
+        4,
+        1,
+        3,
+        1,
+        1,
+        7872
+      ],
+      "ready_at_least_eight": 7872,
+      "ready_at_least_eight_pct": 99.68342408509561,
+      "selections": 8059368,
+      "selection_result": {
+        "claimed": 8059368,
+        "current_not_ready": 0,
+        "self_current": 0
+      },
+      "occupancy_before": [
+        8059368,
+        0
+      ],
+      "occupancy_after": [
+        0,
+        8059368
+      ],
+      "claims": 8059368,
+      "retired_claims": 8059368,
+      "cancelled_claims": 0,
+      "retain_current_calls": 14,
+      "zero_counters": [
+        "budget_expired_episodes",
+        "expiry_checks",
+        "withdrawal_reservations",
+        "withdrawals",
+        "initial_pin_dropped",
+        "forced_cancellations",
+        "cancelled_claims",
+        "drain_nonempty",
+        "full_resumes",
+        "epoch_admission_refusals"
+      ],
+      "before_after_delta_exact": true,
+      "all_three_snapshots_conserve": true
+    },
+    {
+      "workload": "c01",
+      "cachelines": 1,
+      "write_percent": 100,
+      "threads": 36,
+      "repeat": 0,
+      "wait_episodes": 7512139,
+      "completed_within_initial_budget": 7512139,
+      "completed_before_budget_pct": 100.0,
+      "retained_initial_pin": 7512139,
+      "retained_initial_pin_pct": 100.0,
+      "greater_than_99_percent_observed": true,
+      "epoch_admissions": 14619,
+      "epoch_ready_histogram": [
+        0,
+        10,
+        10,
+        8,
+        6,
+        0,
+        1,
+        0,
+        14584
+      ],
+      "ready_at_least_eight": 14584,
+      "ready_at_least_eight_pct": 99.76058553936657,
+      "selections": 7497548,
+      "selection_result": {
+        "claimed": 7497547,
+        "current_not_ready": 1,
+        "self_current": 0
+      },
+      "occupancy_before": [
+        7497548,
+        0
+      ],
+      "occupancy_after": [
+        1,
+        7497547
+      ],
+      "claims": 7497547,
+      "retired_claims": 7497547,
+      "cancelled_claims": 0,
+      "retain_current_calls": 12,
+      "zero_counters": [
+        "budget_expired_episodes",
+        "expiry_checks",
+        "withdrawal_reservations",
+        "withdrawals",
+        "initial_pin_dropped",
+        "forced_cancellations",
+        "cancelled_claims",
+        "drain_nonempty",
+        "full_resumes",
+        "epoch_admission_refusals"
+      ],
+      "before_after_delta_exact": true,
+      "all_three_snapshots_conserve": true
+    }
+  ],
+  "semantics": {
+    "greater_than_99_denominator": "wait_episodes: actual delegation result-wait helper episodes, not all lock acquisitions, descriptor claims, returned JIT bodies, CPU time or parking rate.",
+    "numerator": "initial_budget_completed: retained initial pin and budget_expired false at the initial wait-phase finish.",
+    "claims": "Exact private current-descriptor reservations. Ordinary READY execution does not store CLAIMED; claims and retired_claims are not notification-store counts or returned-body counts.",
+    "retain_current_calls": "Calls retaining an existing current at epoch closure, including already-CLAIMED retention; not exact promotion-store count.",
+    "ready_cohort": "Once per successful epoch admission, before selecting a current, observe a bounded compatible linked READY prefix on distinct nonself CPUs. Bin8 means at least8 observed candidates; it does not promise8 future executions or describe every iteration.",
+    "one_not_ready_at36": "Preserved as one failed selection, one occupancy-after0 and one selection_result.current_not_ready; no bin is discarded. The underlying node state was not recorded, so its cause is not inferred."
+  },
+  "source_evidence": [
+    {
+      "path": "bench/nano/profile.py",
+      "sha256": "10b19ff1dc63cfb5a89b90eb5d59ecfdbc8b837606646ad1b2afc674a6925857",
+      "blob": "141c43ac9d17e837c1a35eeac94826a876629927"
+    },
+    {
+      "path": "kernel_module/mutex/pin_diag.inc",
+      "sha256": "4553bb588045b370b68f140e382c120c4c89efd54d962c883d239867e6ac1a1e",
+      "blob": "b7c87dbdbb659455ab8af3be02a38ad4c3e53fd6"
+    },
+    {
+      "path": "kernel_module/mutex/pin_origin.inc",
+      "sha256": "cab1a2d4713d0a59a5fd6dc9bac7512c88ab5de8514fbb1a67b4872fa0623845",
+      "blob": "225a5b885477330320bed0491b0256f5b800df94"
+    },
+    {
+      "path": "kernel_module/mutex/queue.inc",
+      "sha256": "6e40060db7256e79c90664fc2e53135503020c1c725535b15c1c2579debd160a",
+      "blob": "1a49134248045deb0c6b7477d1f4acf5bdf32fe0"
+    },
+    {
+      "path": "kernel_module/mutex/pin_window.inc",
+      "sha256": "c16982e0e62c63866c285195caa8feff2cc4e87cbe6a0c32e4b9ef5ee7033209",
+      "blob": "caf1eecfaae2cad5b0b098d0cb4a777d98044768"
+    }
+  ],
+  "analyzer_sha256": "4da402c7ff3f52ae04411f0f96b4628adf5a69db06d9fb387b8bd0d4d8e9a2fd",
+  "limits": [
+    "Both are optional mode2 instrumented, single-round c01 points; no performance comparison or acceptance is made.",
+    "100% within-budget holds for these observed wait episodes only; no universal >99% guarantee, wall-time spinning fraction, absence of all scheduling, or lock-parking rate is established.",
+    "The supplied bundle contains result.json plus before/after/delta counters, but no raw session/measurement logs, per-session returned-body counters, source-retirement receipts, or provider ELF/modinfo. Complete/final-idle identities are verified as recorded; those missing raw facts cannot be independently revalidated from this input.",
+    "The diagnostic schema conservation checks cannot themselves prove execution, ownership or source/frame drain. Full archive integrity and live validation remain separate evidence."
+  ]
+}

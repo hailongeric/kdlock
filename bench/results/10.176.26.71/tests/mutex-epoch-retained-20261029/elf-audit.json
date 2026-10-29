@@ -1,0 +1,85 @@
+{
+  "source_commit": "2af70f39a7091c34b5ccab98452f0726336cb2c0",
+  "runtime_commit": "e2b685157cae904ece7a2ea62379cfcf82121794",
+  "elf_sha256": "63c1251654297d36cd82c724db93d998cafd2a16d871fd52ef6e6328ddc52099",
+  "modinfo_verified": {
+    "mutex_batch_diag": "0",
+    "mutex_pin_tsc_shift": "0",
+    "mutex_spin_budget": "65536",
+    "mutex_claim_slots": "1",
+    "mutex_ready_policy": "epoch",
+    "mutex_batch": "1024",
+    "mutex_numa_boundary": "1024"
+  },
+  "percpu_bytes": 7600,
+  "optional_mutex_pin_symbols_absent": true,
+  "comparison": {
+    "before": "/tmp/kdlock-current-r2-inspect-20261029/default-off/kernel_module/kdlock_km.ko",
+    "after": "/tmp/kdlock-retained-r2-inspect-20261029/default-off/kernel_module/kdlock_km.ko",
+    "sha256_before": "329d3a2ee9e42b6fb0357a84cde47b9eea3a2937d7a67173409b8ebefbbfc4c3",
+    "sha256_after": "63c1251654297d36cd82c724db93d998cafd2a16d871fd52ef6e6328ddc52099",
+    "functions": {
+      "kd_mutex_execute_cs": {
+        "size_before": 7155,
+        "size_after": 7720,
+        "bytes_equal": false,
+        "relocations_equal": false,
+        "offset_before": 81984,
+        "offset_after": 82176,
+        "sha256_before": "51df8f05fd33c33a016b50bab4a1d4665b30caf7148626737abb36a924d36758",
+        "sha256_after": "5372b5030c3215e43c29a301e3153e67ba5e620d9550fdaf6e2cf356da95170e"
+      },
+      "kd_mutex_run_combiner": {
+        "size_before": 1914,
+        "size_after": 2279,
+        "bytes_equal": false,
+        "relocations_equal": false,
+        "offset_before": 101776,
+        "offset_after": 102544,
+        "sha256_before": "4c80a2c305081c90b54b19ff94496f9c01105943ef1298a4f57b89a08477fce9",
+        "sha256_after": "2e0205ae30df2b6022c7b846602154d05e932a2fb5037a97a95030c9c540e895"
+      },
+      "kd_mutex_batch_epoch_end": {
+        "size_before": 282,
+        "size_after": 443,
+        "bytes_equal": false,
+        "relocations_equal": false,
+        "offset_before": 19584,
+        "offset_after": 19584,
+        "sha256_before": "8abb7f749e47470f8de83ff792e8d272582915f174419b456342e72b6ec48932",
+        "sha256_after": "76a593cb180d37c6434538cad0562619de929b736ded99b5c074b9dcfaac8f02"
+      },
+      "__kd_mutex_lock_slowpath": {
+        "size_before": 1591,
+        "size_after": 1591,
+        "bytes_equal": false,
+        "relocations_equal": false,
+        "offset_before": 103712,
+        "offset_after": 104848,
+        "sha256_before": "b1e847204cf5ae9557a3a1a4ecbacb30f21e8785dbec1da7a83ee51a24d7ec85",
+        "sha256_after": "7f76b36789033ef52b1fca62ab74bec75516bc1eeeedd5b597491ce176545c97"
+      }
+    },
+    "sections": {
+      ".text": {
+        "bytes_before": 135733,
+        "bytes_after": 137134,
+        "bytes_equal": false,
+        "relocations_equal": false
+      },
+      ".init.text": {
+        "bytes_before": 339,
+        "bytes_after": 339,
+        "bytes_equal": true,
+        "relocations_equal": true
+      },
+      ".exit.text": {
+        "bytes_before": 103,
+        "bytes_after": 103,
+        "bytes_equal": true,
+        "relocations_equal": true
+      }
+    }
+  },
+  "scope": "Read-only ELF parsing and source/emitted-code review; code size is not a performance result."
+}
