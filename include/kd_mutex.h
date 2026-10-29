@@ -112,8 +112,9 @@ struct kd_mutex_osq_node {
  * owns its shadow stack, so an executor acquiring a sleeping KD mutex cannot
  * have its stack reused by another target task running on the same CPU.
  * A queued origin initially spins pinned, then checks scheduling after its
- * finite spin budget. At most eight exact READY requests are claimed at once;
- * a withdrawn origin stays preemptible until its native head/result wake.
+ * finite spin budget. The epoch protects every READY origin, while its owner
+ * retains one exact current claim. A withdrawn origin stays preemptible until
+ * its native head/result wake.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.
