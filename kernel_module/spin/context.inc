@@ -20,7 +20,8 @@ static __always_inline u8 kd_spin_proxy_context(void)
 		(irqs_disabled() ? KD_SPIN_CONTEXT_IRQ_OFF : 0);
 }
 
-static __always_inline bool kd_spin_proxy_context_matches(u8 origin, u8 executor)
+static __always_inline bool
+kd_spin_proxy_context_matches(u8 origin, u8 executor)
 {
 	return origin && origin == executor;
 }
