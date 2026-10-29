@@ -169,6 +169,37 @@ int kd_image_validate_address_guards(const struct kd_jit_image *image)
 	return 0;
 }
 
+int kd_image_validate_origin_sites(const struct kd_jit_image *image)
+{
+	const struct kd_origin_site *sites;
+	unsigned int count, i, j;
+
+	if (!(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_INSN))
+		return 0;
+	sites = kd_image_origin_sites(image, &count);
+	if (!sites || image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return -EPROTO;
+	for (i = 0; i < count; i++) {
+		unsigned char opcode[8];
+		int ret;
+
+		if (!kd_image_origin_site_valid(image, &sites[i]))
+			return -EPROTO;
+		for (j = 0; j < i; j++)
+			if (sites[j].ip == sites[i].ip)
+				return -EPROTO;
+		ret = kd_source_pin_root(sites[i].ip);
+		if (!ret)
+			ret = kd_source_pin_root(sites[i].next_ip);
+		if (ret)
+			return ret;
+		if (copy_from_kernel_nofault(opcode, (void *)sites[i].ip, sites[i].length) ||
+		    memcmp(opcode, sites[i].opcode, sites[i].length))
+			return -EILSEQ;
+	}
+	return 0;
+}
+
 int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 		     unsigned long base_generation)
 {

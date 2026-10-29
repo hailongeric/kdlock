@@ -104,6 +104,13 @@ static int stack_error, stack_reads;
 static unsigned char escape_text[16];
 static unsigned long kd_native_escape_count;
 static unsigned long kd_address_guard_count;
+static unsigned long kd_origin_instruction_count, kd_origin_reentry_count,
+	kd_origin_suffix_count;
+static bool kd_origin_instruction_force_suffix;
+static int origin_result;
+static unsigned int origin_calls;
+static unsigned long origin_sequence;
+static bool origin_wrapper;
 #define STRING_IP 0xffff80000000c000UL
 #define STRING_RETURN (STRING_IP + 0x1005)
 #define STRING_LEFT (STRING_IP + 0x2000)
@@ -239,6 +246,19 @@ static unsigned long kd_direct_strcmp, kd_direct_pad;
 		}                                                       \
 	} while (0)
 
+/* The backend handshake is tested separately. This double changes one scalar
+ * result only when it reports execution; consumers must retain that effect. */
+static int kd_mutex_origin_instruction(struct kd_exec_frame *frame,
+				       unsigned int kind, unsigned long sequence)
+{
+	CHECK(frame == &active && kind == KD_ORIGIN_RDTSC && sequence);
+	origin_calls++;
+	origin_sequence = sequence;
+	if (origin_result == 1)
+		kd_exec_frame_regs(frame)->ax = 0x12345678;
+	return origin_result;
+}
+
 /* Native primitives are doubles; production adapters still choose the service
  * and transport its ABI. The scalar double records the full argument, not a
  * copied sqrt algorithm. Actual numeric results belong to the live workload. */
@@ -315,6 +335,12 @@ static void translated(struct kd_regs *regs, unsigned long *args)
 		return;
 	}
 	step = &steps[calls++];
+	if (origin_wrapper) {
+		CHECK(regs->orig_ax == KD_REG_ORIGIN_REENTRY_TAG && regs->ip == ESCAPE_IP + 2);
+		CHECK(regs->ax == 0x12345678 && regs->ss == 7);
+		/* The real generated dispatcher consumes this tag before its body. */
+		regs->orig_ax = 0;
+	}
 
 	/* A test double reports boundary packets only. The separate machine-code
 	 * suite verifies that a real failed predicate preserves the whole packet. */
@@ -338,7 +364,7 @@ static void translated(struct kd_regs *regs, unsigned long *args)
 static void fixture_wrapper_dispatch(void (*wrapper)(struct kd_regs *, unsigned long *),
 				     struct kd_regs *regs, unsigned long *args)
 {
-	if (string_wrapper) {
+	if (string_wrapper || origin_wrapper) {
 		CHECK((void *)wrapper == string_wrapper_code);
 		translated(regs, args);
 	} else {
@@ -445,6 +471,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/spin.inc"
 #include "jit_entry_scope/mutex.inc"
 #include "jit_entry_scope/native_escape.inc"
+#include "jit_entry_scope/origin_instruction.inc"
 #include "jit_entry_scope/root_native_escape.inc"
 #include "jit_entry_scope/native_calls.inc"
 #include "jit_entry_scope/address_guard.inc"
@@ -458,6 +485,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 int main(void)
 {
 	check_native_escape();
+	check_origin_instruction();
 	check_terminal_and_indirect_calls();
 	check_root_native_escape();
 	check_address_guard();

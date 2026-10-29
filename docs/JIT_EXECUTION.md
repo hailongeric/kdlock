@@ -46,7 +46,11 @@ work or reset the body.
 
 Supported instruction markers resume the origin before the selected instruction
 with the declared arithmetic flags. Prior stores and locks remain owned; the entry
-becomes native-only for the session. Generic faults, missing targets and budget
+retains its existing eligibility for later invocations. The optional ABI2
+original-task instruction service instead retains node/frame/owner through an
+intermediate ACK and resumes the same image after exact RDTSC/RDTSCP/CPUID.
+Its source, flags and remaining-budget contract is separate from a native suffix.
+Generic faults, missing targets and budget
 errors are not arbitrary recovery boundaries. Optional address guards and old
 string-service/direct-call routes belong to checked/historical compatibility,
 not current trusted-source emission.

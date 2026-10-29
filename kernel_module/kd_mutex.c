@@ -35,6 +35,7 @@
 #include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
+#include "kd_origin_service.h"
 #include "kd_jit_batch.h"
 #include "kd_source.h"
 #include "kd_segment.h"

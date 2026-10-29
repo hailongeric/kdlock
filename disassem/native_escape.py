@@ -170,7 +170,7 @@ def root_scope_rejection(blocks, databases, terminal_unlock, controls,
     return None
 
 
-def emitted_scope(blocks, databases):
+def emitted_scope(blocks, databases, *, origin_sites=()):
     """Cut each first marker's successor edge after full source admission.
 
     Independently selected blocks remain checked and addressable; this does not
@@ -181,7 +181,7 @@ def emitted_scope(blocks, databases):
     for start, original in blocks.items():
         block = original
         for index, line in enumerate(original.lines):
-            if descriptor(line):
+            if descriptor(line) and line.offset not in origin_sites:
                 block = copy(original)
                 block.lines = original.lines[:index + 1]
                 block.bto = set()

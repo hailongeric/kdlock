@@ -26,6 +26,11 @@ struct jit_escape_snapshot {
 	__u64 idle;
 };
 
+struct jit_origin_snapshot {
+	__u64 effects[4];
+	__u64 instructions[4];
+};
+
 #define JIT_ESCAPE_RUN _IOWR('E', 1, struct jit_escape_run)
 #define JIT_ESCAPE_SNAPSHOT _IOR('E', 2, struct jit_escape_snapshot)
 #define JIT_ESCAPE_PREPARE _IO('E', 3)
@@ -34,4 +39,5 @@ struct jit_escape_snapshot {
 #define JIT_ESCAPE_READ _IOWR('E', 5, struct jit_escape_run)
 /* Change only the next idle phase; existing RUN/SNAPSHOT layouts stay fixed. */
 #define JIT_ESCAPE_COLD _IO('E', 6)
+#define JIT_ESCAPE_ORIGIN_SNAPSHOT _IOR('E', 7, struct jit_origin_snapshot)
 #endif

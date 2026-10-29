@@ -11,6 +11,13 @@ another lock holder. An instruction **marker** exits that code before an
 instruction that must run on the original task. This check uses `RDTSC`, the
 safe x86 instruction that reads the processor timestamp counter. It does not
 exercise instructions that disable interrupts or change privileged settings.
+With capability v13/bit13, an eligible sole-outer ABI2 mutex gate instead services
+RDTSC on the original waiter and returns to the same immutable JIT image. That
+gate also serves explicitly prepared rwsem writers; runtime has no separate API
+family discriminator. Their write admission remains held through service and
+reentry, while readers always execute locally. The runner checks the capability
+explicitly; spin/rwlock and nested-spin cases retain the before-instruction
+native-suffix expectation.
 
 Set the verified snapshot variables and the pinned Python environment described
 in the VM guide before running:
@@ -47,10 +54,55 @@ those substitutes are not live-kernel validation.
 local readers; its compiled capture is audited separately from historical OUTER
 cookie callers.
 The default remains `--family mutex`. Spin/rwlock runs require capability
-version 12, both native-exit bit 5 and root-exit bit 11, and an immutable
+version 12 or 13, both native-exit bit 5 and root-exit bit 11, and an immutable
 generation with image requirements exactly 33. Older providers or a static
-translation refusal cannot satisfy these positive probes. Mutex/rwsem runs retain
-their requirement-1 image; only mutex supports the public/OUTER selection.
+translation refusal cannot satisfy these positive probes. ABI2 images use
+requirements 65 when the provider advertises original-task instruction service,
+otherwise 1. Prepared rwsem writer gates expect the same RDTSC service/reentry
+contract while preserving their reader exclusion. Only mutex supports the
+public/OUTER selection and the extended four-instruction variant.
+
+## Bounded original-task instruction reentry
+
+`--family mutex --origin-instructions` adds a bounded four-instruction sequence:
+RDTSC, RDTSCP, CPUID leaf 1/subleaf 0, and a second RDTSCP. It requires v13/bit13
+and cannot be combined with nested spin or another lock family. Use the public
+entry, for example:
+
+```sh
+python3 tests/kernel/jit_escape/run.py --family mutex --mutex-api public \
+  --origin-instructions --cpus 0-15 --iterations 10000 --warmup-iterations 10000 \
+  --output /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/origin-insn-NEW
+```
+
+Singleton-affinity workers sample Native RDTSCP TSC_AUX and CPUID leaf 1 outside
+the protected interval. Both in-body RDTSCP results and all four CPUID outputs
+must match that worker's Native values. CF/PF/ZF/SF/OF from a known CMP are
+checked after each instruction, including a real conditional branch. LAHF would
+itself end delegation, so eligible mutex and prepared rwsem writer bodies omit it. AF preservation is
+covered by the full-flags runtime/codegen fixture, not this live payload.
+Four per-instruction effect
+counters, prefix/suffix and returned worker results must be conserved exactly.
+These are functional observations, never benchmark scores.
+
+Cold → taken → cold → taken must retain one image/generation. Each taken phase
+requires completed JIT roots and exactly four successful waiter services and
+four actual same-image reentry witnesses per delegated root. The ordinary mutex
+RDTSC-only variant expects one of each. The service counters are mandatory cold
+protocol witnesses, distinct from publication or inferred execution.
+
+The extended variant then enables `origin_instruction_force_suffix` only while
+idle. Every delegated root must execute the first instruction once through the
+waiter service, record one post-instruction suffix transition, and record zero
+JIT reentries/completions. The remaining body executes locally. The runtime's
+validated post-instruction PC and instruction counter establish the no-replay
+boundary; timestamps alone are not an instruction-execution counter. All four
+body effects and flags still pass. The flag is cleared while idle and a final
+cold phase must delegate again. Ordinary retirement retains exact frame/source,
+queue, task and physical-owner obligations; the probe never weakens them.
+
+This candidate is unvalidated until its VM receipts exist. It covers the three
+bounded scalar instructions, not arbitrary instructions or helper reentry.
 
 For example, after the same recovery and kernel-identity checks:
 
@@ -110,7 +162,10 @@ encoding. The named first marker remains `RDTSC`, and the suffix still records
 the physical current task. These new families do not use IRQ/BH lock variants,
 nested acquisition, cancellation or a checked memory-fault continuation.
 
-The warmup and four asserted phases remain in one provider/source session:
+The warmup and four asserted phases remain in one provider/source session.
+The following taken-phase description applies to the before-instruction native
+suffix controls. Eligible v13 sole-outer ABI2 writer gates instead require the exact
+instruction-service/reentry counts described above:
 
 1. `cold-warmup`: run with the unusual-instruction branch disabled, leaving it
    present in the code. The image must publish as `NORMAL`, which means ready
@@ -134,11 +189,12 @@ The warmup and four asserted phases remain in one provider/source session:
 
 Every asserted phase requires the same registry record, immutable generation,
 code address and published image bytes. No re-preparation or replacement can
-stand in for persistent eligibility. A marker finishes the current invocation's
-entire native suffix; it does not return that invocation to the JIT. Independent
+stand in for persistent eligibility. A before-instruction native marker finishes
+the current invocation's entire suffix; the v13 bounded instruction service
+returns eligible ABI2 writer invocations to the same image. Independent
 entry bans remain sticky and are covered separately by the image/registry tests.
 
-The mutex/rwsem controls accept capability versions 6 through 12 only when feature
+The mutex/rwsem controls accept capability versions 6 through 13 only when feature
 bit 5 (native instruction exit) is present. Spin/rwlock require the additional
 contract described above; the version alone does not establish support.
 The private benchmark observation
@@ -164,9 +220,11 @@ and 128 entries. Those spin workloads do not measure this mutex marker path.
 
 Every phase records worker process identifiers, exact per-worker progress,
 counter snapshots, registry state and kernel messages. The payload checks all
-six arithmetic condition flags carried from a comparison through an
-unconditional branch, the marker exit and `RDTSC`; see its README for the flag
-names and expected values. Existing mutex ownership, release acknowledgements
+five arithmetic condition flags carried from a comparison through an
+unconditional branch, the marker exit and `RDTSC`. Native-suffix family/nesting
+variants retain LAHF's additional AF check; eligible ABI2 writers omit that separate
+native marker. See the payload README for the tested flag names and values.
+Existing mutex ownership, release acknowledgements
 and source-lifetime rules remain in force.
 
 A timeout, kernel fault or caller-control error before every worker joins

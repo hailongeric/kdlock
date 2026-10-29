@@ -102,6 +102,14 @@ See [mutex routing](design/locking.md#entry-completion-and-task-routing).
 | 96, 104, 112, 120, 128 | AX, CX, DX, SI, DI |
 | 136, 144, 152, 160 | orig_AX, CS, FLAGS, SS |
 
+Under the optional original-task instruction image requirement, SS is private
+storage for the remaining branch budget; it is never installed as a hardware
+segment selector. Only that contract's FULL marker writes it. The runtime's
+`KD_REG_ORIGIN_REENTRY_TAG` authorizes one flags/budget import at an exact
+directory-listed successor; ordinary FULL CALL entries clear stale tag bytes.
+`KD_REG_ORIGIN_SUFFIX_TAG` instead selects flags-aware native restoration after
+an instruction that already executed. Neither tag changes source CALL words.
+
 The packet is shared by waiter and combiner. Virtual R11..R15 use its backing slots;
 there is no second wrapper GPR snapshot. The spin frame places its 40-byte core
 header immediately before IP/SP/BP, filling one aligned cacheline. Its
@@ -145,7 +153,7 @@ inside one C batch loop. Neither is callable as an ordinary C function pointer.
 Historical direct-string images accept only the clobber entry at offset 32 with a pristine
 MINIMAL packet; their ordinary and legacy entries deliberately reject execution.
 
-The separate 16-byte `KD_JIT_CAPS` ioctl reports version 12. Bits 0 and 1 describe
+The separate 16-byte `KD_JIT_CAPS` ioctl reports version 13. Bits 0 and 1 describe
 the checked mutex stack bound and static module per-CPU range; bits 3 and 4
 advertise immutable mutex images and exclusive KD mutex objects. Bits 5 and 6
 support mutex instruction exits and checked spin address exits. Bits 7 and 8
@@ -174,7 +182,20 @@ the bit retain the older unresolved-IJ behavior. No packet field, wrapper word
 or image requirement is added; new provider and translator inputs are frozen
 and synchronized together for this candidate.
 
-Ordinary images accept compatible versions 5 through 12. Optional image
+Version 13 bit 13 (`KD_JIT_CAP_ORIGIN_INSTRUCTION`) adds exit 12 for ABI2 mutex images
+with exactly requirement bits 0 and 6 (value 65). Their immutable `KDOS0001`
+footer has a 32-bit directory offset and count, followed by no other data. Up
+to 64 32-byte rows contain source IP, source successor IP, generated successor
+offset, one-byte kind and length, two zero reserved bytes and eight padded
+opcode bytes. Kinds 1/2/3 mean exact RDTSC/RDTSCP/CPUID. Publication validates
+source bytes and pins both source boundaries; runtime matches the current marker
+and retained owner before executing. Other instruction/context intervals retain
+the suffix path. Prepared rwsem writers retain their reader-excluding reservation
+around this same ABI2 gate-mutex transaction; reads never delegate.
+The [candidate contract](design/kernel_cs_semantics.md#bounded-original-task-instruction-service-candidate)
+states pending correctness and performance gates.
+
+Ordinary images accept compatible versions 5 through 13. Optional image
 requirements still need their corresponding capabilities. Bit 9 adds no image
 requirement or packet field: image bit 0 alone remains mutex ABI2 only; its
 pair with bit 5 is restricted to spin ABI1/3. Image bits 1, 2, 3 and 4 remain
@@ -284,6 +305,7 @@ separate obligations; materializing FULL releases neither admission nor the gate
 | 9 ADDRESS_GUARD | Checked ABI1 spin load would overlap recorded stack writes; resume the waiter before that load and disable future delegation |
 | 10 DIRECT_CALL_LIMIT | Direct helper allowance exhausted before that helper executes; preserve its pending CALL word and finish on the original waiter |
 | 11 INDIRECT_CALL | Negotiated near indirect CALL miss; IP holds the actual target, `orig_ax` temporarily holds the exact source CALL address, and SP points at its real source return word |
+| 12 ORIGIN_INSN | Negotiated exact RDTSC/RDTSCP/CPUID marker; IP is the unexecuted instruction, FLAGS holds arithmetic state, and SS holds remaining block budget |
 
 Wrapper values in `exe_info.h` differ from C dispatcher results in `exe.h`.
 COMPLETE stores only IP/SP/BP; FULL stores current logical GPRs before C reads them.
@@ -335,7 +357,7 @@ reused after unpin; its ACK/task references must outlive the native suffix.
 For mutex entry ABI2, an image can replace a reviewed processor instruction with
 a marker: generated code that saves current state and returns exit 8 before that
 instruction executes. The image declares requirement bit 0, and the provider must
-advertise capability version 6 through 12 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
+advertise capability version 6 through 13 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
 The [instruction policy](design/admission.md#checked-instruction-exits) lists the
 exact eligible instructions, retained protocol restrictions and optional
 checked-mode source proofs. Trusted production assumes the source input contract.

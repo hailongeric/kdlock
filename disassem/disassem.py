@@ -26,6 +26,7 @@ import indirect_jump
 import memread
 import normal
 import native_escape
+import origin_instructions
 import native_terminals
 import solve_bug
 from miasm.expression.expression import ExprId, ExprMem
@@ -222,6 +223,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     escape_capable = (root_escape_capable or
                       (lock_kind == "mutex" and abi == 2
                        and memread.device_session.native_escape()))
+    origin_capable = (lock_kind == "mutex" and abi == 2 and escape_capable
+                      and memread.device_session.origin_instruction())
     root_controls = {address: name for address, (_, name) in lock_symbols.items()}
     if root_escape_capable:
         root_controls.update(
@@ -532,11 +535,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(reason)
         if entry_guards is not None and entry_guards.register_dependencies() - {"RSP", "RBP"}:
             return reject_translation("entry guard requires an uncaptured GPR")
+    origin_sites = origin_instructions.sites(block_dict) if origin_capable else {}
     if has_escapes:
         # Both admission passes above checked the complete original scope,
         # including every cold branch and the native suffix. Only now remove
         # instructions that this generated invocation can never execute.
-        block_dict, db_dict = native_escape.emitted_scope(block_dict, db_dict)
+        block_dict, db_dict = native_escape.emitted_scope(block_dict, db_dict,
+                                                        origin_sites=origin_sites)
         block_dict, db_dict, _ = context_policy.jit_phase_blocks(
             block_dict, db_dict, {entry} & block_dict.keys(),
             keep_call_stack,
@@ -554,6 +559,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         except indirect_jump.ReturnFlowError as error:
             diagnostics.set_instruction(error.offset, "<native escape return dispatch>")
             return reject_translation(str(error))
+    # A prior nonservice marker may have cut a later service on this branch.
+    emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
+    origin_sites = {ip:site for ip,site in origin_sites.items()
+                    if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
@@ -566,6 +575,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         root_native_escape=root_escapes,
         address_guards=memory_guards,
         trusted_source=trusted_source,
+        origin_sites=origin_sites,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -575,6 +585,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         Path('./asm/jit.S').read_text(encoding='utf-8')),
         requirements=((native_escape.REQUIREMENT if has_escapes else 0)
                       | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
+                      | (origin_instructions.REQUIREMENT if origin_sites else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)))
     return 0

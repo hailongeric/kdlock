@@ -7,6 +7,13 @@
 #include <linux/preempt.h>
 #include <linux/sched.h>
 #include <linux/uaccess.h>
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+#include <asm/cpufeature.h>
+#include "kd_regs.h"
+#if defined(JIT_ESCAPE_SPIN) || defined(JIT_ESCAPE_RWLOCK) || defined(JIT_ESCAPE_RWSEM) || defined(JIT_ESCAPE_MIXED_SPIN)
+#error "Original-task instruction probe requires a sole outer mutex"
+#endif
+#endif
 #if defined(JIT_ESCAPE_RWLOCK) || defined(JIT_ESCAPE_RWSEM)
 #define JIT_ESCAPE_SHARED
 #endif
@@ -36,6 +43,10 @@ static DEFINE_KD_MUTEX(test_lock);
 #include "kd_spin_api.h"
 static DEFINE_KD_SPINLOCK(inner_spin);
 #endif
+#if !defined(JIT_ESCAPE_SPINNING) && !defined(JIT_ESCAPE_MIXED_SPIN)
+/* Prepared rwsem writers expose this same ABI2 mutex gate to the executor. */
+#define JIT_ESCAPE_CAN_ORIGIN
+#endif
 
 static atomic_t control = ATOMIC_INIT(0);
 static atomic_t writers = ATOMIC_INIT(0);
@@ -50,6 +61,10 @@ static u64 prefix __aligned(64);
 static u64 suffix;
 static u64 hot_taken;
 extern char jit_escape_entry[], jit_escape_marker[];
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+static u64 origin_effects[4];
+extern char jit_origin_rdtscp_first[], jit_origin_cpuid[], jit_origin_rdtscp_second[];
+#endif
 
 struct escape_result {
 	u8 taken;
@@ -57,6 +72,12 @@ struct escape_result {
 	u32 ah;
 	u32 tsc_low, tsc_high;
 	unsigned long task;
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+	u32 timestamp_low[2], timestamp_high[2], auxiliary[2];
+	u32 cpuid[4];
+	u8 stage_carry[3], stage_parity[3], stage_zero[3], stage_sign[3];
+	u8 stage_overflow[3], stage_branch[3];
+#endif
 #ifdef JIT_ESCAPE_SPINNING
 	u32 cpu_aux;
 #endif
@@ -68,7 +89,7 @@ struct escape_result {
 
 /* These observations stay outside the admitted critical section. The worker
  * has singleton affinity; compare raw TSC_AUX without assuming its CPU encoding. */
-#ifdef JIT_ESCAPE_SPINNING
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 static __always_inline u32 native_cpu_aux(void)
 {
 	u32 aux;
@@ -83,6 +104,14 @@ static __always_inline unsigned long native_control_flags(void)
 
 	asm volatile("pushfq; popq %0" : "=r" (flags) : : "memory");
 	return flags & ~KD_REG_ARITHMETIC_FLAGS;
+}
+#endif
+
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+static __always_inline void native_cpuid_leaf1(u32 *value)
+{
+	asm volatile("cpuid" : "=a"(value[0]), "=b"(value[1]),
+		     "=c"(value[2]), "=d"(value[3]) : "0"(1U), "2"(0U) : "memory");
 }
 #endif
 
@@ -183,7 +212,8 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 		 * The unconditional branch tests flag preservation across a JIT
 		 * block boundary. RDTSC is safe on this guest and leaves flags
 		 * unchanged. The native suffix observes each condition immediately;
-		 * LAHF additionally exposes AF, which has no SETcc instruction.
+		 * Native-suffix families retain LAHF to expose AF. Eligible ABI2
+		 * writer builds omit that second marker so reentry reaches unlock.
 		 * Read actual current_task here, after RDTSC, and compare only after
 		 * returning to the original caller. No unsafe privileged operation
 		 * is used to exercise the escape mechanism. */
@@ -199,9 +229,11 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 			     "setz %[zero]\n\t"
 			     "sets %[sign]\n\t"
 			     "seto %[overflow]\n\t"
+#ifndef JIT_ESCAPE_CAN_ORIGIN
 			     "lahf\n\t"
 			     "movzbl %%ah, %%eax\n\t"
 			     "movl %%eax, %[ah]\n\t"
+#endif
 #ifdef JIT_ESCAPE_SPINNING
 			     /* Arithmetic observations precede this second safe
 			      * instruction; RDTSC remains the named first marker. */
@@ -217,7 +249,9 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 			       [zero] "=m" (observed.zero),
 			       [sign] "=m" (observed.sign),
 			       [overflow] "=m" (observed.overflow),
+#ifndef JIT_ESCAPE_CAN_ORIGIN
 			       [ah] "=m" (observed.ah),
+#endif
 			       [task] "=m" (observed.task)
 #ifdef JIT_ESCAPE_SPINNING
 			       , [aux] "=m" (observed.cpu_aux)
@@ -227,6 +261,9 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 			     "rcx",
 #endif
 			     "cc", "memory");
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+#include "origin_body.inc"
+#endif
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
 #ifdef JIT_ESCAPE_MIXED_SPIN
 		/* This is after the real native marker and before B's physical ACK.
@@ -316,10 +353,14 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	struct escape_result result;
 	unsigned int before_preempt, i;
 	bool before_irqs;
-#ifdef JIT_ESCAPE_SPINNING
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 	unsigned int before_cpu;
 	unsigned long before_flags;
 	u32 expected_aux;
+#endif
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+	u32 expected_cpuid[4];
+	unsigned int stage;
 #endif
 	int ret = 0;
 
@@ -334,7 +375,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (!run.iterations || run.iterations > 10000000 ||
 		    run.worker >= 64 || run.reserved[0] || run.reserved[1])
 			return -EINVAL;
-#ifdef JIT_ESCAPE_SPINNING
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 		/* Only ordinary task-context root acquisitions are under test. */
 		if (preempt_count() || irqs_disabled() ||
 		    cpumask_weight(current->cpus_ptr) != 1)
@@ -342,13 +383,16 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		before_cpu = raw_smp_processor_id();
 		expected_aux = native_cpu_aux();
 #endif
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+		native_cpuid_leaf1(expected_cpuid);
+#endif
 		if (!atomic_add_unless(&control, 1, -1))
 			return -EBUSY;
 		before_preempt = preempt_count();
 		before_irqs = irqs_disabled();
 		run.completed = run.errors = 0;
 		for (i = 0; i < run.iterations; i++) {
-#ifdef JIT_ESCAPE_SPINNING
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 			before_flags = native_control_flags();
 #endif
 #ifdef JIT_ESCAPE_SHARED
@@ -359,26 +403,45 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #endif
 			{
 				escape_body(&result);
-				/* Compare outside the translated critical section.
-				 * A delegated GS read cannot replace execution of
-				 * the suffix on this exact original task. */
+				/* Compare outside the translated critical section. A logical
+				 * GS task read alone is not physical-CPU evidence; extended
+				 * services additionally compare Native TSC_AUX and CPUID. */
 				if (result.taken != READ_ONCE(hot) ||
 				    (result.taken &&
 				     (result.task != (unsigned long)current ||
 				      result.carry != 1 || result.parity != 1 ||
 				      result.zero != 0 || result.sign != 1 ||
-				      result.overflow != 0 || (result.ah & 0xd5) != 0x95)))
+				      result.overflow != 0
+#ifndef JIT_ESCAPE_CAN_ORIGIN
+				      || (result.ah & 0xd5) != 0x95
+#endif
+				      )))
 					run.errors++;
 #ifdef JIT_ESCAPE_SPINNING
 				if (result.taken && result.cpu_aux != expected_aux)
 					run.errors++;
+#endif
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+				if (result.taken) {
+					if (result.auxiliary[0] != expected_aux ||
+					    result.auxiliary[1] != expected_aux)
+						run.errors++;
+					for (stage = 0; stage < 4; stage++)
+						if (result.cpuid[stage] != expected_cpuid[stage])
+							run.errors++;
+					for (stage = 0; stage < 3; stage++)
+						if (result.stage_carry[stage] != 1 || result.stage_parity[stage] != 1 ||
+						    result.stage_zero[stage] || result.stage_sign[stage] != 1 ||
+						    result.stage_overflow[stage] || !result.stage_branch[stage])
+							run.errors++;
+				}
 #endif
 #ifdef JIT_ESCAPE_SHARED
 				if (result.taken && !result.reader_pending)
 					run.errors++;
 #endif
 			}
-#ifdef JIT_ESCAPE_SPINNING
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 			if (native_control_flags() != before_flags ||
 			    raw_smp_processor_id() != before_cpu ||
 			    preempt_count() != before_preempt ||
@@ -397,6 +460,9 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		return copy_to_user(user, &run, sizeof(run)) ? -EFAULT : 0;
 	}
 	if (cmd != JIT_ESCAPE_SNAPSHOT && cmd != JIT_ESCAPE_PREPARE &&
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+	    cmd != JIT_ESCAPE_ORIGIN_SNAPSHOT &&
+#endif
 	    cmd != JIT_ESCAPE_HOT && cmd != JIT_ESCAPE_COLD)
 		return -ENOTTY;
 	/* Phase changes and inspection require every workload caller to join. */
@@ -421,7 +487,19 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			ret = -EBUSY;
 		else
 			WRITE_ONCE(hot, cmd == JIT_ESCAPE_HOT);
-	} else {
+	}
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+	else if (cmd == JIT_ESCAPE_ORIGIN_SNAPSHOT) {
+		struct jit_origin_snapshot state = {
+			.effects = { origin_effects[0], origin_effects[1], origin_effects[2], origin_effects[3] },
+			.instructions = { (unsigned long)jit_escape_marker, (unsigned long)jit_origin_rdtscp_first,
+				(unsigned long)jit_origin_cpuid, (unsigned long)jit_origin_rdtscp_second },
+		};
+
+		ret = copy_to_user(user, &state, sizeof(state)) ? -EFAULT : 0;
+	}
+#endif
+	else {
 		snapshot.prefix = prefix;
 		snapshot.suffix = suffix;
 		snapshot.hot_taken = hot_taken;
@@ -459,7 +537,8 @@ static int __init escape_init(void)
 {
 	BUILD_BUG_ON(sizeof(struct jit_escape_run) != 32);
 	BUILD_BUG_ON(sizeof(struct jit_escape_snapshot) != 80);
-#ifdef JIT_ESCAPE_SPINNING
+	BUILD_BUG_ON(sizeof(struct jit_origin_snapshot) != 64);
+#if defined(JIT_ESCAPE_SPINNING) || defined(JIT_ESCAPE_ORIGIN_INSTRUCTIONS)
 	if (!boot_cpu_has(X86_FEATURE_RDTSCP))
 		return -EOPNOTSUPP;
 #endif
@@ -470,6 +549,11 @@ module_init(escape_init);
 module_exit(escape_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Conditional JIT instruction escape and exact native continuation");
+#ifdef JIT_ESCAPE_ORIGIN_INSTRUCTIONS
+MODULE_INFO(kd_origin_instructions, "4");
+#else
+MODULE_INFO(kd_origin_instructions, "0");
+#endif
 #ifdef JIT_ESCAPE_RWLOCK
 MODULE_INFO(kd_escape_family, "rwlock");
 MODULE_INFO(kd_mutex_api, "not_applicable");

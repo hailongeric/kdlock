@@ -32,6 +32,7 @@ Trusted translation does not extend that MM integration scope.
 | [translation_image.py](translation_image.py) | Dispatch targets, flag-preserving instrumentation and generated assembly |
 | `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Register, instruction, virtual-stack and control lowering |
 | [native_escape.py](native_escape.py) | Exact instruction-marker lowering and retained runtime protocol scope |
+| [origin_instructions.py](origin_instructions.py) | ABI2 original-task instruction directory and flags/budget-preserving reentry |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
 | [instruction_policy.py](instruction_policy.py), [context_policy.py](context_policy.py), `context_symbols.py` | Optional checked-mode instruction and context screening; shared CFG helpers |
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Optional bounded value and memory analysis |
@@ -91,6 +92,15 @@ invocation's JIT after the native interval. Unsupported marker encodings
 are not automatically native fallback points. See
 [the protocol details](../docs/design/admission.md#checked-instruction-exits).
 
+The isolated original-task instruction candidate adds optional capability
+`KD_JIT_CAP_ORIGIN_INSTRUCTION` and image requirement 64. For an exact RDTSC, RDTSCP or
+CPUID with an emitted successor, an ABI2 mutex image can retain its node/frame
+while the waiter executes the instruction, then return to the same JIT with its
+arithmetic flags and remaining block budget. Other markers keep the suffix path.
+This is bounded instruction support, not arbitrary Native CALL/branch reentry;
+its [contract and pending gates](../docs/design/kernel_cs_semantics.md#bounded-original-task-instruction-service-candidate)
+remain explicit.
+
 Install [the pinned requirements](requirements.txt) in the guest virtual
 environment. The production command is
 `python3 disassem/disassem.py PID ENTRY_HEX [LOCK_KIND] [ABI]`.
@@ -105,7 +115,7 @@ The following descriptions record historical checked-analysis and image/provider
 compatibility. The current translator does not select these routes, and their
 recorded validation does not validate ordinary helper translation on Linux 7.
 
-Historical original string API services require versions 10 through 12 bit 9,
+Historical original string API services require versions 10 through 13 bit 9,
 together with bit 7 for
 `strcmp` or bit 8 for `strscpy_pad`. Their image requirements remain bit 2 and
 bit 3 respectively. A service invokes the original kernel function with its

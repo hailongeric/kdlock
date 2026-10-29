@@ -20,7 +20,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 12
+CAPS_VERSION = 13
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -33,6 +33,7 @@ CAP_AUDITED_STRINGS = 512
 CAP_DIRECT_STRINGS = 1024
 CAP_ROOT_NATIVE_ESCAPE = 2048
 CAP_INDIRECT_CALL = 4096
+CAP_ORIGIN_INSTRUCTION = 8192
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -51,6 +52,7 @@ _audited_strings = False
 _direct_strings = False
 _root_native_escape = False
 _indirect_call = False
+_origin_instruction = False
 
 
 class SourceRefused(RuntimeError):
@@ -91,7 +93,8 @@ def query_capabilities(fd):
                 "native_escape": False, "address_guard": False,
                 "string_services": False, "string_write": False,
                 "audited_strings": False, "direct_strings": False,
-                "root_native_escape": False, "indirect_call": False}
+                "root_native_escape": False, "indirect_call": False,
+                "origin_instruction": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -127,6 +130,8 @@ def query_capabilities(fd):
             known |= CAP_DIRECT_STRINGS
         if 12 <= version <= CAPS_VERSION:
             known |= CAP_ROOT_NATIVE_ESCAPE | CAP_INDIRECT_CALL
+        if 13 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_INSTRUCTION
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -135,6 +140,8 @@ def query_capabilities(fd):
             and (not features & CAP_DIRECT_STRINGS
                  or features & CAP_AUDITED_STRINGS)
             and (not features & CAP_ROOT_NATIVE_ESCAPE
+                 or features & CAP_NATIVE_ESCAPE)
+            and (not features & CAP_ORIGIN_INSTRUCTION
                  or features & CAP_NATIVE_ESCAPE)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
@@ -153,6 +160,7 @@ def query_capabilities(fd):
                 "direct_strings": bool(features & CAP_DIRECT_STRINGS),
                 "root_native_escape": bool(features & CAP_ROOT_NATIVE_ESCAPE),
                 "indirect_call": bool(features & CAP_INDIRECT_CALL),
+                "origin_instruction": bool(features & CAP_ORIGIN_INSTRUCTION),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -233,6 +241,12 @@ def indirect_call():
     return _indirect_call
 
 
+def origin_instruction():
+    """Only this v13 lease authorizes same-image original-task instructions."""
+    require()
+    return _origin_instruction
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -248,7 +262,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -296,6 +310,7 @@ def session():
         _direct_strings = caps["direct_strings"]
         _root_native_escape = caps["root_native_escape"]
         _indirect_call = caps["indirect_call"]
+        _origin_instruction = caps["origin_instruction"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -305,7 +320,8 @@ def session():
             f"string_services={int(_string_services)} "
             f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
             f"direct_strings={int(_direct_strings)} "
-            f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)}"
+            f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)} "
+            f"origin_instruction={int(_origin_instruction)}"
         )
         yield fd
     finally:
@@ -320,6 +336,7 @@ def session():
         _direct_strings = False
         _root_native_escape = False
         _indirect_call = False
+        _origin_instruction = False
         if fd is not None:
             os.close(fd)
 

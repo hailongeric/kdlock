@@ -15,6 +15,32 @@ spec = importlib.util.spec_from_file_location(
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
 
+
+class OriginalInstructionReceipts(unittest.TestCase):
+    def delta(self, entered=7, completed=7, native=0, instructions=0, reentries=0, suffixes=0):
+        return dict(bench_jit_bodies=entered, bench_jit_completions=completed,
+                    native_escape_count=native, origin_instruction_count=instructions,
+                    origin_reentry_count=reentries, origin_suffix_count=suffixes)
+
+    def test_cold_service_and_post_instruction_suffix_are_distinct(self):
+        runner.validate_execution(self.delta(), False, True, 4)
+        runner.validate_execution(self.delta(instructions=28, reentries=28), True, True, 4)
+        runner.validate_execution(self.delta(instructions=7, reentries=7), True, True)
+        runner.validate_execution(self.delta(completed=0, instructions=7, suffixes=7), True, True, 4, True)
+        runner.validate_execution(self.delta(completed=0, native=7), True, False)
+
+    def test_missing_reentry_replay_and_mixed_fallback_are_rejected(self):
+        good = self.delta(instructions=28, reentries=28)
+        for field, value in (('origin_instruction_count', 29), ('origin_reentry_count', 27),
+                             ('origin_reentry_count', 29), ('origin_suffix_count', 1),
+                             ('native_escape_count', 1), ('bench_jit_completions', 0)):
+            with self.subTest(field=field, value=value), self.assertRaises(runner.rt.Failure):
+                runner.validate_execution(dict(good, **{field:value}), True, True, 4)
+        with self.assertRaises(runner.rt.Failure):
+            runner.validate_execution(self.delta(completed=0, instructions=28, suffixes=7), True, True, 4, True)
+        with self.assertRaises(runner.rt.Failure):
+            runner.validate_execution(self.delta(entered=0, completed=0), False, True)
+
 spec = importlib.util.spec_from_file_location(
     "address_guard_runner", ROOT / "tests/kernel/spin/address_guard/run.py")
 address_runner = importlib.util.module_from_spec(spec)

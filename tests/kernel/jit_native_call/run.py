@@ -242,7 +242,8 @@ class NativeCallSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
             mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version == 12 and features & (1 << 12), "v12 Native CALL continuation capability missing")
+        rt.require(version in (12, 13) and features & (1 << 12),
+                   "Native CALL continuation capability missing from reviewed v12/v13 provider")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
         layout = self.counts("initial")

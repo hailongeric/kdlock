@@ -81,6 +81,10 @@ static void reset(void)
 	source_error = source_calls = source_fail_at = stack_error = stack_reads = 0;
 	memset(source_targets, 0, sizeof(source_targets));
 	kd_native_escape_count = 0;
+	kd_origin_instruction_count = kd_origin_reentry_count = kd_origin_suffix_count = 0;
+	kd_origin_instruction_force_suffix = origin_wrapper = false;
+	origin_result = 1;
+	origin_calls = origin_sequence = 0;
 	for (unsigned int i = 0; i < ARRAY_SIZE(kd_native_terminals); i++)
 		kd_native_terminals[i].address = 0;
 	kd_address_guard_count = 0;

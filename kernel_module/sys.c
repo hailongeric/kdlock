@@ -77,7 +77,8 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 			KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |
 			KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |
 			KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |
-			KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL,
+			KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |
+			KD_JIT_CAP_ORIGIN_INSTRUCTION,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -313,6 +314,9 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			upload->image->requirements = head.requirements;
 			upload->image->entry_abi = head.entry_abi;
 			ret = kd_image_validate_address_guards(upload->image);
+			if (ret)
+				return ret;
+			ret = kd_image_validate_origin_sites(upload->image);
 			if (ret)
 				return ret;
 			ret = kd_image_relocate_direct(upload->image);

@@ -55,6 +55,8 @@ enum kd_packet_state {
 #define KD_EXE_DIRECT_CALL_LIMIT 10
 /* Actual near indirect CALL: FULL IP is target, orig_ax is source CALL site. */
 #define KD_EXE_INDIRECT_CALL 11
+/* Exact CPU instruction on the original task, with retained JIT continuation. */
+#define KD_EXE_ORIGIN_INSN 12
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
@@ -129,12 +131,16 @@ struct kd_recv_pkt {
 /* ABI1/3 markers require one pristine physical root and one invocation.
  * This is separate from ABI2, whose nested continuation contract is unchanged. */
 #define KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE (1U << 5)
-#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE)
+#define KD_IMAGE_REQUIRE_ORIGIN_INSN (1U << 6)
+#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ORIGIN_INSN)
 
 static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 					     unsigned int requirements)
 {
 	return !(requirements & ~KD_IMAGE_REQUIREMENTS) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_ORIGIN_INSN) ||
+		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+		 requirements == (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ORIGIN_INSN))) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_NATIVE_ESCAPE) ||
 		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1) ||
 		(kind == KD_EXE_LOCK_SPIN && kd_entry_abi_spin_clobber(abi) &&

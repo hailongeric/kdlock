@@ -69,6 +69,7 @@ boundaries remain separate for reading.
 | [kd_mutex_local.c](kd_mutex_local.c), [kd_mutex_osq.c](kd_mutex_osq.c) | KD-owned physical exclusion, sleeping callers and private optimistic spinning |
 | [kd_mutex_state.h](../include/kd_mutex_state.h) | Embedded gate claim and owner phase stores; versioned waiter-record publication in reserved nodes |
 | [mutex/count.inc](mutex/count.inc) | Cold exact waiter snapshots and controlled drain checks |
+| [mutex/origin_instruction.inc](mutex/origin_instruction.inc) | Cold original-task CPU-instruction request; retains node, packet, frame and outer owner through its ACK |
 | [kd_rwsem.c](kd_rwsem.c) | Sleeping APIs, ordinary cancellation/downgrade and outer-writer phase admission before the unchanged mutex queue |
 | [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
@@ -97,6 +98,8 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
 | `native_escape_count` | Read-only total of validated instruction-exit markers; read after workers finish. It does not establish completion or control admission. |
+| `origin_instruction_count`, `origin_reentry_count`, `origin_suffix_count` | Read-only counts of executed original-task instructions, witnessed subsequent JIT segments and completed-instruction native suffixes; none substitutes for owner/source drain. |
+| `origin_instruction_force_suffix` | Diagnostic default false; finish locally after the executed instruction. Change only between idle functional phases, never during timing. |
 | `address_guard_count` | Read-only total of validated spin pointer-load exits; read after workers finish. It does not establish body completion, lock ownership or drain. |
 
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
@@ -120,7 +123,7 @@ does not stop delegation. If execution reaches it, the provider preserves the
 current registers and resumes the original waiter at that instruction, without
 repeating earlier writes.
 
-The current provider advertises capability version 12, retaining the instruction
+The current candidate provider advertises capability version 13, retaining the instruction
 exit feature introduced in version 6. The translator requires the matching
 capability bit and image requirement, which declares what the compiled code needs
 from the provider. The existing two-word wrapper interface and ABI2
@@ -138,18 +141,28 @@ ABI3 writer admission remains held through that suffix. Existing ABI2 nesting
 and ordinary spin images keep their contracts; see
 [admission](../docs/design/admission.md#checked-instruction-exits).
 
-Reaching a valid marker changes the operation's registry state to `NATIVE_ONLY`,
-meaning delegation is disabled for the rest of that source session. This change
-uses the same publication lock as a replacement image, so a concurrent upload
-cannot reenable the operation. Already admitted calls keep their original code
-and ownership records until they finish. The existing physical owner still
-services the waiter's unlock and acknowledges that the release completed.
+Reaching a valid suffix marker leaves the entry's registry state untouched.
+This invocation keeps its original code and ownership records through native
+completion; a later cold branch remains eligible. The existing physical owner
+still services the waiter's unlock and acknowledges that the release completed.
 
 The [focused live check](../tests/kernel/jit_escape/README.md) verifies both the
-untaken and taken branches, resumption on the original task, and subsequent local
-execution. Generic translation errors and exhausted execution limits do not use
+untaken and taken branches, resumption on the original task, and later cold-path
+delegation. Generic translation errors and exhausted execution limits do not use
 this recovery path. The [register contract](../docs/JIT_REGISTER_ABI.md#checked-instruction-exit)
 describes the exact saved state and validation conditions.
+
+Version 13 bit 13 adds a separate ABI2-only original-task instruction service.
+An image with requirement 65 retains exact RDTSC/RDTSCP/CPUID successors in its
+`KDOS0001` directory. A sole outer-mutex root can lend its FULL packet to the
+pinned original waiter without releasing its node or owner. After the returned
+ACK the same image resumes with only arithmetic flags and the remaining budget
+imported. A refused request retains the old suffix; a completed request's local
+fallback starts after the instruction. Arbitrary Native CALLs and state-changing
+instructions do not gain this contract. The isolated candidate's validation
+and nano gates remain pending.
+Prepared rwsem writers use this same ABI2 gate-mutex scope while retaining their
+writer reservation through final unlock ACK. Rwsem reads remain local.
 
 ## Checked spin pointer loads
 

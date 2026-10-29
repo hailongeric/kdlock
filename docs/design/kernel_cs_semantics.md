@@ -399,6 +399,14 @@ invocation to an emitted JIT successor. There is no source CALL/RET interception
 or replacement return word. Ordinary images and the inner waiter polling loop
 retain their existing paths.
 
+The ABI2 scope also includes a prepared rwsem writer whose sole physical owner
+is its gate mutex. Its positive writer reservation remains held through the
+instruction transaction and final mutex unlock ACK; the transaction neither
+reopens reader admission nor retires that reservation. Rwsem readers always
+execute locally. The extended four-instruction live probe targets the ordinary
+mutex; the existing prepared-writer marker probe covers the rwsem backend
+separately, and neither result may be inferred from the other before execution.
+
 The rare waiter wake distinguishes a service from native completion. The waiter
 rearms its existing notification before release-publishing the returned result;
 after publication it never touches the transaction or packet again and resumes
@@ -408,6 +416,13 @@ released at an intermediate service boundary. Exact transaction identity and
 source continuation checks remain mandatory. A refused service executes its
 original marker natively; a completed service can fall forward only from its
 post-instruction state, never replay the instruction.
+
+For CPUID, the original requested leaf/subleaf executes on the waiter. The
+combiner additionally serializes its own instruction stream with leaf-zero
+CPUID before publication and after the returned ACK; a memory handshake alone
+does not provide CPUID's instruction-stream ordering across the proxy boundary.
+Remaining branch budget is captured and imported for reentry, and the existing
+finite continuation quota also bounds the number of services in one body.
 
 Only arithmetic flags cross the new continuation boundary. The JIT imports them
 after runtime checks and dispatch comparisons, immediately before its emitted

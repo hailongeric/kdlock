@@ -1,11 +1,18 @@
 JIT_ESCAPE_MUTEX_API ?= outer
 JIT_ESCAPE_FAMILY ?= mutex
 JIT_ESCAPE_MIXED_SPIN ?= 0
+JIT_ESCAPE_ORIGIN_INSTRUCTIONS ?= 0
 ifneq ($(KERNELRELEASE),)
 obj-m := jit_escape_test.o
 jit_escape_test-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -I$(KDLOCK_INCLUDE)
+ifeq ($(JIT_ESCAPE_ORIGIN_INSTRUCTIONS),1)
+ifneq ($(JIT_ESCAPE_FAMILY):$(JIT_ESCAPE_MIXED_SPIN),mutex:0)
+$(error origin instruction probe requires a mutex with no nested spin)
+endif
+ccflags-y += -DJIT_ESCAPE_ORIGIN_INSTRUCTIONS
+endif
 ifeq ($(JIT_ESCAPE_MIXED_SPIN),1)
 ccflags-y += -DJIT_ESCAPE_MIXED_SPIN
 endif

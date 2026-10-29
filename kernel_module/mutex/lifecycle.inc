@@ -42,6 +42,8 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(sizeof(struct kd_mutex_node) != 5 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, native_resume) != 306);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, origin_request) != 312);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, count_seq) != 88);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, counted_lock) != 96);

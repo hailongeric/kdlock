@@ -1,4 +1,4 @@
-"""Execute the production instruction-marker restore in guest userspace.
+"""Execute production pre/post-instruction restoration in guest userspace.
 
 This checks x86 registers, arithmetic flags, stack position, and preservation
 of user-observable control flags. Kernel ownership/drain need the live probe.

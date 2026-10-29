@@ -331,6 +331,85 @@ static int kd_jit_native_escape(struct kd_exe_info *exe,
 	return 0;
 }
 
+/* 1 resumes this same image; 0/2 return a validated before/after native suffix.
+ * Unlike a CALL, one of these fixed opcodes has no source return word to pop. */
+__attribute__((__noinline__, __cold__, __no_instrument_function__))
+static int kd_jit_origin_instruction(struct kd_exe_info *exe,
+				     struct kd_exec_frame *frame,
+				     struct kd_regs *regs,
+				     unsigned long sequence)
+{
+	const struct kd_origin_site *sites, *site = NULL;
+	const struct kd_jit_image *image;
+	unsigned char opcode[8];
+	unsigned long base, end;
+	unsigned int count, i;
+	int ret;
+
+	if (!exe || !frame || !regs || frame->packet_state != KD_PACKET_FULL ||
+	    !frame->mutex_backend || frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !frame->executed || frame->logical_task == current ||
+	    regs != kd_exec_frame_regs(frame) || !kd_exec_frame_can_borrow_locks(frame) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    frame->image->entry_abi != frame->entry_abi || !(regs->flags & 2) ||
+	    !regs->ss || regs->ss > 0x1000000UL)
+		return -EINVAL;
+	image = frame->image;
+	sites = kd_image_origin_sites(image, &count);
+	if (!sites)
+		return -EPROTO;
+	for (i = 0; i < count; i++)
+		if (sites[i].ip == regs->ip) {
+			if (site)
+				return -EPROTO;
+			site = &sites[i];
+		}
+	if (!site || !kd_image_origin_site_valid(image, site))
+		return -EPROTO;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE)
+		return -EFAULT;
+	end = base + THREAD_SIZE;
+	if (regs->sp < base + 2 * sizeof(unsigned long) || regs->sp > end - sizeof(unsigned long))
+		return -EFAULT;
+	ret = kd_source_pin_target(site->ip);
+	if (!ret)
+		ret = kd_source_pin_target(site->next_ip - 1);
+	if (!ret)
+		ret = kd_source_pin_target(site->next_ip);
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)site->ip, site->length) ||
+	    memcmp(opcode, site->opcode, site->length))
+		return -EILSEQ;
+	/* A quota or context refusal is still BEFORE this source instruction.
+	 * The established suffix path retains every previously committed effect. */
+	ret = sequence > KD_EXE_HL_MAX_CONTINUATIONS ? 0 :
+		kd_mutex_origin_instruction(frame, site->kind, sequence);
+	if (ret < 0)
+		return ret;
+	if (!ret) {
+		ret = kd_jit_native_escape(exe, frame, regs);
+		return ret ? ret : 0;
+	}
+	/* The service's ACK proves the origin no longer accesses this packet.
+	 * Every later refusal must use this post-instruction state, never ip. */
+	if (ret != 1 || frame->image != image ||
+	    !kd_exec_frame_can_borrow_locks(frame) || regs->ip != site->ip ||
+	    frame->control_call.phase != KD_CALL_NONE)
+		return -EINVAL;
+	regs->ip = site->next_ip;
+	atomic64_inc(&kd_origin_instruction_count);
+	regs->orig_ax = READ_ONCE(kd_origin_instruction_force_suffix) ?
+		KD_REG_ORIGIN_SUFFIX_TAG : KD_REG_ORIGIN_REENTRY_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	if (regs->orig_ax == KD_REG_ORIGIN_SUFFIX_TAG) {
+		atomic64_inc(&kd_origin_suffix_count);
+		return 2;
+	}
+	return 1;
+}
+
 /* Only a published MOV-load predicate can request this continuation. Source
  * flags are dead along every admitted successor before a flag read, proved by
  * the translator; the ordinary spin restore therefore needs no flags merge.

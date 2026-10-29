@@ -25,6 +25,8 @@ def main(executor=None, benchmark=False):
     types += without_includes(read_source((ROOT / "include/exe_info.h")))
     types += without_includes(read_source(ROOT / "include/kd_image.h"))
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
+    types += definition(read_source(ROOT / "include/kd_origin_service.h"),
+                        "enum kd_origin_instruction {").rstrip() + ";\n"
     types += '#include "kd_hostcall.h"\n'
     if executor is None:
         executor = read_source(ROOT / "kernel_module/exe.c")
@@ -69,6 +71,7 @@ def main(executor=None, benchmark=False):
             "static bool kd_jit_root_escape_image(const struct kd_exec_frame *frame)",
             "static bool kd_jit_root_escape_owner(const struct kd_exec_frame *frame)",
             "static int kd_jit_native_escape(struct kd_exe_info *exe,",
+            "static int kd_jit_origin_instruction(struct kd_exe_info *exe,",
             "static int kd_jit_address_guard(struct kd_exe_info *exe,",
             "static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,",
             "static void *kd_jit_bound_code(const struct kd_exe_info *exe,",

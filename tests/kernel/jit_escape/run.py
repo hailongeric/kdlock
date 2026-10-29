@@ -29,6 +29,8 @@ WORKER_COMM = "ke_worker"
 RUN, SNAPSHOT, PREPARE, HOT = 0xC0204501, 0x80504502, 0x4503, 0x4504
 READ = 0xC0204505
 COLD = 0x4506
+ORIGIN_SNAPSHOT = 0x80404507
+ORIGIN_COUNTERS = ("origin_instruction_count", "origin_reentry_count", "origin_suffix_count")
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
 FIELDS = ("prefix", "suffix", "hot_taken", "lock_address", "entry", "marker",
           "failures", "active", "hot", "idle")
@@ -52,6 +54,32 @@ def snapshot():
     with open(DEVICE, "rb", buffering=0) as device:
         fcntl.ioctl(device, SNAPSHOT, buffer, True)
     return dict(zip(FIELDS, struct.unpack("=10Q", buffer)))
+
+
+def origin_snapshot():
+    buffer = bytearray(64)
+    with open(DEVICE, "rb", buffering=0) as device:
+        fcntl.ioctl(device, ORIGIN_SNAPSHOT, buffer, True)
+    values = struct.unpack("=8Q", buffer)
+    return dict(effects=list(values[:4]), instructions=list(values[4:]))
+
+
+def validate_execution(delta, hot, service, instructions=1, force_suffix=False):
+    """Exact returned-root versus committed-service/reentry conservation."""
+    entered, completed = delta["bench_jit_bodies"], delta["bench_jit_completions"]
+    native = delta["native_escape_count"]
+    origin = [delta.get(name, 0) for name in ORIGIN_COUNTERS]
+    rt.require(entered > 0, "phase lacks actual JIT entries", "NO_JIT")
+    if not hot:
+        rt.require(entered == completed and native == 0 and origin == [0, 0, 0],
+                   "cold path did not return through JIT without instruction service", "DATA_ERROR")
+    elif service:
+        expected = [entered, 0, entered] if force_suffix else [instructions*entered, instructions*entered, 0]
+        rt.require(native == 0 and completed == (0 if force_suffix else entered) and origin == expected,
+                   "committed waiter instruction/reentry/suffix conservation differs", "DATA_ERROR")
+    else:
+        rt.require(entered == native and completed == 0 and origin == [0, 0, 0],
+                   "native-only marker did not resume the original suffix", "DATA_ERROR")
 
 
 def worker(arguments):
@@ -124,6 +152,8 @@ class EscapeSession(Session):
 
     def counts(self, label):
         row = snapshot()
+        if self.record.get("origin_instructions"):
+            row["origin"] = origin_snapshot()
         rt.write_json(self.path / (label + ".counts.json"), row)
         rt.require(row["active"] == 0 and row["idle"] == 1,
                    "workload or lock still active: " + str(row), "UNDRAINED")
@@ -132,8 +162,10 @@ class EscapeSession(Session):
         return row
 
     def counters(self):
-        return {key: int((PARAMETERS / key).read_text())
-                for key in ("bench_jit_bodies", "bench_jit_completions", "native_escape_count")}
+        names = ("bench_jit_bodies", "bench_jit_completions", "native_escape_count")
+        if self.record.get("origin_capable"):
+            names += ORIGIN_COUNTERS
+        return {key: int((PARAMETERS / key).read_text()) for key in names}
 
     def registry(self, label, expected):
         rows = image_registry()
@@ -161,10 +193,20 @@ class EscapeSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11, 12) and features & (1 << 5),
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
+        self.record["origin_capable"] = version == 13 and bool(features & (1 << 13))
+        self.record["origin_service"] = (self.record["origin_capable"] and
+            self.record["entry_abi"] == 2 and not self.record["mixed_spin"])
+        if self.record["origin_capable"] and self.record["entry_abi"] == 2:
+            self.record["image_requirements"] |= 64
+        rt.require(not self.record.get("origin_instructions") or self.record["origin_service"],
+                   "four-instruction probe requires v13/bit13 sole-outer mutex service")
+        if self.record["origin_capable"]:
+            rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() == "N",
+                       "forced suffix diagnostic unexpectedly enabled at load")
         if self.record["lock_kind"] in ("spin", "rwlock"):
-            rt.require(version == 12 and features & (1 << 11),
+            rt.require(version in (12, 13) and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
@@ -172,6 +214,11 @@ class EscapeSession(Session):
         rt.require(layout["prefix"] == layout["suffix"] == layout["hot_taken"] == layout["hot"] == 0,
                    "nonzero initial workload state")
         rt.require(layout["lock_address"] and layout["entry"] and layout["marker"], "missing source labels")
+        if self.record.get("origin_instructions"):
+            rt.require(layout["origin"]["effects"] == [0]*4 and
+                       len(set(layout["origin"]["instructions"])) == 4 and
+                       layout["origin"]["instructions"][0] == layout["marker"],
+                       "instruction labels or initial effects differ")
         self.record.update(layout=layout, entry_range=[layout["entry"], layout["entry"] + 1],
                            caller_abi="clobber")
         (PARAMETERS / "bench_lock_addr").write_text(str(layout["lock_address"]))
@@ -192,6 +239,27 @@ class EscapeSession(Session):
                            self.record["image_requirements"] and
                            self.record["image_registry"][0]["generation"] > 0,
                            "marker image lacks the required native-exit contract")
+                if self.record.get("origin_instructions"):
+                    images = list((self.path/"workspace").rglob("jit.bin"))
+                    rt.require(len(images) == 1, "exactly one immutable instruction image required")
+                    data = images[0].read_bytes()
+                    rt.require(len(data) >= 16 and data[-16:-8] == b"KDOS0001",
+                               "original-task instruction footer missing")
+                    offset, count = struct.unpack_from("<2I", data, len(data)-8)
+                    rt.require(count == 4 and offset+count*32 == len(data)-16,
+                               "exact four-site image metadata required")
+                    sites = [struct.unpack_from("<QQIBBH8s", data, offset+index*32) for index in range(count)]
+                    expected = dict(zip(layout["origin"]["instructions"],
+                                        ((1,b"\x0f\x31"), (2,b"\x0f\x01\xf9"),
+                                         (3,b"\x0f\xa2"), (2,b"\x0f\x01\xf9"))))
+                    rt.require({row[0] for row in sites} == set(expected) and
+                               all(next_ip == ip+length and kind == expected[ip][0] and
+                                   opcode == expected[ip][1].ljust(8,b"\0") and
+                                   length == len(expected[ip][1]) and reserved == 0 and code < offset
+                                   for ip,next_ip,code,kind,length,reserved,opcode in sites),
+                               "immutable instruction/successor metadata differs")
+                    self.record["origin_sites"] = [dict(ip=row[0], next_ip=row[1], code_offset=row[2],
+                        kind=row[3], length=row[4], opcode=row[6].hex()) for row in sites]
                 self.record["initial_parameters"] = rt.parameters()
                 rt.require(self.record["initial_parameters"]["target_process"] == WORKER_COMM,
                            "provider worker eligibility name differs")
@@ -200,12 +268,12 @@ class EscapeSession(Session):
             time.sleep(.1)
         raise rt.Failure("TIMEOUT", "cold branch failed to publish", unsafe=True)
 
-    def phase(self, name, iterations, hot):
+    def phase(self, name, iterations, hot, force_suffix=False):
         self.verify()
         before = self.counts(name + "-before")
         rt.require(before["hot"] == hot, "incorrect phase flag")
         counts_before = self.counters()
-        result = dict(name=name, iterations=iterations, hot=hot, before=before,
+        result = dict(name=name, iterations=iterations, hot=hot, force_suffix=force_suffix, before=before,
                       counters_before=counts_before, registry_before=image_registry(), complete=False)
         self.record.setdefault("phases", []).append(result)
         self.save()
@@ -293,6 +361,14 @@ class EscapeSession(Session):
                    after["suffix"] - before["suffix"] == operations and
                    after["hot_taken"] - before["hot_taken"] == hot * operations,
                    "prefix/suffix/native branch duplicated or omitted", "DATA_ERROR")
+        if self.record.get("origin_instructions"):
+            rt.require(before["origin"]["instructions"] == after["origin"]["instructions"] ==
+                       self.record["layout"]["origin"]["instructions"] and
+                       [end-start for start,end in zip(before["origin"]["effects"],after["origin"]["effects"])] ==
+                       [hot*operations]*4, "instruction effects duplicated, lost or labels changed", "DATA_ERROR")
+        if self.record.get("origin_capable"):
+            rt.require(all(0 <= delta[key] <= operations*(4 if self.record.get("origin_instructions") else 1)
+                           for key in ORIGIN_COUNTERS), "instruction counters out of bounds", "DATA_ERROR")
         rt.require(0 <= delta["bench_jit_completions"] <= delta["bench_jit_bodies"] <= operations,
                    "invalid execution counters", "DATA_ERROR")
         rt.require(0 <= delta["native_escape_count"] <= operations and
@@ -313,23 +389,32 @@ class EscapeSession(Session):
         self.record["execution_status"] = "MEASURING"
         self.phase("cold-warmup", self.record["warmup_iterations"], 0)
         taken = []
-        for name, hot in (("cold-delegated", 0), ("hot-escape", 1),
-                          ("cold-after-escape", 0), ("hot-repeat", 1)):
+        phases = [("cold-delegated", 0, False), ("hot-escape", 1, False),
+                  ("cold-after-escape", 0, False), ("hot-repeat", 1, False)]
+        if self.record.get("origin_instructions"):
+            phases += [("hot-forced-post-instruction-suffix", 1, True),
+                       ("cold-after-forced-suffix", 0, False)]
+        for name, hot, force_suffix in phases:
             # phase() returns only after every caller joins and the source
             # frames drain. The payload also requires exclusive idle control.
             with open(DEVICE, "rb", buffering=0) as device:
                 fcntl.ioctl(device, HOT if hot else COLD)
-            phase = self.phase(name, self.record["iterations"], hot)
+            if self.record.get("origin_capable"):
+                (PARAMETERS/"origin_instruction_force_suffix").write_text(str(int(force_suffix))+"\n")
+                rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() ==
+                           ("Y" if force_suffix else "N"), "forced suffix diagnostic readback differs")
+            phase = self.phase(name, self.record["iterations"], hot, force_suffix)
             delta = phase["jit_delta"]
-            if hot:
-                rt.require(delta["bench_jit_bodies"] == delta["native_escape_count"] > 0 and
-                           delta["bench_jit_completions"] == 0,
-                           f"{name} lacks exact reached-marker/native-suffix evidence", "DATA_ERROR")
+            validate_execution(delta, hot, self.record["origin_service"],
+                               4 if self.record.get("origin_instructions") else 1, force_suffix)
+            phase["execution_contract"] = ("returned_jit" if not hot else
+                "post_instruction_native_suffix" if force_suffix else
+                "waiter_instruction_and_same_image_reentry" if self.record["origin_service"] else
+                "before_instruction_native_suffix")
+            phase["execution_validated"] = True
+            self.save()
+            if hot and not self.record["origin_service"]:
                 taken.append(phase)
-            else:
-                rt.require(delta["bench_jit_bodies"] == delta["bench_jit_completions"] > 0 and
-                           delta["native_escape_count"] == 0,
-                           f"{name} lacks completed delegated bodies", "NO_JIT")
             rows = self.registry(name, 0)
             rt.require(rows == self.record["image_registry"] and
                        self.publication() == self.record["publication"],
@@ -346,13 +431,17 @@ class EscapeSession(Session):
                 if row["role"] == "writer"}
         # Logs are rate limited; counters prove a reached marker in EACH taken
         # phase. Every retained log must still name one exact eligible caller.
-        rt.require(events and len(events) <= sum(p["jit_delta"]["native_escape_count"] for p in taken) and
-                   all(event["entry"] == self.record["layout"]["entry"] and
-                   event["rip"] == self.record["layout"]["marker"] and
-                   event["generation"] == self.record["image_registry"][0]["generation"] and
-                   event["waiter_pid"] in pids for event in events),
-                   "missing or mismatched native-escape event", "DATA_ERROR")
-        self.record.update(jit_status="COLD_JIT_TAKEN_NATIVE_COLD_JIT_TAKEN_NATIVE", accepted=True,
+        if taken:
+            rt.require(events and len(events) <= sum(p["jit_delta"]["native_escape_count"] for p in taken) and
+                       all(event["entry"] == self.record["layout"]["entry"] and
+                       event["rip"] == self.record["layout"]["marker"] and
+                       event["generation"] == self.record["image_registry"][0]["generation"] and
+                       event["waiter_pid"] in pids for event in events),
+                       "missing or mismatched native-escape event", "DATA_ERROR")
+        else:
+            rt.require(not events, "service-only phases unexpectedly used a before-instruction suffix")
+        self.record.update(jit_status=("COLD_JIT_WAITER_INSTRUCTION_JIT_REENTRY_REPEAT"
+            if self.record["origin_service"] else "COLD_JIT_TAKEN_NATIVE_COLD_JIT_TAKEN_NATIVE"), accepted=True,
                            final_parameters=rt.parameters())
         self.verify()
 
@@ -375,6 +464,8 @@ def main():
     parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
     parser.add_argument("--mixed-spin", action="store_true",
                         help="mutex: hold an exact nested spin ticket across native escape")
+    parser.add_argument("--origin-instructions", action="store_true",
+                        help="sole-outer mutex: four original-task instructions, JIT reentry and forced suffix")
     parser.add_argument("--hotlock-stats", action="store_true",
                         help="retain final heat observations for diagnosis; admission is unchanged")
     kernel_identity.arguments(parser)
@@ -393,6 +484,8 @@ def main():
                "--mutex-api public requires --family mutex")
     rt.require(not args.mixed_spin or args.family == "mutex",
                "--mixed-spin requires --family mutex")
+    rt.require(not args.origin_instructions or (args.family == "mutex" and not args.mixed_spin),
+               "--origin-instructions requires a mutex without nested spin")
     rt.require(0 < args.reader_iterations <= 10000000, "reader iterations out of bounds")
     rt.require(0 < args.iterations <= 10000000 and 0 < args.warmup_iterations <= 10000000 and
                1 <= args.phase_timeout <= 600, "invalid iteration/timeout bounds")
@@ -433,6 +526,7 @@ def main():
                     f"JIT_ESCAPE_FAMILY={args.family}",
                     f"JIT_ESCAPE_MUTEX_API={args.mutex_api}",
                     f"JIT_ESCAPE_MIXED_SPIN={int(args.mixed_spin)}",
+                    f"JIT_ESCAPE_ORIGIN_INSTRUCTIONS={int(args.origin_instructions)}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)
         compiled_api = rt.command(["modinfo", "-F", "kd_mutex_api", workload],
                                   out / "mutex-api.txt").strip()
@@ -441,6 +535,10 @@ def main():
         compiled_family = rt.command(["modinfo", "-F", "kd_escape_family", workload],
                                      out / "family.txt").strip()
         rt.require(compiled_family == args.family, "compiled escape family differs")
+        compiled_origin = rt.command(["modinfo", "-F", "kd_origin_instructions", workload],
+                                     out / "origin-instructions.txt").strip()
+        rt.require(compiled_origin == ("4" if args.origin_instructions else "0"),
+                   "compiled original-task instruction variant differs")
         imported = rt.command(["nm", "-u", workload], out / "workload-imports.txt")
         if args.mixed_spin:
             rt.require({"kd_spin_lock_clobber_v1", "kd_spin_unlock_clobber_v1"} <= set(imported.split()),
@@ -521,6 +619,7 @@ def main():
                     image_requirements=1 if args.family in ("mutex", "rwsem") else 33,
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,
+                    origin_instructions=args.origin_instructions,
                     caller_shell=shell, cookie_storage=cookie, hotlock_stats=args.hotlock_stats,
                     worker_roles=["writer"] * (len(args.cpus) - reader_count) + ["reader"] * reader_count,
                     reader_iterations=args.reader_iterations,
@@ -535,11 +634,16 @@ def main():
             image_requirements=session.record["image_requirements"],
             worker_roles=session.record["worker_roles"],
             mixed_spin=session.record["mixed_spin"],
+            origin_instructions=session.record["origin_instructions"],
+            origin_service=session.record["origin_service"],
+            capabilities=session.record["capabilities"],
             mutex_api=session.record["mutex_api"], caller_shell=session.record["caller_shell"],
             cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
-        print("PASS: cold branches delegated before and after native continuation; hot instruction resumed on original task; exact effects/flags; image remains eligible; final drain")
+        print("PASS: cold paths and reached original-task instructions retain exact effects and tested flags; "
+              + ("same-image JIT reentry verified; " if session.record["origin_service"] else "native suffix verified; ")
+              + "image remains eligible; final drain")
         return 0
     except (RuntimeError, OSError, ValueError, KeyError, ImportError) as error:
         rt.write_json(out / "failure.json", dict(error=str(error), status=getattr(error, "status", "FAILED"),

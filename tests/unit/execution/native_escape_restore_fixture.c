@@ -45,7 +45,9 @@ asm(".text\n"
 int main(void)
 {
 	static const unsigned int bits[] = {0, 2, 4, 6, 7, 11};
-	for (unsigned int pattern = 0; pattern < 64; pattern++) {
+	/* A completed instruction resumes after its effect with the same exact
+	 * flags contract as a pre-instruction marker; neither installs CPU state. */
+	for (unsigned int pattern = 0; pattern < 128; pattern++) {
 		struct kd_regs unchanged;
 		unsigned long *input = (unsigned long *)&resume_packet;
 		unsigned long arithmetic = 0;
@@ -56,7 +58,8 @@ int main(void)
 			input[word] = 0x1100000000000000UL + word * 0x01020304050607UL;
 		resume_packet.ip = (unsigned long)escaped_landing;
 		resume_packet.sp = (unsigned long)(target_stack + sizeof(target_stack) - 64);
-		resume_packet.orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
+		resume_packet.orig_ax = pattern & 64 ?
+			KD_REG_ORIGIN_SUFFIX_TAG : KD_REG_NATIVE_ESCAPE_TAG;
 		/* Poison every control bit: none may be installed on the waiter. */
 		resume_packet.flags = ~KD_REG_ARITHMETIC_FLAGS | arithmetic;
 		unchanged = resume_packet;
@@ -73,7 +76,7 @@ int main(void)
 		assert((result_packet.flags & ~KD_REG_ARITHMETIC_FLAGS) ==
 		       (caller_flags & ~KD_REG_ARITHMETIC_FLAGS));
 	}
-	printf("native marker restore: 64 arithmetic-flag combinations, all GPRs, exact SP and waiter control flags passed; return=%s\n",
+	printf("native marker/post-instruction restore: 2 tags x 64 arithmetic-flag combinations, all GPRs, exact SP and waiter control flags passed; return=%s\n",
 #if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 	       "configured-thunk-stand-in"
 #else
