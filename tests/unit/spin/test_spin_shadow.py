@@ -99,6 +99,10 @@ def main():
     body += "#define cpu_relax() ((void)0)\nstatic __always_inline bool\n"
     body += definition(source, "kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)")
     body += "#undef cpu_relax\n"
+    body += "static u8 kd_spin_proxy_context(void) { return fixture_proxy_context; }\n"
+    body += "static __always_inline bool\n" + definition(
+        source, "kd_spin_proxy_context_matches(u8 origin, u8 executor)"
+    )
     body += definition(source, "static void kd_spin_batch_run(void *opaque)")
     # The wrapper observes recursive entry/return; it does not replace the
     # production scan, cancellation, splice or queue-head save/restore bodies.

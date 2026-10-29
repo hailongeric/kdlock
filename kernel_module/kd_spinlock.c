@@ -44,6 +44,8 @@
  * inlining form part of the existing entry ABI. See README.md for the map. */
 #include "spin/state.inc"
 
+#include "spin/context.inc"
+
 #include "spin/shadow.inc"
 
 #include "spin/diagnostics.inc"

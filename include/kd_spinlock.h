@@ -67,6 +67,9 @@ struct kd_spin_node {
 	u8 prefetch_complex;
 	/* Valid upward stack hints, prepared by the owning CPU. Fits node padding. */
 	u8 prefetch_stack_lines;
+	/* Saved physical-root context; zero refuses proxying. Fits node padding.
+	 * A virtual request has its separate parent/ticket context contract. */
+	u8 proxy_context;
 	/* NULL for a non-combinable MCS waiter; no logical execution state. */
 	struct kd_spin_continuation *execution;
 	struct kd_regs *prefetch_regs;
