@@ -1,5 +1,53 @@
-/* Included inside the terminal fixture main after its production queue cases.
- * This checks actual mode-2 selection/drain hooks, not a second counter model. */
+/* Included at the helper/setup/extra boundaries of the terminal fixture.
+ * Exercise the actual dynamic lifecycle and mode-2 selection/drain helpers. */
+#if defined(PIN_DIAG_FIXTURE_HELPERS)
+static void diag_free_percpu(void *storage)
+{
+    /* Detach while excluding getters, then drop that exclusion before free. */
+    CHECK(!diag_params_locked && !kd_mutex_pin_cpus);
+    CHECK(storage && storage==diag_live_storage);
+    memset(storage,0xdd,diag_storage_bytes);
+    free(storage);diag_live_storage=NULL;diag_storage_bytes=0;diag_frees++;
+}
+
+static int diag_stats_get(char *buffer)
+{
+    int ret;
+    /* Match kernel/params.c's externally held lock for the production getter. */
+    kernel_param_lock(THIS_MODULE);
+    ret=kd_mutex_pin_stats_get(buffer,NULL);
+    kernel_param_unlock(THIS_MODULE);
+    return ret;
+}
+
+static void diag_check_zero(void)
+{
+    CHECK(kd_mutex_pin_cpus && (void *)kd_mutex_pin_cpus==diag_live_storage);
+    CHECK(diag_storage_bytes==sizeof(*kd_mutex_pin_cpus));
+    for(size_t i=0;i<diag_storage_bytes;i++)
+        CHECK(((const unsigned char *)diag_live_storage)[i]==0);
+#if KDLOCK_MUTEX_PIN_TSC_SHIFT
+    CHECK(!kd_mutex_pin_sample_seq);
+#endif
+}
+#elif defined(PIN_DIAG_FIXTURE_SETUP)
+    char lifecycle_json[PAGE_SIZE];
+    memset(lifecycle_json,'#',sizeof(lifecycle_json));
+    CHECK(!kd_mutex_pin_cpus && !diag_live_storage);
+    CHECK(diag_stats_get(lifecycle_json)==-ENODEV && !diag_cpu_accesses);
+    CHECK(lifecycle_json[0]=='#' && lifecycle_json[PAGE_SIZE-1]=='#');
+    diag_fail_alloc=true;
+    CHECK(KD_MUTEX_PIN_DIAG_INIT()==-ENOMEM);
+    CHECK(diag_alloc_attempts==1 && !diag_allocations && !diag_frees);
+    CHECK(!kd_mutex_pin_cpus && !diag_live_storage && !diag_params_locked);
+    CHECK(diag_stats_get(lifecycle_json)==-ENODEV && !diag_cpu_accesses);
+    KD_MUTEX_PIN_DIAG_EXIT();
+    CHECK(!diag_frees && !diag_live_storage && !diag_params_locked);
+    diag_fail_alloc=false;
+    CHECK(!KD_MUTEX_PIN_DIAG_INIT());
+    CHECK(diag_alloc_attempts==2 && diag_allocations==1 && !diag_frees);
+    diag_check_zero();
+#else
     char pin_json[PAGE_SIZE];
     unsigned long long before_sum=0,after_sum=0,reason_sum=0;
     for(unsigned int i=0;i<=KD_MUTEX_PIN_WINDOW;i++) {
@@ -15,7 +63,7 @@
     CHECK(kd_mutex_pin_totals.current_ack_immediate==kd_mutex_pin_totals.selections);
     CHECK(kd_mutex_pin_totals.batches==kd_mutex_combiner_count);
     CHECK(kd_mutex_pin_totals.occupancy_after[4]>0 && kd_mutex_pin_totals.occupancy_before[3]>0);
-    CHECK(kd_mutex_pin_stats_get(pin_json,NULL)>0);printf("PIN %s",pin_json);
+    CHECK(diag_stats_get(pin_json)>0);printf("PIN %s",pin_json);
 
     /* Each stop has one invocation receipt; pending ACK cancellation settles
      * selections before any batch merge. Selection metadata is never ownership. */
@@ -73,5 +121,40 @@
 #endif
     /* Maximal numeric values still serialize as complete JSON within sysfs. */
     memset(&kd_mutex_pin_totals,0xff,sizeof(kd_mutex_pin_totals));
-    int pin_length=kd_mutex_pin_stats_get(pin_json,NULL);
+    int pin_length=diag_stats_get(pin_json);
     CHECK(pin_length>0 && pin_length<(int)sizeof(pin_json));printf("PINMAX %s",pin_json);
+
+    /* A final getter cannot outlive detached storage. Reinitialization must
+     * discard every old total and optional sampling ordinal, even if the
+     * allocator reuses the same address. No pointer equality implies reuse. */
+#if KDLOCK_MUTEX_PIN_TSC_SHIFT
+    kd_mutex_pin_sample_seq=UINT64_MAX;
+#endif
+    KD_MUTEX_PIN_DIAG_EXIT();
+    CHECK(!kd_mutex_pin_cpus && !diag_live_storage && !diag_params_locked);
+    CHECK(diag_frees==1 && diag_allocations==1);
+    unsigned int detached_accesses=diag_cpu_accesses;
+    memset(pin_json,'#',sizeof(pin_json));
+    CHECK(diag_stats_get(pin_json)==-ENODEV && diag_cpu_accesses==detached_accesses);
+    CHECK(pin_json[0]=='#' && pin_json[PAGE_SIZE-1]=='#');
+    KD_MUTEX_PIN_DIAG_EXIT();
+    CHECK(diag_frees==1 && !diag_live_storage);
+    CHECK(!KD_MUTEX_PIN_DIAG_INIT());
+    CHECK(diag_alloc_attempts==3 && diag_allocations==2 && diag_frees==1);
+    diag_check_zero();
+    CHECK(diag_stats_get(pin_json)>0);printf("PINRESET %s",pin_json);
+#if KDLOCK_MUTEX_PIN_TSC_SHIFT
+    struct kd_mutex_pin_diag restarted_wait={0};
+    nodes[0].locked=KD_MUTEX_PROXY_PINNED;
+    kd_mutex_pin_diag_wait(&restarted_wait,&nodes[0],false);
+    CHECK(kd_mutex_pin_sample_seq==1 && restarted_wait.current_ack_immediate==1);
+    CHECK(!restarted_wait.tsc_samples && !restarted_wait.tsc_cycles);
+#endif
+    KD_MUTEX_PIN_DIAG_EXIT();
+    CHECK(!kd_mutex_pin_cpus && !diag_live_storage && !diag_params_locked);
+    CHECK(diag_allocations==2 && diag_frees==2);
+    CHECK(diag_param_locks==diag_param_unlocks);
+    CHECK(diag_stats_get(pin_json)==-ENODEV);
+    CHECK(!diag_params_locked && diag_param_locks==diag_param_unlocks);
+    puts("PASS pin diagnostic allocation lifecycle: failure, unavailable getter, detach/free and zero reinitialization");
+#endif

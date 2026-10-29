@@ -284,10 +284,18 @@ matched timing remain pending for this candidate; no gain is claimed and no
 diagnostic counter is added.
 
 The separate diagnostic candidate adds `KDLOCK_MUTEX_DIAGNOSTICS=2` on this ring
-baseline. It replaces mode 1 batch counters within the same bounded per-CPU
-storage budget. Invocation-local counts merge only at the existing finished-batch
-boundaries; the default build removes observations, their storage, and their node
-reads. Mode 2 records selection occupancy, exact requested/consumed/cancelled
+baseline. Mode 2 keeps one bounded dynamic per-CPU record, allocated before
+caller admission and freed after exact drain. Its first static-storage version
+failed module loading before provider initialization: the loader could not reserve
+7984 bytes aligned to 128, while the ordinary 7600-byte provider loaded. That
+preparation failure is preserved; no runtime or timing result came from it.
+The focused fix moves mode 2 observations and its optional sampling ordinal to
+`alloc_percpu`; mode 1 remains unchanged. Allocation failure unwinds the already
+initialized local runtime, and later initialization failure frees this storage.
+The existing kernel parameter mutex serializes the getter with publication and
+final detach; getters before initialization or after detach return `-ENODEV`.
+Invocation-local counts merge only at the existing finished-batch boundaries;
+the default build removes observations, their storage, and their node reads. Mode 2 records selection occupancy, exact requested/consumed/cancelled
 notification lifetimes, selection stop reasons, drain calls, and current versus
 cancellation ACK polling. Consumed pins include native and role-transfer result
 publication; they are not returned JIT bodies. `full_resumes` counts actual

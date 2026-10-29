@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Mode 2 replaces mode 1 observations to stay within the module per-CPU budget.
+/* Mode 2 uses one preallocated dynamic per-CPU diagnostic record. The module
+ * loader's reserved per-CPU chunk remains dedicated to the ordinary runtime.
  * Counts never authorize acquisition, stack access, cancellation or retirement.
  * Merge only at the existing finished-batch boundaries; read quiescent deltas.
  * The optional ordered-TSC sample includes timestamp overhead and the first ACK
@@ -51,14 +52,59 @@ struct kd_mutex_pin_diag {
 	u64 refill_stop[KD_MUTEX_PIN_REASON_COUNT];
 	enum kd_mutex_pin_reason reason;
 };
-_Static_assert(sizeof(struct kd_mutex_pin_diag) + sizeof(u64) <= 384,
-	       "mutex pin observations exceed the reserved per-CPU budget");
-static DEFINE_PER_CPU(struct kd_mutex_pin_diag, kd_mutex_pin_totals);
+struct kd_mutex_pin_cpu {
+	struct kd_mutex_pin_diag totals;
 #if KDLOCK_MUTEX_PIN_TSC_SHIFT
-/* Approximate sampling ordinal, never an ownership or invocation identity.
- * Each CPU-local increment is atomic against interrupt nesting. No per-CPU
- * pointer survives a wait, body, or possible migration. */
-static DEFINE_PER_CPU(u64, kd_mutex_pin_sample_seq);
+	u64 sample_seq;
+#endif
+};
+_Static_assert(sizeof(struct kd_mutex_pin_cpu) <= 384,
+	       "mutex pin observations exceed the bounded per-CPU footprint");
+static struct kd_mutex_pin_cpu __percpu *kd_mutex_pin_cpus;
+/* These are dynamic per-CPU address operands, not physical per_cpu_ptr results.
+ * Keep this_cpu operations atomic against preemption/interrupt nesting; never
+ * retain a physical CPU pointer across a wait, body, or possible migration. */
+#define kd_mutex_pin_totals (kd_mutex_pin_cpus->totals)
+
+static int kd_mutex_pin_diag_init(void)
+{
+	struct kd_mutex_pin_cpu __percpu *storage;
+	int cpu;
+
+	storage = alloc_percpu(struct kd_mutex_pin_cpu);
+	if (!storage)
+		return -ENOMEM;
+	for_each_possible_cpu(cpu)
+		memset(per_cpu_ptr(storage, cpu), 0, sizeof(*storage));
+	/* param_attr_show holds this same target-kernel mutex while calling
+	 * the getter. Publish only fully initialized storage. */
+	kernel_param_lock(THIS_MODULE);
+	BUG_ON(kd_mutex_pin_cpus);
+	WRITE_ONCE(kd_mutex_pin_cpus, storage);
+	kernel_param_unlock(THIS_MODULE);
+	return 0;
+}
+
+static void kd_mutex_pin_diag_exit(void)
+{
+	struct kd_mutex_pin_cpu __percpu *storage;
+
+	/* Ordinary exact caller/source/frame drain precedes this teardown.
+	 * Serialize the remaining sysfs readers, detach first, then free. A
+	 * later getter sees ENODEV, even before sysfs removes its attribute. */
+	kernel_param_lock(THIS_MODULE);
+	storage = kd_mutex_pin_cpus;
+	WRITE_ONCE(kd_mutex_pin_cpus, NULL);
+	kernel_param_unlock(THIS_MODULE);
+	if (storage)
+		free_percpu(storage);
+}
+#define KD_MUTEX_PIN_DIAG_INIT() kd_mutex_pin_diag_init()
+#define KD_MUTEX_PIN_DIAG_EXIT() kd_mutex_pin_diag_exit()
+
+#if KDLOCK_MUTEX_PIN_TSC_SHIFT
+/* Approximate sampling ordinal, never an ownership or invocation identity. */
+#define kd_mutex_pin_sample_seq (kd_mutex_pin_cpus->sample_seq)
 static __always_inline u64 kd_mutex_pin_stamp(void)
 {
 	u64 value;
@@ -135,20 +181,26 @@ static void kd_mutex_pin_diag_finish(struct kd_mutex_pin_diag *diag)
 static int kd_mutex_pin_stats_get(char *buffer, const struct kernel_param *kp)
 {
 	struct kd_mutex_pin_diag total = { 0 };
+	struct kd_mutex_pin_cpu __percpu *storage = kd_mutex_pin_cpus;
 	unsigned int i;
 	int cpu, length = 0;
 
+	/* kernel/params.c calls get under kernel_param_lock(THIS_MODULE),
+	 * which also serializes publication and final detach above. */
 	(void)kp;
+	if (!storage)
+		return -ENODEV;
 	for_each_possible_cpu(cpu) {
-#define KD_MUTEX_PIN_READ(name) total.name += READ_ONCE(per_cpu(kd_mutex_pin_totals, cpu).name);
+		struct kd_mutex_pin_diag *local = &per_cpu_ptr(storage, cpu)->totals;
+#define KD_MUTEX_PIN_READ(name) total.name += READ_ONCE(local->name);
 		KD_MUTEX_PIN_COUNTERS(KD_MUTEX_PIN_READ)
 #undef KD_MUTEX_PIN_READ
 		for (i = 0; i <= KD_MUTEX_PIN_WINDOW; i++) {
-			total.occupancy_before[i] += READ_ONCE(per_cpu(kd_mutex_pin_totals, cpu).occupancy_before[i]);
-			total.occupancy_after[i] += READ_ONCE(per_cpu(kd_mutex_pin_totals, cpu).occupancy_after[i]);
+			total.occupancy_before[i] += READ_ONCE(local->occupancy_before[i]);
+			total.occupancy_after[i] += READ_ONCE(local->occupancy_after[i]);
 		}
 		for (i = 0; i < KD_MUTEX_PIN_REASON_COUNT; i++)
-			total.refill_stop[i] += READ_ONCE(per_cpu(kd_mutex_pin_totals, cpu).refill_stop[i]);
+			total.refill_stop[i] += READ_ONCE(local->refill_stop[i]);
 	}
 #define KD_MUTEX_PIN_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
@@ -208,6 +260,8 @@ MODULE_PARM_DESC(mutex_pin_stats, "Selected pin observations; quiescent deltas o
 	} \
 } while (0)
 #else
+#define KD_MUTEX_PIN_DIAG_INIT() (0)
+#define KD_MUTEX_PIN_DIAG_EXIT() do { } while (0)
 #define KD_MUTEX_PIN_INC(batch, name) do { } while (0)
 #define KD_MUTEX_PIN_BEGIN(batch) do { } while (0)
 #define KD_MUTEX_PIN_END(batch) do { } while (0)
