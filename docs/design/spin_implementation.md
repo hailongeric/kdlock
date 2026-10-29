@@ -37,7 +37,11 @@ paired bodies; generic service returns refresh the next-root context.
 This is a root admission contract, not permission to translate arbitrary
 inline IRQ/preempt/RCU changes or CPU-local operations. Virtual nested requests
 retain their separate exact-ticket/ledger contract. Explicit IRQ/BH APIs remain
-local. Live validation and nano acceptance of this candidate are pending.
+local. At `25aa81bba99b12c9c0e33a8e4db83c144cccdc29`, the
+[focused live checks](../../bench/results/10.176.26.71/tests/kernel-proxy-functional-20261030/README.md)
+passed matching-IF delegation, mixed-IF stress and local completion under
+BH/RCU/preempt/migration constraints. The mixed-IF run does not prove a
+deliberately forced executor/waiter mismatch. Nano acceptance remains pending.
 
 Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization and
 [`kd_spin_api.h`](../../include/kd_spin_api.h) for ordinary paired operations.
