@@ -26,7 +26,7 @@ remain separate acceptance boundaries.
 
 | Step | Deliverable and acceptance boundary | Status |
 | --- | --- | --- |
-| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. The user approved a small immediately selected group. A four-request window is implemented at isolated `e0db8876`; correctness/performance checks remain pending. Strict current-request preparation overlap `f9f21188` is also isolated and unexecuted. |
+| 1 | Permit preemption while a mutex delegation request is merely queued. Before proxy execution, request and acknowledge an origin pin; retain the pin through every executor access and completion/retirement obligation. Do not redesign oversubscription. | Strict one-request candidate passed focused/live checks but lost 42–54% at contended nano points; archived, not promoted. The user approved a small immediately selected group. The isolated four-request window at `6d95745d` passed corrected affected checks, four-family basic, queued scheduling and local/cross-node role cases. Its same-boot 36-point round lost 19.75–39.25% at contended mutex points, so it is not promoted. Circular descriptor storage/inline helper follow-up is unexecuted. Strict current-request preparation overlap `f9f21188` is also isolated and unexecuted. |
 | 2 | One public macro layer for spin and related ordinary APIs, using the compiler clobber wrappers. Retain only required cross-module provider symbols; callable interfaces must have an explicit conventional wrapper and execution contract. | Public raw-clobber spin macros and export reduction implemented at `893c16b5`; ten selected VM checks passed. Their cold path differs from the named DIRECT benchmark shell. The separate 18-observation c01/c08 public/DIRECT comparison completed; single-round results do not establish performance neutrality. |
 | 3 | Assess rwlock recursive reads, upgrades and IRQ/BH pairs. Implement only cases with a stated ownership/context contract; distinguish unsupported blocking upgrade from feasible nonblocking conversion. | Local IRQ/BH and trylock APIs plus interrupt-reader bypass implemented at `428e068a`; affected units and live IPI reader probe passed with exact drain and no JIT. Arbitrary task recursive reads, blocking upgrades and NMI use remain unsupported; nonblocking conversion is an exploration, not an exposed API. |
 | 4 | One ordinary rwsem API family, with the widest compatible init/read/write/try/signal/downgrade/non-owner/annotation coverage. Explain any delegation eligibility restriction; never let a queued writer bypass a downgraded reader. | Unified ordinary API implemented at `6099baf3`; default/local downgrade and explicit prepared writer eligibility are documented. At `1b186f5d`, API/cancellation/live JIT escape and affected unit/runner checks passed. Changed prepared DIRECT shell was measured in the completed 60-point comparison at `5f96dd5c`; losses remain unresolved after the completed 44-observation frozen-input matched recheck. |
@@ -71,8 +71,10 @@ workers measured 4.590029 Mops/s (+0.14% versus the historical baseline), while
 rwlock c16/1% at eight workers measured 8.681424 Mops/s (-19.87%, `NO_JIT`).
 The latter and earlier rwlock losses require matched investigation. Cross-boot
 single observations cannot establish performance neutrality. The candidate
-remains outside `master`; the separate bounded-window implementation and
-migration-state probe have not yet executed.
+remains outside `master`. The separate [bounded-window record](../bench/results/10.176.26.71/tests/mutex-pin-window-20261029/README.md)
+retains its successful scoped checks and failed performance gate. Its migration-state
+probe passed local and actual C2-to-W33 exchange; this does not establish arbitrary
+contexts or performance neutrality.
 
 Preserve a baseline source identity and matched c01/c16 nano observations before
 changing runtime behavior. Use the existing workload bodies, post256, 1024/1024

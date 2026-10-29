@@ -1,0 +1,1088 @@
+{
+  "scope": "Offline verification of fetched result/controller receipts and relevant committed probe source; no VM, build, test or benchmark execution.",
+  "input_file": "/tmp/kdlock-pin-window-live-results-20261029.json",
+  "input_sha256": "6f7191e6f1664cbe23603dce5d45b80011cd601b7f8ad02c4f24cade6a53cdab",
+  "source_commit": "6d95745d8e3c405a650e32efe04d54ffd2187cc7",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "blocks_completed": 8,
+  "controller_blocks": [
+    {
+      "name": "basic",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "queued",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "simple",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "c-native",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "c-early-spin",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "w-early-spin",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "w-early-mutex",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    },
+    {
+      "name": "simple-cross-numa",
+      "passed": true,
+      "returncode": 0,
+      "completion_unconfirmed": false
+    }
+  ],
+  "basic": {
+    "passed": true,
+    "final_idle": true,
+    "mode": "FUNCTIONAL_ONLY",
+    "timing_started": false,
+    "performance_accepted": false,
+    "host_reference_sha256": "0a8ce5d7933eb45ed6ee3e10f3ae2b691b37500a5905d6dcad9d68174a6a01ff",
+    "results": [
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "spin",
+        "jit_completions": 1597166,
+        "jit_entries": 1597166,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/pin-window-live-20261029/basic/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+        "receipt_sha256": "a5857b6f66b79549300e4cd139c1c1def3de18aa8b373f9c7d3c112fd7d39eee"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "mutex",
+        "jit_completions": 1588637,
+        "jit_entries": 1588637,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/pin-window-live-20261029/basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+        "receipt_sha256": "46c6539ef8e20e77e105bd495cba416f19c53b9a3e994cc26d867c36bf7c0231"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "rwlock",
+        "jit_completions": 24106,
+        "jit_entries": 24106,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/pin-window-live-20261029/basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+        "receipt_sha256": "b9b6ce3b7346e2949109158335417c4f5752c7f6e8619dfdc599bb67eac14fd8"
+      },
+      {
+        "drained": true,
+        "execution": "RETURNED_JIT",
+        "family": "rwsem",
+        "jit_completions": 1589742,
+        "jit_entries": 1589742,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "receipt": "/root/kdlock-evidence/10.176.26.71/tests/pin-window-live-20261029/basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+        "receipt_sha256": "56677943bb8c30b95d34af5b8f31538d2453a07d73efd6697eee7c8878e4dd93"
+      }
+    ]
+  },
+  "queued": {
+    "drained": true,
+    "final_idle": true,
+    "jit_bodies": 0,
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "passed": true,
+    "snapshot_tag": "linux70-kdlock1-clean-20261027",
+    "source_retirement": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    }
+  },
+  "role_cases": [
+    {
+      "name": "simple",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0-4",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "steal_attempts": 10019,
+      "steals": 0,
+      "original_combiner_body_task": "W",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "38496",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "38497",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "38498",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "38499",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "38500",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "38503",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "38501",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "38502",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "38505",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "38504",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          }
+        ]
+      ],
+      "context_rows": 10
+    },
+    {
+      "name": "c-native",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0-4",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 0
+      },
+      "steal_attempts": 10014,
+      "steals": 0,
+      "original_combiner_body_task": "W",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "1",
+          "started": "1",
+          "unlocks": "1"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "39737",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "39738",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "39739",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "39741",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "39740",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "39743",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "39746",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "39744",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "39742",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "39745",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          }
+        ]
+      ],
+      "context_rows": 10
+    },
+    {
+      "name": "c-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0-4",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "steal_attempts": 10018,
+      "steals": 0,
+      "original_combiner_body_task": "W",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "40978",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "40979",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "40980",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "40982",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "40981",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "40986",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "40984",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "40983",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "40987",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "40985",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          }
+        ]
+      ],
+      "context_rows": 10
+    },
+    {
+      "name": "w-early-spin",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0-4",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "steal_attempts": 10016,
+      "steals": 0,
+      "original_combiner_body_task": "C",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "42219",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "42220",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "42222",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "42221",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "42223",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "42226",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "42228",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "42225",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "42224",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "42227",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          }
+        ]
+      ],
+      "context_rows": 10
+    },
+    {
+      "name": "w-early-mutex",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0-4",
+      "jit": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "steal_attempts": 10015,
+      "steals": 0,
+      "original_combiner_body_task": "C",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "43460",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "43461",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "43463",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "43462",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "43464",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "43470",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "43469",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "43468",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "43467",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "43466",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          }
+        ]
+      ],
+      "context_rows": 10
+    },
+    {
+      "name": "simple-cross-numa",
+      "passed": true,
+      "drained": true,
+      "cpus_argument": "0,1,32,33,34",
+      "jit": {
+        "bench_jit_bodies": 2,
+        "bench_jit_completions": 1
+      },
+      "steal_attempts": 10012,
+      "steals": 0,
+      "original_combiner_body_task": "W",
+      "physical_owner_changed_c_to_w": true,
+      "native_stats": [
+        {
+          "completed": "0",
+          "started": "0",
+          "unlocks": "0"
+        }
+      ],
+      "source_retirement": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "contexts": [
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "44826",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "0"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "44827",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "1"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "44828",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "4"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "44829",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "2"
+        },
+        {
+          "errors": "0",
+          "irqs_after": "0",
+          "irqs_before": "0",
+          "migration_after": "0",
+          "migration_before": "0",
+          "phase": "run",
+          "pid": "44830",
+          "preempt_after": "0",
+          "preempt_before": "0",
+          "role": "3"
+        }
+      ],
+      "warmup_contexts": [
+        [
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "44834",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "3"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "44835",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "4"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "44833",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "2"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "44831",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "0"
+          },
+          {
+            "errors": "0",
+            "irqs_after": "0",
+            "irqs_before": "0",
+            "migration_after": "0",
+            "migration_before": "0",
+            "phase": "warmup",
+            "pid": "44832",
+            "preempt_after": "0",
+            "preempt_before": "0",
+            "role": "1"
+          }
+        ]
+      ],
+      "context_rows": 10
+    }
+  ],
+  "context_rows": 60,
+  "all_recorded_context_fields_zero": true,
+  "probe_original_commit": "d8149cc140655734c8100d4978c1e2a694d095c0",
+  "probe_integrated_commit": "39abf5b13e0cf272a8775622c081d7bdfb530a81",
+  "probe_payload_and_runner_same_bytes": true,
+  "limits": [
+    "Source identity is the completed controller receipt; frozen archive source/binary verification is a separate preservation step.",
+    "Queued result reports pass and exact retirement; source requires one exact queued=1 scheduled=1 effects=4 warm=400000 idle=1 result=0 log receipt. Raw kernel.log was not part of this fetched JSON.",
+    "The simple-cross-numa case uses GATE0/SPIN1/C32/W33/THIEF34. It spans nodes, but C-to-W role exchange remains within NUMA node1.",
+    "Context receipts cover five original-task returns per phase/case; they are not proof of every internal interleaving or arbitrary/long-chain nesting.",
+    "No performance acceptance follows from these correctness results. Nano36 is outside this fetched result set.",
+    "First unit attempt18/20 and corrected10/10 were reported by root, not independently verified by this file."
+  ]
+}

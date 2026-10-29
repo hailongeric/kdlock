@@ -1,0 +1,93 @@
+{
+  "completed": true,
+  "groups": [
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-window-20261029/bench/pin-window-nano-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 2909,
+        "regular_files": 2405,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "a9e3a5058dfb55b95ad78fefa0acd206635108dc709be0d7ea43f6ddd313402a",
+            "regular_files": 2398
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "ac415b7aae1af09354033789b4f0e8cbfbcdbe1c53ef76ca55c7fb9420d82636",
+            "regular_files": 7
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-window-20261029/tests/pin-window-live-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 6189,
+        "regular_files": 5469,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "215ab9c344ba515396b04348294e7c61b7d89eb42957f640a36dd8cad966098b",
+            "regular_files": 5457
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "96707f050e46823b7e589af64acf3d4c6cd0555c6029e655b2b35dd45312c999",
+            "regular_files": 12
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-window-20261029/tests/pin-window-role-cross-node-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 557,
+        "regular_files": 499,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "64403214040115e3de3719414ecc20125df02ab40e6177ed51ba4b25f4ed09fa",
+            "regular_files": 474
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "dd91d78577386c274f0159922a58a7ceb51feee45302e04a77bf59f41454ab57",
+            "regular_files": 25
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    },
+    {
+      "archive_directory": "bench/results/10.176.26.71/raw/tests/mutex-pin-window-20261029/tests/pin-window-units-20261029-archives",
+      "verification": {
+        "completed": true,
+        "host": "380G10",
+        "inventory_paths": 4,
+        "regular_files": 4,
+        "verified_archives": [
+          {
+            "file": "evidence.tar.gz",
+            "sha256": "ca173f997fb18a582060cad4e73b27c194f238788b892538a270733ef2d58fe4",
+            "regular_files": 3
+          },
+          {
+            "file": "metadata.tar.gz",
+            "sha256": "642fa6999c9af00af761ef458cbbf1a960f45324ed09385d7f0a52bbf738e21c",
+            "regular_files": 1
+          }
+        ],
+        "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+      }
+    }
+  ]
+}
