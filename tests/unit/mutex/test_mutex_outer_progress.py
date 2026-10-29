@@ -122,12 +122,12 @@ def main():
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
-            "skip-prepare-ack": code.replace("\t\tkd_mutex_proxy_wait_pinned(curr_node);\n\t}\n\tif (frame)",
+            "skip-prepare-ack": code.replace("\t\tKD_MUTEX_PIN_WAIT(batch, curr_node, false);\n\t}\n\tif (frame)",
                                                "\t}\n\tif (frame)", 1),
             "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_unpin(batch, false);", "", 1),
             "resume-keeps-future-pins": code.replace(
-                "\t\tkd_mutex_batch_unpin(batch, true);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
-                "\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
+                "\t\tkd_mutex_batch_unpin(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
+                "\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
             "unpin-before-frame-retirement": code.replace(
                 "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);",
                 "\tsmp_store_release(&curr_node->locked, KD_MUTEX_WAIT);\n"

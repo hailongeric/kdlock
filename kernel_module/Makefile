@@ -23,6 +23,8 @@ ccflags-y += -DKDLOCK_MUTEX_NUMA_BOUNDARY=$(KDLOCK_MUTEX_NUMA_BOUNDARY)
 # Optional observations are compiled out of ordinary timing builds.
 KDLOCK_MUTEX_DIAGNOSTICS ?= 0
 ccflags-y += -DKDLOCK_MUTEX_DIAGNOSTICS=$(KDLOCK_MUTEX_DIAGNOSTICS)
+KDLOCK_MUTEX_PIN_TSC_SHIFT ?= 0
+ccflags-y += -DKDLOCK_MUTEX_PIN_TSC_SHIFT=$(KDLOCK_MUTEX_PIN_TSC_SHIFT)
 ifeq ($(KDLOCK_NUMA),1)
 ccflags-y += -DNUMA_AWARE
 endif

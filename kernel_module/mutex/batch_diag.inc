@@ -7,13 +7,13 @@
 #ifndef KDLOCK_MUTEX_DIAGNOSTICS
 #define KDLOCK_MUTEX_DIAGNOSTICS 0
 #endif
-#if KDLOCK_MUTEX_DIAGNOSTICS != 0 && KDLOCK_MUTEX_DIAGNOSTICS != 1
-#error "KDLOCK_MUTEX_DIAGNOSTICS must be 0 or 1"
+#if KDLOCK_MUTEX_DIAGNOSTICS < 0 || KDLOCK_MUTEX_DIAGNOSTICS > 2
+#error "KDLOCK_MUTEX_DIAGNOSTICS must be 0, 1 or 2"
 #endif
 
 MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
 
-#if KDLOCK_MUTEX_DIAGNOSTICS
+#if KDLOCK_MUTEX_DIAGNOSTICS == 1
 #include <linux/bitops.h>
 
 /* Finished bodies cannot exceed the configured attempt cap. Deferred nodes
@@ -272,3 +272,5 @@ MODULE_PARM_DESC(mutex_batch_stats,
 #define KD_MUTEX_DIAG_STOP(batch, reason) do { } while (0)
 #define KD_MUTEX_DIAG_FINISH(batch) do { } while (0)
 #endif
+
+#include "pin_diag.inc"

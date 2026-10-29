@@ -5,7 +5,7 @@ Only the measured client is wrapped. Preparation, translation and warmup retain
 their ordinary boundaries. The inherited client includes startup/collection;
 flat summaries separately select rb_worker samples within the settled full cohort.
 No call-chain unwinding is attempted across generated or borrowed stacks.
-Batch mode instead enables optional provider observations without launching perf.
+Batch and pin modes enable optional provider observations without launching perf.
 """
 import argparse
 from collections import defaultdict
@@ -26,6 +26,9 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
+import kernel_identity
+
 PERF = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/tools/perf')
 EVENTS = ('cycles:k', 'instructions:k', 'cache-references:k', 'cache-misses:k',
           'branches:k', 'branch-misses:k', 'task-clock', 'context-switches',
@@ -46,6 +49,17 @@ BATCH_REASONS = ('unclassified', 'initial_unexecutable', 'source_refusal',
     'native_done', 'owner_transfer', 'total_cap', 'empty_tail', 'unsupported_tail')
 BATCH_HISTOGRAMS = ('completed_hist', 'deferred_peak_hist')
 BATCH_LEGACY = ('combiner', 'jit_success', 'handoff')
+PIN_METADATA = dict(schema=1, compiled=2, window=4, total_cap=1024,
+                    numa_boundary=1024, tsc_sample_shift=0)
+PIN_COUNTERS = ('batches', 'selections', 'requested', 'consumed', 'cancelled',
+    'drain_calls', 'drain_nonempty', 'drain_keep_current',
+    'current_ack_immediate', 'current_ack_stalled', 'current_ack_loops',
+    'cancel_ack_immediate', 'cancel_ack_stalled', 'cancel_ack_loops',
+    'full_resumes', 'tsc_samples', 'tsc_cycles')
+PIN_HISTOGRAMS = ('occupancy_before', 'occupancy_after')
+PIN_REASONS = ('self_current', 'single', 'budget', 'window', 'no_link', 'entry',
+               'numa', 'deferred_tail', 'duplicate_cpu', 'self_future')
+COMPILED_MODES = ('batch', 'pin')
 
 
 def require(condition, message):
@@ -178,6 +192,65 @@ def batch_delta(before, after, expected_completions=None, policy=None):
         require(type(expected_completions) is int and expected_completions >= 0 and
                 result['jit_completed'] == expected_completions,
                 'batch JIT completions differ from exact returned-body counter delta')
+    return result
+
+
+def pin_metadata(policy=None, tsc_sample_shift=0):
+    require(type(tsc_sample_shift) is int and tsc_sample_shift in (0, 6),
+            'invalid pin TSC sample shift')
+    selected = batch_metadata(policy)
+    return dict(PIN_METADATA, total_cap=selected['total_cap'],
+                numa_boundary=selected['numa_boundary'], tsc_sample_shift=tsc_sample_shift)
+
+
+def validate_pin(snapshot, policy=None, tsc_sample_shift=0):
+    """Check quiescent pin observations, independently of body completion/drain."""
+    metadata = pin_metadata(policy, tsc_sample_shift)
+    require(isinstance(snapshot, dict) and set(snapshot) ==
+            set(PIN_METADATA) | set(PIN_COUNTERS) | set(PIN_HISTOGRAMS) | {'refill_stop'},
+            'unexpected pin diagnostic schema')
+    require(all(type(snapshot[key]) is int and snapshot[key] == value
+                for key, value in metadata.items()), 'pin diagnostic metadata differs')
+    def counter(value):
+        return type(value) is int and 0 <= value <= 2**64 - 1
+    require(all(counter(snapshot[key]) for key in PIN_COUNTERS), 'invalid pin counter')
+    for key in PIN_HISTOGRAMS:
+        require(isinstance(snapshot[key], list) and len(snapshot[key]) == metadata['window'] + 1 and
+                all(counter(value) for value in snapshot[key]), 'invalid pin histogram: ' + key)
+    require(isinstance(snapshot['refill_stop'], dict) and
+            set(snapshot['refill_stop']) == set(PIN_REASONS) and
+            all(counter(value) for value in snapshot['refill_stop'].values()),
+            'invalid pin refill stop mapping')
+    require(snapshot['selections'] == sum(snapshot['occupancy_before']) ==
+            sum(snapshot['occupancy_after']) == sum(snapshot['refill_stop'].values()),
+            'pin selections/occupancy/refill stops differ')
+    require(snapshot['requested'] == snapshot['consumed'] + snapshot['cancelled'],
+            'pin request retirement accounting differs')
+    require(snapshot['cancelled'] == snapshot['cancel_ack_immediate'] + snapshot['cancel_ack_stalled'],
+            'pin cancellation ACK accounting differs')
+    for prefix in ('current', 'cancel'):
+        stalled, loops = snapshot[prefix + '_ack_stalled'], snapshot[prefix + '_ack_loops']
+        require(loops >= stalled and (stalled != 0 or loops == 0),
+                'pin ACK loop accounting differs: ' + prefix)
+    require(snapshot['drain_keep_current'] <= snapshot['drain_nonempty'] <= snapshot['drain_calls'],
+            'pin drain subset accounting differs')
+    require(snapshot['tsc_samples'] <= snapshot['current_ack_immediate'] + snapshot['current_ack_stalled'],
+            'pin TSC samples exceed current ACKs')
+    require(tsc_sample_shift != 0 or snapshot['tsc_samples'] == snapshot['tsc_cycles'] == 0,
+            'pin TSC observations present with sampling disabled')
+    return snapshot
+
+
+def pin_delta(before, after, policy=None, tsc_sample_shift=0):
+    validate_pin(before, policy, tsc_sample_shift)
+    validate_pin(after, policy, tsc_sample_shift)
+    result = pin_metadata(policy, tsc_sample_shift)
+    result.update({key: after[key] - before[key] for key in PIN_COUNTERS})
+    for key in PIN_HISTOGRAMS:
+        result[key] = [b - a for a, b in zip(before[key], after[key])]
+    result['refill_stop'] = {key: after['refill_stop'][key] - before['refill_stop'][key]
+                           for key in PIN_REASONS}
+    validate_pin(result, policy, tsc_sample_shift)
     return result
 
 
@@ -373,6 +446,14 @@ def profiled_session(runner, args, perf, perf_sha):
                 batch_before = validate_batch(json.loads(batch_path.read_text()), policy)
                 save(self.path / 'batch-before.json', batch_before)
                 self.record['batch_diagnostics'] = dict(status='BEFORE_ONLY', before=batch_before)
+            elif args.mode == 'pin':
+                require(self.loaded_kd, 'pin diagnostics require KD provider')
+                pin_path = Path('/sys/module/kdlock_km/parameters/mutex_pin_stats')
+                policy = self.record['provider_mutex_policy']
+                shift = 6 if args.pin_tsc else 0
+                pin_before = validate_pin(json.loads(pin_path.read_text()), policy, shift)
+                save(self.path / 'pin-before.json', pin_before)
+                self.record['pin_diagnostics'] = dict(status='BEFORE_ONLY', before=pin_before)
             self.save()
             super().measure()
             if self.loaded_kd:
@@ -396,9 +477,21 @@ def profiled_session(runner, args, perf, perf_sha):
                     legacy_handoff='Existing refusal-path counter, not total physical-owner handoffs')
                 self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
                 self.save()
+            elif args.mode == 'pin':
+                pin_after = validate_pin(json.loads(pin_path.read_text()), policy, shift)
+                delta = pin_delta(pin_before, pin_after, policy, shift)
+                save(self.path / 'pin-after.json', pin_after)
+                save(self.path / 'pin-delta.json', delta)
+                self.record['pin_diagnostics'].update(status='OBSERVED', after=pin_after, delta=delta,
+                    scope='Quiescent pre/post reads after warmup and joined measurement; optional compiled pin observations, no perf process',
+                    occupancy_bins='Exact requested-pin occupancy 0..4 before and after selection',
+                    consumption='Consumed pins are not returned JIT bodies; native exits and FULL resumes remain separate',
+                    tsc_scope='Ordered-TSC current-ACK samples include timestamp overhead and the first ACK load; zero loops do not imply zero latency')
+                self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
+                self.save()
 
         def run(self, command, log, **kwargs):
-            if log != 'measure.json' or args.mode == 'batch':
+            if log != 'measure.json' or args.mode in COMPILED_MODES:
                 return super().run(command, log, **kwargs)
             expected = self.path.parent / 'source/bench/rwlock_compare/client.py'
             require(len(command) >= 2 and Path(command[1]) == expected,
@@ -442,14 +535,16 @@ def profiled_session(runner, args, perf, perf_sha):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mode', choices=('stat', 'record', 'batch'), required=True)
+    p.add_argument('--mode', choices=('stat', 'record', 'batch', 'pin'), required=True)
+    p.add_argument('--pin-tsc', action='store_true',
+                   help='pin mode only: sample ordered-TSC current ACK latency once per 64 observations')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--source-root', type=Path, default=ROOT)
     p.add_argument('--source-commit', required=True)
     p.add_argument('--perf', type=Path, default=PERF)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
                    default=['mutex-throughput', 'mutex-locality'])
-    p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
+    p.add_argument('--threads', nargs='+', type=int, choices=(16, 20, 32, 36, 60), default=[16, 36, 60])
     p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--mutex-batch-limit', type=int, default=1024)
@@ -458,15 +553,25 @@ def parser():
     p.add_argument('--events', nargs='+', default=list(EVENTS))
     p.add_argument('--allow-multiplex', action='store_true')
     p.add_argument('--dry-run', action='store_true')
+    kernel_identity.arguments(p)
     return p
 
 
 def selected_backends(args):
-    return args.backends or (['kdlock'] if args.mode == 'batch' else ['native', 'kdlock'])
+    return args.backends or (['kdlock'] if args.mode in COMPILED_MODES else ['native', 'kdlock'])
+
+
+def diagnostic_settings(args):
+    require(args.mode not in COMPILED_MODES or selected_backends(args) == ['kdlock'],
+            args.mode + ' diagnostics support the KD provider only')
+    require(not args.pin_tsc or args.mode == 'pin', '--pin-tsc requires --mode pin')
+    return dict(mutex_diag={'batch': 1, 'pin': 2}.get(args.mode, 0),
+                mutex_pin_tsc_shift=6 if args.pin_tsc else 0)
 
 
 def runner_arguments(args, profile):
     selected_mutex_policy(args)
+    diagnostic_settings(args)
     workload, lines, post = PROFILES[profile]
     return ['--output', str(args.output.resolve() / profile), '--lock-kind', 'mutex',
         '--workloads', workload, '--cachelines', str(lines), '--write-percent', '100',
@@ -475,15 +580,15 @@ def runner_arguments(args, profile):
         '--duration-ms', '2000', '--post-work-rounds', str(post),
         '--mutex-batch-limit', str(args.mutex_batch_limit),
         '--mutex-numa-boundary', str(args.mutex_numa_boundary),
-        '--kernel-source', '/root/linux-6.1.159-kdclobber2',
-        '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
+        '--kernel-source', str(args.kernel_source),
+        '--kernel-baseline', str(args.kernel_baseline), '--kernel-variant', args.kernel_variant]
 
 
 def main():
     args = parser().parse_args()
     args.backends = selected_backends(args)
     policy = selected_mutex_policy(args)
-    require(args.mode != 'batch' or args.backends == ['kdlock'], 'batch diagnostics support the KD provider only')
+    diagnostics = diagnostic_settings(args)
     for values in (args.profiles, args.threads, args.backends, args.events):
         require(values and len(values) == len(set(values)), 'empty or duplicate profile selection')
     require(re.fullmatch(r'[0-9a-f]{40}', args.source_commit), 'record a full source commit')
@@ -492,10 +597,9 @@ def main():
     if args.dry_run:
         print(json.dumps({profile: runner_arguments(args, profile) for profile in args.profiles}, indent=2))
         return 0
-    require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
-            os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-            os.environ.get('KDLOCK_SNAPSHOT_TAG') == 'before-mutex-kdonly-20261017T140354Z',
-            'confirmed recovery guest required')
+    require(os.geteuid() == 0 and os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
+            os.environ.get('KDLOCK_SNAPSHOT_TAG'),
+            'confirmed recovery guest and recorded snapshot tag required')
     root, out = args.source_root.resolve(), args.output.resolve()
     require(str(root).startswith('/root/') and not out.exists() and not out.is_relative_to(root),
             'use the guest checkout and a new external evidence directory')
@@ -509,7 +613,7 @@ def main():
         runner.idle()
         out.mkdir(parents=True)
         perf, tool_sha, events = None, None, []
-        if args.mode != 'batch':
+        if args.mode not in COMPILED_MODES:
             perf = out / 'tools/perf'
             perf.parent.mkdir()
             tool_sha = digest(args.perf)
@@ -526,7 +630,8 @@ def main():
                            out / 'perf-capability.log', timeout=30)
             save(out / 'perf-capability.json', parse_stat((out / 'perf-capability.csv').read_text(), events, args.allow_multiplex))
         else:
-            save(out / 'perf-tool.json', dict(status='NOT_USED', reason='Compiled batch observations only; no perf process or PMU counters'))
+            save(out / 'perf-tool.json', dict(status='NOT_USED',
+                reason='Compiled ' + args.mode + ' observations only; no perf process or PMU counters'))
         frozen = runner.sources()
         save(out / 'source-sha256.json', frozen)
         self_sha = digest(Path(__file__))
@@ -538,14 +643,17 @@ def main():
                 row.update(diagnostic=True, score_eligible=False, source_commit=args.source_commit,
                     diagnostic_kind='nano-' + args.mode, diagnostic_mode=args.mode,
                     mutex_batch_diagnostics=args.mode == 'batch',
-                    perf_mode=args.mode if args.mode != 'batch' else None,
+                    mutex_pin_diagnostics=args.mode == 'pin',
+                    mutex_diagnostics_mode=diagnostics['mutex_diag'],
+                    mutex_pin_tsc_shift=diagnostics['mutex_pin_tsc_shift'],
+                    perf_mode=args.mode if args.mode not in COMPILED_MODES else None,
                     perf_events=events, perf_frequency=args.frequency if args.mode == 'record' else None,
                     perf_binary_sha256=tool_sha, profile_driver_sha256=self_sha,
-                    profile_scope=('Compiled batch observations around joined measurement; warmup excluded'
-                        if args.mode == 'batch' else 'Measured client including startup/collection; warmup excluded'))
+                    profile_scope=('Compiled ' + args.mode + ' observations around joined measurement; warmup excluded'
+                        if args.mode in COMPILED_MODES else 'Measured client including startup/collection; warmup excluded'))
             return rows
         def build(parsed, directory, rows):
-            binaries, hashes = original_build(parsed, directory, rows, mutex_diag=args.mode == 'batch')
+            binaries, hashes = original_build(parsed, directory, rows, **diagnostics)
             if perf is not None:
                 hashes[str(perf)] = tool_sha
             save(directory / 'binary-sha256.json', hashes)
@@ -554,7 +662,8 @@ def main():
         runner.RWSession = profiled_session(runner, args, perf, tool_sha)
         runner.report = lambda directory: diagnostic_report(runner, directory)
         receipt = dict(diagnostic=True, score_eligible=False, source_commit=args.source_commit,
-            driver_sha256=self_sha, mode=args.mode, provider_mutex_policy=policy, stages=[], complete=False)
+            driver_sha256=self_sha, mode=args.mode, provider_mutex_policy=policy,
+            provider_diagnostics=diagnostics, stages=[], complete=False)
         save(out / 'result.json', receipt)
         for profile in args.profiles:
             require(runner.sources() == frozen and (perf is None or digest(perf) == tool_sha),

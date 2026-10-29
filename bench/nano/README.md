@@ -234,26 +234,32 @@ mutex-locality --post-work-rounds 4` selects the tighter-arrival body. Use
 `--post-work-rounds 64` for the former locality spacing, and record the provider
 policy explicitly when comparing with its historical 256-boundary measurements.
 
-## Historical mutex profiling runner
+## Unscored mutex diagnostics
 
-[`profile.py`](profile.py) retains the Linux 6.1 diagnostic implementation for
-`mutex-throughput` and `mutex-locality`, preserving their post256 settings and
-one round per point. It still binds the retired kernel, identity bundle,
-snapshot and perf-tool location. It has **not been ported to Linux 7** and cannot
-run under the current environment above. Further Linux 6.1 runs are retired.
-The retained invocations below explain existing evidence only; a future Linux 7
-diagnostic port needs its own tooling, identity and affected validation.
-Historical records bind `NANO_PROFILE_SOURCE_COMMIT` to the full reviewed
-source-host commit and retain source and binary hashes.
+[`profile.py`](profile.py) selects the `c01` body (`mutex-throughput`, one padded
+counter) and the `c16` body (`mutex-locality`, sixteen padded counters), preserving
+post256 and one round per point. It uses the shared Linux 7 schema-2 identity
+verification and recovery requirements above. `--kernel-source` names the separate
+build directory; `--kernel-baseline` names its captured bundle, with the same defaults
+as the ordinary runner. Thread selections are `16 20 32 36 60`; the default remains
+`16 36 60`. Set `NANO_PROFILE_SOURCE_COMMIT` to the full reviewed source-host commit;
+the runner also retains exact source and binary hashes.
+
+The pin diagnostics and updated runner are a source candidate until their focused
+VM checks pass. These commands do not establish validation or measurements. Existing
+Linux 6.1 diagnostic evidence retains its original kernel and source identity.
+For perf modes, supply a separately verified Linux 7-capable tool through `--perf`;
+the retained default path identifies the historical tool and is not evidence of
+current PMU support. Compiled batch and pin modes do not launch perf.
 
 ```sh
 # Requested PMU/software counters for Native and KD.
-python3 bench/nano/profile.py --mode stat --threads 16 36 60 \
+python3 bench/nano/profile.py --mode stat --threads 16 36 60 --perf "$NANO_PERF" \
   --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-stat-NEW
 
 # Flat instruction-pointer samples for Native and KD.
-python3 bench/nano/profile.py --mode record --threads 16 36 60 --frequency 499 \
+python3 bench/nano/profile.py --mode record --threads 16 36 60 --frequency 499 --perf "$NANO_PERF" \
   --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-record-NEW
 
@@ -261,6 +267,16 @@ python3 bench/nano/profile.py --mode record --threads 16 36 60 --frequency 499 \
 python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
   --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-batch-NEW
+
+# KD selected-pin accounting; no perf process or TSC sampling.
+python3 bench/nano/profile.py --mode pin --threads 20 36 60 \
+  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-pin-NEW
+
+# Separate sampled-current-ACK experiment: ordered TSC on one in 64 observations.
+python3 bench/nano/profile.py --mode pin --pin-tsc --threads 20 36 60 \
+  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-pin-tsc-NEW
 ```
 
 Preparation, translation and warmup finish before the measured client starts.
@@ -272,8 +288,8 @@ and generated-image addresses and uses no borrowed-stack unwinding. Requested
 counter availability is checked before the workload; unsupported or uncounted
 events are failures, not zero measurements.
 
-The `batch` mode builds KD with `KDLOCK_MUTEX_DIAGNOSTICS=1`; ordinary builds and
-the two perf modes keep it compiled out. Quiescent snapshots after warmup and
+The `batch` mode retains `KDLOCK_MUTEX_DIAGNOSTICS=1`; ordinary builds and
+the two perf modes use mode 0. Quiescent snapshots after warmup and
 after joined measurement produce deltas for batch lengths, exit reasons,
 deferred requests and local/remote JIT service. Histogram bin zero represents
 zero; bin `i > 0` represents `[2^(i-1), 2^i-1]`. The validator checks exact
@@ -282,15 +298,43 @@ the returned-body completion-counter delta. Dispatch-node locality does not
 prove that a sleepable body stayed on that node. These observations never
 replace exact ownership, ACK, source/frame retirement or final drain checks.
 
+The KD-only `pin` mode uses `KDLOCK_MUTEX_DIAGNOSTICS=2`, replacing batch
+observations to stay within the reserved per-CPU storage budget. It reads
+`mutex_pin_stats` after warmup and after the joined measurement, saving
+`pin-before.json`, `pin-after.json` and `pin-delta.json`. Schema 1 binds compiled
+mode 2, a four-request window, both selected mutex policy limits and the TSC
+sample shift. The seventeen counters retain selections, requested/consumed/cancelled
+pins, drain calls, current and cancellation ACK behavior, batch-resume calls and samples.
+`full_resumes` counts calls to `kd_exe_mutex_batch_resume`, including checked
+pre-entry refusals; it does not assert that a FULL service or body returned.
+The two five-bin histograms record exact occupancy `0..4` before and after selection;
+the ten refill-stop reasons account for every selection.
+
+The validator requires both occupancy totals and refill-stop totals to equal
+selections; requested pins must equal consumed plus cancelled pins at quiescence.
+Cancelled pins must equal their immediate plus stalled ACK counts. ACK-loop totals
+must cover stalled ACKs and must be zero when none stalled. Nonempty drains cannot
+exceed drain calls, and drains retaining the current pin cannot exceed nonempty
+drains. These counters describe pin lifetimes: consumed pins are not a count of
+returned JIT bodies, and neither a counter identity nor a histogram proves drain.
+The unchanged workload oracle, physical ownership/ACK checks and source/frame
+retirement remain required before unloading or advancing to another case.
+
+TSC sampling is off by default (`KDLOCK_MUTEX_PIN_TSC_SHIFT=0`), requiring zero
+samples and cycles. `--pin-tsc` is valid only with `--mode pin` and selects shift 6.
+It samples one in 64 current-pin ACK waits per CPU. Ordered timestamps have
+explicit compiler barriers and LFENCE on both sides. The delta includes fence and
+timestamp overhead, the first ACK cacheline load, and any interruptions during
+the wait; zero polling iterations do not mean zero latency. Samples cannot
+exceed current ACKs. Keep sampled and unsampled diagnostic runs separate.
+
 Both perf collection and compiled counters perturb execution. Keep their rates
 separate from uninstrumented throughput and do not infer speedups from
-instrumented rates. All three modes retain `score_eligible=false`; a published
+instrumented rates. All four modes retain `score_eligible=false`; a published
 image alone still does not establish a returned JIT body.
 
-The active `best_case.py` launcher accepts explicit mutex policy experiments.
-The historical profiler exposes the same parameter controls, but remains
-unported. Change one limit per campaign and retain a matched default control;
-the first example is current, while the second documents the retained profiler:
+The active `best_case.py` launcher and profiler accept explicit mutex policy
+experiments. Change one limit per campaign and retain a matched default control:
 
 ```sh
 # Uninstrumented comparison: total cap 4096, NUMA boundary still 1024.
@@ -298,14 +342,14 @@ python3 bench/nano/best_case.py --profiles mutex-throughput mutex-locality \
   --threads 16 36 60 --mutex-batch-limit 4096 \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-cap4096-NEW
 
-# Historical Linux 6.1 diagnostic control; unavailable on Linux 7.
+# Separate batch diagnostic control; retain its policy in the result identity.
 python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
   --mutex-numa-boundary 256 --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-boundary256-batch-NEW
 ```
 
-The current launcher accepts either option. The retained profiler also records
-them for its historical `stat`, `record` and `batch` modes.
+Both launchers accept either option. The profiler records the selection in all
+four diagnostic modes.
 Defaults are total cap 1024 and NUMA boundary 1024, so the locality boundary
 does not shorten the default batch by count. Terminal/deferred exits remain.
 Each accepts `1..32767` independently; a smaller total cap can stop service before the NUMA boundary.
@@ -318,7 +362,7 @@ A larger same-node cohort can delay remote service; bounded body counts are not
 a wall-time fairness bound. The user's default promotion does not extend the
 measured performance claims beyond their recorded workloads and counts.
 
-For changes to this driver or batch diagnostics, run the basic checks plus
+For changes to this driver or compiled diagnostics, run the basic checks plus
 the directly affected drivers in the VM:
 
 ```sh

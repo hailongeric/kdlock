@@ -333,7 +333,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * follow the current origin's pin acknowledgement. */
 		if (!kd_mutex_batch_pin_select(batch, curr_node, false))
 			return KD_EXE_NO_RUN;
-		kd_mutex_proxy_wait_pinned(curr_node);
+		KD_MUTEX_PIN_WAIT(batch, curr_node, false);
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
@@ -399,7 +399,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			frame = kd_exec_frame_push_mutex_batch(&curr_node->regs,
 				curr_node->regs.ip, curr_node->gsbase,
 				curr_node->task_struct_ptr, lock, &batch->outer);
-		kd_mutex_proxy_wait_pinned(curr_node);
+		KD_MUTEX_PIN_WAIT(batch, curr_node, false);
 	}
 	if (frame)
 		goto prepared;
@@ -466,6 +466,7 @@ prepared:
 		/* The dispatcher may sleep or transfer ownership. Future selected
 		 * origins must be free to schedule before any FULL service begins. */
 		kd_mutex_batch_unpin(batch, true);
+		KD_MUTEX_PIN_INC(batch, full_resumes);
 		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
 	} else {
 		kd_mutex_batch_unpin(batch, true);
