@@ -1,0 +1,1635 @@
+{
+  "completed": true,
+  "scope": "Offline receipt/hash/source-manifest audit, not test execution or new binary authentication",
+  "archive_sha256": "1e78b352ca3a745bf15ff73e09769244b451e4d61ba976d3403ade0099aa949e",
+  "fetch": {
+    "files": 1921,
+    "bytes": 3288418,
+    "manifest_sha256": "1703f8b93ed587f65444409c8c7df627d785bd48a7998e886eaecc171dbabc2c"
+  },
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "kernel_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+  "attempts": [
+    {
+      "root": "kernel-proxy-calls-r2-unit-20261030",
+      "source_commit": "1495f5509752d2424bbc99c6dcea92649db97ba4",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "build-default-off",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-calls-unit-20261030",
+      "source_commit": "d20afbefb7491b592f0b51547fa1b6dfea3a0dc4",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          13,
+          1
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 2
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-context-live-20261030",
+      "source_commit": "f40a17c8e69ce9ac5017a6d8c3583d4da39014ba",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "live",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-context-live-r2-20261030",
+      "source_commit": "25aa81bba99b12c9c0e33a8e4db83c144cccdc29",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "live",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-context-r2-unit-20261030",
+      "source_commit": "ada764f076454d01f134d93e6b728b1acb842754",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          3,
+          1
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 2
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-context-r3-unit-20261030",
+      "source_commit": "99efd26e8cc6627f00509fd68635f04b283a6a56",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "build-default-off",
+          "returncode": 0
+        },
+        {
+          "name": "build-mmap1-probe",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-context-unit-20261030",
+      "source_commit": "4fc02b01acab36e2cdc31b832e59fe1268dd66d8",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          5,
+          2
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 2
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-marker-live-20261030",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "completed": true,
+      "unit_driver_totals": [],
+      "blocks": [
+        {
+          "name": "mutex",
+          "returncode": 0
+        },
+        {
+          "name": "spin",
+          "returncode": 0
+        },
+        {
+          "name": "rwlock",
+          "returncode": 0
+        },
+        {
+          "name": "rwsem",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-marker-unit-20261030",
+      "source_commit": "b8fda6af5d4169e69e10b09133fabf0b1af2d645",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          9,
+          1
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 2
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-native-call-live-20261030",
+      "source_commit": "e9ad910c45661170710aaf3051034a70a2700860",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          5,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "live-direct",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-native-call-live-r2-20261030",
+      "source_commit": "3a0f3c25f237a1a980b3b80ee0bf48f54f10e510",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "build-setfd",
+          "returncode": 0
+        },
+        {
+          "name": "build-pipe",
+          "returncode": 0
+        },
+        {
+          "name": "live-direct",
+          "returncode": 0
+        },
+        {
+          "name": "live-indirect",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-ordering-r3-unit-20261030",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          3,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "build-default-off",
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-ordering-unit-20261030",
+      "source_commit": "627b47e8292ff08eb346dd913778fe3c3a0dd7f2",
+      "completed": false,
+      "unit_driver_totals": [
+        [
+          9,
+          1
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 2
+        }
+      ]
+    },
+    {
+      "root": "kernel-proxy-profile-unit-20261030",
+      "source_commit": "0ef4e92bea5db63b9201c3dd24310cbd6929d928",
+      "completed": true,
+      "unit_driver_totals": [
+        [
+          6,
+          0
+        ]
+      ],
+      "blocks": [
+        {
+          "name": "kernel-identity",
+          "returncode": 0
+        },
+        {
+          "name": "unit",
+          "returncode": 0
+        },
+        {
+          "name": "mm-platform",
+          "returncode": 0
+        },
+        {
+          "name": "build-client",
+          "returncode": 0
+        }
+      ]
+    }
+  ],
+  "source_manifests": [
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/source-sha256.json",
+      "commit": "0ef4e92bea5db63b9201c3dd24310cbd6929d928",
+      "recorded_files": 399,
+      "git_verified_files": 279,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "bench/spin_cacheline/.build/provider/include/asm_head.h",
+        "bench/spin_cacheline/.build/provider/include/exe.h",
+        "bench/spin_cacheline/.build/provider/include/exe_info.h",
+        "bench/spin_cacheline/.build/provider/include/kd_api_control.h",
+        "bench/spin_cacheline/.build/provider/include/kd_api_provider.h",
+        "bench/spin_cacheline/.build/provider/include/kd_bench.h",
+        "bench/spin_cacheline/.build/provider/include/kd_call.h",
+        "bench/spin_cacheline/.build/provider/include/kd_comm.h",
+        "bench/spin_cacheline/.build/provider/include/kd_config.h",
+        "bench/spin_cacheline/.build/provider/include/kd_exec.h",
+        "bench/spin_cacheline/.build/provider/include/kd_hostcall.h",
+        "bench/spin_cacheline/.build/provider/include/kd_hostcalls.def",
+        "bench/spin_cacheline/.build/provider/include/kd_hotlock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_image.h",
+        "bench/spin_cacheline/.build/provider/include/kd_jit_batch.h",
+        "bench/spin_cacheline/.build/provider/include/kd_lock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_compat.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_state.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_stats.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_types.h",
+        "bench/spin_cacheline/.build/provider/include/kd_native_terminals.def",
+        "bench/spin_cacheline/.build/provider/include/kd_regs.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwlock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_compat.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_types.h",
+        "bench/spin_cacheline/.build/provider/include/kd_segment.h",
+        "bench/spin_cacheline/.build/provider/include/kd_source.h",
+        "bench/spin_cacheline/.build/provider/include/kd_source_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_entry.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_fast.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_type.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spinlock.h",
+        "bench/spin_cacheline/.build/provider/include/qspinlock_i.h",
+        "bench/spin_cacheline/.build/provider/include/sys.h",
+        "bench/spin_cacheline/.build/provider/include/utils.h",
+        "bench/spin_cacheline/.build/provider/include/wrapper.S",
+        "bench/spin_cacheline/.build/provider/kernel_module/Makefile",
+        "bench/spin_cacheline/.build/provider/kernel_module/exe.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/control_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/frame_lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/hostcalls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/images.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/lock_ledger.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/native.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/native_terminals.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/registry_lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/registry_publish.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/remote.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/timing.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/wrapper_entry.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_api_provider.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_bench.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_exec.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_hotlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_lock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_main.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_local.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_local.h",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_osq.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_tasks.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwsem.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwsem_api.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_source.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spin_entry.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spin_runtime.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spinlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/mixed_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/mutex_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/spin_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/batch_diag.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/clobber.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/combiner.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/count.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/custody.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_diag.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_origin.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_window.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/queue.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/waiter.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/combiner.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/context.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/diagnostics.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/direct.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/entry.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/execute.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/nested.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/nondelegated.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/prefetch.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/queue.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/request.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/restore.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/shadow.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/slowpath.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/state.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_borrow.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_diagnostics.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_origin.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_state.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/unlock.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/wait.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/sys.c",
+        "bench/spin_cacheline/.build/provider/manifest.json",
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "ec4dc2135d970a5ca2d11837cff004a59d7c03a40376b5420a08eff1b8a7971c"
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/source-sha256.json",
+      "commit": "0ef4e92bea5db63b9201c3dd24310cbd6929d928",
+      "recorded_files": 302,
+      "git_verified_files": 296,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "16a783e0e7b6f95fb6f79349886fa406f95b9ac7e52a8e8c0878e9418b6c6a72"
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/source-sha256.json",
+      "commit": "0ef4e92bea5db63b9201c3dd24310cbd6929d928",
+      "recorded_files": 302,
+      "git_verified_files": 296,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "16a783e0e7b6f95fb6f79349886fa406f95b9ac7e52a8e8c0878e9418b6c6a72"
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/source-sha256.json",
+      "commit": "0ef4e92bea5db63b9201c3dd24310cbd6929d928",
+      "recorded_files": 399,
+      "git_verified_files": 279,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "bench/spin_cacheline/.build/provider/include/asm_head.h",
+        "bench/spin_cacheline/.build/provider/include/exe.h",
+        "bench/spin_cacheline/.build/provider/include/exe_info.h",
+        "bench/spin_cacheline/.build/provider/include/kd_api_control.h",
+        "bench/spin_cacheline/.build/provider/include/kd_api_provider.h",
+        "bench/spin_cacheline/.build/provider/include/kd_bench.h",
+        "bench/spin_cacheline/.build/provider/include/kd_call.h",
+        "bench/spin_cacheline/.build/provider/include/kd_comm.h",
+        "bench/spin_cacheline/.build/provider/include/kd_config.h",
+        "bench/spin_cacheline/.build/provider/include/kd_exec.h",
+        "bench/spin_cacheline/.build/provider/include/kd_hostcall.h",
+        "bench/spin_cacheline/.build/provider/include/kd_hostcalls.def",
+        "bench/spin_cacheline/.build/provider/include/kd_hotlock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_image.h",
+        "bench/spin_cacheline/.build/provider/include/kd_jit_batch.h",
+        "bench/spin_cacheline/.build/provider/include/kd_lock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_compat.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_state.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_stats.h",
+        "bench/spin_cacheline/.build/provider/include/kd_mutex_types.h",
+        "bench/spin_cacheline/.build/provider/include/kd_native_terminals.def",
+        "bench/spin_cacheline/.build/provider/include/kd_regs.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwlock.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_compat.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_rwsem_types.h",
+        "bench/spin_cacheline/.build/provider/include/kd_segment.h",
+        "bench/spin_cacheline/.build/provider/include/kd_source.h",
+        "bench/spin_cacheline/.build/provider/include/kd_source_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_api.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_direct.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_entry.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_fast.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spin_type.h",
+        "bench/spin_cacheline/.build/provider/include/kd_spinlock.h",
+        "bench/spin_cacheline/.build/provider/include/qspinlock_i.h",
+        "bench/spin_cacheline/.build/provider/include/sys.h",
+        "bench/spin_cacheline/.build/provider/include/utils.h",
+        "bench/spin_cacheline/.build/provider/include/wrapper.S",
+        "bench/spin_cacheline/.build/provider/kernel_module/Makefile",
+        "bench/spin_cacheline/.build/provider/kernel_module/exe.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/control_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/frame_lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/hostcalls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/images.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/lock_ledger.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/native.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/native_terminals.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/registry_lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/registry_publish.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/remote.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/timing.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/execution/wrapper_entry.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_api_provider.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_bench.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_exec.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_hotlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_lock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_main.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_local.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_local.h",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_osq.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_mutex_tasks.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwsem.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_rwsem_api.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_source.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spin_entry.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spin_runtime.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/kd_spinlock.c",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/mixed_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/mutex_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/lock/spin_calls.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/batch_diag.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/clobber.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/combiner.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/count.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/custody.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_diag.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_origin.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/pin_window.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/queue.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/mutex/waiter.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/combiner.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/context.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/diagnostics.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/direct.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/entry.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/execute.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/lifecycle.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/nested.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/nondelegated.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/prefetch.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/queue.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/request.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/restore.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/shadow.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/slowpath.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/state.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_borrow.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_diagnostics.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_origin.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/ticket_state.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/unlock.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/spin/wait.inc",
+        "bench/spin_cacheline/.build/provider/kernel_module/sys.c",
+        "bench/spin_cacheline/.build/provider/manifest.json",
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "ec4dc2135d970a5ca2d11837cff004a59d7c03a40376b5420a08eff1b8a7971c"
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/source-sha256.json",
+      "commit": "f40a17c8e69ce9ac5017a6d8c3583d4da39014ba",
+      "recorded_files": 218,
+      "git_verified_files": 212,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "2a56cc8d1d2f139f31111b2bcffe987a34f38ad0cf5becf30a6d7eee1312e131"
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/source-sha256.json",
+      "commit": "25aa81bba99b12c9c0e33a8e4db83c144cccdc29",
+      "recorded_files": 218,
+      "git_verified_files": 212,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "ed6ce136d2d66b2b44ec2da4f9145f623a18d2630861e5a433dbc6d1a89812eb"
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/source-sha256.json",
+      "commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "recorded_files": 214,
+      "git_verified_files": 208,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927"
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/source-sha256.json",
+      "commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "recorded_files": 214,
+      "git_verified_files": 208,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927"
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/source-sha256.json",
+      "commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "recorded_files": 214,
+      "git_verified_files": 208,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927"
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/source-sha256.json",
+      "commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "recorded_files": 214,
+      "git_verified_files": 208,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927"
+    },
+    {
+      "path": "kernel-proxy-native-call-live-20261030/direct/source-sha256.json",
+      "commit": "e9ad910c45661170710aaf3051034a70a2700860",
+      "recorded_files": 250,
+      "git_verified_files": 244,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "53da2ad8f1b1bab74fb30c2794a3678546931bb7ca8b8bc30871364cc28123e7"
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/source-sha256.json",
+      "commit": "3a0f3c25f237a1a980b3b80ee0bf48f54f10e510",
+      "recorded_files": 250,
+      "git_verified_files": 244,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "5a6775f3fea7395b7a6cabd1d4eff0e73cd328ee21bc9e3fe4810c9c499a0a95"
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/source-sha256.json",
+      "commit": "3a0f3c25f237a1a980b3b80ee0bf48f54f10e510",
+      "recorded_files": 250,
+      "git_verified_files": 244,
+      "nontracked_snapshot_paths_not_Git_verified": [
+        "include/kd_rwsem_direct.h",
+        "kernel_module/kd_rwlock.c",
+        "kernel_module/mutex/custody.inc",
+        "kernel_module/mutex/pin_diag.inc",
+        "kernel_module/mutex/pin_origin.inc",
+        "kernel_module/mutex/pin_window.inc"
+      ],
+      "sha256": "5a6775f3fea7395b7a6cabd1d4eff0e73cd328ee21bc9e3fe4810c9c499a0a95"
+    }
+  ],
+  "live": [
+    {
+      "root": "kernel-proxy-marker-live-20261030",
+      "arm": "mutex",
+      "kind": "marker",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1495146,
+          "jit_completions": 1495146,
+          "deltas": {
+            "bench_jit_bodies": 1495146,
+            "bench_jit_completions": 1495146,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 30862,
+          "jit_completions": 30862,
+          "deltas": {
+            "bench_jit_bodies": 30862,
+            "bench_jit_completions": 30862,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 6192,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 6192,
+            "bench_jit_completions": 0,
+            "native_escape_count": 6192
+          }
+        },
+        {
+          "name": "cold-after-escape",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 29030,
+          "jit_completions": 29030,
+          "deltas": {
+            "bench_jit_bodies": 29030,
+            "bench_jit_completions": 29030,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-repeat",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 6011,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 6011,
+            "bench_jit_completions": 0,
+            "native_escape_count": 6011
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476393435136,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "tgid": 372805
+        },
+        "images": {
+          "bin.txt": "7efec3ab889059d4793099683960bfc6a5da4d13387df34e2a553c9fee2c42e8",
+          "jit.S": "2ed572b3c120094bac5c8fb03c3c0eb9aefb6f51af1b3f8b865045fd3fdc3d0c",
+          "jit.bin": "d4d3fecc3c15b4bac72a0eedae8d5ea6120e584b44ac2e4f33dcf07e948e3161"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 10,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-marker-live-20261030",
+      "arm": "spin",
+      "kind": "marker",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1538324,
+          "jit_completions": 1538324,
+          "deltas": {
+            "bench_jit_bodies": 1538324,
+            "bench_jit_completions": 1538324,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 27886,
+          "jit_completions": 27886,
+          "deltas": {
+            "bench_jit_bodies": 27886,
+            "bench_jit_completions": 27886,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 29253,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 29253,
+            "bench_jit_completions": 0,
+            "native_escape_count": 29253
+          }
+        },
+        {
+          "name": "cold-after-escape",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 29444,
+          "jit_completions": 29444,
+          "deltas": {
+            "bench_jit_bodies": 29444,
+            "bench_jit_completions": 29444,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-repeat",
+          "operations": 32000,
+          "read_operations": 0,
+          "jit_entries": 26890,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 26890,
+            "bench_jit_completions": 0,
+            "native_escape_count": 26890
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476392476672,
+          "entry": 18446744072646181360,
+          "entry_abi": 1,
+          "generation": 1,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 33,
+          "status": 0,
+          "tgid": 374118
+        },
+        "images": {
+          "bin.txt": "16e77b0b267b0a174e1dc2c7b68518908503fa4e6cdb7ad1619f942eaa5e1c3f",
+          "jit.S": "5a96c43d4a537f6252a24055432d554691b49449594f753f5257d37ddd34d2ef",
+          "jit.bin": "4cae3be613e351bd18299fe2c9c00c60f701106720bb7c5dddbb5b1ebe8938ed"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 10,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-marker-live-20261030",
+      "arm": "rwlock",
+      "kind": "marker",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 1500000,
+          "read_operations": 10000000,
+          "jit_entries": 601796,
+          "jit_completions": 601796,
+          "deltas": {
+            "bench_jit_bodies": 601796,
+            "bench_jit_completions": 601796,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 3118,
+          "jit_completions": 3118,
+          "deltas": {
+            "bench_jit_bodies": 3118,
+            "bench_jit_completions": 3118,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 3459,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 3459,
+            "bench_jit_completions": 0,
+            "native_escape_count": 3459
+          }
+        },
+        {
+          "name": "cold-after-escape",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 5259,
+          "jit_completions": 5259,
+          "deltas": {
+            "bench_jit_bodies": 5259,
+            "bench_jit_completions": 5259,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-repeat",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 1706,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 1706,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1706
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476391817216,
+          "entry": 18446744072646181344,
+          "entry_abi": 3,
+          "generation": 1,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 33,
+          "status": 0,
+          "tgid": 375437
+        },
+        "images": {
+          "bin.txt": "d17c4e55bf9fa745ee599400890d14482ac1cd56ee50cb71b465af85f28ee9a2",
+          "jit.S": "93e79b03a428965f69094746da8d796b73b5655101b0023613ce8380433ba922",
+          "jit.bin": "87206f1cc9ec7ee1b547246faa827be10a33c31c5e999e2ea6d14f398d0ef4a3"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 10,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-marker-live-20261030",
+      "arm": "rwsem",
+      "kind": "marker",
+      "source_commit": "264725969cbafd909bd20a051cc51b2575b30cfd",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 1500000,
+          "read_operations": 10000000,
+          "jit_entries": 1456632,
+          "jit_completions": 1456632,
+          "deltas": {
+            "bench_jit_bodies": 1456632,
+            "bench_jit_completions": 1456632,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 17365,
+          "jit_completions": 17365,
+          "deltas": {
+            "bench_jit_bodies": 17365,
+            "bench_jit_completions": 17365,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 10054,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 10054,
+            "bench_jit_completions": 0,
+            "native_escape_count": 10054
+          }
+        },
+        {
+          "name": "cold-after-escape",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 13217,
+          "jit_completions": 13217,
+          "deltas": {
+            "bench_jit_bodies": 13217,
+            "bench_jit_completions": 13217,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-repeat",
+          "operations": 30000,
+          "read_operations": 10000000,
+          "jit_entries": 10995,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 10995,
+            "bench_jit_completions": 0,
+            "native_escape_count": 10995
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476392476672,
+          "entry": 18446744072646181129,
+          "entry_abi": 2,
+          "generation": 1,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "tgid": 376751
+        },
+        "images": {
+          "bin.txt": "026acb6b50323f237eeba05357c7d1fabdd05381aa9768f67d56dffc7f06c718",
+          "jit.S": "6ac2653df4b27207f6203bf2319357e36f6e2837d50d7cb8565ecf606d0307c7",
+          "jit.bin": "37dce76f9edb1d3b64638a56ff112f9e3172cf88e1b94e36c002a5a4f49c8ae7"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 10,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-context-live-r2-20261030",
+      "arm": "probe",
+      "kind": "context",
+      "source_commit": "25aa81bba99b12c9c0e33a8e4db83c144cccdc29",
+      "phase_count": 9,
+      "phases": [
+        {
+          "name": "ordinary-warmup",
+          "operations": 524288,
+          "read_operations": 0,
+          "jit_entries": 497714,
+          "jit_completions": 497714,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 497714,
+            "bench_jit_completions": 497714
+          }
+        },
+        {
+          "name": "if-on",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 19627,
+          "jit_completions": 19627,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 19627,
+            "bench_jit_completions": 19627
+          }
+        },
+        {
+          "name": "if-off",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 19623,
+          "jit_completions": 19623,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 19623,
+            "bench_jit_completions": 19623
+          }
+        },
+        {
+          "name": "bh-local",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 0,
+          "jit_completions": 0,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0
+          }
+        },
+        {
+          "name": "rcu-local",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 0,
+          "jit_completions": 0,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0
+          }
+        },
+        {
+          "name": "preempt-local",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 0,
+          "jit_completions": 0,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0
+          }
+        },
+        {
+          "name": "migration-local",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 0,
+          "jit_completions": 0,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0
+          }
+        },
+        {
+          "name": "mixed-if-stress",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 8372,
+          "jit_completions": 8372,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 8372,
+            "bench_jit_completions": 8372
+          }
+        },
+        {
+          "name": "if-on-final",
+          "operations": 32768,
+          "read_operations": 0,
+          "jit_entries": 18633,
+          "jit_completions": 18633,
+          "deltas": {
+            "address_guard_count": 0,
+            "bench_jit_bodies": 18633,
+            "bench_jit_completions": 18633
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476404940800,
+          "entry": 18446744072646180931,
+          "entry_abi": 1,
+          "generation": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 0,
+          "status": 0,
+          "tgid": 384387
+        },
+        "images": {
+          "bin.txt": "bf3056fedca5bd57d57839f0950a210a8d08716fb12001a785117be5617d7d90",
+          "jit.S": "de99f75ecdfc22683a334f1b51e80cfeae108735d1c4f98f6d68f77f8996d835",
+          "jit.bin": "e4e0fa6ae7cd3371c33e3623968a5d396eb101dcec3a9841f314805b65b32aa3"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 0,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-native-call-live-r2-20261030",
+      "arm": "direct",
+      "kind": "call",
+      "source_commit": "3a0f3c25f237a1a980b3b80ee0bf48f54f10e510",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 3200000,
+          "read_operations": 0,
+          "jit_entries": 3113434,
+          "jit_completions": 3113434,
+          "deltas": {
+            "bench_jit_bodies": 3113434,
+            "bench_jit_completions": 3113434,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1592679,
+          "jit_completions": 1592679,
+          "deltas": {
+            "bench_jit_bodies": 1592679,
+            "bench_jit_completions": 1592679,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "taken-native",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 422713,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 422713,
+            "bench_jit_completions": 0,
+            "native_call_probe_count": 422713,
+            "native_completed": 422713,
+            "native_escape_count": 0,
+            "native_started": 422713,
+            "native_unlocks": 422713
+          }
+        },
+        {
+          "name": "cold-after-native",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1591658,
+          "jit_completions": 1591658,
+          "deltas": {
+            "bench_jit_bodies": 1591658,
+            "bench_jit_completions": 1591658,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "taken-repeat",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 424042,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 424042,
+            "bench_jit_completions": 0,
+            "native_call_probe_count": 424042,
+            "native_completed": 424042,
+            "native_escape_count": 0,
+            "native_started": 424042,
+            "native_unlocks": 424042
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476395847680,
+          "entry": 18446744072646180985,
+          "entry_abi": 2,
+          "generation": 1,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": 0,
+          "tgid": 404211
+        },
+        "images": {
+          "bin.txt": "c6f1863dcee635e28f90549f3248c467c54e65ede7b80a1f73bafd14c7a75e5f",
+          "jit.S": "ad6d233831cc26181036123752211261821d17128d8319a51dfbbfcc2b1a0218",
+          "jit.bin": "257c08c6c97fc286d39b68805649f14250a0e3da39d5d41c46e9776a06db3c52"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 20,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "root": "kernel-proxy-native-call-live-r2-20261030",
+      "arm": "indirect",
+      "kind": "call",
+      "source_commit": "3a0f3c25f237a1a980b3b80ee0bf48f54f10e510",
+      "phase_count": 5,
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "operations": 3200000,
+          "read_operations": 0,
+          "jit_entries": 3106777,
+          "jit_completions": 3106777,
+          "deltas": {
+            "bench_jit_bodies": 3106777,
+            "bench_jit_completions": 3106777,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1592236,
+          "jit_completions": 1592236,
+          "deltas": {
+            "bench_jit_bodies": 1592236,
+            "bench_jit_completions": 1592236,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "taken-native",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 402330,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 402330,
+            "bench_jit_completions": 0,
+            "native_call_probe_count": 402330,
+            "native_completed": 402330,
+            "native_escape_count": 0,
+            "native_started": 402330,
+            "native_unlocks": 402330
+          }
+        },
+        {
+          "name": "cold-after-native",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 1589572,
+          "jit_completions": 1589572,
+          "deltas": {
+            "bench_jit_bodies": 1589572,
+            "bench_jit_completions": 1589572,
+            "native_call_probe_count": 0,
+            "native_completed": 0,
+            "native_escape_count": 0,
+            "native_started": 0,
+            "native_unlocks": 0
+          }
+        },
+        {
+          "name": "taken-repeat",
+          "operations": 1600000,
+          "read_operations": 0,
+          "jit_entries": 404875,
+          "jit_completions": 0,
+          "deltas": {
+            "bench_jit_bodies": 404875,
+            "bench_jit_completions": 0,
+            "native_call_probe_count": 404875,
+            "native_completed": 404875,
+            "native_escape_count": 0,
+            "native_started": 404875,
+            "native_unlocks": 404875
+          }
+        }
+      ],
+      "publication": {
+        "entry": {
+          "code": 18419722476395847680,
+          "entry": 18446744072646180985,
+          "entry_abi": 2,
+          "generation": 1,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": 0,
+          "tgid": 405538
+        },
+        "images": {
+          "bin.txt": "d1fb7b2bb84e63123678a369429a5a2008fe72576347351c214bc21eb5504d73",
+          "jit.S": "319af4da9ec91b6e6bd5da92701f00222f6a2dbe18329cbf9231338baa51a9eb",
+          "jit.bin": "a74a8c6b52c827a5fd9671b5b33e4cd7edeb21a756d6a9e1ce1ca153893a91d1"
+        },
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "event_samples": 20,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "basic": [
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "spin",
+      "jit_completions": 1596587,
+      "jit_entries": 1596587,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "receipt_sha256": "dee877014c6fa8c0a5912ddbb69dff9a3ac9eae85f5a0d955538d8a134e0958d"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "mutex",
+      "jit_completions": 1589665,
+      "jit_entries": 1589665,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "receipt_sha256": "b4934e9806639de29b2133d9ff3e832cf326ea2631e3b652fa0a1c0582f1cc99"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "rwlock",
+      "jit_completions": 25618,
+      "jit_entries": 25618,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "receipt_sha256": "cf14004cfc70664a9b9e9e135f9166795df5f0f7a8c1e0ce59377e8304eed341"
+    },
+    {
+      "drained": true,
+      "execution": "RETURNED_JIT",
+      "family": "rwsem",
+      "jit_completions": 1589756,
+      "jit_entries": 1589756,
+      "operations": 1600000,
+      "passed": true,
+      "performance_accepted": false,
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "receipt_sha256": "af18dc8b4e732ff68fcba083af700ff5e2de0857986cf42429f7518dc4a61f9d"
+    }
+  ],
+  "limits": [
+    "Versions and instrumented call shells are separate; no performance claim.",
+    "Raw images/ELFs are represented by captured hashes; complete bulk archives are outside this receipt audit.",
+    "Context mixed-IF phase is stress only, not deterministic mismatched-pair proof.",
+    "Native CALL live coverage is a mutex root and fixed Native spin target; borrowed owner, no role swap or arbitrary JIT re-entry."
+  ],
+  "source_manifest_unique_blobs": 1440
+}

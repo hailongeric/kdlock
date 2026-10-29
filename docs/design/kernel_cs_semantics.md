@@ -324,3 +324,32 @@ JIT after a native interval additionally requires a validated return/state merge
 and acquisition contract. Preserve actual CALL/RET words; do not create a fake
 general native return bridge to satisfy a coverage count. Any remaining coarse
 fallback or unsupported context must stay explicit in the completion report.
+
+## October 30 bounded functional milestone
+
+The [functional evidence record](../../bench/results/10.176.26.71/tests/kernel-proxy-functional-20261030/README.md)
+updates the implementation status without rewriting the `acfa33a5` audit above.
+At `264725969cbafd909bd20a051cc51b2575b30cfd`, decoded PAUSE/fence/LOCK ordering
+checks and four-family cold → marker → cold → marker live probes passed after
+the retained lowering failures were fixed. Supported reached markers preserve
+later image eligibility. At `25aa81bba99b12c9c0e33a8e4db83c144cccdc29`, ordinary
+spin context checks passed with matching IF delegation and local completion for
+BH/RCU/preempt/migration constraints; mixed-IF live execution is stress evidence,
+not a deliberately forced mismatch proof.
+
+At `3a0f3c25f237a1a980b3b80ee0bf48f54f10e510`, separate direct and fresh fixed
+indirect Native CALL probes passed cold → taken → cold → taken with exact
+original-task effects, native completion/unlock counts, unchanged image identity
+and complete source/frame retirement. The tested outer lock is an ABI2 mutex
+whose physical owner is borrowed; this does not establish queued role exchange.
+The invocation finishes its native suffix. Arbitrary return to the same JIT,
+unknown indirect RET/JMP recovery and universal Native API coverage remain
+outside this evidence. Optional CALL capability bit 12 is explicit.
+
+These are unscored mechanism and functional checks on the existing Linux 7
+kernel. Client compilation and runner/binding unit checks do not establish
+actual bound-object syscall or MM execution. The selected kernel integration,
+unchanged mmap1 and matched nano/performance gates remain pending separately.
+The killable-writer optimistic-poll review is a proposal, not an implemented or
+measured improvement. Exact versions, retained failed attempts, receipt hashes
+and the binary/archive verification limits are in the linked record.

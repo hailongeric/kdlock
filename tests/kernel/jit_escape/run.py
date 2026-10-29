@@ -539,7 +539,7 @@ def main():
             cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
-        print("PASS: cold branch delegated; hot instruction resumed on original task; exact effects/flags; permanent native-only state; final drain")
+        print("PASS: cold branches delegated before and after native continuation; hot instruction resumed on original task; exact effects/flags; image remains eligible; final drain")
         return 0
     except (RuntimeError, OSError, ValueError, KeyError, ImportError) as error:
         rt.write_json(out / "failure.json", dict(error=str(error), status=getattr(error, "status", "FAILED"),
