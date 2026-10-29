@@ -37,8 +37,13 @@ comparisons, not a causal or no-regression verdict.
 | rwsem | c16 | 1% | 20 | 10.817592 | 9.916495 | 10.029305 | -7.29% |
 
 Rwlock c16/1% at eight workers is the largest observed loss and reports
-`NO_JIT`; no explanation is established. The earlier rwlock c01 losses remain
-unresolved. Rwsem's original baseline used a different call shell from the
+`NO_JIT`; no measured cause is established. An [offline ELF comparison](rwlock-elf-comparison.json)
+verified that c01/c16 `rb_read`, `rb_write` and `rb_run` have identical bytes,
+relative offsets, sizes and relocations at `5f96dd5c` and `1c86d6d1`. The c16/t8
+code entry was unchanged, while runtime lock data moved with the same page
+offset/alignment. Physical data placement was not measured. Thus a payload
+instruction/layout change does not explain this new loss; runtime/provider
+effects remain unresolved. The earlier rwlock c01 losses also remain open. Rwsem's original baseline used a different call shell from the
 ordinary prepared DIRECT API, so those deltas also include that interface
 change. No source generations, boots, call shells or observations are pooled.
 
