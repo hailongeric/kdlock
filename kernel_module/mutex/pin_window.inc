@@ -103,9 +103,15 @@ static bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
 	if (limit > KD_MUTEX_PIN_WINDOW)
 		limit = KD_MUTEX_PIN_WINDOW;
 	while (batch->nr_pins < limit) {
-		struct kd_mutex_node *last = batch->pins[batch->nr_pins - 1].node;
+		unsigned int count = batch->nr_pins;
+		struct kd_mutex_node *last;
 		int cpu;
 
+		/* Successful current selection established a nonempty window.
+		 * Keep the index bound explicit at this dereference, including
+		 * compile-time one-body policy configurations. */
+		BUG_ON(!count || count > KD_MUTEX_PIN_WINDOW);
+		last = batch->pins[count - 1].node;
 		next = smp_load_acquire(&last->next);
 		if (!next || next->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 		    next->packet_state != KD_PACKET_MINIMAL ||
