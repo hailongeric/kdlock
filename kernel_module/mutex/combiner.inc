@@ -132,12 +132,38 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 }
 
 /* An unlinked last node is eligible only under the explicit minimal ABI.
- * Legacy/FULL last waiters retain the established physical handoff boundary. */
+ * A delayed link ends ordinary execution and is retired by cold cleanup. */
 static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
 {
 	return node && (READ_ONCE(node->next) ||
 		(node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
 		 node->packet_state == KD_PACKET_MINIMAL));
+}
+
+/* Ordinary completed-body retirement never waits for queue response. A lost
+ * terminal tail CAS means an enqueuer still owns the missing link. Keep the
+ * current claim/node and batch lease live, then leave the execution loop. */
+static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,
+					    struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_node *node, *next;
+
+	BUG_ON(batch->lock != lock);
+	if (batch->current_retired)
+		return true;
+	node = batch->current_node;
+	BUG_ON(!node);
+	next = batch->next;
+	if (!next) {
+		BUG_ON(batch->deferred_head);
+		next = smp_load_acquire(&node->next);
+		if (!next && cmpxchg(&lock->delegation_tail, (u32)node->tail, 0) !=
+			     (u32)node->tail)
+			return false;
+		batch->next = next;
+	}
+	batch->current_retired = true;
+	return true;
 }
 
 /* Retire queue publication before letting a committed waiter reuse its node.
@@ -254,7 +280,9 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 	node->regs = *kd_exec_frame_regs(frame);
 	node->packet_state = KD_PACKET_FULL;
 	WRITE_ONCE(own->next, NULL);
-	WRITE_ONCE(own->locked, true);
+	/* C still owns the live old frame. Its republished node must remain
+	 * unclaimable until frame/source retirement at the SWAPPED return. */
+	WRITE_ONCE(own->locked, KD_MUTEX_QUEUE_INIT);
 	WRITE_ONCE(own->completed, false);
 	WRITE_ONCE(own->native_resume, false);
 	own->queued_at_ns = kd_exe_queue_timing_start();
@@ -330,10 +358,10 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	if (!clobber) {
 		/* Legacy decoding reads the origin stack, so even image lookup must
-		 * follow the current origin's pin acknowledgement. */
+		 * follow the current origin's successful readiness claim. */
 		if (!kd_mutex_batch_pin_select(batch, curr_node, false))
 			return KD_EXE_NO_RUN;
-		KD_MUTEX_PIN_WAIT(batch, curr_node, false);
+		KD_MUTEX_PIN_ASSERT(batch, curr_node);
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
@@ -393,13 +421,13 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 		if (!kd_mutex_batch_pin_select(batch, curr_node, minimal))
 			return KD_EXE_NO_RUN;
-		/* Only stable published metadata/private executor storage is used
-		 * here. No origin stack/GS access precedes the acquire ACK. */
+		/* The successful READY claim already proves origin pin/quiescence.
+		 * Keep its exact assertion before preparing borrowed origin state. */
+		KD_MUTEX_PIN_ASSERT(batch, curr_node);
 		if (minimal)
 			frame = kd_exec_frame_push_mutex_batch(&curr_node->regs,
 				curr_node->regs.ip, curr_node->gsbase,
 				curr_node->task_struct_ptr, lock, &batch->outer);
-		KD_MUTEX_PIN_WAIT(batch, curr_node, false);
 	}
 	if (frame)
 		goto prepared;
@@ -611,6 +639,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 #endif
 	};
 	int counter = 0;
+	bool completed_pending_tail = false;
 
 	this_cpu_inc(kd_mutex_combiner_count);
 
@@ -679,6 +708,11 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_OWNER_TRANSFER);
 			KD_MUTEX_DIAG_FINISH(&batch);
 			kd_source_frame_put();
+			/* C's original stack/GS state is now quiescent and its old frame
+			 * and batch source lease are gone. W cannot combine until READY
+			 * below; publish C's pin proof first, with no later origin edits. */
+			BUG_ON(cmpxchg(&batch.own_node->locked, KD_MUTEX_QUEUE_INIT,
+				       KD_MUTEX_PROXY_READY) != KD_MUTEX_QUEUE_INIT);
 			/* Last old-executor access: W can finish and reuse this slot as
 			 * soon as it observes READY. C now only waits on its own node. */
 			smp_store_release(&owner->custody.ready, true);
@@ -700,7 +734,18 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		}
 
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
-			kd_mutex_batch_retire_current(lock, &batch);
+			if (!kd_mutex_batch_try_retire_current(lock, &batch)) {
+				/* Its frame is retired and body is complete, but this
+				 * invocation cannot be woken/reused until publication ends.
+				 * Never cancel it to WAIT or execute its body again. */
+				BUG_ON(batch.nr_pins != 1 || batch.outer.released ||
+				       curr_node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+				       (curr_node->packet_state != KD_PACKET_COMPLETE &&
+					curr_node->packet_state != KD_PACKET_FULL));
+				completed_pending_tail = true;
+				KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_DELAYED_TAIL);
+				break;
+			}
 			this_cpu_inc(kd_mutex_jit_success_count);
 			kd_mutex_batch_pin_complete(&batch, curr_node);
 			kd_mutex_clear_locked_set_completed(curr_node);
@@ -730,6 +775,18 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			break;
 
 		curr_node = next_node;
+	}
+
+	if (completed_pending_tail) {
+		/* Cold terminal boundary: the normal body loop has ended. Retain
+		 * physical exclusion, exact current claim and source lease while
+		 * the racing publisher finishes its link. Retire before the one
+		 * completion wake; only saved batch state is read after that wake. */
+		kd_mutex_batch_retire_current(lock, &batch);
+		this_cpu_inc(kd_mutex_jit_success_count);
+		kd_mutex_batch_pin_complete(&batch, curr_node);
+		kd_mutex_clear_locked_set_completed(curr_node);
+		next_node = batch.next;
 	}
 
 	/* The failed current request or a retained successor becomes queue head.

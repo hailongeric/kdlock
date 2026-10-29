@@ -77,65 +77,84 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock, struct kd_mutex_node *no
 	}
 }
 
-/* Enter and return pinned, but allow scheduling while merely queued. The slot
- * and shadow stack stay reserved under migration disable. A release PINNED ACK
- * follows preempt_disable, before an executor may access origin CPU state.
- * Completion/native handoff ends all delegated accesses to that CPU state.
- * A plain head handoff needs no proxy ACK and returns with the same one pin. */
+/* Enter on the reserved shadow stack with preemption disabled. Packet/count
+ * publication is finished before INIT becomes READY. A role-exchanged origin
+ * may already be READY/CLAIMED, withdrawn, or completed when it reaches here.
+ * Never rearm WAIT: cancellation may have won before this invocation entered.
+ * Every return retains exactly the caller's original one preemption pin. */
 static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
-	preempt_enable();
-queued:
-	for (;;) {
-		u8 state = smp_load_acquire(&node->locked);
+	unsigned int budget = KDLOCK_MUTEX_SPIN_BUDGET;
+	u8 state;
+	KD_MUTEX_PIN_WAIT_ENTER();
 
-		if (state != KD_MUTEX_WAIT) {
-			preempt_disable();
-			if (state == KD_MUTEX_PROXY_REQUEST) {
-				smp_store_release(&node->locked, KD_MUTEX_PROXY_PINNED);
-				while ((state = smp_load_acquire(&node->locked))) {
-					if (state == KD_MUTEX_WAIT) {
-						/* An unstarted attempt can be refused after ACK.
-						 * Release the pin before waiting behind its rejoined
-						 * queue prefix; no executor has run this body. */
-						preempt_enable();
-						goto queued;
-					}
-					if (state == KD_MUTEX_PROXY_REQUEST)
-						smp_store_release(&node->locked, KD_MUTEX_PROXY_PINNED);
-					else
-						BUG_ON(state != KD_MUTEX_PROXY_PINNED);
-					cpu_relax();
-				}
-			} else {
-				BUG_ON(state);
-			}
+	state = cmpxchg(&node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_PROXY_READY);
+	BUG_ON(state != KD_MUTEX_QUEUE_INIT && state != KD_MUTEX_PROXY_READY &&
+	       state != KD_MUTEX_PROXY_CLAIMED && state != KD_MUTEX_WAIT && state);
+	for (;;) {
+		state = smp_load_acquire(&node->locked);
+		if (!state) {
+			KD_MUTEX_PIN_INITIAL_FINISH(true);
 			return;
 		}
+		if (state == KD_MUTEX_WAIT) {
+			KD_MUTEX_PIN_FORCED_CANCEL();
+			goto withdrawn;
+		}
+		BUG_ON(state != KD_MUTEX_PROXY_READY && state != KD_MUTEX_PROXY_CLAIMED);
+		cpu_relax();
+		if (budget) {
+			if (!--budget)
+				KD_MUTEX_PIN_BUDGET_EXPIRED();
+			else
+				continue;
+		}
+		/* A claimed origin cannot abandon its pin. The spent budget remains
+		 * spent, including after a lost claim/withdraw race. */
+		if (state != KD_MUTEX_PROXY_READY)
+			continue;
+		KD_MUTEX_PIN_EXPIRY_CHECK();
+		if (!need_resched())
+			continue;
+		state = cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_WAIT);
+		if (state == KD_MUTEX_PROXY_READY) {
+			KD_MUTEX_PIN_WITHDRAW();
+			goto withdrawn;
+		}
+		BUG_ON(state != KD_MUTEX_PROXY_CLAIMED && state != KD_MUTEX_WAIT && state);
+	}
+withdrawn:
+	/* Withdrawal won against claim, or the executor ended every origin
+	 * access before publishing WAIT. A concurrent result zero must survive:
+	 * no store or rearm follows this point. This is runnable scheduling,
+	 * not a new parked delegation producer or a new sleep/wake protocol. */
+	KD_MUTEX_PIN_INITIAL_FINISH(false);
+	preempt_enable();
+	while ((state = smp_load_acquire(&node->locked))) {
+		BUG_ON(state != KD_MUTEX_WAIT);
 		cpu_relax();
 		if (need_resched())
 			cond_resched();
 	}
+	preempt_disable();
 }
 
-/* Only one physical owner selects a queued request. Never wait for a task
- * preempted on this executor's own CPU: it cannot acknowledge while we spin.
- * Refuse that still-unstarted request so the existing queue hands it off. */
+/* Only one physical owner claims a READY invocation. The origin's competing
+ * READY->WAIT CAS must win before it may unpin. Successful acquire therefore
+ * proves a pin without polling an origin response; failure is a refusal. */
 static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)
 {
 	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
 		return false;
-	BUG_ON(READ_ONCE(node->locked) != KD_MUTEX_WAIT);
-	smp_store_release(&node->locked, KD_MUTEX_PROXY_REQUEST);
-	return true;
+	return cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED) ==
+		KD_MUTEX_PROXY_READY;
 }
 
-/* REQUEST cannot be withdrawn while its origin may still publish PINNED.
- * Even failed private preparation must observe this ACK before cancellation. */
-static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)
+/* This checks an already-acquired pin. No normal proxy path waits for READY
+ * or retries a claim. The exact node/generation descriptor is checked too. */
+static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)
 {
-	while (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED)
-		cpu_relax();
+	BUG_ON(smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_CLAIMED);
 }
 
 /* ACQUIRING reserves the gate while physical acquisition can sleep. HELD

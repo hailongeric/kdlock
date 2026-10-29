@@ -39,6 +39,7 @@ MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
 	X(OWNER_TRANSFER, owner_transfer) \
 	X(TOTAL_CAP, total_cap) \
 	X(EMPTY_TAIL, empty_tail) \
+	X(DELAYED_TAIL, delayed_tail) \
 	X(UNSUPPORTED_TAIL, unsupported_tail)
 
 enum kd_mutex_diag_reason {
@@ -91,7 +92,9 @@ struct kd_mutex_batch_totals {
 #undef KD_MUTEX_DIAG_FIELD
 	u64 completed_hist[KD_MUTEX_DIAG_COMPLETED_BINS];
 	u64 deferred_peak_hist[KD_MUTEX_DIAG_DEFERRED_BINS];
-	u64 stop_reason[KD_MUTEX_DIAG_REASON_COUNT];
+	/* UNCLASSIFIED is derived from batches minus classified exits. Its
+	 * omitted zero-index bin leaves room for DELAYED_TAIL within 384 bytes. */
+	u64 stop_reason[KD_MUTEX_DIAG_REASON_COUNT - 1];
 };
 _Static_assert(sizeof(struct kd_mutex_batch_totals) <= 384,
 	       "mutex batch observations exceed the reserved per-CPU budget");
@@ -153,6 +156,7 @@ static void kd_mutex_diag_finish(struct kd_mutex_batch_diag *diag)
 {
 	unsigned int completed = diag->jit_completed + diag->native_completed;
 
+	BUG_ON((unsigned int)diag->reason >= KD_MUTEX_DIAG_REASON_COUNT);
 	/* Per-CPU additions remain valid if a sleepable executor has migrated.
 	 * Never keep a per-CPU pointer across an addition or body execution. */
 	this_cpu_inc(kd_mutex_batch_totals.batches);
@@ -174,19 +178,26 @@ static void kd_mutex_diag_finish(struct kd_mutex_batch_diag *diag)
 	/* Bin 0 contains zero; bin i>0 contains [2^(i-1), 2^i-1]. */
 	this_cpu_inc(kd_mutex_batch_totals.completed_hist[fls(completed)]);
 	this_cpu_inc(kd_mutex_batch_totals.deferred_peak_hist[fls(diag->peak_deferred)]);
-	this_cpu_inc(kd_mutex_batch_totals.stop_reason[diag->reason]);
+	if (diag->reason != KD_MUTEX_DIAG_UNCLASSIFIED)
+		this_cpu_inc(kd_mutex_batch_totals.stop_reason[diag->reason - 1]);
 }
 
 static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 {
 	struct kd_mutex_batch_totals total = { 0 };
+	u64 classified = 0, unclassified;
+	bool overflow = false;
 	unsigned int i;
 	int cpu, length = 0;
 
 	(void)kp;
 	for_each_possible_cpu(cpu) {
-#define KD_MUTEX_DIAG_READ(name) \
-		total.name += READ_ONCE(per_cpu(kd_mutex_batch_totals, cpu).name);
+#define KD_MUTEX_DIAG_READ(name) do { \
+		u64 value = READ_ONCE(per_cpu(kd_mutex_batch_totals, cpu).name); \
+		if (value > (u64)-1 - total.name) \
+			overflow = true; \
+		total.name += value; \
+	} while (0);
 		KD_MUTEX_DIAG_TOTALS(KD_MUTEX_DIAG_READ)
 #undef KD_MUTEX_DIAG_READ
 		for (i = 0; i < KD_MUTEX_DIAG_COMPLETED_BINS; i++)
@@ -195,13 +206,27 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 		for (i = 0; i < KD_MUTEX_DIAG_DEFERRED_BINS; i++)
 			total.deferred_peak_hist[i] += READ_ONCE(
 				per_cpu(kd_mutex_batch_totals, cpu).deferred_peak_hist[i]);
-		for (i = 0; i < KD_MUTEX_DIAG_REASON_COUNT; i++)
-			total.stop_reason[i] += READ_ONCE(
-				per_cpu(kd_mutex_batch_totals, cpu).stop_reason[i]);
+		for (i = 0; i < KD_MUTEX_DIAG_REASON_COUNT - 1; i++) {
+			u64 value = READ_ONCE(per_cpu(kd_mutex_batch_totals, cpu).stop_reason[i]);
+
+			if (value > (u64)-1 - total.stop_reason[i])
+				overflow = true;
+			total.stop_reason[i] += value;
+		}
 	}
+	for (i = 0; i < KD_MUTEX_DIAG_REASON_COUNT - 1; i++) {
+		if (total.stop_reason[i] > (u64)-1 - classified)
+			overflow = true;
+		classified += total.stop_reason[i];
+	}
+	/* Independent CPU updates can cross a live read. Refuse to manufacture
+	 * a zero classification gap after overflow or an inconsistent snapshot;
+	 * the quiescent validator rejects this explicit nonzero sentinel. */
+	unclassified = overflow || classified > total.batches ?
+		(u64)-1 : total.batches - classified;
 #define KD_MUTEX_DIAG_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_DIAG_PRINT("{\"schema\":3,\"compiled\":1,\"total_cap\":%u,"
+	KD_MUTEX_DIAG_PRINT("{\"schema\":4,\"compiled\":1,\"total_cap\":%u,"
 		"\"numa_boundary\":%u,\"deferred_handoff\":8,\"scan_budget\":64,"
 		"\"completed_hist_bins\":%u,\"deferred_peak_hist_bins\":%u,",
 		kd_mutex_batch_size, (unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY,
@@ -228,7 +253,8 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 #define KD_MUTEX_DIAG_PRINT_REASON(symbol, name) \
 	KD_MUTEX_DIAG_PRINT("%s\"" #name "\":%llu", \
 		KD_MUTEX_DIAG_##symbol ? "," : "", \
-		(unsigned long long)total.stop_reason[KD_MUTEX_DIAG_##symbol]);
+		(unsigned long long)(KD_MUTEX_DIAG_##symbol == KD_MUTEX_DIAG_UNCLASSIFIED ? \
+			unclassified : total.stop_reason[KD_MUTEX_DIAG_##symbol - 1]));
 	KD_MUTEX_DIAG_REASONS(KD_MUTEX_DIAG_PRINT_REASON)
 #undef KD_MUTEX_DIAG_PRINT_REASON
 	KD_MUTEX_DIAG_PRINT("},\"legacy\":{\"combiner\":%llu,\"jit_success\":%llu,"

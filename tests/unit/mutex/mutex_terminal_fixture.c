@@ -54,20 +54,21 @@ static unsigned long kd_mutex_combiner_count,kd_mutex_handoff_count,kd_mutex_jit
 static unsigned int leases,lease_gets,lease_puts,calls,completed,wakes,reclaims,polls,cas_calls;
 static unsigned int order[1030];
 static bool source_open,delayed_link,new_head_after_cas,new_head_pending;
+static bool normal_proxy_loop,body_completed,delayed_tail_exchanged;
+struct kd_mutex_batch;
+static struct kd_mutex_batch *active_batch;
 static int refusal_at,native_at,early_at;
 static struct kd_mutex_node *delayed_from,*delayed_to;
 static bool kd_source_frame_get(void) { if(!source_open)return false;lease_gets++;leases++;return true; }
 static void kd_source_frame_put(void) { CHECK(leases==1);leases--;lease_puts++; }
-static void cpu_relax(void)
-{
-    CHECK(delayed_link && delayed_from && delayed_to && polls<3);
-    if(++polls==2) { delayed_from->next=delayed_to;delayed_link=false; }
-}
+static void cpu_relax(void);
 static u32 tail_cas(u32 *p,u32 old,u32 value)
 {
     CHECK(p==&lock.delegation_tail && leases==1 && lock.owner==current);
     cas_calls++;
-    if(delayed_link && !polls) { CHECK(*p==old);*p=delayed_to->tail; }
+    if(delayed_link && !delayed_tail_exchanged) {
+        CHECK(*p==old);*p=delayed_to->tail;delayed_tail_exchanged=true;
+    }
     u32 seen=*p;
     if(seen==old) {
         *p=value;
@@ -79,36 +80,58 @@ static u32 tail_cas(u32 *p,u32 old,u32 value)
     }
     return seen;
 }
-#define cmpxchg(p,o,n) tail_cas((p),(o),(n))
+static u8 claim_cas(u8 *p,u8 old,u8 value)
+{
+    CHECK(old==KD_MUTEX_PROXY_READY && value==KD_MUTEX_PROXY_CLAIMED);
+    u8 seen=*p;if(seen==old)*p=value;return seen;
+}
+#define cmpxchg(p,o,n) _Generic((p),u8 *:claim_cas,default:tail_cas)((p),(o),(n))
+#define cmpxchg_acquire(p,o,n) claim_cas((p),(o),(n))
 static void publish(void *p,int value)
 {
-    if(value==KD_MUTEX_PROXY_REQUEST) { *(u8 *)p=KD_MUTEX_PROXY_PINNED;return; }
-    if(value==KD_MUTEX_WAIT) { *(u8 *)p=value;return; }
+    if(value==KD_MUTEX_WAIT) {
+        CHECK(!body_completed || p!=&nodes[0].locked || !delayed_link);
+        *(u8 *)p=value;return;
+    }
     CHECK(value==0);*(u8 *)p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
-static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
-{
-    CHECK(leases==1 && node->locked && lock.delegation_tail!=(u32)node->tail);
-    node->completed=1;node->locked=0;completed++;
-    /* Immediate slot reuse makes any old successor read observably invalid. */
-    node->next=(void *)1;node->tail=0xdead;
-}
+static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node);
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *node) { (void)node; }
 static void kd_mutex_wait_and_lock(struct kd_mutex *p)
 { CHECK(p==&lock);CHECK(!lock.owner && leases==1);CHECK(kd_mutex_gate_trylock(p));lock.owner=current;kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD);reclaims++; }
 int _kd_mutex_unlock_checked(struct kd_mutex *p)
 { CHECK(p==&lock);CHECK(lock.owner==current && leases==1);kd_mutex_gate_set(p,KD_MUTEX_GATE_RELEASING);lock.owner=NULL;kd_mutex_gate_set(p,KD_MUTEX_GATE_FREE);return 0; }
 #include "helpers.h"
+static void cpu_relax(void)
+{
+    CHECK(!normal_proxy_loop && delayed_link && delayed_from && delayed_to && polls<3);
+    CHECK(active_batch && active_batch->nr_pins==1 && body_completed);
+    CHECK(active_batch->pins[active_batch->pin_head].node==delayed_from);
+    CHECK(delayed_from->locked==KD_MUTEX_PROXY_CLAIMED && !delayed_from->completed);
+    CHECK(delayed_from->packet_state==KD_PACKET_COMPLETE && !active_batch->current_retired);
+    CHECK(leases==1 && lock.owner==current && completed==0 && calls==1 && !wakes);
+    if(++polls==2) { delayed_from->next=delayed_to;delayed_link=false; }
+}
+static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
+{
+    CHECK(leases==1 && node->locked==KD_MUTEX_PROXY_CLAIMED && lock.delegation_tail!=(u32)node->tail);
+    CHECK(active_batch && active_batch->current_retired);
+    for(unsigned int i=0;i<KD_MUTEX_PIN_WINDOW;i++)CHECK(active_batch->pins[i].node!=node);
+    node->completed=1;node->locked=0;completed++;
+    node->next=(void *)1;node->tail=0xdead;
+}
+
 static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,struct kd_mutex_batch *batch)
 {
     int i=node-nodes;
+    active_batch=batch;body_completed=false;
     CHECK(p==&lock && leases==1 && lock.owner==current);
     CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
-    CHECK(kd_mutex_batch_pin_select(batch,node,true));
-    kd_mutex_proxy_wait_pinned(node);
+    if(!kd_mutex_batch_pin_select(batch,node,true))return KD_EXE_NO_RUN;
+    kd_mutex_proxy_assert_claimed(node);
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
             .outer_lock_addr=(unsigned long)p,.jit_lock_depth=2};
@@ -132,6 +155,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
         CHECK(batch->next==saved_next && lock.delegation_tail==saved_tail && cas_calls==saved_cas);
         return KD_EXE_NATIVE_DONE;
     }
+    node->packet_state=KD_PACKET_COMPLETE;body_completed=true;
     return 0;
 }
 #include "loop.h"
@@ -140,11 +164,12 @@ static void reset(unsigned int count)
     memset(nodes,0,sizeof(nodes));memset(&lock,0,sizeof(lock));
     kd_mutex_gate_set(&lock,KD_MUTEX_GATE_COMBINER);lock.owner=current;
     source_open=true;delayed_link=new_head_after_cas=new_head_pending=false;
+    normal_proxy_loop=body_completed=delayed_tail_exchanged=false;active_batch=NULL;
     refusal_at=native_at=early_at=-1;
     leases=lease_gets=lease_puts=calls=completed=wakes=reclaims=polls=cas_calls=0;
     for(unsigned int i=0;i<count;i++) {
         nodes[i].next=i+1<count?&nodes[i+1]:NULL;
-        nodes[i].tail=(i+1)<<4;nodes[i].locked=1;
+        nodes[i].tail=(i+1)<<4;nodes[i].locked=KD_MUTEX_PROXY_READY;
         nodes[i].entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
         nodes[i].packet_state=KD_PACKET_MINIMAL;nodes[i].task_struct_ptr=&waiter;
         nodes[i].counted_lock=&lock;nodes[i].count_seq=2;
@@ -174,18 +199,18 @@ static void late_first_deferred(void)
     finish();
 }
 
-/* Six successful bodies move the ring head through a wrap before a FULL/native
- * or early-outer path drains its three selected successors. */
+/* Ten successful bodies wrap the eight-slot ring before exceptional dispatch
+ * drains the seven still-selected successors without an origin reply. */
 static void wrapped_release_boundaries(void)
 {
-    if(kd_mutex_batch_size < 8)return;
+    if(kd_mutex_batch_size < 12)return;
     for(unsigned int early=0;early<2;early++) {
-        scenario=24+early;reset(12);
-        if(early)early_at=6;else native_at=6;
+        scenario=24+early;reset(20);
+        if(early)early_at=10;else native_at=10;
         CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
-        CHECK(calls==7 && completed==(early?7U:6U) && wakes==1 && !nodes[7].locked);
-        CHECK(nodes[8].locked==KD_MUTEX_WAIT && nodes[9].locked==KD_MUTEX_WAIT);
-        CHECK(reclaims==early && nodes[6].native_resume==!early);
+        CHECK(calls==11 && completed==(early?11U:10U) && wakes==1 && !nodes[11].locked);
+        for(unsigned int i=12;i<18;i++)CHECK(nodes[i].locked==KD_MUTEX_WAIT);
+        CHECK(reclaims==early && nodes[10].native_resume==!early);
         finish();
     }
 }
@@ -198,7 +223,8 @@ int main(void)
     CHECK(calls==1 && completed==1 && !wakes && !lock.delegation_tail && cas_calls==1);finish();
     scenario=2;reset(2);nodes[0].next=NULL;delayed_link=true;delayed_from=&nodes[0];delayed_to=&nodes[1];
     lock.delegation_tail=nodes[0].tail;CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
-    CHECK(calls==2 && completed==2 && polls==2 && !lock.delegation_tail && !wakes);finish();
+    CHECK(calls==1 && completed==1 && polls==2 && wakes==1 && !nodes[1].locked);
+    CHECK(lock.delegation_tail==(u32)nodes[1].tail && cas_calls==2 && !nodes[1].completed);finish();
     scenario=3;reset(2);nodes[0].next=NULL;lock.delegation_tail=nodes[0].tail;new_head_after_cas=true;
     CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==1 && completed==1 && new_head_pending && nodes[1].locked && !wakes);
@@ -284,5 +310,5 @@ int main(void)
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();
     late_first_deferred();
     wrapped_release_boundaries();
-    printf("PASS terminal queue: %u checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries\n",checks);
+    printf("PASS terminal queue: %u checks; terminal bodies, nonblocking hot retirement, exact cold pending completion, independent new head, native reuse and bounds\n",checks);
 }

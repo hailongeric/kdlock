@@ -456,7 +456,7 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	CHECK(node->gsbase == kd_read_kernel_gsbase());
 	CHECK(node->tail == (int)kd_mutex_encode_tail(smp_processor_id(), node->slot));
 	CHECK(kd_mutex_decode_tail(node->tail) == node);
-	CHECK(node->locked && !node->completed && !node->native_resume &&
+	CHECK(node->locked==KD_MUTEX_QUEUE_INIT && !node->completed && !node->native_resume &&
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
 	CHECK(memcmp(&node->regs, &entry, sizeof(entry)) == 0);
@@ -985,7 +985,7 @@ static void check_poll_result(void)
 	preempt = migration = 1;
 	schedule_wanted = true;
 	poll_node = &kd_mutex_nodes[0];
-	poll_node->locked = 1;
+	poll_node->locked = KD_MUTEX_WAIT; /* Irrevocably withdrawn; never rearm. */
 	polls = 0;
 	kd_mutex_wait_for_result(poll_node);
 	CHECK(polls == 8 && schedules == 1 && preempt == 1 && migration == 1);

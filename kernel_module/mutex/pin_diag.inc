@@ -2,24 +2,18 @@
 /* Mode 2 uses one preallocated dynamic per-CPU diagnostic record. The module
  * loader's reserved per-CPU chunk remains dedicated to the ordinary runtime.
  * Counts never authorize acquisition, stack access, cancellation or retirement.
- * Merge only at the existing finished-batch boundaries; read quiescent deltas.
- * The optional ordered-TSC sample includes timestamp overhead and the first ACK
- * cacheline load. A zero-iteration ACK is not a zero-latency load. */
+ * Merge executor totals at finished-batch boundaries and origin totals once at
+ * the end of the initial pinned phase. Read only quiescent deltas.
+ * Schema 2 describes READY claims; schema 1 REQUEST/ACK records are historical. */
 #ifndef KDLOCK_MUTEX_PIN_TSC_SHIFT
 #define KDLOCK_MUTEX_PIN_TSC_SHIFT 0
 #endif
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT != 0 && KDLOCK_MUTEX_PIN_TSC_SHIFT != 6
-#error "KDLOCK_MUTEX_PIN_TSC_SHIFT must be 0 (off) or 6 (one in 64)"
-#endif
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT && KDLOCK_MUTEX_DIAGNOSTICS != 2
-#error "mutex pin TSC sampling requires diagnostics mode 2"
+#if KDLOCK_MUTEX_PIN_TSC_SHIFT
+#error "READY claims have no ACK wait; mutex pin TSC sampling is retired"
 #endif
 MODULE_INFO(mutex_pin_tsc_shift, __stringify(KDLOCK_MUTEX_PIN_TSC_SHIFT));
 
 #if KDLOCK_MUTEX_DIAGNOSTICS == 2
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-#include <asm/tsc.h>
-#endif
 #define KD_MUTEX_PIN_REASONS(X) \
 	X(SELF_CURRENT, self_current) \
 	X(SINGLE, single) \
@@ -30,19 +24,25 @@ MODULE_INFO(mutex_pin_tsc_shift, __stringify(KDLOCK_MUTEX_PIN_TSC_SHIFT));
 	X(NUMA, numa) \
 	X(DEFERRED_TAIL, deferred_tail) \
 	X(DUPLICATE_CPU, duplicate_cpu) \
-	X(SELF_FUTURE, self_future)
+	X(SELF_FUTURE, self_future) \
+	X(CURRENT_NOT_READY, current_not_ready) \
+	X(FUTURE_NOT_READY, future_not_ready)
 enum kd_mutex_pin_reason {
 #define KD_MUTEX_PIN_ENUM(symbol, name) KD_MUTEX_PIN_##symbol,
 	KD_MUTEX_PIN_REASONS(KD_MUTEX_PIN_ENUM)
 #undef KD_MUTEX_PIN_ENUM
 	KD_MUTEX_PIN_REASON_COUNT
 };
+#define KD_MUTEX_PIN_EXECUTOR_COUNTERS(X) \
+	X(batches) X(selections) X(claims) X(retired_claims) X(cancelled_claims) \
+	X(drain_calls) X(drain_nonempty) X(drain_keep_current) X(full_resumes)
+#define KD_MUTEX_PIN_ORIGIN_COUNTERS(X) \
+	X(wait_episodes) X(initial_pin_retained) X(initial_pin_dropped) \
+	X(initial_budget_completed) X(budget_expired_episodes) X(expiry_checks) \
+	X(withdrawals) X(forced_cancellations)
 #define KD_MUTEX_PIN_COUNTERS(X) \
-	X(batches) X(selections) X(requested) X(consumed) X(cancelled) \
-	X(drain_calls) X(drain_nonempty) X(drain_keep_current) \
-	X(current_ack_immediate) X(current_ack_stalled) X(current_ack_loops) \
-	X(cancel_ack_immediate) X(cancel_ack_stalled) X(cancel_ack_loops) \
-	X(full_resumes) X(tsc_samples) X(tsc_cycles)
+	KD_MUTEX_PIN_EXECUTOR_COUNTERS(X) \
+	KD_MUTEX_PIN_ORIGIN_COUNTERS(X)
 struct kd_mutex_pin_diag {
 #define KD_MUTEX_PIN_FIELD(name) u64 name;
 	KD_MUTEX_PIN_COUNTERS(KD_MUTEX_PIN_FIELD)
@@ -54,9 +54,6 @@ struct kd_mutex_pin_diag {
 };
 struct kd_mutex_pin_cpu {
 	struct kd_mutex_pin_diag totals;
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-	u64 sample_seq;
-#endif
 };
 _Static_assert(sizeof(struct kd_mutex_pin_cpu) <= 384,
 	       "mutex pin observations exceed the bounded per-CPU footprint");
@@ -102,22 +99,21 @@ static void kd_mutex_pin_diag_exit(void)
 #define KD_MUTEX_PIN_DIAG_INIT() kd_mutex_pin_diag_init()
 #define KD_MUTEX_PIN_DIAG_EXIT() kd_mutex_pin_diag_exit()
 
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-/* Approximate sampling ordinal, never an ownership or invocation identity. */
-#define kd_mutex_pin_sample_seq (kd_mutex_pin_cpus->sample_seq)
-static __always_inline u64 kd_mutex_pin_stamp(void)
+static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,
+				       bool retained)
 {
-	u64 value;
-
-	/* The target rdtsc_ordered() orders older loads, but its asm has no
-	 * compiler memory clobber and does not fence younger loads. Bracket
-	 * both sides explicitly; the measured delta includes fence overhead. */
-	asm volatile("lfence" ::: "memory");
-	value = rdtsc_ordered();
-	asm volatile("lfence" ::: "memory");
-	return value;
+	/* The origin is still pinned at this merge. No per-poll shared writes,
+	 * timestamps, or observational checks participate in the state CAS. */
+	this_cpu_inc(kd_mutex_pin_totals.wait_episodes);
+	this_cpu_add(kd_mutex_pin_totals.initial_pin_retained, retained);
+	this_cpu_add(kd_mutex_pin_totals.initial_pin_dropped, !retained);
+	this_cpu_add(kd_mutex_pin_totals.initial_budget_completed,
+		     retained && !origin->budget_expired);
+	this_cpu_add(kd_mutex_pin_totals.budget_expired_episodes, origin->budget_expired);
+	this_cpu_add(kd_mutex_pin_totals.expiry_checks, origin->expiry_checks);
+	this_cpu_add(kd_mutex_pin_totals.withdrawals, origin->withdrawn);
+	this_cpu_add(kd_mutex_pin_totals.forced_cancellations, origin->forced_cancel);
 }
-#endif
 
 static __always_inline bool
 kd_mutex_pin_diag_condition(struct kd_mutex_pin_diag *diag, bool condition,
@@ -128,47 +124,13 @@ kd_mutex_pin_diag_condition(struct kd_mutex_pin_diag *diag, bool condition,
 	return condition;
 }
 
-static __always_inline void
-kd_mutex_pin_diag_wait(struct kd_mutex_pin_diag *diag,
-		       struct kd_mutex_node *node, bool cancel)
-{
-	u64 loops = 0;
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-	bool sample = !cancel && !(this_cpu_inc_return(kd_mutex_pin_sample_seq) &
-		((1ULL << KDLOCK_MUTEX_PIN_TSC_SHIFT) - 1));
-	u64 begin = sample ? kd_mutex_pin_stamp() : 0;
-#endif
-
-	/* Keep exactly the same acquire-load/PAUSE protocol as the ordinary
-	 * helper. Accumulate in a local register, then update private state. */
-	while (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED) {
-		cpu_relax();
-		loops++;
-	}
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-	if (sample) {
-		diag->tsc_cycles += kd_mutex_pin_stamp() - begin;
-		diag->tsc_samples++;
-	}
-#endif
-	if (cancel) {
-		diag->cancel_ack_immediate += !loops;
-		diag->cancel_ack_stalled += !!loops;
-		diag->cancel_ack_loops += loops;
-	} else {
-		diag->current_ack_immediate += !loops;
-		diag->current_ack_stalled += !!loops;
-		diag->current_ack_loops += loops;
-	}
-}
-
 static void kd_mutex_pin_diag_finish(struct kd_mutex_pin_diag *diag)
 {
 	unsigned int i;
 
 	diag->batches++;
 #define KD_MUTEX_PIN_ADD(name) this_cpu_add(kd_mutex_pin_totals.name, diag->name);
-	KD_MUTEX_PIN_COUNTERS(KD_MUTEX_PIN_ADD)
+	KD_MUTEX_PIN_EXECUTOR_COUNTERS(KD_MUTEX_PIN_ADD)
 #undef KD_MUTEX_PIN_ADD
 	for (i = 0; i <= KD_MUTEX_PIN_WINDOW; i++) {
 		this_cpu_add(kd_mutex_pin_totals.occupancy_before[i], diag->occupancy_before[i]);
@@ -204,10 +166,10 @@ static int kd_mutex_pin_stats_get(char *buffer, const struct kernel_param *kp)
 	}
 #define KD_MUTEX_PIN_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_PIN_PRINT("{\"schema\":1,\"compiled\":2,\"window\":%u,\"total_cap\":%u,"
-		"\"numa_boundary\":%u,\"tsc_sample_shift\":%u,",
+	KD_MUTEX_PIN_PRINT("{\"schema\":2,\"compiled\":2,\"window\":%u,\"total_cap\":%u,"
+		"\"numa_boundary\":%u,\"initial_spin_budget\":%u,",
 		(unsigned int)KD_MUTEX_PIN_WINDOW, (unsigned int)kd_mutex_batch_size,
-		(unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY, (unsigned int)KDLOCK_MUTEX_PIN_TSC_SHIFT);
+		(unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY, (unsigned int)KDLOCK_MUTEX_SPIN_BUDGET);
 #define KD_MUTEX_PIN_PRINT_COUNTER(name) \
 	KD_MUTEX_PIN_PRINT("\"" #name "\":%llu,", (unsigned long long)total.name);
 	KD_MUTEX_PIN_COUNTERS(KD_MUTEX_PIN_PRINT_COUNTER)
@@ -232,7 +194,7 @@ static const struct kernel_param_ops kd_mutex_pin_stats_ops = {
 	.get = kd_mutex_pin_stats_get,
 };
 module_param_cb(mutex_pin_stats, &kd_mutex_pin_stats_ops, NULL, 0444);
-MODULE_PARM_DESC(mutex_pin_stats, "Selected pin observations; quiescent deltas only");
+MODULE_PARM_DESC(mutex_pin_stats, "READY claim and initial spin observations; schema 2, quiescent deltas only");
 #undef KD_MUTEX_DIAG_MEMBER
 #define KD_MUTEX_DIAG_MEMBER struct kd_mutex_pin_diag diag;
 #undef KD_MUTEX_DIAG_FINISH
@@ -251,7 +213,7 @@ MODULE_PARM_DESC(mutex_pin_stats, "Selected pin observations; quiescent deltas o
 #define KD_MUTEX_PIN_STOP(batch, why) ((batch)->diag.reason = (why))
 #define KD_MUTEX_PIN_CONDITION(batch, condition, why) \
 	kd_mutex_pin_diag_condition(&(batch)->diag, (condition), (why))
-#define KD_MUTEX_PIN_WAIT(batch, node, cancel) kd_mutex_pin_diag_wait(&(batch)->diag, node, cancel)
+#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_proxy_assert_claimed(node)
 #define KD_MUTEX_PIN_DRAIN(batch, keep) do { \
 	(batch)->diag.drain_calls++; \
 	if ((batch)->nr_pins > (keep)) { \
@@ -267,6 +229,6 @@ MODULE_PARM_DESC(mutex_pin_stats, "Selected pin observations; quiescent deltas o
 #define KD_MUTEX_PIN_END(batch) do { } while (0)
 #define KD_MUTEX_PIN_STOP(batch, why) do { } while (0)
 #define KD_MUTEX_PIN_CONDITION(batch, condition, why) (condition)
-#define KD_MUTEX_PIN_WAIT(batch, node, cancel) kd_mutex_proxy_wait_pinned(node)
+#define KD_MUTEX_PIN_ASSERT(batch, node) kd_mutex_proxy_assert_claimed(node)
 #define KD_MUTEX_PIN_DRAIN(batch, keep) do { } while (0)
 #endif

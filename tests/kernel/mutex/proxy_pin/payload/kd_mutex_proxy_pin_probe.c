@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-/* A queued delegation producer must not prevent another task on its CPU from
- * running. The owner releases after a bounded deadline even on the old pinned
- * protocol, so a failed observation does not strand the test's own workers.
+/* A queued delegation producer must eventually allow another task on its CPU
+ * to run after its initial spin budget. The owner releases after a bounded
+ * deadline even on the old indefinitely pinned protocol, so a failed observation
+ * does not strand the test's own workers.
  * No prepared image or daemon is used: this probes queued scheduling only. */
 #include <linux/module.h>
 #include <linux/kthread.h>
@@ -9,6 +10,8 @@
 #include <linux/delay.h>
 #include <linux/cpu.h>
 #include <linux/sched/task.h>
+#include <linux/preempt.h>
+#include <linux/irqflags.h>
 #include "kd_mutex_api.h"
 #include "kd_mutex_state.h"
 #include "kd_lock.h"
@@ -23,6 +26,46 @@ static atomic_t owner_released = ATOMIC_INIT(0);
 static atomic_t witness_before_release = ATOMIC_INIT(0);
 static unsigned int effects;
 static unsigned int warm_effects;
+
+/* Same-task observations outside lock calls. The controller reads them only
+ * after joining every created task; these do not infer state inside a JIT body. */
+static struct {
+	unsigned int preempt, migration, irq, cpu;
+	bool valid;
+} contexts[5][3];
+
+static void context_take(unsigned int role, unsigned int phase)
+{
+	contexts[role][phase].preempt = preempt_count();
+	contexts[role][phase].migration = current->migration_disabled;
+	contexts[role][phase].irq = irqs_disabled();
+	contexts[role][phase].cpu = raw_smp_processor_id();
+	contexts[role][phase].valid = true;
+}
+
+static bool context_check(void)
+{
+	unsigned int role, phase;
+	bool clean = true;
+
+	for (role = 0; role < 5; role++)
+		for (phase = 0; phase < 3; phase++) {
+			if (role == 4 && phase == 1)
+				continue;
+			clean &= contexts[role][phase].valid &&
+				!contexts[role][phase].preempt &&
+				!contexts[role][phase].migration &&
+				!contexts[role][phase].irq &&
+				contexts[role][phase].cpu == (role == 4 ? 3 : role);
+			pr_info("kd_mutex_proxy_context: role=%u phase=%u cpu=%u preempt=%u migration=%u irq=%u valid=%u\n",
+				role, phase, contexts[role][phase].cpu,
+				contexts[role][phase].preempt,
+				contexts[role][phase].migration,
+				contexts[role][phase].irq,
+				contexts[role][phase].valid);
+		}
+	return clean;
+}
 
 static __attribute__((noipa)) void warm_up(void)
 {
@@ -41,7 +84,9 @@ static __attribute__((noipa)) void warm_up(void)
 static __attribute__((noipa)) int owner(void *unused)
 {
 	(void)unused;
+	context_take(0, 0);
 	warm_up();
+	context_take(0, 1);
 	wait_for_completion(&owner_start);
 	kd_mutex_lock(&lock);
 	effects++;
@@ -49,6 +94,7 @@ static __attribute__((noipa)) int owner(void *unused)
 	wait_for_completion_timeout(&owner_release, 5 * HZ);
 	atomic_set(&owner_released, 1);
 	kd_mutex_unlock(&lock);
+	context_take(0, 2);
 	return 0;
 }
 
@@ -57,18 +103,23 @@ static __attribute__((noipa)) int producer(void *unused)
 	unsigned int cpu = raw_smp_processor_id();
 
 	(void)unused;
+	context_take(cpu, 0);
 	warm_up();
+	context_take(cpu, 1);
 	wait_for_completion(&producer_start[cpu]);
 	kd_mutex_lock(&lock);
 	effects++;
 	kd_mutex_unlock(&lock);
+	context_take(cpu, 2);
 	return 0;
 }
 
 static int witness(void *unused)
 {
 	(void)unused;
+	context_take(4, 0);
 	atomic_set(&witness_before_release, !atomic_read(&owner_released));
+	context_take(4, 2);
 	complete(&witness_done);
 	return 0;
 }
@@ -101,7 +152,7 @@ static int __init probe_init(void)
 {
 	struct task_struct *tasks[5] = {};
 	int result = -EINVAL, i, created = 0;
-	bool queued = false, scheduled = false;
+	bool queued = false, scheduled = false, context_ok;
 	unsigned long deadline;
 
 	if (!cpu_online(0) || !cpu_online(1) || !cpu_online(2) || !cpu_online(3))
@@ -155,11 +206,12 @@ join:
 			kthread_stop(tasks[i]);
 			put_task_struct(tasks[i]);
 		}
-	if (queued && scheduled && effects == 4 && warm_effects == 400000 && kd_mutex_is_idle(&lock) &&
+	context_ok = context_check();
+	if (queued && scheduled && context_ok && effects == 4 && warm_effects == 400000 && kd_mutex_is_idle(&lock) &&
 	    !kd_mutex_debug_waiter_count(&lock))
 		result = 0;
-	pr_info("kd_mutex_proxy_pin: queued=%u scheduled=%u effects=%u warm=%u idle=%u result=%d\n",
-		queued, scheduled, effects, warm_effects, kd_mutex_is_idle(&lock), result);
+	pr_info("kd_mutex_proxy_pin: queued=%u scheduled=%u effects=%u warm=%u idle=%u context=%u result=%d\n",
+		queued, scheduled, effects, warm_effects, kd_mutex_is_idle(&lock), context_ok, result);
 	return result;
 }
 static void __exit probe_exit(void) {}

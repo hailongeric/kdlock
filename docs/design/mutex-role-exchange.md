@@ -40,8 +40,9 @@ custody-node pointer. No frame or shadow stack moves between CPUs.
    `KD_EXEC_EVENT_OWNER_TRANSFER` / `KD_EXEC_FRAME_TRANSFERRED` transition allows
    frame retirement. It does not record OUTER_UNLOCK, mark any lock released or
    count a completed JIT/native body.
-6. After popping its own frame and dropping its old batch lease, C release-stores
-   READY into W's node as its final access to that node. C returns to the normal
+6. After popping its own frame and dropping its old batch lease, C changes its
+   original node from INIT to proxy READY while still pinned. C then release-stores
+   W's distinct `custody.ready` flag as its final access to W's node. C returns to the normal
    result wait on its original node. It does not reacquire A through a node-less
    gate path. W waits for READY before executing its native suffix.
 
@@ -165,10 +166,19 @@ before pickup ACK. It alone proves neither accepted custody nor C execution.
 Optional batch diagnostics record ownership transfers separately from refusals
 and completed JIT/native bodies; those measurement schemas must not be pooled.
 
-The separate four-request pin-window candidate drains every future selected
-origin before FULL dispatcher entry and before committing queue custody. It
-removes W's exact current descriptor before the native wake; no window pointer
-survives into W's custody. C is requeued as WAIT and may schedule until selected
-again. W's after-body combining creates a fresh bounded window. These additions
-are source-reviewed only until their own VM checks pass; they do not change the
-unsupported native-lock context limits above.
+The long-spin READY candidate retains up to eight exact claims. It removes every
+future claim before FULL dispatcher entry or queue custody, then publishes WAIT
+to make the origin withdraw without rearming. W's current descriptor disappears
+before native wake; no claim-window pointer survives into custody. C is requeued
+as INIT until its old frame and source lease retire, then becomes proxy READY
+before W's separate custody barrier opens. Its wait-loop entry cannot rearm a
+prior cancellation because INIT and withdrawn WAIT are distinct.
+
+Terminal ABI2 requests remain eligible, so W may proxy C even in a two-party
+exchange. Normal completion tries tail/link retirement once without response
+polling. A lost tail CAS with no published link ends the execution round while
+retaining the completed C node, exact claim and batch source lease. Cold cleanup
+finishes link retirement before the one completion wake. No body is replayed,
+no completed claim is cancelled, and existing C native/early-outer cases remain
+required. The unsupported native-lock context limits above still apply. VM
+validation and performance acceptance remain pending.

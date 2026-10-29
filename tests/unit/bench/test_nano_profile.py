@@ -16,7 +16,7 @@ profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
 
 
-BATCH_METADATA = dict(schema=3, compiled=1, total_cap=1024, numa_boundary=1024,
+BATCH_METADATA = dict(schema=4, compiled=1, total_cap=1024, numa_boundary=1024,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed', 'owner_transfers',
@@ -24,8 +24,8 @@ BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed', 'o
                   'scan_steps', 'scan_exhausted_batches', 'small_fifo_batches')
 
 
-def batch_snapshot(scale=1, *, schema=3):
-    """Five historical batches; schema 3 also records one unfinished transfer."""
+def batch_snapshot(scale=1, *, schema=4):
+    """Schema 3 adds an unfinished transfer; schema 4 distinguishes a delayed tail."""
     completed = [0] * 16
     completed[0], completed[1], completed[2], completed[4] = 2, 1, 1, 1
     deferred = [0] * 8
@@ -39,12 +39,15 @@ def batch_snapshot(scale=1, *, schema=3):
                       native_done=1, total_cap=0, empty_tail=1, unsupported_tail=0),
                   legacy=dict(combiner=5, jit_success=10, handoff=2))
     result['schema'] = schema
-    if schema == 3:
+    if schema >= 3:
         result.update(owner_transfers=1, batches=6, attempts=13)
         result['completed_hist'][0] += 1
         result['deferred_peak_hist'][0] += 1
         result['stop_reason']['owner_transfer'] = 1
         result['legacy']['combiner'] += 1
+    if schema >= 4:
+        result['stop_reason']['empty_tail'] = 0
+        result['stop_reason']['delayed_tail'] = 1
     for key in BATCH_COUNTERS:
         if key in result:
             result[key] *= scale
@@ -55,7 +58,7 @@ def batch_snapshot(scale=1, *, schema=3):
     return result
 
 
-def pin_snapshot(scale=1, *, shift=0):
+def historical_pin_snapshot(scale=1, *, shift=0):
     """Pins can be consumed by native exits or repeated FULL continuations."""
     result = dict(schema=1, compiled=2, window=4, total_cap=1024, numa_boundary=1024,
         tsc_sample_shift=shift, batches=2, selections=5, requested=10, consumed=7, cancelled=3,
@@ -66,6 +69,26 @@ def pin_snapshot(scale=1, *, shift=0):
         occupancy_before=[2, 1, 0, 1, 1], occupancy_after=[1, 0, 1, 1, 2],
         refill_stop=dict(self_current=1, single=0, budget=0, window=2, no_link=1,
                          entry=0, numa=0, deferred_tail=0, duplicate_cpu=1, self_future=0))
+    for key in profile.PIN_V1_COUNTERS:
+        result[key] *= scale
+    for key in profile.PIN_HISTOGRAMS:
+        result[key] = [value * scale for value in result[key]]
+    result['refill_stop'] = {key: value * scale for key, value in result['refill_stop'].items()}
+    return result
+
+
+def pin_snapshot(scale=1):
+    """READY claims and origin phases have independent lifetime denominators."""
+    result = dict(profile.PIN_METADATA, batches=2, selections=5,
+        claims=10, retired_claims=7, cancelled_claims=3, drain_calls=6,
+        drain_nonempty=3, drain_keep_current=1, full_resumes=1,
+        wait_episodes=10, initial_pin_retained=7, initial_pin_dropped=3,
+        initial_budget_completed=5, budget_expired_episodes=4, expiry_checks=6,
+        withdrawals=2, forced_cancellations=1,
+        occupancy_before=[2, 1, 0, 1, 1, 0, 0, 0, 0],
+        occupancy_after=[1, 0, 1, 1, 1, 0, 0, 0, 1],
+        refill_stop={key: 0 for key in profile.PIN_REASONS})
+    result['refill_stop'].update(self_current=1, window=2, no_link=1, future_not_ready=1)
     for key in profile.PIN_COUNTERS:
         result[key] *= scale
     for key in profile.PIN_HISTOGRAMS:
@@ -249,21 +272,22 @@ class NanoProfileTests(unittest.TestCase):
 
     def test_pin_mode_and_tsc_guards_precede_live_work(self):
         base = ['--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
-        for sampled in (False, True):
-            args = profile.parser().parse_args(base + ['--mode', 'pin', '--threads', '20'] +
-                                               (['--pin-tsc'] if sampled else []))
-            self.assertEqual(profile.selected_backends(args), ['kdlock'])
-            self.assertEqual(profile.diagnostic_settings(args),
-                dict(mutex_diag=2, mutex_pin_tsc_shift=6 if sampled else 0))
-            self.assertEqual(args.threads, [20])
+        args = profile.parser().parse_args(base + ['--mode', 'pin', '--threads', '20'])
+        self.assertEqual(profile.selected_backends(args), ['kdlock'])
+        self.assertEqual(profile.diagnostic_settings(args),
+            dict(mutex_diag=2, mutex_pin_tsc_shift=0, mutex_spin_budget=65536))
+        self.assertEqual(args.threads, [20])
+        args = profile.parser().parse_args(base + ['--mode', 'pin', '--mutex-spin-budget', '131072'])
+        self.assertEqual(profile.diagnostic_settings(args)['mutex_spin_budget'], 131072)
         for mode, expected in (('stat', 0), ('record', 0), ('batch', 1)):
             args = profile.parser().parse_args(base + ['--mode', mode])
             self.assertEqual(profile.diagnostic_settings(args),
-                             dict(mutex_diag=expected, mutex_pin_tsc_shift=0))
+                             dict(mutex_diag=expected, mutex_pin_tsc_shift=0, mutex_spin_budget=65536))
         for options in (['--mode', 'pin', '--backends', 'native'],
                         ['--mode', 'pin', '--backends', 'native', 'kdlock'],
                         ['--mode', 'batch', '--backends', 'native'],
-                        *(['--mode', mode, '--pin-tsc'] for mode in ('stat', 'record', 'batch'))):
+                        *(['--mode', mode, '--pin-tsc'] for mode in ('stat', 'record', 'batch', 'pin')),
+                        *(['--mode', 'pin', '--mutex-spin-budget', value] for value in ('0', '-1', '2147483648'))):
             with self.subTest(options=options), \
                     patch.object(profile.sys, 'argv', ['profile.py', *base, *options]), \
                     patch.object(profile.os, 'geteuid') as identity, self.assertRaises(ValueError):
@@ -302,12 +326,12 @@ class NanoProfileTests(unittest.TestCase):
                 pass
         with tempfile.TemporaryDirectory() as temporary:
             cls = profile.profiled_session(types.SimpleNamespace(RWSession=Base),
-                types.SimpleNamespace(mode='pin', pin_tsc=True), None, None)
+                types.SimpleNamespace(mode='pin', pin_tsc=False, mutex_spin_budget=65536), None, None)
             session = cls()
             session.loaded_kd, session.path = True, Path(temporary)
             session.record = dict(provider_mutex_policy=dict(total_cap=1024, numa_boundary=1024,
                                                             deferred_handoff=8, scan_budget=64))
-            snapshots = iter((pin_snapshot(shift=6), pin_snapshot(2, shift=6)))
+            snapshots = iter((pin_snapshot(), pin_snapshot(2)))
             def read_snapshot(path):
                 self.assertEqual(path.name, 'mutex_pin_stats')
                 events.append('pin snapshot')
@@ -316,17 +340,146 @@ class NanoProfileTests(unittest.TestCase):
                     patch.object(Path, 'read_text', read_snapshot):
                 session.measure()
             self.assertEqual(events, ['pin snapshot', 'joined measurement', 'pin snapshot'])
-            self.assertEqual(session.record['pin_diagnostics']['delta'], pin_snapshot(shift=6))
-            self.assertEqual(json.loads((session.path / 'pin-delta.json').read_text()), pin_snapshot(shift=6))
+            self.assertEqual(session.record['pin_diagnostics']['delta'], pin_snapshot())
+            self.assertEqual(session.record['pin_diagnostics']['initial_spin_fractions'],
+                             dict(completed_within_initial_budget=0.5, retained_initial_pin=0.7))
+            self.assertEqual(json.loads((session.path / 'pin-delta.json').read_text()), pin_snapshot())
             self.assertTrue(session.record['diagnostic'])
             self.assertFalse(session.record['score_eligible'])
             self.assertNotIn('drained', session.record)
 
+    def test_live_pin_collection_rejects_historical_schema_before_measurement(self):
+        class Base:
+            def measure(self):
+                raise AssertionError('historical diagnostics reached measured work')
+            def save(self):
+                pass
+        with tempfile.TemporaryDirectory() as temporary:
+            cls = profile.profiled_session(types.SimpleNamespace(RWSession=Base),
+                types.SimpleNamespace(mode='pin', pin_tsc=False, mutex_spin_budget=65536), None, None)
+            session = cls()
+            session.loaded_kd, session.path = True, Path(temporary)
+            session.record = dict(provider_mutex_policy=dict(total_cap=1024, numa_boundary=1024,
+                                                            deferred_handoff=8, scan_budget=64))
+            with patch.object(profile, 'observations', return_value=dict(values={'n': 0})), \
+                    patch.object(Path, 'read_text', return_value=json.dumps(historical_pin_snapshot())), \
+                    self.assertRaisesRegex(ValueError, 'live pin collection requires READY schema 2'):
+                session.measure()
+
 
 class NanoPinSnapshotTests(unittest.TestCase):
+    def test_current_schema_deltas_and_distinct_spin_fractions(self):
+        zero, before, after = (pin_snapshot(n) for n in (0, 1, 2))
+        original = deepcopy((zero, before, after))
+        for snapshot in (zero, before, after):
+            self.assertEqual(profile.validate_pin(snapshot), snapshot)
+        self.assertEqual(profile.pin_delta(before, after), before)
+        self.assertEqual(profile.pin_delta(before, before), zero)
+        self.assertEqual(profile.pin_delta(zero, before), before)
+        self.assertEqual((zero, before, after), original)
+        self.assertEqual(profile.pin_fractions(before),
+            dict(completed_within_initial_budget=0.5, retained_initial_pin=0.7))
+        self.assertEqual(profile.pin_fractions(zero),
+            dict(completed_within_initial_budget=None, retained_initial_pin=None))
+        with self.assertRaises(ValueError):
+            profile.pin_delta(historical_pin_snapshot(), before)
+        with self.assertRaises(ValueError):
+            profile.pin_fractions(historical_pin_snapshot())
+
+    def test_current_metadata_policy_and_budget_match_explicit_selection(self):
+        policy = dict(total_cap=4096, numa_boundary=768, deferred_handoff=8, scan_budget=64)
+        before, after = pin_snapshot(), pin_snapshot(2)
+        for snapshot in (before, after):
+            snapshot.update(total_cap=4096, numa_boundary=768, initial_spin_budget=131072)
+        self.assertEqual(profile.pin_delta(before, after, policy, initial_spin_budget=131072), before)
+        for selected, budget in ((None, 131072), (policy, 65536), (policy, 0), (policy, True)):
+            with self.subTest(policy=selected, budget=budget), self.assertRaises(ValueError):
+                profile.validate_pin(before, selected, initial_spin_budget=budget)
+        for key in profile.PIN_METADATA:
+            changed = deepcopy(after)
+            changed[key] += 1
+            with self.subTest(metadata=key), self.assertRaises(ValueError):
+                profile.pin_delta(before, changed, policy, initial_spin_budget=131072)
+        with self.assertRaises(ValueError):
+            profile.validate_pin(pin_snapshot(), tsc_sample_shift=6)
+
+    def test_current_schema_shapes_and_counter_types(self):
+        valid = pin_snapshot()
+        for key in valid:
+            invalid = deepcopy(valid)
+            del invalid[key]
+            with self.subTest(missing=key), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+        for key, value in (('schema', True), ('window', 4), ('compiled', 1),
+                ('occupancy_before', [0] * 8), ('occupancy_after', [0] * 10),
+                ('occupancy_after', {}), ('refill_stop', []), ('requested', 0),
+                ('current_ack_loops', 0), ('tsc_sample_shift', 0)):
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                profile.validate_pin(dict(valid, **{key: value}))
+        for key in profile.PIN_REASONS:
+            invalid = deepcopy(valid)
+            del invalid['refill_stop'][key]
+            with self.subTest(reason=key), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+        for keys in (*((key,) for key in profile.PIN_COUNTERS),
+                     ('occupancy_before', 0), ('occupancy_after', 8), ('refill_stop', 'no_link')):
+            for value in (-1, True, 1.0, '1', None, 1 << 64):
+                invalid = deepcopy(valid)
+                target = invalid if len(keys) == 1 else invalid[keys[0]]
+                target[keys[-1]] = value
+                with self.subTest(keys=keys, value=value), self.assertRaises(ValueError):
+                    profile.validate_pin(invalid)
+
+    def test_current_quiescent_lifetime_and_origin_identities(self):
+        for changes in (dict(selections=6), dict(claims=11), dict(retired_claims=8),
+                dict(cancelled_claims=4), dict(drain_nonempty=7), dict(drain_keep_current=4),
+                dict(wait_episodes=11), dict(initial_pin_retained=8), dict(initial_pin_dropped=4),
+                dict(initial_budget_completed=8), dict(budget_expired_episodes=1),
+                dict(budget_expired_episodes=6), dict(withdrawals=4), dict(expiry_checks=1),
+                dict(forced_cancellations=0), dict(forced_cancellations=4)):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                profile.validate_pin(dict(pin_snapshot(), **changes))
+        invalid = pin_snapshot(0)
+        invalid['expiry_checks'] = 1
+        with self.assertRaises(ValueError):
+            profile.validate_pin(invalid)
+        for group, bucket in (('occupancy_before', 0), ('occupancy_after', 8),
+                              ('refill_stop', 'no_link')):
+            invalid = pin_snapshot()
+            invalid[group][bucket] += 1
+            with self.subTest(group=group), self.assertRaises(ValueError):
+                profile.validate_pin(invalid)
+
+    def test_current_delta_rejects_counter_bin_reason_and_origin_resets(self):
+        with self.assertRaises(ValueError):
+            profile.pin_delta(pin_snapshot(2), pin_snapshot())
+        for group, bucket, destination in (('occupancy_before', 1, 0),
+                ('occupancy_after', 8, 0), ('refill_stop', 'no_link', 'window')):
+            after = pin_snapshot(2)
+            after[group][destination] += after[group][bucket]
+            after[group][bucket] = 0
+            profile.validate_pin(after)
+            with self.subTest(group=group), self.assertRaises(ValueError):
+                profile.pin_delta(pin_snapshot(), after)
+        after = dict(pin_snapshot(2), full_resumes=0)
+        profile.validate_pin(after)
+        with self.assertRaises(ValueError):
+            profile.pin_delta(pin_snapshot(), after)
+        # Each snapshot is internally consistent, but the origin phase totals reset.
+        after = pin_snapshot(2)
+        for key in ('wait_episodes', 'initial_pin_retained', 'initial_pin_dropped',
+                    'initial_budget_completed', 'budget_expired_episodes', 'expiry_checks',
+                    'withdrawals', 'forced_cancellations'):
+            after[key] = 0
+        profile.validate_pin(after)
+        with self.assertRaises(ValueError):
+            profile.pin_delta(pin_snapshot(), after)
+
+
+class NanoHistoricalPinSnapshotTests(unittest.TestCase):
     def test_valid_snapshot_and_delta_preserve_metadata_and_inputs(self):
         for shift in (0, 6):
-            zero, before, after = (pin_snapshot(n, shift=shift) for n in (0, 1, 2))
+            zero, before, after = (historical_pin_snapshot(n, shift=shift) for n in (0, 1, 2))
             original = deepcopy((zero, before, after))
             for snapshot in (zero, before, after):
                 self.assertEqual(profile.validate_pin(snapshot, tsc_sample_shift=shift), snapshot)
@@ -337,21 +490,21 @@ class NanoPinSnapshotTests(unittest.TestCase):
 
     def test_policy_and_tsc_metadata_must_match_explicit_selection(self):
         policy = dict(total_cap=4096, numa_boundary=768, deferred_handoff=8, scan_budget=64)
-        before, after = pin_snapshot(shift=6), pin_snapshot(2, shift=6)
+        before, after = historical_pin_snapshot(shift=6), historical_pin_snapshot(2, shift=6)
         for snapshot in (before, after):
             snapshot.update(total_cap=4096, numa_boundary=768)
         self.assertEqual(profile.pin_delta(before, after, policy, 6), before)
         for selected, shift in ((None, 6), (policy, 0), (policy, 1), (policy, True)):
             with self.subTest(policy=selected, shift=shift), self.assertRaises(ValueError):
                 profile.validate_pin(before, selected, shift)
-        for key in profile.PIN_METADATA:
+        for key in profile.PIN_V1_METADATA:
             changed = deepcopy(after)
             changed[key] += 1
             with self.subTest(metadata=key), self.assertRaises(ValueError):
                 profile.pin_delta(before, changed, policy, 6)
 
     def test_schema_and_exact_shapes_are_required(self):
-        valid = pin_snapshot()
+        valid = historical_pin_snapshot()
         for key in valid:
             invalid = deepcopy(valid)
             del invalid[key]
@@ -362,7 +515,7 @@ class NanoPinSnapshotTests(unittest.TestCase):
                 ('occupancy_after', {}), ('refill_stop', []), ('unexpected', 0)):
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 profile.validate_pin(dict(valid, **{key: value}))
-        for key in profile.PIN_REASONS:
+        for key in profile.PIN_V1_REASONS:
             invalid = deepcopy(valid)
             del invalid['refill_stop'][key]
             with self.subTest(missing_reason=key), self.assertRaises(ValueError):
@@ -373,10 +526,10 @@ class NanoPinSnapshotTests(unittest.TestCase):
             profile.validate_pin(invalid)
 
     def test_counters_require_nonnegative_u64_integers(self):
-        for keys in (*((key,) for key in profile.PIN_COUNTERS),
+        for keys in (*((key,) for key in profile.PIN_V1_COUNTERS),
                      ('occupancy_before', 0), ('occupancy_after', 0), ('refill_stop', 'window')):
             for value in (-1, True, 1.0, '1', None, 1 << 64):
-                invalid = pin_snapshot()
+                invalid = historical_pin_snapshot()
                 target = invalid if len(keys) == 1 else invalid[keys[0]]
                 target[keys[-1]] = value
                 with self.subTest(keys=keys, value=value), self.assertRaises(ValueError):
@@ -390,50 +543,74 @@ class NanoPinSnapshotTests(unittest.TestCase):
                 dict(drain_nonempty=7), dict(drain_keep_current=4),
                 dict(tsc_samples=1), dict(tsc_cycles=1)):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
-                profile.validate_pin(dict(pin_snapshot(), **changes))
+                profile.validate_pin(dict(historical_pin_snapshot(), **changes))
         for key in profile.PIN_HISTOGRAMS:
-            invalid = pin_snapshot()
+            invalid = historical_pin_snapshot()
             invalid[key][0] += 1
             with self.subTest(histogram=key), self.assertRaises(ValueError):
                 profile.validate_pin(invalid)
-        invalid = pin_snapshot()
+        invalid = historical_pin_snapshot()
         invalid['refill_stop']['window'] += 1
         with self.assertRaises(ValueError):
             profile.validate_pin(invalid)
         with self.assertRaises(ValueError):
-            profile.validate_pin(dict(pin_snapshot(shift=6), tsc_samples=9), tsc_sample_shift=6)
+            profile.validate_pin(dict(historical_pin_snapshot(shift=6), tsc_samples=9), tsc_sample_shift=6)
 
     def test_delta_rejects_counter_bin_and_reason_resets(self):
         with self.assertRaises(ValueError):
-            profile.pin_delta(pin_snapshot(2), pin_snapshot())
+            profile.pin_delta(historical_pin_snapshot(2), historical_pin_snapshot())
         for group, bucket, destination in (('occupancy_before', 1, 0),
                 ('occupancy_after', 2, 0), ('refill_stop', 'self_current', 'no_link')):
-            after = pin_snapshot(2)
+            after = historical_pin_snapshot(2)
             after[group][destination] += after[group][bucket]
             after[group][bucket] = 0
             profile.validate_pin(after)
             with self.subTest(group=group), self.assertRaises(ValueError):
-                profile.pin_delta(pin_snapshot(), after)
-        after = dict(pin_snapshot(2), full_resumes=0)
+                profile.pin_delta(historical_pin_snapshot(), after)
+        after = dict(historical_pin_snapshot(2), full_resumes=0)
         profile.validate_pin(after)
         with self.assertRaises(ValueError):
-            profile.pin_delta(pin_snapshot(), after)
+            profile.pin_delta(historical_pin_snapshot(), after)
 
 
 class NanoBatchSnapshotTests(unittest.TestCase):
     def test_historical_schema_is_preserved_and_never_mixed_with_current(self):
-        before, after = batch_snapshot(schema=2), batch_snapshot(2, schema=2)
-        self.assertEqual(profile.validate_batch(before), before)
-        self.assertEqual(profile.batch_delta(before, after, expected_completions=10), before)
-        self.assertEqual(before['schema'], 2)
-        self.assertNotIn('owner_transfers', before)
-        self.assertNotIn('owner_transfer', before['stop_reason'])
-        for old, new in ((before, batch_snapshot(2)), (batch_snapshot(), after)):
-            with self.assertRaisesRegex(ValueError, 'schema changed'):
-                profile.batch_delta(old, new)
-        for invalid in (dict(before, owner_transfers=0), dict(batch_snapshot(), schema=2)):
+        for schema in (2, 3):
+            before, after = batch_snapshot(schema=schema), batch_snapshot(2, schema=schema)
+            self.assertEqual(profile.validate_batch(before), before)
+            self.assertEqual(profile.batch_delta(before, after, expected_completions=10), before)
+            self.assertEqual(before['schema'], schema)
+            self.assertNotIn('delayed_tail', before['stop_reason'])
+            if schema == 2:
+                self.assertNotIn('owner_transfers', before)
+                self.assertNotIn('owner_transfer', before['stop_reason'])
+            for old, new in ((before, batch_snapshot(2)), (batch_snapshot(), after)):
+                with self.assertRaisesRegex(ValueError, 'schema changed'):
+                    profile.batch_delta(old, new)
+            invalid = deepcopy(before)
+            invalid['stop_reason']['delayed_tail'] = 0
             with self.assertRaises(ValueError):
                 profile.validate_batch(invalid)
+        for invalid in (dict(batch_snapshot(schema=2), owner_transfers=0),
+                        dict(batch_snapshot(), schema=2), dict(batch_snapshot(), schema=3)):
+            with self.assertRaises(ValueError):
+                profile.validate_batch(invalid)
+
+    def test_delayed_tail_is_a_distinct_current_batch_exit(self):
+        snapshot = batch_snapshot()
+        self.assertEqual(snapshot['schema'], 4)
+        self.assertEqual(snapshot['stop_reason']['delayed_tail'], 1)
+        profile.validate_batch(snapshot)
+        missing = deepcopy(snapshot)
+        del missing['stop_reason']['delayed_tail']
+        with self.assertRaises(ValueError):
+            profile.validate_batch(missing)
+        after = batch_snapshot(2)
+        after['stop_reason']['empty_tail'] += after['stop_reason']['delayed_tail']
+        after['stop_reason']['delayed_tail'] = 0
+        profile.validate_batch(after)
+        with self.assertRaises(ValueError):
+            profile.batch_delta(snapshot, after)
 
     def test_transfer_is_an_unfinished_attempt_with_its_own_stop_reason(self):
         snapshot = batch_snapshot()

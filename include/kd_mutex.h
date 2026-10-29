@@ -30,6 +30,12 @@
 #if KDLOCK_MUTEX_NUMA_BOUNDARY < 1 || KDLOCK_MUTEX_NUMA_BOUNDARY > 32767
 #error "KDLOCK_MUTEX_NUMA_BOUNDARY must be 1..32767"
 #endif
+#ifndef KDLOCK_MUTEX_SPIN_BUDGET
+#define KDLOCK_MUTEX_SPIN_BUDGET 65536
+#endif
+#if KDLOCK_MUTEX_SPIN_BUDGET < 1 || KDLOCK_MUTEX_SPIN_BUDGET > 2147483647
+#error "KDLOCK_MUTEX_SPIN_BUDGET must be 1..2147483647 PAUSE iterations"
+#endif
 
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
@@ -87,12 +93,15 @@ struct kd_mutex_osq_node {
 	u32 tail; /* immutable encoded CPU and slot, initialized with the pool */
 };
 
-/* Queue result byte: only the selected executor requests an origin pin.
- * A PINNED release ACK precedes any delegated stack/GS access. */
+/* READY is published only by a pinned, quiescent origin. Its claim races the
+ * origin's withdrawal on this same byte; no REQUEST/ACK round trip exists.
+ * INIT distinguishes never-ready publication from irrevocably withdrawn WAIT.
+ * Zero remains the exact completion/native/head result publication. */
 #define KD_MUTEX_WAIT 1
-#define KD_MUTEX_PROXY_REQUEST 2
-#define KD_MUTEX_PROXY_PINNED 3
-#define KD_MUTEX_PIN_WINDOW 4
+#define KD_MUTEX_PROXY_READY 2
+#define KD_MUTEX_PROXY_CLAIMED 3
+#define KD_MUTEX_QUEUE_INIT 4
+#define KD_MUTEX_PIN_WINDOW 8
 
 /*
  * kd_mutex_node — per-waiter queue node.
@@ -100,8 +109,9 @@ struct kd_mutex_osq_node {
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
  * owns its shadow stack, so an executor acquiring a sleeping KD mutex cannot
  * have its stack reused by another target task running on the same CPU.
- * Queued unselected waiters are preemptible; at most four immediate selected
- * requests per batch acknowledge a pin before delegated execution.
+ * A queued origin initially spins pinned, then checks scheduling after its
+ * finite spin budget. At most eight exact READY requests are claimed at once;
+ * a withdrawn origin stays preemptible until its native head/result wake.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.

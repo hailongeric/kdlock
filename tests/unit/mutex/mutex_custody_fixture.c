@@ -72,10 +72,6 @@ static void observe_owner_wake(const void *address, bool zero)
 #define cmpxchg(p,o,n) ({ __typeof__(*(p)) old_=(o); __atomic_compare_exchange_n((p),&old_,(n),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); old_; })
 static void cpu_relax(void)
 {
-	if (current == &ctask && READ_ONCE(next_node.locked)==KD_MUTEX_PROXY_REQUEST) {
-		CHECK(batch.nr_pins==2 && batch.pins[(batch.pin_head+1)%KD_MUTEX_PIN_WINDOW].node==&next_node);
-		smp_store_release(&next_node.locked,KD_MUTEX_PROXY_PINNED);
-	}
 	if (current == &ctask && delayed_link) {
 		delayed_link = false;
 		smp_store_release(&wnode.next, &next_node);
@@ -199,7 +195,7 @@ static void setup(void)
 	cnode.count_seq=wnode.count_seq=2; cnode.task_struct_ptr=&ctask; wnode.task_struct_ptr=&wtask;
 	cnode.entry_abi=wnode.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	cnode.packet_state=wnode.packet_state=KD_PACKET_MINIMAL;
-	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=KD_MUTEX_PROXY_PINNED; next_node.locked=KD_MUTEX_WAIT; deferred.locked=1;
+	cnode.regs.ip=0xcafe; cnode.regs.sp=0x1000; wnode.locked=KD_MUTEX_PROXY_CLAIMED; next_node.locked=KD_MUTEX_WAIT; deferred.locked=1;
 	frame.mutex_backend=frame.complex_ready=frame.batch_lease=true;
 	frame.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1; frame.logical_task=&wtask;
 	frame.outer_lock_addr=(unsigned long)&lock; frame.jit_lock_addr[0]=(unsigned long)&lock;
@@ -214,7 +210,7 @@ static void setup(void)
 	batch.pins[start_head].node=&wnode; batch.pins[start_head].generation=wnode.count_seq; batch.nr_pins=1;
 	if (shape==1 || shape==3) {
 		next_node.counted_lock=&lock; next_node.count_seq=2;
-		next_node.locked=KD_MUTEX_PROXY_REQUEST;
+		next_node.locked=KD_MUTEX_PROXY_CLAIMED;
 		unsigned int index=(start_head+1)%KD_MUTEX_PIN_WINDOW;
 		batch.pins[index].node=&next_node; batch.pins[index].generation=2; batch.nr_pins=2;
 	}
@@ -242,6 +238,7 @@ static void *native_owner(void *unused)
 	CHECK(source_refs==1 && frame.state==KD_EXEC_FRAME_UNUSED && !context.depth);
 	CHECK(!frame.outer_unlock_seen && !frame.completion_seen && !frame.jit_lock_released[0]);
 	CHECK(cnode.regs.ip==0xcafe && cnode.counted_lock==&lock && cnode.count_seq==2);
+	CHECK(smp_load_acquire(&cnode.locked)==KD_MUTEX_PROXY_READY);
 	CHECK(!wnode.native_transfer && wnode.custody.phase==KD_MUTEX_CUSTODY_NATIVE);
 	preempt_enable();
 	if (mode==1) pins++; /* Native spin B remains held at outer unlock. */
@@ -264,7 +261,7 @@ static void receipt_checks(void)
 	frame.mutex_mixed.queue.head=&cnode; frame.mutex_mixed.queue.generation=4;
 	wnode.count_seq=4; wnode.counted_lock=NULL; wnode.custody.head=&cnode;
 	wnode.custody.generation=4; wnode.custody.phase=KD_MUTEX_CUSTODY_WAIT_READY;
-	wnode.custody.source_lease=true; cnode.locked=1; route=&wnode;
+	wnode.custody.source_lease=true; cnode.locked=KD_MUTEX_QUEUE_INIT; route=&wnode;
 	lock.owner=(unsigned long)&wtask | 1UL;
 	CHECK(kd_exec_mutex_custody_accepted(&frame));
 	frame.mutex_mixed.picked_up=false; CHECK(!kd_exec_mutex_custody_accepted(&frame)); frame.mutex_mixed.picked_up=true;
@@ -288,11 +285,13 @@ int main(void)
 		CHECK(batch.swapped_owner==&wnode && !batch.next && !context.depth);
 		CHECK(lock.delegation_tail==(u32)cnode.tail && !frame.outer_unlock_seen && !frame.completion_seen);
 		kd_source_frame_put();
-		/* Production batch's final access, after frame and old lease retire. */
+		/* Match the production batch publication only after frame/source retirement. */
+		CHECK(!context.depth && frame.state==KD_EXEC_FRAME_UNUSED && source_refs==1);
+		CHECK(cmpxchg(&cnode.locked,KD_MUTEX_QUEUE_INIT,KD_MUTEX_PROXY_READY)==KD_MUTEX_QUEUE_INIT);
 		smp_store_release(&wnode.custody.ready,true);
 		CHECK(!pthread_join(worker,NULL));
 	}
-	start_head=3; shape=mode=0; setup(); source_closed=1;
+	start_head=7; shape=mode=0; setup(); source_closed=1;
 	CHECK(!kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 	CHECK(!route && source_refs==1 && lock.delegation_tail==(u32)wnode.tail && !cnode.locked);
 	source_closed=0; batch.after_body=true;

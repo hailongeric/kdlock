@@ -70,6 +70,8 @@
 static const unsigned int kd_mutex_batch_size = KDLOCK_MUTEX_BATCH;
 MODULE_INFO(mutex_batch, __stringify(KDLOCK_MUTEX_BATCH));
 MODULE_INFO(mutex_numa_boundary, __stringify(KDLOCK_MUTEX_NUMA_BOUNDARY));
+MODULE_INFO(mutex_spin_budget, __stringify(KDLOCK_MUTEX_SPIN_BUDGET));
+MODULE_INFO(mutex_ready_window, __stringify(KD_MUTEX_PIN_WINDOW));
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
 KD_MUTEX_STAT(kd_mutex_slowpath_count);
@@ -120,6 +122,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 DEFINE_PER_CPU(unsigned long, kd_mutex_custody_slots);
 EXPORT_SYMBOL_GPL(kd_mutex_custody_slots);
 
+#include "mutex/pin_origin.inc"
 #include "mutex/queue.inc"
 #include "mutex/count.inc"
 
@@ -228,9 +231,9 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		return;
 	}
 
-	/* Migration protects the reserved CPU/slot while queued tasks schedule.
-	 * Only the bounded selected group disables preemption and acknowledges
-	 * that pin before any executor may use its origin stack or GS state. */
+	/* Migration protects the reserved CPU/slot after a queued origin withdraws
+	 * readiness and schedules. Initial READY publication retains this pin;
+	 * exact READY/CLAIMED arbitration precedes every proxy stack/GS access. */
 	migrate_disable();
 	preempt_disable();
 	if (unlikely(kd_mutex_has_local_predecessor(lock))) {
@@ -273,7 +276,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->packet_state = abi == KD_ENTRY_ABI_LEGACY ?
 			KD_PACKET_FULL : KD_PACKET_MINIMAL;
 		curr_node->regs.sp = rsp_value;
-		curr_node->locked = true;
+		curr_node->locked = KD_MUTEX_QUEUE_INIT;
 		curr_node->completed = false;
 		curr_node->native_resume = false;
 		curr_node->next = NULL;

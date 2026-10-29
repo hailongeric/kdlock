@@ -40,7 +40,7 @@ static unsigned int fls(unsigned int value)
 CHECKS = r'''
     static const enum kd_mutex_diag_reason reasons[] = {
         KD_MUTEX_DIAG_UNCLASSIFIED,
-        KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_EMPTY_TAIL,
+        KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_DELAYED_TAIL,
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_EXECUTION_REFUSAL,
         KD_MUTEX_DIAG_NATIVE_DONE, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE,
         KD_MUTEX_DIAG_TOTAL_CAP, KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE,
@@ -81,7 +81,8 @@ CHECKS = r'''
         scenario == 17 || scenario == 18 || scenario == 19;
     expected.completed_hist[fls(completed + native)]++;
     expected.deferred_peak_hist[fls(deferred[scenario])]++;
-    expected.stop_reason[reasons[scenario]]++;
+    if(reasons[scenario]!=KD_MUTEX_DIAG_UNCLASSIFIED)
+        expected.stop_reason[reasons[scenario]-1]++;
 #define CHECK_TOTAL(name) CHECK(kd_mutex_batch_totals.name == expected.name);
     KD_MUTEX_DIAG_TOTALS(CHECK_TOTAL)
 #undef CHECK_TOTAL
@@ -89,7 +90,7 @@ CHECKS = r'''
         CHECK(kd_mutex_batch_totals.completed_hist[i] == expected.completed_hist[i]);
     for (unsigned int i = 0; i < KD_MUTEX_DIAG_DEFERRED_BINS; i++)
         CHECK(kd_mutex_batch_totals.deferred_peak_hist[i] == expected.deferred_peak_hist[i]);
-    for (unsigned int i = 0; i < KD_MUTEX_DIAG_REASON_COUNT; i++)
+    for (unsigned int i = 0; i + 1 < KD_MUTEX_DIAG_REASON_COUNT; i++)
         CHECK(kd_mutex_batch_totals.stop_reason[i] == expected.stop_reason[i]);
     CHECK(kd_mutex_batch_totals.batches == kd_mutex_combiner_count);
     CHECK(kd_mutex_batch_totals.jit_completed == kd_mutex_jit_success_count);
@@ -118,6 +119,16 @@ EXTRA = r'''
     length=kd_mutex_batch_stats_get(json_buffer,NULL);
     CHECK(length>0 && length<(int)sizeof(json_buffer));
     printf("TRANSFER %s",json_buffer);
+    /* The compact storage omits enum zero. Its JSON gap is still observable,
+     * and corrupt/inconsistent totals must not wrap to a plausible count. */
+    memset(&kd_mutex_batch_totals,0,sizeof(kd_mutex_batch_totals));
+    kd_mutex_batch_totals.batches=1;
+    length=kd_mutex_batch_stats_get(json_buffer,NULL);
+    CHECK(length>0 && length<(int)sizeof(json_buffer));printf("GAP %s",json_buffer);
+    kd_mutex_batch_totals.batches=0;
+    kd_mutex_batch_totals.stop_reason[KD_MUTEX_DIAG_EMPTY_TAIL-1]=1;
+    length=kd_mutex_batch_stats_get(json_buffer,NULL);
+    CHECK(length>0 && length<(int)sizeof(json_buffer));printf("INCONSISTENT %s",json_buffer);
     /* Exercise both declared last bins independently of this fixture's
      * smaller queue. No observation may grow beyond the per-CPU budget. */
     _Static_assert(sizeof(struct kd_mutex_batch_totals)<=384,
@@ -167,9 +178,9 @@ def main():
                                 check=True, timeout=10)
         print(result.stdout, end='')
         values = {line.split(' ', 1)[0]: json.loads(line.split(' ', 1)[1])
-                  for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'TRANSFER ', 'MAX '))}
+                  for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'TRANSFER ', 'GAP ', 'INCONSISTENT ', 'MAX '))}
         sample = values['DIAG']
-        assert sample['schema'] == 3 and sample['compiled'] == 1
+        assert sample['schema'] == 4 and sample['compiled'] == 1
         assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
         assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
         assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
@@ -186,13 +197,15 @@ def main():
         assert sample['legacy']['combiner'] == sample['batches']
         assert sample['legacy']['jit_success'] == sample['jit_completed']
         transfer = values['TRANSFER']
-        assert transfer['schema'] == 3 and transfer['batches'] == transfer['attempts'] == 1
+        assert transfer['schema'] == 4 and transfer['batches'] == transfer['attempts'] == 1
         assert transfer['owner_transfers'] == transfer['stop_reason']['owner_transfer'] == 1
         assert transfer['jit_completed'] == transfer['native_completed'] == transfer['execution_refusals'] == 0
         assert transfer['completed_hist'] == [1] + [0] * 15
         assert transfer['deferred_peak_hist'] == [1] + [0] * 7
         assert transfer['legacy'] == dict(combiner=1, jit_success=0, handoff=0)
         maximum = (1 << 64) - 1
+        assert values['GAP']['stop_reason']['unclassified'] == 1
+        assert values['INCONSISTENT']['stop_reason']['unclassified'] == maximum
         assert values['MAX']['batches'] == maximum
         assert values['MAX']['owner_transfers'] == maximum
         assert values['MAX']['completed_hist'] == [maximum] * 16
@@ -216,10 +229,11 @@ def main():
         # Undefined poisoned arguments must disappear before compilation. The
         # condition's own side effect still occurs once with short circuiting.
         off = '#define MODULE_INFO(...)\n'
+        off += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))
         off += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))
         off += r'''
-static unsigned int waits;
-static void kd_mutex_proxy_wait_pinned(unsigned int value) { waits += value; }
+static unsigned int asserted;
+static void kd_mutex_proxy_assert_claimed(unsigned int value) { asserted += value; }
 struct off_layout { int original; KD_MUTEX_DIAG_MEMBER };
 _Static_assert(sizeof(struct off_layout) == sizeof(int), "off adds storage");
 int main(void)
@@ -240,10 +254,16 @@ int main(void)
     KD_MUTEX_PIN_STOP(poison(), poison());
     KD_MUTEX_PIN_DRAIN(poison(), poison());
     if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
-    KD_MUTEX_PIN_WAIT(poison(), 1, poison());
+    KD_MUTEX_PIN_ASSERT(poison(), 1);
+    KD_MUTEX_PIN_WAIT_ENTER();
+    KD_MUTEX_PIN_BUDGET_EXPIRED();
+    KD_MUTEX_PIN_EXPIRY_CHECK();
+    KD_MUTEX_PIN_WITHDRAW();
+    KD_MUTEX_PIN_FORCED_CANCEL();
+    KD_MUTEX_PIN_INITIAL_FINISH(poison());
     if (KD_MUTEX_PIN_DIAG_INIT()) return 3;
     KD_MUTEX_PIN_DIAG_EXIT();
-    return calls != 1 || waits != 1;
+    return calls != 1 || asserted != 1;
 }
 '''
         (path/'off.c').write_text(off)

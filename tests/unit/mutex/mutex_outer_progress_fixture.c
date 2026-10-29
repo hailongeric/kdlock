@@ -56,12 +56,14 @@ static unsigned int release_traces;
 static unsigned int routine_traces;
 static int preempt = 1;
 static bool other_holds, terminal, fast_window;
+static bool delayed_full, pending_link, normal_proxy_loop;
+static unsigned int pending_polls, terminal_attempts;
 static unsigned int test_pin_head;
+static unsigned int source_leases;
 static int kd_mutex_batch_size = 16;
 static unsigned int queue_finishes;
 static unsigned int handoff_starts, handoff_ends;
-static unsigned int pin_requests, pin_acks, private_prepares, future_requests, future_acks;
-static unsigned long *origin_stack;
+static unsigned int pin_requests, private_prepares, future_requests;
 
 /* CPU appears only in diagnostics; this fixture does not model scheduling. */
 static int raw_smp_processor_id(void)
@@ -92,24 +94,16 @@ static int raw_smp_processor_id(void)
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define unlikely(x) (x)
 #define smp_load_acquire(p) (*(p))
-#define smp_store_release(p, v)                                   \
-	do {                                                      \
-		if ((void *)(p) == &request.locked) {               \
-			if ((v) == KD_MUTEX_PROXY_REQUEST)            \
-				pin_requests++;                       \
-			else if (((v) == KD_MUTEX_WAIT || (v) == 0) && pin_requests) { \
-				CHECK(pin_acks == pin_requests);       \
-				if (mode == 8) CHECK(pops == 1);      \
-			}                                               \
-		}                                                       \
-		if ((void *)(p) == &successor.locked) { \
-			if ((v) == KD_MUTEX_PROXY_REQUEST) future_requests++; \
-			if ((v) == KD_MUTEX_WAIT && future_requests) CHECK(future_acks == 1); \
-		} \
-		if ((void *)(p) == &successor.locked && (v) == 0) \
-			wakes++;                                  \
-		*(p) = (v);                                       \
-	} while (0)
+#define smp_store_release(p, v) do { \
+ if ((void *)(p)==&request.locked && ((v)==KD_MUTEX_WAIT || !(v)) && pin_requests) { \
+  CHECK(request.locked==KD_MUTEX_PROXY_CLAIMED || (!(v) && request.locked==KD_MUTEX_WAIT)); \
+  if(mode==8)CHECK(pops==1); \
+ } \
+ if ((void *)(p)==&successor.locked && (v)==KD_MUTEX_WAIT && future_requests) \
+  CHECK(successor.locked==KD_MUTEX_PROXY_CLAIMED); \
+ if ((void *)(p)==&successor.locked && !(v))wakes++; \
+ *(p)=(v); \
+} while(0)
 #define this_cpu_inc(x) (++(x))
 #define atomic64_inc(p) (++*(p))
 static bool fixture_warn(bool condition) { return condition; }
@@ -188,13 +182,24 @@ static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
 	handoff_ends++;
 }
 
-#define cmpxchg(p, old, value)                \
-	({                                    \
-		__typeof__(*(p)) seen = *(p); \
-		if (seen == (old))            \
-			*(p) = (value);       \
-		seen;                         \
-	})
+#define cmpxchg(p, old, value) ({ \
+ __auto_type target=(p); \
+ if((void *)target==&gate.delegation_tail && delayed_full) { \
+  CHECK(pops==1 && scripts==1 && active.packet_state==KD_PACKET_FULL); \
+  if(!terminal_attempts++) { gate.delegation_tail=successor.tail;pending_link=true; } \
+ } \
+ __typeof__(*target) seen=*target; \
+ if(seen==(old)) { \
+  if((void *)target==&request.locked) { \
+   CHECK((old)==KD_MUTEX_PROXY_READY && (value)==KD_MUTEX_PROXY_CLAIMED);pin_requests++; \
+  } \
+  if((void *)target==&successor.locked) { \
+   CHECK((old)==KD_MUTEX_PROXY_READY && (value)==KD_MUTEX_PROXY_CLAIMED);future_requests++; \
+  } \
+  *target=(value); \
+ } seen; \
+})
+#define cmpxchg_acquire(p,old,value) cmpxchg((p),(old),(value))
 
 static void preempt_enable(void)
 {
@@ -206,21 +211,16 @@ static void preempt_disable(void)
 }
 static void cpu_relax(void)
 {
-	if (request.locked == KD_MUTEX_PROXY_REQUEST) {
-		CHECK(pin_requests == 1 && !pin_acks && !scripts && !pops);
-		/* Model the origin's real pin and release ACK. Its legacy stack
-		 * becomes valid only now, so a pre-ACK decode is observable. */
-		origin_stack[7] = 0x800;
-		request.locked = KD_MUTEX_PROXY_PINNED;
-		pin_acks++;
-		return;
-	}
-	if (successor.locked == KD_MUTEX_PROXY_REQUEST) {
-		CHECK(fast_window && future_requests == 1 && !future_acks && !scripts);
-		successor.locked = KD_MUTEX_PROXY_PINNED;
-		future_acks++;
-		return;
-	}
+ if(pending_link) {
+  CHECK(delayed_full && !normal_proxy_loop && pops==1 && scripts==1 && !wakes);
+  CHECK(source_leases==1 && preempt==1);
+  CHECK(request.locked==KD_MUTEX_PROXY_CLAIMED && !request.completed);
+  CHECK(active.packet_state==KD_PACKET_FULL && active.completion_seen);
+  CHECK(gate.owner==&executor && kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_COMBINER);
+  CHECK(++pending_polls<=2);
+  if(pending_polls==2) { request.next=&successor;pending_link=false; }
+  return;
+ }
 	CHECK(other_holds && current == &executor);
 	current = &other;
 	CHECK(_kd_mutex_unlock_checked(&gate) == 0);
@@ -275,7 +275,6 @@ static bool kd_exe_entry_is_ready(struct kd_exe_info *exe, int pid, unsigned lon
     (void)pid; (void)ip; return exe != NULL;
 }
 /* This fixture deliberately exercises the existing legacy/complex route. */
-static unsigned int source_leases;
 static bool kd_source_frame_get(void) { source_leases++; return true; }
 static void kd_source_frame_put(void) { CHECK(source_leases == 1); source_leases--; }
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned long ip,
@@ -283,11 +282,11 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned
  struct kd_exec_outer_unlock *hook)
 {
  CHECK(r == &request.regs && ip == 0x800 && gs == 1 && task == &waiter);
- CHECK(lock == &gate && hook && pin_requests == 1 && !pin_acks);
- CHECK(request.locked == KD_MUTEX_PROXY_REQUEST && !scripts && !pops);
+ CHECK(lock == &gate && hook && pin_requests == 1);
+ CHECK(request.locked == KD_MUTEX_PROXY_CLAIMED && !scripts && !pops);
  private_prepares++;
  /* Generic fallback/NULL refusal and successful private preparation both
-  * occur before the origin ACK; only published packet metadata is copied. */
+  * occur after the READY claim; no origin acknowledgement is polled. */
  if (!fast_window || mode == 7) return NULL;
  memset(&active, 0, sizeof(active));
  active.native_link.next = active.native_link.prev = &active.native_link;
@@ -306,14 +305,14 @@ static bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 {
  (void)call;
  CHECK(fast_window && exe == &ready_entry && frame == &active);
- CHECK(pin_acks == 1 && request.locked == KD_MUTEX_PROXY_PINNED);
- CHECK(future_requests == 1 && successor.locked == KD_MUTEX_PROXY_REQUEST);
+ CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
+ CHECK(future_requests == 1 && successor.locked == KD_MUTEX_PROXY_CLAIMED);
  return mode != 8;
 }
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
  (void)call;
- CHECK(fast_window && active.executed && request.locked == KD_MUTEX_PROXY_PINNED);
+ CHECK(fast_window && active.executed && request.locked == KD_MUTEX_PROXY_CLAIMED);
  active.packet_state = KD_PACKET_FULL;
 }
 static bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
@@ -326,15 +325,16 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs
 static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_jit_batch_call *call)
 {
  (void)call;
- CHECK(fast_window && future_requests == 1 && future_acks == 1);
- CHECK(successor.locked == KD_MUTEX_WAIT && request.locked == KD_MUTEX_PROXY_PINNED);
+ CHECK(fast_window && future_requests == 1);
+ CHECK(successor.locked == KD_MUTEX_WAIT && request.locked == KD_MUTEX_PROXY_CLAIMED);
  return kd_exe_on_call_hl_entry(exe, &active.regs, active.entry_ip, active.outer_lock_addr);
 }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
 	(void)pid;
 	(void)ip;
-	CHECK(request.locked == KD_MUTEX_WAIT && successor.locked == KD_MUTEX_WAIT);
+	CHECK(request.locked == (pin_requests ? KD_MUTEX_WAIT : KD_MUTEX_PROXY_READY));
+	CHECK(successor.locked == KD_MUTEX_PROXY_READY);
 	CHECK(kind == KD_EXE_LOCK_MUTEX);
 	CHECK(abi == ((terminal || fast_window) ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY));
 }
@@ -348,7 +348,7 @@ struct kd_exec_frame *kd_exec_frame_push(const struct kd_regs *regs,
 					 unsigned int depth, unsigned long gs,
 					 struct task_struct *task)
 {
-	CHECK(pin_acks == 1 && request.locked == KD_MUTEX_PROXY_PINNED);
+	CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
 	if (mode == 7)
 		return NULL;
 	memset(&active, 0, sizeof(active));
@@ -374,10 +374,10 @@ struct kd_exec_frame *kd_exec_frame_push_borrowed(struct kd_regs *regs,
 }
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
-	CHECK(frame == &active && pin_acks == 1);
+	CHECK(frame == &active && pin_requests == 1);
 	CHECK(mode == 8 ? frame->state == KD_EXEC_FRAME_ERROR && !frame->executed :
 		frame->completion_seen);
-	CHECK(request.locked == KD_MUTEX_PROXY_PINNED || native_waits);
+	CHECK(request.locked == KD_MUTEX_PROXY_CLAIMED || native_waits);
 	if (regs)
 		*regs = frame->regs;
 	pops++;
@@ -427,8 +427,8 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 {
 	CHECK(exe == &ready_entry);
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&gate);
-	CHECK(pin_acks == 1 && request.locked == KD_MUTEX_PROXY_PINNED);
-	if (fast_window) CHECK(successor.locked == KD_MUTEX_WAIT && future_acks == 1);
+	CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
+	if (fast_window) CHECK(successor.locked == KD_MUTEX_WAIT && future_requests == 1);
 	if (mode == 8)
 		return KD_EXE_NO_RUN;
 	scripts++;
@@ -540,6 +540,9 @@ int main(void)
 	for (mode = 0; mode < 9; mode++) {
 		terminal = terminal_case == 1;
 		fast_window = terminal_case == 2;
+		delayed_full = terminal && mode == 0;
+		pending_link = normal_proxy_loop = false;
+		pending_polls = terminal_attempts = 0;
 		if (test_pin_head && !fast_window) continue;
 		if (fast_window && mode == 0) continue;
 		unsigned long stack[8] = { 0 };
@@ -563,13 +566,14 @@ int main(void)
 		request.packet_state = terminal || fast_window ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 		request.regs.ip = 0x800;
 		successor.task_struct_ptr = &other;
-		request.locked = successor.locked = 1;
+		successor.tail = 3U << KD_MUTEX_TAIL_CPU_OFFSET;
+		request.locked = successor.locked = KD_MUTEX_PROXY_READY;
 		request.regs.sp = (unsigned long)stack;
-		origin_stack = stack;
-		pin_requests = pin_acks = private_prepares = 0;
+		stack[7] = 0x800; /* Origin stack is quiescent before READY publication. */
+		pin_requests = private_prepares = 0;
 		request.counted_lock = &gate;
 		request.count_seq = 2;
-		future_requests = future_acks = 0;
+		future_requests = 0;
 		if (fast_window) {
 			successor.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 			successor.packet_state = KD_PACKET_MINIMAL;
@@ -593,9 +597,9 @@ int main(void)
 		CHECK(kd_mutex_run_combiner(&gate, &request, NULL, after_body) ==
 		      (after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED));
 		CHECK(scripts == expected && pops == expected + (mode == 8));
-		CHECK(pin_requests == ((terminal || fast_window) && mode == 4 ? 0U : 1U) && pin_acks == pin_requests);
+		CHECK(pin_requests == ((terminal || fast_window) && mode == 4 ? 0U : 1U));
 		CHECK(private_prepares == ((terminal || fast_window) && mode != 4));
-		CHECK(future_requests == (fast_window && mode != 4) && future_acks == future_requests);
+		CHECK(future_requests == (fast_window && mode != 4));
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5 || mode == 6));
@@ -617,10 +621,12 @@ int main(void)
 			CHECK(kd_mutex_origin_acquires == (early ? 3 : mode == 6 ? 2 : 1));
 			CHECK(kd_mutex_origin_releases == (early ? 2 : mode == 6 ? 1 : 0));
 		}
-		CHECK(wakes == ((mode == 4 || mode >= 7 || terminal) ? 0 : 1));
+		CHECK(wakes == (delayed_full ? 1 : (mode == 4 || mode >= 7 || terminal) ? 0 : 1));
 		if (terminal)
-			CHECK(gate.delegation_tail == (mode == 4 || mode >= 7 ? 2U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
-		CHECK(successor.locked == (early || mode == 4 || mode >= 7 || terminal));
+			CHECK(gate.delegation_tail == (delayed_full ? (unsigned int)successor.tail : mode == 4 || mode >= 7 ? 2U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
+		CHECK(!!successor.locked == (!delayed_full && (early || mode == 4 || mode >= 7 || terminal)));
+		CHECK(pending_polls==(delayed_full?2U:0U) && !pending_link);
+		CHECK(terminal_attempts==(delayed_full?2U:0U));
 		CHECK(request.completed == (mode == 0 || mode == 1));
 		CHECK(release_traces == early);
 		if (!after_body) {
@@ -641,9 +647,9 @@ int main(void)
 		CHECK(!enclosing.counted_lock && !(enclosing.count_seq & 1));
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
-	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 12);
-	CHECK(routine_traces == 100);
-	printf("mutex outer production progress: %u checks, %u failures, 100 scenarios\n",
+	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 20);
+	CHECK(routine_traces == 164);
+	printf("mutex outer production progress: %u checks, %u failures, 164 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

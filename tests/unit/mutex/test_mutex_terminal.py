@@ -22,12 +22,13 @@ def production_sources():
         types += without_includes(read_source(ROOT/f'include/{name}.h'))+'\n'
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
     helpers = '#define MODULE_INFO(...)\n'
+    helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))+'\n'
     helpers += next(line for line in source.splitlines() if line.startswith('#define KD_MUTEX_EXEC_SWAPPED '))+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
     for marker in ('static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
-                   'static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)'):
+                   'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)'):
         helpers += definition(source, marker)+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_window.inc'))+'\n'
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
@@ -35,12 +36,17 @@ def production_sources():
         helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
     for marker in (
         'static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)',
+        'static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,',
         'static void kd_mutex_batch_retire_current(struct kd_mutex *lock,',
     ):
         helpers += definition(source, marker)+'\n'
     helpers += definition(source, 'static int kd_mutex_release_outer(struct kd_exec_frame *frame,')+'\n'
     marker = next(line for line in source.splitlines() if line.startswith('kd_mutex_run_combiner('))
     loop = 'static enum kd_mutex_batch_result\n' + definition(source, marker)
+    # Test-only phase observation leaves the actual body/retirement code intact.
+    # A delayed publication must poll only after the normal execution loop ends.
+    loop = loop.replace("\twhile (curr_node) {", "\tnormal_proxy_loop = true;\n\twhile (curr_node) {", 1)
+    loop = loop.replace("\tif (completed_pending_tail) {", "\tnormal_proxy_loop = false;\n\tif (completed_pending_tail) {", 1)
     return types, helpers, loop
 
 
@@ -54,6 +60,15 @@ def main():
         assert loop.count('kd_mutex_set_locked(lock);') == 2
         mutations = {
             'production': (helpers, loop),
+            'poll-inside-normal-loop': (helpers, loop.replace(
+                'if (!kd_mutex_batch_try_retire_current(lock, &batch)) {',
+                'if ((kd_mutex_batch_retire_current(lock, &batch), !kd_mutex_batch_try_retire_current(lock, &batch))) {', 1)),
+            'withdraw-pending-current': (helpers, loop.replace(
+                '\tif (completed_pending_tail) {',
+                '\tif (completed_pending_tail) {\n\t\tsmp_store_release(&curr_node->locked, KD_MUTEX_WAIT);', 1)),
+            'wake-before-cold-retirement': (helpers, loop.replace(
+                '\tif (completed_pending_tail) {',
+                '\tif (completed_pending_tail) {\n\t\tkd_mutex_clear_locked_set_completed(curr_node);', 1)),
             'ignore-local-pin-budget': (helpers.replace('if (left > local_left)', 'if (false && left > local_left)'), loop),
             'underflow-late-local-budget': (helpers.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?', 'false ?'), loop),
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),

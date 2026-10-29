@@ -1,7 +1,7 @@
-"""Guest-only bounded pin-window protocol with deterministic origin ACKs.
+"""Guest-only bounded pin-window protocol with deterministic READY claims.
 
 Compile production descriptors, selection, cancellation and consumption helpers.
-Atomic access observers model delayed peers and slot reuse. This does not prove
+Atomic access observers model expiry races and slot reuse. This does not prove
 live scheduler/JIT behavior or execute the enclosing combiner's body boundaries.
 """
 import os
@@ -19,9 +19,9 @@ def main():
     header = read_source(ROOT / "include/kd_mutex.h")
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
     constants = "\n".join(re.findall(
-        r"^#define KD_MUTEX_(?:WAIT|PROXY_REQUEST|PROXY_PINNED|PIN_WINDOW|CUSTODY_LOCKS) \d+$",
+        r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT|PIN_WINDOW|CUSTODY_LOCKS) \d+$",
         header, re.M))
-    assert len(constants.splitlines()) == 5
+    assert len(constants.splitlines()) == 6
     types = constants + "\n"
     types += definition(read_source(ROOT / "include/kd_mutex_types.h"),
                         "struct kd_mutex {") + ";\n"
@@ -34,10 +34,10 @@ def main():
     types += definition(read_source(ROOT / "include/kd_exec.h"),
                         "struct kd_exec_outer_unlock {") + ";\n"
     types += definition(source, "struct kd_mutex_batch {") + ";\n"
-    code = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
+    code = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
     for marker in (
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-        "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
     ):
         code += definition(source, marker) + "\n"
     window = read_source(ROOT / "kernel_module/mutex/pin_window.inc")
@@ -47,7 +47,7 @@ def main():
     remove_before_wait = (
         "\t\tbatch->pins[index].node = NULL;\n"
         "\t\tbatch->nr_pins = count;\n"
-        "\t\tKD_MUTEX_PIN_INC(batch, cancelled);\n"
+        "\t\tKD_MUTEX_PIN_INC(batch, cancelled_claims);\n"
         "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);")
     assert remove_before_wait in unpin
     mutations = {
@@ -69,8 +69,9 @@ def main():
             "if (left > local_left)", "if (false && left > local_left)", "", 1),
         "underflow-local-budget": (
             "counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?", "false ?", "", 1),
-        "cancel-before-ack": (unpin,
-            unpin.replace("\t\tKD_MUTEX_PIN_WAIT(batch, node, true);", "\t\t/* Missing ACK. */", 1), "", 1),
+        "cancel-rearms-ready": (
+            "smp_store_release(&node->locked, KD_MUTEX_WAIT);",
+            "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", "", 1),
         "cancel-before-descriptor-removal": (unpin,
             unpin.replace(remove_before_wait,
                 "\t\tsmp_store_release(&node->locked, KD_MUTEX_WAIT);\n"
@@ -118,7 +119,7 @@ def main():
             else:
                 print(result.stdout, end="")
                 for invalid in ("generation", "wrong-lock", "odd-generation",
-                                "wrong-current", "complete-unacked", "bad-head", "occupied-slot"):
+                                "wrong-current", "complete-unclaimed", "bad-head", "occupied-slot"):
                     rejected = subprocess.run([binary, invalid], capture_output=True,
                                               text=True, timeout=10)
                     assert rejected.returncode == 86 and "BUG pin window:" in rejected.stderr, (

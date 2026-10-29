@@ -75,6 +75,13 @@ wait_result:
 	}
 
 	/* --- become lock holder / combiner --- */
+	/* A private first head may schedule while acquiring the real mutex.
+	 * It is not proxy-ready; a handed-off head already has result state0. */
+	if (READ_ONCE(curr_node->locked) == KD_MUTEX_QUEUE_INIT)
+		BUG_ON(cmpxchg(&curr_node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_WAIT) !=
+		       KD_MUTEX_QUEUE_INIT);
+	else
+		BUG_ON(READ_ONCE(curr_node->locked));
 	kd_mutex_wait_and_lock_node(lock, curr_node);
 	/* End at physical acquisition, before processing another waiter's CS. */
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,

@@ -1,9 +1,7 @@
-"""Guest-only production origin pin protocol with deterministic scheduling.
+"""Guest-only actual READY wait/claim helpers with deterministic race injection.
 
-Compile the current wait/request/ACK helpers unchanged. The window selection
-fixture is separate; these cases cover preemptible queue/head waiting, exact
-origin pins, cancellation and reselection, including an unobserved WAIT interval.
-They do not establish live scheduler, weak-memory or JIT behavior.
+Cover initial spin grace, expiry arbitration, cancellation, result races and
+balanced scheduling. This does not establish live scheduler or weak-memory behavior.
 """
 import os
 import re
@@ -12,37 +10,38 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from source_text import ROOT, read_source
+from source_text import ROOT, read_source, without_includes
 from test_spin_shadow import definition
 
 
 def main():
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
-    code = "\n".join(definition(source, signature) for signature in (
+    code = without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
+    code += "\n".join(definition(source, signature) for signature in (
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-        "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
     ))
     constants = "\n".join(re.findall(
-        r"^#define KD_MUTEX_(?:WAIT|PROXY_REQUEST|PROXY_PINNED) \d+$",
+        r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT) \d+$",
         (ROOT / "include/kd_mutex.h").read_text(), re.M))
-    assert len(constants.splitlines()) == 3
+    assert len(constants.splitlines()) == 4
     mutations = {
-        "queue-cannot-schedule": ("\tpreempt_enable();", "\t/* Missing enable. */"),
-        "proxy-without-origin-pin": ("\t\t\tpreempt_disable();", "\t\t\t/* Missing pin. */"),
-        "cancel-keeps-pin": ("\t\t\t\t\t\tpreempt_enable();", "\t\t\t\t\t\t/* Missing cancel unpin. */"),
-        "reselection-without-ack": (
-            "\t\t\t\t\tif (state == KD_MUTEX_PROXY_REQUEST)\n"
-            "\t\t\t\t\t\tsmp_store_release(&node->locked, KD_MUTEX_PROXY_PINNED);",
-            "\t\t\t\t\tif (state == KD_MUTEX_PROXY_REQUEST)\n\t\t\t\t\t\t(void)node;"),
-        "skip-origin-ack": (
-            "\twhile (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED)\n\t\tcpu_relax();",
-            "\t(void)node; /* No acknowledgement wait. */"),
-        "self-cpu-selection": (" == raw_smp_processor_id())", " == -99)"),
+        "schedule-before-budget": ("if (budget) {", "if (false && budget) {"),
+        "withdraw-without-unpin": ("\tpreempt_enable();\n\twhile ((state =", "\twhile ((state ="),
         "head-cannot-schedule": (
             "\tpreempt_enable();\n\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))",
             "\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))"),
+        "rearm-withdrawn-origin": (
+            "cmpxchg(&node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_PROXY_READY)",
+            "cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_READY)"),
+        "ignore-expiry-cas-loss": (
+            "if (state == KD_MUTEX_PROXY_READY) {", "if (true) {"),
+        "self-cpu-selection": (" == raw_smp_processor_id())", " == -99)"),
+        "claim-without-ready": (
+            "return cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED) ==",
+            "return cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_CLAIMED) =="),
     }
     with tempfile.TemporaryDirectory(prefix="kd-mutex-proxy-pin-") as directory:
         path = Path(directory)

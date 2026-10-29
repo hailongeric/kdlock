@@ -269,13 +269,14 @@ def sources():
     return result
 
 
-def build(args, out, plan, *, mutex_diag=0, mutex_pin_tsc_shift=0):
+def build(args, out, plan, *, mutex_diag=0, mutex_pin_tsc_shift=0, mutex_spin_budget=65536):
     policy = mutex_policy(args)
     require(type(mutex_diag) in (int, bool) and mutex_diag in (0, 1, 2),
             'mutex diagnostics mode must be 0, 1 or 2')
-    require(type(mutex_pin_tsc_shift) is int and mutex_pin_tsc_shift in (0, 6) and
-            (not mutex_pin_tsc_shift or mutex_diag == 2),
-            'mutex pin TSC sampling requires diagnostics mode 2 and shift 0 or 6')
+    require(type(mutex_pin_tsc_shift) is int and mutex_pin_tsc_shift == 0,
+            'READY claims have no ACK wait; mutex pin TSC sampling is retired')
+    require(type(mutex_spin_budget) is int and 1 <= mutex_spin_budget <= 2**31 - 1,
+            'invalid initial mutex spin budget')
     require(not mutex_diag or (args.lock_kind == 'mutex' and args.backends == ['kdlock'] and
             all(row.get('diagnostic') is True and row.get('score_eligible') is False for row in plan)),
             'mutex diagnostics require an unscored KD-only mutex plan')
@@ -295,7 +296,8 @@ def build(args, out, plan, *, mutex_diag=0, mutex_pin_tsc_shift=0):
                  f'KDLOCK_MUTEX_BATCH={policy["total_cap"]}',
                  f'KDLOCK_MUTEX_NUMA_BOUNDARY={policy["numa_boundary"]}',
                  f'KDLOCK_MUTEX_DIAGNOSTICS={int(mutex_diag)}',
-                 f'KDLOCK_MUTEX_PIN_TSC_SHIFT={mutex_pin_tsc_shift}', 'UBSAN_SANITIZE=n'],
+                 f'KDLOCK_MUTEX_PIN_TSC_SHIFT={mutex_pin_tsc_shift}',
+                 f'KDLOCK_MUTEX_SPIN_BUDGET={mutex_spin_budget}', 'UBSAN_SANITIZE=n'],
                 out / 'build-kdlock.log', timeout=180)
         binaries['kdlock'] = provider / 'kernel_module/kdlock_km.ko'
         command(['make', '-C', source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'],
@@ -305,7 +307,8 @@ def build(args, out, plan, *, mutex_diag=0, mutex_pin_tsc_shift=0):
                                 ('mutex_batch', str(policy['total_cap'])),
                                 ('mutex_numa_boundary', str(policy['numa_boundary'])),
                                 ('mutex_batch_diag', str(int(mutex_diag))),
-                                ('mutex_pin_tsc_shift', str(mutex_pin_tsc_shift))):
+                                ('mutex_pin_tsc_shift', str(mutex_pin_tsc_shift)),
+                                ('mutex_spin_budget', str(mutex_spin_budget))):
             require(command(['modinfo', '-F', field, binaries['kdlock']], out / (field + '.txt')).strip() == expected,
                     'KD compiled policy differs')
     if 'tclock' in args.backends:

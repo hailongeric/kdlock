@@ -268,15 +268,11 @@ python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
   --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-batch-NEW
 
-# KD selected-pin accounting; no perf process or TSC sampling.
+# KD READY-claim and initial-spin accounting; no perf process.
 python3 bench/nano/profile.py --mode pin --threads 20 36 60 \
   --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-pin-NEW
 
-# Separate sampled-current-ACK experiment: ordered TSC on one in 64 observations.
-python3 bench/nano/profile.py --mode pin --pin-tsc --threads 20 36 60 \
-  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
-  --output /root/kdlock-evidence/10.176.26.71/bench/nano-pin-tsc-NEW
 ```
 
 Preparation, translation and warmup finish before the measured client starts.
@@ -291,8 +287,14 @@ events are failures, not zero measurements.
 The `batch` mode retains `KDLOCK_MUTEX_DIAGNOSTICS=1`; ordinary builds and
 the two perf modes use mode 0. Quiescent snapshots after warmup and
 after joined measurement produce deltas for batch lengths, exit reasons,
-deferred requests and local/remote JIT service. Histogram bin zero represents
-zero; bin `i > 0` represents `[2^(i-1), 2^i-1]`. The validator checks exact
+deferred requests and local/remote JIT service. Current schema 4 distinguishes
+`delayed_tail`: an ordinary proxy round ended before cold cleanup waited for a
+late successor link. Historical schemas 2 and 3 remain readable with their
+original fields; unavailable historical reasons are not measured zeros. Schema 4
+retains the 384-byte static record by deriving the invalid/unclassified count
+from batches minus classified exits; overflow or inconsistent live reads produce
+a nonzero sentinel that the quiescent validator rejects. Histogram bin zero
+represents zero; bin `i > 0` represents `[2^(i-1), 2^i-1]`. The validator checks exact
 accounting identities and requires the batch `jit_completed` delta to equal
 the returned-body completion-counter delta. Dispatch-node locality does not
 prove that a sleepable body stayed on that node. These observations never
@@ -305,34 +307,46 @@ per-CPU section. Exact drain precedes teardown, and the existing parameter mutex
 serializes sysfs reads with final detach. The getter returns `-ENODEV` without
 storage. The original static-counter candidate failed reserved-chunk allocation
 at 7984 bytes before provider initialization; that is a preparation failure, not
-a measured workload. The mode 2 allocation fix still requires VM validation.
-The runner reads `mutex_pin_stats` after warmup and after the joined measurement, saving
-`pin-before.json`, `pin-after.json` and `pin-delta.json`. Schema 1 binds compiled
-mode 2, a four-request window, both selected mutex policy limits and the TSC
-sample shift. The seventeen counters retain selections, requested/consumed/cancelled
-pins, drain calls, current and cancellation ACK behavior, batch-resume calls and samples.
+a measured workload. This READY candidate requires fresh VM validation.
+The runner reads `mutex_pin_stats` after warmup and after the joined measurement,
+saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 2
+binds compiled mode 2, an eight-claim window, both mutex policy limits and
+`initial_spin_budget` (default 65536 PAUSE iterations). The profiler accepts an
+explicit `--mutex-spin-budget` and verifies matching module metadata. Keep each
+threshold and source version separate. `c01` is the one-cacheline throughput
+profile; `c16` is the sixteen-cacheline locality profile.
+
+Executor counters record selections, successful READY-to-CLAIMED claims,
+retired and cancelled claims, drains and FULL resume calls. Nine-bin histograms
+record exact cohort occupancy `0..8` before and after each selection. Refill-stop
+reasons include current/future readiness and deferred-prefix boundaries. Claim
+admission is one CAS and the ordinary proxy round has no ACK polling loop.
 `full_resumes` counts calls to `kd_exe_mutex_batch_resume`, including checked
 pre-entry refusals; it does not assert that a FULL service or body returned.
-The two five-bin histograms record exact occupancy `0..4` before and after selection;
-the ten refill-stop reasons account for every selection.
 
-The validator requires both occupancy totals and refill-stop totals to equal
-selections; requested pins must equal consumed plus cancelled pins at quiescence.
-Cancelled pins must equal their immediate plus stalled ACK counts. ACK-loop totals
-must cover stalled ACKs and must be zero when none stalled. Nonempty drains cannot
-exceed drain calls, and drains retaining the current pin cannot exceed nonempty
-drains. These counters describe pin lifetimes: consumed pins are not a count of
-returned JIT bodies, and neither a counter identity nor a histogram proves drain.
-The unchanged workload oracle, physical ownership/ACK checks and source/frame
-retirement remain required before unloading or advancing to another case.
+Origin counters count delegation wait episodes, completion with the initial pin
+retained, first pin drops, episodes completing before the initial budget expired,
+episodes reaching expiry, post-budget scheduling checks, successful withdrawals
+and forced cancellations. The denominator is `wait_for_result` episodes, not all
+lock acquisitions. A retained pin may continue beyond the budget when scheduling
+is unnecessary or a claim has won. The report therefore separates
+`completed_within_initial_budget` from `retained_initial_pin`. Both fractions are
+unavailable when the episode count is zero. No greater-than-99% claim follows
+until quiescent measurements support it. Per-poll expiry checks accumulate in a
+local variable; origin totals merge once before the first unpin or pinned return.
 
-TSC sampling is off by default (`KDLOCK_MUTEX_PIN_TSC_SHIFT=0`), requiring zero
-samples and cycles. `--pin-tsc` is valid only with `--mode pin` and selects shift 6.
-It samples one in 64 current-pin ACK waits per CPU. Ordered timestamps have
-explicit compiler barriers and LFENCE on both sides. The delta includes fence and
-timestamp overhead, the first ACK cacheline load, and any interruptions during
-the wait; zero polling iterations do not mean zero latency. Samples cannot
-exceed current ACKs. Keep sampled and unsampled diagnostic runs separate.
+Both occupancy totals and refill-stop totals must equal selections. Claims equal
+retired plus cancelled claims at quiescence. Origin episodes equal retained plus
+dropped initial pins; successful withdrawals and forced cancellations account
+for drops. Retired claims are not returned JIT bodies. Neither diagnostic
+identities nor histograms prove drain: the workload oracle, exact physical
+ownership/ACK checks and source/frame retirement remain required.
+
+Historical schema 1 REQUEST/ACK records remain readable offline with their
+original seventeen counters, four-request window, five-bin histograms and
+optional TSC sample shift. They cannot be mixed with schema 2 or relabelled as
+READY claims. The current protocol has no ACK timing samples: `--pin-tsc` and a
+nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` are explicitly rejected.
 
 Both perf collection and compiled counters perturb execution. Keep their rates
 separate from uninstrumented throughput and do not infer speedups from

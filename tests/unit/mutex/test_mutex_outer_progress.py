@@ -63,13 +63,14 @@ def main():
     end = mutex.index("#endif", start) + len("#endif")
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     code += '#define MODULE_INFO(...)\n'
+    code += without_includes(read_source(ROOT/'kernel_module/mutex/pin_origin.inc'))+'\n'
     code += next(line for line in mutex.splitlines() if line.startswith("#define KD_MUTEX_EXEC_SWAPPED ")) + "\n"
     code += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     for marker in ("static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
-                   "static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)"):
+                   "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)"):
         code += definition(mutex, marker) + "\n"
     code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_window.inc")) + "\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
@@ -78,6 +79,7 @@ def main():
     code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
         "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",
+        "static bool kd_mutex_batch_try_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
@@ -110,6 +112,9 @@ def main():
     batch_init = "\tstruct kd_mutex_batch batch = {\n"
     assert code.count(batch_init) == 1
     code = code.replace(batch_init, batch_init + "\t\t.pin_head = test_pin_head,\n", 1)
+    # Observe the actual loop/cold boundary without replacing its transitions.
+    code = code.replace("\twhile (curr_node) {", "\tnormal_proxy_loop = true;\n\twhile (curr_node) {", 1)
+    code = code.replace("\tif (completed_pending_tail) {", "\tnormal_proxy_loop = false;\n\tif (completed_pending_tail) {", 1)
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-outer-unit-") as directory:
         path = Path(directory)
         (path / "mutex_outer_types.h").write_text(types)
@@ -122,8 +127,10 @@ def main():
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
-            "skip-prepare-ack": code.replace("\t\tKD_MUTEX_PIN_WAIT(batch, curr_node, false);\n\t}\n\tif (frame)",
-                                               "\t}\n\tif (frame)", 1),
+            "claim-does-not-pin": code.replace(
+                "cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED)",
+                "cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_READY)", 1),
+            "reject-completed-full-tail": code.replace("curr_node->packet_state != KD_PACKET_FULL", "true", 1),
             "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_unpin(batch, false);", "", 1),
             "resume-keeps-future-pins": code.replace(
                 "\t\tkd_mutex_batch_unpin(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
@@ -159,7 +166,7 @@ def main():
                 assert result.returncode == 0, (result.stdout, result.stderr)
                 print(result.stdout, end="")
             else:
-                expected = 2 if name in {"skip-prepare-ack", "unpin-before-frame-retirement"} else 1
+                expected = 2 if name in {"claim-does-not-pin", "reject-completed-full-tail", "unpin-before-frame-retirement"} else 1
                 assert result.returncode == expected and "FAIL mode=" in result.stderr, (
                     name, result.returncode, result.stdout, result.stderr)
                 print(f"mutation detected: {name}")

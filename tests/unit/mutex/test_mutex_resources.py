@@ -43,6 +43,7 @@ def production():
     code += definition(mutex, "static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)")
     code += definition(read_source(ROOT / "kernel_module/kd_mutex_local.c"),
                        "void kd_mutex_init(struct kd_mutex *lock)")
+    code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
     for marker in (
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
@@ -140,12 +141,12 @@ def main():
             "WRITE_ONCE(shadow->node_slots, slots);",
         ),
         "queue-prevents-preemption": (
-            "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)\n{\n\tpreempt_enable();",
-            "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)\n{",
+            "KD_MUTEX_PIN_INITIAL_FINISH(false);\n\tpreempt_enable();",
+            "KD_MUTEX_PIN_INITIAL_FINISH(false);",
         ),
         "poll-returns-before-publication": (
-            "if (state != KD_MUTEX_WAIT)",
-            "if (true)",
+            "if (!state) {",
+            "if (true) {",
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
@@ -233,8 +234,7 @@ def main():
                 [str(binary)], capture_output=True, text=True, timeout=15, check=False
             )
             if mutation:
-                expected_code, expected_message = ((2, "BUG line") if
-                    name == "poll-returns-before-publication" else (1, "FAIL line"))
+                expected_code, expected_message = (1, "FAIL line")
                 assert result.returncode == expected_code and expected_message in result.stderr, (
                     name,
                     result.returncode,

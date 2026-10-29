@@ -1,7 +1,7 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch carries the bounded selected-group candidate
+delegation waiters. This branch carries the long-spin READY candidate
 below; its VM correctness and performance gates are pending. New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -197,120 +197,122 @@ outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
 
-### Bounded selected-group candidate (October 29)
+### Long-spin READY candidate (October 29)
 
-This source-only candidate starts from `1c86d6d1`, including the corrected single
-native-acquisition custody event. The user approved a small group of immediately
-selected requests after the strict single-request candidate
+This isolated implementation starts from
+`4a46795e3f052282a5a0593f4cb85cf8e5901a05`. The latest user direction supersedes
+immediate preemptible queue publication: spend a long initial interval spinning
+pinned, check scheduling only after its budget expires, and admit a larger ready
+cohort without polling origin responses inside ordinary proxy execution. More
+than 99% finishing that initial interval and no nano regression are measurement
+targets. Neither follows from choosing a large threshold. VM correctness,
+context restoration, emitted-code and performance validation remain pending.
+
+The finite initial budget is `KDLOCK_MUTEX_SPIN_BUDGET`, default 65,536 PAUSE
+iterations. A small build override supports forced expiry tests; it is not a
+wall-clock duration. `mutex_spin_budget` and `mutex_ready_window` module metadata
+record the compiled budget and the eight-request claim limit. Physical OSQ still
+orders acquisition of the real mutex, with its own owner-running, scheduling,
+cancellation and sleeping-waiter logic. This delegation change does not alter
+that independent membership or add a parked-producer sleep/wake protocol.
+
+| Notification state | Meaning and permitted transition |
+| --- | --- |
+| `KD_MUTEX_QUEUE_INIT` | Initialized, published but not proxy-ready; a private head may schedule only after leaving this state for WAIT. |
+| `KD_MUTEX_PROXY_READY` | Origin is preemption-disabled and its packet, original stack and GS state are quiescent for proxy access. |
+| `KD_MUTEX_PROXY_CLAIMED` | Executor won the single READY-to-CLAIMED CAS; origin cannot drop its pin or change this state. |
+| `KD_MUTEX_WAIT` | Withdrawn/unready; no READY rearm in this candidate. The migration pin and reserved node remain live. |
+| `0` | Exact completed/native/head result; the origin returns with its expected one preemption pin. |
+
+After queue/count/link publication finishes on the reserved shadow stack,
+`kd_mutex_wait_for_result()` CASes INIT to READY once. Expiry checks
+`need_resched()` only after the initial budget reaches zero. If scheduling is
+needed, its READY-to-WAIT CAS competes with the executor's READY-to-CLAIMED CAS.
+Only a successful withdrawal permits preemption enable. A claim winner keeps
+the origin pinned through completion or explicit cancellation. A spent budget
+never resets, and losing withdrawal to result zero cannot overwrite that result.
+A withdrawn origin remains runnable and preemptible, polling with the existing
+`cond_resched()` path until native head/result handoff. This is scheduling, not
+parking. No kernel wait-list or wake protocol was added.
+
+[`pin_window.inc`](../../kernel_module/mutex/pin_window.inc) retains up to eight
+exact `{node, count_seq}` descriptors on the combiner stack. It rolls forward
+continuously, admitting current plus up to seven consecutive linked ABI2 MINIMAL
+requests with the same entry and NUMA locality. Admission performs one nonblocking
+READY-to-CLAIMED CAS. An unavailable future limits refill; an unavailable current
+uses unstarted native handoff. It never waits to fill eight slots. Current's exact
+CLAIMED/lock/generation checks remain; no ACK loop or origin response is needed.
+Distinct CPU, same-CPU predecessor, remaining total/local cap and deferred-prefix
+rules stay in force. Eight bounds claimed descriptors, not the number of origins
+still pinned during their initial grace periods. Mutex/node sizes remain 32/320
+bytes; the four reserved slots per CPU are independent of this cohort limit.
+
+Terminal ABI2 delegation is retained. Ordinary completion tries queue retirement
+without waiting: use the known/acquire-loaded successor, or try the exact terminal
+tail CAS once. If a racing publisher owns a missing link, the completed body ends
+the execution loop immediately. Cold post-loop cleanup retains its CLAIMED
+descriptor, completed packet (COMPLETE or FULL), reserved node, physical owner
+and batch source lease
+until that link arrives. It then retires publication, removes the descriptor and
+publishes the one completion wake before handing off the retained successor. It
+never cancels the executed current to WAIT, replays its body, or wakes a node with
+an outstanding publisher. The two-party role-exchange path can still proxy C as
+a terminal request. The total and locality limits remain 1024/1024; deferred
+handoff rules stay unchanged. Exceptional/native ownership and link retirement
+can still wait outside ordinary ready-body execution.
+
+Before FULL dispatcher entry, generic service, native handoff, early outer
+release or role exchange, remove future exact descriptors and release-store
+WAIT. The origin cannot withdraw CLAIMED concurrently and never rearms WAIT, so
+cancellation requires no response ACK. The existing code does not wait for the
+origin's actual `preempt_enable()` instruction; publication tells it to unpin.
+Current remains CLAIMED through its real frame retirement or native publication.
+Descriptor removal precedes result zero, and no later access may use a recycled
+node. Source OPEN/image checks, actual physical owners, unlock ACKs, immutable
+image leases and trusted-source policy remain unchanged.
+
+Role exchange republishes C as INIT while its old frame is live. After real
+custody pickup, old-frame retirement and old batch source release, C publishes
+READY before releasing W's separate `custody.ready` barrier. Thus W cannot use C
+as an origin while C still owns that old frame. If future cancellation reaches C
+before its wait-loop entry, the separate INIT/WAIT states prevent resurrection.
+C may still be proxied as the sole terminal request; a delayed successor only
+ends that execution round after its body completes. FULL recovery preserves the
+existing native/control semantics and is not a translation admission rejection.
+
+### Optional READY diagnostics and prior experiments
+
+Mode 0 compiles observations out. Mode 1 emits batch schema 4, adding the
+explicit `delayed_tail` cold boundary; historical schemas 2 and 3 remain distinct.
+Its record remains 384 bytes by deriving `unclassified` from finished batches
+minus the sum of all stored classified exit bins at the quiescent getter. A
+missing classification stays visible as a nonzero gap; excess classifications
+or arithmetic overflow produce a nonzero failure sentinel. Mode 1 loadability
+remains a separate VM check. Optional mode 2 now emits schema 2 with window eight, the initial spin budget, ready claims,
+retired/cancelled claims, refill stop reasons, occupancy and FULL/drain counts.
+Origin observations merge once per actual delegation wait episode: retained or
+dropped initial pin, completion within budget, budget expiry, scheduling checks,
+successful withdrawal and forced cancellation. `initial_budget_completed /
+wait_episodes` measures the within-budget fraction; retained-pin fraction can
+also include post-budget completion and must be reported separately. Uncontended
+acquisitions are not in either denominator. Claims are not returned JIT bodies.
+
+The diagnostic storage remains dynamically preallocated per CPU and freed after
+exact drain, serialized with parameter reads. The earlier static 7984-byte
+per-CPU allocation failure remains a preparation failure; ordinary storage was
+7600 bytes. Schema 1 REQUEST/ACK/TSC records retain their historical meaning.
+Nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` is refused here because READY claims have no
+ACK wait to sample. All instrumented measurements are unscored, and none of
+these observations authorizes ownership or lifetime transitions.
+
+The earlier strict single-request experiment
 `658b918a05cb930d52ccf7307b8d44d54c6d6265` lost 42–54% at measured contended points.
-The earlier timing result remains rejected evidence; no gain or parity has been
-measured for this window.
-
-[`pin_window.inc`](../../kernel_module/mutex/pin_window.inc) keeps at most four
-exact `{node, count_seq}` descriptors on the combiner's stack. Queue reservation
-retains node storage; the independent batch source lease retains executable text.
-Neither changes the 32-byte mutex or 320-byte node layout. The window includes
-current plus up to three consecutive, fully published ABI2 MINIMAL requests with
-the same entry IP and local NUMA identity. It stops at another entry/ABI/packet,
-an executor-CPU or duplicate-origin-CPU request, a missing link, or the remaining
-batch budget. An existing deferred prefix is untouched: lookahead stops before
-a terminal successor or the locality count boundary that would rejoin/hand off
-that prefix. A first deferral after the locality boundary clamps selection to
-current, avoiding unsigned budget underflow. It does not perform NUMA selection ahead of
-the existing queue loop. Every current image is rechecked before execution.
-The total and locality limits remain 1024/1024.
-
-The origin stays migration-disabled while its slot is reserved, but a merely
-queued `KD_MUTEX_WAIT` task can schedule. The combiner release-publishes
-`KD_MUTEX_PROXY_REQUEST`; the selected origin disables preemption and
-release-publishes `KD_MUTEX_PROXY_PINNED`. The executor acquire-observes that ACK
-before delegated stack loads/stores or GS execution. Only stable published
-metadata and private executor frame preparation overlap the handshake. Existing
-successor `PREFETCHW` hints may touch still-reserved stack cache lines before ACK;
-they do not read architectural stack values. Legacy stack decoding waits for its
-single current ACK before decoding; generic/FULL paths select only current.
-
-After each ordinary completion, the exact descriptor is removed before the
-result wake permits node reuse. Remaining immediate requests can stay selected
-and the window can refill. A non-complete short-wrapper return first acknowledges
-and releases every future selection **before** calling the dispatcher, which may
-sleep, execute a known service or hand execution to an origin. Generic setup,
-early outer release, native handoff, role exchange, refusal and final queue
-handoff obey the same boundary. Current remains pinned through its actual frame
-retirement or native publication. Role exchange moves no window descriptors:
-W receives the existing node/source custody, and C requeues its own node as WAIT.
-W's later after-body combiner starts a new independent window.
-
-Cancellation waits for every outstanding REQUEST to become PINNED before
-publishing WAIT. It never overwrites an unacknowledged request, which could race
-a late ACK. After WAIT, an origin can unpin or acknowledge a new selection; an
-immediate head result still returns with the caller's expected one pin. Four
-bounds outstanding selection descriptors, not the time to receive an ACK or the
-number of CPUs momentarily finishing previously completed results. Same-CPU
-refusal and reserved local predecessor checks remain. This is not an
-oversubscription or fairness redesign, and arbitrary Native sleeping locks or
-KD rwsem reads in a custody suffix retain the existing unsupported context limit.
-
-Validation remains pending in the VM. Source-derived fixtures cover the real
-origin wait/ACK/reselection loop, bounded refill and late cancellation, exact
-identities and post-wake reuse, real combiner terminal/deferred/cap paths, failed
-private preparation, FULL dispatcher entry with future pins drained, native and
-early-outer paths, and actual queued custody transfer with a delayed future ACK.
-Mutation checks retain the ownership/duplicate-acquisition BUG probes. Required
-VM checks are basic plus `test_mutex_proxy_pin`, `test_mutex_pin_window`,
-`test_mutex_resources`, `test_mutex_outer_progress`, `test_mutex_terminal`,
-`test_mutex_policy`, `test_mutex_custody`, `test_mutex_custody_acquire`,
-`test_mutex_batch_diag`, and the existing mixed/frame/source-lifetime checks.
-Then run the five scoped role-exchange live cases and matched nano points with
-identical workloads, call shells, topology and instrumentation. Source-only
-fixtures do not establish scheduler progress, actual JIT returns or performance.
-
-The separate ring candidate starts from `6b790cfd28d1e4cf8c95ff82e2f49bd4e791ab99`.
-The frozen linear-window provider actually emits an external `memmove` for every
-completion that retains successors, plus out-of-line selection and refill calls
-with return-thunk epilogues. These are verified emitted costs, not proof of the
-measured throughput loss. The ring keeps the same four exact descriptors, advances
-an invocation-private head, and clears each consumed physical slot before wake.
-Reverse cancellation clears tail slots while preserving current. Hot descriptor
-helpers explicitly inline; frame, stack-switch and ownership boundaries retain
-their existing ABI. No ACK, selection, source or delegation limit changes.
-Fixtures cover every starting head, three full ring turns, empty reuse, reverse
-cancellation, wrapped native/early release, and queued custody transfer at every
-head. The composed actual `kd_mutex_execute_cs` FULL-resume fixture seeds its
-private batch initializer with every head while retaining the real helper and
-dispatch boundaries; body execution is substituted. These are protocol fixtures,
-not generated JIT or scheduler evidence. Build, emitted-code verification and
-matched timing remain pending for this candidate; no gain is claimed and no
-diagnostic counter is added.
-
-The separate diagnostic candidate adds `KDLOCK_MUTEX_DIAGNOSTICS=2` on this ring
-baseline. Mode 2 keeps one bounded dynamic per-CPU record, allocated before
-caller admission and freed after exact drain. Its first static-storage version
-failed module loading before provider initialization: the loader could not reserve
-7984 bytes aligned to 128, while the ordinary 7600-byte provider loaded. That
-preparation failure is preserved; no runtime or timing result came from it.
-The focused fix moves mode 2 observations and its optional sampling ordinal to
-`alloc_percpu`; mode 1 remains unchanged. Allocation failure unwinds the already
-initialized local runtime, and later initialization failure frees this storage.
-The existing kernel parameter mutex serializes the getter with publication and
-final detach; getters before initialization or after detach return `-ENODEV`.
-Invocation-local counts merge only at the existing finished-batch boundaries;
-the default build removes observations, their storage, and their node reads. Mode 2 records selection occupancy, exact requested/consumed/cancelled
-notification lifetimes, selection stop reasons, drain calls, and current versus
-cancellation ACK polling. Consumed pins include native and role-transfer result
-publication; they are not returned JIT bodies. `full_resumes` counts actual
-`kd_exe_mutex_batch_resume` calls, including checked pre-entry refusals.
-
-Optional `KDLOCK_MUTEX_PIN_TSC_SHIFT=6` samples one in 64 current ACK waits using
-a diagnostic CPU-local ordinal. It includes the first acquire load even when that
-load is already PINNED. The authenticated Linux 7 `asm/tsc.h` defines
-`rdtsc_ordered()` without a compiler memory clobber or following load fence, so
-sample timestamps add LFENCE and compiler memory barriers on both sides. Sampled
-TSC deltas include serialization overhead and interruptions; they cannot alone
-attribute latency to cache coherence. The original migration pin remains intact.
-Sampling defaults off, and both sampled and unsampled diagnostics remain unscored.
-No count replaces exact ownership, PINNED ACK, source leases or final drain.
-Build, fixture and live validation remain pending for this source candidate.
+The four-request linear window from `1c86d6d1`, ring follow-up from
+`6b790cfd28d1e4cf8c95ff82e2f49bd4e791ab99`, and their schema 1 diagnostics remain
+separate experiments. The ring removed emitted descriptor `memmove` and outlined
+hot pin helpers; that does not establish parity for this READY implementation.
+Its ordinary prefetch remains the baseline successor hint; separate prefetch
+ablations are not folded into this protocol change.
 
 ### Unified lock/unlock protocol
 
@@ -356,8 +358,9 @@ kd_mutex_lock(A):
             initialize MINIMAL packet, task/GS identity and independent links
             exchange delegation_tail; record this exact counted interval
             if there is a predecessor:
-                publish predecessor.next; enable preemption while unselected
-                acknowledge a selected pin before proxy execution
+                publish predecessor.next, then INIT->READY while pinned/quiescent
+                spin for the initial budget; only then check scheduling
+                claim races withdrawal; withdrawn waiters never rearm READY
                 poll node.locked with acquire ordering; return with one pin
                 if native_resume:
                     retire counted interval; preserve FULL before node reuse
@@ -391,12 +394,16 @@ service_one_queued_request(node):
     require the exact physical owner and a retained source lease
     if node has no linked successor and is not ABI2 MINIMAL:
         leave it uncompleted for the next queue head
+    claim READY with one CAS, or leave unstarted for native head handoff
     bind a checked frame, its lock ledger and an immutable image
     if pre-body admission refuses:
         leave the original request uncompleted for handoff
     invoke the checked body boundary once
     if the batch wrapper returns COMPLETE:
-        retire completed body state; retire queue links
+        retire completed body state; try queue retirement without waiting
+        if a racing publisher owns the missing terminal link:
+            end the ordinary loop; retain claim/node/source in cold cleanup
+            finish link retirement without replaying or cancelling this body
         set completed; release-store node.locked = 0
     else if the wrapper reports ENTRY_REFUSED:
         validate the pristine MINIMAL state and absence of body progress
@@ -445,7 +452,7 @@ flowchart TD
     R -->|no| GW["Retain routing reference; wait for gate; acquire physically"]
     GW --> RS["Restore scheduler state"]
     RS --> B
-    R -->|yes| Q["Publish packet and link; queue preemptibly; ACK selected pin"]
+    R -->|yes| Q["Publish READY while pinned; claim races budget-expiry withdrawal"]
     Q --> W{"Published result"}
     W -->|completed| C["Retire node; resume after unlock"]
     W -->|native suffix| S["Retire node; restore scheduler state; resume exact FULL state"]
@@ -840,7 +847,7 @@ unload frees preallocated contexts/stacks; no forced context release is used.
 
 ## Scope and evidence
 
-The maintained baseline pins published waiters; the bounded selected-group
+The maintained baseline pins published waiters; the long-spin READY
 candidate above remains unqualified. Both retain bounded NUMA queue grouping. Stack
 allocation, request selection and KD physical ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does

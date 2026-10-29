@@ -20,6 +20,9 @@ KDLOCK_MUTEX_BATCH ?= 1024
 KDLOCK_MUTEX_NUMA_BOUNDARY ?= 1024
 ccflags-y += -DKDLOCK_MUTEX_BATCH=$(KDLOCK_MUTEX_BATCH)
 ccflags-y += -DKDLOCK_MUTEX_NUMA_BOUNDARY=$(KDLOCK_MUTEX_NUMA_BOUNDARY)
+# Initial delegated-waiter pin budget; a small override forces expiry tests.
+KDLOCK_MUTEX_SPIN_BUDGET ?= 65536
+ccflags-y += -DKDLOCK_MUTEX_SPIN_BUDGET=$(KDLOCK_MUTEX_SPIN_BUDGET)
 # Optional observations are compiled out of ordinary timing builds.
 KDLOCK_MUTEX_DIAGNOSTICS ?= 0
 ccflags-y += -DKDLOCK_MUTEX_DIAGNOSTICS=$(KDLOCK_MUTEX_DIAGNOSTICS)

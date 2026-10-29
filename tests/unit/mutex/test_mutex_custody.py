@@ -31,11 +31,11 @@ def main():
     types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "PIN_WINDOW"))) + "\n"
     types += definition(mutex, "enum kd_mutex_batch_result {") + ";\n"
     types += definition(mutex, "struct kd_mutex_batch {") + ";\n"
-    queue = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
+    queue = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
     queue += "static struct kd_mutex_node *\n" + definition(mutex, "kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)") + "\n"
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
     queue += "static __always_inline unsigned int\n" + definition(mutex, "kd_mutex_batch_pin_slot(struct kd_mutex_batch *batch, unsigned int offset)") + "\n"
-    for marker in ("static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+    for marker in ("static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
                    "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,",
                    "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)",
                    "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):

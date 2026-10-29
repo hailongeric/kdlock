@@ -26,9 +26,6 @@ static void diag_check_zero(void)
     CHECK(diag_storage_bytes==sizeof(*kd_mutex_pin_cpus));
     for(size_t i=0;i<diag_storage_bytes;i++)
         CHECK(((const unsigned char *)diag_live_storage)[i]==0);
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-    CHECK(!kd_mutex_pin_sample_seq);
-#endif
 }
 #elif defined(PIN_DIAG_FIXTURE_SETUP)
     char lifecycle_json[PAGE_SIZE];
@@ -57,79 +54,63 @@ static void diag_check_zero(void)
     for(unsigned int i=0;i<KD_MUTEX_PIN_REASON_COUNT;i++)
         reason_sum+=kd_mutex_pin_totals.refill_stop[i];
     CHECK(kd_mutex_pin_totals.selections==before_sum && before_sum==after_sum && after_sum==reason_sum);
-    CHECK(kd_mutex_pin_totals.requested==kd_mutex_pin_totals.consumed+kd_mutex_pin_totals.cancelled);
-    CHECK(kd_mutex_pin_totals.cancelled==kd_mutex_pin_totals.cancel_ack_immediate);
-    CHECK(!kd_mutex_pin_totals.current_ack_stalled && !kd_mutex_pin_totals.cancel_ack_stalled);
-    CHECK(kd_mutex_pin_totals.current_ack_immediate==kd_mutex_pin_totals.selections);
+    CHECK(kd_mutex_pin_totals.claims==kd_mutex_pin_totals.retired_claims+kd_mutex_pin_totals.cancelled_claims);
     CHECK(kd_mutex_pin_totals.batches==kd_mutex_combiner_count);
-    CHECK(kd_mutex_pin_totals.occupancy_after[4]>0 && kd_mutex_pin_totals.occupancy_before[3]>0);
+    CHECK(kd_mutex_pin_totals.occupancy_after[8]>0 && kd_mutex_pin_totals.occupancy_before[7]>0);
+    /* Real accumulator/merge code, distinct from the actual wait-helper
+     * interleavings exercised by the companion generated origin fixture. */
+    { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_INITIAL_FINISH(true); }
+    { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_BUDGET_EXPIRED();
+      KD_MUTEX_PIN_EXPIRY_CHECK();KD_MUTEX_PIN_EXPIRY_CHECK();
+      KD_MUTEX_PIN_WITHDRAW();KD_MUTEX_PIN_INITIAL_FINISH(false); }
+    { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_FORCED_CANCEL();KD_MUTEX_PIN_INITIAL_FINISH(false); }
+    { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_BUDGET_EXPIRED();
+      KD_MUTEX_PIN_EXPIRY_CHECK();KD_MUTEX_PIN_INITIAL_FINISH(true); }
+    CHECK(kd_mutex_pin_totals.wait_episodes==4);
+    CHECK(kd_mutex_pin_totals.initial_pin_retained==2 && kd_mutex_pin_totals.initial_pin_dropped==2);
+    CHECK(kd_mutex_pin_totals.initial_budget_completed==1 && kd_mutex_pin_totals.budget_expired_episodes==2);
+    CHECK(kd_mutex_pin_totals.expiry_checks==3 && kd_mutex_pin_totals.withdrawals==1);
+    CHECK(kd_mutex_pin_totals.forced_cancellations==1);
     CHECK(diag_stats_get(pin_json)>0);printf("PIN %s",pin_json);
 
-    /* Each stop has one invocation receipt; pending ACK cancellation settles
-     * selections before any batch merge. Selection metadata is never ownership. */
+    /* Each stop has one selection receipt. Terminal requests remain eligible;
+     * no-link stops the refill without waiting for another producer. */
     for(unsigned int stop=0;stop<KD_MUTEX_PIN_REASON_COUNT;stop++) {
-        struct kd_mutex_batch observed={.lock=&lock,.numa_node=0,.pin_budget=4};
+        struct kd_mutex_batch observed={.lock=&lock,.numa_node=0,.pin_budget=KD_MUTEX_PIN_WINDOW};
         bool ahead=true,accepted;
-        reset(stop==KD_MUTEX_PIN_NO_LINK?1:stop==KD_MUTEX_PIN_DEFERRED_TAIL?2:8);
+        reset(stop==KD_MUTEX_PIN_NO_LINK?1:stop==KD_MUTEX_PIN_DEFERRED_TAIL?2:12);
         switch(stop) {
         case KD_MUTEX_PIN_SELF_CURRENT: nodes[0].tail=65536U<<4;break;
         case KD_MUTEX_PIN_SINGLE: ahead=false;break;
         case KD_MUTEX_PIN_BUDGET: observed.pin_budget=2;break;
         case KD_MUTEX_PIN_WINDOW_FULL: break;
         case KD_MUTEX_PIN_NO_LINK: break;
+        case KD_MUTEX_PIN_DEFERRED_TAIL: observed.deferred_head=&nodes[11];break;
         case KD_MUTEX_PIN_ENTRY: nodes[1].regs.ip=0xbad;break;
         case KD_MUTEX_PIN_NUMA: nodes[1].numa_node=1;break;
-        case KD_MUTEX_PIN_DEFERRED_TAIL: observed.deferred_head=&nodes[7];break;
         case KD_MUTEX_PIN_DUPLICATE_CPU: nodes[1].tail=nodes[0].tail;break;
         case KD_MUTEX_PIN_SELF_FUTURE: nodes[1].tail=65536U<<4;break;
+        case KD_MUTEX_PIN_CURRENT_NOT_READY: nodes[0].locked=KD_MUTEX_WAIT;break;
+        case KD_MUTEX_PIN_FUTURE_NOT_READY: nodes[1].locked=KD_MUTEX_WAIT;break;
         default: CHECK(false);
         }
         accepted=kd_mutex_batch_pin_select(&observed,&nodes[0],ahead);
-        CHECK(accepted==(stop!=KD_MUTEX_PIN_SELF_CURRENT));
+        CHECK(accepted==(stop!=KD_MUTEX_PIN_SELF_CURRENT && stop!=KD_MUTEX_PIN_CURRENT_NOT_READY));
         CHECK(observed.diag.selections==1 && observed.diag.occupancy_before[0]==1);
         CHECK(observed.diag.refill_stop[stop]==1);
         CHECK(observed.diag.occupancy_after[observed.nr_pins]==1);
-        CHECK(observed.diag.requested==observed.nr_pins);
+        CHECK(observed.diag.claims==observed.nr_pins && !polls);
         kd_mutex_batch_unpin(&observed,false);
-        CHECK(!observed.nr_pins && observed.diag.requested==observed.diag.cancelled);
-        CHECK(observed.diag.cancel_ack_immediate==observed.diag.cancelled);
+        CHECK(!observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);
     }
 
-    /* Delayed current and cancellation ACKs count PAUSE iterations separately.
-     * No helper reads an origin packet or changes its notification protocol. */
-    struct kd_mutex_pin_diag wait_diag={0};
-    reset(1);nodes[0].locked=KD_MUTEX_PROXY_PINNED;
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-    kd_mutex_pin_sample_seq=63;
-#endif
-    kd_mutex_pin_diag_wait(&wait_diag,&nodes[0],false);
-    CHECK(wait_diag.current_ack_immediate==1 && !wait_diag.current_ack_loops);
-    for(unsigned int cancel=0;cancel<2;cancel++) {
-        nodes[0].locked=KD_MUTEX_PROXY_REQUEST;diag_ack_node=&nodes[0];diag_ack_polls=0;
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-        if(!cancel)kd_mutex_pin_sample_seq=63;
-#endif
-        kd_mutex_pin_diag_wait(&wait_diag,&nodes[0],cancel);
-        CHECK(!diag_ack_node && diag_ack_polls==3);
-    }
-    CHECK(wait_diag.current_ack_stalled==1 && wait_diag.current_ack_loops==3);
-    CHECK(wait_diag.cancel_ack_stalled==1 && wait_diag.cancel_ack_loops==3);
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-    CHECK(wait_diag.tsc_samples==2 && wait_diag.tsc_cycles==14);
-#else
-    CHECK(!wait_diag.tsc_samples && !wait_diag.tsc_cycles);
-#endif
     /* Maximal numeric values still serialize as complete JSON within sysfs. */
     memset(&kd_mutex_pin_totals,0xff,sizeof(kd_mutex_pin_totals));
     int pin_length=diag_stats_get(pin_json);
     CHECK(pin_length>0 && pin_length<(int)sizeof(pin_json));printf("PINMAX %s",pin_json);
 
     /* A final getter cannot outlive detached storage. Reinitialization must
-     * discard every old total and optional sampling ordinal, even if the
-     * allocator reuses the same address. No pointer equality implies reuse. */
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-    kd_mutex_pin_sample_seq=UINT64_MAX;
-#endif
+     * discard every old total, even if the allocator reuses the same address. No pointer equality implies reuse. */
     KD_MUTEX_PIN_DIAG_EXIT();
     CHECK(!kd_mutex_pin_cpus && !diag_live_storage && !diag_params_locked);
     CHECK(diag_frees==1 && diag_allocations==1);
@@ -143,13 +124,6 @@ static void diag_check_zero(void)
     CHECK(diag_alloc_attempts==3 && diag_allocations==2 && diag_frees==1);
     diag_check_zero();
     CHECK(diag_stats_get(pin_json)>0);printf("PINRESET %s",pin_json);
-#if KDLOCK_MUTEX_PIN_TSC_SHIFT
-    struct kd_mutex_pin_diag restarted_wait={0};
-    nodes[0].locked=KD_MUTEX_PROXY_PINNED;
-    kd_mutex_pin_diag_wait(&restarted_wait,&nodes[0],false);
-    CHECK(kd_mutex_pin_sample_seq==1 && restarted_wait.current_ack_immediate==1);
-    CHECK(!restarted_wait.tsc_samples && !restarted_wait.tsc_cycles);
-#endif
     KD_MUTEX_PIN_DIAG_EXIT();
     CHECK(!kd_mutex_pin_cpus && !diag_live_storage && !diag_params_locked);
     CHECK(diag_allocations==2 && diag_frees==2);

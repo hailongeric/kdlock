@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import threading
@@ -14,7 +15,23 @@ import bench_runtime as rt
 import kernel_identity
 
 MODULE = 'kd_mutex_proxy_pin_probe'
-PREFIX = 'kd_mutex_proxy_pin: queued=1 scheduled=1 effects=4 warm=400000 idle=1 result=0'
+PREFIX = 'kd_mutex_proxy_pin: queued=1 scheduled=1 effects=4 warm=400000 idle=1 context=1 result=0'
+CONTEXT = re.compile(r'kd_mutex_proxy_context: role=(\d+) phase=(\d+) cpu=(\d+) '
+                     r'preempt=(\d+) migration=(\d+) irq=(\d+) valid=(\d+)')
+
+
+def contexts(messages):
+    fields = ('role', 'phase', 'cpu', 'preempt', 'migration', 'irq', 'valid')
+    rows = [dict(zip(fields, map(int, match))) for match in CONTEXT.findall(messages)]
+    expected = {(role, phase) for role in range(5) for phase in range(3)
+                if (role, phase) != (4, 1)}
+    rt.require(len(rows) == len(expected) and
+               {(row['role'], row['phase']) for row in rows} == expected,
+               'missing or duplicate joined-task context receipt')
+    rt.require(all(row['valid'] == 1 and not row['preempt'] and not row['migration'] and
+                   not row['irq'] and row['cpu'] == (3 if row['role'] == 4 else row['role'])
+                   for row in rows), 'task context or CPU placement was not restored')
+    return rows
 
 
 def sources(root):
@@ -100,6 +117,11 @@ def main():
             rt.command(['make', '-C', binary.parent, f'KDIR={args.kernel_source}',
                         'W=1', 'KDLOCK_SELFTEST=0', 'UBSAN_SANITIZE=n'],
                        out / f'build-{name}.log', timeout=180)
+        result['ready_policy'] = {}
+        for field, expected in (('mutex_spin_budget', '65536'), ('mutex_ready_window', '8')):
+            value = rt.command(['modinfo', '-F', field, provider], out / (field + '.txt')).strip()
+            rt.require(value == expected, 'unexpected ready-spin policy: ' + field)
+            result['ready_policy'][field] = int(value)
         rt.require(sources(ROOT) == sources(source) == frozen, 'source inputs changed')
         binaries = {str(path): rt.digest(path) for path in (provider, payload)}
         rt.write_json(out / 'binary-sha256.json', binaries)
@@ -119,6 +141,7 @@ def main():
             stop.wait(0.01)
         check_log()
         rt.require(messages.count(PREFIX) == 1, 'missing exact scheduling/drain receipt')
+        result['contexts'] = contexts(messages)
         rt.command(['rmmod', MODULE], out / 'unload-probe.log')
         check_log()
         retired = json.loads(rt.command(
