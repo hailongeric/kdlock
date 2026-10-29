@@ -28,7 +28,7 @@ def main():
     types += definition(read_source(ROOT / "include/kd_spin_entry.h"), "struct kd_spin_ref {") + ";\n"
     for name in ("include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source(ROOT / name)) + "\n"
-    types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "PIN_WINDOW"))) + "\n"
+    types += "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_") and any(word in line for word in ("WAIT", "PROXY", "QUEUE_INIT", "PIN_WINDOW"))) + "\n"
     types += definition(mutex, "enum kd_mutex_batch_result {") + ";\n"
     types += definition(mutex, "struct kd_mutex_batch {") + ";\n"
     queue = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"

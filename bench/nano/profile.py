@@ -272,7 +272,10 @@ def validate_pin(snapshot, policy=None, tsc_sample_shift=0, *, initial_spin_budg
             ('wait_episodes', 'initial_pin_retained', 'initial_pin_dropped'))
         completed, expired = snapshot['initial_budget_completed'], snapshot['budget_expired_episodes']
         require(episodes == retained + dropped, 'initial pin episode accounting differs')
-        require(completed <= retained and retained - completed <= expired <= episodes - completed,
+        # Late retained episodes and successful withdrawals are disjoint;
+        # both exhausted the initial budget before their phase ended.
+        require(completed <= retained and
+                retained - completed + snapshot['withdrawals'] <= expired <= episodes - completed,
                 'initial spin budget subsets differ')
         require(snapshot['withdrawals'] <= min(dropped, expired, snapshot['expiry_checks']) and
                 snapshot['forced_cancellations'] <= dropped and

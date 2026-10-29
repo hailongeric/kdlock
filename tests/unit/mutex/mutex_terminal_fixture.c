@@ -60,7 +60,13 @@ static struct kd_mutex_batch *active_batch;
 static int refusal_at,native_at,early_at;
 static struct kd_mutex_node *delayed_from,*delayed_to;
 static bool kd_source_frame_get(void) { if(!source_open)return false;lease_gets++;leases++;return true; }
-static void kd_source_frame_put(void) { CHECK(leases==1);leases--;lease_puts++; }
+static void kd_source_frame_put(void)
+{
+    CHECK(leases==1);
+    /* The batch is local to the combiner. All observed queue accesses finish
+     * before its source lease is returned; retain no pointer beyond that edge. */
+    active_batch=NULL;leases--;lease_puts++;
+}
 static void cpu_relax(void);
 static u32 tail_cas(u32 *p,u32 old,u32 value)
 {
@@ -161,6 +167,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
 #include "loop.h"
 static void reset(unsigned int count)
 {
+    CHECK(!active_batch);
     memset(nodes,0,sizeof(nodes));memset(&lock,0,sizeof(lock));
     kd_mutex_gate_set(&lock,KD_MUTEX_GATE_COMBINER);lock.owner=current;
     source_open=true;delayed_link=new_head_after_cas=new_head_pending=false;
@@ -178,7 +185,7 @@ static void reset(unsigned int count)
 }
 static void finish(void)
 {
-    CHECK(!leases && lease_gets==lease_puts && lock.owner==current);
+    CHECK(!active_batch && !leases && lease_gets==lease_puts && lock.owner==current);
     CHECK(kd_mutex_gate_read(&lock)==1);
 }
 /* Deferral can first appear after the locality count has already been crossed.

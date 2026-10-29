@@ -450,6 +450,19 @@ class NanoPinSnapshotTests(unittest.TestCase):
             with self.subTest(group=group), self.assertRaises(ValueError):
                 profile.validate_pin(invalid)
 
+    def test_expired_episodes_cover_disjoint_retained_late_and_withdrawal_subsets(self):
+        # Seven retained waits include five before budget expiry; two additional
+        # waits withdrew. Those disjoint groups require at least four expiries.
+        valid = pin_snapshot()
+        self.assertEqual(valid['initial_pin_retained'] - valid['initial_budget_completed'], 2)
+        self.assertEqual(valid['withdrawals'], 2)
+        for expired in (2, 3):
+            with self.subTest(expired=expired), self.assertRaisesRegex(
+                    ValueError, 'initial spin budget subsets differ'):
+                profile.validate_pin(dict(valid, budget_expired_episodes=expired))
+        for expired in (4, 5):
+            profile.validate_pin(dict(valid, budget_expired_episodes=expired))
+
     def test_current_delta_rejects_counter_bin_reason_and_origin_resets(self):
         with self.assertRaises(ValueError):
             profile.pin_delta(pin_snapshot(2), pin_snapshot())
