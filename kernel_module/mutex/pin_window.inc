@@ -145,5 +145,22 @@ static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *bat
 		if (!kd_mutex_batch_pin_add(batch, next))
 			break;
 	}
+	/* The next refill is three requests beyond the ordinary successor hint.
+	 * While this owner retains the queue, a published forward link cannot
+	 * retire before our wake. Hint only that one node's metadata lines; do
+	 * not read its fields/stack, select it, or retain it across body execution.
+	 * Every admission, identity and WAIT check still runs on the next refill. */
+	if (batch->nr_pins == KD_MUTEX_PIN_WINDOW) {
+		struct kd_mutex_node *last = batch->pins[
+			kd_mutex_batch_pin_slot(batch, KD_MUTEX_PIN_WINDOW - 1)].node;
+
+		next = smp_load_acquire(&last->next);
+		if (next) {
+			prefetch(next);
+			prefetch(&next->entry_abi);
+			prefetch(&next->regs);
+			prefetch(&next->locked);
+		}
+	}
 	return true;
 }

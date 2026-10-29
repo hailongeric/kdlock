@@ -29,6 +29,7 @@ static struct kd_mutex_node nodes[NODE_COUNT];
 static struct kd_mutex_batch batch;
 static unsigned int checks, requests, acknowledgements, cancellations, completions;
 static unsigned int requested[NODE_COUNT], acked[NODE_COUNT], delayed[NODE_COUNT];
+static unsigned int hinted[NODE_COUNT], hint_calls;
 static bool poisoned[NODE_COUNT];
 static int polled, executor_cpu;
 static unsigned int start_head;
@@ -56,8 +57,35 @@ static void observe_read(const void *address)
 
  if (index < 0) return;
  CHECK(!poisoned[index]);
+ if (batch.nr_pins == KD_MUTEX_PIN_WINDOW) {
+  bool selected = false;
+
+  for (unsigned int i = 0; i < KD_MUTEX_PIN_WINDOW; i++)
+   selected |= batch.pins[i].node == &nodes[index];
+  CHECK(selected); /* A full window may hint, but never load a fifth node. */
+ }
  if (address == &nodes[index].locked) polled = index;
 }
+
+static void observe_prefetch(const void *address)
+{
+ int index = node_at(address);
+ unsigned int mask;
+ struct kd_mutex_node *last;
+
+ CHECK(batch.nr_pins == KD_MUTEX_PIN_WINDOW);
+ CHECK(index >= 0 && !poisoned[index]);
+ last = batch.pins[(batch.pin_head + KD_MUTEX_PIN_WINDOW - 1) % KD_MUTEX_PIN_WINDOW].node;
+ CHECK(last && last->next == &nodes[index]);
+ CHECK(!requested[index] && !acked[index] && nodes[index].locked == KD_MUTEX_WAIT);
+ if (address == &nodes[index]) mask = 1;
+ else if (address == &nodes[index].entry_abi) mask = 2;
+ else if (address == &nodes[index].regs) mask = 4;
+ else { CHECK(address == &nodes[index].locked); mask = 8; }
+ hinted[index] |= mask;
+ hint_calls++;
+}
+#define prefetch(address) observe_prefetch(address)
 
 static void descriptor_absent(struct kd_mutex_node *node)
 {
@@ -116,6 +144,8 @@ static void setup(void)
  memset(requested, 0, sizeof(requested));
  memset(acked, 0, sizeof(acked));
  memset(delayed, 0, sizeof(delayed));
+ memset(hinted, 0, sizeof(hinted));
+ hint_calls = 0;
  memset(poisoned, 0, sizeof(poisoned));
  requests = acknowledgements = cancellations = completions = 0;
  polled = -1;
@@ -257,6 +287,41 @@ static void cancellation(void)
  CHECK(requests == 5 && acknowledgements == 5 && completions == 1);
 }
 
+static void metadata_hints(void)
+{
+ setup();
+ /* Hints do not inspect the fifth node's ABI, origin stack or next link.
+  * A later real refill must still refuse this incompatible request. */
+ nodes[4].entry_abi = KD_ENTRY_ABI_LEGACY;
+ nodes[4].regs.sp = 1;
+ nodes[4].next = (void *)(uintptr_t)1;
+ CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
+ CHECK(hint_calls == 4 && hinted[4] == 15 && !requested[4]);
+ for (unsigned int i = 0; i < NODE_COUNT; i++)
+  CHECK(i == 4 || !hinted[i]);
+ consume(0);
+ CHECK(kd_mutex_batch_pin_select(&batch, &nodes[1], true));
+ CHECK(batch.nr_pins == 3 && hint_calls == 4 && !requested[4]);
+ kd_mutex_batch_unpin(&batch, false);
+ CHECK(!batch.nr_pins && requests == 4 && acknowledgements == 4);
+
+ setup();
+ nodes[3].next = NULL; /* Last selected publisher has no linked successor. */
+ CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
+ CHECK(batch.nr_pins == 4 && !hint_calls && !requested[4]);
+ nodes[3].next = &nodes[4]; /* Publication may arrive before the next hint. */
+ CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
+ CHECK(hint_calls == 4 && hinted[4] == 15 && !requested[4]);
+ kd_mutex_batch_unpin(&batch, false);
+
+ for (unsigned int limit = 1; limit < KD_MUTEX_PIN_WINDOW; limit++) {
+  setup(); batch.pin_budget = limit;
+  CHECK(kd_mutex_batch_pin_select(&batch, &nodes[0], true));
+  CHECK(batch.nr_pins == limit && !hint_calls);
+  kd_mutex_batch_unpin(&batch, false);
+ }
+}
+
 static void invalid_identity(const char *name)
 {
  setup();
@@ -293,7 +358,8 @@ int main(int argc, char **argv)
   bounded_refill();
   selection_boundaries();
   cancellation();
+  metadata_hints();
  }
- printf("PASS pin window: %u checks; bound4/three ring turns/all heads, exact current ACK, CPU/image/NUMA/deferred/cap boundaries, delayed cancellation and slot reuse\n", checks);
+ printf("PASS pin window: %u checks; bound4/three ring turns/all heads, exact current ACK, CPU/image/NUMA/deferred/cap boundaries, metadata-only next-refill hints, delayed cancellation and slot reuse\n", checks);
  return 0;
 }

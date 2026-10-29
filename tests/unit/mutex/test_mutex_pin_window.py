@@ -51,7 +51,9 @@ def main():
     assert remove_before_wait in unpin
     mutations = {
         "ignore-window-bound": (
-            "\t\tlimit = KD_MUTEX_PIN_WINDOW;", "\t\tlimit = batch->pin_budget;", "", 86),
+            # The full-window access observer now catches the fifth-node load
+            # before pin_add reaches its unchanged capacity BUG.
+            "\t\tlimit = KD_MUTEX_PIN_WINDOW;", "\t\tlimit = batch->pin_budget;", "", 1),
         "ignore-total-budget": (
             "unsigned int i, limit = batch->pin_budget;",
             "unsigned int i, limit = KD_MUTEX_PIN_WINDOW;", "", 1),
@@ -90,6 +92,19 @@ def main():
             "READ_ONCE(node->count_seq) != batch->pins[index].generation", "false", "generation", 1),
         "ignore-lock-identity": (
             "READ_ONCE(node->counted_lock) != batch->lock ||", "false ||", "wrong-lock", 1),
+        "hint-before-full-window": (
+            "if (batch->nr_pins == KD_MUTEX_PIN_WINDOW) {\n"
+            "\t\tstruct kd_mutex_node *last = batch->pins[\n"
+            "\t\t\tkd_mutex_batch_pin_slot(batch, KD_MUTEX_PIN_WINDOW - 1)].node;",
+            "if (batch->nr_pins) {\n"
+            "\t\tstruct kd_mutex_node *last = batch->pins[\n"
+            "\t\t\tkd_mutex_batch_pin_slot(batch, batch->nr_pins - 1)].node;", "", 1),
+        "hint-loads-unselected-packet": (
+            "\t\t\tprefetch(&next->regs);",
+            "\t\t\t(void)READ_ONCE(next->regs.ip);\n\t\t\tprefetch(&next->regs);", "", 1),
+        "hint-selects-fifth-request": (
+            "\t\t\tprefetch(next);",
+            "\t\t\t(void)kd_mutex_proxy_request(next);\n\t\t\tprefetch(next);", "", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kd-pin-window-") as directory:
         path = Path(directory)

@@ -33,6 +33,7 @@ struct list_head { struct list_head *next, *prev; };
 #define KD_EXE_NATIVE_DONE 7
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x, v) ((x) = (v))
+#define prefetch(p) ((void)(p))
 #define NUMA_AWARE 1
 #define KD_MUTEX_TAIL_CPU_OFFSET 4
 static int raw_smp_processor_id(void) { return 65535; }

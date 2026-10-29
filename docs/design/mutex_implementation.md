@@ -600,6 +600,20 @@ does not fetch the entire FULL packet on every minimal request. The pointer is q
 current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
+A separate source-only ablation based on `209f8b40` hints one more queued node
+after filling the four-request pin window. It acquire-loads the last selected
+node's published `next` link, then issues read prefetches for that successor's
+header, ABI, first register-packet and notification lines. The queue reservation
+keeps both nodes live until this owner wakes them. The hint reads no successor
+fields or caller stack, requests no fifth pin, retains no new pointer across the
+body, and changes no eligibility, exact identity or ACK check. A missing link
+simply produces no hint. This targets the next iteration's refill rather than
+the immediate successor's later execution. It changes neither the node layout
+nor the 1024/1024 limits. Static fixtures cover all ring heads, delayed link
+publication, an incompatible hinted successor, bounded selection and post-wake
+reuse; VM build, live execution and matched timing remain pending. No cache-miss
+reduction or throughput gain is established by the source change.
+
 The embedded gate uses a read before its acquire CAS. The phase and encoded tail
 occupy the last eight bytes; exact waiter records live in reserved nodes. Physical ownership
 can share that cacheline; native alignment also permits the object to straddle
