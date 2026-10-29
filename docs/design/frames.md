@@ -142,6 +142,12 @@ Ordinary CALL miss preserves the virtual CALL word and enters the original calle
 on the waiter. The remainder of that invocation stays native. Known controls and
 dispatcher services can resume JIT at validated registered continuations instead.
 Current ordinary callee misses do not authorize reentry after arbitrary native work.
+The planned [exact Native CALL boundaries](admission.md#planned-native-call-boundaries)
+reuse that forward-only lifetime: preserve the actual pending CALL and original
+task, retain every physical acquisition and source/frame lease through the final
+unlock ACK, and leave registry eligibility unchanged. They do not create a new
+frame-return bridge or let a Native object use the KD lock backend. Unknown
+ordinary calls continue to learn targets for future invocations.
 
 Native registration accepts only supported NONE/PENDING and distinct validated
 post-acquisition/STACK_CHANGED/remote COMPLETE tags. It verifies callee, token,
@@ -151,8 +157,8 @@ does not make every progressed error recoverable.
 A mutex ABI2 instruction marker has a separate checked boundary: the current
 instruction has not executed, earlier effects remain, and the original waiter
 continues at that exact address with current registers and arithmetic flags.
-The runtime checks the source opcode and active immutable image before disabling
-future delegation of the entry. It retains the existing physical-owner records,
+The runtime checks the source opcode and active immutable image without changing
+future eligibility of the entry. It retains the existing physical-owner records,
 source leases, unlock acknowledgements and native-frame references until their
 normal retirement. A marker does not release a held lock or replay the entry.
 The [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) specifies

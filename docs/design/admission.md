@@ -126,6 +126,44 @@ its return thunk changes arithmetic flags after restore. Configured support is
 not the same as an active runtime feature. Complete mitigation coverage of
 handwritten/generated returns remains separately unvalidated.
 
+## Planned Native CALL boundaries
+
+The next candidate adds a shared, finite manifest of exact Native lock and
+processor/task-context API symbols. It is a runtime continuation contract, not
+a reinstatement of checked source/value admission. The translator and provider
+resolve the same names independently. Missing symbols do not match, and unknown
+ordinary callees keep the existing learning path. Initial groups cover Native
+spin/rwlock, mutex and rwsem operations; scheduling, preemption, migration and
+IRQ/BH transitions; and explicit task-mm, user-access and TLB operations whose
+effect must remain on the original task. Each manifest group must explain its
+context obligation. Compiler clones, inlined instructions and unlisted helpers
+are outside an exact-symbol guarantee.
+
+A reached listed CALL retains its actual source return word and saved packet.
+The runtime independently checks its exact target, physical/frame scope, pending
+CALL stack bounds and source residency before returning it to the original
+waiter. That invocation runs the callee and remaining native suffix. The
+boundary does not invoke a Native API on a KD object, invalidate a ready image,
+request callee learning or return to JIT after arbitrary native work.
+
+Historical callee and indirect-target records must not import a listed body or
+keep its otherwise unreachable descendants as independent entry roots. Scope
+must follow real entry/CALL/known-indirect edges; alternate reachable branches
+remain translated. A previously learned indirect CALL may reach the same native
+stub, retaining its real CALL word. A fresh unresolved indirect transfer still
+needs its existing exact routing contract; a generic IJ error is not a native
+restart. Return routing and complete text for every emitted path remain required.
+
+The selected files/pipe bridges are per-object dispatchers. Their acquire and
+non-root unlock calls remain terminal because the object may be Native. Only the
+integration's exact outer-object/class unlock predicate may take precedence as
+a KD completion endpoint. No symbol-name canonicalization may convert an
+arbitrary Native inner lock into a KD control.
+
+This section is a docs-first implementation plan. Acceptance requires source-
+derived runtime checks, decoder/history/branch tests and a live repeated-path
+probe; no pass or wider Native API coverage follows from the plan.
+
 ## Checked spin pointer loads
 
 Pointer-load guards are optional checked-regression/historical behavior.
