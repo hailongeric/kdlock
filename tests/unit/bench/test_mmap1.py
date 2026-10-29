@@ -1,4 +1,5 @@
 """Focused unchanged-harness, lifetime and actual object receipt checks (VM only)."""
+import argparse
 import copy
 import importlib.util
 import json
@@ -40,6 +41,47 @@ def observed(model='threads'):
     snapshot = dict(abi=1, count=2, overflow=0, errors=0, stopped=1,
                     refs_acquired=2, refs_released=2, repeat_equal=True, records=records)
     return snapshot, session
+
+
+class KernelProfiles(unittest.TestCase):
+    def test_mmap1_selects_explicit_profiles_and_preserves_default(self):
+        parser=argparse.ArgumentParser()
+        bench.arguments(parser)
+        base=['--mode','native','--output','/tmp/out','--host-state','/tmp/host',
+              '--boot-id','boot','--host-reference','/tmp/reference','--host-reference-sha256','hash']
+        for variant in ('kdlock1',*bench.mm.platform.PROFILES):
+            argv=list(base)+['--kernel-variant',variant]
+            if variant.endswith('-kd'): argv[1]='kd'
+            args=parser.parse_args(argv)
+            with patch.object(bench.platform,'guest') as gate, \
+                 patch.object(Path,'read_text',return_value='kd_mmap='+('on' if args.mode=='kd' else 'off')):
+                bench.guest(args)
+                family=variant.rsplit('-',1)[0] if variant!='kdlock1' else variant
+                date='20261030' if family=='kdscope1' else '20261027'
+                self.assertEqual(args.kernel_source,Path('/mnt/kdlock-builds/linux-7.0.0-38-'+family+'/build'))
+                self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-'+date))
+                if variant=='kdlock1': gate.assert_called_once_with('boot')
+                else: gate.assert_called_once_with('boot',release='7.0.0-38-'+family)
+            args.mode='kd' if args.mode=='native' else 'native'
+            with patch.object(bench.platform,'guest') as gate:
+                with self.assertRaises(bench.rt.Failure): bench.guest(args)
+                gate.assert_not_called()
+        self.assertEqual(parser.parse_args(base).kernel_variant,'kdlock1')
+        args=parser.parse_args(base+['--kernel-variant','kdscope1-native',
+                                    '--kernel-source','/mnt/kdlock-builds/linux-7.0.0-38-kdmm1/build'])
+        with patch.object(bench.platform,'guest'),self.assertRaises(bench.rt.Failure): bench.guest(args)
+
+    def test_mmap1_binding_forwards_selected_variant(self):
+        args=argparse.Namespace(kernel_variant='kdscope1-kd',kernel_source=Path('/scope/build'),
+                               kernel_baseline=Path('/scope/bundle'),mode='kd',host_state=Path('/host'),
+                               boot_id='boot',host_reference=Path('/reference'),host_reference_sha256='hash')
+        captured=dict(schema=2,runtime_policy={'mmap_mode':'on'})
+        with patch.object(bench,'guest'),patch.object(bench.common,'host_check',return_value={}), \
+             patch.object(bench.identity,'capture',return_value=captured), \
+             patch.object(bench.mm.platform,'binding',return_value={'variant':'kdscope1-kd'}) as binding:
+            self.assertEqual(bench.admit(args,Path('/out'))['kernel_binding']['variant'],'kdscope1-kd')
+            binding.assert_called_once_with(captured,args.kernel_source,args.kernel_baseline,'kd',variant='kdscope1-kd')
+            self.assertEqual(args.captured_runtime_policy,{'mmap_mode':'on'})
 
 
 class Harness(unittest.TestCase):

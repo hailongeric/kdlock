@@ -127,7 +127,7 @@ def checked_receipt(path, expected_sha256, binding, vmlinux, out, command):
     rt.require(receipt.get('schema') == 1 and receipt.get('kernel_binding') == binding and
                receipt.get('vmlinux_sha256') == rt.digest(vmlinux),
                'writer-site receipt belongs to another kernel ELF')
-    shared = binding.get('variant') in ('kdmm1-native','kdmm1-kd')
+    shared = binding.get('variant') in ('kdmm1-native','kdmm1-kd','kdscope1-native','kdscope1-kd')
     current = (derive_shared if shared else derive)(vmlinux, out, command)
     rt.require(current == {key: receipt[key] for key in current},
                'writer-site disassembly differs from reviewed receipt')
@@ -151,7 +151,8 @@ def main():
     rt.require(not out.exists() and not out.is_relative_to(ROOT), 'new evidence output required')
     out.mkdir(parents=True)
     identity = common.kernel_identity.capture(args, out, rt.command)
-    binding = (shared.binding(identity,args.kernel_source,args.kernel_baseline,args.mode) if args.mode else
+    binding = (shared.binding(identity,args.kernel_source,args.kernel_baseline,args.mode,
+                              variant=args.kernel_variant) if args.mode else
                common.mm_platform.kernel_binding(identity,args.kernel_source,args.kernel_baseline,
                                                   private_backing_locks=False))
     vmlinux = args.kernel_source/'vmlinux'

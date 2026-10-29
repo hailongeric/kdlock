@@ -28,11 +28,16 @@ def capture(args):
                      "capture requires the installed custom Linux 7 guest to be booted")
     source, build = args.source or selected["source"], args.build or selected["build"]
     output = args.output or selected["bundle"]
+    scoped = variant in identity.SCOPE_VARIANTS
     identity.require(source == selected["source"] and build == selected["build"],
                      "only the canonical development source/build pair is supported")
     if variant != "kdlock1":
         identity.require(output == selected["bundle"], "MM capture requires its canonical mode bundle")
         identity.require(args.mmap_prepare is not None, "MM capture requires preparation provenance")
+    api_prepare, composition_path = getattr(args, "api_prepare", None), getattr(args, "composition", None)
+    identity.require((api_prepare is not None and composition_path is not None) if scoped else
+                     (api_prepare is None and composition_path is None),
+                     "API/composition inputs require both receipts and the explicit scope variant")
     identity.require(not output.exists(), "capture output already exists")
     identity.check_digest(args.acquisition, identity.ACQUISITION_SHA256)
     identity.check_files(args.source_archives, identity.SOURCE_ARCHIVES)
@@ -62,6 +67,8 @@ def capture(args):
     sources = {name: identity.digest_file(source / name)
                for name in sorted(identity.CORE_PATHS | set(identity.BASE_SOURCE))}
     mmap = None
+    api = None
+    composition = json.loads(composition_path.read_text()) if scoped else None
     if args.mmap_prepare is not None:
         receipt = json.loads(args.mmap_prepare.read_text())
         preserve(args.mmap_prepare, "mmap-prepare.json")
@@ -76,9 +83,43 @@ def capture(args):
         for name, expected in (receipt["outputs"] | receipt["native_body_sha256"]).items():
             identity.relative_path(name)
             identity.require((source / name).resolve().is_relative_to(source), "MM output escapes source")
+            if scoped and name == identity.scope_composer().SHARED:
+                # The verifier compares both independent staging bytes with
+                # the authenticated base and exact reviewed append rule.
+                continue
             identity.check_digest(source / name, expected)
             sources[name] = expected
         mmap = dict(enabled=config.get("CONFIG_KDLOCK_MMAP", "n") == "y")
+    if scoped:
+        composer = identity.scope_composer()
+        preserve(api_prepare, "api-prepare.json")
+        preserve(ROOT / "kernel_integration/real_api/lock-binding.patch", "api-lock-binding.patch")
+        preserve(ROOT / "kernel_integration/real_api/base-sha256.json", "api-base-sha256.json")
+        preserve(composition_path, "composition.json")
+        preserve(HERE / "scope-base-sha256.json", "scope-base-sha256.json")
+        api_receipt = json.loads(api_prepare.read_text())
+        for prefix, record in (("api-inputs/", api_receipt), ("composition-inputs/", composition)):
+            for name, expected in record["inputs"].items():
+                identity.relative_path(name)
+                path = ROOT / name
+                identity.require(path.resolve().is_relative_to(ROOT.resolve()), "scope input escapes project")
+                identity.check_digest(path, expected)
+                preserve(path, prefix + name)
+        for name, expected in composition["artifacts"].items():
+            identity.relative_path(name)
+            path = composition_path.parent / name
+            identity.require(path.resolve().is_relative_to(composition_path.parent.resolve()),
+                             "composition artifact escapes its output")
+            identity.check_digest(path, expected)
+            preserve(path, "composition/" + name)
+        for name, expected in composition["final_source_files"].items():
+            identity.relative_path(name)
+            identity.require((source / name).resolve().is_relative_to(source), "scope output escapes source")
+            identity.check_digest(source / name, expected)
+        # Exact key set and all overlapping hashes are checked below and again
+        # by identity.verify; this does not trust the receipt as a new profile.
+        sources = composition["final_source_files"]
+        api = dict(enabled=True, default_backend="native")
     release = selected["release"]
     installed_links = {f"lib/modules/{release}/build": str(build)}
     source_link = Path(f"/lib/modules/{release}/source")
@@ -86,7 +127,7 @@ def capture(args):
         installed_links[str(source_link.relative_to("/"))] = str(source)
     manifest = dict(schema=2, variant=variant, source_package=identity.PACKAGE,
                     source_archives=identity.SOURCE_ARCHIVES,
-                    source_scope="named core/MM inputs; not a complete source-tree audit",
+                    source_scope=identity.COMPOSED_SCOPE if scoped else identity.SOURCE_SCOPE,
                     source_root=str(source), build_root=str(build),
                     core_patch="core-kernel.patch", mmap=mmap,
                     bundle_files=files, source_files=sources,
@@ -96,6 +137,8 @@ def capture(args):
                     installed_files={name: identity.digest_file(Path("/") / name)
                                      for name in sorted(identity.installed_paths(variant))},
                     installed_links=installed_links)
+    if scoped:
+        manifest["api"] = api
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return identity.verify(output, build, running=True, variant=variant)
 
@@ -112,6 +155,8 @@ def main():
         "/mnt/kdlock-builds/ubuntu-7.0.0-38-source/downloads"))
     parser.add_argument("--mmap-prepare", type=Path,
                         help="required if the development source includes the MM overlay, even when disabled")
+    parser.add_argument("--api-prepare", type=Path, help="scope profiles only: independent pristine API preparation")
+    parser.add_argument("--composition", type=Path, help="scope profiles only: exact core/MM/API composition receipt")
     parser.add_argument("--preempt", choices=("lazy", "voluntary"), default="lazy")
     args = parser.parse_args()
     print(json.dumps(capture(args), sort_keys=True))

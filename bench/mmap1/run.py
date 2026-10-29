@@ -96,10 +96,15 @@ def freeze_support(out):
 
 
 def guest(args):
-    expected = 'kd' if args.kernel_variant == 'kdmm1-kd' else 'native'
-    rt.require(args.mode == expected, 'explicit backend and kernel variant differ')
-    release = '7.0.0-38-kdlock1' if args.kernel_variant == 'kdlock1' else '7.0.0-38-kdmm1'
-    platform.guest(args.boot_id, release=release)
+    if args.kernel_variant != 'kdlock1':
+        mm.platform.guest(args)
+        return
+    rt.require(args.mode == 'native', 'explicit backend and kernel variant differ')
+    if args.kernel_source is None:
+        args.kernel_source = Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build')
+    if args.kernel_baseline is None:
+        args.kernel_baseline = Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027')
+    platform.guest(args.boot_id)
 
 
 def admit(args, out):
@@ -113,7 +118,8 @@ def admit(args, out):
         binding = platform.kernel_binding(captured, args.kernel_source, args.kernel_baseline,
                                           private_backing_locks=False)
     else:
-        binding = mm.platform.binding(captured, args.kernel_source, args.kernel_baseline, args.mode)
+        binding = mm.platform.binding(captured, args.kernel_source, args.kernel_baseline, args.mode,
+                                      variant=args.kernel_variant)
     args.captured_runtime_policy = captured['runtime_policy']
     return dict(kernel_identity=captured, kernel_binding=binding, host_qualification=host)
 
@@ -388,6 +394,7 @@ def arguments(parser):
     parser.add_argument('--host-state', type=Path, required=True)
     platform.arguments(parser)
     identity.arguments(parser)
+    parser.set_defaults(kernel_source=None, kernel_baseline=None)
 
 
 def main():

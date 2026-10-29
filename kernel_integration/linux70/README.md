@@ -164,3 +164,9 @@ occurs directly in `kernel/fork.c`; `mmap_lock.h` has additional assertions and
 per-VMA uses of the rwsem. The adapter's build, asynchronous read-release lifetime
 checks and live validation remain separate gates. Any whole-kernel replacement
 remains unvalidated on this platform.
+
+The separate [kdscope1 composition](SCOPE.md) combines this core patch, the local
+MM overlay and the scoped file-table/pipe API binding in a new source/output
+pair. Its two explicit schema-2 profiles preserve the existing development and
+MM profiles. API objects default to Native in both MM boot modes; per-object
+selection and actual syscall evidence remain required.
