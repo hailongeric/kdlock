@@ -6,66 +6,41 @@ from miasm_compat import expr_args, expr_int_value, expr_ptr, set_expr_int_value
 
 
 def solve_cond_jmp_lock_cmpxchg(file_path):
+    """Skip the overlapping unprefixed block after executing its LOCK form.
 
-    def is_match(a, b):
-        a1 = a.split()
-        b1 = b.split()
-        if len(a1) == len(b1) + 1:
-            return False
-        for e in range(len(b1)):
-            if a1[e + 1] != b1[e]:
-                return False
-        return True
+    A branch may enter the opcode after F0. Miasm then emits two blocks for
+    the same source operation; the locked block's actual successor is after
+    both encodings. Do not scan source comments as executable instructions or
+    infer a successor from an unrelated/final block.
+    """
+    from pathlib import Path
+    import re
 
-    with open(file_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
-    lines_to_add = []
-    target_line_number = []
-    for i, line in enumerate(lines):
-        if len(line) > 5 and line[:5] == "LOCK ":
-            for j in range(i, -1, -1):
-                if lines[j][:4] == "loc_":
-                    break
-            if lines[j][-2:] != ":\n":
-                continue
-            for j in range(i, -1, -1):
-                if lines[j] == "/*\n":
-                    before_addr = int(lines[j + 1][4:], 16)
-                    break
-            for j in range(i, len(lines)):
-                if lines[j] == "/*\n":
-                    after_addr = int(lines[j + 1][4:], 16)
-                    break
-            if after_addr == before_addr + 1:
-                flag = False
-                for k in range(j, len(lines)):
-                    if lines[k] == "":
-                        break
-                    if is_match(line, lines[k]):
-                        flag = True
-                        break
-                if flag:
-                    target_line_number.append(j - 2)
-                    for k in range(i, -1, -1):
-                        if "->	c_next:loc_" in lines[k]:
-                            lines_to_add.append(
-                                "JMP             " + lines[k].split(":")[1]
-                            )
-                            break
-
-    if len(target_line_number) == 0:
-        return
-
-    new_lines = []
-    pre_number = 0
-    for i, n in enumerate(target_line_number):
-        new_lines.extend(lines[pre_number:n])
-        new_lines.extend(lines_to_add[i])
-        pre_number = n
-    new_lines.extend(lines[pre_number:])
-
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.writelines(new_lines)
+    path = Path(file_path)
+    text = path.read_text(encoding="utf-8")
+    blocks = list(re.finditer(
+        r"/\*\nloc_([0-9a-fA-F]+)\n(.*?)\*/[ \t]*\nloc_\1:\n",
+        text, re.DOTALL))
+    insertions = []
+    for before, after in zip(blocks, blocks[1:]):
+        if int(after[1], 16) != int(before[1], 16) + 1:
+            continue
+        first = [line.split() for line in before[2].splitlines()
+                 if line.strip() and not line.startswith("->")]
+        second = [line.split() for line in after[2].splitlines()
+                  if line.strip() and not line.startswith("->")]
+        if (len(first) != 1 or len(second) != 1 or
+                first[0][0] != "LOCK" or first[0][1:] != second[0]):
+            continue
+        next_before = re.findall(r"t_next:(loc_[0-9a-fA-F]+)", before[2])
+        next_after = re.findall(r"t_next:(loc_[0-9a-fA-F]+)", after[2])
+        if len(next_before) != 1 or next_before != next_after:
+            continue
+        insertions.append((after.start(), "JMP             " + next_before[0] + "\n"))
+    for position, jump in reversed(insertions):
+        text = text[:position] + jump + text[position:]
+    if insertions:
+        path.write_text(text, encoding="utf-8")
 
 
 def solve_lea_ra_rb_c_rb(line):

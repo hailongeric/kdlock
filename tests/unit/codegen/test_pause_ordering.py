@@ -45,6 +45,32 @@ class PauseOrderingTests(unittest.TestCase):
                 self.assertEqual(status, 0, log)
                 self.assertEqual(len(re.findall(r"\bpause\b", disassemble_image(assembly))), expected)
 
+    def test_overlapping_lock_prefix_executes_the_operation_once(self):
+        # A real branch to the byte after F0 creates overlapping decoded
+        # blocks. Both paths must perform exactly one read/modify/write.
+        for locked in (False, True):
+            for trusted in (False, True):
+                with self.subTest(locked=locked, trusted_source=trusted):
+                    source = machine_code(f"""
+                        mov eax, 5
+                        mov ecx, {int(locked)}
+                        cmp ecx, 0
+                        je unlocked
+                        .byte 0xf0
+                    unlocked:
+                        xadd QWORD PTR [rbp], rax
+                        mov QWORD PTR [rbp + 8], rax
+                        ret
+                    """)
+                    assembly, log, status = render(source.hex(), trusted_source=trusted,
+                        body_witness=True, return_status=True)
+                    self.assertEqual(status, 0, log)
+                    memory = (ctypes.c_ulong * 2)(7, 0)
+                    def initialize(regs, stack):
+                        regs[2] = ctypes.addressof(memory)
+                    run_image(assembly, [0x1000], initialize=initialize)
+                    self.assertEqual(list(memory), [12, 7])
+
     def test_loop_fences_and_locked_operations_remain_in_generated_code(self):
         source = machine_code("""
             mov ecx, 3

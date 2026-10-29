@@ -42,6 +42,11 @@ Trusted translation does not extend that MM integration scope.
 from construction and runtime checks. [Register ABI](../docs/JIT_REGISTER_ABI.md)
 defines packet fields, mapping, actual CALL words and COMPLETE/FULL.
 `solve_bug.py` contains active encoding/assembly corrections.
+The LOCK overlap correction only applies to adjacent emitted source blocks
+whose second entry is the first entry plus one byte and repeats the same
+operation without its LOCK prefix. The first block jumps to its decoded
+continuation so the operation executes once. Source comments, unrelated blocks
+and a final block without a successor are never candidates for this correction.
 
 Entry identities remain legacy 0, spin clobber 1, mutex clobber 2 and rwlock
 writer clobber 3. ABI3 uses the spin backend and IP/SP/BP packet. Native code
