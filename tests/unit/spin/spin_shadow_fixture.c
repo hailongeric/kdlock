@@ -756,6 +756,7 @@ enum {
 struct nested_level {
 	struct qspinlock lock;
 	struct kd_spin_node head, queue[QUEUE_NODES];
+	struct kd_spin_continuation execution[QUEUE_NODES];
 	unsigned int executions;
 };
 
@@ -992,6 +993,8 @@ static void run_nested_case(int depth, int followers, int parent, int leaf,
 
 			node->next = i == last ? NULL : node + 1;
 			node->locked = true;
+			node->execution = &levels[level].execution[i];
+			node->proxy_context = 1;
 			node->rsp = 0x20000 + level * 0x100 + i;
 			node->socket_id = i % (followers + 1) ? 1 : 0;
 		}
