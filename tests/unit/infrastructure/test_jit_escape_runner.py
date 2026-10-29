@@ -236,7 +236,9 @@ class RepeatedMarkerProbe(runner.EscapeSession):
                            registry_kind=self.image["lock_kind"], entry_abi=self.image["entry_abi"],
                            image_registry=[dict(self.image)], publication={"image": "exact-bytes"})
 
-    def phase(self, name, iterations, hot):
+    def phase(self, name, iterations, hot, force_suffix=False):
+        # This probe exercises ordinary reached markers, not instruction service.
+        assert force_suffix is False
         self.current_phase = name
         self.names.append(name)
         delta = dict(bench_jit_bodies=5, bench_jit_completions=0 if hot else 5,

@@ -424,7 +424,9 @@ def main(executor=None, benchmark=False):
                 print(f"entry/hostcall mutation detected: {name}")
             else:
                 print(result.stdout, end="")
-                assert result.returncode == 0, result.stderr
+                assert result.returncode == 0, (
+                    name, result.returncode, result.stdout, result.stderr
+                )
 
 
 if __name__ == "__main__":

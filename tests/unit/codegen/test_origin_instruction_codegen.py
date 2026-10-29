@@ -218,14 +218,17 @@ class OriginInstructionCodegenTests(unittest.TestCase):
 
     def test_service_capability_does_not_change_ordinary_images(self):
         raw='48c7c02a000000c3'
-        common=dict(lock_kind='mutex',abi=2,kernel_symbols=SYMBOLS,native_escape_capable=True)
+        # Compare production translations with and without the new capability.
+        # The explicit checked-source analyzer has a separate rejection policy.
+        common=dict(lock_kind='mutex',abi=2,kernel_symbols=SYMBOLS,
+                    native_escape_capable=True,trusted_source=True)
         original,_=render(raw,**common)
         capable,_=render(raw,origin_instruction_capable=True,**common)
         self.assertEqual(original,capable)
         _,assembly,build=compile_source('cli\nret')
         self.assertEqual(build['requirements'],1);self.assertNotIn(b'KDOS0001',assembly)
-        old,_,status=render('0f31c3',return_status=True,**common)
-        self.assertEqual(status,0);self.assertNotIn(b'KDOS0001',old)
+        old,log,status=render('0f31c3',return_status=True,**common)
+        self.assertEqual(status,0,log);self.assertNotIn(b'KDOS0001',old)
 
 
 if __name__ == '__main__':
