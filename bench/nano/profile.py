@@ -344,7 +344,10 @@ def pin_delta(before, after, policy=None, tsc_sample_shift=0, *, initial_spin_bu
 
 
 def pin_fractions(snapshot):
-    """Empty observations are unavailable, not evidence of a perfect fraction."""
+    """Fractions use helper-entry episodes and its loop budget, not READY wall time.
+
+    Already-completed entry counts once; empty observations are unavailable.
+    """
     require(snapshot['schema'] in (2, 3, 4), 'initial spin fractions require a READY schema')
     episodes = snapshot['wait_episodes']
     return {name: snapshot[counter] / episodes if episodes else None for name, counter in (
@@ -588,7 +591,7 @@ def profiled_session(runner, args, perf, perf_sha):
                     ready_candidates='Once per admitted epoch, bounded compatible READY prefix on distinct nonself CPUs; bin 8 means at least eight, not future executions',
                     retirement='Retired claims are not returned JIT bodies; native exits and FULL resumes remain separate',
                     initial_spin_fractions=pin_fractions(delta),
-                    fraction_scope='Wait episodes completing before the initial budget expires; retained pin also includes later completion without unpinning',
+                    fraction_scope='One episode per wait-helper entry, including an already-zero result; completion within its PAUSE-loop budget is not wall time since READY publication. Retained pin also includes later completion without unpinning',
                     admission='Claims count exact current descriptor reservations admitted from READY; cold retention promotes to CLAIMED before reopening withdrawal, while hot completion needs no CLAIMED store')
                 self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
                 self.save()

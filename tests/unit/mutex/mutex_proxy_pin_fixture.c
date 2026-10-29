@@ -206,21 +206,27 @@ static void wait_case(enum route selected,u8 initial)
 {
  reset(selected);node.locked=initial;kd_mutex_wait_for_result(&node);
  CHECK(pins==1 && migration==1 && !node.locked);
- CHECK(pin_calls==unpin_calls && publish_attempts==1);
- CHECK(publications==(initial==KD_MUTEX_QUEUE_INIT));
+ CHECK(pin_calls==unpin_calls && !publish_attempts && !publications);
 }
 int main(void)
 {
- wait_case(EARLY_DONE,KD_MUTEX_QUEUE_INIT);
+ /* INIT belongs to an unlinked invocation, never to this observe-only loop. */
+ if (getenv("KDLOCK_PROXY_INIT")) {
+  reset(EARLY_DONE);
+  kd_mutex_wait_for_result(&node);
+  fprintf(stderr,"FAIL unpublished INIT unexpectedly returned\n");
+  return 3;
+ }
+ wait_case(EARLY_DONE,KD_MUTEX_PROXY_READY);
  CHECK(claims==1 && pauses==1 && !need_checks && !schedules && !unpin_calls);
- wait_case(EXPIRE,KD_MUTEX_QUEUE_INIT);
+ wait_case(EXPIRE,KD_MUTEX_PROXY_READY);
  CHECK(withdraw_attempts==1 && withdrawals==1 && pauses>=KDLOCK_MUTEX_SPIN_BUDGET);
  CHECK(schedules==1 && pin_calls==1 && !claims);
- wait_case(CLAIM_RACE,KD_MUTEX_QUEUE_INIT);
+ wait_case(CLAIM_RACE,KD_MUTEX_PROXY_READY);
  CHECK(claims==1 && !withdraw_attempts && !withdrawals && !unpin_calls && !schedules);
- wait_case(WAKE_RACE,KD_MUTEX_QUEUE_INIT);
+ wait_case(WAKE_RACE,KD_MUTEX_PROXY_READY);
  CHECK(withdraw_attempts==1 && !withdrawals && !unpin_calls && !schedules);
- wait_case(CANCEL,KD_MUTEX_QUEUE_INIT);
+ wait_case(CANCEL,KD_MUTEX_PROXY_READY);
  CHECK(claims==1 && !withdraw_attempts && unpin_calls==1 && schedules==1);
  wait_case(CANCEL_AT_ENTRY,KD_MUTEX_WAIT);
  CHECK(!publications && !claims && !withdraw_attempts && unpin_calls==1 && schedules==1);
@@ -228,15 +234,15 @@ int main(void)
  CHECK(!publications && !claim_attempts && !need_checks && !unpin_calls);
  wait_case(DONE_AT_ENTRY,0);
  CHECK(!publications && !pauses && !need_checks && !unpin_calls);
- wait_case(WAKE_AT_UNPIN,KD_MUTEX_QUEUE_INIT);
+ wait_case(WAKE_AT_UNPIN,KD_MUTEX_PROXY_READY);
  CHECK(withdrawals==1 && pin_calls==1 && !schedules && !node.locked);
- wait_case(NO_RESCHED,KD_MUTEX_QUEUE_INIT);
+ wait_case(NO_RESCHED,KD_MUTEX_PROXY_READY);
  CHECK(need_checks>=2 && claims==1 && !withdraw_attempts && !unpin_calls);
- wait_case(RELEASE_RACE,KD_MUTEX_QUEUE_INIT);
+ wait_case(RELEASE_RACE,KD_MUTEX_PROXY_READY);
  CHECK(withdrawals==1 && pin_calls==1 && !atomic_read(&lock.delegation_state));
- wait_case(STALE_READY,KD_MUTEX_QUEUE_INIT);
+ wait_case(STALE_READY,KD_MUTEX_PROXY_READY);
  CHECK(claims==1 && withdraw_attempts==1 && !withdrawals && !unpin_calls);
- wait_case(READY_EPOCH,KD_MUTEX_QUEUE_INIT);
+ wait_case(READY_EPOCH,KD_MUTEX_PROXY_READY);
  CHECK(!claims && claim_attempts==1 && need_checks>=2 && !withdraw_attempts && !withdrawals && !unpin_calls && !schedules);
  kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);
  for(unsigned int state=0;state<=KD_MUTEX_QUEUE_INIT;state++) {

@@ -47,7 +47,7 @@ static struct kd_mutex gate;
 static struct kd_mutex_node request, successor, enclosing, unselected;
 static bool origin_probe;
 static unsigned int cold_yields;
-static void kd_mutex_wait_for_result(struct kd_mutex_node *node);
+static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node);
 static struct kd_exec_frame active;
 static unsigned long kd_exec_invariant_failures;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
@@ -590,7 +590,7 @@ int main(void)
 		kd_mutex_count_enter(&gate, &enclosing);
 		memset(&request, 0, sizeof(request));
 		memset(&successor, 0, sizeof(successor));
-  memset(&unselected,0,sizeof(unselected));unselected.lock=&gate;unselected.locked=KD_MUTEX_QUEUE_INIT;
+  memset(&unselected,0,sizeof(unselected));unselected.lock=&gate;unselected.locked=KD_MUTEX_PROXY_READY;
   cold_yields=0;origin_probe=false;
 		gate.owner = NULL;
 		b.owner = NULL;

@@ -77,20 +77,19 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock, struct kd_mutex_node *no
 	}
 }
 
-/* Enter on the reserved shadow stack with preemption disabled. Packet/count
- * publication is finished before INIT becomes READY. A role-exchanged origin
- * may already be READY/CLAIMED, withdrawn, or completed when it reaches here.
- * Never rearm WAIT: cancellation may have won before this invocation entered.
+/* Enter on the reserved shadow stack with preemption disabled. Ordinary
+ * publication or the role-exchange retirement barrier has already supplied
+ * READY; cancellation, cold retention or completion may have won before entry.
+ * Observe only: never overwrite zero/WAIT or accept an unpublished INIT here.
+ * Inline into the notrace slowpath: an instrumented helper entry after READY
+ * could touch the origin's live per-CPU state while a proxy borrows it.
  * Every return retains exactly the caller's original one preemption pin. */
-static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
+static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
 	unsigned int budget = KDLOCK_MUTEX_SPIN_BUDGET;
 	u8 state;
 	KD_MUTEX_PIN_WAIT_ENTER();
 
-	state = cmpxchg(&node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_PROXY_READY);
-	BUG_ON(state != KD_MUTEX_QUEUE_INIT && state != KD_MUTEX_PROXY_READY &&
-	       state != KD_MUTEX_PROXY_CLAIMED && state != KD_MUTEX_WAIT && state);
 	for (;;) {
 		state = smp_load_acquire(&node->locked);
 		if (!state) {

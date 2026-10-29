@@ -52,11 +52,17 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	kd_mutex_waiter_enter(lock, curr_node);
 
 	if (old_tail) {
-		/* --- waiter path: link behind prev, spin until woken --- */
+		/* Both entry ABIs already use the reserved shadow stack. Finish
+		 * count/debug work before offering the origin stack/GS to a proxy.
+		 * Only this unlinked ordinary invocation may replace INIT by store. */
 		prev_node = kd_mutex_decode_tail(old_tail);
-		WRITE_ONCE(prev_node->next, curr_node);
-
 		mutex_debug("Mutex waiter spinning\n");
+		BUG_ON(READ_ONCE(curr_node->locked) != KD_MUTEX_QUEUE_INIT);
+		smp_store_release(&curr_node->locked, KD_MUTEX_PROXY_READY);
+		/* The tail exchange preceded count publication. Release the incoming
+		 * link so metadata and READY precede every acquired queue traversal.
+		 * No origin packet/debug work follows until result ownership returns. */
+		smp_store_release(&prev_node->next, curr_node);
 wait_result:
 		kd_mutex_wait_for_result(curr_node);
 		if (READ_ONCE(curr_node->native_resume)) {

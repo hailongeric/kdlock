@@ -176,7 +176,7 @@ static void __attribute__((unused)) diag_free_percpu(void *storage);
 
 
 def check_origin_hooks():
-    """Actual wait-helper calls plus actual local accumulator/merge implementation."""
+    """Observe-only wait entry plus actual local accumulator/merge implementation."""
     source = read_source(ROOT / 'kernel_module/kd_mutex.c')
     diag = read_source(ROOT / 'kernel_module/mutex/pin_diag.inc')
     origin = without_includes(read_source(ROOT / 'kernel_module/mutex/pin_origin.inc'))
@@ -196,21 +196,29 @@ def check_origin_hooks():
 #define this_cpu_inc(name) do { CHECK(pins==1); (name)++; } while(0)
 ''' + state + '\n' + origin + '\n' + declarations + '\n' + merge + '\n'
     code += '\n'.join(definition(source, signature) for signature in (
-        'static void kd_mutex_wait_for_result(struct kd_mutex_node *node)',
+        'static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)',
         'static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
         'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)',
         'static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,',
     ))
     fixture = (ROOT / 'tests/unit/mutex/mutex_proxy_pin_fixture.c').read_text()
     fixture = fixture.replace('#include <stdlib.h>', '#include <stdlib.h>\n#include <string.h>')
-    fixture = fixture.replace('int main(void)\n{', 'int main(void)\n{\n'
+    main_entry = 'int main(void)\n{'
+    assert fixture.count(main_entry) == 1
+    fixture = fixture.replace(main_entry, main_entry + '\n'
         ' static struct kd_mutex_pin_cpu origin_storage;kd_mutex_pin_cpus=&origin_storage;')
     anchor = 'reset(selected);node.locked=initial;kd_mutex_wait_for_result(&node);'
     assert fixture.count(anchor) == 1
     fixture = fixture.replace(anchor, 'memset(&kd_mutex_pin_totals,0,sizeof(kd_mutex_pin_totals));\n ' + anchor + r'''
  bool dropped=selected==EXPIRE || selected==CANCEL || selected==CANCEL_AT_ENTRY || selected==WAKE_AT_UNPIN || selected==RELEASE_RACE;
  bool expired=selected==EXPIRE || selected==CLAIM_RACE || selected==WAKE_RACE || selected==WAKE_AT_UNPIN || selected==NO_RESCHED || selected==RELEASE_RACE || selected==STALE_READY || selected==READY_EPOCH;
+ /* Publication belongs to the queue caller, never this result-wait entry. */
+ CHECK(!publish_attempts && !publications);
  CHECK(kd_mutex_pin_totals.wait_episodes==1);
+ if(selected==DONE_AT_ENTRY) {
+  CHECK(!pauses && !need_checks && !unpin_calls);
+  CHECK(kd_mutex_pin_totals.initial_pin_retained==1 && kd_mutex_pin_totals.initial_budget_completed==1);
+ }
  CHECK(kd_mutex_pin_totals.initial_pin_retained==!dropped && kd_mutex_pin_totals.initial_pin_dropped==dropped);
  CHECK(kd_mutex_pin_totals.initial_budget_completed==(!dropped && !expired));
  CHECK(kd_mutex_pin_totals.budget_expired_episodes==expired);
@@ -245,7 +253,7 @@ def check_origin_hooks():
             result = subprocess.run([binary], capture_output=True, text=True, timeout=10)
             if name == 'production':
                 assert result.returncode == 0, result
-                print('PASS actual origin diagnostic hooks: within-budget, retained-late, expiry, cancellation and races')
+                print('PASS actual origin diagnostic hooks: observe-only entry, already-completed episode, loop budget, retained-late, expiry and races')
             else:
                 assert result.returncode == 1 and 'FAIL proxy pin' in result.stderr, (name, result)
                 print('origin diagnostic mutation detected:', name)

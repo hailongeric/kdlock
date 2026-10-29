@@ -46,7 +46,7 @@ def production():
     code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
     for marker in (
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
-        "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",

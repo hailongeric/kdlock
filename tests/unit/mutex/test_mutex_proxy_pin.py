@@ -18,7 +18,7 @@ def main():
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
     code = without_includes(read_source(ROOT / "include/kd_mutex_state.h")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
     code += "\n".join(definition(source, signature) for signature in (
-        "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+        "static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
@@ -27,6 +27,9 @@ def main():
         r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT) \d+$",
         (ROOT / "include/kd_mutex.h").read_text(), re.M))
     assert len(constants.splitlines()) == 4
+    state_values = dict(re.findall(r"#define (KD_MUTEX_\w+) (\d+)", constants))
+    rejected_guard = ("!(state != " + state_values["KD_MUTEX_PROXY_READY"] +
+                      " && state != " + state_values["KD_MUTEX_PROXY_CLAIMED"] + ")")
     constants += "\n" + "\n".join(line for line in (ROOT / "include/kd_mutex.h").read_text().splitlines()
                                   if line.startswith("#define KD_MUTEX_GATE_"))
     mutations = {
@@ -36,8 +39,9 @@ def main():
             "\tpreempt_enable();\n\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))",
             "\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))"),
         "rearm-withdrawn-origin": (
-            "cmpxchg(&node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_PROXY_READY)",
-            "cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_READY)"),
+            "state = smp_load_acquire(&node->locked);",
+            "state = smp_load_acquire(&node->locked); if (state == KD_MUTEX_WAIT) "
+            "state = cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_READY);"),
         "ignore-expiry-cas-loss": (
             "if (state == KD_MUTEX_PROXY_READY) {", "if (true) {"),
         "self-cpu-selection": (" == raw_smp_processor_id())", " == -99)"),
@@ -72,6 +76,11 @@ def main():
             else:
                 assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
                 print(result.stdout, end="")
+                rejected = subprocess.run([binary], capture_output=True, text=True, timeout=10,
+                                          env={**os.environ, "KDLOCK_PROXY_INIT": "1"})
+                assert rejected.returncode == 1 and (
+                    rejected_guard in rejected.stderr), (rejected.returncode, rejected.stdout, rejected.stderr)
+                print("proxy pin unpublished INIT rejected by actual wait-loop guard")
 
 
 if __name__ == "__main__":

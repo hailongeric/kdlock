@@ -315,7 +315,8 @@ a measured workload. This single-current epoch candidate requires fresh VM valid
 The runner reads `mutex_pin_stats` after warmup and after the joined measurement,
 saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 4
 binds compiled mode 2, `claim_slots=1`, `ready_policy="epoch"`, both mutex policy limits and
-`initial_spin_budget` (default 65536 PAUSE iterations). The profiler accepts an
+`initial_spin_budget` (default 65536 PAUSE iterations in the result-wait loop).
+The profiler accepts an
 explicit `--mutex-spin-budget` and verifies matching module metadata. Keep each
 threshold and source version separate. `c01` is the one-cacheline throughput
 profile; `c16` is the sixteen-cacheline locality profile.
@@ -356,10 +357,16 @@ bytes per CPU (bounded at 304); mode 1 remains a 384-byte static record.
 pre-entry refusals; it does not assert that a FULL service or body returned.
 
 Origin counters count delegation wait episodes, completion with the initial pin
-retained, first pin drops, episodes completing before the initial budget expired,
+retained, first pin drops, episodes completing before the wait-loop budget expired,
 episodes reaching expiry, post-budget scheduling checks, successful withdrawals
-and forced cancellations. The denominator is `wait_for_result` episodes, not all
-lock acquisitions. A retained pin may continue beyond the budget when scheduling
+and forced cancellations. The denominator is one episode per `wait_for_result`
+entry, including an entry whose result is already zero; it does not count all
+lock acquisitions. Ordinary READY publication now precedes the incoming queue
+link and helper entry. The helper only observes that publication: an already
+completed result counts as one retained episode completed before loop-budget
+expiry, with no PAUSE iterations. `initial_budget_completed / wait_episodes`
+therefore measures the helper's PAUSE budget, not wall time since READY publication
+or a parking rate. A retained pin may continue beyond the budget when scheduling
 is unnecessary or a claim has won. The report therefore separates
 `completed_within_initial_budget` from `retained_initial_pin`. Both fractions are
 unavailable when the episode count is zero. No greater-than-99% claim follows

@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch starts the earlier ordinary READY publication
-design below; its implementation and VM gates are pending.
+delegation waiters. This branch implements the earlier ordinary READY publication
+candidate below; its VM correctness and timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -396,10 +396,11 @@ unchanged; early READY publication is a separate option outside this candidate.
 Schema 4 claims continue to count exact descriptor reservations, not CLAIMED
 stores. A long-running READY current may perform additional post-budget expiry
 checks, but cannot withdraw during the owned epoch. The greater-than-99% target
-still uses actual wait episodes. Source-derived mutation, live correctness,
-emitted-code and matched timing gates are pending; no benefit is presumed.
+still uses actual wait episodes. Its scoped unit, live correctness and
+emitted-code gates passed through `2af70f39a7091c34b5ccab98452f0726336cb2c0`;
+the mutex timing gate failed as recorded below.
 
-### Earlier ordinary READY publication design (October 29)
+### Earlier ordinary READY publication candidate (October 29)
 
 This isolated follow-up starts from
 `2af70f39a7091c34b5ccab98452f0726336cb2c0`, whose production runtime is
@@ -425,6 +426,11 @@ WAIT cancellation and result zero all survive unchanged; INIT is an invariant
 failure and never permission to rearm. After link publication, ordinary debug,
 packet and origin-stack work must stop until result handling regains ownership.
 Waiting touches only reserved shadow/control state and the existing protocol.
+The wait helper is explicitly `__always_inline` into the `notrace` slowpath:
+an instrumented helper entry after READY could touch origin per-CPU state while
+the proxy borrows it. Mode 0 and mode 2 emitted code must retain the publication
+to polling path without such a call. This does not validate broader function-graph
+instrumentation or the pre-existing role-C return path under every tracing mode.
 An already-completed zero still counts as one delegation wait episode, with its
 initial loop budget unspent; the within-budget ratio is not elapsed time since
 READY publication or a parking measurement.

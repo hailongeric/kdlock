@@ -213,8 +213,8 @@ cancellation. C's INIT-to-READY publication after real old-frame/source retireme
 W's HELD native suffix, fresh admission at W's unlock, exact current retirement
 before custody wake, and terminal C delegation remain unchanged. One claim slot
 does not limit the number of READY origins protected by the epoch. The same five
-role cases, actual C2-to-W33 exchange and balanced context/drain checks remain
-pending validation for this new candidate.
+role cases, actual C2-to-W33 exchange and balanced context/drain checks passed
+through `82bfc1006c25767d7a319fcf175c548dcf24824a`; its mutex timing gate failed.
 
 The delayed-CLAIMED candidate keeps an ordinary current READY under the exact
 descriptor, private epoch and physical owner. Before root owner transfer or any
@@ -225,4 +225,13 @@ An early outer callback after native result zero checks only saved batch state
 when its descriptor has already retired; it must not inspect the reused node.
 The old frame/source retirement barrier, C's INIT-to-READY publication, W's native
 HELD suffix and fresh after-body epoch are unchanged. The existing five local
-role cases and actual C2-to-W33 case remain pending VM gates for this candidate.
+role cases and actual C2-to-W33 case passed through
+`2af70f39a7091c34b5ccab98452f0726336cb2c0`; the separate mutex performance gate
+still failed.
+
+The earlier ordinary READY follow-up changes only new successors' incoming
+publication. Role-exchanged C still uses the checked INIT-to-READY CAS after
+old-frame/source retirement and before W's custody-ready release. It then enters
+the observe-only wait helper, which preserves an earlier zero, WAIT or CLAIMED.
+Private first heads remain nonready until physical acquisition. The same role,
+source, owner and balanced-context gates remain pending for this new candidate.
