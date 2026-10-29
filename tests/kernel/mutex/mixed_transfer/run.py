@@ -142,6 +142,22 @@ def trace_records(messages, prefix):
     return result
 
 
+def validate_context(workers, messages, phase):
+    """Require original-task context at every joined ioctl return, including warmup."""
+    expected = {str(worker["pid"]): str(worker["role"]) for worker in workers}
+    rows = [row for row in trace_records(messages, "KD_MIXED_CONTEXT ")
+            if row.get("phase") == phase and row.get("pid") in expected]
+    fields = {"phase", "role", "pid", "preempt_before", "preempt_after",
+              "migration_before", "migration_after", "irqs_before", "irqs_after", "errors"}
+    zero = fields - {"phase", "role", "pid"}
+    rt.require(phase in ("warmup", "run") and len(expected) == 5 and len(rows) == 5 and
+               {row["pid"] for row in rows} == set(expected) and
+               all(set(row) == fields and row["role"] == expected[row["pid"]] and
+                   all(row[key] == "0" for key in zero) for row in rows),
+               "original-task context differs: " + str(rows), "DATA_ERROR")
+    return rows
+
+
 def observe_hotlock(provider_root):
     """Expose the existing cached query only in this frozen diagnostic build."""
     path = provider_root / "kernel_module/kd_hotlock.c"
@@ -434,11 +450,13 @@ class MixedSession(Session):
             self.wait_receipts(warm, "warmup")
             publish(self.path / f"warm-{round_number}-go.json", dict(start=True))
             workers = self.join(warm, 60)
+            self.faults()
+            contexts = validate_context(workers, self.messages, "warmup")
             before = self.counts(f"warm-{round_number}-drain")
             rt.require(before["warm_ops"] == round_number * 5 * self.record["warmup_iterations"] and
                        not before["prefix"] and not before["suffix"] and not before["started"],
                        "warmup count/probe isolation differs", "DATA_ERROR")
-            self.record["warm_rounds"].append(dict(workers=workers, after=before))
+            self.record["warm_rounds"].append(dict(workers=workers, after=before, contexts=contexts))
             self.save()
             # A global JIT witness cannot establish CPU-local admission for G,
             # C or W. These cached queries ran at each affine worker's return.
@@ -483,6 +501,7 @@ class MixedSession(Session):
         self.record["workers"] = self.join(probe, 15)
         self.record["callers_joined"] = True
         self.faults()
+        self.record["contexts"] = validate_context(self.record["workers"], self.messages, "run")
         after = self.counts("transfer-drain")
         delta = {key: self.counters()[key] - counters_before[key] for key in counters_before}
         # Save the joined observations even if a protocol-specific assertion
@@ -641,6 +660,8 @@ def main():
         rt.write_json(out / "result.json", dict(passed=True, drained=True, protocol=args.protocol,
             case=args.case, after=session.record["after"],
             jit_delta=session.record["jit_delta"], native_stats=session.record["native_stats"],
+            contexts=session.record["contexts"],
+            warmup_contexts=[row["contexts"] for row in session.record["warm_rounds"]],
             source_retirement=session.record["retired"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
         print(f"PASS: {args.protocol}/{args.case}; failed CAS, exact owner/body/ACK evidence and drain")

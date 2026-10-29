@@ -27,6 +27,7 @@ class Probe(runner.MixedSession):
                            protocol="owner-handoff", case="simple")
         self.save = Mock()
         self.faults = Mock()
+        self.messages = ""
 
 
 class MixedTransferRunnerTests(unittest.TestCase):
@@ -128,15 +129,66 @@ class MixedTransferRunnerTests(unittest.TestCase):
                         dict(warm_ops=50000, prefix=0, suffix=0, started=0,
                              warm_eligible=runner.REQUIRED_ELIGIBILITY if eventual_hot else 0)]
                 probe.counts = Mock(side_effect=rows)
-                with patch.object(runner, "publish") as publish:
+                with patch.object(runner, "publish") as publish, \
+                     patch.object(runner, "validate_context", return_value=["checked"]) as contexts:
                     if eventual_hot:
                         self.assertEqual(probe.warm(), rows[-1])
                     else:
                         with self.assertRaises(runner.rt.Failure):
                             probe.warm()
                     self.assertEqual(publish.call_count, 2)
+                    self.assertEqual(contexts.call_args_list,
+                                     [unittest.mock.call([], "", "warmup")] * 2)
                 self.assertEqual(probe.launch.call_count, 10)
                 self.assertEqual(len(probe.record["warm_rounds"]), 2)
+                self.assertTrue(all(row["contexts"] == ["checked"]
+                                    for row in probe.record["warm_rounds"]))
+
+    def test_original_context_requires_zero_migration_for_each_joined_role(self):
+        workers = [dict(pid=100 + role, role=role) for role in range(5)]
+        for phase in ("warmup", "run"):
+            rows = [dict(phase=phase, role=str(role), pid=str(100 + role),
+                         preempt_before="0", preempt_after="0", migration_before="0",
+                         migration_after="0", irqs_before="0", irqs_after="0", errors="0")
+                    for role in range(5)]
+
+            def messages(values):
+                return "".join("KD_MIXED_CONTEXT " + " ".join(f"{k}={v}" for k, v in row.items())
+                               + "\n" for row in values)
+
+            self.assertEqual(runner.validate_context(workers, messages(rows), phase), rows)
+            for mutation in ("migration_before", "migration_after", "preempt_after", "irqs_after",
+                             "errors", "role", "missing", "duplicate", "pid", "field", "phase"):
+                with self.subTest(phase=phase, mutation=mutation):
+                    changed = copy.deepcopy(rows)
+                    if mutation in ("migration_before", "migration_after", "preempt_after",
+                                    "irqs_after", "errors"):
+                        changed[3][mutation] = "1"
+                    elif mutation == "role":
+                        changed[3]["role"] = "2"
+                    elif mutation == "missing":
+                        changed.pop()
+                    elif mutation == "duplicate":
+                        changed.append(copy.deepcopy(changed[3]))
+                    elif mutation == "pid":
+                        changed[3]["pid"] = "999"
+                    elif mutation == "field":
+                        del changed[3]["migration_after"]
+                    else:
+                        changed[3]["phase"] = "run" if phase == "warmup" else "warmup"
+                    with self.assertRaises(runner.rt.Failure):
+                        runner.validate_context(workers, messages(changed), phase)
+
+    def test_warm_context_failure_prevents_eligibility_acceptance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            probe = Probe(Path(tmp))
+            probe.launch = Mock(return_value=(Mock(), {}))
+            probe.wait_receipts = Mock()
+            probe.join = Mock(return_value=[])
+            probe.counts = Mock()
+            with patch.object(runner, "publish"), self.assertRaises(runner.rt.Failure):
+                probe.warm()
+            probe.counts.assert_not_called()
 
     def test_staging_owns_gate_before_queueing(self):
         class Staged(Exception):

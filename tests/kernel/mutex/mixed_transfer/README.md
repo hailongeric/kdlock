@@ -31,6 +31,14 @@ before entering the lock. These are cached observations, so actual gate/queue
 publication remains the authority if the following acquisition resamples heat.
 The probe never forces heat, changes eligibility counters or treats image
 publication as execution. Every warm round has separate counts and receipts.
+Every warmup and test ioctl records `KD_MIXED_CONTEXT` on its original task,
+with before/after preemption, IRQ and `migration_disabled` values. The runner
+requires all six values and the error count to be zero for all five joined
+roles. CPU affinity alone does not establish a balanced migration pin. A
+queued role swap must retain the reservation's single pin until custody ends,
+then return with migration enabled. These cold return observations leave the
+ioctl layout and translated body unchanged; `result.json` includes test and
+per-round warmup context receipts.
 The original default remains `owner-handoff`, `simple`, and 50,000 warmup
 iterations. The suggested commands use 200,000: a recorded live attempt exhausted
 all four 50,000 rounds with G still cold; the larger real warmup then succeeded.
@@ -62,7 +70,7 @@ creating a second prepared image. G uses the same prepared public entry as C/W.
    loop before its legitimate A unlock.
 4. In `--protocol owner-handoff`, W's A unlock must produce the retained executor's native ACK. C's own body
    must subsequently run exactly once with C again physically owning A. All
-   five processes must return with balanced preemption/IRQ state. The runner
+   five processes must return with balanced preemption/IRQ/migration state. The runner
    requires one partial JIT body for the forced attempt, one matching transfer,
    one pending-B native continuation, one A ACK and one native completion.
 
@@ -169,5 +177,5 @@ oversubscription and arbitrary kernel replacement remain outside this probe.
 `tests/unit/infrastructure/test_mixed_transfer_runner.py` checks the real runner's
 warm eligibility decisions, gate-before-queue staging, snapshot wire format,
 export-only overlay, protocol-specific returned-JIT/native/early-release
-requirements and failure records using explicit substitutes. It does
+requirements, exact original-task context receipts and failure records using explicit substitutes. It does
 not compile the payload or replace live validation.
