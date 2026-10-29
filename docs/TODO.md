@@ -43,7 +43,7 @@ The proposed `READY`/`CLAIMED` arbitration and validation order are recorded in
 This supersedes the earlier immediate queued/preemptible requirement; it does
 not authorize weakening pin proofs or physical/source/frame retirement. The
 more-than-99% spinning target and nano no-regression gate require measurements.
-The optional profiling follow-up is deferred while this protocol is developed.
+Focused profiling is now the next step because the validated protocol still has a measured throughput gap.
 
 The first [long-spin READY candidate](../bench/results/10.176.26.71/tests/mutex-ready-window-20261029/README.md)
 at `43418d5a`, validated through fixture correction `406c679b`, passed all affected
@@ -67,10 +67,12 @@ contended mutex still lost 1.65–14.26%; rwsem also has negative points. It is 
 promoted. The [early-READY follow-up](../bench/results/10.176.26.71/tests/mutex-early-ready-20261029/README.md)
 at `a46bf63c` passed fifteen selected drivers, both ordinary/diagnostic builds
 and eight live blocks. Both counter points meet the scoped spin target, but
-contended mutex still lost 2.55–11.53%. It is not promoted. The next hypothesis
-consolidates duplicate checks at ordinary admission, retaining every exact
-predicate, stable generation/key revalidation and all later fresh lifetime proofs.
-No performance acceptance follows from source simplification alone.
+contended mutex still lost 2.55–11.53%. It is not promoted. The [consolidated-admission follow-up](../bench/results/10.176.26.71/tests/mutex-admission-once-20261029/README.md)
+at `99f38362` passed nine selected drivers, both provider builds and eight live
+blocks. Its two counter points meet the helper-episode budget target; nine of ten contended mutex
+points remain negative, with changes spanning -11.68% to +1.06%. It is not
+promoted. Focused c01/20 PMU and flat-IP diagnostics against the unchanged pinned
+runtime are next; their instrumented observations cannot become nano scores.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.

@@ -229,16 +229,19 @@ inspection preserves the distinct private-head and post-source role-C CAS paths.
 Both counter points meet the scoped spin target, but contended mutex still loses
 2.55–11.53% in the 36-point round. It remains isolated.
 
-The next hypothesis consolidates duplicate admission checks at the two existing
-boundaries before legacy stack reads or ABI2 borrowed preparation. Preserve
-exact expected node, stable generation/key revalidation, private epoch,
-unreleased outer, current physical owner including PICKUP refusal, COMBINER,
-READY and self-CPU checks. No callback or scheduling boundary may intervene.
-Initial execute_cs checks across image/context work, and every later completion,
-cold, role and tail proof remain fresh. Keep publication, threshold, limits and
-layout unchanged. Source review, negative mutation checks, live validation and
-measurement must establish whether this removes cost without weakening a proof;
-the no-regression gate remains open.
+The [consolidated-admission candidate](../../bench/results/10.176.26.71/tests/mutex-admission-once-20261029/README.md)
+at `99f383624faa872a76521d1b5be7faea586591c1` retains every logical admission
+predicate, stable key/generation reread and later fresh lifetime proof while
+removing duplicate checks at the same uninterrupted boundary. Nine selected
+drivers, both provider builds and eight live blocks passed. Both counter points
+meet the scoped helper-episode budget target. In the 36-point round, the ten
+contended mutex points span -11.68% to +1.06%, with nine negative; it is not promoted.
+
+Focused PMU and flat-IP profiling at c01/20 is the next diagnostic step. Use the
+same frozen runtime and a tools-only Linux 7 overlay for the saved pinned baseline;
+verify unchanged runtime/include/workload trees. Keep instrumented observations
+separate from single-round nano scores. Unsupported counters are failures, never
+zeros. Preserve exact ownership and retirement probes while identifying cost.
 
 ### Physical exclusion for ordinary and delegated callers
 
