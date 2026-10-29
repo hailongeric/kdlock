@@ -33,10 +33,11 @@ def main():
     types += definition(mutex, "struct kd_mutex_batch {") + ";\n"
     queue = "static struct kd_mutex_node *\n" + definition(mutex, "kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)") + "\n"
     queue += definition(mutex, "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,") + "\n"
-    for marker in ("static void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
-                   "static void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,",
+    queue += "static __always_inline unsigned int\n" + definition(mutex, "kd_mutex_batch_pin_slot(struct kd_mutex_batch *batch, unsigned int offset)") + "\n"
+    for marker in ("static __always_inline void kd_mutex_proxy_wait_pinned(struct kd_mutex_node *node)",
+                   "static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,",
                    "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)",
-                   "static void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):
+                   "static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,"):
         queue += definition(mutex, marker) + "\n"
     code = definition(frame, "static bool kd_exec_mutex_custody_accepted(const struct kd_exec_frame *frame)") + "\n"
     code += definition(frame, "int kd_exec_frame_record_event(struct kd_exec_frame *frame,") + "\n"

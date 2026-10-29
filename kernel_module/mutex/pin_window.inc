@@ -4,7 +4,19 @@
  * separately keeps executable text live through final retirement.
  * Every selected origin must ACK even when preparation/refusal closes the window.
  * Only the current request may survive a dispatcher or ownership boundary. */
-static void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,
+/* Slots hold exact invocation identities. Advancing a private cursor avoids
+ * copying overlapping descriptors through a library memmove on every body.
+ * Empty windows may retain any valid head; all inactive node slots are NULL. */
+static __always_inline unsigned int
+kd_mutex_batch_pin_slot(struct kd_mutex_batch *batch, unsigned int offset)
+{
+	BUG_ON(batch->pin_head >= KD_MUTEX_PIN_WINDOW ||
+	       offset >= KD_MUTEX_PIN_WINDOW);
+	return (batch->pin_head + offset) % KD_MUTEX_PIN_WINDOW;
+}
+
+/* index is a physical slot returned by kd_mutex_batch_pin_slot(). */
+static __always_inline void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,
 				     unsigned int index)
 {
 	struct kd_mutex_node *node = batch->pins[index].node;
@@ -13,19 +25,21 @@ static void kd_mutex_batch_pin_check(struct kd_mutex_batch *batch,
 	       READ_ONCE(node->count_seq) != batch->pins[index].generation);
 }
 
-static bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
+static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
 				   struct kd_mutex_node *node)
 {
-	unsigned int i = batch->nr_pins;
+	unsigned int count = batch->nr_pins, index;
 	u64 generation = READ_ONCE(node->count_seq);
 
-	BUG_ON(i >= KD_MUTEX_PIN_WINDOW || (generation & 1) ||
+	BUG_ON(count >= KD_MUTEX_PIN_WINDOW || (generation & 1) ||
 	       READ_ONCE(node->counted_lock) != batch->lock);
+	index = kd_mutex_batch_pin_slot(batch, count);
+	BUG_ON(batch->pins[index].node);
 	if (!kd_mutex_proxy_request(node))
 		return false;
-	batch->pins[i].node = node;
-	batch->pins[i].generation = generation;
-	batch->nr_pins = i + 1;
+	batch->pins[index].node = node;
+	batch->pins[index].generation = generation;
+	batch->nr_pins = count + 1;
 	return true;
 }
 
@@ -37,37 +51,37 @@ static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current
 	unsigned int keep = keep_current && batch->nr_pins ? 1 : 0;
 
 	while (batch->nr_pins > keep) {
-		unsigned int i = batch->nr_pins - 1;
-		struct kd_mutex_node *node = batch->pins[i].node;
+		unsigned int count = batch->nr_pins - 1;
+		unsigned int index = kd_mutex_batch_pin_slot(batch, count);
+		struct kd_mutex_node *node = batch->pins[index].node;
 
-		kd_mutex_batch_pin_check(batch, i);
+		kd_mutex_batch_pin_check(batch, index);
 		kd_mutex_proxy_wait_pinned(node);
-		batch->pins[i].node = NULL;
-		batch->nr_pins = i;
+		batch->pins[index].node = NULL;
+		batch->nr_pins = count;
 		smp_store_release(&node->locked, KD_MUTEX_WAIT);
 	}
 }
 
 /* Forget the completed/native current before result publication. Its pin ends
  * through that existing result protocol; every remaining descriptor is queued. */
-static void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,
+static __always_inline void kd_mutex_batch_pin_complete(struct kd_mutex_batch *batch,
 					struct kd_mutex_node *node)
 {
-	unsigned int i;
+	unsigned int index = kd_mutex_batch_pin_slot(batch, 0);
 
-	BUG_ON(!batch->nr_pins || batch->pins[0].node != node ||
+	BUG_ON(!batch->nr_pins || batch->pins[index].node != node ||
 	       smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_PINNED);
-	kd_mutex_batch_pin_check(batch, 0);
-	for (i = 1; i < batch->nr_pins; i++)
-		batch->pins[i - 1] = batch->pins[i];
+	kd_mutex_batch_pin_check(batch, index);
+	batch->pins[index].node = NULL;
 	batch->nr_pins--;
-	batch->pins[batch->nr_pins].node = NULL;
+	batch->pin_head = (index + 1) % KD_MUTEX_PIN_WINDOW;
 }
 
 /* The caller has already incremented counter for current. A deferred prefix
  * may first appear after the locality boundary: clamp to current instead of
  * unsigned underflow, then let the original next-iteration boundary decide. */
-static void kd_mutex_batch_pin_budget(struct kd_mutex_batch *batch, int counter)
+static __always_inline void kd_mutex_batch_pin_budget(struct kd_mutex_batch *batch, int counter)
 {
 	unsigned int left = counter >= kd_mutex_batch_size ?
 		1 : kd_mutex_batch_size - counter + 1;
@@ -86,15 +100,17 @@ static void kd_mutex_batch_pin_budget(struct kd_mutex_batch *batch, int counter)
  * linked, same-entry/local FIFO prefix is immediately selected. With a deferred
  * prefix, stop before its terminal or count boundary; never select that prefix
  * or change its links. Distinct origin CPUs keep one pin from blocking an ACK. */
-static bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
+static __always_inline bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
 				      struct kd_mutex_node *node, bool ahead)
 {
 	struct kd_mutex_node *next;
 	unsigned int i, limit = batch->pin_budget;
 
 	if (batch->nr_pins) {
-		BUG_ON(batch->pins[0].node != node);
-		kd_mutex_batch_pin_check(batch, 0);
+		unsigned int index = kd_mutex_batch_pin_slot(batch, 0);
+
+		BUG_ON(batch->pins[index].node != node);
+		kd_mutex_batch_pin_check(batch, index);
 	} else if (!kd_mutex_batch_pin_add(batch, node)) {
 		return false;
 	}
@@ -111,7 +127,7 @@ static bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
 		 * Keep the index bound explicit at this dereference, including
 		 * compile-time one-body policy configurations. */
 		BUG_ON(!count || count > KD_MUTEX_PIN_WINDOW);
-		last = batch->pins[count - 1].node;
+		last = batch->pins[kd_mutex_batch_pin_slot(batch, count - 1)].node;
 		next = smp_load_acquire(&last->next);
 		if (!next || next->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 		    next->packet_state != KD_PACKET_MINIMAL ||
@@ -120,9 +136,12 @@ static bool kd_mutex_batch_pin_select(struct kd_mutex_batch *batch,
 		    (batch->deferred_head && !smp_load_acquire(&next->next)))
 			break;
 		cpu = next->tail >> KD_MUTEX_TAIL_CPU_OFFSET;
-		for (i = 0; i < batch->nr_pins; i++)
-			if ((batch->pins[i].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)
+		for (i = 0; i < batch->nr_pins; i++) {
+			unsigned int index = kd_mutex_batch_pin_slot(batch, i);
+
+			if ((batch->pins[index].node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) == cpu)
 				return true;
+		}
 		if (!kd_mutex_batch_pin_add(batch, next))
 			break;
 	}

@@ -56,6 +56,7 @@ static unsigned int release_traces;
 static unsigned int routine_traces;
 static int preempt = 1;
 static bool other_holds, terminal, fast_window;
+static unsigned int test_pin_head;
 static int kd_mutex_batch_size = 16;
 static unsigned int queue_finishes;
 static unsigned int handoff_starts, handoff_ends;
@@ -533,11 +534,13 @@ static bool kd_mutex_try_role_swap(struct kd_mutex *lock,
 
 int main(void)
 {
+	for (test_pin_head = 0; test_pin_head < KD_MUTEX_PIN_WINDOW; test_pin_head++)
 	for (unsigned int after_body_case = 0; after_body_case < 2; after_body_case++)
 	for (unsigned int terminal_case = 0; terminal_case < 3; terminal_case++)
 	for (mode = 0; mode < 9; mode++) {
 		terminal = terminal_case == 1;
 		fast_window = terminal_case == 2;
+		if (test_pin_head && !fast_window) continue;
 		if (fast_window && mode == 0) continue;
 		unsigned long stack[8] = { 0 };
 		unsigned int expected = mode == 4 || mode >= 7 ? 0 : 1;
@@ -638,9 +641,9 @@ int main(void)
 		CHECK(!enclosing.counted_lock && !(enclosing.count_seq & 1));
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
-	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 6);
-	CHECK(routine_traces == 52);
-	printf("mutex outer production progress: %u checks, %u failures, 52 scenarios\n",
+	CHECK(!kd_exec_invariant_failures && kd_mutex_frame_failure_count == 12);
+	CHECK(routine_traces == 100);
+	printf("mutex outer production progress: %u checks, %u failures, 100 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

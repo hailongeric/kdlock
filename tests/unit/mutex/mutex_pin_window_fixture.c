@@ -23,7 +23,7 @@ struct kd_exec_frame;
 static const int kd_mutex_batch_size = 1024;
 #include "pin_window_types.h"
 
-#define NODE_COUNT 8
+#define NODE_COUNT 16
 static struct kd_mutex lock, other_lock;
 static struct kd_mutex_node nodes[NODE_COUNT];
 static struct kd_mutex_batch batch;
@@ -31,6 +31,7 @@ static unsigned int checks, requests, acknowledgements, cancellations, completio
 static unsigned int requested[NODE_COUNT], acked[NODE_COUNT], delayed[NODE_COUNT];
 static bool poisoned[NODE_COUNT];
 static int polled, executor_cpu;
+static unsigned int start_head;
 
 #define CHECK(value) do { checks++; if (!(value)) { \
  fprintf(stderr, "FAIL pin window line %d: %s\n", __LINE__, #value); exit(1); \
@@ -110,6 +111,7 @@ static void cpu_relax(void)
 static void setup(void)
 {
  memset(&batch, 0, sizeof(batch));
+ batch.pin_head = start_head;
  memset(nodes, 0, sizeof(nodes));
  memset(requested, 0, sizeof(requested));
  memset(acked, 0, sizeof(acked));
@@ -158,15 +160,16 @@ static void bounded_refill(void)
  kd_mutex_proxy_wait_pinned(&nodes[0]);
  CHECK(acknowledgements == 1 && acked[0] && !acked[1] && !acked[2] && !acked[3]);
  CHECK(nodes[4].locked == KD_MUTEX_WAIT && !requested[4]);
- /* Six requests remain in this batch; the last two must never be selected. */
- for (unsigned int i = 0; i < 6; i++) {
-  batch.pin_budget = 6 - i;
+ /* Twelve requests remain in this batch; the remaining requests must never be selected. */
+ for (unsigned int i = 0; i < 12; i++) {
+  batch.pin_budget = 12 - i;
   CHECK(kd_mutex_batch_pin_select(&batch, &nodes[i], true));
   CHECK(batch.nr_pins <= 4 && batch.nr_pins <= batch.pin_budget);
   consume(i);
  }
- CHECK(!batch.nr_pins && requests == 6 && completions == 6 && acknowledgements == 6);
- CHECK(!requested[6] && !requested[7] && !cancellations);
+ CHECK(!batch.nr_pins && requests == 12 && completions == 12 && acknowledgements == 12);
+ CHECK(!requested[12] && !requested[13] && !requested[14] && !requested[15] && !cancellations);
+ CHECK(batch.pin_head == start_head);
  kd_mutex_batch_unpin(&batch, false);
 }
 
@@ -240,7 +243,7 @@ static void cancellation(void)
   * selected successor's late ACK before WAIT, keeping only current. */
  CHECK(!acknowledgements);
  kd_mutex_batch_unpin(&batch, true);
- CHECK(batch.nr_pins == 1 && batch.pins[0].node == &nodes[0]);
+ CHECK(batch.nr_pins == 1 && batch.pins[batch.pin_head].node == &nodes[0]);
  CHECK(cancellations == 3 && acknowledgements == 3 && !acked[0]);
  for (unsigned int i = 1; i < 4; i++)
   CHECK(nodes[i].locked == KD_MUTEX_WAIT && delayed[i] == 2);
@@ -257,7 +260,13 @@ static void cancellation(void)
 static void invalid_identity(const char *name)
 {
  setup();
- if (!strcmp(name, "odd-generation")) {
+ if (!strcmp(name, "bad-head")) {
+  batch.pin_head = KD_MUTEX_PIN_WINDOW;
+  kd_mutex_batch_pin_select(&batch, &nodes[0], false);
+ } else if (!strcmp(name, "occupied-slot")) {
+  batch.pins[batch.pin_head].node = &nodes[7];
+  kd_mutex_batch_pin_select(&batch, &nodes[0], false);
+ } else if (!strcmp(name, "odd-generation")) {
   nodes[0].count_seq++;
   kd_mutex_batch_pin_select(&batch, &nodes[0], false);
  } else {
@@ -280,9 +289,11 @@ int main(int argc, char **argv)
 {
  if (argc == 2) invalid_identity(argv[1]);
  CHECK(argc == 1);
- bounded_refill();
- selection_boundaries();
- cancellation();
- printf("PASS pin window: %u checks; bound4/refill, exact current ACK, CPU/image/NUMA/deferred/cap boundaries, delayed cancellation and slot reuse\n", checks);
+ for (start_head = 0; start_head < KD_MUTEX_PIN_WINDOW; start_head++) {
+  bounded_refill();
+  selection_boundaries();
+  cancellation();
+ }
+ printf("PASS pin window: %u checks; bound4/three ring turns/all heads, exact current ACK, CPU/image/NUMA/deferred/cap boundaries, delayed cancellation and slot reuse\n", checks);
  return 0;
 }

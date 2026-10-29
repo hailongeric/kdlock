@@ -265,6 +265,24 @@ Then run the five scoped role-exchange live cases and matched nano points with
 identical workloads, call shells, topology and instrumentation. Source-only
 fixtures do not establish scheduler progress, actual JIT returns or performance.
 
+The separate ring candidate starts from `6b790cfd28d1e4cf8c95ff82e2f49bd4e791ab99`.
+The frozen linear-window provider actually emits an external `memmove` for every
+completion that retains successors, plus out-of-line selection and refill calls
+with return-thunk epilogues. These are verified emitted costs, not proof of the
+measured throughput loss. The ring keeps the same four exact descriptors, advances
+an invocation-private head, and clears each consumed physical slot before wake.
+Reverse cancellation clears tail slots while preserving current. Hot descriptor
+helpers explicitly inline; frame, stack-switch and ownership boundaries retain
+their existing ABI. No ACK, selection, source or delegation limit changes.
+Fixtures cover every starting head, three full ring turns, empty reuse, reverse
+cancellation, wrapped native/early release, and queued custody transfer at every
+head. The composed actual `kd_mutex_execute_cs` FULL-resume fixture seeds its
+private batch initializer with every head while retaining the real helper and
+dispatch boundaries; body execution is substituted. These are protocol fixtures,
+not generated JIT or scheduler evidence. Build, emitted-code verification and
+matched timing remain pending for this candidate; no gain is claimed and no
+diagnostic counter is added.
+
 ### Unified lock/unlock protocol
 
 The following pseudocode describes control flow, not a replacement for the

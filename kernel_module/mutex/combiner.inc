@@ -41,6 +41,7 @@ struct kd_mutex_batch {
 		u64 generation;
 	} pins[KD_MUTEX_PIN_WINDOW];
 	unsigned int nr_pins;
+	unsigned int pin_head;
 	unsigned int pin_budget;
 	KD_MUTEX_DIAG_MEMBER
 };
