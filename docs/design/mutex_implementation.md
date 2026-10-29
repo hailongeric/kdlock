@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch implements the earlier ordinary READY publication
-candidate below; its VM correctness and timing gates are pending.
+delegation waiters. This branch starts the admission consolidation design below;
+its implementation and VM correctness/timing gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -444,6 +444,53 @@ exact descriptor/source/owner/ACK checks, 32/320-byte layouts, 1024/1024 caps,
 65,536 spin budget and one-successor prefetch remain unchanged. Source-derived
 publication/ordering mutations, invalid INIT and early result/cancellation cases,
 emitted-code inspection, live validation and matched timing remain pending.
+
+### One complete admission proof design (October 29)
+
+This separate follow-up starts from
+`a46bf63c44bc81a32901dfd55e3c88a16954e262`. Its 15-driver unit gate, both provider
+builds and emitted-code review passed; its completed one-round nano comparison
+still failed the mutex performance gate. For example, c01 at 20 workers measured
+4.060661 Mops/s versus 4.590029 at `1c86d6d1`; c01 at 8 workers measured 3.584485
+versus 3.678105, and c16 at 20 workers 3.889928 versus 4.227567. These observations
+do not establish which admission instructions account for the remaining cost.
+
+The current selection, descriptor addition, proxy-readiness predicate and
+immediate caller assertion repeat some checks without an intervening callback,
+origin use or scheduling operation. Consolidate only this short admission
+region. Keep one complete proof before legacy origin-stack decoding or ABI2
+borrowed-frame preparation: an empty descriptor, the exact expected current,
+an even captured generation and exact counted lock, this batch's private epoch,
+an unreleased outer acquisition, current's physical ownership excluding PICKUP,
+COMBINER, a different origin CPU, and an acquire READY observation. Capturing
+`count_seq` is not validation: retain the final generation and counted-lock
+re-read before returning admission success. No origin access is permitted on a
+refusal, and no state store or response wait is introduced.
+
+Keep the existing owner predicate, including its internal phase validation,
+rather than creating a second ownership implementation. Preserve the selection
+diagnostic reasons by identifying same-CPU refusal on the cold false path; the
+successful path should check that CPU only once. Mode 2 still counts logical
+descriptor reservations, with unchanged schema and accounting. Its intervening
+counter macros are private inline bookkeeping; mode 0 erases them.
+
+Only the two immediate admission assertions become redundant. The initial
+execute-function guards remain because image/context/debug work separates them
+from ABI2 admission. All fresh checks after frame construction or execution,
+before cold promotion/dispatch, at native/queued role transfer, at delayed-tail
+retirement and before descriptor removal/result publication remain intact. Do
+not reuse admission as a completion proof or change empty epoch closure. Keep
+source/image readiness and exact leases independent of the pin proof.
+
+The focused fixtures must reject each missing admission predicate before any
+borrowed state is touched, including generation/key changes between capture and
+validation, wrong current, PICKUP, a later owner, released outer, invalid phase,
+nonready state and self CPU. Preserve post-execution corruption, cold promotion,
+withdrawal, source retirement, role-C publication and wake/slot-reuse oracles.
+The emitted-code gate must confirm the retained checks and lack of a callback
+between proof and first origin use. All new source/VM gates and any performance
+benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
+fairness are unchanged.
 
 ### Optional READY diagnostics and prior experiments
 
