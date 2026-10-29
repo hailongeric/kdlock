@@ -241,6 +241,8 @@ int main(void)
     KD_MUTEX_PIN_DRAIN(poison(), poison());
     if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
     KD_MUTEX_PIN_WAIT(poison(), 1, poison());
+    if (KD_MUTEX_PIN_DIAG_INIT()) return 3;
+    KD_MUTEX_PIN_DIAG_EXIT();
     return calls != 1 || waits != 1;
 }
 '''

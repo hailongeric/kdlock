@@ -299,8 +299,14 @@ prove that a sleepable body stayed on that node. These observations never
 replace exact ownership, ACK, source/frame retirement or final drain checks.
 
 The KD-only `pin` mode uses `KDLOCK_MUTEX_DIAGNOSTICS=2`, replacing batch
-observations to stay within the reserved per-CPU storage budget. It reads
-`mutex_pin_stats` after warmup and after the joined measurement, saving
+observations. Its bounded per-CPU counters are dynamically preallocated during
+provider initialization, so they do not enlarge the module loader's reserved
+per-CPU section. Exact drain precedes teardown, and the existing parameter mutex
+serializes sysfs reads with final detach. The getter returns `-ENODEV` without
+storage. The original static-counter candidate failed reserved-chunk allocation
+at 7984 bytes before provider initialization; that is a preparation failure, not
+a measured workload. The mode 2 allocation fix still requires VM validation.
+The runner reads `mutex_pin_stats` after warmup and after the joined measurement, saving
 `pin-before.json`, `pin-after.json` and `pin-delta.json`. Schema 1 binds compiled
 mode 2, a four-request window, both selected mutex policy limits and the TSC
 sample shift. The seventeen counters retain selections, requested/consumed/cancelled

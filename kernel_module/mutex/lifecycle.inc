@@ -36,6 +36,11 @@ int kd_mutex_init_percpu(void)
 
 	if (ret)
 		return ret;
+	ret = KD_MUTEX_PIN_DIAG_INIT();
+	if (ret) {
+		kd_mutex_local_runtime_exit();
+		return ret;
+	}
 
 	/* Per-CPU alignment alone does not isolate the four array elements. */
 	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
@@ -118,6 +123,7 @@ int kd_mutex_init_percpu(void)
 
 err_free:
 	kd_mutex_free_percpu_stacks();
+	KD_MUTEX_PIN_DIAG_EXIT();
 	kd_mutex_local_runtime_exit();
 	return -ENOMEM;
 }
@@ -193,5 +199,6 @@ void kd_mutex_exit(void)
 				  i, READ_ONCE(p->node_slots));
 	}
 	kd_mutex_free_percpu_stacks();
+	KD_MUTEX_PIN_DIAG_EXIT();
 	kd_mutex_local_runtime_exit();
 }
