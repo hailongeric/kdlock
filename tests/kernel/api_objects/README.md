@@ -29,7 +29,8 @@ then cancels it before creating another object; that does not change its Native
 target objects.
 
 The runner captures the explicit kernel identity, source/binary hashes and
-three prepared images, stops the translator, then starts each client. These
+three prepared images, explicitly enables `api_bind=1` and records its `Y`
+readback, stops the translator, then starts each client. These
 tests establish syscall effects and participant exclusion. Publication alone
 does not prove returned JIT execution, and the runner deliberately disables
 entry/completion observations. The separate `bench/kernel_api/run.py functional`

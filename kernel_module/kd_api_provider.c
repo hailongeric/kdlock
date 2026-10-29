@@ -16,6 +16,9 @@
 
 unsigned long kd_api_spin_unlock_target, kd_api_mutex_unlock_target;
 static bool kd_api_registered;
+static bool api_bind;
+module_param(api_bind, bool, 0444);
+MODULE_PARM_DESC(api_bind, "Enable explicit syscall object binding and its three prepared entries");
 
 static void kd_api_spin_local_lock(kd_spinlock_t *lock)
 {
@@ -50,6 +53,9 @@ int kd_api_provider_init(void)
 	unsigned long seen = 0;
 	int ret;
 
+	/* Ordinary provider workloads keep their own exact source-entry set. */
+	if (!api_bind)
+		return 0;
 	kd_api_spin_unlock_target = kallsyms_lookup_name("kd_api_files_unlock_clobber");
 	kd_api_mutex_unlock_target = kallsyms_lookup_name("kd_api_pipe_unlock_clobber");
 	if (!kd_api_spin_unlock_target || !kd_api_mutex_unlock_target)
@@ -103,6 +109,8 @@ long kd_api_provider_ioctl(struct file *file, unsigned int command, unsigned lon
 
 	if (!capable(CAP_SYS_ADMIN))
 		return -EPERM;
+	if (!kd_api_registered)
+		return -ENODEV;
 	switch (command) {
 	case KD_API_SELECT:
 		if (!kd_source_is_open())

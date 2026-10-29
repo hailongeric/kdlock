@@ -127,10 +127,19 @@ class FunctionalSmoke(unittest.TestCase):
                 self.assertEqual(rows[0]['write_percent'], 100 if task['family'] == 'rwsem' else 20)
 
     def test_selected_kernel_paths_reach_every_child(self):
-        for task in run.plan(Path('/tmp/kd-basic-plan-only'), run.FAMILIES,
-                             Path('/selected/build'), Path('/selected/bundle')):
-            self.assertIn('/selected/build', task['argv'])
-            self.assertIn('/selected/bundle', task['argv'])
+        source = Path('/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build')
+        for variant in ('kdscope1-native', 'kdscope1-kd'):
+            bundle = Path('/root/kdlock-kernel-baselines/linux70-' + variant + '-20261030')
+            for task in run.plan(Path('/tmp/kd-basic-plan-only'), run.FAMILIES,
+                                 source, bundle, kernel_variant=variant):
+                for option, value in (('--kernel-variant', variant),
+                                      ('--kernel-source', str(source)),
+                                      ('--kernel-baseline', str(bundle))):
+                    self.assertEqual(task['argv'].count(option), 1)
+                    self.assertEqual(task['argv'][task['argv'].index(option) + 1], value)
+        with self.assertRaises(ValueError):
+            run.plan(Path('/tmp/kd-basic-plan-only'), run.FAMILIES,
+                     Path('/selected/build'), Path('/selected/bundle'))
 
     def test_local_or_partial_execution_cannot_pass(self):
         with tempfile.TemporaryDirectory() as name:

@@ -15,16 +15,49 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
 VARIANTS = ('kdlock1', 'kdmm1-native', 'kdmm1-kd', 'kdscope1-native', 'kdscope1-kd')
+BENCHMARK_PROFILES = {
+    'kdlock1': dict(release='7.0.0-38-kdlock1',
+                   build=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
+                   bundle=Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027')),
+    **{variant: dict(release='7.0.0-38-kdscope1',
+                    build=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build'),
+                    bundle=Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-20261030'))
+       for variant in ('kdscope1-native', 'kdscope1-kd')},
+}
 
 
-def arguments(parser):
-    parser.add_argument('--kernel-variant', choices=VARIANTS, default='kdlock1',
+def arguments(parser, *, variants=VARIANTS):
+    parser.add_argument('--kernel-variant', choices=variants, default='kdlock1',
                         help='explicit reviewed Linux 7 release/MM mode; never inferred from a bundle')
     parser.add_argument('--kernel-source', type=Path,
                         default=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
                         help='kernel build directory (KDIR); schema 2 binds its separate source tree')
     parser.add_argument('--kernel-baseline', type=Path,
                         default=Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027'))
+
+
+def benchmark_arguments(parser):
+    arguments(parser, variants=tuple(BENCHMARK_PROFILES))
+    # Resolve only a reviewed explicit profile; an unspecified path is not a
+    # license to infer the profile from the manifest or running release.
+    parser.set_defaults(kernel_source=None, kernel_baseline=None)
+
+
+def benchmark_profile(args, *, release=None):
+    variant = getattr(args, 'kernel_variant', 'kdlock1')
+    if variant not in BENCHMARK_PROFILES:
+        raise ValueError('unsupported benchmark kernel profile')
+    profile = BENCHMARK_PROFILES[variant]
+    if args.kernel_source is None:
+        args.kernel_source = profile['build']
+    if args.kernel_baseline is None:
+        args.kernel_baseline = profile['bundle']
+    if (args.kernel_source != profile['build'] or
+            args.kernel_baseline != profile['bundle']):
+        raise ValueError('exact benchmark profile build and bundle required')
+    if release is not None and release != profile['release']:
+        raise ValueError('running release differs from benchmark profile')
+    return profile
 
 
 def verifier_for(bundle):

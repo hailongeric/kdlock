@@ -420,7 +420,7 @@ def main(lock_kind='spin'):
                    help='freeze and audit binaries without loading modules or running sessions')
     p.add_argument('--functional', action='store_true',
                    help='backend data/context/drain checks; requires --repeats 1; no performance scores')
-    kernel_identity.arguments(p)
+    kernel_identity.benchmark_arguments(p)
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
                    help="off: spin-only KD self-execution control, no JIT acceptance")
@@ -430,6 +430,7 @@ def main(lock_kind='spin'):
                         f'unsigned power of two >=2 (default: {DEFAULT_SPIN_ENTRY_RATIO_LIMIT}; '
                         '0 bypasses only ratio)')
     args = p.parse_args()
+    kernel_identity.benchmark_profile(args)
     args.lock_kind = lock_kind
     require(lock_kind in ('spin', 'mutex'), 'unknown lock kind')
     require(lock_kind != 'mutex' or args.scenario == 'plain',
@@ -454,7 +455,7 @@ def main(lock_kind='spin'):
     require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),
             'confirmed recovery guest and recorded snapshot tag required')
-    require(os.uname().release == '7.0.0-38-kdlock1', 'verified Linux 7 KD kernel required')
+    kernel_identity.benchmark_profile(args, release=os.uname().release)
     out = args.output.resolve()
     require(not out.exists() and not out.is_relative_to(ROOT), 'new external output required')
     idle(); out.mkdir(parents=True); write_json(out/'plan.json', plan)

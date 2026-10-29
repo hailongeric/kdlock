@@ -136,9 +136,12 @@ class ObjectSession(api.BoundSession):
         self.verify()
         self.run(['insmod',self.binaries['guard']], 'load-guard.log')
         self.run(['rmmod','tc_allocator_guard'], 'unload-guard.log')
-        self.run(['insmod',self.binaries['provider'],'bench_quiet=1','bench_complete_probe=0',
+        self.run(['insmod',self.binaries['provider'],'api_bind=1','bench_quiet=1','bench_complete_probe=0',
                   'hotlock_stats=0','jit_timing=0','target_process=sc_worker'], 'load-provider.log')
         self.loaded_kd = True
+        self.record['api_bind'] = (api.PARAM/'api_bind').read_text().strip()
+        rt.require(self.record['api_bind'] == 'Y', 'explicit API binding is not enabled')
+        self.save()
         self.start_daemon()
         until = time.monotonic()+120
         while True:

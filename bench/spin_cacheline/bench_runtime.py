@@ -119,6 +119,7 @@ def source_state():
                       "workload_modules/mutex_cacheline",
                       "include", "kernel_module", "daemon",
                       "disassem", "kernel_baseline", "kernel_integration/linux70",
+                      "kernel_integration/real_api",
                       "kernel_baseline/experiments/spin_static",
                       "kernel_baseline/experiments/spin_clobber",
                       "bench/spin_cacheline/.build/provider"):

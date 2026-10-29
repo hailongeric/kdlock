@@ -200,11 +200,14 @@ class BoundSession(Session):
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-guard.log')
         # The same prepared provider is used by both arms. Native objects
         # never call it, but setup/query control and parameters stay matched.
-        self.run(['insmod', self.binaries['provider'], 'bench_quiet=1',
+        self.run(['insmod', self.binaries['provider'], 'api_bind=1', 'bench_quiet=1',
                   'bench_complete_probe='+str(int(self.functional)), 'jit_timing=0',
                   'hotlock_stats=0', 'target_process=sc_worker'], 'load-provider.log')
         self.loaded_kd = True
         s = self.record
+        s['api_bind'] = (PARAM/'api_bind').read_text().strip()
+        rt.require(s['api_bind'] == 'Y', 'explicit API binding is not enabled')
+        self.save()
         argv = list(map(str, [self.binaries['client'], s['kind'], s['query'], s['entries'], 64,
                ','.join(map(str,s['cpus'])), 63, 2000, 48000, 1000, s['arm']]))
         self.client_log = (self.path/'client.stderr').open('w')

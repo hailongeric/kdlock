@@ -32,6 +32,11 @@ syscalls. Failed creation rolls back its exact provider reference; no implicit
 Native substitution is permitted for an explicitly selected KD creation.
 
 The single loadable KD provider owns all KD queue, CPU, frame and source state.
+API binding is an explicit load-time option, `api_bind=1`; its read-only module
+parameter defaults to off. Ordinary nano/basic providers therefore register only
+their workload entries. With binding off, API setup/query controls refuse the
+request. The actual-syscall benchmark and semantic test enable binding in both
+Native and KD arms and retain the parameter readback before starting clients.
 The built-in bridge contains binding and dispatch only. A second local-only KD
 runtime would create incompatible queue state and is not used. Destruction keeps
 the provider through native close/buffer callbacks, verifies the KD object is

@@ -19,7 +19,10 @@ operations divided by the actual joined phase wall time; no best window or
 repeat is selected. Source/kernel/topology/instrumentation identities remain
 separate from nano and earlier copied-body results.
 
-The provider is loaded before object creation in both arms. The client proves
+The provider is loaded with `api_bind=1` before object creation in both arms;
+the controller records and requires its read-only `Y` readback. Ordinary module
+loads default to binding off and do not prepare these three global entries.
+The client proves
 actual object/lock/provider identity through setup-only queries and keeps the
 object alive until joined workers finish. Its backend cannot change after
 publication. The controller stops the client normally before provider retirement

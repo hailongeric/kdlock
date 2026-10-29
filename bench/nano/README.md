@@ -13,6 +13,17 @@ and fixed-affinity callers. “Best case” describes the intended scope; matche
 measurements determine whether KD actually wins. It is not a claim about
 arbitrary kernel workloads.
 
+The maintained nano and basic launchers accept the explicit `kdlock1`,
+`kdscope1-native` and `kdscope1-kd` kernel profiles. The default remains
+`kdlock1`. Each profile fixes its release, canonical build directory and identity
+bundle; the scope profiles additionally verify the composed API/MM source,
+configuration and exact `kd_mmap=off` or `kd_mmap=on` boot mode. A profile does not
+change workload arguments or select a per-object API backend. Ordinary providers
+leave `api_bind` off, and results from different kernel profiles remain separate.
+Pass the same `--kernel-variant` to the idle evidence archiver, which verifies
+that profile before preserving the tree. This support does not validate the new
+kernel or establish a performance result; those require their own VM receipts.
+
 The October 26 [catalog analysis](../results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 motivates two distinct mechanisms. The strongest measured mutex examples include
 `seek-set` and pipe-capacity queries: small bounded updates or loads with high

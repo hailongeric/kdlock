@@ -65,7 +65,7 @@ def parser():
                    help='fail after the full comparison if KD is slower on peak or median whole-run throughput')
     p.add_argument('--functional', action='store_true', help='one fixed-iteration round, no performance scores')
     p.add_argument('--dry-run', action='store_true', help='print plan without builds, modules or timing')
-    kernel_identity.arguments(p)
+    kernel_identity.benchmark_arguments(p)
     return p
 
 
@@ -80,6 +80,7 @@ def mutex_policy(args):
 
 
 def make_plan(args):
+    kernel_identity.benchmark_profile(args)
     policy = mutex_policy(args)
     require(0 <= args.helper_waves <= 16, 'helper waves must be 0..16')
     require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
@@ -258,7 +259,8 @@ def sources():
     for directory in ('include', 'kernel_module', 'daemon', 'disassem', 'tclock_backend',
                       'workload_modules/rwlock_bench', 'workload_modules/spin_cacheline',
                       'bench/rwlock_compare', 'bench/spin_cacheline', 'bench/tclock_compare', 'bench/nano',
-                      'tests/protocols', 'kernel_baseline', 'kernel_integration/linux70'):
+                      'tests/protocols', 'kernel_baseline', 'kernel_integration/linux70',
+                      'kernel_integration/real_api'):
         for path in (ROOT / directory).rglob('*'):
             relative = path.relative_to(ROOT)
             if (path.is_file() and not any(part.startswith('.') or part in ('__pycache__', 'results')
@@ -385,6 +387,7 @@ def main(argv=None):
         print(json.dumps(plan, indent=2))
         return 0
     require(args.output is not None, '--output is required')
+    kernel_identity.benchmark_profile(args, release=os.uname().release)
     require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),
             'confirmed recovery guest and recorded snapshot tag required')

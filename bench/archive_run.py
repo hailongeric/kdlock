@@ -20,7 +20,9 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "7.0.0-38-kdlock1"
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / "bench/spin_cacheline"))
+import kernel_identity
 
 
 def require(condition, message):
@@ -118,6 +120,16 @@ def idle(base, common_idle):
                 "evidence still open for writing: " + str(descriptor) + " -> " + target)
 
 
+def kernel_admission(args):
+    kernel_identity.benchmark_profile(args, release=os.uname().release)
+    identity = kernel_identity.check(args.kernel_source, args.kernel_baseline,
+                                     variant=args.kernel_variant)
+    require(identity.get("ok") is True and identity.get("schema") == 2 and
+            identity.get("runtime_policy_verified") is True,
+            "verified kernel profile and live runtime policy required before archive")
+    return identity
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, required=True)
@@ -127,10 +139,12 @@ def main():
     parser.add_argument("--group", action="append", required=True, metavar="NAME=PATH",
                         help="assign one top-level path; repeat for each selected group/root")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
+    kernel_identity.benchmark_arguments(parser)
     args = parser.parse_args()
-    require(os.geteuid() == 0 and os.uname().release == RELEASE and
+    require(os.geteuid() == 0 and
             str(ROOT).startswith("/root/") and (ROOT / "bench/spin_cacheline/bench_runtime.py").is_file(),
             "run from the maintained checkout in the intended recovery guest")
+    identity = kernel_admission(args)
     require(60 <= args.timeout_seconds <= 7200, "timeout must be 60..7200 seconds")
     base = args.base.resolve(strict=True)
     require(not args.output.is_symlink(), "output must not be a symbolic link")
@@ -159,6 +173,7 @@ def main():
     out.mkdir()
     receipt = dict(schema=1, completed=False, guest_base=str(base), archive_prefix=base.name,
                    boot_id=boot_id, kernel_release=os.uname().release,
+                   kernel_variant=args.kernel_variant, kernel_identity=identity,
                    health_path=str(health_path.relative_to(base)), health_sha256=sha256(health_path),
                    script_sha256=sha256(Path(__file__)),
                    idle_source_sha256=sha256(ROOT / "bench/spin_cacheline/bench_runtime.py"),
