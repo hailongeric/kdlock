@@ -497,6 +497,54 @@ between proof and first origin use. All new source/VM gates and any performance
 benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
 fairness are unchanged.
 
+### Joint ordinary COMPLETE retirement candidate (October 29)
+
+This isolated design starts from
+`99f383624faa872a76521d1b5be7faea586591c1`. Neither the successor read hint nor
+the specialized exact-phase predicate is included. Their measurements did not
+close the mutex performance gap. Profiling did not establish shared owner checks
+as its cause; a benefit from this larger transition remains unproven.
+
+Only the first ordinary ABI2 batch-wrapper COMPLETE may use joint frame and
+queue retirement. All wrapper witness and timing hooks finish before validation.
+Private helpers retain every existing frame/context, one-lock ledger, 32-bit
+ABI/state and conditional materialized-routing check. The frame must borrow the
+exact current node's packet and name this batch's exact outer hook. The node
+must match the descriptor, counted lock and generation and remain READY under
+this unreleased private epoch. One fresh existing owner/PICKUP/current and
+COMBINER proof then serves both frame and pin retirement; the separate
+`kd_origin_mutex_owned()` read remains. A retained CLAIMED notification cannot
+substitute for that strict READY proof.
+
+After validation, attempt queue retirement once without waiting. On success,
+make the frame inaccessible, mark the packet COMPLETE, remove the descriptor,
+account the one retirement, then publish completed and release result zero.
+Nothing accesses the node or frame afterward. A dedicated private PUBLISHED
+result makes the caller skip its former retirement/wake path and use saved
+successor state only. It is a completed transition, not cached permission for
+another body. Both new private outcomes count as one diagnostic JIT completion.
+
+A lost terminal tail CAS retires the frame and marks COMPLETE but keeps the
+exact descriptor, node reservation, physical owner and batch source lease. A
+private PENDING_TAIL result ends ordinary execution immediately. Existing cold
+cleanup promotes READY to CLAIMED before reopening withdrawal, waits for the
+delayed publisher, retires the link and publishes one completion. It must not
+replay, cancel or wake the completed request early. Origin count membership and
+generation retirement still belong to the origin, independently of this private
+descriptor. Total/local limits, READY publication, spin budget and layouts stay
+unchanged.
+
+The generic `kd_exec_frame_retire_mutex_batch()` interface retains its original
+validation, ownership and error behavior. Shared-TU helpers stay private; no
+export, public proof token or new frame field is added. KDLOCK_SELFTEST keeps the
+old frame-retirement then fresh pin-retirement path, including actual observers.
+FULL, native ACK, role exchange, early outer release and generic/legacy paths
+retain their existing proofs and routing. A source-derived composed fixture must
+exercise actual frame/queue retirement and caller outcomes, including delayed
+tails, invalid identities/routing, exact accounting and immediate post-wake
+reuse. The old outer-progress fixture alone does not exercise fast COMPLETE.
+All compiler, live correctness and timing gates remain pending.
+
 ### Optional READY diagnostics and prior experiments
 
 Mode 0 compiles observations out. Mode 1 emits batch schema 5: `body_unavailable`
