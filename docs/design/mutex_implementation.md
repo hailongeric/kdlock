@@ -1,8 +1,8 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch implements the delayed-CLAIMED candidate below
-from the single-current proxy epoch; its VM correctness and timing gates are pending.
+delegation waiters. This branch starts the earlier ordinary READY publication
+design below; its implementation and VM gates are pending.
 New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -398,6 +398,46 @@ stores. A long-running READY current may perform additional post-budget expiry
 checks, but cannot withdraw during the owned epoch. The greater-than-99% target
 still uses actual wait episodes. Source-derived mutation, live correctness,
 emitted-code and matched timing gates are pending; no benefit is presumed.
+
+### Earlier ordinary READY publication design (October 29)
+
+This isolated follow-up starts from
+`2af70f39a7091c34b5ccab98452f0726336cb2c0`, whose production runtime is
+`e2b685157cae904ece7a2ea62379cfcf82121794`. The delayed-CLAIMED version passed
+its scoped unit and live correctness gates but still failed the mutex timing
+gate: c01 at 20 workers measured 4.038826 Mops/s versus 4.590029 at `1c86d6d1`,
+and at 32 workers 3.959104 versus 4.486160; c16 at 20 workers measured 3.624824
+versus 4.227567. These separate one-round results do not prove the remaining
+cost is caused by publication or establish a gain from this new design.
+
+Only the ordinary `old_tail != 0` branch changes. Both ABI2 and legacy entries
+have already switched to their reserved shadow stacks before this C slowpath.
+Finish packet initialization, exact waiter/count publication and debug work,
+check private INIT, then release-store READY before release-publishing the
+predecessor's `next` link. The incoming release link is required: the prior tail
+exchange precedes count publication, and consumers may inspect generation or
+packet metadata before their readiness acquire. Later producers may append a
+successor meanwhile, but cannot execute or retire the new invocation before its
+incoming link is published.
+
+The result helper becomes observe-only at entry. READY, a cold-retained CLAIMED,
+WAIT cancellation and result zero all survive unchanged; INIT is an invariant
+failure and never permission to rearm. After link publication, ordinary debug,
+packet and origin-stack work must stop until result handling regains ownership.
+Waiting touches only reserved shadow/control state and the existing protocol.
+An already-completed zero still counts as one delegation wait episode, with its
+initial loop budget unspent; the within-budget ratio is not elapsed time since
+READY publication or a parking measurement.
+
+Private first heads stay INIT and keep their checked INIT-to-WAIT transition
+before schedulable physical acquisition. Requeued C stays INIT until its old
+frame/source lease retires; its checked INIT-to-READY CAS still precedes W's
+custody-ready barrier. The role-exchange `goto wait_result` then shares the same
+observe-only helper. Withdrawal arbitration, delayed cold CLAIMED promotion,
+exact descriptor/source/owner/ACK checks, 32/320-byte layouts, 1024/1024 caps,
+65,536 spin budget and one-successor prefetch remain unchanged. Source-derived
+publication/ordering mutations, invalid INIT and early result/cancellation cases,
+emitted-code inspection, live validation and matched timing remain pending.
 
 ### Optional READY diagnostics and prior experiments
 
