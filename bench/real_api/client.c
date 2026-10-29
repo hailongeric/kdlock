@@ -21,6 +21,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "../../workload_modules/real_api/control.h"
+#include "../../include/kd_api_control.h"
 
 #define MAX_WORKERS 63
 #define MAX_SAMPLES 2048
@@ -36,6 +37,8 @@ static char uts_values[2][65];
 static struct utsname uts_baseline;
 static int control_fd = -1, pipe_capacity;
 static int flag_fds[MAX_WORKERS];
+static int binding_fd = -1, binding_backend = -1;
+static struct kd_api_query binding;
 static char name[80], expected[4096];
 static off_t query_offset;
 static pthread_barrier_t barrier;
@@ -87,6 +90,34 @@ static void drain_workers(void)
 		sleep_until(now(CLOCK_MONOTONIC) + 1000000);
 	}
 }
+static pthread_barrier_t files_setup_barrier;
+static void *hold_old_files(void *unused)
+{
+	(void)unused;
+	pthread_barrier_wait(&files_setup_barrier);
+	pthread_barrier_wait(&files_setup_barrier);
+	return NULL;
+}
+
+static void binding_query(bool first)
+{
+	if (binding_fd < 0) return;
+	struct kd_api_query actual = {.version = KD_API_VERSION,
+		.fd = setfd_mode ? -1 : query_fd};
+	if (ioctl(binding_fd, KD_API_QUERY, &actual)) die("object binding query");
+	if (actual.version != KD_API_VERSION || actual.backend != (unsigned int)binding_backend ||
+	    actual.kind != (setfd_mode ? KD_API_KIND_FILES : KD_API_KIND_PIPE) ||
+	    !actual.object || !actual.lock ||
+	    (actual.provider != 0) != (binding_backend == KD_API_BACKEND_KD) ||
+	    !actual.entries[0] || !actual.entries[1] || !actual.entries[2]) {
+		errno = EPROTO; die("object binding identity");
+	}
+	if (!first && memcmp(&actual, &binding, sizeof(actual))) {
+		errno = ESTALE; die("object binding changed during its lifetime");
+	}
+	binding = actual;
+}
+
 static void value_for(char *buf, int key)
 {
 	for (int i = 0; i < value_size; i++)
@@ -301,6 +332,7 @@ static bool run_phase(bool measure, bool learning)
 	}
 	pthread_barrier_destroy(&barrier);
 	drain_workers();
+	binding_query(false);
 	printf("{\"phase\":\"%s\",\"ok\":%s,\"completed\":%llu,"
 	       "\"started_ns\":%llu,\"deadline_ns\":%llu,\"finished_ns\":%llu,"
 	       "\"wall_ns\":%llu,\"duration_ns\":%llu,\"peak_window_ns\":300000000,"
@@ -390,8 +422,13 @@ int main(int argc, char **argv)
 		p = strtok_r(NULL, ",", &save);
 	}
 	if (!nworkers) return 2;
-	if (argc == 11) {
-		if (!xattr_mode) return 2;
+	if (argc == 11 && !xattr_mode) {
+		if (!(setfd_mode || pipebytes_mode || pipecap_mode)) return 2;
+		if (!strcmp(argv[10], "native")) binding_backend = KD_API_BACKEND_NATIVE;
+		else if (!strcmp(argv[10], "kd")) binding_backend = KD_API_BACKEND_KD;
+		else return 2;
+	}
+	if (argc == 11 && xattr_mode) {
 		p = strtok_r(argv[10], ",", &save);
 		while (p) {
 			int cpu = atoi(p);
@@ -414,6 +451,28 @@ int main(int argc, char **argv)
 	}
 	/* Initialize data on the first worker's node equally for all arms. */
 	if (pin(cpus[0])) die("setup affinity");
+	if (binding_backend >= 0) {
+		pthread_t files_holder;
+		if (setfd_mode) {
+			int error = pthread_barrier_init(&files_setup_barrier, NULL, 2);
+			if (!error) error = pthread_create(&files_holder, NULL, hold_old_files, NULL);
+			if (error) { errno = error; die("old file-table holder"); }
+			pthread_barrier_wait(&files_setup_barrier);
+		}
+		binding_fd = open("/dev/kd_dev", O_RDONLY | O_CLOEXEC);
+		if (binding_fd < 0) die("binding control open");
+		struct kd_api_select selection = {.version = KD_API_VERSION,
+			.files_budget = binding_backend == KD_API_BACKEND_KD && setfd_mode,
+			.pipes_budget = binding_backend == KD_API_BACKEND_KD && !setfd_mode};
+		if (ioctl(binding_fd, KD_API_SELECT, &selection)) die("select object creation");
+		if (setfd_mode) {
+			if (unshare(CLONE_FILES)) die("private bound file table");
+			pthread_barrier_wait(&files_setup_barrier);
+			int error = pthread_join(files_holder, NULL);
+			if (!error) error = pthread_barrier_destroy(&files_setup_barrier);
+			if (error) { errno = error; die("file-table holder drain"); }
+		}
+	}
 	if (pipebytes_mode || pipecap_mode) {
 		char dir[] = "/dev/shm/kdlock-api-XXXXXX", fifo[128];
 		if (!mkdtemp(dir)) die("mkdtemp");
@@ -481,17 +540,31 @@ int main(int argc, char **argv)
 			close(independent);
 		}
 	}
+	if (binding_fd >= 0) {
+		if (ioctl(binding_fd, KD_API_CANCEL)) die("clear creation selector");
+		binding_query(true);
+	}
 	if (operation()) { errno = EIO; die("stock oracle"); }
 	if (pin(collector)) die("collector affinity");
-	printf("{\"ready\":true,\"pid\":%d,\"path\":\"%s\"}\n", getpid(), path);
+	printf("{\"ready\":true,\"pid\":%d,\"path\":\"%s\"", getpid(), path);
+	if (binding_fd >= 0)
+		printf(",\"binding\":{\"version\":%u,\"kind\":%u,\"backend\":%u,"
+		       "\"object\":%llu,\"lock\":%llu,\"provider\":%llu,\"entries\":[%llu,%llu,%llu]}",
+		       binding.version, binding.kind, binding.backend,
+		       (unsigned long long)binding.object, (unsigned long long)binding.lock,
+		       (unsigned long long)binding.provider, (unsigned long long)binding.entries[0],
+		       (unsigned long long)binding.entries[1], (unsigned long long)binding.entries[2]);
+	puts("}");
 	fflush(stdout);
 	char cmd[80];
 	while (fgets(cmd, sizeof(cmd), stdin)) {
 		if (!strcmp(cmd, "bind\n")) {
+			if (binding_fd >= 0) return 2;
 			control_fd = open("/dev/real_api_control", O_RDONLY | O_CLOEXEC);
 			if (control_fd < 0) die("control open");
 			puts("{\"bound\":true}"); fflush(stdout);
 		} else if (!strcmp(cmd, "unbind\n")) {
+			if (binding_fd >= 0) return 2;
 			if (control_fd >= 0) close(control_fd);
 			control_fd = -1;
 			puts("{\"unbound\":true}"); fflush(stdout);
@@ -502,6 +575,7 @@ int main(int argc, char **argv)
 		else if (!strcmp(cmd, "measure\n")) { if (!run_phase(true, false)) return 1; }
 		else if (!strcmp(cmd, "check\n")) {
 			bool ok = sync_mode ? checked() : check_all();
+			binding_query(false);
 			printf("{\"check\":%s}\n", ok ? "true" : "false"); fflush(stdout);
 			if (!ok) return 1;
 		} else if (!strcmp(cmd, "quit\n")) break;
@@ -511,5 +585,6 @@ int main(int argc, char **argv)
 	if (setfd_mode || pipebytes_mode || pipecap_mode)
 		for (int i = 0; i < nworkers; i++) close(flag_fds[i]);
 	close(owner_fd);
+	if (binding_fd >= 0) close(binding_fd);
 	return 0;
 }
