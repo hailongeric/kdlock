@@ -17,8 +17,24 @@ diagnostic-report functions are AST-identical between these source versions.
 Retain that common measurement core; preserve each arm's real source/driver hash
 and identify the baseline runtime separately from its tools-overlay commit.
 Historical batch utilities remain present but are outside this experiment.
-Implementation, focused VM checks, both profiling arms and their results are
-pending. No performance gain follows from this plan.
+The tools overlay is implemented and statically reviewed; focused VM checks and
+baseline profiling remain pending. Candidate profiling was collected separately
+by the VM owner. No performance gain follows from this implementation.
+
+The only changed paths from the baseline are this README,
+`bench/nano/profile.py` and `tests/unit/bench/test_nano_profile.py`. Verified
+unchanged Git trees are `kernel_module/` =
+`2e3f84c48543261a8ba5bed9b22b25c45db157bf`, `include/` =
+`439085a106cfd8b036c63aa75e95519de887e48c`, and `workload_modules/` =
+`ee1b7b4fe4252c74b13f402de171ea2fb7914db8`; `bench/rwlock_compare/run.py` is also
+unchanged. The overlay driver SHA-256 is
+`74870cb3423b056d0160e8f61a3ff19bb1e39283c82377a9c0c44eeb4ae28193`.
+The SHA-256 of newline-joined `ast.dump(..., include_attributes=False)` for
+`parse_stat`, `summarize_samples`, `perf_command`, `launch_profiled_client`,
+`capture_symbols`, `diagnostic_report`, in that order, is
+`b21ba930e5120579e2b899738837c390e9e723d7f9ba57c38c7c7010167b2de8`, identical
+to candidate `99f383624faa872a76521d1b5be7faea586591c1`. No host test/import or
+build was used for these static checks. Binary identity is a later VM/ELF gate.
 
 After the scored nano campaign is drained and archived, run only c01 at 20
 workers, once per mode for each frozen source. Use `/usr/bin/perf` (verified

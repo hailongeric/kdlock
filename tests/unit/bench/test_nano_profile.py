@@ -207,6 +207,60 @@ class NanoProfileTests(unittest.TestCase):
             self.assertEqual(argv[argv.index('--repeats') + 1], '1')
             self.assertEqual(argv[argv.index('--write-percent') + 1], '100')
 
+    def test_linux7_kernel_defaults_and_explicit_identity_are_forwarded(self):
+        base = ['--mode', 'stat', '--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
+        for extra, source, baseline, variant in (
+                ([], '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build',
+                 '/root/kdlock-kernel-baselines/linux70-kdlock1-20261027', 'kdlock1'),
+                (['--kernel-source', '/reviewed/kernel/build',
+                  '--kernel-baseline', '/reviewed/kernel/bundle',
+                  '--kernel-variant', 'kdmm1-native'],
+                 '/reviewed/kernel/build', '/reviewed/kernel/bundle', 'kdmm1-native')):
+            with self.subTest(extra=extra):
+                args = profile.parser().parse_args(base + extra)
+                argv = profile.runner_arguments(args, 'mutex-throughput')
+                self.assertEqual(argv[argv.index('--kernel-source') + 1], source)
+                self.assertEqual(argv[argv.index('--kernel-baseline') + 1], baseline)
+                self.assertEqual(argv[argv.index('--kernel-variant') + 1], variant)
+
+    def test_stat_and_record_accept_the_matched_twenty_worker_point(self):
+        for mode in ('stat', 'record'):
+            with self.subTest(mode=mode):
+                args = profile.parser().parse_args(['--mode', mode,
+                    '--output', '/tmp/new-profile', '--source-commit', 'a' * 40,
+                    '--profiles', 'mutex-throughput', '--threads', '20', '--backends', 'kdlock',
+                    '--perf', '/usr/bin/perf', '--record-event', 'cycles:k', '--frequency', '997',
+                    '--events', 'cycles:k', 'instructions:k', 'cache-misses:k', 'task-clock',
+                    'context-switches', 'cpu-migrations', 'page-faults'])
+                argv = profile.runner_arguments(args, 'mutex-throughput')
+                self.assertEqual(argv[argv.index('--threads') + 1:argv.index('--cpus')], ['20'])
+                self.assertEqual(argv[argv.index('--cpus') + 1:argv.index('--collector-cpu')],
+                                 list(map(str, range(20))))
+                self.assertEqual(argv[argv.index('--backends') + 1:argv.index('--repeats')], ['kdlock'])
+                for option, value in (('--collector-cpu', '63'), ('--duration-ms', '2000'),
+                                      ('--cachelines', '1'), ('--post-work-rounds', '256'),
+                                      ('--write-percent', '100')):
+                    self.assertEqual(argv[argv.index(option) + 1], value)
+                self.assertEqual(args.perf, Path('/usr/bin/perf'))
+                self.assertEqual(args.frequency, 997)
+                self.assertFalse(args.allow_multiplex)
+
+    def test_recovery_confirmation_and_snapshot_are_required_before_runner_import(self):
+        argv = ['profile.py', '--mode', 'stat', '--output', '/tmp/new-profile',
+                '--source-commit', 'a' * 40]
+        for uid, environment in ((0, {}), (0, {'KDLOCK_RECOVERY_CONFIRMED': '1'}),
+                (0, {'KDLOCK_SNAPSHOT_TAG': 'reviewed-snapshot'}),
+                (0, {'KDLOCK_RECOVERY_CONFIRMED': '0', 'KDLOCK_SNAPSHOT_TAG': 'reviewed-snapshot'}),
+                (1000, {'KDLOCK_RECOVERY_CONFIRMED': '1', 'KDLOCK_SNAPSHOT_TAG': 'reviewed-snapshot'})):
+            with self.subTest(uid=uid, environment=environment), \
+                    patch.object(profile.sys, 'argv', argv), \
+                    patch.object(profile.os, 'geteuid', return_value=uid), \
+                    patch.dict(profile.os.environ, environment, clear=True), \
+                    patch.object(profile.importlib.util, 'spec_from_file_location') as runner_import:
+                with self.assertRaisesRegex(ValueError, 'confirmed recovery guest and recorded snapshot tag'):
+                    profile.main()
+                runner_import.assert_not_called()
+
     def test_batch_defaults_select_only_kd_and_allow_the_same_node_boundary(self):
         args = profile.parser().parse_args(['--mode', 'batch', '--output', '/tmp/new-profile',
                                            '--source-commit', 'a' * 40,

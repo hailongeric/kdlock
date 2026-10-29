@@ -26,6 +26,9 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
+import kernel_identity
+
 PERF = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/tools/perf')
 EVENTS = ('cycles:k', 'instructions:k', 'cache-references:k', 'cache-misses:k',
           'branches:k', 'branch-misses:k', 'task-clock', 'context-switches',
@@ -449,7 +452,7 @@ def parser():
     p.add_argument('--perf', type=Path, default=PERF)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
                    default=['mutex-throughput', 'mutex-locality'])
-    p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
+    p.add_argument('--threads', nargs='+', type=int, choices=(16, 20, 32, 36, 60), default=[16, 36, 60])
     p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--mutex-batch-limit', type=int, default=1024)
@@ -458,6 +461,7 @@ def parser():
     p.add_argument('--events', nargs='+', default=list(EVENTS))
     p.add_argument('--allow-multiplex', action='store_true')
     p.add_argument('--dry-run', action='store_true')
+    kernel_identity.arguments(p)
     return p
 
 
@@ -475,8 +479,9 @@ def runner_arguments(args, profile):
         '--duration-ms', '2000', '--post-work-rounds', str(post),
         '--mutex-batch-limit', str(args.mutex_batch_limit),
         '--mutex-numa-boundary', str(args.mutex_numa_boundary),
-        '--kernel-source', '/root/linux-6.1.159-kdclobber2',
-        '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
+        '--kernel-source', str(args.kernel_source),
+        '--kernel-baseline', str(args.kernel_baseline),
+        '--kernel-variant', args.kernel_variant]
 
 
 def main():
@@ -492,10 +497,9 @@ def main():
     if args.dry_run:
         print(json.dumps({profile: runner_arguments(args, profile) for profile in args.profiles}, indent=2))
         return 0
-    require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
-            os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-            os.environ.get('KDLOCK_SNAPSHOT_TAG') == 'before-mutex-kdonly-20261017T140354Z',
-            'confirmed recovery guest required')
+    require(os.geteuid() == 0 and os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
+            os.environ.get('KDLOCK_SNAPSHOT_TAG'),
+            'confirmed recovery guest and recorded snapshot tag required')
     root, out = args.source_root.resolve(), args.output.resolve()
     require(str(root).startswith('/root/') and not out.exists() and not out.is_relative_to(root),
             'use the guest checkout and a new external evidence directory')
