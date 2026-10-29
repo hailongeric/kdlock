@@ -84,8 +84,10 @@ KD-only mutex images remain immutable and require the negotiated exclusive-KD
 and immutable-image capabilities. Exact instruction markers keep their existing
 image requirements and runtime source/owner/continuation checks. Trusted mode
 does not apply the historical semantic proofs to their bodies. Marker images
-still obey the restricted root/nested protocol and disable later delegation
-when execution transfers to the original waiter. Unsupported marker encodings
+still obey the restricted root/nested protocol. A supported reached marker
+transfers this invocation's remaining native suffix to the original waiter
+without disabling later delegation of the entry. It does not resume this
+invocation's JIT after the native interval. Unsupported marker encodings
 are not automatically native fallback points. See
 [the protocol details](../docs/design/admission.md#checked-instruction-exits).
 
