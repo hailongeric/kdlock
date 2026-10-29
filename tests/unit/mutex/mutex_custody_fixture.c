@@ -52,8 +52,15 @@ static struct kd_regs captured;
 #define READ_ONCE(x) __atomic_load_n(&(x),__ATOMIC_RELAXED)
 #define WRITE_ONCE(x,v) __atomic_store_n(&(x),(v),__ATOMIC_RELAXED)
 #define smp_load_acquire(p) __atomic_load_n((p),__ATOMIC_ACQUIRE)
+/* Keep this observer bound to the fixture's batch, independently of the
+ * production helper parameter names at the macro expansion site. */
+static void observe_owner_wake(const void *address, bool zero)
+{
+	if (address == &wnode.locked && zero)
+		CHECK(batch.nr_pins == 0);
+}
 #define smp_store_release(p,v) do { \
-    if ((void *)(p)==&wnode.locked && (v)==0) CHECK(batch.nr_pins==0); \
+    observe_owner_wake((p), (v)==0); \
     __atomic_store_n((p),(v),__ATOMIC_RELEASE); \
 } while (0)
 #define BIT(n) (1UL << (n))
