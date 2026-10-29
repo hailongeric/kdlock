@@ -272,13 +272,17 @@ the initial fixture compile failure and missing SELFTEST input failure remain
 recorded. Both counter points meet the scoped spin target. All ten contended
 mutex points still lose 0.98–11.98% in the 36-point round, so it remains isolated.
 
-The next narrow experiment starts again from `99f38362`: split positive-budget
-polling from expired polling and test READY first. Equality proves the common
-state; zero, WAIT, CLAIMED and invalid values retain their exact checks. Preserve
-the last pre-PAUSE snapshot at expiry and the next acquire load after a lost
-withdrawal CAS. The saved parent ELF executes thirteen instructions per ordinary
-READY poll versus four in the pinned baseline. This is a cost hypothesis, not a
-measured cause; the generated loop and all affected gates still need validation.
+The [READY-first waiter candidate](../../bench/results/10.176.26.71/tests/mutex-ready-first-20261029/README.md)
+at `2dbcd7afbf141dd63dcf0086b65fd0da4b32d6f7` changes only the wait helper
+relative to `99f38362`. Positive-budget polling and expired decisions are separate;
+equality proves READY while every other state keeps its exact checks. Both actual
+providers emit six instructions per common initial poll versus thirteen in the
+parent. Eight selected drivers, two builds and eight live blocks passed. Both
+counter points meet the scoped spin target, but all ten contended mutex points
+still lose 0.80–9.82% in the 36-point round. It remains isolated; shorter polling
+alone does not close the throughput gap. A conservative queue-readiness summary
+was reviewed but not implemented because its reset requires a broader protocol
+and its likely savings are limited and unmeasured.
 
 ### Physical exclusion for ordinary and delegated callers
 

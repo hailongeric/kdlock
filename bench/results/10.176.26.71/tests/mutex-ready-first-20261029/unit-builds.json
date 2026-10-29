@@ -1,0 +1,56 @@
+{
+  "completed": true,
+  "source_commit": "2dbcd7afbf141dd63dcf0086b65fd0da4b32d6f7",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "blocks": [
+    {
+      "name": "unit",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "run",
+        "PY_TESTS=mutex/test_mutex_wait_budget.py mutex/test_mutex_proxy_pin.py mutex/test_mutex_pin_diag.py mutex/test_mutex_publication.py mutex/test_mutex_resources.py mutex/test_mutex_outer_progress.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "build-default-off",
+      "argv": [
+        "make",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71/tests/mutex-ready-first-unit-20261029/default-off/kernel_module",
+        "KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "W=1",
+        "KDLOCK_SELFTEST=0",
+        "KDLOCK_NUMA=1",
+        "KDLOCK_SPIN_BATCH=1024",
+        "KDLOCK_MUTEX_BATCH=1024",
+        "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+        "KDLOCK_MUTEX_DIAGNOSTICS=0",
+        "KDLOCK_MUTEX_PIN_TSC_SHIFT=0",
+        "UBSAN_SANITIZE=n"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "build-pin-counts",
+      "argv": [
+        "make",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71/tests/mutex-ready-first-unit-20261029/pin-counts/kernel_module",
+        "KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "W=1",
+        "KDLOCK_SELFTEST=0",
+        "KDLOCK_NUMA=1",
+        "KDLOCK_SPIN_BATCH=1024",
+        "KDLOCK_MUTEX_BATCH=1024",
+        "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+        "KDLOCK_MUTEX_DIAGNOSTICS=2",
+        "KDLOCK_MUTEX_PIN_TSC_SHIFT=0",
+        "UBSAN_SANITIZE=n"
+      ],
+      "returncode": 0
+    }
+  ]
+}

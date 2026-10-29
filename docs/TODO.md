@@ -87,10 +87,15 @@ It is not promoted. The [joint COMPLETE follow-up](../bench/results/10.176.26.71
 at runtime `3232d47c`, validated through `965156ff`, ultimately passed twelve
 selected drivers, three builds and eight live blocks. The two failed setup/gate
 attempts are preserved. Both counter points meet the scoped spin target, but all
-ten contended mutex points still lose 0.98–11.98%; it remains isolated. A separate
-READY-first waiter loop starts from `99f38362` and preserves every state predicate
-and threshold race. Its shorter-loop hypothesis requires actual emitted-code and
-performance evidence before any promotion.
+ten contended mutex points still lose 0.98–11.98%; it remains isolated. The
+[READY-first waiter follow-up](../bench/results/10.176.26.71/tests/mutex-ready-first-20261029/README.md)
+at `2dbcd7af` passed eight selected drivers, two builds and eight live blocks.
+The actual initial poll shrank from thirteen to six instructions, with unchanged
+state/threshold semantics. Both counter points meet the scoped spin target, but
+all ten contended mutex points still lose 0.80–9.82%; it is not promoted. The
+no-regression gate remains open. A proposed queue-wide readiness certificate was
+reviewed without implementation; reset races and limited expected savings do not
+justify weakening exact ownership checks.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.
