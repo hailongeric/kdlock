@@ -1,0 +1,123 @@
+{
+  "scope": "Read-only archived kernel counters and workload receipts, no new execution",
+  "source_commit": "bb3b78e98b28fa049841964fea8bddbf28f32cd8",
+  "archive": "bench/results/10.176.26.71/raw/tests/mutex-ready-prefetch-20261029/bench/mutex-ready-prefetch-nano-20261029-archives/evidence.tar.gz",
+  "member": "mutex-ready-prefetch-nano-20261029/rwsem/rwsem-cacheline-c01-kdlock-w001-t08-r00/kernel.log",
+  "kernel_log_sha256": "4ce243109a22742a503734b4a2dfc96ac991349ca10e4fb5cde8921993260bd8",
+  "mutex_stats": {
+    "slowpath": 0,
+    "combiner": 0,
+    "handoff": 0,
+    "jit_success": 0,
+    "jit_not_ready": 0,
+    "jit_failure": 0,
+    "jit_resume": 0,
+    "frame_failure": 0,
+    "node_overflow": 0,
+    "multi_slot": 0,
+    "context_busy": 0,
+    "nested_lock": 0,
+    "nested_fast": 0,
+    "nested_queued": 0,
+    "nested_jit": 0,
+    "nested_unlock": 0,
+    "nested_abort_release": 0,
+    "active_waiters": 0,
+    "max_waiters_per_cpu": 0,
+    "reserved_nodes": 0,
+    "origin_acquires": 0,
+    "origin_releases": 0
+  },
+  "hotlock_rows": [
+    {
+      "cpu": 0,
+      "entries": 18840,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 1,
+      "entries": 19111,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 2,
+      "entries": 19618,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 3,
+      "entries": 18605,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 4,
+      "entries": 18897,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 5,
+      "entries": 18807,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 6,
+      "entries": 18801,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    },
+    {
+      "cpu": 7,
+      "entries": 19206,
+      "contentions": 0,
+      "last_entries": 0,
+      "checks": 0,
+      "cpu_hot": 0,
+      "window": 1024
+    }
+  ],
+  "measurement_writes": 148045,
+  "warmup_iterations_per_worker": 48000,
+  "worker_cpu_ns": [
+    2000622249,
+    1999877716,
+    1998843316,
+    1999749548,
+    1999468076,
+    1998712033,
+    1999863599,
+    1999704229
+  ],
+  "jit_status": "NO_JIT",
+  "inference": "The recorded combiner count is zero, and the only prefetch call follows its unconditional increment. Thus the changed hint was not executed in this retained run. NO_JIT alone would not establish that.",
+  "limits": [
+    "No cause for the throughput loss is identified.",
+    "This does not measure rwsem phase/read-side coherence costs, physical memory placement, or arbitrary scheduler blocking."
+  ]
+}

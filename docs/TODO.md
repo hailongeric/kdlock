@@ -77,6 +77,12 @@ Candidate whole-client instructions per operation increased 42.80%; samples show
 additional combiner work and waiting amplification, without establishing parking
 or shared owner checks as the cause. Sampling limits remain explicit, and these
 instrumented observations are excluded from nano scores.
+The [successor READY read hint](../bench/results/10.176.26.71/tests/mutex-ready-prefetch-20261029/README.md)
+at `bb3b78e9` passed five selected drivers, both builds and three live blocks,
+but all ten contended mutex points remain below the pinned baseline (1.38–11.60%).
+It remains isolated. The next candidate starts from `99f38362` and consolidates
+redundant phase reads inside the same fresh physical-owner predicates, preserving
+all logical and lifetime boundaries. No performance benefit is assumed.
 
 The spin and rwlock ordinary atomic sections still require preemption exclusion;
 step 1 changes sleeping-lock delegation waiting, not native spin semantics.

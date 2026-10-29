@@ -247,6 +247,20 @@ no dominant shared-owner-check or parking cause is established. The sampling-rat
 ceiling differed, and each mode has one observation. These diagnostics remain
 outside nano scores and do not close the performance gate.
 
+The [single read-hint candidate](../../bench/results/10.176.26.71/tests/mutex-ready-prefetch-20261029/README.md)
+at `bb3b78e98b28fa049841964fea8bddbf28f32cd8` adds only a successor notification
+prefetch. Five selected drivers, both builds and three live blocks passed, and
+both counter points meet the helper-episode budget target. The 36-point round
+still loses 1.38–11.60% at all ten contended mutex points; c01/20 stays near
+4.06 Mops/s. It is isolated and is not carried into the next candidate.
+
+The next bounded change starts from `99f38362` and consolidates the redundant
+HELD-or-COMBINER plus exact-COMBINER tests within one fresh ownership predicate
+at each of the same three boundaries. Keep every owner/PICKUP/current-task,
+private-epoch, exact invocation, origin and later cold/completion proof. Preserve
+the old phase mask rather than inventing a stronger transition check. No cached
+proof crosses a body or callback; correctness and performance remain to be measured.
+
 ### Physical exclusion for ordinary and delegated callers
 
 The `owner` word stores the actual owning task plus three low flag bits:
