@@ -1,0 +1,69 @@
+{
+  "scope": "Read-only static comparison of two basic mutex provider ELFs. No execution, timing or live patch inspection.",
+  "reported_off_source": "cb497220",
+  "text_relocations_count": 4415,
+  "text_relocations_identical": true,
+  "only_text_differences": [
+    {
+      "offset": "0x15baa",
+      "meaning": "KD_PR_DEBUG __LINE__ immediate",
+      "old_line": 585,
+      "new_line": 586
+    },
+    {
+      "offset": "0x20cf4",
+      "meaning": "KD_PR_DEBUG __LINE__ immediate",
+      "old_line": 580,
+      "new_line": 581
+    }
+  ],
+  "exact_function_matches": [
+    "kd_mutex_run_combiner",
+    "kd_mutex_batch_unpin",
+    "_kd_mutex_lock_abi"
+  ],
+  "execute_cs_match": "All bytes except existing debug source-line immediate; all relocations identical.",
+  "off_symbols_absent": [
+    "kd_mutex_pin_diag*",
+    "kd_mutex_pin_stats*",
+    "kd_mutex_pin_stamp",
+    "kd_mutex_pin_sample_seq",
+    "kd_mutex_batch_pin_*",
+    "kd_mutex_proxy_request",
+    "kd_mutex_proxy_wait_pinned"
+  ],
+  "conclusion": "Default-off adds no hot-path evaluation, memory access, call or routing change. Optional diagnostic execution requires separate VM validation.",
+  "ring": {
+    "path": "/tmp/kdlock-pin-ring-basic-provider-20261029.ko",
+    "sha256": "fe932d41819ab8dbffb8348d9002d7343bac1d9641ca18e7ee986d839f223cf6",
+    "text_size": 135567,
+    "text_sha256": "c366c4f849f9b0789c155b86eb15bf63ba9ce9f5dcce0f0bfa00e6a74254463f",
+    "normalized_text_sha256": "ad65a89e36dd3bbdf8887745df275b7c39c3b0fdfceb32f276eeb7bb6431bfb3",
+    "percpu_size": 7600,
+    "metadata": [
+      "mutex_batch_diag=0",
+      "mutex_numa_boundary=1024",
+      "mutex_batch=1024",
+      "spin_numa=1",
+      "spin_batch=1024",
+      "vermagic=7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+    ]
+  },
+  "off": {
+    "path": "/tmp/kdlock-pin-diagnostics-off-provider-20261029.ko",
+    "sha256": "1c4399e15a8d52ab4d2981ddc9690fe81a2896a58d3755cff21e06179dcc1fab",
+    "text_size": 135567,
+    "text_sha256": "39226581421dd6254726d4b5f05e664e6725437f0ee469f69acb1d3927522109",
+    "normalized_text_sha256": "ad65a89e36dd3bbdf8887745df275b7c39c3b0fdfceb32f276eeb7bb6431bfb3",
+    "percpu_size": 7600,
+    "metadata": [
+      "mutex_pin_tsc_shift=0",
+      "mutex_batch_diag=0",
+      "mutex_numa_boundary=1024",
+      "mutex_batch=1024",
+      "spin_numa=1",
+      "spin_batch=1024",
+      "vermagic=7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+    ]
+  }
+}
