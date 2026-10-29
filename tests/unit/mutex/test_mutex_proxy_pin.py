@@ -28,12 +28,11 @@ def main():
         (ROOT / "include/kd_mutex.h").read_text(), re.M))
     assert len(constants.splitlines()) == 4
     state_values = dict(re.findall(r"#define (KD_MUTEX_\w+) (\d+)", constants))
-    rejected_guard = ("!(state != " + state_values["KD_MUTEX_PROXY_READY"] +
-                      " && state != " + state_values["KD_MUTEX_PROXY_CLAIMED"] + ")")
+    rejected_guard = "!(state != " + state_values["KD_MUTEX_PROXY_CLAIMED"] + ")"
     constants += "\n" + "\n".join(line for line in (ROOT / "include/kd_mutex.h").read_text().splitlines()
                                   if line.startswith("#define KD_MUTEX_GATE_"))
     mutations = {
-        "schedule-before-budget": ("if (budget) {", "if (false && budget) {"),
+        "schedule-before-budget": ("} while (--budget);", "} while (--budget && false);"),
         "withdraw-without-unpin": ("\tpreempt_enable();\n\twhile ((state =", "\twhile ((state ="),
         "head-cannot-schedule": (
             "\tpreempt_enable();\n\tfor (;;) {\n\t\twhile (kd_mutex_gate_read(lock))",
@@ -43,7 +42,8 @@ def main():
             "state = smp_load_acquire(&node->locked); if (state == KD_MUTEX_WAIT) "
             "state = cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_READY);"),
         "ignore-expiry-cas-loss": (
-            "if (state == KD_MUTEX_PROXY_READY) {", "if (true) {"),
+            "kd_mutex_gate_end_withdraw(node->lock);\n\t\t\tif (state == KD_MUTEX_PROXY_READY) {",
+            "kd_mutex_gate_end_withdraw(node->lock);\n\t\t\tif (true) {"),
         "self-cpu-selection": (" == raw_smp_processor_id())", " == -99)"),
         "claim-without-ready": (
             "if (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)",

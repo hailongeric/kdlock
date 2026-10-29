@@ -145,8 +145,8 @@ def main():
             "KD_MUTEX_PIN_INITIAL_FINISH(false);",
         ),
         "poll-returns-before-publication": (
-            "if (!state) {",
-            "if (true) {",
+            "if (!state)\n\t\t\t\tgoto completed;",
+            "if (true)\n\t\t\t\tgoto completed;",
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),

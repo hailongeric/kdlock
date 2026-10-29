@@ -22,6 +22,7 @@ static void failure_context(void);
  fprintf(stderr, "FAIL proxy pin line %d: %s\n", __LINE__, #value); failure_context(); exit(1); \
 } } while (0)
 #define BUG_ON(value) CHECK(!(value))
+#define unlikely(value) __builtin_expect(!!(value), 0)
 #define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
 static void observe_claim(const void *word, unsigned int value);
 static __attribute__((noinline)) u8 node_acquire(const u8 *word);

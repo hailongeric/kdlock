@@ -83,8 +83,8 @@ def main():
             "smp_store_release(&prev_node->next, curr_node);",
             "WRITE_ONCE(prev_node->next, curr_node);"),
         "republish-on-wait-entry": (
-            "\t\tstate = smp_load_acquire(&node->locked);",
-            "\t\tWRITE_ONCE(node->locked, KD_MUTEX_PROXY_READY);\n"
+            "\tdo {\n\t\tstate = smp_load_acquire(&node->locked);",
+            "\tdo {\n\t\tWRITE_ONCE(node->locked, KD_MUTEX_PROXY_READY);\n"
             "\t\tstate = smp_load_acquire(&node->locked);"),
         "first-head-stays-init": (
             "cmpxchg(&curr_node->locked, KD_MUTEX_QUEUE_INIT, KD_MUTEX_WAIT)",

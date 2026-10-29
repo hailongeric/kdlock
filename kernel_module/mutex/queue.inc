@@ -90,45 +90,60 @@ static __always_inline void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 	u8 state;
 	KD_MUTEX_PIN_WAIT_ENTER();
 
-	for (;;) {
+	/* READY equality validates the common snapshot. Every other value still
+	 * takes its exact completion/cancellation/CLAIMED validity path. The
+	 * configured budget is positive, so this phase never tests spent zero. */
+	do {
 		state = smp_load_acquire(&node->locked);
-		if (!state) {
-			KD_MUTEX_PIN_INITIAL_FINISH(true);
-			return;
+		if (unlikely(state != KD_MUTEX_PROXY_READY)) {
+			if (!state)
+				goto completed;
+			if (state == KD_MUTEX_WAIT)
+				goto forced_cancel;
+			BUG_ON(state != KD_MUTEX_PROXY_CLAIMED);
 		}
-		if (state == KD_MUTEX_WAIT) {
-			KD_MUTEX_PIN_FORCED_CANCEL();
-			goto withdrawn;
+		cpu_relax();
+	} while (--budget);
+	KD_MUTEX_PIN_BUDGET_EXPIRED();
+
+	/* Start at the decision, carrying the last pre-PAUSE snapshot. A fresh
+	 * load here would change completion/cancellation races and observations
+	 * at the exact budget boundary. CLAIMED consumes that same budget but
+	 * never authorizes withdrawal on its snapshot. */
+	for (;;) {
+		if (state == KD_MUTEX_PROXY_READY) {
+			KD_MUTEX_PIN_EXPIRY_CHECK();
+			if (!need_resched())
+				goto next_poll;
+			/* An epoch or another withdrawing origin refuses this one-shot
+			 * reservation; neither refusal permits abandoning the pin. */
+			if (!kd_mutex_gate_try_withdraw(node->lock))
+				goto next_poll;
+			KD_MUTEX_PIN_WITHDRAW_RESERVED();
+			state = cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_WAIT);
+			kd_mutex_gate_end_withdraw(node->lock);
+			if (state == KD_MUTEX_PROXY_READY) {
+				KD_MUTEX_PIN_WITHDRAW();
+				goto withdrawn;
+			}
+			BUG_ON(state != KD_MUTEX_PROXY_CLAIMED && state != KD_MUTEX_WAIT && state);
 		}
+next_poll:
+		/* A lost CAS, including returned WAIT/zero, is resolved by this
+		 * acquire observation exactly as in the original single loop. */
+		state = smp_load_acquire(&node->locked);
+		if (!state)
+			goto completed;
+		if (state == KD_MUTEX_WAIT)
+			goto forced_cancel;
 		BUG_ON(state != KD_MUTEX_PROXY_READY && state != KD_MUTEX_PROXY_CLAIMED);
 		cpu_relax();
-		if (budget) {
-			if (!--budget)
-				KD_MUTEX_PIN_BUDGET_EXPIRED();
-			else
-				continue;
-		}
-		/* A claimed origin cannot abandon its pin. The spent budget remains
-		 * spent, including after a lost claim/withdraw race. */
-		if (state != KD_MUTEX_PROXY_READY)
-			continue;
-		KD_MUTEX_PIN_EXPIRY_CHECK();
-		if (!need_resched())
-			continue;
-		/* The reservation excludes a new epoch before touching READY. An
-		 * active epoch or another withdrawing origin is a failed attempt,
-		 * never a reason to wait here or abandon this origin's pin. */
-		if (!kd_mutex_gate_try_withdraw(node->lock))
-			continue;
-		KD_MUTEX_PIN_WITHDRAW_RESERVED();
-		state = cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_WAIT);
-		kd_mutex_gate_end_withdraw(node->lock);
-		if (state == KD_MUTEX_PROXY_READY) {
-			KD_MUTEX_PIN_WITHDRAW();
-			goto withdrawn;
-		}
-		BUG_ON(state != KD_MUTEX_PROXY_CLAIMED && state != KD_MUTEX_WAIT && state);
 	}
+completed:
+	KD_MUTEX_PIN_INITIAL_FINISH(true);
+	return;
+forced_cancel:
+	KD_MUTEX_PIN_FORCED_CANCEL();
 withdrawn:
 	/* Withdrawal won against claim, or the executor ended every origin
 	 * access before publishing WAIT. A concurrent result zero must survive:
