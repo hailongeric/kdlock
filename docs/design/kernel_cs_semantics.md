@@ -353,3 +353,37 @@ unchanged mmap1 and matched nano/performance gates remain pending separately.
 The killable-writer optimistic-poll review is a proposal, not an implemented or
 measured improvement. Exact versions, retained failed attempts, receipt hashes
 and the binary/archive verification limits are in the linked record.
+
+### Remaining same-invocation continuation gap
+
+The verified Native CALL path still executes the callee and remaining suffix on
+the waiter. It does **not** meet a stronger request to resume this invocation's
+JIT immediately after only the non-proxyable branch. In particular,
+`kernel_module/mutex/clobber.inc` releases the old request node before native
+resume, while `kernel_module/execution/native.inc` waits for final lock-release
+completion. Reusing that node as a CALL-return rendezvous would violate its
+lifetime contract.
+
+A bounded extension could service a balanced, returning helper on the original
+task while retaining the node, frame, physical owner, source leases and exact
+CALL token. It needs a separate returned-and-quiescent state, complete register
+and arithmetic-flag capture, an already emitted continuation, and exactly one
+logical RET consumption. A failed post-call compatibility check must continue
+after the completed call, never replay it. This is a proposal, not implemented
+support. Arbitrary transparent interception of a native RET additionally needs
+a new return-boundary contract; silently replacing its original return word is
+not compatible with the current contract.
+
+Native lock acquisition is not a balanced helper: a successful
+`_raw_spin_trylock`, for example, leaves an untracked Native lock held. Immediate
+re-entry on the combiner would be invalid even if preemption counts happened to
+match. Such a path needs a proved balanced interval and acquisition accounting,
+or retains the waiter suffix. The direct/indirect CALL live probes above establish
+that suffix behavior, not branch-only re-entry.
+
+The selected setfd, FIONREAD and F_GETPIPE_SZ protected bodies have no mandatory
+inner Native CALL in the audited source and Native objects. FIONREAD's user copy
+is after unlock; SETPIPE_SZ is a separate local branch. Therefore this missing
+re-entry mechanism does not itself prevent complete proxying of the three
+bounded selected bodies. Their changed lock shells still require their own
+linked-image and actual syscall execution evidence.
