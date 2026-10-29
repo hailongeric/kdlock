@@ -1,0 +1,36 @@
+{
+  "baseline": {
+    "kd_exec_frame": [
+      656
+    ],
+    "kd_mutex": [
+      32
+    ],
+    "kd_mutex_node": [
+      320
+    ],
+    "kd_spin_node": [
+      128
+    ],
+    "kd_spin_batch": [
+      200
+    ]
+  },
+  "candidate": {
+    "kd_exec_frame": [
+      656
+    ],
+    "kd_mutex": [
+      32
+    ],
+    "kd_mutex_node": [
+      320
+    ],
+    "kd_spin_node": [
+      128
+    ],
+    "kd_spin_batch": [
+      208
+    ]
+  }
+}

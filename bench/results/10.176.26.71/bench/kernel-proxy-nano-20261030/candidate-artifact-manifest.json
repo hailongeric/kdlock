@@ -1,0 +1,217 @@
+[
+  {
+    "path": "candidate-validation.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/validation.json",
+    "sha256": "710c7bf153eb11ebeddb00b08bdbd7f288525b7942bdf135c4446560a3a5c7fa"
+  },
+  {
+    "path": "candidate-points.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/points.json",
+    "sha256": "21f4ccf05b1b0db56446d6c591dbed26bc429c266ff9c5793d12601d1674b5ba"
+  },
+  {
+    "path": "candidate-points.csv",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/points.csv",
+    "sha256": "5c7b142e4c5be328336eedfd6babc2c5d3aaacb84764cb4c7203cf14a0a92c41"
+  },
+  {
+    "path": "extra-source-review.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/extra-source-review.json",
+    "sha256": "ed64c9e2e789f2f72b0f407c04973cdb49c609fc260ca4dfeac19acba4bb8e8d"
+  },
+  {
+    "path": "candidate-retirement-proposal.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/obsolete-leaf-retirement-proposal.json",
+    "sha256": "851331abb024cbe3dc320de7fdd85f31fee693b7eda2f0fc9856e49122198d75"
+  },
+  {
+    "path": "final-analysis-argv.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/final-analysis-argv.json",
+    "sha256": "21a725614ad109d69962c7bebd80ed7face09f79f77747e123d0aabe12561fb5"
+  },
+  {
+    "path": "final-analysis-command.txt",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/final-analysis-command.txt",
+    "sha256": "a4ca643b9ba45b91318c18d99cdfa474f40d7b9a941eaa91f219f4250f815191"
+  },
+  {
+    "path": "comparison-validation.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/validation.json",
+    "sha256": "c9132082684775338e17e210fb8df4d60107b9d267ebcb269e273c8b18c02ddd"
+  },
+  {
+    "path": "comparison-points.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/points.json",
+    "sha256": "2bf330543a7c9d6f28fc0fe615f9b810d306d599eea9778a1b91e462bbf1a708"
+  },
+  {
+    "path": "comparison-points.csv",
+    "source": "/tmp/kdlock-nano-comparison-20261030/points.csv",
+    "sha256": "d40dc41448fb009d1e156dcdb0fe7db9cfdd57b28b32a23d2d4878a3d63e094e"
+  },
+  {
+    "path": "observed-losses.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/regressions.json",
+    "sha256": "dcbe3e9af64b7b418e8113c153d4d4f56e4dcd68c000c5c448b6c5a63568a5b6"
+  },
+  {
+    "path": "summary-by-workload.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/summary-by-workload.json",
+    "sha256": "407e308865aa87e09aa6538f3e3f374e1d8240d634e1e0cc537c130ab65b4009"
+  },
+  {
+    "path": "selected-20-32-60.csv",
+    "source": "/tmp/kdlock-nano-comparison-20261030/selected-20-32-60.csv",
+    "sha256": "5c2d52a50aab4e4031b70669faedae8e3721baa291b4d800384743260b654167"
+  },
+  {
+    "path": "candidate-host-after.json",
+    "source": "/tmp/kdlock-proxy-nano-candidate-host-after-auto.json",
+    "sha256": "99015016dec4355417ef1714cb44bdff65a07ce4d792a4d78a8577d3f3719679"
+  },
+  {
+    "path": "verify_candidate.py",
+    "source": "/tmp/kdlock-kernel-proxy-nano-verify-candidate-20261030.py",
+    "sha256": "9fb1ea7f45dd5906848600dfd19aab04c6c13a1ac3dd8585521f03026d830b76"
+  },
+  {
+    "path": "analyze_executed.py",
+    "source": "/tmp/kdlock-kernel-proxy-nano-analyze-20261030.py",
+    "sha256": "ecf9bcfe5f1e4156a72c9187147aed0021e6594488e0765ca579e78f4d57f4f2"
+  },
+  {
+    "path": "candidate-verification.log",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030.log",
+    "sha256": "8fd06f4bf217da27ce2818994ceec0ac06e445de948356ff5335d849cd0a26e7"
+  },
+  {
+    "path": "comparison-verification.log",
+    "source": "/tmp/kdlock-nano-comparison-20261030.log",
+    "sha256": "a5483e494534f0db3aec090efa88c7906f0e3dbcc44ab5f646603d9dd9a8e01e"
+  },
+  {
+    "path": "binary-inspection/candidate-elf-provenance.json",
+    "source": "/tmp/kdlock-nano-candidate-verify-20261030/elf-provenance.json",
+    "sha256": "2405f29bb0ff30a97e6aaf5ba77f66fd36310ae66d136739033dcdf938354484"
+  },
+  {
+    "path": "binary-inspection/baseline-provider-provenance.json",
+    "source": "/tmp/kdlock-nano-baseline-artifacts-20261030/provenance.json",
+    "sha256": "cbe165a5fda1f404fca2d0f2ad83d00e5508aaf92df6b3f654c8bc5c83489046"
+  },
+  {
+    "path": "binary-inspection/baseline-workload-provenance.json",
+    "source": "/tmp/kdlock-nano-baseline-workload-elfs-20261030/provenance.json",
+    "sha256": "d919157da86a9bb5ac35c82e0dbacb40b94dc9ba2ac3fa1ebb2d1faac91cbcee"
+  },
+  {
+    "path": "binary-inspection/initial-extraction-failure.txt",
+    "source": "/tmp/kdlock-nano-baseline-workload-elfs-20261030/initial-extraction-failure.txt",
+    "sha256": "69b4c5969e6bc6939d9269a26ac13c0851fc842835325823b5778f7f68a08b0a"
+  },
+  {
+    "path": "binary-inspection/provider-function-maps.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/provider-function-maps.json",
+    "sha256": "759296ac73db400e9e56d66ae996dc673453e30d9669162dcea5aeaf81519945"
+  },
+  {
+    "path": "binary-inspection/measured-text-sections.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/measured-text-sections.json",
+    "sha256": "e46496695d048bf69de11cf1539e7d0284542b483cd66536a62d23d9543fbf5c"
+  },
+  {
+    "path": "binary-inspection/measured-type-sizes.json",
+    "source": "/tmp/kdlock-nano-comparison-20261030/measured-type-sizes.json",
+    "sha256": "035e45cd48c2a0d508ad3df727b95d695e557617b1a08b70b2aa1087b8492b8f"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-run_combiner.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-run_combiner.txt",
+    "sha256": "4bfa5eb13e9083c77c52287aa923e812b4a6f6778a7f9c38c33dfd12e1d8a002"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-run_combiner.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-run_combiner.txt",
+    "sha256": "41a46cb0c246baefd2d14dadc43924436b261092e3ed57eac621f14f364cefd6"
+  },
+  {
+    "path": "binary-inspection/disassembly/kd_mutex_execute_cs.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/kd_mutex_execute_cs.normalized.diff",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "binary-inspection/disassembly/_kd_mutex_lock_abi.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/_kd_mutex_lock_abi.normalized.diff",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-kd_down_read.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-kd_down_read.txt",
+    "sha256": "fbe1adde667012b70cf2d56d99cfb9b5fb5d17677687113d1406b9eb661374bf"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-kd_down_read.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-kd_down_read.txt",
+    "sha256": "24ca3b8805fd5002f1745148295283b817d461ee34fd395028d364b7e11eff9d"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-_kd_mutex_lock_abi.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-_kd_mutex_lock_abi.txt",
+    "sha256": "c029b30f60afa22a9785d1d923d03e0fda9211c280766321425620d934029775"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-__kd_mutex_lock_slowpath.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-__kd_mutex_lock_slowpath.txt",
+    "sha256": "84e83fc4165a132144a8f71d3b0552e77486b0b8932550f2662efb89f1856756"
+  },
+  {
+    "path": "binary-inspection/disassembly/run_combiner.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/run_combiner.normalized.diff",
+    "sha256": "a1645e2622f0f49b076110b6f0fda67c33461ad6a5e317525ef2f6680531c739"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-kd_mutex_execute_cs.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-kd_mutex_execute_cs.txt",
+    "sha256": "0b812dd2eb8a25b55c7494686d7416cc0c45abe9f61142feb0a6276df11f92a3"
+  },
+  {
+    "path": "binary-inspection/disassembly/kd_down_read.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/kd_down_read.normalized.diff",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-kd_mutex_run_combiner.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-kd_mutex_run_combiner.txt",
+    "sha256": "fbd63f34ff6373e7c5519d5749ee5f94c7c3e3cb32864bab8d809b0619812d05"
+  },
+  {
+    "path": "binary-inspection/disassembly/__kd_mutex_lock_slowpath.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/__kd_mutex_lock_slowpath.normalized.diff",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-kd_mutex_run_combiner.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-kd_mutex_run_combiner.txt",
+    "sha256": "be0b960e2d9ca28205e5c30dbd3a5e758412fd623d9a9b6d630776981c0de7e6"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-_kd_mutex_lock_abi.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-_kd_mutex_lock_abi.txt",
+    "sha256": "7cc9bae7294b8e84685c59987d68db0c5b0469f3401bde9b8c491c41b4a32867"
+  },
+  {
+    "path": "binary-inspection/disassembly/kd_mutex_run_combiner.normalized.diff",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/kd_mutex_run_combiner.normalized.diff",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "binary-inspection/disassembly/baseline-kd_mutex_execute_cs.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/baseline-kd_mutex_execute_cs.txt",
+    "sha256": "2dbbde8cec3207f92130e217ed3c0b94a0e0e21449c37ad28ea0edc2d54b5171"
+  },
+  {
+    "path": "binary-inspection/disassembly/candidate-__kd_mutex_lock_slowpath.txt",
+    "source": "/tmp/kdlock-nano-comparison-20261030/binary-disassembly/candidate-__kd_mutex_lock_slowpath.txt",
+    "sha256": "0d7193846201db29a3668c2380fb57acbea8c9a48e04ca5b2f3a9e7e35729065"
+  }
+]

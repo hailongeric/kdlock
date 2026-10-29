@@ -1,150 +1,156 @@
-# Kernel proxy nano comparison: retained baseline
+# Kernel proxy nano comparison, October 30
 
-This is the baseline milestone of the October 30 kernel-proxy campaign, recorded
-while the candidate campaign was still running. All **210 baseline points**
-completed, drained and passed offline replay of the raw data, operation mix,
-sampled peak, JIT accounting, source retirement and ordinary unload receipts.
-There is **no candidate comparison or performance acceptance yet**. Strict host
-timing qualification remains failed; these measurements are exploratory and
-cannot establish the required no-regression result or `mmap1` acceptance.
+All **210 baseline KD points and 630 candidate Native/TCLock/KD points** passed
+offline validation on their first complete replay. Of the 210 matched KD
+coordinates, **108 have lower whole-run throughput, sampled peak throughput,
+or both**. This round does **not** establish the required no-regression result.
+Strict host timing qualification remains failed; `performance_accepted` is false.
+No positive point is treated as an accepted gain, and no loss is discarded as
+noise. One observation per point cannot determine variance or causality.
 
-Baseline source is `acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f`. The separate
-candidate is `8446f4ecb08816380a4c233197a8ce5e4d333aac`; no candidate result is
-included in this milestone. No measured baseline point was retried. Preparation,
-capture and archival failures below are retained separately.
+Measured sources are baseline `acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f` and
+candidate `8446f4ecb08816380a4c233197a8ce5e4d333aac`. The later original-task
+instruction service at `ace6eaf882c54bc822b8fe4f4eea4d85fc605473` is a different
+generation; its VM checks are not included. Real API, localized mmap, kernel
+replacement and unchanged will-it-scale `mmap1` acceptance remain separate.
+The earlier milestone is preserved verbatim in [baseline-report.md](baseline-report.md),
+with all baseline artifacts unchanged. No measured point was repeated or replaced.
 
-## Workload and platform
+## Matched observations
 
-`c01` means one padded cacheline counter; `c16` means sixteen. `w1`, `w20` and
-`w100` mean 1%, 20% and 100% writes. Every point has 256 register-only post-work
-rounds, 48,000 preparation operations per worker and one 2-second measurement.
-The existing peak observation uses a 300-ms window after a 300-ms settling
-interval, sampled every 10 ms. Warmup operations are not pooled with measurement.
+`c01` is one padded cacheline counter; `c16` is sixteen. `w1`, `w20`, `w100` mean
+1%, 20%, 100% writes. Each point has 256 register-only post-work rounds, 48,000
+preparation operations per worker and one 2-second measurement. Peak throughput
+uses the existing 300-ms window after 300-ms settling, sampled every 10 ms.
+Warmup and measurement are separate. Rwsem/rwlock reads always run locally.
 
-Each row below covers workers `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52
-56 60`, exactly once. Readers in rwsem and rwlock execute locally; JIT counts
-refer to writers. A positive returned-body count does not imply that every
-operation delegated.
+Workers are `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60`. The VM
+has 64 vCPUs: node 0 CPUs 0–31, node 1 CPUs 32–63. Workers use a prefix from
+CPU 0; collector CPU 63 is separate. Thus 20 and 32 workers stay on node 0;
+60 workers span both nodes. Versions, topologies and API shells are not pooled.
 
-| Lock | Workload | Returned JIT points | No JIT points |
-| --- | --- | ---: | ---: |
-| Mutex | c01, w100 | 18 | 3 |
-| Mutex | c16, w100 | 19 | 2 |
-| Rwsem | c01, w1 | 2 | 19 |
-| Rwsem | c01, w20 | 17 | 4 |
-| Rwsem | c16, w1 | 11 | 10 |
-| Rwsem | c16, w20 | 18 | 3 |
-| Rwlock | c01, w1 | 10 | 11 |
-| Rwlock | c01, w20 | 13 | 8 |
-| Rwlock | c16, w1 | 10 | 11 |
-| Rwlock | c16, w20 | 13 | 8 |
+| Lock | Points | Whole losses | Peak losses | Either metric |
+| --- | ---: | ---: | ---: | ---: |
+| Mutex | 42 | 14 | 13 | 14 |
+| Rwsem | 84 | 43 | 39 | 44 |
+| Rwlock | 84 | 44 | 47 | 50 |
+| Total | 210 | 101 | 99 | 108 |
 
-All 131 `RETURNED_JIT` and 79 `NO_JIT` points remain in
-[`baseline-points.json`](baseline-points.json) and
-[`baseline-points.csv`](baseline-points.csv). No point is `PARTIAL_JIT`.
-The captured identifiers in these files and the raw archives are unchanged.
-This is a coverage classification, not an aggregate throughput score.
+Individual candidate KD whole-throughput changes against fresh baseline KD:
 
-The VM was `10.176.26.71`, release `7.0.0-38-kdlock1`, boot
-`677b7afa-5358-4ece-a650-5f4a4adecd55`, running Build ID
-`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`. It had 64 vCPUs: node 0 CPUs 0–31,
-node 1 CPUs 32–63. Workers use the CPU prefix beginning at 0; collector CPU 63
-is separate. Host frequency was fixed at 2 GHz with turbo disabled; guest
-preemption was lazy. The actual recovery snapshot
-`linux70-kdlock1-clean-20261027` was listed and the exact kernel bundle verified.
-Mutex total/locality limits and the spin batch limit were 1024; optional mutex
-diagnostics were off. Existing completion and heat observations were enabled
-and remain part of this measurement identity.
+| Workload | 20 workers | 32 workers | 60 workers |
+| --- | ---: | ---: | ---: |
+| Mutex c01 w100 | +2.55% | −0.13% | +0.49% |
+| Mutex c16 w100 | +1.50% | +2.65% | +2.16% |
+| Rwsem c01 w1 | +0.71% | +1.45% | −1.58% |
+| Rwsem c01 w20 | −0.60% | −1.33% | +3.44% |
+| Rwsem c16 w1 | +6.93% | +2.50% | −0.08% |
+| Rwsem c16 w20 | −2.34% | −0.88% | −0.05% |
+| Rwlock c01 w1 | +2.00% | −2.87% | +1.65% |
+| Rwlock c01 w20 | +0.04% | −5.36% | −1.49% |
+| Rwlock c16 w1 | +1.74% | +0.57% | −1.35% |
+| Rwlock c16 w20 | −3.05% | −1.72% | +0.06% |
 
-The campaign ran from `2026-10-29T20:07:49.943267+00:00` through
-`2026-10-29T20:33:50.100970+00:00`. Host endpoint captures were 42.674 seconds
-before launch and 194.531 seconds after completion, within the 300-second
-freshness bound. Fixed host/QEMU placement and frequency matched. Two auxiliary
-host `worker` threads appeared at the ending endpoint, both confined to CPU 63,
-as allowed by the recorded exploratory policy. These endpoint checks do not
-prove uninterrupted conditions during the campaign or repair strict timing
-qualification. `performance_accepted` remains false.
+These are observations, not significance tests. Full rates, peak changes and
+same-candidate Native/TCLock ratios are in [selected-20-32-60.csv](selected-20-32-60.csv).
+At 60 workers, KD/TCLock whole-throughput ratios remain 0.79 for rwsem c01 w20,
+0.96 for rwsem c16 w20, 0.79 for rwlock c01 w20 and 0.64 for rwlock c16 w20.
+The cross-node gap is still observed; its mechanism is not established here.
 
-## Evidence and provenance
+The largest whole losses include rwsem c01 w1 at 8 workers (−30.58%), rwlock c01
+w1 at 6 (−18.08%) and at 16 (−11.50%). All three are **NO_JIT in both versions**.
+Mutex c01 w100 at 5 loses 11.26% with returned JIT in both. Missing returned
+JIT cannot explain every loss; added JIT fallback cannot by itself explain the
+largest rwsem observation.
 
-The completed guest evidence root is
-`/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/kernel-proxy-nano-baseline-acfa-20261030`.
-Its sibling `-control` directory records controller, synchronization, plan and
-completion identities; the sibling `-archives` directory contains the maintained
-archiver's eleven groups. The copied raw evidence is retained under
-`bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/` in the main
-checkout. [`baseline-validation.json`](baseline-validation.json) records archive,
-inventory, controller, source, ELF, image, host and oracle hashes.
+Baseline KD has 131 `RETURNED_JIT` and 79 `NO_JIT` points; candidate KD has 130
+and 80. There are 129 returned/returned pairs, 78 no-JIT/no-JIT pairs and three
+changed classifications, all retained. There are no partial JIT or unscored
+matched points. NORMAL publication alone is not a returned-body receipt;
+TCLock delegation remains `UNMEASURED`.
 
-Offline verification authenticated all 15,650 inventory paths and 12,840 regular
-files. All 287 selected tracked source blobs match the baseline Git commit in
-every profile. Synchronization also left 15 extra leaves; their exact hashes,
-review and retained dependency/import proofs are in
-[`baseline-extra-source-review.json`](baseline-extra-source-review.json).
-The baseline's explicit object list and include/import paths do not use them;
-none occurs in the 350 retained compiler dependency receipts. This is tracked
-Git authentication plus an explicit stale-file review, not a claim that the
-whole guest directory was a pristine checkout.
+## Measured binary evidence and attribution limits
 
-Each of the ten providers was prepared from 111 captured production leaves plus
-the recorded benchmark observation inputs. The verifier reconstructs all 26
-patch hunks from baseline Git bytes using exact, unique full-context matches,
-including recorded line offsets. All 113 resulting prepared leaves per profile
-match both the preparation manifest and actual archived bytes. The preparation
-step adds observation code; the exact binary manifest and `insmod` receipts bind
-the built provider to each measured session. Provider filenames and whole-ELF
-hashes differ between profile build directories; they are retained individually.
+Static inspection uses actual archived measured ELFs authenticated against
+their binary maps. No module or generated image executes on the source host.
 
-The verifier reads archived code only as data. It imports only this report's
-reviewed analyzer and the explicitly selected checkout's `oracle.py` and
-`peak.py`, after verifying that both oracle files equal both named Git commits.
-It executes no archived source, build, module, daemon, test or timing program.
-All live work ran in the VM; edits and this read-only archive replay ran on
-`380G10`.
+| Evidence | Baseline | Candidate |
+| --- | ---: | ---: |
+| Provider `.text` bytes | 128,380 | 130,009 |
+| `kd_exe_dispatch` bytes | 11,040 | 12,229 |
+| DWARF `kd_spin_batch` bytes | 200 | 208 |
+| Spin `run_combiner` stack reservation | 0x110 | 0x120 |
+| Spin batch prefix initialization | 24 qwords | 25 qwords |
 
-## Retained preparation and capture failures
+All ten KD workload executable text-section maps are byte-identical before
+relocation. This does not prove identical runtime addresses or placement.
+Measured `kd_spin_node` stays 128 bytes, `kd_mutex_node` 320, `kd_mutex` 32 and
+`kd_exec_frame` 656. The spin combiner contains new preemption/context checks;
+they preserve required semantics and cannot simply be removed for performance.
 
-These are not failed or repeated measurement points. Their bytes and SHA256
-values are preserved in [`baseline-preparation.json`](baseline-preparation.json)
-and `preparation/`:
+Address-normalized disassembly for `kd_mutex_execute_cs`, `_kd_mutex_lock_abi`,
+`kd_mutex_run_combiner`, `__kd_mutex_lock_slowpath` and `kd_down_read` is unchanged.
+Several rwsem read/write functions also retain identical raw bytes. This does
+not prove identical relocation targets or cache placement: for example,
+`kd_mutex_run_combiner` moves from text offset 0x14e00 to 0x154b0.
 
-- The first synchronization failed on source-host disk space before guest
-  mutation. A subsequent bounded synchronization completed and was bound to
-  the controller's exact tracked-source manifest.
-- The first host-before capture rejected a changed QEMU task list during its
-  snapshot. A fresh capture succeeded before the first measurement; the failed
-  receipt remains retained.
-- The first archival command supplied newer kernel-profile arguments to the
-  baseline archiver, which does not accept them. Argument parsing failed before
-  capture. Invoking that same baseline archiver with its supported arguments
-  then completed all groups, verified unchanged inputs and confirmed guest idle.
+The spin changes provide a concrete overhead hypothesis for rwlock writer
+paths, not a measured causal contribution. They do not explain all NO_JIT losses.
+Code placement, interleaving and the unqualified timing environment remain
+possible contributors. Further changes need their own identified measurements.
+Function/section hashes, type sizes, disassembly and provenance are retained in
+[binary-inspection/](binary-inspection/).
 
-The daemon/server interruption occurred after baseline launch. On recovery,
-the controller had already completed all ten blocks with return code 0 and an
-idle health receipt. Work resumed with the ending host capture and archival;
-no measured point was repeated.
+## Identity and validation
 
-## Reproduce the offline baseline audit
+Both runs use `7.0.0-38-kdlock1`, boot `677b7afa-5358-4ece-a650-5f4a4adecd55`,
+Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`. Actual mutex total/locality
+limits and spin batch limit are all 1024: the former 768 cutoff is absent from
+both versions. Optional mutex diagnostics are off; completion/heat observations
+remain enabled. The recovery snapshot and kernel bundle were verified.
 
-Use the completed raw archive and copied control directories. The output must
-be a new directory outside the input archives and source checkout. This is an
-offline receipt replay, not permission to run builds or tests on the source host.
+Candidate ran `2026-10-29T20:40:32.471188+00:00`–`2026-10-29T21:57:49.433861+00:00`.
+Host endpoint ages are 21.220 seconds before and 2.746 after; baseline ages are
+42.674 and 194.531 seconds. All meet the 300-second freshness bound and fixed
+host/QEMU configuration matches. This does not establish continuous isolation
+or repair strict qualification. Ordering was sequential, without randomized A/B.
 
-```sh
-python3 bench/results/10.176.26.71/bench/kernel-proxy-nano-20261030/verify_baseline.py \
-  --baseline-archives /ABS/kernel-proxy-nano-baseline-acfa-20261030-archives \
-  --baseline-control /ABS/kernel-proxy-nano-baseline-acfa-20261030-control \
-  --baseline-host-after /ABS/baseline-host-after.json \
-  --trusted-checkout /ABS/kdlock \
-  --output /ABS/new-baseline-audit
-```
+Candidate replay authenticates 27,458 inventory paths, 23,958 regular files,
+305 selected Git blobs and 624 compiler dependency receipts. Six stale leaves
+are explicitly shown unused by selected source and build receipts. Every provider
+reconstructs exactly from 111 captured production leaves plus 26 observation
+hunks into 113 prepared leaves. Sixty actual measured module ELFs were retained,
+including ten KD providers. This is tracked-Git plus explicit stale-file review,
+not a pristine-whole-directory claim.
 
-[`verify_baseline.py`](verify_baseline.py) binds the prepared provider and exact
-reviewed extra-source set, then invokes the baseline checks in
-[`analyze.py`](analyze.py). The latter also contains the final two-campaign
-comparison, which has not been run at this milestone. It requires all 630
-candidate points, candidate source preparation review and fresh endpoints;
-every observed KD loss against its matched baseline is retained. Versions,
-topologies, call shells, preparation intervals and observation settings are
-never pooled. Candidate API, localized mmap and final unchanged will-it-scale
-`mmap1` acceptance remain separate unfinished work.
+Raw archives remain in the ignored main-checkout
+`bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/` directory.
+Captured identifiers remain unchanged. Retained report artifacts include:
+
+- `candidate-validation.json`, `candidate-points.json`, `candidate-points.csv`:
+  complete candidate replay.
+- `comparison-validation.json`, `comparison-points.json`, `comparison-points.csv`:
+  all matched observations; `observed-losses.json` retains all 108 either-metric
+  losses using integer cross-products before rounding.
+- `extra-source-review.json`, `candidate-host-after.json`,
+  `candidate-retirement-proposal.json`: exact provenance. The proposal performs
+  no retirement and later provenance/retirement operations do not alter this run.
+
+The optional baseline workload-ELF extraction copied ten files, then rejected
+the final non-profile `metadata` archive group before saving provenance. Its
+failure note and subsequent byte-for-byte verification are retained under
+`binary-inspection/`. Neither complete campaign audit required an adjustment or
+rerun. This extraction issue did not change any archive or measurement.
+
+## Offline reproduction
+
+The baseline command remains in [baseline-report.md](baseline-report.md).
+Run [verify_candidate.py](verify_candidate.py) with arguments retained in
+`candidate-validation.json`, changing only outputs to new directories and
+resolving local paths. It accepts explicit analyzer, archive/control, endpoints,
+baseline extra review and trusted checkout. It emits the comparison invocation
+after validation. The exact performed argv is in `final-analysis-argv.json`.
+For replay use the exact executed [analyze_executed.py](analyze_executed.py), combined extras proof,
+the same raw inputs/commits and a new output. `oracle.py`/`peak.py` run only after
+their trusted-checkout bytes equal both measured commits. Archived code remains
+data. No source-host build, test, module, daemon or timing run is involved.

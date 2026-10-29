@@ -1,0 +1,26 @@
+{
+  "scope": "Static parsing of actual measured module bytes; no module or generated code execution.",
+  "tools": {
+    "objdump": "GNU objdump (GNU Binutils for Ubuntu) 2.38",
+    "readelf": "GNU readelf (GNU Binutils for Ubuntu) 2.38",
+    "pyelftools": "0.27"
+  },
+  "function_disassembly_command": [
+    "objdump",
+    "-d",
+    "--no-show-raw-insn",
+    "--disassemble=FUNCTION",
+    "MEASURED_ELF"
+  ],
+  "dwarf_command": [
+    "readelf",
+    "--debug-dump=info",
+    "MEASURED_ELF"
+  ],
+  "normalization": "Remove each printed instruction address and the numerical address before a symbolic <target>; retain mnemonic, operands, symbolic target and target-relative offset. Relocation tables are not normalized or claimed identical.",
+  "limits": [
+    "Same text bytes before relocation do not prove same runtime placement or relocations.",
+    "Static differences cannot quantify their measured performance contribution.",
+    "No per-point instruction samples or causal attribution experiment was performed."
+  ]
+}

@@ -1,0 +1,2420 @@
+{
+  "mutex-throughput/build/guard/tc_allocator_guard.ko": {
+    "sha256": "2182fc64eaeed64914dde990477753037e5871a57b4bc74a1248c62004fd3ce3",
+    "bytes": 187496,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/guard/tc_allocator_guard.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/mutex-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "5d6b51d602679f3ad6608658afc04be6d364485dc1af1530326f826479a3ccff",
+    "bytes": 416984,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/mutex-cacheline-c01-kdlock/rwlock_bench.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/mutex-cacheline-c01-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_mutex_api": [
+        "public"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/mutex-cacheline-c01-native/rwlock_bench.ko": {
+    "sha256": "4e0f621cd4f9a929ec064be34ffffa3a76eeec843f6396c4b2793c6e575ef300",
+    "bytes": 412880,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/mutex-cacheline-c01-native/rwlock_bench.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/mutex-cacheline-c01-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/mutex-cacheline-c01-tclock/rwlock_bench.ko": {
+    "sha256": "b3a8c9c9e4e2f0b5ca221c655bbf39e33a18399753502e3658b3bda09b3eb10e",
+    "bytes": 417024,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/mutex-cacheline-c01-tclock/rwlock_bench.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/mutex-cacheline-c01-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_mutex_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "6ce9ef1449d8d8a173c593e060fec3c3e0558428fb4b97a600fd23ab1f612e60",
+    "bytes": 4803664,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/tclock/tclock_mutex_backend_km.ko": {
+    "sha256": "598994a567286750cfd837693326211ea5f7f2e9e23d46e29aa035a38b722494",
+    "bytes": 655008,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-throughput/build/tclock/tclock_mutex_backend_km.ko",
+    "archive_group": "mutex-throughput.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-throughput/build/tclock/tclock_mutex_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock mutex for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "A401DCFD6BE47F40B2C08FF"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_mutex_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/guard/tc_allocator_guard.ko": {
+    "sha256": "7bff2b335d0151833cbf187f2479621e3d25976a67eefecd62ee2ef4dcfb23b0",
+    "bytes": 187488,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/guard/tc_allocator_guard.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/mutex-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "9b5bffe2dc5fa6e391b359092be7a634f648ae50ef0897ce5e012e0805df5959",
+    "bytes": 424592,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/mutex-cacheline-c16-kdlock/rwlock_bench.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/mutex-cacheline-c16-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_mutex_api": [
+        "public"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/mutex-cacheline-c16-native/rwlock_bench.ko": {
+    "sha256": "de020f2403c91929e054d1c0a9345ea9b4ecfc70b6941afc54d49cfe99307720",
+    "bytes": 420416,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/mutex-cacheline-c16-native/rwlock_bench.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/mutex-cacheline-c16-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/mutex-cacheline-c16-tclock/rwlock_bench.ko": {
+    "sha256": "4fb246510b34da7445f4fff82b392b1cf1b97b97f42789bbca95812da1baeee6",
+    "bytes": 424568,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/mutex-cacheline-c16-tclock/rwlock_bench.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/mutex-cacheline-c16-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_mutex_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "ccc71436f06d6e7b0f10d20cba48857883828b768f9520d47daeabf47f19582c",
+    "bytes": 4803600,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/tclock/tclock_mutex_backend_km.ko": {
+    "sha256": "878770b3319f91894c3076426743feedb02afec762aa0ee3c9d2702580eca357",
+    "bytes": 654992,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/mutex-locality/build/tclock/tclock_mutex_backend_km.ko",
+    "archive_group": "mutex-locality.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/mutex-locality/build/tclock/tclock_mutex_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock mutex for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "A401DCFD6BE47F40B2C08FF"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_mutex_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "185942e59b1850b8ff067654dbe946f06fc5c6aadb35a3d1a470ea45d6fd4af6",
+    "bytes": 187528,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "ae1d9846369d8b87f35c67db6bf9089797575c3dbacaa2a2068f6f9a51c5f9f3",
+    "bytes": 4803824,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "1a95bc852ee1fff71f9317120cb42790e5873d7df16e30d8d087c5aab9e3d1bc",
+    "bytes": 420800,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/rwsem-cacheline-c01-native/rwlock_bench.ko": {
+    "sha256": "b303a920479ef164365aa2fdafab8ba4784499125e7fb97dbbe77785feb96417",
+    "bytes": 415080,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/rwsem-cacheline-c01-native/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/rwsem-cacheline-c01-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko": {
+    "sha256": "8bf433ad02229c61232387f38a9ca0880c17e383817682b6c87160f9e8a7fe5a",
+    "bytes": 421464,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwsem_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/tclock/tclock_rwsem_backend_km.ko": {
+    "sha256": "8d1b0048bf0eb3aba63ec603f63f1454d01832a7b60da15246e9fde383d13136",
+    "bytes": 744680,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-read/build/tclock/tclock_rwsem_backend_km.ko",
+    "archive_group": "rwsem-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-read/build/tclock/tclock_rwsem_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock rwsem for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwsem_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "EBB049EFAC536F960666F8E"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwsem_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "77142dd1141615ec70241f1ba0e26548c5942e8948702a6c1f19c2d4f98a9726",
+    "bytes": 187536,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "8c87808fc16d248bfa223b9202d26e69e7b23a620108477d8a72de396d972daa",
+    "bytes": 4803856,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "e0247f2bf68fa070645cf351f53f6a338fe4c09712c40dc26865e7d17fac01ed",
+    "bytes": 420808,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/rwsem-cacheline-c01-native/rwlock_bench.ko": {
+    "sha256": "e24d6b2a6da6a310a6ba45a4118fbfd2f5a2b26c7f2d900bb6f9e54e1f24b0a2",
+    "bytes": 415088,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/rwsem-cacheline-c01-native/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/rwsem-cacheline-c01-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko": {
+    "sha256": "5a29d9fec3e27ccf327f26a112e1c481cac9d763c595a3ea6307069589c8d192",
+    "bytes": 421472,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/rwsem-cacheline-c01-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwsem_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/tclock/tclock_rwsem_backend_km.ko": {
+    "sha256": "52d43550fbe6aa8f33890ce8a47544409899fc9e721a00be2f110a247be1c523",
+    "bytes": 744696,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-throughput-mixed/build/tclock/tclock_rwsem_backend_km.ko",
+    "archive_group": "rwsem-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-throughput-mixed/build/tclock/tclock_rwsem_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock rwsem for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwsem_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "EBB049EFAC536F960666F8E"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwsem_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "12119ecb8c533e5f5a9f6948945418977b9fba646d0feda25c0b669ecaede2fa",
+    "bytes": 187520,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "3192a1e6d72a18f7fcf144de4d83ef0bed83133dc8e3a1aa1a035e6e941bb46e",
+    "bytes": 4803760,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "cb3bc4dc3948568b9bba0d797f1796853a306a9270de2f55798d773c9274cc56",
+    "bytes": 428416,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/rwsem-cacheline-c16-native/rwlock_bench.ko": {
+    "sha256": "e2bba2363524d05351edaeeb7fb0ec368880e99ef52e7e5db25db580911d2511",
+    "bytes": 422624,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/rwsem-cacheline-c16-native/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/rwsem-cacheline-c16-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko": {
+    "sha256": "ba182b6f9ada9d04a71ee309a99b5447d7a186650b0631e12f194325e27e1b40",
+    "bytes": 429064,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwsem_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/tclock/tclock_rwsem_backend_km.ko": {
+    "sha256": "51c7bbc46c37e08ddd88a3820777984016258e1df5f421ded66809d4917fb1ff",
+    "bytes": 744656,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-read/build/tclock/tclock_rwsem_backend_km.ko",
+    "archive_group": "rwsem-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-read/build/tclock/tclock_rwsem_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock rwsem for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwsem_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "EBB049EFAC536F960666F8E"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwsem_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "3baf83ed314bf61755abda9928b894ab9febaf2fdec2f4cffad5b8e514ed81e7",
+    "bytes": 187520,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "c8752ccf053b456ccb2f5af28d0fb82a69a279a9f7f26c92ed1e76982fa40c1d",
+    "bytes": 4803792,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "a3bf0d798aa89e24283769f58e2c7d4eb2d63306491f0e279cc7e029b454b27a",
+    "bytes": 428424,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/rwsem-cacheline-c16-native/rwlock_bench.ko": {
+    "sha256": "98903a0763e9ce6598fb5ff8652cfea40b501fb0b7686373b74ac360e6bc402e",
+    "bytes": 422632,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/rwsem-cacheline-c16-native/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/rwsem-cacheline-c16-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko": {
+    "sha256": "0b7a1a3371c740e498c01649c7f5cd03b60263862ad01a86eb3ad443d04af1db",
+    "bytes": 429072,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/rwsem-cacheline-c16-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwsem_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/tclock/tclock_rwsem_backend_km.ko": {
+    "sha256": "4dbd7c89e34244564927e3e06b010ac1bd778cfbd960efe1254b51b77285cb96",
+    "bytes": 744672,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwsem-locality-mixed/build/tclock/tclock_rwsem_backend_km.ko",
+    "archive_group": "rwsem-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwsem-locality-mixed/build/tclock/tclock_rwsem_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "Upstream TCLock rwsem for registered fixed-affinity benchmark workers"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwsem_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "EBB049EFAC536F960666F8E"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwsem_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "edb1f84b430b146a4c65fcf2b8b955aaebd8fa7a6fd8ce08743c9509938482dd",
+    "bytes": 462200,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/cacheline-c01-kdlock/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/cacheline-c01-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/cacheline-c01-native/rwlock_bench.ko": {
+    "sha256": "0b0fa7095c7adaec61b661d1d1f3a0c789c843a939ed54a81a1e2e4b44eb62ba",
+    "bytes": 415552,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/cacheline-c01-native/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/cacheline-c01-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/cacheline-c01-tclock/rwlock_bench.ko": {
+    "sha256": "a7ca64f45a759df2253a7eeddf820b45c46eaa82c9f30875c21e7288449c500f",
+    "bytes": 419688,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/cacheline-c01-tclock/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/cacheline-c01-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwlock_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "ebb06a8e27cced34793ef3dd7c66d0c4af6b4104433a8fa01053192ebf06cb6e",
+    "bytes": 187536,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "63d800d0041a93f136c6e6d8b96e910a07752f90bedeb5ae3b424cba89e97a98",
+    "bytes": 4803856,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/tclock/tclock_rwlock_backend_km.ko": {
+    "sha256": "e9444102deac8df282367edbba7c5f77c1aa30ac5b976ef48e65ef59e3d3e729",
+    "bytes": 617584,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-read/build/tclock/tclock_rwlock_backend_km.ko",
+    "archive_group": "rwlock-throughput-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-read/build/tclock/tclock_rwlock_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "TCLock upstream rwlock stack-delegation benchmark backend"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwlock_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "23CBA274CC75E18494CEB1D"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwlock_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "275944e7fbf3ef149dce96631cfc133337ce36cca4fb57a6aa317ba32605f2b0",
+    "bytes": 462208,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/cacheline-c01-kdlock/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/cacheline-c01-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/cacheline-c01-native/rwlock_bench.ko": {
+    "sha256": "c29d7c8ff50f5e5822be26fb191f4ec4c75d4c52136524096a0d933524af2991",
+    "bytes": 415560,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/cacheline-c01-native/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/cacheline-c01-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/cacheline-c01-tclock/rwlock_bench.ko": {
+    "sha256": "30f68b2269726fbf505bf7f319431a5ef63071fe2499e8af77657b2ddb352d95",
+    "bytes": 419696,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/cacheline-c01-tclock/rwlock_bench.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/cacheline-c01-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwlock_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "b3bb54bdf503757036f3e02b221f984225d16c0aaf6a44b26893cfe8b63501d1",
+    "bytes": 187544,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "a54c143e4a4f1c8147111c7e5c1bee84fc5dcade7a0d2a4f65a55a916c560f63",
+    "bytes": 4803888,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/tclock/tclock_rwlock_backend_km.ko": {
+    "sha256": "a2bffd79867afeb08183204d75e981ef33b8711ce7659472491448fede26f65e",
+    "bytes": 617592,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-throughput-mixed/build/tclock/tclock_rwlock_backend_km.ko",
+    "archive_group": "rwlock-throughput-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-throughput-mixed/build/tclock/tclock_rwlock_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "TCLock upstream rwlock stack-delegation benchmark backend"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwlock_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "23CBA274CC75E18494CEB1D"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwlock_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "c2538a4389eea93218105656c64287e144970fbc53606cdc14877449921f6ff0",
+    "bytes": 470080,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/cacheline-c16-kdlock/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/cacheline-c16-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/cacheline-c16-native/rwlock_bench.ko": {
+    "sha256": "f94d4b3b6ddb32b1836c535a3f02236ad7c3bcfb59ee2684651a173263e71a05",
+    "bytes": 423096,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/cacheline-c16-native/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/cacheline-c16-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/cacheline-c16-tclock/rwlock_bench.ko": {
+    "sha256": "074d0c6fb7f7b79eaaa19ae6943ae7b60509f47d6d7acf1a797935c430af5c98",
+    "bytes": 427176,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/cacheline-c16-tclock/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/cacheline-c16-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwlock_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "0b6c1a0bb77002bca3c5f06c98c8d491d3b8d943a4d7243d6343eb7215bb5def",
+    "bytes": 187520,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "c46a6f51d7ad9426140ac582d72d4c204ca1084e347573f2102b5b6a7d7e9cb1",
+    "bytes": 4803792,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/tclock/tclock_rwlock_backend_km.ko": {
+    "sha256": "59624c227e83324a6683024b38ba935e873dd4ad0dbe73705eb987f1a93adaca",
+    "bytes": 617560,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-read/build/tclock/tclock_rwlock_backend_km.ko",
+    "archive_group": "rwlock-locality-read.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-read/build/tclock/tclock_rwlock_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "TCLock upstream rwlock stack-delegation benchmark backend"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwlock_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "23CBA274CC75E18494CEB1D"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwlock_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "94ed60169c0fe849416740847ff92207e8b7938804d60df3485fbe4446b0b887",
+    "bytes": 470088,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/cacheline-c16-kdlock/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/cacheline-c16-kdlock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/cacheline-c16-native/rwlock_bench.ko": {
+    "sha256": "bd667b6bfd7d18f2aeff731775e7737221f6d888f12c8b7c47a29f8e6d484475",
+    "bytes": 423104,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/cacheline-c16-native/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/cacheline-c16-native/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/cacheline-c16-tclock/rwlock_bench.ko": {
+    "sha256": "cdcd1b8788a591d206d9c76f100654d13b72eeec0ad3b999a5e78caf0d65f71c",
+    "bytes": 427184,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/cacheline-c16-tclock/rwlock_bench.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/cacheline-c16-tclock/rwlock_bench.ko",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "tclock_rwlock_backend_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "94531470b73b795d22fa470bd943ae0791931cb709377bca4709af718669b85a",
+    "bytes": 187528,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/guard/tc_allocator_guard.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/guard/tc_allocator_guard.ko",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "8be057758c298197380f26b2d10899bb1a22b22fa2c654eb82d81e8f7b94f0b7",
+    "bytes": 4803824,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "4D0C206508758F33C2A8710"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/tclock/tclock_rwlock_backend_km.ko": {
+    "sha256": "cad4272af4efb738f0b6bff1b3baf9d5d7b0e2b86a4b581fecdde7ac49e5627d",
+    "bytes": 617576,
+    "file": "/tmp/kdlock-nano-candidate-verify-20261030/elfs/rwlock-locality-mixed/build/tclock/tclock_rwlock_backend_km.ko",
+    "archive_group": "rwlock-locality-mixed.tar.gz",
+    "archive_member": "kernel-proxy-nano-candidate-8446-20261030/rwlock-locality-mixed/build/tclock/tclock_rwlock_backend_km.ko",
+    "modinfo": {
+      "description": [
+        "TCLock upstream rwlock stack-delegation benchmark backend"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "rwlock_numa": [
+        "1"
+      ],
+      "parmtype": [
+        "komb_batch_size:long"
+      ],
+      "srcversion": [
+        "23CBA274CC75E18494CEB1D"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tclock_rwlock_backend_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  }
+}

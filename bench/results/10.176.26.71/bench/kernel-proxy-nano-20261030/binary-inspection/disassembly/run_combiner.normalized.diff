@@ -1,0 +1,1655 @@
+--- baseline
++++ candidate
+@@ -9,186 +9,191 @@
+ push   %rbx
+ mov    %rcx,%rbx
+ and    $0xfffffffffffffff0,%rsp
+-sub    $0x110,%rsp
+-mov    0x10(%rdx),%rcx
++sub    $0x120,%rsp
++mov    0x10(%rdx),%rdx
+ mov    %rdi,0x38(%rsp)
+ mov    %gs:0x0(%rip),%rax        # <run_combiner+0x32>
+-mov    %rax,0x108(%rsp)
++mov    %rax,0x118(%rsp)
+ xor    %eax,%eax
+-mov    (%rsi),%rdx
+-test   %rdx,%rdx
+-je     <run_combiner+0x3b0>
++mov    (%rsi),%r8
++test   %r8,%r8
++je     <run_combiner+0x3ce>
+ lea    0x48(%rsp),%rdi
+-mov    $0x18,%ecx
++mov    $0x19,%ecx
+ movq   $0x0,0x40(%rsp)
+ rep stos %rax,%es:(%rdi)
+ mov    $0x400,%eax
+ mov    %r13,0x58(%rsp)
+ mov    %ax,0xf2(%rsp)
++mov    %gs:0x0(%rip),%eax        # <run_combiner+0x77>
++and    $0x7fffffff,%eax
++cmp    $0x1,%eax
++je     <run_combiner+0x89c>
++movb   $0x0,0xf4(%rsp)
+ cmpl   $0xff,0x8(%r12)
+-je     <run_combiner+0x40b>
+-cmpl   $0xff,0x8(%rdx)
+-je     <run_combiner+0x40b>
+-call   <run_combiner+0x91>
++je     <run_combiner+0x463>
++cmpl   $0xff,0x8(%r8)
++je     <run_combiner+0x463>
++call   <run_combiner+0xaf>
+ mov    %al,0x1f(%rsp)
+ test   %al,%al
+-je     <run_combiner+0x40b>
+-mov    %gs:0x0(%rip),%rax        # <run_combiner+0xa5>
++je     <run_combiner+0x463>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0xc3>
+ mov    %rbx,0x68(%rsp)
+-lea    0x0(%rax),%r15
++lea    0x0(%rax),%r14
+ mov    0x0(%rax),%rax
+ test   %rax,%rax
+-je     <run_combiner+0xa0d>
+-mov    0x8(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xa14>
+-mov    0x10(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xa1e>
+-mov    0x18(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xa28>
+-mov    0x20(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xac8>
+-mov    0x28(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x954>
+-mov    0x30(%r15),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xad2>
+-mov    0x38(%r15),%rax
++je     <run_combiner+0xaa6>
++mov    0x8(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xb2a>
++mov    0x10(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xb34>
++mov    0x18(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xb3e>
++mov    0x20(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xb48>
++mov    0x28(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xa4f>
++mov    0x30(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0xbe8>
++mov    0x38(%r14),%rax
+ mov    $0x7,%esi
+ cmp    $0x1,%rax
+ sbb    $0xffffffff,%esi
+ test   %rbx,%rbx
+-je     <run_combiner+0x914>
++je     <run_combiner+0xa0f>
+ sub    $0x0,%rbx
+-mov    0x0(%rip),%rax        # <run_combiner+0x136>
++mov    0x0(%rip),%rax        # <run_combiner+0x154>
+ sar    $0x7,%rbx
+ mov    %ebx,%ebx
+ lea    (%rbx,%rbx,2),%rdi
+ shl    $0x5,%rdi
+ incq   %gs:0x8(%rax,%rdi,1)
+-mov    0x0(%rip),%rax        # <run_combiner+0x151>
++mov    0x0(%rip),%rax        # <run_combiner+0x16f>
+ add    %rdi,%rax
+ add    $0x48,%rdi
+ mov    %gs:0x48(%rax),%edx
+-jmp    <run_combiner+0x174>
+-mov    0x0(%rip),%rcx        # <run_combiner+0x165>
++jmp    <run_combiner+0x192>
++mov    0x0(%rip),%rcx        # <run_combiner+0x183>
+ mov    %edx,%eax
+ add    %rdi,%rcx
+ cmpxchg %esi,%gs:(%rcx)
+ cmp    %eax,%edx
+-je     <run_combiner+0x178>
++je     <run_combiner+0x196>
+ mov    %eax,%edx
+ cmp    %esi,%edx
+-jl     <run_combiner+0x15e>
+-mov    %gs:0x0(%rip),%rax        # <run_combiner+0x180>
++jl     <run_combiner+0x17c>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x19e>
+ add    $0x0,%rax
+-mov    %rax,0x30(%rsp)
++mov    %rax,0x20(%rsp)
+ mov    0x38(%rsp),%rax
+ mov    %r12,0x78(%rsp)
+-mov    %r15,0x20(%rsp)
++mov    %r14,0x28(%rsp)
+ mov    %rax,0x70(%rsp)
+-mov    %r13,0x28(%rsp)
++mov    %r13,0x30(%rsp)
+ movzbl 0xf0(%rsp),%edx
+ test   %dl,%dl
+-je     <run_combiner+0x573>
++je     <run_combiner+0x5d5>
+ mov    0xc8(%rsp),%eax
+ mov    0x20(%r12),%r13
+ mov    0x50(%rsp),%rbx
+ mov    0x88(%rsp),%rdx
+ and    $0xfffffffd,%eax
+ cmp    $0x1,%eax
+-jne    <run_combiner+0x4ae>
++jne    <run_combiner+0x4ed>
+ cmp    $0x7,%rdx
+-jne    <run_combiner+0x4cd>
++jne    <run_combiner+0x50c>
+ mov    0xd0(%rsp),%rax
+ cmpl   $0x2,(%rax)
+-jne    <run_combiner+0x4cd>
++jne    <run_combiner+0x50c>
+ cmpq   $0x0,0xd8(%rsp)
+-je     <run_combiner+0x4cd>
++je     <run_combiner+0x50c>
+ mov    0x288(%r13),%rsi
+ lea    0x80(%rsp),%rdi
+ call   <kd_jit_note_direct_calls.isra.0>
+ test   %al,%al
+-je     <run_combiner+0x4cd>
++je     <run_combiner+0x50c>
+ mov    0xc0(%rsp),%r14
+ test   %r14,%r14
+-jne    <run_combiner+0xd8e>
++jne    <run_combiner+0x1112>
+ cmpq   $0x1,0x90(%rsp)
+-je     <run_combiner+0xd05>
++je     <run_combiner+0xc28>
+ andb   $0xfb,0x27(%r13)
+ test   %r13,%r13
+-je     <run_combiner+0xaec>
++je     <run_combiner+0xc02>
+ cmpb   $0x0,0x24(%r13)
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ cmpb   $0x0,0x23(%r13)
+-je     <run_combiner+0xaec>
+-mov    %gs:0x0(%rip),%rdx        # <run_combiner+0x26b>
++je     <run_combiner+0xc02>
++mov    %gs:0x0(%rip),%rdx        # <run_combiner+0x289>
+ lea    0x0(%rdx),%rax
+ cmpl   $0x1,0x0(%rdx)
+-jne    <run_combiner+0xaec>
+-mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x287>
++jne    <run_combiner+0xc02>
++mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x2a5>
+ cmp    %rdi,0x1488(%rax)
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ cmp    0x1480(%rax),%r13
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ cmpb   $0x0,0x21(%r13)
+-je     <run_combiner+0xaec>
++je     <run_combiner+0xc02>
+ cmpb   $0x0,0x1f(%r13)
+-je     <run_combiner+0xaec>
++je     <run_combiner+0xc02>
+ cmpb   $0x0,0x20(%r13)
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ cmpq   $0x0,0xe8(%r13)
+-jne    <run_combiner+0xaec>
+-mov    0x18(%r13),%r14d
+-test   %r14d,%r14d
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
++mov    0x18(%r13),%r15d
++test   %r15d,%r15d
++jne    <run_combiner+0xc02>
+ cmpb   $0x0,0x26(%r13)
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ mov    0x14(%r13),%edx
+ cmp    $0x2,%edx
+-je     <run_combiner+0xadc>
++je     <run_combiner+0xbf2>
+ test   %edx,%edx
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ mov    0xd0(%r13),%rdx
+ test   %rdx,%rdx
+-je     <run_combiner+0xce1>
++je     <run_combiner+0xc04>
+ mov    0x8(%r13),%rdi
+ cmp    %rdi,0x80(%rdx)
+-jne    <run_combiner+0xaec>
++jne    <run_combiner+0xc02>
+ movb   $0x1,0x26(%r13)
+ movb   $0x3,0x1e(%r13)
+-mov    $0x4,%r10d
+-xor    %r11d,%r11d
+-mov    %r10w,0x1c(%r13)
++mov    $0x4,%r11d
++xor    %r14d,%r14d
++mov    %r11w,0x1c(%r13)
+ movl   $0x0,0x1490(%rax)
+ movq   $0x0,0x1480(%rax)
+ movq   $0x0,0x1488(%rax)
+ movb   $0x3,0x1e(%r13)
+-mov    %r11w,0x1c(%r13)
+-mov    0xf8(%rsp),%rdx
++mov    %r14w,0x1c(%r13)
++mov    0x100(%rsp),%rdx
+ test   %rdx,%rdx
+-jne    <run_combiner+0xe8e>
++jne    <run_combiner+0x1212>
+ mov    0x68(%rsp),%rax
+ test   %rax,%rax
+-je     <run_combiner+0x39c>
++je     <run_combiner+0x3ba>
+ sub    $0x0,%rax
+-mov    0x0(%rip),%rdx        # <run_combiner+0x388>
++mov    0x0(%rip),%rdx        # <run_combiner+0x3a6>
+ sar    $0x7,%rax
+ mov    %eax,%eax
+ lea    (%rax,%rax,2),%rax
+ shl    $0x5,%rax
+ incq   %gs:0x10(%rdx,%rax,1)
+-mov    $0x100,%r9d
+-mov    %r9w,0xf0(%rsp)
+-jmp    <run_combiner+0x50e>
+-mov    (%rcx),%eax
++mov    $0x100,%r10d
++mov    %r10w,0xf0(%rsp)
++jmp    <run_combiner+0x570>
++mov    (%rdx),%eax
+ and    $0xffff0000,%eax
+ mov    %eax,%edx
+-je     <run_combiner+0x3e1>
++je     <run_combiner+0x416>
+ shr    $0x10,%eax
+ shr    $0x12,%edx
+ and    $0x3,%eax
+@@ -198,22 +203,38 @@
+ add    $0x0,%rax
+ add    0x0(,%rdx,8),%rax
+ cmp    %rax,%rsi
+-jne    <run_combiner+0x45d>
++je     <run_combiner+0x416>
++mov    (%rsi),%rax
++test   %rax,%rax
++jne    <run_combiner+0x412>
++pause  
++mov    (%r12),%rax
++test   %rax,%rax
++je     <run_combiner+0x407>
++mov    (%r12),%r8
+ xor    %eax,%eax
+ lea    0x48(%rsp),%rdi
+-mov    $0x18,%ecx
++mov    $0x19,%ecx
+ movq   $0x0,0x40(%rsp)
+ rep stos %rax,%es:(%rdi)
+ mov    $0x400,%eax
+ mov    %r13,0x58(%rsp)
+ mov    %ax,0xf2(%rsp)
++mov    %gs:0x0(%rip),%eax        # <run_combiner+0x447>
++and    $0x7fffffff,%eax
++cmp    $0x1,%eax
++je     <run_combiner+0x4b5>
++xor    %eax,%eax
++mov    %al,0xf4(%rsp)
++test   %r8,%r8
++jne    <run_combiner+0x8d>
+ mov    0x10(%r13),%rax
+ movb   $0x1,(%rax)
+ movb   $0x0,0x41(%r12)
+ lock addl $0x0,-0x4(%rsp)
+-mov    0x108(%rsp),%rax
+-sub    %gs:0x0(%rip),%rax        # <run_combiner+0x42e>
+-jne    <run_combiner+0xea6>
++mov    0x118(%rsp),%rax
++sub    %gs:0x0(%rip),%rax        # <run_combiner+0x486>
++jne    <run_combiner+0x122a>
+ lea    -0x28(%rbp),%rsp
+ pop    %rbx
+ pop    %r12
+@@ -230,437 +251,494 @@
+ xor    %r9d,%r9d
+ xor    %r10d,%r10d
+ xor    %r11d,%r11d
+-jmp    <run_combiner+0x45d>
+-mov    (%rsi),%rax
+-test   %rax,%rax
+-jne    <run_combiner+0x470>
+-pause  
+-mov    (%r12),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x465>
+-mov    (%r12),%rdx
+-mov    $0x18,%ecx
+-lea    0x48(%rsp),%rdi
+-xor    %eax,%eax
+-mov    $0x400,%r15d
+-rep stos %rax,%es:(%rdi)
+-mov    %r13,0x58(%rsp)
+-movq   $0x0,0x40(%rsp)
+-mov    %r15w,0xf2(%rsp)
+-test   %rdx,%rdx
+-jne    <run_combiner+0x70>
+-jmp    <run_combiner+0x40b>
++jmp    <run_combiner+0x4b5>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x4bd>
++cmpw   $0x0,0x978(%rax)
++jne    <run_combiner+0x451>
++mov    0x97c(%rax),%eax
++test   %eax,%eax
++jne    <run_combiner+0x451>
++call   *0x0(%rip)        # <run_combiner+0x4d7>
++and    $0x200,%eax
++cmp    $0x1,%rax
++sbb    %eax,%eax
++and    $0x2,%eax
++add    $0x1,%eax
++jmp    <run_combiner+0x453>
+ cmp    $0x1,%rdx
+-jne    <run_combiner+0x4cd>
++jne    <run_combiner+0x50c>
+ mov    0x80(%rsp),%rax
+ mov    0xa8(%rsp),%rdi
+ cmp    %rdi,(%rax)
+-je     <run_combiner+0x931>
++je     <run_combiner+0xa2c>
+ cmpb   $0x0,0x21(%r13)
+-je     <run_combiner+0x4dc>
++je     <run_combiner+0x51b>
+ mov    %r13,%rdi
+ call   <kd_spin_jit_prepare_complex.part.0>
+ lea    0x40(%rsp),%rdx
++movb   $0x0,0xf1(%rsp)
++mov    %rdx,0x238(%r13)
+ mov    0x38(%rsp),%rdi
+ mov    %r12,%rsi
+-movb   $0x0,0xf1(%rsp)
+-mov    %rdx,0x238(%r13)
+ call   <execute_cs>
+-lea    -0x2(%rax),%edx
+-cmp    $0x1,%edx
+-jbe    <run_combiner+0x742>
+-cmp    $0x7,%eax
+-je     <run_combiner+0x519>
+-mov    $0x1,%eax
+-mov    %ax,0x40(%r12)
++xor    %edx,%edx
++mov    %eax,%r8d
++mov    %gs:0x0(%rip),%eax        # <run_combiner+0x548>
++and    $0x7fffffff,%eax
++cmp    $0x1,%eax
++je     <run_combiner+0x966>
++lea    -0x2(%r8),%eax
++mov    %dl,0xf4(%rsp)
++cmp    $0x1,%eax
++jbe    <run_combiner+0x8b7>
++cmp    $0x7,%r8d
++je     <run_combiner+0x57b>
++mov    $0x1,%edx
++mov    %dx,0x40(%r12)
+ movzbl 0x48(%rsp),%eax
+ test   %al,%al
+-jne    <run_combiner+0x8e2>
++jne    <run_combiner+0x9dd>
+ test   %rbx,%rbx
+-je     <run_combiner+0x79a>
+-cmpl   $0x3ff,0xf4(%rsp)
+-ja     <run_combiner+0x79a>
++je     <run_combiner+0x6c0>
+ cmpl   $0xff,0x8(%rbx)
+-je     <run_combiner+0x79a>
++je     <run_combiner+0x6c0>
++cmpl   $0x3ff,0xf8(%rsp)
++ja     <run_combiner+0x6c0>
+ mov    (%rbx),%rax
+ test   %rax,%rax
+-je     <run_combiner+0x8ab>
++je     <run_combiner+0x9a6>
+ cmpl   $0xff,0x8(%rax)
+-je     <run_combiner+0x8ce>
++je     <run_combiner+0x9c9>
+ mov    %rbx,0x78(%rsp)
+ mov    %rbx,%r12
+-jmp    <run_combiner+0x1a4>
+-mov    0x30(%rsp),%rax
++jmp    <run_combiner+0x1c2>
++mov    0x20(%rsp),%rax
+ mov    0x58(%rax),%rax
+-addl   $0x1,0xf4(%rsp)
+-mov    %rax,0x100(%rsp)
+-mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x594>
++addl   $0x1,0xf8(%rsp)
++mov    %rax,0x108(%rsp)
+ mov    (%r12),%rbx
+-lea    0x0(%rdi),%r13
+-mov    %r13,%r8
+ test   %rbx,%rbx
+-je     <run_combiner+0x88e>
+-mov    %gs:0x0(%rip),%esi        # <run_combiner+0x5b2>
++je     <run_combiner+0x949>
++mov    %gs:0x0(%rip),%esi        # <run_combiner+0x602>
+ cmp    %esi,0x8(%rbx)
+-je     <run_combiner+0x658>
++je     <run_combiner+0x726>
+ movzwl 0xf2(%rsp),%eax
+ test   %ax,%ax
+-je     <run_combiner+0x658>
+-movzbl 0x1f(%rsp),%r10d
++je     <run_combiner+0x726>
++mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x624>
++movzbl 0x1f(%rsp),%r9d
+ xor    %ecx,%ecx
+-jmp    <run_combiner+0x60a>
+-cmpq   $0x0,0x50(%r13)
+-je     <run_combiner+0x648>
+-mov    0x58(%r13),%rax
+-mov    %rbx,(%rax)
+-mov    %rbx,0x58(%r13)
+-mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x5f0>
+-lea    0x0(%rdi),%r13
++jmp    <run_combiner+0x669>
++mov    %gs:0x0(%rip),%rcx        # <run_combiner+0x636>
++lea    0x0(%rcx),%rax
++cmpq   $0x0,0x0(%rcx)
++je     <run_combiner+0x6b6>
++mov    0x58(%rax),%rcx
++mov    %rbx,(%rcx)
++mov    %rbx,0x58(%rax)
+ movzwl 0xf2(%rsp),%eax
+ mov    (%rbx),%rbx
+ test   %ax,%ax
+-je     <run_combiner+0x652>
+-mov    %r10d,%ecx
++je     <run_combiner+0x720>
++mov    %r9d,%ecx
+ test   %rbx,%rbx
+-je     <run_combiner+0x978>
+-mov    (%rbx),%r9
+-test   %r9,%r9
+-je     <run_combiner+0x658>
++je     <run_combiner+0xa59>
++mov    (%rbx),%r8
++test   %r8,%r8
++je     <run_combiner+0x726>
+ cmpl   $0xff,0x8(%rbx)
+-je     <run_combiner+0x658>
+-cmpl   $0xff,0x8(%r9)
+-je     <run_combiner+0x658>
++je     <run_combiner+0x726>
++cmpl   $0xff,0x8(%r8)
++je     <run_combiner+0x726>
+ sub    $0x1,%eax
+ mov    %ax,0xf2(%rsp)
+ cmp    %esi,0x8(%rbx)
+-je     <run_combiner+0x658>
++je     <run_combiner+0x726>
+ test   %cl,%cl
+-je     <run_combiner+0x5d6>
+-mov    %rbx,0x58(%r8)
+-jmp    <run_combiner+0x5f7>
+-mov    %rbx,0x50(%r13)
+-mov    %rbx,0x58(%r13)
+-jmp    <run_combiner+0x5f7>
++je     <run_combiner+0x62e>
++mov    %rbx,0x0(%rdi)
++jmp    <run_combiner+0x652>
++mov    %rbx,0x50(%rax)
++mov    %rbx,0x58(%rax)
++jmp    <run_combiner+0x652>
++mov    0x28(%rsp),%r14
++mov    0x30(%rsp),%r13
++mov    %rbx,0x50(%rsp)
++test   %al,%al
++jne    <run_combiner+0x9e2>
++mov    0x50(%rsp),%rbx
++cmpq   $0x0,0x50(%r14)
++je     <run_combiner+0x6fe>
++mov    0x58(%r14),%rax
++mov    %rbx,(%rax)
++mov    0x50(%r14),%rbx
++movq   $0x0,0x58(%r14)
++movq   $0x0,0x50(%r14)
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x705>
++je     <run_combiner+0x70b>
++mov    0x10(%r13),%rax
++movb   $0x1,(%rax)
++movb   $0x0,0x41(%rbx)
++call   <run_combiner+0x71b>
++jmp    <run_combiner+0x476>
+ test   %rbx,%rbx
+ sete   %dl
+-mov    0x0(%rip),%ecx        # <run_combiner+0x65e>
++mov    0x0(%rip),%ecx        # <run_combiner+0x72c>
+ mov    %rbx,0x50(%rsp)
+ movb   $0x0,0x48(%rsp)
+ test   %ecx,%ecx
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ test   %dl,%dl
+-jne    <run_combiner+0x707>
++jne    <run_combiner+0x7d5>
+ cmpl   $0xff,0x8(%rbx)
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ mov    0x20(%rbx),%rax
+ test   %rax,%rax
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ cmp    $0x1,%ecx
+-je     <run_combiner+0xa32>
++je     <run_combiner+0xb52>
+ mov    0x28(%rbx),%rdx
+ prefetcht0 (%rax)
+ prefetcht0 0xd0(%rax)
+ test   %rdx,%rdx
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ cmpb   $0x0,0x18(%rbx)
+-jne    <run_combiner+0x91e>
++jne    <run_combiner+0xa19>
+ prefetcht0 0x18(%rdx)
+ cmpb   $0x0,0x19(%rbx)
+-je     <run_combiner+0x6d3>
++je     <run_combiner+0x7a1>
+ prefetcht0 0x170(%rax)
+ prefetcht0 0x1b0(%rax)
+ prefetcht0 0x1d0(%rax)
+ mov    0x30(%rbx),%rdx
+ test   %rdx,%rdx
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ prefetcht0 -0x8(%rdx)
+ movzbl 0x1a(%rbx),%eax
+ test   %al,%al
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ lea    -0x1(%rax),%ecx
+ lea    0x40(%rdx),%rax
+ shl    $0x6,%rcx
+ add    %rax,%rcx
+-jmp    <run_combiner+0x6fc>
++jmp    <run_combiner+0x7ca>
+ add    $0x40,%rax
+ prefetcht0 (%rdx)
+ mov    %rax,%rdx
+ cmp    %rax,%rcx
+-jne    <run_combiner+0x6f8>
+-mov    0x20(%r12),%r14
+-movzbl 0x27(%r14),%eax
+-and    $0x3,%eax
+-cmp    $0x2,%al
+-je     <run_combiner+0x7fa>
+-mov    0x38(%rsp),%rdi
++jne    <run_combiner+0x7c6>
++mov    0x20(%r12),%r13
++movzbl 0x27(%r13),%eax
++test   $0x1,%al
++jne    <run_combiner+0x88a>
++movzbl 0x1b(%r12),%edx
++cmp    %dl,0xf4(%rsp)
++jne    <run_combiner+0x90f>
++test   %dl,%dl
++je     <run_combiner+0x90f>
++test   $0x2,%al
++je     <run_combiner+0x88a>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x812>
++mov    0x0(%rax),%r8d
++test   %r8d,%r8d
++je     <run_combiner+0x839>
++mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x826>
++cmp    %rdi,0x0(%rax)
++jne    <run_combiner+0x839>
++cmpq   $0x0,0x0(%rax)
++jne    <run_combiner+0x88a>
++lea    0x0(%rax),%r14
++mov    0x0(%rax),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x8(%r14),%r15
++test   %r15,%r15
++je     <run_combiner+0xaad>
++mov    0x10(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x18(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x20(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x28(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x30(%r14),%rax
++test   %rax,%rax
++je     <run_combiner+0x88a>
++mov    0x38(%r14),%rax
++movb   $0x0,0xf1(%rsp)
+ lea    0x40(%rsp),%rdx
+-mov    %r12,%rsi
+-movb   $0x0,0xf1(%rsp)
+-call   <execute_cs>
+-lea    -0x2(%rax),%edx
+-cmp    $0x1,%edx
+-ja     <run_combiner+0x509>
+-mov    0x100(%rsp),%rdx
+-mov    0x20(%rsp),%r15
+-mov    0x28(%rsp),%r13
+-test   %rdx,%rdx
+-je     <run_combiner+0x95e>
+-mov    0x30(%rsp),%rdi
+-mov    %rdx,0x58(%rdi)
+-cmp    $0x2,%eax
+-je     <run_combiner+0xd7c>
++jmp    <run_combiner+0x52f>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x8a4>
++cmpw   $0x0,0x978(%rax)
++je     <run_combiner+0x4c7>
++jmp    <run_combiner+0x85>
++mov    0x108(%rsp),%rax
++mov    0x28(%rsp),%r14
++mov    0x30(%rsp),%r13
++test   %rax,%rax
++je     <run_combiner+0xa72>
++mov    0x20(%rsp),%rdi
++mov    %rax,0x58(%rdi)
++cmp    $0x2,%r8d
++je     <run_combiner+0x93b>
+ mov    0x38(%rsp),%rcx
+-mov    %gs:0x0(%rip),%esi        # <run_combiner+0x77b>
++mov    %gs:0x0(%rip),%esi        # <run_combiner+0x8ed>
+ mov    $0x0,%rdx
+ mov    $0x0,%rdi
+-call   <run_combiner+0x78e>
++call   <run_combiner+0x900>
+ mov    %r12,0x50(%rsp)
+ movzbl 0x48(%rsp),%eax
+-jmp    <run_combiner+0x7a9>
+-mov    0x20(%rsp),%r15
+-mov    0x28(%rsp),%r13
+-mov    %rbx,0x50(%rsp)
+-test   %al,%al
+-jne    <run_combiner+0x8e7>
+-mov    0x50(%rsp),%rbx
+-cmpq   $0x0,0x50(%r15)
+-je     <run_combiner+0x7d8>
+-mov    0x58(%r15),%rax
+-mov    %rbx,(%rax)
+-mov    0x50(%r15),%rbx
+-movq   $0x0,0x58(%r15)
+-movq   $0x0,0x50(%r15)
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0x7df>
+-je     <run_combiner+0x7e5>
+-mov    0x10(%r13),%rax
+-movb   $0x1,(%rax)
+-movb   $0x0,0x41(%rbx)
+-call   <run_combiner+0x7f5>
+-jmp    <run_combiner+0x41e>
+-lea    0x0(%rdi),%rax
+-mov    0x0(%rdi),%edi
+-test   %edi,%edi
+-je     <run_combiner+0x82a>
+-mov    %gs:0x0(%rip),%rdi        # <run_combiner+0x813>
+-cmp    %rdi,0x1488(%rax)
+-jne    <run_combiner+0x82a>
+-cmpq   $0x0,0x1480(%rax)
+-jne    <run_combiner+0x71c>
+-mov    0x0(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x8(%r13),%r15
+-test   %r15,%r15
+-je     <run_combiner+0x991>
+-mov    0x10(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x18(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x20(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x28(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x30(%r13),%rax
+-test   %rax,%rax
+-je     <run_combiner+0x71c>
+-mov    0x38(%r13),%rax
+-jmp    <run_combiner+0x71c>
++jmp    <run_combiner+0x6cf>
++mov    0x108(%rsp),%rax
++movb   $0x0,0xf1(%rsp)
++mov    0x28(%rsp),%r14
++mov    0x30(%rsp),%r13
++test   %rax,%rax
++je     <run_combiner+0xa8c>
++mov    0x20(%rsp),%rdi
++mov    %rax,0x58(%rdi)
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x942>
++jne    <run_combiner+0x900>
++jmp    <run_combiner+0x949>
+ movzwl 0xf2(%rsp),%eax
+ test   %ax,%ax
+-je     <run_combiner+0x978>
+-mov    %gs:0x0(%rip),%esi        # <run_combiner+0x8a6>
+-jmp    <run_combiner+0x5cc>
++je     <run_combiner+0xa59>
++mov    %gs:0x0(%rip),%esi        # <run_combiner+0x961>
++jmp    <run_combiner+0x61c>
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x96e>
++cmpw   $0x0,0x978(%rax)
++jne    <run_combiner+0x556>
++mov    0x97c(%rax),%eax
++test   %eax,%eax
++jne    <run_combiner+0x556>
++call   *0x0(%rip)        # <run_combiner+0x990>
++and    $0x200,%eax
++cmp    $0x1,%rax
++sbb    %edx,%edx
++and    $0x2,%edx
++add    $0x1,%edx
++jmp    <run_combiner+0x556>
+ xor    %edx,%edx
+-jmp    <run_combiner+0x8b8>
+-test   %rax,%rax
+-jne    <run_combiner+0x559>
++jmp    <run_combiner+0x9b3>
++test   %rax,%rax
++jne    <run_combiner+0x5bb>
+ pause  
+ add    $0x1,%edx
+ mov    (%rbx),%rax
+ cmp    $0x8,%edx
+-jne    <run_combiner+0x8af>
+-test   %rax,%rax
+-jne    <run_combiner+0x559>
+-mov    0x20(%rsp),%r15
+-mov    0x28(%rsp),%r13
++jne    <run_combiner+0x9aa>
++test   %rax,%rax
++jne    <run_combiner+0x5bb>
++mov    0x28(%rsp),%r14
++mov    0x30(%rsp),%r13
+ movzbl 0x48(%rsp),%eax
+-jmp    <run_combiner+0x7a4>
+-mov    0x28(%rsp),%r13
+-incq   %gs:0x0(%rip)        # <run_combiner+0x8ef>
++jmp    <run_combiner+0x6ca>
++mov    0x30(%rsp),%r13
++incq   %gs:0x0(%rip)        # <run_combiner+0x9ea>
+ xor    %eax,%eax
+ mov    0x10(%r13),%rdi
+ mov    $0x1,%edx
+ lock cmpxchg %edx,(%rdi)
+ test   %eax,%eax
+-jne    <run_combiner+0x94b>
++jne    <run_combiner+0xa46>
+ mov    %r13,%rdi
+-call   <run_combiner+0x90a>
++call   <run_combiner+0xa05>
+ test   %eax,%eax
+-je     <run_combiner+0x7f0>
++je     <run_combiner+0x716>
+ ud2    
+-mov    %r15,0x30(%rsp)
+-jmp    <run_combiner+0x18b>
++mov    %r14,0x20(%rsp)
++jmp    <run_combiner+0x1a9>
+ prefetcht0 (%rdx)
+ prefetcht0 0x40(%rdx)
+ prefetcht0 0x80(%rdx)
+-jmp    <run_combiner+0x6b8>
+-mov    0xa0(%rsp),%rsi
+-cmp    %rsi,0x80(%rax)
+-jne    <run_combiner+0x4cd>
+-jmp    <run_combiner+0x203>
++jmp    <run_combiner+0x786>
++mov    0xa0(%rsp),%rdi
++cmp    %rdi,0x80(%rax)
++jne    <run_combiner+0x50c>
++jmp    <run_combiner+0x221>
+ mov    %eax,%esi
+ call   <kd_spin_acquire_nondelegated_contended>
+-jmp    <run_combiner+0x902>
++jmp    <run_combiner+0x9fd>
+ mov    $0x5,%esi
+-jmp    <run_combiner+0x11f>
+-mov    0x30(%rsp),%rdi
+-movq   $0x0,0x50(%rdi)
+-mov    0x100(%rsp),%rdx
+-jmp    <run_combiner+0x75d>
++jmp    <run_combiner+0x13d>
+ movq   $0x0,0x50(%rsp)
+ movb   $0x0,0x48(%rsp)
+-mov    0x0(%rip),%eax        # <run_combiner+0x98c>
+-jmp    <run_combiner+0x707>
++mov    0x0(%rip),%eax        # <run_combiner+0xa6d>
++jmp    <run_combiner+0x7d5>
++mov    0x20(%rsp),%rax
++movq   $0x0,0x50(%rax)
++mov    0x108(%rsp),%rax
++jmp    <run_combiner+0x8d2>
++mov    0x20(%rsp),%rax
++movq   $0x0,0x50(%rax)
++mov    0x108(%rsp),%rax
++jmp    <run_combiner+0x932>
++xor    %esi,%esi
++jmp    <run_combiner+0x13d>
+ mov    0x68(%rsp),%rax
+ test   %rax,%rax
+-je     <run_combiner+0x9a6>
++je     <run_combiner+0xac2>
+ mov    0x8(%rax),%eax
+ test   %eax,%eax
+-jne    <run_combiner+0x71c>
++jne    <run_combiner+0x88a>
+ mov    0x60(%rsp),%rdx
+-mov    (%r14),%rsi
++mov    0x0(%r13),%rsi
+ test   %rdx,%rdx
+-je     <run_combiner+0x9c0>
++je     <run_combiner+0xadd>
+ mov    0x10(%rdx),%rax
+ cmp    %rax,%rsi
+-je     <run_combiner+0xd6b>
++je     <run_combiner+0x1101>
+ xor    %edi,%edi
+-call   <run_combiner+0x9c7>
++call   <run_combiner+0xae4>
+ mov    %rax,%rdx
+ test   %rax,%rax
+-je     <run_combiner+0x71c>
++je     <run_combiner+0x88a>
+ mov    0xc(%rax),%eax
+ cmp    $0x1,%eax
+-jne    <run_combiner+0x9e0>
++jne    <run_combiner+0xafd>
+ mov    %rdx,0x60(%rsp)
+-mov    0xd0(%r14),%r8
+-movb   $0x1,0x21(%r14)
++mov    0xd0(%r13),%r8
++movb   $0x1,0x21(%r13)
+ test   %r8,%r8
+-je     <run_combiner+0xcc6>
+-cmpq   $0x0,0xe8(%r14)
+-je     <run_combiner+0xaee>
+-movb   $0x0,0x21(%r14)
+-jmp    <run_combiner+0x71c>
+-xor    %esi,%esi
+-jmp    <run_combiner+0x11f>
++je     <run_combiner+0x10e6>
++cmpq   $0x0,0xe8(%r13)
++je     <run_combiner+0xc8e>
++movb   $0x0,0x21(%r13)
++jmp    <run_combiner+0x88a>
+ mov    $0x1,%esi
+-jmp    <run_combiner+0x11f>
++jmp    <run_combiner+0x13d>
+ mov    $0x2,%esi
+-jmp    <run_combiner+0x11f>
++jmp    <run_combiner+0x13d>
+ mov    $0x3,%esi
+-jmp    <run_combiner+0x11f>
++jmp    <run_combiner+0x13d>
++mov    $0x4,%esi
++jmp    <run_combiner+0x13d>
+ mov    0xd0(%rax),%rdx
+ test   %rdx,%rdx
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ prefetcht0 (%rax)
+ prefetcht0 0xd0(%rax)
+-mov    0x14(%rax),%r8d
+-test   %r8d,%r8d
+-jne    <run_combiner+0xcfc>
++mov    0x14(%rax),%r9d
++test   %r9d,%r9d
++jne    <run_combiner+0xc1f>
+ prefetcht0 (%rdx)
+ prefetcht0 0x40(%rdx)
+ prefetcht0 0x80(%rdx)
+ movzbl 0x24(%rax),%ecx
+ test   %cl,%cl
+-je     <run_combiner+0xa84>
++je     <run_combiner+0xba4>
+ prefetcht0 0x170(%rax)
+ prefetcht0 0x1b0(%rax)
+ prefetcht0 0x1d0(%rax)
+ mov    0xe0(%rax),%rax
+ test   %rax,%rax
+-je     <run_combiner+0x707>
++je     <run_combiner+0x7d5>
+ mov    0x20(%rax),%rax
+ mov    0x8(%rdx),%rdx
+ lea    0x8(%rax),%rcx
+ cmp    %rcx,%rdx
+-jb     <run_combiner+0x707>
++jb     <run_combiner+0x7d5>
+ mov    %rdx,%rcx
+ sub    %rax,%rcx
+ cmp    $0x3fff,%rcx
+-ja     <run_combiner+0x707>
++ja     <run_combiner+0x7d5>
+ prefetcht0 (%rdx)
+ prefetcht0 -0x8(%rdx)
+-jmp    <run_combiner+0x707>
+-mov    $0x4,%esi
+-jmp    <run_combiner+0x11f>
++jmp    <run_combiner+0x7d5>
+ mov    $0x6,%esi
+-jmp    <run_combiner+0x11f>
++jmp    <run_combiner+0x13d>
+ mov    0x10(%r13),%edx
+ and    $0xfffffffd,%edx
+ cmp    $0x1,%edx
+-je     <run_combiner+0x31e>
++je     <run_combiner+0x33c>
+ ud2    
+-mov    0x18(%r14),%esi
++lea    0x28(%r13),%rdx
++cmpb   $0x0,0x25(%r13)
++je     <run_combiner+0x32b>
++mov    0xf8(%r13),%rdx
++jmp    <run_combiner+0x32b>
++prefetcht0 0x18(%rdx)
++jmp    <run_combiner+0xb87>
++mov    0x0(%rip),%rax        # <run_combiner+0xc2f>
++mov    0xa0(%rsp),%rdx
++mov    0x0(%r13),%rsi
++test   %rax,%rax
++je     <run_combiner+0xc49>
++cmp    %rax,%rdx
++je     <run_combiner+0x12eb>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0xc50>
++je     <run_combiner+0xc56>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0xc5d>
++je     <run_combiner+0x25d>
++mov    0x0(%rip),%rax        # <run_combiner+0xc6a>
++cmp    %rax,0xa0(%rsp)
++jne    <run_combiner+0x25d>
++test   %rax,%rax
++je     <run_combiner+0x25d>
++incq   %gs:0x0(%rip)        # <run_combiner+0xc89>
++jmp    <run_combiner+0x25d>
++mov    0x18(%r13),%edi
++test   %edi,%edi
++jne    <run_combiner+0xb20>
++cmpb   $0x0,0x22(%r13)
++je     <run_combiner+0xb20>
++cmpb   $0x0,0x20(%r13)
++jne    <run_combiner+0xb20>
++cmpb   $0x0,0x24(%r13)
++jne    <run_combiner+0xb20>
++cmpb   $0x0,0x26(%r13)
++jne    <run_combiner+0xb20>
++cmpw   $0x1,0x1c(%r13)
++jne    <run_combiner+0xb20>
++cmpq   $0x0,0x8(%r13)
++je     <run_combiner+0xb20>
++cmpq   $0x0,0x8(%r8)
++je     <run_combiner+0xb20>
++lea    0x28(%r13),%rax
++cmp    %rax,%r8
++jne    <run_combiner+0xb20>
++cmpb   $0x0,0x1f(%r13)
++jne    <run_combiner+0xb20>
++cmpq   $0x0,0xd8(%r13)
++je     <run_combiner+0xb20>
++cmpq   $0x0,0xe0(%r13)
++je     <run_combiner+0xb20>
++mov    0x0(%r13),%rax
++cmp    %rax,(%r8)
++jne    <run_combiner+0xb20>
++test   %rax,%rax
++je     <run_combiner+0xb20>
++mov    0x0(%rip),%esi        # <run_combiner+0xd38>
+ test   %esi,%esi
+-jne    <run_combiner+0xa03>
+-cmpb   $0x0,0x22(%r14)
+-je     <run_combiner+0xa03>
+-cmpb   $0x0,0x20(%r14)
+-jne    <run_combiner+0xa03>
+-cmpb   $0x0,0x24(%r14)
+-jne    <run_combiner+0xa03>
+-cmpb   $0x0,0x26(%r14)
+-jne    <run_combiner+0xa03>
+-cmpw   $0x1,0x1c(%r14)
+-jne    <run_combiner+0xa03>
+-cmpq   $0x0,0x8(%r14)
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0x8(%r8)
+-je     <run_combiner+0xa03>
+-lea    0x28(%r14),%rax
+-cmp    %rax,%r8
+-jne    <run_combiner+0xa03>
+-cmpb   $0x0,0x1f(%r14)
+-jne    <run_combiner+0xa03>
+-cmpq   $0x0,0xd8(%r14)
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0xe0(%r14)
+-je     <run_combiner+0xa03>
+-mov    (%r14),%rax
+-cmp    %rax,(%r8)
+-jne    <run_combiner+0xa03>
+-test   %rax,%rax
+-je     <run_combiner+0xa03>
+-mov    0x0(%rip),%esi        # <run_combiner+0xb97>
++jne    <run_combiner+0xb20>
++mov    0x288(%r13),%rdi
++mov    (%rdx),%esi
++mov    %rdi,0x10(%rsp)
+ test   %esi,%esi
+-jne    <run_combiner+0xa03>
+-mov    0x288(%r14),%rsi
+-mov    %rsi,0x10(%rsp)
+-mov    (%rdx),%esi
+-test   %esi,%esi
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ mov    0x4(%rdx),%r9d
+ test   %r9d,%r9d
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ mov    0x10(%rdx),%rsi
+ cmp    %rsi,%rax
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ mov    0x18(%rdx),%rax
+ test   %rax,%rax
+-je     <run_combiner+0xa03>
++je     <run_combiner+0xb20>
+ mov    0xc(%rdx),%eax
+ sub    $0x1,%eax
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ xor    %eax,%eax
+-cmpl   $0x0,0x10(%r14)
++cmpl   $0x0,0x10(%r13)
+ setne  %al
+-cmp    %eax,0x14(%r14)
+-jne    <run_combiner+0xa03>
+-mov    %r14,%rsi
++cmp    %eax,0x14(%r13)
++jne    <run_combiner+0xb20>
++mov    %r13,%rsi
+ mov    %rdx,%rdi
+ mov    %r9d,0x18(%rsp)
+ mov    %r8,(%rsp)
+@@ -668,287 +746,293 @@
+ call   <kd_jit_select_image>
+ mov    %rax,%rsi
+ test   %rax,%rax
+-je     <run_combiner+0xa03>
++je     <run_combiner+0xb20>
+ mov    (%rax),%rax
+ mov    0x8(%rsp),%rdx
+ mov    (%rsp),%r8
+ mov    0x18(%rsp),%r9d
+ test   %rax,%rax
+-je     <run_combiner+0xc44>
++je     <run_combiner+0xde5>
+ cmpl   $0x4357444b,0x19(%rax)
+-je     <run_combiner+0x12ef>
++je     <run_combiner+0x12f8>
+ mov    0x30(%rdx),%edx
+-cmp    0x10(%r14),%edx
+-jne    <run_combiner+0xa03>
++cmp    0x10(%r13),%edx
++jne    <run_combiner+0xb20>
+ mov    %edx,%edi
+ and    $0xfffffffd,%edi
+ sub    $0x1,%edi
+-jne    <run_combiner+0x1287>
++jne    <run_combiner+0x12c6>
+ test   %r9d,%r9d
+-je     <run_combiner+0xa03>
++je     <run_combiner+0xb20>
+ movzbl 0x2d(%rax),%eax
+ cmp    %eax,%edx
+-jne    <run_combiner+0xa03>
+-cmpq   $0x0,0x0(%rip)        # <run_combiner+0xc7c>
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0x0(%rip)        # <run_combiner+0xc8a>
+-je     <run_combiner+0xa03>
+-mov    %rsi,0x288(%r14)
+-mov    %r14,%rdi
++jne    <run_combiner+0xb20>
++cmpq   $0x0,0x0(%rip)        # <run_combiner+0xe1d>
++je     <run_combiner+0xb20>
++cmpq   $0x0,0x0(%rip)        # <run_combiner+0xe2b>
++je     <run_combiner+0xb20>
++mov    %rsi,0x288(%r13)
++mov    %r13,%rdi
+ mov    %rsi,0x8(%rsp)
+ mov    %r8,(%rsp)
+ call   <kd_jit_direct_entry>
+ mov    0x8(%rsp),%rsi
+ test   %al,%al
+-jne    <run_combiner+0xed8>
+-mov    0x10(%rsp),%rax
+-mov    %rax,0x288(%r14)
+-jmp    <run_combiner+0xa03>
+-lea    0x28(%r14),%r8
+-cmpb   $0x0,0x25(%r14)
+-je     <run_combiner+0x9f5>
+-mov    0xf8(%r14),%r8
+-jmp    <run_combiner+0x9f5>
+-lea    0x28(%r13),%rdx
+-cmpb   $0x0,0x25(%r13)
+-je     <run_combiner+0x30d>
+-mov    0xf8(%r13),%rdx
+-jmp    <run_combiner+0x30d>
+-prefetcht0 0x18(%rdx)
+-jmp    <run_combiner+0xa67>
+-mov    0x0(%rip),%rax        # <run_combiner+0xd0c>
+-mov    0xa0(%rsp),%rdx
+-mov    0x0(%r13),%rsi
+-test   %rax,%rax
+-je     <run_combiner+0xd26>
+-cmp    %rax,%rdx
+-je     <run_combiner+0x130f>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xd2d>
+-je     <run_combiner+0xd33>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xd3a>
+-je     <run_combiner+0x23f>
+-mov    0x0(%rip),%rax        # <run_combiner+0xd47>
+-cmp    %rax,0xa0(%rsp)
+-jne    <run_combiner+0x23f>
+-test   %rax,%rax
+-je     <run_combiner+0x23f>
+-incq   %gs:0x0(%rip)        # <run_combiner+0xd66>
+-jmp    <run_combiner+0x23f>
+-mov    0xc(%rdx),%eax
+-cmp    $0x1,%eax
+-jne    <run_combiner+0x9c0>
+-jmp    <run_combiner+0x9e0>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xd83>
+-jne    <run_combiner+0x78e>
+-jmp    <run_combiner+0xd8e>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xd95>
+-je     <run_combiner+0x230>
+-call   <run_combiner+0xda0>
+-movabs $0x7ffffffffffffffe,%rsi
+-mov    %rax,%rdx
+-mov    0x0(%rip),%rax        # <run_combiner+0xdb4>
+-cmp    %rax,%rsi
+-jb     <run_combiner+0xec9>
+-lea    0x1(%rax),%rcx
+-lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0xdca>
+-jne    <run_combiner+0xdb4>
+-cmp    %r14,%rdx
+-jb     <run_combiner+0xeba>
+-mov    0x0(%rip),%rax        # <run_combiner+0xddc>
+-sub    %r14,%rdx
+-test   %rax,%rax
+-js     <run_combiner+0xeba>
+-movabs $0x7fffffffffffffff,%rcx
+-sub    %rax,%rcx
+-cmp    %rdx,%rcx
+-jb     <run_combiner+0xeba>
+-lea    (%rdx,%rax,1),%rcx
+-lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0xe0b>
+-jne    <run_combiner+0xddf>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xe14>
+-mov    0xb8(%rsp),%r14
+-je     <run_combiner+0x230>
+-call   <run_combiner+0xe27>
+-movabs $0x7ffffffffffffffe,%rsi
+-mov    %rax,%rdx
+-mov    0x0(%rip),%rax        # <run_combiner+0xe3b>
+-cmp    %rax,%rsi
+-jb     <run_combiner+0x12ac>
+-lea    0x1(%rax),%rcx
+-lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0xe51>
+-jne    <run_combiner+0xe3b>
+-cmp    %r14,%rdx
+-jb     <run_combiner+0xeab>
+-mov    0x0(%rip),%rax        # <run_combiner+0xe5f>
+-sub    %r14,%rdx
+-test   %rax,%rax
+-js     <run_combiner+0xeab>
+-movabs $0x7fffffffffffffff,%rcx
+-sub    %rax,%rcx
+-cmp    %rdx,%rcx
+-jb     <run_combiner+0xeab>
+-lea    (%rdx,%rax,1),%rcx
+-lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0xe86>
+-je     <run_combiner+0x230>
+-jmp    <run_combiner+0xe62>
+-mov    0x20(%r12),%rax
+-xor    %edi,%edi
+-lea    0x2b8(%rax),%rsi
+-call   <run_combiner+0xea1>
+-jmp    <run_combiner+0x371>
+-call   <run_combiner+0xeab>
+-movl   $0x1,0x0(%rip)        # <run_combiner+0xeb5>
+-jmp    <run_combiner+0x230>
+-movl   $0x1,0x0(%rip)        # <run_combiner+0xec4>
+-jmp    <run_combiner+0xe0d>
+-movl   $0x1,0x0(%rip)        # <run_combiner+0xed3>
+-jmp    <run_combiner+0xdcc>
++je     <run_combiner+0x12b5>
+ mov    (%rsi),%rdx
+-mov    %r14,%rdi
++mov    %r13,%rdi
+ mov    %rdx,0x8(%rsp)
+ call   <kd_jit_root_escape_entry>
+ test   %al,%al
+-je     <run_combiner+0xcb5>
++je     <run_combiner+0x12b5>
+ mov    0x8(%rsp),%rdx
+ test   %rdx,%rdx
+-je     <run_combiner+0xcb5>
++je     <run_combiner+0x12b5>
+ cmpl   $0x4257444b,0x9(%rdx)
+-jne    <run_combiner+0xcb5>
++jne    <run_combiner+0x12b5>
+ cmpl   $0x32303042,0xc(%rdx)
+ mov    (%rsp),%r8
+-jne    <run_combiner+0xcb5>
+-mov    0x10(%r14),%eax
++jne    <run_combiner+0x12b5>
++mov    0x10(%r13),%eax
+ mov    %r8,0x80(%rsp)
+ and    $0xfffffffd,%eax
+ sub    $0x1,%eax
+-mov    0xd8(%r14),%rax
++mov    0xd8(%r13),%rax
+ sete   %sil
+ mov    %rax,0x88(%rsp)
+-mov    0xe0(%r14),%rax
++mov    0xe0(%r13),%rax
+ mov    %rax,0x90(%rsp)
+-jne    <run_combiner+0x1263>
++jne    <run_combiner+0x1282>
+ add    $0x20,%rdx
+ mov    %rdx,0x98(%rsp)
+-mov    0x8(%r14),%rax
++mov    0x8(%r13),%rax
+ mov    %rax,0xa0(%rsp)
+-mov    0x0(%rip),%rax        # <run_combiner+0xf75>
++mov    0x0(%rip),%rax        # <run_combiner+0xef3>
+ mov    %rax,0xa8(%rsp)
+ mov    0x8(%r8),%rax
+ movzbl %sil,%esi
+ mov    %rax,0xb0(%rsp)
+-mov    0x10(%r14),%eax
++mov    0x10(%r13),%eax
+ mov    %rsi,0xd8(%rsp)
+ mov    %rax,0xc8(%rsp)
+-lea    0x14(%r14),%rax
++lea    0x14(%r13),%rax
+ mov    %rax,0xd0(%rsp)
+-mov    0x288(%r14),%rax
+-test   %rax,%rax
+-je     <run_combiner+0xfd1>
++mov    0x288(%r13),%rax
++test   %rax,%rax
++je     <run_combiner+0xf4f>
+ testb  $0x10,0x18(%rax)
+-je     <run_combiner+0xfd1>
++je     <run_combiner+0xf4f>
++xor    %esi,%esi
++mov    %rsi,0xe0(%rsp)
++mov    %rsi,0xe8(%rsp)
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0xf56>
++jne    <run_combiner+0x125c>
+ xor    %ecx,%ecx
+-mov    %rcx,0xe0(%rsp)
+-mov    %rcx,0xe8(%rsp)
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0xfd8>
+-jne    <run_combiner+0x115c>
+-xor    %edx,%edx
+ xor    %eax,%eax
+-mov    %rdx,0xb8(%rsp)
++mov    %rcx,0xb8(%rsp)
+ mov    %rax,0xc0(%rsp)
+-test   %r14,%r14
+-je     <run_combiner+0xa03>
+-cmpb   $0x0,0x22(%r14)
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0xd8(%r14)
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0xe0(%r14)
+-je     <run_combiner+0xa03>
+-cmpb   $0x0,0x1f(%r14)
+-jne    <run_combiner+0xa03>
+-mov    %gs:0x0(%rip),%rcx        # <run_combiner+0x1035>
++test   %r13,%r13
++je     <run_combiner+0xb20>
++cmpb   $0x0,0x22(%r13)
++je     <run_combiner+0xb20>
++cmpq   $0x0,0xd8(%r13)
++je     <run_combiner+0xb20>
++cmpq   $0x0,0xe0(%r13)
++je     <run_combiner+0xb20>
++cmpb   $0x0,0x1f(%r13)
++jne    <run_combiner+0xb20>
++mov    %gs:0x0(%rip),%rcx        # <run_combiner+0xfb3>
+ mov    0x0(%rcx),%eax
+ cmp    $0x7,%eax
+-ja     <run_combiner+0xa03>
++ja     <run_combiner+0xb20>
+ mov    0x0(%rcx),%rdx
+ test   %eax,%eax
+ setne  %dil
+ test   %rdx,%rdx
+ setne  %sil
+ cmp    %sil,%dil
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ test   %eax,%eax
+-je     <run_combiner+0x1073>
+-cmp    %gs:0x0(%rip),%rdx        # <run_combiner+0x106d>
+-jne    <run_combiner+0xa03>
+-mov    0x0(%rip),%eax        # <run_combiner+0x1079>
++je     <run_combiner+0xff1>
++cmp    %gs:0x0(%rip),%rdx        # <run_combiner+0xfeb>
++jne    <run_combiner+0xb20>
++mov    0x0(%rip),%eax        # <run_combiner+0xff7>
+ test   %eax,%eax
+-jne    <run_combiner+0xa03>
++jne    <run_combiner+0xb20>
+ mov    0x0(%rcx),%rax
+-mov    %rax,0xe8(%r14)
++mov    %rax,0xe8(%r13)
+ mov    0x0(%rcx),%eax
+-mov    %eax,0x18(%r14)
+-cmpb   $0x0,0x24(%r14)
+-jne    <run_combiner+0x1259>
++mov    %eax,0x18(%r13)
++cmpb   $0x0,0x24(%r13)
++jne    <run_combiner+0x1427>
+ test   %eax,%eax
+-je     <run_combiner+0x124f>
+-movb   $0x0,0x21(%r14)
+-mov    %r14,%rdi
++je     <run_combiner+0x141d>
++movb   $0x0,0x21(%r13)
++mov    %r13,%rdi
+ mov    %rcx,0x10(%rsp)
+ call   <kd_exec_frame_prepare_complex.part.0>
+ mov    0x10(%rsp),%rcx
+ movabs $0x100000001,%rax
+-mov    %rax,0x218(%r14)
+-mov    %gs:0x0(%rip),%rax        # <run_combiner+0x10dc>
+-movb   $0x1,0x23(%r14)
+-movw   $0x1,0x1c(%r14)
++mov    %rax,0x218(%r13)
++mov    %gs:0x0(%rip),%rax        # <run_combiner+0x105a>
++movb   $0x1,0x23(%r13)
++movw   $0x1,0x1c(%r13)
+ mov    %rax,0x0(%rcx)
+ addl   $0x1,0x0(%rcx)
+-mov    %r14,0x0(%rcx)
+-movb   $0x2,0x1e(%r14)
+-cmpl   $0x3,0x10(%r14)
+-jne    <run_combiner+0x1192>
+-movzbl 0x27(%r14),%eax
++mov    %r13,0x0(%rcx)
++movb   $0x2,0x1e(%r13)
++cmpl   $0x3,0x10(%r13)
++jne    <run_combiner+0x1360>
++movzbl 0x27(%r13),%eax
+ test   $0x1,%al
+-jne    <run_combiner+0x1192>
++jne    <run_combiner+0x1360>
+ test   $0x4,%al
+-jne    <run_combiner+0x124d>
+-cmpb   $0x0,0x1f(%r14)
+-jne    <run_combiner+0x124d>
+-mov    0x8(%r14),%rdx
++jne    <run_combiner+0x141b>
++cmpb   $0x0,0x1f(%r13)
++jne    <run_combiner+0x141b>
++mov    0x8(%r13),%rdx
+ xor    %eax,%eax
+ mov    $0xff,%edi
+ lea    -0x40(%rdx),%rsi
+ lock cmpxchg %edi,-0x40(%rdx)
+ test   %eax,%eax
+-je     <run_combiner+0x118d>
++je     <run_combiner+0x135b>
+ lock addl $0x100,-0x40(%rdx)
+ mov    $0xff,%edi
+ mov    -0x40(%rdx),%eax
+ cmp    $0x100,%eax
+-je     <run_combiner+0x1182>
++je     <run_combiner+0x134c>
+ pause  
+-jmp    <run_combiner+0x114e>
+-call   <run_combiner+0x1161>
++jmp    <run_combiner+0x10d4>
++lea    0x28(%r13),%r8
++cmpb   $0x0,0x25(%r13)
++je     <run_combiner+0xb12>
++mov    0xf8(%r13),%r8
++jmp    <run_combiner+0xb12>
++mov    0xc(%rdx),%eax
++cmp    $0x1,%eax
++jne    <run_combiner+0xadd>
++jmp    <run_combiner+0xafd>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1119>
++je     <run_combiner+0x24e>
++call   <run_combiner+0x1124>
++movabs $0x7ffffffffffffffe,%rsi
++mov    %rax,%rdx
++mov    0x0(%rip),%rax        # <run_combiner+0x1138>
++cmp    %rax,%rsi
++jb     <run_combiner+0x124d>
++lea    0x1(%rax),%rcx
++lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0x114e>
++jne    <run_combiner+0x1138>
++cmp    %r14,%rdx
++jb     <run_combiner+0x123e>
++mov    0x0(%rip),%rax        # <run_combiner+0x1160>
++sub    %r14,%rdx
++test   %rax,%rax
++js     <run_combiner+0x123e>
++movabs $0x7fffffffffffffff,%rcx
++sub    %rax,%rcx
++cmp    %rdx,%rcx
++jb     <run_combiner+0x123e>
++lea    (%rdx,%rax,1),%rcx
++lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0x118f>
++jne    <run_combiner+0x1163>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1198>
++mov    0xb8(%rsp),%r14
++je     <run_combiner+0x24e>
++call   <run_combiner+0x11ab>
++movabs $0x7ffffffffffffffe,%rsi
++mov    %rax,%rdx
++mov    0x0(%rip),%rax        # <run_combiner+0x11bf>
++cmp    %rax,%rsi
++jb     <run_combiner+0x12a6>
++lea    0x1(%rax),%rcx
++lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0x11d5>
++jne    <run_combiner+0x11bf>
++cmp    %r14,%rdx
++jb     <run_combiner+0x122f>
++mov    0x0(%rip),%rax        # <run_combiner+0x11e3>
++sub    %r14,%rdx
++test   %rax,%rax
++js     <run_combiner+0x122f>
++movabs $0x7fffffffffffffff,%rcx
++sub    %rax,%rcx
++cmp    %rdx,%rcx
++jb     <run_combiner+0x122f>
++lea    (%rdx,%rax,1),%rcx
++lock cmpxchg %rcx,0x0(%rip)        # <run_combiner+0x120a>
++je     <run_combiner+0x24e>
++jmp    <run_combiner+0x11e6>
++mov    0x20(%r12),%rax
++xor    %edi,%edi
++lea    0x2b8(%rax),%rsi
++call   <run_combiner+0x1225>
++jmp    <run_combiner+0x38f>
++call   <run_combiner+0x122f>
++movl   $0x1,0x0(%rip)        # <run_combiner+0x1239>
++jmp    <run_combiner+0x24e>
++movl   $0x1,0x0(%rip)        # <run_combiner+0x1248>
++jmp    <run_combiner+0x1191>
++movl   $0x1,0x0(%rip)        # <run_combiner+0x1257>
++jmp    <run_combiner+0x1150>
++call   <run_combiner+0x1261>
+ mov    %rax,0xb8(%rsp)
+ xor    %eax,%eax
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1172>
+-je     <run_combiner+0xfea>
+-call   <run_combiner+0x117d>
+-jmp    <run_combiner+0xfea>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1272>
++je     <run_combiner+0xf68>
++call   <run_combiner+0x127d>
++jmp    <run_combiner+0xf68>
++add    $0x10,%rdx
++mov    %rdx,0x98(%rsp)
++mov    0x8(%r13),%rax
++mov    %rax,0xa0(%rsp)
++mov    0x0(%rip),%rax        # <run_combiner+0x12a1>
++jmp    <run_combiner+0xef3>
++movl   $0x1,0x0(%rip)        # <run_combiner+0x12b0>
++jmp    <run_combiner+0x11d7>
++mov    0x10(%rsp),%rax
++mov    %rax,0x288(%r13)
++jmp    <run_combiner+0xb20>
++cmp    $0x2,%edx
++je     <run_combiner+0x1318>
++test   %edx,%edx
++jne    <run_combiner+0xb20>
++test   %r9d,%r9d
++je     <run_combiner+0xe31>
++cmpb   $0x0,0x2d(%rax)
++jne    <run_combiner+0xb20>
++jmp    <run_combiner+0xe31>
++incq   %gs:0x0(%rip)        # <run_combiner+0x12f3>
++jmp    <run_combiner+0xc49>
++cmpl   $0x32303043,0x1c(%rax)
++jne    <run_combiner+0xde5>
++xor    %r9d,%r9d
++cmpl   $0x4241444b,0x29(%rax)
++sete   %r9b
++jmp    <run_combiner+0xde5>
++test   %r9d,%r9d
++je     <run_combiner+0xb20>
++cmpb   $0x2,0x2d(%rax)
++jne    <run_combiner+0xb20>
++cmpq   $0x0,0x0(%rip)        # <run_combiner+0x1333>
++je     <run_combiner+0xb20>
++cmpq   $0x0,0x0(%rip)        # <run_combiner+0x1341>
++jne    <run_combiner+0xe31>
++jmp    <run_combiner+0xb20>
+ lock cmpxchg %edi,(%rsi)
+ cmp    $0x100,%eax
+-jne    <run_combiner+0x114e>
+-orb    $0x4,0x27(%r14)
++jne    <run_combiner+0x10d4>
++orb    $0x4,0x27(%r13)
+ mov    0xc(%r12),%eax
+-mov    %eax,0x40(%r13)
++mov    %eax,0x40(%r14)
+ cmpq   $0x0,0xc0(%rsp)
+-jne    <run_combiner+0x122f>
+-movb   $0x1,0x1f(%r14)
+-mov    0x0(%rip),%rax        # <run_combiner+0x11b6>
++jne    <run_combiner+0x13fd>
++movb   $0x1,0x1f(%r13)
++mov    0x0(%rip),%rax        # <run_combiner+0x1384>
+ movb   $0x1,0xf0(%rsp)
+ incq   %gs:0xc10(%rax)
+ cmpb   $0x0,0xf1(%rsp)
+-je     <run_combiner+0x11d8>
++je     <run_combiner+0x13a6>
+ incq   %gs:0xc18(%rax)
+ mov    0xc8(%rsp),%edx
+ mov    0x80(%rsp),%rdi
+@@ -957,59 +1041,25 @@
+ and    $0xfffffffd,%edx
+ cmp    $0x1,%edx
+ lea    0x80(%rsp),%rdx
+-jne    <run_combiner+0x1216>
+-call   <run_combiner+0x120c>
++jne    <run_combiner+0x13e4>
++call   <run_combiner+0x13da>
+ mov    0x78(%rsp),%r12
+-jmp    <run_combiner+0x1a4>
++jmp    <run_combiner+0x1c2>
+ push   %rbp
+ sub    $0x8,%rsp
+-call   <run_combiner+0x1220>
++call   <run_combiner+0x13ee>
+ add    $0x8,%rsp
+ pop    %rbp
+ mov    0x78(%rsp),%r12
+-jmp    <run_combiner+0x1a4>
+-cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1236>
+-je     <run_combiner+0x1240>
+-call   <run_combiner+0x123d>
++jmp    <run_combiner+0x1c2>
++cmpb   $0x0,0x0(%rip)        # <run_combiner+0x1404>
++je     <run_combiner+0x140e>
++call   <run_combiner+0x140b>
+ mov    %rax,%r15
+-mov    %r15,0xf8(%rsp)
+-jmp    <run_combiner+0x11aa>
++mov    %r15,0x100(%rsp)
++jmp    <run_combiner+0x1378>
+ ud2    
+-movb   $0x1,0x21(%r14)
+-jmp    <run_combiner+0x10d4>
+-movb   $0x0,0x21(%r14)
+-jmp    <run_combiner+0x10c3>
+-add    $0x10,%rdx
+-mov    %rdx,0x98(%rsp)
+-mov    0x8(%r14),%rax
+-mov    %rax,0xa0(%rsp)
+-mov    0x0(%rip),%rax        # <run_combiner+0x1282>
+-jmp    <run_combiner+0xf75>
+-cmp    $0x2,%edx
+-je     <run_combiner+0x12bb>
+-test   %edx,%edx
+-jne    <run_combiner+0xa03>
+-test   %r9d,%r9d
+-je     <run_combiner+0xc90>
+-cmpb   $0x0,0x2d(%rax)
+-jne    <run_combiner+0xa03>
+-jmp    <run_combiner+0xc90>
+-movl   $0x1,0x0(%rip)        # <run_combiner+0x12b6>
+-jmp    <run_combiner+0xe53>
+-test   %r9d,%r9d
+-je     <run_combiner+0xa03>
+-cmpb   $0x2,0x2d(%rax)
+-jne    <run_combiner+0xa03>
+-cmpq   $0x0,0x0(%rip)        # <run_combiner+0x12d6>
+-je     <run_combiner+0xa03>
+-cmpq   $0x0,0x0(%rip)        # <run_combiner+0x12e4>
+-jne    <run_combiner+0xc90>
+-jmp    <run_combiner+0xa03>
+-cmpl   $0x32303043,0x1c(%rax)
+-jne    <run_combiner+0xc44>
+-xor    %r9d,%r9d
+-cmpl   $0x4241444b,0x29(%rax)
+-sete   %r9b
+-jmp    <run_combiner+0xc44>
+-incq   %gs:0x0(%rip)        # <run_combiner+0x1317>
+-jmp    <run_combiner+0xd26>
++movb   $0x1,0x21(%r13)
++jmp    <run_combiner+0x1052>
++movb   $0x0,0x21(%r13)
++jmp    <run_combiner+0x1041>

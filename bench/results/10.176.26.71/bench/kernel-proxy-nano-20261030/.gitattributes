@@ -1,0 +1,4 @@
+# Keep the actual comparison writer's CSV record terminators.
+comparison-points.csv whitespace=cr-at-eol
+# Preserve captured objdump output and unified-diff context verbatim.
+binary-inspection/disassembly/* -whitespace

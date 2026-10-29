@@ -1,0 +1,92 @@
+[
+  {
+    "profile": "mutex-throughput",
+    "archive": "mutex-throughput.tar.gz",
+    "archive_sha256": "44d89f905a1799c3d690d3c5c892f13fe9aa7ca707e6f3cba9ba9539e962bc7c",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "24026421a78f84cfb561c9bf0bd4ad5918438132dfedc730caa84ed8de9c920b",
+    "bytes": 4768384,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/mutex-throughput-kdlock_km.ko"
+  },
+  {
+    "profile": "mutex-locality",
+    "archive": "mutex-locality.tar.gz",
+    "archive_sha256": "40a6c0daca538f87b3ca10e2379d4def5a0e0795873411ff9c6e2967fd4de431",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "c29a3f8b8f9b03080ba0d0fb1b6ee8fa19bb7bdbf85cf2a6134a1c35b782adf2",
+    "bytes": 4768320,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/mutex-locality-kdlock_km.ko"
+  },
+  {
+    "profile": "rwsem-throughput-read",
+    "archive": "rwsem-throughput-read.tar.gz",
+    "archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "49793e2d3bcbfbd9a3d18f8b972dbb48ed124a3b9e148cf638946610734e7c52",
+    "bytes": 4768528,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwsem-throughput-read-kdlock_km.ko"
+  },
+  {
+    "profile": "rwsem-throughput-mixed",
+    "archive": "rwsem-throughput-mixed.tar.gz",
+    "archive_sha256": "8876162a58f655beee3cda7f9eb40950606114bdd1baf81c9bbe19bd4c7f9b7f",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "00804242f82fbe8acee9886619a6c8b32ce6ecacba2bef49cfa1349503da3a50",
+    "bytes": 4768560,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwsem-throughput-mixed-kdlock_km.ko"
+  },
+  {
+    "profile": "rwsem-locality-read",
+    "archive": "rwsem-locality-read.tar.gz",
+    "archive_sha256": "2fde420789b85e00bc6f694d1e713993bb91017025889d42e84f5600d035a652",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "a420a01f52ff0a99c678d88b90afedc902d8aafb83d73bbd91a00c5def0db4a8",
+    "bytes": 4768472,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwsem-locality-read-kdlock_km.ko"
+  },
+  {
+    "profile": "rwsem-locality-mixed",
+    "archive": "rwsem-locality-mixed.tar.gz",
+    "archive_sha256": "176013008d514a3471b90cf53152045b517c1571dc88eeddd6b1b88cb2ca2187",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "570b3fc28022b1c5932263eb94fac830a841b3831ff8e5976fbece878a0e19fa",
+    "bytes": 4768504,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwsem-locality-mixed-kdlock_km.ko"
+  },
+  {
+    "profile": "rwlock-throughput-read",
+    "archive": "rwlock-throughput-read.tar.gz",
+    "archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "0b3c716589846ed19b91327a5f9c367d65d5ec64b0bde4a819a82bab85a0bfe2",
+    "bytes": 4768560,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwlock-throughput-read-kdlock_km.ko"
+  },
+  {
+    "profile": "rwlock-throughput-mixed",
+    "archive": "rwlock-throughput-mixed.tar.gz",
+    "archive_sha256": "180a3e3ff2a519a5232a53b16a0c6380e74619b0a14c48bf1d15b2cccec32a34",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "c06016748738c74967ac5fe9742e4a53862ecf19963317327c6f5d580ca0a1a2",
+    "bytes": 4768592,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwlock-throughput-mixed-kdlock_km.ko"
+  },
+  {
+    "profile": "rwlock-locality-read",
+    "archive": "rwlock-locality-read.tar.gz",
+    "archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "addf08d19135fb41c8bf4ba3aab7ba0cada0c02d758bbeb352d9b40d84442722",
+    "bytes": 4768504,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwlock-locality-read-kdlock_km.ko"
+  },
+  {
+    "profile": "rwlock-locality-mixed",
+    "archive": "rwlock-locality-mixed.tar.gz",
+    "archive_sha256": "90b7d7750ec043bd68b0a444337289b739a67e2636be269211246af35657cab1",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+    "sha256": "9cfcb7781db35b2bb008a6557d08dcffbc951729369248d3a5f21363d23296da",
+    "bytes": 4768528,
+    "output": "/tmp/kdlock-nano-baseline-artifacts-20261030/rwlock-locality-mixed-kdlock_km.ko"
+  }
+]
