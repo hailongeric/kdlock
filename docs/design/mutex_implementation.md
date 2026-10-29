@@ -497,6 +497,44 @@ between proof and first origin use. All new source/VM gates and any performance
 benefit remain pending. Layout, pin budget, publication, 1024/1024 limits and
 fairness are unchanged.
 
+### Fresh exact-COMBINER predicate candidate (October 29)
+
+This isolated follow-up starts from
+`99f383624faa872a76521d1b5be7faea586591c1`. Matched profiling remains exploratory:
+the whole-client stat observation retired more instructions per completed
+operation, but did not attribute those instructions to ownership checks. The
+notification-prefetch experiment is excluded from this candidate. No performance
+benefit is established by this source design.
+
+At three existing boundaries, replace the generic HELD-or-COMBINER ownership
+predicate followed by a separate COMBINER read with a fresh always-inline
+`kd_mutex_combiner_owned()` predicate. These boundaries are initial
+`kd_mutex_execute_cs()` entry, `kd_mutex_proxy_request()` admission and the READY
+branch of `kd_mutex_batch_pin_assert()`. Each invocation still checks a non-null
+lock, the supplied task equals current, the masked physical owner equals current,
+PICKUP is absent, and an acquire-read gate phase equals COMBINER. It reads that
+phase once within this uninterrupted predicate. It neither caches a proof across
+calls or JIT execution nor borrows authority from a frame or private flag alone.
+
+Preserve the existing `kd_mutex_gate_read()` masking semantics: low phase values
+other than COMBINER are rejected; WITHDRAW and other bits outside the phase mask
+are masked exactly as in the old conjunction. This is predicate equivalence,
+not permission to manufacture invalid gate states. The separate full-word
+transition helpers continue to reject or preserve flags according to their
+existing protocol. WAITERS and HANDOFF owner flags remain permitted; every owner
+flag combination containing PICKUP remains rejected.
+
+Private epoch, unreleased outer lock, exact current node, counted key, stable
+generation and self-CPU checks stay at their existing boundaries. Generic
+`kd_mutex_delegation_owned()` and the separate `kd_origin_mutex_owned()` reads
+remain unchanged, as do fresh completion, retained-only cold, source/frame,
+native ACK, role exchange and delayed-tail proofs. Layouts, one-current storage,
+READY publication, spin budget 65,536 and total/local limits 1024/1024 do not
+change. Focused actual-predicate fixtures must cover null/noncurrent tasks,
+owner flags, PICKUP, different owner, every low phase value, mask compatibility
+and fresh state changes at later boundaries. Both default-off and mode-2 emitted
+code, affected fixtures, live correctness and matched timing remain pending.
+
 ### Optional READY diagnostics and prior experiments
 
 Mode 0 compiles observations out. Mode 1 emits batch schema 5: `body_unavailable`
