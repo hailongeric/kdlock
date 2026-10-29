@@ -46,6 +46,14 @@ static unsigned long stack[16];
 static struct task_struct executor = { .pid = 1 },
 	waiter = { .pid = 2, .stack = stack }, stranger = { .pid = 3 };
 static struct task_struct *current = &executor;
+/* Built-in object bridges are absent from this execution-control fixture.
+ * Their actual class/object predicate has a separate integration fixture. */
+static bool kd_api_outer_unlock(unsigned long target, unsigned long lock,
+				unsigned long outer, bool mutex_backend)
+{
+	(void)target; (void)lock; (void)outer; (void)mutex_backend;
+	return false;
+}
 static struct kd_exec_frame active, parent;
 static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
@@ -438,6 +446,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/mutex.inc"
 #include "jit_entry_scope/native_escape.inc"
 #include "jit_entry_scope/root_native_escape.inc"
+#include "jit_entry_scope/native_calls.inc"
 #include "jit_entry_scope/address_guard.inc"
 #include "jit_entry_scope/strings.inc"
 #include "jit_entry_scope/string_copy.inc"
@@ -449,6 +458,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 int main(void)
 {
 	check_native_escape();
+	check_terminal_and_indirect_calls();
 	check_root_native_escape();
 	check_address_guard();
 	check_string_services();

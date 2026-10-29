@@ -9,7 +9,8 @@
  *   CALL_MISS: known lock control, or original-waiter native continuation;
  *   HOSTCALL: exact allowlisted service, then another wrapper invocation;
  *   ENTRY_REFUSED: native fallback only after validating an unstarted root;
- *   NATIVE_ESCAPE: checked instruction boundary, disable and resume waiter;
+ *   NATIVE_ESCAPE: checked instruction boundary, finish this native suffix;
+ *   INDIRECT_CALL: exact source CALL miss, validate then finish native suffix;
  *   IJ_MISS / ERROR / INST_LIMIT: error, not generic native continuation.
  * The budget counts instrumented blocks, not retired instructions. NORMAL
  * remains a legacy syscall exit, unsupported for kernel critical sections.
@@ -49,6 +50,7 @@
 #include "kd_spinlock.h"
 #include "kd_rwlock.h"
 #include "kd_hostcall.h"
+#include "kd_api_provider.h"
 
 /*
  * Pre-allocated pool of executable code blocks.  kd_exe_add() is called from
@@ -145,6 +147,7 @@ static unsigned long contended_mutex_lock_addr;
 static unsigned long outer_mutex_lock_addr;
 static unsigned long direct_mutex_unlock_addr;
 
+#include "execution/native_terminals.inc"
 #include "execution/hostcalls.inc"
 
 #include "execution/timing.inc"
@@ -157,6 +160,17 @@ static unsigned long direct_mutex_unlock_addr;
 #include "execution/registry_publish.inc"
 
 #include "execution/wrapper_entry.inc"
+
+/* A bridge is per-object. Only a sole, exact root acquisition can complete
+ * through its alias here; early/nested aliases retain their Native CALL. */
+static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,
+				struct kd_regs *regs, unsigned long outer)
+{
+	return is_outer_lock_unlock(regs, outer) ||
+		(frame && kd_exec_frame_can_borrow_locks(frame) &&
+		 !kd_exec_frame_has_unreleased_nested(frame) &&
+		 kd_api_outer_unlock(regs->ip, regs->di, outer, frame->mutex_backend));
+}
 
 static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			  unsigned long entry_ip, unsigned long outer_lock_addr,
@@ -531,20 +545,30 @@ returned_wrapper:
 			}
 			resume_after_hostcall = true;
 			continue;
+		} else if (args[0] == KD_EXE_INDIRECT_CALL) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_indirect_call_native(exe, frame, regs);
+			if (call_ret)
+				kd_jit_log_hl_error("INVALID_INDIRECT_CALL", frame, regs,
+					args[0], call_ret, continuation_count, hostcall_count);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 		} else if (args[0] == KD_EXE_CALL_MISS) {
-			if (direct_image && !is_outer_lock_unlock(regs, outer_lock_addr)) {
+			if (direct_image && !kd_jit_outer_unlock(frame, regs, outer_lock_addr)) {
 				/* Preserve the actual source CALL word and physical owner for
 				 * the original waiter. Learning affects a future generation;
 				 * this invocation cannot return to generated direct code. */
 				call_ret = kd_jit_call_limit_native(frame, regs, false);
-				if (!call_ret && !is_end_point(regs->ip))
+				if (!call_ret && !is_end_point(regs->ip) &&
+				    !kd_native_terminal_target(regs->ip))
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
 				ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 				break;
 			}
 			if (outer_lock_addr &&
-			    is_outer_lock_unlock(regs, outer_lock_addr)) {
-				call_ret = kd_jit_timed_control(regs, outer_lock_addr);
+			    kd_jit_outer_unlock(frame, regs, outer_lock_addr)) {
+				call_ret = kd_api_outer_unlock(regs->ip, regs->di,
+					outer_lock_addr, frame->mutex_backend) ?
+					KD_EXE_KNOWN_OUTER_UNLOCK : kd_jit_timed_control(regs, outer_lock_addr);
 				if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
 					ret_flag = KD_EXE_RUN_TO_UNLOCK;
 					break;
@@ -587,6 +611,17 @@ returned_wrapper:
 					break;
 				}
 
+				if (kd_native_terminal_target(regs->ip)) {
+					call_ret = fault_kind ? -EINVAL :
+						kd_jit_pending_call_native(frame, regs, false, 0,
+							"NATIVE_CALL_TERMINAL");
+					if (call_ret)
+						kd_jit_log_hl_error("NATIVE_CALL_TERMINAL_REFUSED", frame,
+							regs, args[0], call_ret, continuation_count, hostcall_count);
+					ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+					break;
+				}
+
 				call_ret =
 					outer_lock_addr ?
 						kd_jit_timed_control(
@@ -619,10 +654,7 @@ returned_wrapper:
 				 * Learning this target only benefits future invocations; do
 				 * not loop back into this JIT after waiter-side execution.
 				 */
-				call_ret =
-					fault_kind ?
-						0 :
-						kd_source_pin_target(regs->ip);
+				call_ret = fault_kind ? 0 : kd_source_pin_target(regs->ip);
 				if (call_ret) {
 					kd_jit_log_hl_error(
 						"SOURCE_TARGET_REFUSED", frame,
@@ -632,7 +664,7 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ERROR;
 					break;
 				}
-				if (!is_end_point(regs->ip))
+				if (!is_end_point(regs->ip) && !kd_native_terminal_target(regs->ip))
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS,
 							regs->ip, 0);
 				/* Synthetic faults have no CALL frame and are not resumable. */

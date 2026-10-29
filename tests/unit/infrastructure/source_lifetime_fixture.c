@@ -19,6 +19,7 @@ void kd_image_discard(struct kd_jit_image *image) { if (image) abort(); }
 static bool direct_pool_available;
 int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_source_api.h"
+#include "kd_api_control.h"
 
 typedef long long s64;
 typedef _Atomic long long atomic64_t;
@@ -119,6 +120,22 @@ struct file {
 	unsigned int f_mode;
 	void *private_data;
 };
+
+/* API selection has its own production fixture. Here observe only exact
+ * ioctl/release forwarding from the shared source-device implementation. */
+static struct file *api_file, *api_released_file;
+static unsigned int api_command, api_calls, api_releases;
+static unsigned long api_argument;
+static long kd_api_provider_ioctl(struct file *file, unsigned int command,
+				  unsigned long argument)
+{
+	api_file = file; api_command = command; api_argument = argument; api_calls++;
+	return -EINPROGRESS;
+}
+static void kd_api_provider_release(struct file *file)
+{
+	api_released_file = file; api_releases++;
+}
 
 static bool try_module_get(struct module *module)
 {
@@ -261,11 +278,30 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0) |
 				(direct_pool_available ? KD_JIT_CAP_DIRECT_STRINGS : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
 	CHECK(caps.percpu_module_bytes == module_bytes);
+	after = status();
+	CHECK(!memcmp(&before, &after, sizeof(before)));
+}
+
+static void check_api_forwarding(void)
+{
+	struct file control = {0};
+	struct kd_source_info before = status(), after;
+	const unsigned int commands[] = {KD_API_SELECT, KD_API_CANCEL, KD_API_QUERY};
+	for (unsigned int i = 0; i < sizeof(commands) / sizeof(commands[0]); i++) {
+		unsigned int calls_before = api_calls;
+		unsigned long argument = 0x123400UL + i;
+		CHECK(kd_dev_ioctl(&control, commands[i], argument) == -EINPROGRESS);
+		CHECK(api_calls == calls_before + 1 && api_file == &control &&
+		      api_command == commands[i] && api_argument == argument);
+	}
+	unsigned int releases_before = api_releases;
+	CHECK(!kd_dev_release(NULL, &control));
+	CHECK(api_releases == releases_before + 1 && api_released_file == &control);
 	after = status();
 	CHECK(!memcmp(&before, &after, sizeof(before)));
 }
@@ -581,7 +617,7 @@ int main(void)
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&
 			       KD_JIT_CAP_STRING_SERVICES == 128 && KD_JIT_CAP_STRING_WRITE == 256 &&
 			       KD_JIT_CAP_AUDITED_STRINGS == 512 && KD_JIT_CAP_DIRECT_STRINGS == 1024 &&
-			       KD_JIT_CAP_ROOT_NATIVE_ESCAPE == 2048,
+			       KD_JIT_CAP_ROOT_NATIVE_ESCAPE == 2048 && KD_JIT_CAP_INDIRECT_CALL == 4096,
 		       "Python capability semantics");
 	_Static_assert(KD_JIT_PERCPU_MODULE_BYTES == 8192 &&
 			       KD_JIT_PERCPU_ALIGNMENT == 4,
@@ -599,6 +635,7 @@ int main(void)
 	concurrent_pins();
 	atomic_frame_admission();
 	concurrent_frame_close();
+	check_api_forwarding();
 	printf("production source lifetime: %u checks, 0 failures; cap=%u\n",
 	       atomic_load(&checks), KD_SOURCE_MAX_MODULES);
 	return 0;

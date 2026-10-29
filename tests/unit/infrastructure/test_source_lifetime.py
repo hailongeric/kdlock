@@ -39,6 +39,13 @@ def production():
 def main():
     code = production()
     mutations = {
+        "api-ioctl-drops-argument": (
+            "return kd_api_provider_ioctl(file, command, arg);",
+            "return kd_api_provider_ioctl(file, command, 0);",
+        ),
+        "api-selector-release-omitted": (
+            "kd_api_provider_release(file);", "(void)kd_api_provider_release;",
+        ),
         "duplicate-pins": (
             "for (i = 0; i < kd_sources.modules; i++)",
             "for (i = kd_sources.modules; i < kd_sources.modules; i++)",
@@ -93,7 +100,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL,",
             ".features = 0,",
         ),
         "wrong-module-arena": (
@@ -125,8 +132,12 @@ def main():
             "KD_JIT_CAP_STRING_WRITE |",
         ),
         "missing-root-native-escape-feature": (
-            "KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE,",
-            "KD_JIT_CAP_AUDITED_STRINGS,",
+            "KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL,",
+            "KD_JIT_CAP_INDIRECT_CALL,",
+        ),
+        "missing-indirect-call-feature": (
+            "KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL,",
+            "KD_JIT_CAP_ROOT_NATIVE_ESCAPE,",
         ),
         "missing-direct-string-feature": (
             "caps.features |= KD_JIT_CAP_DIRECT_STRINGS;",

@@ -51,6 +51,8 @@ struct kd_source_info {
 #define KD_JIT_CAP_DIRECT_STRINGS (1U << 10)
 /* Immutable ABI1/3 instruction markers, only from a single physical root. */
 #define KD_JIT_CAP_ROOT_NATIVE_ESCAPE (1U << 11)
+/* Optional v12 extension: exact near-indirect CALL native continuation. */
+#define KD_JIT_CAP_INDIRECT_CALL (1U << 12)
 #define KD_JIT_MUTEX_STACK_BYTES 256
 #define KD_JIT_PERCPU_MODULE_BYTES (8 * 1024)
 #define KD_JIT_PERCPU_ALIGNMENT 4

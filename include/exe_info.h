@@ -53,6 +53,8 @@ enum kd_packet_state {
 #define KD_EXE_ADDRESS_GUARD 9
 /* Direct helper quota expired with the original CALL still pending. */
 #define KD_EXE_DIRECT_CALL_LIMIT 10
+/* Actual near indirect CALL: FULL IP is target, orig_ax is source CALL site. */
+#define KD_EXE_INDIRECT_CALL 11
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,

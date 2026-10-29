@@ -29,6 +29,7 @@ endif
 
 kdlock_km-objs := \
 	kd_main.o \
+	kd_api_provider.o \
 	kd_lock.o \
 	kd_hotlock.o \
 	sys.o \

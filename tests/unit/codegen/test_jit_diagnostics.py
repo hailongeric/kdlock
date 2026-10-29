@@ -62,6 +62,7 @@ def render(
     direct_strings_capable=False,
     build_options=None,
     trusted_source=False,
+    indirect_call_capable=False,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -92,6 +93,8 @@ def render(
         )
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "native_escape", return_value=native_escape_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "indirect_call", return_value=indirect_call_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "root_native_escape", return_value=root_native_escape_capable))
         stack.enter_context(patch.object(translator.memread.device_session,

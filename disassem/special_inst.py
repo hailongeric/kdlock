@@ -41,7 +41,7 @@ def native_escape_marker(line, reg_map):
     return code
 
 
-def terminal_clobber_unlock(target, continuation, reg_map):
+def terminal_clobber_unlock(target, continuation, reg_map, *, identity_target=None):
     """Check the original CALL's metadata without touching the waiter stack.
 
     R13 is still the pre-CALL SP. Compare the static return PC instead of
@@ -55,7 +55,10 @@ def terminal_clobber_unlock(target, continuation, reg_map):
     code += make_inst('JZ', [fallback])
     code += make_inst('CMP', ['QWORD PTR[R15 + 88]', '0'])
     code += make_inst('JE', [fallback])
-    code += make_inst('MOVABS', ['R14', hex(target)])
+    # A per-object kernel bridge may complete only this exact KD root. Compare
+    # its canonical provider endpoint against the wrapper; retain the original
+    # source target below for a FULL/nested Native-object continuation.
+    code += make_inst('MOVABS', ['R14', hex(target if identity_target is None else identity_target)])
     for left, right in [('R14', 'QWORD PTR[R15 + 40]'),
                         ('RDI', 'QWORD PTR[R15 + 32]'), ('RSI', 'R13'),
                         ('RCX', 'R12')]:
@@ -112,12 +115,30 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
         ret_str += "PAUSE\n" if pause else "NOP\n"
         ret_str += release_conflict(reg_map, block_end)
     elif name == "CALL":
-        ret_str += conflict_resolve(reg_map, {"T2"})
-        ret_str += process_normal(
-            "MOVABS", [ExprId("RT2", 64), ExprInt(offset, 64)], offset, reg_map
-        )
-        ret_str += process_push(ExprId("RT2", 64), offset, reg_map)
-        ret_str += process_jump("JMP", line, args[0], offset, db, reg_map)
+        if isinstance(args[0], (ExprId, ExprMem)):
+            # x86 evaluates CALL's target before pushing its return address.
+            # In particular CALL RSP / [RSP] must observe the original SP.
+            # A memory target can need both spare mapped registers. Preserve
+            # physical RAX on the wrapper stack so target evaluation needs no
+            # third mapped temporary; Stack_IJ is private dispatch scratch.
+            # Neither this balanced physical push/pop nor the moves alter flags
+            # or the source's virtual SP, and no callee executes in between.
+            ret_str += make_inst("PUSH", ["RAX"])
+            ret_str += process_normal("MOV", [ExprId("RAX", 64), args[0]], offset, reg_map)
+            ret_str += make_inst("MOV", ["Stack_IJ", "RAX"])
+            ret_str += make_inst("POP", ["RAX"])
+            ret_str += process_normal("MOVABS", [ExprId("RT1", 64), ExprInt(offset, 64)], offset, reg_map)
+            ret_str += process_push(ExprId("RT1", 64), offset, reg_map)
+            ret_str += release_conflict(reg_map)
+            ret_str += make_inst("MOV", ["R14", "Stack_IJ"])
+            ret_str += make_inst("JMP", ["ij_" + hex(offset)[2:]])
+        else:
+            ret_str += conflict_resolve(reg_map, {"T2"})
+            ret_str += process_normal(
+                "MOVABS", [ExprId("RT2", 64), ExprInt(offset, 64)], offset, reg_map
+            )
+            ret_str += process_push(ExprId("RT2", 64), offset, reg_map)
+            ret_str += process_jump("JMP", line, args[0], offset, db, reg_map)
     elif name == "PUSH":
         ret_str += process_push(args[0], offset, reg_map)
         ret_str += release_conflict(reg_map, block_end)

@@ -16,7 +16,7 @@ import special_inst
 import native_escape
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
-from miasm.expression.expression import ExprLoc
+from miasm.expression.expression import ExprId, ExprLoc, ExprMem
 from translation_scope import find_resumable_call_continuations
 
 
@@ -83,6 +83,8 @@ def emit_jit_assembly(
     entry, block_dict, db_dict, jump_table, missing_callees,
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
     terminal_clobber_unlocks=(),
+    terminal_unlock_aliases=None,
+    indirect_call_native=False,
     native_escapes=False,
     root_native_escape=False,
     address_guards=None,
@@ -185,7 +187,9 @@ def emit_jit_assembly(
                                  source_ip=hex(line.offset), instruction=line.name)
                 f.write(special_inst.native_escape_marker(line, reg_map))
             elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
-                f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
+                f.write(special_inst.terminal_clobber_unlock(
+                    target, offset, reg_map,
+                    identity_target=(terminal_unlock_aliases or {}).get(target)))
             elif native_calls is not None and target in native_calls.services:
                 f.write(native_calls.emit(line, offset, target, reg_map))
             else:
@@ -197,7 +201,12 @@ def emit_jit_assembly(
                 if temp_j == 0:
                     f.write("POPFQ\n")
         f.write("\n\n")
-    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True))
+    indirect_calls = {line.offset + line.l: line.offset
+                      for block in block_dict.values() for line in block.lines
+                      if indirect_call_native and line.name == "CALL" and line.args and
+                      isinstance(line.args[0], (ExprId, ExprMem))}
+    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True,
+                                        indirect_calls=indirect_calls))
     direct_targets = set(native_calls.services) if native_calls is not None else set()
     f.write(indirect_jump.make_callee_table(
         [target for target in missing_callees if target not in direct_targets],

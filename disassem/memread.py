@@ -102,7 +102,9 @@ def read(entry, jump_table, excluded_callees=None):
     for x in jump_table:
         jump_table[x] = sorted(set(jump_table[x]))
 
-    targets = [x[1] for x in ij_his]
+    # Keep exact history edges for CALL-specific dispatch, but never import a
+    # service/Native boundary as an independent decoded source root.
+    targets = [x[1] for x in ij_his if x[1] not in excluded_callees]
     targets.append(entry)
 
     try:

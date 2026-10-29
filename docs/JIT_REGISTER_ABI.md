@@ -167,6 +167,13 @@ Bit 11 separately enables pristine ABI1/3 root instruction exits. These images
 require exactly bits 0 and 5 (value 33), immutable storage and the MINIMAL
 clobber entry. Their regular and batch directories refuse execution.
 
+Optional bit 12 (`KD_JIT_CAP_INDIRECT_CALL`) extends version 12 with the distinct
+FULL near-indirect-CALL exit 11. The translator must negotiate that bit on its
+current device lease; version 12 alone does not imply support. Providers without
+the bit retain the older unresolved-IJ behavior. No packet field, wrapper word
+or image requirement is added; new provider and translator inputs are frozen
+and synchronized together for this candidate.
+
 Ordinary images accept compatible versions 5 through 12. Optional image
 requirements still need their corresponding capabilities. Bit 9 adds no image
 requirement or packet field: image bit 0 alone remains mutex ABI2 only; its
@@ -276,11 +283,22 @@ separate obligations; materializing FULL releases neither admission nor the gate
 | 8 NATIVE_ESCAPE | Validated instruction marker; resume the waiter at the original instruction for this invocation's native suffix, preserving later eligibility |
 | 9 ADDRESS_GUARD | Checked ABI1 spin load would overlap recorded stack writes; resume the waiter before that load and disable future delegation |
 | 10 DIRECT_CALL_LIMIT | Direct helper allowance exhausted before that helper executes; preserve its pending CALL word and finish on the original waiter |
+| 11 INDIRECT_CALL | Negotiated near indirect CALL miss; IP holds the actual target, `orig_ax` temporarily holds the exact source CALL address, and SP points at its real source return word |
 
 Wrapper values in `exe_info.h` differ from C dispatcher results in `exe.h`.
 COMPLETE stores only IP/SP/BP; FULL stores current logical GPRs before C reads them.
 Entry refusal preserves MINIMAL. Generic fault, IJ-miss and budget errors are not
 arbitrary native-recovery boundaries.
+
+Exit 11 is emitted only after evaluating an actual indirect CALL target before
+its virtual push. The provider verifies canonical optional-REX `FF /2` bytes,
+the exact next IP/stack word, FULL packet/frame identity, pending phase and
+source leases before handing the suffix to the original waiter. `orig_ax` is
+cleared before restore. Exact listed Native/context targets do not request
+learning or disable the image; an unknown ordinary target records only the
+proved CALL edge for a future image. RET/JMP misses and noncanonical CALL
+encodings have no such recovery contract. The existing C-call flags convention
+is unchanged, and native execution does not return to JIT in this invocation.
 
 Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their actual virtual return-slot

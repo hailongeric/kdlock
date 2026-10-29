@@ -38,7 +38,9 @@ def main(executor=None, benchmark=False):
             )
             + "\n"
         )
-    code = ""
+    terminals = read_source(ROOT / "kernel_module/execution/native_terminals.inc")
+    code = terminals[:terminals.index("static void kd_native_terminal_init(void)")]
+    code += definition(terminals, "static inline bool kd_native_terminal_target(unsigned long target)")
     for path, signatures in {
         "kernel_module/kd_exec.c": (
             "int kd_exec_frame_state(const struct kd_exec_frame *frame)",
@@ -57,7 +59,11 @@ def main(executor=None, benchmark=False):
             "static int advance_and_save_continuation(struct kd_exec_frame *frame,",
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
+            "static int kd_jit_pending_call_native(struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
+            "static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)",
+            "static int kd_jit_indirect_call_native(struct kd_exe_info *exe,",
+            "static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,",
             "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
             "static int kd_jit_native_escape_opcode(unsigned long ip)",
             "static bool kd_jit_root_escape_image(const struct kd_exec_frame *frame)",
@@ -128,6 +134,31 @@ def main(executor=None, benchmark=False):
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "indirect-accepts-jump-opcode": (
+            "((modrm >> 3) & 7) != 2",
+            "(((modrm >> 3) & 7) != 2 && ((modrm >> 3) & 7) != 4)",
+        ),
+        "indirect-accepts-wrong-return-word": (
+            "(expected_return && return_ip != expected_return)",
+            "(expected_return && false)",
+        ),
+        "indirect-skips-source-site-lease": (
+            "ret = kd_source_pin_target(site);", "ret = 0;",
+        ),
+        "indirect-skips-source-tail-lease": (
+            "ret = kd_source_pin_target(continuation - 1);", "ret = 0;",
+        ),
+        "indirect-learns-terminal-target": (
+            "if (!kd_native_terminal_target(regs->ip) && !is_end_point(regs->ip))",
+            "if (!is_end_point(regs->ip))",
+        ),
+        "terminal-target-never-recognized": (
+            "kd_native_terminals[i].address == target", "false",
+        ),
+        "indirect-keeps-source-site-as-restore-tag": (
+            "kd_image_report(exe, frame->image, KD_EXE_IJ_MISS, regs->ip, continuation);\n\tregs->orig_ax = 0;",
+            "kd_image_report(exe, frame->image, KD_EXE_IJ_MISS, regs->ip, continuation);\n\t(void)regs;",
+        ),
         "instruction-marker-still-disables": (
             "atomic64_inc(&kd_native_escape_count);",
             "kd_image_disable(exe); atomic64_inc(&kd_native_escape_count);",

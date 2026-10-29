@@ -32,6 +32,7 @@ CAP_STRING_WRITE = 256
 CAP_AUDITED_STRINGS = 512
 CAP_DIRECT_STRINGS = 1024
 CAP_ROOT_NATIVE_ESCAPE = 2048
+CAP_INDIRECT_CALL = 4096
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -49,6 +50,7 @@ _string_write = False
 _audited_strings = False
 _direct_strings = False
 _root_native_escape = False
+_indirect_call = False
 
 
 class SourceRefused(RuntimeError):
@@ -89,7 +91,7 @@ def query_capabilities(fd):
                 "native_escape": False, "address_guard": False,
                 "string_services": False, "string_write": False,
                 "audited_strings": False, "direct_strings": False,
-                "root_native_escape": False}
+                "root_native_escape": False, "indirect_call": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -124,7 +126,7 @@ def query_capabilities(fd):
         if 11 <= version <= CAPS_VERSION:
             known |= CAP_DIRECT_STRINGS
         if 12 <= version <= CAPS_VERSION:
-            known |= CAP_ROOT_NATIVE_ESCAPE
+            known |= CAP_ROOT_NATIVE_ESCAPE | CAP_INDIRECT_CALL
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -150,6 +152,7 @@ def query_capabilities(fd):
                 "audited_strings": bool(features & CAP_AUDITED_STRINGS),
                 "direct_strings": bool(features & CAP_DIRECT_STRINGS),
                 "root_native_escape": bool(features & CAP_ROOT_NATIVE_ESCAPE),
+                "indirect_call": bool(features & CAP_INDIRECT_CALL),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -224,6 +227,12 @@ def direct_strings():
     return _direct_strings
 
 
+def indirect_call():
+    """This leased provider validates CALL-only FULL exit 11 provenance."""
+    require()
+    return _indirect_call
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -239,7 +248,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -286,6 +295,7 @@ def session():
         _audited_strings = caps["audited_strings"]
         _direct_strings = caps["direct_strings"]
         _root_native_escape = caps["root_native_escape"]
+        _indirect_call = caps["indirect_call"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -295,7 +305,7 @@ def session():
             f"string_services={int(_string_services)} "
             f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
             f"direct_strings={int(_direct_strings)} "
-            f"root_native_escape={int(_root_native_escape)}"
+            f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)}"
         )
         yield fd
     finally:
@@ -309,6 +319,7 @@ def session():
         _audited_strings = False
         _direct_strings = False
         _root_native_escape = False
+        _indirect_call = False
         if fd is not None:
             os.close(fd)
 
