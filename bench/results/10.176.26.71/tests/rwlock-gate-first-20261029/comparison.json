@@ -1,0 +1,1089 @@
+{
+  "verdict": "NOT_ACCEPTED_NO_REGRESSION_UNRESOLVED",
+  "runtime_candidate": "99b02076dfeb75d978be4eb75d43344ccb2f9049",
+  "tested_tree": "89aac759c5fc98ad15bb127658c40ddcfe4191a1",
+  "identities": {
+    "baseline": {
+      "source_commit": "67361fee6440765e130385b2961246a41052b953",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "completed": true,
+      "input": "/tmp/kdlock-rwlock-matched-baseline-20261029.json",
+      "input_sha256": "371890f727219e2756d3036fd5389e1215893f825c798d4362a8df7253abe5ee",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/bench/rwlock_compare/run.py",
+        "--backends",
+        "kdlock",
+        "--workloads",
+        "cacheline",
+        "--cachelines",
+        "1",
+        "16",
+        "--lock-kind",
+        "rwlock",
+        "--write-percent",
+        "1",
+        "20",
+        "--threads",
+        "1",
+        "8",
+        "20",
+        "32",
+        "36",
+        "60",
+        "--cpus",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "--repeats",
+        "1",
+        "--duration-ms",
+        "2000",
+        "--post-work-rounds",
+        "256",
+        "--collector-cpu",
+        "63",
+        "--mutex-batch-limit",
+        "1024",
+        "--mutex-numa-boundary",
+        "1024",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/rwlock-api-matched-20261029/baseline/rwlock"
+      ],
+      "started_utc": "2026-10-29T04:07:42.817507+00:00",
+      "finished_utc": "2026-10-29T04:11:01.098956+00:00"
+    },
+    "rollback": {
+      "source_commit": "1ad2ef7fb377407e96f7cf264784aef026e47835",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "completed": true,
+      "input": "/tmp/kdlock-rwlock-matched-rollback-20261029.json",
+      "input_sha256": "220520383f4e2780b6bade32e2e3579cf721097cf1a2e42a2041c757d1e1c1fd",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/bench/rwlock_compare/run.py",
+        "--backends",
+        "kdlock",
+        "--workloads",
+        "cacheline",
+        "--cachelines",
+        "1",
+        "16",
+        "--lock-kind",
+        "rwlock",
+        "--write-percent",
+        "1",
+        "20",
+        "--threads",
+        "1",
+        "8",
+        "20",
+        "32",
+        "36",
+        "60",
+        "--cpus",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "--repeats",
+        "1",
+        "--duration-ms",
+        "2000",
+        "--post-work-rounds",
+        "256",
+        "--collector-cpu",
+        "63",
+        "--mutex-batch-limit",
+        "1024",
+        "--mutex-numa-boundary",
+        "1024",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/rwlock-api-matched-20261029/rollback/rwlock"
+      ],
+      "started_utc": "2026-10-29T04:14:28.624179+00:00",
+      "finished_utc": "2026-10-29T04:17:47.699357+00:00"
+    },
+    "gate": {
+      "source_commit": "89aac759c5fc98ad15bb127658c40ddcfe4191a1",
+      "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+      "completed": true,
+      "input": "/tmp/kdlock-rwlock-gate-nano-results-20261029.json",
+      "input_sha256": "4e184ad36ecf98a07ef0c9ac1ea93e24157de8ee643b72d6a2b2d729c431edd5",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/bench/rwlock_compare/run.py",
+        "--backends",
+        "kdlock",
+        "--workloads",
+        "cacheline",
+        "--cachelines",
+        "1",
+        "16",
+        "--lock-kind",
+        "rwlock",
+        "--write-percent",
+        "1",
+        "20",
+        "--threads",
+        "1",
+        "8",
+        "20",
+        "32",
+        "36",
+        "60",
+        "--cpus",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "--repeats",
+        "1",
+        "--duration-ms",
+        "2000",
+        "--post-work-rounds",
+        "256",
+        "--collector-cpu",
+        "63",
+        "--mutex-batch-limit",
+        "1024",
+        "--mutex-numa-boundary",
+        "1024",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/rwlock-gate-first-20261029/rwlock"
+      ],
+      "started_utc": "2026-10-29T05:25:41.330243+00:00",
+      "finished_utc": "2026-10-29T05:29:00.593459+00:00"
+    }
+  },
+  "same_boot": true,
+  "commands_equal_except_output": true,
+  "rounds_per_point": 1,
+  "no_variability_estimate": true,
+  "gate_start_minus_rollback_start_minutes": 71.21176773309708,
+  "jit_status_differences": 0,
+  "functional_evidence_scope": "Parent reports corrected 6 units, live IPI, basic spin/rwlock and all 24 nano data/drain gates passed; this offline review checks summary completion and emitted ELFs, not live execution.",
+  "elf_reports": [
+    "/tmp/kdlock-rwlock-gate-basic-elf-comparison-20261029.json",
+    "/tmp/kdlock-rwlock-gate-nano-elf-comparison-20261029.json"
+  ],
+  "rows": [
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 1,
+      "baseline": {
+        "whole_ops_s": 1918088.9108722738,
+        "peak_ops_s": 1929887.6668416236,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t01-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 1916830.829295539,
+        "peak_ops_s": 1929587.6105737216,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t01-r00"
+      },
+      "gate": {
+        "whole_ops_s": 1918377.576481963,
+        "peak_ops_s": 1929379.4379250393,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t01-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.015049646971676545,
+      "peak_delta_vs_baseline_pct": -0.026334637259795013,
+      "whole_delta_vs_rollback_pct": 0.08069294184882558,
+      "peak_delta_vs_rollback_pct": -0.010788452804189053
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 8,
+      "baseline": {
+        "whole_ops_s": 9794692.037967417,
+        "peak_ops_s": 9860241.588785559,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t08-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 9800210.191286974,
+        "peak_ops_s": 9827358.89678026,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t08-r00"
+      },
+      "gate": {
+        "whole_ops_s": 9334704.826259412,
+        "peak_ops_s": 9405240.62264041,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t08-r00"
+      },
+      "whole_delta_vs_baseline_pct": -4.696290704444261,
+      "peak_delta_vs_baseline_pct": -4.6145011970359695,
+      "whole_delta_vs_rollback_pct": -4.749952867760188,
+      "peak_delta_vs_rollback_pct": -4.295337929279741
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 20,
+      "baseline": {
+        "whole_ops_s": 9019901.548031164,
+        "peak_ops_s": 9080623.807464411,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t20-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 8746092.350875,
+        "peak_ops_s": 8778846.45160567,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t20-r00"
+      },
+      "gate": {
+        "whole_ops_s": 8557425.356862161,
+        "peak_ops_s": 8616090.497136833,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w001-t20-r00"
+      },
+      "whole_delta_vs_baseline_pct": -5.1272864643400755,
+      "peak_delta_vs_baseline_pct": -5.1156541684473815,
+      "whole_delta_vs_rollback_pct": -2.1571575789954167,
+      "peak_delta_vs_rollback_pct": -1.8539560449775117
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 32,
+      "baseline": {
+        "whole_ops_s": 8916648.316354865,
+        "peak_ops_s": 8980466.948388034,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t32-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 8632218.799090514,
+        "peak_ops_s": 8692049.74061944,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t32-r00"
+      },
+      "gate": {
+        "whole_ops_s": 8707836.034204973,
+        "peak_ops_s": 8800284.542071313,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t32-r00"
+      },
+      "whole_delta_vs_baseline_pct": -2.3418248061537916,
+      "peak_delta_vs_baseline_pct": -2.006381264496093,
+      "whole_delta_vs_rollback_pct": 0.8759883973564975,
+      "peak_delta_vs_rollback_pct": 1.2452160846028404
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 36,
+      "baseline": {
+        "whole_ops_s": 7576110.447764964,
+        "peak_ops_s": 7631340.031326918,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t36-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 7341060.105504954,
+        "peak_ops_s": 7387942.899843841,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t36-r00"
+      },
+      "gate": {
+        "whole_ops_s": 7554867.409566471,
+        "peak_ops_s": 7605676.2907706145,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t36-r00"
+      },
+      "whole_delta_vs_baseline_pct": -0.2803950436699232,
+      "peak_delta_vs_baseline_pct": -0.3362940250461022,
+      "whole_delta_vs_rollback_pct": 2.912485403861309,
+      "peak_delta_vs_rollback_pct": 2.9471450155817536
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 60,
+      "baseline": {
+        "whole_ops_s": 7527502.080689001,
+        "peak_ops_s": 7629632.328556668,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t60-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 7307894.044897018,
+        "peak_ops_s": 7396791.084457389,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t60-r00"
+      },
+      "gate": {
+        "whole_ops_s": 7559582.303252239,
+        "peak_ops_s": 7610852.981471916,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w001-t60-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.4261735462755434,
+      "peak_delta_vs_baseline_pct": -0.24613698637172554,
+      "whole_delta_vs_rollback_pct": 3.4440600371179464,
+      "peak_delta_vs_rollback_pct": 2.8939832769419027
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 1,
+      "baseline": {
+        "whole_ops_s": 1918259.1696163232,
+        "peak_ops_s": 1929873.7356966145,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t01-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 1917728.5791827796,
+        "peak_ops_s": 1929377.5533503545,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t01-r00"
+      },
+      "gate": {
+        "whole_ops_s": 1918174.164470547,
+        "peak_ops_s": 1929384.6279502432,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t01-r00"
+      },
+      "whole_delta_vs_baseline_pct": -0.004431369187363199,
+      "peak_delta_vs_baseline_pct": -0.025344028333273982,
+      "whole_delta_vs_rollback_pct": 0.023235054877135397,
+      "peak_delta_vs_rollback_pct": 0.00036667783744892546
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 8,
+      "baseline": {
+        "whole_ops_s": 5619582.054142935,
+        "peak_ops_s": 5636229.730574499,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t08-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 5640340.751618915,
+        "peak_ops_s": 5679770.90754684,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t08-r00"
+      },
+      "gate": {
+        "whole_ops_s": 5936781.168978953,
+        "peak_ops_s": 5973897.456766797,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c01-kdlock-w020-t08-r00"
+      },
+      "whole_delta_vs_baseline_pct": 5.64453213388294,
+      "peak_delta_vs_baseline_pct": 5.9910213446512595,
+      "whole_delta_vs_rollback_pct": 5.255718234309725,
+      "peak_delta_vs_rollback_pct": 5.178493182342003
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 20,
+      "baseline": {
+        "whole_ops_s": 5454872.434025906,
+        "peak_ops_s": 5509078.847181012,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t20-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 5655902.967725193,
+        "peak_ops_s": 5700224.55172517,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t20-r00"
+      },
+      "gate": {
+        "whole_ops_s": 5754579.818870427,
+        "peak_ops_s": 5809174.54951781,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t20-r00"
+      },
+      "whole_delta_vs_baseline_pct": 5.494306025839091,
+      "peak_delta_vs_baseline_pct": 5.447293652193008,
+      "whole_delta_vs_rollback_pct": 1.744670156265471,
+      "peak_delta_vs_rollback_pct": 1.9113281731974352
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 32,
+      "baseline": {
+        "whole_ops_s": 5476788.263372931,
+        "peak_ops_s": 5514220.479659502,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t32-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 5559472.753373831,
+        "peak_ops_s": 5612011.940841043,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t32-r00"
+      },
+      "gate": {
+        "whole_ops_s": 5585644.589256701,
+        "peak_ops_s": 5631988.454423669,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t32-r00"
+      },
+      "whole_delta_vs_baseline_pct": 1.9875942002682168,
+      "peak_delta_vs_baseline_pct": 2.1357139272646375,
+      "whole_delta_vs_rollback_pct": 0.4707611142978907,
+      "peak_delta_vs_rollback_pct": 0.3559599265505531
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 36,
+      "baseline": {
+        "whole_ops_s": 4511276.548664559,
+        "peak_ops_s": 4567002.383123704,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t36-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 4491044.5665265545,
+        "peak_ops_s": 4535321.264266934,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t36-r00"
+      },
+      "gate": {
+        "whole_ops_s": 4524441.761119372,
+        "peak_ops_s": 4569147.920015576,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t36-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.2918289826127074,
+      "peak_delta_vs_baseline_pct": 0.04697910602806665,
+      "whole_delta_vs_rollback_pct": 0.7436397946646967,
+      "peak_delta_vs_rollback_pct": 0.745849164317347
+    },
+    {
+      "variant": "cacheline-c01-kdlock",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 60,
+      "baseline": {
+        "whole_ops_s": 3560847.018017235,
+        "peak_ops_s": 3601911.0792668937,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t60-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 3323737.864556814,
+        "peak_ops_s": 3363222.3554251674,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t60-r00"
+      },
+      "gate": {
+        "whole_ops_s": 3467946.3880699663,
+        "peak_ops_s": 3515237.227903359,
+        "jit_status": "PASS",
+        "sample": "cacheline-c01-kdlock-w020-t60-r00"
+      },
+      "whole_delta_vs_baseline_pct": -2.6089475194303158,
+      "peak_delta_vs_baseline_pct": -2.40632956939002,
+      "whole_delta_vs_rollback_pct": 4.338745394182308,
+      "peak_delta_vs_rollback_pct": 4.519917401029949
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 1,
+      "baseline": {
+        "whole_ops_s": 1918888.5469380599,
+        "peak_ops_s": 1930178.3115011645,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t01-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 1916494.4268167717,
+        "peak_ops_s": 1929378.0294843547,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t01-r00"
+      },
+      "gate": {
+        "whole_ops_s": 1919027.1977426535,
+        "peak_ops_s": 1930218.0469867457,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t01-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.007225578828684576,
+      "peak_delta_vs_baseline_pct": 0.0020586432530222964,
+      "whole_delta_vs_rollback_pct": 0.13215644618851385,
+      "peak_delta_vs_rollback_pct": 0.04353825375609244
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 8,
+      "baseline": {
+        "whole_ops_s": 10954552.979864554,
+        "peak_ops_s": 11030953.223167978,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t08-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 11115353.319013173,
+        "peak_ops_s": 11152162.790882917,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t08-r00"
+      },
+      "gate": {
+        "whole_ops_s": 9889462.582841478,
+        "peak_ops_s": 9953220.015260708,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t08-r00"
+      },
+      "whole_delta_vs_baseline_pct": -9.722810223117339,
+      "peak_delta_vs_baseline_pct": -9.770082295732518,
+      "whole_delta_vs_rollback_pct": -11.028805841688982,
+      "peak_delta_vs_rollback_pct": -10.750764655286105
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 20,
+      "baseline": {
+        "whole_ops_s": 9687458.664255185,
+        "peak_ops_s": 9751109.122619344,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t20-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 10196507.103148123,
+        "peak_ops_s": 10267219.087287853,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t20-r00"
+      },
+      "gate": {
+        "whole_ops_s": 10239313.794181652,
+        "peak_ops_s": 10276211.550281817,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w001-t20-r00"
+      },
+      "whole_delta_vs_baseline_pct": 5.696593389995086,
+      "peak_delta_vs_baseline_pct": 5.385053341720991,
+      "whole_delta_vs_rollback_pct": 0.4198172040728698,
+      "peak_delta_vs_rollback_pct": 0.08758421260435245
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 32,
+      "baseline": {
+        "whole_ops_s": 10093770.597777765,
+        "peak_ops_s": 10172357.669781933,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t32-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 10191705.085125852,
+        "peak_ops_s": 10245075.39977176,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t32-r00"
+      },
+      "gate": {
+        "whole_ops_s": 10312523.807657832,
+        "peak_ops_s": 10381420.473817611,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t32-r00"
+      },
+      "whole_delta_vs_baseline_pct": 2.167210040698042,
+      "peak_delta_vs_baseline_pct": 2.055205005784666,
+      "whole_delta_vs_rollback_pct": 1.1854613288242444,
+      "peak_delta_vs_rollback_pct": 1.3308352425487113
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 36,
+      "baseline": {
+        "whole_ops_s": 8895904.051889012,
+        "peak_ops_s": 8959973.033371484,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t36-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 8349752.202203718,
+        "peak_ops_s": 8415187.062854847,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t36-r00"
+      },
+      "gate": {
+        "whole_ops_s": 8220312.830227253,
+        "peak_ops_s": 8273801.216849028,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t36-r00"
+      },
+      "whole_delta_vs_baseline_pct": -7.594407692811156,
+      "peak_delta_vs_baseline_pct": -7.658190643730778,
+      "whole_delta_vs_rollback_pct": -1.5502181243450819,
+      "peak_delta_vs_rollback_pct": -1.6801271908726156
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 1,
+      "threads": 60,
+      "baseline": {
+        "whole_ops_s": 8710975.065866636,
+        "peak_ops_s": 8775671.83862519,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t60-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 8244970.372052361,
+        "peak_ops_s": 8305334.313865671,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t60-r00"
+      },
+      "gate": {
+        "whole_ops_s": 8388587.302467434,
+        "peak_ops_s": 8463668.46670226,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w001-t60-r00"
+      },
+      "whole_delta_vs_baseline_pct": -3.700937736149157,
+      "peak_delta_vs_baseline_pct": -3.5553217766152168,
+      "whole_delta_vs_rollback_pct": 1.741873214024947,
+      "peak_delta_vs_rollback_pct": 1.9064151646761784
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 1,
+      "baseline": {
+        "whole_ops_s": 1918250.283343174,
+        "peak_ops_s": 1929386.0299692769,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t01-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 1916726.9900004254,
+        "peak_ops_s": 1929088.36387677,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t01-r00"
+      },
+      "gate": {
+        "whole_ops_s": 1918568.7666107325,
+        "peak_ops_s": 1930001.2073839477,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t01-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.016602800496046122,
+      "peak_delta_vs_baseline_pct": 0.03188462055365715,
+      "whole_delta_vs_rollback_pct": 0.09608966847733935,
+      "peak_delta_vs_rollback_pct": 0.04731994263564854
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 8,
+      "baseline": {
+        "whole_ops_s": 4347424.856545572,
+        "peak_ops_s": 4380947.3540707305,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t08-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 4253495.861832992,
+        "peak_ops_s": 4284688.065809038,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t08-r00"
+      },
+      "gate": {
+        "whole_ops_s": 4387010.430022286,
+        "peak_ops_s": 4424767.172907064,
+        "jit_status": "NO_JIT",
+        "sample": "cacheline-c16-kdlock-w020-t08-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.9105522184498005,
+      "peak_delta_vs_baseline_pct": 1.000236142888511,
+      "whole_delta_vs_rollback_pct": 3.138937300664435,
+      "peak_delta_vs_rollback_pct": 3.269295336008926
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 20,
+      "baseline": {
+        "whole_ops_s": 4237797.029679138,
+        "peak_ops_s": 4274479.157350361,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t20-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 4255431.726327088,
+        "peak_ops_s": 4297466.513327154,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t20-r00"
+      },
+      "gate": {
+        "whole_ops_s": 4200831.482771414,
+        "peak_ops_s": 4242409.136000827,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t20-r00"
+      },
+      "whole_delta_vs_baseline_pct": -0.8722821468050035,
+      "peak_delta_vs_baseline_pct": -0.7502673464762855,
+      "whole_delta_vs_rollback_pct": -1.2830717790131119,
+      "peak_delta_vs_rollback_pct": -1.2811589608804463
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 32,
+      "baseline": {
+        "whole_ops_s": 4204400.232613901,
+        "peak_ops_s": 4247892.29967954,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t32-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 4257001.953987405,
+        "peak_ops_s": 4298237.535677146,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t32-r00"
+      },
+      "gate": {
+        "whole_ops_s": 4183522.4889744874,
+        "peak_ops_s": 4224849.235229575,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t32-r00"
+      },
+      "whole_delta_vs_baseline_pct": -0.49656889174020113,
+      "peak_delta_vs_baseline_pct": -0.5424587730650132,
+      "whole_delta_vs_rollback_pct": -1.7260848316992483,
+      "peak_delta_vs_rollback_pct": -1.707404484708397
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 36,
+      "baseline": {
+        "whole_ops_s": 3259472.65315425,
+        "peak_ops_s": 3297215.8251893222,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t36-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 3238011.1210266696,
+        "peak_ops_s": 3267707.115392584,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t36-r00"
+      },
+      "gate": {
+        "whole_ops_s": 3217718.933605553,
+        "peak_ops_s": 3244609.3256656365,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t36-r00"
+      },
+      "whole_delta_vs_baseline_pct": -1.2809961607835763,
+      "peak_delta_vs_baseline_pct": -1.5954824407245272,
+      "whole_delta_vs_rollback_pct": -0.6266867735365445,
+      "peak_delta_vs_rollback_pct": -0.7068500606478789
+    },
+    {
+      "variant": "cacheline-c16-kdlock",
+      "cachelines": 16,
+      "write_percent": 20,
+      "threads": 60,
+      "baseline": {
+        "whole_ops_s": 2464291.8374353345,
+        "peak_ops_s": 2503669.1758035966,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t60-r00"
+      },
+      "rollback": {
+        "whole_ops_s": 2485055.254244689,
+        "peak_ops_s": 2523678.3882192695,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t60-r00"
+      },
+      "gate": {
+        "whole_ops_s": 2471285.6618881044,
+        "peak_ops_s": 2499004.2046949547,
+        "jit_status": "PASS",
+        "sample": "cacheline-c16-kdlock-w020-t60-r00"
+      },
+      "whole_delta_vs_baseline_pct": 0.2838066639075043,
+      "peak_delta_vs_baseline_pct": -0.18632538011514876,
+      "whole_delta_vs_rollback_pct": -0.5540960239441284,
+      "peak_delta_vs_rollback_pct": -0.9777071293828765
+    }
+  ],
+  "inference_limits": [
+    "One round per point has no repeat variability estimate; three-round report completeness remains false by design.",
+    "Same boot and unchanged workload command do not remove time/order/host interference; gate ran about 71 minutes after rollback.",
+    "Identical JIT status labels do not establish equal delegated-body share.",
+    "The observed lower rates block a no-regression acceptance; no speedup or causal attribution is claimed."
+  ],
+  "source_verified": {
+    "commit": "99b02076dfeb75d978be4eb75d43344ccb2f9049",
+    "paths": [
+      "include/kd_rwlock.h:56",
+      "include/kd_spin_direct.h:29"
+    ],
+    "scope": "Whole-word gate CAS precedes context lookup; failed IRQ/BH CAS cancels its exact native reference and restores the reader count without queueing or heat. Ordinary spin composes the same reserve/finish helpers."
+  },
+  "elf_verified": {
+    "scope": "Offline ELF64 section, symbol and relocation inspection; no archive code executed.",
+    "parent_mapping": {
+      "basic_spin_provider_and_DIRECT_payload": "preserved postreset basic selected source paths matching 1c86/1ad",
+      "basic_rwlock_provider": "preserved 1ad basic provider",
+      "nano_provider_and_rwlock_payloads": "preserved 1ad matched nano ELFs"
+    },
+    "identical_provider_and_spin_sections": [
+      ".text",
+      ".init.text",
+      ".exit.text",
+      ".altinstr_replacement"
+    ],
+    "identical_provider_and_spin_metadata_where_present": [
+      ".altinstructions",
+      "__jump_table",
+      ".static_call_sites",
+      ".retpoline_sites",
+      ".return_sites"
+    ],
+    "timed_rwlock_writer_and_entry_identical": true,
+    "reader_sizes_before_after": {
+      "c01": [
+        268,
+        283
+      ],
+      "c16": [
+        607,
+        621
+      ]
+    },
+    "new_reader_spills_observed": false,
+    "timed_rb_run_nonpadding_instructions_before_after": [
+      713,
+      713
+    ],
+    "rb_ioctl_nonpadding_instructions_before_after": [
+      150,
+      150
+    ],
+    "rb_run_and_rb_ioctl_symbolic_control_flow_equal": true,
+    "caveat": "Raw whole-payload bytes differ. Function layout and natural alignment padding changed; symbolic equivalence is not a performance identity claim."
+  },
+  "provenance_reports": [
+    "/tmp/kdlock-rwlock-matched-elf-provenance-20261029.json",
+    "/tmp/kdlock-postreset-basic-spin-elf-provenance-20261029.json",
+    "/tmp/kdlock-rwlock-rollback-basic-elf-provenance-20261029.json"
+  ],
+  "maintained_raw_archive_root": "bench/results/10.176.26.71/raw/tests/rwlock-gate-first-20261029/",
+  "recommended_next_step": "Keep the candidate isolated. Review the no-regression gate before any further runtime change; if a targeted matched control is authorized, prioritize 1% writes at 8 workers for c01/c16 and c16 at 36 workers with separate source/run identities."
+}
