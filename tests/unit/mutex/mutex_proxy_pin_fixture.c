@@ -24,7 +24,7 @@ static void failure_context(void);
 #define BUG_ON(value) CHECK(!(value))
 #define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
 static void observe_claim(const void *word, unsigned int value);
-static u8 node_acquire(const u8 *word);
+static __attribute__((noinline)) u8 node_acquire(const u8 *word);
 #define smp_load_acquire(word) node_acquire(word)
 #define smp_store_release(word,value) do { observe_claim((word),(value)); __atomic_store_n((word),(value),__ATOMIC_RELEASE); } while(0)
 #define WRITE_ONCE(value,after) __atomic_store_n(&(value),(after),__ATOMIC_RELAXED)
@@ -95,7 +95,12 @@ static void observe_claim(const void *word,unsigned int value)
  CHECK(executor && pins==1 && migration==1 && node.locked==KD_MUTEX_PROXY_READY);
  CHECK(atomic_read(&lock.delegation_state)==KD_MUTEX_GATE_COMBINER);claims++;
 }
-static u8 node_acquire(const u8 *word)
+/* Keep this simulated peer read as a call boundary. In the captured GCC 15.2
+ * O2 fixture build, IPA inlining marked both complementary pointer-check call
+ * paths unreachable; its later pass then emitted an unconditional state BUG.
+ * The isolated noinline arm passes with unchanged production helpers and checks.
+ * This annotation affects only the mock, not production compilation or flags. */
+static __attribute__((noinline)) u8 node_acquire(const u8 *word)
 {
  CHECK(word==&node.locked);
  if(executor)claim_attempts++;
