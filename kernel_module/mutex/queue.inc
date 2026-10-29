@@ -116,7 +116,14 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 		KD_MUTEX_PIN_EXPIRY_CHECK();
 		if (!need_resched())
 			continue;
+		/* The reservation excludes a new epoch before touching READY. An
+		 * active epoch or another withdrawing origin is a failed attempt,
+		 * never a reason to wait here or abandon this origin's pin. */
+		if (!kd_mutex_gate_try_withdraw(node->lock))
+			continue;
+		KD_MUTEX_PIN_WITHDRAW_RESERVED();
 		state = cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_WAIT);
+		kd_mutex_gate_end_withdraw(node->lock);
 		if (state == KD_MUTEX_PROXY_READY) {
 			KD_MUTEX_PIN_WITHDRAW();
 			goto withdrawn;
@@ -139,15 +146,21 @@ withdrawn:
 	preempt_disable();
 }
 
-/* Only one physical owner claims a READY invocation. The origin's competing
- * READY->WAIT CAS must win before it may unpin. Successful acquire therefore
- * proves a pin without polling an origin response; failure is a refusal. */
-static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)
+/* The exact physical owner has closed withdrawal for this proxy epoch.
+ * Its READY load can therefore precede a plain CLAIMED publication: no origin
+ * can concurrently withdraw and no other executor owns this queue. The caller
+ * also checks its private epoch and exact invocation generation. */
+static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,
+						 struct kd_mutex_node *node)
 {
+	BUG_ON(!kd_mutex_delegation_owned(lock, current) ||
+	       kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER);
 	if ((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1 == raw_smp_processor_id())
 		return false;
-	return cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED) ==
-		KD_MUTEX_PROXY_READY;
+	if (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)
+		return false;
+	smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);
+	return true;
 }
 
 /* This checks an already-acquired pin. No normal proxy path waits for READY

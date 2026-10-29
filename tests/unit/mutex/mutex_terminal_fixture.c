@@ -86,15 +86,20 @@ static u32 tail_cas(u32 *p,u32 old,u32 value)
     }
     return seen;
 }
-static u8 claim_cas(u8 *p,u8 old,u8 value)
+static inline u8 claim_cas(u8 *p,u8 old,u8 value)
 {
-    CHECK(old==KD_MUTEX_PROXY_READY && value==KD_MUTEX_PROXY_CLAIMED);
+    CHECK(old==KD_MUTEX_PROXY_READY && value==KD_MUTEX_WAIT);
+    CHECK(atomic_read(&lock.delegation_state)&KD_MUTEX_GATE_WITHDRAW);
     u8 seen=*p;if(seen==old)*p=value;return seen;
 }
 #define cmpxchg(p,o,n) _Generic((p),u8 *:claim_cas,default:tail_cas)((p),(o),(n))
 #define cmpxchg_acquire(p,o,n) claim_cas((p),(o),(n))
 static void publish(void *p,int value)
 {
+    if(value==KD_MUTEX_PROXY_CLAIMED) {
+        CHECK(*(u8 *)p==KD_MUTEX_PROXY_READY && kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_COMBINER);
+        *(u8 *)p=value;return;
+    }
     if(value==KD_MUTEX_WAIT) {
         CHECK(!body_completed || p!=&nodes[0].locked || !delayed_link);
         *(u8 *)p=value;return;
@@ -102,6 +107,8 @@ static void publish(void *p,int value)
     CHECK(value==0);*(u8 *)p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
+static bool kd_mutex_delegation_owned(struct kd_mutex *p,struct task_struct *task)
+{ return p==&lock && p->owner==task; }
 static void kd_mutex_set_locked(struct kd_mutex *p) { CHECK(p==&lock);kd_mutex_gate_set(p,KD_MUTEX_GATE_HELD); }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node);
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *node) { (void)node; }
@@ -114,6 +121,7 @@ static void cpu_relax(void)
 {
     CHECK(!normal_proxy_loop && delayed_link && delayed_from && delayed_to && polls<3);
     CHECK(active_batch && active_batch->nr_pins==1 && body_completed);
+    CHECK(!active_batch->proxy_epoch && kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD);
     CHECK(active_batch->pins[active_batch->pin_head].node==delayed_from);
     CHECK(delayed_from->locked==KD_MUTEX_PROXY_CLAIMED && !delayed_from->completed);
     CHECK(delayed_from->packet_state==KD_PACKET_COMPLETE && !active_batch->current_retired);
@@ -136,7 +144,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     CHECK(p==&lock && leases==1 && lock.owner==current);
     CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
-    if(!kd_mutex_batch_pin_select(batch,node,true))return KD_EXE_NO_RUN;
+    if(!kd_mutex_batch_pin_select(batch,node,scenario!=27 && scenario!=28))return KD_EXE_NO_RUN;
     kd_mutex_proxy_assert_claimed(node);
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
@@ -148,7 +156,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     if(i==native_at) {
         /* Mirrors the publication boundary; the separate outer fixture runs
          * the actual execute_cs/FULL/native path with node reuse before ACK. */
-        kd_mutex_batch_unpin(batch,true);
+        kd_mutex_batch_epoch_end(batch,true);
         kd_mutex_batch_retire_current(p,batch);
         kd_mutex_batch_pin_complete(batch,node);
         CHECK(lock.delegation_tail!=(u32)node->tail);
@@ -161,7 +169,14 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
         CHECK(batch->next==saved_next && lock.delegation_tail==saved_tail && cas_calls==saved_cas);
         return KD_EXE_NATIVE_DONE;
     }
-    node->packet_state=KD_PACKET_COMPLETE;body_completed=true;
+    if((scenario==27 || scenario==28) && i==0) {
+        kd_mutex_batch_epoch_end(batch,true);
+        CHECK(!batch->proxy_epoch && node->locked==KD_MUTEX_PROXY_CLAIMED);
+        CHECK(nodes[1].locked==KD_MUTEX_PROXY_READY);
+        if(scenario==28)CHECK(kd_mutex_gate_try_withdraw(p));
+        node->packet_state=KD_PACKET_FULL;
+    } else node->packet_state=KD_PACKET_COMPLETE;
+    body_completed=true;
     return 0;
 }
 #include "loop.h"
@@ -169,7 +184,7 @@ static void reset(unsigned int count)
 {
     CHECK(!active_batch);
     memset(nodes,0,sizeof(nodes));memset(&lock,0,sizeof(lock));
-    kd_mutex_gate_set(&lock,KD_MUTEX_GATE_COMBINER);lock.owner=current;
+    kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);lock.owner=current;
     source_open=true;delayed_link=new_head_after_cas=new_head_pending=false;
     normal_proxy_loop=body_completed=delayed_tail_exchanged=false;active_batch=NULL;
     refusal_at=native_at=early_at=-1;
@@ -218,6 +233,25 @@ static void wrapped_release_boundaries(void)
         CHECK(calls==11 && completed==(early?11U:10U) && wakes==1 && !nodes[11].locked);
         for(unsigned int i=12;i<18;i++)CHECK(nodes[i].locked==KD_MUTEX_WAIT);
         CHECK(reclaims==early && nodes[10].native_resume==!early);
+        finish();
+    }
+}
+
+/* The real loop must acquire a new epoch after a completed cold body. A
+ * concurrent withdrawal wins without a fake body attempt or a response wait. */
+static void epoch_boundaries(void)
+{
+    if(kd_mutex_batch_size<3)return;
+    for(scenario=27;scenario<=28;scenario++) {
+        reset(3);
+        CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
+        CHECK(kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD);
+        if(scenario==27)CHECK(calls==3 && completed==3 && !wakes && !lock.delegation_tail);
+        else {
+            CHECK(calls==1 && completed==1 && wakes==1 && !nodes[1].locked && !nodes[1].completed);
+            CHECK((u32)atomic_read(&lock.delegation_state)==(KD_MUTEX_GATE_HELD|KD_MUTEX_GATE_WITHDRAW));
+            kd_mutex_gate_end_withdraw(&lock);
+        }
         finish();
     }
 }
@@ -317,5 +351,6 @@ int main(void)
     CHECK(nodes[63].next==&nodes[199] && nodes[199].locked && !nodes[199].completed);finish();
     late_first_deferred();
     wrapped_release_boundaries();
+    epoch_boundaries();
     printf("PASS terminal queue: %u checks; terminal bodies, nonblocking hot retirement, exact cold pending completion, independent new head, native reuse and bounds\n",checks);
 }

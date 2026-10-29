@@ -15,7 +15,7 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef unsigned long atomic_long_t;
-typedef unsigned int atomic_t;
+typedef struct { int counter; } atomic_t;
 typedef unsigned int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct task_struct { int pid; } __attribute__((aligned(8)));
@@ -43,6 +43,7 @@ static struct kd_mutex_batch batch;
 static int source_refs, source_closed, task_puts, pops, releases, combines;
 static unsigned int mode, shape, start_head, checks, failures;
 static bool delayed_link;
+static unsigned int refused_epochs;
 static struct kd_regs captured;
 
 #define CHECK(c) do { __atomic_add_fetch(&checks,1,__ATOMIC_RELAXED); if (!(c)) { \
@@ -57,7 +58,7 @@ static struct kd_regs captured;
 static void observe_owner_wake(const void *address, bool zero)
 {
 	if (address == &wnode.locked && zero)
-		CHECK(batch.nr_pins == 0);
+		CHECK(batch.nr_pins == 0 && !batch.proxy_epoch && lock.delegation_state.counter==KD_MUTEX_GATE_HELD);
 }
 #define smp_store_release(p,v) do { \
     observe_owner_wake((p), (v)==0); \
@@ -69,7 +70,25 @@ static void observe_owner_wake(const void *address, bool zero)
 #define this_cpu_and(x,v) ((x) &= (v))
 #define atomic_long_read(p) READ_ONCE(*(p))
 #define list_empty(h) ((h)->next == (h))
-#define cmpxchg(p,o,n) ({ __typeof__(*(p)) old_=(o); __atomic_compare_exchange_n((p),&old_,(n),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); old_; })
+static void observe_cas(const void *address)
+{
+ if(address==&cnode.locked) {
+  CHECK(current==&ctask && pins==1 && migration==1);
+  CHECK(!context.depth && frame.state==KD_EXEC_FRAME_UNUSED && source_refs==1);
+ }
+}
+#define cmpxchg(p,o,n) ({ observe_cas(p); __typeof__(*(p)) old_=(o); __atomic_compare_exchange_n((p),&old_,(n),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); old_; })
+#define atomic_read(p) READ_ONCE((p)->counter)
+#define atomic_read_acquire(p) smp_load_acquire(&(p)->counter)
+#define atomic_cmpxchg(p,o,n) cmpxchg(&(p)->counter,(o),(n))
+#define atomic_fetch_andnot_release(mask,p) __atomic_fetch_and(&(p)->counter,~(u32)(mask),__ATOMIC_RELEASE)
+#define smp_wmb() __atomic_thread_fence(__ATOMIC_RELEASE)
+#include "mutex_state_production.h"
+static void kd_mutex_set_locked(struct kd_mutex *mutex)
+{ kd_mutex_gate_set(mutex,KD_MUTEX_GATE_HELD); }
+static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *value);
+static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *value,bool keep_current);
+
 static void cpu_relax(void)
 {
 	if (current == &ctask && delayed_link) {
@@ -120,6 +139,7 @@ int kd_mutex_transfer_owner(struct kd_mutex *mutex, struct task_struct *next)
 {
 	CHECK(current == &ctask && next == &wtask);
 	CHECK(batch.nr_pins==1 && next_node.locked==KD_MUTEX_WAIT);
+ CHECK(!batch.proxy_epoch && kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_HELD);
 	CHECK((mutex->owner & ~7UL) == (unsigned long)&ctask);
 	smp_store_release(&mutex->owner, (unsigned long)next | (mutex->owner & 7UL) | 4UL);
 	return 0;
@@ -131,7 +151,8 @@ int kd_mutex_transfer_pickup(struct kd_mutex *mutex)
 }
 bool kd_mutex_delegation_owned(struct kd_mutex *mutex, struct task_struct *task)
 {
-	return (mutex->owner & ~7UL) == (unsigned long)task && !(mutex->owner & 4UL);
+	return (mutex->owner & ~7UL) == (unsigned long)task && !(mutex->owner & 4UL) &&
+  (kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_HELD || kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_COMBINER);
 }
 bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *f)
 {
@@ -161,7 +182,8 @@ bool kd_exec_context_occupied(void) { return mode == 6; }
 int _kd_mutex_unlock_checked(struct kd_mutex *mutex)
 {
 	CHECK(current == &wtask && kd_mutex_delegation_owned(mutex,current));
-	CHECK(READ_ONCE(source_refs) > 0); mutex->owner=0; releases++; return 0;
+	CHECK(READ_ONCE(source_refs) > 0);kd_mutex_gate_set(mutex,KD_MUTEX_GATE_RELEASING);
+ mutex->owner=0;releases++;kd_mutex_gate_set(mutex,KD_MUTEX_GATE_FREE);return 0;
 }
 static void kd_mutex_release_node(struct kd_mutex_node *node)
 {
@@ -174,7 +196,23 @@ static enum kd_mutex_batch_result kd_mutex_run_combiner(struct kd_mutex *mutex,
 {
 	CHECK(after_body && !own && current == &wtask && head != &wnode);
 	CHECK(wnode.custody.phase == KD_MUTEX_CUSTODY_COMBINING && !context.depth);
-	combines++; BUG_ON(_kd_mutex_unlock_checked(mutex));
+	/* Substitute only the body: the new owner's epoch arbitration and cleanup
+  * are the actual production helpers, including a competing origin's flag. */
+ struct kd_mutex_batch next_batch={.lock=mutex,.after_body=true};
+ CHECK(kd_mutex_gate_read(mutex)==KD_MUTEX_GATE_HELD);
+ if(mode==7 || mode==8) {
+  CHECK(kd_mutex_gate_try_withdraw(mutex));
+  if(mode==8)kd_mutex_gate_end_withdraw(mutex);
+ }
+ if(kd_mutex_batch_epoch_begin(&next_batch)) {
+  combines++;kd_mutex_batch_epoch_end(&next_batch,false);
+ } else { CHECK(mode==7);refused_epochs++; }
+ BUG_ON(_kd_mutex_unlock_checked(mutex));
+ if(mode==7) {
+  CHECK((u32)atomic_read(&mutex->delegation_state)==KD_MUTEX_GATE_WITHDRAW);
+  /* The deterministic withdrawing peer ends its reservation before unpin. */
+  kd_mutex_gate_end_withdraw(mutex);
+ }
 	smp_store_release(&head->locked,0);
 	return KD_MUTEX_BATCH_RELEASED;
 }
@@ -188,8 +226,9 @@ static void setup(void)
 	memset(&context,0,sizeof(context)); memset(&batch,0,sizeof(batch));
 	memset(&cnode,0,sizeof(cnode)); memset(&wnode,0,sizeof(wnode));
 	memset(&next_node,0,sizeof(next_node)); memset(&deferred,0,sizeof(deferred));
-	route=NULL; source_refs=1; source_closed=0; task_puts=pops=releases=combines=0;
-	lock.owner=(unsigned long)&ctask | 1UL; lock.delegation_tail=wnode.tail=2;
+	route=NULL;refused_epochs=0;source_refs=1; source_closed=0; task_puts=pops=releases=combines=0;
+	lock.owner=(unsigned long)&ctask | 1UL;kd_mutex_gate_set(&lock,KD_MUTEX_GATE_HELD);
+ CHECK(kd_mutex_gate_try_combine(&lock));batch.proxy_epoch=true;lock.delegation_tail=wnode.tail=2;
 	cnode.tail=1; next_node.tail=3; cnode.slot=0; wnode.slot=1;
 	cnode.lock=wnode.lock=&lock; cnode.counted_lock=wnode.counted_lock=&lock;
 	cnode.count_seq=wnode.count_seq=2; cnode.task_struct_ptr=&ctask; wnode.task_struct_ptr=&wtask;
@@ -240,13 +279,14 @@ static void *native_owner(void *unused)
 	CHECK(cnode.regs.ip==0xcafe && cnode.counted_lock==&lock && cnode.count_seq==2);
 	CHECK(smp_load_acquire(&cnode.locked)==KD_MUTEX_PROXY_READY);
 	CHECK(!wnode.native_transfer && wnode.custody.phase==KD_MUTEX_CUSTODY_NATIVE);
+ CHECK(kd_mutex_gate_read(&lock)==KD_MUTEX_GATE_HELD && !batch.proxy_epoch);
 	preempt_enable();
 	if (mode==1) pins++; /* Native spin B remains held at outer unlock. */
 	if (mode==2 || mode==3) kd_mutex_custody_native_acquire(&nested[0]);
 	if (mode==3) kd_mutex_custody_native_release(&nested[0]);
 	if (mode==4) for(unsigned int i=0;i<10;i++) kd_mutex_custody_native_acquire(&nested[i]);
 	CHECK(kd_mutex_custody_unlock(&lock));
-	CHECK(releases==1 && combines==((mode==0 || mode==3)?1:0));
+	CHECK(releases==1 && combines==((mode==0 || mode==3 || mode==8)?1:0) && refused_epochs==(mode==7));
 	CHECK(!route && !source_refs && task_puts==1 && !migration);
 	CHECK(!wnode.lock && !kd_mutex_shadows.node_slots && !kd_mutex_custody_slots);
 	CHECK(pins==(mode==1?1U:0U));
@@ -278,17 +318,13 @@ int main(void)
 {
 	receipt_checks();
 	for(start_head=0;start_head<KD_MUTEX_PIN_WINDOW;start_head++)
-	for(shape=0;shape<4;shape++) for(mode=0;mode<7;mode++) {
+	for(shape=0;shape<4;shape++) for(mode=0;mode<9;mode++) {
 		pthread_t worker; setup();
 		CHECK(!pthread_create(&worker,NULL,native_owner,NULL));
 		CHECK(kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 		CHECK(batch.swapped_owner==&wnode && !batch.next && !context.depth);
 		CHECK(lock.delegation_tail==(u32)cnode.tail && !frame.outer_unlock_seen && !frame.completion_seen);
-		kd_source_frame_put();
-		/* Match the production batch publication only after frame/source retirement. */
-		CHECK(!context.depth && frame.state==KD_EXEC_FRAME_UNUSED && source_refs==1);
-		CHECK(cmpxchg(&cnode.locked,KD_MUTEX_QUEUE_INIT,KD_MUTEX_PROXY_READY)==KD_MUTEX_QUEUE_INIT);
-		smp_store_release(&wnode.custody.ready,true);
+		#include "custody_swap_publication.h"
 		CHECK(!pthread_join(worker,NULL));
 	}
 	start_head=7; shape=mode=0; setup(); source_closed=1;
@@ -297,7 +333,7 @@ int main(void)
 	source_closed=0; batch.after_body=true;
 	CHECK(!kd_mutex_try_role_swap(&lock,&wnode,&batch,&frame));
 	CHECK(!route && source_refs==1);
-	kd_mutex_batch_unpin(&batch,false);
+	kd_mutex_batch_epoch_end(&batch,false);
 	CHECK(!batch.nr_pins && wnode.locked==KD_MUTEX_WAIT);
 	printf("custody protocol checks=%u failures=%u\n",checks,failures);
 	return failures ? 1 : 0;

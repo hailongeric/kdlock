@@ -44,6 +44,8 @@
 #define KD_MUTEX_GATE_HELD 1
 #define KD_MUTEX_GATE_ACQUIRING 2
 #define KD_MUTEX_GATE_RELEASING 4
+#define KD_MUTEX_GATE_PHASE_MASK 7U
+#define KD_MUTEX_GATE_WITHDRAW 8U
 
 #include <linux/atomic.h>
 #include <linux/spinlock.h>
@@ -93,8 +95,8 @@ struct kd_mutex_osq_node {
 	u32 tail; /* immutable encoded CPU and slot, initialized with the pool */
 };
 
-/* READY is published only by a pinned, quiescent origin. Its claim races the
- * origin's withdrawal on this same byte; no REQUEST/ACK round trip exists.
+/* READY is published only by a pinned, quiescent origin. The gate excludes
+ * withdrawal during a proxy epoch; no REQUEST/ACK round trip exists.
  * INIT distinguishes never-ready publication from irrevocably withdrawn WAIT.
  * Zero remains the exact completion/native/head result publication. */
 #define KD_MUTEX_WAIT 1

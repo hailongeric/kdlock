@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
+typedef uint32_t u32;
 #include <stdio.h>
 #include <string.h>
 #include "kd_regs.h"

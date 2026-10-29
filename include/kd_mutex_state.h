@@ -8,26 +8,69 @@
 
 static __always_inline u32 kd_mutex_gate_read(struct kd_mutex *lock)
 {
-	return (u32)atomic_read_acquire(&lock->delegation_state);
+	return (u32)atomic_read_acquire(&lock->delegation_state) & KD_MUTEX_GATE_PHASE_MASK;
 }
 
-/* Only this CAS claims a free gate. Waiter records are independently owned by
- * reserved nodes, so a claim no longer retries against unrelated count writes. */
+/* A withdrawal reservation may survive a physical owner's phase change.
+ * Full-word FREE->ACQUIRING must reject FREE|WITHDRAW until its holder clears
+ * that reservation. No mixed-width accesses may update this atomic word. */
 static __always_inline bool kd_mutex_gate_trylock(struct kd_mutex *lock)
 {
 	return atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_FREE,
 			      KD_MUTEX_GATE_ACQUIRING) == KD_MUTEX_GATE_FREE;
 }
 
-/* Only the gate owner stores an occupied phase. HELD release-publishes its
- * completed physical acquisition. RELEASING precedes the physical owner's
- * release operation, which orders that phase before an ordinary successor's
- * acquisition. FREE release follows the full physical unlock; this owner must
- * never touch the gate afterward because a new claimant can already own it. */
+/* Exactly one attempt closes withdrawal for a proxy epoch. A busy withdrawal
+ * makes this owner hand the queue off; it never waits for an origin response. */
+static __always_inline bool kd_mutex_gate_try_combine(struct kd_mutex *lock)
+{
+	return atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_HELD,
+			      KD_MUTEX_GATE_COMBINER) == KD_MUTEX_GATE_HELD;
+}
+
+static __always_inline bool kd_mutex_gate_try_withdraw(struct kd_mutex *lock)
+{
+	u32 state = (u32)atomic_read_acquire(&lock->delegation_state);
+
+	BUG_ON(state & ~(KD_MUTEX_GATE_PHASE_MASK | KD_MUTEX_GATE_WITHDRAW));
+	BUG_ON((state & KD_MUTEX_GATE_PHASE_MASK) > KD_MUTEX_GATE_RELEASING);
+	if ((state & KD_MUTEX_GATE_WITHDRAW) ||
+	    (state & KD_MUTEX_GATE_PHASE_MASK) == KD_MUTEX_GATE_COMBINER)
+		return false;
+	return (u32)atomic_cmpxchg(&lock->delegation_state, state,
+				   state | KD_MUTEX_GATE_WITHDRAW) == state;
+}
+
+/* Release every node-state access before reopening batch admission. A phase
+ * writer may have run meanwhile, so clear only our bit. The origin must still
+ * be pinned here and must never schedule while it owns this reservation. */
+static __always_inline void kd_mutex_gate_end_withdraw(struct kd_mutex *lock)
+{
+	u32 state = (u32)atomic_fetch_andnot_release(KD_MUTEX_GATE_WITHDRAW,
+						 &lock->delegation_state);
+
+	BUG_ON(!(state & KD_MUTEX_GATE_WITHDRAW) ||
+	       (state & KD_MUTEX_GATE_PHASE_MASK) == KD_MUTEX_GATE_COMBINER);
+}
+
+/* Only the exact gate owner changes phase. Preserve a concurrently reserved
+ * withdrawal through HELD, RELEASING and FREE. COMBINER admission is exclusively
+ * the single CAS above. After publishing FREE, never access this gate again. */
 static __always_inline void kd_mutex_gate_set(struct kd_mutex *lock, u32 phase)
 {
-	BUG_ON(phase > KD_MUTEX_GATE_RELEASING);
-	atomic_set_release(&lock->delegation_state, phase);
+	u32 state, previous;
+
+	BUG_ON(phase > KD_MUTEX_GATE_RELEASING || phase == KD_MUTEX_GATE_COMBINER);
+	state = (u32)atomic_read(&lock->delegation_state);
+	do {
+		BUG_ON(state & ~(KD_MUTEX_GATE_PHASE_MASK | KD_MUTEX_GATE_WITHDRAW));
+		BUG_ON((state & KD_MUTEX_GATE_PHASE_MASK) > KD_MUTEX_GATE_RELEASING);
+		previous = state;
+		/* Fully ordered CAS includes the release publication needed by
+		 * physical acquisition/unlock and by epoch closure. */
+		state = (u32)atomic_cmpxchg(&lock->delegation_state, previous,
+					   phase | (previous & KD_MUTEX_GATE_WITHDRAW));
+	} while (state != previous);
 }
 
 /* Only the migration-pinned origin updates this reserved node. Sequence

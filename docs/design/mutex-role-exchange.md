@@ -180,5 +180,27 @@ polling. A lost tail CAS with no published link ends the execution round while
 retaining the completed C node, exact claim and batch source lease. Cold cleanup
 finishes link retirement before the one completion wake. No body is replayed,
 no completed claim is cancelled, and existing C native/early-outer cases remain
-required. The unsupported native-lock context limits above still apply. VM
-validation and performance acceptance remain pending.
+required. The unsupported native-lock context limits above still apply. The
+READY runtime at `43418d5a3c8659311b0d008310f70e78f245eeee`, validated with the
+fixture corrections through `406c679bd70c1589754c5083039b95051aba297a`, passed these
+scoped live cases but did not meet its performance gate.
+
+### Proxy-epoch follow-up
+
+The follow-up from `406c679bd70c1589754c5083039b95051aba297a` admits a batch with
+one full-word HELD-to-COMBINER CAS while no origin owns the gate's WITHDRAW bit.
+An exact current CLAIMED descriptor survives cold execution, but the private
+proxy epoch and all future claims end before FULL/native services or ownership
+transfer. W therefore runs its native suffix with HELD and must attempt fresh
+admission at its logical unlock. A withdrawal reservation makes that attempt
+fail without waiting; W releases A and wakes the saved native head, then performs
+the same exact custody/source/node cleanup.
+
+C remains INIT until its old frame and source lease retire, and READY publication
+still precedes W's custody barrier. Early outer release validates the exact frame,
+batch and physical owner under HELD or the batch's own active COMBINER epoch;
+an unrelated later owner's COMBINER phase cannot authorize an old frame. Cold
+completed-tail retirement reopens READY withdrawal while retaining its current
+claim. No new ownership inference, packet copy or wait for origin ACK is added.
+The original five role cases and actual C2-to-W33 exchange remain required VM
+gates for this candidate, with separate performance validation.

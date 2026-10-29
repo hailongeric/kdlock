@@ -752,7 +752,8 @@ static void check_local_predecessor(void)
 
 static void hold_peer(struct kd_mutex *gate)
 {
-	kd_mutex_gate_set(gate, KD_MUTEX_GATE_COMBINER);
+	kd_mutex_gate_set(gate, KD_MUTEX_GATE_HELD);
+ CHECK(kd_mutex_gate_try_combine(gate));
 	gate->owner = &peer;
 	kd_mutex_origin_acquires = 1;
 }

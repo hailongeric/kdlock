@@ -86,8 +86,8 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		}
 		/* This is the same read-only hint as the exported helper. Keep it
 		 * inline in every producer's bounded probe sequence. */
-		if (atomic_read_acquire(&lock->delegation_state) ==
-		    KD_MUTEX_GATE_COMBINER)
+		if (((u32)atomic_read_acquire(&lock->delegation_state) &
+		     KD_MUTEX_GATE_PHASE_MASK) == KD_MUTEX_GATE_COMBINER)
 			return false;
 		cpu_relax();
 	}

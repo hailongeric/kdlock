@@ -47,6 +47,8 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix='kdlock-mutex-balances-') as tmp:
         path = Path(tmp)
+        (path / 'mutex_gate_constants.h').write_text('\n'.join(line for line in
+            read_source(ROOT / 'include/kd_mutex.h').splitlines() if line.startswith('#define KD_MUTEX_GATE_')) + '\n')
         (path / 'mutex_state_production.h').write_text(
             without_includes(read_source(ROOT / 'include/kd_mutex_state.h')))
         for name, mutation in [('production', None), *mutations.items()]:

@@ -37,13 +37,17 @@ struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 #ifndef unlikely
 #define unlikely(x) (x)
 #endif
+#define KDLOCK_MUTEX_SPIN_BUDGET 2
 #include "mutex_outer_types.h"
 
 static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
 static struct task_struct *current = &executor;
 static struct kd_mutex b;
 static struct kd_mutex gate;
-static struct kd_mutex_node request, successor, enclosing;
+static struct kd_mutex_node request, successor, enclosing, unselected;
+static bool origin_probe;
+static unsigned int cold_yields;
+static void kd_mutex_wait_for_result(struct kd_mutex_node *node);
 static struct kd_exec_frame active;
 static unsigned long kd_exec_invariant_failures;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
@@ -95,6 +99,12 @@ static int raw_smp_processor_id(void)
 #define unlikely(x) (x)
 #define smp_load_acquire(p) (*(p))
 #define smp_store_release(p, v) do { \
+ if ((void *)(p)==&request.locked && (v)==KD_MUTEX_PROXY_CLAIMED) { \
+  CHECK(request.locked==KD_MUTEX_PROXY_READY && kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_COMBINER);pin_requests++; \
+ } \
+ if ((void *)(p)==&successor.locked && (v)==KD_MUTEX_PROXY_CLAIMED) { \
+  CHECK(successor.locked==KD_MUTEX_PROXY_READY && kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_COMBINER);future_requests++; \
+ } \
  if ((void *)(p)==&request.locked && ((v)==KD_MUTEX_WAIT || !(v)) && pin_requests) { \
   CHECK(request.locked==KD_MUTEX_PROXY_CLAIMED || (!(v) && request.locked==KD_MUTEX_WAIT)); \
   if(mode==8)CHECK(pops==1); \
@@ -115,7 +125,7 @@ static bool fixture_warn(bool condition) { return condition; }
 			release_traces++;                              \
 			CHECK(gate.owner == current &&                    \
 			      kd_mutex_delegation_owned(&gate, current));         \
-			CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_COMBINER_VAL);  \
+			CHECK(kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_HELD);  \
 			CHECK(successor.locked &&                      \
 			      successor.task_struct_ptr == &other);    \
 		}                                                      \
@@ -191,10 +201,10 @@ static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
  __typeof__(*target) seen=*target; \
  if(seen==(old)) { \
   if((void *)target==&request.locked) { \
-   CHECK((old)==KD_MUTEX_PROXY_READY && (value)==KD_MUTEX_PROXY_CLAIMED);pin_requests++; \
+   CHECK(false); /* Normal claim must not perform a node RMW. */ \
   } \
   if((void *)target==&successor.locked) { \
-   CHECK((old)==KD_MUTEX_PROXY_READY && (value)==KD_MUTEX_PROXY_CLAIMED);future_requests++; \
+   CHECK(false); /* Normal claim must not perform a node RMW. */ \
   } \
   *target=(value); \
  } seen; \
@@ -203,6 +213,10 @@ static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
 
 static void preempt_enable(void)
 {
+ if(origin_probe) {
+  CHECK(unselected.locked==KD_MUTEX_WAIT && !(atomic_read(&gate.delegation_state)&KD_MUTEX_GATE_WITHDRAW));
+  cold_yields++;
+ }
 	preempt--;
 }
 static void preempt_disable(void)
@@ -211,12 +225,13 @@ static void preempt_disable(void)
 }
 static void cpu_relax(void)
 {
+ if(origin_probe) { CHECK(unselected.locked==KD_MUTEX_PROXY_READY || unselected.locked==KD_MUTEX_WAIT);return; }
  if(pending_link) {
   CHECK(delayed_full && !normal_proxy_loop && pops==1 && scripts==1 && !wakes);
   CHECK(source_leases==1 && preempt==1);
   CHECK(request.locked==KD_MUTEX_PROXY_CLAIMED && !request.completed);
   CHECK(active.packet_state==KD_PACKET_FULL && active.completion_seen);
-  CHECK(gate.owner==&executor && kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_COMBINER);
+  CHECK(gate.owner==&executor && kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_HELD);
   CHECK(++pending_polls<=2);
   if(pending_polls==2) { request.next=&successor;pending_link=false; }
   return;
@@ -227,8 +242,23 @@ static void cpu_relax(void)
 	current = &executor;
 	other_holds = false;
 }
-static bool need_resched(void) { return false; }
-static void cond_resched(void) { CHECK(false); }
+static bool need_resched(void) { return origin_probe; }
+static void cond_resched(void)
+{
+ CHECK(origin_probe && !preempt && unselected.locked==KD_MUTEX_WAIT);
+ CHECK(!(atomic_read(&gate.delegation_state)&KD_MUTEX_GATE_WITHDRAW));
+ unselected.locked=0;
+}
+/* A separate unselected READY origin uses the real expiry/withdraw helper at
+ * each cold service boundary. Scheduling itself remains a deterministic peer. */
+static void cold_origin_progress(void)
+{
+ CHECK(kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_HELD);
+ if(kd_mutex_gate_read(&gate)!=KD_MUTEX_GATE_HELD || !unselected.locked)return;
+ CHECK(preempt==1 && gate.owner==current);
+ origin_probe=true;kd_mutex_wait_for_result(&unselected);origin_probe=false;
+ CHECK(preempt==1 && !unselected.locked && cold_yields==1);
+}
 static void kd_origin_mutex_lock(struct kd_mutex *lock)
 {
 	CHECK(!lock->owner);
@@ -325,12 +355,14 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs
 static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_jit_batch_call *call)
 {
  (void)call;
+ cold_origin_progress();
  CHECK(fast_window && future_requests == 1);
  CHECK(successor.locked == KD_MUTEX_WAIT && request.locked == KD_MUTEX_PROXY_CLAIMED);
  return kd_exe_on_call_hl_entry(exe, &active.regs, active.entry_ip, active.outer_lock_addr);
 }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
+ cold_origin_progress();
 	(void)pid;
 	(void)ip;
 	CHECK(request.locked == (pin_requests ? KD_MUTEX_WAIT : KD_MUTEX_PROXY_READY));
@@ -349,6 +381,7 @@ struct kd_exec_frame *kd_exec_frame_push(const struct kd_regs *regs,
 					 struct task_struct *task)
 {
 	CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
+ cold_origin_progress();
 	if (mode == 7)
 		return NULL;
 	memset(&active, 0, sizeof(active));
@@ -425,6 +458,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 				   struct kd_regs *regs, unsigned long ip,
 				   unsigned long lock)
 {
+	cold_origin_progress();
 	CHECK(exe == &ready_entry);
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&gate);
 	CHECK(pin_requests == 1 && request.locked == KD_MUTEX_PROXY_CLAIMED);
@@ -455,6 +489,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 }
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
+ CHECK(kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_HELD);
 	CHECK(frame == &active && mutex &&
 	      (mode >= 5 ? !b.owner : b.owner == &executor));
 	CHECK(handoff_starts == 1 && !handoff_ends);
@@ -475,7 +510,7 @@ int kd_mutex_transfer_owner(struct kd_mutex *lock, struct task_struct *next)
 {
 	CHECK(mode == 6 && lock == &gate && next == &waiter);
 	CHECK(gate.owner == &executor && current == &executor && request.locked);
-	CHECK(kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_COMBINER);
+	CHECK(kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_HELD);
 	CHECK(active.entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 && source_leases == 1);
 	gate.owner = next;
 	return 0;
@@ -557,6 +592,8 @@ int main(void)
 		kd_mutex_count_enter(&gate, &enclosing);
 		memset(&request, 0, sizeof(request));
 		memset(&successor, 0, sizeof(successor));
+  memset(&unselected,0,sizeof(unselected));unselected.lock=&gate;unselected.locked=KD_MUTEX_QUEUE_INIT;
+  cold_yields=0;origin_probe=false;
 		gate.owner = NULL;
 		b.owner = NULL;
 		request.tail = 2U << KD_MUTEX_TAIL_CPU_OFFSET;
@@ -593,7 +630,6 @@ int main(void)
 		other_holds = false;
 		preempt = 1;
 		kd_mutex_wait_and_lock(&gate);
-		kd_mutex_gate_set(&gate, KD_MUTEX_GATE_COMBINER);
 		CHECK(kd_mutex_run_combiner(&gate, &request, NULL, after_body) ==
 		      (after_body ? KD_MUTEX_BATCH_RELEASED : KD_MUTEX_BATCH_OWNED));
 		CHECK(scripts == expected && pops == expected + (mode == 8));
@@ -605,6 +641,7 @@ int main(void)
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5 || mode == 6));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(!source_leases && !b.owner && preempt == 1);
+  CHECK(cold_yields==1 && !unselected.locked && !origin_probe);
 		if (after_body) {
 			/* W has already executed its own body. The loop must neither
 			 * reacquire A nor release a successor's later ownership. */

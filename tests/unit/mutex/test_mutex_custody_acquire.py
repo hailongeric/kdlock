@@ -29,8 +29,8 @@ def main():
     types += definition(read_source(ROOT / "include/exe_info.h"),
                         "enum kd_entry_abi {") + ";\n"
     constants = "\n".join(line for line in header.splitlines() if line.startswith((
-        "#define KD_MUTEX_CUSTODY_LOCKS ", "#define KD_MUTEX_GATE_COMBINER ")))
-    assert len(constants.splitlines()) == 2
+        "#define KD_MUTEX_CUSTODY_LOCKS ", "#define KD_MUTEX_GATE_")))
+    assert "#define KD_MUTEX_GATE_PHASE_MASK " in constants
     code = ""
     for marker in (
         "static struct kd_mutex_node *kd_mutex_custody_current(void)",

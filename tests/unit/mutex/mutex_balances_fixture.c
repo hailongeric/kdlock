@@ -13,12 +13,10 @@ typedef uint64_t u64;
 typedef struct { int counter; } atomic_t;
 struct kd_mutex { atomic_t delegation_state; };
 struct kd_mutex_node { u64 count_seq; struct kd_mutex *counted_lock; };
+#include "mutex_gate_constants.h"
 #define KD_MUTEX_MAX_NODES 4
-#define KD_MUTEX_GATE_FREE 0
 static struct kd_mutex_node kd_mutex_nodes[KD_MUTEX_MAX_NODES];
 static struct kd_mutex_node remote_nodes[KD_MUTEX_MAX_NODES];
-#define KD_MUTEX_GATE_ACQUIRING 2
-#define KD_MUTEX_GATE_RELEASING 4
 static jmp_buf bug_target;
 static bool expect_bug;
 #define BUG_ON(c) do { if (c) { CHECK(expect_bug); longjmp(bug_target, 1); } } while (0)

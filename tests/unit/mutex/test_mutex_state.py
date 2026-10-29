@@ -35,12 +35,19 @@ def main():
     mutations = {
         'gate-claim-accepts-held': ('atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_FREE,',
                                  'atomic_cmpxchg(&lock->delegation_state, kd_mutex_gate_read(lock),'),
+        'phase-erases-withdrawal': ('phase | (previous & KD_MUTEX_GATE_WITHDRAW)', 'phase'),
+        'withdraw-allows-active-epoch': (
+            '(state & KD_MUTEX_GATE_PHASE_MASK) == KD_MUTEX_GATE_COMBINER)\n\t\treturn false;',
+            'false)\n\t\treturn false;'),
+        'combine-accepts-withdrawal': (
+            'atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_HELD,',
+            'atomic_cmpxchg(&lock->delegation_state, (u32)atomic_read(&lock->delegation_state),'),
         'record-overflow-not-rejected': ('BUG_ON((seq & 1) || seq > U64_MAX - 2);', 'BUG_ON(seq & 1);'),
         'record-odd-not-rejected': ('BUG_ON((seq & 1) || seq > U64_MAX - 2);', 'BUG_ON(seq > U64_MAX - 2);'),
         'record-identity-not-checked': ('BUG_ON(READ_ONCE(node->counted_lock) != expected);', '(void)expected;'),
         'record-generation-not-advanced': ('WRITE_ONCE(node->count_seq, seq + 2);', 'WRITE_ONCE(node->count_seq, seq);'),
         'record-exit-keeps-key': ('kd_mutex_count_transition(node, lock, NULL);', 'kd_mutex_count_transition(node, lock, lock);'),
-        'invalid-phase-not-rejected': ('BUG_ON(phase > KD_MUTEX_GATE_RELEASING);', '(void)phase;'),
+        'invalid-phase-not-rejected': ('BUG_ON(phase > KD_MUTEX_GATE_RELEASING || phase == KD_MUTEX_GATE_COMBINER);', '(void)phase;'),
         'foreign-task-query-authorized': ('if (!lock || task != current)', 'if (!lock || (false && task != current))'),
         'pickup-authorized': ('(owner & 4UL)', '(owner & 0UL)'),
         'physical-owner-ignored': ('(owner & ~KD_MUTEX_OWNER_FLAGS) != (unsigned long)current', 'false'),

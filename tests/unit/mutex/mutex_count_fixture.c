@@ -48,7 +48,9 @@ static void before_write(const void *address);
 #define smp_load_acquire(p) ({ before_read(p); __atomic_load_n((p), __ATOMIC_SEQ_CST); })
 #define smp_rmb() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 #define smp_wmb() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#define atomic_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_RELAXED)
 #define atomic_read_acquire(p) __atomic_load_n(&(p)->counter, __ATOMIC_SEQ_CST)
+#define atomic_fetch_andnot_release(v,p) __atomic_fetch_and(&(p)->counter, ~(u32)(v), __ATOMIC_RELEASE)
 #define atomic_set_release(p,v) __atomic_store_n(&(p)->counter, (v), __ATOMIC_SEQ_CST)
 #define atomic_cmpxchg(p,o,v) ({ int expected = (o); \
  __atomic_compare_exchange_n(&(p)->counter,&expected,(v),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); expected; })

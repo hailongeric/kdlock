@@ -62,7 +62,7 @@ static void diag_check_zero(void)
     { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_INITIAL_FINISH(true); }
     { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_BUDGET_EXPIRED();
       KD_MUTEX_PIN_EXPIRY_CHECK();KD_MUTEX_PIN_EXPIRY_CHECK();
-      KD_MUTEX_PIN_WITHDRAW();KD_MUTEX_PIN_INITIAL_FINISH(false); }
+      KD_MUTEX_PIN_WITHDRAW_RESERVED();KD_MUTEX_PIN_WITHDRAW();KD_MUTEX_PIN_INITIAL_FINISH(false); }
     { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_FORCED_CANCEL();KD_MUTEX_PIN_INITIAL_FINISH(false); }
     { KD_MUTEX_PIN_WAIT_ENTER();KD_MUTEX_PIN_BUDGET_EXPIRED();
       KD_MUTEX_PIN_EXPIRY_CHECK();KD_MUTEX_PIN_INITIAL_FINISH(true); }
@@ -70,7 +70,9 @@ static void diag_check_zero(void)
     CHECK(kd_mutex_pin_totals.initial_pin_retained==2 && kd_mutex_pin_totals.initial_pin_dropped==2);
     CHECK(kd_mutex_pin_totals.initial_budget_completed==1 && kd_mutex_pin_totals.budget_expired_episodes==2);
     CHECK(kd_mutex_pin_totals.expiry_checks==3 && kd_mutex_pin_totals.withdrawals==1);
-    CHECK(kd_mutex_pin_totals.forced_cancellations==1);
+    CHECK(kd_mutex_pin_totals.forced_cancellations==1 && kd_mutex_pin_totals.withdrawal_reservations==1);
+    CHECK(kd_mutex_pin_totals.epoch_admission_attempts>0);
+    CHECK(kd_mutex_pin_totals.epoch_admission_refusals<=kd_mutex_pin_totals.epoch_admission_attempts);
     CHECK(diag_stats_get(pin_json)>0);printf("PIN %s",pin_json);
 
     /* Each stop has one selection receipt. Terminal requests remain eligible;
@@ -94,15 +96,30 @@ static void diag_check_zero(void)
         case KD_MUTEX_PIN_FUTURE_NOT_READY: nodes[1].locked=KD_MUTEX_WAIT;break;
         default: CHECK(false);
         }
+        CHECK(kd_mutex_batch_epoch_begin(&observed));
+        CHECK(observed.diag.epoch_admission_attempts==1 && !observed.diag.epoch_admission_refusals);
         accepted=kd_mutex_batch_pin_select(&observed,&nodes[0],ahead);
         CHECK(accepted==(stop!=KD_MUTEX_PIN_SELF_CURRENT && stop!=KD_MUTEX_PIN_CURRENT_NOT_READY));
         CHECK(observed.diag.selections==1 && observed.diag.occupancy_before[0]==1);
         CHECK(observed.diag.refill_stop[stop]==1);
         CHECK(observed.diag.occupancy_after[observed.nr_pins]==1);
         CHECK(observed.diag.claims==observed.nr_pins && !polls);
-        kd_mutex_batch_unpin(&observed,false);
-        CHECK(!observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);
+        kd_mutex_batch_epoch_end(&observed,false);
+        CHECK(!observed.proxy_epoch && !observed.nr_pins && observed.diag.claims==observed.diag.cancelled_claims && !polls);
     }
+
+    /* A real gate reservation refuses one epoch without claiming a node or
+     * synthesizing an execution attempt. Release it before retrying admission. */
+    reset(2);
+    struct kd_mutex_batch refused_epoch={.lock=&lock};
+    CHECK(kd_mutex_gate_try_withdraw(&lock));
+    CHECK(!kd_mutex_batch_epoch_begin(&refused_epoch));
+    CHECK(!refused_epoch.proxy_epoch && !refused_epoch.nr_pins);
+    CHECK(refused_epoch.diag.epoch_admission_attempts==1 && refused_epoch.diag.epoch_admission_refusals==1);
+    kd_mutex_gate_end_withdraw(&lock);
+    CHECK(kd_mutex_batch_epoch_begin(&refused_epoch));
+    CHECK(refused_epoch.diag.epoch_admission_attempts==2 && refused_epoch.diag.epoch_admission_refusals==1);
+    kd_mutex_batch_epoch_end(&refused_epoch,false);
 
     /* Maximal numeric values still serialize as complete JSON within sysfs. */
     memset(&kd_mutex_pin_totals,0xff,sizeof(kd_mutex_pin_totals));

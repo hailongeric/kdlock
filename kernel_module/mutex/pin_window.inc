@@ -3,7 +3,7 @@
  * spinning pinned within their finite grace period. The queue
  * reservation keeps each node live until result wake; the batch source lease
  * separately keeps executable text live through final retirement.
- * READY->CLAIMED wins atomically against origin withdrawal; no ACK is polled.
+ * The enclosing gate epoch excludes withdrawal; no origin ACK is polled.
  * Only the current request may survive a dispatcher or ownership boundary. */
 /* Slots hold exact invocation identities. Advancing a private cursor avoids
  * copying overlapping descriptors through a library memmove on every body.
@@ -36,7 +36,8 @@ static __always_inline bool kd_mutex_batch_pin_add(struct kd_mutex_batch *batch,
 	       READ_ONCE(node->counted_lock) != batch->lock);
 	index = kd_mutex_batch_pin_slot(batch, count);
 	BUG_ON(batch->pins[index].node);
-	if (!kd_mutex_proxy_request(node))
+	BUG_ON(!batch->proxy_epoch);
+	if (!kd_mutex_proxy_request(batch->lock, node))
 		return false;
 	batch->pins[index].node = node;
 	batch->pins[index].generation = generation;

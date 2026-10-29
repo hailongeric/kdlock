@@ -31,6 +31,11 @@
  if ((u32)fixture_seen == (u32)(old)) { \
   (p)->counter = (value); fixture_state_changed(p); \
  } fixture_seen; })
+#define atomic_cmpxchg_release(p, old, value) atomic_cmpxchg(p, old, value)
+#define atomic_fetch_andnot_release(mask, p) ({ \
+ int fixture_old = (p)->counter; \
+ (p)->counter = (u32)fixture_old & ~(u32)(mask); \
+ fixture_state_changed(p); fixture_old; })
 #define atomic_fetch_add(v, p) ({ int fixture_old = (p)->counter; \
  (p)->counter = (u32)fixture_old + (u32)(v); fixture_old; })
 #define atomic_fetch_sub(v, p) ({ int fixture_old = (p)->counter; \

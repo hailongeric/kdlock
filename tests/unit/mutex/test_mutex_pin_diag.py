@@ -98,6 +98,8 @@ static void __attribute__((unused)) diag_free_percpu(void *storage);
             'lost-retirement': helpers.replace('KD_MUTEX_PIN_INC(batch, retired_claims);', '', 1),
             'lost-cancellation': helpers.replace('KD_MUTEX_PIN_INC(batch, cancelled_claims);', '', 1),
             'lost-occupancy': helpers.replace('(batch)->diag.occupancy_after[(batch)->nr_pins]++;', '', 1),
+            'lost-epoch-attempt': helpers.replace('(batch)->diag.epoch_admission_attempts++;', '', 1),
+            'lost-epoch-refusal': helpers.replace('(batch)->diag.epoch_admission_refusals += !(accepted);', '', 1),
             'lost-expiry-checks': helpers.replace(
                 'this_cpu_add(kd_mutex_pin_totals.expiry_checks, origin->expiry_checks);', '', 1),
             'retained-is-within-budget': helpers.replace('retained && !origin->budget_expired', 'retained', 1),
@@ -122,7 +124,7 @@ static void __attribute__((unused)) diag_free_percpu(void *storage);
                       for line in result.stdout.splitlines()
                       if line.startswith(('PIN ', 'PINMAX ', 'PINRESET '))}
             sample = values['PIN']
-            assert sample['schema'] == 2 and sample['compiled'] == 2
+            assert sample['schema'] == 3 and sample['compiled'] == 2
             assert sample['window'] == 8 and sample['initial_spin_budget'] == 65536
             assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
             assert sample['selections'] == sum(sample['occupancy_before']) == sum(sample['occupancy_after'])
@@ -161,19 +163,21 @@ def check_origin_hooks():
     constants = '\n'.join(re.findall(
         r'^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT) \d+$',
         (ROOT / 'include/kd_mutex.h').read_text(), re.M))
+    constants += '\n' + '\n'.join(line for line in (ROOT / 'include/kd_mutex.h').read_text().splitlines()
+                                     if line.startswith('#define KD_MUTEX_GATE_'))
+    state = without_includes(read_source(ROOT / 'include/kd_mutex_state.h'))
     declarations = diag[diag.index('#define KD_MUTEX_PIN_REASONS'):diag.index('static int kd_mutex_pin_diag_init')]
     merge = definition(diag, 'static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,')
     code = constants + r'''
 #define KDLOCK_MUTEX_DIAGNOSTICS 2
 #define KD_MUTEX_PIN_WINDOW 8
 #define __percpu
-typedef uint64_t u64;
 #define this_cpu_add(name,value) do { CHECK(pins==1); (name)+=(value); } while(0)
 #define this_cpu_inc(name) do { CHECK(pins==1); (name)++; } while(0)
-''' + origin + '\n' + declarations + '\n' + merge + '\n'
+''' + state + '\n' + origin + '\n' + declarations + '\n' + merge + '\n'
     code += '\n'.join(definition(source, signature) for signature in (
         'static void kd_mutex_wait_for_result(struct kd_mutex_node *node)',
-        'static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
+        'static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
         'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)',
         'static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,',
     ))
@@ -184,15 +188,17 @@ typedef uint64_t u64;
     anchor = 'reset(selected);node.locked=initial;kd_mutex_wait_for_result(&node);'
     assert fixture.count(anchor) == 1
     fixture = fixture.replace(anchor, 'memset(&kd_mutex_pin_totals,0,sizeof(kd_mutex_pin_totals));\n ' + anchor + r'''
- bool dropped=selected==EXPIRE || selected==CANCEL || selected==CANCEL_AT_ENTRY || selected==WAKE_AT_UNPIN;
- bool expired=selected==EXPIRE || selected==CLAIM_RACE || selected==WAKE_RACE || selected==WAKE_AT_UNPIN || selected==NO_RESCHED;
+ bool dropped=selected==EXPIRE || selected==CANCEL || selected==CANCEL_AT_ENTRY || selected==WAKE_AT_UNPIN || selected==RELEASE_RACE;
+ bool expired=selected==EXPIRE || selected==CLAIM_RACE || selected==WAKE_RACE || selected==WAKE_AT_UNPIN || selected==NO_RESCHED || selected==RELEASE_RACE || selected==STALE_READY;
  CHECK(kd_mutex_pin_totals.wait_episodes==1);
  CHECK(kd_mutex_pin_totals.initial_pin_retained==!dropped && kd_mutex_pin_totals.initial_pin_dropped==dropped);
  CHECK(kd_mutex_pin_totals.initial_budget_completed==(!dropped && !expired));
  CHECK(kd_mutex_pin_totals.budget_expired_episodes==expired);
  CHECK(kd_mutex_pin_totals.expiry_checks==(selected==NO_RESCHED?3U:expired?1U:0U));
- CHECK(kd_mutex_pin_totals.withdrawals==(selected==EXPIRE || selected==WAKE_AT_UNPIN));
+ CHECK(kd_mutex_pin_totals.withdrawals==(selected==EXPIRE || selected==WAKE_AT_UNPIN || selected==RELEASE_RACE));
  CHECK(kd_mutex_pin_totals.forced_cancellations==(selected==CANCEL || selected==CANCEL_AT_ENTRY));
+ CHECK(kd_mutex_pin_totals.withdrawal_reservations==(selected==EXPIRE || selected==WAKE_RACE ||
+       selected==WAKE_AT_UNPIN || selected==RELEASE_RACE || selected==STALE_READY));
 ''')
     mutations = {
         'production': code,
@@ -200,6 +206,7 @@ typedef uint64_t u64;
         'missing-budget-expiry': code.replace('KD_MUTEX_PIN_BUDGET_EXPIRED();', '(void)0;', 1),
         'missing-expiry-check': code.replace('KD_MUTEX_PIN_EXPIRY_CHECK();', '', 1),
         'missing-withdrawal': code.replace('KD_MUTEX_PIN_WITHDRAW();', '', 1),
+        'missing-reservation': code.replace('KD_MUTEX_PIN_WITHDRAW_RESERVED();', '', 1),
         'missing-forced-cancel': code.replace('KD_MUTEX_PIN_FORCED_CANCEL();', '', 1),
         'finish-after-unpin': code.replace(
             'KD_MUTEX_PIN_INITIAL_FINISH(false);\n\tpreempt_enable();',

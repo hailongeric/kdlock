@@ -69,10 +69,14 @@ def main():
     code += definition(mutex, "enum kd_mutex_batch_result {").rstrip() + ";\n"
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
-    for marker in ("static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+    for marker in ("static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+                   "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
                    "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)"):
         code += definition(mutex, marker) + "\n"
     code += without_includes(read_source(ROOT / "kernel_module/mutex/pin_window.inc")) + "\n"
+    for marker in ("static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)",
+                   "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)"):
+        code += definition(mutex, marker) + "\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in mutex.splitlines() if line.startswith(name+'('))
         code += 'static struct kd_mutex_node *\n' + definition(mutex, marker)+'\n'
@@ -128,12 +132,12 @@ def main():
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
             "claim-does-not-pin": code.replace(
-                "cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED)",
-                "cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_READY)", 1),
+                "smp_store_release(&node->locked, KD_MUTEX_PROXY_CLAIMED);",
+                "smp_store_release(&node->locked, KD_MUTEX_PROXY_READY);", 1),
             "reject-completed-full-tail": code.replace("curr_node->packet_state != KD_PACKET_FULL", "true", 1),
-            "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_unpin(batch, false);", "", 1),
+            "registration-keeps-pin": code.replace("\t\tkd_mutex_batch_epoch_end(batch, false);", "", 1),
             "resume-keeps-future-pins": code.replace(
-                "\t\tkd_mutex_batch_unpin(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
+                "\t\tkd_mutex_batch_epoch_end(batch, true);\n\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);",
                 "\t\tKD_MUTEX_PIN_INC(batch, full_resumes);\n\t\tret_flag = kd_exe_mutex_batch_resume(exe, &call);", 1),
             "unpin-before-frame-retirement": code.replace(
                 "\tframe_ret = kd_exec_frame_pop(frame, &curr_node->regs);",

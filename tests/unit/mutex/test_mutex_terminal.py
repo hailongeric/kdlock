@@ -27,10 +27,13 @@ def production_sources():
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     helpers += definition(source, 'enum kd_mutex_batch_result {').rstrip()+';\n'
     helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
-    for marker in ('static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)',
+    for marker in ('static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,',
                    'static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)'):
         helpers += definition(source, marker)+'\n'
     helpers += without_includes(read_source(ROOT/'kernel_module/mutex/pin_window.inc'))+'\n'
+    for marker in ("static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)",
+                   "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)"):
+        helpers += definition(source, marker) + "\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in source.splitlines() if line.startswith(name+'('))
         helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
@@ -57,7 +60,8 @@ def main():
         (path/'types.h').write_text(types)
         (path/'mutex_state_production.h').write_text(
             without_includes(read_source(ROOT/'include/kd_mutex_state.h')))
-        assert loop.count('kd_mutex_set_locked(lock);') == 2
+        assert loop.count('kd_mutex_set_locked(lock);') == 1
+        assert helpers.count('kd_mutex_set_locked(batch->lock);') == 1
         mutations = {
             'production': (helpers, loop),
             'poll-inside-normal-loop': (helpers, loop.replace(
@@ -69,6 +73,9 @@ def main():
             'wake-before-cold-retirement': (helpers, loop.replace(
                 '\tif (completed_pending_tail) {',
                 '\tif (completed_pending_tail) {\n\t\tkd_mutex_clear_locked_set_completed(curr_node);', 1)),
+            'cold-body-skips-fresh-admission': (helpers, loop.replace(
+                'if (!batch.proxy_epoch && !kd_mutex_batch_epoch_begin(&batch)) {',
+                'if (false && !batch.proxy_epoch && !kd_mutex_batch_epoch_begin(&batch)) {', 1)),
             'ignore-local-pin-budget': (helpers.replace('if (left > local_left)', 'if (false && left > local_left)'), loop),
             'underflow-late-local-budget': (helpers.replace('counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ?', 'false ?'), loop),
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
@@ -83,10 +90,11 @@ def main():
             'bypass-rejoined-prefix': (helpers, loop.replace('batch.numa_node = -1;', 'batch.numa_node = 0;')),
             'overrun-total-batch': (helpers, loop.replace(
                 'counter >= kd_mutex_batch_size', 'counter >= kd_mutex_batch_size + 1')),
-            # Each combiner return must establish the normal gate value
-            # independently, including source refusal before caller cleanup.
-            'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),
-            'skip-normal-gate': (helpers, ''.join(loop.rsplit('kd_mutex_set_locked(lock);', 1))),
+            # Every return preserves the physical owner's HELD phase. Before epoch
+            # admission the refusal assignment is idempotent; test an illicit
+            # FREE transition, rather than require that redundant write.
+            'refusal-opens-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', 'kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);', 1)),
+            'skip-normal-gate': (helpers.replace('kd_mutex_set_locked(batch->lock);', ''), loop),
         }
         for name, (text, candidate_loop) in mutations.items():
             (path/'helpers.h').write_text(text)

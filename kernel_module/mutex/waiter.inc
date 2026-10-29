@@ -91,9 +91,8 @@ wait_result:
 	if (!next_node)
 		goto release;
 
-	/* --- combiner path --- */
-	kd_mutex_gate_set(lock, KD_MUTEX_GATE_COMBINER);
-
+	/* The physical owner attempts proxy admission inside run_combiner.
+	 * A concurrent withdrawal reservation receives native handoff instead. */
 	if (kd_mutex_run_combiner(lock, next_node, curr_node, false) ==
 	    KD_MUTEX_BATCH_SWAPPED)
 		goto wait_result;

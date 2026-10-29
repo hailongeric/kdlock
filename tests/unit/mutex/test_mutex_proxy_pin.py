@@ -16,10 +16,10 @@ from test_spin_shadow import definition
 
 def main():
     source = read_source(ROOT / "kernel_module/kd_mutex.c")
-    code = without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
+    code = without_includes(read_source(ROOT / "include/kd_mutex_state.h")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n"
     code += "\n".join(definition(source, signature) for signature in (
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
     ))
@@ -27,6 +27,8 @@ def main():
         r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT) \d+$",
         (ROOT / "include/kd_mutex.h").read_text(), re.M))
     assert len(constants.splitlines()) == 4
+    constants += "\n" + "\n".join(line for line in (ROOT / "include/kd_mutex.h").read_text().splitlines()
+                                  if line.startswith("#define KD_MUTEX_GATE_"))
     mutations = {
         "schedule-before-budget": ("if (budget) {", "if (false && budget) {"),
         "withdraw-without-unpin": ("\tpreempt_enable();\n\twhile ((state =", "\twhile ((state ="),
@@ -40,8 +42,12 @@ def main():
             "if (state == KD_MUTEX_PROXY_READY) {", "if (true) {"),
         "self-cpu-selection": (" == raw_smp_processor_id())", " == -99)"),
         "claim-without-ready": (
-            "return cmpxchg(&node->locked, KD_MUTEX_PROXY_READY, KD_MUTEX_PROXY_CLAIMED) ==",
-            "return cmpxchg(&node->locked, KD_MUTEX_WAIT, KD_MUTEX_PROXY_CLAIMED) =="),
+            "if (smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)",
+            "if (false && smp_load_acquire(&node->locked) != KD_MUTEX_PROXY_READY)"),
+        "withdraw-without-reservation": (
+            "if (!kd_mutex_gate_try_withdraw(node->lock))", "if (false && !kd_mutex_gate_try_withdraw(node->lock))"),
+        "unpin-with-reservation": (
+            "kd_mutex_gate_end_withdraw(node->lock);", "(void)node;"),
     }
     with tempfile.TemporaryDirectory(prefix="kd-mutex-proxy-pin-") as directory:
         path = Path(directory)

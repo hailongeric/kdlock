@@ -20,6 +20,7 @@ int main(void)
     const unsigned int cap=KDLOCK_MUTEX_BATCH, boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
     late_first_deferred();
     wrapped_release_boundaries();
+    epoch_boundaries();
     scenario=1;reset(cap+2);
     CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(calls==cap && completed==cap && wakes==1 && !nodes[cap].locked);

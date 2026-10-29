@@ -38,13 +38,13 @@ PROFILES = {'mutex-throughput': ('cacheline', 1, 256),
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
-BATCH_METADATA = dict(schema=4, compiled=1, total_cap=1024, numa_boundary=1024,
+BATCH_METADATA = dict(schema=5, compiled=1, total_cap=1024, numa_boundary=1024,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed', 'owner_transfers',
     'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total', 'scan_steps',
     'scan_exhausted_batches', 'small_fifo_batches')
-BATCH_REASONS = ('unclassified', 'initial_unexecutable', 'source_refusal',
+BATCH_REASONS = ('unclassified', 'body_unavailable', 'source_refusal',
     'numa_boundary', 'numa_tail', 'execution_refusal', 'early_outer_release',
     'native_done', 'owner_transfer', 'total_cap', 'empty_tail', 'delayed_tail', 'unsupported_tail')
 BATCH_HISTOGRAMS = ('completed_hist', 'deferred_peak_hist')
@@ -59,14 +59,16 @@ PIN_V1_COUNTERS = ('batches', 'selections', 'requested', 'consumed', 'cancelled'
 PIN_HISTOGRAMS = ('occupancy_before', 'occupancy_after')
 PIN_V1_REASONS = ('self_current', 'single', 'budget', 'window', 'no_link', 'entry',
                'numa', 'deferred_tail', 'duplicate_cpu', 'self_future')
-# Schema 1 remains an offline REQUEST/ACK record, never a READY-claim alias.
-PIN_METADATA = dict(schema=2, compiled=2, window=8, total_cap=1024,
+# Historical REQUEST/ACK and per-node CAS records keep their exact schemas.
+PIN_METADATA = dict(schema=3, compiled=2, window=8, total_cap=1024,
                     numa_boundary=1024, initial_spin_budget=65536)
-PIN_COUNTERS = ('batches', 'selections', 'claims', 'retired_claims', 'cancelled_claims',
+PIN_V2_COUNTERS = ('batches', 'selections', 'claims', 'retired_claims', 'cancelled_claims',
     'drain_calls', 'drain_nonempty', 'drain_keep_current', 'full_resumes',
     'wait_episodes', 'initial_pin_retained', 'initial_pin_dropped',
     'initial_budget_completed', 'budget_expired_episodes', 'expiry_checks',
     'withdrawals', 'forced_cancellations')
+PIN_COUNTERS = PIN_V2_COUNTERS + ('epoch_admission_attempts', 'epoch_admission_refusals',
+                                  'withdrawal_reservations')
 PIN_REASONS = PIN_V1_REASONS + ('current_not_ready', 'future_not_ready')
 COMPILED_MODES = ('batch', 'pin')
 
@@ -104,16 +106,17 @@ def observation_delta(before, after):
 
 
 def batch_fields(schema):
-    require(type(schema) is int and schema in (2, 3, 4), 'unsupported batch diagnostic schema')
+    require(type(schema) is int and schema in (2, 3, 4, 5), 'unsupported batch diagnostic schema')
     # Missing historical fields remain absent, never synthesized as measured zeros.
     counters = BATCH_COUNTERS if schema >= 3 else tuple(
         key for key in BATCH_COUNTERS if key != 'owner_transfers')
-    reasons = tuple(key for key in BATCH_REASONS if
-        (schema >= 3 or key != 'owner_transfer') and (schema >= 4 or key != 'delayed_tail'))
+    reasons = tuple('initial_unexecutable' if key == 'body_unavailable' and schema < 5 else key
+        for key in BATCH_REASONS if (schema >= 3 or key != 'owner_transfer') and
+        (schema >= 4 or key != 'delayed_tail'))
     return counters, reasons
 
 
-def batch_metadata(policy=None, *, schema=4):
+def batch_metadata(policy=None, *, schema=5):
     batch_fields(schema)
     result = dict(BATCH_METADATA, schema=schema)
     if policy is not None:
@@ -173,7 +176,8 @@ def validate_batch(snapshot, policy=None):
     require(snapshot['scan_exhausted_batches'] <= batches and snapshot['small_fifo_batches'] <= batches,
             'batch subset counter exceeds batches')
     require(snapshot['legacy']['handoff'] == sum(snapshot['stop_reason'][key] for key in
-            ('initial_unexecutable', 'source_refusal', 'execution_refusal')),
+            ('body_unavailable' if snapshot['schema'] >= 5 else 'initial_unexecutable',
+             'source_refusal', 'execution_refusal')),
             'legacy refusal handoff accounting differs')
     histogram = snapshot['completed_hist']
     lower = sum(count * (1 << (index - 1)) for index, count in enumerate(histogram) if index)
@@ -206,13 +210,13 @@ def batch_delta(before, after, expected_completions=None, policy=None):
 
 
 def pin_fields(schema):
-    require(type(schema) is int and schema in (1, 2), 'unsupported pin diagnostic schema')
+    require(type(schema) is int and schema in (1, 2, 3), 'unsupported pin diagnostic schema')
     if schema == 1:
         return PIN_V1_COUNTERS, PIN_V1_REASONS
-    return PIN_COUNTERS, PIN_REASONS
+    return PIN_V2_COUNTERS if schema == 2 else PIN_COUNTERS, PIN_REASONS
 
 
-def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=2, initial_spin_budget=65536):
+def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=3, initial_spin_budget=65536):
     pin_fields(schema)
     require(type(tsc_sample_shift) is int and tsc_sample_shift in (0, 6),
             'invalid pin TSC sample shift')
@@ -220,10 +224,10 @@ def pin_metadata(policy=None, tsc_sample_shift=0, *, schema=2, initial_spin_budg
     if schema == 1:
         return dict(PIN_V1_METADATA, total_cap=selected['total_cap'],
                     numa_boundary=selected['numa_boundary'], tsc_sample_shift=tsc_sample_shift)
-    require(tsc_sample_shift == 0, 'READY schema 2 has no ACK TSC sampling')
+    require(tsc_sample_shift == 0, 'READY schemas have no ACK TSC sampling')
     require(type(initial_spin_budget) is int and 1 <= initial_spin_budget <= 2**31 - 1,
             'invalid initial mutex spin budget')
-    return dict(PIN_METADATA, total_cap=selected['total_cap'],
+    return dict(PIN_METADATA, schema=schema, total_cap=selected['total_cap'],
                 numa_boundary=selected['numa_boundary'], initial_spin_budget=initial_spin_budget)
 
 
@@ -283,6 +287,11 @@ def validate_pin(snapshot, policy=None, tsc_sample_shift=0, *, initial_spin_budg
                 'initial pin withdrawal/cancellation accounting differs')
         require(expired != 0 or snapshot['expiry_checks'] == 0,
                 'expiry checks without an expired initial budget')
+        if snapshot['schema'] == 3:
+            require(snapshot['epoch_admission_refusals'] <= snapshot['epoch_admission_attempts'],
+                    'epoch admission refusals exceed attempts')
+            require(snapshot['withdrawals'] <= snapshot['withdrawal_reservations'] <= snapshot['expiry_checks'],
+                    'withdrawal reservation subsets differ')
     return snapshot
 
 
@@ -304,7 +313,7 @@ def pin_delta(before, after, policy=None, tsc_sample_shift=0, *, initial_spin_bu
 
 def pin_fractions(snapshot):
     """Empty observations are unavailable, not evidence of a perfect fraction."""
-    require(snapshot['schema'] == 2, 'initial spin fractions require READY schema 2')
+    require(snapshot['schema'] in (2, 3), 'initial spin fractions require a READY schema')
     episodes = snapshot['wait_episodes']
     return {name: snapshot[counter] / episodes if episodes else None for name, counter in (
         ('completed_within_initial_budget', 'initial_budget_completed'),
@@ -510,7 +519,7 @@ def profiled_session(runner, args, perf, perf_sha):
                 spin_budget = args.mutex_spin_budget
                 pin_before = validate_pin(json.loads(pin_path.read_text()), policy,
                                           initial_spin_budget=spin_budget)
-                require(pin_before['schema'] == 2, 'live pin collection requires READY schema 2')
+                require(pin_before['schema'] == 3, 'live pin collection requires epoch READY schema 3')
                 save(self.path / 'pin-before.json', pin_before)
                 self.record['pin_diagnostics'] = dict(status='BEFORE_ONLY', before=pin_before)
             self.save()
@@ -547,7 +556,7 @@ def profiled_session(runner, args, perf, perf_sha):
                     retirement='Retired claims are not returned JIT bodies; native exits and FULL resumes remain separate',
                     initial_spin_fractions=pin_fractions(delta),
                     fraction_scope='Wait episodes completing before the initial budget expires; retained pin also includes later completion without unpinning',
-                    admission='One READY-to-CLAIMED CAS; no executor ACK-polling loop or ACK TSC samples')
+                    admission='Epoch gate excludes withdrawal while READY is acquired and CLAIMED is stored; claims count exact descriptor admissions, not per-node CAS operations')
                 self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
                 self.save()
 
@@ -627,7 +636,7 @@ def selected_backends(args):
 def diagnostic_settings(args):
     require(args.mode not in COMPILED_MODES or selected_backends(args) == ['kdlock'],
             args.mode + ' diagnostics support the KD provider only')
-    require(not args.pin_tsc, '--pin-tsc is retired: READY schema 2 has no ACK wait')
+    require(not args.pin_tsc, '--pin-tsc is retired: READY admission has no ACK wait')
     require(type(args.mutex_spin_budget) is int and 1 <= args.mutex_spin_budget <= 2**31 - 1,
             'invalid initial mutex spin budget')
     return dict(mutex_diag={'batch': 1, 'pin': 2}.get(args.mode, 0),

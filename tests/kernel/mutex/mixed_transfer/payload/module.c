@@ -221,8 +221,11 @@ static void hold_spin(void)
 		}
 		if (actual == READ_ONCE(task[MIXED_WAITER])) {
 			WRITE_ONCE(owner_after, actual);
+			/* The proxy epoch ended before W's native continuation. Only
+			 * an in-flight origin withdrawal may accompany HELD here. */
 			if (READ_ONCE(prefix) != 1 || READ_ONCE(suffix) ||
-			    atomic_read(&a.delegation_state) != KD_MUTEX_GATE_COMBINER)
+			    (atomic_read(&a.delegation_state) & ~KD_MUTEX_GATE_WITHDRAW) !=
+				    KD_MUTEX_GATE_HELD)
 				atomic_inc(&failures);
 			if (READ_ONCE(steal_attempts) >= 10000) {
 				observed = true;
@@ -346,7 +349,8 @@ finished:
 	if (cmd == MIXED_RELEASE) {
 		if (READ_ONCE(ready) != (1UL << MIXED_ROLES) - 1 ||
 		    owner() != READ_ONCE(task[MIXED_GATE]) ||
-		    atomic_read(&a.delegation_state) != KD_MUTEX_GATE_HELD ||
+		    (atomic_read(&a.delegation_state) & ~KD_MUTEX_GATE_WITHDRAW) !=
+			    KD_MUTEX_GATE_HELD ||
 		    kd_mutex_debug_waiter_count(&a) != 2)
 			return -EAGAIN;
 		WRITE_ONCE(release_gate, true);

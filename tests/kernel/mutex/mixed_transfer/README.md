@@ -54,8 +54,11 @@ creating a second prepared image. G uses the same prepared public entry as C/W.
    `ACQUIRING`, then releases T to become the trylock competitor. It requires
    owner G with gate `HELD` before starting C. C must publish its exact waiter
    record and queue tail; W then publishes the second record and a changed
-   tail. Only then does G release. C must become the physical owner and execute
-   W's prepared body. A local holder alone leaves the gate `FREE`: the first
+   tail. Only then does G release. Its release control permits only the WITHDRAW
+   bit beside HELD because C/W may now reserve withdrawal; the exact G owner,
+   two waiter records and all ready-role bits remain mandatory. A real withdrawal
+   may still prevent the required delegation and fail the case; the probe never
+   rearms readiness. C must become the physical owner and execute W's prepared body. A local holder alone leaves the gate `FREE`: the first
    admitted request claims it without allocating a queue node. That setup
    cannot satisfy the required one-waiter queue observation.
 2. W's delegated prefix increments exactly once and pauses at a bounded source
@@ -63,8 +66,13 @@ creating a second prepared image. G uses the same prepared public entry as C/W.
    A fifth task starts real `kd_mutex_trylock` attempts while A is held. Only
    then does B's holder release the prefix barrier; it continues holding B.
 3. The runtime's single CAS on B must fail. B's holder observes A's physical
-   owner become W, with its gate still occupied, prefix equal to one and suffix
-   still zero. It releases B through its normal paired public unlock only after
+   owner become W, with gate `HELD`, prefix equal to one and suffix still zero.
+   In this proxy-epoch candidate, only the legitimate `WITHDRAW` bit may accompany
+   `HELD`; `COMBINER` and all unknown bits are rejected. The epoch must end before
+   W's native suffix so unrelated READY origins can withdraw. This deliberately
+   changes the earlier probe's COMBINER-phase expectation while preserving its
+   exact owner, prefix/suffix, theft and context checks. It releases B through
+   its normal paired public unlock only after
    at least 10,000 competing trylock attempts. W acquires B natively, checks
    that W really owns A, completes the suffix once, and stops/joins the trylock
    loop before its legitimate A unlock.

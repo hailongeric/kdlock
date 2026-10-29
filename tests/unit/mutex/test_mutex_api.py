@@ -33,8 +33,8 @@ def read_symbols(binary):
 
 def main():
     base_header = (ROOT / "include/kd_mutex.h").read_text()
-    gate = next(line for line in base_header.splitlines()
-                if line.startswith("#define KD_MUTEX_GATE_COMBINER "))
+    gate = "\n".join(line for line in base_header.splitlines()
+                if line.startswith("#define KD_MUTEX_GATE_"))
     # Preserve the production public-to-linker-name declarations. Repeating
     # an alias in this fixture would not detect an accidental return to the
     # captured kernel's conflicting legacy kd_mutex_lock/unlock exports.

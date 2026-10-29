@@ -43,20 +43,22 @@ CHECKS = r'''
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_DELAYED_TAIL,
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_EXECUTION_REFUSAL,
         KD_MUTEX_DIAG_NATIVE_DONE, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE,
-        KD_MUTEX_DIAG_TOTAL_CAP, KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE,
-        KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE, KD_MUTEX_DIAG_SOURCE_REFUSAL,
+        KD_MUTEX_DIAG_TOTAL_CAP, KD_MUTEX_DIAG_BODY_UNAVAILABLE,
+        KD_MUTEX_DIAG_BODY_UNAVAILABLE, KD_MUTEX_DIAG_SOURCE_REFUSAL,
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_EXECUTION_REFUSAL,
         KD_MUTEX_DIAG_NATIVE_DONE, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE,
         KD_MUTEX_DIAG_NUMA_BOUNDARY, KD_MUTEX_DIAG_NUMA_BOUNDARY,
         KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_TOTAL_CAP,
         KD_MUTEX_DIAG_EXECUTION_REFUSAL, KD_MUTEX_DIAG_NUMA_TAIL,
-        KD_MUTEX_DIAG_UNSUPPORTED_TAIL, KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE,
+        KD_MUTEX_DIAG_UNSUPPORTED_TAIL, KD_MUTEX_DIAG_BODY_UNAVAILABLE,
         KD_MUTEX_DIAG_NUMA_BOUNDARY,
         KD_MUTEX_DIAG_NATIVE_DONE, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE,
+        KD_MUTEX_DIAG_BODY_UNAVAILABLE,
+        KD_MUTEX_DIAG_EMPTY_TAIL, KD_MUTEX_DIAG_BODY_UNAVAILABLE,
     };
     static const unsigned int deferred[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        2, 2, 1, 1, 8, 64, 1, 7, 7, 64, 0, 0, 8, 0, 0,
+        2, 2, 1, 1, 8, 64, 1, 7, 7, 64, 0, 0, 8, 0, 0, 0, 0, 0,
     };
     static struct kd_mutex_batch_totals expected;
     unsigned int native = calls && (int)order[calls - 1] == native_at;
@@ -103,6 +105,12 @@ EXTRA = r'''
     CHECK(calls==1 && completed==1 && wakes==1 && !nodes[1].locked);finish();
     scenario=22;reset(1);CHECK(kd_mutex_run_combiner(&lock,NULL,NULL,false)==KD_MUTEX_BATCH_OWNED);
     CHECK(!calls && !wakes && !lease_gets);finish();
+    scenario=26;reset(2);
+    CHECK(kd_mutex_gate_try_withdraw(&lock));
+    CHECK(kd_mutex_run_combiner(&lock,&nodes[0],NULL,false)==KD_MUTEX_BATCH_OWNED);
+    CHECK(!calls && !completed && wakes==1 && !nodes[0].locked);
+    CHECK(atomic_read(&lock.delegation_state)&KD_MUTEX_GATE_WITHDRAW);
+    kd_mutex_gate_end_withdraw(&lock);finish();
     char json_buffer[PAGE_SIZE];
     int length=kd_mutex_batch_stats_get(json_buffer,NULL);
     CHECK(length>0 && length<(int)sizeof(json_buffer));
@@ -180,11 +188,11 @@ def main():
         values = {line.split(' ', 1)[0]: json.loads(line.split(' ', 1)[1])
                   for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'TRANSFER ', 'GAP ', 'INCONSISTENT ', 'MAX '))}
         sample = values['DIAG']
-        assert sample['schema'] == 4 and sample['compiled'] == 1
+        assert sample['schema'] == 5 and sample['compiled'] == 1
         assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
         assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
         assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
-        assert sample['batches'] == 25 == sum(sample['completed_hist'])
+        assert sample['batches'] == 28 == sum(sample['completed_hist'])
         assert sample['batches'] == sum(sample['deferred_peak_hist'])
         assert sample['batches'] == sum(sample['stop_reason'].values())
         assert sample['stop_reason']['unclassified'] == 0
@@ -197,7 +205,7 @@ def main():
         assert sample['legacy']['combiner'] == sample['batches']
         assert sample['legacy']['jit_success'] == sample['jit_completed']
         transfer = values['TRANSFER']
-        assert transfer['schema'] == 4 and transfer['batches'] == transfer['attempts'] == 1
+        assert transfer['schema'] == 5 and transfer['batches'] == transfer['attempts'] == 1
         assert transfer['owner_transfers'] == transfer['stop_reason']['owner_transfer'] == 1
         assert transfer['jit_completed'] == transfer['native_completed'] == transfer['execution_refusals'] == 0
         assert transfer['completed_hist'] == [1] + [0] * 15
@@ -253,12 +261,14 @@ int main(void)
     KD_MUTEX_PIN_END(poison());
     KD_MUTEX_PIN_STOP(poison(), poison());
     KD_MUTEX_PIN_DRAIN(poison(), poison());
+    KD_MUTEX_PIN_EPOCH_RESULT(poison(), poison());
     if (!KD_MUTEX_PIN_CONDITION(poison(), calls == 1, poison())) return 2;
     KD_MUTEX_PIN_ASSERT(poison(), 1);
     KD_MUTEX_PIN_WAIT_ENTER();
     KD_MUTEX_PIN_BUDGET_EXPIRED();
     KD_MUTEX_PIN_EXPIRY_CHECK();
     KD_MUTEX_PIN_WITHDRAW();
+    KD_MUTEX_PIN_WITHDRAW_RESERVED();
     KD_MUTEX_PIN_FORCED_CANCEL();
     KD_MUTEX_PIN_INITIAL_FINISH(poison());
     if (KD_MUTEX_PIN_DIAG_INIT()) return 3;

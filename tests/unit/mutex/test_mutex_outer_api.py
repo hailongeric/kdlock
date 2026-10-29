@@ -15,8 +15,8 @@ from test_jit_diagnostics import ROOT, render
 def check_variant(general_unlock, header_root):
     source = (header_root/'include/kd_mutex_direct.h').read_text()
     header = re.sub(r'^#include .*$', '', source, flags=re.M)
-    gate_state = next(line for line in (header_root/'include/kd_mutex.h').read_text().splitlines()
-                      if line.startswith('#define KD_MUTEX_GATE_COMBINER '))
+    gate_state = '\n'.join(line for line in (header_root/'include/kd_mutex.h').read_text().splitlines()
+                      if line.startswith('#define KD_MUTEX_GATE_'))
     header = gate_state + '\n' + header
     with tempfile.TemporaryDirectory(prefix='kd-mutex-outer-') as directory:
         path = Path(directory)

@@ -72,6 +72,8 @@ static int fixture_cmpxchg(atomic_t *state, int old, int value)
  return expected;
 }
 #define atomic_cmpxchg(p,o,v) fixture_cmpxchg(p,o,v)
+#define atomic_cmpxchg_release(p,o,v) fixture_cmpxchg(p,o,v)
+#define atomic_fetch_andnot_release(v,p) (++rmw_calls, __atomic_fetch_and(&(p)->counter, ~(u32)(v), __ATOMIC_SEQ_CST))
 #define atomic_set_release(p,v) do { atomic_set(p,v); after_cas(p,v); } while (0)
 #define atomic_fetch_add(v,p) (++rmw_calls, __atomic_fetch_add(&(p)->counter, (v), __ATOMIC_SEQ_CST))
 #define atomic_fetch_sub(v,p) (++rmw_calls, __atomic_fetch_sub(&(p)->counter, (v), __ATOMIC_SEQ_CST))
@@ -88,9 +90,13 @@ static void before_cas(atomic_t *state)
 {
  if (!cas_interleave)
   return;
- CHECK(state == &gate.delegation_state && cas_interleave == 3);
+ CHECK(state == &gate.delegation_state);
+ unsigned int action = cas_interleave;
  cas_interleave = 0;
- kd_mutex_gate_set(&gate, KD_MUTEX_GATE_HELD);
+ if (action == 3) kd_mutex_gate_set(&gate, KD_MUTEX_GATE_HELD);
+ else if (action == 4 || action == 6) CHECK(kd_mutex_gate_try_withdraw(&gate));
+ else if (action == 5) CHECK(kd_mutex_gate_try_combine(&gate));
+ else CHECK(false);
 }
 static void after_cas(atomic_t *state, u32 value)
 {
@@ -156,10 +162,15 @@ static void expect_guard(unsigned int kind)
  if (!setjmp(bug_target)) {
   if (kind == 0) kd_mutex_count_enter(&gate, &record);
   else if (kind == 1) kd_mutex_count_exit(&gate, &record);
-  else kd_mutex_gate_set(&gate, KD_MUTEX_GATE_RELEASING + 1);
+  else kd_mutex_gate_set(&gate, kind == 2 ? KD_MUTEX_GATE_RELEASING + 1 : KD_MUTEX_GATE_COMBINER);
   CHECK(false);
  }
  expected_bug = false;
+}
+static void set_test_phase(u32 phase)
+{
+ kd_mutex_gate_set(&gate, phase == KD_MUTEX_GATE_COMBINER ? KD_MUTEX_GATE_HELD : phase);
+ if (phase == KD_MUTEX_GATE_COMBINER) CHECK(kd_mutex_gate_try_combine(&gate));
 }
 static void check_layout_and_boundaries(void)
 {
@@ -172,7 +183,7 @@ static void check_layout_and_boundaries(void)
  CHECK(offsetof(struct kd_mutex_node, completed) == 304 && offsetof(struct kd_mutex_node, locked) == 305);
  for (u32 phase = 0; phase <= KD_MUTEX_GATE_RELEASING; phase++) {
   reset();
-  kd_mutex_gate_set(&gate, phase);
+  set_test_phase(phase);
   unsigned long before_enter = rmw_calls;
   kd_mutex_count_enter(&gate, &record);
   CHECK(rmw_calls == before_enter);
@@ -183,12 +194,12 @@ static void check_layout_and_boundaries(void)
   CHECK(rmw_calls == before); /* Observations and records need no shared RMW. */
   CHECK(kd_mutex_gate_trylock(&gate) == (phase == KD_MUTEX_GATE_FREE));
   CHECK(kd_mutex_gate_read(&gate) == (phase == KD_MUTEX_GATE_FREE ? KD_MUTEX_GATE_ACQUIRING : phase));
+  set_test_phase(KD_MUTEX_GATE_COMBINER);
   before = rmw_calls;
-  kd_mutex_gate_set(&gate, KD_MUTEX_GATE_COMBINER);
   CHECK(record.counted_lock == &gate);
   kd_mutex_count_exit(&gate, &record);
   CHECK(kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_COMBINER && !record.counted_lock && record.count_seq == 4);
-  CHECK(rmw_calls == before); /* Busy phase transitions are owner stores. */
+  CHECK(rmw_calls == before); /* Exact record updates still have no gate RMW. */
  }
  reset(); record.count_seq = U64_MAX - 1; expect_guard(0);
  CHECK(record.count_seq == U64_MAX - 1 && !record.counted_lock);
@@ -201,6 +212,7 @@ static void check_layout_and_boundaries(void)
  record.counted_lock = &different; expect_guard(1);
  CHECK(record.counted_lock == &different && record.count_seq == 2);
  reset(); unsigned long before = rmw_calls; expect_guard(2); CHECK(rmw_calls == before);
+ reset(); before = rmw_calls; expect_guard(3); CHECK(rmw_calls == before);
  /* Reuse is the same permanent slot, with a monotonically advancing version. */
  reset();
  for (u64 generation = 0; generation < 1000; generation++) {
@@ -218,12 +230,49 @@ static void check_cas_interleavings(void)
  reset(); CHECK(kd_mutex_gate_trylock(&gate));
  CHECK(!kd_mutex_gate_trylock(&gate) && kd_mutex_gate_read(&gate) == KD_MUTEX_GATE_ACQUIRING);
 }
+static void check_epoch_withdrawal(void)
+{
+ /* Exercise the actual full-word admission CAS with each possible winner. */
+ reset(); kd_mutex_gate_set(&gate,KD_MUTEX_GATE_HELD); cas_interleave=4;
+ CHECK(!kd_mutex_gate_try_combine(&gate));
+ CHECK((u32)atomic_read(&gate.delegation_state)==(KD_MUTEX_GATE_HELD|KD_MUTEX_GATE_WITHDRAW));
+ kd_mutex_gate_end_withdraw(&gate);
+ CHECK(kd_mutex_gate_try_combine(&gate));
+ CHECK(!kd_mutex_gate_try_withdraw(&gate));
+ reset(); kd_mutex_gate_set(&gate,KD_MUTEX_GATE_HELD); cas_interleave=5;
+ CHECK(!kd_mutex_gate_try_withdraw(&gate));
+ CHECK((u32)atomic_read(&gate.delegation_state)==KD_MUTEX_GATE_COMBINER);
+ /* A concurrent withdrawal cannot be erased by an owner phase transition. */
+ reset(); kd_mutex_gate_set(&gate,KD_MUTEX_GATE_HELD); cas_interleave=6;
+ kd_mutex_gate_set(&gate,KD_MUTEX_GATE_RELEASING);
+ CHECK((u32)atomic_read(&gate.delegation_state)==(KD_MUTEX_GATE_RELEASING|KD_MUTEX_GATE_WITHDRAW));
+ kd_mutex_gate_set(&gate,KD_MUTEX_GATE_FREE);
+ CHECK(kd_mutex_gate_read(&gate)==KD_MUTEX_GATE_FREE);
+ CHECK((u32)atomic_read(&gate.delegation_state)==KD_MUTEX_GATE_WITHDRAW);
+ CHECK(!kd_mutex_gate_trylock(&gate) && !kd_mutex_gate_try_combine(&gate));
+ kd_mutex_gate_end_withdraw(&gate);
+ CHECK(!atomic_read(&gate.delegation_state) && kd_mutex_gate_trylock(&gate));
+ for(u32 phase=0;phase<=KD_MUTEX_GATE_RELEASING;phase++) {
+  if(phase==KD_MUTEX_GATE_COMBINER)continue;
+  reset();kd_mutex_gate_set(&gate,phase);
+  CHECK(kd_mutex_gate_try_withdraw(&gate));
+  CHECK(!kd_mutex_gate_try_withdraw(&gate) && !kd_mutex_gate_try_combine(&gate));
+  for(u32 next=0;next<=KD_MUTEX_GATE_RELEASING;next++) {
+   if(next==KD_MUTEX_GATE_COMBINER)continue;
+   kd_mutex_gate_set(&gate,next);
+   CHECK(kd_mutex_gate_read(&gate)==next);
+   CHECK((u32)atomic_read(&gate.delegation_state)==(next|KD_MUTEX_GATE_WITHDRAW));
+  }
+  kd_mutex_gate_end_withdraw(&gate);
+  CHECK((u32)atomic_read(&gate.delegation_state)==KD_MUTEX_GATE_RELEASING);
+ }
+}
 static void check_current_owner(void)
 {
  reset();
  CHECK(!kd_mutex_delegation_owned(NULL, current) && !kd_mutex_combiner_active(NULL));
  for (u32 phase = 0; phase <= KD_MUTEX_GATE_RELEASING; phase++) {
-  kd_mutex_gate_set(&gate, phase);
+  set_test_phase(phase);
   bool owns = phase == KD_MUTEX_GATE_HELD || phase == KD_MUTEX_GATE_COMBINER;
   atomic_long_set(&gate.owner, current);
   CHECK(kd_mutex_delegation_owned(&gate, current) == owns);
@@ -277,6 +326,7 @@ int main(void)
 {
  check_layout_and_boundaries();
  check_cas_interleavings();
+ check_epoch_withdrawal();
  check_current_owner();
  check_object_independence();
  puts("PASS embedded mutex state: 32 bytes/8 alignment; versioned node records, owner phases, PICKUP, release handoff, 131072 independent roots");

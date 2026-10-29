@@ -287,10 +287,14 @@ events are failures, not zero measurements.
 The `batch` mode retains `KDLOCK_MUTEX_DIAGNOSTICS=1`; ordinary builds and
 the two perf modes use mode 0. Quiescent snapshots after warmup and
 after joined measurement produce deltas for batch lengths, exit reasons,
-deferred requests and local/remote JIT service. Current schema 4 distinguishes
+deferred requests and local/remote JIT service. Current schema 5 uses
+`body_unavailable` for a request that cannot enter a body,
+including initial eligibility refusal and proxy-epoch admission refusal. A failed
+epoch admission adds no execution attempt or synthetic result. It also retains
 `delayed_tail`: an ordinary proxy round ended before cold cleanup waited for a
-late successor link. Historical schemas 2 and 3 remain readable with their
-original fields; unavailable historical reasons are not measured zeros. Schema 4
+late successor link. Historical schemas 2, 3 and 4 remain readable with their
+original fields (including `initial_unexecutable`); unavailable historical reasons
+are not measured zeros. Schema 5
 retains the 384-byte static record by deriving the invalid/unclassified count
 from batches minus classified exits; overflow or inconsistent live reads produce
 a nonzero sentinel that the quiescent validator rejects. Histogram bin zero
@@ -309,18 +313,25 @@ storage. The original static-counter candidate failed reserved-chunk allocation
 at 7984 bytes before provider initialization; that is a preparation failure, not
 a measured workload. This READY candidate requires fresh VM validation.
 The runner reads `mutex_pin_stats` after warmup and after the joined measurement,
-saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 2
+saving `pin-before.json`, `pin-after.json` and `pin-delta.json`. Current schema 3
 binds compiled mode 2, an eight-claim window, both mutex policy limits and
 `initial_spin_budget` (default 65536 PAUSE iterations). The profiler accepts an
 explicit `--mutex-spin-budget` and verifies matching module metadata. Keep each
 threshold and source version separate. `c01` is the one-cacheline throughput
 profile; `c16` is the sixteen-cacheline locality profile.
 
-Executor counters record selections, successful READY-to-CLAIMED claims,
+Executor counters record selections, successful exact READY claim admissions,
 retired and cancelled claims, drains and FULL resume calls. Nine-bin histograms
 record exact cohort occupancy `0..8` before and after each selection. Refill-stop
-reasons include current/future readiness and deferred-prefix boundaries. Claim
-admission is one CAS and the ordinary proxy round has no ACK polling loop.
+reasons include current/future readiness and deferred-prefix boundaries. Epoch
+admission attempts and refusals are counted once per gate attempt. Inside an
+admitted epoch, READY is read and CLAIMED is stored while withdrawal is excluded;
+`claims` counts descriptors, not per-node CAS operations. The ordinary proxy
+round has no ACK polling loop. Successful origin withdrawal reservations are
+accumulated locally and merged with the origin phase; a reservation can end
+without withdrawal if a result arrived first. The three schema-3 counters grow
+only the dynamically allocated mode-2 record from 384 to 408 bytes per CPU
+(bounded at 416); mode 1 remains a 384-byte static record.
 `full_resumes` counts calls to `kd_exe_mutex_batch_resume`, including checked
 pre-entry refusals; it does not assert that a FULL service or body returned.
 
@@ -344,8 +355,9 @@ ownership/ACK checks and source/frame retirement remain required.
 
 Historical schema 1 REQUEST/ACK records remain readable offline with their
 original seventeen counters, four-request window, five-bin histograms and
-optional TSC sample shift. They cannot be mixed with schema 2 or relabelled as
-READY claims. The current protocol has no ACK timing samples: `--pin-tsc` and a
+optional TSC sample shift. Historical schema 2 retains its per-node CAS READY
+claims and original fields. Neither historical schema can be mixed with current
+schema 3; absent epoch observations are unavailable rather than zero. The current protocol has no ACK timing samples: `--pin-tsc` and a
 nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` are explicitly rejected.
 
 Both perf collection and compiled counters perturb execution. Keep their rates

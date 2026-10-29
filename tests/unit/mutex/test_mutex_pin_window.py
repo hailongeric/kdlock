@@ -22,7 +22,7 @@ def main():
         r"^#define KD_MUTEX_(?:WAIT|PROXY_READY|PROXY_CLAIMED|QUEUE_INIT|PIN_WINDOW|CUSTODY_LOCKS) \d+$",
         header, re.M))
     assert len(constants.splitlines()) == 6
-    types = constants + "\n"
+    types = constants + "\n" + "\n".join(line for line in header.splitlines() if line.startswith("#define KD_MUTEX_GATE_")) + "\n"
     types += definition(read_source(ROOT / "include/kd_mutex_types.h"),
                         "struct kd_mutex {") + ";\n"
     for marker in ("enum kd_mutex_custody_phase {", "struct kd_mutex_custody {",
@@ -36,12 +36,15 @@ def main():
     types += definition(source, "struct kd_mutex_batch {") + ";\n"
     code = "#define MODULE_INFO(...)\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_origin.inc")) + "\n" + without_includes(read_source(ROOT / "kernel_module/mutex/pin_diag.inc")) + "\n"
     for marker in (
-        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex_node *node)",
+        "static __always_inline bool kd_mutex_proxy_request(struct kd_mutex *lock,",
         "static __always_inline void kd_mutex_proxy_assert_claimed(struct kd_mutex_node *node)",
     ):
         code += definition(source, marker) + "\n"
     window = read_source(ROOT / "kernel_module/mutex/pin_window.inc")
     code += window
+    for marker in ("static bool kd_mutex_batch_epoch_begin(struct kd_mutex_batch *batch)",
+                   "static void kd_mutex_batch_epoch_end(struct kd_mutex_batch *batch, bool keep_current)"):
+        code += definition(source, marker) + "\n"
     unpin = definition(window,
         "static void kd_mutex_batch_unpin(struct kd_mutex_batch *batch, bool keep_current)")
     remove_before_wait = (
@@ -96,6 +99,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kd-pin-window-") as directory:
         path = Path(directory)
         (path / "pin_window_types.h").write_text(types)
+        (path / "mutex_state_production.h").write_text(without_includes(read_source(ROOT / "include/kd_mutex_state.h")))
         for name, mutation in [("production", None), *mutations.items()]:
             candidate, scenario, expected = code, "", 0
             if mutation:

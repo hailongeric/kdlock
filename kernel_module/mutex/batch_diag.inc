@@ -29,7 +29,7 @@ MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
 #endif
 #define KD_MUTEX_DIAG_REASONS(X) \
 	X(UNCLASSIFIED, unclassified) \
-	X(INITIAL_UNEXECUTABLE, initial_unexecutable) \
+	X(BODY_UNAVAILABLE, body_unavailable) \
 	X(SOURCE_REFUSAL, source_refusal) \
 	X(NUMA_BOUNDARY, numa_boundary) \
 	X(NUMA_TAIL, numa_tail) \
@@ -226,7 +226,7 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 		(u64)-1 : total.batches - classified;
 #define KD_MUTEX_DIAG_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_DIAG_PRINT("{\"schema\":4,\"compiled\":1,\"total_cap\":%u,"
+	KD_MUTEX_DIAG_PRINT("{\"schema\":5,\"compiled\":1,\"total_cap\":%u,"
 		"\"numa_boundary\":%u,\"deferred_handoff\":8,\"scan_budget\":64,"
 		"\"completed_hist_bins\":%u,\"deferred_peak_hist_bins\":%u,",
 		kd_mutex_batch_size, (unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY,

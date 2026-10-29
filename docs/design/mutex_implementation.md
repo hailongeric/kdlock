@@ -1,7 +1,7 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 The maintained baseline retains KD-only physical ownership and pinned published
-delegation waiters. This branch carries the long-spin READY candidate
+delegation waiters. This branch carries the proxy-epoch candidate
 below; its VM correctness and performance gates are pending. New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. The total cap and NUMA
@@ -197,16 +197,25 @@ outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
 
-### Long-spin READY candidate (October 29)
+### Long-spin proxy-epoch candidate (October 29)
 
 This isolated implementation starts from
-`4a46795e3f052282a5a0593f4cb85cf8e5901a05`. The latest user direction supersedes
-immediate preemptible queue publication: spend a long initial interval spinning
-pinned, check scheduling only after its budget expires, and admit a larger ready
-cohort without polling origin responses inside ordinary proxy execution. More
-than 99% finishing that initial interval and no nano regression are measurement
-targets. Neither follows from choosing a large threshold. VM correctness,
-context restoration, emitted-code and performance validation remain pending.
+`406c679bd70c1589754c5083039b95051aba297a`. Its predecessor's runtime
+`43418d5a3c8659311b0d008310f70e78f245eeee` passed the scoped live cases, and
+unscored 20/36-worker observations put every recorded delegation wait episode
+within the initial budget. Those observations did not meet the performance gate:
+the ordinary c01 twenty-worker point was about 2.759 Mops/s, versus 4.590029 for
+`1c86d6d1` and 3.324957 for the circular-window candidate. These are separate
+single-round source versions, not proof of a cause or of general performance.
+
+This follow-up amortizes exclusion of origin withdrawal across a proxy epoch.
+It retains the initial READY publication CAS, rolling-eight descriptors,
+duplicate-CPU checks and workload shells so the admission change remains scoped.
+The user direction still calls for a long initial pinned interval, scheduling
+checks after its budget and no origin-response waits in normal proxy execution.
+More than 99% within-budget completion and no nano regression remain measurement
+targets. VM correctness, context restoration, emitted-code and performance gates
+for this follow-up are pending.
 
 The finite initial budget is `KDLOCK_MUTEX_SPIN_BUDGET`, default 65,536 PAUSE
 iterations. A small build override supports forced expiry tests; it is not a
@@ -220,17 +229,21 @@ that independent membership or add a parked-producer sleep/wake protocol.
 | --- | --- |
 | `KD_MUTEX_QUEUE_INIT` | Initialized, published but not proxy-ready; a private head may schedule only after leaving this state for WAIT. |
 | `KD_MUTEX_PROXY_READY` | Origin is preemption-disabled and its packet, original stack and GS state are quiescent for proxy access. |
-| `KD_MUTEX_PROXY_CLAIMED` | Executor won the single READY-to-CLAIMED CAS; origin cannot drop its pin or change this state. |
+| `KD_MUTEX_PROXY_CLAIMED` | The admitted physical owner claimed this READY invocation inside its proxy epoch; origin cannot drop its pin or change this state. |
 | `KD_MUTEX_WAIT` | Withdrawn/unready; no READY rearm in this candidate. The migration pin and reserved node remain live. |
 | `0` | Exact completed/native/head result; the origin returns with its expected one preemption pin. |
 
 After queue/count/link publication finishes on the reserved shadow stack,
 `kd_mutex_wait_for_result()` CASes INIT to READY once. Expiry checks
 `need_resched()` only after the initial budget reaches zero. If scheduling is
-needed, its READY-to-WAIT CAS competes with the executor's READY-to-CLAIMED CAS.
-Only a successful withdrawal permits preemption enable. A claim winner keeps
-the origin pinned through completion or explicit cancellation. A spent budget
-never resets, and losing withdrawal to result zero cannot overwrite that result.
+needed, it attempts to reserve `KD_MUTEX_GATE_WITHDRAW` in the existing full-word
+`delegation_state`. A COMBINER phase or another withdrawal makes that attempt
+fail without waiting. After obtaining the bit, it CASes its own READY to WAIT,
+then release-clears the bit before any preemption enable. A concurrent result
+zero or existing CLAIMED state cannot be overwritten. The reservation protects
+that short transition; it does not authorize physical lock ownership. A claimed
+origin keeps its pin through completion or explicit cancellation. A spent budget
+never resets.
 A withdrawn origin remains runnable and preemptible, polling with the existing
 `cond_resched()` path until native head/result handoff. This is scheduling, not
 parking. No kernel wait-list or wake protocol was added.
@@ -238,22 +251,36 @@ parking. No kernel wait-list or wake protocol was added.
 [`pin_window.inc`](../../kernel_module/mutex/pin_window.inc) retains up to eight
 exact `{node, count_seq}` descriptors on the combiner stack. It rolls forward
 continuously, admitting current plus up to seven consecutive linked ABI2 MINIMAL
-requests with the same entry and NUMA locality. Admission performs one nonblocking
-READY-to-CLAIMED CAS. An unavailable future limits refill; an unavailable current
-uses unstarted native handoff. It never waits to fill eight slots. Current's exact
-CLAIMED/lock/generation checks remain; no ACK loop or origin response is needed.
+requests with the same entry and NUMA locality. The exact physical owner opens
+an epoch with one full-word HELD-to-COMBINER CAS, which cannot succeed while
+WITHDRAW is reserved. Failure skips proxy work and hands the unstarted queue head
+to its native path while preserving physical ownership and the reservation.
+For an admitted epoch, a READY acquire-load followed by a CLAIMED release-store
+needs no per-request RMW: origin withdrawal is excluded, and only this owner
+writes queue results. The private `batch.proxy_epoch`, actual physical owner,
+gate phase and exact node/generation are checked before claims. An unavailable
+future limits refill; an unavailable current uses unstarted native handoff.
+Neither path waits to fill eight slots or polls an origin ACK.
 Distinct CPU, same-CPU predecessor, remaining total/local cap and deferred-prefix
 rules stay in force. Eight bounds claimed descriptors, not the number of origins
 still pinned during their initial grace periods. Mutex/node sizes remain 32/320
 bytes; the four reserved slots per CPU are independent of this cohort limit.
+
+The gate phase occupies its existing low three bits and WITHDRAW uses bit 3.
+Every concurrent phase update uses full-word atomics and preserves WITHDRAW;
+FREE-to-ACQUIRING rejects FREE|WITHDRAW. Quiescent initialization alone may reset
+the entire word. The exact idle query still requires raw zero. Withdrawal release
+uses `atomic_fetch_andnot_release`, whose full-word release semantics were checked
+against the authenticated Linux 7 target source. No byte-sized or overlapping
+atomic gate accesses, extra mutex fields or global lock are introduced.
 
 Terminal ABI2 delegation is retained. Ordinary completion tries queue retirement
 without waiting: use the known/acquire-loaded successor, or try the exact terminal
 tail CAS once. If a racing publisher owns a missing link, the completed body ends
 the execution loop immediately. Cold post-loop cleanup retains its CLAIMED
 descriptor, completed packet (COMPLETE or FULL), reserved node, physical owner
-and batch source lease
-until that link arrives. It then retires publication, removes the descriptor and
+and batch source lease until that link arrives. It closes the proxy epoch before
+cold link polling, so unrelated READY origins can withdraw. It then retires publication, removes the descriptor and
 publishes the one completion wake before handing off the retained successor. It
 never cancels the executed current to WAIT, replays its body, or wakes a node with
 an outstanding publisher. The two-party role-exchange path can still proxy C as
@@ -261,9 +288,16 @@ a terminal request. The total and locality limits remain 1024/1024; deferred
 handoff rules stay unchanged. Exceptional/native ownership and link retirement
 can still wait outside ordinary ready-body execution.
 
-Before FULL dispatcher entry, generic service, native handoff, early outer
-release or role exchange, remove future exact descriptors and release-store
-WAIT. The origin cannot withdraw CLAIMED concurrently and never rearms WAIT, so
+Before FULL dispatcher entry, generic service, cold registration, native handoff,
+early outer release or role exchange, remove future exact descriptors and
+release-store WAIT. Clear the private epoch, then publish HELD with a full-word
+phase update before any sleepable service or native notification. Current stays
+CLAIMED; every other READY origin can now reserve withdrawal. Keeping COMBINER
+through such a service would be unsafe: an unselected origin could pin the CPU
+of a task whose nested mutex the executor needs. The epoch must close even when
+the selected descriptor window is empty. A later body requires one new admission
+attempt; failure hands the saved queue head off without inventing a body attempt.
+The origin cannot withdraw CLAIMED concurrently and never rearms WAIT, so
 cancellation requires no response ACK. The existing code does not wait for the
 origin's actual `preempt_enable()` instruction; publication tells it to unpin.
 Current remains CLAIMED through its real frame retirement or native publication.
@@ -273,8 +307,11 @@ image leases and trusted-source policy remain unchanged.
 
 Role exchange republishes C as INIT while its old frame is live. After real
 custody pickup, old-frame retirement and old batch source release, C publishes
-READY before releasing W's separate `custody.ready` barrier. Thus W cannot use C
-as an origin while C still owns that old frame. If future cancellation reaches C
+READY before releasing W's separate `custody.ready` barrier. W receives HELD,
+so its native suffix does not block unrelated READY withdrawal. At logical unlock,
+W must obtain a fresh epoch before combining; failed admission releases A and
+wakes the native head. Thus W cannot use C as an origin while C still owns that
+old frame. If future cancellation reaches C
 before its wait-loop entry, the separate INIT/WAIT states prevent resurrection.
 C may still be proxied as the sole terminal request; a delayed successor only
 ends that execution round after its body completes. FULL recovery preserves the
@@ -282,13 +319,18 @@ existing native/control semantics and is not a translation admission rejection.
 
 ### Optional READY diagnostics and prior experiments
 
-Mode 0 compiles observations out. Mode 1 emits batch schema 4, adding the
-explicit `delayed_tail` cold boundary; historical schemas 2 and 3 remain distinct.
+Mode 0 compiles observations out. Mode 1 emits batch schema 5: `body_unavailable`
+covers a pre-body admission refusal or initially unsupported body. It does not
+fabricate an attempted body or result; historical schemas 2, 3 and 4 retain their
+original `initial_unexecutable` meaning. The explicit `delayed_tail` cold boundary
+remains.
 Its record remains 384 bytes by deriving `unclassified` from finished batches
 minus the sum of all stored classified exit bins at the quiescent getter. A
 missing classification stays visible as a nonzero gap; excess classifications
 or arithmetic overflow produce a nonzero failure sentinel. Mode 1 loadability
-remains a separate VM check. Optional mode 2 now emits schema 2 with window eight, the initial spin budget, ready claims,
+remains a separate VM check. Optional mode 2 now emits schema 3 with window eight,
+the initial spin budget, epoch admission attempts/refusals, withdrawal reservations,
+ready claims,
 retired/cancelled claims, refill stop reasons, occupancy and FULL/drain counts.
 Origin observations merge once per actual delegation wait episode: retained or
 dropped initial pin, completion within budget, budget expiry, scheduling checks,
@@ -297,8 +339,11 @@ wait_episodes` measures the within-budget fraction; retained-pin fraction can
 also include post-budget completion and must be reported separately. Uncontended
 acquisitions are not in either denominator. Claims are not returned JIT bodies.
 
-The diagnostic storage remains dynamically preallocated per CPU and freed after
-exact drain, serialized with parameter reads. The earlier static 7984-byte
+Mode 2 storage remains dynamically preallocated per CPU and freed after exact
+drain, serialized with parameter reads. Its record grows from 384 to 408 bytes
+under an explicit 416-byte bound; this does not enlarge the module loader's
+reserved static per-CPU chunk or mode 1's 384-byte record. Historical mode 2
+schema 2 describes per-request CAS admission and remains separately readable. The earlier static 7984-byte
 per-CPU allocation failure remains a preparation failure; ordinary storage was
 7600 bytes. Schema 1 REQUEST/ACK/TSC records retain their historical meaning.
 Nonzero `KDLOCK_MUTEX_PIN_TSC_SHIFT` is refused here because READY claims have no
@@ -360,7 +405,8 @@ kd_mutex_lock(A):
             if there is a predecessor:
                 publish predecessor.next, then INIT->READY while pinned/quiescent
                 spin for the initial budget; only then check scheduling
-                claim races withdrawal; withdrawn waiters never rearm READY
+                withdrawal reserves the gate bit, then CASes READY to WAIT
+                clear that reservation before unpinning; never rearm READY
                 poll node.locked with acquire ordering; return with one pin
                 if native_resume:
                     retire counted interval; preserve FULL before node reuse
@@ -392,9 +438,11 @@ started. A reduced packet is not permission to infer missing register values.
 ```text
 service_one_queued_request(node):
     require the exact physical owner and a retained source lease
+    admit one proxy epoch with HELD->COMBINER CAS, or hand off without waiting
     if node has no linked successor and is not ABI2 MINIMAL:
         leave it uncompleted for the next queue head
-    claim READY with one CAS, or leave unstarted for native head handoff
+    inside that epoch, acquire-read READY and release-store CLAIMED
+    if unavailable, leave unstarted for native head handoff
     bind a checked frame, its lock ledger and an immutable image
     if pre-body admission refuses:
         leave the original request uncompleted for handoff
@@ -402,17 +450,19 @@ service_one_queued_request(node):
     if the batch wrapper returns COMPLETE:
         retire completed body state; try queue retirement without waiting
         if a racing publisher owns the missing terminal link:
-            end the ordinary loop; retain claim/node/source in cold cleanup
-            finish link retirement without replaying or cancelling this body
+            end the ordinary loop and proxy epoch; retain claim/node/source
+            finish cold link retirement without replaying or cancelling this body
         set completed; release-store node.locked = 0
     else if the wrapper reports ENTRY_REFUSED:
         validate the pristine MINIMAL state and absence of body progress
         leave the unchanged request uncompleted for handoff
     else:
+        cancel future claims and reopen withdrawal by closing the proxy epoch
         dispatch the FULL return once, without rerunning the first body
         if it reaches the matching unlock:
             complete/retire frame; retire links
             set completed; release-store node.locked = 0
+            require fresh epoch admission before claiming any subsequent request
         else if it has a validated native continuation:
             detach borrowed packet storage; preserve FULL for the waiter
             retire every link that an enqueuer could still write

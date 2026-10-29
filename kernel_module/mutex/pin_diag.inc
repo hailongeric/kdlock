@@ -4,7 +4,8 @@
  * Counts never authorize acquisition, stack access, cancellation or retirement.
  * Merge executor totals at finished-batch boundaries and origin totals once at
  * the end of the initial pinned phase. Read only quiescent deltas.
- * Schema 2 describes READY claims; schema 1 REQUEST/ACK records are historical. */
+ * Schema 3 describes epoch-protected READY claims; schemas 1 (REQUEST/ACK)
+ * and 2 (per-node CAS) remain distinct historical records. */
 #ifndef KDLOCK_MUTEX_PIN_TSC_SHIFT
 #define KDLOCK_MUTEX_PIN_TSC_SHIFT 0
 #endif
@@ -35,11 +36,12 @@ enum kd_mutex_pin_reason {
 };
 #define KD_MUTEX_PIN_EXECUTOR_COUNTERS(X) \
 	X(batches) X(selections) X(claims) X(retired_claims) X(cancelled_claims) \
-	X(drain_calls) X(drain_nonempty) X(drain_keep_current) X(full_resumes)
+	X(drain_calls) X(drain_nonempty) X(drain_keep_current) X(full_resumes) \
+	X(epoch_admission_attempts) X(epoch_admission_refusals)
 #define KD_MUTEX_PIN_ORIGIN_COUNTERS(X) \
 	X(wait_episodes) X(initial_pin_retained) X(initial_pin_dropped) \
 	X(initial_budget_completed) X(budget_expired_episodes) X(expiry_checks) \
-	X(withdrawals) X(forced_cancellations)
+	X(withdrawals) X(forced_cancellations) X(withdrawal_reservations)
 #define KD_MUTEX_PIN_COUNTERS(X) \
 	KD_MUTEX_PIN_EXECUTOR_COUNTERS(X) \
 	KD_MUTEX_PIN_ORIGIN_COUNTERS(X)
@@ -55,7 +57,9 @@ struct kd_mutex_pin_diag {
 struct kd_mutex_pin_cpu {
 	struct kd_mutex_pin_diag totals;
 };
-_Static_assert(sizeof(struct kd_mutex_pin_cpu) <= 384,
+/* Schema 3 adds three u64 observations: 408 dynamic bytes per CPU. This
+ * allocation does not enlarge mode 1's 384-byte static per-CPU record. */
+_Static_assert(sizeof(struct kd_mutex_pin_cpu) <= 416,
 	       "mutex pin observations exceed the bounded per-CPU footprint");
 static struct kd_mutex_pin_cpu __percpu *kd_mutex_pin_cpus;
 /* These are dynamic per-CPU address operands, not physical per_cpu_ptr results.
@@ -103,7 +107,7 @@ static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,
 				       bool retained)
 {
 	/* The origin is still pinned at this merge. No per-poll shared writes,
-	 * timestamps, or observational checks participate in the state CAS. */
+	 * timestamps, or observational checks participate in gate/state decisions. */
 	this_cpu_inc(kd_mutex_pin_totals.wait_episodes);
 	this_cpu_add(kd_mutex_pin_totals.initial_pin_retained, retained);
 	this_cpu_add(kd_mutex_pin_totals.initial_pin_dropped, !retained);
@@ -113,6 +117,7 @@ static void kd_mutex_pin_origin_finish(const struct kd_mutex_pin_origin *origin,
 	this_cpu_add(kd_mutex_pin_totals.expiry_checks, origin->expiry_checks);
 	this_cpu_add(kd_mutex_pin_totals.withdrawals, origin->withdrawn);
 	this_cpu_add(kd_mutex_pin_totals.forced_cancellations, origin->forced_cancel);
+	this_cpu_add(kd_mutex_pin_totals.withdrawal_reservations, origin->withdrawal_reservations);
 }
 
 static __always_inline bool
@@ -166,7 +171,7 @@ static int kd_mutex_pin_stats_get(char *buffer, const struct kernel_param *kp)
 	}
 #define KD_MUTEX_PIN_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_PIN_PRINT("{\"schema\":2,\"compiled\":2,\"window\":%u,\"total_cap\":%u,"
+	KD_MUTEX_PIN_PRINT("{\"schema\":3,\"compiled\":2,\"window\":%u,\"total_cap\":%u,"
 		"\"numa_boundary\":%u,\"initial_spin_budget\":%u,",
 		(unsigned int)KD_MUTEX_PIN_WINDOW, (unsigned int)kd_mutex_batch_size,
 		(unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY, (unsigned int)KDLOCK_MUTEX_SPIN_BUDGET);
@@ -194,12 +199,16 @@ static const struct kernel_param_ops kd_mutex_pin_stats_ops = {
 	.get = kd_mutex_pin_stats_get,
 };
 module_param_cb(mutex_pin_stats, &kd_mutex_pin_stats_ops, NULL, 0444);
-MODULE_PARM_DESC(mutex_pin_stats, "READY claim and initial spin observations; schema 2, quiescent deltas only");
+MODULE_PARM_DESC(mutex_pin_stats, "Epoch READY claim and initial spin observations; schema 3, quiescent deltas only");
 #undef KD_MUTEX_DIAG_MEMBER
 #define KD_MUTEX_DIAG_MEMBER struct kd_mutex_pin_diag diag;
 #undef KD_MUTEX_DIAG_FINISH
 #define KD_MUTEX_DIAG_FINISH(batch) kd_mutex_pin_diag_finish(&(batch)->diag)
 #define KD_MUTEX_PIN_INC(batch, name) ((batch)->diag.name++)
+#define KD_MUTEX_PIN_EPOCH_RESULT(batch, accepted) do { \
+	(batch)->diag.epoch_admission_attempts++; \
+	(batch)->diag.epoch_admission_refusals += !(accepted); \
+} while (0)
 #define KD_MUTEX_PIN_BEGIN(batch) do { \
 	BUG_ON((batch)->nr_pins > KD_MUTEX_PIN_WINDOW); \
 	(batch)->diag.selections++; \
@@ -225,6 +234,7 @@ MODULE_PARM_DESC(mutex_pin_stats, "READY claim and initial spin observations; sc
 #define KD_MUTEX_PIN_DIAG_INIT() (0)
 #define KD_MUTEX_PIN_DIAG_EXIT() do { } while (0)
 #define KD_MUTEX_PIN_INC(batch, name) do { } while (0)
+#define KD_MUTEX_PIN_EPOCH_RESULT(batch, accepted) do { } while (0)
 #define KD_MUTEX_PIN_BEGIN(batch) do { } while (0)
 #define KD_MUTEX_PIN_END(batch) do { } while (0)
 #define KD_MUTEX_PIN_STOP(batch, why) do { } while (0)

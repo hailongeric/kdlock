@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+typedef uint32_t u32;
 #include <string.h>
 /* Linux 7 annotations can end at .popsection without a trailing newline.
  * Keep a data marker so the driver also detects leaked executable bytes. */
@@ -103,10 +104,11 @@ static void check_owner_probe(void)
  assert(!release_on_pause && lock.owner==(unsigned long)current && owner_cas_count==3);
  /* Every phase is a hint only. COMBINER stops retries; other phases can
   * observe a later physical release and still need the zero-owner CAS. */
- for (unsigned int phase=0;phase<=4;phase++) {
+ for (unsigned int phase=0;phase<=4;phase++)
+ for (unsigned int flag=0;flag<=KD_MUTEX_GATE_WITHDRAW;flag+=KD_MUTEX_GATE_WITHDRAW) {
   unsigned int before=owner_cas_count;
   lock.owner=0x9000UL;
-  lock.delegation_state=phase;
+  lock.delegation_state=phase|flag;
   release_on_pause=&lock.owner;
   assert(kd_mutex_outer_trylock(&lock, (unsigned long)current) ==
          (phase != KD_MUTEX_GATE_COMBINER));
