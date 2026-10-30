@@ -14,7 +14,8 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-VARIANTS = ('kdlock1', 'kdmm1-native', 'kdmm1-kd', 'kdscope1-native', 'kdscope1-kd')
+VARIANTS = ('kdlock1', 'kdmm1-native', 'kdmm1-kd', 'kdscope1-native', 'kdscope1-kd',
+            'kdscope2-native', 'kdscope2-kd')
 BENCHMARK_PROFILES = {
     'kdlock1': dict(release='7.0.0-38-kdlock1',
                    build=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
@@ -23,6 +24,10 @@ BENCHMARK_PROFILES = {
                     build=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build'),
                     bundle=Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-20261030'))
        for variant in ('kdscope1-native', 'kdscope1-kd')},
+    **{variant: dict(release='7.0.0-38-kdscope2',
+                    build=Path('/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build'),
+                    bundle=Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-20261031'))
+       for variant in ('kdscope2-native', 'kdscope2-kd')},
 }
 
 

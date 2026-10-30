@@ -127,7 +127,8 @@ def checked_receipt(path, expected_sha256, binding, vmlinux, out, command):
     rt.require(receipt.get('schema') == 1 and receipt.get('kernel_binding') == binding and
                receipt.get('vmlinux_sha256') == rt.digest(vmlinux),
                'writer-site receipt belongs to another kernel ELF')
-    shared = binding.get('variant') in ('kdmm1-native','kdmm1-kd','kdscope1-native','kdscope1-kd')
+    shared = binding.get('variant') in ('kdmm1-native','kdmm1-kd','kdscope1-native','kdscope1-kd',
+                                        'kdscope2-native','kdscope2-kd')
     current = (derive_shared if shared else derive)(vmlinux, out, command)
     rt.require(current == {key: receipt[key] for key in current},
                'writer-site disassembly differs from reviewed receipt')

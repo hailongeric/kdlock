@@ -15,13 +15,22 @@ BUNDLES = {mode: Path('/root/kdlock-kernel-baselines/linux70-kdmm1-'+mode+'-2026
            for mode in MODES}
 # Only these reviewed families may select paths; a manifest cannot add one.
 PROFILES = {
-    family+'-'+mode: dict(variant=family+'-'+mode, mode=mode, release=release,
-                         build=Path('/mnt/kdlock-builds/linux-'+release+'/build'),
-                         bundle=Path('/root/kdlock-kernel-baselines/linux70-'+family+'-'+mode+'-'+date),
-                         api_enabled=family == 'kdscope1')
-    for family, release, date in (('kdmm1', RELEASE, '20261027'),
-                                  ('kdscope1', '7.0.0-38-kdscope1', '20261030'))
-    for mode in MODES
+    **{
+        family+'-'+mode: dict(variant=family+'-'+mode, mode=mode, release=release,
+                             build=Path('/mnt/kdlock-builds/linux-'+release+'/build'),
+                             bundle=Path('/root/kdlock-kernel-baselines/linux70-'+family+'-'+mode+'-'+date),
+                             api_enabled=family == 'kdscope1')
+        for family, release, date in (('kdmm1', RELEASE, '20261027'),
+                                      ('kdscope1', '7.0.0-38-kdscope1', '20261030'))
+        for mode in MODES
+    },
+    **{
+        'kdscope2-'+mode: dict(variant='kdscope2-'+mode, mode=mode, release='7.0.0-38-kdscope2',
+                              build=Path('/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build'),
+                              bundle=Path('/root/kdlock-kernel-baselines/linux70-kdscope2-'+mode+'-20261031'),
+                              api_enabled=True)
+        for mode in MODES
+    },
 }
 
 
