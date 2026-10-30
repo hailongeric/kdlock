@@ -31,8 +31,8 @@ condition check before signal failure and enqueue/recheck ordering, including
 a release between the final poll and waiter publication.
 
 Keep the physical gate, killable reader-drain timer, rollback, exact owner,
-phase release and downgrade unchanged. Reader OSQ tail remains an admission
-barrier; all writers still win the actual 0-to--1 phase CAS. Winning admission
+phase release and downgrade unchanged. Reader OSQ tail remains the existing
+admission hint; all writers still win the actual 0-to--1 phase CAS. Winning admission
 does not authorize entry while readers remain. Gate or reader-drain cancellation
 releases the exact phase once, after any acquired physical gate is unlocked.
 Do not add polling to reader drainage, interruptible acquisition, ordinary or
@@ -51,18 +51,21 @@ or an elapsed-time bound.
 Prepare a guest-only fixture extracting the actual reservation, new helper,
 killable acquisition, reader drain, release and downgrade functions. Explicitly
 label deterministic atomic/wait/scheduler doubles: they can check control flow,
-exact predicate effects, signal ordering, queue rechecks and release ordering;
-they do not prove weak-memory behavior or real kernel scheduling.
+exact predicate effects, condition-before-signal ordering, fallback rechecks and
+phase release ordering. Their synthetic wait-boundary counters include attempts
+that Native `prepare_to_wait_event` may refuse without adding membership. They
+do not prove exact queue membership, weak-memory behavior or real scheduling.
 
 Required cases include first/final-probe success, exact exhaustion, reschedule,
 fatal/nonfatal signals, condition winning a pending/racing fatal signal,
-release before fallback and after enqueue, reader-tail refusal/exit, lost CAS
+release before fallback and after modeled wait preparation, reader-tail refusal/exit, lost CAS
 to another writer, gate cancellation, reader-drain cancellation, and downgrade
 followed by another killable writer. Check that success is consumed once and
 that no body is entered before all readers drain. Negative mutations must
 actually execute and fail; compile errors, timeouts or skips are not passes.
 
-The later VM selection is basic plus this fixture, existing
+The later VM selection is basic plus
+`tests/unit/mutex/test_rwsem_killable_poll.py`, existing
 `tests/unit/mutex/test_rwsem_api.py`, `test_rwsem_read_admission.py` and
 `tests/unit/infrastructure/test_mmap_rwsem_generation.py`. Inspect generated
 local source and enabled-object compilation separately. Existing live rwsem

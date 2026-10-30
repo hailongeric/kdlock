@@ -28,7 +28,11 @@ def main():
         assert all(generator.digest(target / name) == expected for name, expected in outputs.items())
         assert 'void kd_mmap_downgrade_write(' in source
         assert 'kd_mmap_rwsem_spin_read' in source
-    print('PASS generated MM retains local unlock/downgrade and no public delegation dependency')
+        assert '#include <linux/sched/signal.h>' in source
+        assert 'static __always_inline bool kd_mmap_rwsem_poll_killable(' in source
+        assert 'if (!kd_mmap_rwsem_poll_killable(sem))' in source
+        assert 'wait_event_killable(sem->phase_wait, kd_mmap_rwsem_reserve_local(sem))' in source
+    print('PASS generated MM retains local unlock/downgrade, killable polling and no public delegation dependency')
 
 
 if __name__ == '__main__':
