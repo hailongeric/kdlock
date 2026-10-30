@@ -1,0 +1,30 @@
+{
+  "actual_idle": true,
+  "boot_id": "02c1396f-28f3-44a9-8d01-97374a0f221d",
+  "completed": true,
+  "drain_unknown": false,
+  "external_log_original": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030-controller-logs/kd/mapping-r4.log",
+  "failed_flags_unchanged": true,
+  "file_inventory_sha256": "76520b62d5f5004f62ea96e2d911f800e1683f89d9bd31de979c2a915ef30565",
+  "finished": 1793357402.8629227,
+  "health_sha256": "26dd66c635d707a7b1f7f2138759c63f927c6043709e2e36abdb263e9002074f",
+  "idle_check": "tests/kernel/mmap_writer/run.py:idle",
+  "measurement_started": false,
+  "moves": [
+    "mapping",
+    "mapping-controller.json",
+    "mapping-controller.log",
+    "external-mapping-r4.log"
+  ],
+  "normal_unload_attempted": true,
+  "original_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd",
+  "performance_accepted": false,
+  "retained_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd/failed-attempts/mapping-writer-observation-r5",
+  "rmmod_pid": 9492,
+  "rmmod_returncode": 0,
+  "schema": 1,
+  "scope": "One normal unload and preservation; no retry or measurement",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "started": 1793357402.4512823,
+  "state": "FAILED_ATTEMPT_PRESERVED_IDLE"
+}

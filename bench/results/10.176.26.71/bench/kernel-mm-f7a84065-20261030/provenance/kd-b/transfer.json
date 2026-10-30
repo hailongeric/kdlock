@@ -1,0 +1,16 @@
+{
+  "analysis_pending": true,
+  "archive_owner_sha256": "32ada97118d9eaceb8eca51ac2596ab8fc8812c1217442edae45393ebe9d023e",
+  "archives_sha256": "1928fea5d2082a53af8403d0ddb31148472e9d6285ef6229315e53f4ef308b83",
+  "boot_id": "8c5259e3-0f93-493d-afa9-bd93d5358683",
+  "completed": true,
+  "input_inventory_sha256": "7f387194d11226c131997cf2fa5411d43510773ce785ea226871a49616c6635e",
+  "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "label": "kd-b",
+  "member_sha256_manifest": "03568b30dd356e9d2fb284aa254acaefaf373e0d29279587065012d14e6757fa",
+  "offline_reader_sha256": "1bbd6e010c27c42f5293a3df09660342e453d49663d9452e3c1d02269116c3a7",
+  "performance_accepted": false,
+  "regular_members": 1723,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "transport_sha256": "779778fb255f097130d2f7c4e619b7370b1b77b42c6c32a3fec9112d10a8bb8b"
+}

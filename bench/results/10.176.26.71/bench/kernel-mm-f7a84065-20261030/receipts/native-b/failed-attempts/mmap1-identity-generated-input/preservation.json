@@ -1,0 +1,30 @@
+{
+  "actual_idle": true,
+  "boot_id": "588ce982-d213-458b-a354-f065054ef6f1",
+  "completed": true,
+  "drain_unknown": false,
+  "external_log_original": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030-controller-logs/native-b/mmap1-identity-r4.log",
+  "failed_flags_unchanged": true,
+  "file_inventory_sha256": "0c8131e5624bacc5f8d7bec136b8f415616e9a053aa37a27f6953bee39ed1e97",
+  "finished": 1793359347.9877493,
+  "idle_check": [
+    "bench/mmap1/run.py:idle",
+    "tests/kernel/mmap_writer/run.py:idle"
+  ],
+  "mmap1_measurement_started": false,
+  "moves": [
+    "mmap1-identity",
+    "mmap1-identity-controller.json",
+    "mmap1-identity-controller.log",
+    "external-mmap1-identity-r4.log"
+  ],
+  "normal_unload_attempted": false,
+  "original_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b",
+  "performance_accepted": false,
+  "retained_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b/failed-attempts/mmap1-identity-generated-input",
+  "schema": 1,
+  "scope": "Preserve failed pre-application identity attempt; no unload, retry or measurement",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "started": 1793359347.569765,
+  "state": "FAILED_ATTEMPT_PRESERVED_IDLE"
+}

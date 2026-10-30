@@ -1,0 +1,15 @@
+{
+  "all_preliminary_scores_exactly_equal": true,
+  "archive_validated": true,
+  "completed": true,
+  "csv_sha256": "c9eef7a4d8dbd3f0e1172e50bc4f05c3796ad95d8fba2ebfb7ccd9bfdc4f9176",
+  "final_all_scope_pending": true,
+  "gains": 0,
+  "losses": 21,
+  "pairs": 21,
+  "performance_accepted": false,
+  "preliminary_csv_sha256": "8218590b958566ac84f9b331f00a2c91e2f9641f95b428f2321376c486cfd709",
+  "qualification": "exploratory",
+  "schema": 1,
+  "ties": 0
+}

@@ -1,0 +1,737 @@
+{
+  "copies": [
+    {
+      "bytes": 79723,
+      "destination": "analysis/validation.json",
+      "sha256": "a3237b709d915c9725cb7fa55f4dfdc6d39ef97cadc4b067a13fd1ef80463286",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-result-20261030/validation.json"
+    },
+    {
+      "bytes": 44126,
+      "destination": "analysis/points.json",
+      "sha256": "e5404911ddcaccd8d709e388a87a507fd4064fc5b3d5daf26815a16dde9a1d48",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-result-20261030/points.json"
+    },
+    {
+      "bytes": 4010,
+      "destination": "analysis/whole_ops_s.csv",
+      "sha256": "c9eef7a4d8dbd3f0e1172e50bc4f05c3796ad95d8fba2ebfb7ccd9bfdc4f9176",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-result-20261030/whole_ops_s.csv"
+    },
+    {
+      "bytes": 7552,
+      "destination": "analysis/pairs_per_nominal_second.csv",
+      "sha256": "f526e89a51073f4b813e1cfd03947c819d5687ca94a08beed6edb94aabeca54a",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-result-20261030/pairs_per_nominal_second.csv"
+    },
+    {
+      "bytes": 975,
+      "destination": "analysis/inputs.json",
+      "sha256": "fa4327979593a39dfdb230b393cfdf4c94b225e6b9bd47f7fc3525fc36e851d0",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-inputs-20261030.json"
+    },
+    {
+      "bytes": 735,
+      "destination": "receipts/analysis-invocation.json",
+      "sha256": "2594e7d51c4dedfa95dba3add920a27364b4e2484d24cc5071c87390f15813cb",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-invocation-20261030.json"
+    },
+    {
+      "bytes": 114,
+      "destination": "logs/analysis.log",
+      "sha256": "8e5be88f195f4b2763e804a3205e58cf96f5f0c886eea19ca7f44e5a61a55795",
+      "source": "/tmp/kdlock-scope-f7-mm-final-offline-analysis-20261030.log"
+    },
+    {
+      "bytes": 33130,
+      "destination": "tools/analyze.py",
+      "sha256": "da6ce611cf61b75b5c0fa3ce11c7d6a9c094b0b88d9664e92d094af308b2a145",
+      "source": "/tmp/kdlock-scope-f7-mm-offline-analysis-r2-20261030.py"
+    },
+    {
+      "bytes": 39587,
+      "destination": "tools/nano_core.py",
+      "sha256": "1bbd6e010c27c42f5293a3df09660342e453d49663d9452e3c1d02269116c3a7",
+      "source": "/tmp/kdlock-nano-f7a84065-analysis-prep-20261030/nano_core.py"
+    },
+    {
+      "bytes": 39001,
+      "destination": "tools/mm-controller-r6.py",
+      "sha256": "edd5e71f445d692a1742381e8241f0e7a362698f1c2d841c8ebae6ddd5184233",
+      "source": "/tmp/kdlock-scope-mm-step-r6-20261030.py"
+    },
+    {
+      "bytes": 12105,
+      "destination": "tools/mmap1-identity-runner.py",
+      "sha256": "5c23db457fc9cfc91ff68c7f392e5c003812cb54a66fe082a0e73a0b459b6120",
+      "source": "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py"
+    },
+    {
+      "bytes": 8489,
+      "destination": "review/final-review-plan.md",
+      "sha256": "6f1cd1f7537a25b7498fe09d8ba84768b8ab64c96896f78f4f2325b5795d992b",
+      "source": "/tmp/kdlock-scope-f7-mm-final-analysis-review-20261030.md"
+    },
+    {
+      "bytes": 743,
+      "destination": "preliminary/localized-inputs.json",
+      "sha256": "2213a2544b2a7ec1a160550d495e53125de4e78d3389bf286549c0d40287319c",
+      "source": "/tmp/kdlock-scope-f7-mm-localized-offline-inputs-20261030.json"
+    },
+    {
+      "bytes": 47191,
+      "destination": "preliminary/localized-archive-validation.json",
+      "sha256": "238d8864e697993e142db7939aaa21fcf0d8cd008959e9cf60c32bb7ef11886f",
+      "source": "/tmp/kdlock-scope-f7-mm-localized-offline-result-20261030/validation.json"
+    },
+    {
+      "bytes": 456,
+      "destination": "preliminary/localized-reconciliation.json",
+      "sha256": "52fa7bf6d049456d058a253a8480ce9ae56344adb4088f7878e7e096308ca105",
+      "source": "/tmp/kdlock-scope-f7-mm-localized-offline-reconciliation-20261030.json"
+    },
+    {
+      "bytes": 118052,
+      "destination": "preliminary/localized-review.json",
+      "sha256": "d9dad42c981499e65def3ed99eeeb15826b262bcce4a0d66235934b2e87451dd",
+      "source": "/tmp/kdlock-scope-f7-localized-preliminary-review-result-20261030/review.json"
+    },
+    {
+      "bytes": 2965,
+      "destination": "preliminary/localized-pairs.csv",
+      "sha256": "8218590b958566ac84f9b331f00a2c91e2f9641f95b428f2321376c486cfd709",
+      "source": "/tmp/kdlock-scope-f7-localized-preliminary-review-result-20261030/pairs.csv"
+    },
+    {
+      "bytes": 1825,
+      "destination": "preliminary/mmap1-summary.json",
+      "sha256": "d7bae352b08ccf5397a48c0d52697a53c20542864000c38a02003dbd5956619e",
+      "source": "/tmp/kdlock-scope-f7-mmap1-receipt-comparison-20261030/summary.json"
+    },
+    {
+      "bytes": 3331,
+      "destination": "preliminary/mmap1-pairs.csv",
+      "sha256": "fffd94e1f3bc18ef8a21d04eeb762d90379624b588c5e2ae503e29c1bab91cb9",
+      "source": "/tmp/kdlock-scope-f7-mmap1-receipt-comparison-20261030/pairs.csv"
+    },
+    {
+      "bytes": 7000,
+      "destination": "tools/frozen-source/bench/spin_cacheline/peak.py",
+      "sha256": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2",
+      "source": "/tmp/kdlock-continuation-perf-20261030/bench/spin_cacheline/peak.py"
+    },
+    {
+      "bytes": 11727,
+      "destination": "tools/frozen-source/bench/mmap_writer/timing.py",
+      "sha256": "6ba11b0f284f89ed213916cd7f8b05df27753460daf50081c51cf4f5b3ea2b3a",
+      "source": "/tmp/kdlock-continuation-perf-20261030/bench/mmap_writer/timing.py"
+    },
+    {
+      "bytes": 14921,
+      "destination": "tools/frozen-source/bench/mmap_writer/linux70.py",
+      "sha256": "3ac744ab4d606da5284c384d272de73e09ead8cdd2fc5ca444b58589318860ad",
+      "source": "/tmp/kdlock-continuation-perf-20261030/bench/mmap_writer/linux70.py"
+    },
+    {
+      "bytes": 25382,
+      "destination": "tools/frozen-source/bench/mmap1/run.py",
+      "sha256": "863c4aa07eda2324dba6a14c3b811b571a4f72c561ce4c162e559af91b114410",
+      "source": "/tmp/kdlock-continuation-perf-20261030/bench/mmap1/run.py"
+    },
+    {
+      "bytes": 882,
+      "destination": "provenance/native-a/transfer.json",
+      "sha256": "ed2d1820426c2ee32619aa07417dea4f0366244ed2115e2cc07203335f2c7dc8",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/transfer.json"
+    },
+    {
+      "bytes": 1001,
+      "destination": "provenance/native-a/archive-provenance.json",
+      "sha256": "610cd4c7df1a2a79beb69275ac56106ff0ae4553d348e0b651115786bfc630ef",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/archive-provenance.json"
+    },
+    {
+      "bytes": 4035,
+      "destination": "provenance/native-a/archives.json",
+      "sha256": "bac8be952ab2d7722480a40affbed34a347e3260f107da3697a686615b260028",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/native-a-archives/archives.json"
+    },
+    {
+      "bytes": 1893,
+      "destination": "receipts/native-a/archive-owner.json",
+      "sha256": "113fcb5fbacb37bc66b9f2f6b4a7a0b92ca7576c950c9248224e8f4f866bbb4d",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/native-a-archive-control/owner.json"
+    },
+    {
+      "bytes": 4515,
+      "destination": "receipts/native-a/final-health.json",
+      "sha256": "df93a3f6c24e647c1d9754caf706a8f93a6c8dadf229be0443b6c8ef2cf5a260",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::final-health.json"
+    },
+    {
+      "bytes": 8338,
+      "destination": "provenance/native-a/preservation-map.json",
+      "sha256": "3f88bb0903abad15dea13b670ec190477dea733e965ccd67e9c49de085334c04",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::preservation-inputs/preservation-map.json"
+    },
+    {
+      "bytes": 11447,
+      "destination": "receipts/native-a/api-controller.json",
+      "sha256": "161fffdb55838f8efafca6e0d95016c9caf305fdd9771482ee62b7766266e866",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::api-controller.json"
+    },
+    {
+      "bytes": 10582,
+      "destination": "receipts/native-a/api/result.json",
+      "sha256": "601b7123406ae523a7f2ca6c755ecfaf523ceeb7ca535a3306eddd8fdbbc96a7",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::api/result.json"
+    },
+    {
+      "bytes": 13034,
+      "destination": "receipts/native-a/mapping-controller.json",
+      "sha256": "b2a690ef79229c9207d6148c31735ff63eea788b1e32195bb47c91b38b5a8e10",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::mapping-controller.json"
+    },
+    {
+      "bytes": 28726,
+      "destination": "receipts/native-a/mapping/result.json",
+      "sha256": "18f1a2b3c42cce66ecd9084cc161fa5a0da0e63913526aaf99755590b467baba",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::mapping/result.json"
+    },
+    {
+      "bytes": 11884,
+      "destination": "receipts/native-a/faults-controller.json",
+      "sha256": "a3b66b59ab00697cabfbb456faaf20d4c64362dc7236c8c483953700a77621d9",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::faults-controller.json"
+    },
+    {
+      "bytes": 18557,
+      "destination": "receipts/native-a/faults/result.json",
+      "sha256": "23b2f24db18e5eac1c44b43962a760ce8ec1523cb5e755f302c75bb73554312a",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::faults/result.json"
+    },
+    {
+      "bytes": 11923,
+      "destination": "receipts/native-a/completed-controller.json",
+      "sha256": "b8370838500aef15a8f64af95c2a33bd867a386fe02ac6002cba9b136cb75e92",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::completed-controller.json"
+    },
+    {
+      "bytes": 10299,
+      "destination": "receipts/native-a/completed/result.json",
+      "sha256": "f0feef750fccc8c4d5a6e23a0d537d9dcef3994fbd276e02e17874bba0e53884",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::completed/result.json"
+    },
+    {
+      "bytes": 14037,
+      "destination": "receipts/native-a/shared-prepare-controller.json",
+      "sha256": "f2631828aba1af546ad122742fac34c378e7a16d4873288d676f265b416345a7",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::shared-prepare-controller.json"
+    },
+    {
+      "bytes": 23458,
+      "destination": "receipts/native-a/shared-prepare/result.json",
+      "sha256": "b28c0ef691ae061114be8c987f07825fa5942349a8a4479d759fd4e3d60f53b9",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::shared-prepare/result.json"
+    },
+    {
+      "bytes": 12011,
+      "destination": "receipts/native-a/mmap1-prepare-controller.json",
+      "sha256": "5a392364dfead11d6a28dcd31838b5844b3c0f94ba8070be36b28897b326b835",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::mmap1-prepare-controller.json"
+    },
+    {
+      "bytes": 10147,
+      "destination": "receipts/native-a/mmap1-prepare/result.json",
+      "sha256": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::mmap1-prepare/result.json"
+    },
+    {
+      "bytes": 12283,
+      "destination": "receipts/native-a/failed-attempts/mapping-r3/mapping-controller.json",
+      "sha256": "e51de89312a0a7176a7466fc878618e78876843f5dbb5a14e803e9ff4b1bd8ef",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::failed-attempts/mapping-r3/mapping-controller.json"
+    },
+    {
+      "bytes": 851,
+      "destination": "receipts/native-a/failed-attempts/mapping-r3/preservation.json",
+      "sha256": "59808d5b5f8dbc95f79d981d0647374ecdae9b7edf34e0a787dc9724eea3e826",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::failed-attempts/mapping-r3/preservation.json"
+    },
+    {
+      "bytes": 11675,
+      "destination": "receipts/native-a/failed-attempts/mmap1-prepare-missing-hwloc/mmap1-prepare-controller.json",
+      "sha256": "44f8e287fcd749b952f8abd7401ab4e5ffea9cf0e0e4b2b427e6dc872cf60bde",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::failed-attempts/mmap1-prepare-missing-hwloc/mmap1-prepare-controller.json"
+    },
+    {
+      "bytes": 10112,
+      "destination": "receipts/native-a/failed-attempts/mmap1-prepare-missing-hwloc/mmap1-prepare/result.json",
+      "sha256": "afc95f4440260f493a73b3236291c609ada80d4128227669e730a07e649726bd",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::failed-attempts/mmap1-prepare-missing-hwloc/mmap1-prepare/result.json"
+    },
+    {
+      "bytes": 38796,
+      "destination": "receipts/native-a/failed-attempts/mmap1-prepare-missing-hwloc/preservation.json",
+      "sha256": "eadf11bdaa4ffd77e141fbe31c9f036019a6fb4a424ac428753126502147d50b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::failed-attempts/mmap1-prepare-missing-hwloc/preservation.json"
+    },
+    {
+      "bytes": 897826,
+      "destination": "provenance/source-sha256.json",
+      "sha256": "f093746333abdc7e3ca647852b43b611d6a0a494e7922b9c285125dd46c00db3",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::preservation-inputs/kdlock-continuation-f7a84065-source-sha256.json"
+    },
+    {
+      "bytes": 504,
+      "destination": "provenance/source-state.json",
+      "sha256": "52448d33d2ed7c781b0bea4cd1ac4ab80b59107a42622a4fc8a0fd9d857fd520",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::preservation-inputs/kdlock-continuation-f7a84065-source-state.json"
+    },
+    {
+      "bytes": 674,
+      "destination": "provenance/generation-record.json",
+      "sha256": "4618cd0df915928562e94569662a3771483a86cdc26f4762f276190d8ee88567",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::preservation-inputs/kdlock-scope-generation-f7a84065-20261030.json"
+    },
+    {
+      "bytes": 1245,
+      "destination": "receipts/native-a/hwloc-package-install.json",
+      "sha256": "6ce683d3b54c2ab4f59f1bb721b751ec0cd4f506d226e47bd171bdbda392022e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::preservation-inputs/dependencies/hwloc/result.json"
+    },
+    {
+      "bytes": 39722,
+      "destination": "provenance/shared-prepare-inputs.json",
+      "sha256": "add83fe67e4f20a95ddb36b97bdbe22576ff32c93216262f35f8e6e1fdd5690f",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::shared-prepare/inputs.json"
+    },
+    {
+      "bytes": 24358,
+      "destination": "provenance/mmap1-prepare-inputs.json",
+      "sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a::mmap1-prepare/inputs.json"
+    },
+    {
+      "bytes": 876,
+      "destination": "provenance/kd/transfer.json",
+      "sha256": "7227b2a63bf1d26a51ececdf7a17ce46cd4689f874cc1d9849fdaafbcb0728a2",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/transfer.json"
+    },
+    {
+      "bytes": 1141,
+      "destination": "provenance/kd/archive-provenance.json",
+      "sha256": "1b938bc1c65eac004c2c8f09f3aa1c37adc363025a559312313a872ad58257d0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/archive-provenance.json"
+    },
+    {
+      "bytes": 4235,
+      "destination": "provenance/kd/archives.json",
+      "sha256": "3897bb0c87f3c83a08777bb811ba0d090301901743dc7f476e2ba2fa467e29db",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/kd-archives/archives.json"
+    },
+    {
+      "bytes": 1871,
+      "destination": "receipts/kd/archive-owner.json",
+      "sha256": "64de6ba92e719d3420dfbd44b62d459f83e5a95365ebf1d326f0fdca9e8bd5a8",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/kd-archive-control/owner.json"
+    },
+    {
+      "bytes": 80935,
+      "destination": "receipts/kd/final-health.json",
+      "sha256": "a37a9ed11c53dae95c3c4e8cd55fc8104ab60d1c0d63ebb0c0dba1459495811d",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::final-health.json"
+    },
+    {
+      "bytes": 13301,
+      "destination": "provenance/kd/preservation-map.json",
+      "sha256": "692b668f6f2589adba973135548d351f46abf242d0fb912121ba952f368a2f66",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::preservation-inputs/preservation-map.json"
+    },
+    {
+      "bytes": 90834,
+      "destination": "receipts/kd/api-controller.json",
+      "sha256": "efb86bbc48d1c79030fd58a1a05aa8a7b721c492f792b6cf73aaf9a3cab4088d",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::api-controller.json"
+    },
+    {
+      "bytes": 10774,
+      "destination": "receipts/kd/api/result.json",
+      "sha256": "53ffc2d6304751dca13116e62cbbbc365dc66392e39b62c0a63c1f2452c6fe4a",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::api/result.json"
+    },
+    {
+      "bytes": 12944,
+      "destination": "receipts/kd/mapping-controller.json",
+      "sha256": "03d65de4e5d72363b73b6b1fa8701a33c34a5db261f38a1fb2bbe5cd89167d26",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::mapping-controller.json"
+    },
+    {
+      "bytes": 28668,
+      "destination": "receipts/kd/mapping/result.json",
+      "sha256": "29fe390291f0583329bbc2e00f1c31fdf9ad79375dfb223f8f7363c50f9226c6",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::mapping/result.json"
+    },
+    {
+      "bytes": 11830,
+      "destination": "receipts/kd/faults-controller.json",
+      "sha256": "f70fdcee70043458e35a7a75a6dc373888d13da6a0e1d65de27f5ec5a80b3ded",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::faults-controller.json"
+    },
+    {
+      "bytes": 18531,
+      "destination": "receipts/kd/faults/result.json",
+      "sha256": "6dc70571423723fd34b7ff0e2aa4476b24b82085209cf9a18284de057a173c95",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::faults/result.json"
+    },
+    {
+      "bytes": 11869,
+      "destination": "receipts/kd/completed-controller.json",
+      "sha256": "525903ee42132f90262046cfc852a8e63f16570b36818efdefe97403e6f2e402",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::completed-controller.json"
+    },
+    {
+      "bytes": 10274,
+      "destination": "receipts/kd/completed/result.json",
+      "sha256": "fafb7a353566f2f7c2c6fad510ee7c94df9afde72b56db4aded6a3c2e9ab78d6",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::completed/result.json"
+    },
+    {
+      "bytes": 14454,
+      "destination": "receipts/kd/shared-prepare-controller.json",
+      "sha256": "bc28528dd054b764120ea8c26d97c4efa104b58a7818e4ee581644967976c784",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::shared-prepare-controller.json"
+    },
+    {
+      "bytes": 23369,
+      "destination": "receipts/kd/shared-prepare/result.json",
+      "sha256": "160073e404bdc5fba70c8b38bbd90766423e423abd09d746cbf1a65c50eb33f6",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::shared-prepare/result.json"
+    },
+    {
+      "bytes": 15004,
+      "destination": "receipts/kd/shared-measure-controller.json",
+      "sha256": "c7eb4084fd93f3cd06682bb21ceaa4e2e2e0dba6c0a07d9f7830a0cb63714793",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::shared-measure-controller.json"
+    },
+    {
+      "bytes": 2545,
+      "destination": "receipts/kd/endpoints/shared-measure/endpoint-receipt.json",
+      "sha256": "f3aa4082cf569f80a336f3cb64981a6bd11e40e2b67a7acb431544e5da122087",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::endpoints/shared-measure/endpoint-receipt.json"
+    },
+    {
+      "bytes": 12619,
+      "destination": "receipts/kd/failed-attempts/mapping-writer-observation-r5/mapping-controller.json",
+      "sha256": "69f48388e14ab9455c39c1bf474303d28313df59d3b71182c8e2dcaea1c3e4d0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::failed-attempts/mapping-writer-observation-r5/mapping-controller.json"
+    },
+    {
+      "bytes": 15442,
+      "destination": "receipts/kd/failed-attempts/mapping-writer-observation-r5/mapping/result.json",
+      "sha256": "04c6f32cb5ba1fdc956f03d05a62b66093b01003571a9299be5100c09021b05e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::failed-attempts/mapping-writer-observation-r5/mapping/result.json"
+    },
+    {
+      "bytes": 1347,
+      "destination": "receipts/kd/failed-attempts/mapping-writer-observation-r5/preservation.json",
+      "sha256": "c464d7f2e3076947beec27facf57ed3b3b1da667d4359a79be2ff11063b96e97",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::failed-attempts/mapping-writer-observation-r5/preservation.json"
+    },
+    {
+      "bytes": 21018,
+      "destination": "receipts/kd/preservation-inputs/external-control/api-reuse-failure/owner.json",
+      "sha256": "13a8994cb552ea3523fa98a4ab660ea4e32a5f81d43b7d1048dc21652862f5cd",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd::preservation-inputs/external-control/api-reuse-failure/owner.json"
+    },
+    {
+      "bytes": 882,
+      "destination": "provenance/native-b/transfer.json",
+      "sha256": "c5aaf779a13c1c36208a929b5eb5d3d5def8e12c41623814a47a79197db619da",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/transfer.json"
+    },
+    {
+      "bytes": 1146,
+      "destination": "provenance/native-b/archive-provenance.json",
+      "sha256": "3e5f741b470c5e5fdd1316a1bc1e27987be5c6c4ada056a793c584847bf354b8",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/archive-provenance.json"
+    },
+    {
+      "bytes": 4562,
+      "destination": "provenance/native-b/archives.json",
+      "sha256": "f3bcab3923a2b6737dabecd0af7d132e1ac430c7bb0433034f1458482738bdb9",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/native-b-archives/archives.json"
+    },
+    {
+      "bytes": 1939,
+      "destination": "receipts/native-b/archive-owner.json",
+      "sha256": "f580f5f37a3a75db1e4258947d9b3bfb81ba6b1d2d0d8df47aa66049769cb46e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/native-b-archive-control/owner.json"
+    },
+    {
+      "bytes": 84484,
+      "destination": "receipts/native-b/final-health.json",
+      "sha256": "953486acd9f882fa27afb0f8979365954bc24578823faa4000dde4727d053652",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::final-health.json"
+    },
+    {
+      "bytes": 24365,
+      "destination": "provenance/native-b/preservation-map.json",
+      "sha256": "875225d56c11394ddc6eba52dd08ef0b740ef5d4ad7aa27ab77e6f976b0cc73d",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::preservation-inputs/preservation-map.json"
+    },
+    {
+      "bytes": 90903,
+      "destination": "receipts/native-b/api-controller.json",
+      "sha256": "10a1d7568caad634badaf440b1e105609e393c9126507292dce687cfc483459b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::api-controller.json"
+    },
+    {
+      "bytes": 10806,
+      "destination": "receipts/native-b/api/result.json",
+      "sha256": "3730d60a7beb231719f86d65231d01694fd602627f329bb5845b101036c16bdf",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::api/result.json"
+    },
+    {
+      "bytes": 13030,
+      "destination": "receipts/native-b/mapping-controller.json",
+      "sha256": "2109a68741033605bb67b0d8310a79280cf044abf160f49451b38a6774961195",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::mapping-controller.json"
+    },
+    {
+      "bytes": 28646,
+      "destination": "receipts/native-b/mapping/result.json",
+      "sha256": "aa632e1187243c8ed17aef815c6dbf202a28d3b917cd7fc27d7b8802eafb639b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::mapping/result.json"
+    },
+    {
+      "bytes": 11883,
+      "destination": "receipts/native-b/faults-controller.json",
+      "sha256": "d61bba89c902bd50a761dfd7a9f0f16d01ac9b6487b36eb0f3abe494653bb942",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::faults-controller.json"
+    },
+    {
+      "bytes": 18541,
+      "destination": "receipts/native-b/faults/result.json",
+      "sha256": "39a2c430d17629739b2b2a087995dafb4fed02eac1623d877e93627f416e2a10",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::faults/result.json"
+    },
+    {
+      "bytes": 11922,
+      "destination": "receipts/native-b/completed-controller.json",
+      "sha256": "e2600083bf87a64863f734bbd0976c150274f8bee7491711d58fc60261bbd5cb",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::completed-controller.json"
+    },
+    {
+      "bytes": 10299,
+      "destination": "receipts/native-b/completed/result.json",
+      "sha256": "6362f7dee17b9a0c873e04d407f45b99bfd8ac9b1d1633374128a74f0d6be3a6",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::completed/result.json"
+    },
+    {
+      "bytes": 12970,
+      "destination": "receipts/native-b/mmap1-identity-controller.json",
+      "sha256": "1d632418c2bff7486e77d4b44bce56409d26b04ae0a535589751c75007437cc0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::mmap1-identity-controller.json"
+    },
+    {
+      "bytes": 66003,
+      "destination": "receipts/native-b/mmap1-identity/result.json",
+      "sha256": "0a2bbbef2955021c43b25950382421ac9e66a80f4e35e1a90f17b52bdd0ad5bb",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::mmap1-identity/result.json"
+    },
+    {
+      "bytes": 15130,
+      "destination": "receipts/native-b/shared-measure-controller.json",
+      "sha256": "8a05d0c8fba52bdc0ff92d336962bd5bc622f717cc47c4c5de432c30d459567c",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::shared-measure-controller.json"
+    },
+    {
+      "bytes": 2562,
+      "destination": "receipts/native-b/endpoints/shared-measure/endpoint-receipt.json",
+      "sha256": "118b695d38efcfc3c8b76003428f98cca1d8c0df3997cbc58a85fa0739f7d1c7",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::endpoints/shared-measure/endpoint-receipt.json"
+    },
+    {
+      "bytes": 16512,
+      "destination": "receipts/native-b/mmap1-measure-controller.json",
+      "sha256": "12682d4ffd528132940df00350c49f75457c774854f55a2587296e76a3118570",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::mmap1-measure-controller.json"
+    },
+    {
+      "bytes": 2556,
+      "destination": "receipts/native-b/endpoints/mmap1-measure/endpoint-receipt.json",
+      "sha256": "2a7d0cc0d08ae2285558320a9969214a252525a0497ffb9751769872321e1be7",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::endpoints/mmap1-measure/endpoint-receipt.json"
+    },
+    {
+      "bytes": 12144,
+      "destination": "receipts/native-b/failed-attempts/mmap1-identity-generated-input/mmap1-identity-controller.json",
+      "sha256": "4470de8764bb2c5252c44dbac32f70ff278812c7326296edeaad66383f511170",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::failed-attempts/mmap1-identity-generated-input/mmap1-identity-controller.json"
+    },
+    {
+      "bytes": 10595,
+      "destination": "receipts/native-b/failed-attempts/mmap1-identity-generated-input/mmap1-identity/result.json",
+      "sha256": "30af5a3cd8c4a5222cb51c058b16bdd2ae4b32647e2eba4ba8f9ea6fc76ee1dc",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::failed-attempts/mmap1-identity-generated-input/mmap1-identity/result.json"
+    },
+    {
+      "bytes": 1337,
+      "destination": "receipts/native-b/failed-attempts/mmap1-identity-generated-input/preservation.json",
+      "sha256": "670d67436b462928f41988a401fcb392ea54686a7d38dcb7ca14dbcffa7c4d8e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b::failed-attempts/mmap1-identity-generated-input/preservation.json"
+    },
+    {
+      "bytes": 878,
+      "destination": "provenance/kd-b/transfer.json",
+      "sha256": "c72d65b50585457e1c78933ca8c20cd64338aff86e886ae83eaacbe10b716934",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b/transfer.json"
+    },
+    {
+      "bytes": 985,
+      "destination": "provenance/kd-b/archive-provenance.json",
+      "sha256": "4e86886aa76f791dbc88c0f78cd8225df57c1b6099c7769f622467374f3e606c",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b/archive-provenance.json"
+    },
+    {
+      "bytes": 3909,
+      "destination": "provenance/kd-b/archives.json",
+      "sha256": "1928fea5d2082a53af8403d0ddb31148472e9d6285ef6229315e53f4ef308b83",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b/kd-b-archives/archives.json"
+    },
+    {
+      "bytes": 1868,
+      "destination": "receipts/kd-b/archive-owner.json",
+      "sha256": "32ada97118d9eaceb8eca51ac2596ab8fc8812c1217442edae45393ebe9d023e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b/kd-b-archive-control/owner.json"
+    },
+    {
+      "bytes": 81878,
+      "destination": "receipts/kd-b/final-health.json",
+      "sha256": "aa1c9086cdb0ca5fb89e44d8809cf2027b6e869c932411526c9036a270ee39b0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::final-health.json"
+    },
+    {
+      "bytes": 15844,
+      "destination": "provenance/kd-b/preservation-map.json",
+      "sha256": "32238145a0829555099ce50cc84d07950644d0dcb1127ec0d2c2f1554942ba63",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::preservation-inputs/preservation-map.json"
+    },
+    {
+      "bytes": 90851,
+      "destination": "receipts/kd-b/api-controller.json",
+      "sha256": "97fa06c84f338558dd32fdd385bf260877bd79b7fee7557846093283c93db49f",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::api-controller.json"
+    },
+    {
+      "bytes": 10776,
+      "destination": "receipts/kd-b/api/result.json",
+      "sha256": "6e5e6e61b21fdee5ee9aac090644fa468aefa4e04eb109bd197b988bf0d26a79",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::api/result.json"
+    },
+    {
+      "bytes": 12966,
+      "destination": "receipts/kd-b/mapping-controller.json",
+      "sha256": "81d40dda824481657366fdfc85e909d0aef7d6079bd23d535bb56fa280f7d62b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::mapping-controller.json"
+    },
+    {
+      "bytes": 28588,
+      "destination": "receipts/kd-b/mapping/result.json",
+      "sha256": "68e29b2690c8c0955eebd24a6a3a9e7a48552977ea2021f6a558281c10e9a6f3",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::mapping/result.json"
+    },
+    {
+      "bytes": 11843,
+      "destination": "receipts/kd-b/faults-controller.json",
+      "sha256": "e5347d73e79b122e3e89a48cc54847507c46bf7ec2a5453eb4b2a354ec63fb8a",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::faults-controller.json"
+    },
+    {
+      "bytes": 18515,
+      "destination": "receipts/kd-b/faults/result.json",
+      "sha256": "a42e7042c7c319be10a1a22ff2e745535e6a5e68ba8ab234d4d99c74a6052da2",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::faults/result.json"
+    },
+    {
+      "bytes": 11882,
+      "destination": "receipts/kd-b/completed-controller.json",
+      "sha256": "721bd86c621ad9e819efbcbc4d0493c4bade6b5804dd3dce01b1287fb80214f8",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::completed-controller.json"
+    },
+    {
+      "bytes": 10274,
+      "destination": "receipts/kd-b/completed/result.json",
+      "sha256": "6eb0e57d5c1136c4038e0f60e71123edb228097025dfe1d3b0685806cacfeaf7",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::completed/result.json"
+    },
+    {
+      "bytes": 12927,
+      "destination": "receipts/kd-b/mmap1-identity-controller.json",
+      "sha256": "01e6e99e6258b8feec11da942659734a1d93d62ab86503c41193209a7714e0d4",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::mmap1-identity-controller.json"
+    },
+    {
+      "bytes": 65538,
+      "destination": "receipts/kd-b/mmap1-identity/result.json",
+      "sha256": "96af936ee7f1cf875a4ce8e1edd11babb7f27026791b24a7facaa7c03beea1d4",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::mmap1-identity/result.json"
+    },
+    {
+      "bytes": 16412,
+      "destination": "receipts/kd-b/mmap1-measure-controller.json",
+      "sha256": "329389d9053f2e6121d3f287cfc609785af0876c4a315f6bb1f5dcd7f6ed0632",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::mmap1-measure-controller.json"
+    },
+    {
+      "bytes": 2543,
+      "destination": "receipts/kd-b/endpoints/mmap1-measure/endpoint-receipt.json",
+      "sha256": "47376836dd5cf90b2f7a602e6c4c9f75b700efb1570d6590af6b418228f70742",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b::endpoints/mmap1-measure/endpoint-receipt.json"
+    },
+    {
+      "bytes": 205310,
+      "destination": "receipts/pool-restoration/result.json",
+      "sha256": "e5ae6ed6f607f2d0eaba308e2d49fc823827632ce646e1f7f1ab5dd47f50d6c6",
+      "source": "/tmp/kdlock-scope-f7-pool-restore-transport-20261030/result.json"
+    },
+    {
+      "bytes": 1119,
+      "destination": "receipts/pool-restoration/owner.json",
+      "sha256": "cfa25ccdb8a3fb42bad3dfac50287be8d1803c98f89713fc70d83a04caf8078c",
+      "source": "/tmp/kdlock-scope-f7-pool-restore-transport-20261030/owner.json"
+    },
+    {
+      "bytes": 469078,
+      "destination": "receipts/pool-restoration/before.host.json",
+      "sha256": "b004dc0340c934553749c5c81bf8ecb99bf102f8a16b0968a66e919fe669d3f1",
+      "source": "/tmp/kdlock-scope-f7-pool-restore-transport-20261030/before.host.json"
+    },
+    {
+      "bytes": 455217,
+      "destination": "receipts/pool-restoration/restored.host.json",
+      "sha256": "a95f463440c1a9e019b7a214fad2caef768a80a30c13aa2a694c8169d92388c8",
+      "source": "/tmp/kdlock-scope-f7-pool-restore-transport-20261030/restored.host.json"
+    },
+    {
+      "bytes": 7612,
+      "destination": "review/independent-arithmetic.json",
+      "sha256": "43ea9546e6e7fe16039ea76be64c667e40d62b1836e89c654dd129db33e996af",
+      "source": "/tmp/kdlock-scope-f7-mm-final-independent-review-20261030.json"
+    },
+    {
+      "bytes": 12242,
+      "destination": "review/source-interpretation.md",
+      "sha256": "0ad282d65619012186e0541edafa6823655921155f3c7269b651d9e613cf6aa9",
+      "source": "/tmp/kdlock-f7-mm-interpretation-20261030.md"
+    },
+    {
+      "bytes": 47567,
+      "destination": "tools/linux70-rwsem.c",
+      "sha256": "5d030b8ab20d775f3e3cf92d307b56e8309d0a6d9c9a4d626af91a3ccd53ea65",
+      "source": "/tmp/kdlock-semantic-source-20261030/source/kernel/locking/rwsem.c"
+    }
+  ],
+  "schema": 1
+}

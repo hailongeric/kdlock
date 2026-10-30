@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "independent_offline_review": true,
+  "no_tests_or_guest_actions": true,
+  "performance_accepted": false,
+  "validation_sha256": "a3237b709d915c9725cb7fa55f4dfdc6d39ef97cadc4b067a13fd1ef80463286",
+  "inputs_sha256": "fa4327979593a39dfdb230b393cfdf4c94b225e6b9bd47f7fc3525fc36e851d0",
+  "point_count": 126,
+  "pairs": 63,
+  "counts": {
+    "shared": {
+      "points": 21,
+      "gains": 0,
+      "losses": 21
+    },
+    "threads": {
+      "points": 21,
+      "gains": 0,
+      "losses": 21
+    },
+    "processes": {
+      "points": 21,
+      "gains": 11,
+      "losses": 10
+    }
+  },
+  "reviewed_counts": [
+    20,
+    32,
+    60
+  ],
+  "raw_score_checks": [
+    {
+      "label": "kd",
+      "model": "shared",
+      "workers": 20,
+      "member": "kd/shared-measure/10-shared-mm-kd-t20-r00/client.jsonl",
+      "sha256": "67588378a5dcc0dc0b8f88881d3f0bf3fa4d4d7af8c3104fa7c55ccc65be8b94",
+      "numerator": 79680,
+      "denominator": 2005794873,
+      "score": 39724.89962586518
+    },
+    {
+      "label": "kd",
+      "model": "shared",
+      "workers": 32,
+      "member": "kd/shared-measure/13-shared-mm-kd-t32-r00/client.jsonl",
+      "sha256": "8c8a5eedd56e9cff90485c12b81ea006fd7fde87361ed1261f62fb4118bd4e26",
+      "numerator": 52448,
+      "denominator": 2014592089,
+      "score": 26034.054380722828
+    },
+    {
+      "label": "kd",
+      "model": "shared",
+      "workers": 60,
+      "member": "kd/shared-measure/20-shared-mm-kd-t60-r00/client.jsonl",
+      "sha256": "f94d5a73e168fa03b335ff3f1b59eab915f822d0dd307c245432d1e77ce1ea82",
+      "numerator": 13856,
+      "denominator": 2078613470,
+      "score": 6665.982011556964
+    },
+    {
+      "label": "native-b",
+      "model": "shared",
+      "workers": 20,
+      "member": "native-b/shared-measure/10-shared-mm-native-t20-r00/client.jsonl",
+      "sha256": "b7508da202a2baf0b046e1ce323bfa47c5307d6205f83b97cfefa17499f8f103",
+      "numerator": 538752,
+      "denominator": 2001601149,
+      "score": 269160.51695372
+    },
+    {
+      "label": "native-b",
+      "model": "shared",
+      "workers": 32,
+      "member": "native-b/shared-measure/13-shared-mm-native-t32-r00/client.jsonl",
+      "sha256": "e6fc510a2bdee2a04c7e1bf70904b3f2aecd3c7d8af0e0364c1a4a3eee5add55",
+      "numerator": 541856,
+      "denominator": 2003350857,
+      "score": 270474.838746631
+    },
+    {
+      "label": "native-b",
+      "model": "shared",
+      "workers": 60,
+      "member": "native-b/shared-measure/20-shared-mm-native-t60-r00/client.jsonl",
+      "sha256": "3c8253122c2d878340eeee80bacd7fc716c6a39e8ed8c25eb775d17f0c700bca",
+      "numerator": 321856,
+      "denominator": 2007237066,
+      "score": 160347.776280054
+    },
+    {
+      "label": "native-b",
+      "model": "processes",
+      "workers": 20,
+      "member": "native-b/mmap1-measure/processes-n20-r00/upstream.log",
+      "sha256": "8cfad36cc18c07aac979d29863f7a5d7c06f90d37cb70359e021984ca2e43a93",
+      "numerator": 3703085,
+      "denominator": 2,
+      "score": 1851542.5
+    },
+    {
+      "label": "native-b",
+      "model": "processes",
+      "workers": 32,
+      "member": "native-b/mmap1-measure/processes-n32-r00/upstream.log",
+      "sha256": "67c3eb0dcd5f445ed7cb6b7252c423459d64e3c9c1961f714c803121bc039c83",
+      "numerator": 3587587,
+      "denominator": 2,
+      "score": 1793793.5
+    },
+    {
+      "label": "native-b",
+      "model": "processes",
+      "workers": 60,
+      "member": "native-b/mmap1-measure/processes-n60-r00/upstream.log",
+      "sha256": "72c56de4152d95c65acef23d47619fec9fb5259806349d5b719780879d06cffe",
+      "numerator": 2525384,
+      "denominator": 2,
+      "score": 1262692.0
+    },
+    {
+      "label": "native-b",
+      "model": "threads",
+      "workers": 20,
+      "member": "native-b/mmap1-measure/threads-n20-r00/upstream.log",
+      "sha256": "1647f5abaacfa6cdfbeb027598c53a9e1a45757857d8c1ef83c5dbe8ea09c70d",
+      "numerator": 413086,
+      "denominator": 2,
+      "score": 206543.0
+    },
+    {
+      "label": "native-b",
+      "model": "threads",
+      "workers": 32,
+      "member": "native-b/mmap1-measure/threads-n32-r00/upstream.log",
+      "sha256": "20f19af57afe580c6060649df6be4a27cd8c654dadfad8520de4be3f10c729e7",
+      "numerator": 396488,
+      "denominator": 2,
+      "score": 198244.0
+    },
+    {
+      "label": "native-b",
+      "model": "threads",
+      "workers": 60,
+      "member": "native-b/mmap1-measure/threads-n60-r00/upstream.log",
+      "sha256": "bf7c2cc25155450bf6a13cce2b8997fa1bd63c9ff49eb4c0d218f91aa178bfc8",
+      "numerator": 232420,
+      "denominator": 2,
+      "score": 116210.0
+    },
+    {
+      "label": "kd-b",
+      "model": "processes",
+      "workers": 20,
+      "member": "kd-b/mmap1-measure/processes-n20-r00/upstream.log",
+      "sha256": "3456b3fd297b3d5732b7bf3b15ff85f08aea72e4be51e07ca7f1846a5afb19cd",
+      "numerator": 3730129,
+      "denominator": 2,
+      "score": 1865064.5
+    },
+    {
+      "label": "kd-b",
+      "model": "processes",
+      "workers": 32,
+      "member": "kd-b/mmap1-measure/processes-n32-r00/upstream.log",
+      "sha256": "a9d1fa5a6de9f4b48b64a17a9ff6a626b9c3c66602372def7277368c6fc933df",
+      "numerator": 3581988,
+      "denominator": 2,
+      "score": 1790994.0
+    },
+    {
+      "label": "kd-b",
+      "model": "processes",
+      "workers": 60,
+      "member": "kd-b/mmap1-measure/processes-n60-r00/upstream.log",
+      "sha256": "3035179f45a70a38cdcce686451b9fcf7d1712ee3017e5846a7828330e3f8f50",
+      "numerator": 3243271,
+      "denominator": 2,
+      "score": 1621635.5
+    },
+    {
+      "label": "kd-b",
+      "model": "threads",
+      "workers": 20,
+      "member": "kd-b/mmap1-measure/threads-n20-r00/upstream.log",
+      "sha256": "0cb4acb51c352b25108a78cb8100754b878b3b45516fcf12a875d610d817768a",
+      "numerator": 75170,
+      "denominator": 2,
+      "score": 37585.0
+    },
+    {
+      "label": "kd-b",
+      "model": "threads",
+      "workers": 32,
+      "member": "kd-b/mmap1-measure/threads-n32-r00/upstream.log",
+      "sha256": "c0c4075752e46be8c270ce46b2592546618b6125aa613d45bb32b5ed94439d07",
+      "numerator": 49947,
+      "denominator": 2,
+      "score": 24973.5
+    },
+    {
+      "label": "kd-b",
+      "model": "threads",
+      "workers": 60,
+      "member": "kd-b/mmap1-measure/threads-n60-r00/upstream.log",
+      "sha256": "ffe2b27cef94f3080cd0f98a1207c16365cd905713645109e096825be2e2a834",
+      "numerator": 13146,
+      "denominator": 2,
+      "score": 6573.0
+    }
+  ],
+  "archive_groups": [
+    {
+      "label": "kd",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/kd-archives/localized.tar.gz",
+      "sha256": "0f46597972ba1da97c05e42fb24015b4ec994e238eb24d93b9ed7a75b1abdad5"
+    },
+    {
+      "label": "native-b",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/native-b-archives/localized.tar.gz",
+      "sha256": "20676da861dea990864eee18427e1b46d6e7c86ad3b2c8b943ef0645ebf0d038"
+    },
+    {
+      "label": "native-b",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b/native-b-archives/mmap1.tar.gz",
+      "sha256": "4956009b240f9a66558073896557a1983fb8ba4e838c79e77c29ea3b3f771712"
+    },
+    {
+      "label": "kd-b",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b/kd-b-archives/mmap1.tar.gz",
+      "sha256": "3dd5d645b7825b6b0e591cd78765d66b883d7bebb4587147ec87940634614936"
+    }
+  ]
+}

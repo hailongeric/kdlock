@@ -1,0 +1,29 @@
+{
+  "archive_receipt_sha256": "bac8be952ab2d7722480a40affbed34a347e3260f107da3697a686615b260028",
+  "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/native-a-archives",
+  "groups": [
+    {
+      "bytes": 4955413,
+      "file": "checks.tar.gz",
+      "sha256": "a8ec24a9d31b0088d8b596dec404b6af57445e7fc547afda8ed1a242d3ae1d35"
+    },
+    {
+      "bytes": 1323156,
+      "file": "preparations.tar.gz",
+      "sha256": "ae550c0327fa6aeb5b9f95bb137f5275ffef17d4cf654b90db87bf865f8b3dec"
+    },
+    {
+      "bytes": 631250,
+      "file": "boot.tar.gz",
+      "sha256": "2d2a3b0770b7fa170195e45d5efcc015fb04fa83a88fecdf80dd94fd1702b411"
+    },
+    {
+      "bytes": 1525231,
+      "file": "metadata.tar.gz",
+      "sha256": "d9050ff2944de5b5a6b0d41be8970353c5807923fbeda5421040976cf4815e7b"
+    }
+  ],
+  "inventory_sha256": "00ea6d916193e8d6afbd1634b0e3fd3713a43664f2b915a512260d675a0c99c1",
+  "paths": 2504,
+  "regular_files": 1923
+}

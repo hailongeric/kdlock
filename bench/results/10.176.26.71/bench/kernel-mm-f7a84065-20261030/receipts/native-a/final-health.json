@@ -1,0 +1,39 @@
+{
+  "actual_idle_predicates": [
+    "bench/archive_run.py:idle",
+    "bench/spin_cacheline/bench_runtime.py:idle"
+  ],
+  "archive_source_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "boot_copy_map_sha256": "6cfad53c571a4317196d376002a742fdec9688d2da0619a612c8e804b1b10b5e",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "checked": 1793355279.6060796,
+  "idle": true,
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "performance_accepted": false,
+  "phase_receipts": {
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/api-controller.json": "161fffdb55838f8efafca6e0d95016c9caf305fdd9771482ee62b7766266e866",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/api/result.json": "601b7123406ae523a7f2ca6c755ecfaf523ceeb7ca535a3306eddd8fdbbc96a7",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/completed-controller.json": "b8370838500aef15a8f64af95c2a33bd867a386fe02ac6002cba9b136cb75e92",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/completed/result.json": "f0feef750fccc8c4d5a6e23a0d537d9dcef3994fbd276e02e17874bba0e53884",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/faults-controller.json": "a3b66b59ab00697cabfbb456faaf20d4c64362dc7236c8c483953700a77621d9",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/faults/result.json": "23b2f24db18e5eac1c44b43962a760ce8ec1523cb5e755f302c75bb73554312a",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mapping-controller.json": "b2a690ef79229c9207d6148c31735ff63eea788b1e32195bb47c91b38b5a8e10",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mapping/result.json": "18f1a2b3c42cce66ecd9084cc161fa5a0da0e63913526aaf99755590b467baba",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare-controller.json": "5a392364dfead11d6a28dcd31838b5844b3c0f94ba8070be36b28897b326b835",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/result.json": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/shared-prepare-controller.json": "f2631828aba1af546ad122742fac34c378e7a16d4873288d676f265b416345a7",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/shared-prepare/result.json": "b28c0ef691ae061114be8c987f07825fa5942349a8a4479d759fd4e3d60f53b9",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/sites-controller.json": "b659d892d3eaac327059547e38fe6df3d674aba9257fba206abc4eb4a6a1f0cc",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/sites/writer-sites.json": "0222b530c0dad9c71b959ec29d3c7de2aa482873e753856821243833ad271447",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-append-r4-f7a84065-20261030/result.json": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-native-a-arm-r4-f7a84065-20261030/result.json": "cf5f4dfe7ff9bf7c4fc8844db1842ee9e4842abbcaed8d97fc37a3e105cc8f5e",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-native-a-postboot-r4-f7a84065-20261030/result.json": "4429695ca3fdc2365304a800fd4b6f388422d51b50861a1ed329c61cf832374b",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-native-a-reboot-r4-f7a84065-20261030/result.json": "f2cb823a2ddd9036bbc43d94ac7bff707b415444d895015931e5adad9325456d",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/mmap1-hwloc-dependency-20261030/result.json": "6ce683d3b54c2ab4f59f1bb721b751ec0cd4f506d226e47bd171bdbda392022e"
+  },
+  "preservation_map_sha256": "3f88bb0903abad15dea13b670ec190477dea733e965ccd67e9c49de085334c04",
+  "schema": 1,
+  "scope": "Actual idle and retained completed checks/preparations; no new diagnostic or timing",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

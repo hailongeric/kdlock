@@ -1,0 +1,34 @@
+{
+  "archive_receipt_sha256": "3897bb0c87f3c83a08777bb811ba0d090301901743dc7f476e2ba2fa467e29db",
+  "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd/kd-archives",
+  "groups": [
+    {
+      "bytes": 4527822,
+      "file": "checks.tar.gz",
+      "sha256": "66d9b982ccf0a1a1363937484cdfc897847da32f17223d6908924e82b4f3d55a"
+    },
+    {
+      "bytes": 607227,
+      "file": "preparations.tar.gz",
+      "sha256": "e0bcdba24ee832342adb5546c2c88cb17e10f66aea6ffe90c510fe38d5672666"
+    },
+    {
+      "bytes": 725893,
+      "file": "localized.tar.gz",
+      "sha256": "0f46597972ba1da97c05e42fb24015b4ec994e238eb24d93b9ed7a75b1abdad5"
+    },
+    {
+      "bytes": 487689,
+      "file": "boot.tar.gz",
+      "sha256": "21b87ba7dfec573eba407e32fedfafc5c7c6af490bd423e4f98b8e4b44885cc4"
+    },
+    {
+      "bytes": 2264990,
+      "file": "metadata.tar.gz",
+      "sha256": "7581e72efef9a062509d86eac275a318f8c420dd0df2b0b2ceb712118566c345"
+    }
+  ],
+  "inventory_sha256": "ccf58539552187c066cb4f52147ef1462e2931421a4b8659be558c85b5e5b7eb",
+  "paths": 2589,
+  "regular_files": 1979
+}

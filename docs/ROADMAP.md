@@ -16,8 +16,8 @@ an extracted critical section does not complete kernel replacement.
 | Stage | Required evidence | Current position |
 | --- | --- | --- |
 | 1. Lock mechanism | Correct local/delegated execution and repeatable gains in a declared favorable regime, with adverse cases reported | Functional coverage and favorable exploratory nano cases; repeated current confirmation remains open |
-| 2. Scoped MM | Actual mmap/fault correctness plus predeclared improvement or parity against Native | Linux 7 shared-MM checks and timings complete; Native faster at every measured count |
-| 3. Broader integration | Complete declared call-site replacement and unchanged-application comparison | Planned |
+| 2. Scoped MM | Actual mmap/fault correctness plus predeclared improvement or parity against Native | Scoped checks and 126-point comparison complete; shared-mm and mmap1 thread losses leave the performance gate unmet |
+| 3. Broader integration | Complete declared call-site replacement and unchanged-application comparison | Selected syscall objects and mmap backend exercised; broader replacement remains unvalidated |
 
 ## Current position
 
@@ -37,7 +37,8 @@ or sixteen padded counters with 256 post-unlock rounds. Their recorded
 as returned-body wins.
 
 The normal development kernel is `7.0.0-38-kdlock1`; its mmap backend is disabled.
-The separate `7.0.0-38-kdmm1` image runs the actual adapter in Native/KD modes.
+The earlier `7.0.0-38-kdmm1` image and the subsequent `7.0.0-38-kdscope1`
+comparison run the actual adapter in Native/KD modes as separate cohorts.
 Native MM bodies remain unchanged and execute on their original task. Linux 6.1
 adaptation, operation-specific MM delegation and prepared teardown are retired.
 
@@ -52,8 +53,13 @@ branch-only return or close the selected syscall, MM or performance gates. The
 retains observed losses and false performance acceptance. The subsequent
 [original-body syscall comparison](../bench/results/10.176.26.71/bench/kernel-api-f7a84065-20261030/README.md)
 completed all 126 sessions and 63 pairs: 40 KD gains and 23 losses, with separate
-scoped functional JIT evidence. It does not close the performance gate. Later
-MM comparisons are authorized on that isolated candidate and remain pending. See
+scoped functional JIT evidence. It does not close the performance gate.
+The subsequent [scoped MM comparison](../bench/results/10.176.26.71/bench/kernel-mm-f7a84065-20261030/README.md)
+completed all 126 points and 63 pairs with archived raw-score validation:
+localized shared-mm and unchanged mmap1 threads each lost at all 21 counts;
+the separate process control had 11 gains and 10 losses. All four boots passed
+their bounded MM prerequisites. This completes the requested single-round
+comparison, not performance acceptance or arbitrary kernel replacement. See
 [the current limitations](TODO.md#current-implementation-gaps).
 
 ## Stage 1: establish the mechanism and performance envelope
@@ -94,17 +100,21 @@ killable path bypasses the ordinary uninterruptible polling stage.
 
 | Workload | Operation and topology | Status |
 | --- | --- | --- |
-| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | Runner implemented; matched actual-backend comparison pending |
-| `mmap1_processes` | Same operation in independent processes/mms | Separate runner model implemented; matched comparison pending |
+| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | 42 scoped-kernel points validated; KD below Native at all 21 counts |
+| `mmap1_processes` | Same operation in independent processes/mms | 42 separate control points validated; 11 KD gains and 10 losses |
 | Actual minor faults | Precisely declared access/reset method on actual Native/KD mmap backends, with backing implementation fixed | Generic throughput driver still needed |
-| Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | 42 Linux 7 points complete; KD below Native at all counts |
+| Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | New 42-point scoped-kernel comparison validated; exploratory host qualification, KD below Native at all counts |
 | Existing private backing faults | Independent mms; reset PTE and read a checked preallocated page | Supporting experiment; actual mmap lock stays Native |
 | Existing independent-mm device test | Untouched device mmap/munmap in independent processes | Native control; no backing-lock work in timed operation |
 
 The [implemented mmap1 runner](../bench/mmap1/README.md) uses unchanged upstream
 `75f66e45697e6f5f49c33dd950c4e6b289198f8f` executables, with frozen build reuse
-and a separate actual worker/mm identity observation. Implementation alone is
-not a completed application comparison or MM performance result.
+and a separate actual worker/mm identity observation. The completed scoped-kernel
+comparison retains its single round, mode/boot identities and distinct host
+qualifications. At 20 workers, threads lost 81.803% while processes gained
+0.730%. This supports investigating shared-mm admission/serialization, not
+attributing the loss to parking without matching observations. The thread
+performance requirement remains unmet.
 
 `MAP_PRIVATE` does not create a separate mm for each pthread. Sharing an fd does
 not establish a shared mm either. The 4 KiB device test and reset-plus-read
@@ -172,7 +182,7 @@ and chart at its completed boundary. A timeout does not establish drain.
 | Next deliverable | Remaining work |
 | --- | --- |
 | Stage 1 confirmation | Repeated favorable/adverse nano comparison with local controls |
-| Exact `mmap1` | Execute the implemented pinned runner with actual worker/mm identity; keep Native/KD and thread/process results separate |
+| Exact `mmap1` | Preserve the completed single-round comparison and identity limits; diagnose the shared-mm losses before another declared candidate comparison |
 | Actual fault throughput | Defined fault class, fixed backing implementation and exact accounting |
 | Scoped MM acceptance | Correctness plus declared improvement/parity; current loss remains unresolved |
 | Broader replacement | Per-object API/lifetime coverage and matched application evaluation |

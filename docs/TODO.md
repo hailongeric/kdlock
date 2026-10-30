@@ -161,8 +161,11 @@ kernel object binding, then unchanged mmap1 acceptance. The sequence started
 from `acfa33a5`; prior regressed mutex candidates remain unpromoted. The selected
 [original-body syscall comparison](../bench/results/10.176.26.71/bench/kernel-api-f7a84065-20261030/README.md)
 completed 126 sessions and 63 pairs, with 40 KD gains and 23 losses. Scoped
-functional checks passed; performance acceptance, localized mmap and unchanged
-mmap1 comparison gates remain open.
+functional checks passed. The subsequent [scoped MM comparison](../bench/results/10.176.26.71/bench/kernel-mm-f7a84065-20261030/README.md)
+completed and archive-validated 126 points and 63 pairs: localized shared-mm and
+unchanged `mmap1_threads` each lost at all 21 counts; `mmap1_processes` had 11
+gains and 10 losses. The MM performance criterion is not met, and the nano
+no-regression gate remains open.
 
 The [per-lock native critical-section map](design/kernel_cs_semantics.md) retains
 the pre-implementation `acfa33a5` audit. The current candidate implements exact
@@ -185,8 +188,8 @@ branch-only JIT return is unimplemented. The runtime candidate at
 [recorded focused validation and a 210-point nano comparison](../bench/results/10.176.26.71/bench/continuation-perf-nano-20261030/README.md).
 The functional checks passed, but nano performance acceptance remains false.
 The user authorized later syscall/MM comparisons on this isolated candidate.
-The recorded syscall checks and timing do not close the nano losses or validate
-the pending MM comparisons.
+The recorded syscall and MM checks establish their bounded functional scope;
+their completed timings do not close the nano or MM performance losses.
 
 | Area | Remaining limit |
 | --- | --- |
@@ -209,15 +212,22 @@ See [translation policy](design/admission.md) and [register ABI](JIT_REGISTER_AB
 
 ## MM and performance gaps
 
-The ordinary `kdlock1` kernel keeps the mmap adapter disabled. The separate
+The ordinary `kdlock1` kernel keeps the mmap adapter disabled. The earlier
 actual shared-MM comparison completed 42 points; Native was faster at all 21
 worker counts. At 60 workers KD achieved 0.0436× Native throughput. A measured
 cause or accepted optimization has not been established on the Linux 7 cohort.
 
 The [unchanged upstream mmap1 runner](../bench/mmap1/README.md) is implemented
 for `mmap1_threads` and the separate `mmap1_processes` control, including frozen
-executable reuse and actual worker/mm identity checks. Its matched Native/KD
-application comparison remains pending. A generic actual-backend minor-fault
+executable reuse and separate actual worker/mm identity checks. The new
+`7.0.0-38-kdscope1` comparison reuses one image and application build across
+Native/KD modes. At 20 workers the archive-validated thread result is −81.803%
+and the process control is +0.730%; the localized shared-mm result is −85.241%.
+The thread loss supports investigating shared-mm admission and serialization,
+but the scored data do not identify parking or a specific wake/cacheline cause.
+Killable writer phase admission bypasses the ordinary 16,384-probe poll before
+the gate's optimistic spinning; this source difference is a hypothesis, not a
+measured attribution or accepted fix. A generic actual-backend minor-fault
 throughput driver is still needed. Existing device mappings and private-backing
 fault cycles are different workloads. Preserve native MM bodies and original-task
 execution; operation-specific delegation and prepared teardown remain retired.

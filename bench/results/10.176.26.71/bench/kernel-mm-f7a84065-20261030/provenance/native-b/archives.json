@@ -1,0 +1,116 @@
+{
+  "archive_prefix": "native-b",
+  "boot_id": "588ce982-d213-458b-a354-f065054ef6f1",
+  "completed": true,
+  "finished_ns": 1793361070063073369,
+  "groups": [
+    {
+      "bytes": 5518161,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b-archives/checks.tar.gz",
+      "roots": [
+        "native-b/api",
+        "native-b/completed",
+        "native-b/faults",
+        "native-b/mapping",
+        "native-b/mmap1-identity",
+        "native-b/sites"
+      ],
+      "sha256": "85454b3a1b1bbe39d05b3c6cef06fb7fe8daaa195777fe5a65b6e89edf179e1e"
+    },
+    {
+      "bytes": 774236,
+      "file": "localized.tar.gz",
+      "group": "localized",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b-archives/localized.tar.gz",
+      "roots": [
+        "native-b/shared-measure"
+      ],
+      "sha256": "20676da861dea990864eee18427e1b46d6e7c86ad3b2c8b943ef0645ebf0d038"
+    },
+    {
+      "bytes": 662826,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b-archives/mmap1.tar.gz",
+      "roots": [
+        "native-b/mmap1-measure"
+      ],
+      "sha256": "4956009b240f9a66558073896557a1983fb8ba4e838c79e77c29ea3b3f771712"
+    },
+    {
+      "bytes": 240410,
+      "file": "boot.tar.gz",
+      "group": "boot",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b-archives/boot.tar.gz",
+      "roots": [
+        "native-b/boot-evidence"
+      ],
+      "sha256": "30c047ec1bd32f4e1826885c034383ef5320a2579eca4552f9dc2c59f33ba4ca"
+    },
+    {
+      "bytes": 2364328,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b-archives/metadata.tar.gz",
+      "roots": [
+        "native-b/api-controller.json",
+        "native-b/api-controller.log",
+        "native-b/api-reuse-probe.json",
+        "native-b/completed-controller.json",
+        "native-b/completed-controller.log",
+        "native-b/endpoints",
+        "native-b/failed-attempts",
+        "native-b/faults-controller.json",
+        "native-b/faults-controller.log",
+        "native-b/final-health.json",
+        "native-b/mapping-controller.json",
+        "native-b/mapping-controller.log",
+        "native-b/mmap1-identity-controller.json",
+        "native-b/mmap1-identity-controller.log",
+        "native-b/mmap1-measure-controller.json",
+        "native-b/mmap1-measure-controller.log",
+        "native-b/preservation-inputs",
+        "native-b/shared-measure-controller.json",
+        "native-b/shared-measure-controller.log",
+        "native-b/sites-controller.json",
+        "native-b/sites-controller.log"
+      ],
+      "sha256": "aa49629c25751cbfdf1ae86acdc5abc2e8b23587f69b7c37c243f8032efe0e06"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-b",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "953486acd9f882fa27afb0f8979365954bc24578823faa4000dde4727d053652",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "1d563cf4dbdd93d8da986f1bb83c0ca0156c03ea058aa89c0cc765312159d651",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "off",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-native"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-native",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793361067494182231
+}

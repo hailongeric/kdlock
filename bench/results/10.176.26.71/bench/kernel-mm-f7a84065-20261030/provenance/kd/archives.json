@@ -1,0 +1,113 @@
+{
+  "archive_prefix": "kd",
+  "boot_id": "02c1396f-28f3-44a9-8d01-97374a0f221d",
+  "completed": true,
+  "finished_ns": 1793357920391552592,
+  "groups": [
+    {
+      "bytes": 4527822,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-archives/checks.tar.gz",
+      "roots": [
+        "kd/api",
+        "kd/completed",
+        "kd/faults",
+        "kd/mapping",
+        "kd/sites"
+      ],
+      "sha256": "66d9b982ccf0a1a1363937484cdfc897847da32f17223d6908924e82b4f3d55a"
+    },
+    {
+      "bytes": 607227,
+      "file": "preparations.tar.gz",
+      "group": "preparations",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-archives/preparations.tar.gz",
+      "roots": [
+        "kd/shared-prepare"
+      ],
+      "sha256": "e0bcdba24ee832342adb5546c2c88cb17e10f66aea6ffe90c510fe38d5672666"
+    },
+    {
+      "bytes": 725893,
+      "file": "localized.tar.gz",
+      "group": "localized",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-archives/localized.tar.gz",
+      "roots": [
+        "kd/shared-measure"
+      ],
+      "sha256": "0f46597972ba1da97c05e42fb24015b4ec994e238eb24d93b9ed7a75b1abdad5"
+    },
+    {
+      "bytes": 487689,
+      "file": "boot.tar.gz",
+      "group": "boot",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-archives/boot.tar.gz",
+      "roots": [
+        "kd/boot-evidence"
+      ],
+      "sha256": "21b87ba7dfec573eba407e32fedfafc5c7c6af490bd423e4f98b8e4b44885cc4"
+    },
+    {
+      "bytes": 2264990,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-archives/metadata.tar.gz",
+      "roots": [
+        "kd/api-controller.json",
+        "kd/api-controller.log",
+        "kd/api-reuse-probe.json",
+        "kd/completed-controller.json",
+        "kd/completed-controller.log",
+        "kd/endpoints",
+        "kd/failed-attempts",
+        "kd/faults-controller.json",
+        "kd/faults-controller.log",
+        "kd/final-health.json",
+        "kd/mapping-controller.json",
+        "kd/mapping-controller.log",
+        "kd/preservation-inputs",
+        "kd/shared-measure-controller.json",
+        "kd/shared-measure-controller.log",
+        "kd/shared-prepare-controller.json",
+        "kd/shared-prepare-controller.log",
+        "kd/sites-controller.json",
+        "kd/sites-controller.log"
+      ],
+      "sha256": "7581e72efef9a062509d86eac275a318f8c420dd0df2b0b2ceb712118566c345"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "a37a9ed11c53dae95c3c4e8cd55fc8104ab60d1c0d63ebb0c0dba1459495811d",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "ccf58539552187c066cb4f52147ef1462e2931421a4b8659be558c85b5e5b7eb",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793357918065821409
+}

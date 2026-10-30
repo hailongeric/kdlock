@@ -1,0 +1,146 @@
+{
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "files": [
+    {
+      "sha256": "f093746333abdc7e3ca647852b43b611d6a0a494e7922b9c285125dd46c00db3",
+      "source": "/tmp/kdlock-continuation-f7a84065-source-sha256.json",
+      "target": "preservation-inputs/kdlock-continuation-f7a84065-source-sha256.json"
+    },
+    {
+      "sha256": "52448d33d2ed7c781b0bea4cd1ac4ab80b59107a42622a4fc8a0fd9d857fd520",
+      "source": "/tmp/kdlock-continuation-f7a84065-source-state.json",
+      "target": "preservation-inputs/kdlock-continuation-f7a84065-source-state.json"
+    },
+    {
+      "sha256": "35495b774fd74872cd204140ef76fe4cdcc34b2235cbac051d05999c9101bf6c",
+      "source": "/tmp/kdlock-scope-api-step-r3-20261030.py",
+      "target": "preservation-inputs/kdlock-scope-api-step-r3-20261030.py"
+    },
+    {
+      "sha256": "6910aa8c1ee06c92c248b8ee0d54d1636a8cab9f9b69161cb0ce9b5a58dae064",
+      "source": "/tmp/kdlock-scope-boot-r4-20261030.py",
+      "target": "preservation-inputs/kdlock-scope-boot-r4-20261030.py"
+    },
+    {
+      "sha256": "4618cd0df915928562e94569662a3771483a86cdc26f4762f276190d8ee88567",
+      "source": "/tmp/kdlock-scope-generation-f7a84065-20261030.json",
+      "target": "preservation-inputs/kdlock-scope-generation-f7a84065-20261030.json"
+    },
+    {
+      "sha256": "b24148bad4184a40d13186da36547320e637b8ecab8836108c26fe91f1efc5b2",
+      "source": "/tmp/kdlock-scope-mm-step-r3-20261030.py",
+      "target": "preservation-inputs/kdlock-scope-mm-step-r3-20261030.py"
+    },
+    {
+      "sha256": "339914241182c2077403847b6982fba22dd36df7573090c41c85633e563fe16c",
+      "source": "/tmp/kdlock-scope-mm-step-r4-20261030.py",
+      "target": "preservation-inputs/kdlock-scope-mm-step-r4-20261030.py"
+    },
+    {
+      "sha256": "95199f8417b1eb8a0e7a406fa1143dec17090aa0973c6db3d0ae828e401ed588",
+      "source": "/tmp/kdlock-scope-f7-pool64-host-reference.json",
+      "target": "preservation-inputs/kdlock-scope-f7-pool64-host-reference.json"
+    },
+    {
+      "sha256": "fe8dda8eb801b13cfd13c70ad0f74c0f0e2d9b29ee7c07bb3d8977b997907a61",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-sites-host-before.json",
+      "target": "preservation-inputs/host-captures/sites-host-before.json"
+    },
+    {
+      "sha256": "b89301f5b49e875bfb4f233799bd4a62743a6efaa3abe494c977b65da20161d8",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-api-host-before.json",
+      "target": "preservation-inputs/host-captures/api-host-before.json"
+    },
+    {
+      "sha256": "48841c8d7b39abbe6ba8a93ad4d43269e446beac8c3907a7d13a1de989d4e4ea",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-mapping-r4-host-before.json",
+      "target": "preservation-inputs/host-captures/mapping-host-before.json"
+    },
+    {
+      "sha256": "7d57ec9ced1fba5b96b655043ae8d40f39cc12a69c259a9dec806f10d3e6feea",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-faults-host-before.json",
+      "target": "preservation-inputs/host-captures/faults-host-before.json"
+    },
+    {
+      "sha256": "61f4e47b6a551c3382068ed4e04f5346b79bf553eeb957a086e5e2916bf41aef",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-completed-host-before.json",
+      "target": "preservation-inputs/host-captures/completed-host-before.json"
+    },
+    {
+      "sha256": "80252a1eee4d28f6824cb4c03c656fd916dcd6219303e529a4c9b468f4407f8f",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-shared-prepare-host-before.json",
+      "target": "preservation-inputs/host-captures/shared-prepare-host-before.json"
+    },
+    {
+      "sha256": "ffab6590d8883146e4669f0bfa17b13c8d49ceab7220d2f560967a6219c9e922",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-mmap1-prepare-r2-host-before.json",
+      "target": "preservation-inputs/host-captures/mmap1-prepare-host-before.json"
+    },
+    {
+      "sha256": "2cd28fdc8e5af74a977a46c7d44f7ef687a961dd2e81158bc5db5ba45fa852a4",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-mapping-host-before.json",
+      "target": "preservation-inputs/failed-host-captures/mapping-r3/mapping-controller.host-before.json"
+    },
+    {
+      "sha256": "60c1b07323b9f7a472fe5881a678cc370523af54a2231ef0a0e5980b3fb1aa86",
+      "source": "/tmp/kdlock-scope-f7-native-a-mm-mmap1-prepare-host-before.json",
+      "target": "preservation-inputs/failed-host-captures/mmap1-prepare-missing-hwloc/mmap1-prepare-controller.host-before.json"
+    }
+  ],
+  "mapping_preservation": {
+    "corrected_copy": null,
+    "corrected_copy_sha256": null,
+    "original": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/failed-attempts/mapping-r3/preservation.json",
+    "original_sha256": "59808d5b5f8dbc95f79d981d0647374ecdae9b7edf34e0a787dc9724eea3e826",
+    "original_valid_json": true,
+    "scope": "Original unchanged; only a trailing literal backslash-n is normalized in a separate copy"
+  },
+  "original_paths_retained": true,
+  "performance_accepted": false,
+  "schema": 1,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "steps": {
+    "api": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/api-controller.json",
+      "owner_sha256": "161fffdb55838f8efafca6e0d95016c9caf305fdd9771482ee62b7766266e866",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/api/result.json",
+      "result_sha256": "601b7123406ae523a7f2ca6c755ecfaf523ceeb7ca535a3306eddd8fdbbc96a7"
+    },
+    "completed": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/completed-controller.json",
+      "owner_sha256": "b8370838500aef15a8f64af95c2a33bd867a386fe02ac6002cba9b136cb75e92",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/completed/result.json",
+      "result_sha256": "f0feef750fccc8c4d5a6e23a0d537d9dcef3994fbd276e02e17874bba0e53884"
+    },
+    "faults": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/faults-controller.json",
+      "owner_sha256": "a3b66b59ab00697cabfbb456faaf20d4c64362dc7236c8c483953700a77621d9",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/faults/result.json",
+      "result_sha256": "23b2f24db18e5eac1c44b43962a760ce8ec1523cb5e755f302c75bb73554312a"
+    },
+    "mapping": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mapping-controller.json",
+      "owner_sha256": "b2a690ef79229c9207d6148c31735ff63eea788b1e32195bb47c91b38b5a8e10",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mapping/result.json",
+      "result_sha256": "18f1a2b3c42cce66ecd9084cc161fa5a0da0e63913526aaf99755590b467baba"
+    },
+    "mmap1-prepare": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare-controller.json",
+      "owner_sha256": "5a392364dfead11d6a28dcd31838b5844b3c0f94ba8070be36b28897b326b835",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/result.json",
+      "result_sha256": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4"
+    },
+    "shared-prepare": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/shared-prepare-controller.json",
+      "owner_sha256": "f2631828aba1af546ad122742fac34c378e7a16d4873288d676f265b416345a7",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/shared-prepare/result.json",
+      "result_sha256": "b28c0ef691ae061114be8c987f07825fa5942349a8a4479d759fd4e3d60f53b9"
+    },
+    "sites": {
+      "owner": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/sites-controller.json",
+      "owner_sha256": "b659d892d3eaac327059547e38fe6df3d674aba9257fba206abc4eb4a6a1f0cc",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/sites/writer-sites.json",
+      "result_sha256": "0222b530c0dad9c71b959ec29d3c7de2aa482873e753856821243833ad271447"
+    }
+  }
+}

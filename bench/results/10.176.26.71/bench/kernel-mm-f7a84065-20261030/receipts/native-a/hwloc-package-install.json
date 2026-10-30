@@ -1,0 +1,37 @@
+{
+  "state": "COMPLETE",
+  "started": 1793354699.1647875,
+  "packages": [
+    "autoconf=2.72-3.1ubuntu2",
+    "autotools-dev=20240727.1build1",
+    "automake=1:1.18.1-3build1",
+    "libhwloc15=2.13.0-2",
+    "libltdl7=2.5.4-9",
+    "libltdl-dev=2.5.4-9",
+    "libnuma-dev=2.0.19-1build1",
+    "libhwloc-dev=2.13.0-2"
+  ],
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "completed": true,
+  "argv": [
+    "apt-get",
+    "-y",
+    "--no-install-recommends",
+    "--no-remove",
+    "--no-upgrade",
+    "install",
+    "autoconf=2.72-3.1ubuntu2",
+    "autotools-dev=20240727.1build1",
+    "automake=1:1.18.1-3build1",
+    "libhwloc15=2.13.0-2",
+    "libltdl7=2.5.4-9",
+    "libltdl-dev=2.5.4-9",
+    "libnuma-dev=2.0.19-1build1",
+    "libhwloc-dev=2.13.0-2"
+  ],
+  "pid": 39137,
+  "returncode": 0,
+  "installed": "autoconf 2.72-3.1ubuntu2 install ok installed\nautomake 1:1.18.1-3build1 install ok installed\nautotools-dev 20240727.1build1 install ok installed\nlibhwloc-dev 2.13.0-2 install ok installed\nlibhwloc15 2.13.0-2 install ok installed\nlibltdl-dev 2.5.4-9 install ok installed\nlibltdl7 2.5.4-9 install ok installed\nlibnuma-dev 2.0.19-1build1 install ok installed\n",
+  "drain_unknown": false,
+  "finished": 1793354708.9161236
+}

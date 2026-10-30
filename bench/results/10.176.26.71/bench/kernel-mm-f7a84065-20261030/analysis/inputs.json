@@ -1,0 +1,21 @@
+{
+  "boots": {
+    "kd": {
+      "raw": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd",
+      "transfer_sha256": "7227b2a63bf1d26a51ececdf7a17ce46cd4689f874cc1d9849fdaafbcb0728a2"
+    },
+    "kd-b": {
+      "raw": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/kd-b",
+      "transfer_sha256": "c72d65b50585457e1c78933ca8c20cd64338aff86e886ae83eaacbe10b716934"
+    },
+    "native-a": {
+      "raw": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a",
+      "transfer_sha256": "ed2d1820426c2ee32619aa07417dea4f0366244ed2115e2cc07203335f2c7dc8"
+    },
+    "native-b": {
+      "raw": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-b",
+      "transfer_sha256": "c5aaf779a13c1c36208a929b5eb5d3d5def8e12c41623814a47a79197db619da"
+    }
+  },
+  "schema": 1
+}

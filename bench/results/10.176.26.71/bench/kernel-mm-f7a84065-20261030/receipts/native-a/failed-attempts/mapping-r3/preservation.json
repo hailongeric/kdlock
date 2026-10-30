@@ -1,0 +1,16 @@
+{
+  "state": "FAILED_ATTEMPT_PRESERVED_IDLE",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "output_never_created": true,
+  "former_parent_and_child_absent": true,
+  "idle_check": "tests/kernel/mmap_writer/run.py:idle",
+  "files": {
+    "mapping-controller.json": "e51de89312a0a7176a7466fc878618e78876843f5dbb5a14e803e9ff4b1bd8ef",
+    "mapping-controller.log": "076b9634efe06b190c28e765856b457589920853ceeff9d2c503ff82e1f30b2d"
+  },
+  "original_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a",
+  "retained_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/failed-attempts/mapping-r3",
+  "completed": true,
+  "timestamp": 1793353640.5453358,
+  "scope": "Preserve the pre-test controller log conflict; no test or measurement rerun"
+}

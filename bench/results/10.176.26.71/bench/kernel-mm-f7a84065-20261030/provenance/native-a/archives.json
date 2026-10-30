@@ -1,0 +1,102 @@
+{
+  "archive_prefix": "native-a",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "completed": true,
+  "finished_ns": 1793355282956576071,
+  "groups": [
+    {
+      "bytes": 4955413,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a-archives/checks.tar.gz",
+      "roots": [
+        "native-a/api",
+        "native-a/completed",
+        "native-a/faults",
+        "native-a/mapping",
+        "native-a/sites"
+      ],
+      "sha256": "a8ec24a9d31b0088d8b596dec404b6af57445e7fc547afda8ed1a242d3ae1d35"
+    },
+    {
+      "bytes": 1323156,
+      "file": "preparations.tar.gz",
+      "group": "preparations",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a-archives/preparations.tar.gz",
+      "roots": [
+        "native-a/mmap1-prepare",
+        "native-a/shared-prepare"
+      ],
+      "sha256": "ae550c0327fa6aeb5b9f95bb137f5275ffef17d4cf654b90db87bf865f8b3dec"
+    },
+    {
+      "bytes": 631250,
+      "file": "boot.tar.gz",
+      "group": "boot",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a-archives/boot.tar.gz",
+      "roots": [
+        "native-a/boot-evidence"
+      ],
+      "sha256": "2d2a3b0770b7fa170195e45d5efcc015fb04fa83a88fecdf80dd94fd1702b411"
+    },
+    {
+      "bytes": 1525231,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a-archives/metadata.tar.gz",
+      "roots": [
+        "native-a/api-controller.json",
+        "native-a/api-controller.log",
+        "native-a/completed-controller.json",
+        "native-a/completed-controller.log",
+        "native-a/failed-attempts",
+        "native-a/faults-controller.json",
+        "native-a/faults-controller.log",
+        "native-a/final-health.json",
+        "native-a/mapping-controller.json",
+        "native-a/mapping-controller.log",
+        "native-a/mmap1-prepare-controller.json",
+        "native-a/mmap1-prepare-controller.log",
+        "native-a/preservation-inputs",
+        "native-a/shared-prepare-controller.json",
+        "native-a/shared-prepare-controller.log",
+        "native-a/sites-controller.json",
+        "native-a/sites-controller.log"
+      ],
+      "sha256": "d9050ff2944de5b5a6b0d41be8970353c5807923fbeda5421040976cf4815e7b"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "df93a3f6c24e647c1d9754caf706a8f93a6c8dadf229be0443b6c8ef2cf5a260",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "00ea6d916193e8d6afbd1634b0e3fd3713a43664f2b915a512260d675a0c99c1",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "off",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-native"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-native",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793355280574820659
+}

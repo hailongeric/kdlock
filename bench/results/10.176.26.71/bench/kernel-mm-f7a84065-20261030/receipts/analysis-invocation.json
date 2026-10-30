@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "python3",
+    "/tmp/kdlock-scope-f7-mm-offline-analysis-r2-20261030.py",
+    "--inputs",
+    "/tmp/kdlock-scope-f7-mm-final-offline-inputs-20261030.json",
+    "--inputs-sha256",
+    "fa4327979593a39dfdb230b393cfdf4c94b225e6b9bd47f7fc3525fc36e851d0",
+    "--scope",
+    "all",
+    "--output",
+    "/tmp/kdlock-scope-f7-mm-final-offline-result-20261030"
+  ],
+  "completed": true,
+  "finished": 1793362578.4620788,
+  "log_sha256": "8e5be88f195f4b2763e804a3205e58cf96f5f0c886eea19ca7f44e5a61a55795",
+  "pid": 3,
+  "returncode": 0,
+  "schema": 1,
+  "scope": "source-host offline archived data only",
+  "script_sha256": "da6ce611cf61b75b5c0fa3ce11c7d6a9c094b0b88d9664e92d094af308b2a145",
+  "started": 1793362575.8390517
+}

@@ -1,0 +1,103 @@
+{
+  "archive_prefix": "kd-b",
+  "boot_id": "8c5259e3-0f93-493d-afa9-bd93d5358683",
+  "completed": true,
+  "finished_ns": 1793362437177913853,
+  "groups": [
+    {
+      "bytes": 5522042,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-b-archives/checks.tar.gz",
+      "roots": [
+        "kd-b/api",
+        "kd-b/completed",
+        "kd-b/faults",
+        "kd-b/mapping",
+        "kd-b/mmap1-identity",
+        "kd-b/sites"
+      ],
+      "sha256": "5e62feb0630f7373714e34633be409f6ea3d8300c289af57bc29211276cf02f3"
+    },
+    {
+      "bytes": 661984,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-b-archives/mmap1.tar.gz",
+      "roots": [
+        "kd-b/mmap1-measure"
+      ],
+      "sha256": "3dd5d645b7825b6b0e591cd78765d66b883d7bebb4587147ec87940634614936"
+    },
+    {
+      "bytes": 240000,
+      "file": "boot.tar.gz",
+      "group": "boot",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-b-archives/boot.tar.gz",
+      "roots": [
+        "kd-b/boot-evidence"
+      ],
+      "sha256": "d4076e5fa90bcfaa11cd085c6322c8de7465e49fdc568a2ea80aac897f27857f"
+    },
+    {
+      "bytes": 1005113,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-b-archives/metadata.tar.gz",
+      "roots": [
+        "kd-b/api-controller.json",
+        "kd-b/api-controller.log",
+        "kd-b/api-reuse-probe.json",
+        "kd-b/completed-controller.json",
+        "kd-b/completed-controller.log",
+        "kd-b/endpoints",
+        "kd-b/faults-controller.json",
+        "kd-b/faults-controller.log",
+        "kd-b/final-health.json",
+        "kd-b/mapping-controller.json",
+        "kd-b/mapping-controller.log",
+        "kd-b/mmap1-identity-controller.json",
+        "kd-b/mmap1-identity-controller.log",
+        "kd-b/mmap1-measure-controller.json",
+        "kd-b/mmap1-measure-controller.log",
+        "kd-b/preservation-inputs",
+        "kd-b/sites-controller.json",
+        "kd-b/sites-controller.log"
+      ],
+      "sha256": "b2e32326aa6883ce5a8cf3235e3e43b09cee77f6de077fd2d0ec25b98371850f"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/kd-b",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "aa1c9086cdb0ca5fb89e44d8809cf2027b6e869c932411526c9036a270ee39b0",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "7f387194d11226c131997cf2fa5411d43510773ce785ea226871a49616c6635e",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793362435169540848
+}

@@ -1,0 +1,62 @@
+{
+  "artifacts": {
+    "pairs.csv": "fffd94e1f3bc18ef8a21d04eeb762d90379624b588c5e2ae503e29c1bab91cb9",
+    "tables.md": "99252f3049a4c97bb6c8057cd54b211bed8c9a7a2392fea8f1a69b8ef604ef63"
+  },
+  "completed": true,
+  "final_archive_validation": false,
+  "groups": {
+    "processes": {
+      "gains": 11,
+      "losses": 10,
+      "maximum_change": 28.426845184732308,
+      "minimum_change": -4.854571782074779,
+      "n20": {
+        "change_percent": 0.7303099982852057,
+        "kd_over_native": 1.007303099982852,
+        "kd_pairs_per_nominal_second": 1865064.5,
+        "model": "processes",
+        "native_pairs_per_nominal_second": 1851542.5,
+        "preliminary": true,
+        "round": 0,
+        "workers": 20
+      },
+      "pairs": 21,
+      "ties": 0
+    },
+    "threads": {
+      "gains": 0,
+      "losses": 21,
+      "maximum_change": -6.282451013645729,
+      "minimum_change": -94.34386025299027,
+      "n20": {
+        "change_percent": -81.8028207201406,
+        "kd_over_native": 0.181971792798594,
+        "kd_pairs_per_nominal_second": 37585.0,
+        "model": "threads",
+        "native_pairs_per_nominal_second": 206543.0,
+        "preliminary": true,
+        "round": 0,
+        "workers": 20
+      },
+      "pairs": 21,
+      "ties": 0
+    }
+  },
+  "inputs": {
+    "kd-b": {
+      "path": "/tmp/kdlock-scope-f7-kd-b-mm-mmap1-measure-20261030/runner-result.json",
+      "sha256": "2a4e26dd14acd45ef3660736a8a69038ee16d438104582f22dffa374f4f5c3f1"
+    },
+    "native-b": {
+      "path": "/tmp/kdlock-scope-f7-native-b-mm-mmap1-measure-20261030/runner-result.json",
+      "sha256": "62f8770f554182e1145f8c6c845c38b3ed6b66d68b2e4303481459a0f74fc68d"
+    }
+  },
+  "pairs": 42,
+  "performance_accepted": false,
+  "points": 84,
+  "preliminary": true,
+  "raw_upstream_validation": false,
+  "schema": 1
+}
