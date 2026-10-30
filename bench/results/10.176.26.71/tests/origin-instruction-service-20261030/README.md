@@ -121,3 +121,19 @@ private tree. Update only the patch context to include that declaration; keep
 all instrumentation additions and production code unchanged. Include the
 directly affected completion-accounting unit driver in the next VM selection.
 Unit success here does not establish a provider build, live execution or timing.
+
+The first context-only correction, `dc56e2ed6539dbae9780217830b948607f8aac80`,
+passed `git apply --check` but the added VM completion-accounting driver still
+failed at that hunk. Four leading context lines and three trailing lines make
+GNU patch require an end-of-file match. Use ordinary three-line context on both
+sides, starting at `resume_after_origin`, without relaxing `--fuzz=0` or changing
+any instrumentation. The failed attempt remains in
+`/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-unit-dc56e2ed-20261030`.
+
+For this formatting-only follow-up, retain the successful fourteen-group
+`28d479d4de96cf038829176124abb29039f7ff19` unit evidence rather than repeating
+unchanged tests. Bind its actual owner receipt, log and synchronization manifest;
+allow only this result document and the observation patch to differ. Run the
+basic checks, directly affected completion-accounting driver and provider build
+on the new generation. The earlier overall attempt stays failed because provider
+preparation failed; only its successful unit block is reusable evidence.
