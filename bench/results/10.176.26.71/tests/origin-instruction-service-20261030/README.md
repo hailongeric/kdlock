@@ -72,3 +72,27 @@ probe, prepared-rwsem writer probe and mixed mutex-to-spin control run. Preserve
 every failure, exact source generation, physical owner, source lease and unlock
 ACK. The earlier `8446f4ecb08816380a4c233197a8ce5e4d333aac` nano campaign cannot
 validate this newer runtime or establish its no-regression acceptance.
+
+## Renamed-family VM attempt
+
+The clean `f1811d1dba0417854cc47f0d651d3a1ccc31ec91` generation renames the
+active functional family to `jit_continuation` without changing production
+runtime bytes. Its 5,864-file synchronization receipt has SHA256
+`d13e2a0995cdb96bbfcd0819214a4547ffc06831435105d69a7046b6fc7c070f`.
+The output is
+`/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-unit-f181-20261030`
+on the same normal-kernel boot recorded above.
+
+Kernel identity passed. The basic and directly affected unit selection reported
+**12 passed, 2 failed**. The production consumer completed 8,955 checks with
+zero failures; its `indirect-accepts-jump-opcode` mutation then exited with
+SIGSEGV instead of the required explicit failed assertion. The repeated-marker
+runner fixture omitted the new `origin_service` field and raised `KeyError`.
+The provider build and live tests did not start. These are failed test groups,
+not completed validation.
+
+Before another VM attempt, give the ordinary-marker fixture its explicit
+non-service mode and diagnose the mutation's direct-helper ownership setup.
+Preserve the ordinary-marker invariants and require explicit assertion failures
+for intentional mutations; a crash must not count as detection. Keep production
+changes separate from fixture corrections and retain this failed generation.
