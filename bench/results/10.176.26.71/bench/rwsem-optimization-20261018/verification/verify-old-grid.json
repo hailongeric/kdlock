@@ -1,7 +1,0 @@
-{
-  "error": "ValueError('member outside recorded archive prefix: rwsem-delegation-grid-20261018.log')",
-  "path": "bench/results/10.176.26.71/raw/bench/rwsem-delegation-20261018/guest-evidence.tar.gz",
-  "schema": 1,
-  "scope": "Read-only archive verification; failure is not a pass",
-  "status": "FAIL"
-}

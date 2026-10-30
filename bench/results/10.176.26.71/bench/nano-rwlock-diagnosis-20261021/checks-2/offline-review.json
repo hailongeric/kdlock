@@ -1,7 +1,0 @@
-{
-  "passed": true,
-  "source_commit": "c0bbefd43c3a215c0caa12649ff869cf94b729b7",
-  "source_files": 270,
-  "checks": "Dependencies, two basic programs, four directly affected drivers; no full suite",
-  "log_sha256": "92495e8c4026871c1fa1c895e9c4b0d242e2f52ede542d8496d08765e24bfaa2"
-}

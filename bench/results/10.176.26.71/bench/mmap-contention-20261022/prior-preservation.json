@@ -1,8 +1,0 @@
-{
-  "method": "Rechecked every prior manifest, inventory, archive SHA256 and size after this diagnostic attempt",
-  "passed": true,
-  "source_index": "bench/results/10.176.26.71/tests/serial-continuation-20261022/artifact-index.json",
-  "source_index_sha256": "18ea94d30ef3cde85f5ac6e0ff1b0cfeceff4493294d253fb8f7686d966c90fd",
-  "unchanged_archives": 31,
-  "unchanged_compressed_bytes": 17850550
-}

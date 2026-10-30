@@ -1,6 +1,0 @@
-{
-  "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/build/guard/tc_allocator_guard.ko": "ec7fc0110a0af5737b6b419832b5f32205a9de7d08e48c5fdb79db16bf1eadcb",
-  "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/build/provider/kernel_module/kdlock_km.ko": "885f728847e9c0b2564a6309e4894595cbb7740d0bf72bb9e0b861eac0e4d6d5",
-  "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/source/daemon/daemon": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb",
-  "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/source/workload_modules/jit_escape/jit_escape_test.ko": "402e2c1fc409bae74328b230432d2a5f177c72333b44251e5c99d5e051200724"
-}

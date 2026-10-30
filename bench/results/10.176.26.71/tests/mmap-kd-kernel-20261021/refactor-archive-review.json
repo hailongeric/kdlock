@@ -1,8 +1,0 @@
-{
-  "passed": true,
-  "checks": 1288,
-  "members": 640,
-  "groups": 4,
-  "manifest_sha256": "97aebaab42b3f17543154cdcd40070ad5802d9d894b7a0bae223eddfb129e5d5",
-  "scope": "Archive SHA-256, length, disjoint member names, and traversal checks; no archived code execution."
-}

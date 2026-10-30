@@ -1,9 +1,0 @@
-{
-  "description": "KD-owned ordinary non-RT physical mutex and private OSQ, retaining legacy KD delegation unchanged",
-  "release": "6.1.159-kdclobber2",
-  "sources": {
-    "kernel/locking/mutex.c": "9398306fa9f63327ca4fcdacc70acb6b83e29591f81e79f3e52f4e3193131368",
-    "kernel/locking/osq_lock.c": "daab1575a9464194d5ad399a4168bd20718e81db806a2f9b896da7f00367a7dc"
-  },
-  "scope": "ordinary mutex only; no ww_mutex, RT, debug mutex or lockdep port; no Linux mutex API calls"
-}

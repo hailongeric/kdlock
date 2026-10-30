@@ -1,6 +1,0 @@
-{"command": ["/root/kdlock-evidence/clobber-20260918/venv/bin/python", "bench/real_api/test_report.py"], "source_sha256": {"bench/real_api/report.py": "321cc0173f5e145b491fc3036ad02fcd9bc6a0ee3b42ace91aa774fb0fa97dec", "bench/real_api/test_report.py": "aa27ebf85c20b40449f10009c5cc168ca9e0fea6c990d0dcd0b8b3b53f02dac1"}, "exit_status": 0}
-....
-----------------------------------------------------------------------
-Ran 4 tests in 0.002s
-
-OK

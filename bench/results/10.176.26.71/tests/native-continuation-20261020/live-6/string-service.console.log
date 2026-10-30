@@ -1,5 +1,0 @@
-{"name": "cold-warmup", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1101460, "bench_jit_completions": 1101460, "address_guard_count": 0}}
-{"name": "cold-delegated", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1371539, "bench_jit_completions": 1371539, "address_guard_count": 0}}
-{"name": "long-delegated", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1586754, "bench_jit_completions": 1586754, "address_guard_count": 0}}
-{"name": "long-repeat", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1584442, "bench_jit_completions": 1584442, "address_guard_count": 0}}
-PASS: original strcmp delegated with short and long valid strings; exact effects/task/value; unchanged image; final drain
