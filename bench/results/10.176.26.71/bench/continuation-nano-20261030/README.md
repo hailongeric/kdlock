@@ -100,3 +100,37 @@ Exact basic, origin instruction service, prepared rwsem writer and mixed mutexâ†
 [receipts/](receipts/) retains the exact run/archive owners, archive index and host endpoint captures. The raw archives remain separately retained under `bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/`. [copied-evidence.json](copied-evidence.json) records exact source paths, byte counts and hashes of the copied evidence.
 
 The source-host offline audit is preserved in [tools/audit_compare.py](tools/audit_compare.py), with `nano_core.py` and `archive_helpers.py`. Its exact original arguments are in `validation.json`; select a fresh output directory when reproducing. It checks complete archives and provider preparation from frozen Git blobs, retains both historical comparisons independently, and never executes archived source or ELF files. Its trusted checkout oracle is separately hash-bound. [tools/findings.py](tools/findings.py) reads that completed output plus the retained unit ELF to regenerate the detail tables and provider equivalence checks; exact arguments and tool/input hashes are in [analysis/findings-receipt.json](analysis/findings-receipt.json). These are host-only offline inspections, not newly executed benchmarks or unit tests.
+
+## First correction validation attempt
+
+Documentation commit `398eb220` precedes runtime candidate
+`6bf690204fdf954ab9076a762000833ec18e6261`, which applies the three bounded
+changes above and adds a production-loop context fixture. Its fresh VM unit
+selection reported **8 passed, 1 failed**. The production fixture completed
+1,195 checks with zero failures in each of NUMA-off and NUMA-on builds, confirming
+192/200-byte batch storage in those fixture layouts. Its intentional
+`missing-generic-refresh` mutation then failed compilation: removing both
+refresh calls leaves the fixture's context accessor unused under `-Werror`.
+This is an incomplete mutation check, not a passing test group. The provider
+build and live runs did not start.
+
+Keep `-Werror` and the required explicit failed-assertion mutation result. Mark
+only that fixture accessor `__maybe_unused`, since its intentional omission is
+the case being tested. Production code needs no change for this failure. Run
+the basic checks and corrected context driver again, then build the provider;
+reuse the six other successful Python drivers only after comparing every tracked
+input and allowing changes solely to this result document and the fixture.
+The earlier overall unit owner remains failed.
+
+The output is
+`/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-unit-6bf69020-20261030`.
+Its failed owner SHA256 is
+`313a1ad0a38891530ec29cd2ceb5aa781d1236056b94ea21fbb47738d32a7bea`;
+unit log SHA256 is
+`52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757`.
+The 5,922-file synchronization SHA256 is
+`e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43`.
+A separate read-only project/build-process drain check passed on unchanged boot
+`677b7afa-5358-4ece-a650-5f4a4adecd55`, receipt SHA256
+`838bc4133196d69026d374ad158f2f7b48008ebfa9ecd747b50c7818e7cbd817`.
+No performance measurement belongs to this correction attempt.
