@@ -1,0 +1,87 @@
+{
+  "archives_sha256": "4f22382de3d93cf5ee474d7f1ce91a026f967e0cc10772b7bcf5d9a11b131042",
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/root/host_fs/kdlock/bench/archive_run.py",
+    "--base",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-archives",
+    "--health",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031/final-health.json",
+    "--timeout-seconds",
+    "3600",
+    "--kernel-variant",
+    "kdlock1",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "--group",
+    "mutex-throughput=mutex-throughput",
+    "--group",
+    "mutex-locality=mutex-locality",
+    "--group",
+    "rwsem-throughput-read=rwsem-throughput-read",
+    "--group",
+    "rwsem-throughput-mixed=rwsem-throughput-mixed",
+    "--group",
+    "rwsem-locality-read=rwsem-locality-read",
+    "--group",
+    "rwsem-locality-mixed=rwsem-locality-mixed",
+    "--group",
+    "rwlock-throughput-read=rwlock-throughput-read",
+    "--group",
+    "rwlock-throughput-mixed=rwlock-throughput-mixed",
+    "--group",
+    "rwlock-locality-read=rwlock-locality-read",
+    "--group",
+    "rwlock-locality-mixed=rwlock-locality-mixed"
+  ],
+  "boot_id": "760d4758-28b8-4903-b1d5-5bbb8938430d",
+  "comparison_pending": true,
+  "completed": true,
+  "endpoint_policy_sha256": "7396ed60bd6e9ad65daa558ba4e1678678a1f5111ae8ac3aebc0c01984ee248e",
+  "endpoint_receipt_sha256": "aef2689b0f9be85e2c11d0afe5df80c73c8602598a7f1cf091385d5c6186a5be",
+  "host_admission": {
+    "functional": {
+      "additional_workers": [],
+      "memory_bindings": [
+        [
+          "7469b7c00000",
+          "bind:1",
+          4
+        ],
+        [
+          "746cb7e00000",
+          "bind:0",
+          4
+        ]
+      ],
+      "mode": "FUNCTIONAL_ONLY",
+      "observed_threads": 131,
+      "original_threads": 131,
+      "performance_accepted": false,
+      "timing_gate": "NOT_APPLICABLE"
+    },
+    "timing": {
+      "additional_workers": [],
+      "exploratory": false,
+      "fixed_frequency_khz": 2000000,
+      "host_endpoint": "PENDING",
+      "observed_threads": 131,
+      "original_threads": 131,
+      "performance_accepted": false,
+      "retired_workers": [],
+      "strict_host_gate": "PASS",
+      "task_set_unchanged": true
+    }
+  },
+  "host_after_sha256": "19a23612077731d750756f72b5f3494e07dbf9354a5629898710783dbdfbf05f",
+  "idle": true,
+  "performance_accepted": false,
+  "pid": 38984,
+  "returncode": 0,
+  "run_owner_sha256": "76b6d86be39558d9025934da78b8953722385a76462deaa8b2bdfad6ac0f914c",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

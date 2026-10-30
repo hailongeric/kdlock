@@ -1,0 +1,137 @@
+{
+  "all_eight_controllers_completed_drained_idle": true,
+  "api": {
+    "api_checks": 8,
+    "cancellation_checks": 3,
+    "checks": 161,
+    "errors": 0,
+    "idle": 1
+  },
+  "archive": {
+    "analysis_arm_sha256": "5fdd9a14cd9dbbd7689e4e3d865335916d0d4e29b9543c184cf6239c9578a2b6",
+    "archives_sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+    "groups": 4,
+    "regular_members": 1779,
+    "source_host_fetch_only": true
+  },
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "completed_fault": {
+    "completed": 64,
+    "entries": 64,
+    "errors": 0,
+    "missed": 0,
+    "returns": 64,
+    "write_reacquired": 1
+  },
+  "endpoint": {
+    "delay_seconds": 3.172100782394409,
+    "strict_host_gate": "PASS",
+    "task_set_unchanged": true,
+    "tasks": 131
+  },
+  "faults": {
+    "case_counts": {
+      "complete": 1,
+      "fork_cow_remote_exit": 1,
+      "userfault_retry_vma_split": 16
+    },
+    "checks": 596,
+    "children_joined": 16,
+    "fault_threads_joined": 16,
+    "limits": "Does not cover VM_FAULT_COMPLETED or every filesystem/device fault callback"
+  },
+  "grid": {
+    "all_passed_drained": true,
+    "paired_comparison": "PENDING_CANDIDATE",
+    "points": 42,
+    "processes": 21,
+    "rounds_per_point": 1,
+    "separate_identity_scope": "separate-diagnostic-class-proof; timed mm addresses unobserved",
+    "threads": 21
+  },
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "identity": {
+    "processes": {
+      "actual_mmap_lock_observed": true,
+      "delegated_execution_proved": false,
+      "passed": true,
+      "scope": "these diagnostic process lifetimes only",
+      "unique_mms": 2,
+      "workers": 2
+    },
+    "threads": {
+      "actual_mmap_lock_observed": true,
+      "delegated_execution_proved": false,
+      "passed": true,
+      "scope": "these diagnostic process lifetimes only",
+      "unique_mms": 1,
+      "workers": 2
+    }
+  },
+  "kernel_recipe_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "mapping_cases": [
+    {
+      "checks": 27,
+      "completed": null,
+      "joined": null,
+      "name": "00-scope-1",
+      "passed": true,
+      "rejected_mutations": 0
+    },
+    {
+      "checks": 22,
+      "completed": 1000,
+      "joined": 1,
+      "name": "01-cycle-1",
+      "passed": true,
+      "rejected_mutations": 0
+    },
+    {
+      "checks": 48125,
+      "completed": 80000,
+      "joined": 16,
+      "name": "02-cycle-16",
+      "passed": true,
+      "rejected_mutations": 9
+    },
+    {
+      "checks": 20,
+      "completed": 1,
+      "joined": 1,
+      "name": "03-lifetime-1",
+      "passed": true,
+      "rejected_mutations": 0
+    },
+    {
+      "checks": 200,
+      "completed": 16,
+      "joined": 16,
+      "name": "04-lifetime-16",
+      "passed": true,
+      "rejected_mutations": 0
+    },
+    {
+      "checks": 14,
+      "completed": null,
+      "joined": null,
+      "name": "05-exit-1",
+      "passed": true,
+      "rejected_mutations": 0
+    }
+  ],
+  "performance_accepted": false,
+  "provider_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "schema": 1,
+  "scope": "Selected exact baseline functional counts and coverage; no paired score validation or causal claim",
+  "sites_scope": "Exact writer-call return PCs only; no live contention/teardown pass.",
+  "step_owners": {
+    "api": "ba4cfd71bad167d18e1423b7ada2a9cb7912a013783ffda5f6884aee50e194a9",
+    "completed": "90b0914cc27100f1afe1efe186f636871a27b0ddef1cc768a2fca6ac686ff545",
+    "endpoint": "d60e56cbaf9c24f55c04077a45276cdb482aa5b1c06d373c792e61b693a9f93c",
+    "faults": "2aae580e139db659de19276b59da28e484aee62593d83e13edbf06ee62273f3c",
+    "mapping": "affbb198d73dbdb589a0e08b5b39dbdcabe40056b84b310aa789221c7440c6f0",
+    "mmap1-identity": "9441eca03b608af09d873f31238b99c5000eec2e577ee37b17e3df216e70fdf2",
+    "mmap1-measure": "2e41912593201132820220a2e583c2fb7687e8aa9fd800df6066ed0819661d6d",
+    "sites": "9899a89ad4edbfa0fa25bd7b9d10a0b7b896771834594d23d4fda00426f46125"
+  }
+}

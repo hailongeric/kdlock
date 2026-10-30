@@ -1,0 +1,30 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 2106,
+      "sha256": "e9c3c78a9915240b532e55d99b3b931cc809096f200eeb74ed55026e0091ba57"
+    },
+    "archive_helpers.py": {
+      "bytes": 3938,
+      "sha256": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda"
+    },
+    "fresh_controls.py": {
+      "bytes": 9333,
+      "sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79"
+    },
+    "mmap_compare.py": {
+      "bytes": 25087,
+      "sha256": "ae35ac7d62fbe8101ef2593febe5c61027974f7fd14d6d9be72c38a3c8ed06b8"
+    },
+    "nano_core.py": {
+      "bytes": 34745,
+      "sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f"
+    },
+    "policy_checks.py": {
+      "bytes": 14001,
+      "sha256": "4c559a4a9206ae57c2d1d80b16575fb4b19a313c2fc7c2a813f6579d79ee5def"
+    }
+  },
+  "schema": 1,
+  "scope": "Read-only source-domain correction; independent review and replay pending"
+}

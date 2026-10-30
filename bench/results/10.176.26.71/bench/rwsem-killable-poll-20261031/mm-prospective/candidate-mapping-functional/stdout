@@ -1,0 +1,2 @@
+{"state": "COMPLETE", "arm": "candidate-22d-scope2-kd", "step": "mapping-functional", "owner": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/mapping-functional-controller.json", "owner_sha256": "73c8c7aef4b5bec3e72dab9c0bff915f566d0e62bac967004aa2b647defcf6f6", "result_sha256": "666eea31f715ca523d86001bb8c2eb710ba5000a0b9b6672056b0e39e5170b48", "drain_unknown": false}
+COMPLETE killable-mm candidate-22d-scope2-kd mapping-functional

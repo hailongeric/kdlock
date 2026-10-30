@@ -1,0 +1,7 @@
+{
+  "archives": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-archives",
+  "archives_sha256": "6870ea1cf5d889f8f1a46c34da172ca4e2ca4f5c6710362e995cdd4f34ed31bb",
+  "control": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-control",
+  "owner_sha256": "8cc4a03376835d083e10796c5db8369c573a77fb3ab717dc22821fc4117ea589",
+  "archive_owner_sha256": "55b462123812ef92d79e88778c902698ade0a1410ebbcb83f2c3849b975881ea"
+}

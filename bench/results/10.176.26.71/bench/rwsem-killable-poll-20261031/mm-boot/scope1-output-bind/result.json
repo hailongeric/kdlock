@@ -1,0 +1,123 @@
+{
+  "action": "output-bind",
+  "arm_environment_before": {
+    "next_entry": ""
+  },
+  "automatic_retry": false,
+  "backing": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395709.8763587,
+      "mutation": false,
+      "name": "disk",
+      "pid": 2776,
+      "returncode": 0,
+      "started": 1793395709.8593252
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395709.9408104,
+      "mutation": false,
+      "name": "environment-before",
+      "pid": 2777,
+      "returncode": 0,
+      "started": 1793395709.8932703
+    },
+    {
+      "argv": [
+        "mount",
+        "--bind",
+        "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395711.1803598,
+      "mutation": true,
+      "name": "restore-output",
+      "pid": 2778,
+      "returncode": 0,
+      "started": 1793395711.158658
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "drain_unknown": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "expected_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0",
+    "preempt=lazy",
+    "kd_mmap=on"
+  ],
+  "finished": 1793395711.2081094,
+  "install_sha256": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+  "kind": "scope1-mm-return",
+  "mutation_attempted": true,
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "output_identity": {
+    "device": 2049,
+    "inode": 331042
+  },
+  "passed": true,
+  "performance_accepted": false,
+  "previous_boot_id": "6dcbd9dd-2d8c-4743-96f6-a43f70f8ab8e",
+  "prior_result_sha256": "35c237643054c884566eb6eed2d7d5078159cc72e00c0f4f8171cd41937a1e8e",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "release": "7.0.0-38-kdscope1",
+  "schema": 1,
+  "scope2_append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "source_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "started": 1793395709.796959,
+  "state": "SCOPE1_OUTPUT_RESTORED",
+  "state_unknown": false,
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "verified_build_files": {
+    ".config": "7131e48d4bb556e54f9fc287c04e6fab33a3de80eb923a215872a01a07609f4b",
+    "Makefile": "4142b331599251bbf4e2ac8616587b383c4d6d8d686e371bfb87bddc063e779b",
+    "Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+    "System.map": "63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334",
+    "arch/x86/boot/bzImage": "66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b",
+    "include/config/auto.conf": "6f171f571166c70d800e6f84fef606c01d66de6c1bac5cda7e9366267ffd7d08",
+    "include/config/kernel.release": "f7679860bd87f24c68dc43c1d7685ddbe722d5cb0e0564ce3278f7bf6efdd85e",
+    "include/generated/autoconf.h": "79283052442e14370e535d3e81704e3f2c08c701acd893a9295e740fe35198ea",
+    "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+    "include/generated/utsrelease.h": "a734733e188b11a54a13995787c7079c33be49f70c5ac151d17c8d5655d2497a",
+    "include/generated/utsversion.h": "983cd647b2709b35cd2b181766d2e72c3cb33f7c4b9ab7c6a5510553833edb21",
+    "vmlinux": "ea8b44b8f9cc9256c93228adfcb30f5535a1c841a67496b96946f24080240a42"
+  }
+}

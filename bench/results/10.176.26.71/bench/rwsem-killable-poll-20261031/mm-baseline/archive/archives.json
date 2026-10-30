@@ -1,0 +1,110 @@
+{
+  "archive_prefix": "baseline-f7-scope1-kd",
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "completed": true,
+  "finished_ns": 1793396534846781741,
+  "groups": [
+    {
+      "bytes": 5868291,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "roots": [
+        "baseline-f7-scope1-kd/api",
+        "baseline-f7-scope1-kd/completed",
+        "baseline-f7-scope1-kd/endpoint",
+        "baseline-f7-scope1-kd/faults",
+        "baseline-f7-scope1-kd/mapping",
+        "baseline-f7-scope1-kd/mmap1-identity",
+        "baseline-f7-scope1-kd/sites"
+      ],
+      "sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563"
+    },
+    {
+      "bytes": 656928,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/baseline-f7-scope1-kd-archives/mmap1.tar.gz",
+      "roots": [
+        "baseline-f7-scope1-kd/mmap1-measure"
+      ],
+      "sha256": "005ebcf8c66eb426318bb2504a4996ae088ff3ed6df133d6045c609c59f4f075"
+    },
+    {
+      "bytes": 1149089,
+      "file": "inputs.tar.gz",
+      "group": "inputs",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/baseline-f7-scope1-kd-archives/inputs.tar.gz",
+      "roots": [
+        "baseline-f7-scope1-kd/preservation-inputs"
+      ],
+      "sha256": "ae021c700f2d2f0f3f617159fbc8c6d9761f86cce2b01294f03824edf1bebcc3"
+    },
+    {
+      "bytes": 3406061,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/baseline-f7-scope1-kd-archives/metadata.tar.gz",
+      "roots": [
+        "baseline-f7-scope1-kd/api-controller.json",
+        "baseline-f7-scope1-kd/api-controller.log",
+        "baseline-f7-scope1-kd/api-inputs",
+        "baseline-f7-scope1-kd/completed-controller.json",
+        "baseline-f7-scope1-kd/completed-controller.log",
+        "baseline-f7-scope1-kd/completed-inputs",
+        "baseline-f7-scope1-kd/endpoint-controller.json",
+        "baseline-f7-scope1-kd/endpoint-inputs",
+        "baseline-f7-scope1-kd/faults-controller.json",
+        "baseline-f7-scope1-kd/faults-controller.log",
+        "baseline-f7-scope1-kd/faults-inputs",
+        "baseline-f7-scope1-kd/final-health.json",
+        "baseline-f7-scope1-kd/mapping-controller.json",
+        "baseline-f7-scope1-kd/mapping-controller.log",
+        "baseline-f7-scope1-kd/mapping-inputs",
+        "baseline-f7-scope1-kd/mmap1-identity-controller.json",
+        "baseline-f7-scope1-kd/mmap1-identity-controller.log",
+        "baseline-f7-scope1-kd/mmap1-identity-inputs",
+        "baseline-f7-scope1-kd/mmap1-measure-controller.json",
+        "baseline-f7-scope1-kd/mmap1-measure-controller.log",
+        "baseline-f7-scope1-kd/mmap1-measure-inputs",
+        "baseline-f7-scope1-kd/sites-controller.json",
+        "baseline-f7-scope1-kd/sites-controller.log",
+        "baseline-f7-scope1-kd/sites-inputs"
+      ],
+      "sha256": "c47a6629b3bdbcd25d18447f1caf1f674015ca6844c6f90aac7a15f284234362"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/baseline-f7-scope1-kd",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "067ef2ddfc910fb0423d3d25acd3625720f66f9c848eb2575bd219098011f9fa",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "f7351486d7fbd1d4135c769c97ff119124679078f77792772518266ad3510404",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793396532298833288
+}

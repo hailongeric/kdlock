@@ -1,0 +1,18 @@
+{
+  "script": "/tmp/kdlock-scope2-preinstall-20261031.py",
+  "script_sha256": "7e7c49014995af0d919d9f3fa5e2db97ca1236680117710dabc97d5172b4a821",
+  "argv": [
+    "--boot-id",
+    "8c5259e3-0f93-493d-afa9-bd93d5358683",
+    "--build-result-sha256",
+    "d289a0c9cb7790349d3519a4d111a07ca6a3c0e60c930f74398844f4d2a31701",
+    "--artifact-helper",
+    "/tmp/kdlock-scope2-artifact-inputs-20261031.py",
+    "--artifact-helper-sha256",
+    "d23235dcccd2accae679a9b7797d24616062198a62e290eaac6b7fb68c34ec8d",
+    "--idle-confirmed"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-preinstall-20261031/result.json",
+  "timeout": 4000,
+  "affinity": "0-63"
+}

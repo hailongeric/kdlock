@@ -1,0 +1,141 @@
+{
+  "analysis_arm_sha256": "5fdd9a14cd9dbbd7689e4e3d865335916d0d4e29b9543c184cf6239c9578a2b6",
+  "archive_index_sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+  "baseline_arm": "baseline-f7-scope1-kd",
+  "baseline_boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "builder_sha256": "5a5af222de7270474baa5a1788b9da80ce974bb2735b5284e5200a85f27b2bec",
+  "cases": [
+    {
+      "checks": 27,
+      "completed": null,
+      "joined": null,
+      "name": "00-scope-1",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    },
+    {
+      "checks": 22,
+      "completed": 1000,
+      "joined": 1,
+      "name": "01-cycle-1",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    },
+    {
+      "checks": 48125,
+      "completed": 80000,
+      "joined": 16,
+      "name": "02-cycle-16",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    },
+    {
+      "checks": 20,
+      "completed": 1,
+      "joined": 1,
+      "name": "03-lifetime-1",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    },
+    {
+      "checks": 200,
+      "completed": 16,
+      "joined": 16,
+      "name": "04-lifetime-16",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    },
+    {
+      "checks": 14,
+      "completed": null,
+      "joined": null,
+      "name": "05-exit-1",
+      "passed": true,
+      "policy": "mmap-writer-proof-v1"
+    }
+  ],
+  "common_checks": [
+    "Six original strict cases passed and drained in the same KD boot",
+    "Exact worker mm/lock/object identity, joins and per-worker completion",
+    "Zero worker errors and zero fault/context errors",
+    "Map/clone/close/VMA conservation",
+    "Actual sleeping-writer chain and stable scheduler bracket",
+    "All nine positive-observation mutations rejected",
+    "Original unchanged 42-point one-round mmap1 result retained"
+  ],
+  "compatible": true,
+  "created_utc": "2026-10-30T22:07:42.708425+00:00",
+  "full_archive_verification_receipt_sha256": "867bd747118954c75f90835cb95a27fbeb12f10eb23168a9ca39f742b250bae3",
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "harness_source_sha256": {
+    "bench/mmap1/run.py": "863c4aa07eda2324dba6a14c3b811b571a4f72c561ce4c162e559af91b114410",
+    "bench/mmap_lock/eligibility.py": "fd5617428d9ed2635deb38216bddfec2b988e6c8f0e2cdc3b814aea869130681",
+    "bench/mmap_writer/linux70.py": "3ac744ab4d606da5284c384d272de73e09ead8cdd2fc5ca444b58589318860ad",
+    "tests/kernel/mmap_lock/mapping.py": "926b7b75134726542a761a6afa89a7416060a57b5dd01a3479c2bf99b484a414",
+    "tests/kernel/mmap_writer/run.py": "2e0adc6a8b31370f473f440d71f3d1b51ff75cb469ea4f87a5dd4c658fdf57a5"
+  },
+  "interpretation_policy": "mmap-functional-v1",
+  "kind": "baseline-strict-functional-compatibility",
+  "limits": [
+    "Later functional-policy interpretation, not a new baseline run or retroactive policy change",
+    "Does not pass or erase the candidate original strict failure",
+    "Does not establish candidate correctness, performance qualification or acceptance"
+  ],
+  "mapping_owner_sha256": "affbb198d73dbdb589a0e08b5b39dbdcabe40056b84b310aa789221c7440c6f0",
+  "mapping_result_sha256": "2f6cb7a6f1d198156510314a68dab4e678abb8b4104f7c39129468080ba9e2e0",
+  "measurement_repeated": false,
+  "new_test_executed": false,
+  "original_members": {
+    "mapping-controller.json": {
+      "archive": "metadata.tar.gz",
+      "archive_sha256": "c47a6629b3bdbcd25d18447f1caf1f674015ca6844c6f90aac7a15f284234362",
+      "member_sha256": "affbb198d73dbdb589a0e08b5b39dbdcabe40056b84b310aa789221c7440c6f0"
+    },
+    "mapping/02-cycle-16.jsonl": {
+      "archive": "checks.tar.gz",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "member_sha256": "591707f0ce49a495a430b09a811376c8952340708cf350ae025d5cbe8091a1a4"
+    },
+    "mapping/result.json": {
+      "archive": "checks.tar.gz",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "member_sha256": "2f6cb7a6f1d198156510314a68dab4e678abb8b4104f7c39129468080ba9e2e0"
+    },
+    "mapping/writer-sites.json": {
+      "archive": "checks.tar.gz",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "member_sha256": "211765b1c73bf1ba47f98511f40a14c454eeca6e14aee5c1f94b28e3da8bce9e"
+    },
+    "mmap1-measure-controller.json": {
+      "archive": "metadata.tar.gz",
+      "archive_sha256": "c47a6629b3bdbcd25d18447f1caf1f674015ca6844c6f90aac7a15f284234362",
+      "member_sha256": "2e41912593201132820220a2e583c2fb7687e8aa9fd800df6066ed0819661d6d"
+    },
+    "mmap1-measure/result.json": {
+      "archive": "mmap1.tar.gz",
+      "archive_sha256": "005ebcf8c66eb426318bb2504a4996ae088ff3ed6df133d6045c609c59f4f075",
+      "member_sha256": "926fa8e6f7cecc2cbb3e97621f35b35c443e8ac3e6b46d6c6d70e21d3b00be45"
+    }
+  },
+  "original_policy": "mmap-writer-proof-v1",
+  "original_policy_was_implicit_default": true,
+  "original_receipts_unchanged": true,
+  "performance_accepted": false,
+  "performance_qualified": false,
+  "rejected_mutations": [
+    "different_lock",
+    "wrong_caller_return",
+    "wrong_wait_return",
+    "wrong_adapter_return",
+    "running_task",
+    "other_wait_channel",
+    "rescheduled_task",
+    "missing_chain",
+    "missing_writer_proof"
+  ],
+  "schema": 1,
+  "six_cases_validated": true,
+  "timing_reused_without_modification": true,
+  "validation_basis": "Retained strict VM verdicts plus source-host structural/hash checks; no VM rerun or rewritten receipt",
+  "writer_observation": "observed"
+}

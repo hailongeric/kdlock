@@ -1,0 +1,1 @@
+{"state": "FAILED", "arm": "candidate-22d-scope2-kd", "step": "mapping", "owner": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/mapping-controller.json", "owner_sha256": "71568d5f8374b7cd8e90119cf56aebd150334a91d98be09ac69675779548df2e", "result_sha256": null, "drain_unknown": true}

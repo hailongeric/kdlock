@@ -1,0 +1,2 @@
+{"state": "COMPLETE", "arm": "candidate-22d-scope2-kd", "step": "mmap1-measure", "owner": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/mmap1-measure-controller.json", "owner_sha256": "576536b62794f14366be8f29c1d1c06f5fc3048f7824eea8c14f4e27bf217109", "result_sha256": "6fba002bcf456dc22eb62236a523271e31e3b637c9ed4fdaee2a21f7ac681114", "drain_unknown": false}
+COMPLETE killable-mm candidate-22d-scope2-kd mmap1-measure

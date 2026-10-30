@@ -1,0 +1,29 @@
+{
+  "archive_receipt_sha256": "4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8",
+  "directory": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archives",
+  "groups": [
+    {
+      "bytes": 6964757,
+      "file": "checks.tar.gz",
+      "sha256": "5bfd6d22fa6228de6e00dc1c1c947437af0dd4fd349bc668d501ea52e21c3bc3"
+    },
+    {
+      "bytes": 657035,
+      "file": "mmap1.tar.gz",
+      "sha256": "92893ecf9cc612dc31696e2d198dfa36871ee4bcd421750d569fe6ada8c3bca9"
+    },
+    {
+      "bytes": 5741648,
+      "file": "inputs.tar.gz",
+      "sha256": "2e3a17fee9ca446c0e35f5f5e729e3368d7e4ddf7ded737ff76b1a560fb6921f"
+    },
+    {
+      "bytes": 5013418,
+      "file": "metadata.tar.gz",
+      "sha256": "c4009a875d1d3c00aba37052e76b87c66f271c22a0fe1aeb971eb663d3e2e28f"
+    }
+  ],
+  "inventory_sha256": "7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9",
+  "paths": 2961,
+  "regular_files": 2257
+}

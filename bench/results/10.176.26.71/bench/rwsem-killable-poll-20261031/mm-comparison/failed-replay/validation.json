@@ -1,0 +1,14 @@
+{
+  "completed": false,
+  "validated": false,
+  "performance_accepted": false,
+  "inputs_sha256": "249f173be35bcd1335b4f12ca64f237aefa1e0f900811272239fed788dbef359",
+  "script_sha256": "67f8b76201c428420ee80c0d135232e75b382c547c708c59b0c8e3529bbac789",
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "eligibility_policy": "mmap-functional-v1",
+  "performance_qualified": false,
+  "strict_qualified": false,
+  "no_regression_evidence_gate": false,
+  "policy_checker_sha256": "4c559a4a9206ae57c2d1d80b16575fb4b19a313c2fc7c2a813f6579d79ee5def",
+  "error": "ValueError('captured harness source differs')"
+}

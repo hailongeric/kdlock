@@ -1,0 +1,6 @@
+{
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdlock1",
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+  "request_sha256": "8d760922728340c408e95284270046d584ad97411250b9deb20ceb291f194253"
+}

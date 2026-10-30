@@ -1,0 +1,116 @@
+{
+  "archive_prefix": "candidate-22d-scope2-kd",
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "completed": true,
+  "finished_ns": 1793399314039424782,
+  "groups": [
+    {
+      "bytes": 6964757,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd-archives/checks.tar.gz",
+      "roots": [
+        "candidate-22d-scope2-kd/api",
+        "candidate-22d-scope2-kd/completed",
+        "candidate-22d-scope2-kd/endpoint",
+        "candidate-22d-scope2-kd/faults",
+        "candidate-22d-scope2-kd/mapping-functional",
+        "candidate-22d-scope2-kd/mmap1-identity",
+        "candidate-22d-scope2-kd/sites",
+        "candidate-22d-scope2-kd/strict-hold"
+      ],
+      "sha256": "5bfd6d22fa6228de6e00dc1c1c947437af0dd4fd349bc668d501ea52e21c3bc3"
+    },
+    {
+      "bytes": 657035,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd-archives/mmap1.tar.gz",
+      "roots": [
+        "candidate-22d-scope2-kd/mmap1-measure"
+      ],
+      "sha256": "92893ecf9cc612dc31696e2d198dfa36871ee4bcd421750d569fe6ada8c3bca9"
+    },
+    {
+      "bytes": 5741648,
+      "file": "inputs.tar.gz",
+      "group": "inputs",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd-archives/inputs.tar.gz",
+      "roots": [
+        "candidate-22d-scope2-kd/preservation-inputs"
+      ],
+      "sha256": "2e3a17fee9ca446c0e35f5f5e729e3368d7e4ddf7ded737ff76b1a560fb6921f"
+    },
+    {
+      "bytes": 5013418,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd-archives/metadata.tar.gz",
+      "roots": [
+        "candidate-22d-scope2-kd/api-controller.json",
+        "candidate-22d-scope2-kd/api-controller.log",
+        "candidate-22d-scope2-kd/api-inputs",
+        "candidate-22d-scope2-kd/completed-controller.json",
+        "candidate-22d-scope2-kd/completed-controller.log",
+        "candidate-22d-scope2-kd/completed-inputs",
+        "candidate-22d-scope2-kd/endpoint-controller.json",
+        "candidate-22d-scope2-kd/endpoint-inputs",
+        "candidate-22d-scope2-kd/faults-controller.json",
+        "candidate-22d-scope2-kd/faults-controller.log",
+        "candidate-22d-scope2-kd/faults-inputs",
+        "candidate-22d-scope2-kd/final-health.json",
+        "candidate-22d-scope2-kd/mapping",
+        "candidate-22d-scope2-kd/mapping-controller.json",
+        "candidate-22d-scope2-kd/mapping-controller.log",
+        "candidate-22d-scope2-kd/mapping-functional-controller.json",
+        "candidate-22d-scope2-kd/mapping-functional-controller.log",
+        "candidate-22d-scope2-kd/mapping-functional-inputs",
+        "candidate-22d-scope2-kd/mapping-inputs",
+        "candidate-22d-scope2-kd/measurement-policy.json",
+        "candidate-22d-scope2-kd/mmap1-identity-controller.json",
+        "candidate-22d-scope2-kd/mmap1-identity-controller.log",
+        "candidate-22d-scope2-kd/mmap1-identity-inputs",
+        "candidate-22d-scope2-kd/mmap1-measure-controller.json",
+        "candidate-22d-scope2-kd/mmap1-measure-controller.log",
+        "candidate-22d-scope2-kd/mmap1-measure-inputs",
+        "candidate-22d-scope2-kd/sites-controller.json",
+        "candidate-22d-scope2-kd/sites-controller.log",
+        "candidate-22d-scope2-kd/sites-inputs"
+      ],
+      "sha256": "c4009a875d1d3c00aba37052e76b87c66f271c22a0fe1aeb971eb663d3e2e28f"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "9d26f11d0e2098d9ce2b708f9d9de5361206d80190d57a11639d00bbcda56a2a",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "e7380e28475b756e39071bd6fd37d8b8f828d16d",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/source",
+    "variant": "kdscope2-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope2",
+  "kernel_variant": "kdscope2-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793399310151190835
+}

@@ -1,0 +1,25 @@
+{
+  "script": "/tmp/kdlock-normal-transition-r2-20261031.py",
+  "script_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "argv": [
+    "before",
+    "--boot-id",
+    "8c5259e3-0f93-493d-afa9-bd93d5358683",
+    "--install-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-install-20261031/result.json",
+    "--install-result-sha256",
+    "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+    "--normal-manifest-sha256",
+    "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "--host-state",
+    "/tmp/kdlock-normal-before-host.json",
+    "--host-state-sha256",
+    "587f3b6ba0c6c16fafbde7b66e5ec5de7c71fdad8a4b46e2d8e62bfde7ce6d8d",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-before-20261031",
+    "--execute"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-before-20261031/result.json",
+  "timeout": 1100,
+  "affinity": "0-63"
+}

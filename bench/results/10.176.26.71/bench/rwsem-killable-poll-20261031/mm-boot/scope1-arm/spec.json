@@ -1,0 +1,42 @@
+{
+  "script": "/tmp/kdlock-scope1-mm-return-20261031.py",
+  "script_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "argv": [
+    "arm",
+    "--boot-id",
+    "6dcbd9dd-2d8c-4743-96f6-a43f70f8ab8e",
+    "--host-state",
+    "/tmp/kdlock-killable-scope1-arm-host.json",
+    "--host-state-sha256",
+    "01229782fc4c6d14371db2df33c137123747c78e5f5eb46106e45aa88d65849a",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-arm-20261031",
+    "--execute",
+    "--scope2-append-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-append-20261031/result.json",
+    "--scope2-append-result-sha256",
+    "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+    "--prior-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-native-postboot-20261031/result.json",
+    "--prior-result-sha256",
+    "1492c1a546f729e16d5af4eacaf5dc31e4ce79da31d38bf7546d092316dd724f"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-arm-20261031/result.json",
+  "timeout": 360,
+  "affinity": "0-63",
+  "success_key": "completed",
+  "source_host_bindings": {
+    "/tmp/kdlock-killable-progress-20261031.json": "f4b89ba374d1b03a8bec619d453f6ea567a60ad31c19471e9bbec9c03c969e0e",
+    "/tmp/kdlock-scope2-install-transport-20261031/result.json": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+    "/tmp/kdlock-scope2-append-transport-20261031/result.json": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+    "/dev/shm/kdlock-killable-controls-20261031/scope1-arm-host-inputs/state.json": "01229782fc4c6d14371db2df33c137123747c78e5f5eb46106e45aa88d65849a",
+    "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/result.json": "1492c1a546f729e16d5af4eacaf5dc31e4ce79da31d38bf7546d092316dd724f"
+  },
+  "source_host_builder_sha256": "f51ab6bf70a5effef67e27ac1164278ad050634b14ce1595a4eccb8dc414e41e",
+  "family": "scope1-return",
+  "action": "arm",
+  "boot_id": "6dcbd9dd-2d8c-4743-96f6-a43f70f8ab8e",
+  "release": "7.0.0-38-kdscope2",
+  "commands_executed": false,
+  "performance_accepted": false
+}

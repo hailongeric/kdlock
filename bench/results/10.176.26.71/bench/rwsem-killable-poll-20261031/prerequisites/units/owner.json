@@ -1,0 +1,31 @@
+{
+  "state": "COMPLETE",
+  "completed": true,
+  "guest_output": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-unit-22d62d5c-20261031",
+  "argv": [
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "LC_ALL=C",
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/tmp/kdlock-rwsem-killable-unit-invocation-20261031.py",
+    "--commit",
+    "22d62d5c13cad3c61c97dd47524da908769f1a52",
+    "--boot-id",
+    "8c5259e3-0f93-493d-afa9-bd93d5358683",
+    "--source-state",
+    "/tmp/kdlock-killable-22d62d5c-source-state.json",
+    "--source-state-sha256",
+    "0e5ce648c02c4d62b4d3296a0f4c227ae38d6dd7157fac8bd0a4eb2b634b31c4",
+    "--source-manifest",
+    "/tmp/kdlock-killable-22d62d5c-source-sha256.json",
+    "--source-manifest-sha256",
+    "3b4d7be79df9e783091744e832cf799c23a27a19b9facbcc759d9b0ef8f74323",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-unit-22d62d5c-20261031"
+  ],
+  "started": 1793382746.5727248,
+  "pid": 3196903,
+  "returncode": 0,
+  "finished": 1793382765.5057707,
+  "result_sha256": "11980b5b69ce1decc445c79cafa65e1345bbb9379d658818d893b646e4f9accc"
+}

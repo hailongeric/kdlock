@@ -1,0 +1,1330 @@
+{
+  "mutex-throughput/build/guard/tc_allocator_guard.ko": {
+    "sha256": "6195d47ffa0e9767fc9c902bc5f94df705514aa2d176c198928ef8c03e673af8",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/mutex-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "160ee049bfa1d4bb9510c39903857a747854f14937e78989f9f14695dc3c3da1",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_mutex_api": [
+        "public"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-throughput/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "e8c52b22de3871621b4978255f2cb728d3b5d69ea79cb562def878a1a72c6c79",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/guard/tc_allocator_guard.ko": {
+    "sha256": "05d601f4c444a46ddb7499a94cadac6858e1aad1389e34020e38141fe2e2a1e1",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/mutex-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "6906e445ed6398216fa9ab17e12c4ae96d5ae3dc7c763c6b058c14040f492792",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_mutex_api": [
+        "public"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "mutex-locality/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "94ee9cae6ea4b4c680a3513b5087d701f463f998a4e4c10beeb948df0111d89b",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "db9842219f6250a1d23670602217c84a8cb92be8557e4d391eead220befe420d",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "77568622a7fb2d36ef9a10b2871e30706fd43d7d42e6ee1590d5683dab3fbcd9",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-read/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "86db34171d6dc3ee7ae78e612092d526ad0c1fbfd815e4265f70dd90fa6ff014",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "9cfc010f979c93f88559eff81125c428696a66d12f8832f0dedc3e75d9c944fa",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "3f0136ddd828065f84daa8fa5efe53552bdcfaf2f74c2db51d2b3b7bdf82fa16",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-throughput-mixed/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "1813241741a203b7459fcee2ea8c7ec7015ee9788bbddcea11e663630e56019a",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "796471cc66a5ffe8fe1a6144cde6e47da67d72579d87cf76feb816b49f0e427d",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "8b29c5d6b7aab4d39f43fbea4bc5945aa8a7ceb00053b19e759c77fa24c424cd",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-read/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "a8727a832c3407b64a4f929b6e80d43981e9777d28d7509174ad1404f9f3d466",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "9f89066545d93c8e02e55d011b8655b893dddee083648a539c7e3fc0b7022aee",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "60511886b1fecaa4676137430c24f66481e500ee2a125460365fe2616145025d",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwsem-locality-mixed/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "4cce2771f02ee6b8b521f2d63b37a3f4316ff538a29de6c9b3ae901a88a00d86",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "kd_rwsem_api": [
+        "public-prepared-direct"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "b2d14c331d3eb1966238abdb4947679e581828ea124bf6ff40e0f67d73a34d38",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "c535dd893a7a4b58f775fa47e2d1ad445ce79ad61e7b278c271b10e3919df01b",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "2b4c1f1fbd40069cd29351bd5a09716f87aa4e8aa7f34b8ed7c6cb5c0cd8a472",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/cacheline-c01-kdlock/rwlock_bench.ko": {
+    "sha256": "04f354002e36888f393e98508f4bb3c69e8a9f05230b6e94d0a8d5ef2522fd32",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "c14adb2d239c304b6333b745eda1d630b80a3bafc4baabe8bba2564ed5e725b4",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "7539f540144cff6ed0622fbbb14ab0a3cdc744f68b5e311b826a42c1b5dea74d",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "17f43296a66372dc7c08ab32d27b530c466bff7cd3126f57643381d0c7dd4dff",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/guard/tc_allocator_guard.ko": {
+    "sha256": "bce4e8e962e95decc31d42676f5de15f96b7846e22498a5135154aad4daeaacf",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "7a3c498c9ae4f44b35b3ca1fa91bcca2df9721c5d867891d934ae036f4b35c07",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/cacheline-c16-kdlock/rwlock_bench.ko": {
+    "sha256": "2bc5c80a105e8ff1e31eae56fcf943f68a1577bc5ee8fafcf6f7c30c83d6677a",
+    "modinfo": {
+      "description": [
+        "Native/TCLock/KD lock workloads and minimal record nano"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "F6A198C81BD5C4323E70CF6"
+      ],
+      "depends": [
+        "kdlock_km"
+      ],
+      "name": [
+        "rwlock_bench"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/guard/tc_allocator_guard.ko": {
+    "sha256": "1076dfa888862d4214b3eab8d0047779d48347e9fc23c66aac5abfbfee493174",
+    "modinfo": {
+      "description": [
+        "Benchmark preparation: refresh reserved per-CPU hints"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "srcversion": [
+        "6DC4A3D5031DAC1992099ED"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "tc_allocator_guard"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  },
+  "rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko": {
+    "sha256": "84430698f38bdc8d3503d2668e3a73471c857dfd3557ca03990565dc38fb24f8",
+    "modinfo": {
+      "parm": [
+        "target_process:task comm eligible for direct mutex delegation",
+        "spin_jit_fail_after_nested_lock:one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint",
+        "bench_jit_completions:Witnessed root invocations reaching matching outer unlock; read after drain",
+        "bench_jit_bodies:Witnessed entries for bench_lock_addr; read after drain",
+        "bench_complete_probe:Observe complete root invocations as well as entry witnesses",
+        "bench_lock_addr:Count witnessed JIT entries for this lock; 0 disables",
+        "bench_quiet:Suppress routine per-invocation diagnostics",
+        "jit_fail_pending_lock:One-shot pre-acquisition resource failure: 1=spin, 2=mutex",
+        "hotlock_stats:Print final CPU-local exact lock counters after provider drain",
+        "spin_entry_ratio_limit:Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2",
+        "spin_prefetch:Successor prefetch: 0=off, 1=consumer lookup, 2=producer hints (default)",
+        "spin_delegate:Allow JIT delegation; false keeps KD self-execution",
+        "jit_timing:Collect inclusive JIT boundary timings at unload",
+        "address_guard_count:Validated spin address-guard native continuations",
+        "origin_instruction_force_suffix:After a validated origin instruction, finish its post-instruction suffix locally",
+        "native_escape_count:Validated instruction-marker native continuations",
+        "jit_hl_fault_after_known_call:Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit"
+      ],
+      "parmtype": [
+        "target_process:charp",
+        "spin_jit_fail_after_nested_lock:int",
+        "bench_complete_probe:bool",
+        "bench_lock_addr:ulong",
+        "bench_quiet:bool",
+        "jit_fail_pending_lock:int",
+        "hotlock_stats:bool",
+        "spin_entry_ratio_limit:uint",
+        "spin_prefetch:uint",
+        "spin_delegate:bool",
+        "jit_timing:bool",
+        "origin_instruction_force_suffix:bool",
+        "jit_hl_fault_after_known_call:int",
+        "mutex_task_fail_once:int"
+      ],
+      "description": [
+        "kdlock JIT lock delegation"
+      ],
+      "license": [
+        "GPL"
+      ],
+      "mutex_batch_diag": [
+        "0"
+      ],
+      "mutex_numa_boundary": [
+        "1024"
+      ],
+      "mutex_batch": [
+        "1024"
+      ],
+      "spin_numa": [
+        "1"
+      ],
+      "spin_batch": [
+        "1024"
+      ],
+      "srcversion": [
+        "E7037A28981BECA834C3F8F"
+      ],
+      "depends": [
+        ""
+      ],
+      "name": [
+        "kdlock_km"
+      ],
+      "retpoline": [
+        "Y"
+      ],
+      "vermagic": [
+        "7.0.0-38-kdlock1 SMP preempt mod_unload modversions "
+      ]
+    },
+    "executed": false
+  }
+}

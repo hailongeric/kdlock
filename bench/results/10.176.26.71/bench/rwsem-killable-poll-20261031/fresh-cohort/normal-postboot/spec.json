@@ -1,0 +1,33 @@
+{
+  "script": "/tmp/kdlock-normal-transition-r2-20261031.py",
+  "script_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "argv": [
+    "postboot",
+    "--boot-id",
+    "760d4758-28b8-4903-b1d5-5bbb8938430d",
+    "--install-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-install-20261031/result.json",
+    "--install-result-sha256",
+    "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+    "--normal-manifest-sha256",
+    "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "--host-state",
+    "/tmp/kdlock-killable-normal-postboot-host.json",
+    "--host-state-sha256",
+    "b5c15ea39549bdb9bd1f129bf821049460dc6fd9695ffcb3cc30dc30af9ede28",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-postboot-20261031",
+    "--execute",
+    "--before-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-before-20261031/result.json",
+    "--before-result-sha256",
+    "59a1e8bd036816d51252172c1e0e3e2b310ea2941403b104817c4378e65f0161",
+    "--request-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-request-20261031/result.json",
+    "--request-result-sha256",
+    "d415ef547c0f506bd8d5b75602a92d47846a987e7cf04994f05d2bab51db32d9"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/normal-transition-postboot-20261031/result.json",
+  "timeout": 1100,
+  "affinity": "0-63"
+}

@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "scope": "All finalized analyzer artifacts remain unchanged in tmpfs; compact selected copies only",
+  "files": [
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/campaign.json",
+      "sha256": "941982e3d7903c9887dd2df69abcd48e5588a3af145832bb841ebbc59b9080a2",
+      "bytes": 60318,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/elf-provenance.json",
+      "sha256": "f43a58f565c3b7a9383075687492c5738a1c1ef4f1d3bb43e2736aa1eeca180e",
+      "bytes": 42697,
+      "report_copy": "nano-comparison/baseline/elf-provenance.json"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/points.json",
+      "sha256": "bb9d4ff5bdc87891a9a1266db25e9b33355cbcefd0f6a02490dbbb1fdd6049fd",
+      "bytes": 827601,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/provider-audit.json",
+      "sha256": "bdd8593496b6f6886e0a581d8421554c8338fcb32b9533807886230399f390d8",
+      "bytes": 57732,
+      "report_copy": "nano-comparison/baseline/provider-audit.json"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/campaign.json",
+      "sha256": "7ce646bf4e859f7f151261a7052ec0a12446aa1e3dba6f4c8652d38487fcdf5d",
+      "bytes": 60316,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/elf-provenance.json",
+      "sha256": "13e120a3618e42c9a1eaa762eae5565af1fbe2bef268629961185f1c15c6f142",
+      "bytes": 42697,
+      "report_copy": "nano-comparison/candidate/elf-provenance.json"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/points.json",
+      "sha256": "c7b4677a6d92927c36d4f09f0ffc8bf8ce794e0dc8b5776e4dcdc278c6e6d785",
+      "bytes": 827675,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/provider-audit.json",
+      "sha256": "125060de99b10427bcff598a144773f5ebb2b717b23ba24e2fdd26dfaad1110c",
+      "bytes": 57732,
+      "report_copy": "nano-comparison/candidate/provider-audit.json"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/observed-losses.json",
+      "sha256": "12f86436739817e497a7a5b5a6a8f4931744fdf902c27fc9d4c165849a5b71ee",
+      "bytes": 1143887,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/points.csv",
+      "sha256": "ff44a90a82d98f880e0aeb6f16dec8efdd47198eff9c2de816e992462572b8d0",
+      "bytes": 110345,
+      "report_copy": "nano-comparison/comparison/points.csv"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/points.json",
+      "sha256": "6bbcfb652bb65eab0bcfb5d5426ea357519c1a189640cbb303dea80523261d9b",
+      "bytes": 1946230,
+      "report_copy": null
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/summary.json",
+      "sha256": "41571a8eaffca40c486a31c5d636ef25b5ea2b42b8497677f9c5c25acfb07281",
+      "bytes": 523,
+      "report_copy": "nano-comparison/comparison/summary.json"
+    },
+    {
+      "path": "/dev/shm/kdlock-killable-nano-comparison-20261031/validation.json",
+      "sha256": "4db452836c12a1d8d05ff280c9731bf8008f6f51f714f5e8bac94740564eb858",
+      "bytes": 119619,
+      "report_copy": "nano-comparison/validation.json"
+    }
+  ]
+}

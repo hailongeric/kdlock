@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "arm": "f7",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "state": "COMPLETE",
+  "completed": true,
+  "started": 1793391191.3508186,
+  "script_sha256": "b1fb63ee712d720552e4fb6fbc325620d3540531023bcae0cd0b89d590c115a0",
+  "helper_sha256": {
+    "/tmp/kdlock-killable-nano-spec-builder-20261031.py": "69c5170894f1a4d8c7c30c91dfd60fc7b4c879bd01c82ed3e45a2bbce81b7c74",
+    "/tmp/kdlock-remote-action-transport-20261031.py": "9494ee13268b7c3c366c3ed504e7b3ab07ccd81001867637727bbcc95574684b",
+    "/tmp/kdlock-reviewed-guest-step-transport-20261031.py": "0d48e27a4dbd6838e349431d50f671ce7b59346ab4afed59ca8f54449310ffd7"
+  },
+  "input_bindings": {
+    "/tmp/kdlock-killable-progress-20261031.json": {
+      "sha256": "d7d8b92409e223b42dcc733e50b162aec28e6832a83c06e11d1833ea98df67c8",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/checkpoint.json"
+    },
+    "/tmp/kdlock-killable-f7-sync-envelope-20261031.json": {
+      "sha256": "df81c24d7c2727f7c4f02aa3627d8b7f5576e2977e81319265f3e93656a3b6d0",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/sync.json"
+    },
+    "/tmp/kdlock-killable-nano-f7a84065-run-20261031/result.json": {
+      "sha256": "76b6d86be39558d9025934da78b8953722385a76462deaa8b2bdfad6ac0f914c",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/run-owner.json"
+    },
+    "/tmp/kdlock-killable-nano-f7a84065-after-20261031.json": {
+      "sha256": "19a23612077731d750756f72b5f3494e07dbf9354a5629898710783dbdfbf05f",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint.json"
+    },
+    "/tmp/kdlock-killable-nano-f7a84065-after-20261031-policy.json": {
+      "sha256": "7396ed60bd6e9ad65daa558ba4e1678678a1f5111ae8ac3aebc0c01984ee248e",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint-policy.json"
+    },
+    "/tmp/kdlock-killable-nano-f7a84065-after-20261031-receipt.json": {
+      "sha256": "aef2689b0f9be85e2c11d0afe5df80c73c8602598a7f1cf091385d5c6186a5be",
+      "copy": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint-receipt.json"
+    }
+  },
+  "steps": [
+    {
+      "name": "spec",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-killable-nano-spec-builder-20261031.py",
+        "f7",
+        "archive",
+        "--checkpoint",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/checkpoint.json",
+        "--sync",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/sync.json",
+        "--guest-sync",
+        "/tmp/kdlock-killable-f7-sync-envelope-20261031.json",
+        "--run-owner",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/run-owner.json",
+        "--endpoint-prefix",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint",
+        "--guest-endpoint-prefix",
+        "/tmp/kdlock-killable-nano-f7a84065-after-20261031",
+        "--output",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive-spec.json"
+      ],
+      "started": 1793391191.3763394,
+      "returncode": 0,
+      "child_completion_unknown": false,
+      "pid": 3240231,
+      "finished": 1793391191.5044923
+    },
+    {
+      "name": "upload-host-after",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-remote-action-transport-20261031.py",
+        "--target",
+        "guest",
+        "--local",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint.json",
+        "--remote",
+        "/tmp/kdlock-killable-nano-f7a84065-after-20261031.json",
+        "--sha256",
+        "19a23612077731d750756f72b5f3494e07dbf9354a5629898710783dbdfbf05f",
+        "--output",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/upload-host-after",
+        "--timeout",
+        "30",
+        "upload"
+      ],
+      "started": 1793391191.5202672,
+      "returncode": 0,
+      "child_completion_unknown": false,
+      "pid": 3240232,
+      "finished": 1793391192.3515432
+    },
+    {
+      "name": "upload-policy",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-remote-action-transport-20261031.py",
+        "--target",
+        "guest",
+        "--local",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint-policy.json",
+        "--remote",
+        "/tmp/kdlock-killable-nano-f7a84065-after-20261031-policy.json",
+        "--sha256",
+        "7396ed60bd6e9ad65daa558ba4e1678678a1f5111ae8ac3aebc0c01984ee248e",
+        "--output",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/upload-policy",
+        "--timeout",
+        "30",
+        "upload"
+      ],
+      "started": 1793391192.3611755,
+      "returncode": 0,
+      "child_completion_unknown": false,
+      "pid": 3240236,
+      "finished": 1793391192.991992
+    },
+    {
+      "name": "upload-endpoint",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-remote-action-transport-20261031.py",
+        "--target",
+        "guest",
+        "--local",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/inputs/endpoint-receipt.json",
+        "--remote",
+        "/tmp/kdlock-killable-nano-f7a84065-after-20261031-receipt.json",
+        "--sha256",
+        "aef2689b0f9be85e2c11d0afe5df80c73c8602598a7f1cf091385d5c6186a5be",
+        "--output",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/upload-endpoint",
+        "--timeout",
+        "30",
+        "upload"
+      ],
+      "started": 1793391193.0006323,
+      "returncode": 0,
+      "child_completion_unknown": false,
+      "pid": 3240250,
+      "finished": 1793391193.6316075
+    },
+    {
+      "name": "archive",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-reviewed-guest-step-transport-20261031.py",
+        "--spec",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive-spec.json",
+        "--output",
+        "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive"
+      ],
+      "started": 1793391193.639733,
+      "returncode": 0,
+      "child_completion_unknown": false,
+      "pid": 3240252,
+      "finished": 1793391215.1451442
+    }
+  ],
+  "remote_completion_unknown": false,
+  "automatic_retry": false,
+  "timing_started": false,
+  "source_synchronized": false,
+  "performance_accepted": false,
+  "spec_sha256": "fa7ce15b5fde6235dd73dddd781a21a254a4511c3d0b17a45ba4526678a6340c",
+  "finished": 1793391215.153094,
+  "archive_owner_sha256": "d5a154b70c2dd2348c87b85d3e2558b610ce087e688378b81593a603d0c0067a",
+  "archives_sha256": "4f22382de3d93cf5ee474d7f1ce91a026f967e0cc10772b7bcf5d9a11b131042",
+  "endpoint_receipt_sha256": "aef2689b0f9be85e2c11d0afe5df80c73c8602598a7f1cf091385d5c6186a5be",
+  "host_after_sha256": "19a23612077731d750756f72b5f3494e07dbf9354a5629898710783dbdfbf05f",
+  "endpoint_policy_sha256": "7396ed60bd6e9ad65daa558ba4e1678678a1f5111ae8ac3aebc0c01984ee248e",
+  "run_owner_sha256": "76b6d86be39558d9025934da78b8953722385a76462deaa8b2bdfad6ac0f914c"
+}

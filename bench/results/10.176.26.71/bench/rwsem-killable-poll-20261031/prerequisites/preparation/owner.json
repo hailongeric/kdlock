@@ -1,0 +1,28 @@
+{
+  "phase": "prepare",
+  "argv": [
+    "env",
+    "-u",
+    "KERNELRELEASE",
+    "-u",
+    "KBUILD_OUTPUT",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "LC_ALL=C",
+    "taskset",
+    "-c",
+    "0-63",
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/tmp/kdlock-scope2-prepare-20261031.py",
+    "--boot-id",
+    "8c5259e3-0f93-493d-afa9-bd93d5358683"
+  ],
+  "completed": true,
+  "drain_unknown": false,
+  "started": 1793384871.766065,
+  "guest_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-prepare-20261031/result.json",
+  "controller_sha256": "b76f3752b9ea3ef3eea498f461c9610f2fefeee1da2ab669b1b777747277ffba",
+  "pid": 3210014,
+  "returncode": 0,
+  "finished": 1793385027.6320045,
+  "result_sha256": "c4ebbc107f6a06e144678ec2c37447ab8b9e61fadbcb3d76816eff9e5420b4bc"
+}

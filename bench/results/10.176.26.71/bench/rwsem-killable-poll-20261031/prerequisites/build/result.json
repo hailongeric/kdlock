@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "passed": true,
+  "state": "COMPLETE",
+  "boot_id": "8c5259e3-0f93-493d-afa9-bd93d5358683",
+  "source_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "recipe_manifest_sha256": "57b031b6c2b27e33a3d7434abf7864b7e8b0aebb00e7a38dc4e135d64314bb7b",
+  "controller_sha256": "d4b10cd75dbd0685e51b5392baf0dd1bd33795e43f2d88dcc3555590055ebc29",
+  "preparation_sha256": "c4ebbc107f6a06e144678ec2c37447ab8b9e61fadbcb3d76816eff9e5420b4bc",
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+  "release": "7.0.0-38-kdscope2",
+  "installed": false,
+  "rebooted": false,
+  "driver_pid": 36003,
+  "performance_accepted": false,
+  "initial_resources": {
+    "time": 1793385084.2380095,
+    "free": 97314963456,
+    "memory": {
+      "MemTotal": 24630116,
+      "MemAvailable": 23393460,
+      "SwapFree": 0
+    }
+  },
+  "source_manifest_sha256": "e5393a2b6d4e5244803d2401a0b90a9333c8b2f2502b6cfdbf3faf30107ecb75",
+  "source_files": 93352,
+  "config_sha256": "1db0292bc0f63703f8946e8ab21d618e853fc7a48321aa09d87c9b7b54db6283",
+  "command": [
+    "make",
+    "-C",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/source",
+    "O=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+    "ARCH=x86",
+    "CC=x86_64-linux-gnu-gcc",
+    "KERNELRELEASE=7.0.0-38-kdscope2",
+    "-j32",
+    "bzImage",
+    "modules"
+  ],
+  "started": 1793385092.0287817,
+  "pid": 36004,
+  "returncode": 0,
+  "finished": 1793385995.7097096,
+  "final_resources": {
+    "time": 1793385995.7100258,
+    "free": 64296103936,
+    "memory": {
+      "MemTotal": 24630116,
+      "MemAvailable": 22478652,
+      "SwapFree": 0
+    }
+  },
+  "source_unchanged": true,
+  "config_unchanged": true,
+  "boot_unchanged": true,
+  "outputs": {
+    "vmlinux": {
+      "bytes": 508152440,
+      "sha256": "42c35f6451cbf1a4b0197ca7fc531e16033fc13522ac6c3be40a3c67abee94c0"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17117696,
+      "sha256": "d16245f3033c6f77047890123317bef0ea3177607a802f072825e1a995683dcf"
+    },
+    "System.map": {
+      "bytes": 10543429,
+      "sha256": "51f7b819bd5452aeb003d6b539395fc5007737105f2da71e54032cfc5b3bb750"
+    },
+    "Module.symvers": {
+      "bytes": 2387526,
+      "sha256": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b"
+    },
+    ".config": {
+      "bytes": 308552,
+      "sha256": "1db0292bc0f63703f8946e8ab21d618e853fc7a48321aa09d87c9b7b54db6283"
+    },
+    "modules.order": {
+      "bytes": 226838,
+      "sha256": "53585e7c733e6ae2ca38882eb323756a8184adee0d878a49a2489b7f15e62f82"
+    },
+    "include/config/kernel.release": {
+      "bytes": 18,
+      "sha256": "e7b061b29da5a14f6c1a85bf8e536e4b1a8c068cd2a945fb9e6871c43beed158"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 40,
+      "sha256": "2fdd29be10f23abc863d183a5c838d78c8812ed385c1abef3457dd2121a4c49c"
+    },
+    "include/generated/uapi/linux/version.h": {
+      "bytes": 216,
+      "sha256": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c"
+    }
+  },
+  "module_count": 6901,
+  "recipe_unchanged": true,
+  "build_log_sha256": "91049d69e811a7ee3e8a06639ed66ad9ee768bb1175301056bb012bf98b9478b"
+}

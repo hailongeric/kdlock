@@ -1,0 +1,29 @@
+{
+  "arm": "baseline-f7-scope1-kd",
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "endpoint_watcher": {
+    "path": "/tmp/kdlock-killable-mm-baseline-after-20261031-receipt.json",
+    "sha256": "7f2c89219785b57cd20961dac008905c87f313e152905df19bb4b2c4528cc9fb"
+  },
+  "extra_files": [],
+  "postboot": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-postboot-20261031/result.json",
+    "sha256": "4e85e962d3448662af923ed2a7ad489d80710b6aa0c7fe76a824ef09b2c4022c"
+  },
+  "schema": 1,
+  "source_bind": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-baseline-f7-scope1-kd-source-bind-20261031/result.json",
+    "sha256": "0e004bf2a3e197a85f4ce3363784718b095be90ef746555f7b418fe99d77c262"
+  },
+  "step_owners": {
+    "api": "ba4cfd71bad167d18e1423b7ada2a9cb7912a013783ffda5f6884aee50e194a9",
+    "completed": "90b0914cc27100f1afe1efe186f636871a27b0ddef1cc768a2fca6ac686ff545",
+    "endpoint": "d60e56cbaf9c24f55c04077a45276cdb482aa5b1c06d373c792e61b693a9f93c",
+    "faults": "2aae580e139db659de19276b59da28e484aee62593d83e13edbf06ee62273f3c",
+    "mapping": "affbb198d73dbdb589a0e08b5b39dbdcabe40056b84b310aa789221c7440c6f0",
+    "mmap1-identity": "9441eca03b608af09d873f31238b99c5000eec2e577ee37b17e3df216e70fdf2",
+    "mmap1-measure": "2e41912593201132820220a2e583c2fb7687e8aa9fd800df6066ed0819661d6d",
+    "sites": "9899a89ad4edbfa0fa25bd7b9d10a0b7b896771834594d23d4fda00426f46125"
+  }
+}

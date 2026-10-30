@@ -1,0 +1,56 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/root/host_fs/kdlock/tests/unit",
+    "-B",
+    "run",
+    "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "PY_TESTS=mutex/test_rwsem_killable_poll.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py"
+  ],
+  "boot_id": "8c5259e3-0f93-493d-afa9-bd93d5358683",
+  "child_pid": 18663,
+  "child_returncode": 0,
+  "child_started": true,
+  "completed": true,
+  "completion_unknown": false,
+  "controller_sha256": "20f3f7747e613924d1fbdca4f10b134e1c72bd1d19ac676bceea05b83fea4088",
+  "expected_mutants": 10,
+  "expected_scenarios": 25,
+  "expected_unit_passes": 6,
+  "finished": 1793382765.4597435,
+  "fresh": true,
+  "kernel_release": "7.0.0-38-kdscope1",
+  "mutant_witnesses": [
+    "successful-reservation-repeated",
+    "stop-before-reservation",
+    "pending-signal-ignored",
+    "nonfatal-signal-ignored",
+    "poll-budget-shortened",
+    "fallback-reservation-skipped",
+    "queued-readers-ignored",
+    "reader-drain-skipped",
+    "phase-released-before-gate",
+    "phase-reservation-leaked"
+  ],
+  "passed": true,
+  "prior_checks_reused": false,
+  "python_drivers": [
+    "mutex/test_rwsem_killable_poll.py",
+    "mutex/test_rwsem_api.py",
+    "mutex/test_rwsem_read_admission.py",
+    "infrastructure/test_mmap_rwsem_generation.py"
+  ],
+  "scenario_witnesses": [
+    "25"
+  ],
+  "schema": 1,
+  "source_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "source_manifest_sha256": "3b4d7be79df9e783091744e832cf799c23a27a19b9facbcc759d9b0ef8f74323",
+  "source_state_sha256": "0e5ce648c02c4d62b4d3296a0f4c227ae38d6dd7157fac8bd0a4eb2b634b31c4",
+  "source_unchanged_after": true,
+  "source_unchanged_before": true,
+  "started": 1793382747.1145616,
+  "state": "COMPLETE",
+  "unit_log_sha256": "0c9ba2f09890a06fb78932d4be75daac6f682f64668c27f8aae1dc7432421355"
+}

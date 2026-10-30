@@ -1,0 +1,9 @@
+[
+  "ssh",
+  "-o",
+  "BatchMode=yes",
+  "-o",
+  "ConnectTimeout=10",
+  "eric@10.176.26.71",
+  "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import json,os,base64\nfrom pathlib import Path\nrequest=Path('\"'\"'\"'\"'\"'\"'\"'\"'/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-final-normal-request-20261031/result.json'\"'\"'\"'\"'\"'\"'\"'\"')\nprint(json.dumps({'\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"':Path('\"'\"'\"'\"'\"'\"'\"'\"'/proc/sys/kernel/random/boot_id'\"'\"'\"'\"'\"'\"'\"'\"').read_text().strip(),'\"'\"'\"'\"'\"'\"'\"'\"'release'\"'\"'\"'\"'\"'\"'\"'\"':os.uname().release,'\"'\"'\"'\"'\"'\"'\"'\"'cmdline'\"'\"'\"'\"'\"'\"'\"'\"':Path('\"'\"'\"'\"'\"'\"'\"'\"'/proc/cmdline'\"'\"'\"'\"'\"'\"'\"'\"').read_text().strip(),'\"'\"'\"'\"'\"'\"'\"'\"'request_b64'\"'\"'\"'\"'\"'\"'\"'\"':base64.b64encode(request.read_bytes()).decode()}))\n'\"'\"''"
+]

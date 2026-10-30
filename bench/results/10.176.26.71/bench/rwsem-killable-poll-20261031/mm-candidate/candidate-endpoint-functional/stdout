@@ -1,0 +1,2 @@
+{"state": "COMPLETE", "arm": "candidate-22d-scope2-kd", "step": "endpoint", "owner": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/endpoint-controller.json", "owner_sha256": "3e38c2dbb38a5b349a141cf2b3c1496d5b228723b51afae43237ae18e01a4516", "result_sha256": "da46ecf977274ec52d89dd5e748e5cfc74c6143a070e9f129892d5a38d47ea69", "drain_unknown": false}
+COMPLETE killable-mm candidate-22d-scope2-kd endpoint

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 6, in <module>
+    assert {x.name for x in members}==set(p['manifest']['files'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

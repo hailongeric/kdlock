@@ -1,0 +1,130 @@
+{
+  "action": "request",
+  "activation_sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+  "append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "automatic_retry": false,
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "build_disk": {
+    "fstype": "ext4",
+    "source": "/dev/sdc",
+    "target": "/mnt/kdlock-builds2",
+    "uuid": "c7501672-7642-4d35-aae9-6b258b1f2733"
+  },
+  "bundle_manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399503.066131,
+      "name": "build-disk",
+      "pid": 18238,
+      "returncode": 0,
+      "started": 1793399503.049021
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399503.1290967,
+      "name": "grub-environment",
+      "pid": 18239,
+      "returncode": 0,
+      "started": 1793399503.081141
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope2-recipe-f4ae82cf/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdlock1",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--build-root",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399504.4207902,
+      "name": "normal-kernel-identity",
+      "pid": 18240,
+      "returncode": 0,
+      "started": 1793399503.1382287
+    },
+    {
+      "argv": [
+        "systemctl",
+        "--no-block",
+        "reboot"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399504.4778578,
+      "name": "reboot",
+      "pid": 18242,
+      "returncode": 0,
+      "started": 1793399504.461115
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "0d13f4363c2ec54f0e2455f139a87f4f675bccdb6ab0b5d9ffcb480e3d153597",
+  "default_changed": false,
+  "drain_unknown": false,
+  "expected_normal_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0"
+  ],
+  "finished": 1793399504.4853532,
+  "grub_environment": {
+    "next_entry": ""
+  },
+  "host_state_sha256": "9ba053eb34cc24612657dde56262778632113f7f7672fe30cd6e2c4836eef07b",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "new_boot_proved": false,
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "passed": true,
+  "performance_accepted": false,
+  "pool_verification_sha256": "7940781ccde5391c09501ff11d4c058e81476a8d7d7f213d686bdfa3bf42faf1",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "reboot_requested": true,
+  "release": "7.0.0-38-kdscope2",
+  "schema": 1,
+  "source_changed": false,
+  "started": 1793399502.9675992,
+  "state": "REBOOT_REQUESTED_NOT_VERIFIED",
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "unbind_sha256": "d1df59270bce9d94558fccb8f99c934ac1ce191f1f47f3b55b59ff5e3eccc155"
+}

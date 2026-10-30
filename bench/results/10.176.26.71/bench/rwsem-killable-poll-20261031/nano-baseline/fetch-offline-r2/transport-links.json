@@ -1,0 +1,79 @@
+{
+  "links": {
+    "killable-nano-f7a84065-20261031-basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/disassem": {
+      "gid": 0,
+      "local_relative_target": "../../source/disassem",
+      "mode": 511,
+      "mtime": 1793387620,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/mutex/source/disassem",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/mutex/source/disassem",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/include": {
+      "gid": 0,
+      "local_relative_target": "../../source/include",
+      "mode": 511,
+      "mtime": 1793387620,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/mutex/source/include",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/mutex/source/include",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/disassem": {
+      "gid": 0,
+      "local_relative_target": "../../source/disassem",
+      "mode": 511,
+      "mtime": 1793387654,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/rwlock/source/disassem",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/rwlock/source/disassem",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/include": {
+      "gid": 0,
+      "local_relative_target": "../../source/include",
+      "mode": 511,
+      "mtime": 1793387654,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/rwlock/source/include",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/rwlock/source/include",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/disassem": {
+      "gid": 0,
+      "local_relative_target": "../../source/disassem",
+      "mode": 511,
+      "mtime": 1793387689,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/rwsem/source/disassem",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/rwsem/source/disassem",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/include": {
+      "gid": 0,
+      "local_relative_target": "../../source/include",
+      "mode": 511,
+      "mtime": 1793387689,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/rwsem/source/include",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/rwsem/source/include",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/disassem": {
+      "gid": 0,
+      "local_relative_target": "../../source/disassem",
+      "mode": 511,
+      "mtime": 1793387587,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/spin/source/disassem",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/spin/source/disassem",
+      "uid": 0
+    },
+    "killable-nano-f7a84065-20261031-basic/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/include": {
+      "gid": 0,
+      "local_relative_target": "../../source/include",
+      "mode": 511,
+      "mtime": 1793387587,
+      "original_target": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic/spin/source/include",
+      "retained_target_member": "killable-nano-f7a84065-20261031-basic/spin/source/include",
+      "uid": 0
+    }
+  },
+  "original_guest_targets_preserved": true,
+  "reconstruction": "relative links to the exact same family source",
+  "schema": 1
+}

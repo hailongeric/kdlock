@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "source_only": true,
+  "executed": false,
+  "timing_data_present": false,
+  "original_archive_reader_sha256": "1bbd6e010c27c42f5293a3df09660342e453d49663d9452e3c1d02269116c3a7",
+  "point_validator_change": "only recovery snapshot tag; Archive class unchanged",
+  "files": {
+    "README.md": "182380f0b7cc3efd301ad1239fca25e2c70e250bd5d7c820bd94a5b4badf2c08",
+    "archive_helpers.py": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda",
+    "fresh_controls.py": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+    "initial-correctness.json": "0c88bb366a9104f62ad870151a8c734e3b8d678a457bc64672be689b34309e55",
+    "initial-correctness.md": "b436bd97c18335a9b3e2e37689ca98637eb99df9269e7328c7d684fea6d7641a",
+    "mmap_compare.py": "2c5eb6e25380a9b1dae1c55eb8abec02e8355495d4bb2be0fca5fe88dfcb014c",
+    "nano-core.diff": "e487169e14f48e0fad6f6dcbad32c37eb580911ecb295523c2fb2ceea327979a",
+    "nano_compare.py": "1376203d93c29cc144a0fa3446f335c6ed6f024eecf98b70c642249fefc77869",
+    "nano_core.py": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+    "nano_functions.py": "b831d0775d81681e7fdddfa3bb051802abe3ada1be065c8352911505babe7159",
+    "report.py": "7d578a9fb0c09901d55827da132ac0812db2d8d0e25e403c9e57e31acc53d9ea"
+  }
+}

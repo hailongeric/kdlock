@@ -1,0 +1,153 @@
+{
+  "action": "postboot",
+  "activation_sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+  "append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "automatic_retry": false,
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "build_disk": {
+    "fstype": "ext4",
+    "source": "/dev/sdc",
+    "target": "/mnt/kdlock-builds2",
+    "uuid": "c7501672-7642-4d35-aae9-6b258b1f2733"
+  },
+  "bundle_manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399623.3027482,
+      "name": "build-disk",
+      "pid": 2966,
+      "returncode": 0,
+      "started": 1793399623.2849894
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399623.3540108,
+      "name": "grub-environment",
+      "pid": 2967,
+      "returncode": 0,
+      "started": 1793399623.3221402
+    },
+    {
+      "argv": [
+        "dmesg",
+        "--color=never"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399623.378998,
+      "name": "kernel-log",
+      "pid": 2968,
+      "returncode": 0,
+      "started": 1793399623.3629863
+    },
+    {
+      "argv": [
+        "systemctl",
+        "--failed",
+        "--no-legend",
+        "--plain",
+        "--no-pager"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399623.408007,
+      "name": "failed-services",
+      "pid": 2969,
+      "returncode": 0,
+      "started": 1793399623.3928347
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope2-recipe-f4ae82cf/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdlock1",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--build-root",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--running"
+      ],
+      "completion_unknown": false,
+      "finished": 1793399624.947945,
+      "name": "normal-kernel-identity",
+      "pid": 2970,
+      "returncode": 0,
+      "started": 1793399623.4154491
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "0d13f4363c2ec54f0e2455f139a87f4f675bccdb6ab0b5d9ffcb480e3d153597",
+  "default_changed": false,
+  "drain_unknown": false,
+  "expected_normal_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0"
+  ],
+  "finished": 1793399624.9769342,
+  "grub_environment": {
+    "next_entry": ""
+  },
+  "host_state_sha256": "68933c6c05a2e78dbb3e157088346bd45251cc9e79f524503773c50c1d8ebc78",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "new_boot_proved": true,
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "passed": true,
+  "performance_accepted": false,
+  "pool_verification_sha256": "3c1fbf4647e5d3c69c39819ede44f584ce309a26508353ccc7dc4dc8e313e660",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "reboot_requested": false,
+  "release": "7.0.0-38-kdlock1",
+  "request_sha256": "8d760922728340c408e95284270046d584ad97411250b9deb20ceb291f194253",
+  "schema": 1,
+  "source_changed": false,
+  "started": 1793399623.2224,
+  "state": "NORMAL_BOOT_VERIFIED",
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "unbind_sha256": "d1df59270bce9d94558fccb8f99c934ac1ce191f1f47f3b55b59ff5e3eccc155"
+}

@@ -1,0 +1,20 @@
+{
+  "script": "/tmp/kdlock-scope2-install-only-20261031.py",
+  "script_sha256": "362706943154bab9f0ce9b10207c7e27c0e5bec24818998a8ffae05d923d0811",
+  "argv": [
+    "--boot-id",
+    "8c5259e3-0f93-493d-afa9-bd93d5358683",
+    "--stage-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-module-stage-20261031/result.json",
+    "--stage-result-sha256",
+    "deeba5894aa105d4de1e4a394ef1f4a9db572fe225539af5f56ebd154f97529d",
+    "--stage-controller",
+    "/tmp/kdlock-scope2-stage-modules-20261031.py",
+    "--stage-controller-sha256",
+    "2ec9439b083106651795218eef841a68b2a6b98d6def7e9bb834447892ddefe6",
+    "--idle-confirmed"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-install-20261031/result.json",
+  "timeout": 4000,
+  "affinity": "0-63"
+}

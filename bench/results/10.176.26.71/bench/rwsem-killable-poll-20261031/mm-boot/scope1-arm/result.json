@@ -1,0 +1,118 @@
+{
+  "action": "arm",
+  "arm_environment_before": {
+    "next_entry": ""
+  },
+  "automatic_retry": false,
+  "boot_id": "6dcbd9dd-2d8c-4743-96f6-a43f70f8ab8e",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395623.161765,
+      "mutation": false,
+      "name": "disk",
+      "pid": 3429,
+      "returncode": 0,
+      "started": 1793395623.145515
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395623.2313213,
+      "mutation": false,
+      "name": "environment-before",
+      "pid": 3430,
+      "returncode": 0,
+      "started": 1793395623.1800113
+    },
+    {
+      "argv": [
+        "grub-reboot",
+        "kdscope1-kd-20261030"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395623.4767992,
+      "mutation": true,
+      "name": "arm-existing-entry",
+      "pid": 3431,
+      "returncode": 0,
+      "started": 1793395623.3935344
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395623.5099068,
+      "mutation": false,
+      "name": "environment-after",
+      "pid": 3444,
+      "returncode": 0,
+      "started": 1793395623.4913025
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "drain_unknown": false,
+  "entry": "kdscope1-kd-20261030",
+  "environment_after": {
+    "next_entry": "kdscope1-kd-20261030"
+  },
+  "environment_before": {
+    "next_entry": ""
+  },
+  "expected_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0",
+    "preempt=lazy",
+    "kd_mmap=on"
+  ],
+  "finished": 1793395623.53647,
+  "install_sha256": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+  "kind": "scope1-mm-return",
+  "mutation_attempted": true,
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "passed": true,
+  "performance_accepted": false,
+  "prior_result_sha256": "1492c1a546f729e16d5af4eacaf5dc31e4ce79da31d38bf7546d092316dd724f",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "release": "7.0.0-38-kdscope2",
+  "schema": 1,
+  "scope2_append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "source_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "started": 1793395623.0880384,
+  "state": "SCOPE1_ARMED",
+  "state_unknown": false,
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2"
+}

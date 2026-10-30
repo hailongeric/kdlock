@@ -1,0 +1,13 @@
+{
+  "reference_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "current_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "matched_coordinates": 210,
+  "whole_losses": 120,
+  "peak_losses": 120,
+  "either_metric_losses": 123,
+  "unscored_coordinates": 0,
+  "rounds_per_point": 1,
+  "performance_accepted": false,
+  "ordering": "Sequential older reference then current KD; no randomized pairs or variance estimate",
+  "historical_other_arms": "Only two fresh KD arms from the selected new cohort are compared"
+}

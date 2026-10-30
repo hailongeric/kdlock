@@ -1,0 +1,54 @@
+FUNCTIONAL spin
+FUNCTIONAL mutex
+FUNCTIONAL rwlock
+FUNCTIONAL rwsem
+[
+  {
+    "family": "spin",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1596450,
+    "jit_completions": 1596450,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-basic-22d62d5c-20261031/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+    "receipt_sha256": "42a33a1ee577727773eea69f8fae5621fd770874975203c732e77bffe4418e41",
+    "performance_accepted": false
+  },
+  {
+    "family": "mutex",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1587747,
+    "jit_completions": 1587747,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-basic-22d62d5c-20261031/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+    "receipt_sha256": "0d3ae87aec13b8667ec06affd4ec4ed4e17c2da8bbdb0a9d79730eb934801296",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwlock",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 27760,
+    "jit_completions": 27760,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-basic-22d62d5c-20261031/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+    "receipt_sha256": "3aed1527c5b75d597bce7a95673739fc33bb0937ca083fccf9c9307cd6f4b2de",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwsem",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1588271,
+    "jit_completions": 1588271,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/rwsem-killable-basic-22d62d5c-20261031/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+    "receipt_sha256": "c4d27843b1a7785d1dd1f2a0f843aea1c1b607459b88a87e5058215b756c8b2b",
+    "performance_accepted": false
+  }
+]

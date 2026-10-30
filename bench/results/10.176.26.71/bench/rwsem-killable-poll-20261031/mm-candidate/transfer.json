@@ -1,0 +1,167 @@
+{
+  "completed": true,
+  "started": 1793399345.6582026,
+  "arm": "candidate-22d-scope2-kd",
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "kernel": {
+    "variant": "kdscope2-kd",
+    "release": "7.0.0-38-kdscope2",
+    "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope2-kd-20261031",
+    "kernel_project_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+    "provider_comparison_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52"
+  },
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "expected_sha256": {
+    "archive-owner": "d55c4de1efb7fa15143ddaf6807d14a39fb65c38e656fdee6f1d825b71f680d9",
+    "archive": "4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8",
+    "inventory": "7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9",
+    "aliases": "492d70821abf91c0602988a71dd7323ba105aa9e7392c642f6a602ce2a6ac8e6",
+    "preservation-map": "0c5aeda4bf6f50ac1d729f21e637645718fb60fcdb36629173b6c02e0b7c3e63"
+  },
+  "remote_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031",
+  "roots": [
+    "candidate-22d-scope2-kd-archive-control",
+    "candidate-22d-scope2-kd-archives"
+  ],
+  "destination": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031",
+  "script_sha256": "672f19fac5a5073944ed067f1b77782153eb429bc8d05e0506c1c3f967c9e969",
+  "mount_namespace": "mnt:[4026531841]",
+  "destination_device": 28,
+  "performance_accepted": false,
+  "performance_qualified": false,
+  "eligibility_policy": "mmap-functional-v1",
+  "offline_analysis_pending": true,
+  "scope": "Read-only transport and host archive-byte verification; no score validation or guest drain inference",
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,subprocess,sys\nbase=pathlib.Path(sys.argv[1]);name=sys.argv[2];expected=json.loads(sys.argv[3])\nboot,harness,archiver=sys.argv[4:7];kernel=json.loads(sys.argv[7]);steps=json.loads(sys.argv[8])\ncontrol=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"');archives=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')\npaths={'\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'alias-map.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'preservation-map.json'\"'\"'\"'\"'\"'\"'\"'\"'}\ndef need(v,m):\n if not v:raise RuntimeError(m)\ndef sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()\nneed(all(p.is_file() and not p.is_symlink() and sha(p)==expected[n] for n,p in paths.items()),'\"'\"'\"'\"'\"'\"'\"'\"'actual receipt hashes differ'\"'\"'\"'\"'\"'\"'\"'\"')\no,a,aliases,preservation=[json.loads(paths[n].read_bytes())for n in ('\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"')]\nneed(o.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'state'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'COMPLETE'\"'\"'\"'\"'\"'\"'\"'\"' and o.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and o.get('\"'\"'\"'\"'\"'\"'\"'\"'idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'drain_unknown'\"'\"'\"'\"'\"'\"'\"'\"')is False and o.get('\"'\"'\"'\"'\"'\"'\"'\"'child_returncode'\"'\"'\"'\"'\"'\"'\"'\"')==0 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and o.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and o.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel'\"'\"'\"'\"'\"'\"'\"'\"')==kernel and o.get('\"'\"'\"'\"'\"'\"'\"'\"'script_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==archiver and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False and set(o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'])==set(steps),'\"'\"'\"'\"'\"'\"'\"'\"'archive owner incomplete or generation differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(o['\"'\"'\"'\"'\"'\"'\"'\"'archives_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     o['\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'preservation_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive receipt chain differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(a.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_base'\"'\"'\"'\"'\"'\"'\"'\"')==str(base/name) and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'archive_prefix'\"'\"'\"'\"'\"'\"'\"'\"')==name and a.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_variant'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'variant'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_release'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'release'\"'\"'\"'\"'\"'\"'\"'\"'] and a['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a['\"'\"'\"'\"'\"'\"'\"'\"'health_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==o['\"'\"'\"'\"'\"'\"'\"'\"'final_health_sha256'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive index identity differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'owners'\"'\"'\"'\"'\"'\"'\"'\"')==o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'bundle_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/kernel-bundle/manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False,'\"'\"'\"'\"'\"'\"'\"'\"'alias map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nlogical={step:dict(owner=('\"'\"'\"'\"'\"'\"'\"'\"'mapping-functional'\"'\"'\"'\"'\"'\"'\"'\"'if step=='\"'\"'\"'\"'\"'\"'\"'\"'mapping'\"'\"'\"'\"'\"'\"'\"'\"'else step)+'\"'\"'\"'\"'\"'\"'\"'\"'-controller.json'\"'\"'\"'\"'\"'\"'\"'\"',\n result=('\"'\"'\"'\"'\"'\"'\"'\"'mapping-functional'\"'\"'\"'\"'\"'\"'\"'\"'if step=='\"'\"'\"'\"'\"'\"'\"'\"'mapping'\"'\"'\"'\"'\"'\"'\"'\"'else step)+'\"'\"'\"'\"'\"'\"'\"'\"'/'\"'\"'\"'\"'\"'\"'\"'\"'+('\"'\"'\"'\"'\"'\"'\"'\"'writer-sites.json'\"'\"'\"'\"'\"'\"'\"'\"'if step=='\"'\"'\"'\"'\"'\"'\"'\"'sites'\"'\"'\"'\"'\"'\"'\"'\"'else'\"'\"'\"'\"'\"'\"'\"'\"'result.json'\"'\"'\"'\"'\"'\"'\"'\"'))for step in steps}\nneed(name=='\"'\"'\"'\"'\"'\"'\"'\"'candidate-22d-scope2-kd'\"'\"'\"'\"'\"'\"'\"'\"' and all(v.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'mmap-functional-v1'\"'\"'\"'\"'\"'\"'\"'\"' and\n v.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_qualified'\"'\"'\"'\"'\"'\"'\"'\"')is False and v.get('\"'\"'\"'\"'\"'\"'\"'\"'logical_steps'\"'\"'\"'\"'\"'\"'\"'\"')==logical for v in(o,aliases,preservation)),\n '\"'\"'\"'\"'\"'\"'\"'\"'explicit prospective logical members/policy differ'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'original_paths_retained'\"'\"'\"'\"'\"'\"'\"'\"')is True and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False,'\"'\"'\"'\"'\"'\"'\"'\"'preservation map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nmore={control/'\"'\"'\"'\"'\"'\"'\"'\"'controller.py'\"'\"'\"'\"'\"'\"'\"'\"':archiver,control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"':o['\"'\"'\"'\"'\"'\"'\"'\"'bindings_sha256'\"'\"'\"'\"'\"'\"'\"'\"']}\nneed(all(sha(p)==h for p,h in more.items()),'\"'\"'\"'\"'\"'\"'\"'\"'archive control input differs'\"'\"'\"'\"'\"'\"'\"'\"')\nbindings=json.loads((control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"').read_bytes())\nneed(bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==2 and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'logical_steps'\"'\"'\"'\"'\"'\"'\"'\"')==logical and\n bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'mmap-functional-v1'\"'\"'\"'\"'\"'\"'\"'\"' and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_qualified'\"'\"'\"'\"'\"'\"'\"'\"')is False,\n '\"'\"'\"'\"'\"'\"'\"'\"'prospective archive bindings differ'\"'\"'\"'\"'\"'\"'\"'\"')\nbound={**{p:expected[n]for n,p in paths.items()},**more}\ncode=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(base),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'])\nneed(code==0 and all(sha(p)==h for p,h in bound.items()),'\"'\"'\"'\"'\"'\"'\"'\"'transport or final receipt check failed'\"'\"'\"'\"'\"'\"'\"'\"')\n'\"'\"' /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031 candidate-22d-scope2-kd '\"'\"'{\"archive-owner\": \"d55c4de1efb7fa15143ddaf6807d14a39fb65c38e656fdee6f1d825b71f680d9\", \"archive\": \"4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8\", \"inventory\": \"7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9\", \"aliases\": \"492d70821abf91c0602988a71dd7323ba105aa9e7392c642f6a602ce2a6ac8e6\", \"preservation-map\": \"0c5aeda4bf6f50ac1d729f21e637645718fb60fcdb36629173b6c02e0b7c3e63\"}'\"'\"' fe7fa10a-13fb-4bb3-b730-eb99db9200cd f4ae82cfdf053c679c5d09ee8e503a7919764c9b 438e5be3fc0710a9b195d8c8bc3b7521f816804b001c26c3c68ba6ca9f165106 '\"'\"'{\"variant\": \"kdscope2-kd\", \"release\": \"7.0.0-38-kdscope2\", \"build\": \"/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build\", \"bundle\": \"/root/kdlock-kernel-baselines/linux70-kdscope2-kd-20261031\", \"kernel_project_commit\": \"f4ae82cfdf053c679c5d09ee8e503a7919764c9b\", \"provider_comparison_commit\": \"22d62d5c13cad3c61c97dd47524da908769f1a52\"}'\"'\"' '\"'\"'[\"sites\", \"api\", \"mapping\", \"faults\", \"completed\", \"mmap1-identity\", \"mmap1-measure\", \"endpoint\"]'\"'\"''"
+  ],
+  "pid": 3279395,
+  "returncode": 0,
+  "transport_sha256": "f3440432c54077d6b927aee97abf563104c0730b43326eb598014ea03f8ce8dc",
+  "transport_bytes": 19476480,
+  "files": {
+    "candidate-22d-scope2-kd-archives/inputs.tar.gz": {
+      "sha256": "2e3a17fee9ca446c0e35f5f5e729e3368d7e4ddf7ded737ff76b1a560fb6921f",
+      "bytes": 5741648,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399313
+    },
+    "candidate-22d-scope2-kd-archives/archive_run.py": {
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+      "bytes": 11669,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399310
+    },
+    "candidate-22d-scope2-kd-archives/input-inventory.json": {
+      "sha256": "7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9",
+      "bytes": 838225,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399310
+    },
+    "candidate-22d-scope2-kd-archives/archives.json": {
+      "sha256": "4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8",
+      "bytes": 5209,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399314
+    },
+    "candidate-22d-scope2-kd-archives/checks.tar.gz": {
+      "sha256": "5bfd6d22fa6228de6e00dc1c1c947437af0dd4fd349bc668d501ea52e21c3bc3",
+      "bytes": 6964757,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399311
+    },
+    "candidate-22d-scope2-kd-archives/mmap1.tar.gz": {
+      "sha256": "92893ecf9cc612dc31696e2d198dfa36871ee4bcd421750d569fe6ada8c3bca9",
+      "bytes": 657035,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399312
+    },
+    "candidate-22d-scope2-kd-archives/metadata.tar.gz": {
+      "sha256": "c4009a875d1d3c00aba37052e76b87c66f271c22a0fe1aeb971eb663d3e2e28f",
+      "bytes": 5013418,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399313
+    },
+    "candidate-22d-scope2-kd-archive-control/controller.py": {
+      "sha256": "438e5be3fc0710a9b195d8c8bc3b7521f816804b001c26c3c68ba6ca9f165106",
+      "bytes": 22070,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399307
+    },
+    "candidate-22d-scope2-kd-archive-control/alias-map.json": {
+      "sha256": "492d70821abf91c0602988a71dd7323ba105aa9e7392c642f6a602ce2a6ac8e6",
+      "bytes": 60417,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399308
+    },
+    "candidate-22d-scope2-kd-archive-control/archive.log": {
+      "sha256": "9cfee966286b87fd6fe39f54189bbc39e25ab02299ba2e853eae6d27773c993f",
+      "bytes": 3095,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399314
+    },
+    "candidate-22d-scope2-kd-archive-control/preservation-map.json": {
+      "sha256": "0c5aeda4bf6f50ac1d729f21e637645718fb60fcdb36629173b6c02e0b7c3e63",
+      "bytes": 137757,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399308
+    },
+    "candidate-22d-scope2-kd-archive-control/bindings.json": {
+      "sha256": "5c4903ac46e3c2f1fdd539e2353b9d5980ababb2a224a06122bcc81d7dd5f9d0",
+      "bytes": 2559,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399307
+    },
+    "candidate-22d-scope2-kd-archive-control/owner.json": {
+      "sha256": "d55c4de1efb7fa15143ddaf6807d14a39fb65c38e656fdee6f1d825b71f680d9",
+      "bytes": 4322,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793399314
+    }
+  },
+  "group_archives": 4,
+  "regular_members": 2257,
+  "member_manifest_sha256": "49974f548da072ce4bf8e6378629612cc54f12b7ec94ed30c4e92f2c046f013d",
+  "archive_provenance_sha256": "461178412b9a601bdb8d5ccbde7391506d737f914dacde3722adb72fd750e73a",
+  "offline_reader_sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+  "offline_reader_dependency_sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+  "analysis_arm_sha256": "289ccf7b707e50fcae63278683ca1dbb1b678a91e4445a2165b15e19dd30407e",
+  "transport_verified": true,
+  "archive_members_verified": true,
+  "finished": 1793399348.5715919,
+  "transport_intermediate_removed": true,
+  "removal_scope": "Only verified task-created transport.tar and derived receipt-cache; original compressed groups/control retained"
+}

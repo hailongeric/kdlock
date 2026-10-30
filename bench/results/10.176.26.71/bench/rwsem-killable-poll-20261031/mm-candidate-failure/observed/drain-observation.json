@@ -1,0 +1,8 @@
+{
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "health": "files=0 mm_refs=0 destroyed=3 release_errors=0\n",
+  "module": [
+    "kd_mmap_writer_native 12288 0 - Live 0xffffffffc09e8000 (OE)"
+  ],
+  "candidate_processes": []
+}

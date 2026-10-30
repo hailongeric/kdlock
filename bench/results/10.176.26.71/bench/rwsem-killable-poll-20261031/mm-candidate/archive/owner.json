@@ -1,0 +1,115 @@
+{
+  "alias_map_sha256": "492d70821abf91c0602988a71dd7323ba105aa9e7392c642f6a602ce2a6ac8e6",
+  "archives_sha256": "4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8",
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/root/host_fs/kdlock/bench/archive_run.py",
+    "--base",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd-archives",
+    "--health",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/final-health.json",
+    "--kernel-variant",
+    "kdscope2-kd",
+    "--kernel-source",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdscope2-kd-20261031",
+    "--timeout-seconds",
+    "3600",
+    "--group",
+    "checks=sites",
+    "--group",
+    "checks=api",
+    "--group",
+    "checks=mapping-functional",
+    "--group",
+    "checks=faults",
+    "--group",
+    "checks=completed",
+    "--group",
+    "checks=mmap1-identity",
+    "--group",
+    "mmap1=mmap1-measure",
+    "--group",
+    "checks=endpoint",
+    "--group",
+    "checks=strict-hold",
+    "--group",
+    "inputs=preservation-inputs"
+  ],
+  "arm": "candidate-22d-scope2-kd",
+  "automatic_retry": false,
+  "bindings_sha256": "5c4903ac46e3c2f1fdd539e2353b9d5980ababb2a224a06122bcc81d7dd5f9d0",
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "child_returncode": 0,
+  "completed": true,
+  "drain_unknown": false,
+  "eligibility_policy": "mmap-functional-v1",
+  "final_health_sha256": "9d26f11d0e2098d9ce2b708f9d9de5361206d80190d57a11639d00bbcda56a2a",
+  "finished": 1793399314.688781,
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "idle": true,
+  "input_inventory_sha256": "7be7fba9e28ffafdf9dd6575432242d8ff98d650d51dadef8c48eee2e92f4fc9",
+  "kernel": {
+    "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope2-kd-20261031",
+    "kernel_project_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+    "provider_comparison_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+    "release": "7.0.0-38-kdscope2",
+    "variant": "kdscope2-kd"
+  },
+  "logical_steps": {
+    "api": {
+      "owner": "api-controller.json",
+      "result": "api/result.json"
+    },
+    "completed": {
+      "owner": "completed-controller.json",
+      "result": "completed/result.json"
+    },
+    "endpoint": {
+      "owner": "endpoint-controller.json",
+      "result": "endpoint/result.json"
+    },
+    "faults": {
+      "owner": "faults-controller.json",
+      "result": "faults/result.json"
+    },
+    "mapping": {
+      "owner": "mapping-functional-controller.json",
+      "result": "mapping-functional/result.json"
+    },
+    "mmap1-identity": {
+      "owner": "mmap1-identity-controller.json",
+      "result": "mmap1-identity/result.json"
+    },
+    "mmap1-measure": {
+      "owner": "mmap1-measure-controller.json",
+      "result": "mmap1-measure/result.json"
+    },
+    "sites": {
+      "owner": "sites-controller.json",
+      "result": "sites/writer-sites.json"
+    }
+  },
+  "performance_accepted": false,
+  "performance_qualified": false,
+  "pid": 16728,
+  "preservation_map_sha256": "0c5aeda4bf6f50ac1d729f21e637645718fb60fcdb36629173b6c02e0b7c3e63",
+  "schema": 1,
+  "script_sha256": "438e5be3fc0710a9b195d8c8bc3b7521f816804b001c26c3c68ba6ca9f165106",
+  "started": 1793399307.6075327,
+  "state": "COMPLETE",
+  "step_owners": {
+    "api": "482148a32785254f3d487a64f335764094a0501711e98e5dadb25a37e50f8ff5",
+    "completed": "51f860e131f943aa7ad02bb67eaf9cfc430b2dba164212b1a6684fce92c69013",
+    "endpoint": "3e38c2dbb38a5b349a141cf2b3c1496d5b228723b51afae43237ae18e01a4516",
+    "faults": "a50cf310866774f0107d9f035bc8e24e49aaca560b06c3ee143a9ca42b724a9b",
+    "mapping": "73c8c7aef4b5bec3e72dab9c0bff915f566d0e62bac967004aa2b647defcf6f6",
+    "mmap1-identity": "e457792bc18d0cbfa919f3a913eb9f5c3517ee9734b39e9771011a4b1e9f56ee",
+    "mmap1-measure": "576536b62794f14366be8f29c1d1c06f5fc3048f7824eea8c14f4e27bf217109",
+    "sites": "7a59f5e505f9c4e5d332e7e8c1efdb8ee3f8e6db855fb525b8a409e857d0f6c8"
+  }
+}

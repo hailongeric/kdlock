@@ -1,0 +1,42 @@
+{
+  "script": "/tmp/kdlock-scope1-mm-return-20261031.py",
+  "script_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "argv": [
+    "output-bind",
+    "--boot-id",
+    "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+    "--host-state",
+    "/tmp/kdlock-killable-scope1-output-bind-host.json",
+    "--host-state-sha256",
+    "d1f7f558e71ec285e25a139c61bf4baf4fbb52e3b8e76adc519c34460a7ac9c5",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-output-bind-20261031",
+    "--execute",
+    "--scope2-append-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-append-20261031/result.json",
+    "--scope2-append-result-sha256",
+    "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+    "--prior-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-reboot-20261031/result.json",
+    "--prior-result-sha256",
+    "35c237643054c884566eb6eed2d7d5078159cc72e00c0f4f8171cd41937a1e8e"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-scope1-output-bind-20261031/result.json",
+  "timeout": 360,
+  "affinity": "0-63",
+  "success_key": "completed",
+  "source_host_bindings": {
+    "/tmp/kdlock-killable-progress-20261031.json": "478275600550e12e147391f11f4baca42b7163f251902f50fc8287c96ad0ba79",
+    "/tmp/kdlock-scope2-install-transport-20261031/result.json": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+    "/tmp/kdlock-scope2-append-transport-20261031/result.json": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+    "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind-host-inputs/state.json": "d1f7f558e71ec285e25a139c61bf4baf4fbb52e3b8e76adc519c34460a7ac9c5",
+    "/dev/shm/kdlock-killable-controls-20261031/scope1-observe/request.json": "35c237643054c884566eb6eed2d7d5078159cc72e00c0f4f8171cd41937a1e8e"
+  },
+  "source_host_builder_sha256": "f51ab6bf70a5effef67e27ac1164278ad050634b14ce1595a4eccb8dc414e41e",
+  "family": "scope1-return",
+  "action": "output-bind",
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "release": "7.0.0-38-kdscope1",
+  "commands_executed": false,
+  "performance_accepted": false
+}

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/transfer.json",
+  "sha256": "dbc918864fccab7e1f7ccdef761b003ce087f83cff898b1d5849571fc6bef1ab",
+  "bytes": 677201,
+  "completed": true,
+  "groups": 11,
+  "links": 8,
+  "originals_retained_in_tmpfs": true,
+  "scope": "Compact reference to unchanged full fetched transport receipt; not a rewritten receipt",
+  "performance_accepted": false
+}

@@ -1,0 +1,52 @@
+diff --git a/kernel_module/kd_rwsem.c b/kernel_module/kd_rwsem.c
+index 4478014a..2194a820 100644
+--- a/kernel_module/kd_rwsem.c
++++ b/kernel_module/kd_rwsem.c
+@@ -2,6 +2,7 @@
+ /* Reader/ordinary-writer/delegated-writer phases around an unchanged KD mutex. */
+ #include <linux/module.h>
+ #include <linux/limits.h>
++#include <linux/sched/signal.h>
+ #include "kd_rwsem.h"
+ #include "kd_lock.h"
+ #include "kd_mutex_local.h"
+@@ -196,6 +197,24 @@ static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)
+ 	return atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER) == 0;
+ }
+ 
++/* Only unpublished killable writers use this poll. A successful reservation
++ * wins before reschedule/signal checks and must never be evaluated again.
++ * False selects the ordinary wait macro, retaining its condition-before-signal
++ * and enqueue/recheck contract; the poll itself never reports cancellation. */
++static __always_inline bool kd_rwsem_poll_killable(struct kd_rwsem *sem)
++{
++	unsigned int budget = 16384;
++
++	do {
++		if (kd_rwsem_reserve_local(sem))
++			return true;
++		if (need_resched() || signal_pending(current))
++			return false;
++		cpu_relax();
++	} while (--budget);
++	return false;
++}
++
+ static void kd_rwsem_release_local(struct kd_rwsem *sem)
+ {
+ 	/* Every ordinary writer retains this exclusive phase until after its
+@@ -239,9 +258,11 @@ int kd_down_write_killable(struct kd_rwsem *sem)
+ 	int ret;
+ 
+ 	might_sleep();
+-	ret = wait_event_killable(sem->phase_wait, kd_rwsem_reserve_local(sem));
+-	if (ret)
+-		return -EINTR;
++	if (!kd_rwsem_poll_killable(sem)) {
++		ret = wait_event_killable(sem->phase_wait, kd_rwsem_reserve_local(sem));
++		if (ret)
++			return -EINTR;
++	}
+ 	ret = kd_mutex_lock_killable(&sem->gate);
+ 	if (!ret) {
+ 		ret = kd_rwsem_drain_readers(sem, TASK_KILLABLE);

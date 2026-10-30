@@ -1,0 +1,165 @@
+{
+  "completed": true,
+  "started": 1793396741.124417,
+  "arm": "baseline-f7-scope1-kd",
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "kernel": {
+    "variant": "kdscope1-kd",
+    "release": "7.0.0-38-kdscope1",
+    "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+    "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+    "provider_comparison_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+  },
+  "harness_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "expected_sha256": {
+    "archive-owner": "f658a47eef9c317ab218d72ba3a492bde14fc0fb9c45943a5f7acdf476d4f12b",
+    "archive": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+    "inventory": "f7351486d7fbd1d4135c769c97ff119124679078f77792772518266ad3510404",
+    "aliases": "9c28bb416b4ed49b8a3a6bf755422d65cfa5c61e6889c8299647bf9f16b9c283",
+    "preservation-map": "bc239c1aff8e0099434835fa09549e1c8c8b4c0a2f64456ace3a8597aded7bf8"
+  },
+  "remote_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031",
+  "roots": [
+    "baseline-f7-scope1-kd-archive-control",
+    "baseline-f7-scope1-kd-archives"
+  ],
+  "destination": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031",
+  "script_sha256": "590181521849eede167c2ba6e6ffd3d72c5fbe883f330f79d6e492020695962d",
+  "mount_namespace": "mnt:[4026531841]",
+  "destination_device": 28,
+  "performance_accepted": false,
+  "offline_analysis_pending": true,
+  "scope": "Read-only transport and host archive-byte verification; no score validation or guest drain inference",
+  "offline_inputs": {
+    "transport": "/dev/shm/kdlock-killable-mm-baseline-20261031/transport.tar",
+    "failed_receipt": "/dev/shm/kdlock-killable-mm-baseline-20261031/transfer.json"
+  },
+  "offline_continuation": true,
+  "remote_actions_executed": false,
+  "prior_failed_transfer_path": "/dev/shm/kdlock-killable-mm-baseline-20261031/transfer.json",
+  "prior_failed_transfer_sha256": "5ee7cbe9c0095b1337427c5c441bb9bc233b7207ec6c2bea6264429b9085c1cd",
+  "original_transport_path": "/dev/shm/kdlock-killable-mm-baseline-20261031/transport.tar",
+  "original_transport_retained": true,
+  "returncode": 0,
+  "transport_sha256": "9246e2e285f3d9d944008cccc4f725642e980a99697ab6c923196fb0ece84e15",
+  "transport_bytes": 11878400,
+  "files": {
+    "baseline-f7-scope1-kd-archives/inputs.tar.gz": {
+      "sha256": "ae021c700f2d2f0f3f617159fbc8c6d9761f86cce2b01294f03824edf1bebcc3",
+      "bytes": 1149089,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396534
+    },
+    "baseline-f7-scope1-kd-archives/archive_run.py": {
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+      "bytes": 11669,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396532
+    },
+    "baseline-f7-scope1-kd-archives/input-inventory.json": {
+      "sha256": "f7351486d7fbd1d4135c769c97ff119124679078f77792772518266ad3510404",
+      "bytes": 655465,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396532
+    },
+    "baseline-f7-scope1-kd-archives/archives.json": {
+      "sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+      "bytes": 4769,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396534
+    },
+    "baseline-f7-scope1-kd-archives/checks.tar.gz": {
+      "sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 5868291,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396533
+    },
+    "baseline-f7-scope1-kd-archives/mmap1.tar.gz": {
+      "sha256": "005ebcf8c66eb426318bb2504a4996ae088ff3ed6df133d6045c609c59f4f075",
+      "bytes": 656928,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396533
+    },
+    "baseline-f7-scope1-kd-archives/metadata.tar.gz": {
+      "sha256": "c47a6629b3bdbcd25d18447f1caf1f674015ca6844c6f90aac7a15f284234362",
+      "bytes": 3406061,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396534
+    },
+    "baseline-f7-scope1-kd-archive-control/controller.py": {
+      "sha256": "fbde42310b1b9f01e866852e70a177a45913d44a7253249bd8eb1b3e09b1f327",
+      "bytes": 16749,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396529
+    },
+    "baseline-f7-scope1-kd-archive-control/alias-map.json": {
+      "sha256": "9c28bb416b4ed49b8a3a6bf755422d65cfa5c61e6889c8299647bf9f16b9c283",
+      "bytes": 15332,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396530
+    },
+    "baseline-f7-scope1-kd-archive-control/archive.log": {
+      "sha256": "0f2629a4af4f7f9adbb2b7bd1037b6415c5d1e44ca38abe7022eda46805833ea",
+      "bytes": 2709,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396534
+    },
+    "baseline-f7-scope1-kd-archive-control/preservation-map.json": {
+      "sha256": "bc239c1aff8e0099434835fa09549e1c8c8b4c0a2f64456ace3a8597aded7bf8",
+      "bytes": 65124,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396530
+    },
+    "baseline-f7-scope1-kd-archive-control/bindings.json": {
+      "sha256": "66603a0a3c118b09ca74696630c2eef0d5549b76f76af1e1f98f9238dad9ce35",
+      "bytes": 1561,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396529
+    },
+    "baseline-f7-scope1-kd-archive-control/owner.json": {
+      "sha256": "f658a47eef9c317ab218d72ba3a492bde14fc0fb9c45943a5f7acdf476d4f12b",
+      "bytes": 3269,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793396535
+    }
+  },
+  "group_archives": 4,
+  "regular_members": 1779,
+  "member_manifest_sha256": "1b585fb361c44562b93a57add41bf472727c965ae9befe19594ecc630cfb2249",
+  "archive_provenance_sha256": "d4579cd87ccedf49b208c33934b5f4a852638d40b8007a6e4e38a3193573025e",
+  "offline_reader_sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+  "offline_reader_dependency_sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+  "analysis_arm_sha256": "5fdd9a14cd9dbbd7689e4e3d865335916d0d4e29b9543c184cf6239c9578a2b6",
+  "transport_verified": true,
+  "archive_members_verified": true,
+  "finished": 1793396742.2478454,
+  "transport_intermediate_removed": false,
+  "removal_scope": "Only the new derived receipt-cache; original failed attempt/tar retained"
+}

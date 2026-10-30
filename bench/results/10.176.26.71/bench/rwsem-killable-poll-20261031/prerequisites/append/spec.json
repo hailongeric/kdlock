@@ -1,0 +1,25 @@
+{
+  "script": "/tmp/kdlock-scope2-boot-20261031.py",
+  "script_sha256": "3f502447f10a508adeeb1e6676db8f643e61d98cc2c83ebc2cf970c2af542d9d",
+  "argv": [
+    "append",
+    "--snapshot",
+    "kdlock-builddisk-clean-20261031",
+    "--boot-id",
+    "760d4758-28b8-4903-b1d5-5bbb8938430d",
+    "--install-result",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-install-20261031/result.json",
+    "--install-result-sha256",
+    "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+    "--host-state",
+    "/tmp/kdlock-killable-normal-postboot-host.json",
+    "--host-state-sha256",
+    "b5c15ea39549bdb9bd1f129bf821049460dc6fd9695ffcb3cc30dc30af9ede28",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-append-20261031",
+    "--execute"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-append-20261031/result.json",
+  "timeout": 1100,
+  "affinity": "0-63"
+}

@@ -1,0 +1,86 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/root/host_fs/kdlock/bench/basic/run.py",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/killable-nano-f7a84065-20261031-basic",
+    "--families",
+    "spin",
+    "mutex",
+    "rwlock",
+    "rwsem",
+    "--snapshot-tag",
+    "kdlock-builddisk-clean-20261031",
+    "--host-reference",
+    "/tmp/kdlock-killable-reference.json",
+    "--host-reference-sha256",
+    "6493853058495ad9b155cbd184525967501fe005d60bbec1ac46d7554c4581a9",
+    "--host-state",
+    "/tmp/kdlock-killable-f7-basic-host.json",
+    "--kernel-variant",
+    "kdlock1",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+  ],
+  "boot_id": "760d4758-28b8-4903-b1d5-5bbb8938430d",
+  "common_harness_sha256": "46b509fb24341f6990710e28a57a7d39308657a40e7a6c130a1254c5ed64185e",
+  "completed": true,
+  "final_idle": true,
+  "host_admission": {
+    "functional": {
+      "additional_workers": [],
+      "memory_bindings": [
+        [
+          "7469b7c00000",
+          "bind:1",
+          4
+        ],
+        [
+          "746cb7e00000",
+          "bind:0",
+          4
+        ]
+      ],
+      "mode": "FUNCTIONAL_ONLY",
+      "observed_threads": 131,
+      "original_threads": 131,
+      "performance_accepted": false,
+      "timing_gate": "NOT_APPLICABLE"
+    },
+    "timing": {
+      "additional_workers": [],
+      "exploratory": false,
+      "fixed_frequency_khz": 2000000,
+      "host_endpoint": "PENDING",
+      "observed_threads": 131,
+      "original_threads": 131,
+      "performance_accepted": false,
+      "retired_workers": [],
+      "strict_host_gate": "PASS",
+      "task_set_unchanged": true
+    }
+  },
+  "inputs": {
+    "controller.py": "26d484996dd8f2a2b3e7e0e7ee813c63713fcecff8ce90b7eb031a88a52fc0c3",
+    "host-before.json": "418e4f3eab9c0680fb0b2e5a378a37e9e7cb243deac16d0193b85a7b1f53d5fe",
+    "host-reference.json": "6493853058495ad9b155cbd184525967501fe005d60bbec1ac46d7554c4581a9",
+    "policy-receipt.json": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+    "prior-live-source.json": "1ac4521349f9ebf96584328610fb5f84816176399f9bfa1b9ded8b7b6785161f",
+    "prior-live.json": "40ff1aa9e3665a3c078e8a6ed6ae8f23b5b85fafc61b4dc29230a4a09c4b7591",
+    "prior-unit.json": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "sync.json": "df81c24d7c2727f7c4f02aa3627d8b7f5576e2977e81319265f3e93656a3b6d0"
+  },
+  "performance_accepted": false,
+  "phase": "basic",
+  "pid": 4963,
+  "policy_controller_sha256": "cd4333d4cb533d7d4ff3f8937735e8ae963b9ad487ad67bcf208d3ea3dc6083a",
+  "prior_boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "prior_checks_historical": true,
+  "result_sha256": "a03c946423da25259c7fdfc97bf2553139f8d2862614bfcff5fd871dd7933d71",
+  "returncode": 0,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "state": "EXITED",
+  "timing_started": false
+}

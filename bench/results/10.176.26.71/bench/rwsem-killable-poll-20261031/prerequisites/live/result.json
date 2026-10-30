@@ -1,0 +1,50 @@
+{
+  "binaries": {
+    "source/kernel_module/kdlock_km.ko": "bdb9d5b309e71e326a5aac9e5887c563264ec1127ed425cb3252c2d88706d291",
+    "source/tests/kernel/rwsem/rwsem_probe.ko": "47f0d4acd867f4d1d6fda2c7a76ff820f03ad2f322d19bdf645ad047c50285b4"
+  },
+  "drained": true,
+  "jit_bodies": 0,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "passed": true,
+  "results": [
+    {
+      "api_checks": 17,
+      "cancellation_checks": 10,
+      "colocated": 1,
+      "downgrade_checks": 1,
+      "errors": 0,
+      "execution": "local",
+      "idle": 1,
+      "late_reader_slept": 1,
+      "outer_readers_slept": 2,
+      "outer_writer_slept": 1,
+      "publication_checks": 3,
+      "readers_slept": 2,
+      "writer_slept": 1
+    }
+  ],
+  "snapshot_tag": "linux70-kdlock1-clean-20261027"
+}

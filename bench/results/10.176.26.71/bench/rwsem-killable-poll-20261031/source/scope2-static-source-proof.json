@@ -1,0 +1,77 @@
+{
+  "audit_script_sha256": "7dd306e9a85df1764e40d5aa795587e023a0dd24be95f2dd8ebaebbde7e67011",
+  "base_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "built": false,
+  "changed_inputs": [
+    "kernel_module/kd_rwsem.c"
+  ],
+  "expected_changed_generated_outputs": [
+    "kernel/locking/kd_mmap/kd_mmap_rwsem.c"
+  ],
+  "generated_input_hashes": {
+    "include/kd_config.h": {
+      "base_sha256": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+      "candidate_sha256": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311"
+    },
+    "include/kd_lock.h": {
+      "base_sha256": "2782692adcbd135d614808c2af840fa6d7e4bd790975da61ef898535d223150a",
+      "candidate_sha256": "2782692adcbd135d614808c2af840fa6d7e4bd790975da61ef898535d223150a"
+    },
+    "include/kd_mutex.h": {
+      "base_sha256": "5347a142f3ba30545fef0a31fe7e071621044e546226d3efc5d38b929390c242",
+      "candidate_sha256": "5347a142f3ba30545fef0a31fe7e071621044e546226d3efc5d38b929390c242"
+    },
+    "include/kd_mutex_types.h": {
+      "base_sha256": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+      "candidate_sha256": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8"
+    },
+    "include/kd_regs.h": {
+      "base_sha256": "dd295ae847c706f1343019edbfc65a8973d0e293cb1a588798c1125de2a54bf1",
+      "candidate_sha256": "dd295ae847c706f1343019edbfc65a8973d0e293cb1a588798c1125de2a54bf1"
+    },
+    "include/kd_rwsem.h": {
+      "base_sha256": "aebf91bc88931497f4d6728d7b618f6eab9035b996440463bd4fce6378af162a",
+      "candidate_sha256": "aebf91bc88931497f4d6728d7b618f6eab9035b996440463bd4fce6378af162a"
+    },
+    "include/kd_rwsem_types.h": {
+      "base_sha256": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "candidate_sha256": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58"
+    },
+    "kernel_module/kd_mutex_local.c": {
+      "base_sha256": "be9b83cd9ab54a94386875615bcbeadcbd0f570b3ae25999f0a765590f6eae65",
+      "candidate_sha256": "be9b83cd9ab54a94386875615bcbeadcbd0f570b3ae25999f0a765590f6eae65"
+    },
+    "kernel_module/kd_mutex_local.h": {
+      "base_sha256": "db55f75c72ad1788b977cf6b078034e2f640591d20c6bb40ec11cb2247bcf611",
+      "candidate_sha256": "db55f75c72ad1788b977cf6b078034e2f640591d20c6bb40ec11cb2247bcf611"
+    },
+    "kernel_module/kd_mutex_osq.c": {
+      "base_sha256": "25569c0cf30054ea2ae7e20368234ad9343a386ff7223a04ba630bb84df295fd",
+      "candidate_sha256": "25569c0cf30054ea2ae7e20368234ad9343a386ff7223a04ba630bb84df295fd"
+    },
+    "kernel_module/kd_rwsem.c": {
+      "base_sha256": "9911761bdc89c4cb5cfa9f7cbeba05eaa133eef4e65d7d168855dfed30da8e24",
+      "candidate_sha256": "f2d665cd09453c9da6517ce0072bf5a6dec13929ab2de9e63caf53b4a419d38e"
+    }
+  },
+  "generator_sha256": "109e28b1dc02fc2f09c0747950cf15c9520bf8496922734e13d51aa1375505cb",
+  "limitation": "Only the changed C output was reconstructed as text. Actual complete VM preparation/output hashes remain required.",
+  "original_recipe_generators_patches_overlays_and_headers_unchanged": true,
+  "passed": true,
+  "performance_accepted": false,
+  "provider_baseline_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "provider_candidate_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "recipe_head": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "recipe_root": "/tmp/kdlock-scope2-recipe-20261031",
+  "reconstructed_rwsem": {
+    "base_sha256": "59b72352568ab51de51e44c865b33fc73a265d38e09231ad12a727e09ad59d14",
+    "candidate_sha256": "43c404befd820f2ad0d50ffe79f33e9dab918f342f644bd43d1f853e430da3f1",
+    "diff_path": "/tmp/kdlock-scope2-generated-rwsem-static-20261031.diff",
+    "diff_sha256": "c52ecab9675c7a41839e456d190d876b818829c8eaa2c70c40f259c96ed30818"
+  },
+  "schema": 1,
+  "scope": "static source/Git comparison only",
+  "tests_executed": false,
+  "vm_preparation": false,
+  "worktree_changes": []
+}

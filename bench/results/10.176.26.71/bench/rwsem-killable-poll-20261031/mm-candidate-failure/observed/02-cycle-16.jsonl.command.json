@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031/candidate-22d-scope2-kd/mapping/client",
+    "cycle",
+    "16",
+    "5000",
+    "231",
+    "136",
+    "kd_mmap_down_write_killable",
+    "313",
+    "313",
+    "43",
+    "kd_mmap_write_lock_killable"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 6788,
+  "started_ns": 287333782133,
+  "timeout_seconds": 120
+}

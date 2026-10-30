@@ -1,0 +1,276 @@
+{
+  "analysis_artifact_policy": "Copy finalized analyzer output bytes unchanged, including CSVs, validation receipts, negative points and failed attempts; no placeholder measurements or cross-generation pooling.",
+  "baseline_kernel_recipe_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "baseline_provider_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "candidate_kernel_recipe_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "candidate_provider_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "comparisons": {
+    "mmap1": {
+      "baseline": {
+        "analysis_arm_sha256": "5fdd9a14cd9dbbd7689e4e3d865335916d0d4e29b9543c184cf6239c9578a2b6",
+        "archive_verified": true,
+        "archives_sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+        "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+        "completed": true,
+        "functional_summary": "mm-baseline/functional-summary.json",
+        "paired_score_validation": true,
+        "points": 42,
+        "raw": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031",
+        "rounds_per_point": 1
+      },
+      "candidate": {
+        "analysis_arm_sha256": "289ccf7b707e50fcae63278683ca1dbb1b678a91e4445a2165b15e19dd30407e",
+        "archive_verified": true,
+        "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+        "completed": true,
+        "eligibility_policy": "mmap-functional-v1",
+        "evidence": "mm-candidate-failure/summary.json",
+        "failed_owner_sha256": "71568d5f8374b7cd8e90119cf56aebd150334a91d98be09ac69675779548df2e",
+        "failed_runner_sha256": "284e2cbffc95a2c56f9d23b768646ed774b6143de0d3f537e27fcee526ae23c2",
+        "original_controller_drain_unknown": true,
+        "original_controller_drained": false,
+        "original_controller_passed": false,
+        "original_strict_mapping_passed": false,
+        "paired_score_validation": true,
+        "performance_qualified": false,
+        "points": 42,
+        "prospective_mapping": {
+          "drained": true,
+          "owner_sha256": "73c8c7aef4b5bec3e72dab9c0bff915f566d0e62bac967004aa2b647defcf6f6",
+          "passed": true,
+          "result_sha256": "666eea31f715ca523d86001bb8c2eb710ba5000a0b9b6672056b0e39e5170b48",
+          "writer_observation": "inconclusive"
+        },
+        "raw": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031",
+        "status": "ARCHIVED_AND_PAIRED_OFFLINE_VALIDATED",
+        "strict_hold": {
+          "drained": true,
+          "final_idle": true,
+          "passed": true,
+          "rejected_mutations": 18,
+          "result_sha256": "1f38b8da4af61e36278fb0a5db701f2c92565331699f38437a77b81c80cc1cda",
+          "scope": "Separate artificial held interval; not the free-running observation",
+          "syscall_cases": 2
+        },
+        "timing_started": true
+      },
+      "completed": true,
+      "expected_pairs": 42,
+      "expected_points_per_arm": 42,
+      "host_strict_qualified": true,
+      "model_outcomes": {
+        "processes": {
+          "gains": 2,
+          "losses": 19,
+          "pairs": 21
+        },
+        "threads": {
+          "gains": 16,
+          "losses": 5,
+          "pairs": 21
+        }
+      },
+      "models": {
+        "processes": 21,
+        "threads": 21
+      },
+      "no_regression_evidence_gate": false,
+      "paired_validated_points": 84,
+      "pairs": 42,
+      "performance_accepted": false,
+      "performance_qualified": false,
+      "results": "mm-comparison/README.md",
+      "retained_scored_points": 84,
+      "rounds_per_point": 1,
+      "status": "VALIDATED_PROSPECTIVE_FUNCTIONAL_COMPARISON_UNQUALIFIED",
+      "strict_qualified": false,
+      "validated": true,
+      "validation_sha256": "c9577f24ee5a2655ba9c51e7e3354e6eee25f8c9d4e78901b5ab11ffa6a0241f"
+    },
+    "nano": {
+      "baseline": {
+        "archive_completed": true,
+        "archive_owner_sha256": "d5a154b70c2dd2348c87b85d3e2558b610ce087e688378b81593a603d0c0067a",
+        "archives_sha256": "4f22382de3d93cf5ee474d7f1ce91a026f967e0cc10772b7bcf5d9a11b131042",
+        "controller_validated_points": 210,
+        "offline_full_member_and_point_audit_completed": true,
+        "raw": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031",
+        "run_owner_sha256": "76b6d86be39558d9025934da78b8953722385a76462deaa8b2bdfad6ac0f914c",
+        "transport_verified": true
+      },
+      "candidate": {
+        "archive_owner_sha256": "55b462123812ef92d79e88778c902698ade0a1410ebbcb83f2c3849b975881ea",
+        "archives_sha256": "6870ea1cf5d889f8f1a46c34da172ca4e2ca4f5c6710362e995cdd4f34ed31bb",
+        "completed": true,
+        "controller_validated_points": 210,
+        "offline_full_member_and_point_audit_completed": true,
+        "raw": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031",
+        "run_owner_sha256": "8cc4a03376835d083e10796c5db8369c573a77fb3ab717dc22821fc4117ea589",
+        "status": "ARCHIVED_TRANSPORT_AND_OFFLINE_AUDIT_VERIFIED"
+      },
+      "comparison_results": "nano-comparison/comparison/points.csv",
+      "completed": true,
+      "either_metric_losses": 123,
+      "expected_pairs": 210,
+      "expected_points_per_arm": 210,
+      "no_regression_evidence_gate": false,
+      "pairs": 210,
+      "peak_losses": 120,
+      "points": 420,
+      "results": {
+        "interpretation": "nano-comparison/interpretation/README.md",
+        "points": "nano-comparison/comparison/points.csv",
+        "summary": "nano-comparison/comparison/summary.json"
+      },
+      "retained_scored_points": 420,
+      "rounds_per_point": 1,
+      "status": "VALIDATED_NO_REGRESSION_GATE_FAILED",
+      "strict_qualified": true,
+      "unscored_coordinates": 0,
+      "validated": true,
+      "validation_sha256": "4db452836c12a1d8d05ff280c9731bf8008f6f51f714f5e8bac94740564eb858",
+      "whole_losses": 120
+    }
+  },
+  "created_utc": "2026-10-30T19:13:45.501674+00:00",
+  "documentation_first_commit": "2c4882f8cded1456fb6face980d717f3ee6c3ed1",
+  "final_restoration": {
+    "aio_max_batch": 0,
+    "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+    "evidence": "restoration/",
+    "final_max": 64,
+    "final_min": 0,
+    "normal_boot_verified": true,
+    "original_qom_absence_restored": false,
+    "original_task_map_restored": false,
+    "policy_state_unknown": false,
+    "pool_settings_restored": true,
+    "source_view_unbound": true
+  },
+  "fresh_cohort": {
+    "basic_owners": {
+      "22d": {
+        "families": [
+          {
+            "family": "spin",
+            "jit_completions": 1595209,
+            "jit_entries": 1595209,
+            "operations": 1600000
+          },
+          {
+            "family": "mutex",
+            "jit_completions": 1586456,
+            "jit_entries": 1586456,
+            "operations": 1600000
+          },
+          {
+            "family": "rwlock",
+            "jit_completions": 22235,
+            "jit_entries": 22235,
+            "operations": 1600000
+          },
+          {
+            "family": "rwsem",
+            "jit_completions": 1589500,
+            "jit_entries": 1589500,
+            "operations": 1600000
+          }
+        ],
+        "full_runner_result_retained": true,
+        "owner_sha256": "204a37fea83341cbfc79d170821de58568a4bdab0d85f9d342b39959262e3161",
+        "runner_result_sha256": "098a949a4297d37d968e457a54f5732b60236d723dbab4f7bc71864035b8a36a"
+      },
+      "f7": {
+        "families": [
+          {
+            "family": "spin",
+            "jit_completions": 1597288,
+            "jit_entries": 1597288,
+            "operations": 1600000
+          },
+          {
+            "family": "mutex",
+            "jit_completions": 1588003,
+            "jit_entries": 1588003,
+            "operations": 1600000
+          },
+          {
+            "family": "rwlock",
+            "jit_completions": 19072,
+            "jit_entries": 19072,
+            "operations": 1600000
+          },
+          {
+            "family": "rwsem",
+            "jit_completions": 1588188,
+            "jit_entries": 1588188,
+            "operations": 1600000
+          }
+        ],
+        "full_runner_result_retained": true,
+        "owner_sha256": "3ad9330ee87c4abafea3c80487ba8bda239edfa7095db9d2de03a9935887cfb3",
+        "runner_result_sha256": "a03c946423da25259c7fdfc97bf2553139f8d2862614bfcff5fd871dd7933d71"
+      }
+    },
+    "boot_id": "760d4758-28b8-4903-b1d5-5bbb8938430d",
+    "both_basic_controllers_completed": true,
+    "cohort": "kernel-killable-22d62d5c-20261031",
+    "kernel_release": "7.0.0-38-kdlock1",
+    "normal_boot_verified": true,
+    "normal_postboot_result_sha256": "2bf297b6a546f60b1fe4b360d9354b9e5324eff3451698d1bb14ce5e6ba0a9a0",
+    "pool_policy_sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+    "pool_reference_sha256": "6493853058495ad9b155cbd184525967501fe005d60bbec1ac46d7554c4581a9"
+  },
+  "historical_rates_pooled": false,
+  "initial_correctness": {
+    "assertion_mutants": 10,
+    "basic_families": 4,
+    "boot_id": "8c5259e3-0f93-493d-afa9-bd93d5358683",
+    "deterministic_scenarios": 25,
+    "kernel_release": "7.0.0-38-kdscope1",
+    "passed": true,
+    "rwsem_api_checks": 17,
+    "rwsem_cancellation_checks": 10,
+    "scope": "Prior-boot functional prerequisites only; not scope2 runtime or fresh same-boot validation. Fresh four-family basic is separately recorded.",
+    "selected_unit_checks": 6,
+    "signal_probe_cases": 4
+  },
+  "mm_boot_preparation": {
+    "harness_readonly_source_bind_sha256": "0e004bf2a3e197a85f4ce3363784718b095be90ef746555f7b418fe99d77c262",
+    "mm_functional_pass_claimed": false,
+    "mm_performance_pass_claimed": false,
+    "scope": "Boot/image/backend identity and exact source/output views only; same-boot MM checks and timing remain separate",
+    "scope1_kd_boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+    "scope1_output_bind_sha256": "4b0a8f4df8d03a40b9179d2fc5477dba106ec87635b362beb7440c0f94c72e30",
+    "scope1_postboot_sha256": "4e85e962d3448662af923ed2a7ad489d80710b6aa0c7fe76a824ef09b2c4022c",
+    "scope2_native_postboot_sha256": "1492c1a546f729e16d5af4eacaf5dc31e4ce79da31d38bf7546d092316dd724f",
+    "scope2_stale_reboot_attempt": {
+      "commands": [],
+      "passed": false,
+      "reboot_requested": false,
+      "result_sha256": "54df2cc44ebc8b8d7227ff0ca50b37baedd3ef6f562e9249c1619084f01bcd85"
+    },
+    "scope2_successful_request_sha256": "908d5aa466fc5a2d229d1e59a0a760c1e0d50e787151198ab991405757bd105f"
+  },
+  "performance_accepted": false,
+  "performance_claims": [],
+  "poll_budget": 16384,
+  "report_preparation_scope": "380G10 source inspection and evidence copying only; no build, test, timing or VM action",
+  "schema": 1,
+  "scope2": {
+    "boot_entry_append_passed": true,
+    "boot_evidence_retained": true,
+    "boot_id": "6dcbd9dd-2d8c-4743-96f6-a43f70f8ab8e",
+    "boot_identity_verified": true,
+    "boot_mode": "native",
+    "build_passed": true,
+    "install_passed": true,
+    "live_runtime_evidence_retained": true,
+    "module_count": 6901,
+    "preinstall_passed": true,
+    "runtime_scope": "Separate same-boot MM checks and prospective mapping eligibility; original strict mapping failure retained; not whole-kernel or live API bridge qualification",
+    "stage_passed": true
+  },
+  "status": "COMPARISONS_COMPLETE_CANDIDATE_UNACCEPTED",
+  "updated_utc": "2026-10-30T22:38:29.257669+00:00"
+}

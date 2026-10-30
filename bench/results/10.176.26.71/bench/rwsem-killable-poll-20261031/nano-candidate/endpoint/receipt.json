@@ -1,0 +1,66 @@
+{
+  "activation_receipt_sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+  "calls": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "eric@10.176.26.71",
+        "sudo -n taskset -c 63 python3 -c 'import hashlib,json,os,pathlib,sys\nx=json.loads(sys.argv[1]);p=pathlib.Path(x['\"'\"'script'\"'\"'])\nassert hashlib.sha256(p.read_bytes()).hexdigest()==x['\"'\"'sha256'\"'\"']\nos.execv('\"'\"'/usr/bin/python3'\"'\"',['\"'\"'python3'\"'\"',str(p),*x['\"'\"'args'\"'\"']])\n' '{\"script\": \"/tmp/kdlock-qemu-pool-reactivate-20261031.py\", \"sha256\": \"cd4333d4cb533d7d4ff3f8937735e8ae963b9ad487ad67bcf208d3ea3dc6083a\", \"args\": [\"verify\", \"--capture-helper\", \"/tmp/kdlock-qemu-stable-pool-capture-host-20261030.py\", \"--inventory\", \"/tmp/kdlock-qemu-readonly-inventory-20261030.json\", \"--snapshot\", \"kdlock-builddisk-clean-20261031\", \"--cohort\", \"kernel-killable-22d62d5c-20261031\", \"--policy\", \"/tmp/kdlock-pool64-killable-activate-20261031/result.json\", \"--policy-sha256\", \"b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48\", \"--output\", \"/tmp/kdlock-killable-nano-22d62d5c-pool-endpoint-20261031\"]}'"
+      ],
+      "finished": 1793394963.0141788,
+      "name": "verify",
+      "pid": 3256302,
+      "returncode": 0,
+      "started": 1793394961.0840106,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "d097941294dff5431ae11e3a99eeb047bb7fb266bb6458f201e1801ce3e7b503"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "eric@10.176.26.71",
+        "sudo -n python3 -c 'import base64,json,pathlib,sys\np=pathlib.Path(sys.argv[1]);r=p/'\"'\"'result.json'\"'\"';v=json.loads(r.read_bytes())\nassert v['\"'\"'action'\"'\"']=='\"'\"'verify'\"'\"' and v['\"'\"'completed'\"'\"'] is True\nh=p/'\"'\"'after.host.json'\"'\"';assert v['\"'\"'captures'\"'\"']['\"'\"'after'\"'\"']['\"'\"'path'\"'\"']==str(h)\nprint(json.dumps({'\"'\"'policy'\"'\"':base64.b64encode(r.read_bytes()).decode(),'\"'\"'host'\"'\"':base64.b64encode(h.read_bytes()).decode()}))\n' /tmp/kdlock-killable-nano-22d62d5c-pool-endpoint-20261031"
+      ],
+      "finished": 1793394963.2906508,
+      "name": "read",
+      "pid": 3256312,
+      "returncode": 0,
+      "started": 1793394963.0154238,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "c952e513cdd5a60cd1f05d506410811fc730de38a3536d4fa5c1fd137b829cbf"
+    }
+  ],
+  "cohort": "kernel-killable-22d62d5c-20261031",
+  "completed": true,
+  "completion_marker": "COMPLETE killable-nano 22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "endpoint_policy": "/tmp/kdlock-killable-nano-22d62d5c-after-20261031-policy.json",
+  "endpoint_policy_sha256": "297a83d1f106b46517d0e003d87427b555016deb4ef49cbe331668e0190a8a0b",
+  "finished": 1793394963.3136451,
+  "guest_work_started": false,
+  "host_output": "/tmp/kdlock-killable-nano-22d62d5c-pool-endpoint-20261031",
+  "output": "/tmp/kdlock-killable-nano-22d62d5c-after-20261031.json",
+  "output_sha256": "3771605a9ef8ba820efa7af7e5e1739266373b2d1b360a612667471201760d2a",
+  "performance_accepted": false,
+  "policy_controller_sha256": "cd4333d4cb533d7d4ff3f8937735e8ae963b9ad487ad67bcf208d3ea3dc6083a",
+  "returncode": 0,
+  "run_log": "/tmp/kdlock-killable-nano-22d62d5c-run-20261031/stdout",
+  "run_log_sha256": "26afca3fd0498b551a84dc40bb9cbc5395336edbf1718c170d0e3c8a86a7b3ff",
+  "schema": 1,
+  "script_sha256": "40f576dbb3128de1f08229bd8d488fad6d722cea84591cf35c94f63d9401aa15",
+  "snapshot_tag": "kdlock-builddisk-clean-20261031",
+  "source_commit": "22d62d5c13cad3c61c97dd47524da908769f1a52",
+  "started": 1793391597.4990766,
+  "state": "COMPLETE"
+}

@@ -1,0 +1,17 @@
+{
+  "completed": true,
+  "scope": "Offline extraction and copied-byte verification only; point/member analysis remains pending",
+  "raw": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031",
+  "script_sha256": "04ac5dd5fb693b42d782c75dde39bb30d8247be6f717238de15f0470fbce8a17",
+  "transfer_sha256": "83a35e53e0155d875133ed94062d6371e4523a95e7ebe31340b1d2fd6c1c4bbd",
+  "analysis_arm_sha256": "969f33fd03393608edc436cf7782c7717cdbd92847b9a5e22b6104550867a420",
+  "link_manifest_sha256": "a3d405a39a084be84195f3c5df98fbc8be4c81e2338c17b424eac26bf9ca760b",
+  "regular_files": 2326,
+  "symlinks": 8,
+  "groups": 11,
+  "original_failed_receipt_sha256": "9f470eae9b59717cab36a2dfa8089e4b2f2f1ea782ef3920fa1b6217a6cb5e90",
+  "original_transport_sha256": "59ce889bd150fb3a5092013026af02b5e8af14f2dcbcb94c4d600d90f5b6df2b",
+  "original_transport_bytes": 149094400,
+  "originals_unchanged": true,
+  "performance_accepted": false
+}

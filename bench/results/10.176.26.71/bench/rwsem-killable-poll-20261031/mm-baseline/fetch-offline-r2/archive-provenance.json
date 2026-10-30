@@ -1,0 +1,29 @@
+{
+  "archive_receipt_sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+  "directory": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives",
+  "groups": [
+    {
+      "bytes": 5868291,
+      "file": "checks.tar.gz",
+      "sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563"
+    },
+    {
+      "bytes": 656928,
+      "file": "mmap1.tar.gz",
+      "sha256": "005ebcf8c66eb426318bb2504a4996ae088ff3ed6df133d6045c609c59f4f075"
+    },
+    {
+      "bytes": 1149089,
+      "file": "inputs.tar.gz",
+      "sha256": "ae021c700f2d2f0f3f617159fbc8c6d9761f86cce2b01294f03824edf1bebcc3"
+    },
+    {
+      "bytes": 3406061,
+      "file": "metadata.tar.gz",
+      "sha256": "c47a6629b3bdbcd25d18447f1caf1f674015ca6844c6f90aac7a15f284234362"
+    }
+  ],
+  "inventory_sha256": "f7351486d7fbd1d4135c769c97ff119124679078f77792772518266ad3510404",
+  "paths": 2330,
+  "regular_files": 1779
+}

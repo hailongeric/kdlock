@@ -1,0 +1,130 @@
+{
+  "action": "source-bind",
+  "automatic_retry": false,
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395779.8206332,
+      "mutation": false,
+      "name": "disk",
+      "pid": 4297,
+      "returncode": 0,
+      "started": 1793395779.8028135
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395779.8821468,
+      "mutation": false,
+      "name": "environment-before",
+      "pid": 4298,
+      "returncode": 0,
+      "started": 1793395779.834419
+    },
+    {
+      "argv": [
+        "mount",
+        "--bind",
+        "/mnt/kdlock-builds2/kdlock-scope2-recipe-f4ae82cf",
+        "/root/host_fs/kdlock"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395779.9168606,
+      "mutation": true,
+      "name": "bind-source",
+      "pid": 4299,
+      "returncode": 0,
+      "started": 1793395779.9016469
+    },
+    {
+      "argv": [
+        "mount",
+        "-o",
+        "remount,bind,ro",
+        "/root/host_fs/kdlock"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395779.9390745,
+      "mutation": true,
+      "name": "readonly-source",
+      "pid": 4300,
+      "returncode": 0,
+      "started": 1793395779.9241025
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "drain_unknown": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "expected_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0",
+    "preempt=lazy",
+    "kd_mmap=on"
+  ],
+  "finished": 1793395779.9657772,
+  "full_source_validation": "frozen MM controller recipe() before each runner",
+  "full_tracked_hashes_checked": false,
+  "install_sha256": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+  "kind": "scope1-mm-return",
+  "mutation_attempted": true,
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "passed": true,
+  "performance_accepted": false,
+  "prior_result_sha256": "4e85e962d3448662af923ed2a7ad489d80710b6aa0c7fe76a824ef09b2c4022c",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "recipe_identity": {
+    "device": 2080,
+    "inode": 3670017
+  },
+  "recipe_manifest_sha256": "57b031b6c2b27e33a3d7434abf7864b7e8b0aebb00e7a38dc4e135d64314bb7b",
+  "release": "7.0.0-38-kdscope1",
+  "schema": 1,
+  "scope2_append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "source_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "started": 1793395779.7464404,
+  "state": "SOURCE_BOUND_READONLY",
+  "state_unknown": false,
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2",
+  "underlying_identity": {
+    "device": 2049,
+    "inode": 2353000
+  },
+  "underlying_sentinels": {
+    "include/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+    "kernel_module/kd_exec.c": "2893e8af93368b42318fbb0e0f963ee59d5fcc24b4e5d047f3749a6925e86fb6",
+    "kernel_module/kd_rwsem.c": "f2d665cd09453c9da6517ce0072bf5a6dec13929ab2de9e63caf53b4a419d38e"
+  }
+}

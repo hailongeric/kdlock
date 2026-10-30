@@ -1,0 +1,2400 @@
+{
+  "files": [
+    {
+      "bytes": 14843,
+      "path": "inputs/progress-at-scaffold.json",
+      "sha256": "d8398b42a41414e2bdd42bfad7f5a83b212e8868e144c81ae27068c81a02348d",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1892,
+      "path": "prerequisites/units/result.json",
+      "sha256": "11980b5b69ce1decc445c79cafa65e1345bbb9379d658818d893b646e4f9accc",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1168,
+      "path": "prerequisites/units/owner.json",
+      "sha256": "0311ec6863e81285fd40fac1b8f7b42946db94919d0f6b7da299a1b976f51f1a",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 120,
+      "path": "prerequisites/units/stdout",
+      "sha256": "833d29573b28082f55650b7eb36f99b055a4c9a110081ef10187afe0fd972434",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/units/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 8450,
+      "path": "prerequisites/units/unit.log",
+      "sha256": "0c9ba2f09890a06fb78932d4be75daac6f682f64668c27f8aae1dc7432421355",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/unit.log",
+      "verbatim": true
+    },
+    {
+      "bytes": 22,
+      "path": "prerequisites/units/upload.stdout",
+      "sha256": "704f54bf908025a47d4b8dd0c071e2c40272c8a41b98f4c1320ebef9f7f4684b",
+      "source_host_path": "/tmp/kdlock-killable-unit-22d62d5c-transport-20261031/upload.stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 1656,
+      "path": "prerequisites/live/result.json",
+      "sha256": "eb465041f72403b3a5dd4f6585254ab85b04a5b3365a96a1851beb644e20ce8b",
+      "source_host_path": "/tmp/kdlock-killable-live-22d62d5c-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1231,
+      "path": "prerequisites/live/owner.json",
+      "sha256": "0d7f4efe0f43140b388ddd3d11b379c19de69e112a41da126c9b9594f6f6eca8",
+      "source_host_path": "/tmp/kdlock-killable-live-22d62d5c-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 139,
+      "path": "prerequisites/live/stdout",
+      "sha256": "741c185a1a56ffbefba8e6286a7e0f8f60ed8cd083bf3694f62376ae28443689",
+      "source_host_path": "/tmp/kdlock-killable-live-22d62d5c-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/live/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-live-22d62d5c-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 11236,
+      "path": "prerequisites/basic/result.json",
+      "sha256": "99c68b5b072f1b13f867bfe84d26b8a0b7710c63623c485a430a264335b273a3",
+      "source_host_path": "/tmp/kdlock-killable-basic-22d62d5c-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1797,
+      "path": "prerequisites/basic/owner.json",
+      "sha256": "5837076c240bc76ec47a2a818fd9b5e6f31b3569f8201eb3069c3900b5205674",
+      "source_host_path": "/tmp/kdlock-killable-basic-22d62d5c-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2006,
+      "path": "prerequisites/basic/stdout",
+      "sha256": "14c8040c6d47606a53da09e63bf6e922a7f41aabfe624b84eb9d7d014ccb4eae",
+      "source_host_path": "/tmp/kdlock-killable-basic-22d62d5c-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/basic/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-basic-22d62d5c-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 43530,
+      "path": "prerequisites/live_signal_probe/result.json",
+      "sha256": "f78d8bac48ca6f37118dccabf4ee46949ee72c3a5d22ce78f2499af854d6fb1b",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1802,
+      "path": "prerequisites/live_signal_probe/owner.json",
+      "sha256": "4888dfe91c095b141bb4224085650f387e50564901214b1347f99cd93e6e3ec1",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 91,
+      "path": "prerequisites/live_signal_probe/stdout",
+      "sha256": "c09042c7dc204c932fe80c82a4701e6cfc4111630014a454c21a4e3bc3522495",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/live_signal_probe/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 24,
+      "path": "prerequisites/live_signal_probe/upload.stdout",
+      "sha256": "c30af55b4e1b99d9a48fab9618a9ae1b37ea163464a656955c3f7f7a5f4c9d68",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/upload.stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/live_signal_probe/upload.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-r2-20261031/upload.stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 17704,
+      "path": "prerequisites/preparation/result.json",
+      "sha256": "c4ebbc107f6a06e144678ec2c37447ab8b9e61fadbcb3d76816eff9e5420b4bc",
+      "source_host_path": "/tmp/kdlock-scope2-prepare-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 830,
+      "path": "prerequisites/preparation/owner.json",
+      "sha256": "6aded1d072dbca1254c2b6b229a649a6bc3ec42fb5a590e14f1ba24adfb8d362",
+      "source_host_path": "/tmp/kdlock-scope2-prepare-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9,
+      "path": "prerequisites/preparation/stdout",
+      "sha256": "a4bccf5c13ef5ff8311e59b34d492bc7072a55298723601a6a9c127053aee8fc",
+      "source_host_path": "/tmp/kdlock-scope2-prepare-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/preparation/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-prepare-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 3205,
+      "path": "prerequisites/build/result.json",
+      "sha256": "d289a0c9cb7790349d3519a4d111a07ca6a3c0e60c930f74398844f4d2a31701",
+      "source_host_path": "/tmp/kdlock-scope2-build-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 925,
+      "path": "prerequisites/build/owner.json",
+      "sha256": "1076e1b33d07ba37eca2707a2d04f2f07ce43fcb45d98971d715109841fb3673",
+      "source_host_path": "/tmp/kdlock-scope2-build-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9,
+      "path": "prerequisites/build/stdout",
+      "sha256": "a4bccf5c13ef5ff8311e59b34d492bc7072a55298723601a6a9c127053aee8fc",
+      "source_host_path": "/tmp/kdlock-scope2-build-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/build/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-build-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 16754,
+      "path": "prerequisites/preinstall/result.json",
+      "sha256": "1cc835638c46b443338e6e4c015c17889e3df7fcfd8c6027965022a7d5779f75",
+      "source_host_path": "/tmp/kdlock-scope2-preinstall-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1443,
+      "path": "prerequisites/preinstall/owner.json",
+      "sha256": "83aad71447a1db2d7c3e9d45ba28f834a764de932eab20be525ec442609810a6",
+      "source_host_path": "/tmp/kdlock-scope2-preinstall-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 689,
+      "path": "prerequisites/preinstall/spec.json",
+      "sha256": "0a492812b55707399c316e7ceb68e5059854b4d5626c76efa1124e251c7ddbc5",
+      "source_host_path": "/tmp/kdlock-scope2-preinstall-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 13802,
+      "path": "prerequisites/preinstall/stdout",
+      "sha256": "30cebb2423a916b37a884c5b18b870e176bc0ad1ad418368a1d3ce5cb02092c6",
+      "source_host_path": "/tmp/kdlock-scope2-preinstall-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/preinstall/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-preinstall-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 3504,
+      "path": "prerequisites/stage/result.json",
+      "sha256": "deeba5894aa105d4de1e4a394ef1f4a9db572fe225539af5f56ebd154f97529d",
+      "source_host_path": "/tmp/kdlock-scope2-stage-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1796,
+      "path": "prerequisites/stage/owner.json",
+      "sha256": "3ea714ac206d4141d606d240b85626cea8934bb79d9f0a7315e2dabdf1a962d1",
+      "source_host_path": "/tmp/kdlock-scope2-stage-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1045,
+      "path": "prerequisites/stage/spec.json",
+      "sha256": "60ed76bda29d10e3548e0477d7a19efee3c1c60e6a4b30c9763b45fd468d87f5",
+      "source_host_path": "/tmp/kdlock-scope2-stage-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3352,
+      "path": "prerequisites/stage/stdout",
+      "sha256": "382ed9b7041a9548648a298e8fc6e15b27f7e2475fced62f9a3528c94e78af7e",
+      "source_host_path": "/tmp/kdlock-scope2-stage-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/stage/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-stage-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 9042,
+      "path": "prerequisites/install/result.json",
+      "sha256": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+      "source_host_path": "/tmp/kdlock-scope2-install-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1561,
+      "path": "prerequisites/install/owner.json",
+      "sha256": "ffb557d470be3ab4cd4899537e17a49d2f01db19462268a2f18a1b9d663bc83c",
+      "source_host_path": "/tmp/kdlock-scope2-install-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 820,
+      "path": "prerequisites/install/spec.json",
+      "sha256": "c539362f66810fe6cc610016269d03611a2a4ebbba3b3c44406fd329d05e700c",
+      "source_host_path": "/tmp/kdlock-scope2-install-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 7724,
+      "path": "prerequisites/install/stdout",
+      "sha256": "6bf4761fd1150848f96f0c0aea0ae12c60c5806519ecafce7bd626e3c454a210",
+      "source_host_path": "/tmp/kdlock-scope2-install-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/install/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-install-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 10126,
+      "path": "prerequisites/append/result.json",
+      "sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+      "source_host_path": "/tmp/kdlock-scope2-append-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1709,
+      "path": "prerequisites/append/owner.json",
+      "sha256": "f4723530f072e9ecf9da5531d38dd737f91ee1ea2fe73755264b84f24f9d9b34",
+      "source_host_path": "/tmp/kdlock-scope2-append-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 972,
+      "path": "prerequisites/append/spec.json",
+      "sha256": "c3c18748882a8f3c1a022ed22930e494148b624d6063c099a9df4e7b59985acf",
+      "source_host_path": "/tmp/kdlock-scope2-append-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 8478,
+      "path": "prerequisites/append/stdout",
+      "sha256": "07fe94b56b50d07bdf0628605c99d4aa25208633fff9d7fadba9143cba6d9bc8",
+      "source_host_path": "/tmp/kdlock-scope2-append-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/append/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-scope2-append-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 221,
+      "path": "prerequisites/failed-signal-upload/upload.stderr",
+      "sha256": "5c51c3ebbec1d047a8acd6743bff936ba0eab85cc3e563eecd8fef30e6d7933f",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-20261031/upload.stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "prerequisites/failed-signal-upload/upload.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-signal-22d62d5c-transport-20261031/upload.stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 3930,
+      "path": "source/scope2-static-source-proof.json",
+      "sha256": "3cd8d944dba48f6dafd3d103348530aa0b43b1b2c4fdf5f0b091b03515903fc3",
+      "source_host_path": "/tmp/kdlock-scope2-static-source-proof-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1696,
+      "path": "source/generated-rwsem.diff",
+      "sha256": "c52ecab9675c7a41839e456d190d876b818829c8eaa2c70c40f259c96ed30818",
+      "source_host_path": "/tmp/kdlock-scope2-generated-rwsem-static-20261031.diff",
+      "verbatim": true
+    },
+    {
+      "bytes": 506,
+      "path": "source/candidate-source-state.json",
+      "sha256": "0e5ce648c02c4d62b4d3296a0f4c227ae38d6dd7157fac8bd0a4eb2b634b31c4",
+      "source_host_path": "/tmp/kdlock-killable-poll-22d62d5c-sync-inputs-20261031/source-state.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 898172,
+      "path": "source/candidate-source-sha256.json",
+      "sha256": "3b4d7be79df9e783091744e832cf799c23a27a19b9facbcc759d9b0ef8f74323",
+      "source_host_path": "/tmp/kdlock-killable-poll-22d62d5c-sync-inputs-20261031/source-sha256.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1791,
+      "generated_from": {
+        "command": [
+          "git",
+          "diff",
+          "f7a84065e84474380faa37eeadfdf534abd72a68",
+          "22d62d5c13cad3c61c97dd47524da908769f1a52",
+          "--",
+          "kernel_module/kd_rwsem.c"
+        ]
+      },
+      "path": "source/provider-rwsem.diff",
+      "sha256": "265856d62accc659ffa7a56df27bbafc4c189d600b0b4f1a88a684bae0d0e34e",
+      "verbatim": false
+    },
+    {
+      "bytes": 19414,
+      "path": "inputs/progress-f7-complete-candidate-running-20261031.json",
+      "sha256": "ae875b74f09dd0db1bb8f0e26ab059a7d206e262da927b24bed80e7fdcb64eae",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1755,
+      "path": "fresh-cohort/normal-before/owner.json",
+      "sha256": "06cddb38dc3ac4e32fdb7c293088c3d82bcd444452d8d1a753bcf39425682fee",
+      "source_host_path": "/tmp/kdlock-normal-before-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1025,
+      "path": "fresh-cohort/normal-before/spec.json",
+      "sha256": "099985cdafdd9cadf654905251e776dbcbfff361256c0a8ff5ed3bf5aade46b3",
+      "source_host_path": "/tmp/kdlock-normal-before-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4481,
+      "path": "fresh-cohort/normal-before/result.json",
+      "sha256": "59a1e8bd036816d51252172c1e0e3e2b310ea2941403b104817c4378e65f0161",
+      "source_host_path": "/tmp/kdlock-normal-before-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 271,
+      "path": "fresh-cohort/normal-before/stdout",
+      "sha256": "84cc576bb1ca846a1cf8aea1597f6caaa811d1e24adbb9f404283eed8b983ccd",
+      "source_host_path": "/tmp/kdlock-normal-before-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/normal-before/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-normal-before-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1831,
+      "path": "fresh-cohort/normal-request/owner.json",
+      "sha256": "3677339a9f4bd200674afb6b58625d012c1d6c57bb513978daa95dfa347c7d1c",
+      "source_host_path": "/tmp/kdlock-normal-request-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1271,
+      "path": "fresh-cohort/normal-request/spec.json",
+      "sha256": "8c174a4f9cf88b93c1dfbf41e5a7de6b01ef361ae31a487379643df081eb9bf9",
+      "source_host_path": "/tmp/kdlock-normal-request-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/normal-request/result.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-normal-request-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 275,
+      "path": "fresh-cohort/normal-request/stdout",
+      "sha256": "512bf7962aac490d3c8dd17bcf61660f29f9a84e8ab54957177a6aed8e5b49ee",
+      "source_host_path": "/tmp/kdlock-normal-request-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/normal-request/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-normal-request-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2242,
+      "path": "fresh-cohort/normal-postboot/owner.json",
+      "sha256": "35ecb66b5da133f813fe43566358b2c595796ca5c22f85ae18a17dfa04118541",
+      "source_host_path": "/tmp/kdlock-normal-postboot-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1511,
+      "path": "fresh-cohort/normal-postboot/spec.json",
+      "sha256": "4cf44c413c2ab326fb6bec978cfe0da6f30c3ef814fa0f44e96a74436ef2560c",
+      "source_host_path": "/tmp/kdlock-normal-postboot-transport-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5620,
+      "path": "fresh-cohort/normal-postboot/result.json",
+      "sha256": "2bf297b6a546f60b1fe4b360d9354b9e5324eff3451698d1bb14ce5e6ba0a9a0",
+      "source_host_path": "/tmp/kdlock-normal-postboot-transport-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 272,
+      "path": "fresh-cohort/normal-postboot/stdout",
+      "sha256": "82e976669ecfe6721de62a5c2f998c1430a8f83143c45034f8da908499905b90",
+      "source_host_path": "/tmp/kdlock-normal-postboot-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/normal-postboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-normal-postboot-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 4189,
+      "path": "fresh-cohort/normal-request/reconnected-observation.json",
+      "sha256": "10cfdf8a6d42feff6fc708cb5f1916d70b4bb31f675bb5bf593f55218f81f73c",
+      "source_host_path": "/tmp/kdlock-normal-reboot-observed-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 312417,
+      "path": "fresh-cohort/pool/policy.json",
+      "sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48",
+      "source_host_path": "/tmp/kdlock-killable-normal-pool-inputs-20261031/policy.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 456206,
+      "path": "fresh-cohort/pool/reference.json",
+      "sha256": "6493853058495ad9b155cbd184525967501fe005d60bbec1ac46d7554c4581a9",
+      "source_host_path": "/tmp/kdlock-killable-normal-pool-inputs-20261031/reference.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 495,
+      "path": "fresh-cohort/pool/bindings.json",
+      "sha256": "2788d5e9b8d329538d812d0a67a02d7098a76c806e7abf678f92434d673d0baa",
+      "source_host_path": "/tmp/kdlock-killable-normal-pool-inputs-20261031/bindings.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1156,
+      "path": "fresh-cohort/pool/transport-owner.json",
+      "sha256": "5a49411f56859ba1318ae6854fb403dc3db2fcf192db0d87f61a8eb7235216ba",
+      "source_host_path": "/tmp/kdlock-killable-pool-activate-transport-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 228,
+      "path": "fresh-cohort/pool/transport-stdout",
+      "sha256": "47f671ca898ee848501c73e30d165ae54572844a2807cba11f5a1e9bbf2ec38d",
+      "source_host_path": "/tmp/kdlock-killable-pool-activate-transport-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/pool/transport-stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-pool-activate-transport-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2903,
+      "path": "fresh-cohort/f7/basic/owner.json",
+      "sha256": "38abb264cf81f4df5579fac20d8bbed8a975ad5e77117a752f735b5d323f760e",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-basic-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2216,
+      "path": "fresh-cohort/f7/basic/spec.json",
+      "sha256": "42859a1a698679901f8558a9d21243ac699543273ef904e5c75517d4f1423825",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-basic-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3049,
+      "path": "fresh-cohort/f7/basic/result.json",
+      "sha256": "3ad9330ee87c4abafea3c80487ba8bda239edfa7095db9d2de03a9935887cfb3",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-basic-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 70,
+      "path": "fresh-cohort/f7/basic/stdout",
+      "sha256": "7e9b0f849d762dbde222643f498c5cf328f9f70cc33df531adccee9b7da9f5cc",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-basic-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/f7/basic/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-basic-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 911943,
+      "path": "fresh-cohort/f7/sync-envelope.json",
+      "sha256": "df81c24d7c2727f7c4f02aa3627d8b7f5576e2977e81319265f3e93656a3b6d0",
+      "source_host_path": "/tmp/kdlock-killable-f7-sync-envelope-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2885,
+      "path": "fresh-cohort/22d/basic/owner.json",
+      "sha256": "7cd09bd5bae2dab92064e0568a4b1040a8e35106996b527af5b1fa2250758ddc",
+      "source_host_path": "/tmp/kdlock-killable-nano-22d62d5c-basic-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3475,
+      "path": "fresh-cohort/22d/basic/spec.json",
+      "sha256": "3d2dd95590b98395e00bf2225a2886d3e473807d19bc80b02067cbaaf8db29e7",
+      "source_host_path": "/tmp/kdlock-killable-nano-22d62d5c-basic-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3051,
+      "path": "fresh-cohort/22d/basic/result.json",
+      "sha256": "204a37fea83341cbfc79d170821de58568a4bdab0d85f9d342b39959262e3161",
+      "source_host_path": "/tmp/kdlock-killable-nano-22d62d5c-basic-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 70,
+      "path": "fresh-cohort/22d/basic/stdout",
+      "sha256": "af4dd8d72c8efba989e0b6c65dc805e2e09b06bdf88b52b0928a07aae4d59cee",
+      "source_host_path": "/tmp/kdlock-killable-nano-22d62d5c-basic-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "fresh-cohort/22d/basic/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-nano-22d62d5c-basic-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 912304,
+      "path": "fresh-cohort/22d/sync-envelope.json",
+      "sha256": "118819bbbcef0963a9f236b4020d627b170eaee45e1bdf101cf510f86a395168",
+      "source_host_path": "/tmp/kdlock-killable-22d-sync-envelope-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2262,
+      "path": "nano-baseline/run/owner.json",
+      "sha256": "8961f5b58d55ba407897ea73f5a614bc952193da8ba524a893722355fa72105d",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-run-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2423,
+      "path": "nano-baseline/run/spec.json",
+      "sha256": "821560c802f9bccc917e2ce66ffa613947bfed0d811452ffd23850b2aad64e9d",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-run-20261031/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 6842,
+      "path": "nano-baseline/run/result.json",
+      "sha256": "76b6d86be39558d9025934da78b8953722385a76462deaa8b2bdfad6ac0f914c",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-run-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 64,
+      "path": "nano-baseline/run/stdout",
+      "sha256": "a76834a33e54cf51bf54b7a4357ee547e8b30776c37a92bc8271295f66f4e0ae",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-run-20261031/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "nano-baseline/run/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-run-20261031/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2286,
+      "path": "nano-baseline/archive/owner.json",
+      "sha256": "bc7033f2aa2901eaacfbc7923fabc444c25b6b84b5b88fa61adb7652d50fbab0",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2881,
+      "path": "nano-baseline/archive/spec.json",
+      "sha256": "fa7ce15b5fde6235dd73dddd781a21a254a4511c3d0b17a45ba4526678a6340c",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2885,
+      "path": "nano-baseline/archive/result.json",
+      "sha256": "d5a154b70c2dd2348c87b85d3e2558b610ce087e688378b81593a603d0c0067a",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 72,
+      "path": "nano-baseline/archive/stdout",
+      "sha256": "eaae23564a0a79b3fe3851bc32d36267b5e8444e6a10c99106e96a7e5ed23f62",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "nano-baseline/archive/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/archive/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 7112,
+      "path": "nano-baseline/archive/launch-owner.json",
+      "sha256": "c38913aa1729e68d5ecdd9fcc4b8a6278c07da0b414be1f2e39fba138d71f4d3",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-archive-launch-20261031/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 455783,
+      "path": "nano-baseline/endpoint/host-after.json",
+      "sha256": "19a23612077731d750756f72b5f3494e07dbf9354a5629898710783dbdfbf05f",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-after-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3984,
+      "path": "nano-baseline/endpoint/endpoint-receipt.json",
+      "sha256": "aef2689b0f9be85e2c11d0afe5df80c73c8602598a7f1cf091385d5c6186a5be",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-after-20261031-receipt.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 90113,
+      "path": "nano-baseline/endpoint/endpoint-policy.json",
+      "sha256": "7396ed60bd6e9ad65daa558ba4e1678678a1f5111ae8ac3aebc0c01984ee248e",
+      "source_host_path": "/tmp/kdlock-killable-nano-f7a84065-after-20261031-policy.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 922,
+      "path": "nano-baseline/fetch-offline-r2/result.json",
+      "sha256": "142022133187ffd2c224497267094803209e619b47163ad2b636323734be0688",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-offline-r2-20261031/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 667852,
+      "path": "nano-baseline/fetch-offline-r2/transfer.json",
+      "sha256": "83a35e53e0155d875133ed94062d6371e4523a95e7ebe31340b1d2fd6c1c4bbd",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-offline-r2-20261031/transfer.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4027,
+      "path": "nano-baseline/fetch-offline-r2/transport-links.json",
+      "sha256": "a3d405a39a084be84195f3c5df98fbc8be4c81e2338c17b424eac26bf9ca760b",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-offline-r2-20261031/transport-links.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 488,
+      "path": "nano-baseline/fetch-offline-r2/analysis-arm.json",
+      "sha256": "969f33fd03393608edc436cf7782c7717cdbd92847b9a5e22b6104550867a420",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-offline-r2-20261031/analysis-arm.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 11386,
+      "path": "nano-baseline/fetch-offline-r2/prior-failed-transfer.json",
+      "sha256": "9f470eae9b59717cab36a2dfa8089e4b2f2f1ea782ef3920fa1b6217a6cb5e90",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-offline-r2-20261031/prior-failed-transfer.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 11386,
+      "path": "nano-baseline/fetch-failed/transfer.json",
+      "sha256": "9f470eae9b59717cab36a2dfa8089e4b2f2f1ea782ef3920fa1b6217a6cb5e90",
+      "source_host_path": "/tmp/kdlock-killable-f7-fetch-failed-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 13434,
+      "path": "tools/kdlock-killable-nano-fetch-20261031.py",
+      "sha256": "e64c4d7de1dddf04f35ab15d5e4195ce7d2f9a4c9e7eff9f624f62d5d39be697",
+      "source_host_path": "/tmp/kdlock-killable-nano-fetch-20261031.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 18344,
+      "path": "tools/kdlock-killable-nano-fetch-r2-20261031.py",
+      "sha256": "04ac5dd5fb693b42d782c75dde39bb30d8247be6f717238de15f0470fbce8a17",
+      "source_host_path": "/tmp/kdlock-killable-nano-fetch-r2-20261031.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 11143,
+      "path": "tools/kdlock-killable-nano-fetch-r2-20261031.py.diff",
+      "sha256": "cf3f47567b52ab57177cbd29c200c38cce85e808c3bbd90669e6e096e5ba30f9",
+      "source_host_path": "/tmp/kdlock-killable-nano-fetch-r2-20261031.py.diff",
+      "verbatim": true
+    },
+    {
+      "bytes": 3344,
+      "path": "tools/kdlock-killable-nano-fetch-r2-20261031.md",
+      "sha256": "a9a978742089e70c29f6a66a0056366c9247040102c70b15811794f9176669eb",
+      "source_host_path": "/tmp/kdlock-killable-nano-fetch-r2-20261031.md",
+      "verbatim": true
+    },
+    {
+      "bytes": 11081,
+      "path": "fresh-cohort/f7/basic/runner-result.json",
+      "sha256": "a03c946423da25259c7fdfc97bf2553139f8d2862614bfcff5fd871dd7933d71",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-basic/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9079,
+      "path": "fresh-cohort/f7/basic/sessions/spin.json",
+      "sha256": "375dcec7a4bdc7babb3664fe604e950fc2e1313f983dc409c3065fd6adc9b332",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-basic/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9106,
+      "path": "fresh-cohort/f7/basic/sessions/mutex.json",
+      "sha256": "08c8a58832d5b81adfbbc0eddecb2e7e9516fdf648bbc009dec123d611fa058d",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 14504,
+      "path": "fresh-cohort/f7/basic/sessions/rwlock.json",
+      "sha256": "dfc59b9c6b9c9dad4c0551ddb79361ce6a3857829e5097c390cc4020451c6ef1",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 14681,
+      "path": "fresh-cohort/f7/basic/sessions/rwsem.json",
+      "sha256": "30546ca91948c96c1bdb63e6534f21cf047201998f7619053edbd8e28802f8b1",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 7165,
+      "path": "nano-baseline/archive/archives.json",
+      "sha256": "4f22382de3d93cf5ee474d7f1ce91a026f967e0cc10772b7bcf5d9a11b131042",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-archives/archives.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 455807,
+      "path": "nano-baseline/endpoint/host-before.json",
+      "sha256": "a2bc03cce7dc820e4cde6b29b1cda833d34b56f975cdfdcccf382f677d2e2513",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-f7a84065-r2-20261031/killable-nano-f7a84065-20261031-control/host-before.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 21422,
+      "path": "inputs/progress-nano-complete-mm-pending-20261031.json",
+      "sha256": "3bb922bdd229e30f2048ce3dce8f2e7e5de2ed95f7e614daf374a5f5dba906ab",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 119619,
+      "path": "nano-comparison/validation.json",
+      "sha256": "4db452836c12a1d8d05ff280c9731bf8008f6f51f714f5e8bac94740564eb858",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/validation.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1087,
+      "path": "nano-comparison/inputs.json",
+      "sha256": "47b966fdae0e7741987386223964af3d1af6da3a8b47f8a2f8837cd243b4e943",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-inputs-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 110345,
+      "path": "nano-comparison/comparison/points.csv",
+      "sha256": "ff44a90a82d98f880e0aeb6f16dec8efdd47198eff9c2de816e992462572b8d0",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/points.csv",
+      "verbatim": true
+    },
+    {
+      "bytes": 523,
+      "path": "nano-comparison/comparison/summary.json",
+      "sha256": "41571a8eaffca40c486a31c5d636ef25b5ea2b42b8497677f9c5c25acfb07281",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/comparison/summary.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 57732,
+      "path": "nano-comparison/baseline/provider-audit.json",
+      "sha256": "bdd8593496b6f6886e0a581d8421554c8338fcb32b9533807886230399f390d8",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/provider-audit.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 42697,
+      "path": "nano-comparison/baseline/elf-provenance.json",
+      "sha256": "f43a58f565c3b7a9383075687492c5738a1c1ef4f1d3bb43e2736aa1eeca180e",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/baseline/elf-provenance.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 57732,
+      "path": "nano-comparison/candidate/provider-audit.json",
+      "sha256": "125060de99b10427bcff598a144773f5ebb2b717b23ba24e2fdd26dfaad1110c",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/provider-audit.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 42697,
+      "path": "nano-comparison/candidate/elf-provenance.json",
+      "sha256": "13e120a3618e42c9a1eaa762eae5565af1fbe2bef268629961185f1c15c6f142",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-comparison-20261031/candidate/elf-provenance.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3245,
+      "path": "nano-comparison/interpretation/README.md",
+      "sha256": "9ba8eabbcc425778696aea53cdb7b7b26aa089671fd276323ba4b177069d04a5",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-interpretation-20261031/README.md",
+      "verbatim": true
+    },
+    {
+      "bytes": 97325,
+      "path": "nano-comparison/interpretation/summary.json",
+      "sha256": "36ba48190eebc15df6bb6cf71b1d55a8be46e049bf7934c75102d850fb49cf55",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-interpretation-20261031/summary.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 16212,
+      "path": "nano-comparison/interpretation/key-points.csv",
+      "sha256": "dfee9189cebba2b07c249bde6dbe71b3d0856b3fa4b941ebf4256b5d8f20f55c",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-interpretation-20261031/key-points.csv",
+      "verbatim": true
+    },
+    {
+      "bytes": 17937,
+      "path": "nano-comparison/independent-arithmetic-review.json",
+      "sha256": "3baa5d9c0699514746ce4f0bfb3e10242ddf2dedc7644b45d59cacef642fe3a1",
+      "source_host_path": "/tmp/kdlock-killable-nano-arithmetic-review-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9349,
+      "path": "tools/kdlock-killable-nano-summarize-20261031.py",
+      "sha256": "be4851be9b75222ed5273c4aff3acf0c8be972b69784eb190c7cc0a0aed54fd6",
+      "source_host_path": "/tmp/kdlock-killable-nano-summarize-20261031.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 3571,
+      "path": "tools/offline-nano/nano_compare.py",
+      "sha256": "1376203d93c29cc144a0fa3446f335c6ed6f024eecf98b70c642249fefc77869",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/nano_compare.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 34745,
+      "path": "tools/offline-nano/nano_core.py",
+      "sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/nano_core.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 8217,
+      "path": "tools/offline-nano/nano_functions.py",
+      "sha256": "b831d0775d81681e7fdddfa3bb051802abe3ada1be065c8352911505babe7159",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/nano_functions.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 9333,
+      "path": "tools/offline-nano/fresh_controls.py",
+      "sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/fresh_controls.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 3938,
+      "path": "tools/offline-nano/archive_helpers.py",
+      "sha256": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/archive_helpers.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 1306,
+      "path": "tools/offline-nano/original-tool-manifest.json",
+      "sha256": "42e411775a5afd99fb69ceedd797b880761468bcfe1acc12bb47a7b3d563e36b",
+      "source_host_path": "/tmp/kdlock-killable-offline-20261031/manifest.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 6843,
+      "path": "nano-candidate/run/owner.json",
+      "sha256": "8cc4a03376835d083e10796c5db8369c573a77fb3ab717dc22821fc4117ea589",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-control/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2885,
+      "path": "nano-candidate/archive/owner.json",
+      "sha256": "55b462123812ef92d79e88778c902698ade0a1410ebbcb83f2c3849b975881ea",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-control/archive-owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 7165,
+      "path": "nano-candidate/archive/archives.json",
+      "sha256": "6870ea1cf5d889f8f1a46c34da172ca4e2ca4f5c6710362e995cdd4f34ed31bb",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-archives/archives.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3984,
+      "path": "nano-candidate/endpoint/receipt.json",
+      "sha256": "deebb9ee256e5658524bbf161fc5801fde88e6cbf1ee6a6a55ff3560b2fc814a",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-control/endpoint-receipt.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 482,
+      "path": "nano-candidate/fetch/analysis-arm.json",
+      "sha256": "1de4d78892e4b94eb801ec82e002823127318908de04bdc7676ea7d2ce6e0ddf",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/analysis-arm.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4027,
+      "path": "nano-candidate/fetch/transport-links.json",
+      "sha256": "43d08d050305f6b444f26a04cde8aba711e7c9b93c1da6450947d59011915de7",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/transport-links.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 11088,
+      "path": "fresh-cohort/22d/basic/runner-result.json",
+      "sha256": "098a949a4297d37d968e457a54f5732b60236d723dbab4f7bc71864035b8a36a",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-basic/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9114,
+      "path": "fresh-cohort/22d/basic/sessions/spin.json",
+      "sha256": "7308a2f72a2d43f4efd68e5f15f67220d8f5212e845eb6992a1f71f0a10ed1d9",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-basic/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9124,
+      "path": "fresh-cohort/22d/basic/sessions/mutex.json",
+      "sha256": "47d22025442fbd9f0ebef54ced6381cc6e3cb12a9e89ee928200120569d0976d",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-basic/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 14576,
+      "path": "fresh-cohort/22d/basic/sessions/rwlock.json",
+      "sha256": "da56e8271801969fd499bfe88a837f3db01435760c8376f4cfa202e024d3d581",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-basic/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 14739,
+      "path": "fresh-cohort/22d/basic/sessions/rwsem.json",
+      "sha256": "60aaad5deda882a78a155f82bcadd808b33ad6b8edfbfcbb72cb21edc2ce11bf",
+      "source_host_path": "/dev/shm/kdlock-killable-nano-22d62d5c-20261031/killable-nano-22d62d5c-20261031-basic/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3496,
+      "generated_from": "Finalized offline analyzer file inventory; large outputs stay in actual tmpfs",
+      "path": "nano-comparison/retained-artifacts.json",
+      "sha256": "d5108501791795e15876e332cbed941a96eb610e419c0204a0b9ef7e71bcb645",
+      "verbatim": false
+    },
+    {
+      "bytes": 416,
+      "generated_from": "Compact reference to the unchanged complete candidate fetch receipt",
+      "path": "nano-candidate/fetch/receipt-reference.json",
+      "sha256": "d2000c7b4f8ac1d54e60df31973113a9ad0b8f2e19ba8b12321dacd3430c06e3",
+      "verbatim": false
+    },
+    {
+      "bytes": 1965,
+      "path": "mm-boot/scope2-native-arm/owner.json",
+      "sha256": "d16b7b9e63844853282dafb9432387d10ffcd349de1040b222d0389e58413f18",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-arm/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2128,
+      "path": "mm-boot/scope2-native-arm/spec.json",
+      "sha256": "86f762c14d59137fb5e3336e1522e1ade44508a54d87c010a395c74f0a1e9e13",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-arm/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4816,
+      "path": "mm-boot/scope2-native-arm/result.json",
+      "sha256": "265c4197a0824c86410d7a66a55426749c7829e276fcf608cade319c2867a640",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-arm/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3970,
+      "path": "mm-boot/scope2-native-arm/stdout",
+      "sha256": "47deb45a3a2f0d95c35b87501b2ba90bf2b40047770534c3a2abc2b4d06c9c42",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-arm/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope2-native-arm/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-arm/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2263,
+      "path": "mm-boot/scope2-native-reboot/owner.json",
+      "sha256": "fc606848af0f545356f22d48b986ac02d2772e239f64e312f911e5a638fa1bdb",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2521,
+      "path": "mm-boot/scope2-native-reboot/spec.json",
+      "sha256": "2aeadf4fe0e85fa7f1172cdd5cf938df6ef35daecd8df4e70b3e79fcd137a7b4",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1159,
+      "path": "mm-boot/scope2-native-reboot/result.json",
+      "sha256": "54df2cc44ebc8b8d7227ff0ca50b37baedd3ef6f562e9249c1619084f01bcd85",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1105,
+      "path": "mm-boot/scope2-native-reboot/stdout",
+      "sha256": "33713d23bf25b7ccb57c9df470291ac090b306bfc43b65e23d0843652c1fb838",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope2-native-reboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2043,
+      "path": "mm-boot/scope2-native-reboot-r2/owner.json",
+      "sha256": "b0e8f1b093623c7289c09c8d21d0cf8f154d4471595d96b52cc12e2a97136595",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot-r2/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2533,
+      "path": "mm-boot/scope2-native-reboot-r2/spec.json",
+      "sha256": "5a1c328b7e000bc70c0157da32fbbf3b944dd9e84bc1091fe12f7019a76fdffe",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot-r2/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope2-native-reboot-r2/result.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot-r2/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3360,
+      "path": "mm-boot/scope2-native-reboot-r2/stdout",
+      "sha256": "0d66bf95a149642e883992d2a6cfd6220573c592bfbbe11fa75231304b25dbbe",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot-r2/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 48,
+      "path": "mm-boot/scope2-native-reboot-r2/stderr",
+      "sha256": "138644feac9a90519ea062e71704f2087a623470d9f991db9110943552fec422",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-reboot-r2/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2252,
+      "path": "mm-boot/scope2-native-postboot/owner.json",
+      "sha256": "901af5666ec2fbc4a38313cf6bd0d88a71cca1e9ce4e90300de473b2cd011a00",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2562,
+      "path": "mm-boot/scope2-native-postboot/spec.json",
+      "sha256": "adf9b3d53381b48fd074d6457591c49a2c2251bf2c289ec305b07afb80ad517f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9327,
+      "path": "mm-boot/scope2-native-postboot/result.json",
+      "sha256": "1492c1a546f729e16d5af4eacaf5dc31e4ce79da31d38bf7546d092316dd724f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 7759,
+      "path": "mm-boot/scope2-native-postboot/stdout",
+      "sha256": "fb43afd7dc13ea242851ba836783b7811ca1535f0e3617a9c9f9884a3c460d40",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope2-native-postboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-postboot/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1880,
+      "path": "mm-boot/scope1-arm/owner.json",
+      "sha256": "4174f00f4d886688a7fe166b0982f7503e65beec3f206c55a641e69e1aa83d09",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-arm/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2205,
+      "path": "mm-boot/scope1-arm/spec.json",
+      "sha256": "bea3ce102dd3472ed702d43e7bb816b882e0a4d555bd95298a859bdaf5208e9a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-arm/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3282,
+      "path": "mm-boot/scope1-arm/result.json",
+      "sha256": "f6bf1422f208a2a4d6bb78eeadcd0fd9edb1471f137b32b19456666c003110cb",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-arm/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 232,
+      "path": "mm-boot/scope1-arm/stdout",
+      "sha256": "06cafcbc9cff14b03bfb9ebb03bf81de336ed7eb110140a5538c14d34b5e654c",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-arm/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope1-arm/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-arm/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1720,
+      "path": "mm-boot/scope1-request/owner.json",
+      "sha256": "f22520c86cac9d8e673d89bd10e3d7bc47705511b7c7abf647477f8b8449bfa9",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-request/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2205,
+      "path": "mm-boot/scope1-request/spec.json",
+      "sha256": "0e882cc32d71a03edccab70da5301b5f5298e0b685a949524850e9a165303d7b",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-request/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope1-request/result.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-request/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 246,
+      "path": "mm-boot/scope1-request/stdout",
+      "sha256": "0d44cc17db457794db1bb82b463a85ee660374d462d8abd5f748e650b3b21364",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-request/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope1-request/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-request/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1915,
+      "path": "mm-boot/scope1-output-bind/owner.json",
+      "sha256": "8c70e0611993f80ebabf3de571d85286dc9a093edd8af7db749b0ec1eb128bcf",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2239,
+      "path": "mm-boot/scope1-output-bind/spec.json",
+      "sha256": "8820222f74850855f71cc40c8e7051a43f0831076272eadb355794f4a0ca6430",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4424,
+      "path": "mm-boot/scope1-output-bind/result.json",
+      "sha256": "4b0a8f4df8d03a40b9179d2fc5477dba106ec87635b362beb7440c0f94c72e30",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 250,
+      "path": "mm-boot/scope1-output-bind/stdout",
+      "sha256": "a93493671ec89013e7f10357b6b7680c869b4ffe762f9bb6a006b40d533a56d8",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope1-output-bind/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-output-bind/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1908,
+      "path": "mm-boot/scope1-postboot/owner.json",
+      "sha256": "d06f33893becdec49c50bed27a6947db485097113eb55dfca60c987ed597ef96",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-postboot/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2230,
+      "path": "mm-boot/scope1-postboot/spec.json",
+      "sha256": "17e039f5b1066a4fce6bf8fabe36913b78a1c547acbbce547f11c091df8851ae",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-postboot/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4333,
+      "path": "mm-boot/scope1-postboot/result.json",
+      "sha256": "4e85e962d3448662af923ed2a7ad489d80710b6aa0c7fe76a824ef09b2c4022c",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-postboot/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 248,
+      "path": "mm-boot/scope1-postboot/stdout",
+      "sha256": "28b40bfa1bf74a569d9b6d81ece2f3c3e9d8d1caca1f4d356d351257616f8f0c",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-postboot/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/scope1-postboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-postboot/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1945,
+      "path": "mm-boot/baseline-source-bind/owner.json",
+      "sha256": "8c42d1e597c55cdb7c9ec15bc9370db7b9b3d9fef0f8ee0497ec00025a85480b",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-bind/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2275,
+      "path": "mm-boot/baseline-source-bind/spec.json",
+      "sha256": "4e5cacf5332ec8a46570e0b3e3eb0c6d848e6569c994565789184873c7fe701b",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-bind/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3912,
+      "path": "mm-boot/baseline-source-bind/result.json",
+      "sha256": "0e004bf2a3e197a85f4ce3363784718b095be90ef746555f7b418fe99d77c262",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-bind/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 264,
+      "path": "mm-boot/baseline-source-bind/stdout",
+      "sha256": "93e1db90f2de0ff8cab3763891f544b32d42e7e8eec3f40dd38904c9d7f16683",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-bind/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-boot/baseline-source-bind/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-bind/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 4054,
+      "path": "mm-boot/scope1-observe/scope2-request.json",
+      "sha256": "908d5aa466fc5a2d229d1e59a0a760c1e0d50e787151198ab991405757bd105f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-observe/scope2-request.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2895,
+      "path": "mm-boot/scope1-observe/request.json",
+      "sha256": "35c237643054c884566eb6eed2d7d5078159cc72e00c0f4f8171cd41937a1e8e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-observe/request.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 90,
+      "path": "mm-boot/scope1-observe/boot.json",
+      "sha256": "74cc2776c693dccf07f4bf1f977258e4fc0abe36dab54d1acbf59f3e30f3daf4",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope1-observe/boot.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 260,
+      "path": "mm-boot/scope2-native-observe.json",
+      "sha256": "db6915bb5d8561aefc3af2c956a818941ccabb85f7e8156eae60970d49d00239",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/scope2-native-observe.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 21558,
+      "path": "inputs/progress-scope2-native-scope1-kd-boot-20261031.json",
+      "sha256": "478275600550e12e147391f11f4baca42b7163f251902f50fc8287c96ad0ba79",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5328,
+      "path": "mm-baseline/steps/sites/controller.json",
+      "sha256": "9899a89ad4edbfa0fa25bd7b9d10a0b7b896771834594d23d4fda00426f46125",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-sites/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1974,
+      "path": "mm-baseline/steps/sites/transport-owner.json",
+      "sha256": "d965f1d86bbd610ad5fd6e70ff065912f26ae7b94212223800245e5d482ab313",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-sites/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5549,
+      "path": "mm-baseline/steps/api/controller.json",
+      "sha256": "ba4cfd71bad167d18e1423b7ada2a9cb7912a013783ffda5f6884aee50e194a9",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-api/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1966,
+      "path": "mm-baseline/steps/api/transport-owner.json",
+      "sha256": "e2b7421baeb197049b4d2f3d67103dc67749068a2ebdf417f5c39b23f66dc729",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-api/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 6768,
+      "path": "mm-baseline/steps/mapping/controller.json",
+      "sha256": "affbb198d73dbdb589a0e08b5b39dbdcabe40056b84b310aa789221c7440c6f0",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-mapping/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2281,
+      "path": "mm-baseline/steps/mapping/transport-owner.json",
+      "sha256": "f514140a33001843ad9ca0bf5ac564a55df17a2f68719cfee29cf0b978f98e1a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-mapping/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5589,
+      "path": "mm-baseline/steps/faults/controller.json",
+      "sha256": "2aae580e139db659de19276b59da28e484aee62593d83e13edbf06ee62273f3c",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-faults/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1978,
+      "path": "mm-baseline/steps/faults/transport-owner.json",
+      "sha256": "ebbaf3c9b6c3d6ddc375f4df03a429d7d53c8f6271f2c35d20ce030dc7465192",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-faults/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5642,
+      "path": "mm-baseline/steps/completed/controller.json",
+      "sha256": "90b0914cc27100f1afe1efe186f636871a27b0ddef1cc768a2fca6ac686ff545",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-completed/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1990,
+      "path": "mm-baseline/steps/completed/transport-owner.json",
+      "sha256": "65801a210a96ae184568049f0700a50a47cf52ae68e28033f3a2911be6d2b92e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-completed/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5960,
+      "path": "mm-baseline/steps/mmap1-identity/controller.json",
+      "sha256": "9441eca03b608af09d873f31238b99c5000eec2e577ee37b17e3df216e70fdf2",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-identity/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1998,
+      "path": "mm-baseline/steps/mmap1-identity/transport-owner.json",
+      "sha256": "85f9b5ce4b8c5019510df4f42be338e79f1e45452ee7cd060f5da9fff1143032",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-identity/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 8531,
+      "path": "mm-baseline/steps/mmap1-measure/controller.json",
+      "sha256": "2e41912593201132820220a2e583c2fb7687e8aa9fd800df6066ed0819661d6d",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-measure/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2507,
+      "path": "mm-baseline/steps/mmap1-measure/transport-owner.json",
+      "sha256": "d07970908dc3d244317093bb2ba03cd443f52ae12eaff6a4412a0727ba99e9b6",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-measure/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5057,
+      "path": "mm-baseline/steps/endpoint/controller.json",
+      "sha256": "d60e56cbaf9c24f55c04077a45276cdb482aa5b1c06d373c792e61b693a9f93c",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-endpoint/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2096,
+      "path": "mm-baseline/steps/endpoint/transport-owner.json",
+      "sha256": "462a8ff4abedf1153b8f1ceb73e1f2214afdad5f109a95a8655516ec7cff42f3",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-endpoint/owner.json",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/api/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 10557,
+      "path": "mm-baseline/steps/api/runner-result.json",
+      "sha256": "aaf63f83027482e3e26fbf5d8feb9a5a3e9f351467e143c8f0fb919cfaedfd7c",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/completed/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 10273,
+      "path": "mm-baseline/steps/completed/runner-result.json",
+      "sha256": "f8631fc4fa202acbfaf17cfa712e5161fcf72e8d9515109aa372bba4e30a19bf",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/endpoint/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 1734,
+      "path": "mm-baseline/steps/endpoint/runner-result.json",
+      "sha256": "780f6e1af7b5c0a8363e9f161c157105b7c70e0b1b5c59cfa4246b4f152a0fb4",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/faults/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 18515,
+      "path": "mm-baseline/steps/faults/runner-result.json",
+      "sha256": "a05d69644f8839bb32ef6aa6367faf7fc2a6f0cf7e1e136cf64206a18ea561b5",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/mapping/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 28587,
+      "path": "mm-baseline/steps/mapping/runner-result.json",
+      "sha256": "2f6cb7a6f1d198156510314a68dab4e678abb8b4104f7c39129468080ba9e2e0",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/mmap1-identity/result.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 65272,
+      "path": "mm-baseline/steps/mmap1-identity/runner-result.json",
+      "sha256": "6083a0aacdd54be2dd9e026bdbfb655ec6af253ea93a6a00279ea288d2d77bd9",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/sites/writer-sites.json",
+      "archive_sha256": "afe1fbffaa965981030881235934ff8aeb8717f5cd00f9fac7d44d2d9c9e7563",
+      "bytes": 12522,
+      "path": "mm-baseline/steps/sites/runner-result.json",
+      "sha256": "211765b1c73bf1ba47f98511f40a14c454eeca6e14aee5c1f94b28e3da8bce9e",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "baseline-f7-scope1-kd/mmap1-measure/result.json",
+      "archive_sha256": "005ebcf8c66eb426318bb2504a4996ae088ff3ed6df133d6045c609c59f4f075",
+      "bytes": 441967,
+      "path": "mm-baseline/steps/mmap1-measure/runner-result.json",
+      "sha256": "926fa8e6f7cecc2cbb3e97621f35b35c443e8ac3e6b46d6c6d70e21d3b00be45",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/mmap1.tar.gz",
+      "verbatim": true
+    },
+    {
+      "bytes": 3269,
+      "path": "mm-baseline/archive/owner.json",
+      "sha256": "f658a47eef9c317ab218d72ba3a492bde14fc0fb9c45943a5f7acdf476d4f12b",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archive-control/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 15332,
+      "path": "mm-baseline/archive/alias-map.json",
+      "sha256": "9c28bb416b4ed49b8a3a6bf755422d65cfa5c61e6889c8299647bf9f16b9c283",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archive-control/alias-map.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1561,
+      "path": "mm-baseline/archive/bindings.json",
+      "sha256": "66603a0a3c118b09ca74696630c2eef0d5549b76f76af1e1f98f9238dad9ce35",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archive-control/bindings.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2709,
+      "path": "mm-baseline/archive/archive.log",
+      "sha256": "0f2629a4af4f7f9adbb2b7bd1037b6415c5d1e44ca38abe7022eda46805833ea",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archive-control/archive.log",
+      "verbatim": true
+    },
+    {
+      "bytes": 4769,
+      "path": "mm-baseline/archive/archives.json",
+      "sha256": "4fa34c365caad5c5288dfef9fce5cd8d95273153c144697014a75fa565c91e92",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/baseline-f7-scope1-kd-archives/archives.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 6399,
+      "path": "mm-baseline/fetch-offline-r2/transfer.json",
+      "sha256": "867bd747118954c75f90835cb95a27fbeb12f10eb23168a9ca39f742b250bae3",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/transfer.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 15319,
+      "path": "mm-baseline/fetch-offline-r2/analysis-arm.json",
+      "sha256": "5fdd9a14cd9dbbd7689e4e3d865335916d0d4e29b9543c184cf6239c9578a2b6",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/analysis-arm.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 951,
+      "path": "mm-baseline/fetch-offline-r2/archive-provenance.json",
+      "sha256": "d4579cd87ccedf49b208c33934b5f4a852638d40b8007a6e4e38a3193573025e",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/archive-provenance.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 10577,
+      "path": "mm-baseline/fetch-failed/transfer.json",
+      "sha256": "5ee7cbe9c0095b1337427c5c441bb9bc233b7207ec6c2bea6264429b9085c1cd",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-baseline-r2-20261031/prior-failed-transfer.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 21319,
+      "path": "mm-baseline/fetch-offline-r2/kdlock-killable-mm-fetch-r2-20261031.py",
+      "sha256": "590181521849eede167c2ba6e6ffd3d72c5fbe883f330f79d6e492020695962d",
+      "source_host_path": "/tmp/kdlock-killable-mm-fetch-r2-20261031.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 10833,
+      "path": "mm-baseline/fetch-offline-r2/kdlock-killable-mm-fetch-r2-20261031.py.diff",
+      "sha256": "a7e50fca96b67b0f46623c67149ceccb6dda406e9894c8eda814a2eeb6311580",
+      "source_host_path": "/tmp/kdlock-killable-mm-fetch-r2-20261031.py.diff",
+      "verbatim": true
+    },
+    {
+      "bytes": 3457,
+      "path": "mm-baseline/fetch-offline-r2/kdlock-killable-mm-fetch-r2-20261031.md",
+      "sha256": "13a51a6a46900517707ff37eb34b953f8328c91efbaefa19383236213a013e63",
+      "source_host_path": "/tmp/kdlock-killable-mm-fetch-r2-20261031.md",
+      "verbatim": true
+    },
+    {
+      "bytes": 3223,
+      "path": "mm-baseline/source-unbind/result.json",
+      "sha256": "580cfbba3a141bc6caf90604aaa18ecf8591d47dfefdbd39f929147e8c0c1f6b",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-unbind/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1953,
+      "path": "mm-baseline/source-unbind/owner.json",
+      "sha256": "6e77b4b67399c6910e277415b55f9be2f6bf069a0de9671125342e61b686988a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/baseline-source-unbind/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 22501,
+      "path": "inputs/progress-baseline-mm-complete-candidate-pending-20261031.json",
+      "sha256": "7f4e9799cebafecf9fd5683eb45e307920b8be5a5b08b2a8ba788d16ecf40c1c",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3999,
+      "generated_from": "mm-baseline/steps/*/{controller,runner-result}.json and mm-baseline/fetch-offline-r2/transfer.json",
+      "path": "mm-baseline/functional-summary.json",
+      "sha256": "a4f4472c2a06699d0c56a1310d906840c5d374b06cc75e56fe756ebb7e70636e",
+      "verbatim": false
+    },
+    {
+      "bytes": 6818,
+      "path": "mm-candidate-failure/transport/result.json",
+      "sha256": "71568d5f8374b7cd8e90119cf56aebd150334a91d98be09ac69675779548df2e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2341,
+      "path": "mm-candidate-failure/transport/owner.json",
+      "sha256": "f8c1152586cbf632bfc61e5db7f221f7ed9c64242af89e9a8c1b7a084edafecb",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3753,
+      "path": "mm-candidate-failure/transport/spec.json",
+      "sha256": "d792c149303c82f55f308567b766d6a6de67049bfd116773e7863ff229cbc059",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 339,
+      "path": "mm-candidate-failure/transport/stdout",
+      "sha256": "622098896d6ffaa56a0e5609167ac4919033ffd910c8f015cfbc96132fd9842a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-candidate-failure/transport/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 235,
+      "path": "mm-candidate-failure/observed/drain-observation.json",
+      "sha256": "00af5280fb136b1d42a685200f5b4e1a661dc0705215c93e70cdcfc8fa54fce1",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/drain-observation.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2860,
+      "path": "mm-candidate-failure/observed/modules",
+      "sha256": "093930d95fd395561b2d8dbcc2899e6a8d9ef9a75740e80a2854cef01bf90a47",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/modules",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-candidate-failure/observed/kernel.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/kernel.log",
+      "verbatim": true
+    },
+    {
+      "bytes": 404,
+      "path": "mm-candidate-failure/observed/02-cycle-16.jsonl.command.json",
+      "sha256": "51d91cf34353265c0b54fc639747d9b8faf0e871e916283edecb3b087488e664",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/02-cycle-16.jsonl.command.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 83497,
+      "path": "mm-candidate-failure/observed/02-cycle-16.jsonl",
+      "sha256": "a978c4486a57513cee58ff2fbf5a293d098c977af2583e6b6f92c40ae781fd99",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/02-cycle-16.jsonl",
+      "verbatim": true
+    },
+    {
+      "bytes": 15471,
+      "path": "mm-candidate-failure/observed/result.json",
+      "sha256": "284e2cbffc95a2c56f9d23b768646ed774b6143de0d3f537e27fcee526ae23c2",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-failure/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1123,
+      "generated_from": "mm-candidate-failure/transport/result.json and observed/{result.json,02-cycle-16.jsonl,drain-observation.json}",
+      "path": "mm-candidate-failure/summary.json",
+      "sha256": "dda6ff56a09b70479127a67d88c94022f06d37e0b84d12c6d993be9277b01b48",
+      "verbatim": false
+    },
+    {
+      "bytes": 23422,
+      "path": "inputs/progress-candidate-mm-mapping-failed-20261031.json",
+      "sha256": "48df8e1ae4eb55b316812ccd1ba5598624835ba0ff35f18fcdf82d608b8917c5",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 8661,
+      "path": "mm-prospective/candidate-mapping-functional/result.json",
+      "sha256": "73c8c7aef4b5bec3e72dab9c0bff915f566d0e62bac967004aa2b647defcf6f6",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-functional/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2356,
+      "path": "mm-prospective/candidate-mapping-functional/owner.json",
+      "sha256": "a36bcdc87f37960d157fdd85a8d008858c75655e8bb10f5277d37ad69538d716",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-functional/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4289,
+      "path": "mm-prospective/candidate-mapping-functional/spec.json",
+      "sha256": "f43e49b993fdd0c7e65981a430d257ad736c4b6cab940a02ca199bf7a850f89f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-functional/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 490,
+      "path": "mm-prospective/candidate-mapping-functional/stdout",
+      "sha256": "9962ebae46f13117096a7d2aa5be7a5a35b62c9e54d4a5cba3388aa212388bd6",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-functional/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-prospective/candidate-mapping-functional/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-functional/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 48170,
+      "path": "mm-prospective/candidate-strict-hold/result.json",
+      "sha256": "1f38b8da4af61e36278fb0a5db701f2c92565331699f38437a77b81c80cc1cda",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-strict-hold/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2530,
+      "path": "mm-prospective/candidate-strict-hold/owner.json",
+      "sha256": "9888e188420dcfff0406bde978c01781fedc69c85077443213af501d2fd0ba7a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-strict-hold/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1923,
+      "path": "mm-prospective/candidate-strict-hold/spec.json",
+      "sha256": "5a202337d2207e8f856cf001fbba4e23a107f4c8ed664be76050f4fc5b39b203",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-strict-hold/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 67,
+      "path": "mm-prospective/candidate-strict-hold/stdout",
+      "sha256": "7a740aeab824cb8f6ccf8f693d55c167cee9c82e5edef1569d87c3358bacd018",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-strict-hold/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-prospective/candidate-strict-hold/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-strict-hold/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2870,
+      "path": "mm-prospective/candidate-mapping-preserve/result.json",
+      "sha256": "16561602201b33c7eeaac746b36008846539caf4a3f6bc8d705e61d0857c9f14",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-preserve/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 1139,
+      "path": "mm-prospective/candidate-mapping-preserve/owner.json",
+      "sha256": "66d5afc77107df66b4e92087b684db043140d6042321c18bd4ce4edfdde24f3a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-preserve/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 434,
+      "path": "mm-prospective/candidate-mapping-preserve/spec.json",
+      "sha256": "942ae9ca53b3728fd40c9c5b76ec52f3360ec4dda312f00e4cdb9e23c8acbcf3",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-preserve/spec.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2556,
+      "path": "mm-prospective/candidate-mapping-preserve/stdout",
+      "sha256": "3c4b2d4955cb61787bcc3be936e089300efa6cdbdb5844f0ea952bb353a56cf6",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-preserve/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-prospective/candidate-mapping-preserve/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-mapping-preserve/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 5584,
+      "path": "mm-prospective/baseline-compatibility.json",
+      "sha256": "00ad3bc9873a2c75c37b4d1b2059d3253bb778057ee9b23894d66663e17e0247",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-20261031/baseline-compatibility.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 9145,
+      "path": "mm-prospective/baseline_compatibility.py",
+      "sha256": "5a5af222de7270474baa5a1788b9da80ce974bb2735b5284e5200a85f27b2bec",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-20261031/baseline_compatibility.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 25341,
+      "path": "inputs/progress-prospective-mm-grid-running-20261031.json",
+      "sha256": "5f210c4800387aefcce31408ac1e0359f83d2b1ea1a6bf780e4f5ebb36da798b",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 49314,
+      "path": "mm-comparison/validation.json",
+      "sha256": "c9577f24ee5a2655ba9c51e7e3354e6eee25f8c9d4e78901b5ab11ffa6a0241f",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/validation.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4590,
+      "path": "mm-comparison/threads.csv",
+      "sha256": "53a9ab14125e4fd979fdda7c6188635e1a079d8f655b5cf2d120b4148fcd0cc3",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/threads.csv",
+      "verbatim": true
+    },
+    {
+      "bytes": 4728,
+      "path": "mm-comparison/processes.csv",
+      "sha256": "bd9fcf995e8f9bdf91a2068308b7a9969b59c84e4b9ee40af1d12aaa73b940f7",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/processes.csv",
+      "verbatim": true
+    },
+    {
+      "bytes": 22637,
+      "path": "mm-comparison/comparisons.json",
+      "sha256": "433c12e7dc92e2c695b64cd2b99fc5ce5e1ac2ddb8ed4f320b1d9d78fdcbc46d",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/comparisons.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 12993,
+      "path": "mm-comparison/observed-losses.json",
+      "sha256": "ce09491e8361c7338c7e99a9a76a7e4ca0c3991a75e3544f009d7b6c6aa57811",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/observed-losses.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 62107,
+      "path": "mm-comparison/points.json",
+      "sha256": "d9c83ec64d398d1edc135ddbb0841cfb230477714c1e54a38a54799cdc15ff98",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-r2-20261031/points.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 78050,
+      "path": "mm-comparison/inputs.json",
+      "sha256": "249f173be35bcd1335b4f12ca64f237aefa1e0f900811272239fed788dbef359",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-inputs-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 622,
+      "path": "mm-comparison/failed-replay/validation.json",
+      "sha256": "4f9c469ee972e102ee3ec1cf41a4cd9bf6682ab280debf5161627a99a81bfe78",
+      "source_host_path": "/dev/shm/kdlock-killable-functional-mm-comparison-20261031/validation.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 23749,
+      "path": "mm-comparison/failed-replay/mmap_compare.py",
+      "sha256": "67f8b76201c428420ee80c0d135232e75b382c547c708c59b0c8e3529bbac789",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-20261031/mmap_compare.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 3938,
+      "path": "mm-comparison/tools/archive_helpers.py",
+      "sha256": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/archive_helpers.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 2106,
+      "path": "mm-comparison/tools/README.md",
+      "sha256": "e9c3c78a9915240b532e55d99b3b931cc809096f200eeb74ed55026e0091ba57",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/README.md",
+      "verbatim": true
+    },
+    {
+      "bytes": 34745,
+      "path": "mm-comparison/tools/nano_core.py",
+      "sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/nano_core.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 1975,
+      "path": "mm-comparison/tools/mmap_compare.py.diff",
+      "sha256": "000e0439ade24639eacfa71dfe34cbf0baaa5550a5b649497ac28da765b875cc",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/mmap_compare.py.diff",
+      "verbatim": true
+    },
+    {
+      "bytes": 939,
+      "path": "mm-comparison/tools/manifest.json",
+      "sha256": "243453bb3decc5db4b05968c6021631e3a8655992f3a4a2fb51ec4d62b93cfc8",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/manifest.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 25087,
+      "path": "mm-comparison/tools/mmap_compare.py",
+      "sha256": "ae35ac7d62fbe8101ef2593febe5c61027974f7fd14d6d9be72c38a3c8ed06b8",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/mmap_compare.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 9333,
+      "path": "mm-comparison/tools/fresh_controls.py",
+      "sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/fresh_controls.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 14001,
+      "path": "mm-comparison/tools/policy_checks.py",
+      "sha256": "4c559a4a9206ae57c2d1d80b16575fb4b19a313c2fc7c2a813f6579d79ee5def",
+      "source_host_path": "/tmp/kdlock-killable-functional-offline-r2-20261031/policy_checks.py",
+      "verbatim": true
+    },
+    {
+      "bytes": 18516,
+      "path": "mm-comparison/independent-raw-arithmetic.json",
+      "sha256": "306358712fe74507a2a947a8a7c16f536becd045d3beb7787af89f1127fe39db",
+      "source_host_path": "/tmp/kdlock-killable-mm-independent-arithmetic-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4257,
+      "path": "mm-comparison/independent-final-review.json",
+      "sha256": "ae82228af8b23d0c2295ecb4be246827d527694604346c572d200dd6f3b1f4bc",
+      "source_host_path": "/tmp/kdlock-killable-mm-final-independent-review-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 60413,
+      "path": "mm-candidate/analysis-arm.json",
+      "sha256": "289ccf7b707e50fcae63278683ca1dbb1b678a91e4445a2165b15e19dd30407e",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/analysis-arm.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 16544,
+      "path": "mm-candidate/transfer.json",
+      "sha256": "2c2ee2635917f6355469fe93f6071e87ea9e36ac255b3531d9b3f3f03d24a704",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/transfer.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 962,
+      "path": "mm-candidate/archive-provenance.json",
+      "sha256": "461178412b9a601bdb8d5ccbde7391506d737f914dacde3722adb72fd750e73a",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/archive-provenance.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4322,
+      "path": "mm-candidate/archive/owner.json",
+      "sha256": "d55c4de1efb7fa15143ddaf6807d14a39fb65c38e656fdee6f1d825b71f680d9",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archive-control/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 2559,
+      "path": "mm-candidate/archive/bindings.json",
+      "sha256": "5c4903ac46e3c2f1fdd539e2353b9d5980ababb2a224a06122bcc81d7dd5f9d0",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archive-control/bindings.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 5209,
+      "path": "mm-candidate/archive/archives.json",
+      "sha256": "4992561a607a65569973457317f235898373bed29e526aba18b2d68b7439b7a8",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archives/archives.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3006,
+      "path": "mm-candidate/candidate-measure-functional/owner.json",
+      "sha256": "50c6c5b48c83df28682bf8c8958ee01b4507c9f92bf7095fc103fc9686ff3357",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-measure-functional/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 44261,
+      "path": "mm-candidate/candidate-measure-functional/result.json",
+      "sha256": "576536b62794f14366be8f29c1d1c06f5fc3048f7824eea8c14f4e27bf217109",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-measure-functional/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 475,
+      "path": "mm-candidate/candidate-measure-functional/stdout",
+      "sha256": "5321388ccf9c5953085b00a5953bd1777e89f9385dd899c06ba650bed6f2bd2e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-measure-functional/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-candidate/candidate-measure-functional/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-measure-functional/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2572,
+      "path": "mm-candidate/candidate-endpoint-functional/owner.json",
+      "sha256": "e37df3ad583443c64c2ea8a37abab7be99eb319c4c56f7b4bc92a4dc5680c00f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-endpoint-functional/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 41290,
+      "path": "mm-candidate/candidate-endpoint-functional/result.json",
+      "sha256": "3e38c2dbb38a5b349a141cf2b3c1496d5b228723b51afae43237ae18e01a4516",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-endpoint-functional/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 460,
+      "path": "mm-candidate/candidate-endpoint-functional/stdout",
+      "sha256": "a641a31a70ac51019e0fcd99d2e6d09bf7ac325eedbc32f4d916eaf740a71241",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-endpoint-functional/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "mm-candidate/candidate-endpoint-functional/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-endpoint-functional/stderr",
+      "verbatim": true
+    },
+    {
+      "archive_member": "candidate-22d-scope2-kd/mapping-functional/result.json",
+      "archive_sha256": "5bfd6d22fa6228de6e00dc1c1c947437af0dd4fd349bc668d501ea52e21c3bc3",
+      "bytes": 29754,
+      "path": "mm-prospective/candidate-mapping-functional/runner-result.json",
+      "sha256": "666eea31f715ca523d86001bb8c2eb710ba5000a0b9b6672056b0e39e5170b48",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archives/checks.tar.gz",
+      "verbatim": true
+    },
+    {
+      "archive_member": "candidate-22d-scope2-kd/measurement-policy.json",
+      "archive_sha256": "c4009a875d1d3c00aba37052e76b87c66f271c22a0fe1aeb971eb663d3e2e28f",
+      "bytes": 1635,
+      "path": "mm-candidate/measurement-policy.json",
+      "sha256": "289bfcaf4a5ef70888877137873f23e420a29cf89b429bb36ad57bce2d92af71",
+      "source_host_path": "/dev/shm/kdlock-killable-mm-candidate-functional-20261031/candidate-22d-scope2-kd-archives/metadata.tar.gz",
+      "verbatim": true
+    },
+    {
+      "bytes": 1986,
+      "path": "restoration/candidate-source-unbind/owner.json",
+      "sha256": "48ec713dd12a1ca5d894eb1e30875fc3eda18e5965a9192ee2a5428366ed189b",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-source-unbind/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 3225,
+      "path": "restoration/candidate-source-unbind/result.json",
+      "sha256": "d1df59270bce9d94558fccb8f99c934ac1ce191f1f47f3b55b59ff5e3eccc155",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-source-unbind/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 273,
+      "path": "restoration/candidate-source-unbind/stdout",
+      "sha256": "f75857c48576eb86e254cf8e2024783478564358ae85599e253a6220179162be",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-source-unbind/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "restoration/candidate-source-unbind/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/candidate-source-unbind/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1737,
+      "path": "restoration/final-normal-request/owner.json",
+      "sha256": "e5854d552e436e0e5994e505182db9bfdbd2fa9fd0ad42ef57de3c36e2165ce9",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "restoration/final-normal-request/result.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 285,
+      "path": "restoration/final-normal-request/stdout",
+      "sha256": "9a0a9042b85f1221b4a5c8267964e3aba6b2d2b31c29b510c671153ad901229e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "restoration/final-normal-request/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 2153,
+      "path": "restoration/final-normal-postboot/owner.json",
+      "sha256": "b7bcf2c1679bd350fe2df2921a6788105957da91ff6b6505366e2904bd8d52b5",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-postboot/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4769,
+      "path": "restoration/final-normal-postboot/result.json",
+      "sha256": "ec53bffef6230be06cafb6351dbb828767750c4516e3d1902722a7cc0596b536",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-postboot/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 276,
+      "path": "restoration/final-normal-postboot/stdout",
+      "sha256": "8ce2cfeff53c1665e6242f996a2daf512a15f73c94809f89446eca735dd01d63",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-postboot/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "restoration/final-normal-postboot/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-postboot/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 1145,
+      "path": "restoration/final-pool-restore/owner.json",
+      "sha256": "bc5912581e111401972c545e12f435137e5cc6b581e0823912bdebe0df577b6f",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-pool-restore/owner.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 206317,
+      "path": "restoration/final-pool-restore/result.json",
+      "sha256": "6bbf13bbb1d3ff5ec11a0cc3da96cae27f2ace1e9055d95bd98cb52af4bbd421",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-pool-restore/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 227,
+      "path": "restoration/final-pool-restore/stdout",
+      "sha256": "df9a1f0599fa4d1468876d24d65fc0567190c2fcb654f4dfe31cdbde13a4ed6e",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-pool-restore/stdout",
+      "verbatim": true
+    },
+    {
+      "bytes": 0,
+      "path": "restoration/final-pool-restore/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-pool-restore/stderr",
+      "verbatim": true
+    },
+    {
+      "bytes": 4008,
+      "path": "restoration/final-normal-request-observed/result.json",
+      "sha256": "8d760922728340c408e95284270046d584ad97411250b9deb20ceb291f194253",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request-observed/result.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 329,
+      "path": "restoration/final-normal-request-observed/observation.json",
+      "sha256": "489de061f86e0553f0de325ecd1c45648c78d7c564c481637a56490c4aa40386",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request-observed/observation.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 906,
+      "path": "restoration/final-normal-request-observed/command.json",
+      "sha256": "b92c231505dd6651baaab8bad9a6071c209cb7755ab1393bf2760853cf0cde2a",
+      "source_host_path": "/dev/shm/kdlock-killable-controls-20261031/final-normal-request-observed/command.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 27026,
+      "path": "inputs/progress-final-comparisons-restored-20261031.json",
+      "sha256": "bc13ddecf7c7308991e0602434313a4c84dbb427554f1f6edfe818684a0ae892",
+      "source_host_path": "/tmp/kdlock-killable-progress-20261031.json",
+      "verbatim": true
+    },
+    {
+      "bytes": 4471,
+      "generated_from": [
+        "mm-comparison/comparisons.json",
+        "mm-comparison/validation.json",
+        "mm-comparison/independent-final-review.json"
+      ],
+      "path": "mm-comparison/README.md",
+      "sha256": "3e75b2f21a8e22958054ee2d3f1bf6aec7eaa7cf280a73e06c28cd388245ac47",
+      "verbatim": false
+    }
+  ],
+  "schema": 1,
+  "scope": "Exact selected prerequisite receipts plus source deltas; not a full raw archive verification or timing result",
+  "updates": [
+    {
+      "captured_utc": "2026-10-30T20:27:48.633386+00:00",
+      "checkpoint": "inputs/progress-f7-complete-candidate-running-20261031.json",
+      "scope": "Completed normal boot/new pool, both fresh basic controllers and baseline archive/offline continuation; candidate timing active"
+    },
+    {
+      "captured_utc": "2026-10-30T21:24:37.086049+00:00",
+      "checkpoint": "inputs/progress-nano-complete-mm-pending-20261031.json",
+      "scope": "Both nano arms complete; frozen paired offline audit and independent arithmetic passed; no-regression gate failed; MM comparison pending"
+    },
+    {
+      "captured_utc": "2026-10-30T21:33:06.053720+00:00",
+      "checkpoint": "inputs/progress-scope2-native-scope1-kd-boot-20261031.json",
+      "scope": "Scope2 Native boot identity, preserved stale no-reboot attempt, successful request and scope1 KD return/output/source bindings only; no MM functional or timing pass"
+    },
+    {
+      "captured_utc": "2026-10-30T21:52:43.846212+00:00",
+      "checkpoint": "inputs/progress-baseline-mm-complete-candidate-pending-20261031.json",
+      "scope": "Baseline MM six prerequisite checks, 42 one-round sessions and strict endpoint complete; source-host archive-byte audit passed after preserved local import failure; paired candidate comparison pending"
+    },
+    {
+      "captured_utc": "2026-10-30T22:00:19.349194+00:00",
+      "checkpoint": "inputs/progress-candidate-mm-mapping-failed-20261031.json",
+      "scope": "Preserved candidate strict mapping-witness failure before timing; later health is separate and does not convert original failed/undrained flags into pass"
+    },
+    {
+      "captured_utc": "2026-10-30T22:27:41.386275+00:00",
+      "checkpoint": "inputs/progress-prospective-mm-grid-running-20261031.json",
+      "scope": "Actual separate normal preservation, functional mapping inconclusive observation and strict-held two-syscall/18-mutation proof; original strict failure unchanged, candidate timing started but paired archive comparison pending"
+    },
+    {
+      "captured_utc": "2026-10-30T22:38:29.257669+00:00",
+      "checkpoint": "inputs/progress-final-comparisons-restored-20261031.json",
+      "scope": "Final 84-point/42-pair MM replay with all 24 losses; explicit prospective functional policy, original strict failure preserved; final normal boot/source/pool restoration limits"
+    }
+  ]
+}

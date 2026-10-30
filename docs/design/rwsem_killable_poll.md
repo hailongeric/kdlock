@@ -111,3 +111,118 @@ MM/mmap1 comparison. No current result may be relabeled as testing this change.
 5. Report every negative point, exact commits, budget and correctness limits.
    Both functional checks and the no-regression criterion must pass before
    any promotion; otherwise retain the isolated candidate and its results.
+
+
+## October 31 recorded implementation and validation
+
+The preceding proposal is retained as the historical preparation record. The
+implemented candidate is `22d62d5c13cad3c61c97dd47524da908769f1a52`, isolated from
+`master`. Its only production extension relative to
+`f7a84065e84474380faa37eeadfdf534abd72a68` is the bounded phase-admission poll in
+`kd_down_write_killable()`, with the required pending-signal include. The stop
+condition is now `need_resched() || signal_pending(current)`. Every probe first
+tries the unchanged reservation predicate; success is consumed once before
+checking scheduling or signals. A false result enters the unchanged killable
+wait, so nonfatal signals stop spinning without canceling acquisition. Fatal
+cancellation, physical-gate acquisition, reader drainage, rollback, downgrade,
+phase release and exact ownership retain their existing paths.
+
+The 16,384 limit counts reservation probes, not unconditional atomic exchanges:
+`kd_rwsem_reserve_local()` first reads phase admission and the existing reader
+OSQ-tail hint, and attempts the phase CAS only when both permit it. This poll
+remains preemptible and unpublished. It is not Native's owner-aware optimistic
+spinning queue. All eligible entering killable writers can poll; no proof of
+owner progress, fairness improvement or reduced parking follows from the new
+loop. Ordinary and prepared writers, readers and delegated bodies do not gain
+this helper.
+
+The [isolated validation report](../../bench/results/10.176.26.71/bench/rwsem-killable-poll-20261031/README.md)
+retains the initial functional receipts separately from the fresh timing
+cohort. These are recorded VM results, not host-side test executions:
+
+| Evidence | Recorded result | Receipt SHA256 |
+| --- | --- | --- |
+| Basic plus directly affected unit selection | Six checks passed; the extracted-helper fixture ran 25 scenarios and rejected 10 executable mutations | `11980b5b69ce1decc445c79cafa65e1345bbb9379d658818d893b646e4f9accc` |
+| Existing live rwsem API/cancellation probe | 17 API checks and 10 cancellation checks, zero errors, drained | `eb465041f72403b3a5dd4f6585254ab85b04a5b3365a96a1851beb644e20ce8b` |
+| Initial four-family basic probe | Spin, mutex, rwlock and rwsem passed, with final idle recorded | `99c68b5b072f1b13f867bfe84d26b8a0b7710c63623c485a430a264335b273a3` |
+| Source-extracted actual-kernel signal probe | Four cases passed, zero errors or inconclusive cases, drained | `f78d8bac48ca6f37118dccabf4ee46949ee72c3a5d22ce78f2499af854d6fb1b` |
+
+The last probe, at diagnostic commit
+`43dd256e7e0eba7639d4db87c0eaa450f6d86d41`, uses actual kernel tasks, signals and
+atomic operations with the extracted helper. It proves the bounded helper's
+observed signal/condition order in those cases. It does not instrument the
+uninstrumented provider binary, prove arbitrary scheduler interleavings or
+replace queued cancellation coverage.
+
+The separate kernel recipe is
+`f4ae82cfdf053c679c5d09ee8e503a7919764c9b`, based on
+`8446f4ecb08816380a4c233197a8ce5e4d333aac`. The recorded preparation comparison
+found only `kernel/locking/kd_mmap/kd_mmap_rwsem.c` changed in the generated
+kernel source; the configuration difference is `CONFIG_VERSION_SIGNATURE`.
+Native MM bodies, source generators and original headers are retained. MM
+critical sections execute on their original task; this change does not add MM
+delegation, generic Native CALL interval reentry or queued combiner/waiter role
+exchange.
+
+The fresh nano comparison completed 420 points: 210 matching KD pairs across
+ten workload profiles and 21 worker counts, one round per point. The strict
+host checks passed and zero points were unscored. The candidate lost 120 whole
+rates and 120 peak rates; 123 pairs lost at least one metric. The no-regression
+gate therefore failed, and the candidate remains unaccepted. Identical emitted
+JIT bytes at the paired points establish byte identity, not a causal explanation
+or grounds to omit negative results.
+
+The original candidate mapping correctness attempt remains failed: its
+16-worker cycle completed 80,000 operations with no worker errors, but did not
+capture the required strict sleeping/stack bracket. This does not prove an
+absence of parking. A separately identified prospective functional mapping run
+completed all six cases with its ordinary writer observation still
+`inconclusive`; it does not relabel the earlier strict failure.
+
+A separate same-mm held-writer diagnostic at
+`3b34414a259d6061a4b566ac33579f9547df080e` subsequently passed actual `mmap` and
+`munmap` syscall cases and rejected nine proof mutations per case. Its receipt
+is `1f38b8da4af61e36278fb0a5db701f2c92565331699f38437a77b81c80cc1cda`;
+normal unload, drain and final idle were recorded. It uses the unchanged stack
+classifier, an exact held writer on the target mm and a separate-mm observer.
+This proves those deliberately blocked syscall cases, not a sleeping witness
+in the original free-running case. Its post-acquisition release deadline does
+not bound native lock acquisition or joining after a kernel malfunction.
+
+Both mmap1 arms are now archived and fetched. The
+[completed comparison](../../bench/results/10.176.26.71/bench/rwsem-killable-poll-20261031/mm-comparison/README.md)
+validated all 84 raw points and 42 matched pairs, one round per point. Its score
+is completed mmap/munmap pairs per nominal second: the sum of the two
+post-marker integer samples divided by two. Threads gained at 16 worker counts
+and lost at five; processes gained at two and lost at 19. All 24 negative pairs
+remain in the report. Selected changes relative to the fresh f7 arm are:
+
+| Workers | mmap1_threads | mmap1_processes |
+| ---: | ---: | ---: |
+| 20 | +135.394558% | -0.706155% |
+| 32 | +68.495828% | -1.634649% |
+| 60 | +88.465320% | -10.997268% |
+
+The strict host comparisons passed, but the prospective `mmap-functional-v1`
+policy leaves `performance_qualified=false` and `strict_qualified=false`.
+Validation receipt
+`c9577f24ee5a2655ba9c51e7e3354e6eee25f8c9d4e78901b5ab11ffa6a0241f`
+records `performance_accepted=false`. The supplemental functional run and
+held-writer proof do not relabel the original strict mapping failure. The
+subsequent ordinary writer observation remains inconclusive. These are fresh KD-versus-KD
+comparisons, not a fresh Linux Native parity result. Earlier Native rates are
+not pooled into them. The thread gains do not establish reduced parking as
+their cause, and they do not reverse the failed nano gate. The candidate remains
+isolated and unaccepted.
+
+Restoration completed separately after evidence preservation. The source view
+was unbound and the original ordinary kernel `7.0.0-38-kdlock1` was verified on
+new boot `fa97b9f8-fefc-49b9-abc1-636861e64fc0`; postboot receipt
+`ec53bffef6230be06cafb6351dbb828767750c4516e3d1902722a7cc0596b536`
+records `NORMAL_BOOT_VERIFIED`. Pool receipt
+`6bbf13bbb1d3ff5ec11a0cc3da96cae27f2ace1e9055d95bd98cb52af4bbd421`
+records restored minimum 0, maximum 64 and `aio-max-batch=0`. Its original QOM
+object-absence and task-map restoration flags remain false. Those limits and
+the request transport whose result fetch did not complete remain preserved.
+Settings restoration is not proof of exact original host-state restoration or
+performance acceptance.

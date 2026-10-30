@@ -1,0 +1,114 @@
+{
+  "comparison_rows_verified": 42,
+  "comparisons_sha256": "433c12e7dc92e2c695b64cd2b99fc5ce5e1ac2ddb8ed4f320b1d9d78fdcbc46d",
+  "completed": true,
+  "csv_sha256": {
+    "processes.csv": "bd9fcf995e8f9bdf91a2068308b7a9969b59c84e4b9ee40af1d12aaa73b940f7",
+    "threads.csv": "53a9ab14125e4fd979fdda7c6188635e1a079d8f655b5cf2d120b4148fcd0cc3"
+  },
+  "eligibility_policy": "mmap-functional-v1",
+  "failed_analysis_validation_sha256": "4f9c469ee972e102ee3ec1cf41a4cd9bf6682ab280debf5161627a99a81bfe78",
+  "host_strict_qualified": true,
+  "models": {
+    "processes": {
+      "equal": 0,
+      "gains": 2,
+      "losses": 19
+    },
+    "threads": {
+      "equal": 0,
+      "gains": 16,
+      "losses": 5
+    }
+  },
+  "no_regression_evidence_gate": false,
+  "original_failed_analysis_preserved": true,
+  "performance_accepted": false,
+  "performance_qualified": false,
+  "raw_arithmetic_receipt_sha256": "306358712fe74507a2a947a8a7c16f536becd045d3beb7787af89f1127fe39db",
+  "raw_logs_verified": 84,
+  "schema": 1,
+  "scope": "Independent raw-score arithmetic and final42-row review; no new workload execution",
+  "selected": [
+    {
+      "baseline": 37599.0,
+      "baseline_completed_pairs": 75198,
+      "baseline_raw_sha256": "390ea41a85a8cfac6ff7c089e4d1dc7317c98ef900a5dfd903f1c49a507791c4",
+      "candidate": 88506.0,
+      "candidate_completed_pairs": 177012,
+      "candidate_raw_sha256": "062666c4d1f174cea2abb8208ce873a28a97bb4605c82c0226cc75876e1bd532",
+      "change_pct": 135.394558365914,
+      "denominator": 2,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 20
+    },
+    {
+      "baseline": 23790.5,
+      "baseline_completed_pairs": 47581,
+      "baseline_raw_sha256": "2952fe7d85f19c9044a3a3c2a6ded89f7518c5b185a1c722b874abe7e41fa951",
+      "candidate": 40086.0,
+      "candidate_completed_pairs": 80172,
+      "candidate_raw_sha256": "e822af484f84631bc4971e729d95107391cfd9c4fb9d4dd0b02eccd684cdb83b",
+      "change_pct": 68.49582816670521,
+      "denominator": 2,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 32
+    },
+    {
+      "baseline": 6610.5,
+      "baseline_completed_pairs": 13221,
+      "baseline_raw_sha256": "4a8cdcf3e0b543500272c5c42a5b8fc0c6d492c86dd137fb9bc8cc703271621d",
+      "candidate": 12458.5,
+      "candidate_completed_pairs": 24917,
+      "candidate_raw_sha256": "74a37de54efe9c3f9129edef4ff7e4513e110bd6f904e0ce7215b79f0d9a937e",
+      "change_pct": 88.4653203237274,
+      "denominator": 2,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 60
+    },
+    {
+      "baseline": 1869420.0,
+      "baseline_completed_pairs": 3738840,
+      "baseline_raw_sha256": "f6b8031023ca971bab932f70602cc9a4245f99539fbfb6a245d3a22ac375fb79",
+      "candidate": 1856219.0,
+      "candidate_completed_pairs": 3712438,
+      "candidate_raw_sha256": "afc433d5315a70363d5180a1542420400e1f24f09980e68e7aae7f50bd4547a8",
+      "change_pct": -0.7061548501674286,
+      "denominator": 2,
+      "model": "processes",
+      "observed_loss": true,
+      "workers": 20
+    },
+    {
+      "baseline": 1796532.5,
+      "baseline_completed_pairs": 3593065,
+      "baseline_raw_sha256": "1cee35ef854ab32767a37c6f524b35d86310dd5d03fcaabfbabef647fc054eb7",
+      "candidate": 1767165.5,
+      "candidate_completed_pairs": 3534331,
+      "candidate_raw_sha256": "5c6569d930fd48879e9f5d2672a4cc8d9c21df67298d43da6747dda016830771",
+      "change_pct": -1.6346489696122957,
+      "denominator": 2,
+      "model": "processes",
+      "observed_loss": true,
+      "workers": 32
+    },
+    {
+      "baseline": 1415688.0,
+      "baseline_completed_pairs": 2831376,
+      "baseline_raw_sha256": "f34a2852707c29360842a5e3dd945d33d479b1fd4657671b0588f2ccf3d9f869",
+      "candidate": 1260001.0,
+      "candidate_completed_pairs": 2520002,
+      "candidate_raw_sha256": "bc56be1e9a829301c2a072c2128158f74518149c33ee4a88d3ffc47224974a71",
+      "change_pct": -10.997267759562845,
+      "denominator": 2,
+      "model": "processes",
+      "observed_loss": true,
+      "workers": 60
+    }
+  ],
+  "source_domain_fix": "Six diagnostic leaves bind3b34414a/ea0579 independently of f4ae harness",
+  "validation_sha256": "c9577f24ee5a2655ba9c51e7e3354e6eee25f8c9d4e78901b5ab11ffa6a0241f"
+}

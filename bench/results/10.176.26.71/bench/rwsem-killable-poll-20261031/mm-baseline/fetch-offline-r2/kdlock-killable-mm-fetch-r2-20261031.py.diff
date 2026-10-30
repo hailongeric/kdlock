@@ -1,0 +1,173 @@
+--- /tmp/kdlock-killable-mm-fetch-20261031.py
++++ /tmp/kdlock-killable-mm-fetch-r2-20261031.py
+@@ -20,6 +20,9 @@
+ REMOTE = '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031'
+ CORE = Path('/tmp/kdlock-killable-offline-20261031/nano_core.py')
+ CORE_SHA = '782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f'
++FRESH_CONTROLS = CORE.parent / 'fresh_controls.py'
++FRESH_CONTROLS_SHA = 'f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79'
++ORIGINAL_FETCH_SHA = '19e73578e919af0d0e50248ddca647f976062f3786944ba955afaf0ec0541e53'
+ MAP_MEMBER = 'preservation-inputs/preservation-map.json'
+ BUNDLE_MEMBER = 'preservation-inputs/kernel-bundle/manifest.json'
+ STEPS = ('sites', 'api', 'mapping', 'faults', 'completed', 'mmap1-identity', 'mmap1-measure', 'endpoint')
+@@ -92,16 +95,22 @@
+     parser.add_argument('--arm', choices=ARMS, required=True)
+     parser.add_argument('--boot-id', required=True)
+     parser.add_argument('--destination', type=Path, required=True)
++    parser.add_argument('--offline-transport', type=Path)
++    parser.add_argument('--offline-receipt', type=Path)
++    parser.add_argument('--offline-receipt-sha256')
+     for name in ('archive-owner', 'archive', 'inventory', 'aliases', 'preservation-map'):
+         parser.add_argument('--' + name + '-sha256', required=True)
+     args = parser.parse_args()
++    need(bool(args.offline_transport) == bool(args.offline_receipt) == bool(args.offline_receipt_sha256),
++         'offline mode requires original transport, failed receipt and its actual hash')
+     expected = {name: getattr(args, name.replace('-', '_') + '_sha256') for name in
+                 ('archive-owner', 'archive', 'inventory', 'aliases', 'preservation-map')}
+     need(all(re.fullmatch('[0-9a-f]{64}', value) for value in expected.values()),
+          'actual finalized receipt hashes required')
+     need(re.fullmatch('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', args.boot_id),
+          'actual completed arm boot ID required')
+-    need(sha(CORE) == CORE_SHA, 'reviewed offline archive reader differs')
++    need(sha(CORE) == CORE_SHA and sha(FRESH_CONTROLS) == FRESH_CONTROLS_SHA,
++         'reviewed offline archive reader or local dependency differs')
+     name, kernel = args.arm, ARMS[args.arm]
+     raw = args.destination
+     need(raw.is_absolute() and raw.parent == Path('/dev/shm') and raw.resolve() == raw and
+@@ -110,7 +119,7 @@
+          'actual source-host tmpfs needs at least 2 GiB free')
+     raw.mkdir()
+     roots = {name + suffix for suffix in ('-archives', '-archive-control')}
+-    transport = raw / 'transport.tar'
++    transport = args.offline_transport or raw / 'transport.tar'
+     receipt_path = raw / 'transfer.json'
+     receipt = dict(completed=False, started=time.time(), arm=name, boot_id=args.boot_id,
+                    kernel=kernel, harness_commit=HARNESS,
+@@ -131,34 +140,63 @@
+         ['python3', '-c', GUEST, REMOTE, name, json.dumps(expected), args.boot_id,
+          HARNESS, ARCHIVER, json.dumps(kernel), json.dumps(STEPS)])])
+     command = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', 'eric@10.176.26.71', remote]
+-    receipt['argv'] = command
++    if args.offline_transport:
++        receipt['offline_inputs'] = dict(transport=str(args.offline_transport),
++                                         failed_receipt=str(args.offline_receipt))
++    else:
++        receipt['argv'] = command
+     try:
+-        with transport.open('xb') as output, (raw / 'transport.log').open('xb') as error:
+-            child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=output, stderr=error)
+-            receipt['pid'] = child.pid
++        if args.offline_transport:
++            need(re.fullmatch('[0-9a-f]{64}', args.offline_receipt_sha256) and
++                 args.offline_receipt.is_file() and not args.offline_receipt.is_symlink() and
++                 sha(args.offline_receipt) == args.offline_receipt_sha256,
++                 'original failed transfer receipt differs')
++            prior = json.loads(args.offline_receipt.read_bytes())
++            need(prior.get('completed') is False and prior.get('returncode') == 0 and
++                 prior.get('arm') == name and prior.get('boot_id') == args.boot_id and
++                 prior.get('kernel') == kernel and prior.get('harness_commit') == HARNESS and
++                 prior.get('expected_sha256') == expected and prior.get('remote_base') == REMOTE and
++                 prior.get('roots') == sorted(roots) and prior.get('script_sha256') == ORIGINAL_FETCH_SHA and
++                 prior.get('error') == 'ModuleNotFoundError("No module named \'fresh_controls\'")' and
++                 transport == Path(prior['destination']) / 'transport.tar' and
++                 args.offline_receipt == Path(prior['destination']) / 'transfer.json' and
++                 transport.is_file() and not transport.is_symlink() and
++                 transport.stat().st_size == prior['transport_bytes'] and sha(transport) == prior['transport_sha256'],
++                 'only the exact completed transfer/import failure may continue offline')
++            shutil.copyfile(args.offline_receipt, raw / 'prior-failed-transfer.json')
++            code = 0
++            receipt.update(offline_continuation=True, remote_actions_executed=False,
++                           prior_failed_transfer_path=str(args.offline_receipt),
++                           prior_failed_transfer_sha256=args.offline_receipt_sha256,
++                           original_transport_path=str(transport), original_transport_retained=True)
+             save()
+-            try:
+-                code = child.wait(timeout=1200)
+-            except subprocess.TimeoutExpired:
+-                receipt.update(timed_out=True, remote_completion_unconfirmed=True)
++        else:
++            with transport.open('xb') as output, (raw / 'transport.log').open('xb') as error:
++                child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=output, stderr=error)
++                receipt['pid'] = child.pid
++                save()
+                 try:
+-                    child.terminate()
+-                except ProcessLookupError:
+-                    pass
+-                try:
+-                    child.wait(timeout=10)
++                    code = child.wait(timeout=1200)
+                 except subprocess.TimeoutExpired:
++                    receipt.update(timed_out=True, remote_completion_unconfirmed=True)
+                     try:
+-                        child.kill()
++                        child.terminate()
+                     except ProcessLookupError:
+                         pass
+                     try:
+                         child.wait(timeout=10)
+                     except subprocess.TimeoutExpired:
+-                        pass
+-                receipt.update(returncode=child.poll(),
+-                               local_transport_completion_unconfirmed=child.poll() is None)
+-                raise
++                        try:
++                            child.kill()
++                        except ProcessLookupError:
++                            pass
++                        try:
++                            child.wait(timeout=10)
++                        except subprocess.TimeoutExpired:
++                            pass
++                    receipt.update(returncode=child.poll(),
++                                   local_transport_completion_unconfirmed=child.poll() is None)
++                    raise
+         receipt['returncode'] = code
+         need(code == 0, 'fetch failed; preserve partial transport')
+         receipt.update(transport_sha256=sha(transport), transport_bytes=transport.stat().st_size)
+@@ -207,9 +245,16 @@
+         bindings = checked_json(name + '-archive-control/bindings.json', owner['bindings_sha256'])
+         need(bindings['arm'] == name and bindings['boot_id'] == args.boot_id and
+              bindings['step_owners'] == owner['step_owners'], 'copied bindings identity differs')
+-        need(sha(CORE) == CORE_SHA, 'reviewed offline archive reader changed')
+-        spec = importlib.util.spec_from_file_location('reviewed_killable_archive_bytes', CORE)
++        need(sha(CORE) == CORE_SHA and sha(FRESH_CONTROLS) == FRESH_CONTROLS_SHA,
++             'reviewed offline archive reader or local dependency changed')
++        # The pinned dependency imports nano_core. Publish this same module
++        # under its normal name before execution, avoiding a second core load.
++        need('nano_core' not in sys.modules and 'fresh_controls' not in sys.modules,
++             'offline reader modules were already loaded')
++        sys.path.insert(0, str(CORE.parent))
++        spec = importlib.util.spec_from_file_location('nano_core', CORE)
+         core = importlib.util.module_from_spec(spec)
++        sys.modules['nano_core'] = core
+         spec.loader.exec_module(core)
+         cache = raw / 'receipt-cache'
+         cache.mkdir()
+@@ -269,13 +314,23 @@
+                        member_manifest_sha256=sha(raw / 'member-sha256.json'),
+                        archive_provenance_sha256=sha(raw / 'archive-provenance.json'),
+                        offline_reader_sha256=CORE_SHA,
++                       offline_reader_dependency_sha256=FRESH_CONTROLS_SHA,
+                        analysis_arm_sha256=sha(raw / 'analysis-arm.json'),
+                        transport_verified=True, archive_members_verified=True)
+         save()
++        if args.offline_transport:
++            need(sha(args.offline_receipt) == args.offline_receipt_sha256 and
++                 sha(raw / 'prior-failed-transfer.json') == args.offline_receipt_sha256 and
++                 transport.stat().st_size == prior['transport_bytes'] and
++                 sha(transport) == prior['transport_sha256'], 'original failed attempt changed')
+         shutil.rmtree(cache)
+-        transport.unlink()
+-        receipt.update(completed=True, finished=time.time(), transport_intermediate_removed=True,
+-                       removal_scope='Only verified task-created transport.tar and derived receipt-cache; original compressed groups/control retained')
++        if not args.offline_transport:
++            transport.unlink()
++        receipt.update(completed=True, finished=time.time(),
++                       transport_intermediate_removed=not bool(args.offline_transport),
++                       removal_scope=('Only the new derived receipt-cache; original failed attempt/tar retained'
++                                      if args.offline_transport else
++                                      'Only verified task-created transport.tar and derived receipt-cache; original compressed groups/control retained'))
+     except BaseException as error:
+         receipt['error'] = repr(error)
+         raise

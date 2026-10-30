@@ -1,0 +1,14 @@
+[
+  {
+    "name": "policy.json",
+    "host": "/tmp/kdlock-pool64-killable-activate-20261031/result.json",
+    "guest": "/tmp/kdlock-killable-policy.json",
+    "sha256": "b401a9f7f47a0b6a535f60c98c7a101200ed165434861538c8199ee9e520db48"
+  },
+  {
+    "name": "reference.json",
+    "host": "/tmp/kdlock-pool64-killable-activate-20261031/settled-a.host.json",
+    "guest": "/tmp/kdlock-killable-reference.json",
+    "sha256": "6493853058495ad9b155cbd184525967501fe005d60bbec1ac46d7554c4581a9"
+  }
+]

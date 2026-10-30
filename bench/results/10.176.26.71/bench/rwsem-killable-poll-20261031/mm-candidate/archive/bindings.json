@@ -1,0 +1,65 @@
+{
+  "arm": "candidate-22d-scope2-kd",
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "bundle_manifest_sha256": "50630ce77756cfc2d6e125dd4e3968de355353b2033809e40bb80b98533a1649",
+  "eligibility_policy": "mmap-functional-v1",
+  "endpoint_watcher": {
+    "path": "/tmp/kdlock-killable-mm-candidate-after-20261031-receipt.json",
+    "sha256": "bc907252c304bc47da0d8a628c5043f7a7523f8ced67c3c8158d555207292fbe"
+  },
+  "extra_files": [],
+  "logical_steps": {
+    "api": {
+      "owner": "api-controller.json",
+      "result": "api/result.json"
+    },
+    "completed": {
+      "owner": "completed-controller.json",
+      "result": "completed/result.json"
+    },
+    "endpoint": {
+      "owner": "endpoint-controller.json",
+      "result": "endpoint/result.json"
+    },
+    "faults": {
+      "owner": "faults-controller.json",
+      "result": "faults/result.json"
+    },
+    "mapping": {
+      "owner": "mapping-functional-controller.json",
+      "result": "mapping-functional/result.json"
+    },
+    "mmap1-identity": {
+      "owner": "mmap1-identity-controller.json",
+      "result": "mmap1-identity/result.json"
+    },
+    "mmap1-measure": {
+      "owner": "mmap1-measure-controller.json",
+      "result": "mmap1-measure/result.json"
+    },
+    "sites": {
+      "owner": "sites-controller.json",
+      "result": "sites/writer-sites.json"
+    }
+  },
+  "performance_qualified": false,
+  "postboot": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/kernel-scope2-kd-postboot-20261031/result.json",
+    "sha256": "fa9f32dcd91f1319b1d96990633e6a74efc75f400fafb9a517ae2c05b8e87b64"
+  },
+  "schema": 2,
+  "source_bind": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/killable-candidate-22d-scope2-kd-source-bind-20261031/result.json",
+    "sha256": "2ad0a98d97133e07659c6851c1162206d8d396bade0ac5e64d78b884ae7f833c"
+  },
+  "step_owners": {
+    "api": "482148a32785254f3d487a64f335764094a0501711e98e5dadb25a37e50f8ff5",
+    "completed": "51f860e131f943aa7ad02bb67eaf9cfc430b2dba164212b1a6684fce92c69013",
+    "endpoint": "3e38c2dbb38a5b349a141cf2b3c1496d5b228723b51afae43237ae18e01a4516",
+    "faults": "a50cf310866774f0107d9f035bc8e24e49aaca560b06c3ee143a9ca42b724a9b",
+    "mapping": "73c8c7aef4b5bec3e72dab9c0bff915f566d0e62bac967004aa2b647defcf6f6",
+    "mmap1-identity": "e457792bc18d0cbfa919f3a913eb9f5c3517ee9734b39e9771011a4b1e9f56ee",
+    "mmap1-measure": "576536b62794f14366be8f29c1d1c06f5fc3048f7824eea8c14f4e27bf217109",
+    "sites": "7a59f5e505f9c4e5d332e7e8c1efdb8ee3f8e6db855fb525b8a409e857d0f6c8"
+  }
+}

@@ -1,0 +1,28 @@
+--- /tmp/kdlock-killable-functional-offline-20261031/mmap_compare.py
++++ /tmp/kdlock-killable-functional-offline-r2-20261031/mmap_compare.py
+@@ -107,7 +107,25 @@
+                     path='/root/host_fs/kdlock/'+name
+                     a.need(path not in absolute or absolute[path]==row['sha256'],'archived/common harness alias changed')
+                     absolute[path]=row['sha256']
++                diagnostic_sources={}
++                if label=='candidate':
++                    diagnostic_manifest=ar.json('strict-hold/diagnostic-manifest.json')
++                    a.need(ar.hashes['strict-hold/diagnostic-manifest.json']==
++                           'ea057985c5dc0443b54e2e279c01ad76581e7f82416f448abcdddc30771b201a' and
++                           diagnostic_manifest.get('commit')==STRICT_HOLD_COMMIT and
++                           set(diagnostic_manifest['files'])=={'README.md','run.py','payload/Makefile',
++                               'payload/api.h','payload/module.c','payload/client.c'},
++                           'exact diagnostic source-domain manifest differs')
++                    for leaf,digest in diagnostic_manifest['files'].items():
++                        member='strict-hold/source/'+leaf
++                        a.need(digest==a.sha(git.blob(STRICT_HOLD_COMMIT,
++                                   'tests/kernel/mmap_writer/strict_hold/'+leaf)) and
++                               ar.hashes.get(member)==digest,'diagnostic source-domain bytes differ')
++                        diagnostic_sources[member]=digest
+                 for name,digest in ar.hashes.items():
++                    if name in diagnostic_sources:
++                        a.need(digest==diagnostic_sources[name],'validated diagnostic source changed')
++                        continue
+                     for marker in ('/runtime-source/','/source/'):
+                         if marker in name:
+                             relative=name.split(marker,1)[1]

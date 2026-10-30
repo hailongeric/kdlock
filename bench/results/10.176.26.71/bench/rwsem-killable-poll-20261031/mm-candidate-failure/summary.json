@@ -1,0 +1,30 @@
+{
+  "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+  "candidate_mm_timing_started": false,
+  "completed_operations": 80000,
+  "contended_mmaps": 4675,
+  "context_errors": 0,
+  "final_vmas": 0,
+  "later_health_observation": {
+    "boot_id": "fe7fa10a-13fb-4bb3-b730-eb99db9200cd",
+    "candidate_processes": [],
+    "health": "files=0 mm_refs=0 destroyed=3 release_errors=0\n",
+    "module": [
+      "kd_mmap_writer_native 12288 0 - Live 0xffffffffc09e8000 (OE)"
+    ]
+  },
+  "normal_unload_or_preservation_claimed": false,
+  "original_drain_unknown": true,
+  "original_drained": false,
+  "original_passed": false,
+  "original_state": "FAILED",
+  "owner_sha256": "71568d5f8374b7cd8e90119cf56aebd150334a91d98be09ac69675779548df2e",
+  "paired_mm_performance_available": false,
+  "performance_accepted": false,
+  "runner_sha256": "284e2cbffc95a2c56f9d23b768646ed774b6143de0d3f537e27fcee526ae23c2",
+  "schema": 1,
+  "scope": "Failed strict writer-wait observation; operation completion and later health do not convert this check into a pass",
+  "strict_witness_passed": false,
+  "worker_errors": 0,
+  "workers_joined": 16
+}

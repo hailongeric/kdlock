@@ -1,0 +1,32 @@
+{
+  "transport_completed": true,
+  "started": 1793397519.1675057,
+  "spec_sha256": "942ae9ca53b3728fd40c9c5b76ec52f3360ec4dda312f00e4cdb9e23c8acbcf3",
+  "argv": [
+    "env",
+    "-u",
+    "KERNELRELEASE",
+    "-u",
+    "KBUILD_OUTPUT",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "LC_ALL=C",
+    "PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "KDLOCK_RECOVERY_CONFIRMED=1",
+    "KDLOCK_SNAPSHOT_TAG=kdlock-builddisk-clean-20261031",
+    "taskset",
+    "-c",
+    "0-63",
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/tmp/kdlock-killable-candidate-mapping-preserve-20261031.py",
+    "--execute"
+  ],
+  "guest_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031-preservation-control/candidate-mapping-writer-bracket-20261031/owner.json",
+  "child_completion_unknown": false,
+  "pid": 3269794,
+  "returncode": 0,
+  "finished": 1793397520.6379836,
+  "result_sha256": "16561602201b33c7eeaac746b36008846539caf4a3f6bc8d705e61d0857c9f14",
+  "step_passed": true,
+  "step_state": "FAILED_ARM_ARCHIVED_IDLE",
+  "step_error": null
+}

@@ -1,0 +1,142 @@
+{
+  "action": "postboot",
+  "arm_environment_before": {
+    "next_entry": ""
+  },
+  "automatic_retry": false,
+  "boot_id": "43101fa8-697a-46ad-99c9-be4b39cce0b3",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "--json",
+        "--mountpoint",
+        "/mnt/kdlock-builds2",
+        "--output",
+        "TARGET,SOURCE,FSTYPE,UUID"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395737.486821,
+      "mutation": false,
+      "name": "disk",
+      "pid": 3308,
+      "returncode": 0,
+      "started": 1793395737.4699793
+    },
+    {
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395737.5809884,
+      "mutation": false,
+      "name": "environment-before",
+      "pid": 3309,
+      "returncode": 0,
+      "started": 1793395737.5005765
+    },
+    {
+      "argv": [
+        "dmesg",
+        "--color=never"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395737.6066873,
+      "mutation": false,
+      "name": "kernel-log",
+      "pid": 3310,
+      "returncode": 0,
+      "started": 1793395737.590667
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope2-recipe-f4ae82cf/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdscope1-kd",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+        "--build-root",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+        "--running"
+      ],
+      "completion_unknown": false,
+      "finished": 1793395738.802493,
+      "mutation": false,
+      "name": "running-identity",
+      "pid": 3311,
+      "returncode": 0,
+      "started": 1793395737.6210494
+    }
+  ],
+  "completed": true,
+  "controller_sha256": "b93be19cd7ca0cfe8cdbfe828a39e73cbec1b14dec574bdd8278e7919db2bac5",
+  "drain_unknown": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "expected_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0",
+    "preempt=lazy",
+    "kd_mmap=on"
+  ],
+  "finished": 1793395738.8333154,
+  "install_sha256": "d62955d45cd120c0fdb71f5289cd5b424b360ea950f823c1f238bd9fba8264b8",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "kind": "scope1-mm-return",
+  "mutation_attempted": false,
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "passed": true,
+  "performance_accepted": false,
+  "prior_result_sha256": "4b0a8f4df8d03a40b9179d2fc5477dba106ec87635b362beb7440c0f94c72e30",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 5547,
+      "mode": 420,
+      "sha256": "78f417317ee670c596fa7bebf4c8ae77f8697fc2c4dd5a48f6f1092f9c6c3e3a"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 420,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    }
+  },
+  "release": "7.0.0-38-kdscope1",
+  "running_kernel_validated": true,
+  "schema": 1,
+  "scope2_append_sha256": "9b3ea84c5dc4abc4e79629b881dfcb5031efebabc50d602e4d85cd4211b53b35",
+  "source_commit": "f4ae82cfdf053c679c5d09ee8e503a7919764c9b",
+  "started": 1793395737.411167,
+  "state": "SCOPE1_RUNTIME_VERIFIED",
+  "state_unknown": false,
+  "support_sha256": "57bc5f75261b96361c0fe9c2ebe1d1e569d03adb742e12e2ae549c808aaed5c2"
+}

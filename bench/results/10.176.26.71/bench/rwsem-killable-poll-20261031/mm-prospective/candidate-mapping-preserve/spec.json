@@ -1,0 +1,11 @@
+{
+  "script": "/tmp/kdlock-killable-candidate-mapping-preserve-20261031.py",
+  "script_sha256": "8452a6abeecc658b95169c3374b8d31febe59b231da067678285080897e5b5e4",
+  "argv": [
+    "--execute"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/killable-mm-20261031-preservation-control/candidate-mapping-writer-bracket-20261031/owner.json",
+  "timeout": 1000,
+  "affinity": "0-63",
+  "success_key": "completed"
+}
