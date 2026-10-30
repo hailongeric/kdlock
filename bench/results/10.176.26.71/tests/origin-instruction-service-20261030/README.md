@@ -49,6 +49,22 @@ complete unit pass and does not resolve the original ordinary-build exit.
 
 ## Required next gates
 
+The separate plain optimized diagnostic reproduced SIGSEGV (`returncode=-11`)
+with final idle and unchanged source. Its retained binary SHA256 is
+`3e239cb78fd51ae771dd7d333d5ac1ca8fc470db022f154cbb218827b38b3363`.
+The kernel's fault RIP maps to ELF offset `0x95a5`, the full-register copy in
+`kd_exec_frame_save_continuation`. `continuation_sp` aliases `borrowed_regs`;
+writing it while borrowing remains active makes the copy target the virtual
+stack. The computed 16-byte write crosses exactly the recorded fault page.
+
+Two successful direct-helper loops in `native_escape.inc` and `native_calls.inc`
+bypass the production dispatcher's FULL-packet ownership transition. Correct
+only those setups with `kd_exec_frame_own_regs`; retain the via-dispatch and
+malformed-input cases. Static review of all fifteen production continuation-save
+call sites found no corresponding bypass. This is a source finding, not a live
+claim for every nesting case. The runtime has not been changed for this fixture
+failure; the corrected fixture still needs VM execution.
+
 After source-host review and a separate correction commit, run the basic plus
 directly affected tests in the VM, then build and inspect the provider. Only
 after those pass may the all-family basic checks, original-task instruction
