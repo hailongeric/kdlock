@@ -1,4 +1,69 @@
-# `kdscope1` source composition and identity
+# Scoped Linux 7 source composition and identity
+
+## October 31 `kdscope2` killable-writer candidate
+
+The new recipe starts at `8446f4ecb08816380a4c233197a8ce5e4d333aac`, the
+original `kdscope1` kernel recipe. Its only lock implementation change is the
+`kernel_module/kd_rwsem.c` delta from provider
+`f7a84065e84474380faa37eeadfdf534abd72a68` to
+`22d62d5c13cad3c61c97dd47524da908769f1a52`. The rwsem source at the original
+recipe and at `f7a84065e84474380faa37eeadfdf534abd72a68` is identical. Keep the
+original recipe's API overlay, MM adapter, physical mutex implementation and
+all shared type/API/register headers. Do not substitute the later provider's
+whole input tree or cherry-pick its unrelated runtime changes.
+
+The bounded poll checks the writer reservation first. After a failed reservation,
+`need_resched()` or any `signal_pending(current)` ends polling; otherwise it
+uses `cpu_relax()` for at most 16,384 probes. A successful reservation returns
+immediately without a second predicate evaluation. An unsuccessful poll enters
+the existing `wait_event_killable` path, including its condition recheck and
+fatal-signal cancellation. Gate acquisition, reader drain, phase release,
+downgrade and Native MM bodies remain unchanged. Ordinary and prepared writer
+paths are outside this source change; unchanged source is not a binary-layout
+or performance guarantee.
+
+The unchanged MM generator retains this helper and renames it into
+`kernel/locking/kd_mmap/kd_mmap_rwsem.c`. Compare all generated lock inputs and
+outputs against the original recipe: only that generated C file may change.
+Release/configuration/build identity and the additive runner profiles are
+separate from this algorithmic source comparison. A fresh VM preparation and
+full build must record the actual output hashes; source inspection alone does
+not establish generated, compiled or running identity.
+
+- Release: `7.0.0-38-kdscope2`, with unchanged upstream version code 458766.
+- Canonical source/output pair:
+  `/mnt/kdlock-builds2/linux-7.0.0-38-kdscope2/{source,build}` on the separately
+  provisioned build disk. Preserve the old source/output trees and their mounts.
+- `kdscope2-native`: `kd_mmap=off`, bundle
+  `/root/kdlock-kernel-baselines/linux70-kdscope2-native-20261031`.
+- `kdscope2-kd`: `kd_mmap=on`, bundle
+  `/root/kdlock-kernel-baselines/linux70-kdscope2-kd-20261031`.
+- Both variants require `CONFIG_KDLOCK_MMAP=y`, `CONFIG_KD_API_LOCKS=y` and
+  `CONFIG_DEBUG_SPINLOCK=n`, with all existing configuration, composition,
+  installed-file and runtime-policy checks. The API object default remains
+  Native. Existing `kdlock1`, `kdmm1-*` and `kdscope1-*` defaults and identities
+  are unchanged.
+
+Use the preparation/composition/capture interfaces below with new scope2
+staging paths under `/mnt/kdlock-builds2` and the explicit scope2 variant.
+Capture selects the canonical source/build/bundle tuple; neither a manifest nor
+a supplied build path may infer another profile. The common benchmark identity
+helper, shared MM platform and mmap1 runner must admit the new explicit tuple
+without relaxing the old profiles. Keep the recipe generation separate from
+the provider generation in every receipt. A sparse source-host checkout is not
+a complete synchronized source tree; export every required tracked recipe input
+with its hash before VM preparation.
+
+Status: documentation and source preparation only. No scope2 build, boot, MM
+correctness result, timing or acceptance is claimed here. Root runs basic and
+directly affected checks in the VM, then one fresh matched KD-only nano matrix
+and one fresh mmap1 threads/processes matrix for each compared generation.
+Historical f7 measurements remain separate; no topology or qualification is
+reused as new measurement evidence. Retain every negative result and keep the
+candidate unaccepted. Explicit profile support also needs the affected identity,
+shared-MM, mmap1 and benchmark-profile fixtures; they are not run on 380G10.
+
+## Original `kdscope1` recipe
 
 Status: source-only implementation and focused test sources; no preparation, build, install, reboot or test execution is established by this document. The candidate API package is still under source review. Preserve all existing `kdlock1` and `kdmm1-*` profiles and their frozen bundles.
 
