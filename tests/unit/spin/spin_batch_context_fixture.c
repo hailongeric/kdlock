@@ -46,7 +46,9 @@ static struct kd_spin_node *first_node;
 #define this_cpu_ptr(p) (p)
 #define unlikely(x) (x)
 #define print_debug(...) ((void)0)
-static u8 kd_spin_proxy_context(void) { context_reads++; return current_context; }
+/* The omission mutant deliberately removes every call to this accessor. */
+static u8 __maybe_unused kd_spin_proxy_context(void)
+{ context_reads++; return current_context; }
 static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
                                         const struct kd_exec_frame *frame)
 { (void)call; (void)frame; return fast_complete; }
