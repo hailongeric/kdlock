@@ -137,3 +137,44 @@ allow only this result document and the observation patch to differ. Run the
 basic checks, directly affected completion-accounting driver and provider build
 on the new generation. The earlier overall attempt stays failed because provider
 preparation failed; only its successful unit block is reusable evidence.
+
+## Completed corrected-generation validation
+
+`8617e97c02432a7c0b931aa8263d5edd0f6eb5b8` completed the declared reuse check,
+the two basic unit checks, completion-accounting driver and fresh W=1 provider
+build. The fresh unit block reported three passes, zero failures; completion
+accounting exercised 9,846 checks and detected its seven omission mutations.
+The fourteen earlier successful groups retain their original failed-attempt
+provenance above. Production runtime bytes were not changed to fix these
+fixture and patch-context failures. Compiler-name and existing handwritten
+stack/return-analysis warnings remain in the build log.
+
+The current unit owner SHA256 is
+`455fed932ddf38decb6bfe93ee55a79345c5144afb750f120a4a7273a94b39f0`;
+the clean synchronization SHA256 is
+`c38e1e0f6ae448c0b5b1155822c50b50041c496ac148c7785a2c7015645ac58a`.
+All four basic live families passed with positive returned-JIT counts and
+complete retirement. The first extended-phase attempt stopped before starting
+a test child because transient host workers in its reference had exited.
+That failed receipt is retained. A separate campaign explicitly references
+the successful original basic result and uses the prior permanent-task host
+reference; no failed test is relabelled a pass.
+
+The separate extended campaign passed all seven ordinary mutex phases, five
+prepared-rwsem phases and five mixed mutex-to-spin phases. The two hot mutex
+phases recorded 638,108 and 635,912 original-task services with matching reentry
+counts. Forced post-service continuation recorded 57,379 native suffixes and
+zero JIT completions; later cold recovery returned 158,450 JIT bodies. The two
+hot rwsem phases recorded 133,214 and 132,604 matching services/reentries, with
+ten million local reads in each phase. Mixed nesting retained native suffixes
+(36,871 and 36,528), no instruction service, and later cold JIT recovery.
+Every completed owner reports final idle on the unchanged boot above.
+
+The [separate nano record](../../bench/continuation-nano-20261030/README.md)
+preserves these prerequisite receipts and all 210 subsequent one-round timing
+points. Functional validation passed, but that candidate **failed** the
+no-regression gate: 112 coordinates decreased in whole or peak throughput
+against `acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f`. Neither the scoped
+real-world API comparison nor final unchanged mmap1 acceptance is complete.
+Generic native CALL return/reentry and full queued role exchange remain
+unsupported; the instruction-service evidence does not establish either.

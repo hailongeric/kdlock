@@ -1,0 +1,29 @@
+{
+  "arguments": {
+    "audit": "/tmp/kdlock-nano-8617-comparison-20261030",
+    "out": "/tmp/kdlock-nano-8617-findings-20261030",
+    "unit_provider": "/tmp/kdlock-continuation-8617e97c-provider.ko"
+  },
+  "artifact_execution": false,
+  "builds": false,
+  "completed": true,
+  "inputs": {
+    "/tmp/kdlock-nano-8617-comparison-20261030/current/elf-provenance.json": "991fc0e2a14b82ece303364234bf2173318edc48bedd3f365695ab4a8508e1ad",
+    "/tmp/kdlock-nano-8617-comparison-20261030/validation.json": "6e32cea001ff6a44539f61a58c0477d8088c05ea8539d41075f04f5150da8e87",
+    "/tmp/kdlock-nano-8617-comparison-20261030/vs-8446/points.json": "23fd5bf499c461da9c63a6906289d2f63dda650e06364e5545da4d1930d84998",
+    "/tmp/kdlock-nano-8617-comparison-20261030/vs-acfa/points.json": "0540ded91659927de722f02b3e2154de5406639bf0f87b653d13637bb9580ff5"
+  },
+  "operation": "read-only completed-data and ELF inspection",
+  "outputs": {
+    "actual-provider-identity.json": "8797641e7ef9a5a82e489148f686a08b92da09e2166c3c69dc798047aea98955",
+    "all-points.csv": "f99fdaeed3d89e87f39647eb0b0e34d82ed81e49c7d9018acfebbefe36fccefc",
+    "changed-execution-class.csv": "94bad260e7a41198a7edc9aab8b3ebd527ec928122c27a9b61b90baccdc5a4f9",
+    "measured-summary.json": "c0f1104e88cf093bca792bb5fe3ed7c698524fa9ac2a26fe4779a39e2a9fedcb",
+    "whole-losses-at-least-5-percent.csv": "b3ebaa86dbc2977433d8985d39b5f0a84abcca8be21fb00ad8231780b51a451a",
+    "workers-20-32-60.csv": "6ad59b648702526509096c70d2d56666512f1865f7280bc8af37e92cf6b5d2e1"
+  },
+  "performance_accepted": false,
+  "tests": false,
+  "tool_sha256": "132c047727a09fe2a80f9d4e711db5477fffe3cb56bda6d706023317a020dce1",
+  "vm_actions": false
+}

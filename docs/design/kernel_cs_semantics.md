@@ -437,3 +437,51 @@ directly affected VM checks, exact original-task execution and same-image JIT
 reentry witnesses, repeated/interleaved service and post-service fallback tests,
 complete owner/source/frame drain, and a new matched one-round nano comparison.
 No implementation, correctness or performance pass is implied by this plan.
+
+### October 30 instruction-service validation and performance correction
+
+The isolated `8617e97c02432a7c0b931aa8263d5edd0f6eb5b8` generation passed the
+basic four-family checks and the directly affected instruction-service checks
+on `7.0.0-38-kdlock1`. The ordinary mutex probe recorded 638,108 and 635,912
+original-task instructions with matching same-image reentries. Its forced
+post-instruction suffix completed without replay; later cold requests again
+returned from JIT. Prepared rwsem writers recorded 133,214 and 132,604 matching
+services/reentries, with ten million local reads per phase. The mixed nesting
+control retained native-suffix behavior. These are mechanism checks, not actual
+selected-API syscall or arbitrary Native CALL reentry validation.
+
+Its separate one-round nano campaign completed all 210 KD points with correct
+data and retirement. The [comparison record](../../bench/results/10.176.26.71/bench/continuation-nano-20261030/README.md)
+retains every coordinate and the two independent historical comparisons. Against
+`acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f`, 107 whole-run and 106 peak
+observations decreased, with 112 coordinates lower in either metric. Against
+`8446f4ecb08816380a4c233197a8ce5e4d333aac`, the respective counts are
+120, 120 and 126. The candidate fails the no-regression promotion gate. All
+measurements retain the existing exploratory host qualification; a single round
+does not estimate variance or establish a causal explanation for these losses.
+
+The next isolated correction targets three inspected costs without changing
+the supported lock/context semantics:
+
+1. Mark the mutex waiter's nonzero `native_resume` branch unlikely, requesting
+   fall-through for ordinary completion. The measured candidate reversed this
+   layout after adding instruction service. Verify the actual new ELF; a source
+   hint is not proof of the requested layout or a throughput improvement.
+2. Refresh the spin executor's cached context only when a generic result can
+   reach another root. Refused/error results and released outer ownership end
+   the batch, so their refreshed value has no consumer. Preserve initial
+   capture, every saved-origin comparison and refresh after nonterminal service.
+3. Restore compact spin batch storage by placing a 16-bit body counter beside
+   the existing 16-bit NUMA scan counter. The configured maximum is 1024; retain
+   all cap and queue-boundary checks. Verify compiled size and initialization
+   rather than inferring an execution benefit from C layout alone.
+
+Commit this plan and measured evidence before the code changes. Then run basic
+plus directly affected batch/context, waiter-service and completion checks in
+the VM, inspect the fresh provider, and repeat the full 210-coordinate matrix
+once for that new source generation. Preserve the old results unchanged and
+report every remaining loss. Do not attribute all NO_JIT losses to these costs:
+the inspected rwsem public functions are unchanged, and translation completes
+before warmup and measurement. The new correction is not a performance pass
+until measured. The syscall, localized mmap and unchanged mmap1 gates remain
+pending; no regressed generation is promoted to maintained kernel replacement.

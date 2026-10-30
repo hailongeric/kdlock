@@ -1,0 +1,3435 @@
+{
+  "caller_shell": "mutex_public_direct",
+  "capabilities": {
+    "features": 15355,
+    "mutex_stack_bytes": 256,
+    "percpu_module_bytes": 8192,
+    "version": 13
+  },
+  "cookie_storage": "provider_acquisition_ledger",
+  "drained": true,
+  "entry_abi": 2,
+  "escape_events": [
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145149
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145149
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145149
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145134
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145138
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145148
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145140
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145135
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145149
+    },
+    {
+      "entry": 18446744072646180977,
+      "generation": 1,
+      "rip": 18446744072646181072,
+      "waiter_pid": 1145140
+    }
+  ],
+  "family": "mutex",
+  "image_requirements": 65,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "mixed_spin": true,
+  "mutex_api": "public",
+  "origin_instructions": false,
+  "origin_service": false,
+  "passed": true,
+  "phases": [
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 160000,
+        "suffix": 160000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 0,
+        "suffix": 0
+      },
+      "callers": [
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "0",
+            "10000",
+            "0",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 0,
+          "pid": 1145102,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "1",
+            "10000",
+            "1",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 1,
+          "pid": 1145103,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "2",
+            "10000",
+            "2",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 2,
+          "pid": 1145104,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "3",
+            "10000",
+            "3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 3,
+          "pid": 1145105,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "4",
+            "10000",
+            "4",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 4,
+          "pid": 1145106,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "5",
+            "10000",
+            "5",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 5,
+          "pid": 1145107,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "6",
+            "10000",
+            "6",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 6,
+          "pid": 1145108,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "7",
+            "10000",
+            "7",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 7,
+          "pid": 1145109,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "8",
+            "10000",
+            "8",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 8,
+          "pid": 1145110,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "9",
+            "10000",
+            "9",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 9,
+          "pid": 1145111,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "10",
+            "10000",
+            "10",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 10,
+          "pid": 1145112,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "11",
+            "10000",
+            "11",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 11,
+          "pid": 1145113,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "12",
+            "10000",
+            "12",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 12,
+          "pid": 1145114,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "13",
+            "10000",
+            "13",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 13,
+          "pid": 1145115,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "14",
+            "10000",
+            "14",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 14,
+          "pid": 1145116,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "15",
+            "10000",
+            "15",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-warmup-barrier",
+            "writer"
+          ],
+          "cpu": 15,
+          "pid": 1145117,
+          "role": "writer"
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 78377,
+        "bench_jit_completions": 78377,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "force_suffix": false,
+      "hot": 0,
+      "iterations": 10000,
+      "jit_delta": {
+        "bench_jit_bodies": 78377,
+        "bench_jit_completions": 78377,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "name": "cold-warmup",
+      "read_operations": 0,
+      "ready": [
+        {
+          "comm": "kc_worker",
+          "cpu": 0,
+          "pid": 1145102,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 1,
+          "pid": 1145103,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 2,
+          "pid": 1145104,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 3,
+          "pid": 1145105,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 4,
+          "pid": 1145106,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 5,
+          "pid": 1145107,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 6,
+          "pid": 1145108,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 7,
+          "pid": 1145109,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 8,
+          "pid": 1145110,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 9,
+          "pid": 1145111,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 10,
+          "pid": 1145112,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 11,
+          "pid": 1145113,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 12,
+          "pid": 1145114,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 13,
+          "pid": 1145115,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 14,
+          "pid": 1145116,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 15,
+          "pid": 1145117,
+          "role": "writer"
+        }
+      ],
+      "registry_after": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 0
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 1
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 2
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 3
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 4
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 5
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 6
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 7
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 8
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 9
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 10
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 11
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 12
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 13
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 14
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 15
+        }
+      ],
+      "write_operations": 160000
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 320000,
+        "suffix": 320000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 160000,
+        "suffix": 160000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "0",
+            "10000",
+            "0",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 0,
+          "pid": 1145118,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "1",
+            "10000",
+            "1",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 1,
+          "pid": 1145119,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "2",
+            "10000",
+            "2",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 2,
+          "pid": 1145120,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "3",
+            "10000",
+            "3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 3,
+          "pid": 1145121,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "4",
+            "10000",
+            "4",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 4,
+          "pid": 1145122,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "5",
+            "10000",
+            "5",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 5,
+          "pid": 1145123,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "6",
+            "10000",
+            "6",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 6,
+          "pid": 1145124,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "7",
+            "10000",
+            "7",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 7,
+          "pid": 1145125,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "8",
+            "10000",
+            "8",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 8,
+          "pid": 1145126,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "9",
+            "10000",
+            "9",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 9,
+          "pid": 1145127,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "10",
+            "10000",
+            "10",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 10,
+          "pid": 1145128,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "11",
+            "10000",
+            "11",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 11,
+          "pid": 1145129,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "12",
+            "10000",
+            "12",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 12,
+          "pid": 1145130,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "13",
+            "10000",
+            "13",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 13,
+          "pid": 1145131,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "14",
+            "10000",
+            "14",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 14,
+          "pid": 1145132,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "15",
+            "10000",
+            "15",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-delegated-barrier",
+            "writer"
+          ],
+          "cpu": 15,
+          "pid": 1145133,
+          "role": "writer"
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 233844,
+        "bench_jit_completions": 233844,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 78377,
+        "bench_jit_completions": 78377,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "execution_contract": "returned_jit",
+      "execution_validated": true,
+      "force_suffix": false,
+      "hot": 0,
+      "iterations": 10000,
+      "jit_delta": {
+        "bench_jit_bodies": 155467,
+        "bench_jit_completions": 155467,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "name": "cold-delegated",
+      "read_operations": 0,
+      "ready": [
+        {
+          "comm": "kc_worker",
+          "cpu": 0,
+          "pid": 1145118,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 1,
+          "pid": 1145119,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 2,
+          "pid": 1145120,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 3,
+          "pid": 1145121,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 4,
+          "pid": 1145122,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 5,
+          "pid": 1145123,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 6,
+          "pid": 1145124,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 7,
+          "pid": 1145125,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 8,
+          "pid": 1145126,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 9,
+          "pid": 1145127,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 10,
+          "pid": 1145128,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 11,
+          "pid": 1145129,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 12,
+          "pid": 1145130,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 13,
+          "pid": 1145131,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 14,
+          "pid": 1145132,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 15,
+          "pid": 1145133,
+          "role": "writer"
+        }
+      ],
+      "registry_after": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 0
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 1
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 2
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 3
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 4
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 5
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 6
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 7
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 8
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 9
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 10
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 11
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 12
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 13
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 14
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 15
+        }
+      ],
+      "write_operations": 160000
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 160000,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 480000,
+        "suffix": 480000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 320000,
+        "suffix": 320000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "0",
+            "10000",
+            "0",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 0,
+          "pid": 1145134,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "1",
+            "10000",
+            "1",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 1,
+          "pid": 1145135,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "2",
+            "10000",
+            "2",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 2,
+          "pid": 1145136,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "3",
+            "10000",
+            "3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 3,
+          "pid": 1145137,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "4",
+            "10000",
+            "4",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 4,
+          "pid": 1145138,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "5",
+            "10000",
+            "5",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 5,
+          "pid": 1145139,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "6",
+            "10000",
+            "6",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 6,
+          "pid": 1145140,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "7",
+            "10000",
+            "7",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 7,
+          "pid": 1145141,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "8",
+            "10000",
+            "8",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 8,
+          "pid": 1145142,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "9",
+            "10000",
+            "9",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 9,
+          "pid": 1145143,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "10",
+            "10000",
+            "10",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 10,
+          "pid": 1145144,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "11",
+            "10000",
+            "11",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 11,
+          "pid": 1145145,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "12",
+            "10000",
+            "12",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 12,
+          "pid": 1145146,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "13",
+            "10000",
+            "13",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 13,
+          "pid": 1145147,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "14",
+            "10000",
+            "14",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 14,
+          "pid": 1145148,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "15",
+            "10000",
+            "15",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-escape-barrier",
+            "writer"
+          ],
+          "cpu": 15,
+          "pid": 1145149,
+          "role": "writer"
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 270715,
+        "bench_jit_completions": 233844,
+        "native_escape_count": 36871,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 233844,
+        "bench_jit_completions": 233844,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "execution_contract": "before_instruction_native_suffix",
+      "execution_validated": true,
+      "force_suffix": false,
+      "hot": 1,
+      "iterations": 10000,
+      "jit_delta": {
+        "bench_jit_bodies": 36871,
+        "bench_jit_completions": 0,
+        "native_escape_count": 36871,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "name": "hot-escape",
+      "read_operations": 0,
+      "ready": [
+        {
+          "comm": "kc_worker",
+          "cpu": 0,
+          "pid": 1145134,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 1,
+          "pid": 1145135,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 2,
+          "pid": 1145136,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 3,
+          "pid": 1145137,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 4,
+          "pid": 1145138,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 5,
+          "pid": 1145139,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 6,
+          "pid": 1145140,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 7,
+          "pid": 1145141,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 8,
+          "pid": 1145142,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 9,
+          "pid": 1145143,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 10,
+          "pid": 1145144,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 11,
+          "pid": 1145145,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 12,
+          "pid": 1145146,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 13,
+          "pid": 1145147,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 14,
+          "pid": 1145148,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 15,
+          "pid": 1145149,
+          "role": "writer"
+        }
+      ],
+      "registry_after": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 0
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 1
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 2
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 3
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 4
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 5
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 6
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 7
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 8
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 9
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 10
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 11
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 12
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 13
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 14
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 15
+        }
+      ],
+      "write_operations": 160000
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 160000,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 640000,
+        "suffix": 640000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 160000,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 480000,
+        "suffix": 480000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "0",
+            "10000",
+            "0",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 0,
+          "pid": 1145150,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "1",
+            "10000",
+            "1",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 1,
+          "pid": 1145151,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "2",
+            "10000",
+            "2",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 2,
+          "pid": 1145152,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "3",
+            "10000",
+            "3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 3,
+          "pid": 1145153,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "4",
+            "10000",
+            "4",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 4,
+          "pid": 1145154,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "5",
+            "10000",
+            "5",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 5,
+          "pid": 1145155,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "6",
+            "10000",
+            "6",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 6,
+          "pid": 1145156,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "7",
+            "10000",
+            "7",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 7,
+          "pid": 1145157,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "8",
+            "10000",
+            "8",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 8,
+          "pid": 1145158,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "9",
+            "10000",
+            "9",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 9,
+          "pid": 1145159,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "10",
+            "10000",
+            "10",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 10,
+          "pid": 1145160,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "11",
+            "10000",
+            "11",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 11,
+          "pid": 1145161,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "12",
+            "10000",
+            "12",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 12,
+          "pid": 1145162,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "13",
+            "10000",
+            "13",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 13,
+          "pid": 1145163,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "14",
+            "10000",
+            "14",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 14,
+          "pid": 1145164,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "15",
+            "10000",
+            "15",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/cold-after-escape-barrier",
+            "writer"
+          ],
+          "cpu": 15,
+          "pid": 1145165,
+          "role": "writer"
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 428390,
+        "bench_jit_completions": 391519,
+        "native_escape_count": 36871,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 270715,
+        "bench_jit_completions": 233844,
+        "native_escape_count": 36871,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "execution_contract": "returned_jit",
+      "execution_validated": true,
+      "force_suffix": false,
+      "hot": 0,
+      "iterations": 10000,
+      "jit_delta": {
+        "bench_jit_bodies": 157675,
+        "bench_jit_completions": 157675,
+        "native_escape_count": 0,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "name": "cold-after-escape",
+      "read_operations": 0,
+      "ready": [
+        {
+          "comm": "kc_worker",
+          "cpu": 0,
+          "pid": 1145150,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 1,
+          "pid": 1145151,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 2,
+          "pid": 1145152,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 3,
+          "pid": 1145153,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 4,
+          "pid": 1145154,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 5,
+          "pid": 1145155,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 6,
+          "pid": 1145156,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 7,
+          "pid": 1145157,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 8,
+          "pid": 1145158,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 9,
+          "pid": 1145159,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 10,
+          "pid": 1145160,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 11,
+          "pid": 1145161,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 12,
+          "pid": 1145162,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 13,
+          "pid": 1145163,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 14,
+          "pid": 1145164,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 15,
+          "pid": 1145165,
+          "role": "writer"
+        }
+      ],
+      "registry_after": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 0
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 1
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 2
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 3
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 4
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 5
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 6
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 7
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 8
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 9
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 10
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 11
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 12
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 13
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 14
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 15
+        }
+      ],
+      "write_operations": 160000
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 320000,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 800000,
+        "suffix": 800000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072646180977,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 160000,
+        "idle": 1,
+        "lock_address": 18446744072648011936,
+        "marker": 18446744072646181072,
+        "prefix": 640000,
+        "suffix": 640000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "0",
+            "10000",
+            "0",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 0,
+          "pid": 1145166,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "1",
+            "10000",
+            "1",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 1,
+          "pid": 1145167,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "2",
+            "10000",
+            "2",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 2,
+          "pid": 1145168,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "3",
+            "10000",
+            "3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 3,
+          "pid": 1145169,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "4",
+            "10000",
+            "4",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 4,
+          "pid": 1145170,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "5",
+            "10000",
+            "5",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 5,
+          "pid": 1145171,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "6",
+            "10000",
+            "6",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 6,
+          "pid": 1145172,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "7",
+            "10000",
+            "7",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 7,
+          "pid": 1145173,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "8",
+            "10000",
+            "8",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 8,
+          "pid": 1145174,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "9",
+            "10000",
+            "9",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 9,
+          "pid": 1145175,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "10",
+            "10000",
+            "10",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 10,
+          "pid": 1145176,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "11",
+            "10000",
+            "11",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 11,
+          "pid": 1145177,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "12",
+            "10000",
+            "12",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 12,
+          "pid": 1145178,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "13",
+            "10000",
+            "13",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 13,
+          "pid": 1145179,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "14",
+            "10000",
+            "14",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 14,
+          "pid": 1145180,
+          "role": "writer"
+        },
+        {
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/source/tests/kernel/jit_continuation/run.py",
+            "--worker",
+            "15",
+            "10000",
+            "15",
+            "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/mixed/session/hot-repeat-barrier",
+            "writer"
+          ],
+          "cpu": 15,
+          "pid": 1145181,
+          "role": "writer"
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 464918,
+        "bench_jit_completions": 391519,
+        "native_escape_count": 73399,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 428390,
+        "bench_jit_completions": 391519,
+        "native_escape_count": 36871,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "execution_contract": "before_instruction_native_suffix",
+      "execution_validated": true,
+      "force_suffix": false,
+      "hot": 1,
+      "iterations": 10000,
+      "jit_delta": {
+        "bench_jit_bodies": 36528,
+        "bench_jit_completions": 0,
+        "native_escape_count": 36528,
+        "origin_instruction_count": 0,
+        "origin_reentry_count": 0,
+        "origin_suffix_count": 0
+      },
+      "name": "hot-repeat",
+      "read_operations": 0,
+      "ready": [
+        {
+          "comm": "kc_worker",
+          "cpu": 0,
+          "pid": 1145166,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 1,
+          "pid": 1145167,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 2,
+          "pid": 1145168,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 3,
+          "pid": 1145169,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 4,
+          "pid": 1145170,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 5,
+          "pid": 1145171,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 6,
+          "pid": 1145172,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 7,
+          "pid": 1145173,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 8,
+          "pid": 1145174,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 9,
+          "pid": 1145175,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 10,
+          "pid": 1145176,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 11,
+          "pid": 1145177,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 12,
+          "pid": 1145178,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 13,
+          "pid": 1145179,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 14,
+          "pid": 1145180,
+          "role": "writer"
+        },
+        {
+          "comm": "kc_worker",
+          "cpu": 15,
+          "pid": 1145181,
+          "role": "writer"
+        }
+      ],
+      "registry_after": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476290052096,
+          "entry": 18446744072646180977,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 65,
+          "status": 0,
+          "target": 0,
+          "tgid": 1143863
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 0
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 1
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 2
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 3
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 4
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 5
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 6
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 7
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 8
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 9
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 10
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 11
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 12
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 13
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 14
+        },
+        {
+          "comm": "kc_worker",
+          "completed": 10000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 10000,
+          "reserved": [
+            0,
+            0
+          ],
+          "role": "writer",
+          "worker": 15
+        }
+      ],
+      "write_operations": 160000
+    }
+  ],
+  "snapshot_tag": "linux70-kdlock1-clean-20261027",
+  "worker_roles": [
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer",
+    "writer"
+  ]
+}

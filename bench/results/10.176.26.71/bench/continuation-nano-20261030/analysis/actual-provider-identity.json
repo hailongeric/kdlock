@@ -1,0 +1,476 @@
+{
+  "full_file_identity_claimed": false,
+  "profiles": [
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "mutex-throughput",
+      "sha256": "307641049b4253f1da9c65bc5b568655a428e5d079700b4c5ed98f32a5b26d31",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "mutex-locality",
+      "sha256": "cb99d00891e299c578127c04cc331eabf805a8cf111bfd6e007b341842f41aa3",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwsem-throughput-read",
+      "sha256": "4f81c487cf3539bbdea580df9294d498b6ac9422c95ca718867e89a799d35b82",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwsem-throughput-mixed",
+      "sha256": "778b5714cf64debb5644a14f16b4e458b51012c93f6efd053f1574c47e5d04f8",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwsem-locality-read",
+      "sha256": "8e2cc07a60c24ce6fec094fed32632cf6c84124d3795c5cf7a8f313aa76896a4",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwsem-locality-mixed",
+      "sha256": "b3f5787c0697aed1074d155044069168d31dc405cfcdede19399de9e0a6f8b13",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwlock-throughput-read",
+      "sha256": "c3cedbb42f7119584af40805e78b729dc7bdbbb685ae3c8fba2383de2a5fc64b",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwlock-throughput-mixed",
+      "sha256": "edeb3b6e9fda249f589f42a7283f0426392f8e66ceffe983ed002f3869114e70",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwlock-locality-read",
+      "sha256": "86e685226602d4cc56bc3f9ea6774b9f491c89449b1736059ed956b350ea6f32",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    },
+    {
+      "allocated_relocation_count": 8740,
+      "allocated_relocations_equal": true,
+      "allocated_section_differences": [
+        ".note.gnu.build-id"
+      ],
+      "executable_sections": [
+        ".text",
+        ".exit.text",
+        ".init.text",
+        ".altinstr_replacement"
+      ],
+      "executable_sections_equal": true,
+      "file": "/tmp/kdlock-nano-8617-comparison-20261030/current/elfs/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "profile": "rwlock-locality-mixed",
+      "sha256": "da831098cc847ed1db7228c0f801f75ce571b15c92d155964aa9667e2738865d",
+      "text": {
+        "alignment": 64,
+        "flags": 6,
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694,
+        "type": "SHT_PROGBITS"
+      }
+    }
+  ],
+  "runtime_load_address_identity_claimed": false,
+  "unit_allocated_relocation_count": 8740,
+  "unit_allocated_relocation_sha256": "053648d0f63140f672305e2f9376a6c14bcb82253cf81d43ea5dfb9db1d98af4",
+  "unit_allocated_sections": {
+    ".altinstr_replacement": {
+      "alignment": 1,
+      "flags": 6,
+      "sha256": "32c8d60a7f3c8ee86e3da800ab8d4de27132b0128104a9ae55f63d968ceece07",
+      "size": 301,
+      "type": "SHT_PROGBITS"
+    },
+    ".altinstructions": {
+      "alignment": 8,
+      "flags": 18,
+      "sha256": "1d1e2d0e9a632460d42888c376b92e1a51000c9d3ec64b8d3c8e05884e236aae",
+      "size": 980,
+      "type": "SHT_PROGBITS"
+    },
+    ".bss": {
+      "alignment": 128,
+      "flags": 3,
+      "sha256": null,
+      "size": 31568,
+      "type": "SHT_NOBITS"
+    },
+    ".call_sites": {
+      "alignment": 1,
+      "flags": 2,
+      "sha256": "162a6ab9e89b2c304bacbd72f07c3fcaecc600a4b1ef27f0fd55ebe0e08cbdff",
+      "size": 6156,
+      "type": "SHT_PROGBITS"
+    },
+    ".data": {
+      "alignment": 32,
+      "flags": 3,
+      "sha256": "0b5718ca8d16e6c8dcc9d4cf154681b7b098b4ac102b321c5ab65cd25146402a",
+      "size": 2224,
+      "type": "SHT_PROGBITS"
+    },
+    ".data..percpu": {
+      "alignment": 128,
+      "flags": 3,
+      "sha256": "921582ff953786e983005d5a9a7887146636543e077497c04e0b09a16da68706",
+      "size": 7592,
+      "type": "SHT_PROGBITS"
+    },
+    ".data..read_mostly": {
+      "alignment": 4,
+      "flags": 3,
+      "sha256": "363f012b74b9c88d828c809a568dc50627214866415aeb36ef6effbc3061741f",
+      "size": 12,
+      "type": "SHT_PROGBITS"
+    },
+    ".exit.data": {
+      "alignment": 8,
+      "flags": 3,
+      "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+      "size": 8,
+      "type": "SHT_PROGBITS"
+    },
+    ".exit.text": {
+      "alignment": 16,
+      "flags": 6,
+      "sha256": "77d6dcb091c01330879ae1bf1e39d9a23622c6255b49aba5c05dce2fcd154915",
+      "size": 103,
+      "type": "SHT_PROGBITS"
+    },
+    ".gnu.linkonce.this_module": {
+      "alignment": 64,
+      "flags": 3,
+      "sha256": "f2a0b906e0147b952244c257c27e108778aea3cd75239f1eb7287d137a023f31",
+      "size": 1280,
+      "type": "SHT_PROGBITS"
+    },
+    ".init.data": {
+      "alignment": 8,
+      "flags": 3,
+      "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+      "size": 8,
+      "type": "SHT_PROGBITS"
+    },
+    ".init.text": {
+      "alignment": 16,
+      "flags": 6,
+      "sha256": "b0166a87ef1c304d7f9568d414b47a15dcd06775e88520e1aa57154cbf8c340e",
+      "size": 339,
+      "type": "SHT_PROGBITS"
+    },
+    ".modinfo": {
+      "alignment": 1,
+      "flags": 2,
+      "sha256": "85904ce120cb3609dfdc3fa9d52f619cbef977aaeb4efb94fb79141d760ecc0c",
+      "size": 2224,
+      "type": "SHT_PROGBITS"
+    },
+    ".note.Linux": {
+      "alignment": 4,
+      "flags": 2,
+      "sha256": "9eaee5ea5e5544e6132fa275cdb07ebdb072cbef6755b11ec50c8ed71b0800ba",
+      "size": 48,
+      "type": "SHT_NOTE"
+    },
+    ".note.gnu.build-id": {
+      "alignment": 4,
+      "flags": 2,
+      "sha256": "fb406a11e35e88240060c33ec04b22ff857f2d624c7e2f7f7039e04ac4e9b8c8",
+      "size": 36,
+      "type": "SHT_NOTE"
+    },
+    ".retpoline_sites": {
+      "alignment": 1,
+      "flags": 2,
+      "sha256": "d4817aa5497628e7c77e6b606107042bbba3130888c5f47a375e6179be789fbb",
+      "size": 56,
+      "type": "SHT_PROGBITS"
+    },
+    ".return_sites": {
+      "alignment": 1,
+      "flags": 2,
+      "sha256": "b0e21d402e6b2444a6809e16498e95706b5db8b1286839c2ede9a567f6c5cd22",
+      "size": 2204,
+      "type": "SHT_PROGBITS"
+    },
+    ".rodata": {
+      "alignment": 32,
+      "flags": 2,
+      "sha256": "d22627f16d592d904534344e7f858a7577ea6d0d449bd1c7520de5eed70b7392",
+      "size": 13398,
+      "type": "SHT_PROGBITS"
+    },
+    ".smp_locks": {
+      "alignment": 4,
+      "flags": 2,
+      "sha256": "82823076344d2111f1047052202daf8028f30b99b902e4aa20169338762b6ef3",
+      "size": 1028,
+      "type": "SHT_PROGBITS"
+    },
+    ".static_call_sites": {
+      "alignment": 1,
+      "flags": 3,
+      "sha256": "4b48f21a4b7a02bfbec19ef880a967a02334a3cdcef8ae83de2ef327ba8bc5dd",
+      "size": 480,
+      "type": "SHT_PROGBITS"
+    },
+    ".text": {
+      "alignment": 64,
+      "flags": 6,
+      "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+      "size": 134694,
+      "type": "SHT_PROGBITS"
+    },
+    "__bug_table": {
+      "alignment": 8,
+      "flags": 3,
+      "sha256": "66af2ce621570e826481f8ba8751885ef289548c4686c3ccc4dec0d97eaeed17",
+      "size": 3312,
+      "type": "SHT_PROGBITS"
+    },
+    "__jump_table": {
+      "alignment": 8,
+      "flags": 3,
+      "sha256": "2ea9ab9198d1638007400cd2c3bef1cc745b864b76011a0e1bc52180ac6452d4",
+      "size": 96,
+      "type": "SHT_PROGBITS"
+    },
+    "__kcrctab_gpl": {
+      "alignment": 4,
+      "flags": 2,
+      "sha256": "e4ddaa798f6950b1c9af36b8166b78b13869dc61c3876cc2ca69e07b7ff025b2",
+      "size": 236,
+      "type": "SHT_PROGBITS"
+    },
+    "__ksymtab_gpl": {
+      "alignment": 8,
+      "flags": 2,
+      "sha256": "381f9f243e527541bf377599b978020b325370543c0dc89fdbf23ee764680773",
+      "size": 708,
+      "type": "SHT_PROGBITS"
+    },
+    "__ksymtab_strings": {
+      "alignment": 1,
+      "flags": 50,
+      "sha256": "8e5d9c7a9a606ee9574a18d1721ee4a63ee9ad358a6a49b904e0b14b35f9fb42",
+      "size": 1391,
+      "type": "SHT_PROGBITS"
+    },
+    "__mcount_loc": {
+      "alignment": 1,
+      "flags": 2,
+      "sha256": "2f329134686a44ee0362fd0c8b5d071e38bade32a5389e31282f64f565e76759",
+      "size": 2288,
+      "type": "SHT_PROGBITS"
+    },
+    "__param": {
+      "alignment": 8,
+      "flags": 2,
+      "sha256": "a69ac719c0a12d6b1ae0e877335a832fccdafa7db9ebf503dac303e835efa0e8",
+      "size": 920,
+      "type": "SHT_PROGBITS"
+    },
+    "__patchable_function_entries": {
+      "alignment": 8,
+      "flags": 131,
+      "sha256": "bae555aea679ad7e524d27af3cc2e2e9d4b74b5bcb821244afe80bb9037aeb87",
+      "size": 2760,
+      "type": "SHT_PROGBITS"
+    },
+    "__version_ext_crcs": {
+      "alignment": 32,
+      "flags": 2,
+      "sha256": "3107143f1e193726d005cd11f22409b5bf863f092f3c3cf24e045089076acdf9",
+      "size": 376,
+      "type": "SHT_PROGBITS"
+    },
+    "__version_ext_names": {
+      "alignment": 32,
+      "flags": 2,
+      "sha256": "fae3818396301e41779e2cca51bdb4bd925fb7d747d4fc8da0b19c11c48e7444",
+      "size": 1476,
+      "type": "SHT_PROGBITS"
+    },
+    "__versions": {
+      "alignment": 32,
+      "flags": 2,
+      "sha256": "50c972bd16c79a5a78ce31c1e83d54d25f9252baafea512d76ef7e4bd5717e21",
+      "size": 6016,
+      "type": "SHT_PROGBITS"
+    }
+  },
+  "unit_file": "/tmp/kdlock-continuation-8617e97c-provider.ko",
+  "unit_sha256": "e602695d23676fa0e05f467ff92e23abe25b373d2f8792449af23d679f02c33d"
+}

@@ -1,0 +1,161 @@
+{
+  "archive_prefix": "continuation-nano-8617e97c-20261030",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "completed": true,
+  "finished_ns": 1793337553548942491,
+  "groups": [
+    {
+      "bytes": 6850731,
+      "file": "mutex-throughput.tar.gz",
+      "group": "mutex-throughput",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/mutex-throughput.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/mutex-throughput"
+      ],
+      "sha256": "22f146cb4bbc39bd50245ee2a91ad4928172fc7d37009b0766c4b45a823170fb"
+    },
+    {
+      "bytes": 6880150,
+      "file": "mutex-locality.tar.gz",
+      "group": "mutex-locality",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/mutex-locality.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/mutex-locality"
+      ],
+      "sha256": "7960b9fe94111fc57d48c63c8f6a7c20ea92700e1e12af223b7776d0b864f8a0"
+    },
+    {
+      "bytes": 7064130,
+      "file": "rwsem-throughput-read.tar.gz",
+      "group": "rwsem-throughput-read",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwsem-throughput-read"
+      ],
+      "sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d"
+    },
+    {
+      "bytes": 6848072,
+      "file": "rwsem-throughput-mixed.tar.gz",
+      "group": "rwsem-throughput-mixed",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-mixed.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwsem-throughput-mixed"
+      ],
+      "sha256": "baf459657aacd850b13579ecbc45c9de1b26e73a6fd31d97a5af01df0df3f7f2"
+    },
+    {
+      "bytes": 7201362,
+      "file": "rwsem-locality-read.tar.gz",
+      "group": "rwsem-locality-read",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwsem-locality-read.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwsem-locality-read"
+      ],
+      "sha256": "e809715451de81c6c0bff783b94fb9b2fe98b6cb5fbc9ace99d3853dcf31f76d"
+    },
+    {
+      "bytes": 6889294,
+      "file": "rwsem-locality-mixed.tar.gz",
+      "group": "rwsem-locality-mixed",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwsem-locality-mixed.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwsem-locality-mixed"
+      ],
+      "sha256": "d44eb0b5b559247dca512a2a099f52096f605d821abab97dc2cd8e8ed1962d54"
+    },
+    {
+      "bytes": 7168132,
+      "file": "rwlock-throughput-read.tar.gz",
+      "group": "rwlock-throughput-read",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwlock-throughput-read"
+      ],
+      "sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971"
+    },
+    {
+      "bytes": 6994830,
+      "file": "rwlock-throughput-mixed.tar.gz",
+      "group": "rwlock-throughput-mixed",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-mixed.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwlock-throughput-mixed"
+      ],
+      "sha256": "1bee1ea4a1611290e957b8b36460caee4871f8b11edb8808d5e3051b47b5cd98"
+    },
+    {
+      "bytes": 7230573,
+      "file": "rwlock-locality-read.tar.gz",
+      "group": "rwlock-locality-read",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwlock-locality-read"
+      ],
+      "sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7"
+    },
+    {
+      "bytes": 7004788,
+      "file": "rwlock-locality-mixed.tar.gz",
+      "group": "rwlock-locality-mixed",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/rwlock-locality-mixed.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/rwlock-locality-mixed"
+      ],
+      "sha256": "80e654b316c4c5c7fcd77d4e105f22d4a18825236936e1ef557210b950808c1d"
+    },
+    {
+      "bytes": 22809,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030-archives/metadata.tar.gz",
+      "roots": [
+        "continuation-nano-8617e97c-20261030/commands.json",
+        "continuation-nano-8617e97c-20261030/final-health.json",
+        "continuation-nano-8617e97c-20261030/mutex-locality.log",
+        "continuation-nano-8617e97c-20261030/mutex-throughput.log",
+        "continuation-nano-8617e97c-20261030/owner.json",
+        "continuation-nano-8617e97c-20261030/rwlock-locality-mixed.log",
+        "continuation-nano-8617e97c-20261030/rwlock-locality-read.log",
+        "continuation-nano-8617e97c-20261030/rwlock-throughput-mixed.log",
+        "continuation-nano-8617e97c-20261030/rwlock-throughput-read.log",
+        "continuation-nano-8617e97c-20261030/rwsem-locality-mixed.log",
+        "continuation-nano-8617e97c-20261030/rwsem-locality-read.log",
+        "continuation-nano-8617e97c-20261030/rwsem-throughput-mixed.log",
+        "continuation-nano-8617e97c-20261030/rwsem-throughput-read.log",
+        "continuation-nano-8617e97c-20261030/source-sha256.json"
+      ],
+      "sha256": "aebaba6f38dbf8b8bef9aa344d97b689cd340c8ee9e181a5e7ec64df5c49ec16"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-nano-8617e97c-20261030",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "a1751cdc60ee04aaafe28a6804dc501884037eed50e39b504365441de3cc1639",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "cea2851439418cdee185f8747240b088ac4b1ac807dca62a3b0c7ae8f7faf888",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "kernel_release": "7.0.0-38-kdlock1",
+  "kernel_variant": "kdlock1",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793337536860512174
+}
