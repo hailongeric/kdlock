@@ -146,7 +146,7 @@ This invocation keeps its original code and ownership records through native
 completion; a later cold branch remains eligible. The existing physical owner
 still services the waiter's unlock and acknowledges that the release completed.
 
-The [focused live check](../tests/kernel/jit_escape/README.md) verifies both the
+The [focused live check](../tests/kernel/jit_continuation/README.md) verifies both the
 untaken and taken branches, resumption on the original task, and later cold-path
 delegation. Generic translation errors and exhausted execution limits do not use
 this recovery path. The [register contract](../docs/JIT_REGISTER_ABI.md#checked-instruction-exit)

@@ -1,10 +1,20 @@
-# Conditional JIT instruction exit check
+# JIT continuation check
 
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). The runner freezes the source,
 including private `.inc` implementation files, and builds the provider, daemon,
 allocator guard and [kernel payload](payload/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
+
+The active family is named `jit_continuation`. Its runner lives at
+`tests/kernel/jit_continuation/run.py`, its module is `jit_continuation_test.ko`,
+and its device is `/dev/kd_jit_continuation_test`. The payload's build controls
+use `JIT_CONTINUATION_*`; the affected unit driver is
+`infrastructure/test_jit_continuation_runner.py`. This naming update preserves
+all ioctl command numbers, layouts, phase labels, result keys, runtime counters
+and continuation semantics. Fixed results and archived source retain their
+original names. The rename is not a fresh functional or performance result;
+the basic and affected VM checks must run against the resulting source commit.
 
 JIT means just-in-time compiled code used to execute a waiting task's work on
 another lock holder. An instruction **marker** exits that code before an
@@ -23,9 +33,9 @@ Set the verified snapshot variables and the pinned Python environment described
 in the VM guide before running:
 
 ```sh
-timeout 900s python3 tests/kernel/jit_escape/run.py \
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
   --cpus 0-15 --iterations 100000 --warmup-iterations 100000 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-NEW
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-continuation-NEW
 ```
 
 Add `--mutex-api public` to exercise literal `kd_mutex_lock/unlock` calls and
@@ -70,7 +80,7 @@ and cannot be combined with nested spin or another lock family. Use the public
 entry, for example:
 
 ```sh
-python3 tests/kernel/jit_escape/run.py --family mutex --mutex-api public \
+python3 tests/kernel/jit_continuation/run.py --family mutex --mutex-api public \
   --origin-instructions --cpus 0-15 --iterations 10000 --warmup-iterations 10000 \
   --output /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/origin-insn-NEW
 ```
@@ -107,15 +117,15 @@ bounded scalar instructions, not arbitrary instructions or helper reentry.
 For example, after the same recovery and kernel-identity checks:
 
 ```sh
-timeout 900s python3 tests/kernel/jit_escape/run.py \
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
   --family spin --cpus 0-15 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-spin-NEW
-timeout 900s python3 tests/kernel/jit_escape/run.py \
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-continuation-spin-NEW
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
   --family rwlock --cpus 0-15 --reader-count 2 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-rwlock-NEW
-timeout 900s python3 tests/kernel/jit_escape/run.py \
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-continuation-rwlock-NEW
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
   --family rwsem --cpus 0-15 --reader-count 2 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-rwsem-NEW
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-continuation-rwsem-NEW
 ```
 
 Rwlock/rwsem default to one reader, using the last selected CPU. `--reader-count`
@@ -231,7 +241,7 @@ A timeout, kernel fault or caller-control error before every worker joins
 preserves running callers and loaded modules for diagnosis. Barrier and receipt
 I/O errors follow the same rule: before GO, a worker can hold a device reference
 while the payload's active count is still zero. The affected
-`infrastructure/test_jit_escape_runner.py` unit driver exercises these failures
+`infrastructure/test_jit_continuation_runner.py` unit driver exercises these failures
 through the production phase and cleanup dispatcher with substituted callers.
 These failures do not prove that work finished and do not authorize forced
 unload. Successful completion requires workers to join, zero active execution

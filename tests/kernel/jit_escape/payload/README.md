@@ -1,4 +1,4 @@
-# Conditional instruction exit workload
+# JIT continuation payload
 
 This is a focused correctness workload for KD mutex instruction exits. Use the
 [guest runner](../README.md); this directory contains
@@ -14,7 +14,7 @@ a bounded instruction service there and return to the same JIT invocation; the
 runner distinguishes both. Explicitly prepared rwsem writers use that same gate
 without releasing their write admission; shared readers stay local.
 
-`JIT_ESCAPE_ORIGIN_INSTRUCTIONS=1` adds RDTSCP, CPUID leaf 1/subleaf 0 and another
+`JIT_CONTINUATION_ORIGIN_INSTRUCTIONS=1` adds RDTSCP, CPUID leaf 1/subleaf 0 and another
 RDTSCP after the existing RDTSC. Native pre-lock observations are per worker,
 outside the translated interval. Each instruction has its own exact effect
 counter and CF/PF/ZF/SF/OF/conditional-branch check. Eligible ABI2 writer builds omit
@@ -27,7 +27,7 @@ layouts. Only a mutex with no nested spin may build this variant.
 The protected operation increments a prefix counter, checks a mutable condition,
 and increments a suffix counter before unlocking. The condition starts false:
 the unusual instruction is present in the original code, but normal calls never
-reach it. `JIT_ESCAPE_MUTEX_API=outer` selects the existing explicit outer pair;
+reach it. `JIT_CONTINUATION_MUTEX_API=outer` selects the existing explicit outer pair;
 `public` selects literal `kd_mutex_lock/unlock` calls. Both use ABI2, the existing
 machine-level calling agreement for delegated mutex operations. The public
 shell's named entry aliases DIRECT's actual captured continuation and must pass
@@ -41,7 +41,7 @@ taken phases must reach validated markers. That branch uses
 `RDTSC`, the x86 read-timestamp-counter instruction. It safely reads a processor
 counter on the designated guest and leaves arithmetic condition flags unchanged.
 The instruction does not change interrupt enable state or write privileged
-processor settings. Its named `jit_escape_marker` label identifies the exact
+processor settings. Its named `jit_continuation_marker` label identifies the exact
 original instruction address expected in the runtime exit event.
 
 Immediately before that address, `CMP` compares 1 with 2, establishing known

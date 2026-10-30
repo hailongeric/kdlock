@@ -120,7 +120,7 @@ ABI1/3 images require immutable requirements 33 and the matching provider bits.
 Their physical owner, writer admission where applicable, FULL packet and exact
 source target survive native transfer. See the
 [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
-[live probes](../../tests/kernel/jit_escape/README.md).
+[live probes](../../tests/kernel/jit_continuation/README.md).
 
 Linux 7 active call-depth tracking is rejected at provider initialization because
 its return thunk changes arithmetic flags after restore. Configured support is

@@ -36,7 +36,7 @@ diagnosis and never authorizes forced cleanup.
 The probe covers mutex-root Native CALL continuation. Other lock families,
 contended Native locking, arbitrary RET/JMP recovery, non-C incoming-flags ABIs,
 and broader kernel replacement remain separate validation scopes. The existing
-[instruction marker probe](../jit_escape/README.md) retains its own four-family
+[instruction marker probe](../jit_continuation/README.md) retains its own four-family
 coverage and counters.
 
 Run each mode in a new output directory while the guest is idle, after the
@@ -72,7 +72,7 @@ lifetime ends.
 
 The directly affected guest checks are
 `tests/unit/infrastructure/test_jit_native_call_runner.py` and
-`tests/unit/infrastructure/test_jit_escape_runner.py`, plus the basic checks.
+`tests/unit/infrastructure/test_jit_continuation_runner.py`, plus the basic checks.
 They exercise CALL encoding rejection, exact repeated phase/image/counter
 oracles, the diagnostic patch boundaries and caller retention on failures.
 They are source additions until the VM runs them. W=1 builds and exact emitted

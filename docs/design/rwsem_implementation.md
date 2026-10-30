@@ -348,7 +348,7 @@ Correctness does not establish fairness, full Linux equivalence, performance
 parity, whole-kernel support or automatic non-owner lifetime transfer. RT and
 lockdep configurations are explicitly excluded.
 
-The [instruction-exit probe](../../tests/kernel/jit_escape/README.md) has a separate
+The [instruction-exit probe](../../tests/kernel/jit_continuation/README.md) has a separate
 prepared local-writer ABI2 family. Its returned cold bodies, hot native suffix, exclusion
 and drain are distinct from the local actual-MM backend. Production source trust
 changes no reader-drain, ownership, ACK or reservation-release requirement.
