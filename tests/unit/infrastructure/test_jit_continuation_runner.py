@@ -231,7 +231,7 @@ class RepeatedMarkerProbe(runner.ContinuationSession):
         self.image = dict(status=0, entry=0x1000, lock_kind=2 if family in ("mutex", "rwsem") else 1,
                           entry_abi={"mutex": 2, "rwsem": 2, "spin": 1, "rwlock": 3}[family],
                           generation=7, code=0x9000, requirements=1 if family in ("mutex", "rwsem") else 33)
-        self.record = dict(warmup_iterations=10, iterations=10,
+        self.record = dict(warmup_iterations=10, iterations=10, origin_service=False,
                            layout=dict(entry=0x1000, marker=0x1010),
                            registry_kind=self.image["lock_kind"], entry_abi=self.image["entry_abi"],
                            image_registry=[dict(self.image)], publication={"image": "exact-bytes"})

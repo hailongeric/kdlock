@@ -96,3 +96,11 @@ non-service mode and diagnose the mutation's direct-helper ownership setup.
 Preserve the ordinary-marker invariants and require explicit assertion failures
 for intentional mutations; a crash must not count as detection. Keep production
 changes separate from fixture corrections and retain this failed generation.
+
+Source inspection identifies the same borrowed-packet union issue in the
+direct indirect-CALL refusal loop: accepting the intentionally malformed opcode
+reaches continuation saving before the fixture has performed the production
+dispatcher's ownership transition. Own the FULL packet for those direct-helper
+cases; preserve case 15's deliberately foreign borrowed packet. The runtime
+dispatcher already performs this transition. Both corrections affect only test
+fixtures and require a new VM run; the mutation must still fail an assertion.

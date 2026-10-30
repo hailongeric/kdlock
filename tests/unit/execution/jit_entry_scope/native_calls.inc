@@ -57,6 +57,11 @@ static void check_terminal_and_indirect_calls(void)
 	}
 	for (unsigned int bad = 0; bad < 22; bad++) {
 		native_call_packet(&call, true, false);
+		/* These direct consumers start after FULL-packet ownership transfer,
+		 * even when a predicate mutant wrongly accepts the malformed CALL.
+		 * Keep case 15's foreign borrowed packet as its own refusal control. */
+		if (bad != 15)
+			kd_exec_frame_own_regs(&active);
 		switch (bad) {
 		case 0: escape_text[1] = 0xe0; break; /* JMP /4 */
 		case 1: escape_text[1] = 0xd8; break; /* Far CALL /3 */
