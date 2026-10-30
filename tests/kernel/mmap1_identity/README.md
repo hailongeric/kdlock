@@ -26,6 +26,18 @@ are not performance scores. The observer is stopped and exact references
 released before normal module unload. Failure or timeout preserves evidence
 and does not imply drain or authorize forced unload.
 
+The payload snapshot excludes generated `*.mod.c` files. Kbuild regenerates
+those files in the copied build directory, so treating an old generated file as
+an immutable source input causes the subsequent source check to fail before
+the observer or application starts. The real payload `.c`/`.h` files and
+Makefile remain captured and verified.
+
+A frozen comparison cohort may execute an explicitly hash-bound external copy
+of the corrected diagnostic runner. Record its distinct source commit and byte
+hash, and bind both the executed path and its retained copy in `result.files`.
+The ordinary scored runner can then recheck those exact diagnostic inputs while
+the cohort's provider, original mmap1 executables and validators stay frozen.
+
 This is a **diagnostic class proof** for those observed process lifetimes. Its
 pointer values do not identify the different processes of a later scored
 campaign. The scored runner records that limitation explicitly. A kprobe at
