@@ -1,0 +1,145 @@
+{
+  "absent_points": 0,
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "campaign_complete": true,
+  "captured_sessions": 126,
+  "completion_issues": [],
+  "direction_counts": {
+    "UNQUALIFIED": 0,
+    "equal": 0,
+    "gain": 40,
+    "loss": 23
+  },
+  "duration_ms": 2000,
+  "expected_points": 126,
+  "functional_jit": [
+    {
+      "arm": "native",
+      "functional_jit": {
+        "entered": 0,
+        "returned": 0
+      },
+      "kind": "setfd",
+      "name": "setfd-native-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "arm": "kd",
+      "functional_jit": {
+        "entered": 4890200,
+        "returned": 4890200
+      },
+      "kind": "setfd",
+      "name": "setfd-kd-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "arm": "native",
+      "functional_jit": {
+        "entered": 0,
+        "returned": 0
+      },
+      "kind": "pipebytes",
+      "name": "pipebytes-native-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "arm": "kd",
+      "functional_jit": {
+        "entered": 2168993,
+        "returned": 2168993
+      },
+      "kind": "pipebytes",
+      "name": "pipebytes-kd-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "arm": "native",
+      "functional_jit": {
+        "entered": 0,
+        "returned": 0
+      },
+      "kind": "pipecap",
+      "name": "pipecap-native-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "arm": "kd",
+      "functional_jit": {
+        "entered": 3893743,
+        "returned": 3893743
+      },
+      "kind": "pipecap",
+      "name": "pipecap-kd-n16-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "host_endpoint": "NOT_ASSESSED_BY_THIS_ANALYZER",
+  "identity_issues": [],
+  "identity_valid": true,
+  "invalid_points": 0,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdscope1-native-20261030",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "off",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-native"
+  },
+  "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "pairs": 63,
+  "performance_accepted": false,
+  "rounds_per_point": 1,
+  "schema": 1,
+  "score": "completed operations / actual joined wall interval",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "timed_jit": "not observed; separate functional proof only",
+  "unexpected_records": [],
+  "unexpected_session_paths": [],
+  "valid_points": 126
+}

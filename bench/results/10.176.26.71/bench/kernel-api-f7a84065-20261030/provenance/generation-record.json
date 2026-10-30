@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "provider_source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "provider_source_state_sha256": "52448d33d2ed7c781b0bea4cd1ac4ab80b59107a42622a4fc8a0fd9d857fd520",
+  "provider_source_manifest_sha256": "f093746333abdc7e3ca647852b43b611d6a0a494e7922b9c285125dd46c00db3",
+  "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "provenance_root": "/mnt/kdlock-builds/kdlock-kernel-provenance/8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "provenance_state_sha256": "ecf513e80d1d45eebd7e07c870856c30f1e07c1512078ceb85bc4c7963be3384",
+  "provenance_manifest_sha256": "ee859f798b60ed4e8f4bbb20bdce80324416d856ee716abc05458904b65552e2"
+}

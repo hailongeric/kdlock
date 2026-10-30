@@ -49,8 +49,11 @@ the same JIT in their documented ABI2 scope; generic Native CALL fallback still
 finishes the waiter suffix. These implementations do not establish arbitrary
 branch-only return or close the selected syscall, MM or performance gates. The
 [f7 focused checks and 210-point nano record](../bench/results/10.176.26.71/bench/continuation-perf-nano-20261030/README.md)
-retains observed losses and false performance acceptance. Later syscall/MM
-comparisons are authorized on that isolated candidate and remain pending. See
+retains observed losses and false performance acceptance. The subsequent
+[original-body syscall comparison](../bench/results/10.176.26.71/bench/kernel-api-f7a84065-20261030/README.md)
+completed all 126 sessions and 63 pairs: 40 KD gains and 23 losses, with separate
+scoped functional JIT evidence. It does not close the performance gate. Later
+MM comparisons are authorized on that isolated candidate and remain pending. See
 [the current limitations](TODO.md#current-implementation-gaps).
 
 ## Stage 1: establish the mechanism and performance envelope

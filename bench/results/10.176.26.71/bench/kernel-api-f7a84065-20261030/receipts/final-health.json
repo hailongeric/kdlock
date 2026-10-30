@@ -1,0 +1,26 @@
+{
+  "actual_idle_predicates": [
+    "bench/archive_run.py:idle",
+    "bench/spin_cacheline/bench_runtime.py:idle"
+  ],
+  "archive_source_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "checked": 1793352808.5825021,
+  "endpoint_receipt_sha256": "9c9129850b4763e5591238346e2ed6e8fb5b1d660b59d991deede38920ccdd5b",
+  "idle": true,
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "performance_accepted": false,
+  "phase_receipts": {
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/basic-control/owner.json": "9abce6bb5e73f3b850d79e7463227606deea42724bf99b19105be34ba1cc8beb",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/basic/result.json": "3b4f6d68998fe5228f4bf48db5db19b94d82fcfcc40885f62686db8fdfe95d1e",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/functional-control/owner.json": "f3b3b9c1fa1396328bb43017061164e9f4081add2bdc29d6038f525a8d422a1b",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/functional/result.json": "e763bedada5dc3c88428ed96e46732edc537b618e30a6bde5d470dd5874f5f97",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/measure-control/owner.json": "d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/measure/result.json": "0a8ca4188be7d9d32f96b8e43c0f9935e0a037e94636eade062adb62618da488",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/objects-control/owner.json": "1eec386afa4d92cadc85d442a83133c40dd268fc00db7372a25559d7c1e76262",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/objects/result.json": "1c4d6aae29e3fe992da75fadd8525e8d982f254ff24f75b0ce05537d3d6462d0"
+  },
+  "schema": 1,
+  "scope": "Actual maintained idle plus retained successful phase checks; no new fault diagnostics",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

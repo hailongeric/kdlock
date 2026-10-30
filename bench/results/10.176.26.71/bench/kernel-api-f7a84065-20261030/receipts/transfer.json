@@ -1,0 +1,15 @@
+{
+  "analysis_pending": true,
+  "archive_owner_sha256": "faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a",
+  "archives_sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "completed": true,
+  "input_inventory_sha256": "c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104",
+  "member_sha256_manifest": "8d0390049b66caad2684856e1230ee204981e71e2872e8b98285c7dc4e7bb3e1",
+  "offline_reader_sha256": "1bbd6e010c27c42f5293a3df09660342e453d49663d9452e3c1d02269116c3a7",
+  "performance_accepted": false,
+  "prior_failed_owner_sha256": "c08c0e9bf1c0ac8d252995b7739e01daf670d8ee482b92b34995f653f8181d8d",
+  "regular_members": 8541,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "transport_sha256": "3daa9e1789cea5cf1addeed25601126d3c00455c0fbe85f9a2239fcf280165ba"
+}

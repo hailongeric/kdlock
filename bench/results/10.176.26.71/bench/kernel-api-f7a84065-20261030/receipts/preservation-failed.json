@@ -1,0 +1,257 @@
+{
+  "archive_owner_sha256": "faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a",
+  "archives_sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "calls": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'cat /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030/measure-control/owner.json'"
+      ],
+      "finished": 1793352802.030269,
+      "label": "actual-measure-owner",
+      "pid": 3129388,
+      "returncode": 0,
+      "started": 1793352801.5047905,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "sudo -n taskset -c 63 env PYTHONDONTWRITEBYTECODE=1 python3 /tmp/kdlock-qemu-stable-pool-action-20261030.py verify --capture-helper /tmp/kdlock-qemu-stable-pool-capture-host-20261030.py --inventory /tmp/kdlock-qemu-readonly-inventory-20261030.json --snapshot linux70-kdlock1-clean-20261027 --cohort kernel-api-mm-pool64-20261030 --policy /tmp/kdlock-qemu-pool64-apply-20261030/result.json --policy-sha256 52dd632277c8997b8e10c4dee335cfddeb3cea3e029674d66b0b933998070e46 --output /tmp/kdlock-qemu-pool64-native-a-api-endpoint-20261030"
+      ],
+      "finished": 1793352803.9610066,
+      "label": "endpoint-verify",
+      "pid": 3129389,
+      "returncode": 0,
+      "started": 1793352802.0312276,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "65f619bead14fd9395db1b0ad58106ab1d7603a01c53e594b3fceb21b78e904c"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "cat /tmp/kdlock-qemu-pool64-native-a-api-endpoint-20261030/result.json"
+      ],
+      "finished": 1793352804.1857777,
+      "label": "endpoint-policy",
+      "pid": 3129392,
+      "returncode": 0,
+      "started": 1793352803.9617805,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "1a546b714fc0965268f59635d6b364fdb70de45e4b2210f10804dfc2de6d407c"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "cat /tmp/kdlock-qemu-pool64-native-a-api-endpoint-20261030/before.host.json"
+      ],
+      "finished": 1793352804.411106,
+      "label": "endpoint-before",
+      "pid": 3129404,
+      "returncode": 0,
+      "started": 1793352804.1870697,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "5d41b1320cec6941dbe80675698cb9cdcccb06dcff178e0997724a8eb4927fce"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "cat /tmp/kdlock-qemu-pool64-native-a-api-endpoint-20261030/after.host.json"
+      ],
+      "finished": 1793352804.6379714,
+      "label": "endpoint-after",
+      "pid": 3129405,
+      "returncode": 0,
+      "started": 1793352804.4152899,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "c6b1519517b907e73fbf75f44ce61e8860504356df565092952fa6342ba2b1c1"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "cat /tmp/kdlock-qemu-pool64-apply-20261030/settled-a.host.json"
+      ],
+      "finished": 1793352804.8644764,
+      "label": "host-reference",
+      "pid": 3129406,
+      "returncode": 0,
+      "started": 1793352804.641693,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "95199f8417b1eb8a0e7a406fa1143dec17090aa0973c6db3d0ae828e401ed588"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import pathlib,hashlib,sys;p=pathlib.Path(sys.argv[1]);b=sys.stdin.buffer.read();assert hashlib.sha256(b).hexdigest()==sys.argv[2];assert not p.is_symlink();same=p.exists();assert not same or (sys.argv[3]==\"1\" and p.read_bytes()==b);f=None if same else p.open(\"xb\");None if same else f.write(b);None if same else f.close();assert p.read_bytes()==b'\"'\"' /tmp/kdlock-scope-f7-api-archive-20261030.py 46134b0aaf87b6e928ad475dfd7c071719b9d28404e5844d2f26a9040399eae3 1'"
+      ],
+      "finished": 1793352805.4422464,
+      "label": "upload-archive-helper",
+      "pid": 3129407,
+      "returncode": 0,
+      "started": 1793352804.8687732,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import pathlib,hashlib,sys;p=pathlib.Path(sys.argv[1]);b=sys.stdin.buffer.read();assert hashlib.sha256(b).hexdigest()==sys.argv[2];assert not p.is_symlink();same=p.exists();assert not same or (sys.argv[3]==\"1\" and p.read_bytes()==b);f=None if same else p.open(\"xb\");None if same else f.write(b);None if same else f.close();assert p.read_bytes()==b'\"'\"' /tmp/kdlock-scope-f7-api-host-after-20261030.json c6b1519517b907e73fbf75f44ce61e8860504356df565092952fa6342ba2b1c1 0'"
+      ],
+      "finished": 1793352806.0183723,
+      "label": "upload-endpoint",
+      "pid": 3129415,
+      "returncode": 0,
+      "started": 1793352805.4447992,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import pathlib,hashlib,sys;p=pathlib.Path(sys.argv[1]);b=sys.stdin.buffer.read();assert hashlib.sha256(b).hexdigest()==sys.argv[2];assert not p.is_symlink();same=p.exists();assert not same or (sys.argv[3]==\"1\" and p.read_bytes()==b);f=None if same else p.open(\"xb\");None if same else f.write(b);None if same else f.close();assert p.read_bytes()==b'\"'\"' /tmp/kdlock-scope-f7-api-endpoint-policy-20261030.json 1a546b714fc0965268f59635d6b364fdb70de45e4b2210f10804dfc2de6d407c 0'"
+      ],
+      "finished": 1793352806.5946214,
+      "label": "upload-policy",
+      "pid": 3129416,
+      "returncode": 0,
+      "started": 1793352806.0193686,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import pathlib,hashlib,sys;p=pathlib.Path(sys.argv[1]);b=sys.stdin.buffer.read();assert hashlib.sha256(b).hexdigest()==sys.argv[2];assert not p.is_symlink();same=p.exists();assert not same or (sys.argv[3]==\"1\" and p.read_bytes()==b);f=None if same else p.open(\"xb\");None if same else f.write(b);None if same else f.close();assert p.read_bytes()==b'\"'\"' /tmp/kdlock-scope-f7-pool64-host-reference.json 95199f8417b1eb8a0e7a406fa1143dec17090aa0973c6db3d0ae828e401ed588 1'"
+      ],
+      "finished": 1793352807.1706262,
+      "label": "verify-reference",
+      "pid": 3129418,
+      "returncode": 0,
+      "started": 1793352806.597008,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'env PYTHONDONTWRITEBYTECODE=1 /mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3 /tmp/kdlock-scope-f7-api-archive-20261030.py --measure-owner-sha256 d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245 --host-after /tmp/kdlock-scope-f7-api-host-after-20261030.json --host-after-sha256 c6b1519517b907e73fbf75f44ce61e8860504356df565092952fa6342ba2b1c1 --endpoint-result /tmp/kdlock-scope-f7-api-endpoint-policy-20261030.json --endpoint-result-sha256 1a546b714fc0965268f59635d6b364fdb70de45e4b2210f10804dfc2de6d407c'"
+      ],
+      "finished": 1793352820.2875683,
+      "label": "archive",
+      "pid": 3129419,
+      "returncode": 0,
+      "started": 1793352807.176967,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "52420842995545de51ade0cbce749d8c954fac97ac00d772e36c29479729597a"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'cat /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archive-control/owner.json'"
+      ],
+      "finished": 1793352820.8145204,
+      "label": "archive-owner",
+      "pid": 3129492,
+      "returncode": 0,
+      "started": 1793352820.2885864,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'cat /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/archives.json'"
+      ],
+      "finished": 1793352821.3417227,
+      "label": "archives",
+      "pid": 3129493,
+      "returncode": 0,
+      "started": 1793352820.8158073,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c"
+    }
+  ],
+  "completed": false,
+  "drain_unknown": true,
+  "endpoint_policy_sha256": "1a546b714fc0965268f59635d6b364fdb70de45e4b2210f10804dfc2de6d407c",
+  "error": "RuntimeError('insufficient source-host raw space')",
+  "finished": 1793352821.3514729,
+  "guest_archive_started": true,
+  "host_after_sha256": "c6b1519517b907e73fbf75f44ce61e8860504356df565092952fa6342ba2b1c1",
+  "manifest_sha256": "1e549b91ba64c9b86a28d7bc383ab858d204d09a8efd3386ae9c8f8318d0fe40",
+  "measure_owner_sha256": "d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245",
+  "performance_accepted": false,
+  "remote_started": true,
+  "schema": 1,
+  "script_sha256": "4bd53fd947ddca246b3dae7a5507fec223de554617744e252e31e183b5e2927a",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "started": 1793349277.80752,
+  "state": "FAILED"
+}

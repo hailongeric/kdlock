@@ -1,0 +1,13 @@
+{
+  "excluded_raw_evidence": [],
+  "files": 5922,
+  "git_head": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "git_status": "",
+  "omitted_missing_tracked_paths": [],
+  "snapshot_policy": "Regular tracked current bytes copied into a private local snapshot; hashes describe transferred bytes.",
+  "snapshot_utc": "2026-10-30T05:41:42.536515+00:00",
+  "source_host": "380G10",
+  "source_path": "/tmp/kdlock-continuation-perf-20261030",
+  "target_host": "eric@10.176.26.71",
+  "transfer_bytes": 316063539
+}

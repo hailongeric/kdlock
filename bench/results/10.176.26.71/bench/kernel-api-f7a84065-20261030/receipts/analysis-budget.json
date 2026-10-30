@@ -1,0 +1,10 @@
+{
+  "transfer_sha256": "f52c421912fd1f19b9ef88d167897da7cc432345c99de5927af1e91d94e7751b",
+  "fetch_owner_sha256": "d58a42cb89eea9c2825f106afa6bba4cdd08630949b1121d3b69f2828e052f9f",
+  "archives": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives",
+  "cache_allocation_bound": 80318464,
+  "cache_bytes": 66416209,
+  "required_with_report_reserve": 481586338,
+  "free_bytes": 679133184,
+  "analyzer_sha256": "8245f2e53f3978165484489837f6dea1f89dfa7b9c3fa543a52f168030c6811e"
+}

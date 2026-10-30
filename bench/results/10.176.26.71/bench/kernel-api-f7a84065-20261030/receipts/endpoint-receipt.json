@@ -1,0 +1,26 @@
+{
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "captured_utc": "2026-10-30T09:33:23.195467+00:00",
+  "comparison": {
+    "additional_workers": [],
+    "exploratory": false,
+    "fixed_frequency_khz": 2000000,
+    "host_endpoint": "PENDING",
+    "observed_threads": 131,
+    "original_threads": 131,
+    "performance_accepted": false,
+    "retired_workers": [],
+    "strict_host_gate": "PASS",
+    "task_set_unchanged": true
+  },
+  "completed": true,
+  "endpoint_policy_sha256": "1a546b714fc0965268f59635d6b364fdb70de45e4b2210f10804dfc2de6d407c",
+  "host_after_sha256": "c6b1519517b907e73fbf75f44ce61e8860504356df565092952fa6342ba2b1c1",
+  "measure_finished": 1793352795.4358582,
+  "measure_owner_sha256": "d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245",
+  "performance_accepted": false,
+  "reference_sha256": "95199f8417b1eb8a0e7a406fa1143dec17090aa0973c6db3d0ae828e401ed588",
+  "schema": 1,
+  "scope": "Strict endpoint identity only; not uninterrupted isolation or performance acceptance",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

@@ -1,0 +1,98 @@
+{
+  "archive_prefix": "kdscope1-api-f7a84065-20261030",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "completed": true,
+  "finished_ns": 1793352819659163245,
+  "groups": [
+    {
+      "bytes": 17725190,
+      "file": "basic.tar.gz",
+      "group": "basic",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/basic.tar.gz",
+      "roots": [
+        "kdscope1-api-f7a84065-20261030/basic"
+      ],
+      "sha256": "8bde48b7af567538d5f5c4dd6055901eff48c5f311e9075a4ad025aec22c6875"
+    },
+    {
+      "bytes": 5729122,
+      "file": "objects.tar.gz",
+      "group": "objects",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/objects.tar.gz",
+      "roots": [
+        "kdscope1-api-f7a84065-20261030/objects"
+      ],
+      "sha256": "af06745f4f70603860f7e98940ea6771f9d350d9ea5845d5d5f4e003765176c2"
+    },
+    {
+      "bytes": 5717018,
+      "file": "functional.tar.gz",
+      "group": "functional",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/functional.tar.gz",
+      "roots": [
+        "kdscope1-api-f7a84065-20261030/functional"
+      ],
+      "sha256": "846fcd510a0bc347b94dc9edea5b9aeb27e71e62c65c268e55c6995396ab0280"
+    },
+    {
+      "bytes": 8716599,
+      "file": "measure.tar.gz",
+      "group": "measure",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/measure.tar.gz",
+      "roots": [
+        "kdscope1-api-f7a84065-20261030/measure"
+      ],
+      "sha256": "be71392b645898f2b1cf3315e3b774d8cf088650306d84e7bf19672ba4004e74"
+    },
+    {
+      "bytes": 2729067,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz",
+      "roots": [
+        "kdscope1-api-f7a84065-20261030/basic-control",
+        "kdscope1-api-f7a84065-20261030/endpoint-policy.json",
+        "kdscope1-api-f7a84065-20261030/endpoint-receipt.json",
+        "kdscope1-api-f7a84065-20261030/final-health.json",
+        "kdscope1-api-f7a84065-20261030/functional-control",
+        "kdscope1-api-f7a84065-20261030/host-after.json",
+        "kdscope1-api-f7a84065-20261030/measure-control",
+        "kdscope1-api-f7a84065-20261030/objects-control"
+      ],
+      "sha256": "4dbebbf1250e97d658a62c4a6f9aae41329849320f37609734e005bda916e3e2"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-api-f7a84065-20261030",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "6d525bd1dfdb041677887676bf4be71513183429e5b04be4f10a7d99253daa2e",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "off",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-native"
+  },
+  "kernel_release": "7.0.0-38-kdscope1",
+  "kernel_variant": "kdscope1-native",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793352809554062793
+}

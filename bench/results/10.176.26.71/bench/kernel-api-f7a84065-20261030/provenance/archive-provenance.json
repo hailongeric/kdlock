@@ -1,0 +1,34 @@
+{
+  "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives",
+  "archive_receipt_sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c",
+  "inventory_sha256": "c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104",
+  "paths": 11175,
+  "regular_files": 8541,
+  "groups": [
+    {
+      "file": "basic.tar.gz",
+      "bytes": 17725190,
+      "sha256": "8bde48b7af567538d5f5c4dd6055901eff48c5f311e9075a4ad025aec22c6875"
+    },
+    {
+      "file": "objects.tar.gz",
+      "bytes": 5729122,
+      "sha256": "af06745f4f70603860f7e98940ea6771f9d350d9ea5845d5d5f4e003765176c2"
+    },
+    {
+      "file": "functional.tar.gz",
+      "bytes": 5717018,
+      "sha256": "846fcd510a0bc347b94dc9edea5b9aeb27e71e62c65c268e55c6995396ab0280"
+    },
+    {
+      "file": "measure.tar.gz",
+      "bytes": 8716599,
+      "sha256": "be71392b645898f2b1cf3315e3b774d8cf088650306d84e7bf19672ba4004e74"
+    },
+    {
+      "file": "metadata.tar.gz",
+      "bytes": 2729067,
+      "sha256": "4dbebbf1250e97d658a62c4a6f9aae41329849320f37609734e005bda916e3e2"
+    }
+  ]
+}

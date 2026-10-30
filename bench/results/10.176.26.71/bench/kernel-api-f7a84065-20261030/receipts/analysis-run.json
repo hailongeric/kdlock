@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "python3",
+    "/tmp/kdlock-scope-f7-api-offline-analysis-20261030.py",
+    "--archives",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives",
+    "--owner-hashes",
+    "/tmp/kdlock-scope-f7-api-analysis-owner-hashes-20261030.json",
+    "--output",
+    "/tmp/kdlock-scope-f7-api-comparison-20261030"
+  ],
+  "started": 1793353642.1819339,
+  "completed": true,
+  "output": "/tmp/kdlock-scope-f7-api-comparison-20261030",
+  "pid": 3,
+  "returncode": 0,
+  "finished": 1793353649.3178954
+}

@@ -1,0 +1,197 @@
+{
+  "files": {
+    "analysis/README.md": {
+      "bytes": 5376,
+      "sha256": "f5c7e2f665ebb97e0e5e5769e2c28a64b410f220fa4f87e5a78f6f4c147f80fd",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/README.md"
+    },
+    "analysis/findings.json": {
+      "bytes": 12945,
+      "sha256": "88d389ecf503e7e2396f0c9216e0b03c468405744a6b55d00177ac992c2dd711",
+      "source": "/tmp/kdlock-scope-f7-api-findings-20261030/findings.json"
+    },
+    "analysis/inputs-sha256.json": {
+      "bytes": 609,
+      "sha256": "0d9479f767b2720144027c178dfda71c4ff4f72f2bad2c289c52b7331ea0771c",
+      "source": "/tmp/kdlock-scope-f7-api-findings-20261030/inputs-sha256.json"
+    },
+    "analysis/output-sha256.json": {
+      "bytes": 709,
+      "sha256": "388875e959c66c041da39429fe0615673aa454a7fb0e3e1b3257563c2f06e58d",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/output-sha256.json"
+    },
+    "analysis/pairs.csv": {
+      "bytes": 7101,
+      "sha256": "c4c8243d4f719cd8e6f515ab83442095e46aaaa5c5aced78ede419654be44558",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/pairs.csv"
+    },
+    "analysis/points.csv": {
+      "bytes": 14547,
+      "sha256": "89220feaa5b6e372dd3ce3c89fb04323a714ab98b1e17f05390d67b99deb3fcc",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/points.csv"
+    },
+    "analysis/ratios.csv": {
+      "bytes": 5792,
+      "sha256": "ba39fa9c827ad1a0775da37942d7095c746aeb71fc7fa8a569abae1bf5c933bb",
+      "source": "/tmp/kdlock-scope-f7-api-findings-20261030/ratios.csv"
+    },
+    "analysis/read-files-sha256.json": {
+      "bytes": 360737,
+      "sha256": "e3646e9e7542218f9cc2df2371e1280103629a5d47de85c28028682194aa3d0b",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/read-files-sha256.json"
+    },
+    "analysis/summary.json": {
+      "bytes": 3587,
+      "sha256": "ae7862629d5e32afbafca933fb7a3983c55f350deb93f23118b1d9105dc05e5e",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/summary.json"
+    },
+    "logs/analysis.log": {
+      "bytes": 141,
+      "sha256": "7a42a38a91d7670ae00399039b838eed086a11b871d3111ff8469149d8968ad0",
+      "source": "/tmp/kdlock-scope-f7-api-analysis-run-20261030.log"
+    },
+    "provenance/archive-provenance.json": {
+      "bytes": 1170,
+      "sha256": "2536179752d1b626aaea0b614e966d609aa91c6ea67bc4c1b19e4f59524e5532",
+      "source": "/tmp/kdlock-scope-f7-api-comparison-20261030/archive-provenance.json"
+    },
+    "provenance/archives.json": {
+      "bytes": 4050,
+      "sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/archives.json"
+    },
+    "provenance/generation-record.json": {
+      "bytes": 674,
+      "sha256": "4618cd0df915928562e94569662a3771483a86cdc26f4762f276190d8ee88567",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/measure-control/generation-record.json"
+    },
+    "provenance/owner-hashes.json": {
+      "bytes": 328,
+      "sha256": "d4e0ee9f116aa0c4b280c2657681343511c6682ed69297cffc50e7f4bd027e15",
+      "source": "/tmp/kdlock-scope-f7-api-analysis-owner-hashes-20261030.json"
+    },
+    "provenance/source-sha256.json": {
+      "bytes": 897826,
+      "sha256": "f093746333abdc7e3ca647852b43b611d6a0a494e7922b9c285125dd46c00db3",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/measure-control/source-sha256.json"
+    },
+    "provenance/source-state.json": {
+      "bytes": 504,
+      "sha256": "52448d33d2ed7c781b0bea4cd1ac4ab80b59107a42622a4fc8a0fd9d857fd520",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/measure-control/source-state.json"
+    },
+    "receipts/analysis-budget.json": {
+      "bytes": 566,
+      "sha256": "4bd023c69675ec8030bdf39b378873782299e2f90a88c79b1e22f90db58eca2c",
+      "source": "/tmp/kdlock-scope-f7-api-analysis-budget-20261030.json"
+    },
+    "receipts/analysis-run.json": {
+      "bytes": 596,
+      "sha256": "8ae4f8dab101e12e401463e4b83ce2a376a4b931b074265e154209f2131706f3",
+      "source": "/tmp/kdlock-scope-f7-api-analysis-run-20261030.json"
+    },
+    "receipts/archive-owner.json": {
+      "bytes": 1716,
+      "sha256": "faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archive-control/owner.json"
+    },
+    "receipts/basic-owner.json": {
+      "bytes": 12257,
+      "sha256": "9abce6bb5e73f3b850d79e7463227606deea42724bf99b19105be34ba1cc8beb",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/basic-control/owner.json"
+    },
+    "receipts/basic-result.json": {
+      "bytes": 11252,
+      "sha256": "3b4f6d68998fe5228f4bf48db5db19b94d82fcfcc40885f62686db8fdfe95d1e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/basic.tar.gz::kdscope1-api-f7a84065-20261030/basic/result.json"
+    },
+    "receipts/endpoint-receipt.json": {
+      "bytes": 1084,
+      "sha256": "9c9129850b4763e5591238346e2ed6e8fb5b1d660b59d991deede38920ccdd5b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/endpoint-receipt.json"
+    },
+    "receipts/fetch-only-complete.json": {
+      "bytes": 11752,
+      "sha256": "d58a42cb89eea9c2825f106afa6bba4cdd08630949b1121d3b69f2828e052f9f",
+      "source": "/tmp/kdlock-scope-f7-api-fetch-only-r2-20261030/owner.json"
+    },
+    "receipts/final-health.json": {
+      "bytes": 2214,
+      "sha256": "6d525bd1dfdb041677887676bf4be71513183429e5b04be4f10a7d99253daa2e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/final-health.json"
+    },
+    "receipts/functional-owner.json": {
+      "bytes": 13501,
+      "sha256": "f3b3b9c1fa1396328bb43017061164e9f4081add2bdc29d6038f525a8d422a1b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/functional-control/owner.json"
+    },
+    "receipts/functional-result.json": {
+      "bytes": 161199,
+      "sha256": "e763bedada5dc3c88428ed96e46732edc537b618e30a6bde5d470dd5874f5f97",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/functional.tar.gz::kdscope1-api-f7a84065-20261030/functional/result.json"
+    },
+    "receipts/measure-owner.json": {
+      "bytes": 14004,
+      "sha256": "d84af83046460f11bbeb0a316b8bd0856827b949fbc46427ba1e02bc8aece245",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/measure-control/owner.json"
+    },
+    "receipts/objects-owner.json": {
+      "bytes": 12576,
+      "sha256": "1eec386afa4d92cadc85d442a83133c40dd268fc00db7372a25559d7c1e76262",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/objects-control/owner.json"
+    },
+    "receipts/objects-result.json": {
+      "bytes": 132844,
+      "sha256": "1c4d6aae29e3fe992da75fadd8525e8d982f254ff24f75b0ce05537d3d6462d0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/objects.tar.gz::kdscope1-api-f7a84065-20261030/objects/result.json"
+    },
+    "receipts/preservation-failed.json": {
+      "bytes": 11676,
+      "sha256": "c08c0e9bf1c0ac8d252995b7739e01daf670d8ee482b92b34995f653f8181d8d",
+      "source": "/tmp/kdlock-scope-f7-api-preserve-20261030/owner.json"
+    },
+    "receipts/transfer.json": {
+      "bytes": 887,
+      "sha256": "f52c421912fd1f19b9ef88d167897da7cc432345c99de5927af1e91d94e7751b",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/transfer.json"
+    },
+    "tools/analyze.py": {
+      "bytes": 30145,
+      "sha256": "8245f2e53f3978165484489837f6dea1f89dfa7b9c3fa543a52f168030c6811e",
+      "source": "/tmp/kdlock-scope-f7-api-offline-analysis-20261030.py"
+    },
+    "tools/api-controller.py": {
+      "bytes": 22691,
+      "sha256": "35495b774fd74872cd204140ef76fe4cdcc34b2235cbac051d05999c9101bf6c",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/metadata.tar.gz::kdscope1-api-f7a84065-20261030/measure-control/controller.py"
+    },
+    "tools/archive.py": {
+      "bytes": 10527,
+      "sha256": "46134b0aaf87b6e928ad475dfd7c071719b9d28404e5844d2f26a9040399eae3",
+      "source": "/tmp/kdlock-scope-f7-api-archive-20261030.py"
+    },
+    "tools/fetch-only-r2.py": {
+      "bytes": 12217,
+      "sha256": "a418676a6696a9f19fb2a53fabfd5c481be383633dba9d7965633e84306b5459",
+      "source": "/tmp/kdlock-scope-f7-api-fetch-only-r2-20261030.py"
+    },
+    "tools/kernel_api_README.md": {
+      "bytes": 2782,
+      "sha256": "d8629f1c25e7a0db37b7138e4bd97f68d73bfc450cd744b079d4f07d5b540ce0",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/functional.tar.gz::kdscope1-api-f7a84065-20261030/functional/source/bench/kernel_api/README.md"
+    },
+    "tools/kernel_api_run.py": {
+      "bytes": 22585,
+      "sha256": "fd83caf3d7f6062bb87645a5ce118c7ec2600b61f78a44a6a0780caf0d96e73e",
+      "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030/kdscope1-api-f7a84065-20261030-archives/functional.tar.gz::kdscope1-api-f7a84065-20261030/functional/source/bench/kernel_api/run.py"
+    },
+    "tools/preserve.py": {
+      "bytes": 13210,
+      "sha256": "4bd53fd947ddca246b3dae7a5507fec223de554617744e252e31e183b5e2927a",
+      "source": "/tmp/kdlock-scope-f7-api-preserve-20261030.py"
+    }
+  },
+  "raw_root": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030",
+  "schema": 1,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

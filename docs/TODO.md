@@ -159,7 +159,10 @@ The user authorized the [October 30 integration sequence](design/kernel_cs_seman
 one-round nano and bounded syscall comparisons, localized mmap, full selected
 kernel object binding, then unchanged mmap1 acceptance. The sequence started
 from `acfa33a5`; prior regressed mutex candidates remain unpromoted. The selected
-syscall, localized mmap and unchanged mmap1 comparison gates remain pending.
+[original-body syscall comparison](../bench/results/10.176.26.71/bench/kernel-api-f7a84065-20261030/README.md)
+completed 126 sessions and 63 pairs, with 40 KD gains and 23 losses. Scoped
+functional checks passed; performance acceptance, localized mmap and unchanged
+mmap1 comparison gates remain open.
 
 The [per-lock native critical-section map](design/kernel_cs_semantics.md) retains
 the pre-implementation `acfa33a5` audit. The current candidate implements exact
@@ -181,8 +184,9 @@ branch-only JIT return is unimplemented. The runtime candidate at
 `f7a84065e84474380faa37eeadfdf534abd72a68` has
 [recorded focused validation and a 210-point nano comparison](../bench/results/10.176.26.71/bench/continuation-perf-nano-20261030/README.md).
 The functional checks passed, but nano performance acceptance remains false.
-The user authorized later syscall/MM comparisons on this isolated candidate;
-those gates remain pending, and no syscall or MM pass is implied.
+The user authorized later syscall/MM comparisons on this isolated candidate.
+The recorded syscall checks and timing do not close the nano losses or validate
+the pending MM comparisons.
 
 | Area | Remaining limit |
 | --- | --- |

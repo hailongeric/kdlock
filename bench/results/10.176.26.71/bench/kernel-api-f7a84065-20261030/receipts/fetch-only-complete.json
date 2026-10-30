@@ -1,0 +1,89 @@
+{
+  "analysis_pending": true,
+  "archive_owner_sha256": "faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a",
+  "archives_sha256": "6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c",
+  "boot_id": "2e0ea0fa-ff34-4416-9175-b4b0ede3f63b",
+  "calls": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,stat,subprocess,sys\nroot=pathlib.Path(sys.argv[1]);name=sys.argv[2];mode=sys.argv[3]\nexpected=sys.argv[4:7]\npaths=[root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"']\ndef check():\n assert all(hashlib.sha256(p.read_bytes()).hexdigest()==h for p,h in zip(paths,expected))\ndef inventory():\n rows=[]\n for top in (name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'):\n  parent=root/top\n  for p in [parent,*sorted(parent.rglob('\"'\"'\"'\"'\"'\"'\"'\"'*'\"'\"'\"'\"'\"'\"'\"'\"'))]:\n   s=p.lstat();rel=p.relative_to(root).as_posix()\n   assert stat.S_ISDIR(s.st_mode) or stat.S_ISREG(s.st_mode)\n   assert len((rel+('\"'\"'\"'\"'\"'\"'\"'\"'/'\"'\"'\"'\"'\"'\"'\"'\"' if stat.S_ISDIR(s.st_mode) else '\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'\"'\"'\"'\"'\"'\"')).encode())<=100\n   rows.append(dict(path=rel,bytes=s.st_size if stat.S_ISREG(s.st_mode) else 0,directory=stat.S_ISDIR(s.st_mode),mtime_ns=s.st_mtime_ns,mode=s.st_mode))\n return rows\ncheck()\nif mode=='\"'\"'\"'\"'\"'\"'\"'\"'input'\"'\"'\"'\"'\"'\"'\"'\"':\n sys.stdout.buffer.write(paths[2].read_bytes());check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'plan'\"'\"'\"'\"'\"'\"'\"'\"':\n print(json.dumps(inventory(),sort_keys=True));check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'fetch'\"'\"'\"'\"'\"'\"'\"'\"':\n rows=inventory();actual=hashlib.sha256(json.dumps(rows,sort_keys=True).encode()).hexdigest();assert actual==sys.argv[7]\n rc=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--format=ustar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--blocking-factor=1'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(root),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"']);assert rc==0\n check();assert inventory()==rows\nelse:raise AssertionError(mode)\n'\"'\"' /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests kdscope1-api-f7a84065-20261030 input faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a 6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104'"
+      ],
+      "finished": 1793353437.2341797,
+      "label": "input-inventory",
+      "pid": 3132689,
+      "returncode": 0,
+      "started": 1793353436.1016104,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,stat,subprocess,sys\nroot=pathlib.Path(sys.argv[1]);name=sys.argv[2];mode=sys.argv[3]\nexpected=sys.argv[4:7]\npaths=[root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"']\ndef check():\n assert all(hashlib.sha256(p.read_bytes()).hexdigest()==h for p,h in zip(paths,expected))\ndef inventory():\n rows=[]\n for top in (name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'):\n  parent=root/top\n  for p in [parent,*sorted(parent.rglob('\"'\"'\"'\"'\"'\"'\"'\"'*'\"'\"'\"'\"'\"'\"'\"'\"'))]:\n   s=p.lstat();rel=p.relative_to(root).as_posix()\n   assert stat.S_ISDIR(s.st_mode) or stat.S_ISREG(s.st_mode)\n   assert len((rel+('\"'\"'\"'\"'\"'\"'\"'\"'/'\"'\"'\"'\"'\"'\"'\"'\"' if stat.S_ISDIR(s.st_mode) else '\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'\"'\"'\"'\"'\"'\"')).encode())<=100\n   rows.append(dict(path=rel,bytes=s.st_size if stat.S_ISREG(s.st_mode) else 0,directory=stat.S_ISDIR(s.st_mode),mtime_ns=s.st_mtime_ns,mode=s.st_mode))\n return rows\ncheck()\nif mode=='\"'\"'\"'\"'\"'\"'\"'\"'input'\"'\"'\"'\"'\"'\"'\"'\"':\n sys.stdout.buffer.write(paths[2].read_bytes());check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'plan'\"'\"'\"'\"'\"'\"'\"'\"':\n print(json.dumps(inventory(),sort_keys=True));check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'fetch'\"'\"'\"'\"'\"'\"'\"'\"':\n rows=inventory();actual=hashlib.sha256(json.dumps(rows,sort_keys=True).encode()).hexdigest();assert actual==sys.argv[7]\n rc=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--format=ustar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--blocking-factor=1'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(root),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"']);assert rc==0\n check();assert inventory()==rows\nelse:raise AssertionError(mode)\n'\"'\"' /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests kdscope1-api-f7a84065-20261030 plan faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a 6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104'"
+      ],
+      "finished": 1793353437.8971453,
+      "label": "transport-plan",
+      "pid": 3132701,
+      "returncode": 0,
+      "started": 1793353437.3171217,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "6a0b8ab3fda6f7d9cebf8652d33598c32d9d1ecfe4a64d4ce4ab466d149ec898"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,stat,subprocess,sys\nroot=pathlib.Path(sys.argv[1]);name=sys.argv[2];mode=sys.argv[3]\nexpected=sys.argv[4:7]\npaths=[root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',root/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"']\ndef check():\n assert all(hashlib.sha256(p.read_bytes()).hexdigest()==h for p,h in zip(paths,expected))\ndef inventory():\n rows=[]\n for top in (name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'):\n  parent=root/top\n  for p in [parent,*sorted(parent.rglob('\"'\"'\"'\"'\"'\"'\"'\"'*'\"'\"'\"'\"'\"'\"'\"'\"'))]:\n   s=p.lstat();rel=p.relative_to(root).as_posix()\n   assert stat.S_ISDIR(s.st_mode) or stat.S_ISREG(s.st_mode)\n   assert len((rel+('\"'\"'\"'\"'\"'\"'\"'\"'/'\"'\"'\"'\"'\"'\"'\"'\"' if stat.S_ISDIR(s.st_mode) else '\"'\"'\"'\"'\"'\"'\"'\"''\"'\"'\"'\"'\"'\"'\"'\"')).encode())<=100\n   rows.append(dict(path=rel,bytes=s.st_size if stat.S_ISREG(s.st_mode) else 0,directory=stat.S_ISDIR(s.st_mode),mtime_ns=s.st_mtime_ns,mode=s.st_mode))\n return rows\ncheck()\nif mode=='\"'\"'\"'\"'\"'\"'\"'\"'input'\"'\"'\"'\"'\"'\"'\"'\"':\n sys.stdout.buffer.write(paths[2].read_bytes());check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'plan'\"'\"'\"'\"'\"'\"'\"'\"':\n print(json.dumps(inventory(),sort_keys=True));check()\nelif mode=='\"'\"'\"'\"'\"'\"'\"'\"'fetch'\"'\"'\"'\"'\"'\"'\"'\"':\n rows=inventory();actual=hashlib.sha256(json.dumps(rows,sort_keys=True).encode()).hexdigest();assert actual==sys.argv[7]\n rc=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--format=ustar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--blocking-factor=1'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(root),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"']);assert rc==0\n check();assert inventory()==rows\nelse:raise AssertionError(mode)\n'\"'\"' /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests kdscope1-api-f7a84065-20261030 fetch faadffedd8a15b776d392c1549b272148f512977b32f0a07daf96284d98c0c2a 6d4323fadc413522020631d937d1e259800591ededc46aa186259065ee0a4c4c c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104 60b022c7710ef60c8ff04c5af8305b3706e34cdefc299bbc6ff8f728cb8ce406'"
+      ],
+      "finished": 1793353439.01588,
+      "label": "fetch",
+      "pid": 3132703,
+      "returncode": 0,
+      "started": 1793353437.9336586,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "3daa9e1789cea5cf1addeed25601126d3c00455c0fbe85f9a2239fcf280165ba"
+    }
+  ],
+  "completed": true,
+  "finished": 1793353442.9215815,
+  "guest_archive_completed": true,
+  "guest_archive_drained": true,
+  "performance_accepted": false,
+  "prior_failed_owner_sha256": "c08c0e9bf1c0ac8d252995b7739e01daf670d8ee482b92b34995f653f8181d8d",
+  "raw": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-api-f7a84065-20261030",
+  "remote_work": "read-only byte transfer",
+  "schema": 1,
+  "script_sha256": "a418676a6696a9f19fb2a53fabfd5c481be383633dba9d7965633e84306b5459",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "space_budget": {
+    "allocation_unit": 4096,
+    "cache_allocation_bound": 80318464,
+    "cache_bytes": 66416209,
+    "cache_files": 1933,
+    "free_bytes": 841457664,
+    "headroom_bytes": 268435456,
+    "input_inventory_sha256": "c7f14cbabf6d17e3a082ed740f9c41d31767c8733e42df33eae3cca8ff365104",
+    "required_bytes": 436544512,
+    "transport_bytes": 43895296,
+    "transport_copies": 2,
+    "transport_plan_sha256": "60b022c7710ef60c8ff04c5af8305b3706e34cdefc299bbc6ff8f728cb8ce406"
+  },
+  "started": 1793353436.0852697,
+  "state": "COMPLETE",
+  "transfer_sha256": "f52c421912fd1f19b9ef88d167897da7cc432345c99de5927af1e91d94e7751b"
+}
