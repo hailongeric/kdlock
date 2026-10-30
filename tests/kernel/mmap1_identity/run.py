@@ -134,7 +134,7 @@ def main():
         source.mkdir()
         source_hashes = {}
         for original in sorted((ROOT/'tests/kernel/mmap1_identity/payload').iterdir()):
-            if original.name != 'Makefile' and original.suffix not in ('.c', '.h'):
+            if original.name.endswith('.mod.c') or (original.name != 'Makefile' and original.suffix not in ('.c', '.h')):
                 continue
             copied = source/original.name
             shutil.copyfile(original, copied)
