@@ -1,0 +1,24 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001d950 <kd_up_read>:
+   1d950:	call   1d955 <kd_up_read+0x5>
+   1d955:	lock decq 0x40(%rdi)
+   1d95a:	jne    1d96d <kd_up_read+0x1d>
+   1d95c:	push   %rbp
+   1d95d:	mov    %rsp,%rbp
+   1d960:	call   1d8d0 <kd_up_read.part.0>
+   1d965:	pop    %rbp
+   1d966:	xor    %edi,%edi
+   1d968:	jmp    1d96d <kd_up_read+0x1d>
+   1d96d:	xor    %edi,%edi
+   1d96f:	jmp    1d974 <kd_up_read+0x24>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

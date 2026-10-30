@@ -1,0 +1,13 @@
+{
+  "reference_commit": "acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f",
+  "current_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "matched_coordinates": 210,
+  "whole_losses": 114,
+  "peak_losses": 118,
+  "either_metric_losses": 122,
+  "unscored_coordinates": 0,
+  "rounds_per_point": 1,
+  "performance_accepted": false,
+  "ordering": "Sequential older reference then current KD; no randomized pairs or variance estimate",
+  "historical_other_arms": "Reference Native/TCLock observations are not used or relabelled as current comparators"
+}

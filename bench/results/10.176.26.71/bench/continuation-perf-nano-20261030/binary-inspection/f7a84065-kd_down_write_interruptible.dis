@@ -1,0 +1,122 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001e500 <kd_down_write_interruptible>:
+   1e500:	call   1e505 <kd_down_write_interruptible+0x5>
+   1e505:	push   %rbp
+   1e506:	mov    %rsp,%rbp
+   1e509:	push   %r14
+   1e50b:	push   %r13
+   1e50d:	push   %r12
+   1e50f:	push   %rbx
+   1e510:	sub    $0x30,%rsp
+   1e514:	mov    %gs:0x0(%rip),%rbx        # 1e51c <kd_down_write_interruptible+0x1c>
+   1e51c:	mov    %rbx,-0x28(%rbp)
+   1e520:	mov    %rdi,%rbx
+   1e523:	call   1e528 <kd_down_write_interruptible+0x28>
+   1e528:	call   1e52d <kd_down_write_interruptible+0x2d>
+   1e52d:	mov    0x80(%rbx),%rax
+   1e534:	test   %rax,%rax
+   1e537:	jne    1e5a8 <kd_down_write_interruptible+0xa8>
+   1e539:	mov    0x118(%rbx),%edx
+   1e53f:	test   %edx,%edx
+   1e541:	jne    1e5a8 <kd_down_write_interruptible+0xa8>
+   1e543:	mov    $0xffffffffffffffff,%rdx
+   1e54a:	lock cmpxchg %rdx,0x80(%rbx)
+   1e553:	test   %rax,%rax
+   1e556:	jne    1e5a8 <kd_down_write_interruptible+0xa8>
+   1e558:	mov    %rbx,%rdi
+   1e55b:	call   1e560 <kd_down_write_interruptible+0x60>
+   1e560:	test   %eax,%eax
+   1e562:	jne    1e67e <kd_down_write_interruptible+0x17e>
+   1e568:	mov    $0x1,%esi
+   1e56d:	mov    %rbx,%rdi
+   1e570:	call   1d390 <kd_rwsem_drain_readers>
+   1e575:	test   %eax,%eax
+   1e577:	jne    1e676 <kd_down_write_interruptible+0x176>
+   1e57d:	mov    -0x28(%rbp),%rdx
+   1e581:	sub    %gs:0x0(%rip),%rdx        # 1e589 <kd_down_write_interruptible+0x89>
+   1e589:	jne    1e6b9 <kd_down_write_interruptible+0x1b9>
+   1e58f:	add    $0x30,%rsp
+   1e593:	pop    %rbx
+   1e594:	pop    %r12
+   1e596:	pop    %r13
+   1e598:	pop    %r14
+   1e59a:	pop    %rbp
+   1e59b:	xor    %edx,%edx
+   1e59d:	xor    %ecx,%ecx
+   1e59f:	xor    %esi,%esi
+   1e5a1:	xor    %edi,%edi
+   1e5a3:	jmp    1e5a8 <kd_down_write_interruptible+0xa8>
+   1e5a8:	xor    %esi,%esi
+   1e5aa:	lea    -0x50(%rbp),%rdi
+   1e5ae:	movq   $0x0,-0x50(%rbp)
+   1e5b6:	lea    0xc0(%rbx),%r14
+   1e5bd:	movq   $0x0,-0x48(%rbp)
+   1e5c5:	mov    $0xffffffffffffffff,%r13
+   1e5cc:	movq   $0x0,-0x40(%rbp)
+   1e5d4:	movq   $0x0,-0x38(%rbp)
+   1e5dc:	movq   $0x0,-0x30(%rbp)
+   1e5e4:	call   1e5e9 <kd_down_write_interruptible+0xe9>
+   1e5e9:	mov    $0x1,%edx
+   1e5ee:	lea    -0x50(%rbp),%rsi
+   1e5f2:	mov    %r14,%rdi
+   1e5f5:	call   1e5fa <kd_down_write_interruptible+0xfa>
+   1e5fa:	mov    %rax,%r12
+   1e5fd:	mov    0x80(%rbx),%rax
+   1e604:	test   %rax,%rax
+   1e607:	jne    1e621 <kd_down_write_interruptible+0x121>
+   1e609:	mov    0x118(%rbx),%edx
+   1e60f:	test   %edx,%edx
+   1e611:	jne    1e621 <kd_down_write_interruptible+0x121>
+   1e613:	lock cmpxchg %r13,0x80(%rbx)
+   1e61c:	test   %rax,%rax
+   1e61f:	je     1e652 <kd_down_write_interruptible+0x152>
+   1e621:	test   %r12,%r12
+   1e624:	jne    1e663 <kd_down_write_interruptible+0x163>
+   1e626:	call   1e62b <kd_down_write_interruptible+0x12b>
+   1e62b:	mov    0x80(%rbx),%rax
+   1e632:	test   %rax,%rax
+   1e635:	jne    1e5e9 <kd_down_write_interruptible+0xe9>
+   1e637:	mov    0x118(%rbx),%eax
+   1e63d:	test   %eax,%eax
+   1e63f:	jne    1e5e9 <kd_down_write_interruptible+0xe9>
+   1e641:	mov    %r12,%rax
+   1e644:	lock cmpxchg %r13,0x80(%rbx)
+   1e64d:	test   %rax,%rax
+   1e650:	jne    1e5e9 <kd_down_write_interruptible+0xe9>
+   1e652:	lea    -0x50(%rbp),%rsi
+   1e656:	mov    %r14,%rdi
+   1e659:	call   1e65e <kd_down_write_interruptible+0x15e>
+   1e65e:	jmp    1e558 <kd_down_write_interruptible+0x58>
+   1e663:	test   %r12d,%r12d
+   1e666:	je     1e558 <kd_down_write_interruptible+0x58>
+   1e66c:	mov    $0xfffffffc,%eax
+   1e671:	jmp    1e57d <kd_down_write_interruptible+0x7d>
+   1e676:	mov    %rbx,%rdi
+   1e679:	call   1e67e <kd_down_write_interruptible+0x17e>
+   1e67e:	xor    %eax,%eax
+   1e680:	xchg   %rax,0x80(%rbx)
+   1e687:	cmp    $0xffffffffffffffff,%rax
+   1e68b:	jne    1e6b7 <kd_down_write_interruptible+0x1b7>
+   1e68d:	mov    0xc8(%rbx),%rax
+   1e694:	lea    0xc0(%rbx),%rdi
+   1e69b:	add    $0xc8,%rbx
+   1e6a2:	cmp    %rbx,%rax
+   1e6a5:	je     1e66c <kd_down_write_interruptible+0x16c>
+   1e6a7:	xor    %ecx,%ecx
+   1e6a9:	xor    %edx,%edx
+   1e6ab:	mov    $0x3,%esi
+   1e6b0:	call   1e6b5 <kd_down_write_interruptible+0x1b5>
+   1e6b5:	jmp    1e66c <kd_down_write_interruptible+0x16c>
+   1e6b7:	ud2    
+   1e6b9:	call   1e6be <kd_down_write_interruptible+0x1be>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

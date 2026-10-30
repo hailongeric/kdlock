@@ -1,0 +1,24 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000020609 <__kd_mutex_lock_slowpath.cold>:
+   20609:	mov    %r12,%rdi
+   2060c:	call   1f0a0 <kd_mutex_origin_instruction_waiter>
+   20611:	jmp    20616 <__kd_mutex_lock_slowpath.cold+0xd>
+   20616:	mov    %gs:0x0(%rip),%rax        # 2061e <__kd_mutex_lock_slowpath.cold+0x15>
+   2061e:	mov    %gs:0x0(%rip),%esi        # 20625 <__kd_mutex_lock_slowpath.cold+0x1c>
+   20625:	mov    %rbx,%r8
+   20628:	mov    $0x0,%rcx
+   2062f:	mov    $0x0,%rdi
+   20636:	mov    0xaf0(%rax),%edx
+   2063c:	call   20641 <__kd_mutex_lock_slowpath.cold+0x38>
+   20641:	jmp    20646 <kd_mutex_lock_slowpath_asm.cold>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

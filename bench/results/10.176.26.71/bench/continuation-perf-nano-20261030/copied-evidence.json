@@ -1,0 +1,1147 @@
+{
+  "8617/campaign.json": {
+    "bytes": 32912,
+    "sha256": "91815fe348abacfb0007d4a23ad2c35e6cea29fd1b08856bdc9798b4d0decfca",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/8617/campaign.json"
+  },
+  "8617/points.json": {
+    "bytes": 828036,
+    "sha256": "a91384ff989663ebffd1ddd227cb21d99d4f208bf34ac32d7c5303f84b9a6d87",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/8617/points.json"
+  },
+  "acfa/campaign.json": {
+    "bytes": 939746,
+    "sha256": "66d25676d15e5c35324cf85caeba3a1538de5a8b924c5d8d7a58dc24bb34f1de",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/acfa/campaign.json"
+  },
+  "acfa/points.json": {
+    "bytes": 828092,
+    "sha256": "08ab284bb2a20c28d70e02ea9fcec1a2e05d8ded563d5d5b1730ac5543b8c26a",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/acfa/points.json"
+  },
+  "analysis/README.md": {
+    "bytes": 9563,
+    "sha256": "1c984385d890286edbb280d023926361ec21490f4ea0ae6f5d9bd147df57c295",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/README.md"
+  },
+  "analysis/all-point-rates-and-changes.csv": {
+    "bytes": 77069,
+    "sha256": "e39b74face664c6ed4cff04feb8a4dbb4d0073754f3907c90d0e4101cb478b67",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/all-point-rates-and-changes.csv"
+  },
+  "analysis/analysis-attempts.txt": {
+    "bytes": 274,
+    "sha256": "32fbb6c641444f29f8f93f52eb2b32bf34d6ed81e2847f8209023ed10d642b06",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/analysis-attempts.txt"
+  },
+  "analysis/analysis.log": {
+    "bytes": 4176,
+    "sha256": "8778c59833a074e3823e3f273552535e88b82be797bcb9b8758b7d1e181cb899",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/analysis.log"
+  },
+  "analysis/analyze-first-attempt.py.txt": {
+    "bytes": 7231,
+    "sha256": "ba2e4450b8627c3ecfd9a9696685813415550b87009a40b131c99b27d19c7486",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/analyze-first-attempt.py.txt"
+  },
+  "analysis/analyze.py": {
+    "bytes": 7235,
+    "sha256": "3e2e47b0858d749533e78bd6ba523f9c344d4fadd0fdbe4c1822886a2a7bbaad",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/analyze.py"
+  },
+  "analysis/compare_measured_elf.py": {
+    "bytes": 2446,
+    "sha256": "3a8d899dd7c80ea49cc160fac4c4c2a4623ba41ac6e41e322c5bb0f681706bb7",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/compare_measured_elf.py"
+  },
+  "analysis/manifest.json": {
+    "bytes": 15444,
+    "sha256": "ffa4cf6fcbe50fa74a469b488c93326b7b9506f14b28adcc76650b938dc93fcd",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/manifest.json"
+  },
+  "analysis/measured-elf-proof.json": {
+    "bytes": 4726,
+    "sha256": "83619b28d5928e2917d19af9ed6e49526dda8490b5cc3d19f1030001d240965a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/measured-elf-proof.json"
+  },
+  "analysis/point-provenance.json": {
+    "bytes": 38853,
+    "sha256": "8a4441fa3a6213dfddd333fc741117e17f6d784ce57a7ddaf727c3ac1d92304a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/point-provenance.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log": {
+    "bytes": 3216,
+    "sha256": "a1c6bc9d1e90bf6c9c33c88f0c04c8f8d69ccb869316e22479f944994b895777",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json": {
+    "bytes": 46844,
+    "sha256": "1001a88dc6a76cf2c120bac159003e4fc2a7584a839c40f6e885e413295cd28b",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json": {
+    "bytes": 59604,
+    "sha256": "c65be68e6fb742af02f05f40d270c9f98721d0fbd0a59b2043f6501be8a80132",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json": {
+    "bytes": 3690,
+    "sha256": "cf97da1716a25b853a169499988b47129e4102aff4657ddc7e94c06e5d9496a0",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log": {
+    "bytes": 16652,
+    "sha256": "4946e93012a9e2d280ac4b518b7136f18522b78650edc2f5d143347f28f934aa",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json": {
+    "bytes": 208056,
+    "sha256": "393673373ca54ae93eacb120d1463e00648cc26c202d5d23d686ad191471704b",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json": {
+    "bytes": 242696,
+    "sha256": "fdff5965333b09da205862cd8b22e9eb94e62a20112cf8996a205a3b9a90b772",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json"
+  },
+  "analysis/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json": {
+    "bytes": 21280,
+    "sha256": "7530ec9d992c7244adc20d118c596d7f829d6f20d29b6002f7caf1028d9731db",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3362,
+    "sha256": "521bae18a28a25f4ef6cda3a45f8d261cd218af01d1ffde85800d1d9f2b913f8",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50244,
+    "sha256": "76b0b163d37549c774dfe32a0e4c7e432da71c7ec881c61c60af287e91774ed9",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63472,
+    "sha256": "0cb08c62e9075ecfc5b8edee3aec3d841c7a1a3dd5213519c18c0dafaa11e9ad",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4022,
+    "sha256": "5a943f667cf6cdc14cfb6a9c6808f7b7ea58c48f718d8e4cf7ca1a95d0f94a9f",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log": {
+    "bytes": 3503,
+    "sha256": "7126ea94474c1cf4c16c86f7419ebdc817fe459c151d0d0b991dd028bffa8743",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json": {
+    "bytes": 53985,
+    "sha256": "093ef079b6df3cb5cc541c274699e77dd71c1a952d05c6fc6c83fb66e2812092",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json": {
+    "bytes": 67688,
+    "sha256": "44e90cb9213473074454a3e61f875911ffcdf237675a21bf8e880126fdd11364",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json"
+  },
+  "analysis/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json": {
+    "bytes": 4401,
+    "sha256": "0edeeec392c5e1245c5339a47d575852fb29fd5f6978b7d688a3d163558175b7",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3485,
+    "sha256": "11926c2daf04b2623c1a085b4aa18cd758a9444d1f7d7c720fdf251c03d0b7f5",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50185,
+    "sha256": "179ba1a96d66781ae6a2d868f2f235825df4b69ed819085fe536df616d626769",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63449,
+    "sha256": "2f8214df5756e6004542f7914637ec1911deea0739de2ff61fa6d16dec4b6661",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4022,
+    "sha256": "98376240037868abfd6a60595fcaf53027badad8d7fc4df7974985289747677a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log": {
+    "bytes": 16412,
+    "sha256": "336dc2e94330b16c0e8671fa2a0f9c3993e660db7b9ad8a9af477ade59d4390c",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json": {
+    "bytes": 193488,
+    "sha256": "c9d236eb463f413a49360ed777b9519648a412253993491692ed6f5fde479913",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json": {
+    "bytes": 226213,
+    "sha256": "c192857e3a8b9e6d4984c6f6534e18f1e271ccce458da88d37aae94b072d8b69",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json"
+  },
+  "analysis/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json": {
+    "bytes": 19690,
+    "sha256": "6846af77ce96f08ff869f094720b8d81fa5e9301e2a7c12497212efc88ffe4ff",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/8617/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log": {
+    "bytes": 3215,
+    "sha256": "0d785e059014a74d7c2fbe34c4963e5f0769731642162a65e5098d7b6f93dd37",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json": {
+    "bytes": 46843,
+    "sha256": "c3f38468e279bbecd55fd2a26002509f1a893ecaaa049901c24eb1060276e6c9",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json": {
+    "bytes": 59454,
+    "sha256": "6c40942d36aa222578b0ffdf84e7bf73c2fe07ea29f7cf80c576f69419b7192a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json": {
+    "bytes": 3690,
+    "sha256": "117f717d118254a463d481811430f31cca970dfb0c55a3a46f45dbb2e8a8891f",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log": {
+    "bytes": 16652,
+    "sha256": "413e00db0fba3b9ab4f3599795295c23f1b1c3208f2593e799be95b761309bad",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json": {
+    "bytes": 208029,
+    "sha256": "20646807a65397fde023d32346077110549ad3d5be516ad072c798572eff9407",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json": {
+    "bytes": 242519,
+    "sha256": "c788c9ff2f8d0f71266902df534aa8480d8bfd42b49ea5c53426921ac15a0b35",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json"
+  },
+  "analysis/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json": {
+    "bytes": 21280,
+    "sha256": "ac41d0c926e5c2d4659e23c51e722e286326779174016e5e4b776cc08ddc1787",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3366,
+    "sha256": "67394526e5fc8dc5e79b58a00359e20ddf1f262a5955cda57d9355ff2e8f6705",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50159,
+    "sha256": "00bdb1a2cb4b7eceea74fff916f7faf91ec0784cbe33115223222f735653be2a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63214,
+    "sha256": "aae0b8329b69fd12af607d3e7aa217c78132fe93672bf39b9dc156b66af89fdf",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4022,
+    "sha256": "11e0804a90f323b09f9379624685a0c8395162ec8e60a5672202e2a1b4ddc1eb",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log": {
+    "bytes": 3508,
+    "sha256": "26dfd0e6047104dc23bf6ee72b3a6777d55e887a8130e7fbddbf04e824be7ee2",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json": {
+    "bytes": 53934,
+    "sha256": "6e43a83fc6dedd1c48548c53ed40c9494092535a01cf1013b6445973f35a29b9",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json": {
+    "bytes": 67488,
+    "sha256": "0996e39b0cc25cf1a39bd7ec9eef0470ff03798e6e582730793c9c0dfe65e229",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json"
+  },
+  "analysis/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json": {
+    "bytes": 4401,
+    "sha256": "2510ef75e58ba376369da975d80e30750c02ca4e736feeae9ddea442e4ab2f15",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3485,
+    "sha256": "8bce20d9c83835ff425e4cb8933ea8d25597b1e16256bd411aac4be8b0c056d5",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50399,
+    "sha256": "b710ea721653eea277a6c63de094c4b944191a2b9cc0fec5aae01896df3226ff",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63516,
+    "sha256": "de0e693813ca7fd2c430437fefd6d079ca7edc4cbf9116487d2b5b824fd81c2b",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4022,
+    "sha256": "04bc4160c9c823b078e0c90454f4e7ecd1f8db6d6dd9660b31375a64eacf81f6",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log": {
+    "bytes": 16236,
+    "sha256": "4d28e987c44cd3637d2c8b7921f37dbb0cf855cee8abaac7b87f7f586c69df0f",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json": {
+    "bytes": 193489,
+    "sha256": "336e4521c55ceb08ca0c873b93a62f9905c99e1204762b5bf55c7dbef7eaff03",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json": {
+    "bytes": 226066,
+    "sha256": "e0c0f3e99bd83ec498a894781e9996cb885fdb572b18d54d64e047e4cc805e04",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json"
+  },
+  "analysis/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json": {
+    "bytes": 19690,
+    "sha256": "329215faec889941a384499b0f112f09f29a4f59265f9507a206c5cbcdebe241",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/acfa/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log": {
+    "bytes": 3255,
+    "sha256": "82f2d8eb1953f1ce6f5e83d2a0805a9fbb7425f734b41dc0225064a1fe1dada3",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json": {
+    "bytes": 47188,
+    "sha256": "4821615cbb25e95cc35f25d24b913e52e91f6ecb9be007c9754be382dfeccd39",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json": {
+    "bytes": 59952,
+    "sha256": "26af231523adde196081a4c03ab0544d4bcdb849e95da5fd9ad0d453e675a6f5",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json": {
+    "bytes": 3710,
+    "sha256": "c8aaba9a9ada3cd78567b52debe2747e4c4f5fd6a1f0997ce4faf3813ba1a9c4",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log": {
+    "bytes": 16796,
+    "sha256": "67d508636f41e00ec08acac0a8b975be1e6dafdd79e86de04e5c0a4dc378d51a",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json": {
+    "bytes": 208135,
+    "sha256": "d750f3cecff82428c14059c70e3fea9008b75fde05ef423aab98f6231ce236a0",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json": {
+    "bytes": 242783,
+    "sha256": "b5be55652b528f449678c8f0f633b720f5a3473f6fb9ba2df494bb33f17fa7e8",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json"
+  },
+  "analysis/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json": {
+    "bytes": 21438,
+    "sha256": "46eff90b0551a7917d3ef3697e9bc561fd43c0d17f4630f504715616a384288b",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3401,
+    "sha256": "fdb53f9610ac67a7525132e542ba78ec2d05360a02380fe504553fa6e7bf1f35",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50651,
+    "sha256": "582a05435a29b67bf997d9c13076cb456807d76be574e5897efbd1e5551879c9",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63884,
+    "sha256": "f0a8d6928ccce8e8e87bfe2d6816d0f44ebbf9be74a54d014cde0d1a0e8d60da",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4045,
+    "sha256": "f97c275c55a16b2d30b118e4e6363adc5d40bb02eea468dc8e68fedcab7fd4b0",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log": {
+    "bytes": 3542,
+    "sha256": "a18eb37a043007f09509450466341db60de69c1fa079e62673abe534d19bb1fd",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json": {
+    "bytes": 54326,
+    "sha256": "63b0b16ae7b3f43d366c67a29200b48ef79cd0ba50dec38ae37a147326c35ba0",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json": {
+    "bytes": 68036,
+    "sha256": "1497c3d81e6e2684fab9fbcf35fc4761a45039665406992d915dc8d996963eb7",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json"
+  },
+  "analysis/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json": {
+    "bytes": 4427,
+    "sha256": "62148c5016ce7e5cf372af5e77bc96910122453fe110bd9b8a42b4cb4c5d39d5",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log": {
+    "bytes": 3485,
+    "sha256": "b37631cad20397af99b37ab312bc4e4d22f47b113b20cddb0f9f2aaa113433e4",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json": {
+    "bytes": 50166,
+    "sha256": "4d85a7d5f0d7ea69849de6af07beda933ac318a2e245d8eb3a2f8677d48b2716",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json": {
+    "bytes": 63406,
+    "sha256": "49fa42cce8dd013780c2b4a2fbfc2b13a910b988a3954fe53ce18d21f43dbe08",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json": {
+    "bytes": 4022,
+    "sha256": "ee86342a84c5110b9878185a7f79a187ae65eb30078fa12c4fd7e67749ad43fe",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log": {
+    "bytes": 12314,
+    "sha256": "5d1ca4c4a51d08c9c8e3208177bd7910e160fd20341dc3471c934259834f37c2",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json": {
+    "bytes": 192094,
+    "sha256": "29e4dba63dcd3355750e376a8b2b3e5c739986163bdde2b124ce014ad9d79341",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json": {
+    "bytes": 224862,
+    "sha256": "5bd0468415d5311d5b739cd7037b1a9545d77e5493820d8e9d5683feaff08122",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json"
+  },
+  "analysis/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json": {
+    "bytes": 19690,
+    "sha256": "3278450d63bac836b93abb35c8b089977b984ebcb804fcc71509d4620effb83c",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/points/current/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json"
+  },
+  "analysis/summary.json": {
+    "bytes": 280955,
+    "sha256": "168c3793df8b47e07349e7479f3af6a135d938b0ae89e6c94cc7affcd6f554e1",
+    "source": "/tmp/kdlock-nano-f7-final-analysis-20261030/summary.json"
+  },
+  "binary-inspection/8617e97c-__kd_mutex_lock_slowpath.dis": {
+    "bytes": 10799,
+    "sha256": "0ef6f32b50e791a6873ca191ed1835e7a415aab5cbafaaad9076f9ec4b2fa6a1",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-__kd_mutex_lock_slowpath.dis"
+  },
+  "binary-inspection/8617e97c-__kd_mutex_lock_slowpath.relocations-lines.dis": {
+    "bytes": 131567,
+    "sha256": "5e187d7c96732565437adb8f4b0296b6f1570514389cad3bc18933d42d96eebc",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-__kd_mutex_lock_slowpath.relocations-lines.dis"
+  },
+  "binary-inspection/8617e97c-_kd_mutex_lock_abi.dis": {
+    "bytes": 10124,
+    "sha256": "8674ca3b09a6bc5b2eb235d48aca8398d5e437791c691b6febdb0e95f4fcb5f7",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-_kd_mutex_lock_abi.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_read.dis": {
+    "bytes": 6997,
+    "sha256": "40fbcac9cdeed4d1d246a2d242c1fa795e0e2dc1fe7dba6e5c74e7adbfbccc14",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_read.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_read_interruptible.dis": {
+    "bytes": 3634,
+    "sha256": "b1d7fe9a12506d6076316bd809a58de687144d68194ebfee357383d7187c8035",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_read_interruptible.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_read_killable.dis": {
+    "bytes": 3506,
+    "sha256": "115fc093c63cfce3b48257d504f8099dd7c6b21cffd4015c89159ca0d4b08c4a",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_read_killable.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_read_non_owner.dis": {
+    "bytes": 527,
+    "sha256": "9faa8c47373c9f51e4f1873399f1ce04e209719604c583ddbacf881834035e04",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_read_non_owner.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_read_trylock.dis": {
+    "bytes": 1197,
+    "sha256": "11294a0d4bbc9f51903247b24214103a21d74c3714f730289c81805ff966d7f2",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_read_trylock.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_write.dis": {
+    "bytes": 3718,
+    "sha256": "d02598d595b17ec953c64130609faa8a604e3e32864fe91ef78cdece14e3589e",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_write.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_write_interruptible.dis": {
+    "bytes": 4501,
+    "sha256": "9020104058228cc35b4d4e87a5925b2dc3313c7420deb483ebd8b4cd97d34d65",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_write_interruptible.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_write_killable.dis": {
+    "bytes": 4335,
+    "sha256": "efe025abca2b8c6043db29deb77a7de82700f871f99109056e53394258e7b8d2",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_write_killable.dis"
+  },
+  "binary-inspection/8617e97c-kd_down_write_trylock.dis": {
+    "bytes": 2186,
+    "sha256": "dfa86f653abb5e68fd9445db24f3bc3d4211efd342c513dee830fd206cf4a6bd",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_down_write_trylock.dis"
+  },
+  "binary-inspection/8617e97c-kd_downgrade_write.dis": {
+    "bytes": 1537,
+    "sha256": "1af6e5e146fe32446d9ccb909fd7f89674804049ed7fbe2dc9c64f39a025b6b4",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_downgrade_write.dis"
+  },
+  "binary-inspection/8617e97c-kd_exe_dispatch.cold.dis": {
+    "bytes": 3269,
+    "sha256": "e73c0d4def5aa45c916e5ad745eb80441afe7371842ba6c0591e0de0773acbce",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_exe_dispatch.cold.dis"
+  },
+  "binary-inspection/8617e97c-kd_exe_dispatch.dis": {
+    "bytes": 87501,
+    "sha256": "e72840311eda34fdd678a942aa2363424fb7a461ee7e06019ec43c63285a4636",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_exe_dispatch.dis"
+  },
+  "binary-inspection/8617e97c-kd_mutex_execute_cs.dis": {
+    "bytes": 46493,
+    "sha256": "67fd6df2d9b2ff670e8c8989c8ada4bacd9f3f719d2e46b9c9495e830bf3214e",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_mutex_execute_cs.dis"
+  },
+  "binary-inspection/8617e97c-kd_mutex_run_combiner.dis": {
+    "bytes": 11008,
+    "sha256": "e35b3f1e41ecc9f88f756c4fd78ba042a22aa95cc093d54dfe02220e8339b116",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_mutex_run_combiner.dis"
+  },
+  "binary-inspection/8617e97c-kd_rwsem_delegate_enter.dis": {
+    "bytes": 4384,
+    "sha256": "5b98619eb2827d52fd6f84f7049d78c9bab9a419a0ef086e404f225660f1451b",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_rwsem_delegate_enter.dis"
+  },
+  "binary-inspection/8617e97c-kd_rwsem_delegate_exit.dis": {
+    "bytes": 1387,
+    "sha256": "7da48f2ad89d105311bf2e8e1a1b15ac39e0273014916d1090f2351d3ac2f1fa",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_rwsem_delegate_exit.dis"
+  },
+  "binary-inspection/8617e97c-kd_rwsem_down_write_clobber_v1.dis": {
+    "bytes": 1359,
+    "sha256": "bde9d13f28a560f6e8b2d32920e3ce2e60cb4f1e51c68c14faccd5a68466465c",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_rwsem_down_write_clobber_v1.dis"
+  },
+  "binary-inspection/8617e97c-kd_rwsem_drain_readers.dis": {
+    "bytes": 6772,
+    "sha256": "72519cbd4c5811c12a562eeefbdd79d510c191e9ec8fe142839ca5507d813346",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_rwsem_drain_readers.dis"
+  },
+  "binary-inspection/8617e97c-kd_rwsem_write_release.dis": {
+    "bytes": 1473,
+    "sha256": "72bf69dc9d288b5ec9d3de2f5e9999bdc419580358be0a4dbd509005fec81877",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_rwsem_write_release.dis"
+  },
+  "binary-inspection/8617e97c-kd_up_read.dis": {
+    "bytes": 622,
+    "sha256": "85007faedcb530c58c52ae5a14e3bc46326d9a43629d864c1f16bc27dce288f8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_up_read.dis"
+  },
+  "binary-inspection/8617e97c-kd_up_read.part.0.dis": {
+    "bytes": 1224,
+    "sha256": "3f320a7ce742241d282ff55fe86f9b359ec014893729fbd62fca48d1fa24a6d8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_up_read.part.0.dis"
+  },
+  "binary-inspection/8617e97c-kd_up_read_non_owner.dis": {
+    "bytes": 672,
+    "sha256": "98320766a15682af91a7abc7f59820c95785a5214aae2a163c0ca43e24ec6a32",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_up_read_non_owner.dis"
+  },
+  "binary-inspection/8617e97c-kd_up_write.dis": {
+    "bytes": 1442,
+    "sha256": "a7eff592b14ab0da04e4ca6d919dc74a3f569913dbba734a6cbd4cdfc865e5d8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-kd_up_write.dis"
+  },
+  "binary-inspection/8617e97c-run_combiner.dis": {
+    "bytes": 39390,
+    "sha256": "be120036b1df27db4e55dcd321e9c56533928585307a11261dc320ba4c77ba9c",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-run_combiner.dis"
+  },
+  "binary-inspection/8617e97c-run_combiner.relocations-lines.dis": {
+    "bytes": 234382,
+    "sha256": "99fb864ed1d8162a8871f86bcec192255a3de0e2b508ace15bd18535b31a897a",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-run_combiner.relocations-lines.dis"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-__kd_mutex_lock_slowpath.normalized.diff": {
+    "bytes": 12415,
+    "sha256": "c68e9a1aec80ae62d1ab77e831296bb7515c6ba1851c32e81daf2727586e7d4a",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-__kd_mutex_lock_slowpath.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-_kd_mutex_lock_abi.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-_kd_mutex_lock_abi.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_read.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_read.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_read_interruptible.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_read_interruptible.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_read_killable.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_read_killable.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_read_non_owner.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_read_non_owner.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_read_trylock.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_read_trylock.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_write.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_write.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_write_interruptible.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_write_interruptible.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_write_killable.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_write_killable.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_down_write_trylock.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_down_write_trylock.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_downgrade_write.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_downgrade_write.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_exe_dispatch.cold.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_exe_dispatch.cold.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_exe_dispatch.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_exe_dispatch.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_mutex_execute_cs.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_mutex_execute_cs.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_mutex_run_combiner.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_mutex_run_combiner.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_rwsem_delegate_enter.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_rwsem_delegate_enter.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_rwsem_delegate_exit.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_rwsem_delegate_exit.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_rwsem_down_write_clobber_v1.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_rwsem_down_write_clobber_v1.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_rwsem_drain_readers.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_rwsem_drain_readers.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_rwsem_write_release.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_rwsem_write_release.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_up_read.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_up_read.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_up_read.part.0.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_up_read.part.0.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_up_read_non_owner.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_up_read_non_owner.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-kd_up_write.normalized.diff": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-kd_up_write.normalized.diff"
+  },
+  "binary-inspection/8617e97c-to-f7a84065-run_combiner.normalized.diff": {
+    "bytes": 36154,
+    "sha256": "e9aa68af2f2a2096494d7c37c77bebd93a13232d147e7ee4c6314aae383ad0c8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/8617e97c-to-f7a84065-run_combiner.normalized.diff"
+  },
+  "binary-inspection/README.md": {
+    "bytes": 5787,
+    "sha256": "52331e102c9afba63857a9c44d05828de58ceb7e39cc200594a5edcba51d44d2",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/README.md"
+  },
+  "binary-inspection/__kd_mutex_lock_slowpath.cold.dis": {
+    "bytes": 832,
+    "sha256": "5ebe6e06a89c77c470fff342843fedfedf7afa34784fd2bbfe4806f6e8b74d6c",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/__kd_mutex_lock_slowpath.cold.dis"
+  },
+  "binary-inspection/cold-relocations.json": {
+    "bytes": 3179,
+    "sha256": "d98559212b82bf50cef4d83cee19eaeba1f4d36d2e1563df6b75a16d4a003db8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/cold-relocations.json"
+  },
+  "binary-inspection/comparison.json": {
+    "bytes": 42732,
+    "sha256": "9e9be89c6102a61a19318c2b3e8e77d70bc9596e055c722af315ead28f8d690f",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/comparison.json"
+  },
+  "binary-inspection/f7a84065-__kd_mutex_lock_slowpath.dis": {
+    "bytes": 10772,
+    "sha256": "abf6c8e15d0c47aec4954648f296db7e21ca1ee57310463c371531b53b911357",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-__kd_mutex_lock_slowpath.dis"
+  },
+  "binary-inspection/f7a84065-__kd_mutex_lock_slowpath.relocations-lines.dis": {
+    "bytes": 132174,
+    "sha256": "4766932cf749656e7ce7e7b9395ccfb0442cf092c144639641a325f5ad63dfdd",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-__kd_mutex_lock_slowpath.relocations-lines.dis"
+  },
+  "binary-inspection/f7a84065-_kd_mutex_lock_abi.dis": {
+    "bytes": 10124,
+    "sha256": "2eaa6d2a9158c4fb17a3f6ab78219f6f80ac1cf91bc8cbb4d664d09bdd4c653e",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-_kd_mutex_lock_abi.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_read.dis": {
+    "bytes": 6997,
+    "sha256": "81502cb7eae2c7e80923ce248b98cf5339752765edf2b14094a1047dbd64e414",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_read.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_read_interruptible.dis": {
+    "bytes": 3634,
+    "sha256": "a60bd376524edfe9160271c76234b8754496916e468b2036277c299f4ba529e1",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_read_interruptible.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_read_killable.dis": {
+    "bytes": 3506,
+    "sha256": "d073af17f9de81a0d3bba9ac1ca52134103fa4b118fd515633235b8457b8a3bd",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_read_killable.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_read_non_owner.dis": {
+    "bytes": 527,
+    "sha256": "25a7265fe6880756067a044f010185943bf7763ae3aa295f3d2bd11790c2f95e",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_read_non_owner.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_read_trylock.dis": {
+    "bytes": 1197,
+    "sha256": "44b264e5389e31cfb1aed00d35786bfa3194177eb182679bddd24279baae0494",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_read_trylock.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_write.dis": {
+    "bytes": 3718,
+    "sha256": "ab2003ac90f0171088174ee4314bb636b49f52d6b1df5c16a0eb3506dc5364c8",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_write.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_write_interruptible.dis": {
+    "bytes": 4501,
+    "sha256": "d831ff6801ddbdf50ea5e4fc8d12cdbec27c0f723042ab10e877a79cb9512aff",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_write_interruptible.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_write_killable.dis": {
+    "bytes": 4335,
+    "sha256": "ae7f4573e5a2c7bdd19e10c05bd7b66a6863bd0bad20432f5e0cf2d66c2cda56",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_write_killable.dis"
+  },
+  "binary-inspection/f7a84065-kd_down_write_trylock.dis": {
+    "bytes": 2186,
+    "sha256": "2463e3952edab2cdc014cc9a313cef3cb8f0451d522e0bd83be7910c1adb4b25",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_down_write_trylock.dis"
+  },
+  "binary-inspection/f7a84065-kd_downgrade_write.dis": {
+    "bytes": 1537,
+    "sha256": "1b8b6ede3073ea601a86c6da594128806cbc3f8a7349c7d4de49aad53e5551e9",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_downgrade_write.dis"
+  },
+  "binary-inspection/f7a84065-kd_exe_dispatch.cold.dis": {
+    "bytes": 3269,
+    "sha256": "fe8bfc18025c5552993faf23577b2f4771d86e19f4cb9fcb8d5974afb60bd774",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_exe_dispatch.cold.dis"
+  },
+  "binary-inspection/f7a84065-kd_exe_dispatch.dis": {
+    "bytes": 87501,
+    "sha256": "d4396e43f134075aa6d627e90bebce501f2c2b19590495f68418aa67b9add6b4",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_exe_dispatch.dis"
+  },
+  "binary-inspection/f7a84065-kd_mutex_execute_cs.dis": {
+    "bytes": 46493,
+    "sha256": "7d26db8285c71d4d19406fc78e91ddcec2037d039683ed5d2ec570349f6a273a",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_mutex_execute_cs.dis"
+  },
+  "binary-inspection/f7a84065-kd_mutex_run_combiner.dis": {
+    "bytes": 11008,
+    "sha256": "9d7265c8ffcf8189c479fb60c03bc4c0d4eb02e55a910afca94d4ce5ca9c9d5a",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_mutex_run_combiner.dis"
+  },
+  "binary-inspection/f7a84065-kd_rwsem_delegate_enter.dis": {
+    "bytes": 4384,
+    "sha256": "2096ff7c53eec3d19574c8493a95ff77b9c48fb092e2a3a716c734d66926a4a5",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_rwsem_delegate_enter.dis"
+  },
+  "binary-inspection/f7a84065-kd_rwsem_delegate_exit.dis": {
+    "bytes": 1387,
+    "sha256": "fdc2d4aa5eb5ea8dd27a9b3cb91a0f3ff352f9f93f113bde9383c73c16e13c4c",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_rwsem_delegate_exit.dis"
+  },
+  "binary-inspection/f7a84065-kd_rwsem_down_write_clobber_v1.dis": {
+    "bytes": 1359,
+    "sha256": "a00216985332279bb6e676dcc0da93afe255f55fa2b29bb43784c8e898990636",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_rwsem_down_write_clobber_v1.dis"
+  },
+  "binary-inspection/f7a84065-kd_rwsem_drain_readers.dis": {
+    "bytes": 6772,
+    "sha256": "7ec8a366708d40643c1c68a028ab349566634367ecfaf10b787cf1470384baad",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_rwsem_drain_readers.dis"
+  },
+  "binary-inspection/f7a84065-kd_rwsem_write_release.dis": {
+    "bytes": 1473,
+    "sha256": "b2c0d6068b685fc1dc31c8c722643c5599490a41e339fde7a24157ee5cb0f828",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_rwsem_write_release.dis"
+  },
+  "binary-inspection/f7a84065-kd_up_read.dis": {
+    "bytes": 622,
+    "sha256": "1a96692eb1d342bb8549a0e30239e465917eade31f1a8c2da01e2a1257624bcf",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_up_read.dis"
+  },
+  "binary-inspection/f7a84065-kd_up_read.part.0.dis": {
+    "bytes": 1224,
+    "sha256": "26211dfb1aa38d956f255f1784c1255234e43980a6c64a158902b3d0a5f65eff",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_up_read.part.0.dis"
+  },
+  "binary-inspection/f7a84065-kd_up_read_non_owner.dis": {
+    "bytes": 672,
+    "sha256": "0a3643d69a52c30870bef81720569ffc4e794113e7be519f38ceeca05a3be953",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_up_read_non_owner.dis"
+  },
+  "binary-inspection/f7a84065-kd_up_write.dis": {
+    "bytes": 1442,
+    "sha256": "9c82f4d567a76f38274818f3fcc6b73af9b98d761d8b15e90c218077be53ff78",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-kd_up_write.dis"
+  },
+  "binary-inspection/f7a84065-run_combiner.dis": {
+    "bytes": 39538,
+    "sha256": "3a76d4a8e941bbbe9745f7847021dad48ec246bcbf6f1c737923a6fbe0ab2258",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-run_combiner.dis"
+  },
+  "binary-inspection/f7a84065-run_combiner.relocations-lines.dis": {
+    "bytes": 237221,
+    "sha256": "65034d837cbab30cfdeac2bb3eaa22746efd136faaa1f086337b7f60addefeea",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/f7a84065-run_combiner.relocations-lines.dis"
+  },
+  "binary-inspection/inspection-receipt.json": {
+    "bytes": 10483,
+    "sha256": "f6faade9b10b46354fc09eee823f962e50ff71e0221a1d1bb65b793a874ae780",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/inspection-receipt.json"
+  },
+  "binary-inspection/manual-review-receipt.json": {
+    "bytes": 891,
+    "sha256": "8a3b5dcc238652ea3494b8448e9b28c4f904b0fdc63301852f291980ff482752",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/manual-review-receipt.json"
+  },
+  "binary-inspection/run_combiner.cold.dis": {
+    "bytes": 998,
+    "sha256": "7d41ba8631298708667d76f8c2a187a0bc83385d9171e2e915abd6014cca68cf",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/run_combiner.cold.dis"
+  },
+  "binary-inspection/unit-owner.json": {
+    "bytes": 5132,
+    "sha256": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "source": "/tmp/kdlock-provider-f7a84065-static-comparison-20261030/unit-owner.json"
+  },
+  "current/campaign.json": {
+    "bytes": 41360,
+    "sha256": "e37d2d51ae497f117b897328bff754b883523e6eafaa92da4becb3c698f37679",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/campaign.json"
+  },
+  "current/elf-provenance.json": {
+    "bytes": 52791,
+    "sha256": "ed06f5d6b9dd18db9d606d9799b92ffed349c2d853f2e81eb66319865e9b90fd",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elf-provenance.json"
+  },
+  "current/points.json": {
+    "bytes": 828190,
+    "sha256": "0db27566b3b9b71861710b81c6197bc9df898da6327dd63c86ca8d151ad80390",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/points.json"
+  },
+  "current/provider-audit.json": {
+    "bytes": 57722,
+    "sha256": "5095d7ec2f664435ef611eac74747ed54b8732e88d13c5f6cb1e6dad88fc45c6",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/provider-audit.json"
+  },
+  "prerequisites/basic-owner.json": {
+    "bytes": 2799,
+    "sha256": "8e6b41da338eb8e17de6f69ffae694fd24f0005e3a9f1f081278e32fcea261e5",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/basic-owner.json"
+  },
+  "prerequisites/basic-result.json": {
+    "bytes": 11173,
+    "sha256": "fd8579d8e7609e340f78af713263fc51dae8c5da9377f926c0ae41797d028ad1",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/basic-result.json"
+  },
+  "prerequisites/mixed-owner.json": {
+    "bytes": 3401,
+    "sha256": "c3337c184618601816c5e90a38d4cb5db4d6ce1998b81599033f1a9e329a532a",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/mixed-owner.json"
+  },
+  "prerequisites/mixed-result.json": {
+    "bytes": 98074,
+    "sha256": "0a98c926292520f173f2327e9f3a7bf8ca47eb2fff14589dd570af37e18a123a",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/mixed-result.json"
+  },
+  "prerequisites/mixed-session.json": {
+    "bytes": 101526,
+    "sha256": "82506ae7af0ab05bb2512773163742d8f2aae40c07c97bb9f9082bba6216c3d2",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/mixed-session.json"
+  },
+  "prerequisites/origin-owner.json": {
+    "bytes": 3410,
+    "sha256": "8e0cc4c7780f7ee92dfee91433d89ebd5bf9708813447e10a4ded16e1c40de55",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/origin-owner.json"
+  },
+  "prerequisites/origin-result.json": {
+    "bytes": 140128,
+    "sha256": "fc5f1ae7aa99b361d3f3f3df2e639d0a106432b21096e56d1405520d872ef5c0",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/origin-result.json"
+  },
+  "prerequisites/origin-session.json": {
+    "bytes": 144600,
+    "sha256": "851a55ec2f918185e6ea62b6c3217716fc132cc76e3c6c6135e9f5b0e482b496",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/origin-session.json"
+  },
+  "prerequisites/provider-build.log": {
+    "bytes": 2310,
+    "sha256": "2d2c3364cb9d8fb4d3469ea22ffe4f88aa378d95c1365abe0fd2f9b749e9bdb8",
+    "source": "/tmp/kdlock-continuation-f7a84065-provider-build.log"
+  },
+  "prerequisites/rwsem-owner.json": {
+    "bytes": 3493,
+    "sha256": "5a5b85820b1944eef63a6821a3fdd9dc0855cccb63609db2a3c5551e8f901f9f",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/rwsem-owner.json"
+  },
+  "prerequisites/rwsem-result.json": {
+    "bytes": 96873,
+    "sha256": "40ff1aa9e3665a3c078e8a6ed6ae8f23b5b85fafc61b4dc29230a4a09c4b7591",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/rwsem-result.json"
+  },
+  "prerequisites/rwsem-session.json": {
+    "bytes": 100334,
+    "sha256": "d46abd6384cb57c0af0431f64600870a078d47cfd03dd3a5402cd0258f5328ff",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/rwsem-session.json"
+  },
+  "prerequisites/unit-reuse-controller.py": {
+    "bytes": 6426,
+    "sha256": "e60a9285bca40716fdad9dcd409026471fadbc771508eccab4483797a4247b71",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/unit-reuse-controller.py"
+  },
+  "prerequisites/unit-reuse-owner.json": {
+    "bytes": 2085,
+    "sha256": "313a1ad0a38891530ec29cd2ceb5aa781d1236056b94ea21fbb47738d32a7bea",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/unit-reuse-owner.json"
+  },
+  "prerequisites/unit-reuse-sync.json": {
+    "bytes": 910614,
+    "sha256": "e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/unit-reuse-sync.json"
+  },
+  "prerequisites/unit-reuse-unit.log": {
+    "bytes": 15357,
+    "sha256": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/unit-reuse-unit.log"
+  },
+  "prerequisites/unit.json": {
+    "bytes": 5132,
+    "sha256": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/unit.json"
+  },
+  "prerequisites/unit.log": {
+    "bytes": 6693,
+    "sha256": "b5322d00a36271c735ad350d69fbbe9e0d412fe9c731ae59b356ed7190d702ac",
+    "source": "/tmp/kdlock-continuation-f7a84065-unit.log"
+  },
+  "receipts/archive-owner.json": {
+    "bytes": 6613,
+    "sha256": "fc5a6a503d59a4eb0f505ee3250502608059aa0037fc09835dfd8fadddf67e4f",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/archive-owner.json"
+  },
+  "receipts/archive-watch-r3-owner.json": {
+    "bytes": 11535,
+    "sha256": "34d7d57c6f2737576911c02e8dafcb542ccedb713f06cc519a1f8b8a7d3cefde",
+    "source": "/tmp/kdlock-continuation-perf-nano-f7a84065-20261030-archive-watch-r3-owner.json"
+  },
+  "receipts/archives.json": {
+    "bytes": 7498,
+    "sha256": "ff7c1f6533cd435a13fc065b2c667581f3ac45aa878292034fdf5b3c3f6f450b",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/archives.json"
+  },
+  "receipts/endpoint-receipt.json": {
+    "bytes": 1221,
+    "sha256": "404b65b853b89d735140977e0d322cd26cda5ee24facffee14fcaa7d67b0c5bb",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/endpoint-receipt.json"
+  },
+  "receipts/host-after.json": {
+    "bytes": 464667,
+    "sha256": "26a91814b223f15768f35b18a1c38acd23bb766aadddc14fc1436d8178cfe9f0",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/host-after.json"
+  },
+  "receipts/host-before.json": {
+    "bytes": 458451,
+    "sha256": "00ceb21b63d3b26935ce10c1b494dac21841948b328685eb151a28609cbd3ed0",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/host-before.json"
+  },
+  "receipts/host-reference.json": {
+    "bytes": 457249,
+    "sha256": "cbdd4de1bd9ad2abc143658a6eaa0c8e77d3f77fdf61151d89c365d0a2d539a0",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/host-reference.json"
+  },
+  "receipts/owner.json": {
+    "bytes": 7819,
+    "sha256": "6def6d611a9eef3f5d55aaee4d6d81ffa0a6b270401f518fcc626dc3febdddd6",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/owner.json"
+  },
+  "receipts/plan.json": {
+    "bytes": 19796,
+    "sha256": "ac3f8ff89d2bd60aac68c1bbe2ff5a7ee71dd13eba3ed21ccebaa70f8ae649bb",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/plan.json"
+  },
+  "receipts/postprocess-path-correction.md": {
+    "bytes": 1143,
+    "sha256": "277a752ee2f90efb26b354aa54080ff0f6969234396d34676bb6e8560fe10a5c",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-watch-r2-20261030.md"
+  },
+  "receipts/postprocess-r1/owner.json": {
+    "bytes": 2432,
+    "sha256": "46ed95e2a1e36cc37507d591400516b18ad8e7851c9ba98518236f9cfaa4f5ce",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-20261030/owner.json"
+  },
+  "receipts/postprocess-r1/stop.json": {
+    "bytes": 414,
+    "sha256": "2e7099c24870aa182ff051cd4361d0d880a99474667e7d8483630d2f91439f6c",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-20261030/stop.json"
+  },
+  "receipts/postprocess-r2/audit.log": {
+    "bytes": 1157,
+    "sha256": "0efaa051d2b4e93e69fcbd434dd97116b6fc64af61c29e2e80c4d4f147f4991e",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-r2-20261030/audit.log"
+  },
+  "receipts/postprocess-r2/fetch.log": {
+    "bytes": 137,
+    "sha256": "dac15d4b5785e961a7d7aa172a6ffaefccc7ec3c0ac02b25155735e8aca55291",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-r2-20261030/fetch.log"
+  },
+  "receipts/postprocess-r2/owner.json": {
+    "bytes": 7531,
+    "sha256": "d24710105272310e15f5679986bfe36427491266248c064e27afe7659ed0f056",
+    "source": "/tmp/kdlock-nano-f7a84065-postprocess-r2-20261030/owner.json"
+  },
+  "receipts/sync.json": {
+    "bytes": 910614,
+    "sha256": "e60d0fe664b1f0bc53e5a3236b4f77df555fd2d06716646dcb67bdad40f7c887",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-control/sync.json"
+  },
+  "receipts/transfer.json": {
+    "bytes": 7401,
+    "sha256": "3163817f616b1c31f9ac29369c6e26a06a74556101cf75c2ac4c1a6f4d9c012e",
+    "source": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/transfer.json"
+  },
+  "tools/archive_helpers.py": {
+    "bytes": 3938,
+    "sha256": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda",
+    "source": "/tmp/kdlock-nano-f7a84065-analysis-prep-20261030/archive_helpers.py"
+  },
+  "tools/audit_compare.py": {
+    "bytes": 14342,
+    "sha256": "cc1cc246217e4e43564530eac1fa1ce1b6fdac08bcde3bef814de10e2eb50133",
+    "source": "/tmp/kdlock-nano-f7a84065-analysis-prep-20261030/audit_compare.py"
+  },
+  "tools/compare_provider.py": {
+    "bytes": 10090,
+    "sha256": "09484be7569dd0a17581093a3f8cf937193bd5384a86c7b522081954fbcd7e85",
+    "source": "/tmp/kdlock-provider-f7a84065-inspection-prep-20261030/compare_provider.py"
+  },
+  "tools/controllers/kdlock-continuation-perf-live-r2-20261030.py": {
+    "bytes": 15772,
+    "sha256": "fdce682d696a6eb76b6bea511b1edc02a12655fae3eec2ac5065922ff9a6359e",
+    "source": "/tmp/kdlock-continuation-perf-live-r2-20261030.py"
+  },
+  "tools/controllers/kdlock-continuation-perf-nano-r2-20261030.py": {
+    "bytes": 29419,
+    "sha256": "c73bb5bf52cf2d2d66af0d39f4189f48db791556da61b003ba8ea2a2095bff1a",
+    "source": "/tmp/kdlock-continuation-perf-nano-r2-20261030.py"
+  },
+  "tools/controllers/kdlock-continuation-perf-unit-r2-20261030.py": {
+    "bytes": 11333,
+    "sha256": "fe9208ce981a4e0d524c8366fe7cce78683f45235316e0ef85514c4555fce996",
+    "source": "/tmp/kdlock-continuation-perf-unit-r2-20261030.py"
+  },
+  "tools/nano_core.py": {
+    "bytes": 39587,
+    "sha256": "1bbd6e010c27c42f5293a3df09660342e453d49663d9452e3c1d02269116c3a7",
+    "source": "/tmp/kdlock-nano-f7a84065-analysis-prep-20261030/nano_core.py"
+  },
+  "tools/prerequisites.py": {
+    "bytes": 9198,
+    "sha256": "2e97f2e5b98cc4b03d9d53b5e5727a8d093010938b22811583ecea659308e8e1",
+    "source": "/tmp/kdlock-nano-f7a84065-analysis-prep-20261030/prerequisites.py"
+  },
+  "validation.json": {
+    "bytes": 122504,
+    "sha256": "1ed01930d09da234b2158b9298310dab086f9f1e3c6c94fd24ca07bca9f3422d",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/validation.json"
+  },
+  "vs-8617/points.csv": {
+    "bytes": 110340,
+    "sha256": "58b3fb5965f1f51b887a6fb4247249e2f2a58706ac305375fc94a2345cbe2318",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/vs-8617/points.csv"
+  },
+  "vs-8617/summary.json": {
+    "bytes": 545,
+    "sha256": "541005b1479b78fd274bca4f45f61ae40b34bb8cb152a8fccee9cec3c1cecfa5",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/vs-8617/summary.json"
+  },
+  "vs-acfa/points.csv": {
+    "bytes": 110408,
+    "sha256": "24ded91cf8d4e494845ce4f6f6259ea5c43ec2c7630095fda4d681ff0caf8b8d",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/vs-acfa/points.csv"
+  },
+  "vs-acfa/summary.json": {
+    "bytes": 545,
+    "sha256": "4cbcedd0ec54535c1bcb5568067b7aacc1d4c8ea5096e16852c33a6c0aa4c603",
+    "source": "/tmp/kdlock-nano-f7a84065-comparison-20261030/vs-acfa/summary.json"
+  }
+}

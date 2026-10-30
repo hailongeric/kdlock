@@ -157,24 +157,38 @@ outside this work.
 
 The user authorized the [October 30 integration sequence](design/kernel_cs_semantics.md#october-30-implementation-plan-and-acceptance-gates): semantic/function repairs,
 one-round nano and bounded syscall comparisons, localized mmap, full selected
-kernel object binding, then unchanged mmap1 acceptance. Implementation begins
-from `acfa33a5`; prior regressed mutex candidates remain unpromoted. The plan's
-gates are pending, and no claimed coverage or performance changes merely because
-implementation is authorized.
+kernel object binding, then unchanged mmap1 acceptance. The sequence started
+from `acfa33a5`; prior regressed mutex candidates remain unpromoted. The selected
+syscall, localized mmap and unchanged mmap1 comparison gates remain pending.
 
-The [per-lock native critical-section map](design/kernel_cs_semantics.md) records
-the October 30 source/object analysis before implementation. Newly identified
-work includes preserving the decoder's prefixed-NOP PAUSE path, stable local
-boundaries for learned Native inner-lock calls, saved waiter/executor context
-comparison, exact cross-function acquire/return/release graphs, and cancellable
-delegated mmap writers with downgrade. These are unresolved; no runtime change,
-new test pass, hotspot profile or performance claim accompanies the audit.
+The [per-lock native critical-section map](design/kernel_cs_semantics.md) retains
+the pre-implementation `acfa33a5` audit. The current candidate implements exact
+F3 90 PAUSE lowering, supported native-escape instruction markers that preserve
+later image eligibility, stable Native inner/context CALL boundaries, and saved
+ordinary spin waiter/executor context checks. Address-guard fallback still
+disables the entry. The
+[bounded functional record](../bench/results/10.176.26.71/tests/kernel-proxy-functional-20261030/README.md)
+records earlier scoped checks; it does not validate every context or selected
+bound-object syscall. Cross-function ownership coverage remains limited, and
+native MM bodies continue locally on their original task; delegated mmap writers
+and prepared teardown are outside the current integration plan.
+
+Typed RDTSC/RDTSCP/CPUID service supports original-task execution followed by
+same-image JIT reentry for a sole-outer ABI2 mutex or prepared rwsem writer,
+retaining arithmetic flags, budget and exact ownership. Generic Native CALL
+fallback still runs the callee and remaining suffix on the waiter; arbitrary
+branch-only JIT return is unimplemented. The runtime candidate at
+`f7a84065e84474380faa37eeadfdf534abd72a68` has
+[recorded focused validation and a 210-point nano comparison](../bench/results/10.176.26.71/bench/continuation-perf-nano-20261030/README.md).
+The functional checks passed, but nano performance acceptance remains false.
+The user authorized later syscall/MM comparisons on this isolated candidate;
+those gates remain pending, and no syscall or MM pass is implied.
 
 | Area | Remaining limit |
 | --- | --- |
 | Whole-kernel replacement | Loading the provider does not convert kernel objects; each object and all its users require one protocol and lifecycle integration |
 | Pinned delegation waiters | Published mutex producers poll with preemption disabled; broad oversubscription/progress redesign is deferred |
-| Origin context | Hardware task/GS, IRQ/RCU, accounting and address-space state remain the executor's; trusting source does not switch them |
+| Origin context | Saved ordinary spin context checks and typed original-task instructions do not cover arbitrary IRQ/RCU, accounting or address-space intervals; trusting source does not supply those contracts |
 | Native recovery | Generic FULL exits do not restore arbitrary flags or SIMD/FPU state; only the documented instruction-exit paths preserve their declared arithmetic flags |
 | Mitigations | Active call-depth tracking is rejected; complete mitigation coverage of handwritten/generated returns remains unvalidated |
 | Image replacement | Mutex images are immutable; ordinary spin/rwlock entries may still replace code in place until an immutable transition |
@@ -196,11 +210,13 @@ actual shared-MM comparison completed 42 points; Native was faster at all 21
 worker counts. At 60 workers KD achieved 0.0436× Native throughput. A measured
 cause or accepted optimization has not been established on the Linux 7 cohort.
 
-The next scoped tasks are an exact actual-backend `mmap1_threads` runner, its
-independent-process control, and a generic actual-backend minor-fault throughput
-driver. Existing independent-mm device mappings and private-backing fault cycles
-are different workloads. Preserve native MM bodies and original-task execution;
-operation-specific delegation and prepared teardown remain retired.
+The [unchanged upstream mmap1 runner](../bench/mmap1/README.md) is implemented
+for `mmap1_threads` and the separate `mmap1_processes` control, including frozen
+executable reuse and actual worker/mm identity checks. Its matched Native/KD
+application comparison remains pending. A generic actual-backend minor-fault
+throughput driver is still needed. Existing device mappings and private-backing
+fault cycles are different workloads. Preserve native MM bodies and original-task
+execution; operation-specific delegation and prepared teardown remain retired.
 
 Favorable nano points do not establish a universal gain. Current repeated
 confirmation, uncertainty estimates and performance-neutral integration remain

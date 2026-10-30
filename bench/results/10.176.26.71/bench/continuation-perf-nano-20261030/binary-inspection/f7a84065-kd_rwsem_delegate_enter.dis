@@ -1,0 +1,120 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001df40 <kd_rwsem_delegate_enter>:
+   1df40:	call   1df45 <kd_rwsem_delegate_enter+0x5>
+   1df45:	push   %rbp
+   1df46:	mov    %rsp,%rbp
+   1df49:	push   %r14
+   1df4b:	push   %r13
+   1df4d:	push   %r12
+   1df4f:	push   %rbx
+   1df50:	sub    $0x30,%rsp
+   1df54:	mov    %gs:0x0(%rip),%r12        # 1df5c <kd_rwsem_delegate_enter+0x1c>
+   1df5c:	mov    %r12,-0x28(%rbp)
+   1df60:	mov    %rdi,%r12
+   1df63:	call   1df68 <kd_rwsem_delegate_enter+0x28>
+   1df68:	mov    %gs:0x0(%rip),%rdi        # 1df70 <kd_rwsem_delegate_enter+0x30>
+   1df70:	mov    $0x4000,%ecx
+   1df75:	movabs $0x7ffffffffffffffe,%rsi
+   1df7f:	lea    0x80(%r12),%rbx
+   1df87:	mov    0x80(%r12),%rax
+   1df8f:	cmp    %rax,%rsi
+   1df92:	jb     1dfea <kd_rwsem_delegate_enter+0xaa>
+   1df94:	test   %rax,%rax
+   1df97:	jne    1dfa5 <kd_rwsem_delegate_enter+0x65>
+   1df99:	mov    0x118(%r12),%edx
+   1dfa1:	test   %edx,%edx
+   1dfa3:	jne    1dfea <kd_rwsem_delegate_enter+0xaa>
+   1dfa5:	lea    0x1(%rax),%rdx
+   1dfa9:	lock cmpxchg %rdx,(%rbx)
+   1dfae:	jne    1df8f <kd_rwsem_delegate_enter+0x4f>
+   1dfb0:	mov    $0x2,%esi
+   1dfb5:	mov    %r12,%rdi
+   1dfb8:	call   1d390 <kd_rwsem_drain_readers>
+   1dfbd:	mov    -0x28(%rbp),%rax
+   1dfc1:	sub    %gs:0x0(%rip),%rax        # 1dfc9 <kd_rwsem_delegate_enter+0x89>
+   1dfc9:	jne    1e0f4 <kd_rwsem_delegate_enter+0x1b4>
+   1dfcf:	add    $0x30,%rsp
+   1dfd3:	pop    %rbx
+   1dfd4:	pop    %r12
+   1dfd6:	pop    %r13
+   1dfd8:	pop    %r14
+   1dfda:	pop    %rbp
+   1dfdb:	xor    %eax,%eax
+   1dfdd:	xor    %edx,%edx
+   1dfdf:	xor    %ecx,%ecx
+   1dfe1:	xor    %esi,%esi
+   1dfe3:	xor    %edi,%edi
+   1dfe5:	jmp    1dfea <kd_rwsem_delegate_enter+0xaa>
+   1dfea:	mov    (%rdi),%rax
+   1dfed:	test   $0x10,%al
+   1dfef:	jne    1dff8 <kd_rwsem_delegate_enter+0xb8>
+   1dff1:	pause  
+   1dff3:	sub    $0x1,%ecx
+   1dff6:	jne    1df87 <kd_rwsem_delegate_enter+0x47>
+   1dff8:	call   1dffd <kd_rwsem_delegate_enter+0xbd>
+   1dffd:	mov    0x80(%r12),%rax
+   1e005:	movabs $0x7ffffffffffffffe,%rcx
+   1e00f:	cmp    %rax,%rcx
+   1e012:	jb     1e032 <kd_rwsem_delegate_enter+0xf2>
+   1e014:	test   %rax,%rax
+   1e017:	jne    1e025 <kd_rwsem_delegate_enter+0xe5>
+   1e019:	mov    0x118(%r12),%edx
+   1e021:	test   %edx,%edx
+   1e023:	jne    1e032 <kd_rwsem_delegate_enter+0xf2>
+   1e025:	lea    0x1(%rax),%rdx
+   1e029:	lock cmpxchg %rdx,(%rbx)
+   1e02e:	je     1dfb0 <kd_rwsem_delegate_enter+0x70>
+   1e030:	jmp    1e00f <kd_rwsem_delegate_enter+0xcf>
+   1e032:	xor    %esi,%esi
+   1e034:	lea    -0x50(%rbp),%rdi
+   1e038:	movq   $0x0,-0x50(%rbp)
+   1e040:	movabs $0x7ffffffffffffffe,%r14
+   1e04a:	movq   $0x0,-0x48(%rbp)
+   1e052:	movq   $0x0,-0x40(%rbp)
+   1e05a:	movq   $0x0,-0x38(%rbp)
+   1e062:	movq   $0x0,-0x30(%rbp)
+   1e06a:	call   1e06f <kd_rwsem_delegate_enter+0x12f>
+   1e06f:	mov    $0x2,%edx
+   1e074:	lea    -0x50(%rbp),%rsi
+   1e078:	lea    0xc0(%r12),%rdi
+   1e080:	call   1e085 <kd_rwsem_delegate_enter+0x145>
+   1e085:	mov    0x80(%r12),%rax
+   1e08d:	cmp    %rax,%r14
+   1e090:	jb     1e0c4 <kd_rwsem_delegate_enter+0x184>
+   1e092:	test   %rax,%rax
+   1e095:	jne    1e0a3 <kd_rwsem_delegate_enter+0x163>
+   1e097:	mov    0x118(%r12),%edx
+   1e09f:	test   %edx,%edx
+   1e0a1:	jne    1e0c4 <kd_rwsem_delegate_enter+0x184>
+   1e0a3:	lea    0x1(%rax),%rdx
+   1e0a7:	lock cmpxchg %rdx,(%rbx)
+   1e0ac:	jne    1e08d <kd_rwsem_delegate_enter+0x14d>
+   1e0ae:	lea    -0x50(%rbp),%rsi
+   1e0b2:	lea    0xc0(%r12),%rdi
+   1e0ba:	call   1e0bf <kd_rwsem_delegate_enter+0x17f>
+   1e0bf:	jmp    1dfb0 <kd_rwsem_delegate_enter+0x70>
+   1e0c4:	call   1e0c9 <kd_rwsem_delegate_enter+0x189>
+   1e0c9:	mov    0x80(%r12),%rax
+   1e0d1:	cmp    %rax,%r14
+   1e0d4:	jb     1e06f <kd_rwsem_delegate_enter+0x12f>
+   1e0d6:	test   %rax,%rax
+   1e0d9:	jne    1e0e7 <kd_rwsem_delegate_enter+0x1a7>
+   1e0db:	mov    0x118(%r12),%edx
+   1e0e3:	test   %edx,%edx
+   1e0e5:	jne    1e06f <kd_rwsem_delegate_enter+0x12f>
+   1e0e7:	lea    0x1(%rax),%rdx
+   1e0eb:	lock cmpxchg %rdx,(%rbx)
+   1e0f0:	je     1e0ae <kd_rwsem_delegate_enter+0x16e>
+   1e0f2:	jmp    1e0d1 <kd_rwsem_delegate_enter+0x191>
+   1e0f4:	call   1e0f9 <kd_rwsem_delegate_enter+0x1b9>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

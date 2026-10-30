@@ -1,0 +1,20 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001ea20 <kd_down_read_non_owner>:
+   1ea20:	call   1ea25 <kd_down_read_non_owner+0x5>
+   1ea25:	push   %rbp
+   1ea26:	mov    %rsp,%rbp
+   1ea29:	call   1ea2e <kd_down_read_non_owner+0xe>
+   1ea2e:	pop    %rbp
+   1ea2f:	xor    %edi,%edi
+   1ea31:	jmp    1ea36 <kd_down_read_non_owner+0x16>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

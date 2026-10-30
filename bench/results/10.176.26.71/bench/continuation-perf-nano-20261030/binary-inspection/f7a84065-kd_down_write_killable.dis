@@ -1,0 +1,122 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001da80 <kd_down_write_killable>:
+   1da80:	call   1da85 <kd_down_write_killable+0x5>
+   1da85:	push   %rbp
+   1da86:	mov    %rsp,%rbp
+   1da89:	push   %r14
+   1da8b:	push   %r13
+   1da8d:	push   %r12
+   1da8f:	push   %rbx
+   1da90:	sub    $0x30,%rsp
+   1da94:	mov    %gs:0x0(%rip),%rbx        # 1da9c <kd_down_write_killable+0x1c>
+   1da9c:	mov    %rbx,-0x28(%rbp)
+   1daa0:	mov    %rdi,%rbx
+   1daa3:	call   1daa8 <kd_down_write_killable+0x28>
+   1daa8:	call   1daad <kd_down_write_killable+0x2d>
+   1daad:	mov    0x80(%rbx),%rax
+   1dab4:	test   %rax,%rax
+   1dab7:	jne    1db28 <kd_down_write_killable+0xa8>
+   1dab9:	mov    0x118(%rbx),%edx
+   1dabf:	test   %edx,%edx
+   1dac1:	jne    1db28 <kd_down_write_killable+0xa8>
+   1dac3:	mov    $0xffffffffffffffff,%rdx
+   1daca:	lock cmpxchg %rdx,0x80(%rbx)
+   1dad3:	test   %rax,%rax
+   1dad6:	jne    1db28 <kd_down_write_killable+0xa8>
+   1dad8:	mov    %rbx,%rdi
+   1dadb:	call   1dae0 <kd_down_write_killable+0x60>
+   1dae0:	test   %eax,%eax
+   1dae2:	jne    1dbfe <kd_down_write_killable+0x17e>
+   1dae8:	mov    $0x102,%esi
+   1daed:	mov    %rbx,%rdi
+   1daf0:	call   1d390 <kd_rwsem_drain_readers>
+   1daf5:	test   %eax,%eax
+   1daf7:	jne    1dbf6 <kd_down_write_killable+0x176>
+   1dafd:	mov    -0x28(%rbp),%rdx
+   1db01:	sub    %gs:0x0(%rip),%rdx        # 1db09 <kd_down_write_killable+0x89>
+   1db09:	jne    1dc39 <kd_down_write_killable+0x1b9>
+   1db0f:	add    $0x30,%rsp
+   1db13:	pop    %rbx
+   1db14:	pop    %r12
+   1db16:	pop    %r13
+   1db18:	pop    %r14
+   1db1a:	pop    %rbp
+   1db1b:	xor    %edx,%edx
+   1db1d:	xor    %ecx,%ecx
+   1db1f:	xor    %esi,%esi
+   1db21:	xor    %edi,%edi
+   1db23:	jmp    1db28 <kd_down_write_killable+0xa8>
+   1db28:	xor    %esi,%esi
+   1db2a:	lea    -0x50(%rbp),%rdi
+   1db2e:	movq   $0x0,-0x50(%rbp)
+   1db36:	lea    0xc0(%rbx),%r14
+   1db3d:	movq   $0x0,-0x48(%rbp)
+   1db45:	mov    $0xffffffffffffffff,%r13
+   1db4c:	movq   $0x0,-0x40(%rbp)
+   1db54:	movq   $0x0,-0x38(%rbp)
+   1db5c:	movq   $0x0,-0x30(%rbp)
+   1db64:	call   1db69 <kd_down_write_killable+0xe9>
+   1db69:	mov    $0x102,%edx
+   1db6e:	lea    -0x50(%rbp),%rsi
+   1db72:	mov    %r14,%rdi
+   1db75:	call   1db7a <kd_down_write_killable+0xfa>
+   1db7a:	mov    %rax,%r12
+   1db7d:	mov    0x80(%rbx),%rax
+   1db84:	test   %rax,%rax
+   1db87:	jne    1dba1 <kd_down_write_killable+0x121>
+   1db89:	mov    0x118(%rbx),%edx
+   1db8f:	test   %edx,%edx
+   1db91:	jne    1dba1 <kd_down_write_killable+0x121>
+   1db93:	lock cmpxchg %r13,0x80(%rbx)
+   1db9c:	test   %rax,%rax
+   1db9f:	je     1dbd2 <kd_down_write_killable+0x152>
+   1dba1:	test   %r12,%r12
+   1dba4:	jne    1dbe3 <kd_down_write_killable+0x163>
+   1dba6:	call   1dbab <kd_down_write_killable+0x12b>
+   1dbab:	mov    0x80(%rbx),%rax
+   1dbb2:	test   %rax,%rax
+   1dbb5:	jne    1db69 <kd_down_write_killable+0xe9>
+   1dbb7:	mov    0x118(%rbx),%eax
+   1dbbd:	test   %eax,%eax
+   1dbbf:	jne    1db69 <kd_down_write_killable+0xe9>
+   1dbc1:	mov    %r12,%rax
+   1dbc4:	lock cmpxchg %r13,0x80(%rbx)
+   1dbcd:	test   %rax,%rax
+   1dbd0:	jne    1db69 <kd_down_write_killable+0xe9>
+   1dbd2:	lea    -0x50(%rbp),%rsi
+   1dbd6:	mov    %r14,%rdi
+   1dbd9:	call   1dbde <kd_down_write_killable+0x15e>
+   1dbde:	jmp    1dad8 <kd_down_write_killable+0x58>
+   1dbe3:	test   %r12d,%r12d
+   1dbe6:	je     1dad8 <kd_down_write_killable+0x58>
+   1dbec:	mov    $0xfffffffc,%eax
+   1dbf1:	jmp    1dafd <kd_down_write_killable+0x7d>
+   1dbf6:	mov    %rbx,%rdi
+   1dbf9:	call   1dbfe <kd_down_write_killable+0x17e>
+   1dbfe:	xor    %eax,%eax
+   1dc00:	xchg   %rax,0x80(%rbx)
+   1dc07:	cmp    $0xffffffffffffffff,%rax
+   1dc0b:	jne    1dc37 <kd_down_write_killable+0x1b7>
+   1dc0d:	mov    0xc8(%rbx),%rax
+   1dc14:	lea    0xc0(%rbx),%rdi
+   1dc1b:	add    $0xc8,%rbx
+   1dc22:	cmp    %rbx,%rax
+   1dc25:	je     1dbec <kd_down_write_killable+0x16c>
+   1dc27:	xor    %ecx,%ecx
+   1dc29:	xor    %edx,%edx
+   1dc2b:	mov    $0x3,%esi
+   1dc30:	call   1dc35 <kd_down_write_killable+0x1b5>
+   1dc35:	jmp    1dbec <kd_down_write_killable+0x16c>
+   1dc37:	ud2    
+   1dc39:	call   1dc3e <kd_down_write_killable+0x1be>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

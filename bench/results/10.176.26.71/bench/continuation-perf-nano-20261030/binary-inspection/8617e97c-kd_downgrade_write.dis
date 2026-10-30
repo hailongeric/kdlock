@@ -1,0 +1,50 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001dd70 <kd_downgrade_write>:
+   1dd70:	call   1dd75 <kd_downgrade_write+0x5>
+   1dd75:	push   %rbp
+   1dd76:	mov    %rsp,%rbp
+   1dd79:	push   %rbx
+   1dd7a:	mov    0x80(%rdi),%rax
+   1dd81:	cmp    $0xffffffffffffffff,%rax
+   1dd85:	jne    1ddf0 <kd_downgrade_write+0x80>
+   1dd87:	mov    (%rdi),%rax
+   1dd8a:	mov    %rdi,%rbx
+   1dd8d:	and    $0xfffffffffffffff8,%rax
+   1dd91:	cmp    %rax,%gs:0x0(%rip)        # 1dd99 <kd_downgrade_write+0x29>
+   1dd99:	jne    1ddf0 <kd_downgrade_write+0x80>
+   1dd9b:	lock incq 0x40(%rdi)
+   1dda0:	call   1dda5 <kd_downgrade_write+0x35>
+   1dda5:	xor    %eax,%eax
+   1dda7:	xchg   %rax,0x80(%rbx)
+   1ddae:	cmp    $0xffffffffffffffff,%rax
+   1ddb2:	jne    1ddf2 <kd_downgrade_write+0x82>
+   1ddb4:	mov    0xc8(%rbx),%rax
+   1ddbb:	lea    0xc0(%rbx),%rdi
+   1ddc2:	add    $0xc8,%rbx
+   1ddc9:	cmp    %rbx,%rax
+   1ddcc:	je     1dddc <kd_downgrade_write+0x6c>
+   1ddce:	xor    %ecx,%ecx
+   1ddd0:	xor    %edx,%edx
+   1ddd2:	mov    $0x3,%esi
+   1ddd7:	call   1dddc <kd_downgrade_write+0x6c>
+   1dddc:	mov    -0x8(%rbp),%rbx
+   1dde0:	leave  
+   1dde1:	xor    %eax,%eax
+   1dde3:	xor    %edx,%edx
+   1dde5:	xor    %ecx,%ecx
+   1dde7:	xor    %esi,%esi
+   1dde9:	xor    %edi,%edi
+   1ddeb:	jmp    1ddf0 <kd_downgrade_write+0x80>
+   1ddf0:	ud2    
+   1ddf2:	ud2    
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

@@ -1,0 +1,44 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001eae0 <kd_rwsem_down_write_clobber_v1>:
+   1eae0:	push   %rbp
+   1eae1:	mov    %rsp,%rbp
+   1eae4:	sub    $0x20,%rsp
+   1eae8:	mov    0x20(%rdi),%eax
+   1eaeb:	test   %eax,%eax
+   1eaed:	je     1eb29 <kd_rwsem_down_write_clobber_v1+0x49>
+   1eaef:	mov    %rcx,-0x20(%rbp)
+   1eaf3:	mov    %rdx,-0x18(%rbp)
+   1eaf7:	mov    %rsi,-0x10(%rbp)
+   1eafb:	mov    %rdi,-0x8(%rbp)
+   1eaff:	call   1eb04 <kd_rwsem_down_write_clobber_v1+0x24>
+   1eb04:	mov    -0x20(%rbp),%rcx
+   1eb08:	mov    -0x18(%rbp),%rdx
+   1eb0c:	mov    -0x10(%rbp),%rsi
+   1eb10:	mov    -0x8(%rbp),%rdi
+   1eb14:	call   1eb19 <kd_rwsem_down_write_clobber_v1+0x39>
+   1eb19:	leave  
+   1eb1a:	xor    %eax,%eax
+   1eb1c:	xor    %edx,%edx
+   1eb1e:	xor    %ecx,%ecx
+   1eb20:	xor    %esi,%esi
+   1eb22:	xor    %edi,%edi
+   1eb24:	jmp    1eb29 <kd_rwsem_down_write_clobber_v1+0x49>
+   1eb29:	call   1eb2e <kd_rwsem_down_write_clobber_v1+0x4e>
+   1eb2e:	leave  
+   1eb2f:	xor    %eax,%eax
+   1eb31:	xor    %edx,%edx
+   1eb33:	xor    %ecx,%ecx
+   1eb35:	xor    %esi,%esi
+   1eb37:	xor    %edi,%edi
+   1eb39:	jmp    1eb3e <kd_rwsem_down_write_clobber_v1+0x5e>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

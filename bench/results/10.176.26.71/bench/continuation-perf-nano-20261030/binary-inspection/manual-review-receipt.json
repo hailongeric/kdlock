@@ -1,0 +1,18 @@
+{
+  "completed": true,
+  "static_blocker_found": false,
+  "actual_branch_review_completed": true,
+  "artifact_execution": false,
+  "tests": false,
+  "vm_actions": false,
+  "performance_accepted": false,
+  "sha256": {
+    "README.md": "52331e102c9afba63857a9c44d05828de58ceb7e39cc200594a5edcba51d44d2",
+    "unit-owner.json": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "comparison.json": "9e9be89c6102a61a19318c2b3e8e77d70bc9596e055c722af315ead28f8d690f",
+    "inspection-receipt.json": "f6faade9b10b46354fc09eee823f962e50ff71e0221a1d1bb65b793a874ae780",
+    "cold-relocations.json": "d98559212b82bf50cef4d83cee19eaeba1f4d36d2e1563df6b75a16d4a003db8",
+    "run_combiner.cold.dis": "7d41ba8631298708667d76f8c2a187a0bc83385d9171e2e915abd6014cca68cf",
+    "__kd_mutex_lock_slowpath.cold.dis": "5ebe6e06a89c77c470fff342843fedfedf7afa34784fd2bbfe4806f6e8b74d6c"
+  }
+}

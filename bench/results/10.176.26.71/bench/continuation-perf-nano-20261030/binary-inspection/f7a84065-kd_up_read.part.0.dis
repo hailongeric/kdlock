@@ -1,0 +1,40 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001d8d0 <kd_up_read.part.0>:
+   1d8d0:	call   1d8d5 <kd_up_read.part.0+0x5>
+   1d8d5:	push   %rbp
+   1d8d6:	mov    %rdi,%r8
+   1d8d9:	mov    %rsp,%rbp
+   1d8dc:	call   *0x0(%rip)        # 1d8e2 <kd_up_read.part.0+0x12>
+   1d8e2:	test   $0x2,%ah
+   1d8e5:	je     1d91c <kd_up_read.part.0+0x4c>
+   1d8e7:	testl  $0x7fffffff,%gs:0x0(%rip)        # 1d8f2 <kd_up_read.part.0+0x22>
+   1d8f2:	jne    1d91c <kd_up_read.part.0+0x4c>
+   1d8f4:	mov    0x108(%r8),%rax
+   1d8fb:	lea    0x108(%r8),%rdi
+   1d902:	cmp    %rdi,%rax
+   1d905:	je     1d91c <kd_up_read.part.0+0x4c>
+   1d907:	xor    %ecx,%ecx
+   1d909:	xor    %edx,%edx
+   1d90b:	lea    0x100(%r8),%rdi
+   1d912:	mov    $0x3,%esi
+   1d917:	call   1d91c <kd_up_read.part.0+0x4c>
+   1d91c:	pop    %rbp
+   1d91d:	xor    %eax,%eax
+   1d91f:	xor    %edx,%edx
+   1d921:	xor    %ecx,%ecx
+   1d923:	xor    %esi,%esi
+   1d925:	xor    %edi,%edi
+   1d927:	xor    %r8d,%r8d
+   1d92a:	xor    %r9d,%r9d
+   1d92d:	jmp    1d932 <kd_up_read.part.0+0x62>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

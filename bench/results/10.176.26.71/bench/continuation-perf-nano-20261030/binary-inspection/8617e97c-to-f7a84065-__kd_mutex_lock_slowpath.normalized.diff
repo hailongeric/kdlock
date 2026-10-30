@@ -1,0 +1,375 @@
+--- 8617e97c/__kd_mutex_lock_slowpath
++++ f7a84065/__kd_mutex_lock_slowpath
+@@ -9,21 +9,21 @@
+ sub    $0x8,%rsp
+ cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x1c>
+ mov    %gs:0x0(%rip),%r13        #  <__kd_mutex_lock_slowpath+0x24>
+-jne     <__kd_mutex_lock_slowpath+0x2da>
++jne     <__kd_mutex_lock_slowpath+0x2b8>
+ mov    %rax,0x128(%r12)
+ xchg   %esi,0x1c(%rbx)
+ mov    $0x1,%ecx
+ xadd   %ecx,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x42>
+ test   %rbx,%rbx
+-je      <__kd_mutex_lock_slowpath+0x2d8>
+-mov    0x58(%r12),%rax
+-cmp    $0xfffffffffffffffe,%rax
+-je      <__kd_mutex_lock_slowpath+0x2d6>
+-test   $0x1,%al
+-jne     <__kd_mutex_lock_slowpath+0x2d6>
++je      <__kd_mutex_lock_slowpath+0x2c8>
++mov    0x58(%r12),%rax
++cmp    $0xfffffffffffffffe,%rax
++je      <__kd_mutex_lock_slowpath+0x2b6>
++test   $0x1,%al
++jne     <__kd_mutex_lock_slowpath+0x2b6>
+ mov    0x60(%r12),%rdx
+ test   %rdx,%rdx
+-jne     <__kd_mutex_lock_slowpath+0x2ea>
++jne     <__kd_mutex_lock_slowpath+0x2ca>
+ lea    0x1(%rax),%rdx
+ add    $0x1,%ecx
+ mov    %rdx,0x58(%r12)
+@@ -40,7 +40,7 @@
+ cmp    %edx,%ecx
+ jg      <__kd_mutex_lock_slowpath+0x93>
+ test   %esi,%esi
+-je      <__kd_mutex_lock_slowpath+0x1ad>
++je      <__kd_mutex_lock_slowpath+0x119>
+ mov    %esi,%eax
+ shr    $0x4,%esi
+ add    $0x0,%r13
+@@ -52,42 +52,69 @@
+ cltq
+ add    $0x0,%rdx
+ add    0x0(,%rax,8),%rdx
+-cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0xe4>
++cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0xe0>
+ mov    %r12,(%rdx)
+-jne     <__kd_mutex_lock_slowpath+0xf0>
+-jmp     <__kd_mutex_lock_slowpath+0xee>
++jne     <__kd_mutex_lock_slowpath+0xec>
++jmp     <__kd_mutex_lock_slowpath+0xea>
+ pause
+ movzbl 0x131(%r12),%eax
+ test   %al,%al
+-jne     <__kd_mutex_lock_slowpath+0xee>
++jne     <__kd_mutex_lock_slowpath+0xea>
+ movzbl 0x132(%r12),%eax
+ test   %al,%al
+-je      <__kd_mutex_lock_slowpath+0x3af>
+-movzbl 0x132(%r12),%eax
+-cmp    $0x2,%al
+-je      <__kd_mutex_lock_slowpath+0x11f>
+-movzbl 0x132(%r12),%eax
+-cmp    $0x1,%al
+-jne     <__kd_mutex_lock_slowpath+0x392>
+-mov    %r12,0x8(%r13)
+-mov    0x58(%r12),%rax
+-cmp    $0xfffffffffffffffe,%rax
+-je      <__kd_mutex_lock_slowpath+0x2ec>
+-test   $0x1,%al
+-jne     <__kd_mutex_lock_slowpath+0x2ec>
++jne     <__kd_mutex_lock_slowpath+0x393>
++cmpb   $0x0,0x130(%r12)
++jne     <__kd_mutex_lock_slowpath+0x249>
++lea    0x18(%rbx),%rdx
++mov    $0x2,%ecx
++jmp     <__kd_mutex_lock_slowpath+0x126>
++pause
++mov    0x18(%rbx),%eax
++test   %eax,%eax
++jne     <__kd_mutex_lock_slowpath+0x124>
++xor    %eax,%eax
++lock cmpxchg %ecx,(%rdx)
++test   %eax,%eax
++jne     <__kd_mutex_lock_slowpath+0x124>
++decl   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x13e>
++je      <__kd_mutex_lock_slowpath+0x2aa>
++mov    0x18(%rbx),%r13d
++cmp    $0x2,%r13d
++jne     <__kd_mutex_lock_slowpath+0x2b4>
++mov    %r12,%rsi
++mov    %rbx,%rdi
++call    <__kd_mutex_lock_slowpath+0x15d>
++movl   $0x1,0x18(%rbx)
++incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x16c>
++incl   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x173>
++cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x17a>
++jne     <__kd_mutex_lock_slowpath+0x2f1>
++mov    (%r12),%rsi
++test   %rsi,%rsi
++je      <__kd_mutex_lock_slowpath+0x21b>
++movl   $0x3,0x18(%rbx)
++mov    %rbx,%rdi
++call    <kd_mutex_run_combiner>
++mov    0x18(%rbx),%eax
++cmp    $0x1,%eax
++jne     <__kd_mutex_lock_slowpath+0x2ef>
++mov    0x58(%r12),%rax
++cmp    $0xfffffffffffffffe,%rax
++je      <__kd_mutex_lock_slowpath+0x2cc>
++test   $0x1,%al
++jne     <__kd_mutex_lock_slowpath+0x2cc>
+ mov    0x60(%r12),%rdx
+ cmp    %rdx,%rbx
+-jne     <__kd_mutex_lock_slowpath+0x3ad>
++jne     <__kd_mutex_lock_slowpath+0x40a>
+ lea    0x1(%rax),%rdx
+ mov    %rdx,0x58(%r12)
+ movq   $0x0,0x60(%r12)
+ add    $0x2,%rax
+ mov    %rax,0x58(%r12)
+ mov    $0xffffffff,%eax
+-xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x181>
++xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x1f5>
+ sub    $0x1,%eax
+-js      <__kd_mutex_lock_slowpath+0x41f>
+-mov    $0x5,%r13d
++js      <__kd_mutex_lock_slowpath+0x40c>
+ add    $0x8,%rsp
+ mov    %r13d,%eax
+ pop    %rbx
+@@ -99,157 +126,129 @@
+ xor    %esi,%esi
+ xor    %edi,%edi
+ xor    %r8d,%r8d
+-jmp     <__kd_mutex_lock_slowpath+0x1ad>
+-lea    0x18(%rbx),%rdx
+-mov    $0x2,%ecx
+-jmp     <__kd_mutex_lock_slowpath+0x1ba>
+-pause
+-mov    0x18(%rbx),%eax
+-test   %eax,%eax
+-jne     <__kd_mutex_lock_slowpath+0x1b8>
+-xor    %eax,%eax
+-lock cmpxchg %ecx,(%rdx)
+-test   %eax,%eax
+-jne     <__kd_mutex_lock_slowpath+0x1b8>
+-decl   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x1d2>
+-je      <__kd_mutex_lock_slowpath+0x443>
+-mov    0x18(%rbx),%r13d
+-cmp    $0x2,%r13d
+-jne     <__kd_mutex_lock_slowpath+0x44d>
+-mov    %r12,%rsi
+-mov    %rbx,%rdi
+-call    <__kd_mutex_lock_slowpath+0x1f1>
+-movl   $0x1,0x18(%rbx)
+-incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x200>
+-incl   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x207>
+-cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x20e>
+-jne     <__kd_mutex_lock_slowpath+0x2f0>
+-mov    (%r12),%rsi
+-test   %rsi,%rsi
+-je      <__kd_mutex_lock_slowpath+0x2b6>
+-movl   $0x3,0x18(%rbx)
+-mov    %rbx,%rdi
+-call    <kd_mutex_run_combiner>
+-mov    0x18(%rbx),%eax
+-cmp    $0x1,%eax
+-jne     <__kd_mutex_lock_slowpath+0x2ee>
+-mov    0x58(%r12),%rax
+-cmp    $0xfffffffffffffffe,%rax
+-je      <__kd_mutex_lock_slowpath+0x394>
+-test   $0x1,%al
+-jne     <__kd_mutex_lock_slowpath+0x394>
+-mov    0x60(%r12),%rdx
+-cmp    %rdx,%rbx
+-jne     <__kd_mutex_lock_slowpath+0x44f>
+-lea    0x1(%rax),%rdx
+-mov    %rdx,0x58(%r12)
+-movq   $0x0,0x60(%r12)
+-add    $0x2,%rax
+-mov    %rax,0x58(%r12)
+-mov    $0xffffffff,%eax
+-xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x289>
+-sub    $0x1,%eax
+-jns     <__kd_mutex_lock_slowpath+0x190>
+-movl   $0x0,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x29d>
+-incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x2a5>
+-mov    $0x0,%rdi
+-call    <__kd_mutex_lock_slowpath+0x2b1>
+-jmp     <__kd_mutex_lock_slowpath+0x190>
++jmp     <__kd_mutex_lock_slowpath+0x21b>
+ mov    0x1c(%rbx),%eax
+ cmp    0x48(%r12),%eax
+-jne     <__kd_mutex_lock_slowpath+0x2c7>
+-jmp     <__kd_mutex_lock_slowpath+0x396>
++jne     <__kd_mutex_lock_slowpath+0x23a>
++xor    %edx,%edx
++lock cmpxchg %edx,0x1c(%rbx)
++cmp    0x48(%r12),%eax
++jne     <__kd_mutex_lock_slowpath+0x23a>
++jmp     <__kd_mutex_lock_slowpath+0x1a8>
+ pause
+ mov    (%r12),%rsi
+ test   %rsi,%rsi
+-jne     <__kd_mutex_lock_slowpath+0x221>
+-jmp     <__kd_mutex_lock_slowpath+0x2c5>
++jne     <__kd_mutex_lock_slowpath+0x18d>
++jmp     <__kd_mutex_lock_slowpath+0x238>
++mov    %r12,0x8(%r13)
++mov    0x58(%r12),%rax
++cmp    $0xfffffffffffffffe,%rax
++je      <__kd_mutex_lock_slowpath+0x43f>
++test   $0x1,%al
++jne     <__kd_mutex_lock_slowpath+0x43f>
++mov    0x60(%r12),%rdx
++cmp    %rdx,%rbx
++jne     <__kd_mutex_lock_slowpath+0x456>
++lea    0x1(%rax),%rdx
++mov    %rdx,0x58(%r12)
++movq   $0x0,0x60(%r12)
++add    $0x2,%rax
++mov    %rax,0x58(%r12)
++mov    $0xffffffff,%eax
++xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x29a>
++sub    $0x1,%eax
++js      <__kd_mutex_lock_slowpath+0x2ce>
++mov    $0x3,%r13d
++jmp     <__kd_mutex_lock_slowpath+0x1fe>
++call    <__kd_mutex_lock_slowpath+0x2af>
++jmp     <__kd_mutex_lock_slowpath+0x144>
+ ud2
+ ud2
+ mov    %esi,-0x1c(%rbp)
+-call    <__kd_mutex_lock_slowpath+0x2e2>
++call    <__kd_mutex_lock_slowpath+0x2c0>
+ mov    -0x1c(%rbp),%esi
+ jmp     <__kd_mutex_lock_slowpath+0x2a>
+ ud2
+ ud2
+ ud2
+-call    <__kd_mutex_lock_slowpath+0x2f5>
+-cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x2fc>
++movl   $0x0,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x2d9>
++incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x2e1>
++mov    $0x0,%rdi
++call    <__kd_mutex_lock_slowpath+0x2ed>
++jmp     <__kd_mutex_lock_slowpath+0x29f>
++ud2
++call    <__kd_mutex_lock_slowpath+0x2f6>
++cmpb   $0x0,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x2fd>
+ mov    %rax,%rdx
+-je      <__kd_mutex_lock_slowpath+0x214>
++je      <__kd_mutex_lock_slowpath+0x180>
+ mov    0x128(%r12),%rcx
+ test   %rcx,%rcx
+-je      <__kd_mutex_lock_slowpath+0x214>
++je      <__kd_mutex_lock_slowpath+0x180>
+ movq   $0x0,0x128(%r12)
+-mov    0x0(%rip),%rax        #  <__kd_mutex_lock_slowpath+0x329>
++mov    0x0(%rip),%rax        #  <__kd_mutex_lock_slowpath+0x32a>
+ movabs $0x7ffffffffffffffe,%rdi
+ cmp    %rax,%rdi
+-jb      <__kd_mutex_lock_slowpath+0x460>
++jb      <__kd_mutex_lock_slowpath+0x447>
+ lea    0x1(%rax),%rsi
+-lock cmpxchg %rsi,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x349>
+-jne     <__kd_mutex_lock_slowpath+0x333>
++lock cmpxchg %rsi,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x34a>
++jne     <__kd_mutex_lock_slowpath+0x334>
+ cmp    %rcx,%rdx
+-jb      <__kd_mutex_lock_slowpath+0x451>
+-mov    0x0(%rip),%rax        #  <__kd_mutex_lock_slowpath+0x35b>
++jb      <__kd_mutex_lock_slowpath+0x430>
++mov    0x0(%rip),%rax        #  <__kd_mutex_lock_slowpath+0x35c>
+ sub    %rcx,%rdx
+ test   %rax,%rax
+-js      <__kd_mutex_lock_slowpath+0x451>
++js      <__kd_mutex_lock_slowpath+0x430>
+ movabs $0x7fffffffffffffff,%rcx
+ sub    %rax,%rcx
+ cmp    %rdx,%rcx
+-jb      <__kd_mutex_lock_slowpath+0x451>
++jb      <__kd_mutex_lock_slowpath+0x430>
+ lea    (%rdx,%rax,1),%rcx
+-lock cmpxchg %rcx,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x38a>
+-je      <__kd_mutex_lock_slowpath+0x214>
+-jmp     <__kd_mutex_lock_slowpath+0x35e>
+-ud2
+-ud2
+-xor    %edx,%edx
+-lock cmpxchg %edx,0x1c(%rbx)
+-cmp    0x48(%r12),%eax
+-jne     <__kd_mutex_lock_slowpath+0x2c7>
+-jmp     <__kd_mutex_lock_slowpath+0x23c>
+-ud2
+-cmpb   $0x0,0x130(%r12)
+-je      <__kd_mutex_lock_slowpath+0x1ad>
++lock cmpxchg %rcx,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x38b>
++je      <__kd_mutex_lock_slowpath+0x180>
++jmp     <__kd_mutex_lock_slowpath+0x35f>
++movzbl 0x132(%r12),%eax
++cmp    $0x2,%al
++je      <__kd_mutex_lock_slowpath+0x3a4>
++movzbl 0x132(%r12),%eax
++cmp    $0x1,%al
++jne     <__kd_mutex_lock_slowpath+0x445>
+ mov    %r12,0x8(%r13)
+ mov    0x58(%r12),%rax
+ cmp    $0xfffffffffffffffe,%rax
+-je      <__kd_mutex_lock_slowpath+0x490>
+-test   $0x1,%al
+-jne     <__kd_mutex_lock_slowpath+0x490>
++je      <__kd_mutex_lock_slowpath+0x441>
++test   $0x1,%al
++jne     <__kd_mutex_lock_slowpath+0x441>
+ mov    0x60(%r12),%rdx
+ cmp    %rdx,%rbx
+-jne     <__kd_mutex_lock_slowpath+0x48e>
++jne     <__kd_mutex_lock_slowpath+0x443>
+ lea    0x1(%rax),%rdx
+ mov    %rdx,0x58(%r12)
+ movq   $0x0,0x60(%r12)
+ add    $0x2,%rax
+ mov    %rax,0x58(%r12)
+ mov    $0xffffffff,%eax
+-xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x40f>
++xadd   %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x3fa>
+ sub    $0x1,%eax
+-js      <__kd_mutex_lock_slowpath+0x46f>
+-mov    $0x3,%r13d
+-jmp     <__kd_mutex_lock_slowpath+0x190>
+-movl   $0x0,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x42a>
+-incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x432>
++js      <__kd_mutex_lock_slowpath+0x458>
++mov    $0x5,%r13d
++jmp     <__kd_mutex_lock_slowpath+0x1fe>
++ud2
++movl   $0x0,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x417>
++incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x41f>
+ mov    $0x0,%rdi
+-call    <__kd_mutex_lock_slowpath+0x43e>
+-jmp     <__kd_mutex_lock_slowpath+0x18a>
+-call    <__kd_mutex_lock_slowpath+0x448>
+-jmp     <__kd_mutex_lock_slowpath+0x1d8>
+-ud2
+-ud2
+-movl   $0x1,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x45b>
+-jmp     <__kd_mutex_lock_slowpath+0x214>
+-movl   $0x1,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x46a>
+-jmp     <__kd_mutex_lock_slowpath+0x34b>
+-xor    %eax,%eax
+-mov    %eax,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x478>
+-incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x480>
++call    <__kd_mutex_lock_slowpath+0x42b>
++jmp     <__kd_mutex_lock_slowpath+0x1fe>
++movl   $0x1,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x43a>
++jmp     <__kd_mutex_lock_slowpath+0x180>
++ud2
++ud2
++ud2
++ud2
++movl   $0x1,0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x451>
++jmp     <__kd_mutex_lock_slowpath+0x34c>
++ud2
++movl   $0x0,%gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x463>
++incq   %gs:0x0(%rip)        #  <__kd_mutex_lock_slowpath+0x46b>
+ mov    $0x0,%rdi
+-call    <__kd_mutex_lock_slowpath+0x48c>
+-jmp     <__kd_mutex_lock_slowpath+0x414>
+-ud2
+-ud2
++call    <__kd_mutex_lock_slowpath+0x477>
++jmp     <__kd_mutex_lock_slowpath+0x3ff>

@@ -1,0 +1,40 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001d990 <kd_down_read_trylock>:
+   1d990:	call   1d995 <kd_down_read_trylock+0x5>
+   1d995:	mov    0x80(%rdi),%rax
+   1d99c:	test   %rax,%rax
+   1d99f:	jne    1d9e2 <kd_down_read_trylock+0x52>
+   1d9a1:	mov    $0x1,%eax
+   1d9a6:	lock xadd %rax,0x40(%rdi)
+   1d9ac:	mov    0x80(%rdi),%rdx
+   1d9b3:	mov    $0x1,%eax
+   1d9b8:	test   %rdx,%rdx
+   1d9bb:	je     1d9d9 <kd_down_read_trylock+0x49>
+   1d9bd:	lock decq 0x40(%rdi)
+   1d9c2:	jne    1d9e2 <kd_down_read_trylock+0x52>
+   1d9c4:	push   %rbp
+   1d9c5:	mov    %rsp,%rbp
+   1d9c8:	call   1d8d0 <kd_up_read.part.0>
+   1d9cd:	xor    %eax,%eax
+   1d9cf:	pop    %rbp
+   1d9d0:	xor    %edx,%edx
+   1d9d2:	xor    %edi,%edi
+   1d9d4:	jmp    1d9d9 <kd_down_read_trylock+0x49>
+   1d9d9:	xor    %edx,%edx
+   1d9db:	xor    %edi,%edi
+   1d9dd:	jmp    1d9e2 <kd_down_read_trylock+0x52>
+   1d9e2:	xor    %eax,%eax
+   1d9e4:	xor    %edx,%edx
+   1d9e6:	xor    %edi,%edi
+   1d9e8:	jmp    1d9ed <kd_down_read_trylock+0x5d>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

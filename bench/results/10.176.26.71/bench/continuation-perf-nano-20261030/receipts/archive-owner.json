@@ -1,0 +1,305 @@
+{
+  "archives_sha256": "ff7c1f6533cd435a13fc065b2c667581f3ac45aa878292034fdf5b3c3f6f450b",
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/root/host_fs/kdlock/bench/archive_run.py",
+    "--base",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-perf-nano-f7a84065-20261030",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-perf-nano-f7a84065-20261030-archives",
+    "--health",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/continuation-perf-nano-f7a84065-20261030/final-health.json",
+    "--timeout-seconds",
+    "3600",
+    "--kernel-variant",
+    "kdlock1",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "--group",
+    "mutex-throughput=mutex-throughput",
+    "--group",
+    "mutex-locality=mutex-locality",
+    "--group",
+    "rwsem-throughput-read=rwsem-throughput-read",
+    "--group",
+    "rwsem-throughput-mixed=rwsem-throughput-mixed",
+    "--group",
+    "rwsem-locality-read=rwsem-locality-read",
+    "--group",
+    "rwsem-locality-mixed=rwsem-locality-mixed",
+    "--group",
+    "rwlock-throughput-read=rwlock-throughput-read",
+    "--group",
+    "rwlock-throughput-mixed=rwlock-throughput-mixed",
+    "--group",
+    "rwlock-locality-read=rwlock-locality-read",
+    "--group",
+    "rwlock-locality-mixed=rwlock-locality-mixed"
+  ],
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "comparison_pending": true,
+  "completed": true,
+  "endpoint_receipt_sha256": "404b65b853b89d735140977e0d322cd26cda5ee24facffee14fcaa7d67b0c5bb",
+  "host_admission": {
+    "additional_workers": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172703773,
+        "tid": 745701
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172776528,
+        "tid": 746419
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172776528,
+        "tid": 746420
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172926343,
+        "tid": 746489
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746497
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746500
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746502
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746504
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746506
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746507
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746508
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746510
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746514
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746516
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746518
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746519
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746520
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746521
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746523
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746524
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746525
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746528
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746529
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746531
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746533
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746534
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746535
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746537
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746540
+      }
+    ],
+    "memory_bindings": [
+      [
+        "7469b7c00000",
+        "bind:1",
+        4
+      ],
+      [
+        "746cb7e00000",
+        "bind:0",
+        4
+      ]
+    ],
+    "mode": "FUNCTIONAL_ONLY",
+    "observed_threads": 96,
+    "original_threads": 67,
+    "performance_accepted": false,
+    "timing_gate": "NOT_APPLICABLE"
+  },
+  "host_after_sha256": "26a91814b223f15768f35b18a1c38acd23bb766aadddc14fc1436d8178cfe9f0",
+  "idle": true,
+  "performance_accepted": false,
+  "pid": 1223650,
+  "returncode": 0,
+  "run_owner_sha256": "6def6d611a9eef3f5d55aaee4d6d81ffa0a6b270401f518fcc626dc3febdddd6",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+}

@@ -1,0 +1,204 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, runpy, sys; script = sys.argv.pop(1); sys.path.insert(0, os.path.dirname(script)); runpy.run_path(script, run_name='__main__')
+                                                                                                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.tRJK6R/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":1176795,"started_ns":97562238245658,"finished_ns":97562238696940,"wall_ns":451282,"user_ns":379000,"system_ns":0,"maxrss_kib":1088,"minor_faults":31,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, runpy, sys; script = sys.argv.pop(1); sys.path.insert(0, os.path.dirname(script)); runpy.run_path(script, run_name='__main__')
+                                                                                                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.tRJK6R/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":1176796,"started_ns":97562238716021,"finished_ns":97562289405730,"wall_ns":50689709,"user_ns":43552000,"system_ns":6928000,"maxrss_kib":13176,"minor_faults":1872,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":1176797,"started_ns":97562289474282,"finished_ns":97562313783426,"wall_ns":24309144,"user_ns":20149000,"system_ns":4029000,"maxrss_kib":10596,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":1176798,"started_ns":97562313822556,"finished_ns":97562338357699,"wall_ns":24535143,"user_ns":18246000,"system_ns":6082000,"maxrss_kib":11072,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":1176799,"started_ns":97562338387315,"finished_ns":97562362651085,"wall_ns":24263770,"user_ns":20154000,"system_ns":4030000,"maxrss_kib":10556,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":1176800,"started_ns":97562362677934,"finished_ns":97562387014475,"wall_ns":24336541,"user_ns":20203000,"system_ns":4040000,"maxrss_kib":10536,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":1176801,"started_ns":97562387040172,"finished_ns":97562411293735,"wall_ns":24253563,"user_ns":18096000,"system_ns":6032000,"maxrss_kib":10596,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":1176802,"started_ns":97562411330090,"finished_ns":97562435683291,"wall_ns":24353201,"user_ns":19217000,"system_ns":5057000,"maxrss_kib":10596,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":1176803,"started_ns":97562435709494,"finished_ns":97562459771850,"wall_ns":24062356,"user_ns":20991000,"system_ns":2998000,"maxrss_kib":10544,"minor_faults":1224,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":1176804,"started_ns":97562459802752,"finished_ns":97562484126915,"wall_ns":24324163,"user_ns":21338000,"system_ns":2909000,"maxrss_kib":11092,"minor_faults":1225,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":1176805,"started_ns":97562484153810,"finished_ns":97562508520798,"wall_ns":24366988,"user_ns":18221000,"system_ns":6073000,"maxrss_kib":10544,"minor_faults":1224,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+spin batch PASS: cache invalidation, per-CPU sum/max, physical/virtual prefetch
+spin batch PASS: cache invalidation, per-CPU sum/max, physical/virtual prefetch
+
+kd_node: cannot allocate selftest observation records
+spin shadow: 48 queue-head cases, 1352 checks, 0 failures
+spin nested lists: 441 cases, 284256 checks, 0 failures
+spin node producers: trace=0 303 cases, 9045 checks, 0 failures
+spin recursive producers: trace=0 126 cases, 91476 checks, 0 failures
+spin mixed MCS: 5 native boundaries, including requestless middle nodes
+spin bounded batch: body cap, finite NUMA scan and complete handoff chain
+spin proxy context: 18 matched/refused queue handoffs with exact prefixes
+spin node producers: trace=1 303 cases, 12012 checks, 0 failures
+spin recursive producers: trace=1 126 cases, 91980 checks, 0 failures
+spin observer guards: 10 checks
+kd_node trace: cpu=0 native=0 virtual=0 native_full=0 virtual_full=0 context_missing=0 prepare_cancel=0 native_return=0 remote_return=0 combiner=0 head=0 poll=0 reacquire=0 release=0 live=0 actual=0 peak=0 peak_task=0 peak_preempt=0 peak_irq=0 first_event=0 first_count=0 first_expected=0 first_task=0 first_preempt=0 first_irq=0
+kd_node summary: cpus=1 capacity=4 record_bytes=144
+spin observer allocation: 7 checks
+kd_node: cannot allocate selftest observation records
+spin shadow: 48 queue-head cases, 1416 checks, 0 failures
+spin nested lists: 441 cases, 276087 checks, 0 failures
+spin node producers: trace=0 303 cases, 9141 checks, 0 failures
+spin recursive producers: trace=0 126 cases, 86352 checks, 0 failures
+spin mixed MCS: 5 native boundaries, including requestless middle nodes
+spin bounded batch: body cap, finite NUMA scan and complete handoff chain
+spin proxy context: 18 matched/refused queue handoffs with exact prefixes
+spin node producers: trace=1 303 cases, 12108 checks, 0 failures
+spin recursive producers: trace=1 126 cases, 86856 checks, 0 failures
+spin observer guards: 10 checks
+kd_node trace: cpu=0 native=0 virtual=0 native_full=0 virtual_full=0 context_missing=0 prepare_cancel=0 native_return=0 remote_return=0 combiner=0 head=0 poll=0 reacquire=0 release=0 live=0 actual=0 peak=0 peak_task=0 peak_preempt=0 peak_irq=0 first_event=0 first_count=0 first_expected=0 first_task=0 first_preempt=0 first_irq=0
+kd_node summary: cpus=1 capacity=4 record_bytes=144
+spin observer allocation: 7 checks
+[PASS] test_spin_shadow (production node producers, queue exits and nested lists, NUMA off/on)
+
+spin queued refusal: reason=8 result=3 parent=0 phase=3 registers=1
+spin queued refusal: reason=11 result=3 parent=0 phase=3 registers=1
+spin queued refusal: reason=12 result=3 parent=0 phase=3 registers=1
+spin outer production progress: 7144 checks, 0 failures, 8 progress + 90 rejection + 12 readmission + 4 preentry scenarios NUMA=0
+spin full frame refusal: 51 real API failures, regs=168 frame=656 context=5272
+spin preentry queue return: 3 joined producer/combiner/acquisition cases
+spin wake publication: 5 release/packet/reuse boundaries
+spin queued refusal: reason=8 result=3 parent=0 phase=3 registers=1
+spin queued refusal: reason=11 result=3 parent=0 phase=3 registers=1
+spin queued refusal: reason=12 result=3 parent=0 phase=3 registers=1
+spin outer production progress: 18175 checks, 0 failures, 8 progress + 270 rejection + 12 readmission + 4 preentry scenarios NUMA=1
+spin full frame refusal: 123 real API failures, regs=168 frame=656 context=5272
+spin preentry queue return: 3 joined producer/combiner/acquisition cases
+spin wake publication: 5 release/packet/reuse boundaries
+spin refusal mutation detected: tail-before-link-misclassified
+spin refusal mutation detected: completion-plain-write
+spin refusal mutation detected: early-handoff-plain-write
+spin refusal mutation detected: batch-handoff-plain-write
+spin refusal mutation detected: completion-packet-not-ready
+spin refusal mutation detected: packet-overwrite-after-wake
+spin refusal mutation detected: refusal-writes-parent
+spin refusal mutation detected: refusal-publishes-completion
+spin refusal mutation detected: refusal-cancels-virtual-parent
+spin refusal mutation detected: virtual-native-trampoline
+spin refusal mutation detected: child-cancel-ends-parent-wait
+spin refusal control: BUG-only exit is not an assertion detection
+
+spin proxy context: 256 capture states, IF matches and preserved physical state
+spin proxy context: 256 capture states, IF matches and preserved physical state
+
+/root/host_fs/kdlock/tests/unit/spin/spin_batch_context_fixture.c:49:11: error: ‘kd_spin_proxy_context’ defined but not used [-Werror=unused-function]
+   49 | static u8 kd_spin_proxy_context(void) { context_reads++; return current_context; }
+      |           ^~~~~~~~~~~~~~~~~~~~~
+cc1: all warnings being treated as errors
+spin batch context: 1195 checks, 0 failures; batch=192 counter=2 NUMA=0
+spin batch context: 1195 checks, 0 failures; batch=200 counter=2 NUMA=1
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/tests/unit/run.py", line 46, in <module>
+    main()
+    ~~~~^^
+  File "/root/host_fs/kdlock/tests/unit/run.py", line 42, in main
+    runpy.run_path(str(path), run_name="__main__")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/host_fs/kdlock/tests/unit/spin/test_spin_batch_context.py", line 70, in <module>
+    main()
+    ~~~~^^
+  File "/root/host_fs/kdlock/tests/unit/spin/test_spin_batch_context.py", line 52, in main
+    subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        '-I', str(path), *(['-DNUMA_AWARE'] if numa else []),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        str(ROOT / 'tests/unit/spin/spin_batch_context_fixture.c'),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        '-o', str(binary)], check=True, timeout=30)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-I', '/tmp/kd-spin-batch-context-0c16ocrj', '/root/host_fs/kdlock/tests/unit/spin/spin_batch_context_fixture.c', '-o', '/tmp/kd-spin-batch-context-0c16ocrj/missing-generic-refresh-0']' returned non-zero exit status 1.
+
+origin instruction: production two-thread handshake, retained packet/owner/node, refusal and post-ACK next publication passed
+origin handshake mutation detected: missing-rearm-before-ack
+origin handshake mutation detected: late-rearm-overwrites-next-publication
+origin handshake mutation detected: waiter-preemption-not-checked
+origin handshake mutation detected: timestamp-high-half-lost
+
+patching file include/utils.h
+patching file kernel_module/Makefile
+Hunk #1 succeeded at 29 (offset 11 lines).
+patching file kernel_module/exe.c
+Hunk #1 succeeded at 212 (offset 46 lines).
+Hunk #2 succeeded at 234 (offset 48 lines).
+Hunk #3 succeeded at 267 (offset 55 lines).
+Hunk #4 succeeded at 778 (offset 195 lines).
+patching file kernel_module/execution/native.inc
+Hunk #1 succeeded at 127 (offset 44 lines).
+Hunk #2 succeeded at 223 (offset 80 lines).
+Hunk #3 succeeded at 241 (offset 80 lines).
+patching file kernel_module/execution/remote.inc
+patching file kernel_module/execution/wrapper_entry.inc
+Hunk #1 succeeded at 477 (offset 377 lines).
+Hunk #2 succeeded at 749 (offset 470 lines).
+Hunk #3 succeeded at 818 (offset 467 lines).
+patching file kernel_module/kd_exec.c
+Hunk #1 succeeded at 18 (offset 1 line).
+patching file kernel_module/kd_mutex.c
+Hunk #1 succeeded at 52 (offset 7 lines).
+Hunk #2 succeeded at 250 (offset 35 lines).
+patching file kernel_module/spin/restore.inc
+Hunk #1 succeeded at 293 (offset 88 lines).
+patching file kernel_module/mutex/combiner.inc
+Hunk #1 succeeded at 183 (offset 149 lines).
+Hunk #2 succeeded at 273 (offset 147 lines).
+Hunk #3 succeeded at 458 (offset 197 lines).
+patching file kernel_module/spin/combiner.inc
+Hunk #1 succeeded at 101 (offset 2 lines).
+Hunk #2 succeeded at 362 (offset 101 lines).
+patching file kernel_module/spin/execute.inc
+Hunk #1 succeeded at 118 (offset -9 lines).
+Hunk #3 succeeded at 272 (offset -1 lines).
+production JIT entry scope: 9846 checks, 0 failures
+entry/hostcall mutation detected: completion-omitted
+entry/hostcall mutation detected: completion-counts-native-or-error
+entry/hostcall mutation detected: completion-without-witness
+entry/hostcall mutation detected: completion-counts-remote-suffix
+entry/hostcall mutation detected: completion-counts-physical-child
+entry/hostcall mutation detected: completion-per-wrapper
+entry/hostcall mutation detected: completion-counts-unfinished-batch
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 8 passed, 1 failed
+make: *** [Makefile:32: run] Error 1
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'

@@ -1,0 +1,69 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001e110 <kd_down_write_trylock>:
+   1e110:	call   1e115 <kd_down_write_trylock+0x5>
+   1e115:	mov    0x80(%rdi),%rax
+   1e11c:	test   %rax,%rax
+   1e11f:	jne    1e1cd <kd_down_write_trylock+0xbd>
+   1e125:	mov    0x118(%rdi),%edx
+   1e12b:	test   %edx,%edx
+   1e12d:	jne    1e1cd <kd_down_write_trylock+0xbd>
+   1e133:	mov    $0xffffffffffffffff,%rdx
+   1e13a:	lock cmpxchg %rdx,0x80(%rdi)
+   1e143:	test   %rax,%rax
+   1e146:	jne    1e1cd <kd_down_write_trylock+0xbd>
+   1e14c:	push   %rbp
+   1e14d:	mov    %rsp,%rbp
+   1e150:	sub    $0x8,%rsp
+   1e154:	mov    %rdi,-0x8(%rbp)
+   1e158:	call   1e15d <kd_down_write_trylock+0x4d>
+   1e15d:	mov    -0x8(%rbp),%rdi
+   1e161:	test   %eax,%eax
+   1e163:	je     1e180 <kd_down_write_trylock+0x70>
+   1e165:	mov    0x40(%rdi),%rdx
+   1e169:	mov    $0x1,%eax
+   1e16e:	test   %rdx,%rdx
+   1e171:	je     1e1bc <kd_down_write_trylock+0xac>
+   1e173:	mov    %rdi,-0x8(%rbp)
+   1e177:	call   1e17c <kd_down_write_trylock+0x6c>
+   1e17c:	mov    -0x8(%rbp),%rdi
+   1e180:	xor    %eax,%eax
+   1e182:	xchg   %rax,0x80(%rdi)
+   1e189:	cmp    $0xffffffffffffffff,%rax
+   1e18d:	jne    1e1df <kd_down_write_trylock+0xcf>
+   1e18f:	mov    0xc8(%rdi),%rax
+   1e196:	lea    0xc0(%rdi),%r8
+   1e19d:	add    $0xc8,%rdi
+   1e1a4:	cmp    %rdi,%rax
+   1e1a7:	je     1e1ba <kd_down_write_trylock+0xaa>
+   1e1a9:	xor    %ecx,%ecx
+   1e1ab:	xor    %edx,%edx
+   1e1ad:	mov    $0x3,%esi
+   1e1b2:	mov    %r8,%rdi
+   1e1b5:	call   1e1ba <kd_down_write_trylock+0xaa>
+   1e1ba:	xor    %eax,%eax
+   1e1bc:	leave  
+   1e1bd:	xor    %edx,%edx
+   1e1bf:	xor    %ecx,%ecx
+   1e1c1:	xor    %esi,%esi
+   1e1c3:	xor    %edi,%edi
+   1e1c5:	xor    %r8d,%r8d
+   1e1c8:	jmp    1e1cd <kd_down_write_trylock+0xbd>
+   1e1cd:	xor    %eax,%eax
+   1e1cf:	xor    %edx,%edx
+   1e1d1:	xor    %ecx,%ecx
+   1e1d3:	xor    %esi,%esi
+   1e1d5:	xor    %edi,%edi
+   1e1d7:	xor    %r8d,%r8d
+   1e1da:	jmp    1e1df <kd_down_write_trylock+0xcf>
+   1e1df:	ud2    
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

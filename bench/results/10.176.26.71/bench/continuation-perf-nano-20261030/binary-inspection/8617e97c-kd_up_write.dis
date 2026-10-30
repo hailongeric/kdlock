@@ -1,0 +1,50 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001dea0 <kd_up_write>:
+   1dea0:	call   1dea5 <kd_up_write+0x5>
+   1dea5:	push   %rbp
+   1dea6:	mov    %rsp,%rbp
+   1dea9:	push   %rbx
+   1deaa:	mov    %rdi,%rbx
+   1dead:	call   1deb2 <kd_up_write+0x12>
+   1deb2:	mov    0x80(%rbx),%rax
+   1deb9:	cmp    $0xffffffffffffffff,%rax
+   1debd:	je     1df13 <kd_up_write+0x73>
+   1debf:	mov    $0xffffffffffffffff,%rax
+   1dec6:	lock xadd %rax,0x80(%rbx)
+   1decf:	sub    $0x1,%rax
+   1ded3:	js     1df24 <kd_up_write+0x84>
+   1ded5:	jne    1deff <kd_up_write+0x5f>
+   1ded7:	mov    0xc8(%rbx),%rax
+   1dede:	lea    0xc0(%rbx),%rdi
+   1dee5:	add    $0xc8,%rbx
+   1deec:	cmp    %rbx,%rax
+   1deef:	je     1deff <kd_up_write+0x5f>
+   1def1:	xor    %ecx,%ecx
+   1def3:	xor    %edx,%edx
+   1def5:	mov    $0x3,%esi
+   1defa:	call   1deff <kd_up_write+0x5f>
+   1deff:	mov    -0x8(%rbp),%rbx
+   1df03:	leave  
+   1df04:	xor    %eax,%eax
+   1df06:	xor    %edx,%edx
+   1df08:	xor    %ecx,%ecx
+   1df0a:	xor    %esi,%esi
+   1df0c:	xor    %edi,%edi
+   1df0e:	jmp    1df13 <kd_up_write+0x73>
+   1df13:	xor    %eax,%eax
+   1df15:	xchg   %rax,0x80(%rbx)
+   1df1c:	cmp    $0xffffffffffffffff,%rax
+   1df20:	je     1ded7 <kd_up_write+0x37>
+   1df22:	ud2    
+   1df24:	ud2    
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

@@ -1,0 +1,98 @@
+{
+  "scope": "Static bytes and relocation recipes; not execution, causation or loaded physical placement proof.",
+  "unit_sha256": "93a892843297888e1a000d41dcc560de4fd9fabd74d3d90f95ef68406b3b3c6d",
+  "unit_text_bytes": 134694,
+  "profiles": [
+    {
+      "profile": "mutex-locality",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "70c1e7f7456b64cb9998bb56b4d3abeee6a28df45bb317915be8acf2edb1c915",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "mutex-throughput",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "c51822953a8b2f2e5473d8dbc9c0bc424092bd8cc293953fe94dd2b1cac61d93",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwlock-locality-mixed",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "d010f2556c205c08597fab5b625b6b377a0e9e58e23795eba8018dae536b0d7a",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwlock-locality-read",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "66267577854920a7e59de118fa164cc35d2e3968a80985cab9cacae09a06b98d",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwlock-throughput-mixed",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "c21e9a312c6870994b928b93faf3e9a958d779491a3776603f2ccb7c1de0da40",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwlock-throughput-read",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "1c9970f2b1339cb9ceb47a54ab4fd946552529c4fac44f8f361486557bdc767d",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwsem-locality-mixed",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "16f26400bb623dfed6e2770dd265a1b364b0671241677bd2aba5124f8170eb6a",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwsem-locality-read",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "078ddba0a3eda1a6f479733401782ea5d8779a45b01acb9821d62a8c2152f9f2",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwsem-throughput-mixed",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "c0b6ccb16e611d5338dc0a9be92a3109a120f329f0c2d4fcb7847d42308e3b28",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    },
+    {
+      "profile": "rwsem-throughput-read",
+      "path": "/tmp/kdlock-nano-f7a84065-comparison-20261030/current/elfs/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "7e1658dfb8013cb131cc93552f147529793e912ade6ff990ab8dcd45478de0b4",
+      "point_rows": 21,
+      "allocated_sections_except_build_id_equal_unit": true,
+      "allocated_relocations_equal_unit": true,
+      "allocated_relocations": 8740
+    }
+  ],
+  "all_match": true
+}

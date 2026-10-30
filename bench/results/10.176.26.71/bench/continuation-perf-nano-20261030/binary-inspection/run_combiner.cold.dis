@@ -1,0 +1,31 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000020a11 <run_combiner.cold>:
+   20a11:	mov    0x38(%rsp),%rcx
+   20a16:	mov    %gs:0x0(%rip),%esi        # 20a1d <run_combiner.cold+0xc>
+   20a1d:	mov    $0x0,%rdx
+   20a24:	mov    $0x0,%rdi
+   20a2b:	call   20a30 <run_combiner.cold+0x1f>
+   20a30:	jmp    20a35 <run_combiner.cold+0x24>
+   20a35:	mov    0xc(%rbx),%r9d
+   20a39:	mov    %gs:0x0(%rip),%esi        # 20a40 <run_combiner.cold+0x2f>
+   20a40:	mov    $0x0,%rdx
+   20a47:	mov    $0x0,%rdi
+   20a4e:	mov    0x38(%rsp),%rcx
+   20a53:	mov    %esi,%r8d
+   20a56:	call   20a5b <run_combiner.cold+0x4a>
+   20a5b:	jmp    20a60 <run_combiner.cold+0x4f>
+   20a60:	mov    $0x1,%ecx
+   20a65:	mov    $0x0,%rdi
+   20a6c:	call   20a71 <run_combiner.cold+0x60>
+   20a71:	jmp    20a76 <__kd_spin_lock_longjmp.cold>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

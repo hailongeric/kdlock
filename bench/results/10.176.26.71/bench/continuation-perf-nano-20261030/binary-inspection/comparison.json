@@ -1,0 +1,1385 @@
+{
+  "baseline": {
+    "functions": {
+      "__kd_mutex_lock_slowpath": {
+        "instruction_count": 255,
+        "normalized_sha256": "9260962b1877e9d627a9958eceeb7901eaf4224337790835eff48e17bb124474",
+        "offset": 77712,
+        "raw_sha256": "7409f4d19f6e29710a4516ea4f5e5f2d8a22030cd02fecd9b2851392d05edf3a",
+        "section": ".text",
+        "size": 1170
+      },
+      "_kd_mutex_lock_abi": {
+        "instruction_count": 255,
+        "normalized_sha256": "60693b00d1fdfa4959147c3438efe74e80e3138cfea89d865ead15712a0da191",
+        "offset": 101872,
+        "raw_sha256": "c00c6e86b8d8fb09eaa71f627b4aaabe52c049b3ecfdbdb47f51408fcb1911ff",
+        "section": ".text",
+        "size": 1156
+      },
+      "kd_down_read": {
+        "instruction_count": 194,
+        "normalized_sha256": "ff77639535cfd826b03df9d4d8abeea26b4d8dae24e178dfb90e3d55efafc986",
+        "offset": 124624,
+        "raw_sha256": "3071d91b1147a6499acfd19f10710035931cdd3c688f9010d05f6efc42fca895",
+        "section": ".text",
+        "size": 820
+      },
+      "kd_down_read_interruptible": {
+        "instruction_count": 88,
+        "normalized_sha256": "319aede9e80b431e431c02cf7d6e5b795bdd14ba2095716f0764487c81be00ec",
+        "offset": 123776,
+        "raw_sha256": "1810f73c1a209bf3d485ea90fa0dd54252a8bf84102d3d8e34a3d43f172b21d2",
+        "section": ".text",
+        "size": 361
+      },
+      "kd_down_read_killable": {
+        "instruction_count": 88,
+        "normalized_sha256": "345e6d74e697f33d729d7d16e62932d67f0ec3142a9ae07a10eaa519f494a3ee",
+        "offset": 123392,
+        "raw_sha256": "6a7f89acd13b6941d70c4e16f5bf9d5026d9d000bec5ca5985e0fa20b88a3786",
+        "section": ".text",
+        "size": 361
+      },
+      "kd_down_read_non_owner": {
+        "instruction_count": 7,
+        "normalized_sha256": "dc8bbf4ed80a3fde286a898ae06f3e5a9f58721305300e96381c73052b789659",
+        "offset": 125472,
+        "raw_sha256": "90141e6a643e45a49f75fa2b46dc8f17b759ff90f066ba41d9394a6a19a0ddf1",
+        "section": ".text",
+        "size": 22
+      },
+      "kd_down_read_trylock": {
+        "instruction_count": 27,
+        "normalized_sha256": "a4b6abded7f0c4290772dc69088e55746b565cd41f4e447b0bf8a6d741ae7bff",
+        "offset": 121232,
+        "raw_sha256": "087c1d091e9dcfe1bdfd152bbf713ce08b6a4ad4626e55536a2fa34610063bb9",
+        "section": ".text",
+        "size": 93
+      },
+      "kd_down_write": {
+        "instruction_count": 99,
+        "normalized_sha256": "40ff4af7f5fab12bcfd902fc077d2a00c348db4d7e62efbd96b37714c2916708",
+        "offset": 120480,
+        "raw_sha256": "de305b40f333d9cce4603b0c6ee4e2c207afb8c3a0078fa3299f2e51a4c86f5c",
+        "section": ".text",
+        "size": 408
+      },
+      "kd_down_write_interruptible": {
+        "instruction_count": 109,
+        "normalized_sha256": "45c283a9d90399d58feea21e07968833f1565e1d97ba8e286d69d13938edcef2",
+        "offset": 124160,
+        "raw_sha256": "52cd049427b08abc514ca33eea69816d92f7856be7d81376a2d8e439df983e67",
+        "section": ".text",
+        "size": 446
+      },
+      "kd_down_write_killable": {
+        "instruction_count": 109,
+        "normalized_sha256": "7903d3a4edb551d27021264c9ad8e24b34a60641d2c898f4cd27b7b2cf828402",
+        "offset": 121472,
+        "raw_sha256": "07e64e5b2e7a14022e21df0dd64af25181498267dbbfa62855d3fb4aa0ea4946",
+        "section": ".text",
+        "size": 446
+      },
+      "kd_down_write_trylock": {
+        "instruction_count": 56,
+        "normalized_sha256": "5bf7f02254aba06717744710a5285d8f28dd6f5e0377a3bae7f8a08dd4028365",
+        "offset": 123152,
+        "raw_sha256": "f6fc2fa2f77ba5d9f138de882607ca51ecee4f4a0b098ed064cea86ec8dccbaa",
+        "section": ".text",
+        "size": 209
+      },
+      "kd_downgrade_write": {
+        "instruction_count": 37,
+        "normalized_sha256": "ec4d0b1624617bcc1b1a649e369f6640a3361205dbc7c870c09b15371e4b9fe2",
+        "offset": 122224,
+        "raw_sha256": "0818c12c1402ba37f357fcff01bff075015f1984cdccae5ce5f68c468cfecee4",
+        "section": ".text",
+        "size": 132
+      },
+      "kd_exe_dispatch": {
+        "instruction_count": 2336,
+        "normalized_sha256": "ad8220da532994dd4048bf497708798a2288011678a2988bb527a3356edf7ea4",
+        "offset": 58080,
+        "raw_sha256": "d21f9fc1c31fbb8362d439d6f060892b2e59b6fcf57b40d80df072fd79c0e3e4",
+        "section": ".text",
+        "size": 12016
+      },
+      "kd_exe_dispatch.cold": {
+        "instruction_count": 82,
+        "normalized_sha256": "dc71192bd198b34440b8593b3c448f665a13d5caded57b3bc25f0f5f40223702",
+        "offset": 131838,
+        "raw_sha256": "21255253b2807c51c6ea90d22f923d02b2bed3cd9bdce29bbbf2e8b0653ef4a7",
+        "section": ".text",
+        "size": 421
+      },
+      "kd_mutex_execute_cs": {
+        "instruction_count": 1182,
+        "normalized_sha256": "b3b69d9b48a415cde2aab2ebd206ef40eda0c431eb4d35cc609368c2a5efb241",
+        "offset": 70528,
+        "raw_sha256": "ceb0dcdf2ea9cf9fc7966f11d5cb9035d41cbef8c0cc7ac4cc9c79a02ad5a773",
+        "section": ".text",
+        "size": 6021
+      },
+      "kd_mutex_run_combiner": {
+        "instruction_count": 278,
+        "normalized_sha256": "440d31fdb1dd21f778ba4194876da43b49792dfda4312939428aafc74b994a31",
+        "offset": 76576,
+        "raw_sha256": "591004f98ebd7a2c32c352164446a0d6405d25497a49d93b50b454c3e00d3c29",
+        "section": ".text",
+        "size": 1118
+      },
+      "kd_rwsem_delegate_enter": {
+        "instruction_count": 107,
+        "normalized_sha256": "a9b084a60bad09e822ad0d7d20c3115a01c0d5e94dd621247f794454a9786a0e",
+        "offset": 122688,
+        "raw_sha256": "4cfad3e733a149ebd1105dc43de819f1e7b9d2d473bcf2b1ff39341caa81254e",
+        "section": ".text",
+        "size": 441
+      },
+      "kd_rwsem_delegate_exit": {
+        "instruction_count": 34,
+        "normalized_sha256": "cc065d57c69923b28b3de574553142a658beecdf28cfb7e32d821f8141f74e1e",
+        "offset": 121936,
+        "raw_sha256": "258cd97aa97f15be245fb98181d3d1f1780cc984ba1f9a0580e525088ee37866",
+        "section": ".text",
+        "size": 115
+      },
+      "kd_rwsem_down_write_clobber_v1": {
+        "instruction_count": 31,
+        "normalized_sha256": "e293fbb3cccb9c2f40232235e133cdf27ecbd428f3310cd1eb02ab7a0b921fa4",
+        "offset": 125664,
+        "raw_sha256": "d73a7832831ed0afa89f0f666e88d07bd6fafd68695f0f382b7caab07f069dbc",
+        "section": ".text",
+        "size": 94
+      },
+      "kd_rwsem_drain_readers": {
+        "instruction_count": 175,
+        "normalized_sha256": "2effe5e2bc0d9af6aa69cb4f0d97adf1c849d979171ee599171287eca1f9d735",
+        "offset": 119696,
+        "raw_sha256": "d269f43227ccd882b6da71b58ebd2d8f057b7380cac1a3b3ba0945881f4b947d",
+        "section": ".text",
+        "size": 764
+      },
+      "kd_rwsem_write_release": {
+        "instruction_count": 35,
+        "normalized_sha256": "16f55e803e6e42b13db80a861f467aa7aef10476437c128b93d558aa86aed9ef",
+        "offset": 122384,
+        "raw_sha256": "4883fe76bd8a55426f91c3a39e7e9aa25a641b2a9f6fd351fe89eff385b2556b",
+        "section": ".text",
+        "size": 127
+      },
+      "kd_up_read": {
+        "instruction_count": 11,
+        "normalized_sha256": "f389b52def6e6c4e9eb16128acef99ab8b4dbba0fdc25e49c18a9f4a25a13518",
+        "offset": 121168,
+        "raw_sha256": "47caec48ea1803371c6d9ed089bc847117f5fe1a82657815b637a523bdd3f458",
+        "section": ".text",
+        "size": 36
+      },
+      "kd_up_read.part.0": {
+        "instruction_count": 27,
+        "normalized_sha256": "782e2b34e2c8b51d3a06fe4242334c71fdea65aa003dce4c4dfc090deabad22d",
+        "offset": 121040,
+        "raw_sha256": "bec25aa296f699288fbfdcb2b14951a08fd4243bb3abf2bfd4dd058e0fec15d2",
+        "section": ".text",
+        "size": 98
+      },
+      "kd_up_read_non_owner": {
+        "instruction_count": 11,
+        "normalized_sha256": "fbd3553d968b6326b8bb7e5d05234928bf1c10453d2b99fd3ec81db6ae30f96f",
+        "offset": 121344,
+        "raw_sha256": "cd795745df0cd2e9a0280e38c4c655dc0bef3b9ada7feb3114b1d86c06494ebd",
+        "section": ".text",
+        "size": 36
+      },
+      "kd_up_write": {
+        "instruction_count": 37,
+        "normalized_sha256": "e2e1d159505b2d98fc3532bae5778212f62f876c154a1c1ac0045e9b2fc8581e",
+        "offset": 122528,
+        "raw_sha256": "4b43255321b527e6f1b782c8f61e6ab1567717977e777cb646fcf1466c38fdbe",
+        "section": ".text",
+        "size": 134
+      },
+      "run_combiner": {
+        "instruction_count": 1065,
+        "normalized_sha256": "1d13287071c2886acf31e17c5568a0b1cbe438b387974bb36c5ccc72d529a34d",
+        "offset": 85584,
+        "raw_sha256": "b3f9a7cac073a44bcefb7b099c34b92a2c2919f457b377fbfaa47fc52a02dbd1",
+        "section": ".text",
+        "size": 5169
+      }
+    },
+    "layout": {
+      "rep_initialization_windows": [
+        [
+          {
+            "address": 85647,
+            "instruction": "test   %r8,%r8"
+          },
+          {
+            "address": 85650,
+            "instruction": "je     1521e <run_combiner+0x3ce>"
+          },
+          {
+            "address": 85656,
+            "instruction": "lea    0x48(%rsp),%rdi"
+          },
+          {
+            "address": 85661,
+            "instruction": "mov    $0x19,%ecx"
+          },
+          {
+            "address": 85666,
+            "instruction": "movq   $0x0,0x40(%rsp)"
+          },
+          {
+            "address": 85675,
+            "instruction": "rep stos %rax,%es:(%rdi)"
+          },
+          {
+            "address": 85678,
+            "instruction": "mov    $0x400,%eax"
+          }
+        ],
+        [
+          {
+            "address": 86626,
+            "instruction": "mov    (%r12),%r8"
+          },
+          {
+            "address": 86630,
+            "instruction": "xor    %eax,%eax"
+          },
+          {
+            "address": 86632,
+            "instruction": "lea    0x48(%rsp),%rdi"
+          },
+          {
+            "address": 86637,
+            "instruction": "mov    $0x19,%ecx"
+          },
+          {
+            "address": 86642,
+            "instruction": "movq   $0x0,0x40(%rsp)"
+          },
+          {
+            "address": 86651,
+            "instruction": "rep stos %rax,%es:(%rdi)"
+          },
+          {
+            "address": 86654,
+            "instruction": "mov    $0x400,%eax"
+          }
+        ]
+      ],
+      "stack_subtractions": [
+        {
+          "address": 85610,
+          "instruction": "sub    $0x120,%rsp"
+        },
+        {
+          "address": 90677,
+          "instruction": "sub    $0x8,%rsp"
+        }
+      ]
+    },
+    "members": {
+      "kd_mutex_node": {
+        "completed": 304,
+        "count_seq": 88,
+        "counted_lock": 96,
+        "entry_abi": 64,
+        "gsbase": 8,
+        "lock": 40,
+        "locked": 305,
+        "native_resume": 306,
+        "native_spin_pins": 308,
+        "next": 0,
+        "numa_node": 80,
+        "osq": 104,
+        "packet_state": 68,
+        "queued_at_ns": 296,
+        "regs": 128,
+        "rsp": 16,
+        "saved_ret_addr": 56,
+        "shadow_stack_base": 24,
+        "shadow_stack_ptr": 32,
+        "slot": 76,
+        "tail": 72,
+        "task_struct_ptr": 48
+      },
+      "kd_spin_batch": {
+        "call": 64,
+        "counter": 184,
+        "cursor": 56,
+        "diag": 40,
+        "exe": 32,
+        "fast_previous": 177,
+        "lock": 48,
+        "next": 16,
+        "numa_scan_left": 178,
+        "outer": 0,
+        "pending": 176,
+        "proxy_context": 180,
+        "queue_end": 192,
+        "request": 24,
+        "saved_tail": 200
+      }
+    },
+    "path": "/tmp/kdlock-continuation-8617e97c-provider.ko",
+    "sections": {
+      ".text": {
+        "sha256": "5f9f0f0761376034f5d5a41d2ae8405201baa0980b169510ebb4a0aacc13ecb2",
+        "size": 134694
+      }
+    },
+    "sha256": "e602695d23676fa0e05f467ff92e23abe25b373d2f8792449af23d679f02c33d",
+    "types": {
+      "kd_exec_frame": [
+        656
+      ],
+      "kd_mutex": [
+        32
+      ],
+      "kd_mutex_node": [
+        320
+      ],
+      "kd_spin_batch": [
+        208
+      ],
+      "kd_spin_node": [
+        128
+      ]
+    },
+    "witness": {
+      "context_refresh_control_flow": "Manual review required using relocation/source-line listing and generic-dispatch windows; no automatic semantic pass.",
+      "generic_dispatch_windows": [
+        [
+          {
+            "address": 86891,
+            "instruction": "lea    0x40(%rsp),%rdx"
+          },
+          {
+            "address": 86896,
+            "instruction": "movb   $0x0,0xf1(%rsp)"
+          },
+          {
+            "address": 86904,
+            "instruction": "mov    %rdx,0x238(%r13)"
+          },
+          {
+            "address": 86911,
+            "instruction": "mov    0x38(%rsp),%rdi"
+          },
+          {
+            "address": 86916,
+            "instruction": "mov    %r12,%rsi"
+          },
+          {
+            "address": 86919,
+            "instruction": "call   134d0 <execute_cs>"
+          },
+          {
+            "address": 86924,
+            "instruction": "xor    %edx,%edx"
+          },
+          {
+            "address": 86926,
+            "instruction": "mov    %eax,%r8d"
+          },
+          {
+            "address": 86929,
+            "instruction": "mov    %gs:0x0(%rip),%eax        # 15398 <run_combiner+0x548>"
+          },
+          {
+            "address": 86936,
+            "instruction": "and    $0x7fffffff,%eax"
+          },
+          {
+            "address": 86941,
+            "instruction": "cmp    $0x1,%eax"
+          },
+          {
+            "address": 86944,
+            "instruction": "je     157b6 <run_combiner+0x966>"
+          },
+          {
+            "address": 86950,
+            "instruction": "lea    -0x2(%r8),%eax"
+          },
+          {
+            "address": 86954,
+            "instruction": "mov    %dl,0xf4(%rsp)"
+          },
+          {
+            "address": 86961,
+            "instruction": "cmp    $0x1,%eax"
+          },
+          {
+            "address": 86964,
+            "instruction": "jbe    15707 <run_combiner+0x8b7>"
+          },
+          {
+            "address": 86970,
+            "instruction": "cmp    $0x7,%r8d"
+          },
+          {
+            "address": 86974,
+            "instruction": "je     153cb <run_combiner+0x57b>"
+          },
+          {
+            "address": 86976,
+            "instruction": "mov    $0x1,%edx"
+          },
+          {
+            "address": 86981,
+            "instruction": "mov    %dx,0x40(%r12)"
+          },
+          {
+            "address": 86987,
+            "instruction": "movzbl 0x48(%rsp),%eax"
+          },
+          {
+            "address": 86992,
+            "instruction": "test   %al,%al"
+          },
+          {
+            "address": 86994,
+            "instruction": "jne    1582d <run_combiner+0x9dd>"
+          },
+          {
+            "address": 87000,
+            "instruction": "test   %rbx,%rbx"
+          },
+          {
+            "address": 87003,
+            "instruction": "je     15510 <run_combiner+0x6c0>"
+          },
+          {
+            "address": 87009,
+            "instruction": "cmpl   $0xff,0x8(%rbx)"
+          },
+          {
+            "address": 87016,
+            "instruction": "je     15510 <run_combiner+0x6c0>"
+          },
+          {
+            "address": 87022,
+            "instruction": "cmpl   $0x3ff,0xf8(%rsp)"
+          },
+          {
+            "address": 87033,
+            "instruction": "ja     15510 <run_combiner+0x6c0>"
+          },
+          {
+            "address": 87039,
+            "instruction": "mov    (%rbx),%rax"
+          },
+          {
+            "address": 87042,
+            "instruction": "test   %rax,%rax"
+          },
+          {
+            "address": 87045,
+            "instruction": "je     157f6 <run_combiner+0x9a6>"
+          },
+          {
+            "address": 87051,
+            "instruction": "cmpl   $0xff,0x8(%rax)"
+          },
+          {
+            "address": 87058,
+            "instruction": "je     15819 <run_combiner+0x9c9>"
+          },
+          {
+            "address": 87064,
+            "instruction": "mov    %rbx,0x78(%rsp)"
+          },
+          {
+            "address": 87069,
+            "instruction": "mov    %rbx,%r12"
+          },
+          {
+            "address": 87072,
+            "instruction": "jmp    15012 <run_combiner+0x1c2>"
+          },
+          {
+            "address": 87077,
+            "instruction": "mov    0x20(%rsp),%rax"
+          },
+          {
+            "address": 87082,
+            "instruction": "mov    0x58(%rax),%rax"
+          },
+          {
+            "address": 87086,
+            "instruction": "addl   $0x1,0xf8(%rsp)"
+          },
+          {
+            "address": 87094,
+            "instruction": "mov    %rax,0x108(%rsp)"
+          },
+          {
+            "address": 87102,
+            "instruction": "mov    (%r12),%rbx"
+          },
+          {
+            "address": 87106,
+            "instruction": "test   %rbx,%rbx"
+          }
+        ]
+      ],
+      "native_resume_zero_branches": [
+        {
+          "branch": {
+            "address": 77976,
+            "instruction": "je     1333f <__kd_mutex_lock_slowpath+0x3af>"
+          },
+          "load": {
+            "address": 77965,
+            "instruction": "movzbl 0x132(%r12),%eax"
+          },
+          "surrounding": [
+            {
+              "address": 77950,
+              "instruction": "pause"
+            },
+            {
+              "address": 77952,
+              "instruction": "movzbl 0x131(%r12),%eax"
+            },
+            {
+              "address": 77961,
+              "instruction": "test   %al,%al"
+            },
+            {
+              "address": 77963,
+              "instruction": "jne    1307e <__kd_mutex_lock_slowpath+0xee>"
+            },
+            {
+              "address": 77965,
+              "instruction": "movzbl 0x132(%r12),%eax"
+            },
+            {
+              "address": 77974,
+              "instruction": "test   %al,%al"
+            },
+            {
+              "address": 77976,
+              "instruction": "je     1333f <__kd_mutex_lock_slowpath+0x3af>"
+            },
+            {
+              "address": 77982,
+              "instruction": "movzbl 0x132(%r12),%eax"
+            },
+            {
+              "address": 77991,
+              "instruction": "cmp    $0x2,%al"
+            },
+            {
+              "address": 77993,
+              "instruction": "je     130af <__kd_mutex_lock_slowpath+0x11f>"
+            },
+            {
+              "address": 77999,
+              "instruction": "movzbl 0x132(%r12),%eax"
+            },
+            {
+              "address": 78008,
+              "instruction": "cmp    $0x1,%al"
+            }
+          ],
+          "test": {
+            "address": 77974,
+            "instruction": "test   %al,%al"
+          },
+          "zero_falls_through": false
+        }
+      ],
+      "native_resume_zero_fallthrough": false
+    }
+  },
+  "candidate": {
+    "functions": {
+      "__kd_mutex_lock_slowpath": {
+        "instruction_count": 254,
+        "normalized_sha256": "e8bf9c4e75cbac9ded77e3f9a1cbd75aebf425b5f25d9458d6220907721f7a61",
+        "offset": 77712,
+        "raw_sha256": "60e76a894f1e282c4d760da7aa24ef31f51dfb7e81832bca94fc0f1510e195e9",
+        "section": ".text",
+        "size": 1145
+      },
+      "_kd_mutex_lock_abi": {
+        "instruction_count": 255,
+        "normalized_sha256": "60693b00d1fdfa4959147c3438efe74e80e3138cfea89d865ead15712a0da191",
+        "offset": 101872,
+        "raw_sha256": "6d803c4d8cbc8cd29240799c9104b154dcb74185a8c07915276e618984e91c09",
+        "section": ".text",
+        "size": 1156
+      },
+      "kd_down_read": {
+        "instruction_count": 194,
+        "normalized_sha256": "ff77639535cfd826b03df9d4d8abeea26b4d8dae24e178dfb90e3d55efafc986",
+        "offset": 124624,
+        "raw_sha256": "3071d91b1147a6499acfd19f10710035931cdd3c688f9010d05f6efc42fca895",
+        "section": ".text",
+        "size": 820
+      },
+      "kd_down_read_interruptible": {
+        "instruction_count": 88,
+        "normalized_sha256": "319aede9e80b431e431c02cf7d6e5b795bdd14ba2095716f0764487c81be00ec",
+        "offset": 123776,
+        "raw_sha256": "1810f73c1a209bf3d485ea90fa0dd54252a8bf84102d3d8e34a3d43f172b21d2",
+        "section": ".text",
+        "size": 361
+      },
+      "kd_down_read_killable": {
+        "instruction_count": 88,
+        "normalized_sha256": "345e6d74e697f33d729d7d16e62932d67f0ec3142a9ae07a10eaa519f494a3ee",
+        "offset": 123392,
+        "raw_sha256": "6a7f89acd13b6941d70c4e16f5bf9d5026d9d000bec5ca5985e0fa20b88a3786",
+        "section": ".text",
+        "size": 361
+      },
+      "kd_down_read_non_owner": {
+        "instruction_count": 7,
+        "normalized_sha256": "dc8bbf4ed80a3fde286a898ae06f3e5a9f58721305300e96381c73052b789659",
+        "offset": 125472,
+        "raw_sha256": "90141e6a643e45a49f75fa2b46dc8f17b759ff90f066ba41d9394a6a19a0ddf1",
+        "section": ".text",
+        "size": 22
+      },
+      "kd_down_read_trylock": {
+        "instruction_count": 27,
+        "normalized_sha256": "a4b6abded7f0c4290772dc69088e55746b565cd41f4e447b0bf8a6d741ae7bff",
+        "offset": 121232,
+        "raw_sha256": "087c1d091e9dcfe1bdfd152bbf713ce08b6a4ad4626e55536a2fa34610063bb9",
+        "section": ".text",
+        "size": 93
+      },
+      "kd_down_write": {
+        "instruction_count": 99,
+        "normalized_sha256": "40ff4af7f5fab12bcfd902fc077d2a00c348db4d7e62efbd96b37714c2916708",
+        "offset": 120480,
+        "raw_sha256": "de305b40f333d9cce4603b0c6ee4e2c207afb8c3a0078fa3299f2e51a4c86f5c",
+        "section": ".text",
+        "size": 408
+      },
+      "kd_down_write_interruptible": {
+        "instruction_count": 109,
+        "normalized_sha256": "45c283a9d90399d58feea21e07968833f1565e1d97ba8e286d69d13938edcef2",
+        "offset": 124160,
+        "raw_sha256": "52cd049427b08abc514ca33eea69816d92f7856be7d81376a2d8e439df983e67",
+        "section": ".text",
+        "size": 446
+      },
+      "kd_down_write_killable": {
+        "instruction_count": 109,
+        "normalized_sha256": "7903d3a4edb551d27021264c9ad8e24b34a60641d2c898f4cd27b7b2cf828402",
+        "offset": 121472,
+        "raw_sha256": "07e64e5b2e7a14022e21df0dd64af25181498267dbbfa62855d3fb4aa0ea4946",
+        "section": ".text",
+        "size": 446
+      },
+      "kd_down_write_trylock": {
+        "instruction_count": 56,
+        "normalized_sha256": "5bf7f02254aba06717744710a5285d8f28dd6f5e0377a3bae7f8a08dd4028365",
+        "offset": 123152,
+        "raw_sha256": "f6fc2fa2f77ba5d9f138de882607ca51ecee4f4a0b098ed064cea86ec8dccbaa",
+        "section": ".text",
+        "size": 209
+      },
+      "kd_downgrade_write": {
+        "instruction_count": 37,
+        "normalized_sha256": "ec4d0b1624617bcc1b1a649e369f6640a3361205dbc7c870c09b15371e4b9fe2",
+        "offset": 122224,
+        "raw_sha256": "0818c12c1402ba37f357fcff01bff075015f1984cdccae5ce5f68c468cfecee4",
+        "section": ".text",
+        "size": 132
+      },
+      "kd_exe_dispatch": {
+        "instruction_count": 2336,
+        "normalized_sha256": "ad8220da532994dd4048bf497708798a2288011678a2988bb527a3356edf7ea4",
+        "offset": 58080,
+        "raw_sha256": "d21f9fc1c31fbb8362d439d6f060892b2e59b6fcf57b40d80df072fd79c0e3e4",
+        "section": ".text",
+        "size": 12016
+      },
+      "kd_exe_dispatch.cold": {
+        "instruction_count": 82,
+        "normalized_sha256": "dc71192bd198b34440b8593b3c448f665a13d5caded57b3bc25f0f5f40223702",
+        "offset": 131838,
+        "raw_sha256": "21255253b2807c51c6ea90d22f923d02b2bed3cd9bdce29bbbf2e8b0653ef4a7",
+        "section": ".text",
+        "size": 421
+      },
+      "kd_mutex_execute_cs": {
+        "instruction_count": 1182,
+        "normalized_sha256": "b3b69d9b48a415cde2aab2ebd206ef40eda0c431eb4d35cc609368c2a5efb241",
+        "offset": 70528,
+        "raw_sha256": "ceb0dcdf2ea9cf9fc7966f11d5cb9035d41cbef8c0cc7ac4cc9c79a02ad5a773",
+        "section": ".text",
+        "size": 6021
+      },
+      "kd_mutex_run_combiner": {
+        "instruction_count": 278,
+        "normalized_sha256": "440d31fdb1dd21f778ba4194876da43b49792dfda4312939428aafc74b994a31",
+        "offset": 76576,
+        "raw_sha256": "591004f98ebd7a2c32c352164446a0d6405d25497a49d93b50b454c3e00d3c29",
+        "section": ".text",
+        "size": 1118
+      },
+      "kd_rwsem_delegate_enter": {
+        "instruction_count": 107,
+        "normalized_sha256": "a9b084a60bad09e822ad0d7d20c3115a01c0d5e94dd621247f794454a9786a0e",
+        "offset": 122688,
+        "raw_sha256": "4cfad3e733a149ebd1105dc43de819f1e7b9d2d473bcf2b1ff39341caa81254e",
+        "section": ".text",
+        "size": 441
+      },
+      "kd_rwsem_delegate_exit": {
+        "instruction_count": 34,
+        "normalized_sha256": "cc065d57c69923b28b3de574553142a658beecdf28cfb7e32d821f8141f74e1e",
+        "offset": 121936,
+        "raw_sha256": "258cd97aa97f15be245fb98181d3d1f1780cc984ba1f9a0580e525088ee37866",
+        "section": ".text",
+        "size": 115
+      },
+      "kd_rwsem_down_write_clobber_v1": {
+        "instruction_count": 31,
+        "normalized_sha256": "e293fbb3cccb9c2f40232235e133cdf27ecbd428f3310cd1eb02ab7a0b921fa4",
+        "offset": 125664,
+        "raw_sha256": "d73a7832831ed0afa89f0f666e88d07bd6fafd68695f0f382b7caab07f069dbc",
+        "section": ".text",
+        "size": 94
+      },
+      "kd_rwsem_drain_readers": {
+        "instruction_count": 175,
+        "normalized_sha256": "2effe5e2bc0d9af6aa69cb4f0d97adf1c849d979171ee599171287eca1f9d735",
+        "offset": 119696,
+        "raw_sha256": "d269f43227ccd882b6da71b58ebd2d8f057b7380cac1a3b3ba0945881f4b947d",
+        "section": ".text",
+        "size": 764
+      },
+      "kd_rwsem_write_release": {
+        "instruction_count": 35,
+        "normalized_sha256": "16f55e803e6e42b13db80a861f467aa7aef10476437c128b93d558aa86aed9ef",
+        "offset": 122384,
+        "raw_sha256": "4883fe76bd8a55426f91c3a39e7e9aa25a641b2a9f6fd351fe89eff385b2556b",
+        "section": ".text",
+        "size": 127
+      },
+      "kd_up_read": {
+        "instruction_count": 11,
+        "normalized_sha256": "f389b52def6e6c4e9eb16128acef99ab8b4dbba0fdc25e49c18a9f4a25a13518",
+        "offset": 121168,
+        "raw_sha256": "47caec48ea1803371c6d9ed089bc847117f5fe1a82657815b637a523bdd3f458",
+        "section": ".text",
+        "size": 36
+      },
+      "kd_up_read.part.0": {
+        "instruction_count": 27,
+        "normalized_sha256": "782e2b34e2c8b51d3a06fe4242334c71fdea65aa003dce4c4dfc090deabad22d",
+        "offset": 121040,
+        "raw_sha256": "bec25aa296f699288fbfdcb2b14951a08fd4243bb3abf2bfd4dd058e0fec15d2",
+        "section": ".text",
+        "size": 98
+      },
+      "kd_up_read_non_owner": {
+        "instruction_count": 11,
+        "normalized_sha256": "fbd3553d968b6326b8bb7e5d05234928bf1c10453d2b99fd3ec81db6ae30f96f",
+        "offset": 121344,
+        "raw_sha256": "cd795745df0cd2e9a0280e38c4c655dc0bef3b9ada7feb3114b1d86c06494ebd",
+        "section": ".text",
+        "size": 36
+      },
+      "kd_up_write": {
+        "instruction_count": 37,
+        "normalized_sha256": "e2e1d159505b2d98fc3532bae5778212f62f876c154a1c1ac0045e9b2fc8581e",
+        "offset": 122528,
+        "raw_sha256": "4b43255321b527e6f1b782c8f61e6ab1567717977e777cb646fcf1466c38fdbe",
+        "section": ".text",
+        "size": 134
+      },
+      "run_combiner": {
+        "instruction_count": 1069,
+        "normalized_sha256": "2141fca30d0e641545985554b6df864ba025bfcce3b802c0cb535dd30a5d36fe",
+        "offset": 85552,
+        "raw_sha256": "f8968c0713bfe8aeeacf97a13d7888054ee0db585d6a9ba786fa86ce5a78d1df",
+        "section": ".text",
+        "size": 5207
+      }
+    },
+    "layout": {
+      "rep_initialization_windows": [
+        [
+          {
+            "address": 85615,
+            "instruction": "test   %r8,%r8"
+          },
+          {
+            "address": 85618,
+            "instruction": "je     151fe <run_combiner+0x3ce>"
+          },
+          {
+            "address": 85624,
+            "instruction": "lea    0x48(%rsp),%rdi"
+          },
+          {
+            "address": 85629,
+            "instruction": "mov    $0x18,%ecx"
+          },
+          {
+            "address": 85634,
+            "instruction": "movq   $0x0,0x40(%rsp)"
+          },
+          {
+            "address": 85643,
+            "instruction": "rep stos %rax,%es:(%rdi)"
+          },
+          {
+            "address": 85646,
+            "instruction": "mov    $0x400,%eax"
+          }
+        ],
+        [
+          {
+            "address": 86594,
+            "instruction": "mov    (%r12),%r8"
+          },
+          {
+            "address": 86598,
+            "instruction": "xor    %eax,%eax"
+          },
+          {
+            "address": 86600,
+            "instruction": "lea    0x48(%rsp),%rdi"
+          },
+          {
+            "address": 86605,
+            "instruction": "mov    $0x18,%ecx"
+          },
+          {
+            "address": 86610,
+            "instruction": "movq   $0x0,0x40(%rsp)"
+          },
+          {
+            "address": 86619,
+            "instruction": "rep stos %rax,%es:(%rdi)"
+          },
+          {
+            "address": 86622,
+            "instruction": "mov    $0x400,%eax"
+          }
+        ]
+      ],
+      "stack_subtractions": [
+        {
+          "address": 85578,
+          "instruction": "sub    $0x110,%rsp"
+        },
+        {
+          "address": 90631,
+          "instruction": "sub    $0x8,%rsp"
+        }
+      ]
+    },
+    "members": {
+      "kd_mutex_node": {
+        "completed": 304,
+        "count_seq": 88,
+        "counted_lock": 96,
+        "entry_abi": 64,
+        "gsbase": 8,
+        "lock": 40,
+        "locked": 305,
+        "native_resume": 306,
+        "native_spin_pins": 308,
+        "next": 0,
+        "numa_node": 80,
+        "osq": 104,
+        "packet_state": 68,
+        "queued_at_ns": 296,
+        "regs": 128,
+        "rsp": 16,
+        "saved_ret_addr": 56,
+        "shadow_stack_base": 24,
+        "shadow_stack_ptr": 32,
+        "slot": 76,
+        "tail": 72,
+        "task_struct_ptr": 48
+      },
+      "kd_spin_batch": {
+        "call": 64,
+        "counter": 180,
+        "cursor": 56,
+        "diag": 40,
+        "exe": 32,
+        "fast_previous": 177,
+        "lock": 48,
+        "next": 16,
+        "numa_scan_left": 178,
+        "outer": 0,
+        "pending": 176,
+        "proxy_context": 182,
+        "queue_end": 184,
+        "request": 24,
+        "saved_tail": 192
+      }
+    },
+    "path": "/tmp/kdlock-continuation-f7a84065-provider.ko",
+    "sections": {
+      ".text": {
+        "sha256": "78089a5f26cca9d56406a63a8df00ed3ebdd1ceac6803ecc36053c984eac44df",
+        "size": 134694
+      }
+    },
+    "sha256": "93a892843297888e1a000d41dcc560de4fd9fabd74d3d90f95ef68406b3b3c6d",
+    "types": {
+      "kd_exec_frame": [
+        656
+      ],
+      "kd_mutex": [
+        32
+      ],
+      "kd_mutex_node": [
+        320
+      ],
+      "kd_spin_batch": [
+        200
+      ],
+      "kd_spin_node": [
+        128
+      ]
+    },
+    "witness": {
+      "context_refresh_control_flow": "Manual review required using relocation/source-line listing and generic-dispatch windows; no automatic semantic pass.",
+      "generic_dispatch_windows": [
+        [
+          {
+            "address": 86859,
+            "instruction": "lea    0x40(%rsp),%rdx"
+          },
+          {
+            "address": 86864,
+            "instruction": "movb   $0x0,0xf1(%rsp)"
+          },
+          {
+            "address": 86872,
+            "instruction": "mov    %rdx,0x238(%r13)"
+          },
+          {
+            "address": 86879,
+            "instruction": "mov    0x38(%rsp),%rdi"
+          },
+          {
+            "address": 86884,
+            "instruction": "mov    %r12,%rsi"
+          },
+          {
+            "address": 86887,
+            "instruction": "call   134b0 <execute_cs>"
+          },
+          {
+            "address": 86892,
+            "instruction": "mov    %eax,%r8d"
+          },
+          {
+            "address": 86895,
+            "instruction": "lea    -0x2(%rax),%eax"
+          },
+          {
+            "address": 86898,
+            "instruction": "cmp    $0x1,%eax"
+          },
+          {
+            "address": 86901,
+            "instruction": "jbe    156f0 <run_combiner+0x8c0>"
+          },
+          {
+            "address": 86907,
+            "instruction": "cmpb   $0x0,0x48(%rsp)"
+          },
+          {
+            "address": 86912,
+            "instruction": "jne    1574c <run_combiner+0x91c>"
+          },
+          {
+            "address": 86918,
+            "instruction": "mov    %gs:0x0(%rip),%edx        # 1538d <run_combiner+0x55d>"
+          },
+          {
+            "address": 86925,
+            "instruction": "xor    %eax,%eax"
+          },
+          {
+            "address": 86927,
+            "instruction": "and    $0x7fffffff,%edx"
+          },
+          {
+            "address": 86933,
+            "instruction": "cmp    $0x1,%edx"
+          },
+          {
+            "address": 86936,
+            "instruction": "je     158b8 <run_combiner+0xa88>"
+          },
+          {
+            "address": 86942,
+            "instruction": "mov    %al,0xf6(%rsp)"
+          },
+          {
+            "address": 86949,
+            "instruction": "cmp    $0x7,%r8d"
+          },
+          {
+            "address": 86953,
+            "instruction": "je     153b6 <run_combiner+0x586>"
+          },
+          {
+            "address": 86955,
+            "instruction": "mov    $0x1,%edx"
+          },
+          {
+            "address": 86960,
+            "instruction": "mov    %dx,0x40(%r12)"
+          },
+          {
+            "address": 86966,
+            "instruction": "movzbl 0x48(%rsp),%eax"
+          },
+          {
+            "address": 86971,
+            "instruction": "test   %al,%al"
+          },
+          {
+            "address": 86973,
+            "instruction": "jne    15756 <run_combiner+0x926>"
+          },
+          {
+            "address": 86979,
+            "instruction": "test   %rbx,%rbx"
+          },
+          {
+            "address": 86982,
+            "instruction": "je     154f9 <run_combiner+0x6c9>"
+          },
+          {
+            "address": 86988,
+            "instruction": "cmpl   $0xff,0x8(%rbx)"
+          },
+          {
+            "address": 86995,
+            "instruction": "je     154f9 <run_combiner+0x6c9>"
+          },
+          {
+            "address": 87001,
+            "instruction": "cmpb   $0x4,0xf5(%rsp)"
+          },
+          {
+            "address": 87009,
+            "instruction": "jae    154f9 <run_combiner+0x6c9>"
+          },
+          {
+            "address": 87015,
+            "instruction": "mov    (%rbx),%rax"
+          },
+          {
+            "address": 87018,
+            "instruction": "test   %rax,%rax"
+          },
+          {
+            "address": 87021,
+            "instruction": "je     157e7 <run_combiner+0x9b7>"
+          },
+          {
+            "address": 87027,
+            "instruction": "cmpl   $0xff,0x8(%rax)"
+          },
+          {
+            "address": 87034,
+            "instruction": "je     1580a <run_combiner+0x9da>"
+          },
+          {
+            "address": 87040,
+            "instruction": "mov    %rbx,0x78(%rsp)"
+          },
+          {
+            "address": 87045,
+            "instruction": "mov    %rbx,%r12"
+          },
+          {
+            "address": 87048,
+            "instruction": "jmp    14ff2 <run_combiner+0x1c2>"
+          },
+          {
+            "address": 87053,
+            "instruction": "mov    0x20(%rsp),%rax"
+          },
+          {
+            "address": 87058,
+            "instruction": "mov    0x58(%rax),%rax"
+          },
+          {
+            "address": 87062,
+            "instruction": "addw   $0x1,0xf4(%rsp)"
+          },
+          {
+            "address": 87071,
+            "instruction": "mov    %rax,0x100(%rsp)"
+          }
+        ]
+      ],
+      "native_resume_zero_branches": [
+        {
+          "branch": {
+            "address": 77972,
+            "instruction": "jne    13323 <__kd_mutex_lock_slowpath+0x393>"
+          },
+          "load": {
+            "address": 77961,
+            "instruction": "movzbl 0x132(%r12),%eax"
+          },
+          "surrounding": [
+            {
+              "address": 77946,
+              "instruction": "pause"
+            },
+            {
+              "address": 77948,
+              "instruction": "movzbl 0x131(%r12),%eax"
+            },
+            {
+              "address": 77957,
+              "instruction": "test   %al,%al"
+            },
+            {
+              "address": 77959,
+              "instruction": "jne    1307a <__kd_mutex_lock_slowpath+0xea>"
+            },
+            {
+              "address": 77961,
+              "instruction": "movzbl 0x132(%r12),%eax"
+            },
+            {
+              "address": 77970,
+              "instruction": "test   %al,%al"
+            },
+            {
+              "address": 77972,
+              "instruction": "jne    13323 <__kd_mutex_lock_slowpath+0x393>"
+            },
+            {
+              "address": 77978,
+              "instruction": "cmpb   $0x0,0x130(%r12)"
+            },
+            {
+              "address": 77987,
+              "instruction": "jne    131d9 <__kd_mutex_lock_slowpath+0x249>"
+            },
+            {
+              "address": 77993,
+              "instruction": "lea    0x18(%rbx),%rdx"
+            },
+            {
+              "address": 77997,
+              "instruction": "mov    $0x2,%ecx"
+            },
+            {
+              "address": 78002,
+              "instruction": "jmp    130b6 <__kd_mutex_lock_slowpath+0x126>"
+            }
+          ],
+          "test": {
+            "address": 77970,
+            "instruction": "test   %al,%al"
+          },
+          "zero_falls_through": true
+        }
+      ],
+      "native_resume_zero_fallthrough": true
+    }
+  },
+  "comparison": {
+    "__kd_mutex_lock_slowpath": {
+      "new_size": 1145,
+      "old_size": 1170,
+      "same_normalized_instructions": false,
+      "same_raw_bytes": false
+    },
+    "_kd_mutex_lock_abi": {
+      "new_size": 1156,
+      "old_size": 1156,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": false
+    },
+    "kd_down_read": {
+      "new_size": 820,
+      "old_size": 820,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_read_interruptible": {
+      "new_size": 361,
+      "old_size": 361,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_read_killable": {
+      "new_size": 361,
+      "old_size": 361,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_read_non_owner": {
+      "new_size": 22,
+      "old_size": 22,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_read_trylock": {
+      "new_size": 93,
+      "old_size": 93,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_write": {
+      "new_size": 408,
+      "old_size": 408,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_write_interruptible": {
+      "new_size": 446,
+      "old_size": 446,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_write_killable": {
+      "new_size": 446,
+      "old_size": 446,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_down_write_trylock": {
+      "new_size": 209,
+      "old_size": 209,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_downgrade_write": {
+      "new_size": 132,
+      "old_size": 132,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_exe_dispatch": {
+      "new_size": 12016,
+      "old_size": 12016,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_exe_dispatch.cold": {
+      "new_size": 421,
+      "old_size": 421,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_mutex_execute_cs": {
+      "new_size": 6021,
+      "old_size": 6021,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_mutex_run_combiner": {
+      "new_size": 1118,
+      "old_size": 1118,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_rwsem_delegate_enter": {
+      "new_size": 441,
+      "old_size": 441,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_rwsem_delegate_exit": {
+      "new_size": 115,
+      "old_size": 115,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_rwsem_down_write_clobber_v1": {
+      "new_size": 94,
+      "old_size": 94,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_rwsem_drain_readers": {
+      "new_size": 764,
+      "old_size": 764,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_rwsem_write_release": {
+      "new_size": 127,
+      "old_size": 127,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_up_read": {
+      "new_size": 36,
+      "old_size": 36,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_up_read.part.0": {
+      "new_size": 98,
+      "old_size": 98,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_up_read_non_owner": {
+      "new_size": 36,
+      "old_size": 36,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "kd_up_write": {
+      "new_size": 134,
+      "old_size": 134,
+      "same_normalized_instructions": true,
+      "same_raw_bytes": true
+    },
+    "run_combiner": {
+      "new_size": 5207,
+      "old_size": 5169,
+      "same_normalized_instructions": false,
+      "same_raw_bytes": false
+    }
+  },
+  "rwsem_all_normalized_equal": true,
+  "rwsem_all_raw_equal": true,
+  "rwsem_functions": [
+    "kd_down_read",
+    "kd_down_read_interruptible",
+    "kd_down_read_killable",
+    "kd_down_read_trylock",
+    "kd_down_read_non_owner",
+    "kd_up_read",
+    "kd_up_read.part.0",
+    "kd_up_read_non_owner",
+    "kd_down_write",
+    "kd_down_write_interruptible",
+    "kd_down_write_killable",
+    "kd_down_write_trylock",
+    "kd_up_write",
+    "kd_downgrade_write",
+    "kd_rwsem_drain_readers",
+    "kd_rwsem_write_release",
+    "kd_rwsem_delegate_enter",
+    "kd_rwsem_delegate_exit",
+    "kd_rwsem_down_write_clobber_v1"
+  ]
+}

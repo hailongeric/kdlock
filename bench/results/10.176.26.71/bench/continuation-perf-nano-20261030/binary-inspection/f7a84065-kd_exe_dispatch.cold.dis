@@ -1,0 +1,95 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000000202fe <kd_exe_dispatch.cold>:
+   202fe:	mov    -0xf0(%rbp),%r8
+   20305:	mov    (%r14),%rcx
+   20308:	mov    %r12d,%esi
+   2030b:	mov    $0x0,%rdi
+   20312:	mov    -0xe8(%rbp),%rdx
+   20319:	call   2031e <kd_exe_dispatch.cold+0x20>
+   2031e:	cmp    $0x3,%r12d
+   20322:	je     203a8 <kd_exe_dispatch.cold+0xaa>
+   20328:	jg     2033e <kd_exe_dispatch.cold+0x40>
+   2032a:	cmp    $0x1,%r12d
+   2032e:	je     20486 <kd_exe_dispatch.cold+0x188>
+   20334:	cmp    $0x2,%r12d
+   20338:	je     20490 <kd_exe_dispatch.cold+0x192>
+   2033e:	xor    %eax,%eax
+   20340:	mov    %rax,-0xc0(%rbp)
+   20347:	jmp    2034c <kd_exe_dispatch.cold+0x4e>
+   2034c:	mov    -0xd0(%rbp),%rax
+   20353:	mov    -0xe8(%rbp),%rsi
+   2035a:	mov    $0x0,%rdi
+   20361:	movzbl 0x20(%rax),%ecx
+   20365:	mov    -0xe0(%rbp),%rax
+   2036c:	mov    0xc(%rax),%edx
+   2036f:	call   20374 <kd_exe_dispatch.cold+0x76>
+   20374:	jmp    20379 <kd_exe_dispatch.cold+0x7b>
+   20379:	mov    -0xe0(%rbp),%rax
+   20380:	mov    -0xd8(%rbp),%rbx
+   20387:	mov    $0x0,%rdi
+   2038e:	mov    0x10(%rax),%rcx
+   20392:	mov    0x4(%rax),%r9d
+   20396:	mov    %rax,%rsi
+   20399:	mov    (%rbx),%r8
+   2039c:	mov    (%rax),%edx
+   2039e:	call   203a3 <kd_exe_dispatch.cold+0xa5>
+   203a3:	jmp    203a8 <kd_exe_dispatch.cold+0xaa>
+   203a8:	mov    $0x4,%eax
+   203ad:	jmp    20340 <kd_exe_dispatch.cold+0x42>
+   203af:	mov    $0x10,%esi
+   203b4:	mov    $0x16,%edi
+   203b9:	call   203be <kd_exe_dispatch.cold+0xc0>
+   203be:	mov    -0xd0(%rbp),%rbx
+   203c5:	mov    $0x0,%rdi
+   203cc:	mov    0xe0(%rbx),%rax
+   203d3:	mov    0x288(%rbx),%rdx
+   203da:	mov    (%rbx),%rsi
+   203dd:	mov    0xaf0(%rax),%r8d
+   203e4:	mov    -0xd8(%rbp),%rax
+   203eb:	mov    0x10(%rdx),%rcx
+   203ef:	mov    (%rax),%rdx
+   203f2:	call   203f7 <kd_exe_dispatch.cold+0xf9>
+   203f7:	jmp    203fc <kd_exe_dispatch.cold+0xfe>
+   203fc:	mov    -0xf8(%rbp),%eax
+   20402:	mov    -0xe0(%rbp),%rdi
+   20409:	mov    %r14,%rdx
+   2040c:	mov    %r15,%rsi
+   2040f:	lea    0x1(%rax),%ebx
+   20412:	movslq %ebx,%rcx
+   20415:	call   1ff70 <kd_jit_origin_instruction>
+   2041a:	movslq %eax,%r8
+   2041d:	cmp    $0x1,%r8d
+   20421:	jne    2046a <kd_exe_dispatch.cold+0x16c>
+   20423:	mov    %ebx,-0xf8(%rbp)
+   20429:	movzbl -0xf1(%rbp),%edx
+   20430:	xor    %eax,%eax
+   20432:	jmp    20437 <kd_exe_dispatch.cold+0x139>
+   20437:	mov    -0xd0(%rbp),%rax
+   2043e:	mov    -0xf0(%rbp),%rcx
+   20445:	mov    $0x0,%rdi
+   2044c:	mov    -0xe8(%rbp),%rsi
+   20453:	mov    0xe0(%rax),%rax
+   2045a:	mov    0xaf0(%rax),%edx
+   20460:	call   20465 <kd_exe_dispatch.cold+0x167>
+   20465:	jmp    2046a <kd_exe_dispatch.cold+0x16c>
+   2046a:	mov    %r14,-0xd8(%rbp)
+   20471:	test   %r8d,%r8d
+   20474:	jns    2047a <kd_exe_dispatch.cold+0x17c>
+   2047a:	mov    -0xc0(%rbp),%rcx
+   20481:	jmp    20486 <kd_exe_dispatch.cold+0x188>
+   20486:	mov    $0x1,%eax
+   2048b:	jmp    20340 <kd_exe_dispatch.cold+0x42>
+   20490:	mov    -0xe8(%rbp),%rax
+   20497:	mov    %rax,-0xc0(%rbp)
+   2049e:	jmp    204a3 <kd_mutex_execute_cs.cold>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

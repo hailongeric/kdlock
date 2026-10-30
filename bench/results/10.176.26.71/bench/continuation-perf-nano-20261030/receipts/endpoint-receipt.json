@@ -1,0 +1,27 @@
+{
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "StrictHostKeyChecking=yes",
+    "eric@10.176.26.71",
+    "sudo -n python3 /home/eric/vm/vm-shared/kdlock/bench/basic/capture_host.py --snapshot linux70-kdlock1-clean-20261027"
+  ],
+  "completed": true,
+  "completion_marker": "COMPLETE origin-nano f7a84065e84474380faa37eeadfdf534abd72a68",
+  "error": "/tmp/kdlock-continuation-perf-nano-f7a84065-20261030-endpoint.log",
+  "error_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "finished": 1793343308.432336,
+  "output": "/tmp/kdlock-continuation-perf-nano-f7a84065-20261030-endpoint.json",
+  "output_sha256": "26a91814b223f15768f35b18a1c38acd23bb766aadddc14fc1436d8178cfe9f0",
+  "returncode": 0,
+  "run_log": "/tmp/kdlock-continuation-perf-nano-f7a84065-20261030.transport.log",
+  "run_log_sha256": "ba9694e2e9ec0262f6c7b2a074d489b2681b811e2e4a9cd0b392ce270861e1d6",
+  "scope": "Physical-host endpoint only; no guest work, timing or drain claim",
+  "script_sha256": "277ab27bead4e670786596f4ca5f6830327f2dcc14ce6f03436c775a6eb2e304",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "started": 1793339933.9520695
+}

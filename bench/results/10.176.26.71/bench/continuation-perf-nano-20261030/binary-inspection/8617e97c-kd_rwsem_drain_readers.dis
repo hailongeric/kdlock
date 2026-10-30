@@ -1,0 +1,188 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001d390 <kd_rwsem_drain_readers>:
+   1d390:	call   1d395 <kd_rwsem_drain_readers+0x5>
+   1d395:	push   %rbp
+   1d396:	mov    %rsp,%rbp
+   1d399:	push   %r14
+   1d39b:	push   %r13
+   1d39d:	push   %r12
+   1d39f:	push   %rbx
+   1d3a0:	sub    $0x30,%rsp
+   1d3a4:	mov    %gs:0x0(%rip),%r12        # 1d3ac <kd_rwsem_drain_readers+0x1c>
+   1d3ac:	mov    %r12,-0x28(%rbp)
+   1d3b0:	mov    %rdi,%r12
+   1d3b3:	cmp    $0x2,%esi
+   1d3b6:	je     1d626 <kd_rwsem_drain_readers+0x296>
+   1d3bc:	cmp    $0x1,%esi
+   1d3bf:	je     1d4a3 <kd_rwsem_drain_readers+0x113>
+   1d3c5:	cmp    $0x102,%esi
+   1d3cb:	je     1d56e <kd_rwsem_drain_readers+0x1de>
+   1d3d1:	call   1d3d6 <kd_rwsem_drain_readers+0x46>
+   1d3d6:	mov    0x40(%r12),%rax
+   1d3db:	test   %rax,%rax
+   1d3de:	je     1d656 <kd_rwsem_drain_readers+0x2c6>
+   1d3e4:	xor    %esi,%esi
+   1d3e6:	lea    -0x50(%rbp),%rdi
+   1d3ea:	movq   $0x0,-0x50(%rbp)
+   1d3f2:	mov    $0x1,%ebx
+   1d3f7:	movq   $0x0,-0x48(%rbp)
+   1d3ff:	lea    0x100(%r12),%r14
+   1d407:	movq   $0x0,-0x40(%rbp)
+   1d40f:	movq   $0x0,-0x38(%rbp)
+   1d417:	movq   $0x0,-0x30(%rbp)
+   1d41f:	call   1d424 <kd_rwsem_drain_readers+0x94>
+   1d424:	mov    $0x2,%edx
+   1d429:	lea    -0x50(%rbp),%rsi
+   1d42d:	mov    %r14,%rdi
+   1d430:	call   1d435 <kd_rwsem_drain_readers+0xa5>
+   1d435:	mov    0x40(%r12),%rax
+   1d43a:	test   %rax,%rax
+   1d43d:	je     1d465 <kd_rwsem_drain_readers+0xd5>
+   1d43f:	mov    %rbx,%rdi
+   1d442:	call   1d447 <kd_rwsem_drain_readers+0xb7>
+   1d447:	mov    %rax,%rbx
+   1d44a:	mov    0x40(%r12),%rax
+   1d44f:	mov    %rbx,%rcx
+   1d452:	or     %rax,%rcx
+   1d455:	je     1d61c <kd_rwsem_drain_readers+0x28c>
+   1d45b:	test   %rbx,%rbx
+   1d45e:	je     1d465 <kd_rwsem_drain_readers+0xd5>
+   1d460:	test   %rax,%rax
+   1d463:	jne    1d424 <kd_rwsem_drain_readers+0x94>
+   1d465:	lea    -0x50(%rbp),%rsi
+   1d469:	mov    %r14,%rdi
+   1d46c:	call   1d471 <kd_rwsem_drain_readers+0xe1>
+   1d471:	test   %rbx,%rbx
+   1d474:	je     1d3d1 <kd_rwsem_drain_readers+0x41>
+   1d47a:	test   %rbx,%rbx
+   1d47d:	jns    1d656 <kd_rwsem_drain_readers+0x2c6>
+   1d483:	mov    $0xfffffffc,%eax
+   1d488:	jmp    1d658 <kd_rwsem_drain_readers+0x2c8>
+   1d48d:	mov    $0x1,%ebx
+   1d492:	lea    -0x50(%rbp),%rsi
+   1d496:	mov    %r14,%rdi
+   1d499:	call   1d49e <kd_rwsem_drain_readers+0x10e>
+   1d49e:	test   %rbx,%rbx
+   1d4a1:	jne    1d47a <kd_rwsem_drain_readers+0xea>
+   1d4a3:	call   1d4a8 <kd_rwsem_drain_readers+0x118>
+   1d4a8:	mov    0x40(%r12),%rax
+   1d4ad:	test   %rax,%rax
+   1d4b0:	je     1d656 <kd_rwsem_drain_readers+0x2c6>
+   1d4b6:	xor    %esi,%esi
+   1d4b8:	lea    -0x50(%rbp),%rdi
+   1d4bc:	movq   $0x0,-0x50(%rbp)
+   1d4c4:	mov    $0x1,%ebx
+   1d4c9:	movq   $0x0,-0x48(%rbp)
+   1d4d1:	lea    0x100(%r12),%r14
+   1d4d9:	movq   $0x0,-0x40(%rbp)
+   1d4e1:	movq   $0x0,-0x38(%rbp)
+   1d4e9:	movq   $0x0,-0x30(%rbp)
+   1d4f1:	call   1d4f6 <kd_rwsem_drain_readers+0x166>
+   1d4f6:	mov    $0x1,%edx
+   1d4fb:	lea    -0x50(%rbp),%rsi
+   1d4ff:	mov    %r14,%rdi
+   1d502:	call   1d507 <kd_rwsem_drain_readers+0x177>
+   1d507:	mov    %rax,%rdx
+   1d50a:	mov    0x40(%r12),%rax
+   1d50f:	test   %rax,%rax
+   1d512:	je     1d492 <kd_rwsem_drain_readers+0x102>
+   1d518:	test   %rdx,%rdx
+   1d51b:	jne    1d67f <kd_rwsem_drain_readers+0x2ef>
+   1d521:	mov    %rbx,%rdi
+   1d524:	call   1d529 <kd_rwsem_drain_readers+0x199>
+   1d529:	mov    %rax,%rbx
+   1d52c:	mov    0x40(%r12),%rax
+   1d531:	mov    %rbx,%rcx
+   1d534:	or     %rax,%rcx
+   1d537:	je     1d48d <kd_rwsem_drain_readers+0xfd>
+   1d53d:	test   %rbx,%rbx
+   1d540:	je     1d492 <kd_rwsem_drain_readers+0x102>
+   1d546:	test   %rax,%rax
+   1d549:	jne    1d4f6 <kd_rwsem_drain_readers+0x166>
+   1d54b:	jmp    1d492 <kd_rwsem_drain_readers+0x102>
+   1d550:	mov    $0x1,%r13d
+   1d556:	lea    -0x50(%rbp),%rsi
+   1d55a:	mov    %r14,%rdi
+   1d55d:	mov    %r13,%rbx
+   1d560:	call   1d565 <kd_rwsem_drain_readers+0x1d5>
+   1d565:	test   %r13,%r13
+   1d568:	jne    1d47a <kd_rwsem_drain_readers+0xea>
+   1d56e:	call   1d573 <kd_rwsem_drain_readers+0x1e3>
+   1d573:	mov    0x40(%r12),%rax
+   1d578:	test   %rax,%rax
+   1d57b:	je     1d656 <kd_rwsem_drain_readers+0x2c6>
+   1d581:	xor    %esi,%esi
+   1d583:	lea    -0x50(%rbp),%rdi
+   1d587:	movq   $0x0,-0x50(%rbp)
+   1d58f:	mov    $0x1,%r13d
+   1d595:	movq   $0x0,-0x48(%rbp)
+   1d59d:	lea    0x100(%r12),%r14
+   1d5a5:	movq   $0x0,-0x40(%rbp)
+   1d5ad:	movq   $0x0,-0x38(%rbp)
+   1d5b5:	movq   $0x0,-0x30(%rbp)
+   1d5bd:	call   1d5c2 <kd_rwsem_drain_readers+0x232>
+   1d5c2:	mov    $0x102,%edx
+   1d5c7:	lea    -0x50(%rbp),%rsi
+   1d5cb:	mov    %r14,%rdi
+   1d5ce:	call   1d5d3 <kd_rwsem_drain_readers+0x243>
+   1d5d3:	mov    %rax,%rbx
+   1d5d6:	mov    0x40(%r12),%rax
+   1d5db:	test   %rax,%rax
+   1d5de:	je     1d556 <kd_rwsem_drain_readers+0x1c6>
+   1d5e4:	test   %rbx,%rbx
+   1d5e7:	jne    1d47a <kd_rwsem_drain_readers+0xea>
+   1d5ed:	mov    %r13,%rdi
+   1d5f0:	call   1d5f5 <kd_rwsem_drain_readers+0x265>
+   1d5f5:	mov    %rax,%r13
+   1d5f8:	mov    0x40(%r12),%rax
+   1d5fd:	mov    %r13,%rcx
+   1d600:	or     %rax,%rcx
+   1d603:	je     1d550 <kd_rwsem_drain_readers+0x1c0>
+   1d609:	test   %r13,%r13
+   1d60c:	je     1d556 <kd_rwsem_drain_readers+0x1c6>
+   1d612:	test   %rax,%rax
+   1d615:	jne    1d5c2 <kd_rwsem_drain_readers+0x232>
+   1d617:	jmp    1d556 <kd_rwsem_drain_readers+0x1c6>
+   1d61c:	mov    $0x1,%ebx
+   1d621:	jmp    1d465 <kd_rwsem_drain_readers+0xd5>
+   1d626:	mov    %gs:0x0(%rip),%rcx        # 1d62e <kd_rwsem_drain_readers+0x29e>
+   1d62e:	mov    $0x4000,%eax
+   1d633:	jmp    1d64c <kd_rwsem_drain_readers+0x2bc>
+   1d635:	mov    (%rcx),%rdx
+   1d638:	and    $0x10,%edx
+   1d63b:	jne    1d3d1 <kd_rwsem_drain_readers+0x41>
+   1d641:	pause  
+   1d643:	sub    $0x1,%eax
+   1d646:	je     1d3d1 <kd_rwsem_drain_readers+0x41>
+   1d64c:	mov    0x40(%r12),%rdx
+   1d651:	test   %rdx,%rdx
+   1d654:	jne    1d635 <kd_rwsem_drain_readers+0x2a5>
+   1d656:	xor    %eax,%eax
+   1d658:	mov    -0x28(%rbp),%rdx
+   1d65c:	sub    %gs:0x0(%rip),%rdx        # 1d664 <kd_rwsem_drain_readers+0x2d4>
+   1d664:	jne    1d687 <kd_rwsem_drain_readers+0x2f7>
+   1d666:	add    $0x30,%rsp
+   1d66a:	pop    %rbx
+   1d66b:	pop    %r12
+   1d66d:	pop    %r13
+   1d66f:	pop    %r14
+   1d671:	pop    %rbp
+   1d672:	xor    %edx,%edx
+   1d674:	xor    %ecx,%ecx
+   1d676:	xor    %esi,%esi
+   1d678:	xor    %edi,%edi
+   1d67a:	jmp    1d67f <kd_rwsem_drain_readers+0x2ef>
+   1d67f:	mov    %rdx,%rbx
+   1d682:	jmp    1d49e <kd_rwsem_drain_readers+0x10e>
+   1d687:	call   1d68c <kd_rwsem_drain_readers+0x2fc>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

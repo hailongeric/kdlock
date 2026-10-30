@@ -1,0 +1,64 @@
+{
+  "completed": false,
+  "source_commit": "6bf690204fdf954ab9076a762000833ec18e6261",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "release": "7.0.0-38-kdlock1",
+  "blocks": [
+    {
+      "name": "kernel-identity",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "kernel_integration/linux70/verify.py",
+        "--running"
+      ],
+      "started": 1793338591.6869183,
+      "state": "EXITED",
+      "pid": 1176778,
+      "returncode": 0,
+      "finished": 1793338592.654227,
+      "log_sha256": "e77d41577382584376230ecc904947edda5b7544a20f43bb93789011d23541d0"
+    },
+    {
+      "name": "unit",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "run",
+        "PY_TESTS=spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_proxy_context.py spin/test_spin_batch_context.py mutex/test_mutex_origin_instruction.py execution/test_bench_completion.py"
+      ],
+      "started": 1793338593.2075303,
+      "state": "EXITED",
+      "pid": 1176780,
+      "returncode": 2,
+      "finished": 1793338648.717076,
+      "log_sha256": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757"
+    }
+  ],
+  "live_modules": false,
+  "performance_accepted": false,
+  "tracked_inputs": 5922,
+  "input_sha256": {
+    "controller.py": "e60a9285bca40716fdad9dcd409026471fadbc771508eccab4483797a4247b71",
+    "sync.json": "e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43"
+  },
+  "unit_selection": {
+    "fresh": true,
+    "prior_checks_reused": false,
+    "basic": [
+      "basic/test_control_call",
+      "basic/test_daemon_policy"
+    ],
+    "python_drivers": [
+      "spin/test_spin_batch.py",
+      "spin/test_spin_shadow.py",
+      "spin/test_spin_outer_progress.py",
+      "spin/test_spin_proxy_context.py",
+      "spin/test_spin_batch_context.py",
+      "mutex/test_mutex_origin_instruction.py",
+      "execution/test_bench_completion.py"
+    ],
+    "expected_passes": 9
+  },
+  "error": "AssertionError('unit')"
+}

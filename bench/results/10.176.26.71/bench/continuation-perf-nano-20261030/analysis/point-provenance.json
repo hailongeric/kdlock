@@ -1,0 +1,506 @@
+[
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "49fa42cce8dd013780c2b4a2fbfc2b13a910b988a3954fe53ce18d21f43dbe08"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "4d85a7d5f0d7ea69849de6af07beda933ac318a2e245d8eb3a2f8677d48b2716"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "ee86342a84c5110b9878185a7f79a187ae65eb30078fa12c4fd7e67749ad43fe"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "b37631cad20397af99b37ab312bc4e4d22f47b113b20cddb0f9f2aaa113433e4"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json",
+    "sha256": "5bd0468415d5311d5b739cd7037b1a9545d77e5493820d8e9d5683feaff08122"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json",
+    "sha256": "29e4dba63dcd3355750e376a8b2b3e5c739986163bdde2b124ce014ad9d79341"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json",
+    "sha256": "3278450d63bac836b93abb35c8b089977b984ebcb804fcc71509d4620effb83c"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log",
+    "sha256": "5d1ca4c4a51d08c9c8e3208177bd7910e160fd20341dc3471c934259834f37c2"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json",
+    "sha256": "26af231523adde196081a4c03ab0544d4bcdb849e95da5fd9ad0d453e675a6f5"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json",
+    "sha256": "4821615cbb25e95cc35f25d24b913e52e91f6ecb9be007c9754be382dfeccd39"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json",
+    "sha256": "c8aaba9a9ada3cd78567b52debe2747e4c4f5fd6a1f0997ce4faf3813ba1a9c4"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log",
+    "sha256": "82f2d8eb1953f1ce6f5e83d2a0805a9fbb7425f734b41dc0225064a1fe1dada3"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json",
+    "sha256": "b5be55652b528f449678c8f0f633b720f5a3473f6fb9ba2df494bb33f17fa7e8"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json",
+    "sha256": "d750f3cecff82428c14059c70e3fea9008b75fde05ef423aab98f6231ce236a0"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json",
+    "sha256": "46eff90b0551a7917d3ef3697e9bc561fd43c0d17f4630f504715616a384288b"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log",
+    "sha256": "67d508636f41e00ec08acac0a8b975be1e6dafdd79e86de04e5c0a4dc378d51a"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "f0a8d6928ccce8e8e87bfe2d6816d0f44ebbf9be74a54d014cde0d1a0e8d60da"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "582a05435a29b67bf997d9c13076cb456807d76be574e5897efbd1e5551879c9"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "f97c275c55a16b2d30b118e4e6363adc5d40bb02eea468dc8e68fedcab7fd4b0"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "fdb53f9610ac67a7525132e542ba78ec2d05360a02380fe504553fa6e7bf1f35"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json",
+    "sha256": "1497c3d81e6e2684fab9fbcf35fc4761a45039665406992d915dc8d996963eb7"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json",
+    "sha256": "63b0b16ae7b3f43d366c67a29200b48ef79cd0ba50dec38ae37a147326c35ba0"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json",
+    "sha256": "62148c5016ce7e5cf372af5e77bc96910122453fe110bd9b8a42b4cb4c5d39d5"
+  },
+  {
+    "generation": "current",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871",
+    "member": "continuation-perf-nano-f7a84065-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log",
+    "sha256": "a18eb37a043007f09509450466341db60de69c1fa079e62673abe534d19bb1fd"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "2f8214df5756e6004542f7914637ec1911deea0739de2ff61fa6d16dec4b6661"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "179ba1a96d66781ae6a2d868f2f235825df4b69ed819085fe536df616d626769"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "98376240037868abfd6a60595fcaf53027badad8d7fc4df7974985289747677a"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "11926c2daf04b2623c1a085b4aa18cd758a9444d1f7d7c720fdf251c03d0b7f5"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json",
+    "sha256": "c192857e3a8b9e6d4984c6f6534e18f1e271ccce458da88d37aae94b072d8b69"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json",
+    "sha256": "c9d236eb463f413a49360ed777b9519648a412253993491692ed6f5fde479913"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json",
+    "sha256": "6846af77ce96f08ff869f094720b8d81fa5e9301e2a7c12497212efc88ffe4ff"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "672e5abae9ed31307b5533602fe0e9d39e058f5429ebcd3039b4b1eaa747cb3d",
+    "member": "continuation-nano-8617e97c-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log",
+    "sha256": "336dc2e94330b16c0e8671fa2a0f9c3993e660db7b9ad8a9af477ade59d4390c"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json",
+    "sha256": "c65be68e6fb742af02f05f40d270c9f98721d0fbd0a59b2043f6501be8a80132"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json",
+    "sha256": "1001a88dc6a76cf2c120bac159003e4fc2a7584a839c40f6e885e413295cd28b"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json",
+    "sha256": "cf97da1716a25b853a169499988b47129e4102aff4657ddc7e94c06e5d9496a0"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log",
+    "sha256": "a1c6bc9d1e90bf6c9c33c88f0c04c8f8d69ccb869316e22479f944994b895777"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json",
+    "sha256": "fdff5965333b09da205862cd8b22e9eb94e62a20112cf8996a205a3b9a90b772"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json",
+    "sha256": "393673373ca54ae93eacb120d1463e00648cc26c202d5d23d686ad191471704b"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json",
+    "sha256": "7530ec9d992c7244adc20d118c596d7f829d6f20d29b6002f7caf1028d9731db"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "ee70be6b40f36e0157bb7cbb37414d94efa341b9e8f9abcbe444fc107cbd97f7",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log",
+    "sha256": "4946e93012a9e2d280ac4b518b7136f18522b78650edc2f5d143347f28f934aa"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "0cb08c62e9075ecfc5b8edee3aec3d841c7a1a3dd5213519c18c0dafaa11e9ad"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "76b0b163d37549c774dfe32a0e4c7e432da71c7ec881c61c60af287e91774ed9"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "5a943f667cf6cdc14cfb6a9c6808f7b7ea58c48f718d8e4cf7ca1a95d0f94a9f"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "521bae18a28a25f4ef6cda3a45f8d261cd218af01d1ffde85800d1d9f2b913f8"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json",
+    "sha256": "44e90cb9213473074454a3e61f875911ffcdf237675a21bf8e880126fdd11364"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json",
+    "sha256": "093ef079b6df3cb5cc541c274699e77dd71c1a952d05c6fc6c83fb66e2812092"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json",
+    "sha256": "0edeeec392c5e1245c5339a47d575852fb29fd5f6978b7d688a3d163558175b7"
+  },
+  {
+    "generation": "8617",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-nano-8617e97c-20261030/continuation-nano-8617e97c-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "5ac5c19b0af21dcc250f8a16b8e44214dadd8916c787d9a2b561c5c4284e2971",
+    "member": "continuation-nano-8617e97c-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log",
+    "sha256": "7126ea94474c1cf4c16c86f7419ebdc817fe459c151d0d0b991dd028bffa8743"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "de0e693813ca7fd2c430437fefd6d079ca7edc4cbf9116487d2b5b824fd81c2b"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "b710ea721653eea277a6c63de094c4b944191a2b9cc0fec5aae01896df3226ff"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "04bc4160c9c823b078e0c90454f4e7ecd1f8db6d6dd9660b31375a64eacf81f6"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "8bce20d9c83835ff425e4cb8933ea8d25597b1e16256bd411aac4be8b0c056d5"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/session.json",
+    "sha256": "e0c0f3e99bd83ec498a894781e9996cb885fdb572b18d54d64e047e4cc805e04"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/measure.json",
+    "sha256": "336e4521c55ceb08ca0c873b93a62f9905c99e1204762b5bf55c7dbef7eaff03"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/warmup.json",
+    "sha256": "329215faec889941a384499b0f112f09f29a4f59265f9507a206c5cbcdebe241"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwsem-throughput-read.tar.gz",
+    "audited_archive_sha256": "cdd3d12af011b6dfc194213c158f7d09a276a7192364cd30c4b10390abb405ce",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t48-r00/kernel.log",
+    "sha256": "4d28e987c44cd3637d2c8b7921f37dbb0cf855cee8abaac7b87f7f586c69df0f"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/session.json",
+    "sha256": "6c40942d36aa222578b0ffdf84e7bf73c2fe07ea29f7cf80c576f69419b7192a"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/measure.json",
+    "sha256": "c3f38468e279bbecd55fd2a26002509f1a893ecaaa049901c24eb1060276e6c9"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/warmup.json",
+    "sha256": "117f717d118254a463d481811430f31cca970dfb0c55a3a46f45dbb2e8a8891f"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t06-r00/kernel.log",
+    "sha256": "0d785e059014a74d7c2fbe34c4963e5f0769731642162a65e5098d7b6f93dd37"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/session.json",
+    "sha256": "c788c9ff2f8d0f71266902df534aa8480d8bfd42b49ea5c53426921ac15a0b35"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/measure.json",
+    "sha256": "20646807a65397fde023d32346077110549ad3d5be516ad072c798572eff9407"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/warmup.json",
+    "sha256": "ac41d0c926e5c2d4659e23c51e722e286326779174016e5e4b776cc08ddc1787"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-locality-read.tar.gz",
+    "audited_archive_sha256": "a0b2eaad257a9ea9cfd44e07692fff55388463a12397a3fb02a4fc9b192e4745",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-locality-read/cacheline-c16-kdlock-w001-t52-r00/kernel.log",
+    "sha256": "413e00db0fba3b9ab4f3599795295c23f1b1c3208f2593e799be95b761309bad"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/session.json",
+    "sha256": "aae0b8329b69fd12af607d3e7aa217c78132fe93672bf39b9dc156b66af89fdf"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/measure.json",
+    "sha256": "00bdb1a2cb4b7eceea74fff916f7faf91ec0784cbe33115223222f735653be2a"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/warmup.json",
+    "sha256": "11e0804a90f323b09f9379624685a0c8395162ec8e60a5672202e2a1b4ddc1eb"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t07-r00/kernel.log",
+    "sha256": "67394526e5fc8dc5e79b58a00359e20ddf1f262a5955cda57d9355ff2e8f6705"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/session.json",
+    "sha256": "0996e39b0cc25cf1a39bd7ec9eef0470ff03798e6e582730793c9c0dfe65e229"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/measure.json",
+    "sha256": "6e43a83fc6dedd1c48548c53ed40c9494092535a01cf1013b6445973f35a29b9"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/warmup.json",
+    "sha256": "2510ef75e58ba376369da975d80e30750c02ca4e736feeae9ddea442e4ab2f15"
+  },
+  {
+    "generation": "acfa",
+    "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/kernel-proxy-nano-20261030/kernel-proxy-nano-baseline-acfa-20261030-archives/rwlock-throughput-read.tar.gz",
+    "audited_archive_sha256": "ca5461efd734c4d930dd62fdf7902bfd527548b4b1c4cc948afe6510c331d24e",
+    "member": "kernel-proxy-nano-baseline-acfa-20261030/rwlock-throughput-read/cacheline-c01-kdlock-w001-t08-r00/kernel.log",
+    "sha256": "26dfd0e6047104dc23bf6ee72b3a6777d55e887a8130e7fbddbf04e824be7ee2"
+  }
+]

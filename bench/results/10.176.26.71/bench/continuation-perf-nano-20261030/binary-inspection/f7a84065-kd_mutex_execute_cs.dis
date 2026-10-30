@@ -1,0 +1,1195 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000011380 <kd_mutex_execute_cs>:
+   11380:	push   %rbp
+   11381:	mov    $0xe,%ecx
+   11386:	mov    %rsi,%r11
+   11389:	mov    %rsp,%rbp
+   1138c:	push   %r15
+   1138e:	push   %r14
+   11390:	push   %r13
+   11392:	push   %r12
+   11394:	push   %rbx
+   11395:	mov    %rdi,%rbx
+   11398:	sub    $0x178,%rsp
+   1139f:	mov    %rdi,-0x170(%rbp)
+   113a6:	lea    -0xa0(%rbp),%rdi
+   113ad:	mov    %rsi,-0x168(%rbp)
+   113b4:	mov    %rdx,%rsi
+   113b7:	mov    0x88(%r11),%rdx
+   113be:	mov    %gs:0x0(%rip),%rax        # 113c6 <kd_mutex_execute_cs+0x46>
+   113c6:	mov    %rax,-0x30(%rbp)
+   113ca:	xor    %eax,%eax
+   113cc:	movq   $0x0,-0xb0(%rbp)
+   113d7:	movl   $0x0,-0xb4(%rbp)
+   113e1:	movq   $0x0,-0xa8(%rbp)
+   113ec:	rep stos %rax,%es:(%rdi)
+   113ef:	mov    $0x15,%ecx
+   113f4:	lea    -0x160(%rbp),%rdi
+   113fb:	rep stos %rax,%es:(%rdi)
+   113fe:	movzbl 0x40(%r11),%eax
+   11403:	mov    %al,-0x171(%rbp)
+   11409:	test   %rbx,%rbx
+   1140c:	je     11641 <kd_mutex_execute_cs+0x2c1>
+   11412:	mov    (%rbx),%rax
+   11415:	mov    %rbx,%rcx
+   11418:	mov    %rax,%rbx
+   1141b:	and    $0xfffffffffffffff8,%rbx
+   1141f:	cmp    %rbx,%gs:0x0(%rip)        # 11427 <kd_mutex_execute_cs+0xa7>
+   11427:	jne    11641 <kd_mutex_execute_cs+0x2c1>
+   1142d:	test   $0x4,%al
+   1142f:	jne    11641 <kd_mutex_execute_cs+0x2c1>
+   11435:	mov    0x18(%rcx),%eax
+   11438:	and    $0xfffffffd,%eax
+   1143b:	cmp    $0x1,%eax
+   1143e:	jne    11641 <kd_mutex_execute_cs+0x2c1>
+   11444:	mov    -0x170(%rbp),%rax
+   1144b:	mov    (%rax),%rax
+   1144e:	and    $0xfffffffffffffff8,%rax
+   11452:	cmp    %rax,%rbx
+   11455:	jne    11afc <kd_mutex_execute_cs+0x77c>
+   1145b:	mov    %rsi,-0x188(%rbp)
+   11462:	test   %rdx,%rdx
+   11465:	je     1164b <kd_mutex_execute_cs+0x2cb>
+   1146b:	cmpb   $0x2,-0x171(%rbp)
+   11472:	je     116d3 <kd_mutex_execute_cs+0x353>
+   11478:	mov    0x8(%rdx),%rax
+   1147c:	mov    -0x168(%rbp),%rsi
+   11483:	add    $0x40,%rdx
+   11487:	mov    %rax,0xc0(%rsi)
+   1148e:	mov    -0x30(%rdx),%rax
+   11492:	mov    %rax,0xb0(%rsi)
+   11499:	mov    -0x28(%rdx),%rax
+   1149d:	mov    %rax,0xa8(%rsi)
+   114a4:	mov    -0x20(%rdx),%rax
+   114a8:	mov    %rax,0xa0(%rsi)
+   114af:	mov    -0x18(%rdx),%rax
+   114b3:	mov    %rax,0x98(%rsi)
+   114ba:	mov    -0x10(%rdx),%rax
+   114be:	mov    %rax,0x90(%rsi)
+   114c5:	mov    -0x8(%rdx),%r12
+   114c9:	mov    %rdx,0x88(%rsi)
+   114d0:	mov    %r12,0x80(%rsi)
+   114d7:	test   %r12,%r12
+   114da:	je     11643 <kd_mutex_execute_cs+0x2c3>
+   114e0:	mov    -0x168(%rbp),%rax
+   114e7:	mov    0x38(%rax),%rax
+   114eb:	test   %rax,%rax
+   114ee:	je     114f9 <kd_mutex_execute_cs+0x179>
+   114f0:	cmp    %r12,%rax
+   114f3:	jne    11643 <kd_mutex_execute_cs+0x2c3>
+   114f9:	cmpb   $0x0,0x0(%rip)        # 11500 <kd_mutex_execute_cs+0x180>
+   11500:	je     11506 <kd_mutex_execute_cs+0x186>
+   11506:	mov    -0x188(%rbp),%rax
+   1150d:	mov    0x30(%rax),%rax
+   11511:	mov    %rax,-0x190(%rbp)
+   11518:	test   %rax,%rax
+   1151b:	je     1152a <kd_mutex_execute_cs+0x1aa>
+   1151d:	mov    0x10(%rax),%rax
+   11521:	cmp    %r12,%rax
+   11524:	je     119e6 <kd_mutex_execute_cs+0x666>
+   1152a:	mov    %r12,%rsi
+   1152d:	xor    %edi,%edi
+   1152f:	call   11534 <kd_mutex_execute_cs+0x1b4>
+   11534:	mov    -0x188(%rbp),%rdx
+   1153b:	mov    %rax,-0x190(%rbp)
+   11542:	mov    %rax,0x30(%rdx)
+   11546:	mov    -0x190(%rbp),%rdx
+   1154d:	test   %rdx,%rdx
+   11550:	je     11694 <kd_mutex_execute_cs+0x314>
+   11556:	test   %r12,%r12
+   11559:	je     11694 <kd_mutex_execute_cs+0x314>
+   1155f:	mov    0x0(%rip),%r13d        # 11566 <kd_mutex_execute_cs+0x1e6>
+   11566:	test   %r13d,%r13d
+   11569:	jne    11694 <kd_mutex_execute_cs+0x314>
+   1156f:	mov    (%rdx),%eax
+   11571:	test   %eax,%eax
+   11573:	jne    11694 <kd_mutex_execute_cs+0x314>
+   11579:	mov    0x4(%rdx),%eax
+   1157c:	mov    %eax,-0x178(%rbp)
+   11582:	test   %eax,%eax
+   11584:	jne    11694 <kd_mutex_execute_cs+0x314>
+   1158a:	mov    -0x190(%rbp),%rax
+   11591:	mov    0x10(%rax),%rax
+   11595:	cmp    %r12,%rax
+   11598:	jne    11694 <kd_mutex_execute_cs+0x314>
+   1159e:	mov    -0x190(%rbp),%rax
+   115a5:	mov    0x18(%rax),%rax
+   115a9:	test   %rax,%rax
+   115ac:	je     11694 <kd_mutex_execute_cs+0x314>
+   115b2:	mov    %gs:0x0(%rip),%rcx        # 115ba <kd_mutex_execute_cs+0x23a>
+   115ba:	lea    0x0(%rcx),%rax
+   115c1:	mov    0x1490(%rax),%edx
+   115c7:	test   %edx,%edx
+   115c9:	je     116e6 <kd_mutex_execute_cs+0x366>
+   115cf:	cmp    0x1488(%rax),%rbx
+   115d6:	je     116e6 <kd_mutex_execute_cs+0x366>
+   115dc:	incq   %gs:0x0(%rip)        # 115e4 <kd_mutex_execute_cs+0x264>
+   115e4:	mov    -0x168(%rbp),%rcx
+   115eb:	mov    %gs:0x0(%rip),%eax        # 115f2 <kd_mutex_execute_cs+0x272>
+   115f2:	mov    $0x0,%rsi
+   115f9:	mov    $0x0,%rdi
+   11600:	mov    0x30(%rcx),%rdx
+   11604:	mov    0xaf0(%rdx),%r9d
+   1160b:	mov    %gs:0x0(%rip),%rdx        # 11613 <kd_mutex_execute_cs+0x293>
+   11613:	mov    0xaf0(%rdx),%r8d
+   1161a:	push   %rax
+   1161b:	mov    $0x114,%edx
+   11620:	push   -0x170(%rbp)
+   11626:	push   0x80(%rcx)
+   1162c:	mov    $0x0,%rcx
+   11633:	call   11638 <kd_mutex_execute_cs+0x2b8>
+   11638:	add    $0x18,%rsp
+   1163c:	jmp    116c7 <kd_mutex_execute_cs+0x347>
+   11641:	ud2    
+   11643:	incq   %gs:0x0(%rip)        # 1164b <kd_mutex_execute_cs+0x2cb>
+   1164b:	movl   $0x3,-0x178(%rbp)
+   11655:	mov    -0x30(%rbp),%rax
+   11659:	sub    %gs:0x0(%rip),%rax        # 11661 <kd_mutex_execute_cs+0x2e1>
+   11661:	jne    1284d <kd_mutex_execute_cs+0x14cd>
+   11667:	mov    -0x178(%rbp),%eax
+   1166d:	lea    -0x28(%rbp),%rsp
+   11671:	pop    %rbx
+   11672:	pop    %r12
+   11674:	pop    %r13
+   11676:	pop    %r14
+   11678:	pop    %r15
+   1167a:	pop    %rbp
+   1167b:	xor    %edx,%edx
+   1167d:	xor    %ecx,%ecx
+   1167f:	xor    %esi,%esi
+   11681:	xor    %edi,%edi
+   11683:	xor    %r8d,%r8d
+   11686:	xor    %r9d,%r9d
+   11689:	xor    %r10d,%r10d
+   1168c:	xor    %r11d,%r11d
+   1168f:	jmp    11694 <kd_mutex_execute_cs+0x314>
+   11694:	incq   %gs:0x0(%rip)        # 1169c <kd_mutex_execute_cs+0x31c>
+   1169c:	cmpb   $0x0,0x0(%rip)        # 116a3 <kd_mutex_execute_cs+0x323>
+   116a3:	je     116a9 <kd_mutex_execute_cs+0x329>
+   116a9:	mov    -0x168(%rbp),%rax
+   116b0:	mov    $0x2,%edx
+   116b5:	xor    %edi,%edi
+   116b7:	movzbl 0x40(%rax),%ecx
+   116bb:	mov    0x80(%rax),%rsi
+   116c2:	call   116c7 <kd_mutex_execute_cs+0x347>
+   116c7:	movl   $0x2,-0x178(%rbp)
+   116d1:	jmp    11655 <kd_mutex_execute_cs+0x2d5>
+   116d3:	mov    -0x168(%rbp),%rax
+   116da:	mov    0x80(%rax),%r12
+   116e1:	jmp    114d7 <kd_mutex_execute_cs+0x157>
+   116e6:	mov    -0x168(%rbp),%rdi
+   116ed:	mov    0x30(%rdi),%r9
+   116f1:	mov    0x8(%rdi),%r8
+   116f5:	mov    0x80(%rdi),%r10
+   116fc:	cmpb   $0x2,-0x171(%rbp)
+   11703:	je     11b40 <kd_mutex_execute_cs+0x7c0>
+   11709:	mov    %rdi,%rax
+   1170c:	lea    0x80(%rdi),%rsi
+   11713:	mov    $0x15,%ecx
+   11718:	sub    $0xffffffffffffff80,%rax
+   1171c:	lea    -0x160(%rbp),%rdi
+   11723:	rep movsq %ds:(%rsi),%es:(%rdi)
+   11726:	mov    %rax,-0x198(%rbp)
+   1172d:	mov    %r10,%rsi
+   11730:	mov    %rax,%rdi
+   11733:	push   $0x0
+   11735:	mov    -0x170(%rbp),%rdx
+   1173c:	mov    $0x1,%ecx
+   11741:	call   57d0 <kd_exec_frame_push_internal.constprop.0>
+   11746:	mov    %rax,-0x180(%rbp)
+   1174d:	pop    %rax
+   1174e:	cmpq   $0x0,-0x180(%rbp)
+   11756:	je     11643 <kd_mutex_execute_cs+0x2c3>
+   1175c:	mov    -0x180(%rbp),%rdx
+   11763:	mov    -0x168(%rbp),%rdi
+   1176a:	xor    %r14d,%r14d
+   1176d:	movl   $0x2,-0xb4(%rbp)
+   11777:	mov    -0x170(%rbp),%rsi
+   1177e:	movb   $0x1,0x20(%rdx)
+   11782:	mov    %r14w,0x158(%rdx)
+   1178a:	movb   $0x0,0x15a(%rdx)
+   11791:	movzbl 0x40(%rdi),%eax
+   11795:	mov    %rsi,-0xb0(%rbp)
+   1179c:	mov    %eax,0x10(%rdx)
+   1179f:	mov    0x44(%rdi),%eax
+   117a2:	mov    %rsi,-0xa8(%rbp)
+   117a9:	mov    %eax,0x14(%rdx)
+   117ac:	mov    0x8(%rdx),%rax
+   117b0:	cmp    %rax,%rsi
+   117b3:	je     117c4 <kd_mutex_execute_cs+0x444>
+   117b5:	test   %rax,%rax
+   117b8:	jne    11e61 <kd_mutex_execute_cs+0xae1>
+   117be:	mov    $0x8,%r13d
+   117c4:	mov    -0x180(%rbp),%rax
+   117cb:	lea    -0xb0(%rbp),%rdx
+   117d2:	add    $0x170,%rax
+   117d8:	cmp    %rax,%rdx
+   117db:	je     12730 <kd_mutex_execute_cs+0x13b0>
+   117e1:	mov    -0x180(%rbp),%rax
+   117e8:	mov    -0x170(%rbp),%rdx
+   117ef:	movl   $0x2,0x1b0(%rax)
+   117f9:	mov    %rdx,0x170(%rax)
+   11800:	mov    %rdx,0x1d0(%rax)
+   11807:	movb   $0x0,0x210(%rax)
+   1180e:	mov    -0x180(%rbp),%rbx
+   11815:	movl   $0x1,0x224(%rbx)
+   1181f:	mov    %rbx,%rdi
+   11822:	mov    %r13d,0x220(%rbx)
+   11829:	call   1182e <kd_mutex_execute_cs+0x4ae>
+   1182e:	test   %al,%al
+   11830:	je     12052 <kd_mutex_execute_cs+0xcd2>
+   11836:	mov    -0x188(%rbp),%rax
+   1183d:	add    $0x8,%rax
+   11841:	mov    %rax,0x238(%rbx)
+   11848:	cmpb   $0x0,0x0(%rip)        # 1184f <kd_mutex_execute_cs+0x4cf>
+   1184f:	movq   $0x0,-0x1a0(%rbp)
+   1185a:	jne    12041 <kd_mutex_execute_cs+0xcc1>
+   11860:	mov    -0x180(%rbp),%rdx
+   11867:	mov    0xd0(%rdx),%rbx
+   1186e:	movzbl 0x23(%rdx),%eax
+   11872:	test   %rbx,%rbx
+   11875:	je     11b18 <kd_mutex_execute_cs+0x798>
+   1187b:	test   %al,%al
+   1187d:	je     118a6 <kd_mutex_execute_cs+0x526>
+   1187f:	cmpb   $0x0,0x20(%rdx)
+   11883:	je     118a6 <kd_mutex_execute_cs+0x526>
+   11885:	cmpb   $0x0,0x25(%rdx)
+   11889:	je     118a6 <kd_mutex_execute_cs+0x526>
+   1188b:	mov    -0x180(%rbp),%rax
+   11892:	cmpb   $0x0,0x21(%rax)
+   11896:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   11898:	cmpq   $0x0,0xe8(%rax)
+   118a0:	je     1207d <kd_mutex_execute_cs+0xcfd>
+   118a6:	mov    -0x180(%rbp),%rax
+   118ad:	mov    -0x190(%rbp),%rdi
+   118b4:	mov    %rbx,%rsi
+   118b7:	xor    %r8d,%r8d
+   118ba:	mov    0x8(%rax),%rcx
+   118be:	mov    (%rax),%rdx
+   118c1:	call   e2e0 <kd_exe_dispatch>
+   118c6:	mov    %eax,%ebx
+   118c8:	mov    -0x180(%rbp),%rax
+   118cf:	mov    0xd0(%rax),%r12
+   118d6:	test   %r12,%r12
+   118d9:	je     11afe <kd_mutex_execute_cs+0x77e>
+   118df:	mov    -0x180(%rbp),%rax
+   118e6:	cmpb   $0x0,0x1f(%rax)
+   118ea:	je     11a08 <kd_mutex_execute_cs+0x688>
+   118f0:	cmpb   $0x0,0x0(%rip)        # 118f7 <kd_mutex_execute_cs+0x577>
+   118f7:	jne    12617 <kd_mutex_execute_cs+0x1297>
+   118fd:	cmp    $0x6,%ebx
+   11900:	je     11b82 <kd_mutex_execute_cs+0x802>
+   11906:	cmp    $0x4,%ebx
+   11909:	jne    12b00 <kd_mutex_execute_cs+0x1780>
+   1190f:	mov    -0x180(%rbp),%rax
+   11916:	cmpb   $0x0,0x22c(%rax)
+   1191d:	jne    11941 <kd_mutex_execute_cs+0x5c1>
+   1191f:	mov    %rax,%rdi
+   11922:	xor    %eax,%eax
+   11924:	mov    $0x3,%esi
+   11929:	cmpl   $0x2,0x14(%rdi)
+   1192d:	cmove  %rax,%r12
+   11931:	mov    %r12,%rdx
+   11934:	call   11939 <kd_mutex_execute_cs+0x5b9>
+   11939:	test   %eax,%eax
+   1193b:	jne    12706 <kd_mutex_execute_cs+0x1386>
+   11941:	mov    -0x180(%rbp),%rdi
+   11948:	call   1194d <kd_mutex_execute_cs+0x5cd>
+   1194d:	test   %al,%al
+   1194f:	je     12701 <kd_mutex_execute_cs+0x1381>
+   11955:	mov    -0x180(%rbp),%r15
+   1195c:	movzwl 0x1c(%r15),%eax
+   11961:	sub    $0x4,%eax
+   11964:	cmp    $0x1,%eax
+   11967:	jbe    12834 <kd_mutex_execute_cs+0x14b4>
+   1196d:	mov    %r15,%rdi
+   11970:	call   11975 <kd_mutex_execute_cs+0x5f5>
+   11975:	test   %al,%al
+   11977:	je     12701 <kd_mutex_execute_cs+0x1381>
+   1197d:	cmpb   $0x0,0x26(%r15)
+   11982:	jne    12701 <kd_mutex_execute_cs+0x1381>
+   11988:	movb   $0x1,0x26(%r15)
+   1198d:	movb   $0x3,0x1e(%r15)
+   11992:	mov    $0x4,%ecx
+   11997:	mov    %r15,%rdi
+   1199a:	mov    %cx,0x1c(%r15)
+   1199f:	call   119a4 <kd_mutex_execute_cs+0x624>
+   119a4:	test   %al,%al
+   119a6:	je     126f7 <kd_mutex_execute_cs+0x1377>
+   119ac:	mov    -0x180(%rbp),%rdi
+   119b3:	mov    -0x168(%rbp),%rdx
+   119ba:	mov    -0x198(%rbp),%rsi
+   119c1:	mov    0x14(%rdi),%eax
+   119c4:	mov    %eax,0x44(%rdx)
+   119c7:	call   119cc <kd_mutex_execute_cs+0x64c>
+   119cc:	test   %eax,%eax
+   119ce:	jne    11adb <kd_mutex_execute_cs+0x75b>
+   119d4:	cmpb   $0x0,0x0(%rip)        # 119db <kd_mutex_execute_cs+0x65b>
+   119db:	jne    11655 <kd_mutex_execute_cs+0x2d5>
+   119e1:	jmp    119e6 <kd_mutex_execute_cs+0x666>
+   119e6:	mov    -0x190(%rbp),%rax
+   119ed:	mov    0xc(%rax),%eax
+   119f0:	cmp    $0x2,%eax
+   119f3:	jne    1152a <kd_mutex_execute_cs+0x1aa>
+   119f9:	jmp    11546 <kd_mutex_execute_cs+0x1c6>
+   119fe:	movl   $0x1,0x0(%rip)        # 11a08 <kd_mutex_execute_cs+0x688>
+   11a08:	cmp    $0x6,%ebx
+   11a0b:	je     11e47 <kd_mutex_execute_cs+0xac7>
+   11a11:	cmp    $0x4,%ebx
+   11a14:	je     1190f <kd_mutex_execute_cs+0x58f>
+   11a1a:	mov    -0x180(%rbp),%rax
+   11a21:	cmpb   $0x0,0x1f(%rax)
+   11a25:	jne    11a2b <kd_mutex_execute_cs+0x6ab>
+   11a2b:	mov    %rax,%rdi
+   11a2e:	call   11a33 <kd_mutex_execute_cs+0x6b3>
+   11a33:	test   %eax,%eax
+   11a35:	jne    126b4 <kd_mutex_execute_cs+0x1334>
+   11a3b:	mov    -0x180(%rbp),%r14
+   11a42:	movzwl 0x1c(%r14),%eax
+   11a47:	cmp    $0x4,%ax
+   11a4b:	je     11a98 <kd_mutex_execute_cs+0x718>
+   11a4d:	mov    %r14,%rdi
+   11a50:	call   11a55 <kd_mutex_execute_cs+0x6d5>
+   11a55:	test   %al,%al
+   11a57:	je     12070 <kd_mutex_execute_cs+0xcf0>
+   11a5d:	movzwl 0x1c(%r14),%eax
+   11a62:	sub    $0x4,%eax
+   11a65:	cmp    $0x1,%eax
+   11a68:	jbe    12070 <kd_mutex_execute_cs+0xcf0>
+   11a6e:	cmpb   $0x0,0x26(%r14)
+   11a73:	jne    12070 <kd_mutex_execute_cs+0xcf0>
+   11a79:	movb   $0x3,0x1e(%r14)
+   11a7e:	mov    $0x5,%eax
+   11a83:	mov    %r14,%rdi
+   11a86:	mov    %ax,0x1c(%r14)
+   11a8b:	call   11a90 <kd_mutex_execute_cs+0x710>
+   11a90:	test   %al,%al
+   11a92:	je     12066 <kd_mutex_execute_cs+0xce6>
+   11a98:	cmpb   $0x2,-0x171(%rbp)
+   11a9f:	je     11ab3 <kd_mutex_execute_cs+0x733>
+   11aa1:	mov    $0x15,%ecx
+   11aa6:	mov    %r12,%rdi
+   11aa9:	lea    -0x160(%rbp),%rsi
+   11ab0:	rep movsq %ds:(%rsi),%es:(%rdi)
+   11ab3:	mov    -0x180(%rbp),%rdi
+   11aba:	mov    -0x168(%rbp),%rdx
+   11ac1:	mov    -0x198(%rbp),%rsi
+   11ac8:	mov    0x14(%rdi),%eax
+   11acb:	mov    %eax,0x44(%rdx)
+   11ace:	call   11ad3 <kd_mutex_execute_cs+0x753>
+   11ad3:	test   %eax,%eax
+   11ad5:	je     1288b <kd_mutex_execute_cs+0x150b>
+   11adb:	incq   %gs:0x0(%rip)        # 11ae3 <kd_mutex_execute_cs+0x763>
+   11ae3:	mov    $0x0,%rdi
+   11aea:	mov    %eax,%esi
+   11aec:	call   11af1 <kd_mutex_execute_cs+0x771>
+   11af1:	cmp    $0x4,%ebx
+   11af4:	jne    1164b <kd_mutex_execute_cs+0x2cb>
+   11afa:	ud2    
+   11afc:	ud2    
+   11afe:	lea    0x28(%rax),%r12
+   11b02:	cmpb   $0x0,0x25(%rax)
+   11b06:	je     118df <kd_mutex_execute_cs+0x55f>
+   11b0c:	mov    0xf8(%rax),%r12
+   11b13:	jmp    118df <kd_mutex_execute_cs+0x55f>
+   11b18:	cmpb   $0x0,0x25(%rdx)
+   11b1c:	je     11e3e <kd_mutex_execute_cs+0xabe>
+   11b22:	mov    0xf8(%rdx),%rbx
+   11b29:	test   %al,%al
+   11b2b:	je     118a6 <kd_mutex_execute_cs+0x526>
+   11b31:	cmpb   $0x0,0x20(%rdx)
+   11b35:	jne    1188b <kd_mutex_execute_cs+0x50b>
+   11b3b:	jmp    118a6 <kd_mutex_execute_cs+0x526>
+   11b40:	cmpl   $0x1,0x44(%rdi)
+   11b44:	je     11ebe <kd_mutex_execute_cs+0xb3e>
+   11b4a:	lea    0x80(%rdi),%rax
+   11b51:	mov    %rax,-0x198(%rbp)
+   11b58:	mov    -0x198(%rbp),%rdi
+   11b5f:	mov    $0x1,%ecx
+   11b64:	mov    %r10,%rsi
+   11b67:	push   %rdi
+   11b68:	mov    -0x170(%rbp),%rdx
+   11b6f:	call   57d0 <kd_exec_frame_push_internal.constprop.0>
+   11b74:	mov    %rax,-0x180(%rbp)
+   11b7b:	pop    %r15
+   11b7d:	jmp    1174e <kd_mutex_execute_cs+0x3ce>
+   11b82:	xor    %ebx,%ebx
+   11b84:	mov    -0x180(%rbp),%rax
+   11b8b:	cmpb   $0x0,0x158(%rax)
+   11b92:	jne    1202b <kd_mutex_execute_cs+0xcab>
+   11b98:	mov    -0x180(%rbp),%rdi
+   11b9f:	mov    $0x1,%esi
+   11ba4:	call   11ba9 <kd_mutex_execute_cs+0x829>
+   11ba9:	test   %eax,%eax
+   11bab:	jne    126f3 <kd_mutex_execute_cs+0x1373>
+   11bb1:	mov    -0x180(%rbp),%rax
+   11bb8:	cmpb   $0x0,0x25(%rax)
+   11bbc:	jne    12615 <kd_mutex_execute_cs+0x1295>
+   11bc2:	mov    0x14(%rax),%edx
+   11bc5:	test   %edx,%edx
+   11bc7:	jne    12615 <kd_mutex_execute_cs+0x1295>
+   11bcd:	mov    -0x168(%rbp),%rax
+   11bd4:	mov    -0x198(%rbp),%rdi
+   11bdb:	mov    $0x15,%ecx
+   11be0:	mov    %r12,%rsi
+   11be3:	rep movsq %ds:(%rsi),%es:(%rdi)
+   11be6:	mov    -0x170(%rbp),%rsi
+   11bed:	movl   $0x0,0x44(%rax)
+   11bf4:	mov    -0x188(%rbp),%rax
+   11bfb:	cmp    (%rax),%rsi
+   11bfe:	jne    126f5 <kd_mutex_execute_cs+0x1375>
+   11c04:	cmpb   $0x0,0x28(%rax)
+   11c08:	jne    11c2d <kd_mutex_execute_cs+0x8ad>
+   11c0a:	mov    0x20(%rax),%rcx
+   11c0e:	test   %rcx,%rcx
+   11c11:	je     1272e <kd_mutex_execute_cs+0x13ae>
+   11c17:	cmpq   $0x0,0x18(%rax)
+   11c1c:	je     126cc <kd_mutex_execute_cs+0x134c>
+   11c22:	mov    -0x188(%rbp),%rax
+   11c29:	movb   $0x1,0x28(%rax)
+   11c2d:	mov    -0x180(%rbp),%rdi
+   11c34:	cmpb   $0x0,0x20(%rdi)
+   11c38:	je     11da5 <kd_mutex_execute_cs+0xa25>
+   11c3e:	cmpb   $0x0,0x24(%rdi)
+   11c42:	je     11da5 <kd_mutex_execute_cs+0xa25>
+   11c48:	mov    0x220(%rdi),%eax
+   11c4e:	mov    0x224(%rdi),%ecx
+   11c54:	lea    0x1(%rax),%esi
+   11c57:	cmp    %ecx,%esi
+   11c59:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11c5f:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11c67:	jne    11c77 <kd_mutex_execute_cs+0x8f7>
+   11c69:	movzbl 0x210(%rdi,%rsi,1),%edx
+   11c71:	xor    $0x1,%edx
+   11c74:	movzbl %dl,%edx
+   11c77:	lea    0x2(%rax),%esi
+   11c7a:	cmp    %ecx,%esi
+   11c7c:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11c82:	mov    -0x180(%rbp),%rdi
+   11c89:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11c91:	jne    11ca4 <kd_mutex_execute_cs+0x924>
+   11c93:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11c9b:	xor    $0x1,%esi
+   11c9e:	movzbl %sil,%esi
+   11ca2:	add    %esi,%edx
+   11ca4:	lea    0x3(%rax),%esi
+   11ca7:	cmp    %ecx,%esi
+   11ca9:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11caf:	mov    -0x180(%rbp),%rdi
+   11cb6:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11cbe:	jne    11cd1 <kd_mutex_execute_cs+0x951>
+   11cc0:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11cc8:	xor    $0x1,%esi
+   11ccb:	movzbl %sil,%esi
+   11ccf:	add    %esi,%edx
+   11cd1:	lea    0x4(%rax),%esi
+   11cd4:	cmp    %ecx,%esi
+   11cd6:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11cdc:	mov    -0x180(%rbp),%rdi
+   11ce3:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11ceb:	jne    11cfe <kd_mutex_execute_cs+0x97e>
+   11ced:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11cf5:	xor    $0x1,%esi
+   11cf8:	movzbl %sil,%esi
+   11cfc:	add    %esi,%edx
+   11cfe:	lea    0x5(%rax),%esi
+   11d01:	cmp    %ecx,%esi
+   11d03:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11d09:	mov    -0x180(%rbp),%rdi
+   11d10:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11d18:	jne    11d2b <kd_mutex_execute_cs+0x9ab>
+   11d1a:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11d22:	xor    $0x1,%esi
+   11d25:	movzbl %sil,%esi
+   11d29:	add    %esi,%edx
+   11d2b:	lea    0x6(%rax),%esi
+   11d2e:	cmp    %ecx,%esi
+   11d30:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11d32:	mov    -0x180(%rbp),%rdi
+   11d39:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11d41:	jne    11d54 <kd_mutex_execute_cs+0x9d4>
+   11d43:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11d4b:	xor    $0x1,%esi
+   11d4e:	movzbl %sil,%esi
+   11d52:	add    %esi,%edx
+   11d54:	lea    0x7(%rax),%esi
+   11d57:	cmp    %ecx,%esi
+   11d59:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11d5b:	mov    -0x180(%rbp),%rdi
+   11d62:	cmpl   $0x4,0x1b0(%rdi,%rsi,4)
+   11d6a:	jne    11d7d <kd_mutex_execute_cs+0x9fd>
+   11d6c:	movzbl 0x210(%rdi,%rsi,1),%esi
+   11d74:	xor    $0x1,%esi
+   11d77:	movzbl %sil,%esi
+   11d7b:	add    %esi,%edx
+   11d7d:	add    $0x8,%eax
+   11d80:	cmp    %ecx,%eax
+   11d82:	jae    11da5 <kd_mutex_execute_cs+0xa25>
+   11d84:	mov    -0x180(%rbp),%rsi
+   11d8b:	cmpl   $0x4,0x1b0(%rsi,%rax,4)
+   11d93:	jne    11da5 <kd_mutex_execute_cs+0xa25>
+   11d95:	movzbl 0x210(%rsi,%rax,1),%eax
+   11d9d:	xor    $0x1,%eax
+   11da0:	movzbl %al,%eax
+   11da3:	add    %eax,%edx
+   11da5:	mov    -0x168(%rbp),%rax
+   11dac:	mov    -0x178(%rbp),%r8d
+   11db3:	mov    %edx,0x134(%rax)
+   11db9:	movq   $0x0,0x138(%rax)
+   11dc4:	test   %r8d,%r8d
+   11dc7:	je     12558 <kd_mutex_execute_cs+0x11d8>
+   11dcd:	mov    -0x188(%rbp),%rax
+   11dd4:	mov    0x18(%rax),%r12
+   11dd8:	cmpq   $0x0,0x38(%rax)
+   11ddd:	je     11e1a <kd_mutex_execute_cs+0xa9a>
+   11ddf:	test   %r12,%r12
+   11de2:	je     1271e <kd_mutex_execute_cs+0x139e>
+   11de8:	mov    0x40(%rax),%rax
+   11dec:	test   %rax,%rax
+   11def:	je     1271e <kd_mutex_execute_cs+0x139e>
+   11df5:	mov    %r12,(%rax)
+   11df8:	mov    -0x188(%rbp),%rax
+   11dff:	mov    0x38(%rax),%r12
+   11e03:	movq   $0x0,0x40(%rax)
+   11e0b:	movq   $0x0,0x38(%rax)
+   11e13:	movl   $0x0,0x48(%rax)
+   11e1a:	mov    -0x180(%rbp),%rax
+   11e21:	mov    -0x170(%rbp),%rdi
+   11e28:	mov    0xe0(%rax),%rsi
+   11e2f:	call   11e34 <kd_mutex_execute_cs+0xab4>
+   11e34:	test   %eax,%eax
+   11e36:	je     11e3c <kd_mutex_execute_cs+0xabc>
+   11e3c:	ud2    
+   11e3e:	lea    0x28(%rdx),%rbx
+   11e42:	jmp    118a6 <kd_mutex_execute_cs+0x526>
+   11e47:	cmpb   $0x0,0x0(%rip)        # 11e4e <kd_mutex_execute_cs+0xace>
+   11e4e:	je     11b82 <kd_mutex_execute_cs+0x802>
+   11e54:	call   11e59 <kd_mutex_execute_cs+0xad9>
+   11e59:	mov    %rax,%rbx
+   11e5c:	jmp    11b84 <kd_mutex_execute_cs+0x804>
+   11e61:	mov    $0xfffffffe,%esi
+   11e66:	incq   %gs:0x0(%rip)        # 11e6e <kd_mutex_execute_cs+0xaee>
+   11e6e:	mov    $0x0,%rdi
+   11e75:	call   11e7a <kd_mutex_execute_cs+0xafa>
+   11e7a:	mov    -0x180(%rbp),%rbx
+   11e81:	xor    %edx,%edx
+   11e83:	mov    $0x5,%esi
+   11e88:	mov    %rbx,%rdi
+   11e8b:	call   11e90 <kd_mutex_execute_cs+0xb10>
+   11e90:	test   %eax,%eax
+   11e92:	jne    11ea6 <kd_mutex_execute_cs+0xb26>
+   11e94:	xor    %esi,%esi
+   11e96:	mov    %rbx,%rdi
+   11e99:	call   11e9e <kd_mutex_execute_cs+0xb1e>
+   11e9e:	test   %eax,%eax
+   11ea0:	je     1164b <kd_mutex_execute_cs+0x2cb>
+   11ea6:	incq   %gs:0x0(%rip)        # 11eae <kd_mutex_execute_cs+0xb2e>
+   11eae:	mov    $0x0,%rdi
+   11eb5:	mov    %eax,%esi
+   11eb7:	call   11ebc <kd_mutex_execute_cs+0xb3c>
+   11ebc:	ud2    
+   11ebe:	mov    %rdi,%r14
+   11ec1:	mov    -0x188(%rbp),%rdi
+   11ec8:	test   %edx,%edx
+   11eca:	setne  %dl
+   11ecd:	mov    %r14,%r15
+   11ed0:	add    $0x8,%rdi
+   11ed4:	sete   %sil
+   11ed8:	or     %esi,%edx
+   11eda:	sub    $0xffffffffffffff80,%r15
+   11ede:	sete   %sil
+   11ee2:	mov    %r15,-0x198(%rbp)
+   11ee9:	or     %esi,%edx
+   11eeb:	test   %r8,%r8
+   11eee:	sete   %sil
+   11ef2:	or     %sil,%dl
+   11ef5:	jne    11b58 <kd_mutex_execute_cs+0x7d8>
+   11efb:	test   %r9,%r9
+   11efe:	je     11b58 <kd_mutex_execute_cs+0x7d8>
+   11f04:	cmpq   $0x0,0x1488(%rax)
+   11f0c:	jne    11b58 <kd_mutex_execute_cs+0x7d8>
+   11f12:	mov    0x0(%rip),%edx        # 11f18 <kd_mutex_execute_cs+0xb98>
+   11f18:	test   %edx,%edx
+   11f1a:	jne    11b58 <kd_mutex_execute_cs+0x7d8>
+   11f20:	mov    -0x170(%rbp),%rsi
+   11f27:	mov    %rbx,0x1488(%rax)
+   11f2e:	movabs $0x100000002,%rdx
+   11f38:	mov    %r15,0xf8(%rax)
+   11f3f:	movq   $0x0,0xd0(%rax)
+   11f4a:	mov    %rax,-0x180(%rbp)
+   11f51:	mov    %r10,0x0(%rcx)
+   11f58:	mov    %rax,%rcx
+   11f5b:	mov    %rdx,0x10(%rax)
+   11f5f:	movabs $0x10001000001,%rdx
+   11f69:	mov    %rsi,0x8(%rax)
+   11f6d:	mov    %r8,0xd8(%rax)
+   11f74:	mov    %r9,0xe0(%rax)
+   11f7b:	movq   $0x0,0xe8(%rax)
+   11f86:	movq   $0x0,0x288(%rax)
+   11f91:	movb   $0x0,0x22c(%rax)
+   11f98:	movabs $0x2000100000000,%rax
+   11fa2:	mov    %rax,0x18(%rcx)
+   11fa6:	movabs $0xfb00000000000000,%rax
+   11fb0:	and    0x20(%rcx),%rax
+   11fb4:	or     %rdx,%rax
+   11fb7:	mov    %rsi,0x170(%rcx)
+   11fbe:	mov    %rax,0x20(%rcx)
+   11fc2:	movabs $0x100000001,%rax
+   11fcc:	mov    %rax,0x218(%rcx)
+   11fd3:	sub    $0x1,%rax
+   11fd7:	movl   $0x2,0x1b0(%rcx)
+   11fe1:	mov    %rsi,0x1d0(%rcx)
+   11fe8:	movb   $0x0,0x210(%rcx)
+   11fef:	mov    %rax,0x220(%rcx)
+   11ff6:	mov    %rdi,0x238(%rcx)
+   11ffd:	mov    %rcx,0x1480(%rcx)
+   12004:	movl   $0x1,0x1490(%rcx)
+   1200e:	test   %rcx,%rcx
+   12011:	jne    11848 <kd_mutex_execute_cs+0x4c8>
+   12017:	mov    0x30(%r14),%r9
+   1201b:	mov    0x8(%r14),%r8
+   1201f:	mov    0x80(%r14),%r10
+   12026:	jmp    11b58 <kd_mutex_execute_cs+0x7d8>
+   1202b:	mov    %rax,%rdi
+   1202e:	call   12033 <kd_mutex_execute_cs+0xcb3>
+   12033:	movzbl %al,%eax
+   12036:	mov    %eax,-0x178(%rbp)
+   1203c:	jmp    11b98 <kd_mutex_execute_cs+0x818>
+   12041:	call   12046 <kd_mutex_execute_cs+0xcc6>
+   12046:	mov    %rax,-0x1a0(%rbp)
+   1204d:	jmp    11860 <kd_mutex_execute_cs+0x4e0>
+   12052:	lock incq 0x0(%rip)        # 1205a <kd_mutex_execute_cs+0xcda>
+   1205a:	ud2    
+   1205c:	mov    $0xffffffea,%esi
+   12061:	jmp    11e66 <kd_mutex_execute_cs+0xae6>
+   12066:	lock incq 0x0(%rip)        # 1206e <kd_mutex_execute_cs+0xcee>
+   1206e:	ud2    
+   12070:	incq   %gs:0x0(%rip)        # 12078 <kd_mutex_execute_cs+0xcf8>
+   12078:	jmp    11a98 <kd_mutex_execute_cs+0x718>
+   1207d:	mov    0x18(%rax),%r12d
+   12081:	test   %r12d,%r12d
+   12084:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   1208a:	cmpb   $0x0,0x22(%rax)
+   1208e:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12094:	cmpl   $0x2,0x10(%rax)
+   12098:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   1209e:	cmpl   $0x1,0x14(%rax)
+   120a2:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   120a8:	cmpb   $0x0,0x1f(%rax)
+   120ac:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   120b2:	cmpw   $0x1,0x1c(%rax)
+   120b7:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   120bd:	cmpq   $0x0,0x8(%rax)
+   120c2:	je     118a6 <kd_mutex_execute_cs+0x526>
+   120c8:	cmpq   $0x0,0xd8(%rax)
+   120d0:	je     118a6 <kd_mutex_execute_cs+0x526>
+   120d6:	cmpq   $0x0,0xe0(%rax)
+   120de:	je     118a6 <kd_mutex_execute_cs+0x526>
+   120e4:	cmpq   $0x0,0x8(%rbx)
+   120e9:	je     118a6 <kd_mutex_execute_cs+0x526>
+   120ef:	mov    (%rax),%rdx
+   120f2:	cmp    %rdx,(%rbx)
+   120f5:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   120fb:	cmpb   $0x0,0x24(%rax)
+   120ff:	jne    12852 <kd_mutex_execute_cs+0x14d2>
+   12105:	cmpq   $0x0,0x1d0(%rax)
+   1210d:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12113:	cmpq   $0x0,0x238(%rax)
+   1211b:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12121:	mov    -0x180(%rbp),%r14
+   12128:	mov    %r14,%rdi
+   1212b:	call   44e0 <kd_jit_minimal_complete_allowed.part.0>
+   12130:	test   %al,%al
+   12132:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12138:	mov    (%r14),%rax
+   1213b:	test   %rax,%rax
+   1213e:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12144:	mov    0x0(%rip),%edx        # 1214a <kd_mutex_execute_cs+0xdca>
+   1214a:	test   %edx,%edx
+   1214c:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12152:	mov    -0x190(%rbp),%rcx
+   12159:	mov    (%rcx),%edx
+   1215b:	test   %edx,%edx
+   1215d:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12163:	mov    0x4(%rcx),%r12d
+   12167:	test   %r12d,%r12d
+   1216a:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12170:	mov    -0x190(%rbp),%rdx
+   12177:	mov    0x10(%rdx),%rdx
+   1217b:	cmp    %rax,%rdx
+   1217e:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12184:	mov    -0x190(%rbp),%rdx
+   1218b:	mov    0x18(%rdx),%rax
+   1218f:	test   %rax,%rax
+   12192:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12198:	mov    0xc(%rdx),%eax
+   1219b:	cmp    $0x2,%eax
+   1219e:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   121a4:	mov    -0x180(%rbp),%rsi
+   121ab:	mov    %rdx,%rdi
+   121ae:	call   4310 <kd_jit_select_image>
+   121b3:	mov    %rax,%rcx
+   121b6:	test   %rax,%rax
+   121b9:	je     118a6 <kd_mutex_execute_cs+0x526>
+   121bf:	mov    (%rax),%rax
+   121c2:	test   %rax,%rax
+   121c5:	je     121d4 <kd_mutex_execute_cs+0xe54>
+   121c7:	cmpl   $0x4357444b,0x19(%rax)
+   121ce:	je     1286b <kd_mutex_execute_cs+0x14eb>
+   121d4:	mov    -0x190(%rbp),%rdx
+   121db:	mov    -0x180(%rbp),%rsi
+   121e2:	mov    0x30(%rdx),%edx
+   121e5:	cmp    0x10(%rsi),%edx
+   121e8:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   121ee:	mov    %edx,%esi
+   121f0:	and    $0xfffffffd,%esi
+   121f3:	sub    $0x1,%esi
+   121f6:	jne    12aa7 <kd_mutex_execute_cs+0x1727>
+   121fc:	test   %r12d,%r12d
+   121ff:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12205:	movzbl 0x2d(%rax),%eax
+   12209:	cmp    %eax,%edx
+   1220b:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12211:	cmpq   $0x0,0x0(%rip)        # 12219 <kd_mutex_execute_cs+0xe99>
+   12219:	je     118a6 <kd_mutex_execute_cs+0x526>
+   1221f:	cmpq   $0x0,0x0(%rip)        # 12227 <kd_mutex_execute_cs+0xea7>
+   12227:	je     118a6 <kd_mutex_execute_cs+0x526>
+   1222d:	mov    -0x180(%rbp),%rdx
+   12234:	mov    %rbx,-0xa0(%rbp)
+   1223b:	mov    0xd8(%rdx),%rax
+   12242:	mov    %rcx,0x288(%rdx)
+   12249:	mov    %rax,-0x98(%rbp)
+   12250:	mov    0xe0(%rdx),%rax
+   12257:	mov    %rax,-0x90(%rbp)
+   1225e:	mov    (%rcx),%rax
+   12261:	add    $0x20,%rax
+   12265:	cmpb   $0x0,0x0(%rip)        # 1226c <kd_mutex_execute_cs+0xeec>
+   1226c:	mov    %rax,-0x88(%rbp)
+   12273:	mov    0x8(%rdx),%rax
+   12277:	mov    %rax,-0x80(%rbp)
+   1227b:	mov    0x0(%rip),%rax        # 12282 <kd_mutex_execute_cs+0xf02>
+   12282:	mov    %rax,-0x78(%rbp)
+   12286:	mov    0x8(%rbx),%rax
+   1228a:	movq   $0x2,-0x58(%rbp)
+   12292:	mov    %rax,-0x70(%rbp)
+   12296:	lea    0x14(%rdx),%rax
+   1229a:	mov    %rax,-0x50(%rbp)
+   1229e:	movq   $0x1,-0x48(%rbp)
+   122a6:	jne    12a85 <kd_mutex_execute_cs+0x1705>
+   122ac:	xor    %ebx,%ebx
+   122ae:	xor    %eax,%eax
+   122b0:	mov    %rbx,-0x68(%rbp)
+   122b4:	mov    %rax,-0x60(%rbp)
+   122b8:	mov    -0x180(%rbp),%rax
+   122bf:	lea    -0x98(%rbp),%rsi
+   122c6:	lea    -0xa0(%rbp),%rdx
+   122cd:	mov    -0xa0(%rbp),%rdi
+   122d4:	movb   $0x1,0x1f(%rax)
+   122d8:	mov    -0x88(%rbp),%rax
+   122df:	call   122e4 <kd_mutex_execute_cs+0xf64>
+   122e4:	cmpq   $0x2,-0x58(%rbp)
+   122e9:	jne    12a44 <kd_mutex_execute_cs+0x16c4>
+   122ef:	cmpq   $0x7,-0x98(%rbp)
+   122f7:	jne    12a44 <kd_mutex_execute_cs+0x16c4>
+   122fd:	cmpq   $0x0,-0x48(%rbp)
+   12302:	je     12a44 <kd_mutex_execute_cs+0x16c4>
+   12308:	mov    -0x50(%rbp),%rax
+   1230c:	cmpl   $0x2,(%rax)
+   1230f:	jne    12a44 <kd_mutex_execute_cs+0x16c4>
+   12315:	mov    -0x60(%rbp),%rsi
+   12319:	test   %rsi,%rsi
+   1231c:	jne    129bf <kd_mutex_execute_cs+0x163f>
+   12322:	cmpq   $0x1,-0x90(%rbp)
+   1232a:	je     129da <kd_mutex_execute_cs+0x165a>
+   12330:	cmpb   $0x0,0x0(%rip)        # 12337 <kd_mutex_execute_cs+0xfb7>
+   12337:	jne    12927 <kd_mutex_execute_cs+0x15a7>
+   1233d:	mov    -0x180(%rbp),%rsi
+   12344:	cmpb   $0x0,0x20(%rsi)
+   12348:	je     12925 <kd_mutex_execute_cs+0x15a5>
+   1234e:	cmpb   $0x0,0x23(%rsi)
+   12352:	je     12925 <kd_mutex_execute_cs+0x15a5>
+   12358:	cmpb   $0x0,0x21(%rsi)
+   1235c:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12362:	cmpb   $0x0,0x22(%rsi)
+   12366:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1236c:	cmpb   $0x0,0x25(%rsi)
+   12370:	je     12925 <kd_mutex_execute_cs+0x15a5>
+   12376:	cmpq   $0x0,0xe8(%rsi)
+   1237e:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12384:	cmpl   $0x0,0x18(%rsi)
+   12388:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1238e:	mov    %gs:0x0(%rip),%rdx        # 12396 <kd_mutex_execute_cs+0x1016>
+   12396:	lea    0x0(%rdx),%rax
+   1239d:	cmpl   $0x1,0x0(%rdx)
+   123a4:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123aa:	mov    %gs:0x0(%rip),%rdx        # 123b2 <kd_mutex_execute_cs+0x1032>
+   123b2:	cmp    %rdx,0x1488(%rax)
+   123b9:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123bf:	cmp    0x1480(%rax),%rsi
+   123c6:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123cc:	mov    0x10(%rsi),%edx
+   123cf:	cmp    $0x2,%edx
+   123d2:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123d8:	mov    0x14(%rsi),%edx
+   123db:	cmp    $0x2,%edx
+   123de:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123e4:	cmpb   $0x0,0x1f(%rsi)
+   123e8:	je     12925 <kd_mutex_execute_cs+0x15a5>
+   123ee:	cmpw   $0x1,0x1c(%rsi)
+   123f3:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   123f9:	cmpb   $0x0,0x26(%rsi)
+   123fd:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12403:	cmpb   $0x0,0x22c(%rsi)
+   1240a:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12410:	cmpl   $0x1,0x218(%rsi)
+   12417:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1241d:	cmpl   $0x1,0x21c(%rsi)
+   12424:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1242a:	cmpl   $0x1,0x224(%rsi)
+   12431:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12437:	cmpl   $0x0,0x220(%rsi)
+   1243e:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12444:	cmpb   $0x0,0x210(%rsi)
+   1244b:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12451:	mov    -0x170(%rbp),%rcx
+   12458:	cmp    0x8(%rsi),%rcx
+   1245c:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12462:	cmp    0x170(%rsi),%rcx
+   12469:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1246f:	cmpl   $0x2,0x1b0(%rsi)
+   12476:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1247c:	cmp    0x1d0(%rsi),%rcx
+   12483:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12489:	cmpb   $0x0,0x24(%rsi)
+   1248d:	jne    128cf <kd_mutex_execute_cs+0x154f>
+   12493:	mov    -0x180(%rbp),%rdx
+   1249a:	mov    0x238(%rdx),%rdx
+   124a1:	test   %rdx,%rdx
+   124a4:	je     12925 <kd_mutex_execute_cs+0x15a5>
+   124aa:	cmpb   $0x0,0x8(%rdx)
+   124ae:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   124b4:	mov    -0x170(%rbp),%rcx
+   124bb:	mov    (%rcx),%rdx
+   124be:	mov    %rdx,%rcx
+   124c1:	and    $0xfffffffffffffff8,%rcx
+   124c5:	cmp    %rcx,%gs:0x0(%rip)        # 124cd <kd_mutex_execute_cs+0x114d>
+   124cd:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   124d3:	and    $0x4,%dl
+   124d6:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   124dc:	mov    -0x170(%rbp),%rcx
+   124e3:	mov    0x18(%rcx),%edx
+   124e6:	and    $0xfffffffd,%edx
+   124e9:	sub    $0x1,%edx
+   124ec:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   124f2:	mov    (%rcx),%rdx
+   124f5:	and    $0xfffffffffffffff8,%rdx
+   124f9:	cmp    %rdx,%gs:0x0(%rip)        # 12501 <kd_mutex_execute_cs+0x1181>
+   12501:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12507:	mov    -0x180(%rbp),%rdx
+   1250e:	xor    %r10d,%r10d
+   12511:	xor    %r9d,%r9d
+   12514:	movb   $0x1,0x210(%rdx)
+   1251b:	movb   $0x1,0x22c(%rdx)
+   12522:	movb   $0x1,0x26(%rdx)
+   12526:	mov    %r9d,0x1490(%rax)
+   1252d:	mov    %r10,0x1480(%rax)
+   12534:	mov    %r10,0x1488(%rax)
+   1253b:	mov    -0x168(%rbp),%rax
+   12542:	movb   $0x3,0x1e(%rdx)
+   12546:	movw   $0x0,0x1c(%rdx)
+   1254c:	movl   $0x2,0x44(%rax)
+   12553:	jmp    11655 <kd_mutex_execute_cs+0x2d5>
+   12558:	mov    -0x168(%rbp),%rax
+   1255f:	movb   $0x1,0x132(%rax)
+   12566:	movb   $0x0,0x131(%rax)
+   1256d:	mov    -0x180(%rbp),%rdi
+   12574:	call   12579 <kd_mutex_execute_cs+0x11f9>
+   12579:	test   %eax,%eax
+   1257b:	jne    127a7 <kd_mutex_execute_cs+0x1427>
+   12581:	cmpb   $0x0,0x0(%rip)        # 12588 <kd_mutex_execute_cs+0x1208>
+   12588:	jne    127a9 <kd_mutex_execute_cs+0x1429>
+   1258e:	mov    -0x180(%rbp),%rbx
+   12595:	mov    %rbx,%rdi
+   12598:	call   1259d <kd_mutex_execute_cs+0x121d>
+   1259d:	test   %al,%al
+   1259f:	je     1281f <kd_mutex_execute_cs+0x149f>
+   125a5:	movzwl 0x1c(%rbx),%eax
+   125a9:	sub    $0x4,%eax
+   125ac:	cmp    $0x1,%eax
+   125af:	jbe    1281f <kd_mutex_execute_cs+0x149f>
+   125b5:	mov    %rbx,%rdi
+   125b8:	call   125bd <kd_mutex_execute_cs+0x123d>
+   125bd:	test   %al,%al
+   125bf:	je     1281f <kd_mutex_execute_cs+0x149f>
+   125c5:	cmpb   $0x0,0x26(%rbx)
+   125c9:	jne    1281f <kd_mutex_execute_cs+0x149f>
+   125cf:	movb   $0x1,0x26(%rbx)
+   125d3:	movb   $0x3,0x1e(%rbx)
+   125d7:	mov    $0x4,%esi
+   125dc:	mov    %rbx,%rdi
+   125df:	mov    %si,0x1c(%rbx)
+   125e3:	call   125e8 <kd_mutex_execute_cs+0x1268>
+   125e8:	test   %al,%al
+   125ea:	je     12815 <kd_mutex_execute_cs+0x1495>
+   125f0:	mov    -0x180(%rbp),%rdi
+   125f7:	xor    %esi,%esi
+   125f9:	call   125fe <kd_mutex_execute_cs+0x127e>
+   125fe:	test   %eax,%eax
+   12600:	jne    12821 <kd_mutex_execute_cs+0x14a1>
+   12606:	movl   $0x7,-0x178(%rbp)
+   12610:	jmp    11655 <kd_mutex_execute_cs+0x2d5>
+   12615:	ud2    
+   12617:	mov    -0x168(%rbp),%rax
+   1261e:	mov    0x128(%rax),%rdx
+   12625:	test   %rdx,%rdx
+   12628:	je     12720 <kd_mutex_execute_cs+0x13a0>
+   1262e:	movq   $0x0,0x128(%rax)
+   12639:	mov    0x0(%rip),%rax        # 12640 <kd_mutex_execute_cs+0x12c0>
+   12640:	movabs $0x7ffffffffffffffe,%rsi
+   1264a:	cmp    %rax,%rsi
+   1264d:	jb     1283e <kd_mutex_execute_cs+0x14be>
+   12653:	lea    0x1(%rax),%rcx
+   12657:	lock cmpxchg %rcx,0x0(%rip)        # 12660 <kd_mutex_execute_cs+0x12e0>
+   12660:	jne    1264a <kd_mutex_execute_cs+0x12ca>
+   12662:	cmp    %rdx,-0x1a0(%rbp)
+   12669:	jb     119fe <kd_mutex_execute_cs+0x67e>
+   1266f:	mov    -0x1a0(%rbp),%rcx
+   12676:	mov    0x0(%rip),%rax        # 1267d <kd_mutex_execute_cs+0x12fd>
+   1267d:	sub    %rdx,%rcx
+   12680:	test   %rax,%rax
+   12683:	js     119fe <kd_mutex_execute_cs+0x67e>
+   12689:	movabs $0x7fffffffffffffff,%rdx
+   12693:	sub    %rax,%rdx
+   12696:	cmp    %rcx,%rdx
+   12699:	jb     119fe <kd_mutex_execute_cs+0x67e>
+   1269f:	lea    (%rcx,%rax,1),%rdx
+   126a3:	lock cmpxchg %rdx,0x0(%rip)        # 126ac <kd_mutex_execute_cs+0x132c>
+   126ac:	je     11a08 <kd_mutex_execute_cs+0x688>
+   126b2:	jmp    12680 <kd_mutex_execute_cs+0x1300>
+   126b4:	incq   %gs:0x0(%rip)        # 126bc <kd_mutex_execute_cs+0x133c>
+   126bc:	mov    $0x0,%rdi
+   126c3:	mov    %eax,%esi
+   126c5:	call   126ca <kd_mutex_execute_cs+0x134a>
+   126ca:	ud2    
+   126cc:	cmpq   $0x0,0x38(%rax)
+   126d1:	jne    12832 <kd_mutex_execute_cs+0x14b2>
+   126d7:	mov    (%rcx),%rsi
+   126da:	test   %rsi,%rsi
+   126dd:	je     12780 <kd_mutex_execute_cs+0x1400>
+   126e3:	mov    -0x188(%rbp),%rax
+   126ea:	mov    %rsi,0x18(%rax)
+   126ee:	jmp    11c22 <kd_mutex_execute_cs+0x8a2>
+   126f3:	ud2    
+   126f5:	ud2    
+   126f7:	lock incq 0x0(%rip)        # 126ff <kd_mutex_execute_cs+0x137f>
+   126ff:	ud2    
+   12701:	mov    $0xffffffea,%eax
+   12706:	incq   %gs:0x0(%rip)        # 1270e <kd_mutex_execute_cs+0x138e>
+   1270e:	mov    $0x0,%rdi
+   12715:	mov    %eax,%esi
+   12717:	call   1271c <kd_mutex_execute_cs+0x139c>
+   1271c:	ud2    
+   1271e:	ud2    
+   12720:	cmp    $0x6,%ebx
+   12723:	jne    11906 <kd_mutex_execute_cs+0x586>
+   12729:	jmp    11e54 <kd_mutex_execute_cs+0xad4>
+   1272e:	ud2    
+   12730:	mov    -0x180(%rbp),%rax
+   12737:	lea    -0xb4(%rbp),%rdx
+   1273e:	add    $0x1b0,%rax
+   12744:	cmp    %rax,%rdx
+   12747:	jne    117e1 <kd_mutex_execute_cs+0x461>
+   1274d:	mov    -0x180(%rbp),%rax
+   12754:	lea    -0xa8(%rbp),%rdx
+   1275b:	add    $0x1d0,%rax
+   12761:	cmp    %rax,%rdx
+   12764:	jne    117e1 <kd_mutex_execute_cs+0x461>
+   1276a:	cmpq   $0xfffffffffffffdf0,-0x180(%rbp)
+   12775:	jne    117e1 <kd_mutex_execute_cs+0x461>
+   1277b:	jmp    1180e <kd_mutex_execute_cs+0x48e>
+   12780:	mov    0x48(%rcx),%eax
+   12783:	mov    -0x170(%rbp),%rdi
+   1278a:	lock cmpxchg %edx,0x1c(%rdi)
+   1278f:	cmp    0x48(%rcx),%eax
+   12792:	je     126e3 <kd_mutex_execute_cs+0x1363>
+   12798:	pause  
+   1279a:	mov    (%rcx),%rsi
+   1279d:	test   %rsi,%rsi
+   127a0:	je     12798 <kd_mutex_execute_cs+0x1418>
+   127a2:	jmp    126e3 <kd_mutex_execute_cs+0x1363>
+   127a7:	ud2    
+   127a9:	call   127ae <kd_mutex_execute_cs+0x142e>
+   127ae:	movabs $0x7ffffffffffffffe,%rsi
+   127b8:	mov    %rax,%rdx
+   127bb:	mov    0x0(%rip),%rax        # 127c2 <kd_mutex_execute_cs+0x1442>
+   127c2:	cmp    %rax,%rsi
+   127c5:	jb     128c0 <kd_mutex_execute_cs+0x1540>
+   127cb:	lea    0x1(%rax),%rcx
+   127cf:	lock cmpxchg %rcx,0x0(%rip)        # 127d8 <kd_mutex_execute_cs+0x1458>
+   127d8:	jne    127c2 <kd_mutex_execute_cs+0x1442>
+   127da:	cmp    %rbx,%rdx
+   127dd:	jb     12823 <kd_mutex_execute_cs+0x14a3>
+   127df:	mov    0x0(%rip),%rax        # 127e6 <kd_mutex_execute_cs+0x1466>
+   127e6:	sub    %rbx,%rdx
+   127e9:	test   %rax,%rax
+   127ec:	js     12823 <kd_mutex_execute_cs+0x14a3>
+   127ee:	movabs $0x7fffffffffffffff,%rcx
+   127f8:	sub    %rax,%rcx
+   127fb:	cmp    %rdx,%rcx
+   127fe:	jb     12823 <kd_mutex_execute_cs+0x14a3>
+   12800:	lea    (%rdx,%rax,1),%rcx
+   12804:	lock cmpxchg %rcx,0x0(%rip)        # 1280d <kd_mutex_execute_cs+0x148d>
+   1280d:	je     1258e <kd_mutex_execute_cs+0x120e>
+   12813:	jmp    127e9 <kd_mutex_execute_cs+0x1469>
+   12815:	lock incq 0x0(%rip)        # 1281d <kd_mutex_execute_cs+0x149d>
+   1281d:	ud2    
+   1281f:	ud2    
+   12821:	ud2    
+   12823:	movl   $0x1,0x0(%rip)        # 1282d <kd_mutex_execute_cs+0x14ad>
+   1282d:	jmp    1258e <kd_mutex_execute_cs+0x120e>
+   12832:	ud2    
+   12834:	mov    $0xffffff8e,%eax
+   12839:	jmp    12706 <kd_mutex_execute_cs+0x1386>
+   1283e:	movl   $0x1,0x0(%rip)        # 12848 <kd_mutex_execute_cs+0x14c8>
+   12848:	jmp    12662 <kd_mutex_execute_cs+0x12e2>
+   1284d:	call   12852 <kd_mutex_execute_cs+0x14d2>
+   12852:	mov    -0x180(%rbp),%rax
+   12859:	cmpl   $0x0,0x258(%rax)
+   12860:	je     12121 <kd_mutex_execute_cs+0xda1>
+   12866:	jmp    118a6 <kd_mutex_execute_cs+0x526>
+   1286b:	cmpl   $0x32303043,0x1c(%rax)
+   12872:	jne    121d4 <kd_mutex_execute_cs+0xe54>
+   12878:	xor    %r12d,%r12d
+   1287b:	cmpl   $0x4241444b,0x29(%rax)
+   12882:	sete   %r12b
+   12886:	jmp    121d4 <kd_mutex_execute_cs+0xe54>
+   1288b:	incq   %gs:0x0(%rip)        # 12893 <kd_mutex_execute_cs+0x1513>
+   12893:	mov    $0x0,%rcx
+   1289a:	mov    %ebx,%r8d
+   1289d:	mov    $0x1cd,%edx
+   128a2:	mov    $0x0,%rsi
+   128a9:	mov    $0x0,%rdi
+   128b0:	call   128b5 <kd_mutex_execute_cs+0x1535>
+   128b5:	mov    %ebx,-0x178(%rbp)
+   128bb:	jmp    11655 <kd_mutex_execute_cs+0x2d5>
+   128c0:	movl   $0x1,0x0(%rip)        # 128ca <kd_mutex_execute_cs+0x154a>
+   128ca:	jmp    127da <kd_mutex_execute_cs+0x145a>
+   128cf:	mov    -0x180(%rbp),%rcx
+   128d6:	cmpl   $0x0,0x258(%rcx)
+   128dd:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   128df:	mov    0x230(%rcx),%edx
+   128e5:	sub    $0x1,%edx
+   128e8:	cmp    $0x1,%edx
+   128eb:	jbe    12925 <kd_mutex_execute_cs+0x15a5>
+   128ed:	mov    %rcx,%rdx
+   128f0:	cmpq   $0x0,0x108(%rcx)
+   128f8:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   128fa:	cmpq   $0x0,0x110(%rcx)
+   12902:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   12904:	cmpq   $0x0,0x270(%rcx)
+   1290c:	jne    12925 <kd_mutex_execute_cs+0x15a5>
+   1290e:	mov    0x260(%rcx),%rcx
+   12915:	add    $0x260,%rdx
+   1291c:	cmp    %rdx,%rcx
+   1291f:	je     12493 <kd_mutex_execute_cs+0x1113>
+   12925:	ud2    
+   12927:	mov    -0x168(%rbp),%rax
+   1292e:	mov    0x128(%rax),%rdx
+   12935:	test   %rdx,%rdx
+   12938:	je     1233d <kd_mutex_execute_cs+0xfbd>
+   1293e:	movabs $0x7ffffffffffffffe,%rsi
+   12948:	xor    %r11d,%r11d
+   1294b:	mov    %r11,0x128(%rax)
+   12952:	mov    0x0(%rip),%rax        # 12959 <kd_mutex_execute_cs+0x15d9>
+   12959:	cmp    %rax,%rsi
+   1295c:	jb     12a35 <kd_mutex_execute_cs+0x16b5>
+   12962:	lea    0x1(%rax),%rcx
+   12966:	lock cmpxchg %rcx,0x0(%rip)        # 1296f <kd_mutex_execute_cs+0x15ef>
+   1296f:	jne    12959 <kd_mutex_execute_cs+0x15d9>
+   12971:	cmp    %rdx,-0x1a0(%rbp)
+   12978:	jb     12a26 <kd_mutex_execute_cs+0x16a6>
+   1297e:	mov    -0x1a0(%rbp),%rcx
+   12985:	mov    0x0(%rip),%rax        # 1298c <kd_mutex_execute_cs+0x160c>
+   1298c:	sub    %rdx,%rcx
+   1298f:	test   %rax,%rax
+   12992:	js     12a26 <kd_mutex_execute_cs+0x16a6>
+   12998:	movabs $0x7fffffffffffffff,%rdx
+   129a2:	sub    %rax,%rdx
+   129a5:	cmp    %rcx,%rdx
+   129a8:	jb     12a26 <kd_mutex_execute_cs+0x16a6>
+   129aa:	lea    (%rcx,%rax,1),%rdx
+   129ae:	lock cmpxchg %rdx,0x0(%rip)        # 129b7 <kd_mutex_execute_cs+0x1637>
+   129b7:	je     1233d <kd_mutex_execute_cs+0xfbd>
+   129bd:	jmp    1298f <kd_mutex_execute_cs+0x160f>
+   129bf:	cmpb   $0x0,0x0(%rip)        # 129c6 <kd_mutex_execute_cs+0x1646>
+   129c6:	jne    12a5e <kd_mutex_execute_cs+0x16de>
+   129cc:	cmpq   $0x1,-0x90(%rbp)
+   129d4:	jne    1233d <kd_mutex_execute_cs+0xfbd>
+   129da:	mov    -0x180(%rbp),%rax
+   129e1:	mov    -0x80(%rbp),%rsi
+   129e5:	mov    $0x1,%edx
+   129ea:	mov    (%rax),%rdi
+   129ed:	call   4490 <kd_exe_note_body>
+   129f2:	cmpb   $0x0,0x0(%rip)        # 129f9 <kd_mutex_execute_cs+0x1679>
+   129f9:	je     12330 <kd_mutex_execute_cs+0xfb0>
+   129ff:	mov    0x0(%rip),%rax        # 12a06 <kd_mutex_execute_cs+0x1686>
+   12a06:	cmp    %rax,-0x80(%rbp)
+   12a0a:	jne    12330 <kd_mutex_execute_cs+0xfb0>
+   12a10:	test   %rax,%rax
+   12a13:	je     12330 <kd_mutex_execute_cs+0xfb0>
+   12a19:	incq   %gs:0x0(%rip)        # 12a21 <kd_mutex_execute_cs+0x16a1>
+   12a21:	jmp    12330 <kd_mutex_execute_cs+0xfb0>
+   12a26:	movl   $0x1,0x0(%rip)        # 12a30 <kd_mutex_execute_cs+0x16b0>
+   12a30:	jmp    1233d <kd_mutex_execute_cs+0xfbd>
+   12a35:	movl   $0x1,0x0(%rip)        # 12a3f <kd_mutex_execute_cs+0x16bf>
+   12a3f:	jmp    12971 <kd_mutex_execute_cs+0x15f1>
+   12a44:	mov    -0x190(%rbp),%rdi
+   12a4b:	lea    -0xa0(%rbp),%rsi
+   12a52:	call   12a57 <kd_mutex_execute_cs+0x16d7>
+   12a57:	mov    %eax,%ebx
+   12a59:	jmp    118c8 <kd_mutex_execute_cs+0x548>
+   12a5e:	mov    $0x1,%edi
+   12a63:	call   4d30 <kd_jit_timing_end.part.0>
+   12a68:	cmpb   $0x0,0x0(%rip)        # 12a6f <kd_mutex_execute_cs+0x16ef>
+   12a6f:	je     129cc <kd_mutex_execute_cs+0x164c>
+   12a75:	mov    -0x68(%rbp),%rsi
+   12a79:	xor    %edi,%edi
+   12a7b:	call   4d30 <kd_jit_timing_end.part.0>
+   12a80:	jmp    12322 <kd_mutex_execute_cs+0xfa2>
+   12a85:	call   12a8a <kd_mutex_execute_cs+0x170a>
+   12a8a:	mov    %rax,-0x68(%rbp)
+   12a8e:	xor    %eax,%eax
+   12a90:	cmpb   $0x0,0x0(%rip)        # 12a97 <kd_mutex_execute_cs+0x1717>
+   12a97:	je     122b4 <kd_mutex_execute_cs+0xf34>
+   12a9d:	call   12aa2 <kd_mutex_execute_cs+0x1722>
+   12aa2:	jmp    122b4 <kd_mutex_execute_cs+0xf34>
+   12aa7:	cmp    $0x2,%edx
+   12aaa:	je     12acc <kd_mutex_execute_cs+0x174c>
+   12aac:	test   %edx,%edx
+   12aae:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12ab4:	test   %r12d,%r12d
+   12ab7:	je     1222d <kd_mutex_execute_cs+0xead>
+   12abd:	cmpb   $0x0,0x2d(%rax)
+   12ac1:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12ac7:	jmp    1222d <kd_mutex_execute_cs+0xead>
+   12acc:	test   %r12d,%r12d
+   12acf:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12ad5:	cmpb   $0x2,0x2d(%rax)
+   12ad9:	jne    118a6 <kd_mutex_execute_cs+0x526>
+   12adf:	cmpq   $0x0,0x0(%rip)        # 12ae7 <kd_mutex_execute_cs+0x1767>
+   12ae7:	je     118a6 <kd_mutex_execute_cs+0x526>
+   12aed:	cmpq   $0x0,0x0(%rip)        # 12af5 <kd_mutex_execute_cs+0x1775>
+   12af5:	jne    1222d <kd_mutex_execute_cs+0xead>
+   12afb:	jmp    118a6 <kd_mutex_execute_cs+0x526>
+   12b00:	jmp    12b05 <kd_mutex_execute_cs+0x1785>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

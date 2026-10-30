@@ -1,0 +1,10 @@
+{
+  "scope": "Stop own local waiting postprocess watcher only; no remote child started",
+  "pid": 3075278,
+  "start_ticks": "1043664027",
+  "script": "/tmp/kdlock-nano-f7a84065-postprocess-watch-20261030.py",
+  "owner_sha256": "3ef659c543ef73fdee4ffb7b43ce21cd921803bb5519c350c6fdf3f3fa30863c",
+  "reason": "Correct local receipt prefix in separate revision",
+  "signal": "SIGTERM",
+  "time": 1793343506.0637426
+}

@@ -1,0 +1,101 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001e380 <kd_down_read_interruptible>:
+   1e380:	call   1e385 <kd_down_read_interruptible+0x5>
+   1e385:	push   %rbp
+   1e386:	mov    %rsp,%rbp
+   1e389:	push   %r14
+   1e38b:	push   %r13
+   1e38d:	push   %r12
+   1e38f:	push   %rbx
+   1e390:	sub    $0x30,%rsp
+   1e394:	mov    %gs:0x0(%rip),%rbx        # 1e39c <kd_down_read_interruptible+0x1c>
+   1e39c:	mov    %rbx,-0x28(%rbp)
+   1e3a0:	mov    %rdi,%rbx
+   1e3a3:	call   1e3a8 <kd_down_read_interruptible+0x28>
+   1e3a8:	call   1e3ad <kd_down_read_interruptible+0x2d>
+   1e3ad:	mov    0x80(%rbx),%rax
+   1e3b4:	test   %rax,%rax
+   1e3b7:	jne    1e3e3 <kd_down_read_interruptible+0x63>
+   1e3b9:	mov    $0x1,%eax
+   1e3be:	lock xadd %rax,0x40(%rbx)
+   1e3c4:	mov    0x80(%rbx),%rax
+   1e3cb:	test   %rax,%rax
+   1e3ce:	je     1e4b1 <kd_down_read_interruptible+0x131>
+   1e3d4:	lock decq 0x40(%rbx)
+   1e3d9:	jne    1e3e3 <kd_down_read_interruptible+0x63>
+   1e3db:	mov    %rbx,%rdi
+   1e3de:	call   1d8d0 <kd_up_read.part.0>
+   1e3e3:	xor    %esi,%esi
+   1e3e5:	lea    -0x50(%rbp),%rdi
+   1e3e9:	movq   $0x0,-0x50(%rbp)
+   1e3f1:	movq   $0x0,-0x48(%rbp)
+   1e3f9:	movq   $0x0,-0x40(%rbp)
+   1e401:	movq   $0x0,-0x38(%rbp)
+   1e409:	movq   $0x0,-0x30(%rbp)
+   1e411:	call   1e416 <kd_down_read_interruptible+0x96>
+   1e416:	mov    $0x1,%edx
+   1e41b:	lea    -0x50(%rbp),%rsi
+   1e41f:	lea    0xc0(%rbx),%rdi
+   1e426:	call   1e42b <kd_down_read_interruptible+0xab>
+   1e42b:	mov    %rax,%r14
+   1e42e:	mov    0x80(%rbx),%rax
+   1e435:	test   %rax,%rax
+   1e438:	jne    1e460 <kd_down_read_interruptible+0xe0>
+   1e43a:	mov    $0x1,%eax
+   1e43f:	lock xadd %rax,0x40(%rbx)
+   1e445:	mov    0x80(%rbx),%rax
+   1e44c:	test   %rax,%rax
+   1e44f:	je     1e4a1 <kd_down_read_interruptible+0x121>
+   1e451:	lock decq 0x40(%rbx)
+   1e456:	jne    1e460 <kd_down_read_interruptible+0xe0>
+   1e458:	mov    %rbx,%rdi
+   1e45b:	call   1d8d0 <kd_up_read.part.0>
+   1e460:	test   %r14,%r14
+   1e463:	jne    1e4d8 <kd_down_read_interruptible+0x158>
+   1e465:	call   1e46a <kd_down_read_interruptible+0xea>
+   1e46a:	mov    0x80(%rbx),%rax
+   1e471:	test   %rax,%rax
+   1e474:	jne    1e416 <kd_down_read_interruptible+0x96>
+   1e476:	mov    $0x1,%eax
+   1e47b:	lock xadd %rax,0x40(%rbx)
+   1e481:	mov    0x80(%rbx),%rax
+   1e488:	test   %rax,%rax
+   1e48b:	je     1e4a1 <kd_down_read_interruptible+0x121>
+   1e48d:	lock decq 0x40(%rbx)
+   1e492:	jne    1e416 <kd_down_read_interruptible+0x96>
+   1e494:	mov    %rbx,%rdi
+   1e497:	call   1d8d0 <kd_up_read.part.0>
+   1e49c:	jmp    1e416 <kd_down_read_interruptible+0x96>
+   1e4a1:	lea    -0x50(%rbp),%rsi
+   1e4a5:	lea    0xc0(%rbx),%rdi
+   1e4ac:	call   1e4b1 <kd_down_read_interruptible+0x131>
+   1e4b1:	xor    %eax,%eax
+   1e4b3:	mov    -0x28(%rbp),%rdx
+   1e4b7:	sub    %gs:0x0(%rip),%rdx        # 1e4bf <kd_down_read_interruptible+0x13f>
+   1e4bf:	jne    1e4e4 <kd_down_read_interruptible+0x164>
+   1e4c1:	add    $0x30,%rsp
+   1e4c5:	pop    %rbx
+   1e4c6:	pop    %r12
+   1e4c8:	pop    %r13
+   1e4ca:	pop    %r14
+   1e4cc:	pop    %rbp
+   1e4cd:	xor    %edx,%edx
+   1e4cf:	xor    %esi,%esi
+   1e4d1:	xor    %edi,%edi
+   1e4d3:	jmp    1e4d8 <kd_down_read_interruptible+0x158>
+   1e4d8:	test   %r14d,%r14d
+   1e4db:	je     1e4b1 <kd_down_read_interruptible+0x131>
+   1e4dd:	mov    $0xfffffffc,%eax
+   1e4e2:	jmp    1e4b3 <kd_down_read_interruptible+0x133>
+   1e4e4:	call   1e4e9 <kd_down_read_interruptible+0x169>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

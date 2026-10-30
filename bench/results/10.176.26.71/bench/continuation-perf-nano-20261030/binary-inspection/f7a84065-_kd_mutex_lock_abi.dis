@@ -1,0 +1,268 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000018df0 <_kd_mutex_lock_abi>:
+   18df0:	push   %rbp
+   18df1:	mov    %rsp,%rbp
+   18df4:	push   %r15
+   18df6:	push   %r14
+   18df8:	mov    %rcx,%r14
+   18dfb:	mov    $0x15,%ecx
+   18e00:	push   %r13
+   18e02:	push   %r12
+   18e04:	push   %rbx
+   18e05:	mov    %rdi,%rbx
+   18e08:	lea    -0xd8(%rbp),%rdi
+   18e0f:	sub    $0xc0,%rsp
+   18e16:	mov    %gs:0x0(%rip),%rax        # 18e1e <_kd_mutex_lock_abi+0x2e>
+   18e1e:	mov    %rax,-0x30(%rbp)
+   18e22:	xor    %eax,%eax
+   18e24:	rep stos %rax,%es:(%rdi)
+   18e27:	test   $0xfffffffd,%r8d
+   18e2e:	jne    1911c <_kd_mutex_lock_abi+0x32c>
+   18e34:	mov    0x18(%rbx),%eax
+   18e37:	mov    %r8d,%r12d
+   18e3a:	mov    %rdx,%r13
+   18e3d:	mov    %rsi,%r15
+   18e40:	test   %eax,%eax
+   18e42:	jne    18eb2 <_kd_mutex_lock_abi+0xc2>
+   18e44:	mov    $0x2,%edx
+   18e49:	lock cmpxchg %edx,0x18(%rbx)
+   18e4e:	test   %eax,%eax
+   18e50:	jne    18eb2 <_kd_mutex_lock_abi+0xc2>
+   18e52:	mov    0x18(%rbx),%eax
+   18e55:	cmp    $0x2,%eax
+   18e58:	jne    191a1 <_kd_mutex_lock_abi+0x3b1>
+   18e5e:	xor    %esi,%esi
+   18e60:	mov    %rbx,%rdi
+   18e63:	call   18e68 <_kd_mutex_lock_abi+0x78>
+   18e68:	movl   $0x1,0x18(%rbx)
+   18e6f:	incq   %gs:0x0(%rip)        # 18e77 <_kd_mutex_lock_abi+0x87>
+   18e77:	mov    -0x30(%rbp),%rax
+   18e7b:	sub    %gs:0x0(%rip),%rax        # 18e83 <_kd_mutex_lock_abi+0x93>
+   18e83:	jne    19262 <_kd_mutex_lock_abi+0x472>
+   18e89:	lea    -0x28(%rbp),%rsp
+   18e8d:	pop    %rbx
+   18e8e:	pop    %r12
+   18e90:	pop    %r13
+   18e92:	pop    %r14
+   18e94:	pop    %r15
+   18e96:	pop    %rbp
+   18e97:	xor    %eax,%eax
+   18e99:	xor    %edx,%edx
+   18e9b:	xor    %ecx,%ecx
+   18e9d:	xor    %esi,%esi
+   18e9f:	xor    %edi,%edi
+   18ea1:	xor    %r8d,%r8d
+   18ea4:	xor    %r9d,%r9d
+   18ea7:	xor    %r10d,%r10d
+   18eaa:	xor    %r11d,%r11d
+   18ead:	jmp    18eb2 <_kd_mutex_lock_abi+0xc2>
+   18eb2:	call   18eb7 <_kd_mutex_lock_abi+0xc7>
+   18eb7:	incl   %gs:0x0(%rip)        # 18ebe <_kd_mutex_lock_abi+0xce>
+   18ebe:	mov    %gs:0x0(%rip),%rcx        # 18ec6 <_kd_mutex_lock_abi+0xd6>
+   18ec6:	lea    0x0(%rcx),%rax
+   18ecd:	mov    0x0(%rcx),%rsi
+   18ed4:	mov    %rax,-0xe0(%rbp)
+   18edb:	mov    %rax,%rdx
+   18ede:	xor    %eax,%eax
+   18ee0:	bt     %rax,%rsi
+   18ee4:	jae    18ef3 <_kd_mutex_lock_abi+0x103>
+   18ee6:	mov    0x28(%rdx),%rdi
+   18eea:	cmp    %rdi,%rbx
+   18eed:	je     19211 <_kd_mutex_lock_abi+0x421>
+   18ef3:	add    $0x1,%eax
+   18ef6:	add    $0x140,%rdx
+   18efd:	cmp    $0x4,%eax
+   18f00:	jne    18ee0 <_kd_mutex_lock_abi+0xf0>
+   18f02:	mov    0x0(%rcx),%rdx
+   18f09:	mov    -0xe0(%rbp),%rsi
+   18f10:	xor    %eax,%eax
+   18f12:	bt     %rax,%rdx
+   18f16:	jb     1911e <_kd_mutex_lock_abi+0x32e>
+   18f1c:	cmpq   $0x0,0x18(%rsi)
+   18f21:	je     1911e <_kd_mutex_lock_abi+0x32e>
+   18f27:	mov    %rsi,-0xe0(%rbp)
+   18f2e:	mov    %rdx,%rsi
+   18f31:	bts    %rax,%rsi
+   18f35:	mov    %rsi,0x0(%rcx)
+   18f3c:	test   %rdx,%rdx
+   18f3f:	je     18f49 <_kd_mutex_lock_abi+0x159>
+   18f41:	incq   %gs:0x0(%rip)        # 18f49 <_kd_mutex_lock_abi+0x159>
+   18f49:	incl   %gs:0x0(%rip)        # 18f50 <_kd_mutex_lock_abi+0x160>
+   18f50:	cmpq   $0x0,-0xe0(%rbp)
+   18f58:	je     19267 <_kd_mutex_lock_abi+0x477>
+   18f5e:	test   %r12d,%r12d
+   18f61:	mov    -0xe0(%rbp),%rax
+   18f68:	setne  %dl
+   18f6b:	jne    191a3 <_kd_mutex_lock_abi+0x3b3>
+   18f71:	lea    0x88(%rax),%rdi
+   18f78:	movq   $0x0,0x80(%rax)
+   18f83:	movq   $0x0,0x120(%rax)
+   18f8e:	and    $0xfffffffffffffff8,%rdi
+   18f92:	sub    %edi,%eax
+   18f94:	lea    0x128(%rax),%ecx
+   18f9a:	xor    %eax,%eax
+   18f9c:	shr    $0x3,%ecx
+   18f9f:	rep stos %rax,%es:(%rdi)
+   18fa2:	mov    -0xe0(%rbp),%rcx
+   18fa9:	movzbl %dl,%edx
+   18fac:	mov    %edx,0x44(%rcx)
+   18faf:	mov    $0x100,%edx
+   18fb4:	mov    0x4c(%rcx),%esi
+   18fb7:	mov    %dx,0x130(%rcx)
+   18fbe:	mov    %r12b,0x40(%rcx)
+   18fc2:	lea    0x0(,%rsi,4),%edx
+   18fc9:	mov    %r15,0x88(%rcx)
+   18fd0:	movb   $0x0,0x132(%rcx)
+   18fd7:	movq   $0x0,(%rcx)
+   18fde:	mov    %gs:0x0(%rip),%eax        # 18fe5 <_kd_mutex_lock_abi+0x1f5>
+   18fe5:	mov    %rbx,0x28(%rcx)
+   18fe9:	add    $0x1,%eax
+   18fec:	mov    %esi,-0xe4(%rbp)
+   18ff2:	shl    $0x4,%eax
+   18ff5:	or     %edx,%eax
+   18ff7:	mov    %eax,0x48(%rcx)
+   18ffa:	mov    %gs:0x0(%rip),%rax        # 19002 <_kd_mutex_lock_abi+0x212>
+   19002:	mov    %rax,0x30(%rcx)
+   19006:	movslq %gs:0x0(%rip),%rax        # 1900e <_kd_mutex_lock_abi+0x21e>
+   1900e:	mov    0x0(,%rax,8),%rax
+   19016:	mov    %r13,0x38(%rcx)
+   1901a:	mov    %rax,0x8(%rcx)
+   1901e:	cmp    $0x2,%r12d
+   19022:	jne    191b6 <_kd_mutex_lock_abi+0x3c6>
+   19028:	mov    %rbx,%rdi
+   1902b:	mov    %rcx,%rsi
+   1902e:	push   %rbp
+   1902f:	mov    %rsp,0x10(%rsi)
+   19033:	mov    %rsi,%r12
+   19036:	mov    0x20(%rsi),%rsp
+   1903a:	and    $0xfffffffffffffff0,%rsp
+   1903e:	xor    %rbp,%rbp
+   19041:	call   13420 <kd_mutex_lock_slowpath>
+   19046:	cmp    $0x3,%eax
+   19049:	je     19058 <_kd_mutex_lock_abi+0x268>
+   1904b:	cmp    $0x5,%eax
+   1904e:	je     19058 <_kd_mutex_lock_abi+0x268>
+   19050:	mov    0x10(%r12),%rsp
+   19055:	pop    %rbp
+   19056:	jmp    19082 <_kd_mutex_lock_abi+0x292>
+   19058:	mov    0x10(%r12),%rax
+   1905d:	cmp    0x88(%r12),%rax
+   19065:	cmova  0x88(%r12),%rax
+   1906e:	and    $0xfffffffffffffff0,%rax
+   19072:	mov    %rax,%rsp
+   19075:	mov    %r12,%rdi
+   19078:	xor    %rbp,%rbp
+   1907b:	call   d9e0 <kd_mutex_resume_completed>
+   19080:	ud2    
+   19082:	mov    %eax,%ebx
+   19084:	lea    -0x3(%rbx),%eax
+   19087:	and    $0xfffffffd,%eax
+   1908a:	jne    191d6 <_kd_mutex_lock_abi+0x3e6>
+   19090:	mov    %gs:0x0(%rip),%rax        # 19098 <_kd_mutex_lock_abi+0x2a8>
+   19098:	add    $0x0,%rax
+   1909e:	mov    0x8(%rax),%rdx
+   190a2:	test   %rdx,%rdx
+   190a5:	je     19239 <_kd_mutex_lock_abi+0x449>
+   190ab:	lea    0x80(%rdx),%rsi
+   190b2:	mov    $0x15,%ecx
+   190b7:	lea    -0xd8(%rbp),%rdi
+   190be:	rep movsq %ds:(%rsi),%es:(%rdi)
+   190c1:	movq   $0x0,0x8(%rax)
+   190c9:	mov    %rdx,%rdi
+   190cc:	call   3b00 <kd_mutex_release_node>
+   190d1:	cmp    $0x5,%ebx
+   190d4:	je     191f2 <_kd_mutex_lock_abi+0x402>
+   190da:	incq   %gs:0x0(%rip)        # 190e2 <_kd_mutex_lock_abi+0x2f2>
+   190e2:	decl   %gs:0x0(%rip)        # 190e9 <_kd_mutex_lock_abi+0x2f9>
+   190e9:	je     191cc <_kd_mutex_lock_abi+0x3dc>
+   190ef:	call   190f4 <_kd_mutex_lock_abi+0x304>
+   190f4:	mov    %gs:0x0(%rip),%rdi        # 190fc <_kd_mutex_lock_abi+0x30c>
+   190fc:	call   19101 <_kd_mutex_lock_abi+0x311>
+   19101:	cmpb   $0x0,0x0(%rip)        # 19108 <_kd_mutex_lock_abi+0x318>
+   19108:	je     1910e <_kd_mutex_lock_abi+0x31e>
+   1910e:	lea    -0xd8(%rbp),%rdi
+   19115:	call   1911a <_kd_mutex_lock_abi+0x32a>
+   1911a:	ud2    
+   1911c:	ud2    
+   1911e:	add    $0x1,%eax
+   19121:	add    $0x140,%rsi
+   19128:	cmp    $0x4,%eax
+   1912b:	jne    18f12 <_kd_mutex_lock_abi+0x122>
+   19131:	incq   %gs:0x0(%rip)        # 19139 <_kd_mutex_lock_abi+0x349>
+   19139:	mov    %gs:0x0(%rip),%rdx        # 19141 <_kd_mutex_lock_abi+0x351>
+   19141:	mov    0x0(%rcx),%rax
+   19148:	mov    %r13,%r9
+   1914b:	mov    $0x0,%rcx
+   19152:	mov    $0x0,%rsi
+   19159:	mov    $0x0,%rdi
+   19160:	mov    0xaf0(%rdx),%r8d
+   19167:	push   %rax
+   19168:	mov    $0xfd,%edx
+   1916d:	mov    %gs:0x0(%rip),%eax        # 19174 <_kd_mutex_lock_abi+0x384>
+   19174:	push   %rax
+   19175:	push   %rbx
+   19176:	call   1917b <_kd_mutex_lock_abi+0x38b>
+   1917b:	xor    %esi,%esi
+   1917d:	mov    %rbx,%rdi
+   19180:	call   4a90 <kd_mutex_wait_and_lock_node>
+   19185:	decl   %gs:0x0(%rip)        # 1918c <_kd_mutex_lock_abi+0x39c>
+   1918c:	sete   %al
+   1918f:	add    $0x18,%rsp
+   19193:	test   %al,%al
+   19195:	jne    191eb <_kd_mutex_lock_abi+0x3fb>
+   19197:	call   1919c <_kd_mutex_lock_abi+0x3ac>
+   1919c:	jmp    18e77 <_kd_mutex_lock_abi+0x87>
+   191a1:	ud2    
+   191a3:	mov    %r13,0x80(%rax)
+   191aa:	mov    %r14,0x90(%rax)
+   191b1:	jmp    18fa2 <_kd_mutex_lock_abi+0x1b2>
+   191b6:	mov    -0xe0(%rbp),%rsi
+   191bd:	mov    %rbx,%rdi
+   191c0:	call   13460 <kd_mutex_lock_slowpath_asm>
+   191c5:	mov    %eax,%ebx
+   191c7:	jmp    19084 <_kd_mutex_lock_abi+0x294>
+   191cc:	call   191d1 <_kd_mutex_lock_abi+0x3e1>
+   191d1:	jmp    190ef <_kd_mutex_lock_abi+0x2ff>
+   191d6:	mov    -0xe0(%rbp),%rdi
+   191dd:	call   3b00 <kd_mutex_release_node>
+   191e2:	decl   %gs:0x0(%rip)        # 191e9 <_kd_mutex_lock_abi+0x3f9>
+   191e9:	jne    19197 <_kd_mutex_lock_abi+0x3a7>
+   191eb:	call   191f0 <_kd_mutex_lock_abi+0x400>
+   191f0:	jmp    19197 <_kd_mutex_lock_abi+0x3a7>
+   191f2:	decl   %gs:0x0(%rip)        # 191f9 <_kd_mutex_lock_abi+0x409>
+   191f9:	je     1924f <_kd_mutex_lock_abi+0x45f>
+   191fb:	call   19200 <_kd_mutex_lock_abi+0x410>
+   19200:	lea    -0xd8(%rbp),%rdi
+   19207:	call   1920c <_kd_mutex_lock_abi+0x41c>
+   1920c:	jmp    190f4 <_kd_mutex_lock_abi+0x304>
+   19211:	decl   %gs:0x0(%rip)        # 19218 <_kd_mutex_lock_abi+0x428>
+   19218:	je     1925b <_kd_mutex_lock_abi+0x46b>
+   1921a:	call   1921f <_kd_mutex_lock_abi+0x42f>
+   1921f:	mov    %gs:0x0(%rip),%rdi        # 19227 <_kd_mutex_lock_abi+0x437>
+   19227:	call   1922c <_kd_mutex_lock_abi+0x43c>
+   1922c:	mov    %rbx,%rdi
+   1922f:	call   19234 <_kd_mutex_lock_abi+0x444>
+   19234:	jmp    18e77 <_kd_mutex_lock_abi+0x87>
+   19239:	incq   %gs:0x0(%rip)        # 19241 <_kd_mutex_lock_abi+0x451>
+   19241:	mov    $0x0,%rdi
+   19248:	call   1924d <_kd_mutex_lock_abi+0x45d>
+   1924d:	ud2    
+   1924f:	call   19254 <_kd_mutex_lock_abi+0x464>
+   19254:	call   19259 <_kd_mutex_lock_abi+0x469>
+   19259:	jmp    19200 <_kd_mutex_lock_abi+0x410>
+   1925b:	call   19260 <_kd_mutex_lock_abi+0x470>
+   19260:	jmp    1921a <_kd_mutex_lock_abi+0x42a>
+   19262:	call   19267 <_kd_mutex_lock_abi+0x477>
+   19267:	mov    %gs:0x0(%rip),%rcx        # 1926f <_kd_mutex_lock_abi+0x47f>
+   1926f:	jmp    19131 <_kd_mutex_lock_abi+0x341>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

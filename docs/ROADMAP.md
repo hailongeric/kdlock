@@ -41,6 +41,18 @@ The separate `7.0.0-38-kdmm1` image runs the actual adapter in Native/KD modes.
 Native MM bodies remain unchanged and execute on their original task. Linux 6.1
 adaptation, operation-specific MM delegation and prepared teardown are retired.
 
+Bounded runtime repairs preserve PAUSE and later image eligibility after
+supported native-escape instruction markers, and retain Native inner/context
+CALL boundaries and ordinary spin context compatibility. Address-guard fallback
+still disables the entry. Typed original-task RDTSC/RDTSCP/CPUID services can reenter
+the same JIT in their documented ABI2 scope; generic Native CALL fallback still
+finishes the waiter suffix. These implementations do not establish arbitrary
+branch-only return or close the selected syscall, MM or performance gates. The
+[f7 focused checks and 210-point nano record](../bench/results/10.176.26.71/bench/continuation-perf-nano-20261030/README.md)
+retains observed losses and false performance acceptance. Later syscall/MM
+comparisons are authorized on that isolated candidate and remain pending. See
+[the current limitations](TODO.md#current-implementation-gaps).
+
 ## Stage 1: establish the mechanism and performance envelope
 
 Use the ten maintained nano profiles and the existing micro/API cases. Compare
@@ -79,12 +91,17 @@ killable path bypasses the ordinary uninterruptible polling stage.
 
 | Workload | Operation and topology | Status |
 | --- | --- | --- |
-| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | Exact maintained comparison runner still needed |
-| `mmap1_processes` | Same operation in independent processes/mms | Separate control still needed |
+| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | Runner implemented; matched actual-backend comparison pending |
+| `mmap1_processes` | Same operation in independent processes/mms | Separate runner model implemented; matched comparison pending |
 | Actual minor faults | Precisely declared access/reset method on actual Native/KD mmap backends, with backing implementation fixed | Generic throughput driver still needed |
 | Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | 42 Linux 7 points complete; KD below Native at all counts |
 | Existing private backing faults | Independent mms; reset PTE and read a checked preallocated page | Supporting experiment; actual mmap lock stays Native |
 | Existing independent-mm device test | Untouched device mmap/munmap in independent processes | Native control; no backing-lock work in timed operation |
+
+The [implemented mmap1 runner](../bench/mmap1/README.md) uses unchanged upstream
+`75f66e45697e6f5f49c33dd950c4e6b289198f8f` executables, with frozen build reuse
+and a separate actual worker/mm identity observation. Implementation alone is
+not a completed application comparison or MM performance result.
 
 `MAP_PRIVATE` does not create a separate mm for each pthread. Sharing an fd does
 not establish a shared mm either. The 4 KiB device test and reset-plus-read
@@ -152,7 +169,7 @@ and chart at its completed boundary. A timeout does not establish drain.
 | Next deliverable | Remaining work |
 | --- | --- |
 | Stage 1 confirmation | Repeated favorable/adverse nano comparison with local controls |
-| Exact `mmap1` | Pinned thread/process runner on actual Native/KD backends |
+| Exact `mmap1` | Execute the implemented pinned runner with actual worker/mm identity; keep Native/KD and thread/process results separate |
 | Actual fault throughput | Defined fault class, fixed backing implementation and exact accounting |
 | Scoped MM acceptance | Correctness plus declared improvement/parity; current loss remains unresolved |
 | Broader replacement | Per-object API/lifetime coverage and matched application evaluation |

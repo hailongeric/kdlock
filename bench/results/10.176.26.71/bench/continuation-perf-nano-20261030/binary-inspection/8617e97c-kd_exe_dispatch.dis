@@ -1,0 +1,2349 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000000e2e0 <kd_exe_dispatch>:
+    e2e0:	call   e2e5 <kd_exe_dispatch+0x5>
+    e2e5:	push   %rbp
+    e2e6:	mov    %rsp,%rbp
+    e2e9:	push   %r15
+    e2eb:	push   %r14
+    e2ed:	push   %r13
+    e2ef:	push   %r12
+    e2f1:	push   %rbx
+    e2f2:	sub    $0x120,%rsp
+    e2f9:	mov    %rdx,-0xe8(%rbp)
+    e300:	mov    %rdi,-0xe0(%rbp)
+    e307:	mov    %rsi,-0xd8(%rbp)
+    e30e:	mov    %rcx,-0xf0(%rbp)
+    e315:	mov    %gs:0x0(%rip),%rax        # e31d <kd_exe_dispatch+0x3d>
+    e31d:	mov    %rax,-0x30(%rbp)
+    e321:	mov    %gs:0x0(%rip),%rax        # e329 <kd_exe_dispatch+0x49>
+    e329:	mov    0x0(%rax),%edx
+    e32f:	test   %edx,%edx
+    e331:	je     e76c <kd_exe_dispatch+0x48c>
+    e337:	lea    0x0(%rax),%rdx
+    e33e:	mov    %gs:0x0(%rip),%rax        # e346 <kd_exe_dispatch+0x66>
+    e346:	cmp    %rax,0x1488(%rdx)
+    e34d:	jne    e76c <kd_exe_dispatch+0x48c>
+    e353:	mov    0x1480(%rdx),%rax
+    e35a:	movq   $0x0,-0xc0(%rbp)
+    e365:	movq   $0x0,-0xb8(%rbp)
+    e370:	mov    %rax,-0xd0(%rbp)
+    e377:	test   %rax,%rax
+    e37a:	je     e76c <kd_exe_dispatch+0x48c>
+    e380:	mov    %r8,%rbx
+    e383:	cmpb   $0x0,0x20(%rax)
+    e387:	jne    e74b <kd_exe_dispatch+0x46b>
+    e38d:	cmpq   $0x0,-0xd8(%rbp)
+    e395:	je     e76c <kd_exe_dispatch+0x48c>
+    e39b:	mov    -0xd0(%rbp),%r14
+    e3a2:	mov    %r14,%rdi
+    e3a5:	call   e3aa <kd_exe_dispatch+0xca>
+    e3aa:	mov    %al,-0xf1(%rbp)
+    e3b0:	test   %al,%al
+    e3b2:	je     e76c <kd_exe_dispatch+0x48c>
+    e3b8:	cmpq   $0x0,0xd8(%r14)
+    e3c0:	je     e76c <kd_exe_dispatch+0x48c>
+    e3c6:	cmpq   $0x0,0xe0(%r14)
+    e3ce:	je     e76c <kd_exe_dispatch+0x48c>
+    e3d4:	test   %rbx,%rbx
+    e3d7:	je     e82c <kd_exe_dispatch+0x54c>
+    e3dd:	mov    -0xe0(%rbp),%rax
+    e3e4:	mov    -0xd0(%rbp),%rcx
+    e3eb:	mov    0xc(%rax),%eax
+    e3ee:	cmpb   $0x0,0x20(%rcx)
+    e3f2:	jne    e7ac <kd_exe_dispatch+0x4cc>
+    e3f8:	cmp    $0x1,%eax
+    e3fb:	jne    e7b5 <kd_exe_dispatch+0x4d5>
+    e401:	mov    -0xd0(%rbp),%rsi
+    e408:	mov    -0xe0(%rbp),%rdi
+    e40f:	mov    0x288(%rsi),%r12
+    e416:	call   4310 <kd_jit_select_image>
+    e41b:	mov    %rax,%rdx
+    e41e:	test   %rax,%rax
+    e421:	je     e819 <kd_exe_dispatch+0x539>
+    e427:	mov    (%rax),%rax
+    e42a:	test   %rax,%rax
+    e42d:	je     e43c <kd_exe_dispatch+0x15c>
+    e42f:	cmpl   $0x4357444b,0x19(%rax)
+    e436:	je     e7f0 <kd_exe_dispatch+0x510>
+    e43c:	mov    -0xe0(%rbp),%rax
+    e443:	mov    0x30(%rax),%ecx
+    e446:	mov    -0xd0(%rbp),%rax
+    e44d:	mov    0x10(%rax),%eax
+    e450:	cmp    %ecx,%eax
+    e452:	jne    e819 <kd_exe_dispatch+0x539>
+    e458:	mov    %eax,%ecx
+    e45a:	and    $0xfffffffd,%ecx
+    e45d:	cmp    $0x1,%ecx
+    e460:	je     e819 <kd_exe_dispatch+0x539>
+    e466:	cmp    $0x2,%eax
+    e469:	je     e819 <kd_exe_dispatch+0x539>
+    e46f:	test   %eax,%eax
+    e471:	jne    e819 <kd_exe_dispatch+0x539>
+    e477:	mov    -0xd0(%rbp),%rax
+    e47e:	mov    %rdx,0x288(%rax)
+    e485:	mov    0x18(%rdx),%eax
+    e488:	test   $0x10,%al
+    e48a:	je     e9eb <kd_exe_dispatch+0x70b>
+    e490:	movzbl -0xf1(%rbp),%eax
+    e497:	movb   $0x0,-0x107(%rbp)
+    e49e:	movl   $0x1,-0x100(%rbp)
+    e4a8:	mov    %al,-0x105(%rbp)
+    e4ae:	movl   $0x0,-0x104(%rbp)
+    e4b8:	test   %rbx,%rbx
+    e4bb:	je     ec60 <kd_exe_dispatch+0x980>
+    e4c1:	mov    0x38(%rbx),%rax
+    e4c5:	mov    %rax,-0x120(%rbp)
+    e4cc:	mov    -0xd0(%rbp),%rax
+    e4d3:	cmpq   $0x0,0xe8(%rax)
+    e4db:	je     f048 <kd_exe_dispatch+0xd68>
+    e4e1:	mov    (%rdx),%rax
+    e4e4:	movb   $0x0,-0xf3(%rbp)
+    e4eb:	mov    %rax,-0x110(%rbp)
+    e4f2:	mov    -0x100(%rbp),%r11d
+    e4f9:	test   %r11d,%r11d
+    e4fc:	je     f02d <kd_exe_dispatch+0xd4d>
+    e502:	mov    -0xd0(%rbp),%rax
+    e509:	mov    %rbx,%rdi
+    e50c:	mov    0x288(%rax),%rsi
+    e513:	call   4740 <kd_jit_note_direct_calls.isra.0>
+    e518:	test   %al,%al
+    e51a:	je     e76c <kd_exe_dispatch+0x48c>
+    e520:	mov    0x60(%rbx),%rax
+    e524:	mov    %rax,-0x130(%rbp)
+    e52b:	mov    0x68(%rbx),%rax
+    e52f:	mov    %rax,-0x138(%rbp)
+    e536:	cmpb   $0x0,0x0(%rip)        # e53d <kd_exe_dispatch+0x25d>
+    e53d:	jne    f468 <kd_exe_dispatch+0x1188>
+    e543:	mov    0x8(%rbx),%rax
+    e547:	mov    0x10(%rbx),%rdx
+    e54b:	mov    %rax,-0xc0(%rbp)
+    e552:	mov    %rdx,-0xb8(%rbp)
+    e559:	cmp    $0x6,%rax
+    e55d:	je     fb7d <kd_exe_dispatch+0x189d>
+    e563:	movzbl -0xf1(%rbp),%eax
+    e56a:	movl   $0x0,-0xf8(%rbp)
+    e574:	movb   $0x0,-0xf2(%rbp)
+    e57b:	mov    %al,-0x106(%rbp)
+    e581:	movl   $0x0,-0x13c(%rbp)
+    e58b:	movl   $0x0,-0xfc(%rbp)
+    e595:	cmpq   $0x1,-0xb8(%rbp)
+    e59d:	je     f320 <kd_exe_dispatch+0x1040>
+    e5a3:	cmpb   $0x0,-0xf2(%rbp)
+    e5aa:	je     e5b4 <kd_exe_dispatch+0x2d4>
+    e5ac:	lock incq 0x0(%rip)        # e5b4 <kd_exe_dispatch+0x2d4>
+    e5b4:	movb   $0x0,-0xf2(%rbp)
+    e5bb:	mov    -0xc0(%rbp),%rax
+    e5c2:	mov    -0xd0(%rbp),%r15
+    e5c9:	mov    -0xd8(%rbp),%r14
+    e5d0:	xor    %r12d,%r12d
+    e5d3:	cmp    $0x7,%rax
+    e5d7:	je     f9d3 <kd_exe_dispatch+0x16f3>
+    e5dd:	mov    0x14(%r15),%edi
+    e5e1:	test   %edi,%edi
+    e5e3:	jne    efc9 <kd_exe_dispatch+0xce9>
+    e5e9:	cmpb   $0x0,0x20(%r15)
+    e5ee:	je     e5fb <kd_exe_dispatch+0x31b>
+    e5f0:	cmpb   $0x0,0x25(%r15)
+    e5f5:	jne    f0d0 <kd_exe_dispatch+0xdf0>
+    e5fb:	cmpb   $0x0,0x21(%r15)
+    e600:	je     ea29 <kd_exe_dispatch+0x749>
+    e606:	mov    -0x104(%rbp),%ecx
+    e60c:	or     -0x100(%rbp),%ecx
+    e612:	jne    ee45 <kd_exe_dispatch+0xb65>
+    e618:	cmp    $0x1,%rax
+    e61c:	je     f2dd <kd_exe_dispatch+0xffd>
+    e622:	mov    %r15,%rdi
+    e625:	call   4ba0 <kd_spin_jit_prepare_complex.part.0>
+    e62a:	mov    0xd0(%r15),%r14
+    e631:	test   %r14,%r14
+    e634:	je     f3e0 <kd_exe_dispatch+0x1100>
+    e63a:	mov    -0xc0(%rbp),%rcx
+    e641:	cmp    $0xa,%rcx
+    e645:	je     f8a8 <kd_exe_dispatch+0x15c8>
+    e64b:	test   %rcx,%rcx
+    e64e:	je     f86c <kd_exe_dispatch+0x158c>
+    e654:	cmp    $0x5,%rcx
+    e658:	je     f109 <kd_exe_dispatch+0xe29>
+    e65e:	cmp    $0xb,%rcx
+    e662:	je     fdc5 <kd_exe_dispatch+0x1ae5>
+    e668:	cmp    $0x1,%rcx
+    e66c:	je     eb97 <kd_exe_dispatch+0x8b7>
+    e672:	cmp    $0xc,%rcx
+    e676:	jne    fcf3 <kd_exe_dispatch+0x1a13>
+    e67c:	test   %r12d,%r12d
+    e67f:	je     e685 <kd_exe_dispatch+0x3a5>
+    e685:	mov    %r14,-0xd8(%rbp)
+    e68c:	mov    $0xffffffffffffffea,%r8
+    e693:	mov    -0xfc(%rbp),%eax
+    e699:	mov    $0x0,%rdi
+    e6a0:	push   %rax
+    e6a1:	mov    -0xf8(%rbp),%r9d
+    e6a8:	mov    -0xd8(%rbp),%rdx
+    e6af:	mov    -0xd0(%rbp),%rsi
+    e6b6:	call   46c0 <kd_jit_log_hl_error>
+    e6bb:	pop    %r13
+    e6bd:	mov    $0x3,%ebx
+    e6c2:	cmpb   $0x0,0x0(%rip)        # e6c9 <kd_exe_dispatch+0x3e9>
+    e6c9:	je     e771 <kd_exe_dispatch+0x491>
+    e6cf:	call   e6d4 <kd_exe_dispatch+0x3f4>
+    e6d4:	movabs $0x7ffffffffffffffe,%rsi
+    e6de:	mov    %rax,%rdx
+    e6e1:	mov    0x0(%rip),%rax        # e6e8 <kd_exe_dispatch+0x408>
+    e6e8:	cmp    %rax,%rsi
+    e6eb:	jb     fc20 <kd_exe_dispatch+0x1940>
+    e6f1:	lea    0x1(%rax),%rcx
+    e6f5:	lock cmpxchg %rcx,0x0(%rip)        # e6fe <kd_exe_dispatch+0x41e>
+    e6fe:	jne    e6e8 <kd_exe_dispatch+0x408>
+    e700:	cmp    -0x120(%rbp),%rdx
+    e707:	jb     f4e4 <kd_exe_dispatch+0x1204>
+    e70d:	mov    0x0(%rip),%rax        # e714 <kd_exe_dispatch+0x434>
+    e714:	sub    -0x120(%rbp),%rdx
+    e71b:	test   %rax,%rax
+    e71e:	js     f4e4 <kd_exe_dispatch+0x1204>
+    e724:	movabs $0x7fffffffffffffff,%rcx
+    e72e:	sub    %rax,%rcx
+    e731:	cmp    %rdx,%rcx
+    e734:	jb     f4e4 <kd_exe_dispatch+0x1204>
+    e73a:	lea    (%rdx,%rax,1),%rcx
+    e73e:	lock cmpxchg %rcx,0x0(%rip)        # e747 <kd_exe_dispatch+0x467>
+    e747:	je     e771 <kd_exe_dispatch+0x491>
+    e749:	jmp    e71b <kd_exe_dispatch+0x43b>
+    e74b:	mov    -0xd0(%rbp),%rax
+    e752:	cmpb   $0x0,0x24(%rax)
+    e756:	jne    e38d <kd_exe_dispatch+0xad>
+    e75c:	mov    %rax,%rdi
+    e75f:	call   e764 <kd_exe_dispatch+0x484>
+    e764:	test   %eax,%eax
+    e766:	je     e38d <kd_exe_dispatch+0xad>
+    e76c:	mov    $0x3,%ebx
+    e771:	mov    -0x30(%rbp),%rax
+    e775:	sub    %gs:0x0(%rip),%rax        # e77d <kd_exe_dispatch+0x49d>
+    e77d:	jne    f5dd <kd_exe_dispatch+0x12fd>
+    e783:	lea    -0x28(%rbp),%rsp
+    e787:	mov    %ebx,%eax
+    e789:	pop    %rbx
+    e78a:	pop    %r12
+    e78c:	pop    %r13
+    e78e:	pop    %r14
+    e790:	pop    %r15
+    e792:	pop    %rbp
+    e793:	xor    %edx,%edx
+    e795:	xor    %ecx,%ecx
+    e797:	xor    %esi,%esi
+    e799:	xor    %edi,%edi
+    e79b:	xor    %r8d,%r8d
+    e79e:	xor    %r9d,%r9d
+    e7a1:	xor    %r10d,%r10d
+    e7a4:	xor    %r11d,%r11d
+    e7a7:	jmp    e7ac <kd_exe_dispatch+0x4cc>
+    e7ac:	cmp    $0x2,%eax
+    e7af:	je     e401 <kd_exe_dispatch+0x121>
+    e7b5:	mov    -0xe0(%rbp),%rcx
+    e7bc:	mov    (%rcx),%eax
+    e7be:	mov    $0xfffffffd,%edx
+    e7c3:	cmp    $0xfffffffd,%eax
+    e7c6:	je     e7ce <kd_exe_dispatch+0x4ee>
+    e7c8:	lock cmpxchg %edx,(%rcx)
+    e7cc:	jne    e7c3 <kd_exe_dispatch+0x4e3>
+    e7ce:	mov    $0x0,%rsi
+    e7d5:	mov    $0x0,%rdi
+    e7dc:	call   e7e1 <kd_exe_dispatch+0x501>
+    e7e1:	test   %eax,%eax
+    e7e3:	jne    111cb <kd_exe_dispatch+0x2eeb>
+    e7e9:	mov    $0x2,%ebx
+    e7ee:	jmp    e771 <kd_exe_dispatch+0x491>
+    e7f0:	cmpl   $0x32303043,0x1c(%rax)
+    e7f7:	je     e985 <kd_exe_dispatch+0x6a5>
+    e7fd:	mov    -0xe0(%rbp),%rax
+    e804:	mov    0x30(%rax),%ecx
+    e807:	mov    -0xd0(%rbp),%rax
+    e80e:	mov    0x10(%rax),%eax
+    e811:	cmp    %eax,%ecx
+    e813:	je     e458 <kd_exe_dispatch+0x178>
+    e819:	mov    -0xd0(%rbp),%rax
+    e820:	movzbl 0x1f(%rax),%ebx
+    e824:	add    $0x2,%ebx
+    e827:	jmp    e771 <kd_exe_dispatch+0x491>
+    e82c:	cmpq   $0x0,-0xe8(%rbp)
+    e834:	je     e965 <kd_exe_dispatch+0x685>
+    e83a:	cmpq   $0x0,-0xe0(%rbp)
+    e842:	je     e7e9 <kd_exe_dispatch+0x509>
+    e844:	mov    0x0(%rip),%eax        # e84a <kd_exe_dispatch+0x56a>
+    e84a:	test   %eax,%eax
+    e84c:	jne    e973 <kd_exe_dispatch+0x693>
+    e852:	mov    -0xe0(%rbp),%rcx
+    e859:	mov    (%rcx),%eax
+    e85b:	test   %eax,%eax
+    e85d:	jne    e973 <kd_exe_dispatch+0x693>
+    e863:	mov    0x4(%rcx),%eax
+    e866:	test   %eax,%eax
+    e868:	jne    e973 <kd_exe_dispatch+0x693>
+    e86e:	mov    -0xe0(%rbp),%rax
+    e875:	mov    0x10(%rax),%rax
+    e879:	cmp    %rax,-0xe8(%rbp)
+    e880:	jne    e973 <kd_exe_dispatch+0x693>
+    e886:	mov    -0xe0(%rbp),%rax
+    e88d:	mov    0x18(%rax),%rax
+    e891:	test   %rax,%rax
+    e894:	je     e973 <kd_exe_dispatch+0x693>
+    e89a:	mov    -0xe0(%rbp),%rax
+    e8a1:	mov    -0xd0(%rbp),%rcx
+    e8a8:	mov    0xc(%rax),%eax
+    e8ab:	cmpb   $0x0,0x20(%rcx)
+    e8af:	je     f296 <kd_exe_dispatch+0xfb6>
+    e8b5:	cmp    $0x2,%eax
+    e8b8:	jne    e7b5 <kd_exe_dispatch+0x4d5>
+    e8be:	mov    -0xd8(%rbp),%rax
+    e8c5:	cmpq   $0x0,0x8(%rax)
+    e8ca:	je     e937 <kd_exe_dispatch+0x657>
+    e8cc:	mov    -0xd0(%rbp),%rcx
+    e8d3:	cmpb   $0x0,0x1f(%rcx)
+    e8d7:	jne    e937 <kd_exe_dispatch+0x657>
+    e8d9:	mov    0x108(%rcx),%r12
+    e8e0:	movzwl 0x1c(%rcx),%eax
+    e8e4:	cmp    $0x1,%ax
+    e8e8:	jne    e937 <kd_exe_dispatch+0x657>
+    e8ea:	cmpb   $0x0,0x22c(%rcx)
+    e8f1:	jne    e937 <kd_exe_dispatch+0x657>
+    e8f3:	mov    -0xe8(%rbp),%rax
+    e8fa:	cmp    (%rcx),%rax
+    e8fd:	jne    e937 <kd_exe_dispatch+0x657>
+    e8ff:	mov    0x258(%rcx),%r15d
+    e906:	test   %r15d,%r15d
+    e909:	jne    e937 <kd_exe_dispatch+0x657>
+    e90b:	test   %r12,%r12
+    e90e:	je     f850 <kd_exe_dispatch+0x1570>
+    e914:	mov    -0xd0(%rbp),%rax
+    e91b:	cmp    %r12,%rax
+    e91e:	je     e937 <kd_exe_dispatch+0x657>
+    e920:	cmpb   $0x0,0x20(%rax)
+    e924:	jne    e937 <kd_exe_dispatch+0x657>
+    e926:	mov    0x230(%r12),%eax
+    e92e:	sub    $0x1,%eax
+    e931:	je     fa25 <kd_exe_dispatch+0x1745>
+    e937:	push   $0x0
+    e939:	mov    -0xd8(%rbp),%rdx
+    e940:	xor    %r9d,%r9d
+    e943:	xor    %ecx,%ecx
+    e945:	mov    -0xd0(%rbp),%rsi
+    e94c:	mov    $0xffffffffffffffea,%r8
+    e953:	mov    $0x0,%rdi
+    e95a:	call   46c0 <kd_jit_log_hl_error>
+    e95f:	pop    %rax
+    e960:	jmp    e7e9 <kd_exe_dispatch+0x509>
+    e965:	cmpq   $0x0,-0xe0(%rbp)
+    e96d:	je     e7e9 <kd_exe_dispatch+0x509>
+    e973:	cmpb   $0x0,0x0(%rip)        # e97a <kd_exe_dispatch+0x69a>
+    e97a:	jne    e7e9 <kd_exe_dispatch+0x509>
+    e980:	jmp    e985 <kd_exe_dispatch+0x6a5>
+    e985:	mov    -0xe0(%rbp),%rcx
+    e98c:	mov    0x30(%rcx),%esi
+    e98f:	mov    -0xd0(%rbp),%rcx
+    e996:	mov    0x10(%rcx),%ecx
+    e999:	cmp    %esi,%ecx
+    e99b:	jne    e819 <kd_exe_dispatch+0x539>
+    e9a1:	mov    %ecx,%edi
+    e9a3:	mov    0x29(%rax),%esi
+    e9a6:	and    $0xfffffffd,%edi
+    e9a9:	cmp    $0x1,%edi
+    e9ac:	jne    ef53 <kd_exe_dispatch+0xc73>
+    e9b2:	cmp    $0x4241444b,%esi
+    e9b8:	jne    e819 <kd_exe_dispatch+0x539>
+    e9be:	movzbl 0x2d(%rax),%eax
+    e9c2:	cmp    %eax,%ecx
+    e9c4:	jne    e819 <kd_exe_dispatch+0x539>
+    e9ca:	cmpq   $0x0,0x0(%rip)        # e9d2 <kd_exe_dispatch+0x6f2>
+    e9d2:	je     e819 <kd_exe_dispatch+0x539>
+    e9d8:	cmpq   $0x0,0x0(%rip)        # e9e0 <kd_exe_dispatch+0x700>
+    e9e0:	jne    e477 <kd_exe_dispatch+0x197>
+    e9e6:	jmp    e819 <kd_exe_dispatch+0x539>
+    e9eb:	cmp    $0x21,%eax
+    e9ee:	movb   $0x0,-0x105(%rbp)
+    e9f5:	sete   %al
+    e9f8:	sete   -0x107(%rbp)
+    e9ff:	movl   $0x0,-0x100(%rbp)
+    ea09:	movzbl %al,%eax
+    ea0c:	mov    %eax,-0x104(%rbp)
+    ea12:	jmp    e4b8 <kd_exe_dispatch+0x1d8>
+    ea17:	cmpb   $0x0,0x25(%r15)
+    ea1c:	je     f5e2 <kd_exe_dispatch+0x1302>
+    ea22:	mov    0xf8(%r15),%r14
+    ea29:	mov    -0x104(%rbp),%esi
+    ea2f:	test   %esi,%esi
+    ea31:	jne    ee6a <kd_exe_dispatch+0xb8a>
+    ea37:	mov    -0x100(%rbp),%ecx
+    ea3d:	test   %ecx,%ecx
+    ea3f:	je     e63a <kd_exe_dispatch+0x35a>
+    ea45:	mov    0x288(%r15),%rax
+    ea4c:	mov    0x28(%rax),%edx
+    ea4f:	test   %edx,%edx
+    ea51:	je     efc9 <kd_exe_dispatch+0xce9>
+    ea57:	mov    0x2c(%rax),%eax
+    ea5a:	test   %eax,%eax
+    ea5c:	je     efc9 <kd_exe_dispatch+0xce9>
+    ea62:	cmpl   $0x1,0x10(%r15)
+    ea67:	jne    efc9 <kd_exe_dispatch+0xce9>
+    ea6d:	cmpb   $0x0,0x20(%r15)
+    ea72:	jne    efc9 <kd_exe_dispatch+0xce9>
+    ea78:	cmpq   $0x0,0xe8(%r15)
+    ea80:	jne    efc9 <kd_exe_dispatch+0xce9>
+    ea86:	mov    0x18(%r15),%eax
+    ea8a:	test   %eax,%eax
+    ea8c:	jne    efc9 <kd_exe_dispatch+0xce9>
+    ea92:	cmpq   $0x0,0x108(%r15)
+    ea9a:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eaa0:	cmpb   $0x0,0x1f(%r15)
+    eaa5:	je     efc9 <kd_exe_dispatch+0xce9>
+    eaab:	mov    %gs:0x0(%rip),%rax        # eab3 <kd_exe_dispatch+0x7d3>
+    eab3:	cmp    %rax,0xe0(%r15)
+    eaba:	je     efc9 <kd_exe_dispatch+0xce9>
+    eac0:	cmpb   $0x0,0x22c(%r15)
+    eac8:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eace:	cmpl   $0x1,0x224(%r15)
+    ead6:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eadc:	mov    0x220(%r15),%eax
+    eae3:	test   %eax,%eax
+    eae5:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eaeb:	mov    %r15,%rdi
+    eaee:	call   eaf3 <kd_exe_dispatch+0x813>
+    eaf3:	mov    %eax,%ebx
+    eaf5:	test   %al,%al
+    eaf7:	je     efc9 <kd_exe_dispatch+0xce9>
+    eafd:	mov    0x230(%r15),%eax
+    eb04:	sub    $0x1,%eax
+    eb07:	cmp    $0x1,%eax
+    eb0a:	jbe    efc9 <kd_exe_dispatch+0xce9>
+    eb10:	cmpq   $0x0,0x110(%r15)
+    eb18:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eb1e:	cmpq   $0x0,0x270(%r15)
+    eb26:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eb2c:	mov    0x258(%r15),%eax
+    eb33:	test   %eax,%eax
+    eb35:	jne    efc9 <kd_exe_dispatch+0xce9>
+    eb3b:	mov    -0xc0(%rbp),%rcx
+    eb42:	cmp    $0xa,%rcx
+    eb46:	je     f8a8 <kd_exe_dispatch+0x15c8>
+    eb4c:	cmp    $0x5,%rcx
+    eb50:	je     fcc1 <kd_exe_dispatch+0x19e1>
+    eb56:	test   %rcx,%rcx
+    eb59:	je     f86c <kd_exe_dispatch+0x158c>
+    eb5f:	cmp    $0xb,%rcx
+    eb63:	je     fdc5 <kd_exe_dispatch+0x1ae5>
+    eb69:	cmp    $0x1,%rcx
+    eb6d:	jne    e672 <kd_exe_dispatch+0x392>
+    eb73:	mov    -0x100(%rbp),%eax
+    eb79:	test   %eax,%eax
+    eb7b:	je     eb97 <kd_exe_dispatch+0x8b7>
+    eb7d:	mov    -0xf0(%rbp),%rdx
+    eb84:	mov    %r14,%rsi
+    eb87:	mov    %r15,%rdi
+    eb8a:	call   6600 <kd_jit_outer_unlock>
+    eb8f:	test   %al,%al
+    eb91:	je     110db <kd_exe_dispatch+0x2dfb>
+    eb97:	mov    -0xf0(%rbp),%rax
+    eb9e:	test   %rax,%rax
+    eba1:	je     f3f4 <kd_exe_dispatch+0x1114>
+    eba7:	mov    %rax,%rdx
+    ebaa:	mov    %r14,%rsi
+    ebad:	mov    %r15,%rdi
+    ebb0:	call   6600 <kd_jit_outer_unlock>
+    ebb5:	test   %al,%al
+    ebb7:	jne    ef93 <kd_exe_dispatch+0xcb3>
+    ebbd:	cmpl   $0xf,-0xf8(%rbp)
+    ebc4:	jg     10698 <kd_exe_dispatch+0x23b8>
+    ebca:	mov    (%r14),%rcx
+    ebcd:	test   %rcx,%rcx
+    ebd0:	je     f2a4 <kd_exe_dispatch+0xfc4>
+    ebd6:	mov    $0x0,%rax
+    ebdd:	jmp    ebf0 <kd_exe_dispatch+0x910>
+    ebdf:	nop
+    ebe0:	add    $0x10,%rax
+    ebe4:	cmp    $0x0,%rax
+    ebea:	je     f36f <kd_exe_dispatch+0x108f>
+    ebf0:	cmp    %rcx,(%rax)
+    ebf3:	jne    ebe0 <kd_exe_dispatch+0x900>
+    ebf5:	mov    %r14,-0xd8(%rbp)
+    ebfc:	mov    %r14,%rsi
+    ebff:	test   %r12d,%r12d
+    ec02:	jne    10e80 <kd_exe_dispatch+0x2ba0>
+    ec08:	mov    -0xd0(%rbp),%rdi
+    ec0f:	mov    $0x0,%r8
+    ec16:	xor    %ecx,%ecx
+    ec18:	xor    %edx,%edx
+    ec1a:	call   7b80 <kd_jit_pending_call_native>
+    ec1f:	movslq %eax,%r8
+    ec22:	test   %r8d,%r8d
+    ec25:	je     f3d6 <kd_exe_dispatch+0x10f6>
+    ec2b:	mov    -0xfc(%rbp),%eax
+    ec31:	mov    -0xc0(%rbp),%rcx
+    ec38:	mov    $0x0,%rdi
+    ec3f:	push   %rax
+    ec40:	mov    -0xf8(%rbp),%r9d
+    ec47:	mov    -0xd8(%rbp),%rdx
+    ec4e:	mov    -0xd0(%rbp),%rsi
+    ec55:	call   46c0 <kd_jit_log_hl_error>
+    ec5a:	pop    %rax
+    ec5b:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    ec60:	mov    -0xd0(%rbp),%rdi
+    ec67:	call   47e0 <kd_jit_direct_entry>
+    ec6c:	test   %al,%al
+    ec6e:	je     f0b6 <kd_exe_dispatch+0xdd6>
+    ec74:	mov    -0xd0(%rbp),%rdi
+    ec7b:	call   4900 <kd_jit_root_escape_entry>
+    ec80:	mov    %al,-0x106(%rbp)
+    ec86:	test   %al,%al
+    ec88:	je     f0b6 <kd_exe_dispatch+0xdd6>
+    ec8e:	cmpb   $0x0,0x0(%rip)        # ec95 <kd_exe_dispatch+0x9b5>
+    ec95:	movq   $0x0,-0x120(%rbp)
+    eca0:	jne    fb6c <kd_exe_dispatch+0x188c>
+    eca6:	mov    -0xd0(%rbp),%rax
+    ecad:	mov    0x288(%rax),%rdx
+    ecb4:	cmpq   $0x0,0x108(%rax)
+    ecbc:	je     f57f <kd_exe_dispatch+0x129f>
+    ecc2:	test   %rdx,%rdx
+    ecc5:	jne    f59f <kd_exe_dispatch+0x12bf>
+    eccb:	mov    -0xd8(%rbp),%rax
+    ecd2:	mov    0x8(%rax),%rax
+    ecd6:	xor    %r14d,%r14d
+    ecd9:	movb   $0x0,-0xf3(%rbp)
+    ece0:	mov    %r14,-0x110(%rbp)
+    ece7:	mov    %rax,-0x128(%rbp)
+    ecee:	movb   $0x0,-0x106(%rbp)
+    ecf5:	mov    -0xd0(%rbp),%rcx
+    ecfc:	movb   $0x0,-0xf2(%rbp)
+    ed03:	movq   $0x0,-0x138(%rbp)
+    ed0e:	mov    0xd8(%rcx),%rax
+    ed15:	movq   $0x0,-0x130(%rbp)
+    ed20:	movl   $0x0,-0xf8(%rbp)
+    ed2a:	mov    %rax,-0xc0(%rbp)
+    ed31:	mov    0xe0(%rcx),%rax
+    ed38:	movl   $0x0,-0xfc(%rbp)
+    ed42:	mov    %rax,-0xb8(%rbp)
+    ed49:	movb   $0x0,-0x118(%rbp)
+    ed50:	movb   $0x0,-0x108(%rbp)
+    ed57:	movl   $0x0,-0x13c(%rbp)
+    ed61:	mov    -0xd0(%rbp),%rax
+    ed68:	cmpb   $0x0,0x0(%rip)        # ed6f <kd_exe_dispatch+0xa8f>
+    ed6f:	movq   $0x0,-0x148(%rbp)
+    ed7a:	movb   $0x1,0x1f(%rax)
+    ed7e:	jne    f70e <kd_exe_dispatch+0x142e>
+    ed84:	mov    -0xd0(%rbp),%rcx
+    ed8b:	mov    0x10(%rcx),%eax
+    ed8e:	mov    %eax,-0x140(%rbp)
+    ed94:	sub    $0x1,%eax
+    ed97:	cmp    $0x2,%eax
+    ed9a:	ja     eda6 <kd_exe_dispatch+0xac6>
+    ed9c:	cmpl   $0x1,0x14(%rcx)
+    eda0:	je     f71f <kd_exe_dispatch+0x143f>
+    eda6:	mov    -0xd0(%rbp),%rax
+    edad:	mov    0x288(%rax),%rax
+    edb4:	testb  $0x40,0x18(%rax)
+    edb8:	je     edd9 <kd_exe_dispatch+0xaf9>
+    edba:	cmpb   $0x0,-0x118(%rbp)
+    edc1:	jne    110b8 <kd_exe_dispatch+0x2dd8>
+    edc7:	mov    -0xd8(%rbp),%rax
+    edce:	movq   $0x0,0x88(%rax)
+    edd9:	mov    -0xd8(%rbp),%rdi
+    ede0:	mov    -0x110(%rbp),%rax
+    ede7:	lea    -0xc0(%rbp),%rsi
+    edee:	call   edf3 <kd_exe_dispatch+0xb13>
+    edf3:	cmpb   $0x0,0x0(%rip)        # edfa <kd_exe_dispatch+0xb1a>
+    edfa:	mov    -0xc0(%rbp),%rax
+    ee01:	jne    f65c <kd_exe_dispatch+0x137c>
+    ee07:	cmpb   $0x0,-0x118(%rbp)
+    ee0e:	jne    10e14 <kd_exe_dispatch+0x2b34>
+    ee14:	cmp    $0x6,%rax
+    ee18:	je     fc97 <kd_exe_dispatch+0x19b7>
+    ee1e:	cmpb   $0x0,-0x108(%rbp)
+    ee25:	je     e595 <kd_exe_dispatch+0x2b5>
+    ee2b:	cmpb   $0x0,-0xf2(%rbp)
+    ee32:	je     f64a <kd_exe_dispatch+0x136a>
+    ee38:	lock incq 0x0(%rip)        # ee40 <kd_exe_dispatch+0xb60>
+    ee40:	jmp    e5bb <kd_exe_dispatch+0x2db>
+    ee45:	mov    %r15,%rdi
+    ee48:	call   4ba0 <kd_spin_jit_prepare_complex.part.0>
+    ee4d:	mov    0xd0(%r15),%r14
+    ee54:	test   %r14,%r14
+    ee57:	je     ea17 <kd_exe_dispatch+0x737>
+    ee5d:	cmpl   $0x0,-0x104(%rbp)
+    ee64:	je     ea45 <kd_exe_dispatch+0x765>
+    ee6a:	mov    %r15,%rdi
+    ee6d:	call   34d0 <kd_jit_root_escape_owner>
+    ee72:	test   %al,%al
+    ee74:	je     efc9 <kd_exe_dispatch+0xce9>
+    ee7a:	mov    -0xc0(%rbp),%rax
+    ee81:	cmp    $0x5,%rax
+    ee85:	je     efc9 <kd_exe_dispatch+0xce9>
+    ee8b:	cmp    $0x1,%rax
+    ee8f:	jne    ea37 <kd_exe_dispatch+0x757>
+    ee95:	mov    (%r14),%rax
+    ee98:	cmp    0x0(%rip),%rax        # ee9f <kd_exe_dispatch+0xbbf>
+    ee9f:	je     efc9 <kd_exe_dispatch+0xce9>
+    eea5:	cmp    0x0(%rip),%rax        # eeac <kd_exe_dispatch+0xbcc>
+    eeac:	je     efc9 <kd_exe_dispatch+0xce9>
+    eeb2:	cmp    0x0(%rip),%rax        # eeb9 <kd_exe_dispatch+0xbd9>
+    eeb9:	je     efc9 <kd_exe_dispatch+0xce9>
+    eebf:	cmp    0x0(%rip),%rax        # eec6 <kd_exe_dispatch+0xbe6>
+    eec6:	je     efc9 <kd_exe_dispatch+0xce9>
+    eecc:	cmp    0x0(%rip),%rax        # eed3 <kd_exe_dispatch+0xbf3>
+    eed3:	je     f6e2 <kd_exe_dispatch+0x1402>
+    eed9:	cmp    0x0(%rip),%rax        # eee0 <kd_exe_dispatch+0xc00>
+    eee0:	je     efc9 <kd_exe_dispatch+0xce9>
+    eee6:	cmp    0x0(%rip),%rax        # eeed <kd_exe_dispatch+0xc0d>
+    eeed:	je     efc9 <kd_exe_dispatch+0xce9>
+    eef3:	cmp    0x0(%rip),%rax        # eefa <kd_exe_dispatch+0xc1a>
+    eefa:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef00:	cmp    0x0(%rip),%rax        # ef07 <kd_exe_dispatch+0xc27>
+    ef07:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef0d:	cmp    0x0(%rip),%rax        # ef14 <kd_exe_dispatch+0xc34>
+    ef14:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef1a:	cmp    0x0(%rip),%rax        # ef21 <kd_exe_dispatch+0xc41>
+    ef21:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef27:	cmp    0x0(%rip),%rax        # ef2e <kd_exe_dispatch+0xc4e>
+    ef2e:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef34:	cmp    0x0(%rip),%rax        # ef3b <kd_exe_dispatch+0xc5b>
+    ef3b:	je     efc9 <kd_exe_dispatch+0xce9>
+    ef41:	cmpl   $0x0,-0x100(%rbp)
+    ef48:	jne    ea45 <kd_exe_dispatch+0x765>
+    ef4e:	jmp    eb97 <kd_exe_dispatch+0x8b7>
+    ef53:	cmp    $0x2,%ecx
+    ef56:	jne    10792 <kd_exe_dispatch+0x24b2>
+    ef5c:	cmp    $0x4241444b,%esi
+    ef62:	jne    e819 <kd_exe_dispatch+0x539>
+    ef68:	cmpb   $0x2,0x2d(%rax)
+    ef6c:	jne    e819 <kd_exe_dispatch+0x539>
+    ef72:	cmpq   $0x0,0x0(%rip)        # ef7a <kd_exe_dispatch+0xc9a>
+    ef7a:	je     e819 <kd_exe_dispatch+0x539>
+    ef80:	cmpq   $0x0,0x0(%rip)        # ef88 <kd_exe_dispatch+0xca8>
+    ef88:	jne    e477 <kd_exe_dispatch+0x197>
+    ef8e:	jmp    e819 <kd_exe_dispatch+0x539>
+    ef93:	mov    -0xf0(%rbp),%rsi
+    ef9a:	mov    %r14,%rdi
+    ef9d:	call   9f10 <kd_jit_timed_control>
+    efa2:	cmp    $0x5,%eax
+    efa5:	je     f419 <kd_exe_dispatch+0x1139>
+    efab:	cmp    $0x8,%eax
+    efae:	je     107b5 <kd_exe_dispatch+0x24d5>
+    efb4:	test   %eax,%eax
+    efb6:	jle    10703 <kd_exe_dispatch+0x2423>
+    efbc:	cmpl   $0x0,-0x100(%rbp)
+    efc3:	je     f2cd <kd_exe_dispatch+0xfed>
+    efc9:	mov    %r14,-0xd8(%rbp)
+    efd0:	mov    $0x3,%ebx
+    efd5:	cmp    $0x6,%ebx
+    efd8:	sete   -0xf1(%rbp)
+    efdf:	mov    -0xd0(%rbp),%rax
+    efe6:	movzbl -0x107(%rbp),%ecx
+    efed:	or     0x20(%rax),%cl
+    eff0:	je     e6c2 <kd_exe_dispatch+0x3e2>
+    eff6:	cmpb   $0x0,-0xf1(%rbp)
+    effd:	je     e6c2 <kd_exe_dispatch+0x3e2>
+    f003:	mov    -0xc0(%rbp),%rax
+    f00a:	and    $0xfffffffffffffffb,%rax
+    f00e:	cmp    $0x8,%rax
+    f012:	je     e6c2 <kd_exe_dispatch+0x3e2>
+    f018:	mov    -0xd8(%rbp),%rax
+    f01f:	xor    %ecx,%ecx
+    f021:	mov    %rcx,0x88(%rax)
+    f028:	jmp    e6c2 <kd_exe_dispatch+0x3e2>
+    f02d:	movq   $0x0,-0x138(%rbp)
+    f038:	movq   $0x0,-0x130(%rbp)
+    f043:	jmp    e536 <kd_exe_dispatch+0x256>
+    f048:	mov    -0xd0(%rbp),%rax
+    f04f:	mov    0x18(%rax),%eax
+    f052:	test   %eax,%eax
+    f054:	jne    e4e1 <kd_exe_dispatch+0x201>
+    f05a:	mov    -0xd0(%rbp),%rax
+    f061:	cmpq   $0x0,0x108(%rax)
+    f069:	sete   %cl
+    f06c:	cmpq   $0x0,-0xf0(%rbp)
+    f074:	setne  %al
+    f077:	and    %eax,%ecx
+    f079:	mov    %cl,-0xf3(%rbp)
+    f07f:	mov    (%rdx),%rax
+    f082:	mov    %rax,-0x110(%rbp)
+    f089:	test   %rbx,%rbx
+    f08c:	jne    e4f2 <kd_exe_dispatch+0x212>
+    f092:	mov    -0xd8(%rbp),%rax
+    f099:	mov    0x8(%rax),%rax
+    f09d:	mov    %rax,-0x128(%rbp)
+    f0a4:	movzbl -0xf1(%rbp),%eax
+    f0ab:	mov    %al,-0x106(%rbp)
+    f0b1:	jmp    ecf5 <kd_exe_dispatch+0xa15>
+    f0b6:	mov    -0xd0(%rbp),%rax
+    f0bd:	movzbl 0x1f(%rax),%ebx
+    f0c1:	mov    %r12,0x288(%rax)
+    f0c8:	add    $0x2,%ebx
+    f0cb:	jmp    e771 <kd_exe_dispatch+0x491>
+    f0d0:	lea    0x28(%r15),%rdx
+    f0d4:	mov    0xf8(%r15),%rsi
+    f0db:	mov    $0x15,%ecx
+    f0e0:	mov    %rdx,%rdi
+    f0e3:	rep movsq %ds:(%rsi),%es:(%rdi)
+    f0e6:	movb   $0x0,0x25(%r15)
+    f0eb:	movq   $0x0,0xf8(%r15)
+    f0f6:	mov    0xd0(%r15),%r14
+    f0fd:	test   %r14,%r14
+    f100:	cmove  %rdx,%r14
+    f104:	jmp    e5fb <kd_exe_dispatch+0x31b>
+    f109:	movq   $0x0,-0x128(%rbp)
+    f114:	mov    (%r14),%rsi
+    f117:	mov    $0x0,%rdx
+    f11e:	xor    %eax,%eax
+    f120:	mov    0x10(%rdx),%rdi
+    f124:	test   %rdi,%rdi
+    f127:	setne  %cl
+    f12a:	cmp    %rdi,%rsi
+    f12d:	sete   %dil
+    f131:	and    %dil,%cl
+    f134:	jne    100e4 <kd_exe_dispatch+0x1e04>
+    f13a:	add    $0x1,%eax
+    f13d:	add    $0x28,%rdx
+    f141:	cmp    $0x5,%eax
+    f144:	jne    f120 <kd_exe_dispatch+0xe40>
+    f146:	movq   $0x0,-0x118(%rbp)
+    f151:	xor    %ebx,%ebx
+    f153:	mov    %rbx,-0xc8(%rbp)
+    f15a:	lock incq 0x0(%rip)        # f162 <kd_exe_dispatch+0xe82>
+    f162:	xor    %r13d,%r13d
+    f165:	mov    %r13d,-0xd8(%rbp)
+    f16c:	cmpl   $0xf,-0xfc(%rbp)
+    f173:	setg   %bl
+    f176:	cmpl   $0xf,-0xf8(%rbp)
+    f17d:	setg   %al
+    f180:	or     %al,%bl
+    f182:	jne    10e8c <kd_exe_dispatch+0x2bac>
+    f188:	xor    %r13d,%r13d
+    f18b:	cmpb   $0x0,0x0(%rip)        # f192 <kd_exe_dispatch+0xeb2>
+    f192:	jne    104af <kd_exe_dispatch+0x21cf>
+    f198:	cmpl   $0x0,-0xd8(%rbp)
+    f19f:	je     f4f3 <kd_exe_dispatch+0x1213>
+    f1a5:	mov    -0x118(%rbp),%rax
+    f1ac:	mov    %r14,%rdi
+    f1af:	mov    0x20(%rax),%rax
+    f1b3:	call   f1b8 <kd_exe_dispatch+0xed8>
+    f1b8:	cmpb   $0x0,0x0(%rip)        # f1bf <kd_exe_dispatch+0xedf>
+    f1bf:	mov    %eax,%r12d
+    f1c2:	jne    103db <kd_exe_dispatch+0x20fb>
+    f1c8:	test   %eax,%eax
+    f1ca:	jne    11090 <kd_exe_dispatch+0x2db0>
+    f1d0:	lock incq 0x0(%rip)        # f1d8 <kd_exe_dispatch+0xef8>
+    f1d8:	mov    -0xc8(%rbp),%rax
+    f1df:	xor    %esi,%esi
+    f1e1:	addq   $0x8,0x8(%r14)
+    f1e6:	mov    %r15,%rdi
+    f1e9:	mov    %rax,(%r14)
+    f1ec:	mov    %esi,0x258(%r15)
+    f1f3:	mov    %r14,%rsi
+    f1f6:	call   f1fb <kd_exe_dispatch+0xf1b>
+    f1fb:	test   %bl,%bl
+    f1fd:	je     f6fb <kd_exe_dispatch+0x141b>
+    f203:	addl   $0x1,-0x13c(%rbp)
+    f20a:	movzbl -0xf1(%rbp),%eax
+    f211:	xor    %edx,%edx
+    f213:	cmpb   $0x0,-0x105(%rbp)
+    f21a:	jne    efc9 <kd_exe_dispatch+0xce9>
+    f220:	cmpb   $0x0,-0x107(%rbp)
+    f227:	jne    efc9 <kd_exe_dispatch+0xce9>
+    f22d:	mov    0x8(%r14),%rcx
+    f231:	mov    -0xf8(%rbp),%ebx
+    f237:	mov    %rcx,-0x128(%rbp)
+    f23e:	mov    0xd8(%r15),%rcx
+    f245:	mov    %rcx,-0xc0(%rbp)
+    f24c:	mov    0xe0(%r15),%rcx
+    f253:	mov    %rcx,-0xb8(%rbp)
+    f25a:	test   %ebx,%ebx
+    f25c:	jle    f271 <kd_exe_dispatch+0xf91>
+    f25e:	xor    %r12d,%r12d
+    f261:	xchg   %r12d,0x0(%rip)        # f268 <kd_exe_dispatch+0xf88>
+    f268:	test   %r12d,%r12d
+    f26b:	jne    f271 <kd_exe_dispatch+0xf91>
+    f271:	movzbl -0xf2(%rbp),%ecx
+    f278:	mov    %dl,-0x118(%rbp)
+    f27e:	mov    %r14,-0xd8(%rbp)
+    f285:	mov    %cl,-0x108(%rbp)
+    f28b:	mov    %al,-0xf2(%rbp)
+    f291:	jmp    ed61 <kd_exe_dispatch+0xa81>
+    f296:	cmp    $0x1,%eax
+    f299:	je     e8be <kd_exe_dispatch+0x5de>
+    f29f:	jmp    e7b5 <kd_exe_dispatch+0x4d5>
+    f2a4:	mov    -0xf0(%rbp),%rsi
+    f2ab:	mov    %r14,%rdi
+    f2ae:	call   9f10 <kd_jit_timed_control>
+    f2b3:	cmp    $0x8,%eax
+    f2b6:	je     107b5 <kd_exe_dispatch+0x24d5>
+    f2bc:	cmp    $0x5,%eax
+    f2bf:	je     f419 <kd_exe_dispatch+0x1139>
+    f2c5:	test   %eax,%eax
+    f2c7:	jle    f5eb <kd_exe_dispatch+0x130b>
+    f2cd:	addl   $0x1,-0xf8(%rbp)
+    f2d4:	xor    %edx,%edx
+    f2d6:	xor    %eax,%eax
+    f2d8:	jmp    f213 <kd_exe_dispatch+0xf33>
+    f2dd:	mov    0x0(%rip),%rax        # f2e4 <kd_exe_dispatch+0x1004>
+    f2e4:	cmp    %rax,(%r14)
+    f2e7:	je     f631 <kd_exe_dispatch+0x1351>
+    f2ed:	mov    %r15,%rdi
+    f2f0:	call   4ba0 <kd_spin_jit_prepare_complex.part.0>
+    f2f5:	mov    0xd0(%r15),%r14
+    f2fc:	test   %r14,%r14
+    f2ff:	jne    e63a <kd_exe_dispatch+0x35a>
+    f305:	lea    0x28(%r15),%r14
+    f309:	cmpb   $0x0,0x25(%r15)
+    f30e:	je     e63a <kd_exe_dispatch+0x35a>
+    f314:	mov    0xf8(%r15),%r14
+    f31b:	jmp    e63a <kd_exe_dispatch+0x35a>
+    f320:	movb   $0x0,-0x118(%rbp)
+    f327:	mov    -0xf0(%rbp),%rsi
+    f32e:	mov    -0xe8(%rbp),%rdi
+    f335:	mov    $0x1,%edx
+    f33a:	call   4490 <kd_exe_note_body>
+    f33f:	cmpb   $0x0,-0xf2(%rbp)
+    f346:	je     f350 <kd_exe_dispatch+0x1070>
+    f348:	lock incq 0x0(%rip)        # f350 <kd_exe_dispatch+0x1070>
+    f350:	cmpb   $0x0,-0x118(%rbp)
+    f357:	jne    10e55 <kd_exe_dispatch+0x2b75>
+    f35d:	movzbl -0xf1(%rbp),%eax
+    f364:	mov    %al,-0xf2(%rbp)
+    f36a:	jmp    e5bb <kd_exe_dispatch+0x2db>
+    f36f:	cmpq   $0x0,-0xf0(%rbp)
+    f377:	jne    f2a4 <kd_exe_dispatch+0xfc4>
+    f37d:	mov    %r14,-0xd8(%rbp)
+    f384:	test   %r12d,%r12d
+    f387:	jne    f3a3 <kd_exe_dispatch+0x10c3>
+    f389:	mov    %rcx,%rdi
+    f38c:	call   f391 <kd_exe_dispatch+0x10b1>
+    f391:	test   %eax,%eax
+    f393:	jne    f970 <kd_exe_dispatch+0x1690>
+    f399:	mov    -0xd8(%rbp),%rax
+    f3a0:	mov    (%rax),%rcx
+    f3a3:	movslq 0x0(%rip),%rdx        # f3aa <kd_exe_dispatch+0x10ca>
+    f3aa:	test   %edx,%edx
+    f3ac:	jle    f913 <kd_exe_dispatch+0x1633>
+    f3b2:	xor    %eax,%eax
+    f3b4:	jmp    f3c3 <kd_exe_dispatch+0x10e3>
+    f3b6:	add    $0x1,%rax
+    f3ba:	cmp    %rdx,%rax
+    f3bd:	je     f913 <kd_exe_dispatch+0x1633>
+    f3c3:	cmp    0x0(,%rax,8),%rcx
+    f3cb:	jne    f3b6 <kd_exe_dispatch+0x10d6>
+    f3cd:	test   %r12d,%r12d
+    f3d0:	jne    e6bd <kd_exe_dispatch+0x3dd>
+    f3d6:	mov    $0x6,%ebx
+    f3db:	jmp    efdf <kd_exe_dispatch+0xcff>
+    f3e0:	lea    0x28(%r15),%r14
+    f3e4:	cmpb   $0x0,0x25(%r15)
+    f3e9:	je     e63a <kd_exe_dispatch+0x35a>
+    f3ef:	jmp    f314 <kd_exe_dispatch+0x1034>
+    f3f4:	movslq 0x0(%rip),%rdx        # f3fb <kd_exe_dispatch+0x111b>
+    f3fb:	mov    (%r14),%rcx
+    f3fe:	test   %edx,%edx
+    f400:	jle    f44d <kd_exe_dispatch+0x116d>
+    f402:	xor    %eax,%eax
+    f404:	jmp    f40f <kd_exe_dispatch+0x112f>
+    f406:	add    $0x1,%rax
+    f40a:	cmp    %rdx,%rax
+    f40d:	je     f44d <kd_exe_dispatch+0x116d>
+    f40f:	cmp    0x0(,%rax,8),%rcx
+    f417:	jne    f406 <kd_exe_dispatch+0x1126>
+    f419:	mov    %r14,-0xd8(%rbp)
+    f420:	cmpb   $0x0,-0xf3(%rbp)
+    f427:	je     10788 <kd_exe_dispatch+0x24a8>
+    f42d:	cmpb   $0x0,-0xf2(%rbp)
+    f434:	je     f443 <kd_exe_dispatch+0x1163>
+    f436:	cmpb   $0x0,0x0(%rip)        # f43d <kd_exe_dispatch+0x115d>
+    f43d:	jne    f9a9 <kd_exe_dispatch+0x16c9>
+    f443:	mov    $0x4,%ebx
+    f448:	jmp    e6c2 <kd_exe_dispatch+0x3e2>
+    f44d:	cmpl   $0xf,-0xf8(%rbp)
+    f454:	jg     10698 <kd_exe_dispatch+0x23b8>
+    f45a:	test   %rcx,%rcx
+    f45d:	jne    ebd6 <kd_exe_dispatch+0x8f6>
+    f463:	jmp    f37d <kd_exe_dispatch+0x109d>
+    f468:	mov    0x40(%rbx),%r12
+    f46c:	call   f471 <kd_exe_dispatch+0x1191>
+    f471:	movabs $0x7ffffffffffffffe,%rsi
+    f47b:	mov    %rax,%rdx
+    f47e:	mov    0x0(%rip),%rax        # f485 <kd_exe_dispatch+0x11a5>
+    f485:	cmp    %rax,%rsi
+    f488:	jb     1056c <kd_exe_dispatch+0x228c>
+    f48e:	lea    0x1(%rax),%rcx
+    f492:	lock cmpxchg %rcx,0x0(%rip)        # f49b <kd_exe_dispatch+0x11bb>
+    f49b:	jne    f485 <kd_exe_dispatch+0x11a5>
+    f49d:	cmp    %r12,%rdx
+    f4a0:	jb     f5ce <kd_exe_dispatch+0x12ee>
+    f4a6:	mov    0x0(%rip),%rax        # f4ad <kd_exe_dispatch+0x11cd>
+    f4ad:	sub    %r12,%rdx
+    f4b0:	test   %rax,%rax
+    f4b3:	js     f5ce <kd_exe_dispatch+0x12ee>
+    f4b9:	movabs $0x7fffffffffffffff,%rcx
+    f4c3:	sub    %rax,%rcx
+    f4c6:	cmp    %rdx,%rcx
+    f4c9:	jb     f5ce <kd_exe_dispatch+0x12ee>
+    f4cf:	lea    (%rdx,%rax,1),%rcx
+    f4d3:	lock cmpxchg %rcx,0x0(%rip)        # f4dc <kd_exe_dispatch+0x11fc>
+    f4dc:	je     e543 <kd_exe_dispatch+0x263>
+    f4e2:	jmp    f4b0 <kd_exe_dispatch+0x11d0>
+    f4e4:	movl   $0x1,0x0(%rip)        # f4ee <kd_exe_dispatch+0x120e>
+    f4ee:	jmp    e771 <kd_exe_dispatch+0x491>
+    f4f3:	mov    (%r14),%rsi
+    f4f6:	mov    -0x128(%rbp),%rdx
+    f4fd:	xor    %eax,%eax
+    f4ff:	mov    0x10(%rdx),%rcx
+    f503:	test   %rcx,%rcx
+    f506:	setne  %dil
+    f50a:	cmp    %rcx,%rsi
+    f50d:	sete   %cl
+    f510:	test   %cl,%dil
+    f513:	jne    105a8 <kd_exe_dispatch+0x22c8>
+    f519:	add    $0x1,%eax
+    f51c:	add    $0x28,%rdx
+    f520:	cmp    $0x5,%eax
+    f523:	jne    f4ff <kd_exe_dispatch+0x121f>
+    f525:	cmpb   $0x0,0x0(%rip)        # f52c <kd_exe_dispatch+0x124c>
+    f52c:	jne    10770 <kd_exe_dispatch+0x2490>
+    f532:	mov    %r14,-0xd8(%rbp)
+    f539:	mov    $0xfffffffe,%r12d
+    f53f:	lock incq 0x0(%rip)        # f547 <kd_exe_dispatch+0x1267>
+    f547:	mov    -0xfc(%rbp),%eax
+    f54d:	mov    -0xc0(%rbp),%rcx
+    f554:	mov    $0x0,%rdi
+    f55b:	movslq %r12d,%r8
+    f55e:	push   %rax
+    f55f:	mov    -0xf8(%rbp),%r9d
+    f566:	mov    -0xd8(%rbp),%rdx
+    f56d:	mov    -0xd0(%rbp),%rsi
+    f574:	call   46c0 <kd_jit_log_hl_error>
+    f579:	pop    %rdi
+    f57a:	jmp    efd0 <kd_exe_dispatch+0xcf0>
+    f57f:	mov    -0xd8(%rbp),%rax
+    f586:	mov    -0xe8(%rbp),%rcx
+    f58d:	cmp    %rcx,(%rax)
+    f590:	je     fc2f <kd_exe_dispatch+0x194f>
+    f596:	test   %rdx,%rdx
+    f599:	je     ecd2 <kd_exe_dispatch+0x9f2>
+    f59f:	mov    (%rdx),%rax
+    f5a2:	movb   $0x0,-0xf3(%rbp)
+    f5a9:	movb   $0x0,-0x106(%rbp)
+    f5b0:	mov    %rax,-0x110(%rbp)
+    f5b7:	mov    -0xd8(%rbp),%rax
+    f5be:	mov    0x8(%rax),%rax
+    f5c2:	mov    %rax,-0x128(%rbp)
+    f5c9:	jmp    ecf5 <kd_exe_dispatch+0xa15>
+    f5ce:	movl   $0x1,0x0(%rip)        # f5d8 <kd_exe_dispatch+0x12f8>
+    f5d8:	jmp    e543 <kd_exe_dispatch+0x263>
+    f5dd:	call   f5e2 <kd_exe_dispatch+0x1302>
+    f5e2:	lea    0x28(%r15),%r14
+    f5e6:	jmp    ea29 <kd_exe_dispatch+0x749>
+    f5eb:	mov    %r14,-0xd8(%rbp)
+    f5f2:	je     fc8f <kd_exe_dispatch+0x19af>
+    f5f8:	mov    -0xfc(%rbp),%ebx
+    f5fe:	mov    -0xc0(%rbp),%rcx
+    f605:	movslq %eax,%r8
+    f608:	mov    $0x0,%rdi
+    f60f:	push   %rbx
+    f610:	mov    -0xf8(%rbp),%r9d
+    f617:	mov    -0xd8(%rbp),%rdx
+    f61e:	mov    -0xd0(%rbp),%rsi
+    f625:	call   46c0 <kd_jit_log_hl_error>
+    f62a:	pop    %r15
+    f62c:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    f631:	mov    -0xf0(%rbp),%rax
+    f638:	cmp    %rax,0x80(%r14)
+    f63f:	jne    f2ed <kd_exe_dispatch+0x100d>
+    f645:	jmp    f419 <kd_exe_dispatch+0x1139>
+    f64a:	movzbl -0x108(%rbp),%ecx
+    f651:	mov    %cl,-0xf2(%rbp)
+    f657:	jmp    e5c2 <kd_exe_dispatch+0x2e2>
+    f65c:	call   f661 <kd_exe_dispatch+0x1381>
+    f661:	movabs $0x7ffffffffffffffe,%rsi
+    f66b:	mov    %rax,%rdx
+    f66e:	mov    0x0(%rip),%rax        # f675 <kd_exe_dispatch+0x1395>
+    f675:	cmp    %rax,%rsi
+    f678:	jb     10599 <kd_exe_dispatch+0x22b9>
+    f67e:	lea    0x1(%rax),%rcx
+    f682:	lock cmpxchg %rcx,0x0(%rip)        # f68b <kd_exe_dispatch+0x13ab>
+    f68b:	jne    f675 <kd_exe_dispatch+0x1395>
+    f68d:	cmp    -0x148(%rbp),%rdx
+    f694:	jb     f95a <kd_exe_dispatch+0x167a>
+    f69a:	mov    0x0(%rip),%rax        # f6a1 <kd_exe_dispatch+0x13c1>
+    f6a1:	sub    -0x148(%rbp),%rdx
+    f6a8:	test   %rax,%rax
+    f6ab:	js     f95a <kd_exe_dispatch+0x167a>
+    f6b1:	movabs $0x7fffffffffffffff,%rcx
+    f6bb:	sub    %rax,%rcx
+    f6be:	cmp    %rdx,%rcx
+    f6c1:	jb     f95a <kd_exe_dispatch+0x167a>
+    f6c7:	lea    (%rdx,%rax,1),%rcx
+    f6cb:	lock cmpxchg %rcx,0x0(%rip)        # f6d4 <kd_exe_dispatch+0x13f4>
+    f6d4:	jne    f6a8 <kd_exe_dispatch+0x13c8>
+    f6d6:	mov    -0xc0(%rbp),%rax
+    f6dd:	jmp    ee07 <kd_exe_dispatch+0xb27>
+    f6e2:	mov    -0xf0(%rbp),%rcx
+    f6e9:	cmp    %rcx,0x80(%r14)
+    f6f0:	je     eed9 <kd_exe_dispatch+0xbf9>
+    f6f6:	jmp    efc9 <kd_exe_dispatch+0xce9>
+    f6fb:	addl   $0x1,-0xfc(%rbp)
+    f702:	addl   $0x1,-0xf8(%rbp)
+    f709:	jmp    f20a <kd_exe_dispatch+0xf2a>
+    f70e:	call   f713 <kd_exe_dispatch+0x1433>
+    f713:	mov    %rax,-0x148(%rbp)
+    f71a:	jmp    ed84 <kd_exe_dispatch+0xaa4>
+    f71f:	xor    %eax,%eax
+    f721:	mov    $0x1c,%ecx
+    f726:	lea    -0xb0(%rbp),%rdi
+    f72d:	rep stos %eax,%es:(%rdi)
+    f72f:	mov    -0xd0(%rbp),%rcx
+    f736:	mov    0xd0(%rcx),%rax
+    f73d:	test   %rax,%rax
+    f740:	je     fc75 <kd_exe_dispatch+0x1995>
+    f746:	mov    -0xd0(%rbp),%rcx
+    f74d:	mov    -0x110(%rbp),%rbx
+    f754:	mov    %rax,-0xb0(%rbp)
+    f75b:	mov    0xd8(%rcx),%rdx
+    f762:	mov    %rdx,-0xa8(%rbp)
+    f769:	mov    0xe0(%rcx),%rdx
+    f770:	mov    %rdx,-0xa0(%rbp)
+    f777:	lea    0x20(%rbx),%rdx
+    f77b:	mov    %rdx,-0x98(%rbp)
+    f782:	mov    0x8(%rcx),%rdx
+    f786:	mov    %rdx,-0x90(%rbp)
+    f78d:	mov    0x0(%rip),%rdx        # f794 <kd_exe_dispatch+0x14b4>
+    f794:	cmpb   $0x0,0x20(%rcx)
+    f798:	je     f7a1 <kd_exe_dispatch+0x14c1>
+    f79a:	mov    0x0(%rip),%rdx        # f7a1 <kd_exe_dispatch+0x14c1>
+    f7a1:	mov    %rdx,-0x88(%rbp)
+    f7a8:	mov    -0xd0(%rbp),%rcx
+    f7af:	mov    0x8(%rax),%rax
+    f7b3:	mov    %rax,-0x80(%rbp)
+    f7b7:	mov    0x10(%rcx),%eax
+    f7ba:	mov    %rax,-0x68(%rbp)
+    f7be:	lea    0x14(%rcx),%rax
+    f7c2:	mov    %rax,-0x60(%rbp)
+    f7c6:	xor    %eax,%eax
+    f7c8:	cmpq   $0x0,0xe8(%rcx)
+    f7d0:	je     104bc <kd_exe_dispatch+0x21dc>
+    f7d6:	movzbl %al,%eax
+    f7d9:	mov    %rax,-0x58(%rbp)
+    f7dd:	mov    -0xd0(%rbp),%rax
+    f7e4:	mov    0x288(%rax),%rax
+    f7eb:	test   %rax,%rax
+    f7ee:	je     f801 <kd_exe_dispatch+0x1521>
+    f7f0:	testb  $0x10,0x18(%rax)
+    f7f4:	je     f801 <kd_exe_dispatch+0x1521>
+    f7f6:	xor    %r10d,%r10d
+    f7f9:	mov    %r10,-0x50(%rbp)
+    f7fd:	mov    %r10,-0x48(%rbp)
+    f801:	mov    -0xb0(%rbp),%rdi
+    f808:	mov    -0x98(%rbp),%rax
+    f80f:	lea    -0xa8(%rbp),%rsi
+    f816:	lea    -0xb0(%rbp),%rdx
+    f81d:	call   f822 <kd_exe_dispatch+0x1542>
+    f822:	cmpl   $0x0,-0x100(%rbp)
+    f829:	jne    fb2f <kd_exe_dispatch+0x184f>
+    f82f:	mov    -0xa8(%rbp),%rax
+    f836:	mov    %rax,-0xc0(%rbp)
+    f83d:	mov    -0xa0(%rbp),%rax
+    f844:	mov    %rax,-0xb8(%rbp)
+    f84b:	jmp    edf3 <kd_exe_dispatch+0xb13>
+    f850:	mov    -0xd8(%rbp),%rax
+    f857:	mov    -0xe8(%rbp),%rcx
+    f85e:	cmp    (%rax),%rcx
+    f861:	je     e401 <kd_exe_dispatch+0x121>
+    f867:	jmp    e937 <kd_exe_dispatch+0x657>
+    f86c:	mov    %r14,-0xd8(%rbp)
+    f873:	mov    -0xfc(%rbp),%eax
+    f879:	xor    %ecx,%ecx
+    f87b:	mov    $0x0,%rdi
+    f882:	mov    -0xd8(%rbp),%rdx
+    f889:	mov    0x60(%rdx),%r8
+    f88d:	push   %rax
+    f88e:	mov    -0xf8(%rbp),%r9d
+    f895:	mov    -0xd0(%rbp),%rsi
+    f89c:	call   46c0 <kd_jit_log_hl_error>
+    f8a1:	pop    %r14
+    f8a3:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    f8a8:	mov    %r14,-0xd8(%rbp)
+    f8af:	mov    -0xd8(%rbp),%rax
+    f8b6:	mov    (%rax),%rsi
+    f8b9:	xor    %eax,%eax
+    f8bb:	imul   $0x28,%rax,%rdx
+    f8bf:	mov    0x0(%rdx),%rdx
+    f8c6:	test   %rdx,%rdx
+    f8c9:	je     f8d4 <kd_exe_dispatch+0x15f4>
+    f8cb:	cmp    %rdx,%rsi
+    f8ce:	je     104d3 <kd_exe_dispatch+0x21f3>
+    f8d4:	add    $0x1,%rax
+    f8d8:	cmp    $0x5,%rax
+    f8dc:	jne    f8bb <kd_exe_dispatch+0x15db>
+    f8de:	mov    $0xffffffffffffffea,%r8
+    f8e5:	mov    -0xfc(%rbp),%eax
+    f8eb:	mov    $0x0,%rdi
+    f8f2:	push   %rax
+    f8f3:	mov    -0xf8(%rbp),%r9d
+    f8fa:	mov    -0xd8(%rbp),%rdx
+    f901:	mov    -0xd0(%rbp),%rsi
+    f908:	call   46c0 <kd_jit_log_hl_error>
+    f90d:	pop    %rax
+    f90e:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    f913:	test   %rcx,%rcx
+    f916:	je     10545 <kd_exe_dispatch+0x2265>
+    f91c:	mov    $0x0,%rax
+    f923:	jmp    f950 <kd_exe_dispatch+0x1670>
+    f925:	nopl   0x0(%rax,%rax,1)
+    f92a:	data16 cs nopw 0x0(%rax,%rax,1)
+    f935:	data16 cs nopw 0x0(%rax,%rax,1)
+    f940:	add    $0x10,%rax
+    f944:	cmp    $0x0,%rax
+    f94a:	je     10545 <kd_exe_dispatch+0x2265>
+    f950:	cmp    (%rax),%rcx
+    f953:	jne    f940 <kd_exe_dispatch+0x1660>
+    f955:	jmp    f3cd <kd_exe_dispatch+0x10ed>
+    f95a:	movl   $0x1,0x0(%rip)        # f964 <kd_exe_dispatch+0x1684>
+    f964:	mov    -0xc0(%rbp),%rax
+    f96b:	jmp    ee07 <kd_exe_dispatch+0xb27>
+    f970:	mov    -0xfc(%rbp),%ebx
+    f976:	mov    -0xc0(%rbp),%rcx
+    f97d:	movslq %eax,%r8
+    f980:	mov    $0x0,%rdi
+    f987:	push   %rbx
+    f988:	mov    -0xf8(%rbp),%r9d
+    f98f:	mov    -0xd8(%rbp),%rdx
+    f996:	mov    -0xd0(%rbp),%rsi
+    f99d:	call   46c0 <kd_jit_log_hl_error>
+    f9a2:	pop    %r14
+    f9a4:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    f9a9:	mov    0x0(%rip),%rax        # f9b0 <kd_exe_dispatch+0x16d0>
+    f9b0:	test   %rax,%rax
+    f9b3:	je     f443 <kd_exe_dispatch+0x1163>
+    f9b9:	cmp    %rax,-0xf0(%rbp)
+    f9c0:	jne    f443 <kd_exe_dispatch+0x1163>
+    f9c6:	incq   %gs:0x0(%rip)        # f9ce <kd_exe_dispatch+0x16ee>
+    f9ce:	jmp    f443 <kd_exe_dispatch+0x1163>
+    f9d3:	mov    -0xd0(%rbp),%rax
+    f9da:	cmpl   $0x2,0x14(%rax)
+    f9de:	jne    e6bd <kd_exe_dispatch+0x3dd>
+    f9e4:	mov    %rax,%rdi
+    f9e7:	cmpq   $0x0,0xe8(%rax)
+    f9ef:	jne    e6bd <kd_exe_dispatch+0x3dd>
+    f9f5:	cmpl   $0x0,0x18(%rax)
+    f9f9:	jne    e6bd <kd_exe_dispatch+0x3dd>
+    f9ff:	call   44e0 <kd_jit_minimal_complete_allowed.part.0>
+    fa04:	movzbl %al,%eax
+    fa07:	lea    0x3(%rax),%ebx
+    fa0a:	sub    $0x1,%eax
+    fa0d:	jne    e6c2 <kd_exe_dispatch+0x3e2>
+    fa13:	cmpb   $0x0,-0xf3(%rbp)
+    fa1a:	jne    f42d <kd_exe_dispatch+0x114d>
+    fa20:	jmp    e6c2 <kd_exe_dispatch+0x3e2>
+    fa25:	mov    %r12,%rdi
+    fa28:	call   fa2d <kd_exe_dispatch+0x174d>
+    fa2d:	test   %al,%al
+    fa2f:	je     e937 <kd_exe_dispatch+0x657>
+    fa35:	cmpb   $0x0,0x20(%r12)
+    fa3b:	jne    e937 <kd_exe_dispatch+0x657>
+    fa41:	cmpb   $0x0,0x26(%r12)
+    fa47:	jne    e937 <kd_exe_dispatch+0x657>
+    fa4d:	movzwl 0x1c(%r12),%eax
+    fa53:	cmp    $0x5,%ax
+    fa57:	je     e937 <kd_exe_dispatch+0x657>
+    fa5d:	cmpb   $0x0,0x1f(%r12)
+    fa63:	je     e937 <kd_exe_dispatch+0x657>
+    fa69:	mov    -0xe8(%rbp),%rax
+    fa70:	cmp    (%r12),%rax
+    fa74:	jne    e937 <kd_exe_dispatch+0x657>
+    fa7a:	mov    -0xd0(%rbp),%rax
+    fa81:	mov    0xe0(%rax),%rax
+    fa88:	cmp    %rax,0xe0(%r12)
+    fa90:	jne    e937 <kd_exe_dispatch+0x657>
+    fa96:	mov    -0xd0(%rbp),%rax
+    fa9d:	mov    0xd8(%rax),%rax
+    faa4:	cmp    %rax,0xd8(%r12)
+    faac:	jne    e937 <kd_exe_dispatch+0x657>
+    fab2:	cmpl   $0x2,0x258(%r12)
+    fabb:	jne    e937 <kd_exe_dispatch+0x657>
+    fac1:	mov    -0xd8(%rbp),%rax
+    fac8:	mov    (%rax),%rax
+    facb:	cmp    %rax,0x250(%r12)
+    fad3:	jne    e937 <kd_exe_dispatch+0x657>
+    fad9:	mov    0x248(%r12),%rax
+    fae1:	mov    -0xd8(%rbp),%rcx
+    fae8:	add    $0x8,%rax
+    faec:	cmp    0x8(%rcx),%rax
+    faf0:	jne    e937 <kd_exe_dispatch+0x657>
+    faf6:	mov    -0xd0(%rbp),%rax
+    fafd:	mov    0x8(%rax),%rax
+    fb01:	cmp    %rax,0x100(%r12)
+    fb09:	jne    e937 <kd_exe_dispatch+0x657>
+    fb0f:	mov    -0xd0(%rbp),%rax
+    fb16:	mov    0x220(%rax),%eax
+    fb1c:	cmp    %eax,0x220(%r12)
+    fb24:	jb     e401 <kd_exe_dispatch+0x121>
+    fb2a:	jmp    e937 <kd_exe_dispatch+0x657>
+    fb2f:	mov    -0xd0(%rbp),%rax
+    fb36:	lea    -0xb0(%rbp),%rdi
+    fb3d:	mov    0x288(%rax),%rsi
+    fb44:	call   4740 <kd_jit_note_direct_calls.isra.0>
+    fb49:	test   %al,%al
+    fb4b:	je     e76c <kd_exe_dispatch+0x48c>
+    fb51:	mov    -0x50(%rbp),%rax
+    fb55:	mov    %rax,-0x130(%rbp)
+    fb5c:	mov    -0x48(%rbp),%rax
+    fb60:	mov    %rax,-0x138(%rbp)
+    fb67:	jmp    f82f <kd_exe_dispatch+0x154f>
+    fb6c:	call   fb71 <kd_exe_dispatch+0x1891>
+    fb71:	mov    %rax,-0x120(%rbp)
+    fb78:	jmp    eca6 <kd_exe_dispatch+0x9c6>
+    fb7d:	mov    0x30(%rbx),%rax
+    fb81:	mov    %rax,-0x128(%rbp)
+    fb88:	mov    -0x138(%rbp),%rax
+    fb8f:	or     -0x130(%rbp),%rax
+    fb96:	jne    fbc6 <kd_exe_dispatch+0x18e6>
+    fb98:	mov    -0xd8(%rbp),%rax
+    fb9f:	mov    -0xe8(%rbp),%rcx
+    fba6:	cmp    %rcx,(%rax)
+    fba9:	jne    fbc6 <kd_exe_dispatch+0x18e6>
+    fbab:	mov    -0x128(%rbp),%rcx
+    fbb2:	cmp    %rcx,0x8(%rax)
+    fbb6:	jne    fbc6 <kd_exe_dispatch+0x18e6>
+    fbb8:	cmpq   $0x0,-0xb8(%rbp)
+    fbc0:	je     10737 <kd_exe_dispatch+0x2457>
+    fbc6:	xor    %r9d,%r9d
+    fbc9:	mov    %r9d,-0xf8(%rbp)
+    fbd0:	mov    %r9d,-0xfc(%rbp)
+    fbd7:	mov    -0xfc(%rbp),%eax
+    fbdd:	mov    $0xffffffffffffffea,%r8
+    fbe4:	mov    $0x6,%ecx
+    fbe9:	mov    $0x0,%rdi
+    fbf0:	push   %rax
+    fbf1:	mov    -0xf8(%rbp),%r9d
+    fbf8:	mov    -0xd8(%rbp),%rdx
+    fbff:	mov    -0xd0(%rbp),%rsi
+    fc06:	call   46c0 <kd_jit_log_hl_error>
+    fc0b:	mov    -0x120(%rbp),%rsi
+    fc12:	xor    %edi,%edi
+    fc14:	call   5070 <kd_jit_timing_end>
+    fc19:	pop    %r8
+    fc1b:	jmp    e76c <kd_exe_dispatch+0x48c>
+    fc20:	movl   $0x1,0x0(%rip)        # fc2a <kd_exe_dispatch+0x194a>
+    fc2a:	jmp    e700 <kd_exe_dispatch+0x420>
+    fc2f:	mov    -0xd0(%rbp),%rax
+    fc36:	cmpq   $0x0,0xe8(%rax)
+    fc3e:	je     1062f <kd_exe_dispatch+0x234f>
+    fc44:	test   %rdx,%rdx
+    fc47:	jne    10607 <kd_exe_dispatch+0x2327>
+    fc4d:	mov    -0xd8(%rbp),%rax
+    fc54:	xor    %r13d,%r13d
+    fc57:	movb   $0x0,-0xf3(%rbp)
+    fc5e:	mov    %r13,-0x110(%rbp)
+    fc65:	mov    0x8(%rax),%rax
+    fc69:	mov    %rax,-0x128(%rbp)
+    fc70:	jmp    ecf5 <kd_exe_dispatch+0xa15>
+    fc75:	lea    0x28(%rcx),%rax
+    fc79:	cmpb   $0x0,0x25(%rcx)
+    fc7d:	je     f746 <kd_exe_dispatch+0x1466>
+    fc83:	mov    0xf8(%rcx),%rax
+    fc8a:	jmp    f746 <kd_exe_dispatch+0x1466>
+    fc8f:	mov    (%r14),%rcx
+    fc92:	jmp    f384 <kd_exe_dispatch+0x10a4>
+    fc97:	cmpb   $0x0,-0x106(%rbp)
+    fc9e:	je     fbd7 <kd_exe_dispatch+0x18f7>
+    fca4:	mov    -0xfc(%rbp),%eax
+    fcaa:	or     -0xf8(%rbp),%eax
+    fcb0:	or     -0x13c(%rbp),%eax
+    fcb6:	jne    fbd7 <kd_exe_dispatch+0x18f7>
+    fcbc:	jmp    fb88 <kd_exe_dispatch+0x18a8>
+    fcc1:	mov    -0xfc(%rbp),%eax
+    fcc7:	mov    %r14,%rdx
+    fcca:	mov    $0xffffffffffffffea,%r8
+    fcd1:	mov    $0x0,%rdi
+    fcd8:	push   %rax
+    fcd9:	mov    -0xf8(%rbp),%r9d
+    fce0:	mov    -0xd0(%rbp),%rsi
+    fce7:	call   46c0 <kd_jit_log_hl_error>
+    fcec:	pop    %r15
+    fcee:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    fcf3:	mov    %r14,-0xd8(%rbp)
+    fcfa:	cmp    $0x8,%rcx
+    fcfe:	je     10b93 <kd_exe_dispatch+0x28b3>
+    fd04:	cmp    $0x9,%rcx
+    fd08:	je     108cd <kd_exe_dispatch+0x25ed>
+    fd0e:	mov    -0xfc(%rbp),%eax
+    fd14:	cmp    $0x3,%rcx
+    fd18:	je     10879 <kd_exe_dispatch+0x2599>
+    fd1e:	cmp    $0x4,%rcx
+    fd22:	je     1084e <kd_exe_dispatch+0x256e>
+    fd28:	push   %rax
+    fd29:	mov    -0xd8(%rbp),%rbx
+    fd30:	xor    %r8d,%r8d
+    fd33:	mov    $0x0,%rdi
+    fd3a:	mov    -0xd0(%rbp),%rsi
+    fd41:	mov    -0xf8(%rbp),%r9d
+    fd48:	mov    %rbx,%rdx
+    fd4b:	call   46c0 <kd_jit_log_hl_error>
+    fd50:	mov    (%rbx),%rcx
+    fd53:	pop    %rsi
+    fd54:	xor    %eax,%eax
+    fd56:	movabs $0x0,%rsi
+    fd60:	mov    0x0(%rip),%edx        # fd66 <kd_exe_dispatch+0x1a86>
+    fd66:	jmp    fd76 <kd_exe_dispatch+0x1a96>
+    fd68:	add    $0x1,%rax
+    fd6c:	cmp    (%rsi,%rax,8),%rcx
+    fd70:	je     e6bd <kd_exe_dispatch+0x3dd>
+    fd76:	cmp    %eax,%edx
+    fd78:	jg     fd68 <kd_exe_dispatch+0x1a88>
+    fd7a:	mov    -0xc0(%rbp),%r8
+    fd81:	xor    %eax,%eax
+    fd83:	movabs $0x0,%rsi
+    fd8d:	jmp    fd9d <kd_exe_dispatch+0x1abd>
+    fd8f:	add    $0x1,%rax
+    fd93:	cmp    (%rsi,%rax,8),%r8
+    fd97:	je     e6bd <kd_exe_dispatch+0x3dd>
+    fd9d:	cmp    %eax,%edx
+    fd9f:	jg     fd8f <kd_exe_dispatch+0x1aaf>
+    fda1:	mov    -0xd0(%rbp),%rax
+    fda8:	mov    -0xe0(%rbp),%rdi
+    fdaf:	mov    $0x2,%edx
+    fdb4:	mov    0x288(%rax),%rsi
+    fdbb:	call   fdc0 <kd_exe_dispatch+0x1ae0>
+    fdc0:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+    fdc5:	mov    %r14,-0xd8(%rbp)
+    fdcc:	test   %r12d,%r12d
+    fdcf:	jne    11016 <kd_exe_dispatch+0x2d36>
+    fdd5:	cmpq   $0x0,-0xe0(%rbp)
+    fddd:	je     11016 <kd_exe_dispatch+0x2d36>
+    fde3:	test   %r14,%r14
+    fde6:	je     11016 <kd_exe_dispatch+0x2d36>
+    fdec:	mov    -0xd0(%rbp),%rdi
+    fdf3:	mov    0x14(%rdi),%ebx
+    fdf6:	test   %ebx,%ebx
+    fdf8:	jne    11016 <kd_exe_dispatch+0x2d36>
+    fdfe:	mov    0xd0(%rdi),%rax
+    fe05:	test   %rax,%rax
+    fe08:	je     100ca <kd_exe_dispatch+0x1dea>
+    fe0e:	cmp    -0xd8(%rbp),%rax
+    fe15:	jne    11016 <kd_exe_dispatch+0x2d36>
+    fe1b:	mov    -0xd0(%rbp),%rdi
+    fe22:	call   fe27 <kd_exe_dispatch+0x1b47>
+    fe27:	test   %al,%al
+    fe29:	je     1100f <kd_exe_dispatch+0x2d2f>
+    fe2f:	mov    -0xd0(%rbp),%rax
+    fe36:	movzbl 0x1f(%rax),%eax
+    fe3a:	mov    %al,-0xf1(%rbp)
+    fe40:	test   %al,%al
+    fe42:	je     1100f <kd_exe_dispatch+0x2d2f>
+    fe48:	mov    -0xd0(%rbp),%rax
+    fe4f:	mov    %gs:0x0(%rip),%rcx        # fe57 <kd_exe_dispatch+0x1b77>
+    fe57:	cmp    %rcx,0xe0(%rax)
+    fe5e:	je     1100f <kd_exe_dispatch+0x2d2f>
+    fe64:	mov    -0xd0(%rbp),%rax
+    fe6b:	mov    0x230(%rax),%eax
+    fe71:	sub    $0x1,%eax
+    fe74:	cmp    $0x1,%eax
+    fe77:	jbe    1100f <kd_exe_dispatch+0x2d2f>
+    fe7d:	mov    -0xd0(%rbp),%rax
+    fe84:	cmpq   $0x0,0x110(%rax)
+    fe8c:	jne    1100f <kd_exe_dispatch+0x2d2f>
+    fe92:	mov    -0xd0(%rbp),%rax
+    fe99:	cmpq   $0x0,0x270(%rax)
+    fea1:	jne    1100f <kd_exe_dispatch+0x2d2f>
+    fea7:	mov    -0xd8(%rbp),%rax
+    feae:	mov    0x88(%rax),%r12
+    feb5:	mov    %r12,%rdi
+    feb8:	call   febd <kd_exe_dispatch+0x1bdd>
+    febd:	test   %eax,%eax
+    febf:	jne    10092 <kd_exe_dispatch+0x1db2>
+    fec5:	xor    %ecx,%ecx
+    fec7:	lea    -0x1(%r12),%rax
+    fecc:	mov    %rcx,-0x40(%rbp)
+    fed0:	cmp    $0xfffffffffffffff6,%rax
+    fed4:	ja     1008d <kd_exe_dispatch+0x1dad>
+    feda:	mov    $0x1,%edx
+    fedf:	mov    %r12,%rsi
+    fee2:	lea    -0x40(%rbp),%rdi
+    fee6:	call   feeb <kd_exe_dispatch+0x1c0b>
+    feeb:	test   %rax,%rax
+    feee:	jne    1008d <kd_exe_dispatch+0x1dad>
+    fef4:	movzbl -0x40(%rbp),%eax
+    fef8:	xor    %r15d,%r15d
+    fefb:	mov    %r12,%rsi
+    fefe:	lea    -0x40(%rbp),%rdi
+    ff02:	sub    $0x40,%eax
+    ff05:	cmp    $0xf,%al
+    ff07:	setbe  %r15b
+    ff0b:	lea    0x2(%r15),%eax
+    ff0f:	mov    %rax,%rdx
+    ff12:	mov    %rax,-0xe8(%rbp)
+    ff19:	mov    %rax,%r14
+    ff1c:	call   ff21 <kd_exe_dispatch+0x1c41>
+    ff21:	test   %rax,%rax
+    ff24:	jne    1008d <kd_exe_dispatch+0x1dad>
+    ff2a:	mov    %r15d,%eax
+    ff2d:	movzbl -0x40(%rbp,%rax,1),%eax
+    ff32:	cmp    $0xff,%al
+    ff34:	jne    110ae <kd_exe_dispatch+0x2dce>
+    ff3a:	lea    0x1(%r15),%edx
+    ff3e:	movzbl -0x40(%rbp,%rdx,1),%edx
+    ff43:	mov    %edx,%esi
+    ff45:	and    $0x38,%esi
+    ff48:	cmp    $0x10,%sil
+    ff4c:	jne    110ae <kd_exe_dispatch+0x2dce>
+    ff52:	mov    %edx,%r8d
+    ff55:	mov    %edx,%r9d
+    ff58:	shr    $0x6,%r8b
+    ff5c:	and    $0x7,%r9d
+    ff60:	cmp    $0x3,%r8b
+    ff64:	je     ffb6 <kd_exe_dispatch+0x1cd6>
+    ff66:	cmp    $0x4,%r9b
+    ff6a:	jne    ffb6 <kd_exe_dispatch+0x1cd6>
+    ff6c:	lea    0x3(%r15),%edx
+    ff70:	mov    %r12,%rsi
+    ff73:	lea    -0x40(%rbp),%rdi
+    ff77:	mov    %r9b,-0xf2(%rbp)
+    ff7e:	mov    %r8b,-0xf0(%rbp)
+    ff85:	call   ff8a <kd_exe_dispatch+0x1caa>
+    ff8a:	test   %rax,%rax
+    ff8d:	jne    1008d <kd_exe_dispatch+0x1dad>
+    ff93:	mov    -0xe8(%rbp),%rax
+    ff9a:	movzbl -0xf2(%rbp),%r9d
+    ffa2:	lea    0x3(%r15),%r14d
+    ffa6:	movzbl -0xf0(%rbp),%r8d
+    ffae:	movzbl -0x40(%rbp,%rax,1),%eax
+    ffb3:	and    $0x7,%eax
+    ffb6:	cmp    $0x1,%r8b
+    ffba:	je     10f0f <kd_exe_dispatch+0x2c2f>
+    ffc0:	cmp    $0x2,%r8b
+    ffc4:	je     10e0a <kd_exe_dispatch+0x2b2a>
+    ffca:	test   %r8b,%r8b
+    ffcd:	jne    ffe3 <kd_exe_dispatch+0x1d03>
+    ffcf:	cmp    $0x5,%r9b
+    ffd3:	sete   %bl
+    ffd6:	cmp    $0x5,%al
+    ffd8:	sete   %al
+    ffdb:	or     %eax,%ebx
+    ffdd:	movzbl %bl,%ebx
+    ffe0:	shl    $0x2,%ebx
+    ffe3:	add    %r14d,%ebx
+    ffe6:	mov    %rbx,%rdx
+    ffe9:	mov    %r12,%rsi
+    ffec:	lea    -0x40(%rbp),%rdi
+    fff0:	call   fff5 <kd_exe_dispatch+0x1d15>
+    fff5:	test   %rax,%rax
+    fff8:	jne    1008d <kd_exe_dispatch+0x1dad>
+    fffe:	add    %r12,%rbx
+   10001:	lea    -0x1(%rbx),%rdi
+   10005:	call   1000a <kd_exe_dispatch+0x1d2a>
+   1000a:	test   %eax,%eax
+   1000c:	jne    10092 <kd_exe_dispatch+0x1db2>
+   10012:	mov    -0xd8(%rbp),%rsi
+   10019:	mov    -0xd0(%rbp),%rdi
+   10020:	xor    %edx,%edx
+   10022:	mov    %rbx,%rcx
+   10025:	mov    $0x0,%r8
+   1002c:	call   7b80 <kd_jit_pending_call_native>
+   10031:	test   %eax,%eax
+   10033:	jne    10092 <kd_exe_dispatch+0x1db2>
+   10035:	mov    -0xd8(%rbp),%rax
+   1003c:	mov    (%rax),%rcx
+   1003f:	test   %rcx,%rcx
+   10042:	je     1115a <kd_exe_dispatch+0x2e7a>
+   10048:	mov    $0x0,%rax
+   1004f:	mov    $0x0,%rdx
+   10056:	jmp    1006d <kd_exe_dispatch+0x1d8d>
+   10058:	nopl   0x0(%rax,%rax,1)
+   10060:	add    $0x10,%rax
+   10064:	cmp    %rax,%rdx
+   10067:	je     1115a <kd_exe_dispatch+0x2e7a>
+   1006d:	cmp    0x8(%rax),%rcx
+   10071:	jne    10060 <kd_exe_dispatch+0x1d80>
+   10073:	mov    -0xd8(%rbp),%rax
+   1007a:	xor    %edx,%edx
+   1007c:	mov    $0x6,%ebx
+   10081:	mov    %rdx,0x88(%rax)
+   10088:	jmp    efdf <kd_exe_dispatch+0xcff>
+   1008d:	mov    $0xfffffff2,%eax
+   10092:	mov    -0xc0(%rbp),%rcx
+   10099:	mov    -0xfc(%rbp),%ebx
+   1009f:	movslq %eax,%r8
+   100a2:	mov    $0x0,%rdi
+   100a9:	push   %rbx
+   100aa:	mov    -0xf8(%rbp),%r9d
+   100b1:	mov    -0xd8(%rbp),%rdx
+   100b8:	mov    -0xd0(%rbp),%rsi
+   100bf:	call   46c0 <kd_jit_log_hl_error>
+   100c4:	pop    %rax
+   100c5:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   100ca:	lea    0x28(%rdi),%rax
+   100ce:	cmpb   $0x0,0x25(%rdi)
+   100d2:	je     fe0e <kd_exe_dispatch+0x1b2e>
+   100d8:	mov    0xf8(%rdi),%rax
+   100df:	jmp    fe0e <kd_exe_dispatch+0x1b2e>
+   100e4:	cltq   
+   100e6:	mov    %ecx,%ebx
+   100e8:	imul   $0x28,%rax,%rax
+   100ec:	lea    0x0(%rax),%rcx
+   100f3:	mov    0x0(%rax),%eax
+   100f9:	mov    %rcx,-0x118(%rbp)
+   10100:	cmp    $0x4,%eax
+   10103:	je     11020 <kd_exe_dispatch+0x2d40>
+   10109:	cmp    $0x5,%eax
+   1010c:	jne    f151 <kd_exe_dispatch+0xe71>
+   10112:	xor    %r10d,%r10d
+   10115:	mov    %r10,-0xc8(%rbp)
+   1011c:	lock incq 0x0(%rip)        # 10124 <kd_exe_dispatch+0x1e44>
+   10124:	xor    %ebx,%ebx
+   10126:	test   %r12d,%r12d
+   10129:	jne    102cb <kd_exe_dispatch+0x1feb>
+   1012f:	mov    -0xe0(%rbp),%rcx
+   10136:	test   %rcx,%rcx
+   10139:	je     102cb <kd_exe_dispatch+0x1feb>
+   1013f:	test   %r14,%r14
+   10142:	je     102cb <kd_exe_dispatch+0x1feb>
+   10148:	cmpb   $0x0,0x20(%r15)
+   1014d:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10153:	cmpl   $0x1,0x10(%r15)
+   10158:	jne    102cb <kd_exe_dispatch+0x1feb>
+   1015e:	cmpl   $0x0,0x14(%r15)
+   10163:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10169:	mov    0x288(%r15),%rax
+   10170:	test   %rax,%rax
+   10173:	je     102cb <kd_exe_dispatch+0x1feb>
+   10179:	cmpl   $0x0,0x28(%rax)
+   1017d:	je     102cb <kd_exe_dispatch+0x1feb>
+   10183:	cmp    0x20(%rax),%rcx
+   10187:	jne    102cb <kd_exe_dispatch+0x1feb>
+   1018d:	cmpl   $0x1,0x1c(%rax)
+   10191:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10197:	mov    %r15,%rdi
+   1019a:	call   1019f <kd_exe_dispatch+0x1ebf>
+   1019f:	test   %al,%al
+   101a1:	je     102cb <kd_exe_dispatch+0x1feb>
+   101a7:	cmpb   $0x0,0x1f(%r15)
+   101ac:	je     102cb <kd_exe_dispatch+0x1feb>
+   101b2:	mov    %gs:0x0(%rip),%rax        # 101ba <kd_exe_dispatch+0x1eda>
+   101ba:	cmp    %rax,0xe0(%r15)
+   101c1:	je     102cb <kd_exe_dispatch+0x1feb>
+   101c7:	cmpq   $0x0,0xe8(%r15)
+   101cf:	jne    102cb <kd_exe_dispatch+0x1feb>
+   101d5:	cmpl   $0x0,0x18(%r15)
+   101da:	jne    102cb <kd_exe_dispatch+0x1feb>
+   101e0:	cmpq   $0x0,0x108(%r15)
+   101e8:	jne    102cb <kd_exe_dispatch+0x1feb>
+   101ee:	cmpb   $0x0,0x22c(%r15)
+   101f6:	jne    102cb <kd_exe_dispatch+0x1feb>
+   101fc:	cmpl   $0x1,0x224(%r15)
+   10204:	jne    102cb <kd_exe_dispatch+0x1feb>
+   1020a:	cmpl   $0x0,0x220(%r15)
+   10212:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10218:	mov    0x230(%r15),%eax
+   1021f:	sub    $0x1,%eax
+   10222:	cmp    $0x1,%eax
+   10225:	jbe    102cb <kd_exe_dispatch+0x1feb>
+   1022b:	cmpq   $0x0,0x110(%r15)
+   10233:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10239:	cmpq   $0x0,0x270(%r15)
+   10241:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10247:	testl  $0xfffffffb,0x258(%r15)
+   10252:	jne    102cb <kd_exe_dispatch+0x1feb>
+   10254:	mov    (%r14),%rsi
+   10257:	mov    $0x0,%rdx
+   1025e:	xor    %eax,%eax
+   10260:	mov    0x10(%rdx),%rcx
+   10264:	test   %rcx,%rcx
+   10267:	je     1026e <kd_exe_dispatch+0x1f8e>
+   10269:	cmp    %rcx,%rsi
+   1026c:	je     102db <kd_exe_dispatch+0x1ffb>
+   1026e:	add    $0x1,%eax
+   10271:	add    $0x28,%rdx
+   10275:	cmp    $0x5,%eax
+   10278:	jne    10260 <kd_exe_dispatch+0x1f80>
+   1027a:	mov    %r14,-0xd8(%rbp)
+   10281:	mov    $0xfffffffffffffffe,%r8
+   10288:	lock incq 0x0(%rip)        # 10290 <kd_exe_dispatch+0x1fb0>
+   10290:	mov    -0xfc(%rbp),%eax
+   10296:	mov    -0xc0(%rbp),%rcx
+   1029d:	mov    $0x3,%ebx
+   102a2:	mov    $0x0,%rdi
+   102a9:	push   %rax
+   102aa:	mov    -0xf8(%rbp),%r9d
+   102b1:	mov    -0xd8(%rbp),%rdx
+   102b8:	mov    -0xd0(%rbp),%rsi
+   102bf:	call   46c0 <kd_jit_log_hl_error>
+   102c4:	pop    %r9
+   102c6:	jmp    efd5 <kd_exe_dispatch+0xcf5>
+   102cb:	mov    %r14,-0xd8(%rbp)
+   102d2:	mov    $0xffffffffffffffea,%r8
+   102d9:	jmp    10288 <kd_exe_dispatch+0x1fa8>
+   102db:	cltq   
+   102dd:	imul   $0x28,%rax,%rax
+   102e1:	mov    0x0(%rax),%edx
+   102e7:	not    %edx
+   102e9:	and    $0x7,%dl
+   102ec:	jne    11037 <kd_exe_dispatch+0x2d57>
+   102f2:	mov    0x0(%rax),%eax
+   102f8:	lea    -0x4(%rax),%edx
+   102fb:	cmp    $0x1,%edx
+   102fe:	ja     102cb <kd_exe_dispatch+0x1feb>
+   10300:	mov    0x288(%r15),%rdx
+   10307:	mov    0x18(%rdx),%edx
+   1030a:	cmp    $0x4,%eax
+   1030d:	je     10314 <kd_exe_dispatch+0x2034>
+   1030f:	mov    $0x8,%eax
+   10314:	test   %eax,%edx
+   10316:	je     11071 <kd_exe_dispatch+0x2d91>
+   1031c:	mov    0xe0(%r15),%rax
+   10323:	mov    0x20(%rax),%rax
+   10327:	lea    -0x1(%rax),%rdx
+   1032b:	cmp    $0xffffffffffffbffe,%rdx
+   10332:	ja     1105e <kd_exe_dispatch+0x2d7e>
+   10338:	mov    0x8(%r14),%rsi
+   1033c:	lea    0x20(%rax),%rdx
+   10340:	cmp    %rdx,%rsi
+   10343:	jb     1105e <kd_exe_dispatch+0x2d7e>
+   10349:	add    $0x3ff8,%rax
+   1034f:	cmp    %rsi,%rax
+   10352:	jb     1105e <kd_exe_dispatch+0x2d7e>
+   10358:	lea    -0xc8(%rbp),%rdi
+   1035f:	mov    $0x8,%edx
+   10364:	call   10369 <kd_exe_dispatch+0x2089>
+   10369:	test   %rax,%rax
+   1036c:	jne    1105e <kd_exe_dispatch+0x2d7e>
+   10372:	mov    -0xc8(%rbp),%rdi
+   10379:	test   %rdi,%rdi
+   1037c:	je     1105e <kd_exe_dispatch+0x2d7e>
+   10382:	call   10387 <kd_exe_dispatch+0x20a7>
+   10387:	movslq %eax,%r8
+   1038a:	test   %r8d,%r8d
+   1038d:	jne    11084 <kd_exe_dispatch+0x2da4>
+   10393:	cmpl   $0x7f,-0x13c(%rbp)
+   1039a:	ja     103c4 <kd_exe_dispatch+0x20e4>
+   1039c:	test   %bl,%bl
+   1039e:	je     103cc <kd_exe_dispatch+0x20ec>
+   103a0:	xor    %r13d,%r13d
+   103a3:	cmpb   $0x0,0x0(%rip)        # 103aa <kd_exe_dispatch+0x20ca>
+   103aa:	je     f1a5 <kd_exe_dispatch+0xec5>
+   103b0:	movzbl 0x0(%rip),%ebx        # 103b7 <kd_exe_dispatch+0x20d7>
+   103b7:	call   103bc <kd_exe_dispatch+0x20dc>
+   103bc:	mov    %rax,%r13
+   103bf:	jmp    f1a5 <kd_exe_dispatch+0xec5>
+   103c4:	test   %bl,%bl
+   103c6:	jne    1104a <kd_exe_dispatch+0x2d6a>
+   103cc:	movl   $0x1,-0xd8(%rbp)
+   103d6:	jmp    f16c <kd_exe_dispatch+0xe8c>
+   103db:	movl   $0x1,-0xd8(%rbp)
+   103e5:	call   103ea <kd_exe_dispatch+0x210a>
+   103ea:	movabs $0x7ffffffffffffffe,%rdi
+   103f4:	mov    %rax,%rcx
+   103f7:	mov    0x0(%rip),%rax        # 103fe <kd_exe_dispatch+0x211e>
+   103fe:	cmp    %rax,%rdi
+   10401:	jb     1058a <kd_exe_dispatch+0x22aa>
+   10407:	lea    0x1(%rax),%rdx
+   1040b:	lock cmpxchg %rdx,0x0(%rip)        # 10414 <kd_exe_dispatch+0x2134>
+   10414:	jne    103fe <kd_exe_dispatch+0x211e>
+   10416:	cmp    %r13,%rcx
+   10419:	jb     1057b <kd_exe_dispatch+0x229b>
+   1041f:	mov    0x0(%rip),%rax        # 10426 <kd_exe_dispatch+0x2146>
+   10426:	sub    %r13,%rcx
+   10429:	test   %rax,%rax
+   1042c:	js     1057b <kd_exe_dispatch+0x229b>
+   10432:	movabs $0x7fffffffffffffff,%rdx
+   1043c:	sub    %rax,%rdx
+   1043f:	cmp    %rcx,%rdx
+   10442:	jb     1057b <kd_exe_dispatch+0x229b>
+   10448:	lea    (%rcx,%rax,1),%rdx
+   1044c:	lock cmpxchg %rdx,0x0(%rip)        # 10455 <kd_exe_dispatch+0x2175>
+   10455:	jne    10429 <kd_exe_dispatch+0x2149>
+   10457:	test   %r12d,%r12d
+   1045a:	jne    11090 <kd_exe_dispatch+0x2db0>
+   10460:	lock incq 0x0(%rip)        # 10468 <kd_exe_dispatch+0x2188>
+   10468:	cmpl   $0x0,-0xd8(%rbp)
+   1046f:	jne    f1d8 <kd_exe_dispatch+0xef8>
+   10475:	mov    0x8(%r14),%r12
+   10479:	test   %r12,%r12
+   1047c:	je     10807 <kd_exe_dispatch+0x2527>
+   10482:	call   10487 <kd_exe_dispatch+0x21a7>
+   10487:	mov    (%r12),%rdx
+   1048b:	add    $0x8,%r12
+   1048f:	mov    %r12,0x8(%r14)
+   10493:	mov    %rdx,(%r14)
+   10496:	test   %rax,%rax
+   10499:	je     f1fb <kd_exe_dispatch+0xf1b>
+   1049f:	mov    %r14,%rsi
+   104a2:	mov    %rax,%rdi
+   104a5:	call   104aa <kd_exe_dispatch+0x21ca>
+   104aa:	jmp    f1fb <kd_exe_dispatch+0xf1b>
+   104af:	call   104b4 <kd_exe_dispatch+0x21d4>
+   104b4:	mov    %rax,%r13
+   104b7:	jmp    f198 <kd_exe_dispatch+0xeb8>
+   104bc:	cmpl   $0x0,0x18(%rcx)
+   104c0:	jne    f7d6 <kd_exe_dispatch+0x14f6>
+   104c6:	mov    %rcx,%rdi
+   104c9:	call   44e0 <kd_jit_minimal_complete_allowed.part.0>
+   104ce:	jmp    f7d6 <kd_exe_dispatch+0x14f6>
+   104d3:	cltq   
+   104d5:	imul   $0x28,%rax,%rax
+   104d9:	cmpb   $0x0,-0x105(%rbp)
+   104e0:	je     f8de <kd_exe_dispatch+0x15fe>
+   104e6:	mov    0x0(%rax),%eax
+   104ec:	cmp    $0x4,%eax
+   104ef:	je     107f1 <kd_exe_dispatch+0x2511>
+   104f5:	cmp    $0x5,%eax
+   104f8:	jne    f8de <kd_exe_dispatch+0x15fe>
+   104fe:	cmpq   $0x10,-0x138(%rbp)
+   10506:	jne    f8de <kd_exe_dispatch+0x15fe>
+   1050c:	mov    -0xd8(%rbp),%rsi
+   10513:	mov    -0xd0(%rbp),%rdi
+   1051a:	xor    %ecx,%ecx
+   1051c:	mov    $0x1,%edx
+   10521:	mov    $0x0,%r8
+   10528:	call   7b80 <kd_jit_pending_call_native>
+   1052d:	movslq %eax,%r8
+   10530:	test   %r8d,%r8d
+   10533:	je     107d2 <kd_exe_dispatch+0x24f2>
+   10539:	mov    -0xc0(%rbp),%rcx
+   10540:	jmp    f8e5 <kd_exe_dispatch+0x1605>
+   10545:	mov    -0xd0(%rbp),%rax
+   1054c:	mov    -0xe0(%rbp),%rdi
+   10553:	xor    %r8d,%r8d
+   10556:	mov    $0x1,%edx
+   1055b:	mov    0x288(%rax),%rsi
+   10562:	call   10567 <kd_exe_dispatch+0x2287>
+   10567:	jmp    f3cd <kd_exe_dispatch+0x10ed>
+   1056c:	movl   $0x1,0x0(%rip)        # 10576 <kd_exe_dispatch+0x2296>
+   10576:	jmp    f49d <kd_exe_dispatch+0x11bd>
+   1057b:	movl   $0x1,0x0(%rip)        # 10585 <kd_exe_dispatch+0x22a5>
+   10585:	jmp    10457 <kd_exe_dispatch+0x2177>
+   1058a:	movl   $0x1,0x0(%rip)        # 10594 <kd_exe_dispatch+0x22b4>
+   10594:	jmp    10416 <kd_exe_dispatch+0x2136>
+   10599:	movl   $0x1,0x0(%rip)        # 105a3 <kd_exe_dispatch+0x22c3>
+   105a3:	jmp    f68d <kd_exe_dispatch+0x13ad>
+   105a8:	cltq   
+   105aa:	imul   $0x28,%rax,%rax
+   105ae:	mov    0x0(%rax),%ecx
+   105b4:	not    %ecx
+   105b6:	and    $0x7,%cl
+   105b9:	jne    10679 <kd_exe_dispatch+0x2399>
+   105bf:	mov    0x0(%rax),%ecx
+   105c5:	sub    $0x4,%ecx
+   105c8:	cmp    $0x1,%ecx
+   105cb:	jbe    10679 <kd_exe_dispatch+0x2399>
+   105d1:	mov    0x0(%rax),%rax
+   105d8:	mov    %r14,%rdi
+   105db:	call   105e0 <kd_exe_dispatch+0x2300>
+   105e0:	cmpb   $0x0,0x0(%rip)        # 105e7 <kd_exe_dispatch+0x2307>
+   105e7:	mov    %eax,%r12d
+   105ea:	jne    103e5 <kd_exe_dispatch+0x2105>
+   105f0:	test   %eax,%eax
+   105f2:	jne    11090 <kd_exe_dispatch+0x2db0>
+   105f8:	lock incq 0x0(%rip)        # 10600 <kd_exe_dispatch+0x2320>
+   10600:	xor    %ebx,%ebx
+   10602:	jmp    10475 <kd_exe_dispatch+0x2195>
+   10607:	mov    (%rdx),%rax
+   1060a:	movb   $0x0,-0xf3(%rbp)
+   10611:	mov    %rax,-0x110(%rbp)
+   10618:	mov    -0xd8(%rbp),%rax
+   1061f:	mov    0x8(%rax),%rax
+   10623:	mov    %rax,-0x128(%rbp)
+   1062a:	jmp    ecf5 <kd_exe_dispatch+0xa15>
+   1062f:	mov    -0xd0(%rbp),%rax
+   10636:	cmpl   $0x0,0x18(%rax)
+   1063a:	jne    fc44 <kd_exe_dispatch+0x1964>
+   10640:	cmpq   $0x0,-0xf0(%rbp)
+   10648:	setne  -0xf3(%rbp)
+   1064f:	test   %rdx,%rdx
+   10652:	jne    f07f <kd_exe_dispatch+0xd9f>
+   10658:	mov    -0xd8(%rbp),%rax
+   1065f:	xor    %r12d,%r12d
+   10662:	mov    %r12,-0x110(%rbp)
+   10669:	mov    0x8(%rax),%rax
+   1066d:	mov    %rax,-0x128(%rbp)
+   10674:	jmp    ecf5 <kd_exe_dispatch+0xa15>
+   10679:	cmpb   $0x0,0x0(%rip)        # 10680 <kd_exe_dispatch+0x23a0>
+   10680:	jne    1077d <kd_exe_dispatch+0x249d>
+   10686:	mov    %r14,-0xd8(%rbp)
+   1068d:	mov    $0xffffffff,%r12d
+   10693:	jmp    f53f <kd_exe_dispatch+0x125f>
+   10698:	mov    %r14,-0xd8(%rbp)
+   1069f:	mov    %r14,%rsi
+   106a2:	test   %r12d,%r12d
+   106a5:	jne    107c6 <kd_exe_dispatch+0x24e6>
+   106ab:	mov    -0xd0(%rbp),%rdi
+   106b2:	mov    $0x0,%r8
+   106b9:	xor    %ecx,%ecx
+   106bb:	xor    %edx,%edx
+   106bd:	call   7b80 <kd_jit_pending_call_native>
+   106c2:	movslq %eax,%r8
+   106c5:	test   %r8d,%r8d
+   106c8:	je     f3d6 <kd_exe_dispatch+0x10f6>
+   106ce:	mov    -0xfc(%rbp),%eax
+   106d4:	mov    -0xc0(%rbp),%rcx
+   106db:	mov    $0x0,%rdi
+   106e2:	push   %rax
+   106e3:	mov    -0xf8(%rbp),%r9d
+   106ea:	mov    -0xd8(%rbp),%rdx
+   106f1:	mov    -0xd0(%rbp),%rsi
+   106f8:	call   46c0 <kd_jit_log_hl_error>
+   106fd:	pop    %rax
+   106fe:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   10703:	mov    -0xfc(%rbp),%ebx
+   10709:	mov    -0xc0(%rbp),%rcx
+   10710:	movslq %eax,%r8
+   10713:	mov    %r14,%rdx
+   10716:	mov    $0x0,%rdi
+   1071d:	push   %rbx
+   1071e:	mov    -0xf8(%rbp),%r9d
+   10725:	mov    -0xd0(%rbp),%rsi
+   1072c:	call   46c0 <kd_jit_log_hl_error>
+   10731:	pop    %rax
+   10732:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   10737:	mov    -0xd0(%rbp),%rax
+   1073e:	mov    $0x0,%rsi
+   10745:	mov    $0x0,%rdi
+   1074c:	movb   $0x0,0x1f(%rax)
+   10750:	call   10755 <kd_exe_dispatch+0x2475>
+   10755:	test   %eax,%eax
+   10757:	jne    1075d <kd_exe_dispatch+0x247d>
+   1075d:	mov    -0x120(%rbp),%rsi
+   10764:	xor    %edi,%edi
+   10766:	call   5070 <kd_jit_timing_end>
+   1076b:	jmp    e7e9 <kd_exe_dispatch+0x509>
+   10770:	xor    %ebx,%ebx
+   10772:	mov    $0xfffffffe,%r12d
+   10778:	jmp    103e5 <kd_exe_dispatch+0x2105>
+   1077d:	mov    $0xffffffff,%r12d
+   10783:	jmp    103e5 <kd_exe_dispatch+0x2105>
+   10788:	mov    $0x4,%ebx
+   1078d:	jmp    efd5 <kd_exe_dispatch+0xcf5>
+   10792:	test   %ecx,%ecx
+   10794:	jne    e819 <kd_exe_dispatch+0x539>
+   1079a:	cmp    $0x4241444b,%esi
+   107a0:	jne    e477 <kd_exe_dispatch+0x197>
+   107a6:	cmpb   $0x0,0x2d(%rax)
+   107aa:	jne    e819 <kd_exe_dispatch+0x539>
+   107b0:	jmp    e477 <kd_exe_dispatch+0x197>
+   107b5:	mov    %r14,-0xd8(%rbp)
+   107bc:	mov    $0x6,%ebx
+   107c1:	jmp    efd5 <kd_exe_dispatch+0xcf5>
+   107c6:	mov    $0xffffffffffffffea,%r8
+   107cd:	jmp    106ce <kd_exe_dispatch+0x23ee>
+   107d2:	lock incq 0x0(%rip)        # 107da <kd_exe_dispatch+0x24fa>
+   107da:	movzbl -0x105(%rbp),%eax
+   107e1:	mov    $0x6,%ebx
+   107e6:	mov    %al,-0xf1(%rbp)
+   107ec:	jmp    efdf <kd_exe_dispatch+0xcff>
+   107f1:	cmpq   $0x80,-0x130(%rbp)
+   107fc:	jne    f8de <kd_exe_dispatch+0x15fe>
+   10802:	jmp    1050c <kd_exe_dispatch+0x222c>
+   10807:	mov    %r14,-0xd8(%rbp)
+   1080e:	mov    %r14,%rdx
+   10811:	lock incq 0x0(%rip)        # 10819 <kd_exe_dispatch+0x2539>
+   10819:	mov    -0xfc(%rbp),%eax
+   1081f:	mov    -0xc0(%rbp),%rcx
+   10826:	mov    $0xffffffffffffffea,%r8
+   1082d:	mov    $0x0,%rdi
+   10834:	push   %rax
+   10835:	mov    -0xf8(%rbp),%r9d
+   1083c:	mov    -0xd0(%rbp),%rsi
+   10843:	call   46c0 <kd_jit_log_hl_error>
+   10848:	pop    %rdx
+   10849:	jmp    efd0 <kd_exe_dispatch+0xcf0>
+   1084e:	push   %rax
+   1084f:	mov    -0xf8(%rbp),%r9d
+   10856:	mov    $0x0,%rdi
+   1085d:	xor    %r8d,%r8d
+   10860:	mov    -0xd8(%rbp),%rdx
+   10867:	mov    -0xd0(%rbp),%rsi
+   1086e:	call   46c0 <kd_jit_log_hl_error>
+   10873:	pop    %rdi
+   10874:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   10879:	push   %rax
+   1087a:	mov    -0xd8(%rbp),%r15
+   10881:	mov    $0xffffffffffffffac,%r8
+   10888:	mov    $0x0,%rdi
+   1088f:	mov    -0xd0(%rbp),%rbx
+   10896:	mov    -0xf8(%rbp),%r9d
+   1089d:	mov    %r15,%rdx
+   108a0:	mov    %rbx,%rsi
+   108a3:	call   46c0 <kd_jit_log_hl_error>
+   108a8:	mov    (%r15),%rcx
+   108ab:	xor    %r8d,%r8d
+   108ae:	mov    $0x3,%edx
+   108b3:	mov    0x288(%rbx),%rsi
+   108ba:	mov    -0xe0(%rbp),%rdi
+   108c1:	call   108c6 <kd_exe_dispatch+0x25e6>
+   108c6:	pop    %r8
+   108c8:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   108cd:	test   %r12d,%r12d
+   108d0:	jne    10b8a <kd_exe_dispatch+0x28aa>
+   108d6:	mov    $0x4,%ecx
+   108db:	lea    -0x40(%rbp),%rdi
+   108df:	mov    %r12d,%eax
+   108e2:	rep stos %eax,%es:(%rdi)
+   108e4:	cmpq   $0x0,-0xe0(%rbp)
+   108ec:	je     10b83 <kd_exe_dispatch+0x28a3>
+   108f2:	cmpq   $0x0,-0xd8(%rbp)
+   108fa:	je     10b83 <kd_exe_dispatch+0x28a3>
+   10900:	mov    -0xd0(%rbp),%rax
+   10907:	cmpb   $0x0,0x20(%rax)
+   1090b:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10911:	mov    -0xd0(%rbp),%rax
+   10918:	cmpl   $0x1,0x10(%rax)
+   1091c:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10922:	mov    -0xd0(%rbp),%rax
+   10929:	cmpl   $0x0,0x14(%rax)
+   1092d:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10933:	mov    -0xd0(%rbp),%rax
+   1093a:	mov    0x288(%rax),%rax
+   10941:	test   %rax,%rax
+   10944:	je     10b83 <kd_exe_dispatch+0x28a3>
+   1094a:	cmpl   $0x0,0x28(%rax)
+   1094e:	je     10b83 <kd_exe_dispatch+0x28a3>
+   10954:	mov    -0xe0(%rbp),%rcx
+   1095b:	cmp    0x20(%rax),%rcx
+   1095f:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10965:	cmpl   $0x1,0x1c(%rax)
+   10969:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   1096f:	mov    -0xd0(%rbp),%rdi
+   10976:	call   1097b <kd_exe_dispatch+0x269b>
+   1097b:	test   %al,%al
+   1097d:	je     10b83 <kd_exe_dispatch+0x28a3>
+   10983:	mov    -0xd0(%rbp),%rax
+   1098a:	cmpb   $0x0,0x1f(%rax)
+   1098e:	je     10b83 <kd_exe_dispatch+0x28a3>
+   10994:	mov    -0xd0(%rbp),%rax
+   1099b:	mov    %gs:0x0(%rip),%rcx        # 109a3 <kd_exe_dispatch+0x26c3>
+   109a3:	cmp    %rcx,0xe0(%rax)
+   109aa:	je     10b83 <kd_exe_dispatch+0x28a3>
+   109b0:	mov    -0xd0(%rbp),%rax
+   109b7:	cmpq   $0x0,0xe8(%rax)
+   109bf:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   109c5:	mov    -0xd0(%rbp),%rax
+   109cc:	cmpl   $0x0,0x18(%rax)
+   109d0:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   109d6:	mov    -0xd0(%rbp),%rax
+   109dd:	cmpq   $0x0,0x108(%rax)
+   109e5:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   109eb:	mov    -0xd0(%rbp),%rax
+   109f2:	cmpb   $0x0,0x22c(%rax)
+   109f9:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   109ff:	mov    -0xd0(%rbp),%rax
+   10a06:	mov    0x224(%rax),%esi
+   10a0c:	cmp    $0x1,%esi
+   10a0f:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10a15:	mov    -0xd0(%rbp),%rax
+   10a1c:	cmpl   $0x0,0x220(%rax)
+   10a23:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10a29:	mov    -0xd0(%rbp),%rax
+   10a30:	mov    0x230(%rax),%eax
+   10a36:	sub    $0x1,%eax
+   10a39:	cmp    $0x1,%eax
+   10a3c:	jbe    10b83 <kd_exe_dispatch+0x28a3>
+   10a42:	mov    -0xd0(%rbp),%rax
+   10a49:	cmpq   $0x0,0x110(%rax)
+   10a51:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10a57:	mov    -0xd0(%rbp),%rax
+   10a5e:	cmpq   $0x0,0x270(%rax)
+   10a66:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10a6c:	mov    -0xd0(%rbp),%rax
+   10a73:	testl  $0xfffffffb,0x258(%rax)
+   10a7d:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10a83:	mov    -0xd8(%rbp),%rax
+   10a8a:	mov    $0xffffffff,%edx
+   10a8f:	mov    $0x4b444147,%ecx
+   10a94:	shl    $0x20,%rdx
+   10a98:	shl    $0x20,%rcx
+   10a9c:	mov    0x88(%rax),%rax
+   10aa3:	and    %rax,%rdx
+   10aa6:	cmp    %rcx,%rdx
+   10aa9:	jne    10b83 <kd_exe_dispatch+0x28a3>
+   10aaf:	mov    -0xd0(%rbp),%rcx
+   10ab6:	mov    0x288(%rcx),%rcx
+   10abd:	test   %rcx,%rcx
+   10ac0:	je     10b46 <kd_exe_dispatch+0x2866>
+   10ac6:	mov    (%rcx),%rdx
+   10ac9:	test   %rdx,%rdx
+   10acc:	je     10b46 <kd_exe_dispatch+0x2866>
+   10ace:	mov    0x8(%rcx),%r8
+   10ad2:	cmp    $0x3f,%r8
+   10ad6:	jbe    10b46 <kd_exe_dispatch+0x2866>
+   10ad8:	testb  $0x2,0x18(%rcx)
+   10adc:	je     10b46 <kd_exe_dispatch+0x2866>
+   10ade:	movabs $0x313030304741444b,%rdi
+   10ae8:	sub    $0x10,%r8
+   10aec:	lea    (%rdx,%r8,1),%rcx
+   10af0:	cmp    %rdi,(%rcx)
+   10af3:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10af5:	mov    0xc(%rcx),%r9d
+   10af9:	lea    -0x1(%r9),%edi
+   10afd:	cmp    $0x3f,%edi
+   10b00:	ja     10b46 <kd_exe_dispatch+0x2866>
+   10b02:	mov    0x8(%rcx),%ecx
+   10b05:	cmp    $0x2f,%ecx
+   10b08:	jbe    10b46 <kd_exe_dispatch+0x2866>
+   10b0a:	mov    %r9d,%edi
+   10b0d:	shl    $0x5,%rdi
+   10b11:	add    %rcx,%rdi
+   10b14:	cmp    %rdi,%r8
+   10b17:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10b19:	add    %rcx,%rdx
+   10b1c:	je     10b46 <kd_exe_dispatch+0x2866>
+   10b1e:	cmp    %r9d,%eax
+   10b21:	jae    10b46 <kd_exe_dispatch+0x2866>
+   10b23:	mov    %eax,%eax
+   10b25:	shl    $0x5,%rax
+   10b29:	lea    (%rdx,%rax,1),%rbx
+   10b2d:	mov    (%rbx),%rdi
+   10b30:	test   %rdi,%rdi
+   10b33:	je     10b46 <kd_exe_dispatch+0x2866>
+   10b35:	movzbl 0x8(%rbx),%r10d
+   10b3a:	lea    -0x3(%r10),%eax
+   10b3e:	cmp    $0x5,%al
+   10b40:	jbe    10bea <kd_exe_dispatch+0x290a>
+   10b46:	mov    -0xc0(%rbp),%rcx
+   10b4d:	mov    $0xffffffffffffffb9,%r8
+   10b54:	mov    -0xfc(%rbp),%eax
+   10b5a:	mov    $0x0,%rdi
+   10b61:	push   %rax
+   10b62:	mov    -0xf8(%rbp),%r9d
+   10b69:	mov    -0xd8(%rbp),%rdx
+   10b70:	mov    -0xd0(%rbp),%rsi
+   10b77:	call   46c0 <kd_jit_log_hl_error>
+   10b7c:	pop    %r9
+   10b7e:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   10b83:	mov    -0xc0(%rbp),%rcx
+   10b8a:	mov    $0xffffffffffffffea,%r8
+   10b91:	jmp    10b54 <kd_exe_dispatch+0x2874>
+   10b93:	mov    -0xd0(%rbp),%rsi
+   10b9a:	mov    -0xe0(%rbp),%rdi
+   10ba1:	mov    %r14,%rdx
+   10ba4:	call   8090 <kd_jit_native_escape>
+   10ba9:	test   %eax,%eax
+   10bab:	je     f3d6 <kd_exe_dispatch+0x10f6>
+   10bb1:	mov    -0xfc(%rbp),%ebx
+   10bb7:	mov    -0xc0(%rbp),%rcx
+   10bbe:	movslq %eax,%r8
+   10bc1:	mov    $0x0,%rdi
+   10bc8:	push   %rbx
+   10bc9:	mov    -0xf8(%rbp),%r9d
+   10bd0:	mov    -0xd8(%rbp),%rdx
+   10bd7:	mov    -0xd0(%rbp),%rsi
+   10bde:	call   46c0 <kd_jit_log_hl_error>
+   10be3:	pop    %r12
+   10be5:	jmp    e6bd <kd_exe_dispatch+0x3dd>
+   10bea:	movzbl %r10b,%r8d
+   10bee:	xor    %r9d,%r9d
+   10bf1:	mov    %r8,%rax
+   10bf4:	add    %rdi,%rax
+   10bf7:	setb   %r9b
+   10bfb:	jb     10b46 <kd_exe_dispatch+0x2866>
+   10c01:	cmpb   $0x1,0x9(%rbx)
+   10c05:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c0b:	movzbl 0x10(%rbx),%ecx
+   10c0f:	mov    %ecx,%eax
+   10c11:	and    $0xfffffff8,%eax
+   10c14:	cmp    $0x48,%al
+   10c16:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c1c:	cmpb   $0x8b,0x11(%rbx)
+   10c20:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c26:	movzbl 0x12(%rbx),%edx
+   10c2a:	mov    %edx,%eax
+   10c2c:	not    %eax
+   10c2e:	test   $0xc0,%al
+   10c30:	je     10b46 <kd_exe_dispatch+0x2866>
+   10c36:	mov    %edx,%eax
+   10c38:	and    $0x7,%eax
+   10c3b:	cmp    $0x4,%al
+   10c3d:	je     10dd8 <kd_exe_dispatch+0x2af8>
+   10c43:	movzbl %al,%eax
+   10c46:	mov    $0x3,%ecx
+   10c4b:	shr    $0x6,%dl
+   10c4e:	jne    10c59 <kd_exe_dispatch+0x2979>
+   10c50:	cmp    $0x5,%eax
+   10c53:	je     10b46 <kd_exe_dispatch+0x2866>
+   10c59:	cmp    $0x1,%dl
+   10c5c:	je     10c6a <kd_exe_dispatch+0x298a>
+   10c5e:	xor    %esi,%esi
+   10c60:	cmp    $0x2,%dl
+   10c63:	sete   %sil
+   10c67:	shl    $0x2,%esi
+   10c6a:	add    %esi,%ecx
+   10c6c:	movzbl %r10b,%eax
+   10c70:	cmp    %eax,%ecx
+   10c72:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c78:	cmpb   $0x0,0xa(%rbx,%r9,1)
+   10c7e:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c84:	add    $0x1,%r9
+   10c88:	cmp    $0x6,%r9
+   10c8c:	jne    10c78 <kd_exe_dispatch+0x2998>
+   10c8e:	cmpb   $0x0,0x10(%rbx,%r8,1)
+   10c94:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10c9a:	add    $0x1,%r8
+   10c9e:	cmp    $0x10,%r8d
+   10ca2:	jne    10c8e <kd_exe_dispatch+0x29ae>
+   10ca4:	mov    -0xd8(%rbp),%rax
+   10cab:	cmp    %rdi,(%rax)
+   10cae:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10cb4:	mov    -0xd0(%rbp),%rax
+   10cbb:	mov    0xe0(%rax),%rax
+   10cc2:	mov    0x20(%rax),%rax
+   10cc6:	lea    -0x1(%rax),%rdx
+   10cca:	cmp    $0xffffffffffffbffe,%rdx
+   10cd1:	ja     10f2b <kd_exe_dispatch+0x2c4b>
+   10cd7:	mov    -0xd8(%rbp),%rcx
+   10cde:	mov    0x8(%rcx),%rdx
+   10ce2:	lea    0x20(%rax),%rcx
+   10ce6:	cmp    %rcx,%rdx
+   10ce9:	jb     10f2b <kd_exe_dispatch+0x2c4b>
+   10cef:	add    $0x3ff8,%rax
+   10cf5:	cmp    %rdx,%rax
+   10cf8:	jb     10f2b <kd_exe_dispatch+0x2c4b>
+   10cfe:	call   10d03 <kd_exe_dispatch+0x2a23>
+   10d03:	movslq %eax,%r8
+   10d06:	test   %r8d,%r8d
+   10d09:	jne    10f1f <kd_exe_dispatch+0x2c3f>
+   10d0f:	mov    -0xd8(%rbp),%rax
+   10d16:	movzbl 0x8(%rbx),%edx
+   10d1a:	lea    -0x40(%rbp),%rdi
+   10d1e:	mov    (%rax),%rsi
+   10d21:	call   10d26 <kd_exe_dispatch+0x2a46>
+   10d26:	test   %rax,%rax
+   10d29:	jne    10f18 <kd_exe_dispatch+0x2c38>
+   10d2f:	movzbl 0x8(%rbx),%edx
+   10d33:	lea    0x10(%rbx),%rsi
+   10d37:	cmp    $0x10,%rdx
+   10d3b:	ja     10d41 <kd_exe_dispatch+0x2a61>
+   10d41:	lea    -0x40(%rbp),%rdi
+   10d45:	call   10d4a <kd_exe_dispatch+0x2a6a>
+   10d4a:	test   %eax,%eax
+   10d4c:	jne    10f18 <kd_exe_dispatch+0x2c38>
+   10d52:	mov    -0xd8(%rbp),%rax
+   10d59:	mov    -0xd0(%rbp),%rdi
+   10d60:	xor    %r11d,%r11d
+   10d63:	xor    %ebx,%ebx
+   10d65:	mov    %r11d,0x258(%rdi)
+   10d6c:	mov    %rax,%rsi
+   10d6f:	mov    %rbx,0x88(%rax)
+   10d76:	call   10d7b <kd_exe_dispatch+0x2a9b>
+   10d7b:	call   33d0 <kd_code_block_gate_lock>
+   10d80:	mov    -0xe0(%rbp),%rsi
+   10d87:	mov    %rax,%rcx
+   10d8a:	mov    (%rsi),%eax
+   10d8c:	mov    $0xfffffffd,%edx
+   10d91:	cmp    $0xfffffffd,%eax
+   10d94:	je     10d9c <kd_exe_dispatch+0x2abc>
+   10d96:	lock cmpxchg %edx,(%rsi)
+   10d9a:	jne    10d91 <kd_exe_dispatch+0x2ab1>
+   10d9c:	xor    %r10d,%r10d
+   10d9f:	mov    %r10d,0x0(%rip)        # 10da6 <kd_exe_dispatch+0x2ac6>
+   10da6:	and    $0x2,%ch
+   10da9:	je     10db0 <kd_exe_dispatch+0x2ad0>
+   10dab:	call   4460 <kd_code_block_gate_unlock.part.0>
+   10db0:	lock incq 0x0(%rip)        # 10db8 <kd_exe_dispatch+0x2ad8>
+   10db8:	mov    $0x0,%rsi
+   10dbf:	mov    $0x0,%rdi
+   10dc6:	call   10dcb <kd_exe_dispatch+0x2aeb>
+   10dcb:	test   %eax,%eax
+   10dcd:	je     f3d6 <kd_exe_dispatch+0x10f6>
+   10dd3:	jmp    10dd8 <kd_exe_dispatch+0x2af8>
+   10dd8:	cmp    $0x3,%r10b
+   10ddc:	je     10b46 <kd_exe_dispatch+0x2866>
+   10de2:	and    $0x2,%cl
+   10de5:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10deb:	movzbl 0x13(%rbx),%eax
+   10def:	mov    %eax,%ecx
+   10df1:	and    $0x38,%ecx
+   10df4:	cmp    $0x20,%cl
+   10df7:	jne    10b46 <kd_exe_dispatch+0x2866>
+   10dfd:	and    $0x7,%eax
+   10e00:	mov    $0x4,%ecx
+   10e05:	jmp    10c4b <kd_exe_dispatch+0x296b>
+   10e0a:	mov    $0x4,%ebx
+   10e0f:	jmp    ffe3 <kd_exe_dispatch+0x1d03>
+   10e14:	cmpq   $0x0,-0xb8(%rbp)
+   10e1c:	jne    10fe6 <kd_exe_dispatch+0x2d06>
+   10e22:	mov    %rax,%rdx
+   10e25:	and    $0xfffffffffffffffb,%rdx
+   10e29:	cmp    $0x2,%rdx
+   10e2d:	je     10f69 <kd_exe_dispatch+0x2c89>
+   10e33:	cmpb   $0x0,-0x108(%rbp)
+   10e3a:	je     10f4c <kd_exe_dispatch+0x2c6c>
+   10e40:	cmpb   $0x0,-0xf2(%rbp)
+   10e47:	je     f64a <kd_exe_dispatch+0x136a>
+   10e4d:	lock incq 0x0(%rip)        # 10e55 <kd_exe_dispatch+0x2b75>
+   10e55:	cmpq   $0x1,-0xb8(%rbp)
+   10e5d:	jne    10e67 <kd_exe_dispatch+0x2b87>
+   10e5f:	lock incq 0x0(%rip)        # 10e67 <kd_exe_dispatch+0x2b87>
+   10e67:	movzbl -0x118(%rbp),%ecx
+   10e6e:	mov    -0xc0(%rbp),%rax
+   10e75:	mov    %cl,-0xf2(%rbp)
+   10e7b:	jmp    e5c2 <kd_exe_dispatch+0x2e2>
+   10e80:	mov    $0xffffffffffffffea,%r8
+   10e87:	jmp    ec2b <kd_exe_dispatch+0x94b>
+   10e8c:	mov    %r14,-0xd8(%rbp)
+   10e93:	lock incq 0x0(%rip)        # 10e9b <kd_exe_dispatch+0x2bbb>
+   10e9b:	mov    $0xffffffffffffffea,%r8
+   10ea2:	test   %r12d,%r12d
+   10ea5:	jne    10ed9 <kd_exe_dispatch+0x2bf9>
+   10ea7:	mov    -0xd8(%rbp),%rsi
+   10eae:	mov    -0xd0(%rbp),%rdi
+   10eb5:	xor    %ecx,%ecx
+   10eb7:	mov    $0x1,%edx
+   10ebc:	mov    $0x0,%r8
+   10ec3:	mov    $0x6,%ebx
+   10ec8:	call   7b80 <kd_jit_pending_call_native>
+   10ecd:	movslq %eax,%r8
+   10ed0:	test   %r8d,%r8d
+   10ed3:	je     efd5 <kd_exe_dispatch+0xcf5>
+   10ed9:	mov    -0xfc(%rbp),%eax
+   10edf:	mov    -0xc0(%rbp),%rcx
+   10ee6:	mov    $0x0,%rdi
+   10eed:	push   %rax
+   10eee:	mov    -0xf8(%rbp),%r9d
+   10ef5:	mov    -0xd8(%rbp),%rdx
+   10efc:	mov    -0xd0(%rbp),%rsi
+   10f03:	call   46c0 <kd_jit_log_hl_error>
+   10f08:	pop    %r8
+   10f0a:	jmp    efd0 <kd_exe_dispatch+0xcf0>
+   10f0f:	lea    0x1(%r14),%ebx
+   10f13:	jmp    ffe6 <kd_exe_dispatch+0x1d06>
+   10f18:	mov    $0xffffffffffffffac,%r8
+   10f1f:	mov    -0xc0(%rbp),%rcx
+   10f26:	jmp    10b54 <kd_exe_dispatch+0x2874>
+   10f2b:	mov    -0xc0(%rbp),%rcx
+   10f32:	mov    $0xfffffffffffffff2,%r8
+   10f39:	jmp    10b54 <kd_exe_dispatch+0x2874>
+   10f3e:	cmpq   $0x1,-0xb8(%rbp)
+   10f46:	je     f327 <kd_exe_dispatch+0x1047>
+   10f4c:	cmpb   $0x0,-0xf2(%rbp)
+   10f53:	je     10f5d <kd_exe_dispatch+0x2c7d>
+   10f55:	lock incq 0x0(%rip)        # 10f5d <kd_exe_dispatch+0x2c7d>
+   10f5d:	movb   $0x0,-0x118(%rbp)
+   10f64:	jmp    10e55 <kd_exe_dispatch+0x2b75>
+   10f69:	mov    -0xd0(%rbp),%rax
+   10f70:	cmpl   $0x0,0x14(%rax)
+   10f74:	jne    e76c <kd_exe_dispatch+0x48c>
+   10f7a:	mov    -0xd8(%rbp),%rbx
+   10f81:	mov    0xf0(%rax),%rcx
+   10f88:	cmp    %rcx,(%rbx)
+   10f8b:	jne    e76c <kd_exe_dispatch+0x48c>
+   10f91:	mov    0xf8(%rax),%rcx
+   10f98:	cmp    %rcx,0x8(%rbx)
+   10f9c:	jne    e76c <kd_exe_dispatch+0x48c>
+   10fa2:	mov    %rax,%rdi
+   10fa5:	call   10faa <kd_exe_dispatch+0x2cca>
+   10faa:	mov    %al,-0xf1(%rbp)
+   10fb0:	test   %al,%al
+   10fb2:	je     e76c <kd_exe_dispatch+0x48c>
+   10fb8:	movabs $0x4b444f5253554646,%rax
+   10fc2:	mov    %rax,0x88(%rbx)
+   10fc9:	lock incq 0x0(%rip)        # 10fd1 <kd_exe_dispatch+0x2cf1>
+   10fd1:	movq   $0xc,-0xc0(%rbp)
+   10fdc:	mov    $0x6,%ebx
+   10fe1:	jmp    efdf <kd_exe_dispatch+0xcff>
+   10fe6:	cmp    $0x6,%rax
+   10fea:	je     fc97 <kd_exe_dispatch+0x19b7>
+   10ff0:	cmpb   $0x0,-0x108(%rbp)
+   10ff7:	je     10f3e <kd_exe_dispatch+0x2c5e>
+   10ffd:	cmpb   $0x0,-0xf2(%rbp)
+   11004:	je     10e55 <kd_exe_dispatch+0x2b75>
+   1100a:	jmp    10e4d <kd_exe_dispatch+0x2b6d>
+   1100f:	mov    -0xc0(%rbp),%rcx
+   11016:	mov    $0xffffffea,%eax
+   1101b:	jmp    10099 <kd_exe_dispatch+0x1db9>
+   11020:	xor    %r11d,%r11d
+   11023:	mov    %r11,-0xc8(%rbp)
+   1102a:	lock incq 0x0(%rip)        # 11032 <kd_exe_dispatch+0x2d52>
+   11032:	jmp    10126 <kd_exe_dispatch+0x1e46>
+   11037:	mov    %r14,-0xd8(%rbp)
+   1103e:	mov    $0xffffffffffffffff,%r8
+   11045:	jmp    10288 <kd_exe_dispatch+0x1fa8>
+   1104a:	mov    %r14,-0xd8(%rbp)
+   11051:	lock incq 0x0(%rip)        # 11059 <kd_exe_dispatch+0x2d79>
+   11059:	jmp    10ea7 <kd_exe_dispatch+0x2bc7>
+   1105e:	mov    %r14,-0xd8(%rbp)
+   11065:	mov    $0xfffffffffffffff2,%r8
+   1106c:	jmp    10288 <kd_exe_dispatch+0x1fa8>
+   11071:	mov    %r14,-0xd8(%rbp)
+   11078:	mov    $0xffffffffffffffb9,%r8
+   1107f:	jmp    10288 <kd_exe_dispatch+0x1fa8>
+   11084:	mov    %r14,-0xd8(%rbp)
+   1108b:	jmp    10288 <kd_exe_dispatch+0x1fa8>
+   11090:	mov    %r14,-0xd8(%rbp)
+   11097:	cmp    $0xfffffffd,%r12d
+   1109b:	ja     f53f <kd_exe_dispatch+0x125f>
+   110a1:	lock incq 0x0(%rip)        # 110a9 <kd_exe_dispatch+0x2dc9>
+   110a9:	jmp    f547 <kd_exe_dispatch+0x1267>
+   110ae:	mov    $0xffffffac,%eax
+   110b3:	jmp    10092 <kd_exe_dispatch+0x1db2>
+   110b8:	mov    -0xd8(%rbp),%rcx
+   110bf:	movabs $0x4b444f524947494e,%rax
+   110c9:	cmp    %rax,0x88(%rcx)
+   110d0:	je     edd9 <kd_exe_dispatch+0xaf9>
+   110d6:	jmp    e76c <kd_exe_dispatch+0x48c>
+   110db:	mov    -0xd0(%rbp),%rdi
+   110e2:	xor    %ecx,%ecx
+   110e4:	xor    %edx,%edx
+   110e6:	mov    %r14,%rsi
+   110e9:	mov    $0x0,%r8
+   110f0:	mov    %r14,-0xd8(%rbp)
+   110f7:	call   7b80 <kd_jit_pending_call_native>
+   110fc:	test   %eax,%eax
+   110fe:	jne    e6bd <kd_exe_dispatch+0x3dd>
+   11104:	mov    (%r14),%rcx
+   11107:	mov    0x0(%rip),%esi        # 1110d <kd_exe_dispatch+0x2e2d>
+   1110d:	xor    %eax,%eax
+   1110f:	movabs $0x0,%rdx
+   11119:	jmp    11125 <kd_exe_dispatch+0x2e45>
+   1111b:	add    $0x1,%rax
+   1111f:	cmp    (%rdx,%rax,8),%rcx
+   11123:	je     1114f <kd_exe_dispatch+0x2e6f>
+   11125:	cmp    %eax,%esi
+   11127:	jg     1111b <kd_exe_dispatch+0x2e3b>
+   11129:	test   %rcx,%rcx
+   1112c:	je     111a7 <kd_exe_dispatch+0x2ec7>
+   1112e:	mov    $0x0,%rax
+   11135:	mov    $0x0,%rdx
+   1113c:	jmp    11149 <kd_exe_dispatch+0x2e69>
+   1113e:	xchg   %ax,%ax
+   11140:	add    $0x10,%rax
+   11144:	cmp    %rax,%rdx
+   11147:	je     111a7 <kd_exe_dispatch+0x2ec7>
+   11149:	cmp    0x8(%rax),%rcx
+   1114d:	jne    11140 <kd_exe_dispatch+0x2e60>
+   1114f:	mov    %bl,-0xf1(%rbp)
+   11155:	jmp    f3d6 <kd_exe_dispatch+0x10f6>
+   1115a:	mov    0x0(%rip),%esi        # 11160 <kd_exe_dispatch+0x2e80>
+   11160:	xor    %eax,%eax
+   11162:	movabs $0x0,%rdx
+   1116c:	jmp    1117c <kd_exe_dispatch+0x2e9c>
+   1116e:	add    $0x1,%rax
+   11172:	cmp    (%rdx,%rax,8),%rcx
+   11176:	je     10073 <kd_exe_dispatch+0x1d93>
+   1117c:	cmp    %eax,%esi
+   1117e:	jg     1116e <kd_exe_dispatch+0x2e8e>
+   11180:	mov    -0xd0(%rbp),%rax
+   11187:	mov    -0xe0(%rbp),%rdi
+   1118e:	mov    %rbx,%r8
+   11191:	mov    $0x2,%edx
+   11196:	mov    0x288(%rax),%rsi
+   1119d:	call   111a2 <kd_exe_dispatch+0x2ec2>
+   111a2:	jmp    10073 <kd_exe_dispatch+0x1d93>
+   111a7:	mov    -0xd0(%rbp),%rax
+   111ae:	mov    -0xe0(%rbp),%rdi
+   111b5:	xor    %r8d,%r8d
+   111b8:	mov    $0x1,%edx
+   111bd:	mov    0x288(%rax),%rsi
+   111c4:	call   111c9 <kd_exe_dispatch+0x2ee9>
+   111c9:	jmp    1114f <kd_exe_dispatch+0x2e6f>
+   111cb:	jmp    111d0 <__pfx_kd_exe_on_call_hl_entry>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

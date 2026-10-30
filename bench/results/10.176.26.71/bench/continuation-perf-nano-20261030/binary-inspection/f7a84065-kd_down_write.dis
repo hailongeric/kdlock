@@ -1,0 +1,112 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001d6a0 <kd_down_write>:
+   1d6a0:	call   1d6a5 <kd_down_write+0x5>
+   1d6a5:	push   %rbp
+   1d6a6:	mov    %rsp,%rbp
+   1d6a9:	push   %r14
+   1d6ab:	push   %r13
+   1d6ad:	push   %r12
+   1d6af:	push   %rbx
+   1d6b0:	sub    $0x30,%rsp
+   1d6b4:	mov    %gs:0x0(%rip),%rbx        # 1d6bc <kd_down_write+0x1c>
+   1d6bc:	mov    %rbx,-0x28(%rbp)
+   1d6c0:	mov    %rdi,%rbx
+   1d6c3:	call   1d6c8 <kd_down_write+0x28>
+   1d6c8:	mov    %gs:0x0(%rip),%rsi        # 1d6d0 <kd_down_write+0x30>
+   1d6d0:	mov    $0x4000,%edx
+   1d6d5:	mov    $0xffffffffffffffff,%rdi
+   1d6dc:	jmp    1d6e5 <kd_down_write+0x45>
+   1d6de:	pause  
+   1d6e0:	sub    $0x1,%edx
+   1d6e3:	je     1d714 <kd_down_write+0x74>
+   1d6e5:	mov    0x80(%rbx),%rax
+   1d6ec:	test   %rax,%rax
+   1d6ef:	jne    1d70d <kd_down_write+0x6d>
+   1d6f1:	mov    0x118(%rbx),%ecx
+   1d6f7:	test   %ecx,%ecx
+   1d6f9:	jne    1d70d <kd_down_write+0x6d>
+   1d6fb:	lock cmpxchg %rdi,0x80(%rbx)
+   1d704:	test   %rax,%rax
+   1d707:	je     1d7f5 <kd_down_write+0x155>
+   1d70d:	mov    (%rsi),%rax
+   1d710:	test   $0x10,%al
+   1d712:	je     1d6de <kd_down_write+0x3e>
+   1d714:	call   1d719 <kd_down_write+0x79>
+   1d719:	mov    0x80(%rbx),%rax
+   1d720:	test   %rax,%rax
+   1d723:	jne    1d748 <kd_down_write+0xa8>
+   1d725:	mov    0x118(%rbx),%edx
+   1d72b:	test   %edx,%edx
+   1d72d:	jne    1d748 <kd_down_write+0xa8>
+   1d72f:	mov    $0xffffffffffffffff,%rdx
+   1d736:	lock cmpxchg %rdx,0x80(%rbx)
+   1d73f:	test   %rax,%rax
+   1d742:	je     1d7f5 <kd_down_write+0x155>
+   1d748:	xor    %esi,%esi
+   1d74a:	lea    -0x50(%rbp),%rdi
+   1d74e:	movq   $0x0,-0x50(%rbp)
+   1d756:	lea    0x80(%rbx),%r12
+   1d75d:	movq   $0x0,-0x48(%rbp)
+   1d765:	mov    $0xffffffffffffffff,%r13
+   1d76c:	movq   $0x0,-0x40(%rbp)
+   1d774:	movq   $0x0,-0x38(%rbp)
+   1d77c:	movq   $0x0,-0x30(%rbp)
+   1d784:	call   1d789 <kd_down_write+0xe9>
+   1d789:	mov    $0x2,%edx
+   1d78e:	lea    -0x50(%rbp),%rsi
+   1d792:	lea    0xc0(%rbx),%rdi
+   1d799:	call   1d79e <kd_down_write+0xfe>
+   1d79e:	mov    0x80(%rbx),%rax
+   1d7a5:	test   %rax,%rax
+   1d7a8:	jne    1d7bf <kd_down_write+0x11f>
+   1d7aa:	mov    0x118(%rbx),%edx
+   1d7b0:	test   %edx,%edx
+   1d7b2:	jne    1d7bf <kd_down_write+0x11f>
+   1d7b4:	lock cmpxchg %r13,(%r12)
+   1d7ba:	test   %rax,%rax
+   1d7bd:	je     1d7e5 <kd_down_write+0x145>
+   1d7bf:	call   1d7c4 <kd_down_write+0x124>
+   1d7c4:	mov    0x80(%rbx),%rax
+   1d7cb:	test   %rax,%rax
+   1d7ce:	jne    1d789 <kd_down_write+0xe9>
+   1d7d0:	mov    0x118(%rbx),%edx
+   1d7d6:	test   %edx,%edx
+   1d7d8:	jne    1d789 <kd_down_write+0xe9>
+   1d7da:	lock cmpxchg %r13,(%r12)
+   1d7e0:	test   %rax,%rax
+   1d7e3:	jne    1d789 <kd_down_write+0xe9>
+   1d7e5:	lea    -0x50(%rbp),%rsi
+   1d7e9:	lea    0xc0(%rbx),%rdi
+   1d7f0:	call   1d7f5 <kd_down_write+0x155>
+   1d7f5:	mov    %rbx,%rdi
+   1d7f8:	call   1d7fd <kd_down_write+0x15d>
+   1d7fd:	mov    $0x2,%esi
+   1d802:	mov    %rbx,%rdi
+   1d805:	call   1d390 <kd_rwsem_drain_readers>
+   1d80a:	mov    -0x28(%rbp),%rax
+   1d80e:	sub    %gs:0x0(%rip),%rax        # 1d816 <kd_down_write+0x176>
+   1d816:	jne    1d833 <kd_down_write+0x193>
+   1d818:	add    $0x30,%rsp
+   1d81c:	pop    %rbx
+   1d81d:	pop    %r12
+   1d81f:	pop    %r13
+   1d821:	pop    %r14
+   1d823:	pop    %rbp
+   1d824:	xor    %eax,%eax
+   1d826:	xor    %edx,%edx
+   1d828:	xor    %ecx,%ecx
+   1d82a:	xor    %esi,%esi
+   1d82c:	xor    %edi,%edi
+   1d82e:	jmp    1d833 <kd_down_write+0x193>
+   1d833:	call   1d838 <kd_down_write+0x198>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

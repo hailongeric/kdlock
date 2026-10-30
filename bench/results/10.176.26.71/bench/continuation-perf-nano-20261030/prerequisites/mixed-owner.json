@@ -1,0 +1,97 @@
+{
+  "completed": true,
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "phase": "mixed",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "performance_accepted": false,
+  "timing_started": false,
+  "driver_pid": 1192854,
+  "started": 1793339875.2483308,
+  "basic_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030",
+  "inputs": {
+    "controller.py": "fdce682d696a6eb76b6bea511b1edc02a12655fae3eec2ac5065922ff9a6359e",
+    "unit.json": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "sync.json": "e60d0fe664b1f0bc53e5a3236b4f77df555fd2d06716646dcb67bdad40f7c887",
+    "host-before.json": "a0057c7d8f4a83940e277dd256d31a476850325ebd93bf7c59534a5e0047df9a",
+    "host-reference.json": "cbdd4de1bd9ad2abc143658a6eaa0c8e77d3f77fdf61151d89c365d0a2d539a0",
+    "unit-reuse-owner.json": "313a1ad0a38891530ec29cd2ceb5aa781d1236056b94ea21fbb47738d32a7bea",
+    "unit-reuse-unit.log": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757",
+    "unit-reuse-sync.json": "e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43",
+    "unit-reuse-controller.py": "e60a9285bca40716fdad9dcd409026471fadbc771508eccab4483797a4247b71"
+  },
+  "host_admission": {
+    "mode": "FUNCTIONAL_ONLY",
+    "performance_accepted": false,
+    "timing_gate": "NOT_APPLICABLE",
+    "original_threads": 67,
+    "observed_threads": 69,
+    "additional_workers": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172657609,
+        "tid": 743780
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172699608,
+        "tid": 745173
+      }
+    ],
+    "memory_bindings": [
+      [
+        "7469b7c00000",
+        "bind:1",
+        4
+      ],
+      [
+        "746cb7e00000",
+        "bind:0",
+        4
+      ]
+    ]
+  },
+  "basic_dependency": {
+    "campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030",
+    "owner_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030/basic-control/owner.json",
+    "owner_sha256": "8e6b41da338eb8e17de6f69ffae694fd24f0005e3a9f1f081278e32fcea261e5",
+    "result_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030/basic/result.json",
+    "result_sha256": "fd8579d8e7609e340f78af713263fc51dae8c5da9377f926c0ae41797d028ad1"
+  },
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "tests/kernel/jit_continuation/run.py",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "--kernel-variant",
+    "kdlock1",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030/mixed",
+    "--cpus",
+    "0-15",
+    "--warmup-iterations",
+    "10000",
+    "--iterations",
+    "10000",
+    "--phase-timeout",
+    "120",
+    "--family",
+    "mutex",
+    "--mutex-api",
+    "public",
+    "--mixed-spin"
+  ],
+  "pid": 1192855,
+  "state": "EXITED",
+  "returncode": 0,
+  "finished": 1793339911.6665237,
+  "final_idle": true,
+  "result_sha256": "0a98c926292520f173f2327e9f3a7bf8ca47eb2fff14589dd570af37e18a123a"
+}

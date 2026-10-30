@@ -1,0 +1,291 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000012b20 <kd_mutex_run_combiner>:
+   12b20:	push   %rbp
+   12b21:	mov    $0x9,%ecx
+   12b26:	mov    %rsp,%rbp
+   12b29:	push   %r13
+   12b2b:	mov    %rdi,%r13
+   12b2e:	push   %r12
+   12b30:	lea    -0x68(%rbp),%rdi
+   12b34:	push   %rbx
+   12b35:	sub    $0x60,%rsp
+   12b39:	mov    %gs:0x0(%rip),%rax        # 12b41 <kd_mutex_run_combiner+0x21>
+   12b41:	mov    %rax,-0x20(%rbp)
+   12b45:	xor    %eax,%eax
+   12b47:	mov    %r13,-0x78(%rbp)
+   12b4b:	movq   $0x0,-0x70(%rbp)
+   12b53:	rep stos %rax,%es:(%rdi)
+   12b56:	movl   $0x40,-0x2c(%rbp)
+   12b5d:	mov    %gs:0x0(%rip),%eax        # 12b64 <kd_mutex_run_combiner+0x44>
+   12b64:	mov    %eax,-0x28(%rbp)
+   12b67:	incq   %gs:0x0(%rip)        # 12b6f <kd_mutex_run_combiner+0x4f>
+   12b6f:	test   %rsi,%rsi
+   12b72:	je     12e65 <kd_mutex_run_combiner+0x345>
+   12b78:	mov    (%rsi),%rax
+   12b7b:	mov    %rsi,%rbx
+   12b7e:	test   %rax,%rax
+   12b81:	je     12db8 <kd_mutex_run_combiner+0x298>
+   12b87:	call   12b8c <kd_mutex_run_combiner+0x6c>
+   12b8c:	mov    $0x400,%r12d
+   12b92:	test   %al,%al
+   12b94:	je     12dc2 <kd_mutex_run_combiner+0x2a2>
+   12b9a:	mov    -0x28(%rbp),%eax
+   12b9d:	test   %eax,%eax
+   12b9f:	js     12bfd <kd_mutex_run_combiner+0xdd>
+   12ba1:	cmp    0x50(%rbx),%eax
+   12ba4:	jne    12bbe <kd_mutex_run_combiner+0x9e>
+   12ba6:	jmp    12bfd <kd_mutex_run_combiner+0xdd>
+   12ba8:	mov    %rbx,(%rdx)
+   12bab:	mov    0x50(%rax),%esi
+   12bae:	addl   $0x1,-0x30(%rbp)
+   12bb2:	mov    %rbx,-0x38(%rbp)
+   12bb6:	cmp    %esi,-0x28(%rbp)
+   12bb9:	je     12bfa <kd_mutex_run_combiner+0xda>
+   12bbb:	mov    %rax,%rbx
+   12bbe:	mov    -0x2c(%rbp),%ecx
+   12bc1:	test   %ecx,%ecx
+   12bc3:	je     12bfd <kd_mutex_run_combiner+0xdd>
+   12bc5:	mov    (%rbx),%rax
+   12bc8:	test   %rax,%rax
+   12bcb:	je     12bfd <kd_mutex_run_combiner+0xdd>
+   12bcd:	subl   $0x1,-0x2c(%rbp)
+   12bd1:	movq   $0x0,(%rbx)
+   12bd8:	mov    -0x38(%rbp),%rdx
+   12bdc:	test   %rdx,%rdx
+   12bdf:	jne    12ba8 <kd_mutex_run_combiner+0x88>
+   12be1:	addl   $0x1,-0x30(%rbp)
+   12be5:	mov    -0x28(%rbp),%edi
+   12be8:	mov    %rbx,-0x40(%rbp)
+   12bec:	mov    %rbx,-0x38(%rbp)
+   12bf0:	cmp    %edi,0x50(%rax)
+   12bf3:	jne    12bbb <kd_mutex_run_combiner+0x9b>
+   12bf5:	mov    %rax,%rbx
+   12bf8:	jmp    12c04 <kd_mutex_run_combiner+0xe4>
+   12bfa:	mov    %rax,%rbx
+   12bfd:	cmpq   $0x0,-0x40(%rbp)
+   12c02:	je     12c10 <kd_mutex_run_combiner+0xf0>
+   12c04:	mov    (%rbx),%rax
+   12c07:	test   %rax,%rax
+   12c0a:	je     12e1d <kd_mutex_run_combiner+0x2fd>
+   12c10:	mov    (%rbx),%rax
+   12c13:	test   %rax,%rax
+   12c16:	je     12e04 <kd_mutex_run_combiner+0x2e4>
+   12c1c:	mov    -0x28(%rbp),%edx
+   12c1f:	test   %edx,%edx
+   12c21:	js     12c7a <kd_mutex_run_combiner+0x15a>
+   12c23:	cmp    0x50(%rax),%edx
+   12c26:	jne    12c40 <kd_mutex_run_combiner+0x120>
+   12c28:	jmp    12c7a <kd_mutex_run_combiner+0x15a>
+   12c2a:	mov    %rax,(%rcx)
+   12c2d:	mov    %rax,-0x38(%rbp)
+   12c31:	mov    0x50(%rdx),%eax
+   12c34:	addl   $0x1,-0x30(%rbp)
+   12c38:	cmp    %eax,-0x28(%rbp)
+   12c3b:	je     12c77 <kd_mutex_run_combiner+0x157>
+   12c3d:	mov    %rdx,%rax
+   12c40:	mov    -0x2c(%rbp),%edx
+   12c43:	test   %edx,%edx
+   12c45:	je     12c7a <kd_mutex_run_combiner+0x15a>
+   12c47:	mov    (%rax),%rdx
+   12c4a:	test   %rdx,%rdx
+   12c4d:	je     12c7a <kd_mutex_run_combiner+0x15a>
+   12c4f:	subl   $0x1,-0x2c(%rbp)
+   12c53:	movq   $0x0,(%rax)
+   12c5a:	mov    -0x38(%rbp),%rcx
+   12c5e:	test   %rcx,%rcx
+   12c61:	jne    12c2a <kd_mutex_run_combiner+0x10a>
+   12c63:	mov    %rax,-0x40(%rbp)
+   12c67:	mov    %rax,-0x38(%rbp)
+   12c6b:	mov    -0x28(%rbp),%eax
+   12c6e:	addl   $0x1,-0x30(%rbp)
+   12c72:	cmp    %eax,0x50(%rdx)
+   12c75:	jne    12c3d <kd_mutex_run_combiner+0x11d>
+   12c77:	mov    %rdx,%rax
+   12c7a:	mov    %rax,(%rbx)
+   12c7d:	prefetcht0 (%rax)
+   12c80:	mov    %rax,-0x60(%rbp)
+   12c84:	mov    %rbx,-0x58(%rbp)
+   12c88:	movb   $0x0,-0x50(%rbp)
+   12c8c:	movb   $0x0,-0x68(%rbp)
+   12c90:	prefetcht0 0x40(%rax)
+   12c94:	prefetcht0 0x80(%rax)
+   12c9b:	mov    0x88(%rax),%rax
+   12ca2:	test   %rax,%rax
+   12ca5:	jne    12ce7 <kd_mutex_run_combiner+0x1c7>
+   12ca7:	lea    -0x78(%rbp),%rdx
+   12cab:	mov    %rbx,%rsi
+   12cae:	mov    %r13,%rdi
+   12cb1:	call   11380 <kd_mutex_execute_cs>
+   12cb6:	test   %eax,%eax
+   12cb8:	je     12cf0 <kd_mutex_run_combiner+0x1d0>
+   12cba:	cmp    $0x7,%eax
+   12cbd:	jne    12f49 <kd_mutex_run_combiner+0x429>
+   12cc3:	cmpb   $0x0,-0x68(%rbp)
+   12cc7:	jne    12ece <kd_mutex_run_combiner+0x3ae>
+   12ccd:	mov    -0x60(%rbp),%rbx
+   12cd1:	cmpq   $0x0,-0x40(%rbp)
+   12cd6:	je     12da0 <kd_mutex_run_combiner+0x280>
+   12cdc:	test   %rbx,%rbx
+   12cdf:	jne    12d75 <kd_mutex_run_combiner+0x255>
+   12ce5:	ud2    
+   12ce7:	prefetcht0 (%rax)
+   12cea:	prefetcht0 -0x8(%rax)
+   12cee:	jmp    12ca7 <kd_mutex_run_combiner+0x187>
+   12cf0:	cmp    $0x7,%eax
+   12cf3:	je     12cc3 <kd_mutex_run_combiner+0x1a3>
+   12cf5:	cmp    -0x78(%rbp),%r13
+   12cf9:	jne    12eca <kd_mutex_run_combiner+0x3aa>
+   12cff:	cmpb   $0x0,-0x50(%rbp)
+   12d03:	jne    12d21 <kd_mutex_run_combiner+0x201>
+   12d05:	mov    -0x58(%rbp),%rdx
+   12d09:	test   %rdx,%rdx
+   12d0c:	je     12e98 <kd_mutex_run_combiner+0x378>
+   12d12:	cmpq   $0x0,-0x60(%rbp)
+   12d17:	je     12eae <kd_mutex_run_combiner+0x38e>
+   12d1d:	movb   $0x1,-0x50(%rbp)
+   12d21:	incq   %gs:0x0(%rip)        # 12d29 <kd_mutex_run_combiner+0x209>
+   12d29:	movb   $0x1,0x130(%rbx)
+   12d30:	movb   $0x0,0x131(%rbx)
+   12d37:	cmpb   $0x0,-0x68(%rbp)
+   12d3b:	jne    12ece <kd_mutex_run_combiner+0x3ae>
+   12d41:	mov    -0x60(%rbp),%rbx
+   12d45:	sub    $0x1,%r12d
+   12d49:	je     12cd1 <kd_mutex_run_combiner+0x1b1>
+   12d4b:	test   %rbx,%rbx
+   12d4e:	je     12f66 <kd_mutex_run_combiner+0x446>
+   12d54:	mov    (%rbx),%rax
+   12d57:	test   %rax,%rax
+   12d5a:	jne    12b9a <kd_mutex_run_combiner+0x7a>
+   12d60:	cmpb   $0x2,0x40(%rbx)
+   12d64:	je     12e7a <kd_mutex_run_combiner+0x35a>
+   12d6a:	cmpq   $0x0,-0x40(%rbp)
+   12d6f:	je     12e9a <kd_mutex_run_combiner+0x37a>
+   12d75:	mov    -0x38(%rbp),%rax
+   12d79:	test   %rax,%rax
+   12d7c:	je     12ce5 <kd_mutex_run_combiner+0x1c5>
+   12d82:	mov    %rbx,(%rax)
+   12d85:	mov    -0x40(%rbp),%rbx
+   12d89:	movq   $0x0,-0x38(%rbp)
+   12d91:	movq   $0x0,-0x40(%rbp)
+   12d99:	movl   $0x0,-0x30(%rbp)
+   12da0:	movl   $0x1,0x18(%r13)
+   12da8:	test   %rbx,%rbx
+   12dab:	jne    12ea2 <kd_mutex_run_combiner+0x382>
+   12db1:	call   12db6 <kd_mutex_run_combiner+0x296>
+   12db6:	jmp    12dd9 <kd_mutex_run_combiner+0x2b9>
+   12db8:	cmpb   $0x2,0x40(%rsi)
+   12dbc:	je     12e89 <kd_mutex_run_combiner+0x369>
+   12dc2:	incq   %gs:0x0(%rip)        # 12dca <kd_mutex_run_combiner+0x2aa>
+   12dca:	movl   $0x1,0x18(%r13)
+   12dd2:	movb   $0x0,0x131(%rbx)
+   12dd9:	mov    -0x20(%rbp),%rax
+   12ddd:	sub    %gs:0x0(%rip),%rax        # 12de5 <kd_mutex_run_combiner+0x2c5>
+   12de5:	jne    12f61 <kd_mutex_run_combiner+0x441>
+   12deb:	add    $0x60,%rsp
+   12def:	pop    %rbx
+   12df0:	pop    %r12
+   12df2:	pop    %r13
+   12df4:	pop    %rbp
+   12df5:	xor    %eax,%eax
+   12df7:	xor    %edx,%edx
+   12df9:	xor    %ecx,%ecx
+   12dfb:	xor    %esi,%esi
+   12dfd:	xor    %edi,%edi
+   12dff:	jmp    12e04 <kd_mutex_run_combiner+0x2e4>
+   12e04:	movq   $0x0,-0x60(%rbp)
+   12e0c:	mov    %rbx,-0x58(%rbp)
+   12e10:	movb   $0x0,-0x50(%rbp)
+   12e14:	movb   $0x0,-0x68(%rbp)
+   12e18:	jmp    12ca7 <kd_mutex_run_combiner+0x187>
+   12e1d:	cmpl   $0x7,-0x30(%rbp)
+   12e21:	ja     12d6a <kd_mutex_run_combiner+0x24a>
+   12e27:	cmpq   $0x0,-0x40(%rbp)
+   12e2c:	je     12e59 <kd_mutex_run_combiner+0x339>
+   12e2e:	mov    -0x38(%rbp),%rax
+   12e32:	test   %rax,%rax
+   12e35:	je     12ecc <kd_mutex_run_combiner+0x3ac>
+   12e3b:	mov    %rbx,(%rax)
+   12e3e:	mov    -0x40(%rbp),%rbx
+   12e42:	movq   $0x0,-0x38(%rbp)
+   12e4a:	movq   $0x0,-0x40(%rbp)
+   12e52:	movl   $0x0,-0x30(%rbp)
+   12e59:	movl   $0xffffffff,-0x28(%rbp)
+   12e60:	jmp    12c10 <kd_mutex_run_combiner+0xf0>
+   12e65:	incq   %gs:0x0(%rip)        # 12e6d <kd_mutex_run_combiner+0x34d>
+   12e6d:	movl   $0x1,0x18(%r13)
+   12e75:	jmp    12dd9 <kd_mutex_run_combiner+0x2b9>
+   12e7a:	cmpl   $0x1,0x44(%rbx)
+   12e7e:	jne    12d6a <kd_mutex_run_combiner+0x24a>
+   12e84:	jmp    12b9a <kd_mutex_run_combiner+0x7a>
+   12e89:	cmpl   $0x1,0x44(%rsi)
+   12e8d:	jne    12dc2 <kd_mutex_run_combiner+0x2a2>
+   12e93:	jmp    12b87 <kd_mutex_run_combiner+0x67>
+   12e98:	ud2    
+   12e9a:	movl   $0x1,0x18(%r13)
+   12ea2:	movb   $0x0,0x131(%rbx)
+   12ea9:	jmp    12db1 <kd_mutex_run_combiner+0x291>
+   12eae:	cmpq   $0x0,-0x40(%rbp)
+   12eb3:	jne    12f56 <kd_mutex_run_combiner+0x436>
+   12eb9:	mov    (%rdx),%rcx
+   12ebc:	test   %rcx,%rcx
+   12ebf:	je     12f2a <kd_mutex_run_combiner+0x40a>
+   12ec1:	mov    %rcx,-0x60(%rbp)
+   12ec5:	jmp    12d1d <kd_mutex_run_combiner+0x1fd>
+   12eca:	ud2    
+   12ecc:	ud2    
+   12ece:	lea    0x18(%r13),%rdx
+   12ed2:	mov    $0x2,%ecx
+   12ed7:	jmp    12edb <kd_mutex_run_combiner+0x3bb>
+   12ed9:	pause  
+   12edb:	mov    0x18(%r13),%eax
+   12edf:	test   %eax,%eax
+   12ee1:	jne    12ed9 <kd_mutex_run_combiner+0x3b9>
+   12ee3:	xor    %eax,%eax
+   12ee5:	lock cmpxchg %ecx,(%rdx)
+   12ee9:	test   %eax,%eax
+   12eeb:	jne    12ed9 <kd_mutex_run_combiner+0x3b9>
+   12eed:	decl   %gs:0x0(%rip)        # 12ef4 <kd_mutex_run_combiner+0x3d4>
+   12ef4:	je     12f5a <kd_mutex_run_combiner+0x43a>
+   12ef6:	mov    0x18(%r13),%eax
+   12efa:	cmp    $0x2,%eax
+   12efd:	jne    12f58 <kd_mutex_run_combiner+0x438>
+   12eff:	xor    %esi,%esi
+   12f01:	mov    %r13,%rdi
+   12f04:	call   12f09 <kd_mutex_run_combiner+0x3e9>
+   12f09:	movl   $0x1,0x18(%r13)
+   12f11:	incq   %gs:0x0(%rip)        # 12f19 <kd_mutex_run_combiner+0x3f9>
+   12f19:	incl   %gs:0x0(%rip)        # 12f20 <kd_mutex_run_combiner+0x400>
+   12f20:	call   12f25 <kd_mutex_run_combiner+0x405>
+   12f25:	jmp    12dd9 <kd_mutex_run_combiner+0x2b9>
+   12f2a:	mov    0x48(%rdx),%eax
+   12f2d:	xor    %esi,%esi
+   12f2f:	lock cmpxchg %esi,0x1c(%r13)
+   12f35:	cmp    0x48(%rdx),%eax
+   12f38:	je     12ec1 <kd_mutex_run_combiner+0x3a1>
+   12f3a:	pause  
+   12f3c:	mov    (%rdx),%rcx
+   12f3f:	test   %rcx,%rcx
+   12f42:	je     12f3a <kd_mutex_run_combiner+0x41a>
+   12f44:	jmp    12ec1 <kd_mutex_run_combiner+0x3a1>
+   12f49:	incq   %gs:0x0(%rip)        # 12f51 <kd_mutex_run_combiner+0x431>
+   12f51:	jmp    12cd1 <kd_mutex_run_combiner+0x1b1>
+   12f56:	ud2    
+   12f58:	ud2    
+   12f5a:	call   12f5f <kd_mutex_run_combiner+0x43f>
+   12f5f:	jmp    12ef6 <kd_mutex_run_combiner+0x3d6>
+   12f61:	call   12f66 <kd_mutex_run_combiner+0x446>
+   12f66:	cmpq   $0x0,-0x40(%rbp)
+   12f6b:	jne    12ce5 <kd_mutex_run_combiner+0x1c5>
+   12f71:	movl   $0x1,0x18(%r13)
+   12f79:	jmp    12db1 <kd_mutex_run_combiner+0x291>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

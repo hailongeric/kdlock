@@ -1,0 +1,62 @@
+"""Offline derivation from finalized audited results, never runs inspected code."""
+from pathlib import Path
+from collections import Counter,defaultdict
+import json,hashlib,csv,tarfile
+ROOT=Path('/tmp/kdlock-nano-f7a84065-comparison-20261030');OUT=Path(__file__).parent
+owner=Path('/tmp/kdlock-nano-f7a84065-postprocess-r2-20261030/owner.json');o=json.loads(owner.read_text());assert o['state']=='COMPLETE' and o['completed'] is True and o['validated'] is True and o['performance_accepted'] is False
+v=json.loads((ROOT/'validation.json').read_text());assert v['completed'] is True and v['validated'] is True and v['performance_accepted'] is False
+summary={'source_postprocess_owner_sha256':hashlib.sha256(owner.read_bytes()).hexdigest(),'source_validation_sha256':hashlib.sha256((ROOT/'validation.json').read_bytes()).hexdigest(),'performance_accepted':False,'comparisons':{}}
+flat=[]
+for name in ['8617','acfa']:
+ rows=json.loads((ROOT/('vs-'+name)/'points.json').read_text());group=defaultdict(list);rr=[]
+ for row in rows:
+  c,b=row['current_kd'],row['reference_kd'];r={k:row[k] for k in ['lock_kind','workload','write_percent','threads']};r.update(reference=name,current_whole=c['whole_ops_s'],current_peak=c['peak_ops_s'],reference_whole=b['whole_ops_s'],reference_peak=b['peak_ops_s'],whole_percent=100*(c['whole_ops_s']/b['whole_ops_s']-1),peak_percent=100*(c['peak_ops_s']/b['peak_ops_s']-1),current_class=c['execution_class'],reference_class=b['execution_class'],current_jit_share=c['jit_completion_share'],reference_jit_share=b['jit_completion_share']);rr.append(r);flat.append(r);group[(row['lock_kind'],row['workload'],row['write_percent'])].append(r)
+ comp={'summary':json.loads((ROOT/('vs-'+name)/'summary.json').read_text()),'profiles':{},'top_whole_losses':sorted(rr,key=lambda r:r['whole_percent'])[:10],'top_peak_losses':sorted(rr,key=lambda r:r['peak_percent'])[:10],'boundaries':[],'selected_mutex':[]}
+ for key,items in group.items():
+  comp['profiles']['/'.join(map(str,key))]={'whole_losses':sum(x['whole_percent']<0 for x in items),'peak_losses':sum(x['peak_percent']<0 for x in items),'either_losses':sum(x['whole_percent']<0 or x['peak_percent']<0 for x in items),'whole_negative_points':[(x['threads'],x['whole_percent']) for x in items if x['whole_percent']<0]}
+  a,b=[next(x for x in items if x['threads']==n) for n in [32,36]]
+  comp['boundaries'].append({'profile':key,'n32':a,'n36':b,'current_32_to_36_percent':100*(b['current_whole']/a['current_whole']-1),'reference_32_to_36_percent':100*(b['reference_whole']/a['reference_whole']-1)})
+ comp['selected_mutex']=[r for r in rr if r['lock_kind']=='mutex' and r['threads'] in [4,6,12,16,20,32,60]]
+ comp['current_NO_JIT']={'count':sum(r['current_class']=='NO_JIT' for r in rr),'whole_losses':sum(r['current_class']=='NO_JIT' and r['whole_percent']<0 for r in rr),'peak_losses':sum(r['current_class']=='NO_JIT' and r['peak_percent']<0 for r in rr),'either_losses':sum(r['current_class']=='NO_JIT' and (r['whole_percent']<0 or r['peak_percent']<0) for r in rr)}
+ comp['reader_heavy_both_NO_JIT']={'count':sum(r['write_percent']==1 and r['current_class']==r['reference_class']=='NO_JIT' for r in rr),'whole_losses':sum(r['write_percent']==1 and r['current_class']==r['reference_class']=='NO_JIT' and r['whole_percent']<0 for r in rr),'either_losses':sum(r['write_percent']==1 and r['current_class']==r['reference_class']=='NO_JIT' and (r['whole_percent']<0 or r['peak_percent']<0) for r in rr)}
+ summary['comparisons'][name]=comp
+with (OUT/'all-point-rates-and-changes.csv').open('w') as f:
+ w=csv.DictWriter(f,fieldnames=list(flat[0]));w.writeheader();w.writerows(flat)
+archives={
+ 'current':Path(v['arguments']['current_archives']),
+ '8617':Path(v['arguments']['reference8617_archives']),
+ 'acfa':Path(v['arguments']['acfa_archives']),
+}
+wanted={
+ 'rwsem-throughput-read':['rwsem-cacheline-c01-kdlock-w001-t07-r00','rwsem-cacheline-c01-kdlock-w001-t48-r00'],
+ 'rwlock-locality-read':['cacheline-c16-kdlock-w001-t06-r00','cacheline-c16-kdlock-w001-t52-r00'],
+ 'rwlock-throughput-read':['cacheline-c01-kdlock-w001-t07-r00','cacheline-c01-kdlock-w001-t08-r00'],
+}
+point_details={};provenance=[]
+for generation,base in archives.items():
+ idx=json.loads((base/'archives.json').read_text());points=json.loads((ROOT/generation/'points.json').read_text());by_session={r['session']:r for r in points};detail={}
+ for profile,names in wanted.items():
+  g=next(x for x in idx['groups'] if x['group']==profile)
+  with tarfile.open(base/g['file']) as t:
+   members={m.name:m for m in t.getmembers()}
+   for name in names:
+    relative=profile+'/'+name;prefix=idx['archive_prefix']+'/'+relative
+    d=OUT/'points'/generation/profile/name;d.mkdir(parents=True,exist_ok=True)
+    expected=by_session[relative+'/session.json'];objects={}
+    for leaf in ['session.json','measure.json','warmup.json','kernel.log']:
+     member=members[prefix+'/'+leaf];data=t.extractfile(member).read();h=hashlib.sha256(data).hexdigest()
+     if leaf!='kernel.log':assert h==expected[{'session.json':'session_sha256','measure.json':'raw_measure_sha256','warmup.json':'raw_warmup_sha256'}[leaf]]
+     (d/leaf).write_bytes(data);provenance.append({'generation':generation,'archive':str(base/g['file']),'audited_archive_sha256':g['sha256'],'member':member.name,'sha256':h})
+     objects[leaf]=json.loads(data) if leaf!='kernel.log' else data.decode()
+    s=objects['session.json'];stats={'lock_addr':s['layout']['lock_addr'],'jit_before':s['jit_before'],'jit_after':s['jit_after'],'jit_complete_before':s['jit_complete_before'],'jit_complete_after':s['jit_complete_after'],'phases':{}}
+    for label in ['measure','warmup']:
+     m=objects[label+'.json'];ws=m['workers'];stats['phases'][label]={'completed':m['completed'],'wall_ns':m['wall_ns'],'rate':m['completed']*1e9/m['wall_ns'],'cpu_ns':sum(x['cpu_ns'] for x in ws),'cpu_per_cohort_wall':sum(x['cpu_ns'] for x in ws)/(len(ws)*m['wall_ns']),'cpu_per_wall_each':[x['cpu_ns']/m['wall_ns'] for x in ws],'cpu_ns_each':[x['cpu_ns'] for x in ws],'completed_each':[x['completed'] for x in ws],'observed_cpus':[x['observed_cpu'] for x in ws],'kernel_start_spread_ns':max(x['active_started_ns'] for x in ws)-min(x['active_started_ns'] for x in ws)}
+    stats['hotlock_lines']=[ln for ln in objects['kernel.log'].splitlines() if any(x in ln for x in ['kd_hotlock mutex ratio:','kd_hotlock spin ratio:','kd_hotlock final:','kd_mutex stats:'])]
+    stats['translation']=s.get('translation');detail[relative]=stats
+ point_details[generation]=detail
+summary['point_details']=point_details
+(OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');(OUT/'point-provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+print('completed derived data')
+for name,c in summary['comparisons'].items():print(name,'NO_JIT',c['current_NO_JIT'],'read-heavy',c['reader_heavy_both_NO_JIT'])
+for generation,rows in point_details.items():
+ x=rows['rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t07-r00'];print(generation,'rwsem c01 w1 n7',json.dumps({k:v for k,v in x.items() if k not in ['hotlock_lines','translation']},sort_keys=True));print('hotlock cpu0-6',[x for x in x['hotlock_lines'] if any('cpu='+str(i)+' ' in x for i in range(7))])

@@ -1,0 +1,1 @@
+First derived-summary attempt stopped with KeyError on a guessed rwlock session prefix; no input or audit result changed. The actual finalized points use cacheline-c16/c01, without rwlock-. Corrected only those selected member names before rerunning the offline derivation.

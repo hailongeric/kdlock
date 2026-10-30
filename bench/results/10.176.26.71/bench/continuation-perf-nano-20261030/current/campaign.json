@@ -1,0 +1,1524 @@
+{
+  "label": "current",
+  "commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "source": {
+    "tracked_blobs": 308,
+    "reviewed_extras": {},
+    "identity_scope": "tracked Git blob authentication plus explicit extra-file review; no blanket checkout identity"
+  },
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "kernel_bundle_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+  "host_fixed_identity": {
+    "host_boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+    "cpufreq": {
+      "policy0": {
+        "affected_cpus": "0",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy1": {
+        "affected_cpus": "1",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy10": {
+        "affected_cpus": "10",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy11": {
+        "affected_cpus": "11",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy12": {
+        "affected_cpus": "12",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy13": {
+        "affected_cpus": "13",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy14": {
+        "affected_cpus": "14",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy15": {
+        "affected_cpus": "15",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy16": {
+        "affected_cpus": "16",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy17": {
+        "affected_cpus": "17",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy18": {
+        "affected_cpus": "18",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy19": {
+        "affected_cpus": "19",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy2": {
+        "affected_cpus": "2",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy20": {
+        "affected_cpus": "20",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy21": {
+        "affected_cpus": "21",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy22": {
+        "affected_cpus": "22",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy23": {
+        "affected_cpus": "23",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy24": {
+        "affected_cpus": "24",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy25": {
+        "affected_cpus": "25",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy26": {
+        "affected_cpus": "26",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy27": {
+        "affected_cpus": "27",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy28": {
+        "affected_cpus": "28",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy29": {
+        "affected_cpus": "29",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy3": {
+        "affected_cpus": "3",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy30": {
+        "affected_cpus": "30",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy31": {
+        "affected_cpus": "31",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy32": {
+        "affected_cpus": "32",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy33": {
+        "affected_cpus": "33",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy34": {
+        "affected_cpus": "34",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy35": {
+        "affected_cpus": "35",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy36": {
+        "affected_cpus": "36",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy37": {
+        "affected_cpus": "37",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy38": {
+        "affected_cpus": "38",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy39": {
+        "affected_cpus": "39",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy4": {
+        "affected_cpus": "4",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy40": {
+        "affected_cpus": "40",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy41": {
+        "affected_cpus": "41",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy42": {
+        "affected_cpus": "42",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy43": {
+        "affected_cpus": "43",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy44": {
+        "affected_cpus": "44",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy45": {
+        "affected_cpus": "45",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy46": {
+        "affected_cpus": "46",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy47": {
+        "affected_cpus": "47",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy48": {
+        "affected_cpus": "48",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy49": {
+        "affected_cpus": "49",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy5": {
+        "affected_cpus": "5",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy50": {
+        "affected_cpus": "50",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy51": {
+        "affected_cpus": "51",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy52": {
+        "affected_cpus": "52",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy53": {
+        "affected_cpus": "53",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy54": {
+        "affected_cpus": "54",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy55": {
+        "affected_cpus": "55",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy56": {
+        "affected_cpus": "56",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy57": {
+        "affected_cpus": "57",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy58": {
+        "affected_cpus": "58",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy59": {
+        "affected_cpus": "59",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy6": {
+        "affected_cpus": "6",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy60": {
+        "affected_cpus": "60",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy61": {
+        "affected_cpus": "61",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy62": {
+        "affected_cpus": "62",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy63": {
+        "affected_cpus": "63",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy7": {
+        "affected_cpus": "7",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy8": {
+        "affected_cpus": "8",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      },
+      "policy9": {
+        "affected_cpus": "9",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_governor": "performance",
+        "scaling_max_freq": "2000000",
+        "scaling_min_freq": "2000000"
+      }
+    },
+    "no_turbo": "1",
+    "numa": {
+      "node0": "0-31",
+      "node1": "32-63"
+    },
+    "recovery_snapshot": "linux70-kdlock1-clean-20261027",
+    "monitor_path": "/tmp/qemu-monitor.sock",
+    "qemu": {
+      "pid": 257489,
+      "start_ticks": 42969155,
+      "args": [
+        "qemu-system-x86_64",
+        "-name",
+        "ubuntu-build,debug-threads=on",
+        "-enable-kvm",
+        "-cpu",
+        "host",
+        "-smp",
+        "64,maxcpus=64,sockets=2,cores=32,threads=1",
+        "-m",
+        "24G",
+        "-object",
+        "memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind",
+        "-object",
+        "memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind",
+        "-numa",
+        "node,nodeid=0,cpus=0-31,memdev=mem0",
+        "-numa",
+        "node,nodeid=1,cpus=32-63,memdev=mem1",
+        "-device",
+        "virtio-scsi-pci,id=scsi0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system",
+        "-device",
+        "scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1",
+        "-device",
+        "scsi-hd,drive=drive_data1,bus=scsi0.0",
+        "-netdev",
+        "user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091",
+        "-device",
+        "virtio-net-pci,netdev=n1",
+        "-display",
+        "none",
+        "-serial",
+        "file:/tmp/qemu-serial.log",
+        "-monitor",
+        "unix:/tmp/qemu-monitor.sock,server=on,wait=off",
+        "-gdb",
+        "tcp:127.0.0.1:1234",
+        "-pidfile",
+        "/tmp/kdlock-qemu.pid",
+        "-daemonize"
+      ],
+      "tasks": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "qemu-system-x86",
+          "start_ticks": 42969155,
+          "tid": 257489
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "call_rcu",
+          "start_ticks": 42969155,
+          "tid": 257490
+        },
+        {
+          "affinity": [
+            0
+          ],
+          "comm": "CPU 0/KVM",
+          "start_ticks": 42969159,
+          "tid": 257495
+        },
+        {
+          "affinity": [
+            1
+          ],
+          "comm": "CPU 1/KVM",
+          "start_ticks": 42969159,
+          "tid": 257496
+        },
+        {
+          "affinity": [
+            2
+          ],
+          "comm": "CPU 2/KVM",
+          "start_ticks": 42969159,
+          "tid": 257497
+        },
+        {
+          "affinity": [
+            3
+          ],
+          "comm": "CPU 3/KVM",
+          "start_ticks": 42969159,
+          "tid": 257498
+        },
+        {
+          "affinity": [
+            4
+          ],
+          "comm": "CPU 4/KVM",
+          "start_ticks": 42969159,
+          "tid": 257499
+        },
+        {
+          "affinity": [
+            5
+          ],
+          "comm": "CPU 5/KVM",
+          "start_ticks": 42969159,
+          "tid": 257500
+        },
+        {
+          "affinity": [
+            6
+          ],
+          "comm": "CPU 6/KVM",
+          "start_ticks": 42969159,
+          "tid": 257501
+        },
+        {
+          "affinity": [
+            7
+          ],
+          "comm": "CPU 7/KVM",
+          "start_ticks": 42969159,
+          "tid": 257502
+        },
+        {
+          "affinity": [
+            8
+          ],
+          "comm": "CPU 8/KVM",
+          "start_ticks": 42969159,
+          "tid": 257503
+        },
+        {
+          "affinity": [
+            9
+          ],
+          "comm": "CPU 9/KVM",
+          "start_ticks": 42969160,
+          "tid": 257504
+        },
+        {
+          "affinity": [
+            10
+          ],
+          "comm": "CPU 10/KVM",
+          "start_ticks": 42969160,
+          "tid": 257505
+        },
+        {
+          "affinity": [
+            11
+          ],
+          "comm": "CPU 11/KVM",
+          "start_ticks": 42969160,
+          "tid": 257506
+        },
+        {
+          "affinity": [
+            12
+          ],
+          "comm": "CPU 12/KVM",
+          "start_ticks": 42969160,
+          "tid": 257507
+        },
+        {
+          "affinity": [
+            13
+          ],
+          "comm": "CPU 13/KVM",
+          "start_ticks": 42969160,
+          "tid": 257508
+        },
+        {
+          "affinity": [
+            14
+          ],
+          "comm": "CPU 14/KVM",
+          "start_ticks": 42969160,
+          "tid": 257509
+        },
+        {
+          "affinity": [
+            15
+          ],
+          "comm": "CPU 15/KVM",
+          "start_ticks": 42969160,
+          "tid": 257510
+        },
+        {
+          "affinity": [
+            16
+          ],
+          "comm": "CPU 16/KVM",
+          "start_ticks": 42969160,
+          "tid": 257511
+        },
+        {
+          "affinity": [
+            17
+          ],
+          "comm": "CPU 17/KVM",
+          "start_ticks": 42969160,
+          "tid": 257512
+        },
+        {
+          "affinity": [
+            18
+          ],
+          "comm": "CPU 18/KVM",
+          "start_ticks": 42969160,
+          "tid": 257513
+        },
+        {
+          "affinity": [
+            19
+          ],
+          "comm": "CPU 19/KVM",
+          "start_ticks": 42969160,
+          "tid": 257514
+        },
+        {
+          "affinity": [
+            20
+          ],
+          "comm": "CPU 20/KVM",
+          "start_ticks": 42969160,
+          "tid": 257515
+        },
+        {
+          "affinity": [
+            21
+          ],
+          "comm": "CPU 21/KVM",
+          "start_ticks": 42969160,
+          "tid": 257516
+        },
+        {
+          "affinity": [
+            22
+          ],
+          "comm": "CPU 22/KVM",
+          "start_ticks": 42969160,
+          "tid": 257517
+        },
+        {
+          "affinity": [
+            23
+          ],
+          "comm": "CPU 23/KVM",
+          "start_ticks": 42969160,
+          "tid": 257518
+        },
+        {
+          "affinity": [
+            24
+          ],
+          "comm": "CPU 24/KVM",
+          "start_ticks": 42969161,
+          "tid": 257519
+        },
+        {
+          "affinity": [
+            25
+          ],
+          "comm": "CPU 25/KVM",
+          "start_ticks": 42969161,
+          "tid": 257520
+        },
+        {
+          "affinity": [
+            26
+          ],
+          "comm": "CPU 26/KVM",
+          "start_ticks": 42969161,
+          "tid": 257521
+        },
+        {
+          "affinity": [
+            27
+          ],
+          "comm": "CPU 27/KVM",
+          "start_ticks": 42969161,
+          "tid": 257522
+        },
+        {
+          "affinity": [
+            28
+          ],
+          "comm": "CPU 28/KVM",
+          "start_ticks": 42969161,
+          "tid": 257523
+        },
+        {
+          "affinity": [
+            29
+          ],
+          "comm": "CPU 29/KVM",
+          "start_ticks": 42969161,
+          "tid": 257524
+        },
+        {
+          "affinity": [
+            30
+          ],
+          "comm": "CPU 30/KVM",
+          "start_ticks": 42969161,
+          "tid": 257525
+        },
+        {
+          "affinity": [
+            31
+          ],
+          "comm": "CPU 31/KVM",
+          "start_ticks": 42969161,
+          "tid": 257526
+        },
+        {
+          "affinity": [
+            32
+          ],
+          "comm": "CPU 32/KVM",
+          "start_ticks": 42969161,
+          "tid": 257527
+        },
+        {
+          "affinity": [
+            33
+          ],
+          "comm": "CPU 33/KVM",
+          "start_ticks": 42969161,
+          "tid": 257528
+        },
+        {
+          "affinity": [
+            34
+          ],
+          "comm": "CPU 34/KVM",
+          "start_ticks": 42969161,
+          "tid": 257529
+        },
+        {
+          "affinity": [
+            35
+          ],
+          "comm": "CPU 35/KVM",
+          "start_ticks": 42969161,
+          "tid": 257530
+        },
+        {
+          "affinity": [
+            36
+          ],
+          "comm": "CPU 36/KVM",
+          "start_ticks": 42969161,
+          "tid": 257531
+        },
+        {
+          "affinity": [
+            37
+          ],
+          "comm": "CPU 37/KVM",
+          "start_ticks": 42969161,
+          "tid": 257532
+        },
+        {
+          "affinity": [
+            38
+          ],
+          "comm": "CPU 38/KVM",
+          "start_ticks": 42969161,
+          "tid": 257533
+        },
+        {
+          "affinity": [
+            39
+          ],
+          "comm": "CPU 39/KVM",
+          "start_ticks": 42969161,
+          "tid": 257534
+        },
+        {
+          "affinity": [
+            40
+          ],
+          "comm": "CPU 40/KVM",
+          "start_ticks": 42969161,
+          "tid": 257535
+        },
+        {
+          "affinity": [
+            41
+          ],
+          "comm": "CPU 41/KVM",
+          "start_ticks": 42969161,
+          "tid": 257536
+        },
+        {
+          "affinity": [
+            42
+          ],
+          "comm": "CPU 42/KVM",
+          "start_ticks": 42969161,
+          "tid": 257537
+        },
+        {
+          "affinity": [
+            43
+          ],
+          "comm": "CPU 43/KVM",
+          "start_ticks": 42969161,
+          "tid": 257538
+        },
+        {
+          "affinity": [
+            44
+          ],
+          "comm": "CPU 44/KVM",
+          "start_ticks": 42969161,
+          "tid": 257539
+        },
+        {
+          "affinity": [
+            45
+          ],
+          "comm": "CPU 45/KVM",
+          "start_ticks": 42969161,
+          "tid": 257540
+        },
+        {
+          "affinity": [
+            46
+          ],
+          "comm": "CPU 46/KVM",
+          "start_ticks": 42969161,
+          "tid": 257541
+        },
+        {
+          "affinity": [
+            47
+          ],
+          "comm": "CPU 47/KVM",
+          "start_ticks": 42969162,
+          "tid": 257542
+        },
+        {
+          "affinity": [
+            48
+          ],
+          "comm": "CPU 48/KVM",
+          "start_ticks": 42969162,
+          "tid": 257543
+        },
+        {
+          "affinity": [
+            49
+          ],
+          "comm": "CPU 49/KVM",
+          "start_ticks": 42969162,
+          "tid": 257544
+        },
+        {
+          "affinity": [
+            50
+          ],
+          "comm": "CPU 50/KVM",
+          "start_ticks": 42969162,
+          "tid": 257545
+        },
+        {
+          "affinity": [
+            51
+          ],
+          "comm": "CPU 51/KVM",
+          "start_ticks": 42969162,
+          "tid": 257546
+        },
+        {
+          "affinity": [
+            52
+          ],
+          "comm": "CPU 52/KVM",
+          "start_ticks": 42969162,
+          "tid": 257547
+        },
+        {
+          "affinity": [
+            53
+          ],
+          "comm": "CPU 53/KVM",
+          "start_ticks": 42969162,
+          "tid": 257548
+        },
+        {
+          "affinity": [
+            54
+          ],
+          "comm": "CPU 54/KVM",
+          "start_ticks": 42969162,
+          "tid": 257549
+        },
+        {
+          "affinity": [
+            55
+          ],
+          "comm": "CPU 55/KVM",
+          "start_ticks": 42969162,
+          "tid": 257550
+        },
+        {
+          "affinity": [
+            56
+          ],
+          "comm": "CPU 56/KVM",
+          "start_ticks": 42969163,
+          "tid": 257551
+        },
+        {
+          "affinity": [
+            57
+          ],
+          "comm": "CPU 57/KVM",
+          "start_ticks": 42969163,
+          "tid": 257552
+        },
+        {
+          "affinity": [
+            58
+          ],
+          "comm": "CPU 58/KVM",
+          "start_ticks": 42969163,
+          "tid": 257553
+        },
+        {
+          "affinity": [
+            59
+          ],
+          "comm": "CPU 59/KVM",
+          "start_ticks": 42969163,
+          "tid": 257554
+        },
+        {
+          "affinity": [
+            60
+          ],
+          "comm": "CPU 60/KVM",
+          "start_ticks": 42969163,
+          "tid": 257555
+        },
+        {
+          "affinity": [
+            61
+          ],
+          "comm": "CPU 61/KVM",
+          "start_ticks": 42969163,
+          "tid": 257556
+        },
+        {
+          "affinity": [
+            62
+          ],
+          "comm": "CPU 62/KVM",
+          "start_ticks": 42969163,
+          "tid": 257557
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "CPU 63/KVM",
+          "start_ticks": 42969163,
+          "tid": 257558
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "kvm-nx-lpage-re",
+          "start_ticks": 42969168,
+          "tid": 257560
+        }
+      ]
+    }
+  },
+  "host_endpoints": {
+    "before_sha256": "00ceb21b63d3b26935ce10c1b494dac21841948b328685eb151a28609cbd3ed0",
+    "after_sha256": "26a91814b223f15768f35b18a1c38acd23bb766aadddc14fc1436d8178cfe9f0",
+    "before_auxiliary_workers": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172657609,
+        "tid": 743780
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172699608,
+        "tid": 745173
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172702289,
+        "tid": 745700
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172703773,
+        "tid": 745701
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172703773,
+        "tid": 745702
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172703773,
+        "tid": 745703
+      }
+    ],
+    "after_auxiliary_workers": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172703773,
+        "tid": 745701
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172776528,
+        "tid": 746419
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172776528,
+        "tid": 746420
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172926343,
+        "tid": 746489
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746497
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746500
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966352,
+        "tid": 746502
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746504
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746506
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746507
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746508
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746510
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746514
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746516
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746518
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746519
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746520
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746521
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746523
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746524
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746525
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746528
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746529
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746531
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746533
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746534
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746535
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746537
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172966353,
+        "tid": 746540
+      }
+    ]
+  },
+  "controller_sha256": "6def6d611a9eef3f5d55aaee4d6d81ffa0a6b270401f518fcc626dc3febdddd6",
+  "started": 1793339948.6147146,
+  "finished": 1793343305.751523,
+  "offline_prerequisites": {
+    "unit_owner_sha256": "2356a8d0ee6a5ffd9be052a1a33db0845faada3e47b15b77fbf55a3662fbc70f",
+    "unit_reuse": {
+      "prior_source_commit": "6bf690204fdf954ab9076a762000833ec18e6261",
+      "current_source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+      "prior_owner_completed": false,
+      "prior_error": "AssertionError('unit')",
+      "prior_unit_returncode": 2,
+      "prior_unit_log_sha256": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757",
+      "prior_failure": "batch context omission mutant compile-only unused accessor",
+      "prior_unit_argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "run",
+        "PY_TESTS=spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_proxy_context.py spin/test_spin_batch_context.py mutex/test_mutex_origin_instruction.py execution/test_bench_completion.py"
+      ],
+      "reused_python_drivers": [
+        "spin/test_spin_batch.py",
+        "spin/test_spin_shadow.py",
+        "spin/test_spin_outer_progress.py",
+        "spin/test_spin_proxy_context.py",
+        "mutex/test_mutex_origin_instruction.py",
+        "execution/test_bench_completion.py"
+      ],
+      "reused_python_passes": 6,
+      "same_tracked_path_set": true,
+      "compared_tracked_inputs": 5922,
+      "changed_inputs": {
+        "bench/results/10.176.26.71/bench/continuation-nano-20261030/README.md": {
+          "prior": "6892c0e6bdd664350ba5978bc5e1d5056dea2ec437aa32b00f9884515d19309d",
+          "current": "bb7ce76d610d8f4dd7678961193ec8ca1afe5ae7ce1b534a2c1636f177bec74f"
+        },
+        "tests/unit/spin/spin_batch_context_fixture.c": {
+          "prior": "5c14c07f841db315373a3790d99ed5c49caf98fcacb83392224edbec3aecd29b",
+          "current": "90e70217a60bd1fa13538b6d38601653a6872ca69dc2db64e3cb0c8070f55329"
+        }
+      },
+      "evidence_directory": "unit-reuse",
+      "retained_sha256": {
+        "owner.json": "313a1ad0a38891530ec29cd2ceb5aa781d1236056b94ea21fbb47738d32a7bea",
+        "unit.log": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757",
+        "sync.json": "e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43",
+        "controller.py": "e60a9285bca40716fdad9dcd409026471fadbc771508eccab4483797a4247b71"
+      }
+    },
+    "retained_failed_inputs": {
+      "owner.json": "313a1ad0a38891530ec29cd2ceb5aa781d1236056b94ea21fbb47738d32a7bea",
+      "unit.log": "52068e4078c5491ab420bbc729e7bb844be55fa42f475f8823df26dfb30be757",
+      "sync.json": "e8f8c60840496de5c3636039a214321ce15b8b1f241a929e812c3f1c899b3e43",
+      "controller.py": "e60a9285bca40716fdad9dcd409026471fadbc771508eccab4483797a4247b71"
+    },
+    "functional_phases": {
+      "basic": {
+        "owner_sha256": "8e6b41da338eb8e17de6f69ffae694fd24f0005e3a9f1f081278e32fcea261e5",
+        "result_sha256": "fd8579d8e7609e340f78af713263fc51dae8c5da9377f926c0ae41797d028ad1",
+        "passed": true,
+        "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+        "original_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030"
+      },
+      "origin": {
+        "owner_sha256": "8e0cc4c7780f7ee92dfee91433d89ebd5bf9708813447e10a4ded16e1c40de55",
+        "result_sha256": "fc5f1ae7aa99b361d3f3f3df2e639d0a106432b21096e56d1405520d872ef5c0",
+        "passed": true,
+        "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+        "original_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030"
+      },
+      "rwsem": {
+        "owner_sha256": "5a5b85820b1944eef63a6821a3fdd9dc0855cccb63609db2a3c5551e8f901f9f",
+        "result_sha256": "40ff1aa9e3665a3c078e8a6ed6ae8f23b5b85fafc61b4dc29230a4a09c4b7591",
+        "passed": true,
+        "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+        "original_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030"
+      },
+      "mixed": {
+        "owner_sha256": "c3337c184618601816c5e90a38d4cb5db4d6ce1998b81599033f1a9e329a532a",
+        "result_sha256": "0a98c926292520f173f2327e9f3a7bf8ca47eb2fff14589dd570af37e18a123a",
+        "passed": true,
+        "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+        "original_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030"
+      }
+    },
+    "basic_dependency": {
+      "campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030",
+      "owner_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030/basic-control/owner.json",
+      "owner_sha256": "8e6b41da338eb8e17de6f69ffae694fd24f0005e3a9f1f081278e32fcea261e5",
+      "result_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-perf-live-f7a84065-20261030/basic/result.json",
+      "result_sha256": "fd8579d8e7609e340f78af713263fc51dae8c5da9377f926c0ae41797d028ad1"
+    },
+    "performance_accepted": false
+  },
+  "archive": {
+    "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/continuation-perf-nano-f7a84065-20261030/continuation-perf-nano-f7a84065-20261030-archives",
+    "archive_receipt_sha256": "ff7c1f6533cd435a13fc065b2c667581f3ac45aa878292034fdf5b3c3f6f450b",
+    "inventory_sha256": "c24badebcaad842af769df68e3173ad9846e4027639abb1749bf3415e9c0c4e5",
+    "paths": 15760,
+    "regular_files": 12880,
+    "groups": [
+      {
+        "file": "mutex-throughput.tar.gz",
+        "bytes": 6854856,
+        "sha256": "e294230a3b7d0711ee4bddad4e4eba72d55b64d2fbb1d62f5778b40e28b8f9f0"
+      },
+      {
+        "file": "mutex-locality.tar.gz",
+        "bytes": 6883308,
+        "sha256": "5e564b59380ee378a4d094aa1d7050d72e0c315ea6e60613d6838c85bf5c556e"
+      },
+      {
+        "file": "rwsem-throughput-read.tar.gz",
+        "bytes": 7058610,
+        "sha256": "c09e8c0f619303d0a9cf926bbe90a3330f57a781785022accc6708f344bdac17"
+      },
+      {
+        "file": "rwsem-throughput-mixed.tar.gz",
+        "bytes": 6835213,
+        "sha256": "3f5f1c6193773c32a1980995ce45b61036ad037bc48cbac9e05b38e74bd6ad54"
+      },
+      {
+        "file": "rwsem-locality-read.tar.gz",
+        "bytes": 7205437,
+        "sha256": "cd69d05c37c3a7b584b9ca2158d5bf746cc1c468785a5d7bf4f12ea89ca03801"
+      },
+      {
+        "file": "rwsem-locality-mixed.tar.gz",
+        "bytes": 6891018,
+        "sha256": "fa05249a76832da45b4986169f5e992ef814044849171ab1f4ddcf9b6c4e9bba"
+      },
+      {
+        "file": "rwlock-throughput-read.tar.gz",
+        "bytes": 7172799,
+        "sha256": "5ed4aa5754d0f17e3889c328cf7d3e5ef581f75d0e052de4452618704b4c5871"
+      },
+      {
+        "file": "rwlock-throughput-mixed.tar.gz",
+        "bytes": 7004295,
+        "sha256": "d86ad63544a6f6b96a0cb5ed968462d318a38cca230ba82baeee3caa3adbbe98"
+      },
+      {
+        "file": "rwlock-locality-read.tar.gz",
+        "bytes": 7228371,
+        "sha256": "ec903320527747f9372b98efc5349c4a0e5427b956a3d93119ffe9a1926dd0de"
+      },
+      {
+        "file": "rwlock-locality-mixed.tar.gz",
+        "bytes": 6999528,
+        "sha256": "5f36e3daf774d0197830b81f76b77e5ba9c294687bb9cd363b4f67e653f21c51"
+      },
+      {
+        "file": "metadata.tar.gz",
+        "bytes": 22855,
+        "sha256": "8f028dfbd928d8a8162ae561dea4cdb488a7e0f6b014a489d8b96b2f0e1674f0"
+      }
+    ]
+  }
+}

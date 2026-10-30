@@ -1,0 +1,48 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001de10 <kd_rwsem_write_release>:
+   1de10:	call   1de15 <kd_rwsem_write_release+0x5>
+   1de15:	push   %rbp
+   1de16:	mov    0x80(%rdi),%rax
+   1de1d:	mov    %rsp,%rbp
+   1de20:	cmp    $0xffffffffffffffff,%rax
+   1de24:	je     1de7c <kd_rwsem_write_release+0x6c>
+   1de26:	mov    $0xffffffffffffffff,%rax
+   1de2d:	lock xadd %rax,0x80(%rdi)
+   1de36:	sub    $0x1,%rax
+   1de3a:	js     1de8d <kd_rwsem_write_release+0x7d>
+   1de3c:	jne    1de69 <kd_rwsem_write_release+0x59>
+   1de3e:	mov    0xc8(%rdi),%rax
+   1de45:	lea    0xc0(%rdi),%r8
+   1de4c:	add    $0xc8,%rdi
+   1de53:	cmp    %rdi,%rax
+   1de56:	je     1de69 <kd_rwsem_write_release+0x59>
+   1de58:	xor    %ecx,%ecx
+   1de5a:	xor    %edx,%edx
+   1de5c:	mov    $0x3,%esi
+   1de61:	mov    %r8,%rdi
+   1de64:	call   1de69 <kd_rwsem_write_release+0x59>
+   1de69:	pop    %rbp
+   1de6a:	xor    %eax,%eax
+   1de6c:	xor    %edx,%edx
+   1de6e:	xor    %ecx,%ecx
+   1de70:	xor    %esi,%esi
+   1de72:	xor    %edi,%edi
+   1de74:	xor    %r8d,%r8d
+   1de77:	jmp    1de7c <kd_rwsem_write_release+0x6c>
+   1de7c:	xor    %eax,%eax
+   1de7e:	xchg   %rax,0x80(%rdi)
+   1de85:	cmp    $0xffffffffffffffff,%rax
+   1de89:	je     1de3e <kd_rwsem_write_release+0x2e>
+   1de8b:	ud2    
+   1de8d:	ud2    
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

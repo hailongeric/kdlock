@@ -1,0 +1,24 @@
+
+/tmp/kdlock-continuation-f7a84065-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001da00 <kd_up_read_non_owner>:
+   1da00:	call   1da05 <kd_up_read_non_owner+0x5>
+   1da05:	lock decq 0x40(%rdi)
+   1da0a:	jne    1da1d <kd_up_read_non_owner+0x1d>
+   1da0c:	push   %rbp
+   1da0d:	mov    %rsp,%rbp
+   1da10:	call   1d8d0 <kd_up_read.part.0>
+   1da15:	pop    %rbp
+   1da16:	xor    %edi,%edi
+   1da18:	jmp    1da1d <kd_up_read_non_owner+0x1d>
+   1da1d:	xor    %edi,%edi
+   1da1f:	jmp    1da24 <kd_up_read_non_owner+0x24>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:
