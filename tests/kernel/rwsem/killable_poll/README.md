@@ -64,5 +64,6 @@ python3 /path/to/killable_poll/run.py \
   --kernel-baseline MATCHING_BUNDLE --cpu 0 --output NEW_EXTERNAL_DIRECTORY
 ```
 
-Implementation and validation status: planned; no build, live result or
-performance measurement is recorded by this document.
+Implementation status: the four-case payload and runner are prepared in this
+separate test branch. Source-host AST and whitespace inspection are the only
+checks so far; no build, live result or performance measurement is recorded.
