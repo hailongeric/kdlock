@@ -104,3 +104,20 @@ dispatcher's ownership transition. Own the FULL packet for those direct-helper
 cases; preserve case 15's deliberately foreign borrowed packet. The runtime
 dispatcher already performs this transition. Both corrections affect only test
 fixtures and require a new VM run; the mutation must still fail an assertion.
+
+## Corrected fixtures and observation preparation
+
+At `28d479d4de96cf038829176124abb29039f7ff19`, the same VM selection completed
+**14 passed, 0 failed**, including explicit detection of the intentional
+execution mutations. The output is
+`/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-unit-28d479d4-20261030`;
+the clean synchronization SHA256 is
+`bf3dda2052dabe5649bfa78b442701315187d8dad33cb20cbc792d9010cca580`.
+
+Private provider preparation then failed before compilation: the first
+`kernel_module/exe.c` observation hunk expected adjacent declarations, but the
+new `resume_after_origin` declaration separates them. Preserve the failed
+private tree. Update only the patch context to include that declaration; keep
+all instrumentation additions and production code unchanged. Include the
+directly affected completion-accounting unit driver in the next VM selection.
+Unit success here does not establish a provider build, live execution or timing.
