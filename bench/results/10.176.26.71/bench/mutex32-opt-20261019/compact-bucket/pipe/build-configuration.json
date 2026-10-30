@@ -1,9 +1,0 @@
-{
-  "kdlock_km": {
-    "spin_batch": "1024",
-    "spin_numa": "1"
-  },
-  "tclock_mutex_backend_km": {
-    "mutex_numa": "1"
-  }
-}

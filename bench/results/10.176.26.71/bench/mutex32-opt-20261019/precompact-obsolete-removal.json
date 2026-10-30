@@ -1,7 +1,0 @@
-{
-  "idle": true,
-  "removed_reviewed_obsolete_synced_sources": {
-    "include/kd_mutex_aux.h": "fc6a63242615a49d5d062ae377328b9f2bb660d7f4c23cf7688a7b5e048ba4c5",
-    "kernel_module/kd_mutex_aux.c": "5f855b403b4629bf252d1d0b531e91b8de8529515750c7b9cc762b0b631eba12"
-  }
-}

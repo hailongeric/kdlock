@@ -1,9 +1,0 @@
-{
-  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
-  "capture_script_sha256": "a629b07eccece28eed499817b93a7d6bfac9d9cf391f69e7140151b4c5fb21ba",
-  "checked_unix": 1792515174.8241796,
-  "idle": true,
-  "per_session_kernel_faults": [],
-  "result_sha256": "b98cc0f92d0b40dede3aeb25eaef18d8214bddf9bf57c43c752737313e375791",
-  "scope": "Read-only kernel identity and source capture; no KD mmap execution."
-}

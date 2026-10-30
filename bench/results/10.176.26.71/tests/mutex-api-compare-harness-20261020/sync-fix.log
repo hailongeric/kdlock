@@ -1,5 +1,0 @@
-Snapshot: 2901 tracked files, 205,887,699 bytes; dry-run=False
-{"changed": ["bench/mutex_api_compare/run.py", "bench/mutex_api_compare/test_compare.py"], "guest_changed_files": 2}
-{"approved_files": 2901, "changed": ["bench/mutex_api_compare/run.py", "bench/mutex_api_compare/test_compare.py"], "changed_files": 2, "dry_run": false}
-Copied 2 changed files; verified all 2901 approved hashes. No project files deleted.
-Synchronization complete; subsequent builds, tests and benchmarks run in the new VM.

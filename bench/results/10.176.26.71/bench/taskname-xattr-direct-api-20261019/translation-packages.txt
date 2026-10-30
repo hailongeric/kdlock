@@ -1,4 +1,0 @@
-future==1.0.0
-miasm==0.1.5
-pyelftools==0.27
-pyparsing==2.4.7

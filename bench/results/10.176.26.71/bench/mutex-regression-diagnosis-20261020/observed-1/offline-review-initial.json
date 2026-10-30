@@ -1,6 +1,0 @@
-{
-  "complete": false,
-  "script_sha256": "2d5f5907c8639df4554da27d82f1bbf217258043259b05eb6d2a3082b9dedb35",
-  "error": "KeyError: analysis-final/per-repeat.csv",
-  "cause": "The inert archive helper hashes CSV members but does not retain their bytes in its text-content cache. No benchmark or archive changed; the follow-up reads the already-verified member directly."
-}
