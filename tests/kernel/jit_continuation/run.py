@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only conditional instruction escape and repeated per-path delegation."""
+"""Guest-only JIT continuation and repeated per-path delegation."""
 import argparse
 import ctypes
 import fcntl
@@ -24,8 +24,8 @@ from native_only_protocol import entries
 sys.path.insert(0, str(ROOT / "bench/tclock_compare"))
 from mutex_api_audit import audit_public_entries
 
-DEVICE = "/dev/kd_jit_escape_test"
-WORKER_COMM = "ke_worker"
+DEVICE = "/dev/kd_jit_continuation_test"
+WORKER_COMM = "kc_worker"
 RUN, SNAPSHOT, PREPARE, HOT = 0xC0204501, 0x80504502, 0x4503, 0x4504
 READ = 0xC0204505
 COLD = 0x4506
@@ -116,7 +116,7 @@ def sources(root):
     hashes = {}
     for directory in ("include", "kernel_module", "daemon", "disassem", "kernel_baseline", "kernel_integration/linux70",
                       "bench/spin_cacheline", "bench/tclock_compare/allocator_guard",
-                      "tests/protocols", "tests/kernel/jit_escape"):
+                      "tests/protocols", "tests/kernel/jit_continuation"):
         for path in (root / directory).rglob("*"):
             relative = path.relative_to(root)
             if (not path.is_file() or any(p.startswith(".") or p in ("__pycache__", "results")
@@ -132,7 +132,7 @@ def sources(root):
 
 def idle():
     rt.idle()
-    for name in ("jit_escape_test", "rwsem_probe", "rwlock_bench", "rwlock_test", "real_api",
+    for name in ("jit_continuation_test", "rwsem_probe", "rwlock_bench", "rwlock_test", "real_api",
                  "tc_allocator_guard", "tclock_backend_km", "tclock_mutex_backend_km",
                  "tclock_rwlock_backend_km"):
         rt.require(not Path("/sys/module", name).exists(), "existing module: " + name)
@@ -143,7 +143,7 @@ def idle():
             continue
 
 
-class EscapeSession(Session):
+class ContinuationSession(Session):
     def __init__(self, out, spec, binaries, verify):
         super().__init__(out, spec, workload_module=binaries["workload"])
         self.binaries, self.verify = binaries, verify
@@ -293,7 +293,7 @@ class EscapeSession(Session):
             for index, cpu in enumerate(self.record["cpus"]):
                 log = (self.path / f"{name}-worker-{index}.json").open("w")
                 logs.append(log)
-                argv = [sys.executable, self.translation_source / "tests/kernel/jit_escape/run.py",
+                argv = [sys.executable, self.translation_source / "tests/kernel/jit_continuation/run.py",
                         "--worker", str(cpu), str(requested[index]), str(index), str(barrier),
                         self.record["worker_roles"][index]]
                 processes.append(subprocess.Popen(list(map(str, argv)), stdout=log,
@@ -520,21 +520,21 @@ def main():
         guard_dir = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard_dir)
         rt.command(["make", "-C", guard_dir, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        workload = source / "tests/kernel/jit_escape/payload/jit_escape_test.ko"
+        workload = source / "tests/kernel/jit_continuation/payload/jit_continuation_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
-                    f"JIT_ESCAPE_FAMILY={args.family}",
-                    f"JIT_ESCAPE_MUTEX_API={args.mutex_api}",
-                    f"JIT_ESCAPE_MIXED_SPIN={int(args.mixed_spin)}",
-                    f"JIT_ESCAPE_ORIGIN_INSTRUCTIONS={int(args.origin_instructions)}",
+                    f"JIT_CONTINUATION_FAMILY={args.family}",
+                    f"JIT_CONTINUATION_MUTEX_API={args.mutex_api}",
+                    f"JIT_CONTINUATION_MIXED_SPIN={int(args.mixed_spin)}",
+                    f"JIT_CONTINUATION_ORIGIN_INSTRUCTIONS={int(args.origin_instructions)}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)
         compiled_api = rt.command(["modinfo", "-F", "kd_mutex_api", workload],
                                   out / "mutex-api.txt").strip()
         rt.require(compiled_api == (args.mutex_api if args.family == "mutex" else "not_applicable"),
                    "compiled mutex API differs")
-        compiled_family = rt.command(["modinfo", "-F", "kd_escape_family", workload],
+        compiled_family = rt.command(["modinfo", "-F", "kd_continuation_family", workload],
                                      out / "family.txt").strip()
-        rt.require(compiled_family == args.family, "compiled escape family differs")
+        rt.require(compiled_family == args.family, "compiled continuation family differs")
         compiled_origin = rt.command(["modinfo", "-F", "kd_origin_instructions", workload],
                                      out / "origin-instructions.txt").strip()
         rt.require(compiled_origin == ("4" if args.origin_instructions else "0"),
@@ -570,7 +570,7 @@ def main():
                            r"rwsem\w*|__rwsem\w*|osq_lock|osq_unlock)", name) for name in names),
                        "rwsem marker caller lacks the public prepared API or uses another lock shell")
             rt.write_json(out / "public-entry-audit.json",
-                          audit_public_entries(workload, {"jit_escape_entry": "escape_body"},
+                          audit_public_entries(workload, {"jit_continuation_entry": "continuation_body"},
                               lock_symbol="kd_rwsem_down_write_clobber_v1"))
         elif args.mutex_api == "public":
             names = set(imported.split())
@@ -582,7 +582,7 @@ def main():
                                             name) for name in names),
                        "public marker caller imports another call shell")
             rt.write_json(out / "public-entry-audit.json",
-                          audit_public_entries(workload, {"jit_escape_entry": "escape_body"}))
+                          audit_public_entries(workload, {"jit_continuation_entry": "continuation_body"}))
         rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
                    out / "build-daemon.log", timeout=120)
         binaries = dict(provider=provider, workload=workload, daemon=source / "daemon/daemon",
@@ -625,7 +625,7 @@ def main():
                     reader_iterations=args.reader_iterations,
                     cpus=args.cpus, iterations=args.iterations, warmup_iterations=args.warmup_iterations,
                     phase_timeout=args.phase_timeout, kernel_identity=identity)
-        session = EscapeSession(out, spec, binaries, verify)
+        session = ContinuationSession(out, spec, binaries, verify)
         session.execute()
         verify()
         idle()

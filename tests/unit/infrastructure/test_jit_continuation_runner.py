@@ -11,7 +11,7 @@ from unittest.mock import mock_open, patch
 
 ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location(
-    "jit_escape_runner", ROOT / "tests/kernel/jit_escape/run.py")
+    "jit_continuation_runner", ROOT / "tests/kernel/jit_continuation/run.py")
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
 
@@ -51,7 +51,7 @@ string_runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(string_runner)
 
 
-class Probe(runner.EscapeSession):
+class Probe(runner.ContinuationSession):
     """Use real phase/execute control flow without devices or kernel work."""
     def __init__(self, path):
         self.path = path
@@ -221,7 +221,7 @@ class CallerLifetimeTests(unittest.TestCase):
                 self.assertTrue(session.record["drained"])
 
 
-class RepeatedMarkerProbe(runner.EscapeSession):
+class RepeatedMarkerProbe(runner.ContinuationSession):
     """Drive real measure/registry validators; only device/work receipts are fake."""
     def __init__(self, path, failure=None, family="mutex"):
         self.path, self.failure = path, failure
@@ -295,7 +295,7 @@ class RepeatedMarkerTests(unittest.TestCase):
                     patch.object(runner.fcntl, "ioctl") as ioctl, \
                     patch.object(runner, "image_registry", side_effect=session.current_registry), \
                     patch.object(runner.rt, "parameters", return_value={}):
-                runner.EscapeSession.measure(session)
+                runner.ContinuationSession.measure(session)
             self.assertEqual([call.args[1] for call in ioctl.call_args_list],
                              [runner.COLD, runner.HOT, runner.COLD, runner.HOT])
             self.assertEqual(session.names, ["cold-warmup", "cold-delegated", "hot-escape",

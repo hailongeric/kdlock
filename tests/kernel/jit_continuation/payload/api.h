@@ -1,11 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-#ifndef KD_JIT_ESCAPE_TEST_API_H
-#define KD_JIT_ESCAPE_TEST_API_H
+#ifndef KD_JIT_CONTINUATION_TEST_API_H
+#define KD_JIT_CONTINUATION_TEST_API_H
 
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
-struct jit_escape_run {
+struct jit_continuation_run {
 	__u32 iterations;
 	__u32 worker;
 	__u32 reserved[2];
@@ -13,7 +13,7 @@ struct jit_escape_run {
 	__u64 errors;
 };
 
-struct jit_escape_snapshot {
+struct jit_continuation_snapshot {
 	__u64 prefix;
 	__u64 suffix;
 	__u64 hot_taken;
@@ -31,13 +31,13 @@ struct jit_origin_snapshot {
 	__u64 instructions[4];
 };
 
-#define JIT_ESCAPE_RUN _IOWR('E', 1, struct jit_escape_run)
-#define JIT_ESCAPE_SNAPSHOT _IOR('E', 2, struct jit_escape_snapshot)
-#define JIT_ESCAPE_PREPARE _IO('E', 3)
-#define JIT_ESCAPE_HOT _IO('E', 4)
+#define JIT_CONTINUATION_RUN _IOWR('E', 1, struct jit_continuation_run)
+#define JIT_CONTINUATION_SNAPSHOT _IOR('E', 2, struct jit_continuation_snapshot)
+#define JIT_CONTINUATION_PREPARE _IO('E', 3)
+#define JIT_CONTINUATION_HOT _IO('E', 4)
 /* Rwlock/rwsem shared-reader control; the command layouts stay fixed. */
-#define JIT_ESCAPE_READ _IOWR('E', 5, struct jit_escape_run)
+#define JIT_CONTINUATION_READ _IOWR('E', 5, struct jit_continuation_run)
 /* Change only the next idle phase; existing RUN/SNAPSHOT layouts stay fixed. */
-#define JIT_ESCAPE_COLD _IO('E', 6)
-#define JIT_ESCAPE_ORIGIN_SNAPSHOT _IOR('E', 7, struct jit_origin_snapshot)
+#define JIT_CONTINUATION_COLD _IO('E', 6)
+#define JIT_CONTINUATION_ORIGIN_SNAPSHOT _IOR('E', 7, struct jit_origin_snapshot)
 #endif
