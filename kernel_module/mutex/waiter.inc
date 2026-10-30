@@ -59,7 +59,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		mutex_debug("Mutex waiter spinning\n");
 	wait_again:
 		kd_mutex_wait_for_result(curr_node);
-		if (READ_ONCE(curr_node->native_resume)) {
+		if (unlikely(READ_ONCE(curr_node->native_resume))) {
 			if (READ_ONCE(curr_node->native_resume) == KD_MUTEX_RESUME_INSTRUCTION) {
 				kd_mutex_origin_instruction_waiter(curr_node);
 				goto wait_again;

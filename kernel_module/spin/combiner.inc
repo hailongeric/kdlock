@@ -20,8 +20,9 @@ struct kd_spin_batch {
 	bool pending;
 	bool fast_previous;
 	u16 numa_scan_left;
+	/* state.inc limits every batch to at most 1024 bodies. */
+	u16 counter;
 	u8 proxy_context;
-	int counter;
 	u64 queue_end;
 #ifdef KDLOCK_SELFTEST
 	int frame_event;
@@ -294,8 +295,12 @@ static void kd_spin_batch_run(void *opaque)
 				batch->fast_previous = false;
 				exe_flag = execute_cs(lock, curr_node, batch);
 				/* A completed FULL/native service can change physical
-				 * nesting. Refresh before any later unstarted root. */
-				batch->proxy_context = kd_spin_proxy_context();
+				 * nesting. Refresh before a later root can be considered;
+				 * terminal outcomes discard this batch and its cache. */
+				if (exe_flag != KD_EXE_NO_RUN &&
+				    exe_flag != KD_EXE_RUN_ERROR &&
+				    !batch->outer.released)
+					batch->proxy_context = kd_spin_proxy_context();
 			}
 		} else {
 #ifdef NUMA_AWARE
@@ -324,7 +329,10 @@ static void kd_spin_batch_run(void *opaque)
 			} else {
 				batch->fast_previous = false;
 				exe_flag = execute_cs(lock, curr_node, batch);
-				batch->proxy_context = kd_spin_proxy_context();
+				if (exe_flag != KD_EXE_NO_RUN &&
+				    exe_flag != KD_EXE_RUN_ERROR &&
+				    !batch->outer.released)
+					batch->proxy_context = kd_spin_proxy_context();
 			}
 		}
 
