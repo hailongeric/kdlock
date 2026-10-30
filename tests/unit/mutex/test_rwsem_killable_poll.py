@@ -5,6 +5,7 @@ logic. Atomic, scheduler and wait primitives are deterministic control-flow
 doubles, not a proof of concurrent memory ordering, kernel signal delivery or
 exact waitqueue membership. Synthetic wait-boundary counts include attempts a
 real prepare_to_wait_event may refuse without enqueueing.
+Any pending signal stops the poll; only a fatal signal cancels the wait.
 All negative controls must compile and terminate with an assertion failure;
 compile errors, timeouts and unrelated crashes are not detected mutations.
 """
@@ -40,7 +41,7 @@ def main():
     code = '\n'.join(functions)
     helper, acquire = functions[3], functions[5]
     success = '\t\tif (kd_rwsem_reserve_local(sem))\n\t\t\treturn true;\n'
-    stop = ('\t\tif (need_resched() || signal_pending_state(TASK_KILLABLE, current))\n'
+    stop = ('\t\tif (need_resched() || signal_pending(current))\n'
             '\t\t\treturn false;\n')
     # Keep these mutations scoped to the new helper or exact killable path.
     # Every substitute remains syntactically referenced, including deliberately
@@ -50,9 +51,13 @@ def main():
             helper, success, success.replace('return true;',
                                             'return kd_rwsem_reserve_local(sem);'))),
         'stop-before-reservation': (helper, replace_once(helper, success + stop, stop + success)),
-        'fatal-signal-ignored': (helper, replace_once(
-            helper, 'signal_pending_state(TASK_KILLABLE, current)',
-            '(false && signal_pending_state(TASK_KILLABLE, current))')),
+        'pending-signal-ignored': (helper, replace_once(
+            helper, 'signal_pending(current)',
+            '(false && signal_pending(current))')),
+        'nonfatal-signal-ignored': (helper, replace_once(
+            helper, 'signal_pending(current)',
+            '((false && signal_pending(current)) || '
+            'signal_pending_state(TASK_KILLABLE, current))')),
         'poll-budget-shortened': (helper, replace_once(helper, 'budget = 16384;', 'budget = 16383;')),
         'fallback-reservation-skipped': (acquire, replace_once(
             acquire, 'wait_event_killable(sem->phase_wait, kd_rwsem_reserve_local(sem))',
@@ -85,7 +90,7 @@ def main():
             result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=10)
             if replacement is None:
                 assert result.returncode == 0, result.stdout + result.stderr
-                assert 'PASS killable admission: 22 ' in result.stdout, result.stdout
+                assert 'PASS killable admission: 25 ' in result.stdout, result.stdout
                 print(result.stdout, end='')
             else:
                 assert result.returncode == -signal.SIGABRT, (name, result.returncode,

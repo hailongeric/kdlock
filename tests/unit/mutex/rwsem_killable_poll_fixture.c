@@ -32,7 +32,7 @@ static struct kd_rwsem sem;
 static unsigned int attempts, reserves, pauses, resched_checks, signal_checks;
 static unsigned int wait_calls, publications, removals, schedules, releases;
 static unsigned int locks, unlocks, drain_calls, timer_rechecks, phase_wakes, reader_wakes;
-static unsigned int available_at, fatal_at, resched_at, checks;
+static unsigned int available_at, fatal_at, nonfatal_at, resched_at, checks;
 static bool phase_owned, acquiring, fatal, nonfatal, cas_loss, gate_cancel, drain_cancel, irq;
 enum boundary { NONE, BEFORE_WAIT, AFTER_ENQUEUE, SCHEDULE };
 static enum boundary release_at;
@@ -48,6 +48,7 @@ static long atomic_long_read(long *p)
         assert(attempts <= 20000);
         if (available_at == attempts) make_available();
         if (fatal_at == attempts) fatal=true;
+        if (nonfatal_at == attempts) nonfatal=true;
     }
     return *p;
 }
@@ -73,10 +74,15 @@ static bool need_resched(void)
     assert(!phase_owned); ++resched_checks;
     return resched_at && attempts>=resched_at;
 }
+static bool signal_pending(void *task)
+{
+    assert(task==current && !phase_owned);
+    ++signal_checks; return fatal || nonfatal;
+}
 static bool signal_pending_state(unsigned int state, void *task)
 {
     assert(state==TASK_KILLABLE && task==current && !phase_owned);
-    ++signal_checks; (void)nonfatal; return fatal;
+    ++signal_checks; return fatal;
 }
 static void cpu_relax(void) { assert(!phase_owned && publications==removals); ++pauses; }
 static void might_sleep(void) { assert(!phase_owned && !sem.gate.owned); acquiring=true; }
@@ -170,7 +176,7 @@ static void reset(void)
     attempts=reserves=pauses=resched_checks=signal_checks=0;
     wait_calls=publications=removals=schedules=releases=0;
     locks=unlocks=drain_calls=timer_rechecks=phase_wakes=reader_wakes=0;
-    available_at=fatal_at=resched_at=0;
+    available_at=fatal_at=nonfatal_at=resched_at=0;
     phase_owned=acquiring=fatal=nonfatal=cas_loss=gate_cancel=drain_cancel=irq=false;
     release_at=NONE;
 }
@@ -201,6 +207,9 @@ int main(void)
     reset(); fatal=true; resched_at=1; expect_success();
     assert(attempts==1 && !signal_checks && !resched_checks && !wait_calls); release_writer();
 
+    reset(); nonfatal=true; expect_success();
+    assert(attempts==1 && !signal_checks && !resched_checks && !wait_calls); release_writer();
+
     reset(); sem.admission=-1; available_at=16384; expect_success();
     assert(attempts==16384 && pauses==16383 && !wait_calls); release_writer();
 
@@ -223,8 +232,19 @@ int main(void)
     reset(); sem.admission=-1; fatal_at=5; expect_cancel();
     assert(attempts==7 && pauses==4 && wait_calls==1 && !locks);
 
-    reset(); sem.admission=-1; nonfatal=true; available_at=8; expect_success();
-    assert(attempts==8 && pauses==7 && signal_checks==7 && !wait_calls); release_writer();
+    /* Any pending signal stops polling, but a nonfatal signal must not cancel
+     * the killable wait. It can schedule and acquire after the phase opens. */
+    reset(); sem.admission=-1; nonfatal=true; release_at=SCHEDULE; expect_success();
+    assert(attempts==4 && !pauses && signal_checks==2 && wait_calls==1);
+    assert(publications==1 && schedules==1); release_writer();
+
+    reset(); sem.admission=-1; nonfatal_at=5; release_at=SCHEDULE; expect_success();
+    assert(attempts==8 && pauses==4 && signal_checks==6 && wait_calls==1);
+    assert(publications==1 && schedules==1); release_writer();
+
+    reset(); sem.admission=-1; nonfatal_at=8; available_at=8; expect_success();
+    assert(attempts==8 && nonfatal && pauses==7 && signal_checks==7 && !wait_calls);
+    release_writer();
 
     reset(); sem.admission=-1; fatal_at=8; available_at=8; expect_success();
     assert(attempts==8 && fatal && signal_checks==7 && !wait_calls); release_writer();

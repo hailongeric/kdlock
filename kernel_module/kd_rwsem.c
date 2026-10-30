@@ -208,7 +208,7 @@ static __always_inline bool kd_rwsem_poll_killable(struct kd_rwsem *sem)
 	do {
 		if (kd_rwsem_reserve_local(sem))
 			return true;
-		if (need_resched() || signal_pending_state(TASK_KILLABLE, current))
+		if (need_resched() || signal_pending(current))
 			return false;
 		cpu_relax();
 	} while (--budget);
