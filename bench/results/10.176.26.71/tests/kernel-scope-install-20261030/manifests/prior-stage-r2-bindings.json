@@ -1,0 +1,13 @@
+{
+  "artifact-inputs.py": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+  "build-module-identities.json": "97c6b5f70a0d10dead2642b600ffdb3610009b24485a4c53f0c4dec2ad791bb7",
+  "controller.py": "f11919bbe394dfb58443789eae9c193c71f1d1422575fcc037b4b7c165f96d34",
+  "fullbuild-result.json": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+  "linked-api-audit.json": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+  "modules-install.log": "3f3a9ca3dae458abaffd404ed3908856abed90d3d260499449cc80a7cd8c0b7c",
+  "operations.jsonl": "2b7a4893307b849b932665aa8b90ea8d709dc0a8e2736135200de4a4adbcd535",
+  "preinstall-result.json": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+  "protected-before.json": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+  "provider-api-audit.json": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+  "result.json": "b55eee6dad571da7d1f5a55a74f04b7ed8c1c34f755aa8e3a8bb60174885046f"
+}

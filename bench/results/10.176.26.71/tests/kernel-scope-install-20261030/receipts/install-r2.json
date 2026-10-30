@@ -1,0 +1,190 @@
+{
+  "artifact_helper_sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+  "boot_armed": false,
+  "boot_files_installed": false,
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "boot_links_modified": false,
+  "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+  "build_result_sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+  "child_may_still_be_running": false,
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "-T",
+        "/",
+        "-o",
+        "TARGET,SOURCE,FSTYPE,OPTIONS"
+      ],
+      "finished": 1793346109.5149949,
+      "label": "mount-root",
+      "log_sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+      "pid": 1276430,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.495584,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "findmnt",
+        "-T",
+        "/boot",
+        "-o",
+        "TARGET,SOURCE,FSTYPE,OPTIONS"
+      ],
+      "finished": 1793346109.5354476,
+      "label": "mount-boot",
+      "log_sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+      "pid": 1276431,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.5186596,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "findmnt",
+        "-T",
+        "/lib/modules",
+        "-o",
+        "TARGET,SOURCE,FSTYPE,OPTIONS"
+      ],
+      "finished": 1793346109.5549734,
+      "label": "mount-modules",
+      "log_sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+      "pid": 1276432,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.5390587,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "findmnt",
+        "-T",
+        "/mnt/kdlock-builds",
+        "-o",
+        "TARGET,SOURCE,FSTYPE,OPTIONS"
+      ],
+      "finished": 1793346109.5742385,
+      "label": "mount-data",
+      "log_sha256": "c19118b76fad84866881208fa9b22bc76b4bdd550899c27bd9d674b8b90ff8aa",
+      "pid": 1276433,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.5582876,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "cp",
+        "--version"
+      ],
+      "finished": 1793346109.5938559,
+      "label": "cp-version",
+      "log_sha256": "51c1cf0977509153e67ca716935e275589e1b01e8ab7137cb2e631a1237107cf",
+      "pid": 1276434,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.5777113,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "depmod",
+        "--version"
+      ],
+      "finished": 1793346109.6144583,
+      "label": "depmod-version",
+      "log_sha256": "9270f24e241e1e5ec224e25e9cb44ddb53d6bc5fb680cc3dacc78af0936adc60",
+      "pid": 1276435,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.5984411,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "cp",
+        "-a",
+        "--reflink=never",
+        "--",
+        "/mnt/kdlock-builds/kdscope1-install-stage-r2-20261030/modules/lib/modules/7.0.0-38-kdscope1",
+        "/lib/modules/7.0.0-38-kdscope1"
+      ],
+      "finished": 1793346110.8027215,
+      "label": "copy-new-module-release",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 1276436,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346109.6181695,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "depmod",
+        "-a",
+        "7.0.0-38-kdscope1"
+      ],
+      "finished": 1793346112.9916322,
+      "label": "depmod-new-release",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 1276437,
+      "remaining_processes": [],
+      "returncode": 0,
+      "started": 1793346112.107133,
+      "timeout_seconds": 300
+    }
+  ],
+  "controller_sha256": "23e0f656fbee0f36797555ab3e639736dc34522d45f40867cfbb6ef1028a1114",
+  "correctness_scope": "kernel-artifact-installation",
+  "current_provider_validated": false,
+  "error": "RuntimeError('depmod removed/linked an index or changed an unexpected member')",
+  "failure_policy": "Retain partial new artifacts and processes; no removal, signal, retry, GRUB change or boot.",
+  "finished": 1793346114.2511368,
+  "grub_modified": false,
+  "historical_kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "historical_provider_sha256": "e6a21c6ffb21625306063bc5148c8d0911b3a401b2d1c95a36e1a138ecc61b0e",
+  "initramfs_created": false,
+  "installed": false,
+  "linked_api_audit_sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+  "live_kernel_validated": false,
+  "loaded": false,
+  "module_count": 6901,
+  "module_tree_created": true,
+  "partial_new_boot_files": [],
+  "partial_new_module_tree_exists": true,
+  "passed": false,
+  "performance_accepted": false,
+  "preinstall_controller_sha256": "a114bf18356d4e31238b6216e293ce3789687edee50758ee770b9fab9c6d2eec",
+  "preinstall_result_sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+  "private_key_read": false,
+  "provider_audit_sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+  "rebooted": false,
+  "release": "7.0.0-38-kdscope1",
+  "remaining_processes": [],
+  "schema": 2,
+  "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+  "source_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "source_manifest_sha256": "3833016fa5c3a913cd9fa54f6fd40f3bdb73047d2a31c74bbcdfc94e4ed5fb99",
+  "space_admission": {
+    "boot_free": 4502405120,
+    "data_free": 22172000256,
+    "initramfs_budget_bytes": 536870912,
+    "required_root_free": 3408744448,
+    "required_root_reserve": 2147483648,
+    "root_after_budget": 3241144320,
+    "root_free": 4502405120,
+    "rounded_boot_bytes": 27983872,
+    "staged_regular_allocated_bytes": 691163136,
+    "staged_total_allocated_bytes": 696406016
+  },
+  "stage_controller_sha256": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+  "stage_result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r3-20261030/result.json",
+  "stage_result_sha256": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+  "staged_manifest_sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+  "started": 1793346080.5308826,
+  "state": "FAILED"
+}

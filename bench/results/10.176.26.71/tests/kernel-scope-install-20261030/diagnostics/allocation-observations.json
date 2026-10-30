@@ -1,0 +1,750 @@
+{
+  "kernel/arch/x86/kvm/kvm-intel.ko": {
+    "after": 1429504,
+    "before": 1425408
+  },
+  "kernel/arch/x86/kvm/kvm.ko": {
+    "after": 3022848,
+    "before": 3018752
+  },
+  "kernel/drivers/block/drbd/drbd.ko": {
+    "after": 1069056,
+    "before": 1064960
+  },
+  "kernel/drivers/block/floppy.ko": {
+    "after": 331776,
+    "before": 327680
+  },
+  "kernel/drivers/bluetooth/hci_uart.ko": {
+    "after": 495616,
+    "before": 491520
+  },
+  "kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko": {
+    "after": 44998656,
+    "before": 44994560
+  },
+  "kernel/drivers/gpu/drm/i915/i915.ko": {
+    "after": 10792960,
+    "before": 10788864
+  },
+  "kernel/drivers/gpu/drm/nouveau/nouveau.ko": {
+    "after": 6434816,
+    "before": 6430720
+  },
+  "kernel/drivers/gpu/drm/radeon/radeon.ko": {
+    "after": 4644864,
+    "before": 4640768
+  },
+  "kernel/drivers/gpu/drm/vmwgfx/vmwgfx.ko": {
+    "after": 1064960,
+    "before": 1060864
+  },
+  "kernel/drivers/gpu/drm/xe/xe.ko": {
+    "after": 9244672,
+    "before": 9240576
+  },
+  "kernel/drivers/infiniband/core/ib_core.ko": {
+    "after": 1155072,
+    "before": 1150976
+  },
+  "kernel/drivers/infiniband/hw/bnxt_re/bnxt_re.ko": {
+    "after": 512000,
+    "before": 507904
+  },
+  "kernel/drivers/infiniband/hw/cxgb4/iw_cxgb4.ko": {
+    "after": 671744,
+    "before": 667648
+  },
+  "kernel/drivers/infiniband/hw/hfi1/hfi1.ko": {
+    "after": 2711552,
+    "before": 2707456
+  },
+  "kernel/drivers/infiniband/hw/irdma/irdma.ko": {
+    "after": 1073152,
+    "before": 1069056
+  },
+  "kernel/drivers/infiniband/hw/mlx4/mlx4_ib.ko": {
+    "after": 696320,
+    "before": 692224
+  },
+  "kernel/drivers/infiniband/sw/rxe/rdma_rxe.ko": {
+    "after": 458752,
+    "before": 454656
+  },
+  "kernel/drivers/infiniband/ulp/ipoib/ib_ipoib.ko": {
+    "after": 327680,
+    "before": 323584
+  },
+  "kernel/drivers/input/mouse/psmouse.ko": {
+    "after": 479232,
+    "before": 475136
+  },
+  "kernel/drivers/md/bcache/bcache.ko": {
+    "after": 790528,
+    "before": 786432
+  },
+  "kernel/drivers/md/dm-vdo/dm-vdo.ko": {
+    "after": 1298432,
+    "before": 1294336
+  },
+  "kernel/drivers/md/raid456.ko": {
+    "after": 446464,
+    "before": 442368
+  },
+  "kernel/drivers/media/dvb-core/dvb-core.ko": {
+    "after": 389120,
+    "before": 385024
+  },
+  "kernel/drivers/media/pci/ivtv/ivtv-alsa.ko": {
+    "after": 106496,
+    "before": 102400
+  },
+  "kernel/drivers/media/pci/ivtv/ivtv.ko": {
+    "after": 503808,
+    "before": 499712
+  },
+  "kernel/drivers/media/test-drivers/vivid/vivid.ko": {
+    "after": 786432,
+    "before": 782336
+  },
+  "kernel/drivers/media/usb/cx231xx/cx231xx.ko": {
+    "after": 503808,
+    "before": 499712
+  },
+  "kernel/drivers/media/v4l2-core/videodev.ko": {
+    "after": 782336,
+    "before": 778240
+  },
+  "kernel/drivers/misc/mei/mei.ko": {
+    "after": 409600,
+    "before": 405504
+  },
+  "kernel/drivers/mtd/ubi/ubi.ko": {
+    "after": 598016,
+    "before": 593920
+  },
+  "kernel/drivers/net/can/sja1000/kvaser_pci.ko": {
+    "after": 28672,
+    "before": 24576
+  },
+  "kernel/drivers/net/dsa/b53/b53_serdes.ko": {
+    "after": 28672,
+    "before": 24576
+  },
+  "kernel/drivers/net/dsa/lantiq/lantiq_gswip.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/net/dsa/qca/ar9331.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/net/dsa/sja1105/sja1105.ko": {
+    "after": 417792,
+    "before": 413696
+  },
+  "kernel/drivers/net/ethernet/amd/xgbe/amd-xgbe.ko": {
+    "after": 638976,
+    "before": 634880
+  },
+  "kernel/drivers/net/ethernet/broadcom/bnx2x/bnx2x.ko": {
+    "after": 1990656,
+    "before": 1986560
+  },
+  "kernel/drivers/net/ethernet/broadcom/bnxt/bnxt_en.ko": {
+    "after": 1056768,
+    "before": 1052672
+  },
+  "kernel/drivers/net/ethernet/cavium/liquidio/liquidio-core.ko": {
+    "after": 471040,
+    "before": 466944
+  },
+  "kernel/drivers/net/ethernet/chelsio/cxgb3/cxgb3.ko": {
+    "after": 471040,
+    "before": 466944
+  },
+  "kernel/drivers/net/ethernet/chelsio/cxgb4/cxgb4.ko": {
+    "after": 1429504,
+    "before": 1425408
+  },
+  "kernel/drivers/net/ethernet/google/gve/gve.ko": {
+    "after": 360448,
+    "before": 356352
+  },
+  "kernel/drivers/net/ethernet/huawei/hinic/hinic.ko": {
+    "after": 516096,
+    "before": 512000
+  },
+  "kernel/drivers/net/ethernet/intel/e1000e/e1000e.ko": {
+    "after": 782336,
+    "before": 778240
+  },
+  "kernel/drivers/net/ethernet/intel/i40e/i40e.ko": {
+    "after": 1359872,
+    "before": 1355776
+  },
+  "kernel/drivers/net/ethernet/intel/iavf/iavf.ko": {
+    "after": 442368,
+    "before": 438272
+  },
+  "kernel/drivers/net/ethernet/intel/ice/ice.ko": {
+    "after": 3207168,
+    "before": 3203072
+  },
+  "kernel/drivers/net/ethernet/intel/idpf/idpf.ko": {
+    "after": 507904,
+    "before": 503808
+  },
+  "kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko": {
+    "after": 1261568,
+    "before": 1257472
+  },
+  "kernel/drivers/net/ethernet/mellanox/mlx4/mlx4_core.ko": {
+    "after": 1073152,
+    "before": 1069056
+  },
+  "kernel/drivers/net/ethernet/mellanox/mlx4/mlx4_en.ko": {
+    "after": 458752,
+    "before": 454656
+  },
+  "kernel/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.ko": {
+    "after": 6438912,
+    "before": 6434816
+  },
+  "kernel/drivers/net/ethernet/mellanox/mlxsw/mlxsw_spectrum.ko": {
+    "after": 1986560,
+    "before": 1982464
+  },
+  "kernel/drivers/net/ethernet/meta/fbnic/fbnic.ko": {
+    "after": 475136,
+    "before": 471040
+  },
+  "kernel/drivers/net/ethernet/mscc/mscc_ocelot_switch_lib.ko": {
+    "after": 421888,
+    "before": 417792
+  },
+  "kernel/drivers/net/ethernet/netronome/nfp/nfp.ko": {
+    "after": 1589248,
+    "before": 1585152
+  },
+  "kernel/drivers/net/ethernet/pensando/ionic/ionic.ko": {
+    "after": 548864,
+    "before": 544768
+  },
+  "kernel/drivers/net/ethernet/qlogic/qed/qed.ko": {
+    "after": 2101248,
+    "before": 2097152
+  },
+  "kernel/drivers/net/ethernet/qlogic/qlcnic/qlcnic.ko": {
+    "after": 868352,
+    "before": 864256
+  },
+  "kernel/drivers/net/ethernet/sfc/sfc.ko": {
+    "after": 1449984,
+    "before": 1445888
+  },
+  "kernel/drivers/net/ethernet/stmicro/stmmac/stmmac.ko": {
+    "after": 798720,
+    "before": 794624
+  },
+  "kernel/drivers/net/wireless/ath/ath10k/ath10k_core.ko": {
+    "after": 1884160,
+    "before": 1880064
+  },
+  "kernel/drivers/net/wireless/ath/ath11k/ath11k.ko": {
+    "after": 2203648,
+    "before": 2199552
+  },
+  "kernel/drivers/net/wireless/ath/ath12k/ath12k.ko": {
+    "after": 2248704,
+    "before": 2244608
+  },
+  "kernel/drivers/net/wireless/ath/ath9k/ath9k.ko": {
+    "after": 700416,
+    "before": 696320
+  },
+  "kernel/drivers/net/wireless/ath/ath9k/ath9k_hw.ko": {
+    "after": 1155072,
+    "before": 1150976
+  },
+  "kernel/drivers/net/wireless/ath/wcn36xx/wcn36xx.ko": {
+    "after": 344064,
+    "before": 339968
+  },
+  "kernel/drivers/net/wireless/broadcom/b43/b43.ko": {
+    "after": 1196032,
+    "before": 1191936
+  },
+  "kernel/drivers/net/wireless/broadcom/b43legacy/b43legacy.ko": {
+    "after": 483328,
+    "before": 479232
+  },
+  "kernel/drivers/net/wireless/broadcom/brcm80211/brcmfmac/brcmfmac.ko": {
+    "after": 1265664,
+    "before": 1261568
+  },
+  "kernel/drivers/net/wireless/broadcom/brcm80211/brcmsmac/brcmsmac.ko": {
+    "after": 1572864,
+    "before": 1568768
+  },
+  "kernel/drivers/net/wireless/intel/iwlegacy/iwl3945.ko": {
+    "after": 327680,
+    "before": 323584
+  },
+  "kernel/drivers/net/wireless/intel/iwlegacy/iwl4965.ko": {
+    "after": 503808,
+    "before": 499712
+  },
+  "kernel/drivers/net/wireless/intel/iwlwifi/dvm/iwldvm.ko": {
+    "after": 851968,
+    "before": 847872
+  },
+  "kernel/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko": {
+    "after": 1396736,
+    "before": 1392640
+  },
+  "kernel/drivers/net/wireless/intel/iwlwifi/mld/iwlmld.ko": {
+    "after": 1077248,
+    "before": 1073152
+  },
+  "kernel/drivers/net/wireless/intel/iwlwifi/mvm/iwlmvm.ko": {
+    "after": 2015232,
+    "before": 2011136
+  },
+  "kernel/drivers/net/wireless/marvell/mwifiex/mwifiex.ko": {
+    "after": 983040,
+    "before": 978944
+  },
+  "kernel/drivers/net/wireless/mediatek/mt76/mt7915/mt7915e.ko": {
+    "after": 593920,
+    "before": 589824
+  },
+  "kernel/drivers/net/wireless/mediatek/mt76/mt7925/mt7925-common.ko": {
+    "after": 434176,
+    "before": 430080
+  },
+  "kernel/drivers/net/wireless/mediatek/mt76/mt7996/mt7996e.ko": {
+    "after": 663552,
+    "before": 659456
+  },
+  "kernel/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.ko": {
+    "after": 724992,
+    "before": 720896
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/btcoexist/btcoexist.ko": {
+    "after": 737280,
+    "before": 733184
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rtl8192de.ko": {
+    "after": 323584,
+    "before": 319488
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/rtl8192ee.ko": {
+    "after": 466944,
+    "before": 462848
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rtl8723ae.ko": {
+    "after": 425984,
+    "before": 421888
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rtl8723be.ko": {
+    "after": 446464,
+    "before": 442368
+  },
+  "kernel/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rtl8821ae.ko": {
+    "after": 954368,
+    "before": 950272
+  },
+  "kernel/drivers/net/wireless/realtek/rtw88/rtw88_8822c.ko": {
+    "after": 688128,
+    "before": 684032
+  },
+  "kernel/drivers/net/wireless/realtek/rtw88/rtw88_core.ko": {
+    "after": 876544,
+    "before": 872448
+  },
+  "kernel/drivers/net/wireless/realtek/rtw89/rtw89_8851b.ko": {
+    "after": 684032,
+    "before": 679936
+  },
+  "kernel/drivers/net/wireless/realtek/rtw89/rtw89_8852a.ko": {
+    "after": 1114112,
+    "before": 1110016
+  },
+  "kernel/drivers/net/wireless/realtek/rtw89/rtw89_8852b.ko": {
+    "after": 708608,
+    "before": 704512
+  },
+  "kernel/drivers/net/wireless/realtek/rtw89/rtw89_8852c.ko": {
+    "after": 1429504,
+    "before": 1425408
+  },
+  "kernel/drivers/net/wireless/realtek/rtw89/rtw89_core.ko": {
+    "after": 2973696,
+    "before": 2969600
+  },
+  "kernel/drivers/net/wireless/silabs/wfx/wfx.ko": {
+    "after": 507904,
+    "before": 503808
+  },
+  "kernel/drivers/net/wireless/st/cw1200/cw1200_core.ko": {
+    "after": 503808,
+    "before": 499712
+  },
+  "kernel/drivers/net/wireless/ti/wl18xx/wl18xx.ko": {
+    "after": 389120,
+    "before": 385024
+  },
+  "kernel/drivers/net/wireless/ti/wlcore/wlcore.ko": {
+    "after": 847872,
+    "before": 843776
+  },
+  "kernel/drivers/nvme/target/nvmet.ko": {
+    "after": 569344,
+    "before": 565248
+  },
+  "kernel/drivers/regulator/max1586.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/regulator/max77857-regulator.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/regulator/max8649.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/regulator/max8952.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/regulator/mc13xxx-regulator-core.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/regulator/mp8859.ko": {
+    "after": 28672,
+    "before": 24576
+  },
+  "kernel/drivers/regulator/tps51632-regulator.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/scsi/bfa/bfa.ko": {
+    "after": 1523712,
+    "before": 1519616
+  },
+  "kernel/drivers/scsi/csiostor/csiostor.ko": {
+    "after": 438272,
+    "before": 434176
+  },
+  "kernel/drivers/scsi/elx/efct.ko": {
+    "after": 1019904,
+    "before": 1015808
+  },
+  "kernel/drivers/scsi/fnic/fnic.ko": {
+    "after": 716800,
+    "before": 712704
+  },
+  "kernel/drivers/scsi/isci/isci.ko": {
+    "after": 495616,
+    "before": 491520
+  },
+  "kernel/drivers/scsi/libfc/libfc.ko": {
+    "after": 389120,
+    "before": 385024
+  },
+  "kernel/drivers/scsi/lpfc/lpfc.ko": {
+    "after": 2740224,
+    "before": 2736128
+  },
+  "kernel/drivers/scsi/megaraid/megaraid_sas.ko": {
+    "after": 499712,
+    "before": 495616
+  },
+  "kernel/drivers/scsi/mpi3mr/mpi3mr.ko": {
+    "after": 548864,
+    "before": 544768
+  },
+  "kernel/drivers/scsi/qla2xxx/qla2xxx.ko": {
+    "after": 2244608,
+    "before": 2240512
+  },
+  "kernel/drivers/scsi/qla4xxx/qla4xxx.ko": {
+    "after": 757760,
+    "before": 753664
+  },
+  "kernel/drivers/staging/media/av7110/dvb-ttpci.ko": {
+    "after": 401408,
+    "before": 397312
+  },
+  "kernel/drivers/staging/rtl8723bs/r8723bs.ko": {
+    "after": 1708032,
+    "before": 1703936
+  },
+  "kernel/drivers/target/iscsi/iscsi_target_mod.ko": {
+    "after": 892928,
+    "before": 888832
+  },
+  "kernel/drivers/target/target_core_mod.ko": {
+    "after": 1093632,
+    "before": 1089536
+  },
+  "kernel/drivers/thunderbolt/thunderbolt.ko": {
+    "after": 1191936,
+    "before": 1187840
+  },
+  "kernel/drivers/ufs/core/ufshcd-core.ko": {
+    "after": 815104,
+    "before": 811008
+  },
+  "kernel/drivers/usb/host/bcma-hcd.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/drivers/video/fbdev/sis/sisfb.ko": {
+    "after": 663552,
+    "before": 659456
+  },
+  "kernel/fs/afs/kafs.ko": {
+    "after": 1269760,
+    "before": 1265664
+  },
+  "kernel/fs/btrfs/btrfs.ko": {
+    "after": 4825088,
+    "before": 4820992
+  },
+  "kernel/fs/cachefiles/cachefiles.ko": {
+    "after": 356352,
+    "before": 352256
+  },
+  "kernel/fs/ceph/ceph.ko": {
+    "after": 1572864,
+    "before": 1568768
+  },
+  "kernel/fs/f2fs/f2fs.ko": {
+    "after": 2158592,
+    "before": 2154496
+  },
+  "kernel/fs/gfs2/gfs2.ko": {
+    "after": 1216512,
+    "before": 1212416
+  },
+  "kernel/fs/jfs/jfs.ko": {
+    "after": 675840,
+    "before": 671744
+  },
+  "kernel/fs/netfs/netfs.ko": {
+    "after": 724992,
+    "before": 720896
+  },
+  "kernel/fs/nfs/nfs.ko": {
+    "after": 1286144,
+    "before": 1282048
+  },
+  "kernel/fs/nfs/nfsv4.ko": {
+    "after": 2375680,
+    "before": 2371584
+  },
+  "kernel/fs/nfsd/nfsd.ko": {
+    "after": 2203648,
+    "before": 2199552
+  },
+  "kernel/fs/nilfs2/nilfs2.ko": {
+    "after": 679936,
+    "before": 675840
+  },
+  "kernel/fs/ntfs3/ntfs3.ko": {
+    "after": 716800,
+    "before": 712704
+  },
+  "kernel/fs/ocfs2/dlm/ocfs2_dlm.ko": {
+    "after": 507904,
+    "before": 503808
+  },
+  "kernel/fs/ocfs2/ocfs2.ko": {
+    "after": 3207168,
+    "before": 3203072
+  },
+  "kernel/fs/overlayfs/overlay.ko": {
+    "after": 516096,
+    "before": 512000
+  },
+  "kernel/fs/smb/client/cifs.ko": {
+    "after": 3391488,
+    "before": 3387392
+  },
+  "kernel/fs/smb/server/ksmbd.ko": {
+    "after": 909312,
+    "before": 905216
+  },
+  "kernel/fs/xfs/xfs.ko": {
+    "after": 5836800,
+    "before": 5832704
+  },
+  "kernel/kernel/kheaders.ko": {
+    "after": 4796416,
+    "before": 4792320
+  },
+  "kernel/lib/test_bpf.ko": {
+    "after": 4943872,
+    "before": 4939776
+  },
+  "kernel/net/batman-adv/batman-adv.ko": {
+    "after": 569344,
+    "before": 565248
+  },
+  "kernel/net/bluetooth/bluetooth.ko": {
+    "after": 2437120,
+    "before": 2433024
+  },
+  "kernel/net/bridge/bridge.ko": {
+    "after": 884736,
+    "before": 880640
+  },
+  "kernel/net/ceph/libceph.ko": {
+    "after": 1236992,
+    "before": 1232896
+  },
+  "kernel/net/dsa/dsa_core.ko": {
+    "after": 479232,
+    "before": 475136
+  },
+  "kernel/net/mac80211/mac80211.ko": {
+    "after": 3903488,
+    "before": 3899392
+  },
+  "kernel/net/netfilter/ipset/ip_set_hash_netiface.ko": {
+    "after": 143360,
+    "before": 139264
+  },
+  "kernel/net/netfilter/nf_tables.ko": {
+    "after": 798720,
+    "before": 794624
+  },
+  "kernel/net/rds/rds.ko": {
+    "after": 294912,
+    "before": 290816
+  },
+  "kernel/net/rxrpc/rxrpc.ko": {
+    "after": 1277952,
+    "before": 1273856
+  },
+  "kernel/net/sctp/sctp.ko": {
+    "after": 1052672,
+    "before": 1048576
+  },
+  "kernel/net/sunrpc/sunrpc.ko": {
+    "after": 1671168,
+    "before": 1667072
+  },
+  "kernel/net/sunrpc/xprtrdma/rpcrdma.ko": {
+    "after": 868352,
+    "before": 864256
+  },
+  "kernel/net/tipc/tipc.ko": {
+    "after": 978944,
+    "before": 974848
+  },
+  "kernel/net/wireless/cfg80211.ko": {
+    "after": 2953216,
+    "before": 2949120
+  },
+  "kernel/sound/core/snd-pcm.ko": {
+    "after": 446464,
+    "before": 442368
+  },
+  "kernel/sound/hda/codecs/realtek/snd-hda-codec-alc269.ko": {
+    "after": 323584,
+    "before": 319488
+  },
+  "kernel/sound/hda/common/snd-hda-codec.ko": {
+    "after": 454656,
+    "before": 450560
+  },
+  "kernel/sound/pci/asihpi/snd-asihpi.ko": {
+    "after": 520192,
+    "before": 516096
+  },
+  "kernel/sound/pci/au88x0/snd-au8820.ko": {
+    "after": 131072,
+    "before": 126976
+  },
+  "kernel/sound/pci/ctxfi/snd-ctxfi.ko": {
+    "after": 413696,
+    "before": 409600
+  },
+  "kernel/sound/pci/echoaudio/snd-darla24.ko": {
+    "after": 122880,
+    "before": 118784
+  },
+  "kernel/sound/pci/echoaudio/snd-mona.ko": {
+    "after": 151552,
+    "before": 147456
+  },
+  "kernel/sound/soc/amd/raven/snd-pci-acp3x.ko": {
+    "after": 28672,
+    "before": 24576
+  },
+  "kernel/sound/soc/amd/renoir/snd-rn-pci-acp3x.ko": {
+    "after": 32768,
+    "before": 28672
+  },
+  "kernel/sound/soc/amd/rpl/snd-rpl-pci-acp6x.ko": {
+    "after": 24576,
+    "before": 20480
+  },
+  "kernel/sound/soc/amd/vangogh/snd-pci-acp5x.ko": {
+    "after": 28672,
+    "before": 24576
+  },
+  "kernel/sound/soc/codecs/snd-soc-cs42l43.ko": {
+    "after": 1249280,
+    "before": 1245184
+  },
+  "kernel/sound/soc/codecs/snd-soc-pcm1681.ko": {
+    "after": 57344,
+    "before": 53248
+  },
+  "kernel/sound/soc/codecs/snd-soc-wm5102.ko": {
+    "after": 2498560,
+    "before": 2494464
+  },
+  "kernel/sound/soc/codecs/snd-soc-wm8998.ko": {
+    "after": 1671168,
+    "before": 1667072
+  },
+  "kernel/sound/soc/sof/xtensa/snd-sof-xtensa-dsp.ko": {
+    "after": 65536,
+    "before": 61440
+  },
+  "kernel/sound/usb/line6/snd-usb-toneport.ko": {
+    "after": 49152,
+    "before": 45056
+  },
+  "kernel/sound/usb/snd-usb-audio.ko": {
+    "after": 1220608,
+    "before": 1216512
+  },
+  "modules.alias": {
+    "after": 1822720,
+    "before": 1818624
+  },
+  "modules.alias.bin": {
+    "after": 1765376,
+    "before": 1761280
+  },
+  "modules.dep.bin": {
+    "after": 1175552,
+    "before": 1171456
+  },
+  "modules.symbols": {
+    "after": 790528,
+    "before": 786432
+  },
+  "modules.symbols.bin": {
+    "after": 954368,
+    "before": 950272
+  }
+}

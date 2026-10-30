@@ -1,0 +1,20 @@
+{
+  "artifact-inputs.py": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+  "controller.py": "23e0f656fbee0f36797555ab3e639736dc34522d45f40867cfbb6ef1028a1114",
+  "copy-new-module-release.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cp-version.log": "51c1cf0977509153e67ca716935e275589e1b01e8ab7137cb2e631a1237107cf",
+  "depmod-new-release.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "depmod-version.log": "9270f24e241e1e5ec224e25e9cb44ddb53d6bc5fb680cc3dacc78af0936adc60",
+  "fullbuild-result.json": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+  "installed-before-depmod.json": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+  "module-verification.json": "7594db4d6bea61da14f78d9f37782e9248824fafde1d20c3d4c489c2be4c0457",
+  "mount-boot.log": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+  "mount-data.log": "c19118b76fad84866881208fa9b22bc76b4bdd550899c27bd9d674b8b90ff8aa",
+  "mount-modules.log": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+  "mount-root.log": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+  "protected-before.json": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+  "result.json": "343b64688df8f055104c4262a28add64bc79800d515b04ce4e48ee984bb07293",
+  "reviewed-stage-controller.py": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+  "stage-result.json": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+  "staged-release-manifest.json": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2"
+}

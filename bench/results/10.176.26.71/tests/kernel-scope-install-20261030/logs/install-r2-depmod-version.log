@@ -1,0 +1,2 @@
+kmod version 34.2
++ZSTD +XZ -ZLIB +OPENSSL

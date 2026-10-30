@@ -1,0 +1,26 @@
+{
+  "System.map-7.0.0-38-kdscope1": {
+    "allocated_bytes": 10551296,
+    "bytes": 10543429,
+    "mode": 33188,
+    "sha256": "63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334"
+  },
+  "config-7.0.0-38-kdscope1": {
+    "allocated_bytes": 311296,
+    "bytes": 308552,
+    "mode": 33188,
+    "sha256": "7131e48d4bb556e54f9fc287c04e6fab33a3de80eb923a215872a01a07609f4b"
+  },
+  "initrd.img-7.0.0-38-kdscope1": {
+    "allocated_bytes": 103211008,
+    "bytes": 103182918,
+    "mode": 33188,
+    "sha256": "e21e0ad9f9cbd784abd35bfca747bf77ae60fc237b8cd47d0dd466c9b07bcf43"
+  },
+  "vmlinuz-7.0.0-38-kdscope1": {
+    "allocated_bytes": 17129472,
+    "bytes": 17121792,
+    "mode": 33188,
+    "sha256": "66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b"
+  }
+}

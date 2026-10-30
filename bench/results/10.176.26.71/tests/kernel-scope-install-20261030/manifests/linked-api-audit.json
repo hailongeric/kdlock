@@ -1,0 +1,168 @@
+{
+  "bridges": [
+    {
+      "branches": [
+        {
+          "offset": 3,
+          "target": "0xffffffff826fcc30"
+        },
+        {
+          "offset": 12,
+          "target": "0xffffffff826fe200"
+        }
+      ],
+      "bytes": "4d85c00f84c7482001498b00e98f5e2001",
+      "checked": "exact tests/loads/tail branches; no CALL, stack mutation or extra instructions",
+      "limitation": "Linked pre-boot bytes only; no claim about boot alternatives or live execution",
+      "symbol": {
+        "index": 1,
+        "info": 18,
+        "name": "kd_api_files_lock_clobber",
+        "other": 0,
+        "size": 17,
+        "value": 18446744071584056160
+      }
+    },
+    {
+      "branches": [
+        {
+          "offset": 3,
+          "target": "0xffffffff826fcde0"
+        },
+        {
+          "offset": 13,
+          "target": "0xffffffff826fe200"
+        }
+      ],
+      "bytes": "4d85c00f84474a2001498b4008e95e5e2001",
+      "checked": "exact tests/loads/tail branches; no CALL, stack mutation or extra instructions",
+      "limitation": "Linked pre-boot bytes only; no claim about boot alternatives or live execution",
+      "symbol": {
+        "index": 1,
+        "info": 18,
+        "name": "kd_api_files_unlock_clobber",
+        "other": 0,
+        "size": 18,
+        "value": 18446744071584056208
+      }
+    },
+    {
+      "branches": [
+        {
+          "offset": 3,
+          "target": "0xffffffff826f37f0"
+        },
+        {
+          "offset": 13,
+          "target": "0xffffffff826fe200"
+        }
+      ],
+      "bytes": "4d85c00f8427b41f01498b4018e92e5e2001",
+      "checked": "exact tests/loads/tail branches; no CALL, stack mutation or extra instructions",
+      "limitation": "Linked pre-boot bytes only; no claim about boot alternatives or live execution",
+      "symbol": {
+        "index": 1,
+        "info": 18,
+        "name": "kd_api_pipe_unlock_clobber",
+        "other": 0,
+        "size": 18,
+        "value": 18446744071584056256
+      }
+    },
+    {
+      "branches": [
+        {
+          "offset": 3,
+          "target": "0xffffffff826f5650"
+        },
+        {
+          "offset": 12,
+          "target": "0xffffffff814f8407"
+        },
+        {
+          "offset": 18,
+          "target": "0xffffffff826fe200"
+        },
+        {
+          "offset": 27,
+          "target": "0xffffffff826fe200"
+        }
+      ],
+      "bytes": "4d85c00f8457d21f014d85c97409498b4010e9f95d2001498b4030e9f05d2001",
+      "checked": "exact tests/loads/tail branches; no CALL, stack mutation or extra instructions",
+      "limitation": "Linked pre-boot bytes only; no claim about boot alternatives or live execution",
+      "symbol": {
+        "index": 1,
+        "info": 18,
+        "name": "kd_api_pipe_lock_clobber",
+        "other": 0,
+        "size": 32,
+        "value": 18446744071584056304
+      }
+    }
+  ],
+  "certificate_embedded": true,
+  "limits": [
+    "No live execution or boot-alternative validation.",
+    "Caller R9 eligibility and unchanged body semantics remain source/full-disassembly review.",
+    "No general ABI, whole-kernel replacement or performance claim."
+  ],
+  "read_only_proof": {
+    "elf_flags": 3,
+    "elf_section": ".rodata",
+    "end_rodata": "0xffffffff83801000",
+    "protected_end": "0xffffffff83a00000",
+    "required_live_gate": "After boot prove site-table kernel mapping read-only; refuse rodata=off",
+    "runtime_page_permissions_verified": false,
+    "start_rodata": "0xffffffff82800000",
+    "strict_kernel_rwx": true
+  },
+  "scope": "Linked table, exact call-capture bytes and four narrow tail bridges only",
+  "site_table_address": "0xffffffff82800000",
+  "site_table_sha256": "88ccb198fba0b9d7b6eaad6a87eb5cefeba2750366800643fe48eb07b2ef50fd",
+  "sites": [
+    {
+      "capture_call_bytes": "4889e6488d15080000004889e9e8e1a8c1ff",
+      "entry": "0xffffffff818ddb0f",
+      "lock_bridge": "kd_api_pipe_lock_clobber",
+      "owner": {
+        "index": 1,
+        "info": 2,
+        "name": "pipe_ioctl",
+        "other": 0,
+        "size": 415,
+        "value": 18446744071588141728
+      },
+      "site": 2
+    },
+    {
+      "capture_call_bytes": "4889e6488d15080000004889e9e8ac7bc1ff",
+      "entry": "0xffffffff818e0844",
+      "lock_bridge": "kd_api_pipe_lock_clobber",
+      "owner": {
+        "index": 1,
+        "info": 18,
+        "name": "pipe_fcntl",
+        "other": 0,
+        "size": 518,
+        "value": 18446744071588153296
+      },
+      "site": 3
+    },
+    {
+      "capture_call_bytes": "4889e6488d15080000004889e9e80439bfff",
+      "entry": "0xffffffff81904a5c",
+      "lock_bridge": "kd_api_files_lock_clobber",
+      "owner": {
+        "index": 1,
+        "info": 18,
+        "name": "set_close_on_exec",
+        "other": 0,
+        "size": 214,
+        "value": 18446744071588301312
+      },
+      "site": 1
+    }
+  ],
+  "vmlinux_sha256": "ea8b44b8f9cc9256c93228adfcb30f5535a1c841a67496b96946f24080240a42"
+}

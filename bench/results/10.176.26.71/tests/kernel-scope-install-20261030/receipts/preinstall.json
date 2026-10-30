@@ -1,0 +1,410 @@
+{
+  "backing": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+  "build_result_sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+  "commands": [
+    {
+      "argv": [
+        "findmnt",
+        "-T",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+        "-o",
+        "TARGET,SOURCE,FSTYPE,OPTIONS"
+      ],
+      "finished": 1793304121.9659443,
+      "label": "build-mount",
+      "log_sha256": "7df79d17291567c85f7ba31b0210f26aba66d3dcc70bcfdca989513e194d169a",
+      "pid": 1024620,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309068,
+      "started": 1793304121.9398503,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "x86_64-linux-gnu-gcc",
+        "--version"
+      ],
+      "finished": 1793304121.9942818,
+      "label": "compiler-version",
+      "log_sha256": "341bf30a2fa055cd06fedb99443187da8a11a93280e036da9650c0b0cf2c3230",
+      "pid": 1024621,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309071,
+      "started": 1793304121.9715402,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "--version"
+      ],
+      "finished": 1793304122.0301259,
+      "label": "binutils-version",
+      "log_sha256": "9e64f2a24ea3a3c22b070d14eb2dcbe381044179b53c84323c1b7f00c3b13282",
+      "pid": 1024622,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309075,
+      "started": 1793304122.005338,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "openssl",
+        "x509",
+        "-inform",
+        "DER",
+        "-in",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/certs/signing_key.x509",
+        "-noout",
+        "-subject",
+        "-nameopt",
+        "RFC2253",
+        "-serial",
+        "-fingerprint",
+        "-sha256"
+      ],
+      "finished": 1793304122.0611403,
+      "label": "public-certificate",
+      "log_sha256": "ef8c4054e5c39b6f983d4193b62c5c04cdcb8b531bc6d7407eaaf7447959c7ca",
+      "pid": 1024623,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309077,
+      "started": 1793304122.035093,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "readelf",
+        "-n",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304122.0898306,
+      "label": "vmlinux-build-id",
+      "log_sha256": "13583af297dcc20f7e22911100407e4b9ac574c3cff148da68ab41bd5c6e90ab",
+      "pid": 1024624,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309081,
+      "started": 1793304122.070887,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "readelf",
+        "-SW",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304122.122248,
+      "label": "vmlinux-sections",
+      "log_sha256": "9497b40442ce894daae12c8cdf9d4b9a3698ab96b80c4bcf2ce8fb6eb74569a6",
+      "pid": 1024625,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309084,
+      "started": 1793304122.09952,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "readelf",
+        "-Ws",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304122.4132962,
+      "label": "vmlinux-symbols",
+      "log_sha256": "d92f159c6c29e8d486e012bac22a6348a39dbb173bfae957a28c461c70377fdb",
+      "pid": 1024626,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309087,
+      "started": 1793304122.1277437,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=set_close_on_exec",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304122.7405775,
+      "label": "linked-set-close-on-exec",
+      "log_sha256": "078a94491ea72c9361eab03529fd289d210af00208f81c7eb0884cb9ca480914",
+      "pid": 1024627,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309120,
+      "started": 1793304122.4563496,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=pipe_ioctl",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304123.0423675,
+      "label": "linked-pipe-ioctl",
+      "log_sha256": "aaec939e8889a12f5453decb2eb62ff8a9e0e696828625e461417601b2dde54c",
+      "pid": 1024628,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309149,
+      "started": 1793304122.75296,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=pipe_fcntl",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304123.3388135,
+      "label": "linked-pipe-fcntl",
+      "log_sha256": "96e2c35d9a6a89676d660dc5124694b484a6679a285d5bfdcd1848bdc6a07ed8",
+      "pid": 1024629,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309179,
+      "started": 1793304123.051236,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=kd_api_files_lock_clobber",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304123.6427078,
+      "label": "linked-kd-api-files-lock-clobber",
+      "log_sha256": "10af8539c89596adc7afdea3bf4fe9ab695a369531f298caa6b8bc5f3cc4d60e",
+      "pid": 1024630,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309209,
+      "started": 1793304123.353496,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=kd_api_files_unlock_clobber",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304123.9437156,
+      "label": "linked-kd-api-files-unlock-clobber",
+      "log_sha256": "2f073f386daa792ce450038d91031dab51305c9e497fcfb75b1428ef60455ade",
+      "pid": 1024631,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309239,
+      "started": 1793304123.6542351,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=kd_api_pipe_lock_clobber",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304124.2421188,
+      "label": "linked-kd-api-pipe-lock-clobber",
+      "log_sha256": "1f3b2bbb58e41371219c109d37b19cd242561e28554390c52e068bf2a5ed0e1e",
+      "pid": 1024632,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309270,
+      "started": 1793304123.956657,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "--disassemble=kd_api_pipe_unlock_clobber",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/vmlinux"
+      ],
+      "finished": 1793304124.5443594,
+      "label": "linked-kd-api-pipe-unlock-clobber",
+      "log_sha256": "9c9a0be413db6b88a97a438c701c4238e226f77001a93ff3ef65539c1a015fd8",
+      "pid": 1024633,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309300,
+      "started": 1793304124.25641,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/prepare-provider.py"
+      ],
+      "finished": 1793304125.4311948,
+      "label": "prepare-provider",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pid": 1024634,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309403,
+      "started": 1793304125.2934306,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module",
+        "KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+        "CC=x86_64-linux-gnu-gcc",
+        "W=1",
+        "KDLOCK_SELFTEST=0",
+        "KDLOCK_NUMA=1",
+        "KDLOCK_SPIN_BATCH=1024",
+        "KDLOCK_MUTEX_BATCH=1024",
+        "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+        "KDLOCK_MUTEX_DIAGNOSTICS=0",
+        "UBSAN_SANITIZE=n"
+      ],
+      "finished": 1793304139.5906503,
+      "label": "build-provider",
+      "log_sha256": "8044adac9d3871285dec450a82fb1d02f3ea67eaeca9805fb49ce06e7252eb17",
+      "pid": 1024636,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6309418,
+      "started": 1793304125.4416075,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "readelf",
+        "-Ws",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module/kdlock_km.ko"
+      ],
+      "finished": 1793304139.6326225,
+      "label": "provider-symbols",
+      "log_sha256": "f513698885aedcd47336dad078d1ae77a88fba05211ed9d6eb26f6cf83561af3",
+      "pid": 1025128,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6310835,
+      "started": 1793304139.606848,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "readelf",
+        "-SW",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module/kdlock_km.ko"
+      ],
+      "finished": 1793304139.6611211,
+      "label": "provider-sections",
+      "log_sha256": "4f14ecc736f6c8772efb7e2aaeb4972e6b28799aa9f894400122697f2f018370",
+      "pid": 1025129,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6310838,
+      "started": 1793304139.63778,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "readelf",
+        "-Wr",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module/kdlock_km.ko"
+      ],
+      "finished": 1793304139.7537658,
+      "label": "provider-relocations",
+      "log_sha256": "ce2d45e5aae744288b2b02c6bb4cbcbc2cfb44b2c51389e24c5962a191df637a",
+      "pid": 1025130,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6310841,
+      "started": 1793304139.668178,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "modinfo",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module/kdlock_km.ko"
+      ],
+      "finished": 1793304139.7960966,
+      "label": "provider-modinfo",
+      "log_sha256": "c07966a01c288b45142e68c40b6b70866ff3bd5057c9844784ed1a306182cb26",
+      "pid": 1025131,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6310852,
+      "started": 1793304139.776041,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "objdump",
+        "-drwC",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-preinstall-r2-20261030/provider/kernel_module/kdlock_km.ko"
+      ],
+      "finished": 1793304139.8922718,
+      "label": "provider-objdump",
+      "log_sha256": "c7933fad4fba5e633e7ce99505cd91c32e139d118d9051a8d52bdb3e7251be27",
+      "pid": 1025132,
+      "remaining_processes": [],
+      "returncode": 0,
+      "start_ticks": 6310855,
+      "started": 1793304139.8063595,
+      "timeout_seconds": 120
+    }
+  ],
+  "controller_sha256": "a114bf18356d4e31238b6216e293ce3789687edee50758ee770b9fab9c6d2eec",
+  "current_project_inputs_unchanged": true,
+  "finished": 1793304165.3691957,
+  "installed": false,
+  "kernel_source_build_unchanged": true,
+  "limits": [
+    "No installation, module loading, boot or live API execution.",
+    "Root must review full caller eligibility/disassembly and compiler warnings before install.",
+    "Signatures of installed modules remain a later gate; private signing key untouched."
+  ],
+  "linked_audit_sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+  "live_abi_validated": false,
+  "loaded": false,
+  "module_count": 6901,
+  "module_manifest_sha256": "97c6b5f70a0d10dead2642b600ffdb3610009b24485a4c53f0c4dec2ad791bb7",
+  "passed": true,
+  "performance_accepted": false,
+  "project_manifest_sha256": "8d30e7037661169352b835ffc2a0b0c2c003af9933d4fb88ba7b57ad08942206",
+  "provider_audit_sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+  "provider_sha256": "e6a21c6ffb21625306063bc5148c8d0911b3a401b2d1c95a36e1a138ecc61b0e",
+  "provider_warning_lines": [
+    "kdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x61: 'naked' return found in MITIGATION_RETHUNK build",
+    "kdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame",
+    "kdlock_km.o: warning: objtool: run_combiner+0x13e9: call without frame pointer save/setup",
+    "kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0xe9: undefined stack state",
+    "kdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x251: call without frame pointer save/setup"
+  ],
+  "public_signing_inputs_unchanged": true,
+  "public_signing_manifest_sha256": "a104bee9eca7a1f009e0f76d70f01fa75c074a83b18eaa85d98422514e597b61",
+  "rebooted": false,
+  "release": "7.0.0-38-kdscope1",
+  "schema": 1,
+  "site_count": 3,
+  "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+  "source_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+  "source_manifest_sha256": "3833016fa5c3a913cd9fa54f6fd40f3bdb73047d2a31c74bbcdfc94e4ed5fb99",
+  "started": 1793304094.178561,
+  "state": "PREINSTALL_ARTIFACTS_VERIFIED_NOT_INSTALLED",
+  "static_bridge_count": 4
+}

@@ -1,0 +1,666 @@
+{
+  "archive_bytes_and_all_regular_members_verified": true,
+  "archives": {
+    "install-r2": {
+      "bytes": 3298140,
+      "members": [
+        {
+          "bytes": 28243,
+          "member": "./controller.py",
+          "sha256": "23e0f656fbee0f36797555ab3e639736dc34522d45f40867cfbb6ef1028a1114",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/controller.py"
+        },
+        {
+          "bytes": 32295,
+          "member": "./reviewed-stage-controller.py",
+          "sha256": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/reviewed-stage-controller.py"
+        },
+        {
+          "bytes": 94,
+          "member": "./mount-root.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/mount-root.log"
+        },
+        {
+          "bytes": 6484,
+          "member": "./result.json",
+          "sha256": "343b64688df8f055104c4262a28add64bc79800d515b04ce4e48ee984bb07293",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/result.json"
+        },
+        {
+          "bytes": 14073,
+          "member": "./preinstall-result.json",
+          "sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/preinstall-result.json"
+        },
+        {
+          "bytes": 2876,
+          "member": "./fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/fullbuild-result.json"
+        },
+        {
+          "bytes": 3162036,
+          "member": "./module-verification.json",
+          "sha256": "7594db4d6bea61da14f78d9f37782e9248824fafde1d20c3d4c489c2be4c0457",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/module-verification.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./staged-release-manifest.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/staged-release-manifest.json"
+        },
+        {
+          "bytes": 4916,
+          "member": "./linked-api-audit.json",
+          "sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/linked-api-audit.json"
+        },
+        {
+          "bytes": 6858,
+          "member": "./provider-api-audit.json",
+          "sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/provider-api-audit.json"
+        },
+        {
+          "bytes": 10576,
+          "member": "./artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/artifact-inputs.py"
+        },
+        {
+          "bytes": 4680,
+          "member": "./stage-result.json",
+          "sha256": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/stage-result.json"
+        },
+        {
+          "bytes": 94,
+          "member": "./mount-boot.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/mount-boot.log"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/protected-before.json"
+        },
+        {
+          "bytes": 94,
+          "member": "./mount-modules.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/mount-modules.log"
+        },
+        {
+          "bytes": 90,
+          "member": "./mount-data.log",
+          "sha256": "c19118b76fad84866881208fa9b22bc76b4bdd550899c27bd9d674b8b90ff8aa",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/mount-data.log"
+        },
+        {
+          "bytes": 376,
+          "member": "./cp-version.log",
+          "sha256": "51c1cf0977509153e67ca716935e275589e1b01e8ab7137cb2e631a1237107cf",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/cp-version.log"
+        },
+        {
+          "bytes": 43,
+          "member": "./depmod-version.log",
+          "sha256": "9270f24e241e1e5ec224e25e9cb44ddb53d6bc5fb680cc3dacc78af0936adc60",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/depmod-version.log"
+        },
+        {
+          "bytes": 0,
+          "member": "./copy-new-module-release.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/copy-new-module-release.log"
+        },
+        {
+          "bytes": 0,
+          "member": "./depmod-new-release.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/depmod-new-release.log"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./installed-before-depmod.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r2-failure-fetched-20261030/files/installed-before-depmod.json"
+        }
+      ],
+      "path": "install-r2.tar.gz",
+      "sha256": "f423e3b3b7c994d0ede1f0e6e4b61215042d838d5b0e66ee1c2f9090e12ef6a4"
+    },
+    "install-r3": {
+      "bytes": 11301852,
+      "members": [
+        {
+          "bytes": 35009,
+          "member": "./controller.py",
+          "sha256": "22b2fd3781a435510b580ef2478068327d4260b7d86de628c8ff712542e56cde",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/controller.py"
+        },
+        {
+          "bytes": 32295,
+          "member": "./reviewed-stage-controller.py",
+          "sha256": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/reviewed-stage-controller.py"
+        },
+        {
+          "bytes": 6484,
+          "member": "./prior-install-r2/result.json",
+          "sha256": "343b64688df8f055104c4262a28add64bc79800d515b04ce4e48ee984bb07293",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/result.json"
+        },
+        {
+          "bytes": 28243,
+          "member": "./prior-install-r2/controller.py",
+          "sha256": "23e0f656fbee0f36797555ab3e639736dc34522d45f40867cfbb6ef1028a1114",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/controller.py"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./prior-install-r2/protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/protected-before.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./prior-install-r2/installed-before-depmod.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/installed-before-depmod.json"
+        },
+        {
+          "bytes": 32295,
+          "member": "./prior-install-r2/reviewed-stage-controller.py",
+          "sha256": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/reviewed-stage-controller.py"
+        },
+        {
+          "bytes": 4680,
+          "member": "./prior-install-r2/stage-result.json",
+          "sha256": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/stage-result.json"
+        },
+        {
+          "bytes": 10576,
+          "member": "./prior-install-r2/artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/artifact-inputs.py"
+        },
+        {
+          "bytes": 2876,
+          "member": "./prior-install-r2/fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/fullbuild-result.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./prior-install-r2/staged-release-manifest.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/staged-release-manifest.json"
+        },
+        {
+          "bytes": 3162036,
+          "member": "./prior-install-r2/module-verification.json",
+          "sha256": "7594db4d6bea61da14f78d9f37782e9248824fafde1d20c3d4c489c2be4c0457",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/module-verification.json"
+        },
+        {
+          "bytes": 94,
+          "member": "./prior-install-r2/mount-root.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/mount-root.log"
+        },
+        {
+          "bytes": 94,
+          "member": "./prior-install-r2/mount-boot.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/mount-boot.log"
+        },
+        {
+          "bytes": 94,
+          "member": "./prior-install-r2/mount-modules.log",
+          "sha256": "a04db3bdce020efeaa7efdb61c64d2b626aebc2c72a7ae8a9c65e123b47e2515",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/mount-modules.log"
+        },
+        {
+          "bytes": 90,
+          "member": "./prior-install-r2/mount-data.log",
+          "sha256": "c19118b76fad84866881208fa9b22bc76b4bdd550899c27bd9d674b8b90ff8aa",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/mount-data.log"
+        },
+        {
+          "bytes": 376,
+          "member": "./prior-install-r2/cp-version.log",
+          "sha256": "51c1cf0977509153e67ca716935e275589e1b01e8ab7137cb2e631a1237107cf",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/cp-version.log"
+        },
+        {
+          "bytes": 43,
+          "member": "./prior-install-r2/depmod-version.log",
+          "sha256": "9270f24e241e1e5ec224e25e9cb44ddb53d6bc5fb680cc3dacc78af0936adc60",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/depmod-version.log"
+        },
+        {
+          "bytes": 0,
+          "member": "./prior-install-r2/copy-new-module-release.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/copy-new-module-release.log"
+        },
+        {
+          "bytes": 0,
+          "member": "./prior-install-r2/depmod-new-release.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2/depmod-new-release.log"
+        },
+        {
+          "bytes": 6464,
+          "member": "./result.json",
+          "sha256": "74110b25f9909843bad1b248864612ea791c7952b6698e774349e2ef21bfa0cf",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/result.json"
+        },
+        {
+          "bytes": 14073,
+          "member": "./preinstall-result.json",
+          "sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/preinstall-result.json"
+        },
+        {
+          "bytes": 2876,
+          "member": "./fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/fullbuild-result.json"
+        },
+        {
+          "bytes": 3162036,
+          "member": "./module-verification.json",
+          "sha256": "7594db4d6bea61da14f78d9f37782e9248824fafde1d20c3d4c489c2be4c0457",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/module-verification.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./staged-release-manifest.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/staged-release-manifest.json"
+        },
+        {
+          "bytes": 4916,
+          "member": "./linked-api-audit.json",
+          "sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/linked-api-audit.json"
+        },
+        {
+          "bytes": 6858,
+          "member": "./provider-api-audit.json",
+          "sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/provider-api-audit.json"
+        },
+        {
+          "bytes": 10576,
+          "member": "./artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/artifact-inputs.py"
+        },
+        {
+          "bytes": 4680,
+          "member": "./stage-result.json",
+          "sha256": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/stage-result.json"
+        },
+        {
+          "bytes": 0,
+          "member": "./make-new-initramfs.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/make-new-initramfs.log"
+        },
+        {
+          "bytes": 1684,
+          "member": "./prior-install-r2-bindings.json",
+          "sha256": "cc5012b8225c5a28e9b4aa4d88657ae1e8c3ea6e1c6ba62ac2e4e0c599fe31e9",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/prior-install-r2-bindings.json"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/protected-before.json"
+        },
+        {
+          "bytes": 8570703,
+          "member": "./protected-resume-before.json",
+          "sha256": "4a31426fb9f1747f8f75652faec6fd86c23954e2b7d46654cfe7b1424e4eae83",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/protected-resume-before.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./installed-before-depmod.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/installed-before-depmod.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./installed-resume-before.json",
+          "sha256": "7b11b8bddb76de24a63bbba648855d090908f476c853b03c59a5f51eb4a7c925",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/installed-resume-before.json"
+        },
+        {
+          "bytes": 3,
+          "member": "./depmod-index-changes.json",
+          "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/depmod-index-changes.json"
+        },
+        {
+          "bytes": 18069,
+          "member": "./allocation-observations.json",
+          "sha256": "633f27c863397c0c2c7af0a51f2c1fb977b381898ab9fef004337bba0e882155",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/allocation-observations.json"
+        },
+        {
+          "bytes": 132761,
+          "member": "./initramfs-list.log",
+          "sha256": "d6ddcfc59a19088bd59b3a975ae18059c0c0f1aaf70d57d5af4f8f0b1078c8e9",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/initramfs-list.log"
+        },
+        {
+          "bytes": 0,
+          "member": "./initramfs-extract.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/initramfs-extract.log"
+        },
+        {
+          "bytes": 297788,
+          "member": "./initramfs-module-identities.json",
+          "sha256": "fa74418f9d2c471bdd2ae4c2db18069e6397171a782718c7687935e9672556cb",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/initramfs-module-identities.json"
+        },
+        {
+          "bytes": 8571530,
+          "member": "./protected-after.json",
+          "sha256": "8ae180c06e0b6691c3ed9b9ca7987793bdda50acedac64514813bf2762bcc5a5",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/protected-after.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./installed-release-manifest.json",
+          "sha256": "7b11b8bddb76de24a63bbba648855d090908f476c853b03c59a5f51eb4a7c925",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/installed-release-manifest.json"
+        },
+        {
+          "bytes": 782,
+          "member": "./installed-boot-manifest.json",
+          "sha256": "3ac9683015c1baa89b9a3d40264b8bad3fb185f321724b1a55e10624de34d37e",
+          "source": "/tmp/kdlock-scope-install-r3-fetched-20261030/files/installed-boot-manifest.json"
+        }
+      ],
+      "path": "install-r3.tar.gz",
+      "sha256": "1ee2bec8e88921485fc4e460429f3397a47d9499fb9e6c1db3ac9435c4c971da"
+    },
+    "stage-r2": {
+      "bytes": 2260098,
+      "members": [
+        {
+          "bytes": 25920,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/controller.py",
+          "sha256": "f11919bbe394dfb58443789eae9c193c71f1d1422575fcc037b4b7c165f96d34",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/controller.py"
+        },
+        {
+          "bytes": 10576,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/artifact-inputs.py"
+        },
+        {
+          "bytes": 7551,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/operations.jsonl",
+          "sha256": "2b7a4893307b849b932665aa8b90ea8d709dc0a8e2736135200de4a4adbcd535",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/operations.jsonl"
+        },
+        {
+          "bytes": 43,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/operation.stdout",
+          "sha256": "9270f24e241e1e5ec224e25e9cb44ddb53d6bc5fb680cc3dacc78af0936adc60",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/operation.stdout"
+        },
+        {
+          "bytes": 2690,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/result.json",
+          "sha256": "b55eee6dad571da7d1f5a55a74f04b7ed8c1c34f755aa8e3a8bb60174885046f",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/result.json"
+        },
+        {
+          "bytes": 14073,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/preinstall-result.json",
+          "sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/preinstall-result.json"
+        },
+        {
+          "bytes": 2876,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/fullbuild-result.json"
+        },
+        {
+          "bytes": 4916,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/linked-api-audit.json",
+          "sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/linked-api-audit.json"
+        },
+        {
+          "bytes": 1152706,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/build-module-identities.json",
+          "sha256": "97c6b5f70a0d10dead2642b600ffdb3610009b24485a4c53f0c4dec2ad791bb7",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/build-module-identities.json"
+        },
+        {
+          "bytes": 6858,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/provider-api-audit.json",
+          "sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/provider-api-audit.json"
+        },
+        {
+          "bytes": 2970411,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/modules-install.log",
+          "sha256": "3f3a9ca3dae458abaffd404ed3908856abed90d3d260499449cc80a7cd8c0b7c",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/modules-install.log"
+        },
+        {
+          "bytes": 6819758,
+          "member": "mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/protected-before.json"
+        },
+        {
+          "bytes": 713592,
+          "member": "mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/arch/x86/events/amd/amd-uncore.ko",
+          "sha256": "9c08daeb84b8c2dc60e5efe5dee63de02b979d001141af9d475b61d03880fd9a",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/arch/x86/events/amd/amd-uncore.ko"
+        },
+        {
+          "bytes": 63113,
+          "member": "mnt/kdlock-builds/kdscope1-install-stage-r2-20261030/modules/lib/modules/7.0.0-38-kdscope1/kernel/arch/x86/events/amd/amd-uncore.ko",
+          "sha256": "ee6d2f7af2d8f3f079f006d2c66158ffe1f281d0eba205b0239cd7e4e3182dc0",
+          "source": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdscope1-install-stage-r2-20261030/modules/lib/modules/7.0.0-38-kdscope1/kernel/arch/x86/events/amd/amd-uncore.ko"
+        }
+      ],
+      "path": "stage-r2.tar.gz",
+      "sha256": "eb70330efe9101c1ed1c71d9362d674eb6a766e3daaaff50769792062c0f37df"
+    },
+    "stage-r3": {
+      "bytes": 7279679,
+      "members": [
+        {
+          "bytes": 32295,
+          "member": "./controller.py",
+          "sha256": "023a69e7ab63224fad238fd0b5b0254008ad4cd2872039595b5fc7fe972a185a",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/controller.py"
+        },
+        {
+          "bytes": 10576,
+          "member": "./artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/artifact-inputs.py"
+        },
+        {
+          "bytes": 2290383,
+          "member": "./operations.jsonl",
+          "sha256": "6c9f3a610cb75afd2620065308e7530241e2d3e1273415f076c741ed9c16ae8f",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/operations.jsonl"
+        },
+        {
+          "bytes": 2690,
+          "member": "./prior-stage-r2/result.json",
+          "sha256": "b55eee6dad571da7d1f5a55a74f04b7ed8c1c34f755aa8e3a8bb60174885046f",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/result.json"
+        },
+        {
+          "bytes": 25920,
+          "member": "./prior-stage-r2/controller.py",
+          "sha256": "f11919bbe394dfb58443789eae9c193c71f1d1422575fcc037b4b7c165f96d34",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/controller.py"
+        },
+        {
+          "bytes": 10576,
+          "member": "./prior-stage-r2/artifact-inputs.py",
+          "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/artifact-inputs.py"
+        },
+        {
+          "bytes": 14073,
+          "member": "./prior-stage-r2/preinstall-result.json",
+          "sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/preinstall-result.json"
+        },
+        {
+          "bytes": 2876,
+          "member": "./prior-stage-r2/fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/fullbuild-result.json"
+        },
+        {
+          "bytes": 1152706,
+          "member": "./prior-stage-r2/build-module-identities.json",
+          "sha256": "97c6b5f70a0d10dead2642b600ffdb3610009b24485a4c53f0c4dec2ad791bb7",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/build-module-identities.json"
+        },
+        {
+          "bytes": 4916,
+          "member": "./prior-stage-r2/linked-api-audit.json",
+          "sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/linked-api-audit.json"
+        },
+        {
+          "bytes": 6858,
+          "member": "./prior-stage-r2/provider-api-audit.json",
+          "sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/provider-api-audit.json"
+        },
+        {
+          "bytes": 7551,
+          "member": "./prior-stage-r2/operations.jsonl",
+          "sha256": "2b7a4893307b849b932665aa8b90ea8d709dc0a8e2736135200de4a4adbcd535",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/operations.jsonl"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./prior-stage-r2/protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/protected-before.json"
+        },
+        {
+          "bytes": 2970411,
+          "member": "./prior-stage-r2/modules-install.log",
+          "sha256": "3f3a9ca3dae458abaffd404ed3908856abed90d3d260499449cc80a7cd8c0b7c",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2/modules-install.log"
+        },
+        {
+          "bytes": 4680,
+          "member": "./result.json",
+          "sha256": "7d34d4860abad6cee800a383651f4fe8f7695ca295ebad528e1207c17b57ece4",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/result.json"
+        },
+        {
+          "bytes": 14073,
+          "member": "./preinstall-result.json",
+          "sha256": "27ca9ae9cb1b42455b4e659de34b0342c52186794065020fe7b25152259f35c2",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/preinstall-result.json"
+        },
+        {
+          "bytes": 1030,
+          "member": "./prior-stage-r2-bindings.json",
+          "sha256": "59f0f269213a9f9bdada5743ea430b918433b887b3f6c5388d9ab4975e62ea62",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/prior-stage-r2-bindings.json"
+        },
+        {
+          "bytes": 2876,
+          "member": "./fullbuild-result.json",
+          "sha256": "c72e3654804a000bd85226fbb2454ba770040e10f937b418836854dce08bcd3d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/fullbuild-result.json"
+        },
+        {
+          "bytes": 4916,
+          "member": "./linked-api-audit.json",
+          "sha256": "7448a1ff221e9b29ea83d7b4b1c0bde7c6a540115a1204d600e6803574b636eb",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/linked-api-audit.json"
+        },
+        {
+          "bytes": 1152706,
+          "member": "./build-module-identities.json",
+          "sha256": "97c6b5f70a0d10dead2642b600ffdb3610009b24485a4c53f0c4dec2ad791bb7",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/build-module-identities.json"
+        },
+        {
+          "bytes": 6858,
+          "member": "./provider-api-audit.json",
+          "sha256": "d51b1066cc466e3a75d11952b0b71ca9d4b43f007d71b16a7bb8aa7c2d448f24",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/provider-api-audit.json"
+        },
+        {
+          "bytes": 54,
+          "member": "./operation.stdout",
+          "sha256": "bf46506340b416efc7198d6613153b8a27a38076f72f61197694958cb9c83c4e",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/operation.stdout"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./protected-before.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/protected-before.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./staged-before.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/staged-before.json"
+        },
+        {
+          "bytes": 1510216,
+          "member": "./staged-release-manifest.json",
+          "sha256": "053c7bf4efec8001d10a7860cb8060f42b3deb9df802ecd7de57910fc74d74f2",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/staged-release-manifest.json"
+        },
+        {
+          "bytes": 3162036,
+          "member": "./module-verification.json",
+          "sha256": "7594db4d6bea61da14f78d9f37782e9248824fafde1d20c3d4c489c2be4c0457",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/module-verification.json"
+        },
+        {
+          "bytes": 6819758,
+          "member": "./protected-after.json",
+          "sha256": "fb8ec836f5b907e364d0e5094704291fdc5753ef8a717a1b10f46a82bf26f11d",
+          "source": "/tmp/kdlock-scope-stage-r3-fetched-20261030/files/protected-after.json"
+        }
+      ],
+      "path": "stage-r3.tar.gz",
+      "sha256": "6ab009b18c963f1f1625738e87ab6cbb3a08a8108fdea5e810e06725fe3c990a"
+    }
+  },
+  "original_tmp_evidence_preserved": true,
+  "raw_root": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kernel-scope-install-20261030",
+  "schema": 1
+}

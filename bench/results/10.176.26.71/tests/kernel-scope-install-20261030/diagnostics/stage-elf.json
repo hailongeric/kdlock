@@ -1,0 +1,484 @@
+{
+  "allocated_sections": {
+    "built_count": 25,
+    "equal": true,
+    "fields": [
+      "name",
+      "type",
+      "flags",
+      "size",
+      "align",
+      "entsize",
+      "contents_sha256_or_nobits"
+    ],
+    "records": {
+      ".altinstr_replacement": {
+        "align": 1,
+        "entsize": 0,
+        "flags": 6,
+        "sha256": "180ac70af1ce787463fe9d7cc7c9fe79205079d67c248300cec21719c92cf391",
+        "size": 59,
+        "type": 1
+      },
+      ".altinstructions": {
+        "align": 8,
+        "entsize": 14,
+        "flags": 18,
+        "sha256": "51140950835cbf0bf488711bce4e3b81d02266768125c9a1a083eeeb3119a6a7",
+        "size": 168,
+        "type": 1
+      },
+      ".bss": {
+        "align": 4,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": null,
+        "size": 4,
+        "type": 8
+      },
+      ".call_sites": {
+        "align": 1,
+        "entsize": 4,
+        "flags": 2,
+        "sha256": "89b888916e93f9808db93945ab665fdad1971310c964cfea59e93ce185d5550e",
+        "size": 668,
+        "type": 1
+      },
+      ".data": {
+        "align": 32,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": "5f7ae9b82c86703ac2714a5cfd1f8b2d9fe44619711d8fdb3515055a4c1d1356",
+        "size": 3272,
+        "type": 1
+      },
+      ".exit.data": {
+        "align": 8,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "size": 8,
+        "type": 1
+      },
+      ".exit.text": {
+        "align": 16,
+        "entsize": 0,
+        "flags": 6,
+        "sha256": "00f298b0c3ec809bdc49da26a7c59c563b73c718ad2c13818cd699daa1b2ad3a",
+        "size": 251,
+        "type": 1
+      },
+      ".gnu.linkonce.this_module": {
+        "align": 64,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": "eea14d7b5139264b447bdcc41feb724d7880e3dd381c56ff565c33fe31b946a1",
+        "size": 1280,
+        "type": 1
+      },
+      ".init.data": {
+        "align": 8,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "size": 8,
+        "type": 1
+      },
+      ".init.text": {
+        "align": 16,
+        "entsize": 0,
+        "flags": 6,
+        "sha256": "a65062b9db51e38130d7c1f12910a45ee5b72b211f85cf21ab0a9573b921e706",
+        "size": 460,
+        "type": 1
+      },
+      ".modinfo": {
+        "align": 1,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "07f6646e728825b92febbf4c72d9ba04da83d6201280e296d006a3233c200649",
+        "size": 219,
+        "type": 1
+      },
+      ".note.Linux": {
+        "align": 4,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "9eaee5ea5e5544e6132fa275cdb07ebdb072cbef6755b11ec50c8ed71b0800ba",
+        "size": 48,
+        "type": 7
+      },
+      ".note.gnu.build-id": {
+        "align": 4,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "62c84b1730508c71268bfe94da8fa8db40183306636de6e08697bfc788c888d8",
+        "size": 36,
+        "type": 7
+      },
+      ".retpoline_sites": {
+        "align": 1,
+        "entsize": 4,
+        "flags": 2,
+        "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+        "size": 32,
+        "type": 1
+      },
+      ".return_sites": {
+        "align": 1,
+        "entsize": 4,
+        "flags": 2,
+        "sha256": "a5645e7a3fa0866cde8842c4dab96567507c3d1a3c028b816bc63f6966367b70",
+        "size": 216,
+        "type": 1
+      },
+      ".rodata": {
+        "align": 16,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "b9bd926b93b7e07a8d1c546a0a9e58d8d4d164210284e33bc05a9a25caa28ff4",
+        "size": 675,
+        "type": 1
+      },
+      ".smp_locks": {
+        "align": 4,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "9d908ecfb6b256def8b49a7c504e6c889c4b0e41fe6ce3e01863dd7b61a20aa0",
+        "size": 24,
+        "type": 1
+      },
+      ".text": {
+        "align": 16,
+        "entsize": 0,
+        "flags": 6,
+        "sha256": "6aa01db35cbc2bb8618dc969d70f5d1874b7999231c03b5f2e4d7d94f8c5a7b9",
+        "size": 10639,
+        "type": 1
+      },
+      "__bug_table": {
+        "align": 8,
+        "entsize": 0,
+        "flags": 3,
+        "sha256": "dd7679d9df93fecf3d3e3b61e11a3702218788db7baa7f95f943a233c164836a",
+        "size": 64,
+        "type": 1
+      },
+      "__mcount_loc": {
+        "align": 1,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "7c7f15ed27de2f3a51d1da31356b27ea1be15370faa3caab96606e5390ebbd0e",
+        "size": 344,
+        "type": 1
+      },
+      "__param": {
+        "align": 8,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "cb43f1ae7bedc140bb914b276c35968fdf1c40935a7e7c2ce807b16c9c1926ab",
+        "size": 40,
+        "type": 1
+      },
+      "__patchable_function_entries": {
+        "align": 8,
+        "entsize": 0,
+        "flags": 131,
+        "sha256": "627f6149015f853f26db2f3dffba1b7c30b3b74b87c5cfb9f346c1616e3636d0",
+        "size": 352,
+        "type": 1
+      },
+      "__version_ext_crcs": {
+        "align": 32,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "9ab53ebe8065037957228f7c81f53f6222e8fa070b66a4f5cd3b00ef9dce6a57",
+        "size": 184,
+        "type": 1
+      },
+      "__version_ext_names": {
+        "align": 32,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "60d8d862d1da2629eb7feb22a516fdcfa2c90bc2d5bf5800f7dbfeaf116139c4",
+        "size": 782,
+        "type": 1
+      },
+      "__versions": {
+        "align": 32,
+        "entsize": 0,
+        "flags": 2,
+        "sha256": "9c96de9824a4b5ef3b7f99813837f241165099d25e5f1ac886733770eab1182a",
+        "size": 2944,
+        "type": 1
+      }
+    },
+    "staged_count": 25
+  },
+  "allocated_target_relocations": {
+    "built_count": 1041,
+    "normalized_multisets_equal": true,
+    "staged_count": 1041
+  },
+  "built": {
+    "bytes": 713592,
+    "path": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/arch/x86/events/amd/amd-uncore.ko",
+    "sha256": "9c08daeb84b8c2dc60e5efe5dee63de02b979d001141af9d475b61d03880fd9a"
+  },
+  "conclusion": "The only loader_identity difference is removal of 18 canonical unused local section symbols by stripping. Allocated bytes/properties and normalized loader relocations match exactly.",
+  "full_module_set_verified": false,
+  "host": "380G10",
+  "inputs": {
+    "artifact_helper": {
+      "bytes": 10576,
+      "path": "/tmp/kdlock-scope-artifact-inputs-r2-20261030.py",
+      "sha256": "d53f62e1446d0a016843a245fe566d142fb9fccde968b7708bc7479ca50fb58d"
+    },
+    "failed_stage_receipt": {
+      "bytes": 2690,
+      "path": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kernel-scope-module-stage-r2-20261030/result.json",
+      "sha256": "b55eee6dad571da7d1f5a55a74f04b7ed8c1c34f755aa8e3a8bb60174885046f"
+    },
+    "stage_controller": {
+      "bytes": 25920,
+      "path": "/tmp/kdlock-scope-stage-modules-r2-20261030.py",
+      "sha256": "f11919bbe394dfb58443789eae9c193c71f1d1422575fcc037b4b7c165f96d34"
+    }
+  },
+  "recommended_normalization": "Omit only canonical unnamed local zero-valued zero-sized STT_SECTION records unreferenced by retained loader relocations from the standalone relevant symbol multiset. Keep every referenced or other relevant symbol and all allocated section/relocation checks.",
+  "relevant_symbols": {
+    "added": [],
+    "added_count": 0,
+    "all_removed_are_canonical_unreferenced_section_symbols": true,
+    "built_count": 224,
+    "removed": [
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".altinstructions",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".call_sites",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".exit.data",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".gnu.linkonce.this_module",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".init.data",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".modinfo",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".note.Linux",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".note.gnu.build-id",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".retpoline_sites",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".return_sites",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": ".smp_locks",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__bug_table",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__mcount_loc",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__param",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__patchable_function_entries",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__version_ext_crcs",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__version_ext_names",
+          "size": 0,
+          "value": 0
+        }
+      },
+      {
+        "count": 1,
+        "referenced_by_allocated_target_relocations": false,
+        "symbol": {
+          "info": 3,
+          "name": "",
+          "other": 0,
+          "section": "__versions",
+          "size": 0,
+          "value": 0
+        }
+      }
+    ],
+    "removed_count": 18,
+    "staged_count": 206
+  },
+  "schema": 1,
+  "scope": "offline-fetched-amd-uncore-pair-only",
+  "stage_accepted": false,
+  "stage_reexecuted": false,
+  "staged": {
+    "bytes": 63113,
+    "path": "/tmp/kdlock-scope-stage-r2-failure-20261030/files/mnt/kdlock-builds/kdscope1-install-stage-r2-20261030/modules/lib/modules/7.0.0-38-kdscope1/kernel/arch/x86/events/amd/amd-uncore.ko",
+    "sha256": "ee6d2f7af2d8f3f079f006d2c66158ffe1f281d0eba205b0239cd7e4e3182dc0"
+  }
+}
