@@ -19,6 +19,7 @@ static void check_terminal_and_indirect_calls(void)
 {
 	struct kd_jit_batch_call call;
 	struct kd_regs before;
+	unsigned long saved_stack[ARRAY_SIZE(stack)];
 	static const struct { unsigned char bytes[8]; unsigned int length; } calls[] = {
 		{{0xff, 0xd0}, 2}, {{0x41, 0xff, 0xd0}, 3},
 		{{0xff, 0x14, 0x24}, 3}, {{0xff, 0x15, 1, 2, 3, 4}, 6},
@@ -84,11 +85,16 @@ static void check_terminal_and_indirect_calls(void)
 	/* Terminal continuation cannot reopen another publisher's status/generation. */
 	for (unsigned int ban = 0; ban < 2; ban++) {
 		native_call_packet(&call, true, true);
+		/* This direct helper starts after the dispatcher owns a FULL packet;
+		 * preserve the real CALL word while recording its continuation. */
+		kd_exec_frame_own_regs(&active);
+		memcpy(saved_stack, stack, sizeof(stack));
 		entry->status_code = ban ? KD_EXE_NATIVE_ONLY : KD_EXE_CALL_MISS;
 		entry->generation = 19;
 		entry->tgt_addr = 0xabc;
 		entry->jump_from = 0xdef;
 		CHECK(!kd_jit_indirect_call_native(entry, &active, &active.regs));
+		CHECK(!memcmp(saved_stack, stack, sizeof(stack)));
 		CHECK(entry->status_code == (ban ? KD_EXE_NATIVE_ONLY : KD_EXE_CALL_MISS) &&
 		      entry->generation == 19 && entry->tgt_addr == 0xabc && entry->jump_from == 0xdef &&
 		      !active.regs.orig_ax);
