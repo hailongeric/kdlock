@@ -72,8 +72,9 @@ diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 --- a/kernel_module/exe.c
 +++ b/kernel_module/exe.c
-@@ -165,6 +165,7 @@
+@@ -165,7 +165,8 @@
  	bool resume_after_hostcall = false;
+ 	bool resume_after_origin = false;
  	bool body_reported = false;
  	bool pristine_root;
 +	bool bench_completion_root;
