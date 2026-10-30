@@ -25,6 +25,11 @@ The target task executes an actual anonymous `mmap` system call and subsequently
 same bound file, reads the target's proc task records, and releases the holder.
 Thus the observer's own faults cannot depend on the held target mmap lock.
 The target does not inspect or release its own held lock from userspace.
+After fork the target locks/prefaults its current image and writable stack/data,
+then sends a READY handshake before the observer starts the holder. Its held
+interval uses inline raw syscalls, and the executable resolves PLT entries at
+load time. This avoids making fork COW faults or lazy binding the intended
+contended operation.
 
 The client reuses byte-identical `task_state`, `chain_frame`,
 `writer_observation`, and `writer_contention` functions from the frozen
@@ -37,6 +42,9 @@ chain verifier and rejects corrupted proof fields. A missing witness fails;
 there is no retry or functional-policy fallback in this test.
 
 Every path releases or times out the held lock, then joins the exact holder.
+A ten-second bound starts after acquisition; it does not bound acquisition or
+join if the underlying lock malfunctions. A runner deadline therefore retains
+uncertainty and the module rather than reporting a completed cleanup.
 A timeout, failed syscall, missing proof, unknown worker completion, retained
 reference or kernel warning fails. Module unload is normal and only follows
 actual file/worker/reference drain. A command timeout does not prove drain and
