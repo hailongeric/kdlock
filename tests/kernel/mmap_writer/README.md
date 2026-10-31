@@ -48,3 +48,34 @@ requires bracketing `D` states, matching wait channels and unchanged scheduler
 execution counters. Unexpected compiler call-chain shapes fail closed.
 The old [writer_sites.json](writer_sites.json) retains its historical 6.1 identity.
 See the [retained diagnosis](../../../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md).
+
+## Three scheduling return sites
+
+The diagnostic revision based on `7814c61a0be20f5db3b9fb41b6079ef6d2938b5f`
+extends only the userspace representation of exact scheduling return PCs.
+The scope3 ELF has three `schedule` returns in
+`kd_mmap_local_lock_slow_signal`: `0x2c8`, `0x3dd` and `0x5d3`.
+All three remain in the decoded instruction and return lists. The two spin
+rescheduling branches remain reachable in the killable writer path, so dropping
+them would produce an incomplete description. A return PC alone does not prove
+sleep: the existing task/mm/lock identity, complete caller chain, `D` state,
+wait-channel and unchanged scheduler-bracket checks remain authoritative.
+
+The original two-number client form and argument count are preserved. Only a
+three-return receipt uses `--wait-returns 712:989:1491` in the two existing
+return-argument positions. This explicit form requires exactly three distinct,
+positive decimal offsets; malformed values, overflow and a fourth return are
+refused. The six-intermediate-frame limit and two returns per intermediate frame
+remain unchanged. The mapping runner and separately versioned strict-held
+diagnostic use the same argument helper and classifier.
+
+Focused VM checks cover each of the three exact PCs, missing or malformed third
+returns, the four-site bound, old-form compatibility and the unchanged rejection
+of wrong frames or sleep brackets. Replay of the original baseline ELF capture
+and positive raw chains is compatibility evidence only: it does not repeat or
+relabel the completed baseline 42-point measurement. Preserve that baseline's
+original source, diagnostic, receipts and timing bytes, and retain the failed
+candidate capture as a failed attempt. Candidate live correctness uses the new
+diagnostic identity before its first timing point. Kernel/runtime sources,
+payload ioctl layouts, upstream applications and timed workload code are outside
+this change. Source review is not a VM execution pass; all new checks are pending.
