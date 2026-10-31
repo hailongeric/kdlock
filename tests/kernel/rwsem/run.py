@@ -29,7 +29,7 @@ def idle():
             continue
         # Inspect exact thread comm values, not command-line substrings: this
         # runner's own path contains rwsem and must not reject itself.
-        rt.require(name not in ('rb_worker', 'kd_rwsem_probe', 'kd_rwsem_cancel', 'kd_rwsem_nonown', 'kd-cancel')
+        rt.require(name not in ('rb_worker', 'kd_rwsem_probe', 'kd_rwsem_cancel', 'kd_rwsem_nonown', 'kd_rwsem_holder', 'kd_rwsem_signal', 'kd-cancel')
                    and not name.startswith(('kd-local/', 'kd_mtask_', 'kd_irq_api/')),
                    f'existing task: {path}: {name}')
 
@@ -61,8 +61,19 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path)
     p.add_argument('--client', action='store_true')
+    p.add_argument('--gate-signal-client', action='store_true')
     kernel_identity.arguments(p)
     args = p.parse_args()
+    if args.gate_signal_client:
+        buffer = bytearray(64)
+        with open('/dev/kd_rwsem_probe', 'rb', buffering=0) as device:
+            fcntl.ioctl(device, 0x80405302, buffer, True)
+        row = dict(zip(('errors', 'cases', 'osq_observed', 'scoped_retired',
+                        'nonfatal_wait', 'fatal_cancel', 'interruptible_cancel', 'idle'),
+                       struct.unpack('=8Q', buffer)))
+        print(json.dumps(row))
+        return 0 if row == dict(errors=0, cases=3, osq_observed=3, scoped_retired=3,
+                               nonfatal_wait=1, fatal_cancel=2, interruptible_cancel=1, idle=1) else 1
     if args.client:
         buffer = bytearray(96)
         with open('/dev/kd_rwsem_probe', 'rb', buffering=0) as device:
@@ -132,13 +143,16 @@ def main():
             data = rt.command([sys.executable, source / 'tests/kernel/rwsem/run.py', '--client'],
                               path / 'result.json', timeout=40)
             check_log()
+            gate_data = rt.command([sys.executable, source / 'tests/kernel/rwsem/run.py',
+                                    '--gate-signal-client'], path / 'gate-signal.json', timeout=30)
+            check_log()
             verify_inputs(source, hashes, binaries)
             rt.command([sys.executable, source / 'disassem/device_session.py', 'retire'], path / 'retire.log')
             rt.command(['rmmod', 'rwsem_probe'], path / 'unload-probe.log')
             rt.command(['rmmod', 'kdlock_km'], path / 'unload-provider.log')
             check_log()
             idle()
-            results.append(dict(execution=mode, **json.loads(data)))
+            results.append(dict(execution=mode, gate_signal=json.loads(gate_data), **json.loads(data)))
         finally:
             check_log()
             os.close(fd)
@@ -146,7 +160,7 @@ def main():
         snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'], kernel_identity=identity, results=results,
         binaries={str(p.relative_to(out)): rt.digest(p) for p in (module, provider)}))
     print('PASS: sleeping readers, ordinary/outer writer admission, same-CPU '
-          'progress, trylocks, downgrade before publication, cancellation and drain')
+          'progress, trylocks, downgrade before publication, cancellation, drain and scoped gate signals')
     return 0
 
 

@@ -177,6 +177,7 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	struct task_struct *task;
 	unsigned long deadline;
 	bool queued = false;
+	bool gate_wait = writer && !drain && !READ_ONCE(sem.prepared_writes);
 
 	init_completion(&c.ready);
 	init_completion(&c.done);
@@ -202,13 +203,16 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	check(wait_for_completion_timeout(&c.ready, 5 * HZ));
 	deadline = jiffies + 5 * HZ;
 	do {
-		queued = waitqueue_active(drain ? &sem.reader_drain : &sem.phase_wait);
+		queued = gate_wait ? !!READ_ONCE(sem.gate.wait_head) :
+			waitqueue_active(drain ? &sem.reader_drain : &sem.phase_wait);
 		if (queued)
 			break;
 		msleep(1);
 	} while (time_before(jiffies, deadline));
 	check(queued);
 	check(!waitqueue_active(drain ? &sem.phase_wait : &sem.reader_drain));
+	if (gate_wait)
+		check(!waitqueue_active(&sem.phase_wait));
 	if (signal == SIGKILL) {
 		check(!send_sig(SIGUSR1, task, 1));
 		msleep(20);
@@ -542,8 +546,12 @@ unlock:
 	return ret;
 }
 
+#include "payload/gate_signal.inc"
+
 static long probe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+	if (cmd == RUN_GATE_SIGNAL)
+		return run_gate_signal((void __user *)arg);
 	return cmd == RUN ? run((void __user *)arg) : -ENOTTY;
 }
 static const struct file_operations ops = {

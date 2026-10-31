@@ -20,6 +20,11 @@ struct kd_mutex_osq_node *kd_mutex_osq_node_get(struct kd_mutex *lock);
 void kd_mutex_osq_node_put(struct kd_mutex_osq_node *node);
 bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
 		       struct kd_mutex_osq_node *node);
+/* Private signalable rwsem queue admission. Grant/unlink retirement remains
+ * identical to the ordinary queue; a signal changes only the spin stop rule. */
+bool kd_mutex_osq_lock_signal(struct optimistic_spin_queue *lock,
+			      struct kd_mutex_osq_node *node);
+int kd_mutex_local_lock_signal(struct kd_mutex *lock, unsigned int state);
 void kd_mutex_osq_unlock(struct optimistic_spin_queue *lock,
 			 struct kd_mutex_osq_node *node);
 /* Only an explicit delegation head may lend its already reserved slot. */

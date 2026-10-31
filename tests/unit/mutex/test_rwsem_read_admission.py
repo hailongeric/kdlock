@@ -6,7 +6,9 @@ concurrent OSQ unlink or sleeping-reader progress; the existing mutex OSQ
 fixture and live rwsem probe cover the latter two separately.
 """
 import os
+import resource
 import shlex
+import signal
 import subprocess
 import tempfile
 from pathlib import Path
@@ -20,6 +22,8 @@ FIXTURE = r'''
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#define noinline __attribute__((noinline))
+#define likely(value) (value)
 
 struct kd_mutex { int unused; };
 struct kd_mutex_osq_node { int unused; };
@@ -387,6 +391,7 @@ int main(void)
 
 
 def main():
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     poll = source[source.index('#define kd_rwsem_poll(condition)'):
                   source.index('#define kd_rwsem_wait(queue, condition)')]
@@ -395,8 +400,9 @@ def main():
     delegate = definition(source, 'static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)')
     local_phase = next(line for line in source.splitlines()
                        if line.startswith('#define KD_RWSEM_LOCAL_WRITER '))
-    code = local_phase + '\n' + poll + spin + local + delegate
-    code += definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
+    slow = definition(source, 'static noinline void kd_rwsem_read_slowpath(struct kd_rwsem *sem)')
+    fast = definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
+    code = local_phase + '\n' + poll + spin + local + delegate + slow + fast
     queue_guard = ('\t\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
                    '\t\t\treturn false;\n')
     delegate_loop = '\twhile (phase >= 0 && phase < LONG_MAX) {'
@@ -412,6 +418,11 @@ def main():
         'lost-queue-release': ('kd_mutex_osq_unlock(&sem->reader_osq, node);', '(void)kd_mutex_osq_unlock; (void)node;'),
         'failure-returns-ownership': ('return acquired;', '(void)acquired; return true;'),
         'early-retry-budget': ('unsigned int retries = 8;', 'unsigned int retries = 9;'),
+        'repeat-successful-first-probe': (
+            fast, fast.replace('if (likely(kd_down_read_trylock(sem)))',
+                               'if (likely(kd_down_read_trylock(sem)) && false)', 1)),
+        'lost-first-failed-pause': (
+            slow, slow.replace('cpu_relax();', '(void)cpu_relax;', 1)),
         'unbounded-poll': ('while (--kd_rwsem_budget)', 'while (--kd_rwsem_budget || true)'),
         'lost-wake-barrier': ('smp_mb();', '(void)smp_mb;'),
         'lost-cohort-wake': ('kd_rwsem_wake(&sem->phase_wait);', '(void)kd_rwsem_wake;'),
@@ -463,11 +474,59 @@ def main():
                 print('rwsem read mutation detected:', name)
                 continue
             if replacement:
-                assert result.returncode != 0, name
+                assert result.returncode == -signal.SIGABRT and 'Assertion' in result.stderr, (
+                    name, result.returncode, result.stdout, result.stderr)
                 print('rwsem read mutation detected:', name)
             else:
                 assert result.returncode == 0, result.stdout + result.stderr
                 print(result.stdout, end='')
+        count_checks(source, compiler, path)
+
+
+def count_checks(source, compiler, path):
+    """Use actual reader functions with deterministic publication boundaries.
+
+    This checks exact count/rollback/wake effects and source barrier ordering;
+    the synthetic atomic functions are not a concurrent weak-memory model.
+    """
+    release = definition(source, 'void kd_up_read(struct kd_rwsem *sem)')
+    acquire = definition(source, 'int kd_down_read_trylock(struct kd_rwsem *sem)')
+    code = release + acquire
+    fixture = ROOT / 'tests/unit/mutex/rwsem_read_count_fixture.c'
+    (path / 'count_fixture.c').write_text(read_source(fixture))
+    mutations = {
+        'missing-before-atomic-order': ('smp_mb__before_atomic();', '(void)smp_mb__before_atomic;'),
+        'missing-after-atomic-order': ('smp_mb__after_atomic();', '(void)smp_mb__after_atomic;'),
+        'publication-before-order': (
+            'smp_mb__before_atomic();\n\tatomic_long_inc(&sem->readers);',
+            'atomic_long_inc(&sem->readers);\n\tsmp_mb__before_atomic();'),
+        'ignore-closed-phase-recheck': (
+            'if (!atomic_long_read_acquire(&sem->admission))',
+            'if ((void)atomic_long_read_acquire(&sem->admission), true)'),
+        'missing-reader-rollback': ('kd_up_read(sem);', '(void)kd_up_read;'),
+        'double-reader-rollback': ('kd_up_read(sem);', 'kd_up_read(sem); kd_up_read(sem);'),
+        'wake-from-irq-disabled-release': ('!irqs_disabled()', '(irqs_disabled(), true)'),
+        'wake-from-atomic-release': ('!in_atomic()', '(in_atomic(), true)'),
+    }
+    for name, replacement in [('count-production', None), *mutations.items()]:
+        body = code
+        if replacement:
+            old, new = replacement
+            assert old in body, name
+            body = body.replace(old, new, 1)
+        (path / 'rwsem_read_count_production.h').write_text(body)
+        binary = path / name
+        subprocess.run(compiler + ['-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
+                                   '-I', str(path), str(path / 'count_fixture.c'),
+                                   '-o', str(binary)], check=True, timeout=30)
+        result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=5)
+        if replacement:
+            assert result.returncode == -signal.SIGABRT and 'Assertion' in result.stderr, (
+                name, result.returncode, result.stdout, result.stderr)
+            print('rwsem reader count mutation detected:', name)
+        else:
+            assert result.returncode == 0, result.stdout + result.stderr
+            print(result.stdout, end='')
 
 
 if __name__ == '__main__':

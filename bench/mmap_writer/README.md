@@ -86,3 +86,21 @@ measure sustained concurrent-reader scaling. Zero payload fault callbacks do
 not mean zero incidental process or kernel faults. Native/KD comparison results
 must retain these limits, each observation mode and every repetition separately.
 No performance gain follows from the retained rejected timings.
+
+The local writer queue candidate also admits an explicitly decoded gate-wait
+chain. Its receipt retains every actual CALL return through the signal-aware
+mutex entry and rwsem writer entry before the adapter and syscall caller. A
+decoded tail jump contributes its instruction/target evidence but no invented
+stack frame. Optional intermediate frames are passed as a bounded extension of
+the existing waiter argument; the first waiter, each return offset and the
+unchanged sleeping-task/scheduler bracket remain mandatory. A different linked
+shape refuses capture until reviewed. The earlier phase-wait chain remains a
+separate supported shape; a gate receipt does not claim that an unobserved phase
+or reader-drain interval was proved.
+
+For a fresh paired campaign, select the same eligibility policy before either
+arm runs. The proposed common checks are all six functional mapping cases plus
+a separate held-writer diagnostic requiring an exact actual `mmap` and `munmap`
+sleeping-writer witness and its negative controls. A missing incidental witness
+in the functional workload stays `inconclusive`; it is never rewritten as a
+strict pass. This is a prospective plan, not current validation evidence.
