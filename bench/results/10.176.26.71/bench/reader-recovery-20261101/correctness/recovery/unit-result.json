@@ -1,0 +1,18 @@
+{
+  "commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "argv": [
+    "make",
+    "-C",
+    "/root/host_fs/kdlock/tests/unit",
+    "-B",
+    "run",
+    "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "PY_TESTS=mutex/test_mutex_osq.py mutex/test_mutex_state.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py mutex/test_rwsem_writer_queue.py"
+  ],
+  "started": 1793464186.4771178,
+  "passed": true,
+  "pid": 3601,
+  "returncode": 0,
+  "source_unchanged": true,
+  "finished": 1793464223.4445949
+}

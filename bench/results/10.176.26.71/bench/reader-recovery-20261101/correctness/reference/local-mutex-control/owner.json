@@ -1,0 +1,20 @@
+{
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "tests/kernel/mutex/local/run.py",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/reader-recovery-reference-20261101/local-mutex",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+  ],
+  "started": 1793471882.939326,
+  "passed": true,
+  "drained": true,
+  "pid": 83982,
+  "returncode": 0,
+  "source_unchanged": true,
+  "finished": 1793471901.345431
+}

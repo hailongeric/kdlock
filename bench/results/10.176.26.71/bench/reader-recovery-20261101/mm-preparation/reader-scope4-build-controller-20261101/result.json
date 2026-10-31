@@ -1,0 +1,72 @@
+{
+  "completed": false,
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "source_commit": "aeec505307fc01354bc3e660b7a64d0b279b7111",
+  "steps": [
+    {
+      "name": "extract",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-reader-scope4-extract-20261101.py"
+      ],
+      "started": 1793475452.3318298,
+      "pid": 122229,
+      "returncode": 0,
+      "finished": 1793475457.4585812
+    },
+    {
+      "name": "baseline-build-bind",
+      "argv": [
+        "mount",
+        "--bind",
+        "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build"
+      ],
+      "started": 1793475457.462004,
+      "pid": 122232,
+      "returncode": 0,
+      "finished": 1793475457.46635
+    },
+    {
+      "name": "test_mmap_writer_observation.py",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope4-recipe-aeec5053/tests/unit/bench/test_mmap_writer_observation.py"
+      ],
+      "started": 1793475457.4673889,
+      "pid": 122233,
+      "returncode": 0,
+      "finished": 1793475458.2333927
+    },
+    {
+      "name": "test_mmap_writer_return_sites.py",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope4-recipe-aeec5053/tests/unit/bench/test_mmap_writer_return_sites.py"
+      ],
+      "started": 1793475458.2337132,
+      "pid": 122310,
+      "returncode": 0,
+      "finished": 1793475458.3484514
+    },
+    {
+      "name": "prepare",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-kernel-20261031.py",
+        "prepare",
+        "--config",
+        "/tmp/kdlock-reader-scope4-kernel-20261101.json",
+        "--sha256",
+        "366a2e79c60c36c23f7be72af5150c0b7d6116f12c86e65ff2654e97f83ff9de"
+      ],
+      "started": 1793475458.3487787,
+      "pid": 122311,
+      "returncode": 1,
+      "finished": 1793475462.9241588
+    }
+  ],
+  "started": 1793475452.3316736,
+  "error": "AssertionError('prepare')",
+  "finished": 1793475462.9244626
+}

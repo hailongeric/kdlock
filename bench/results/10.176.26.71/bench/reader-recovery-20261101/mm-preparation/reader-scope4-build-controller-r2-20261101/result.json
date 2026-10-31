@@ -1,0 +1,59 @@
+{
+  "completed": false,
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "steps": [
+    {
+      "name": "extract",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-reader-scope4-extract-r2-20261101.py"
+      ],
+      "started": 1793475830.287833,
+      "pid": 123603,
+      "returncode": 0,
+      "finished": 1793475835.7155209
+    },
+    {
+      "name": "test_mmap_writer_observation.py",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope4-recipe-9f9fb90e/tests/unit/bench/test_mmap_writer_observation.py"
+      ],
+      "started": 1793475835.718519,
+      "pid": 123606,
+      "returncode": 0,
+      "finished": 1793475836.4350727
+    },
+    {
+      "name": "test_mmap_writer_return_sites.py",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope4-recipe-9f9fb90e/tests/unit/bench/test_mmap_writer_return_sites.py"
+      ],
+      "started": 1793475836.4354165,
+      "pid": 123683,
+      "returncode": 0,
+      "finished": 1793475836.5503085
+    },
+    {
+      "name": "prepare",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-kernel-20261031.py",
+        "prepare",
+        "--config",
+        "/tmp/kdlock-reader-scope4-kernel-r2-20261101.json",
+        "--sha256",
+        "ab25f7a9d014f4d6f9ce4ec913049700381b6e8829e574408325d7edd145601e"
+      ],
+      "started": 1793475836.5507147,
+      "pid": 123684,
+      "returncode": 1,
+      "finished": 1793475861.3268673
+    }
+  ],
+  "started": 1793475830.287681,
+  "error": "AssertionError('prepare')",
+  "finished": 1793475861.3344793
+}

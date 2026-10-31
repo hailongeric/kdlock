@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "nano_complete": true,
+  "nano_points_per_arm": 210,
+  "nano_arms": 3,
+  "rounds_per_point": 1,
+  "mm_complete": false,
+  "mm_state": "queued independent scoped-kernel comparison",
+  "candidate_accepted": false,
+  "candidate_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "promoted_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "promotion_merge": "e0f9696cf7ba6268bbbfa5131a9ee881f6553809",
+  "reference_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "minor_gate_vs_promoted": false,
+  "minor_gate_vs_reference": false,
+  "raw_root": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/reader-recovery-20261101",
+  "performance_accepted": false
+}

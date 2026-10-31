@@ -1,0 +1,57 @@
+{
+  "binaries": {
+    "source/kernel_module/kdlock_km.ko": "1b9606990b31e601ed0227d43a9a67b521ad5d604de08fbfb5b09d4ba98b5927",
+    "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "e2cdabfa4b1fdc377c95e838ddd612ef8d1cc4a2488f81ef827dcfbb3267caaf"
+  },
+  "drained": true,
+  "execution": "ordinary-local",
+  "final_idle": true,
+  "jit_bodies": 0,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "passed": true,
+  "probe": {
+    "address_reuse": "PASS",
+    "api_helpers": "PASS",
+    "containing_layout": "PASS",
+    "drain": "PASS",
+    "interruptible": "EINTR",
+    "io": "PASS",
+    "killable": "EINTR",
+    "lock_align": 8,
+    "lock_size": 32,
+    "nested_sleep": "PASS",
+    "no_aux": "PASS",
+    "no_destroy": "PASS",
+    "objects": 2048,
+    "operations": 160000,
+    "ring_cancel": "PASS",
+    "ring_handoff": "PASS",
+    "workers": 8
+  },
+  "snapshot_tag": "kdlock-builddisk-clean-20261031",
+  "source_retirement": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  }
+}

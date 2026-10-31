@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "recipe": "/mnt/kdlock-builds2/kdlock-scope4-recipe-aeec5053",
+  "manifest": "/mnt/kdlock-builds2/kdlock-reader-scope4-aeec5053-20261101.manifest.json",
+  "manifest_sha256": "cbddf4b4003c7b176c786962481a6ad5877299a4d8e0f6c333ec3c64b6f9def8",
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+  "baseline_kernel": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1",
+  "evidence": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r2-20261101",
+  "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "running_release": "7.0.0-38-kdlock1",
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "commit": "aeec505307fc01354bc3e660b7a64d0b279b7111",
+  "provider_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "release": "7.0.0-38-kdscope4",
+  "ubuntu": "/mnt/kdlock-builds/ubuntu-7.0.0-38-source",
+  "mmap_prepare": "/mnt/kdlock-builds2/kdlock-scope4-mmap-prepare-aeec5053-20261101",
+  "api_prepare": "/mnt/kdlock-builds2/kdlock-scope4-api-prepare-aeec5053-20261101",
+  "expected_changed_generated_files": [
+    "kernel/locking/kd_mmap/kd_mmap_mutex_local.c",
+    "kernel/locking/kd_mmap/kd_mmap_mutex_local.h",
+    "kernel/locking/kd_mmap/kd_mmap_mutex_osq.c",
+    "kernel/locking/kd_mmap/kd_mmap_rwsem.c"
+  ],
+  "signature": "KDLock Ubuntu 7.0.0-38.38 kdscope4 7.0.14",
+  "variant_native": "kdscope4-native"
+}

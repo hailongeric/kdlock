@@ -1,0 +1,39 @@
+{
+  "commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "passed": true,
+  "blocks": [
+    {
+      "name": "rwsem",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/reader-recovery-20261101/live/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793464252.9201357,
+      "pid": 4311,
+      "returncode": 0
+    },
+    {
+      "name": "local-mutex",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/mutex/local/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/reader-recovery-20261101/live/local-mutex",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793464273.6733644,
+      "pid": 5200,
+      "returncode": 0
+    }
+  ],
+  "finished": 1793464292.4797788
+}
