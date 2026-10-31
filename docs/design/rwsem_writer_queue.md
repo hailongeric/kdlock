@@ -34,7 +34,8 @@ must determine whether that helps. Historical scores will not be pooled.
    at internal delegated entry as well as the public macro boundary.
 3. Use a scoped signal-aware version of gate spinning for signalable local
    rwsem writers. Reuse exact OSQ grant, unlink and retirement operations.
-   Ordinary mutex and prepared delegation callers retain their existing path.
+   This includes prepared local signalable writers after phase reservation.
+   Ordinary mutex callers and delegated producers retain their existing path.
    A completed acquisition/grant is checked before cancellation. A pending
    nonfatal signal ends optimistic spinning but does not cancel a killable wait.
 4. Phase transitions and reader drainage receive at most 16,384 success-first
