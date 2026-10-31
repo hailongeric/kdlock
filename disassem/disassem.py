@@ -26,7 +26,10 @@ import indirect_jump
 import memread
 import normal
 import native_escape
+import origin_instructions
+import native_terminals
 import solve_bug
+from miasm.expression.expression import ExprId, ExprMem
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
@@ -151,7 +154,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             "compiler clobber-entry inputs are assumed; "
             "source leases, lowering, return routing and lock ownership remain")
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
+    indirect_call_native = memread.device_session.indirect_call()
     hostcall_targets = set(resolved_hostcalls)
+    terminal_targets = set(native_terminals.resolve(get_kernel_symbol))
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
@@ -198,6 +203,15 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     lock_symbols.pop(0, None)
     lock_symbols.pop(None, None)
     keep_call_stack = set(lock_symbols) | hostcall_targets
+    # Per-object bridges remain Native boundaries unless the exact terminal
+    # outer-unlock metadata proves the selected KD object/class at runtime.
+    api_unlock_name = {1: "kd_api_files_unlock_clobber", 2: "kd_api_pipe_unlock_clobber"}.get(abi)
+    api_unlock = get_kernel_symbol(api_unlock_name) if api_unlock_name else 0
+    terminal_unlock_aliases = ({api_unlock: (clobber_unlock if abi == 1 else direct_mutex_unlock)}
+                               if api_unlock else {})
+    excluded_targets = keep_call_stack | terminal_targets
+    if entry in excluded_targets:
+        return reject_translation("entry is a control or Native CALL boundary")
     # Analysis may use only the bound negotiated on this translation's live
     # device lease. New spin/scalar service summaries describe typed sequential
     # effects; they do not claim this mutex runtime stack-comparison capability.
@@ -209,6 +223,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     escape_capable = (root_escape_capable or
                       (lock_kind == "mutex" and abi == 2
                        and memread.device_session.native_escape()))
+    origin_capable = (lock_kind == "mutex" and abi == 2 and escape_capable
+                      and memread.device_session.origin_instruction())
     root_controls = {address: name for address, (_, name) in lock_symbols.items()}
     if root_escape_capable:
         root_controls.update(
@@ -220,21 +236,20 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
-        rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
+        rets = memread.read(entry, jump_table, excluded_callees=excluded_targets)
     except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
         return reject_translation(str(error))
-    # indirect_jump.find later adds ordinary decoded RET edges to this table.
-    # Preserve only the learned input history for root-marker admission.
-    learned_indirect = bool(jump_table)
-
-    # Newly fetched branch targets inherit their caller's lock depth. Only
-    # originally discovered callees/IJ targets are independent full-scan roots.
+    # Decoder seeds do not independently authorize execution. Rebuild reachability
+    # from the actual entry and its CALL/CFG/history edges on every generation.
     discovered_targets = {target for _, _, targets in rets for target in targets}
     entry_guards = None
     memory_guards = None
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
+        block_dict = {start: block for start, block in block_dict.items()
+                      if start not in excluded_targets}
+        db_dict = {block: db_dict[block] for block in block_dict.values()}
         if escape_capable:
             native_escape.normalize_decoded(block_dict)
         try:
@@ -243,8 +258,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             block_dict, db_dict, native_exits = context_policy.jit_phase_blocks(
                 block_dict,
                 db_dict,
-                discovered_targets | {entry},
+                {entry},
                 keep_call_stack,
+                indirect_history=jump_table,
+                indirect_call_native=indirect_call_native,
             )
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
@@ -255,7 +272,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             entry,
             {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock},
             {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock},
-            discovered_targets,
+            discovered_targets & block_dict.keys(),
             native_exits=native_exits,
         )
         if boundary_error:
@@ -264,6 +281,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(reason)
         if entry not in block_dict:
             return reject_translation("entry has no reachable decoded block")
+
+        for block in block_dict.values():
+            for line in block.lines:
+                if (indirect_call_native and line.name == "CALL" and line.args and
+                    isinstance(line.args[0], (ExprId, ExprMem)) and
+                    native_terminals.indirect_call_length(line.b) != line.l):
+                    diagnostics.set_instruction(line.offset, line)
+                    return reject_translation("indirect CALL encoding lacks an exact native-continuation contract")
 
         source_has_escapes = escape_capable and any(
             native_escape.descriptor(line)
@@ -275,7 +300,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             # or a continuation. No writer-byte value is assumed here.
             scope_error = native_escape.root_scope_rejection(
                 block_dict, db_dict, clobber_unlock, root_controls,
-                hostcall_targets, learned_indirect=learned_indirect,
+                hostcall_targets, learned_indirect=any(
+                    line.offset + line.l in jump_table
+                    for block in block_dict.values() for line in block.lines),
                 native_terminal_controls=native_terminal_controls)
             if scope_error:
                 offset, reason = scope_error
@@ -483,10 +510,19 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(
                 "root instruction markers cannot combine address guards")
 
+    # Historical source PCs outside the actual reachable episode cannot create
+    # orphan dispatch labels or pull their previously learned descendants back
+    # into the image. Keep live targets for the return-graph check below.
+    live_offsets = {line.offset + line.l
+                    for block in block_dict.values() for line in block.lines}
+    jump_table = {source: targets for source, targets in jump_table.items()
+                  if source in live_offsets}
+
     # Final emission must also refuse an incomplete return graph when the
     # unconditional admission path did not need a scoped-call comparison.
     try:
-        missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+        missing_callees = indirect_jump.find(block_dict, db_dict, jump_table,
+                                            terminal_targets=excluded_targets)
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
@@ -499,34 +535,47 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(reason)
         if entry_guards is not None and entry_guards.register_dependencies() - {"RSP", "RBP"}:
             return reject_translation("entry guard requires an uncaptured GPR")
+    origin_sites = origin_instructions.sites(block_dict) if origin_capable else {}
     if has_escapes:
         # Both admission passes above checked the complete original scope,
         # including every cold branch and the native suffix. Only now remove
         # instructions that this generated invocation can never execute.
-        block_dict, db_dict = native_escape.emitted_scope(block_dict, db_dict)
+        block_dict, db_dict = native_escape.emitted_scope(block_dict, db_dict,
+                                                        origin_sites=origin_sites)
         block_dict, db_dict, _ = context_policy.jit_phase_blocks(
-            block_dict, db_dict, (discovered_targets | {entry}) & block_dict.keys(),
+            block_dict, db_dict, {entry} & block_dict.keys(),
             keep_call_stack,
+            indirect_history=jump_table,
+            indirect_call_native=indirect_call_native,
         )
         live_offsets = {line.offset + line.l
                         for block in block_dict.values() for line in block.lines}
-        jump_table = {source: [target for target in targets if target in block_dict]
+        jump_table = {source: [target for target in targets
+                              if target in block_dict or target in excluded_targets]
                       for source, targets in jump_table.items() if source in live_offsets}
         try:
-            missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+            missing_callees = indirect_jump.find(block_dict, db_dict, jump_table,
+                                                terminal_targets=excluded_targets)
         except indirect_jump.ReturnFlowError as error:
             diagnostics.set_instruction(error.offset, "<native escape return dispatch>")
             return reject_translation(str(error))
+    # A prior nonservice marker may have cut a later service on this branch.
+    emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
+    origin_sites = {ip:site for ip,site in origin_sites.items()
+                    if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
-                                 {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
+                                 {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()) | set(terminal_unlock_aliases),
+        terminal_unlock_aliases=terminal_unlock_aliases,
+        indirect_call_native=indirect_call_native,
         native_escapes=has_escapes,
         root_native_escape=root_escapes,
         address_guards=memory_guards,
         trusted_source=trusted_source,
+        origin_sites=origin_sites,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -536,6 +585,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         Path('./asm/jit.S').read_text(encoding='utf-8')),
         requirements=((native_escape.REQUIREMENT if has_escapes else 0)
                       | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
+                      | (origin_instructions.REQUIREMENT if origin_sites else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)))
     return 0

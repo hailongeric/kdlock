@@ -19,9 +19,10 @@ struct kd_spin_batch {
 	struct kd_jit_batch_call call;
 	bool pending;
 	bool fast_previous;
-	/* Reuse the two-byte gap before counter; keep the batch footprint. */
 	u16 numa_scan_left;
-	int counter;
+	/* state.inc limits every batch to at most 1024 bodies. */
+	u16 counter;
+	u8 proxy_context;
 	u64 queue_end;
 #ifdef KDLOCK_SELFTEST
 	int frame_event;
@@ -293,6 +294,13 @@ static void kd_spin_batch_run(void *opaque)
 				frame->outer_unlock_hook = &batch->outer;
 				batch->fast_previous = false;
 				exe_flag = execute_cs(lock, curr_node, batch);
+				/* A completed FULL/native service can change physical
+				 * nesting. Refresh before a later root can be considered;
+				 * terminal outcomes discard this batch and its cache. */
+				if (exe_flag != KD_EXE_NO_RUN &&
+				    exe_flag != KD_EXE_RUN_ERROR &&
+				    !batch->outer.released)
+					batch->proxy_context = kd_spin_proxy_context();
 			}
 		} else {
 #ifdef NUMA_AWARE
@@ -305,15 +313,27 @@ static void kd_spin_batch_run(void *opaque)
 			batch->outer.released = false;
 			kd_spin_prefetch_request(next_node);
 
-			if (kd_spin_batch_prepare_simple(batch, curr_node)) {
+			if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL &&
+			    !kd_spin_proxy_context_matches(curr_node->proxy_context,
+						   batch->proxy_context)) {
+				/* No register/frame/body side effect has occurred. The
+				 * existing NO_RUN splice hands this request native ownership. */
+				batch->fast_previous = false;
+				exe_flag = KD_EXE_NO_RUN;
+			} else if (kd_spin_batch_prepare_simple(batch, curr_node)) {
 				if (kd_entry_abi_spin_clobber(batch->call.entry_abi))
 					kd_jit_clobber_call_v1(&batch->call);
 				else
 					kd_jit_legacy_batch_call(&batch->call);
 				continue;
+			} else {
+				batch->fast_previous = false;
+				exe_flag = execute_cs(lock, curr_node, batch);
+				if (exe_flag != KD_EXE_NO_RUN &&
+				    exe_flag != KD_EXE_RUN_ERROR &&
+				    !batch->outer.released)
+					batch->proxy_context = kd_spin_proxy_context();
 			}
-			batch->fast_previous = false;
-			exe_flag = execute_cs(lock, curr_node, batch);
 		}
 
 #ifdef NUMA_AWARE
@@ -389,6 +409,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		.outer.release = kd_spin_release_outer,
 		.request = request,
 		.numa_scan_left = kd_combiner_batch_size,
+		.proxy_context = kd_spin_proxy_context(),
 	};
 
 	if (next_node == NULL || check_irq_node(curr_node) ||

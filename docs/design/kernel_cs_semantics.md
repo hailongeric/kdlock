@@ -324,3 +324,164 @@ JIT after a native interval additionally requires a validated return/state merge
 and acquisition contract. Preserve actual CALL/RET words; do not create a fake
 general native return bridge to satisfy a coverage count. Any remaining coarse
 fallback or unsupported context must stay explicit in the completion report.
+
+## October 30 bounded functional milestone
+
+The [functional evidence record](../../bench/results/10.176.26.71/tests/kernel-proxy-functional-20261030/README.md)
+updates the implementation status without rewriting the `acfa33a5` audit above.
+At `264725969cbafd909bd20a051cc51b2575b30cfd`, decoded PAUSE/fence/LOCK ordering
+checks and four-family cold → marker → cold → marker live probes passed after
+the retained lowering failures were fixed. Supported reached markers preserve
+later image eligibility. At `25aa81bba99b12c9c0e33a8e4db83c144cccdc29`, ordinary
+spin context checks passed with matching IF delegation and local completion for
+BH/RCU/preempt/migration constraints; mixed-IF live execution is stress evidence,
+not a deliberately forced mismatch proof.
+
+At `3a0f3c25f237a1a980b3b80ee0bf48f54f10e510`, separate direct and fresh fixed
+indirect Native CALL probes passed cold → taken → cold → taken with exact
+original-task effects, native completion/unlock counts, unchanged image identity
+and complete source/frame retirement. The tested outer lock is an ABI2 mutex
+whose physical owner is borrowed; this does not establish queued role exchange.
+The invocation finishes its native suffix. Arbitrary return to the same JIT,
+unknown indirect RET/JMP recovery and universal Native API coverage remain
+outside this evidence. Optional CALL capability bit 12 is explicit.
+
+These are unscored mechanism and functional checks on the existing Linux 7
+kernel. Client compilation and runner/binding unit checks do not establish
+actual bound-object syscall or MM execution. The selected kernel integration,
+unchanged mmap1 and matched nano/performance gates remain pending separately.
+The killable-writer optimistic-poll review is a proposal, not an implemented or
+measured improvement. Exact versions, retained failed attempts, receipt hashes
+and the binary/archive verification limits are in the linked record.
+
+### Remaining same-invocation continuation gap
+
+The verified Native CALL path still executes the callee and remaining suffix on
+the waiter. It does **not** meet a stronger request to resume this invocation's
+JIT immediately after only the non-proxyable branch. In particular,
+`kernel_module/mutex/clobber.inc` releases the old request node before native
+resume, while `kernel_module/execution/native.inc` waits for final lock-release
+completion. Reusing that node as a CALL-return rendezvous would violate its
+lifetime contract.
+
+A bounded extension could service a balanced, returning helper on the original
+task while retaining the node, frame, physical owner, source leases and exact
+CALL token. It needs a separate returned-and-quiescent state, complete register
+and arithmetic-flag capture, an already emitted continuation, and exactly one
+logical RET consumption. A failed post-call compatibility check must continue
+after the completed call, never replay it. This is a proposal, not implemented
+support. Arbitrary transparent interception of a native RET additionally needs
+a new return-boundary contract; silently replacing its original return word is
+not compatible with the current contract.
+
+Native lock acquisition is not a balanced helper: a successful
+`_raw_spin_trylock`, for example, leaves an untracked Native lock held. Immediate
+re-entry on the combiner would be invalid even if preemption counts happened to
+match. Such a path needs a proved balanced interval and acquisition accounting,
+or retains the waiter suffix. The direct/indirect CALL live probes above establish
+that suffix behavior, not branch-only re-entry.
+
+The selected setfd, FIONREAD and F_GETPIPE_SZ protected bodies have no mandatory
+inner Native CALL in the audited source and Native objects. FIONREAD's user copy
+is after unlock; SETPIPE_SZ is a separate local branch. Therefore this missing
+re-entry mechanism does not itself prevent complete proxying of the three
+bounded selected bodies. Their changed lock shells still require their own
+linked-image and actual syscall execution evidence.
+
+### Bounded original-task instruction service candidate
+
+The next isolated candidate implements only exact `RDTSC`, `RDTSCP` and `CPUID`
+instructions in an ABI2 mutex root with its sole outer acquisition. This is a
+new optional image/provider contract. It preserves the pending request, frame,
+FULL packet, physical owner and source/image leases while the original task
+executes one instruction on its reserved shadow stack, then returns that same
+invocation to an emitted JIT successor. There is no source CALL/RET interception
+or replacement return word. Ordinary images and the inner waiter polling loop
+retain their existing paths.
+
+The ABI2 scope also includes a prepared rwsem writer whose sole physical owner
+is its gate mutex. Its positive writer reservation remains held through the
+instruction transaction and final mutex unlock ACK; the transaction neither
+reopens reader admission nor retires that reservation. Rwsem readers always
+execute locally. The extended four-instruction live probe targets the ordinary
+mutex; the existing prepared-writer marker probe covers the rwsem backend
+separately, and neither result may be inferred from the other before execution.
+
+The rare waiter wake distinguishes a service from native completion. The waiter
+rearms its existing notification before release-publishing the returned result;
+after publication it never touches the transaction or packet again and resumes
+polling. The combiner acquire-observes this quiescent result before importing
+registers/flags and continuing. The node, queue count and outer lock are not
+released at an intermediate service boundary. Exact transaction identity and
+source continuation checks remain mandatory. A refused service executes its
+original marker natively; a completed service can fall forward only from its
+post-instruction state, never replay the instruction.
+
+For CPUID, the original requested leaf/subleaf executes on the waiter. The
+combiner additionally serializes its own instruction stream with leaf-zero
+CPUID before publication and after the returned ACK; a memory handshake alone
+does not provide CPUID's instruction-stream ordering across the proxy boundary.
+Remaining branch budget is captured and imported for reentry, and the existing
+finite continuation quota also bounds the number of services in one body.
+
+Only arithmetic flags cross the new continuation boundary. The JIT imports them
+after runtime checks and dispatch comparisons, immediately before its emitted
+successor. Waiter IF/DF/AC are never installed on the combiner. CLI/STI, CLD/STD,
+MSR/PMC operations, unsupported encodings, mixed ownership and arbitrary Native
+CALL intervals keep the native suffix. This does not establish universal
+branch-only continuation or Native lock replacement. Active call-depth tracking
+remains refused; complete return mitigation coverage remains a separate limit.
+
+This section records the contract before code. The candidate requires basic and
+directly affected VM checks, exact original-task execution and same-image JIT
+reentry witnesses, repeated/interleaved service and post-service fallback tests,
+complete owner/source/frame drain, and a new matched one-round nano comparison.
+No implementation, correctness or performance pass is implied by this plan.
+
+### October 30 instruction-service validation and performance correction
+
+The isolated `8617e97c02432a7c0b931aa8263d5edd0f6eb5b8` generation passed the
+basic four-family checks and the directly affected instruction-service checks
+on `7.0.0-38-kdlock1`. The ordinary mutex probe recorded 638,108 and 635,912
+original-task instructions with matching same-image reentries. Its forced
+post-instruction suffix completed without replay; later cold requests again
+returned from JIT. Prepared rwsem writers recorded 133,214 and 132,604 matching
+services/reentries, with ten million local reads per phase. The mixed nesting
+control retained native-suffix behavior. These are mechanism checks, not actual
+selected-API syscall or arbitrary Native CALL reentry validation.
+
+Its separate one-round nano campaign completed all 210 KD points with correct
+data and retirement. The [comparison record](../../bench/results/10.176.26.71/bench/continuation-nano-20261030/README.md)
+retains every coordinate and the two independent historical comparisons. Against
+`acfa33a5adbc1ec6a8aa3bb02f0107052b32a20f`, 107 whole-run and 106 peak
+observations decreased, with 112 coordinates lower in either metric. Against
+`8446f4ecb08816380a4c233197a8ce5e4d333aac`, the respective counts are
+120, 120 and 126. The candidate fails the no-regression promotion gate. All
+measurements retain the existing exploratory host qualification; a single round
+does not estimate variance or establish a causal explanation for these losses.
+
+The next isolated correction targets three inspected costs without changing
+the supported lock/context semantics:
+
+1. Mark the mutex waiter's nonzero `native_resume` branch unlikely, requesting
+   fall-through for ordinary completion. The measured candidate reversed this
+   layout after adding instruction service. Verify the actual new ELF; a source
+   hint is not proof of the requested layout or a throughput improvement.
+2. Refresh the spin executor's cached context only when a generic result can
+   reach another root. Refused/error results and released outer ownership end
+   the batch, so their refreshed value has no consumer. Preserve initial
+   capture, every saved-origin comparison and refresh after nonterminal service.
+3. Restore compact spin batch storage by placing a 16-bit body counter beside
+   the existing 16-bit NUMA scan counter. The configured maximum is 1024; retain
+   all cap and queue-boundary checks. Verify compiled size and initialization
+   rather than inferring an execution benefit from C layout alone.
+
+Commit this plan and measured evidence before the code changes. Then run basic
+plus directly affected batch/context, waiter-service and completion checks in
+the VM, inspect the fresh provider, and repeat the full 210-coordinate matrix
+once for that new source generation. Preserve the old results unchanged and
+report every remaining loss. Do not attribute all NO_JIT losses to these costs:
+the inspected rwsem public functions are unchanged, and translation completes
+before warmup and measurement. The new correction is not a performance pass
+until measured. The syscall, localized mmap and unchanged mmap1 gates remain
+pending; no regressed generation is promoted to maintained kernel replacement.

@@ -31,12 +31,18 @@
 #define KD_REG_FLAGS 152
 #define KD_REG_SS 160
 
-/* Only a validated instruction marker sets orig_ax to this continuation tag.
- * Ordinary CALL exits clear it. No packet layout or wrapper word is added. */
+/* Only validated instruction transactions set the continuation tags below.
+ * Ordinary CALL exits clear them. No packet layout or wrapper word is added. */
 #define KD_REG_NATIVE_ESCAPE_TAG 0x4b44455343415045UL
+/* New image contract only: a completed original-task instruction supplies
+ * arithmetic flags and remaining block budget in ss for this one reentry. */
+/* These two constants also appear directly in generated GAS expressions. */
+#define KD_REG_ORIGIN_REENTRY_TAG 0x4b444f524947494e
+/* The instruction already executed; restore after it, with arithmetic flags. */
+#define KD_REG_ORIGIN_SUFFIX_TAG 0x4b444f5253554646UL
 #define KD_REG_ADDRESS_GUARD_TAG 0x4b44414700000000UL
 #define KD_REG_ADDRESS_GUARD_MASK 0xffffffff00000000UL
-#define KD_REG_ARITHMETIC_FLAGS 0x8d5UL
+#define KD_REG_ARITHMETIC_FLAGS 0x8d5
 
 #ifndef __ASSEMBLER__
 struct kd_regs {

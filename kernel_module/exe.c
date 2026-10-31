@@ -9,7 +9,8 @@
  *   CALL_MISS: known lock control, or original-waiter native continuation;
  *   HOSTCALL: exact allowlisted service, then another wrapper invocation;
  *   ENTRY_REFUSED: native fallback only after validating an unstarted root;
- *   NATIVE_ESCAPE: checked instruction boundary, disable and resume waiter;
+ *   NATIVE_ESCAPE: checked instruction boundary, finish this native suffix;
+ *   INDIRECT_CALL: exact source CALL miss, validate then finish native suffix;
  *   IJ_MISS / ERROR / INST_LIMIT: error, not generic native continuation.
  * The budget counts instrumented blocks, not retired instructions. NORMAL
  * remains a legacy syscall exit, unsupported for kernel critical sections.
@@ -22,6 +23,7 @@
  */
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_origin_service.h"
 #include "kd_source.h"
 #include "kd_jit_batch.h"
 
@@ -49,6 +51,7 @@
 #include "kd_spinlock.h"
 #include "kd_rwlock.h"
 #include "kd_hostcall.h"
+#include "kd_api_provider.h"
 
 /*
  * Pre-allocated pool of executable code blocks.  kd_exe_add() is called from
@@ -82,6 +85,25 @@ static const struct kernel_param_ops kd_native_escape_count_ops = {
 };
 module_param_cb(native_escape_count, &kd_native_escape_count_ops, NULL, 0444);
 MODULE_PARM_DESC(native_escape_count, "Validated instruction-marker native continuations");
+
+static atomic64_t kd_origin_instruction_count = ATOMIC64_INIT(0);
+static atomic64_t kd_origin_reentry_count = ATOMIC64_INIT(0);
+static atomic64_t kd_origin_suffix_count = ATOMIC64_INIT(0);
+static int kd_origin_count_get(char *buffer, const struct kernel_param *kp)
+{
+	return scnprintf(buffer, PAGE_SIZE, "%lld\n",
+			 (long long)atomic64_read(kp->arg));
+}
+static const struct kernel_param_ops kd_origin_count_ops = {
+	.get = kd_origin_count_get,
+};
+module_param_cb(origin_instruction_count, &kd_origin_count_ops, &kd_origin_instruction_count, 0444);
+module_param_cb(origin_reentry_count, &kd_origin_count_ops, &kd_origin_reentry_count, 0444);
+module_param_cb(origin_suffix_count, &kd_origin_count_ops, &kd_origin_suffix_count, 0444);
+/* Focused semantic probe: complete the opcode once, then use its post-state. */
+static bool kd_origin_instruction_force_suffix;
+module_param_named(origin_instruction_force_suffix, kd_origin_instruction_force_suffix, bool, 0644);
+MODULE_PARM_DESC(origin_instruction_force_suffix, "After a validated origin instruction, finish its post-instruction suffix locally");
 
 static atomic64_t kd_address_guard_count = ATOMIC64_INIT(0);
 static int kd_address_guard_count_get(char *buffer, const struct kernel_param *kp)
@@ -145,6 +167,7 @@ static unsigned long contended_mutex_lock_addr;
 static unsigned long outer_mutex_lock_addr;
 static unsigned long direct_mutex_unlock_addr;
 
+#include "execution/native_terminals.inc"
 #include "execution/hostcalls.inc"
 
 #include "execution/timing.inc"
@@ -157,6 +180,17 @@ static unsigned long direct_mutex_unlock_addr;
 #include "execution/registry_publish.inc"
 
 #include "execution/wrapper_entry.inc"
+
+/* A bridge is per-object. Only a sole, exact root acquisition can complete
+ * through its alias here; early/nested aliases retain their Native CALL. */
+static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,
+				struct kd_regs *regs, unsigned long outer)
+{
+	return is_outer_lock_unlock(regs, outer) ||
+		(frame && kd_exec_frame_can_borrow_locks(frame) &&
+		 !kd_exec_frame_has_unreleased_nested(frame) &&
+		 kd_api_outer_unlock(regs->ip, regs->di, outer, frame->mutex_backend));
+}
 
 static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			  unsigned long entry_ip, unsigned long outer_lock_addr,
@@ -175,6 +209,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	bool root_escape_returned = false;
 	const struct kd_jit_image *previous_image;
 	bool resume_after_hostcall = false;
+	bool resume_after_origin = false;
 	bool body_reported = false;
 	bool pristine_root;
 	u64 dispatch_start;
@@ -304,12 +339,40 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 				args[0] = call.args[0];
 				args[1] = call.args[1];
 			} else {
+				if (frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_INSN) {
+					/* FULL CALL packets have no source-flags tag contract.
+					 * Only this just-ACKed transaction may import one; do
+					 * not interpret stale queue-packet bytes as permission. */
+					if (resume_after_origin) {
+						if (regs->orig_ax != KD_REG_ORIGIN_REENTRY_TAG)
+							return KD_EXE_RUN_ERROR;
+					} else {
+						regs->orig_ax = 0;
+					}
+				}
 				translated(regs, args);
 			}
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 returned_wrapper:
 			direct_returned = direct_image;
 			root_escape_returned = root_escape_image;
+			if (resume_after_origin && args[1] == 0 &&
+			    (args[0] == KD_EXE_IJ_MISS || args[0] == KD_EXE_ENTRY_REFUSED)) {
+				/* This contract marks every accepted service successor
+				 * before its first source instruction. A refused dispatch
+				 * therefore still owns the exact completed-opcode packet;
+				 * continue after it instead of replaying the marker. */
+				if (frame->packet_state != KD_PACKET_FULL ||
+				    regs->ip != frame->continuation_ip ||
+				    regs->sp != frame->continuation_sp ||
+				    !kd_exec_frame_can_borrow_locks(frame))
+					return KD_EXE_RUN_ERROR;
+				regs->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+				atomic64_inc(&kd_origin_suffix_count);
+				args[0] = KD_EXE_ORIGIN_INSN;
+				ret_flag = KD_EXE_RUN_NATIVE;
+				break;
+			}
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
 				/* Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
@@ -343,8 +406,11 @@ returned_wrapper:
 			}
 			if (resume_after_hostcall)
 				atomic64_inc(&kd_hostcall_resumed);
+			if (resume_after_origin && args[1] == 1)
+				atomic64_inc(&kd_origin_reentry_count);
 		}
 		resume_after_hostcall = false;
+		resume_after_origin = false;
 
 		/* A fresh physical single-lock root needs no control transaction or
 		 * combiner checkpoint for its final unlock. Match the backend's exact
@@ -531,20 +597,30 @@ returned_wrapper:
 			}
 			resume_after_hostcall = true;
 			continue;
+		} else if (args[0] == KD_EXE_INDIRECT_CALL) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_indirect_call_native(exe, frame, regs);
+			if (call_ret)
+				kd_jit_log_hl_error("INVALID_INDIRECT_CALL", frame, regs,
+					args[0], call_ret, continuation_count, hostcall_count);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 		} else if (args[0] == KD_EXE_CALL_MISS) {
-			if (direct_image && !is_outer_lock_unlock(regs, outer_lock_addr)) {
+			if (direct_image && !kd_jit_outer_unlock(frame, regs, outer_lock_addr)) {
 				/* Preserve the actual source CALL word and physical owner for
 				 * the original waiter. Learning affects a future generation;
 				 * this invocation cannot return to generated direct code. */
 				call_ret = kd_jit_call_limit_native(frame, regs, false);
-				if (!call_ret && !is_end_point(regs->ip))
+				if (!call_ret && !is_end_point(regs->ip) &&
+				    !kd_native_terminal_target(regs->ip))
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
 				ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 				break;
 			}
 			if (outer_lock_addr &&
-			    is_outer_lock_unlock(regs, outer_lock_addr)) {
-				call_ret = kd_jit_timed_control(regs, outer_lock_addr);
+			    kd_jit_outer_unlock(frame, regs, outer_lock_addr)) {
+				call_ret = kd_api_outer_unlock(regs->ip, regs->di,
+					outer_lock_addr, frame->mutex_backend) ?
+					KD_EXE_KNOWN_OUTER_UNLOCK : kd_jit_timed_control(regs, outer_lock_addr);
 				if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
 					ret_flag = KD_EXE_RUN_TO_UNLOCK;
 					break;
@@ -587,6 +663,17 @@ returned_wrapper:
 					break;
 				}
 
+				if (kd_native_terminal_target(regs->ip)) {
+					call_ret = fault_kind ? -EINVAL :
+						kd_jit_pending_call_native(frame, regs, false, 0,
+							"NATIVE_CALL_TERMINAL");
+					if (call_ret)
+						kd_jit_log_hl_error("NATIVE_CALL_TERMINAL_REFUSED", frame,
+							regs, args[0], call_ret, continuation_count, hostcall_count);
+					ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+					break;
+				}
+
 				call_ret =
 					outer_lock_addr ?
 						kd_jit_timed_control(
@@ -619,10 +706,7 @@ returned_wrapper:
 				 * Learning this target only benefits future invocations; do
 				 * not loop back into this JIT after waiter-side execution.
 				 */
-				call_ret =
-					fault_kind ?
-						0 :
-						kd_source_pin_target(regs->ip);
+				call_ret = fault_kind ? 0 : kd_source_pin_target(regs->ip);
 				if (call_ret) {
 					kd_jit_log_hl_error(
 						"SOURCE_TARGET_REFUSED", frame,
@@ -632,13 +716,25 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ERROR;
 					break;
 				}
-				if (!is_end_point(regs->ip))
+				if (!is_end_point(regs->ip) && !kd_native_terminal_target(regs->ip))
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS,
 							regs->ip, 0);
 				/* Synthetic faults have no CALL frame and are not resumable. */
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
 							KD_EXE_RUN_NATIVE;
 			}
+		} else if (args[0] == KD_EXE_ORIGIN_INSN) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_origin_instruction(exe, frame, regs, continuation_count + 1);
+			if (call_ret == 1) {
+				continuation_count++;
+				resume_after_origin = true;
+				continue;
+			}
+			if (call_ret < 0)
+				kd_jit_log_hl_error("INVALID_ORIGIN_INSTRUCTION", frame, regs,
+					args[0], call_ret, continuation_count, hostcall_count);
+			ret_flag = call_ret < 0 ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 		} else if (args[0] == KD_EXE_NATIVE_ESCAPE) {
 			call_ret = kd_jit_native_escape(exe, frame, regs);
 			if (call_ret)
@@ -681,7 +777,7 @@ returned_wrapper:
 	 * them as an instruction-continuation tag when publishing a native suffix. */
 	if ((frame->mutex_backend || root_escape_image) &&
 	    ret_flag == KD_EXE_RUN_NATIVE &&
-	    args[0] != KD_EXE_NATIVE_ESCAPE)
+	    args[0] != KD_EXE_NATIVE_ESCAPE && args[0] != KD_EXE_ORIGIN_INSN)
 		regs->orig_ax = 0;
 
 	/* Completion/native/ACK releases and registry status CAS publish their

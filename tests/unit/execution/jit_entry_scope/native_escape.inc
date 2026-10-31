@@ -32,6 +32,7 @@ static void check_native_escape(void)
 {
 	struct kd_jit_batch_call call;
 	struct kd_regs before;
+	unsigned long saved_stack[ARRAY_SIZE(stack)];
 	const unsigned char reviewed[][3] = {
 		{0x0f, 0x31}, {0x0f, 0x01, 0xf9}, {0x0f, 0xa2},
 		{0xfa}, {0xfb}, {0xfc}, {0xfd}, {0x0f, 0x32},
@@ -49,13 +50,32 @@ static void check_native_escape(void)
 		CHECK(!memcmp(&before, &active.regs, sizeof(before)));
 		CHECK(active.continuation_ip == before.ip &&
 		      active.continuation_sp == before.sp);
-		CHECK(entry->status_code == KD_EXE_NATIVE_ONLY &&
-		      !kd_exe_publish_status(entry, KD_EXE_NORMAL));
+		CHECK(entry->status_code == KD_EXE_NORMAL);
 		CHECK(kd_native_escape_count == 1 && !errors && warnings == 1 &&
 		      source_calls == 1 && !known_calls);
-		CHECK(!kd_exe_entry_is_ready(entry, 0, active.entry_ip));
+		CHECK(kd_exe_entry_is_ready(entry, 0, active.entry_ip));
 	}
-	/* Reject malformed markers before ban, tagging or source-side execution. */
+	/* A retained invocation may finish after another publisher or policy
+	 * decision changes the entry. It must neither ban nor reopen that entry. */
+	const int statuses[] = { KD_EXE_NORMAL, KD_EXE_NATIVE_ONLY, KD_EXE_CALL_MISS };
+	for (unsigned int i = 0; i < ARRAY_SIZE(statuses); i++) {
+		escape_packet(&call);
+		/* Direct helper calls must model the dispatcher's FULL-packet
+		 * transition before continuation_sp reuses borrowed_regs storage. */
+		kd_exec_frame_own_regs(&active);
+		memcpy(saved_stack, stack, sizeof(stack));
+		entry->status_code = statuses[i];
+		entry->generation = 19;
+		entry->tgt_addr = 0xabc;
+		entry->jump_from = 0xdef;
+		CHECK(!kd_jit_native_escape(entry, &active, &active.regs));
+		CHECK(!memcmp(saved_stack, stack, sizeof(stack)));
+		CHECK(entry->status_code == statuses[i] && entry->generation == 19 &&
+		      entry->tgt_addr == 0xabc && entry->jump_from == 0xdef);
+		if (statuses[i] == KD_EXE_NATIVE_ONLY)
+			CHECK(!kd_exe_publish_status(entry, KD_EXE_NORMAL));
+	}
+	/* Reject malformed markers before tagging or source-side execution. */
 	for (unsigned int bad = 0; bad < 15; bad++) {
 		escape_packet(&call);
 		active.regs_borrowed = false;

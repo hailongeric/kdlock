@@ -164,7 +164,7 @@ static void check_root_escape_admission(unsigned int abi)
 	steps[0] = (struct step){ KD_EXE_NATIVE_ESCAPE, ESCAPE_IP, 1, 0 };
 	CHECK(run() == KD_EXE_RUN_NATIVE && calls == 1 &&
 	      active.regs.orig_ax == KD_REG_NATIVE_ESCAPE_TAG &&
-	      kd_native_escape_count == 1 && entry->status_code == KD_EXE_NATIVE_ONLY);
+	      kd_native_escape_count == 1 && entry->status_code == KD_EXE_NORMAL);
 	root_escape_entry(abi);
 	steps[0] = (struct step){ KD_EXE_CALL_MISS, clobber_spin_unlock_addr, 1, -8 };
 	CHECK(run() == KD_EXE_RUN_TO_UNLOCK && calls == 1 && known_calls == 1 &&
@@ -191,8 +191,8 @@ static void check_root_escape_returns(unsigned int abi)
 		root_escape_pending(abi, &call);
 		memcpy(escape_text, reviewed[i], sizeof(reviewed[i]));
 		before = active.regs;
-		/* Binding an older immutable generation remains valid; its marker
-		 * disables the stable source entry, not merely that generation. */
+		/* An older retained image may finish, without changing the current
+		 * generation's eligibility or requesting a new publication. */
 		entry->generation = root_escape_image.generation + 1;
 		CHECK(kd_exe_spin_batch_resume(entry, &call) == KD_EXE_RUN_NATIVE);
 		before.orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
@@ -205,9 +205,18 @@ static void check_root_escape_returns(unsigned int abi)
 		CHECK(active.jit_lock_depth == 1 && active.held_lock_depth == 1 &&
 		      active.outer_lock_depth == 1 && !active.outer_unlock_seen &&
 		      !active.jit_lock_released[0] && active.jit_lock_node[0] == &active);
-		CHECK(entry->status_code == KD_EXE_NATIVE_ONLY &&
-		      !kd_exe_publish_status(entry, KD_EXE_NORMAL));
+		CHECK(entry->status_code == KD_EXE_NORMAL &&
+		      entry->generation == root_escape_image.generation + 1);
 	}
+	/* Admission may close after this frame binds. A marker is not permission
+	 * to reopen an independently banned entry, including a newer generation. */
+	root_escape_pending(abi, &call);
+	entry->status_code = KD_EXE_NATIVE_ONLY;
+	entry->generation = root_escape_image.generation + 1;
+	CHECK(!kd_jit_native_escape(entry, &active, &active.regs));
+	CHECK(entry->status_code == KD_EXE_NATIVE_ONLY &&
+	      entry->generation == root_escape_image.generation + 1 &&
+	      !kd_exe_publish_status(entry, KD_EXE_NORMAL));
 	for (unsigned int bad = 0; bad < 29; bad++) {
 		root_escape_pending(abi, &call);
 		switch (bad) {

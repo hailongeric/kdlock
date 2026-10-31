@@ -58,9 +58,21 @@ The probe checks:
   acquisition waiting for an outer writer reservation. Killable
   waits first receive a nonfatal signal and must remain blocked, then cancel on
   `SIGKILL`. A cancelled drain waiter must reopen reader admission immediately.
-  Phase-admission cases inspect `phase_wait`; writers that already own their
-  reservation and wait for readers inspect `reader_drain`. The other queue must
-  remain empty at each controlled cancellation point.
+  Unprepared writers behind another writer inspect the physical gate wait list;
+  prepared writers and readers inspect `phase_wait`. Writers that already own
+  their reservation and wait for readers inspect `reader_drain`. Unrelated
+  queues remain empty at each controlled cancellation point.
+- Three additional unprepared gate-signal cases use a runnable writer holder,
+  a contender and the controller on three distinct online CPUs. The controller
+  observes a real gate OSQ tail before sending a signal. Interruptible nonfatal
+  and killable fatal cancellation must retire the OSQ and wait list while the
+  holder still owns the lock. A nonfatal killable signal must instead leave the
+  contender asleep on the gate wait list until a subsequent fatal signal. A
+  missing queue observation fails this check. A rescheduling request may race
+  the signal, so these live observations do not isolate which stop predicate
+  retired the queue; the deterministic OSQ fixture checks that distinction.
+  The holder has a two-second busy interval after acquisition. Release precedes
+  every join; a failed or stuck join retains the module and task state.
 - Exact zero error result, expected sleeping transitions, all worker joins, zero
   readers and writer reservations, no phase or drain waiters and an idle
   physical gate. Quiescent inspection also requires an empty read-admission OSQ.
@@ -126,3 +138,25 @@ do not establish live scheduling or delegation. The Native header identity in
 [native-source.json](native-source.json) records the source used to compare API
 coverage. RT/debug/lockdep configurations are explicitly refused; fairness and
 arbitrary kernel replacement remain unvalidated.
+
+The additional `gate_signal` result preserves the original twelve-field ioctl
+record and uses a separate eight-field record: `cases=3`, `osq_observed=3`,
+`scoped_retired=3`, `nonfatal_wait=1`, `fatal_cancel=2`,
+`interruptible_cancel=1`, `errors=0`, `idle=1`. These are functional
+observations, not throughput or delegation measurements. The focused
+[writer queue fixture](../../unit/mutex/test_rwsem_writer_queue.py) extracts the
+production phase/gate/poll/drain functions and checks exact local reservation
+and rollback effects with deterministic primitives.
+
+The first writer-queue candidate `7fa989c1` passed its focused unit checks and
+the original live API record (`api_checks=17`, `cancellation_checks=10`), but its
+new gate-signal record failed with `errors=2`, `cases=1`, `osq_observed=1`,
+`scoped_retired=0`, `idle=1`. This failed attempt remains evidence. The first
+completion wait consumed the waiter's single `complete()` notification. The
+subsequent `completion_done()` therefore suppressed the retirement counter, and
+the join-path wait timed out; the final three-case check then also failed. The
+actual cancellation, holder ownership, queue-retirement and worker joins passed
+in that attempted case. The fixture now uses `complete_all()` for this one
+completion, which deliberately has multiple observers. This is a diagnostic
+notification correction; no lock implementation changes accompany it. The
+corrected live result requires a new VM run and does not replace the failed one.

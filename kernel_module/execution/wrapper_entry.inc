@@ -53,8 +53,10 @@ static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
 /* The excess CALL has not executed: retain its pushed return word and let the
  * original waiter run this callee and the native suffix. This is not an exit
  * from an arbitrary instruction/budget trap and needs no new flags contract. */
-static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
-				    struct kd_regs *regs, bool hostcall)
+static int kd_jit_pending_call_native(struct kd_exec_frame *frame,
+				     struct kd_regs *regs, bool hostcall,
+				     unsigned long expected_return,
+				     const char *reason)
 {
 	unsigned long base, end, return_ip;
 	int ret;
@@ -77,7 +79,8 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	end = base + THREAD_SIZE;
 	if (regs->sp < base || regs->sp > end - sizeof(return_ip) ||
 	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp,
-				     sizeof(return_ip)) || !return_ip)
+				     sizeof(return_ip)) || !return_ip ||
+	    (expected_return && return_ip != expected_return))
 		return -EFAULT;
 	ret = kd_source_pin_target(regs->ip);
 	if (!ret)
@@ -90,9 +93,86 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	frame->control_call.phase = KD_CALL_NONE;
 	kd_exec_frame_save_continuation(frame, regs);
 	pr_warn_ratelimited(
-		"[KD_JIT][WARN] reason=CALL_LIMIT_NATIVE entry=0x%lx ip=0x%lx sp=0x%lx return=0x%lx lock=0x%lx task=%d hostcall=%u\n",
-		frame->entry_ip, regs->ip, regs->sp, return_ip,
+		"[KD_JIT][WARN] reason=%s entry=0x%lx ip=0x%lx sp=0x%lx return=0x%lx lock=0x%lx task=%d hostcall=%u\n",
+		reason, frame->entry_ip, regs->ip, regs->sp, return_ip,
 		frame->outer_lock_addr, frame->logical_task->pid, hostcall);
+	return 0;
+}
+
+static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
+				    struct kd_regs *regs, bool hostcall)
+{
+	return kd_jit_pending_call_native(frame, regs, hostcall, 0,
+					 "CALL_LIMIT_NATIVE");
+}
+
+/* Canonical near indirect CALL only: optional single REX, FF /2, then the
+ * actual ModRM/SIB displacement. No guessed backward scan, far CALL, legacy
+ * prefix or RET/JMP can supply this provenance. Read only required bytes. */
+static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
+{
+	u8 bytes[8], modrm, mode, rm, base = 0xff;
+	unsigned int offset = 0, count;
+
+	if (!site || site > ~0UL - sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, 1))
+		return -EFAULT;
+	if (bytes[0] >= 0x40 && bytes[0] <= 0x4f)
+		offset++;
+	if (copy_from_kernel_nofault(bytes, (void *)site, offset + 2))
+		return -EFAULT;
+	modrm = bytes[offset + 1];
+	if (bytes[offset] != 0xff || ((modrm >> 3) & 7) != 2)
+		return -EILSEQ;
+	count = offset + 2;
+	mode = modrm >> 6;
+	rm = modrm & 7;
+	if (mode != 3 && rm == 4) {
+		if (copy_from_kernel_nofault(bytes, (void *)site, ++count))
+			return -EFAULT;
+		base = bytes[count - 1] & 7;
+	}
+	count += mode == 1 ? 1 : mode == 2 ||
+		 (mode == 0 && (rm == 5 || base == 5)) ? 4 : 0;
+	if (count > sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, count))
+		return -EFAULT;
+	*length = count;
+	return 0;
+}
+
+static int kd_jit_indirect_call_native(struct kd_exe_info *exe,
+				      struct kd_exec_frame *frame,
+				      struct kd_regs *regs)
+{
+	unsigned long site, continuation;
+	unsigned int length;
+	int ret;
+
+	if (!exe || !frame || !regs || frame->packet_state != KD_PACKET_FULL ||
+	    regs != kd_exec_frame_regs(frame) ||
+	    !kd_exec_frame_can_borrow_locks(frame) || !frame->executed ||
+	    frame->logical_task == current || kd_exec_frame_remote_pending(frame) ||
+	    frame->remote_request || frame->native_request)
+		return -EINVAL;
+	site = regs->orig_ax;
+	ret = kd_source_pin_target(site);
+	if (!ret)
+		ret = kd_jit_indirect_call_length(site, &length);
+	if (ret)
+		return ret;
+	continuation = site + length;
+	ret = kd_source_pin_target(continuation - 1);
+	if (!ret)
+		ret = kd_jit_pending_call_native(frame, regs, false, continuation,
+						 "INDIRECT_CALL_NATIVE");
+	if (ret)
+		return ret;
+	/* Remember only this proved CALL edge. A stable Native boundary never
+	 * invalidates an image or asks the daemon to import its body. */
+	if (!kd_native_terminal_target(regs->ip) && !is_end_point(regs->ip))
+		kd_image_report(exe, frame->image, KD_EXE_IJ_MISS, regs->ip, continuation);
+	regs->orig_ax = 0;
 	return 0;
 }
 
@@ -239,13 +319,95 @@ static int kd_jit_native_escape(struct kd_exe_info *exe,
 	frame->control_call.phase = KD_CALL_NONE;
 	regs->orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
 	kd_exec_frame_save_continuation(frame, regs);
-	kd_image_disable(exe);
+	/* This reached instruction ends only this invocation. The immutable
+	 * image and source lease survive through native completion and unlock ACK.
+	 * Leave registry state untouched: an older retained image must neither
+	 * disable a newer image nor reopen an independently disabled entry. */
 	atomic64_inc(&kd_native_escape_count);
 	pr_warn_ratelimited(
-		"[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x%lx rip=0x%lx generation=%lu waiter_pid=%d action=native_suffix_and_disable\n",
+		"[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x%lx rip=0x%lx generation=%lu waiter_pid=%d action=native_suffix_keep_eligible\n",
 		frame->entry_ip, regs->ip, frame->image->generation,
 		frame->logical_task->pid);
 	return 0;
+}
+
+/* 1 resumes this same image; 0/2 return a validated before/after native suffix.
+ * Unlike a CALL, one of these fixed opcodes has no source return word to pop. */
+__attribute__((__noinline__, __cold__, __no_instrument_function__))
+static int kd_jit_origin_instruction(struct kd_exe_info *exe,
+				     struct kd_exec_frame *frame,
+				     struct kd_regs *regs,
+				     unsigned long sequence)
+{
+	const struct kd_origin_site *sites, *site = NULL;
+	const struct kd_jit_image *image;
+	unsigned char opcode[8];
+	unsigned long base, end;
+	unsigned int count, i;
+	int ret;
+
+	if (!exe || !frame || !regs || frame->packet_state != KD_PACKET_FULL ||
+	    !frame->mutex_backend || frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !frame->executed || frame->logical_task == current ||
+	    regs != kd_exec_frame_regs(frame) || !kd_exec_frame_can_borrow_locks(frame) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    frame->image->entry_abi != frame->entry_abi || !(regs->flags & 2) ||
+	    !regs->ss || regs->ss > 0x1000000UL)
+		return -EINVAL;
+	image = frame->image;
+	sites = kd_image_origin_sites(image, &count);
+	if (!sites)
+		return -EPROTO;
+	for (i = 0; i < count; i++)
+		if (sites[i].ip == regs->ip) {
+			if (site)
+				return -EPROTO;
+			site = &sites[i];
+		}
+	if (!site || !kd_image_origin_site_valid(image, site))
+		return -EPROTO;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE)
+		return -EFAULT;
+	end = base + THREAD_SIZE;
+	if (regs->sp < base + 2 * sizeof(unsigned long) || regs->sp > end - sizeof(unsigned long))
+		return -EFAULT;
+	ret = kd_source_pin_target(site->ip);
+	if (!ret)
+		ret = kd_source_pin_target(site->next_ip - 1);
+	if (!ret)
+		ret = kd_source_pin_target(site->next_ip);
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)site->ip, site->length) ||
+	    memcmp(opcode, site->opcode, site->length))
+		return -EILSEQ;
+	/* A quota or context refusal is still BEFORE this source instruction.
+	 * The established suffix path retains every previously committed effect. */
+	ret = sequence > KD_EXE_HL_MAX_CONTINUATIONS ? 0 :
+		kd_mutex_origin_instruction(frame, site->kind, sequence);
+	if (ret < 0)
+		return ret;
+	if (!ret) {
+		ret = kd_jit_native_escape(exe, frame, regs);
+		return ret ? ret : 0;
+	}
+	/* The service's ACK proves the origin no longer accesses this packet.
+	 * Every later refusal must use this post-instruction state, never ip. */
+	if (ret != 1 || frame->image != image ||
+	    !kd_exec_frame_can_borrow_locks(frame) || regs->ip != site->ip ||
+	    frame->control_call.phase != KD_CALL_NONE)
+		return -EINVAL;
+	regs->ip = site->next_ip;
+	atomic64_inc(&kd_origin_instruction_count);
+	regs->orig_ax = READ_ONCE(kd_origin_instruction_force_suffix) ?
+		KD_REG_ORIGIN_SUFFIX_TAG : KD_REG_ORIGIN_REENTRY_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	if (regs->orig_ax == KD_REG_ORIGIN_SUFFIX_TAG) {
+		atomic64_inc(&kd_origin_suffix_count);
+		return 2;
+	}
+	return 1;
 }
 
 /* Only a published MOV-load predicate can request this continuation. Source

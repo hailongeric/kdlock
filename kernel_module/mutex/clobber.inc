@@ -11,6 +11,7 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
 
 	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	BUG_ON(native && READ_ONCE(node->native_resume) != KD_MUTEX_RESUME_NATIVE);
 	BUG_ON(native ? minimal : !READ_ONCE(node->completed));
 	BUG_ON(!minimal && node->packet_state != KD_PACKET_FULL);
 	/* FULL must outlive node reuse; COMPLETE never reads absent GPRs. */

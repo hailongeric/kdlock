@@ -16,6 +16,8 @@ enum kd_call_phase {
 	KD_CALL_STACK_CHANGED,
 	/* A local spin acquisition and its post-CALL packet were validated. */
 	KD_CALL_SPIN_NATIVE,
+	/* Cold original-task instruction owns the frame until its returned ACK. */
+	KD_CALL_ORIGIN_INSTRUCTION,
 };
 
 /* A post-CALL RIP may be staged before B's queue publication. Keep the

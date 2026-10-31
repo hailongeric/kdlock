@@ -110,6 +110,7 @@ struct kd_spin_node {
 	struct kd_spin_node *next;
 	int socket_id;
 	int cpuid;
+	u8 proxy_context;
 	/* Scheduler stack sentinel, not the logical register packet. */
 	uint64_t rsp;
 	/* Queue notification only; execution completion belongs to frame.state. */
@@ -121,10 +122,15 @@ struct kd_spin_node {
 };
 
 
+/* Physical CPU accessor substitute; compatibility uses the real helper. */
+static u8 fixture_proxy_context = 1;
+
 static struct kd_spin_continuation *fixture_request(struct kd_spin_node *node)
 {
-	if (!node->execution)
+	if (!node->execution) {
 		node->execution = calloc(1, sizeof(*node->execution));
+		node->proxy_context = 1;
+	}
 	return node->execution;
 }
 
@@ -750,6 +756,7 @@ enum {
 struct nested_level {
 	struct qspinlock lock;
 	struct kd_spin_node head, queue[QUEUE_NODES];
+	struct kd_spin_continuation execution[QUEUE_NODES];
 	unsigned int executions;
 };
 
@@ -986,6 +993,8 @@ static void run_nested_case(int depth, int followers, int parent, int leaf,
 
 			node->next = i == last ? NULL : node + 1;
 			node->locked = true;
+			node->execution = &levels[level].execution[i];
+			node->proxy_context = 1;
 			node->rsp = 0x20000 + level * 0x100 + i;
 			node->socket_id = i % (followers + 1) ? 1 : 0;
 		}
@@ -1022,6 +1031,7 @@ static void run_native_boundaries(void)
 			nodes[i].next = i == 5 ? NULL : &nodes[i+1];
 			nodes[i].locked = true;
 			nodes[i].execution = &executions[i];
+			nodes[i].proxy_context = 1;
 		}
 		nodes[position].socket_id = IRQ_NUMA_NODE;
 		nodes[position].execution = NULL;
@@ -1063,6 +1073,7 @@ static void run_bounded_batches(void)
 			nodes[i].next = i + 1 < count ? &nodes[i + 1] : NULL;
 			nodes[i].locked = true;
 			nodes[i].execution = &executions[i];
+			nodes[i].proxy_context = 1;
 			nodes[i].socket_id = remote && i ? 1 : 0;
 		}
 		mock_tail_node = &nodes[count - 1];
@@ -1124,6 +1135,51 @@ static void run_bounded_batches(void)
 	puts("spin bounded batch: body cap, finite NUMA scan and complete handoff chain");
 }
 
+/* Exercise the production batch's refusal/handoff before any body, including
+ * a mismatch after a completed prefix. The dispatcher substitutes only the
+ * actual body; no incompatible request may reach it or receive completion. */
+static void run_context_boundaries(void)
+{
+	const u8 contexts[] = { 0, 1, 3 };
+	unsigned int cases = 0;
+	for (unsigned int e = 0; e < ARRAY_SIZE(contexts); e++)
+	for (unsigned int o = 0; o < ARRAY_SIZE(contexts); o++)
+	for (unsigned int position = 0; position < 2; position++) {
+		struct kd_spin_node nodes[4] = { 0 };
+		struct kd_spin_continuation executions[4] = { 0 };
+		struct qspinlock lock = { .locked = 1 };
+		struct kd_spin_request request = { .word = &scheduling_word };
+		unsigned int completed = contexts[e] && contexts[o] == contexts[e] ?
+			3 : (contexts[e] ? position : 0);
+
+		fixture_proxy_context = contexts[e];
+		memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
+		initial_depth = 0;
+		kd_spin_cpu.lock_addr[0] = (unsigned long)&lock;
+		active_lock = &lock;
+		scheduling_word.locked = _Q_LOCKED_COMBINER_VAL;
+		for (unsigned int i = 0; i < ARRAY_SIZE(nodes); i++) {
+			nodes[i].next = i == 3 ? NULL : &nodes[i + 1];
+			nodes[i].locked = true;
+			nodes[i].execution = &executions[i];
+			nodes[i].proxy_context = contexts[e];
+		}
+		nodes[position].proxy_context = contexts[o];
+		mock_tail_node = &nodes[3];
+		native_boundary_case = true;
+		boundary_executions = 0;
+		production_run_combiner(&lock, nodes, &request, (void *)&lock);
+		native_boundary_case = false;
+		CHECK(boundary_executions == (int)completed);
+		CHECK(!nodes[completed].locked && !nodes[completed].completed);
+		for (unsigned int i = 0; i < ARRAY_SIZE(nodes); i++)
+			CHECK(nodes[i].completed == (i < completed));
+		cases++;
+	}
+	fixture_proxy_context = 1;
+	printf("spin proxy context: %u matched/refused queue handoffs with exact prefixes\n", cases);
+}
+
 #include "spin_node_pool_fixture.c"
 
 int main(void)
@@ -1175,6 +1231,7 @@ int main(void)
 	run_mailbox_cases();
 	run_native_boundaries();
 	run_bounded_batches();
+	run_context_boundaries();
 	kd_node_trace = true;
 	run_producer_cases(true);
 	run_observer_checks();

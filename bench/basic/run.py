@@ -20,7 +20,6 @@ import kernel_identity
 import capture_host
 
 FAMILIES = ('spin', 'mutex', 'rwlock', 'rwsem')
-KERNEL_RELEASE = '7.0.0-38-kdlock1'
 PYTHON = '/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3'
 
 
@@ -80,14 +79,15 @@ def functional_host(original, host, now, snapshot=None):
                 memory_bindings=capture_host.memory_bindings(new))
 
 
-def plan(out, families, kernel_source=None, kernel_baseline=None):
-    parser = argparse.ArgumentParser(add_help=False)
-    kernel_identity.arguments(parser)
-    defaults = parser.parse_args([])
+def plan(out, families, kernel_source=None, kernel_baseline=None, kernel_variant='kdlock1'):
+    selected = argparse.Namespace(kernel_source=kernel_source, kernel_baseline=kernel_baseline,
+                                  kernel_variant=kernel_variant)
+    kernel_identity.benchmark_profile(selected)
     common = ['--functional', '--backends', 'kdlock', '--repeats', '1',
               '--iterations', '100000', '--collector-cpu', '63',
-              '--kernel-source', str(kernel_source or defaults.kernel_source),
-              '--kernel-baseline', str(kernel_baseline or defaults.kernel_baseline)]
+              '--kernel-variant', kernel_variant,
+              '--kernel-source', str(selected.kernel_source),
+              '--kernel-baseline', str(selected.kernel_baseline)]
     rows = []
     for family in families:
         # Use one NUMA-local cohort for the returned-body smoke. Larger mixed
@@ -135,7 +135,7 @@ def main():
     parser.add_argument('--host-reference', type=Path, required=True)
     parser.add_argument('--host-reference-sha256', required=True)
     parser.add_argument('--snapshot-tag', default=os.environ.get('KDLOCK_SNAPSHOT_TAG'))
-    kernel_identity.arguments(parser)
+    kernel_identity.benchmark_arguments(parser)
     parser.add_argument('--families', nargs='+', choices=FAMILIES, default=list(FAMILIES))
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -147,12 +147,14 @@ def main():
     require(not environment_tag or environment_tag == args.snapshot_tag,
             'snapshot argument and environment disagree')
     out = args.output.resolve()
-    tasks = plan(out, args.families, args.kernel_source, args.kernel_baseline)
+    kernel_identity.benchmark_profile(args)
+    tasks = plan(out, args.families, args.kernel_source, args.kernel_baseline, args.kernel_variant)
     if args.dry_run:
         print(json.dumps(tasks, indent=2))
         return
-    require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
-            os.uname().release == KERNEL_RELEASE, 'verified Linux 7 development guest required')
+    require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0,
+            'verified Linux 7 development guest required')
+    kernel_identity.benchmark_profile(args, release=os.uname().release)
     require(sys.executable == PYTHON and
             shutil.which('python3') == sys.executable, 'pinned Python required')
     require(os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1', 'confirmed recovery snapshot required')
@@ -168,7 +170,7 @@ def main():
     with open('/run/lock/kdlock-basic.lock', 'a') as slot:
         fcntl.flock(slot, fcntl.LOCK_EX | fcntl.LOCK_NB)
         archive_idle(Path('/root'), rt.idle)
-        identity = kernel_identity.check(args.kernel_source, args.kernel_baseline)
+        identity = kernel_identity.check(args.kernel_source, args.kernel_baseline, variant=args.kernel_variant)
         require(identity.get('ok') is True and identity.get('schema') == 2 and
                 identity.get('runtime_policy_verified') is True,
                 'verified Linux 7 kernel bundle and live runtime policy required')

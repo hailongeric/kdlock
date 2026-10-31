@@ -195,6 +195,8 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	return 0;
 }
 
+#include "origin_instruction.inc"
+
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
  *
@@ -392,7 +394,7 @@ prepared:
 				smp_store_release(&next->locked, 0);
 			batch->next = NULL;
 		}
-		WRITE_ONCE(curr_node->native_resume, true);
+		WRITE_ONCE(curr_node->native_resume, KD_MUTEX_RESUME_NATIVE);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
 		BUG_ON(kd_exec_native_wait(frame));

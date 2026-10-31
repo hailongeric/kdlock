@@ -28,11 +28,20 @@ RUNNER = "tests/kernel/spin/address_guard"
 PAYLOAD = "tests/kernel/spin/address_guard/payload"
 MODULE = "jit_address_guard_test"
 CAP_VERSIONS, CAP_BIT, IMAGE_REQUIREMENT = (7, 8, 9, 10, 11, 12), 6, 2
+IMAGE_GENERATION_REQUIRED = True
 SUCCESS_MESSAGE = "PASS: cold branch delegated; aliasing load resumed on original task; exact effects/values; permanent native-only state; final drain"
 RUN, SNAPSHOT, PREPARE, HOT = 0xC0204501, 0x80504502, 0x4503, 0x4504
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
 FIELDS = ("prefix", "suffix", "hot_taken", "lock_address", "entry", "marker",
           "failures", "active", "hot", "idle")
+
+
+def image_contract(row):
+    # Guard/marker probes require an immutable generation. The ordinary
+    # context probe explicitly selects the existing generation-zero image.
+    return (row['requirements'] == IMAGE_REQUIREMENT and
+            (row['generation'] > 0 if IMAGE_GENERATION_REQUIRED else
+             IMAGE_REQUIREMENT == 0 and row['generation'] == 0))
 
 
 def image_registry():
@@ -166,8 +175,7 @@ class EscapeSession(Session):
             if rows[0]["status"] == 0 and not rt.children(self.daemon.pid):
                 self.record["publication"] = self.publication()
                 self.record["image_registry"] = self.registry("initial", 0)
-                rt.require(self.record["image_registry"][0]["requirements"] == IMAGE_REQUIREMENT and
-                           self.record["image_registry"][0]["generation"] > 0,
+                rt.require(image_contract(self.record["image_registry"][0]),
                            "marker image lacks the required native-exit contract")
                 self.record["initial_parameters"] = rt.parameters()
                 rt.require(self.record["initial_parameters"]["target_process"] == WORKER_COMM,

@@ -423,3 +423,29 @@ kernel fault retains the processes/modules for diagnosis; do not force unload.
 Archive evidence before snapshot recovery. Live output belongs outside the
 guest checkout, and host archives/reports follow the existing machine-specific
 [result layout](../results/README.md).
+
+## Native-body binding candidate
+
+For the October 30 scoped kernel overlay, the existing syscall client accepts
+one extra final argument, `native` or `kd`, only for `setfd`, `pipebytes` and
+`pipecap`. This is a distinct experiment from the ftrace adapters above.
+It opens `/dev/kd_dev`, selects a bounded creation budget, creates a new file
+table with `unshare(CLONE_FILES)` or the existing private FIFO, clears the
+selection, and verifies the actual object's immutable backend/word/provider
+and the kernel's continuation sites. No existing object is retagged.
+
+Setup and identity queries remain outside measurement. The same syscall loop,
+worker placement, descriptor spacing and filled pipe are used for both arms.
+The client must reject old adapter `bind`/`unbind` commands in this mode.
+After every joined phase it queries the still-live object again; destruction
+occurs through normal descriptor close and task exit. The controller must
+observe process/object/provider drain before unloading. The future
+`bench/kernel_api` controller will bind this mode to the exact enabled kernel
+identity and record one two-second round per standard worker count, separately
+from instrumented functional checks. Current source work has no performance
+acceptance until its VM receipts are recorded.
+
+A setup-only pthread holds the old shared file table across `unshare(CLONE_FILES)`
+in both arms. This forces a real allocation even when the client started alone;
+otherwise Linux can leave an already-private file table unchanged. The helper
+is joined before objects are queried or any workers start.

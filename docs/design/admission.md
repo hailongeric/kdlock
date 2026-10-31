@@ -29,11 +29,12 @@ Runtime probes and source/owner/ACK/frame checks must not be removed to hide
 failures.
 
 The [October 30 native-section audit](kernel_cs_semantics.md#mandatory-instructions-and-operations)
-found a concrete source-level PAUSE fidelity gap: the pinned decoder's F3 90
-NOP-alias path reaches a special handler that emits bare NOP and loses its
-prefix. Fence mnemonics and LOCK prefixes use separate ordinary emission paths.
-No new decoder/JIT execution test accompanies that audit. Do not infer faithful
-PAUSE handling from source trust or from the checked mnemonic allowlist.
+found a concrete source-level PAUSE fidelity gap in that audited baseline: the
+pinned decoder's F3 90 NOP-alias path emitted bare NOP and lost its prefix. The
+candidate special handler now emits physical PAUSE for those exact bytes.
+Fence mnemonics and LOCK prefixes use separate ordinary emission paths. The
+focused decoder/generated-byte fixture is separate from that historical audit;
+source trust or a mnemonic allowlist alone is not execution evidence.
 
 Deliberate translation refusal returns exit 2 and the daemon publishes
 `KD_EXE_NATIVE_ONLY`; other compiler/environment failures remain distinct retry
@@ -102,21 +103,82 @@ does not establish arbitrary-source equivalence or whole-kernel replacement.
 
 Supported instruction markers stop before a reviewed original instruction. The
 origin resumes there with earlier effects retained and the documented arithmetic
-flags restored; future delegation of that entry is disabled for that registry
-entry’s lifetime. A generic fault, unsupported lowering or budget failure cannot be
+flags restored. That invocation finishes its native suffix; the marker leaves
+registry status and immutable image identity unchanged, so a later invocation can
+delegate a different path or reach the same marker again. It cannot reopen an
+independently disabled entry. A generic fault, unsupported lowering or budget failure cannot be
 converted into an arbitrary safe native restart.
+
+The pinned decoder's exact F3 90 NOP alias emits physical `PAUSE`; ordinary NOPs
+retain their existing lowering. `PAUSE`, fences and supported LOCK instructions
+remain generated instructions, without a runtime exit per iteration. Focused
+generated-byte and effect checks are required; this is not a claim of arbitrary
+opcode support or a completed kernel memory-ordering proof.
 
 Mutex/rwsem use the ABI2 marker contract. Supported pristine root spin/rwlock
 ABI1/3 images require immutable requirements 33 and the matching provider bits.
 Their physical owner, writer admission where applicable, FULL packet and exact
 source target survive native transfer. See the
 [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
-[live probes](../../tests/kernel/jit_escape/README.md).
+[live probes](../../tests/kernel/jit_continuation/README.md).
 
 Linux 7 active call-depth tracking is rejected at provider initialization because
 its return thunk changes arithmetic flags after restore. Configured support is
 not the same as an active runtime feature. Complete mitigation coverage of
 handwritten/generated returns remains separately unvalidated.
+
+## Reached Native CALL boundaries
+
+The candidate adds `include/kd_native_terminals.def`, a shared, finite manifest of exact Native lock and
+processor/task-context API symbols. It is a runtime continuation contract, not
+a reinstatement of checked source/value admission. The translator and provider
+resolve the same names independently. Missing symbols do not match, and unknown
+ordinary callees keep the existing learning path. Initial groups cover Native
+spin/rwlock, mutex and rwsem operations; scheduling, preemption, migration and
+IRQ/BH transitions; and explicit task-mm, user-access and TLB operations whose
+effect must remain on the original task. Each manifest group must explain its
+context obligation. Compiler clones, inlined instructions and unlisted helpers
+are outside an exact-symbol guarantee.
+
+A reached listed CALL retains its actual source return word and saved packet.
+The runtime independently checks its exact target, physical/frame scope, pending
+CALL stack bounds and source residency before returning it to the original
+waiter. That invocation runs the callee and remaining native suffix. The
+boundary does not invoke a Native API on a KD object, invalidate a ready image,
+request callee learning or return to JIT after arbitrary native work.
+
+Historical callee and indirect-target records must not import a listed body or
+keep its otherwise unreachable descendants as independent entry roots. Scope
+must follow real entry/CALL/known-indirect edges; alternate reachable branches
+remain translated. A previously learned indirect CALL may reach the same native
+stub, retaining its real CALL word. Fresh near indirect CALLs can use optional
+v12 capability bit 12 and FULL exit 11. The emitter evaluates the target before
+the source CALL's virtual push, records the exact source CALL address in
+`orig_ax`, and retains the actual target in IP. The provider checks a canonical
+optional-REX `FF /2` instruction, its exact next IP against the waiter-stack
+return word, FULL packet/frame identity, pending phase and source leases for
+the instruction, target and continuation. Only then can the original waiter
+execute the callee and native suffix. Unknown ordinary targets still learn that
+proved CALL edge; listed terminal targets leave image status unchanged. The
+scratch source address is cleared before native restore. This is the ordinary
+C-call flags contract, not an arbitrary flags-consuming assembly-call ABI.
+
+Without the optional bit, translation emits the older unresolved-indirect
+behavior. Unknown RET/JMP targets remain errors; far or legacy-prefixed CALLs
+have no new continuation contract. They must not masquerade as exit 11. Return
+routing and complete text for every emitted path remain required.
+
+The selected files/pipe bridges are per-object dispatchers. Their acquire and
+non-root unlock calls remain terminal because the object may be Native. Only the
+integration's exact outer-object/class unlock predicate may take precedence as
+a KD completion endpoint. No symbol-name canonicalization may convert an
+arbitrary Native inner lock into a KD control.
+
+The source-derived runtime fixtures and real decoder/wrapper fixtures cover
+pending CALL provenance, independent terminal classification, historical-scope
+cleanup, alternate branches and old-provider negotiation. Their execution and
+the live repeated-path probe remain VM validation gates; no pass or wider Native
+API coverage follows from these source changes.
 
 ## Checked spin pointer loads
 

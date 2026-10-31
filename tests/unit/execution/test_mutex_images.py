@@ -30,7 +30,7 @@ def main():
         tmp = Path(tmp)
         (tmp / 'production.h').write_text(code)
         for fixture in ('mutex_images_fixture.c', 'spin_guard_images_fixture.c',
-                        'direct_images_fixture.c'):
+                        'direct_images_fixture.c', 'origin_images_fixture.c'):
             binary = tmp / fixture.removesuffix('.c')
             subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
                 '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
@@ -58,6 +58,28 @@ def main():
                 '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
                 '-I', str(ROOT / 'include'), '-I', str(tmp),
                 str(ROOT / 'tests/unit/execution/direct_images_fixture.c'),
+                '-o', str(binary)], check=True, timeout=30)
+            result = subprocess.run([str(binary)], text=True, capture_output=True, timeout=20)
+            assert result.returncode != 0 and 'Assertion' in result.stderr, (name, result)
+
+        # The same upload path must validate the immutable instruction table
+        # and both retained source endpoints before publishing an image.
+        for name, before, after in (
+            ('origin-validation-omitted',
+             'ret = kd_image_validate_origin_sites(upload->image);', 'ret = 0;'),
+            ('origin-source-pin-omitted',
+             'ret = kd_source_pin_root(sites[i].ip);\n\t\tif (!ret)\n\t\t\tret = kd_source_pin_root(sites[i].next_ip);',
+             'ret = 0;\n\t\tif (!ret)\n\t\t\tret = kd_source_pin_root(sites[i].next_ip);'),
+            ('origin-successor-pin-omitted',
+             'ret = kd_source_pin_root(sites[i].next_ip);', 'ret = 0;'),
+        ):
+            assert code.count(before) == 1, (name, code.count(before))
+            (tmp / 'production.h').write_text(code.replace(before, after))
+            binary = tmp / name
+            subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+                '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
+                '-I', str(ROOT / 'include'), '-I', str(tmp),
+                str(ROOT / 'tests/unit/execution/origin_images_fixture.c'),
                 '-o', str(binary)], check=True, timeout=30)
             result = subprocess.run([str(binary)], text=True, capture_output=True, timeout=20)
             assert result.returncode != 0 and 'Assertion' in result.stderr, (name, result)

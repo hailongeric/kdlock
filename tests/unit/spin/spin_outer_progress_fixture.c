@@ -29,10 +29,15 @@ static bool list_empty(const struct list_head *head)
 #undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 
+/* Physical CPU accessor substitute; compatibility uses the real helper. */
+static u8 fixture_proxy_context = 1;
+
 static struct kd_spin_continuation *fixture_request(struct kd_spin_node *node)
 {
-	if (!node->execution)
+	if (!node->execution) {
 		node->execution = calloc(1, sizeof(*node->execution));
+		node->proxy_context = 1;
+	}
 	return node->execution;
 }
 
@@ -55,6 +60,7 @@ static void reset_request(void)
 	active_frame = &test_execution.frame;
 	memset(&test_execution, 0, sizeof(test_execution));
 	request.execution = &test_execution;
+	request.proxy_context = 1;
 	fixture_request(&request)->frame.regs_ref = &active.regs;
 	test_execution.storage = &request_storage;
 }

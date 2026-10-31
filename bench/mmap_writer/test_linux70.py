@@ -1,4 +1,5 @@
 """Focused shared-MM plan, mode and prerequisite guards; VM execution only."""
+import argparse
 import copy
 import json
 from pathlib import Path
@@ -30,23 +31,94 @@ class SharedLinux70(unittest.TestCase):
             linux70.plan('tclock')
 
     def test_exact_mode_requires_enabled_verified_identity(self):
-        identity = dict(ok=True,schema=2,running_build_id='id',runtime_policy_verified=True,
-                        runtime_policy=dict(mmap_mode='off',cmdline='nokaslr nopvspin kd_mmap=off',preempt='lazy'))
-        with tempfile.TemporaryDirectory() as directory:
-            root=Path(directory)
-            (root/'.config').write_text('CONFIG_KDLOCK_MMAP=y\n')
-            manifest=dict(variant='kdmm1-native',source_files={'x':'hash'},build_files={'y':'hash'})
-            (root/'manifest.json').write_text(json.dumps(manifest))
-            self.assertEqual(shared_platform.binding(identity,root,root,'native')['kernel_mmap_backend'],'native')
-            for mode in ('kd','invalid'):
-                with self.assertRaises(linux70.rt.Failure):
-                    shared_platform.binding(identity,root,root,mode)
-            for change in (dict(schema=1),dict(runtime_policy_verified=False),dict(running_build_id='')):
-                with self.assertRaises(linux70.rt.Failure):
-                    shared_platform.binding(dict(identity,**change),root,root,'native')
-            (root/'.config').write_text('# CONFIG_KDLOCK_MMAP is not set\n')
-            with self.assertRaises(linux70.rt.Failure):
-                shared_platform.binding(identity,root,root,'native')
+        for variant, selected in shared_platform.PROFILES.items():
+            mode = selected['mode']
+            identity = dict(ok=True, schema=2, running_build_id='id', runtime_policy_verified=True,
+                            variant=variant, runtime_policy=dict(mmap_mode=shared_platform.MODES[mode],
+                            cmdline='nokaslr nopvspin kd_mmap='+shared_platform.MODES[mode], preempt='lazy'))
+            config = 'CONFIG_KDLOCK_MMAP=y\n'
+            if selected['api_enabled']:
+                config += 'CONFIG_KD_API_LOCKS=y\n# CONFIG_DEBUG_SPINLOCK is not set\n'
+            manifest = dict(variant=variant, source_files={'x':'hash'}, build_files={'y':'hash'})
+            def read(path):
+                if path == selected['build']/'.config': return config
+                if path == selected['bundle']/'manifest.json': return json.dumps(manifest)
+                self.fail('unexpected file: '+str(path))
+            with patch.object(Path,'read_text',autospec=True,side_effect=read), \
+                 patch.object(shared_platform.rt,'digest',return_value='hash'):
+                def bind(receipt=identity, **changes):
+                    values = dict(build=selected['build'], bundle=selected['bundle'], mode=mode, variant=variant)
+                    values.update(changes)
+                    return shared_platform.binding(receipt, **values)
+                result = bind()
+                self.assertEqual(result['kernel_mmap_backend'], mode)
+                self.assertEqual(result['release'], selected['release'])
+                self.assertEqual(result['variant'], variant)
+                self.assertFalse(result['private_backing_locks'])
+                for change in (dict(schema=1), dict(runtime_policy_verified=False), dict(running_build_id=''),
+                               dict(variant='other'), dict(runtime_policy=dict(mmap_mode='on' if mode=='native' else 'off',
+                                    cmdline=identity['runtime_policy']['cmdline']))):
+                    with self.subTest(variant=variant,change=change),self.assertRaises(linux70.rt.Failure):
+                        bind(dict(identity, **change))
+                for change in (dict(build=Path('/tmp/unreviewed/build')),dict(bundle=Path('/tmp/manifest-selected')),
+                               dict(mode='kd' if mode=='native' else 'native'),dict(variant='future-'+mode)):
+                    with self.assertRaises(linux70.rt.Failure): bind(**change)
+                manifest['variant'] = 'kdmm1-'+mode if selected['api_enabled'] else 'kdscope1-'+mode
+                with self.assertRaises(linux70.rt.Failure): bind()
+                manifest['variant'] = variant
+                valid = config
+                config = valid.replace('CONFIG_KDLOCK_MMAP=y','# CONFIG_KDLOCK_MMAP is not set')
+                with self.assertRaises(linux70.rt.Failure): bind()
+                config = valid.replace('CONFIG_KD_API_LOCKS=y','') if selected['api_enabled'] else valid+'CONFIG_KD_API_LOCKS=y\n'
+                with self.assertRaises(linux70.rt.Failure): bind()
+                if selected['api_enabled']:
+                    config = valid.replace('# CONFIG_DEBUG_SPINLOCK is not set','CONFIG_DEBUG_SPINLOCK=y')
+                    with self.assertRaises(linux70.rt.Failure): bind()
+
+    def test_explicit_profiles_and_legacy_defaults_select_only_canonical_paths(self):
+        self.assertEqual(shared_platform.profile('native')['build'],shared_platform.BUILD)
+        self.assertEqual(shared_platform.profile('native','kdscope1-native')['build'],
+                         Path('/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build'))
+        parser=argparse.ArgumentParser()
+        shared_platform.arguments(parser,required=False)
+        for variant in (None,*shared_platform.PROFILES):
+            mode='native' if variant is None else shared_platform.PROFILES[variant]['mode']
+            args=parser.parse_args([] if variant is None else ['--kernel-variant',variant])
+            args.mode,args.boot_id=mode,'boot'
+            with patch.object(shared_platform.common.mm_platform,'guest') as gate, \
+                 patch.object(Path,'read_text',return_value='nokaslr nopvspin kd_mmap='+shared_platform.MODES[mode]):
+                shared_platform.guest(args)
+                expected_variant=variant or 'kdmm1-native'
+                family='kdscope1' if expected_variant.startswith('kdscope1-') else 'kdmm1'
+                date='20261030' if family=='kdscope1' else '20261027'
+                self.assertEqual(args.kernel_source,Path('/mnt/kdlock-builds/linux-7.0.0-38-'+family+'/build'))
+                self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+expected_variant+'-'+date))
+                self.assertEqual(args.kernel_variant,expected_variant)
+                gate.assert_called_once_with('boot',release='7.0.0-38-'+family)
+                args.kernel_source=Path('/tmp/alias/build')
+                with self.assertRaises(linux70.rt.Failure): shared_platform.guest(args)
+        args=argparse.Namespace(mode='native',boot_id='boot',kernel_variant='kdscope1-kd',
+                                kernel_source=None,kernel_baseline=None)
+        with patch.object(shared_platform.common.mm_platform,'guest') as gate:
+            with self.assertRaises(linux70.rt.Failure): shared_platform.guest(args)
+            gate.assert_not_called()
+        args.kernel_variant='kdscope1-native'
+        with patch.object(shared_platform.common.mm_platform,'guest'), \
+             patch.object(Path,'read_text',return_value='kd_mmap=off kd_mmap=on'):
+            with self.assertRaises(linux70.rt.Failure): shared_platform.guest(args)
+
+    def test_writer_receipt_uses_shared_adapter_for_both_enabled_families(self):
+        sites=linux70.common.module('shared_mm_site_tests',linux70.ROOT/'bench/mmap_writer/sites.py')
+        for variant in ('kdlock1',*shared_platform.PROFILES):
+            binding=dict(variant=variant)
+            receipt=dict(schema=1,kernel_binding=binding,vmlinux_sha256='a'*64,callers={'site':1})
+            with patch.object(sites.rt,'digest',return_value='a'*64), \
+                 patch.object(sites.common,'load',return_value=receipt), \
+                 patch.object(sites,'derive',return_value={'callers':{'site':1}}) as native, \
+                 patch.object(sites,'derive_shared',return_value={'callers':{'site':1}}) as shared:
+                sites.checked_receipt(Path('/receipt'),'a'*64,binding,Path('/vmlinux'),Path('/out'),None)
+                self.assertEqual(native.call_count,int(variant=='kdlock1'))
+                self.assertEqual(shared.call_count,int(variant!='kdlock1'))
 
     def test_exact_completion_is_retained_when_peak_unavailable(self):
         for peak in (True,False):

@@ -1,0 +1,1673 @@
+{
+  "completed": true,
+  "scope": "Offline full-archive byte/metadata verification; no archived code executed",
+  "capture": {
+    "completed": true,
+    "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+    "release": "7.0.0-38-kdlock1",
+    "source_base": "/root/kdlock-evidence/10.176.26.71/tests",
+    "roots": [
+      "kernel-proxy-marker-unit-20261030",
+      "kernel-proxy-ordering-unit-20261030",
+      "kernel-proxy-ordering-r3-unit-20261030",
+      "kernel-proxy-marker-live-20261030",
+      "kernel-proxy-context-unit-20261030",
+      "kernel-proxy-context-r2-unit-20261030",
+      "kernel-proxy-context-r3-unit-20261030",
+      "kernel-proxy-context-live-20261030",
+      "kernel-proxy-context-live-r2-20261030",
+      "kernel-proxy-calls-unit-20261030",
+      "kernel-proxy-calls-r2-unit-20261030",
+      "kernel-proxy-profile-unit-20261030",
+      "kernel-proxy-calls-basic-20261030",
+      "kernel-proxy-native-call-live-20261030",
+      "kernel-proxy-native-call-live-r2-20261030",
+      "kernel-proxy-profiles-r2-unit-20261030"
+    ],
+    "started": 1793303632.5710757,
+    "scope": "Closed functional evidence only; source/build/ELF bytes retained as data, no captured code executed",
+    "input_inventory_sha256": "783a08938732e255b964557a5fddd88809ff20eced85f9f8aa263f9d7032cad5",
+    "idle": true,
+    "finished": 1793303766.2428634,
+    "archive_sha256": "11d1aa58597f7aa08bdb7643190a5e21d83c53b3f4679a53a211ef32c7067f0c",
+    "archive_bytes": 79815057
+  },
+  "raw_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030",
+  "result_sha256": "ac8d0912139ca207a53618bfb46078bbe0a541651e50526b8195708532d236a0",
+  "controller_sha256": "4972f8609f06d0590b13576617e71b8206c0bffebbbcda0d13f81824121b7ee9",
+  "inventoried_paths": 9497,
+  "extra_root_directory_headers": 16,
+  "types": {
+    "file": 8551,
+    "directory": 922,
+    "symlink": 24
+  },
+  "regular_file_bytes": 318843473,
+  "metadata_verified": [
+    "exact relative path set",
+    "type",
+    "permission mode",
+    "uid",
+    "gid",
+    "regular-file size",
+    "floating-point/PAX mtime",
+    "symlink target"
+  ],
+  "inventory_only_metadata": [
+    "device",
+    "inode",
+    "ctime_ns",
+    "link count",
+    "sub-float mtime nanoseconds"
+  ],
+  "earlier_receipts_identical": 1921,
+  "manifest_summary": {
+    "binary": {
+      "references": 50,
+      "manifests": 12,
+      "unique_archived_files": 50
+    },
+    "image": {
+      "references": 54,
+      "manifests": 12,
+      "unique_archived_files": 36
+    },
+    "prepared_source": {
+      "references": 870,
+      "manifests": 8,
+      "unique_archived_files": 870
+    },
+    "provider_prepared_manifest": {
+      "references": 1870,
+      "manifests": 17,
+      "unique_archived_files": 1870
+    },
+    "source": {
+      "references": 3444,
+      "manifests": 13,
+      "unique_archived_files": 3444
+    }
+  },
+  "manifests": [
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "sha256": "3a453c6e1e42e96b487db26395c5de25958ef893c88ce691aec49d5fe9cae937",
+      "references": 5,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "sha256": "b4934e9806639de29b2133d9ff3e832cf326ea2631e3b652fa0a1c0582f1cc99",
+      "references": 6,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/source-sha256.json",
+      "sha256": "ec4dc2135d970a5ca2d11837cff004a59d7c03a40376b5420a08eff1b8a7971c",
+      "references": 399,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/source/bench/spin_cacheline/.build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/binary-sha256.json",
+      "sha256": "205f4d39f186a981fed4f22d2b20f897ee62cf171bb62ed93f946b5ff5277ee7",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "sha256": "cf14004cfc70664a9b9e9e135f9166795df5f0f7a8c1e0ce59377e8304eed341",
+      "references": 9,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/source-sha256.json",
+      "sha256": "16a783e0e7b6f95fb6f79349886fa406f95b9ac7e52a8e8c0878e9418b6c6a72",
+      "references": 302,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/binary-sha256.json",
+      "sha256": "c7c5458a943280d2d47584856207a2ee65cd8db11d4efc8a91aa5daf3d2b4e7c",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "sha256": "af18dc8b4e732ff68fcba083af700ff5e2de0857986cf42429f7518dc4a61f9d",
+      "references": 9,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/source-sha256.json",
+      "sha256": "16a783e0e7b6f95fb6f79349886fa406f95b9ac7e52a8e8c0878e9418b6c6a72",
+      "references": 302,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "sha256": "bb1a9d848fe0bef103fc4e108bc3bf964c61a2997d9c4c25a01099fa3440b37d",
+      "references": 5,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "sha256": "dee877014c6fa8c0a5912ddbb69dff9a3ac9eae85f5a0d955538d8a134e0958d",
+      "references": 6,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/source-sha256.json",
+      "sha256": "ec4dc2135d970a5ca2d11837cff004a59d7c03a40376b5420a08eff1b8a7971c",
+      "references": 399,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/source/bench/spin_cacheline/.build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-calls-r2-unit-20261030/default-off/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/binary-sha256.json",
+      "sha256": "2bebc71fc5d7986b9c46c1f297b9284d667caef7a3eb419a0339af906b191443",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/build/provider/manifest.json",
+      "sha256": "cc85e75a80551eb53464b64200af03ca3c1ccb185c8f11f8751a01b1cf63007a",
+      "references": 108,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/prepared-source-sha256.json",
+      "sha256": "23dfc335d7e9ef0283dc9a703d2a8cc40fb6f2b3c6be89e5bd47fd7afc4b87ba",
+      "references": 108,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/session/session.json",
+      "sha256": "874621a9ef70fc01b84407a08a9564a9c167744c243653bff70f58e68de474e4",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/source-sha256.json",
+      "sha256": "2a56cc8d1d2f139f31111b2bcffe987a34f38ad0cf5becf30a6d7eee1312e131",
+      "references": 218,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/binary-sha256.json",
+      "sha256": "e92031ad5162b6ce5cec38c5d34c9fb1bca51c520b29fc4dd5b2d931c2d42ae1",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/build/provider/manifest.json",
+      "sha256": "cc85e75a80551eb53464b64200af03ca3c1ccb185c8f11f8751a01b1cf63007a",
+      "references": 108,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/prepared-source-sha256.json",
+      "sha256": "23dfc335d7e9ef0283dc9a703d2a8cc40fb6f2b3c6be89e5bd47fd7afc4b87ba",
+      "references": 108,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/session/session.json",
+      "sha256": "7fcef4f8e1a3a36ff7b7745c0bbf0c434f31eddd50d52d58a72389af1e4f8ab9",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/source-sha256.json",
+      "sha256": "ed6ce136d2d66b2b44ec2da4f9145f623a18d2630861e5a433dbc6d1a89812eb",
+      "references": 218,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-context-r3-unit-20261030/default-off/manifest.json",
+      "sha256": "cc85e75a80551eb53464b64200af03ca3c1ccb185c8f11f8751a01b1cf63007a",
+      "references": 108,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/binary-sha256.json",
+      "sha256": "af593c67df45c31ea673374c1987c23cc3877b7e3f53f6319468d0cc0906fd3f",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/build/provider/manifest.json",
+      "sha256": "8312995e44040946af8de51d91d94ec5915cbcb21cc4920bd71668cfc2babd9f",
+      "references": 107,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/prepared-source-sha256.json",
+      "sha256": "77df89c0efb10e6e759369d130bfe3ebb9a156dcf86dbf12f21a6c9bbd0f7aeb",
+      "references": 107,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/session/session.json",
+      "sha256": "91bbbb20eeab1c117d5f600599b3142670ce8ae2199d7fd3c66de6dc86610cff",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/source-sha256.json",
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927",
+      "references": 214,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/binary-sha256.json",
+      "sha256": "8f5c290d16af101ab640a8cfc36415945bc80d306d2718e73f7b13a4f339b01f",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/build/provider/manifest.json",
+      "sha256": "8312995e44040946af8de51d91d94ec5915cbcb21cc4920bd71668cfc2babd9f",
+      "references": 107,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/prepared-source-sha256.json",
+      "sha256": "77df89c0efb10e6e759369d130bfe3ebb9a156dcf86dbf12f21a6c9bbd0f7aeb",
+      "references": 107,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/session/session.json",
+      "sha256": "49735eab8d3f5c0aa8127494453c5aabfa029480c30f1e29e4d872b292d13e74",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/source-sha256.json",
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927",
+      "references": 214,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/binary-sha256.json",
+      "sha256": "e2c2f698f6add0e67118df5c2bcef5c327228062061b2671c069786ceea3ec35",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/build/provider/manifest.json",
+      "sha256": "8312995e44040946af8de51d91d94ec5915cbcb21cc4920bd71668cfc2babd9f",
+      "references": 107,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/prepared-source-sha256.json",
+      "sha256": "77df89c0efb10e6e759369d130bfe3ebb9a156dcf86dbf12f21a6c9bbd0f7aeb",
+      "references": 107,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/session/session.json",
+      "sha256": "0104dc65846726ec300bbb6135cabd691536c97a39b965268d82015de6335ffe",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/source-sha256.json",
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927",
+      "references": 214,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/binary-sha256.json",
+      "sha256": "25964a49d356b1ff2eef57b16d2331716cba19d1ded4ee570be706160125c758",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/build/provider/manifest.json",
+      "sha256": "8312995e44040946af8de51d91d94ec5915cbcb21cc4920bd71668cfc2babd9f",
+      "references": 107,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/prepared-source-sha256.json",
+      "sha256": "77df89c0efb10e6e759369d130bfe3ebb9a156dcf86dbf12f21a6c9bbd0f7aeb",
+      "references": 107,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/session/session.json",
+      "sha256": "3d2c024a6b9da4233fef1113cb7c3dc18ad519a19cd6aa3f0f6c89f9e04a5b2e",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/source-sha256.json",
+      "sha256": "29b83d0bd0ad6be8c11f27acabe638e4712e8a21c55f6619e7dff3ed1a924927",
+      "references": 214,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-20261030/direct/build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 111,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-20261030/direct/source-sha256.json",
+      "sha256": "53da2ad8f1b1bab74fb30c2794a3678546931bb7ca8b8bc30871364cc28123e7",
+      "references": 250,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/binary-sha256.json",
+      "sha256": "d7ede908a46c92bb0cd82261114fe265551257607889aa4788477305ecc1589d",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 111,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/prepared-source-sha256.json",
+      "sha256": "56e5d480a2d6e0d24bba2422a92cf20b850a5735e0c86c16328c18d301f71bd8",
+      "references": 113,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/session/session.json",
+      "sha256": "0c6a10c0911927ce6d23e84a7db961d4f580018327915c7317484949ef1cac65",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/source-sha256.json",
+      "sha256": "5a6775f3fea7395b7a6cabd1d4eff0e73cd328ee21bc9e3fe4810c9c499a0a95",
+      "references": 250,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/binary-sha256.json",
+      "sha256": "b8c1e37d590f0b6209bc3c3c602cea29f4941ce63a88f8aea672eb40366d0a90",
+      "references": 4,
+      "kinds": [
+        "binary"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/manifest.json",
+      "sha256": "153def226190367c624c1ed1ca520a02f8d3a97092f31d6a4477ad98acc7df53",
+      "references": 111,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/prepared-source-sha256.json",
+      "sha256": "56e5d480a2d6e0d24bba2422a92cf20b850a5735e0c86c16328c18d301f71bd8",
+      "references": 113,
+      "kinds": [
+        "prepared_source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/session/session.json",
+      "sha256": "a61c66d6a16fb33f15b6ad07c7b152e9ebaf9355dbfebe10d090d5cccda96cab",
+      "references": 3,
+      "kinds": [
+        "image"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/source-sha256.json",
+      "sha256": "5a6775f3fea7395b7a6cabd1d4eff0e73cd328ee21bc9e3fe4810c9c499a0a95",
+      "references": 250,
+      "kinds": [
+        "source"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-ordering-r3-unit-20261030/default-off/manifest.json",
+      "sha256": "8312995e44040946af8de51d91d94ec5915cbcb21cc4920bd71668cfc2babd9f",
+      "references": 107,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    },
+    {
+      "path": "kernel-proxy-profiles-r2-unit-20261030/default-off/manifest.json",
+      "sha256": "9eb7b11d1c9edf8517e53fae54d16f1fcbafa2368f55ae0d488c06b977297b13",
+      "references": 113,
+      "kinds": [
+        "provider_prepared_manifest"
+      ],
+      "missing": 0,
+      "mismatched": 0
+    }
+  ],
+  "binary_and_image_checks": [
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/mutex/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/build/guard/tc_allocator_guard.ko",
+      "sha256": "1744df5653e554cb270d3cacc78ce022683d5815a0939a0d0d647a1cc3c55d8d"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "b1172d91848f8790331d2c4a23da94d3378a99f11efa7e75debdcfa4c1e57109"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/mutex/source/daemon/daemon",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/mutex/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "sha256": "1f6be6ad23e53d4f11e4e4147339cda6f537963cafe87a340e578e15eb95813a"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/session/workspace/daemon/0xffffffffc09e4071/372805/asm/bin.txt",
+      "sha256": "7efec3ab889059d4793099683960bfc6a5da4d13387df34e2a553c9fee2c42e8"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/session/workspace/daemon/0xffffffffc09e4071/372805/asm/jit.S",
+      "sha256": "2ed572b3c120094bac5c8fb03c3c0eb9aefb6f51af1b3f8b865045fd3fdc3d0c"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/mutex/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-marker-live-20261030/mutex/session/workspace/daemon/0xffffffffc09e4071/372805/asm/jit.bin",
+      "sha256": "d4d3fecc3c15b4bac72a0eedae8d5ea6120e584b44ac2e4f33dcf07e948e3161"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwlock/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/build/guard/tc_allocator_guard.ko",
+      "sha256": "b187b571e697aac56473f26ceb1b8c45807813bc900b61bbac5aa6bda0ab70eb"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwlock/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "3e0455c9a27271aff4f59b7cf3d21e92f361ece4d5c6808076fc38c551cc9070"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwlock/source/daemon/daemon",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwlock/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "sha256": "a7d382ebfaa3eb10fc1ef9faf01cd9ffd4421500f10a4616c8fe69c597034ffc"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/session/workspace/daemon/0xffffffffc09e41e0/375437/asm/bin.txt",
+      "sha256": "d17c4e55bf9fa745ee599400890d14482ac1cd56ee50cb71b465af85f28ee9a2"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/session/workspace/daemon/0xffffffffc09e41e0/375437/asm/jit.S",
+      "sha256": "93e79b03a428965f69094746da8d796b73b5655101b0023613ce8380433ba922"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwlock/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwlock/session/workspace/daemon/0xffffffffc09e41e0/375437/asm/jit.bin",
+      "sha256": "87206f1cc9ec7ee1b547246faa827be10a33c31c5e999e2ea6d14f398d0ef4a3"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwsem/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/build/guard/tc_allocator_guard.ko",
+      "sha256": "5b4b2520dc869144d94bc2b4e7ef79d99ef81d5c54424a362e5cfd54724b845b"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwsem/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "eacf185d91f9ebfe6911eca51871a3e1f58ea6131410d176bf950bc304d76d26"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwsem/source/daemon/daemon",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/rwsem/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "sha256": "19e6068ab502d788e00a6639bbfd5c25a2ff6a4d9f9f89fe47a06f1ceecedc9c"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/session/workspace/daemon/0xffffffffc09e4109/376751/asm/bin.txt",
+      "sha256": "026acb6b50323f237eeba05357c7d1fabdd05381aa9768f67d56dffc7f06c718"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/session/workspace/daemon/0xffffffffc09e4109/376751/asm/jit.S",
+      "sha256": "6ac2653df4b27207f6203bf2319357e36f6e2837d50d7cb8565ecf606d0307c7"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/rwsem/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-marker-live-20261030/rwsem/session/workspace/daemon/0xffffffffc09e4109/376751/asm/jit.bin",
+      "sha256": "37dce76f9edb1d3b64638a56ff112f9e3172cf88e1b94e36c002a5a4f49c8ae7"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/spin/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/build/guard/tc_allocator_guard.ko",
+      "sha256": "d40c7ce59409139f6d39bead684119c8882a180e21cb208e90d28477ef28e944"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/spin/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "7208eded07d5abcbe939d8491a5ed13a2c09746294122b973216d76570401721"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/spin/source/daemon/daemon",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-marker-live-20261030/spin/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/source/tests/kernel/jit_escape/payload/jit_escape_test.ko",
+      "sha256": "9043c67f489fca3c0df1d8d0714f3ead9e1866ce489b527bcbc7d557afb12f3b"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/session/workspace/daemon/0xffffffffc09e41f0/374118/asm/bin.txt",
+      "sha256": "16e77b0b267b0a174e1dc2c7b68518908503fa4e6cdb7ad1619f942eaa5e1c3f"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/session/workspace/daemon/0xffffffffc09e41f0/374118/asm/jit.S",
+      "sha256": "5a96c43d4a537f6252a24055432d554691b49449594f753f5257d37ddd34d2ef"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-marker-live-20261030/spin/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-marker-live-20261030/spin/session/workspace/daemon/0xffffffffc09e41f0/374118/asm/jit.bin",
+      "sha256": "4cae3be613e351bd18299fe2c9c00c60f701106720bb7c5dddbb5b1ebe8938ed"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-20261030/probe/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/build/guard/tc_allocator_guard.ko",
+      "sha256": "b3e7163ec89188876ddcb51b3d3fa3a900c8689a80a5099c17a33f316fec361b"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-20261030/probe/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "ff9241408cadf21a2c4e4c9194fe6512ea2c4be86f7b396be26eecd95f66f237"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-20261030/probe/source/daemon/daemon",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-20261030/probe/source/tests/kernel/spin/proxy_context/payload/kd_spin_proxy_context_test.ko",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/source/tests/kernel/spin/proxy_context/payload/kd_spin_proxy_context_test.ko",
+      "sha256": "8b51e83a4c419d7ed710ae841528d3e4077d0d1939070f2193ae2efa22533158"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-20261030/probe/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/382142/asm/bin.txt",
+      "sha256": "bf3056fedca5bd57d57839f0950a210a8d08716fb12001a785117be5617d7d90"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-20261030/probe/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/382142/asm/jit.S",
+      "sha256": "de99f75ecdfc22683a334f1b51e80cfeae108735d1c4f98f6d68f77f8996d835"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-20261030/probe/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-context-live-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/382142/asm/jit.bin",
+      "sha256": "e4e0fa6ae7cd3371c33e3623968a5d396eb101dcec3a9841f314805b65b32aa3"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-r2-20261030/probe/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/build/guard/tc_allocator_guard.ko",
+      "sha256": "84962eee657b1b6428fa13fbfb4f3b49f325038c7b7110bb2ede04b27e1e2276"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-r2-20261030/probe/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "0e8ea9708b1f218809b30fc2683556c7cff0790269a7731f0ed7810a5d865f71"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-r2-20261030/probe/source/daemon/daemon",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-context-live-r2-20261030/probe/source/tests/kernel/spin/proxy_context/payload/kd_spin_proxy_context_test.ko",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/source/tests/kernel/spin/proxy_context/payload/kd_spin_proxy_context_test.ko",
+      "sha256": "9f0fcc8958f10b245a858062cbc9077edbff8d9a49b4850466a5277b407a11c6"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/384387/asm/bin.txt",
+      "sha256": "bf3056fedca5bd57d57839f0950a210a8d08716fb12001a785117be5617d7d90"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/384387/asm/jit.S",
+      "sha256": "de99f75ecdfc22683a334f1b51e80cfeae108735d1c4f98f6d68f77f8996d835"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-context-live-r2-20261030/probe/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-context-live-r2-20261030/probe/session/workspace/daemon/0xffffffffc09e4043/384387/asm/jit.bin",
+      "sha256": "e4e0fa6ae7cd3371c33e3623968a5d396eb101dcec3a9841f314805b65b32aa3"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/binaries/kdlock_km.ko",
+      "sha256": "ea2061aed20429bfeafc19a0fd8e977cf76440601295c13d3e611fa413f1f7e4"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/spin_cacheline/client",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/binaries/client",
+      "sha256": "6feb819a34c66285c9deac46250b287e180f2e1198b7d4478425a15e05ca9b59"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/binaries/tc_allocator_guard.ko",
+      "sha256": "06c30e9f09567ce15cd16d47fa3bafbdcb7ca941335235b628651d4a5f0e9fa6"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/daemon/daemon",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/binaries/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/mutex/variants/kdlock/mutex_cacheline.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/variants/kdlock/mutex_cacheline.ko",
+      "sha256": "0571500b5a2cd7b90df0d861f4b67168f8b3e9e2f39281f2461a97e8b3ad8c68"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_before.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/bin.txt",
+      "sha256": "c0527743e352bba0ec0be1656b2cc88c9854a1957fb77157f0db79823c6562c6"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_before.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/jit.S",
+      "sha256": "cc23c1529758ec2698d3709d785c577b53d4033909e2af0041cf31fe6e8fc93f"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_before.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/jit.bin",
+      "sha256": "902859a9945e920dbf7f772f7ac424ca20956ea1c3982aab5f719595439cd2de"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_after.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/bin.txt",
+      "sha256": "c0527743e352bba0ec0be1656b2cc88c9854a1957fb77157f0db79823c6562c6"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_after.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/jit.S",
+      "sha256": "cc23c1529758ec2698d3709d785c577b53d4033909e2af0041cf31fe6e8fc93f"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+      "reference": "published_after.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/mutex/c01-t16-r00-direct-kdlock-adaptive-public/workspace/daemon/0xffffffffc09ea03b/393692/asm/jit.bin",
+      "sha256": "902859a9945e920dbf7f772f7ac424ca20956ea1c3982aab5f719595439cd2de"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwlock/build/cacheline-c01-kdlock/rwlock_bench.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/build/cacheline-c01-kdlock/rwlock_bench.ko",
+      "sha256": "e495a6cb24743e394b76f661d120af3736598852e090eadde87eeb98880a594b"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwlock/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/build/guard/tc_allocator_guard.ko",
+      "sha256": "5db72b165628c5301cc55ae27f16d33c06fa9066eec219e3f27e5742f7921bdb"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwlock/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "95bedb12ef3f64a5fac1076da834eab46fd12514149399800684dcfead90fd83"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwlock/source/daemon/daemon",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/bin.txt",
+      "sha256": "b01d5cc3692ab2a2f65105a45e9c75a859d6713355944f4926d3ff4c1a5b46a4"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.S",
+      "sha256": "ff9cad8abc38765153097133981606fe528a9211215eb40645e207aff90cc55a"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.bin",
+      "sha256": "4872c587dbcf8e6062d984335b7655bf25bff3e9076cd6094b745b0437bb3e36"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_before.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/bin.txt",
+      "sha256": "b01d5cc3692ab2a2f65105a45e9c75a859d6713355944f4926d3ff4c1a5b46a4"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_before.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.S",
+      "sha256": "ff9cad8abc38765153097133981606fe528a9211215eb40645e207aff90cc55a"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_before.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.bin",
+      "sha256": "4872c587dbcf8e6062d984335b7655bf25bff3e9076cd6094b745b0437bb3e36"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_after.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/bin.txt",
+      "sha256": "b01d5cc3692ab2a2f65105a45e9c75a859d6713355944f4926d3ff4c1a5b46a4"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_after.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.S",
+      "sha256": "ff9cad8abc38765153097133981606fe528a9211215eb40645e207aff90cc55a"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+      "reference": "published_after.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwlock/cacheline-c01-kdlock-w020-t16-r00/workspace/daemon/0xffffffffc09e40e3/393746/asm/jit.bin",
+      "sha256": "4872c587dbcf8e6062d984335b7655bf25bff3e9076cd6094b745b0437bb3e36"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwsem/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/build/guard/tc_allocator_guard.ko",
+      "sha256": "35da9f16b9c9e789c9dd2da9c89bf517177a78594b0ed1ba2200050475a39f3b"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwsem/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "f2c8efcfbab3c34e957d2850ec571f33b856e0493fc6641049e77fd4d23b4dbf"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwsem/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+      "sha256": "a50031aa9faaac26273011f5decb6bf32d0469be19ef860cfedf094ebcd5b775"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/rwsem/source/daemon/daemon",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/bin.txt",
+      "sha256": "c6ce0ca568c5b9c93b293a0164a0bac915f6fcf581767de8d20b8b26b73c3120"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.S",
+      "sha256": "f5b90a85f833eec6dd206dda9046c0c05708dde54251d26fa51c459f15d0b093"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.bin",
+      "sha256": "7f96520b5102edc3f7b73b185efed81bb5a820e74f35476c3faca6b99179f19d"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_before.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/bin.txt",
+      "sha256": "c6ce0ca568c5b9c93b293a0164a0bac915f6fcf581767de8d20b8b26b73c3120"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_before.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.S",
+      "sha256": "f5b90a85f833eec6dd206dda9046c0c05708dde54251d26fa51c459f15d0b093"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_before.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.bin",
+      "sha256": "7f96520b5102edc3f7b73b185efed81bb5a820e74f35476c3faca6b99179f19d"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_after.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/bin.txt",
+      "sha256": "c6ce0ca568c5b9c93b293a0164a0bac915f6fcf581767de8d20b8b26b73c3120"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_after.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.S",
+      "sha256": "f5b90a85f833eec6dd206dda9046c0c05708dde54251d26fa51c459f15d0b093"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+      "reference": "published_after.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/workspace/daemon/0xffffffffc09e403b/395031/asm/jit.bin",
+      "sha256": "7f96520b5102edc3f7b73b185efed81bb5a820e74f35476c3faca6b99179f19d"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/binaries/kdlock_km.ko",
+      "sha256": "ea2061aed20429bfeafc19a0fd8e977cf76440601295c13d3e611fa413f1f7e4"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/spin_cacheline/client",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/binaries/client",
+      "sha256": "6feb819a34c66285c9deac46250b287e180f2e1198b7d4478425a15e05ca9b59"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/binaries/tc_allocator_guard.ko",
+      "sha256": "06c30e9f09567ce15cd16d47fa3bafbdcb7ca941335235b628651d4a5f0e9fa6"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "reference": "/root/host_fs/kdlock/daemon/daemon",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/binaries/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-calls-basic-20261030/spin/variants/kdlock/spin_cacheline.ko",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/variants/kdlock/spin_cacheline.ko",
+      "sha256": "b8ad785bf75f1f907715f429ddb1300931228623131ab1d67597994f4373a203"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_before.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/bin.txt",
+      "sha256": "387d9a378443977320773729277525cc399b64aa5694db2b15a11428c8494031"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_before.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/jit.S",
+      "sha256": "32ce7238bca3e6f7a9ba2b645cf0a948e0b4fc98ad84549c668ff9a74ca27ab5"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_before.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/jit.bin",
+      "sha256": "2c3291bd1ae2f66aa953677c368f8294a4718bbd2888fee9ec723faaebbc1eba"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_after.bin.txt",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/bin.txt",
+      "sha256": "387d9a378443977320773729277525cc399b64aa5694db2b15a11428c8494031"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_after.jit.S",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/jit.S",
+      "sha256": "32ce7238bca3e6f7a9ba2b645cf0a948e0b4fc98ad84549c668ff9a74ca27ab5"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+      "reference": "published_after.jit.bin",
+      "archived_path": "kernel-proxy-calls-basic-20261030/spin/c01-t16-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc09ea66e/392522/asm/jit.bin",
+      "sha256": "2c3291bd1ae2f66aa953677c368f8294a4718bbd2888fee9ec723faaebbc1eba"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/direct/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/build/guard/tc_allocator_guard.ko",
+      "sha256": "c26acaa10e382733655992ccdf8beda810936aadac4abfb9aaaf1cf05e4ba28f"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/direct/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "3facd54d5da9ce85c7c91945315916fecf527803d3e467e09ed803f250420335"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/direct/source/daemon/daemon",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/direct/source/tests/kernel/jit_native_call/payload/jit_native_call_test.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/source/tests/kernel/jit_native_call/payload/jit_native_call_test.ko",
+      "sha256": "8983e4204c28ca8e377c336690d12802777353293b6f9f182ff7b73c360dc7a7"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/session/workspace/daemon/0xffffffffc09e4079/404211/asm/bin.txt",
+      "sha256": "c6f1863dcee635e28f90549f3248c467c54e65ede7b80a1f73bafd14c7a75e5f"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/session/workspace/daemon/0xffffffffc09e4079/404211/asm/jit.S",
+      "sha256": "ad6d233831cc26181036123752211261821d17128d8319a51dfbbfcc2b1a0218"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/direct/session/workspace/daemon/0xffffffffc09e4079/404211/asm/jit.bin",
+      "sha256": "257c08c6c97fc286d39b68805649f14250a0e3da39d5d41c46e9776a06db3c52"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/indirect/build/guard/tc_allocator_guard.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/build/guard/tc_allocator_guard.ko",
+      "sha256": "cbe6007bb93bd08f0f56d882e71d9217a992e9b3c7421fc041731db09f4a58b7"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/kernel_module/kdlock_km.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/kernel_module/kdlock_km.ko",
+      "sha256": "d7e68899c9bfadd95c23ec1a0fadfb7e1c51d8d2b44fa2c77d73408a97b43831"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/indirect/source/daemon/daemon",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/source/daemon/daemon",
+      "sha256": "52c375646d8193456e893fa27d31e01ec8db15d96ca206f86da933fb3d3a9cc0"
+    },
+    {
+      "kind": "binary",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/binary-sha256.json",
+      "reference": "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-native-call-live-r2-20261030/indirect/source/tests/kernel/jit_native_call/payload/jit_native_call_test.ko",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/source/tests/kernel/jit_native_call/payload/jit_native_call_test.ko",
+      "sha256": "9e4f1f1c56014f8be9cd30a4acc2b27afc0018f7361c3fa5dcd0040a98a07b1f"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/session/session.json",
+      "reference": "publication.bin.txt",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/session/workspace/daemon/0xffffffffc09e4079/405538/asm/bin.txt",
+      "sha256": "d1fb7b2bb84e63123678a369429a5a2008fe72576347351c214bc21eb5504d73"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/session/session.json",
+      "reference": "publication.jit.S",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/session/workspace/daemon/0xffffffffc09e4079/405538/asm/jit.S",
+      "sha256": "319af4da9ec91b6e6bd5da92701f00222f6a2dbe18329cbf9231338baa51a9eb"
+    },
+    {
+      "kind": "image",
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/session/session.json",
+      "reference": "publication.jit.bin",
+      "archived_path": "kernel-proxy-native-call-live-r2-20261030/indirect/session/workspace/daemon/0xffffffffc09e4079/405538/asm/jit.bin",
+      "sha256": "a74a8c6b52c827a5fd9671b5b33e4cd7edeb21a756d6a9e1ce1ca153893a91d1"
+    }
+  ],
+  "provider_preparation_manifests": [
+    {
+      "path": "kernel-proxy-ordering-r3-unit-20261030/default-off/manifest.json",
+      "references": 107,
+      "direct_matches": 107,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/mutex/build/provider/manifest.json",
+      "references": 107,
+      "direct_matches": 107,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwlock/build/provider/manifest.json",
+      "references": 107,
+      "direct_matches": 107,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/rwsem/build/provider/manifest.json",
+      "references": 107,
+      "direct_matches": 107,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-marker-live-20261030/spin/build/provider/manifest.json",
+      "references": 107,
+      "direct_matches": 107,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-context-r3-unit-20261030/default-off/manifest.json",
+      "references": 108,
+      "direct_matches": 108,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-20261030/probe/build/provider/manifest.json",
+      "references": 108,
+      "direct_matches": 108,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-context-live-r2-20261030/probe/build/provider/manifest.json",
+      "references": 108,
+      "direct_matches": 108,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-calls-r2-unit-20261030/default-off/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/mutex/source/bench/spin_cacheline/.build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwlock/build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/rwsem/build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-calls-basic-20261030/spin/source/bench/spin_cacheline/.build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    },
+    {
+      "path": "kernel-proxy-native-call-live-20261030/direct/build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 111,
+      "exact_reconstructed_base_matches": 2
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/direct/build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 111,
+      "exact_reconstructed_base_matches": 2
+    },
+    {
+      "path": "kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/manifest.json",
+      "references": 113,
+      "direct_matches": 111,
+      "exact_reconstructed_base_matches": 2
+    },
+    {
+      "path": "kernel-proxy-profiles-r2-unit-20261030/default-off/manifest.json",
+      "references": 113,
+      "direct_matches": 113,
+      "exact_reconstructed_base_matches": 0
+    }
+  ],
+  "historical_prepared_layers": [
+    {
+      "manifest": "kernel-proxy-native-call-live-20261030/direct/build/provider/manifest.json",
+      "reference": "kernel_module/execution/wrapper_entry.inc",
+      "base_sha256": "39456538b48f10e84f2f68f46324136a5d41b44b5cdc79368d62bec966bc0f2d",
+      "final_sha256": "1769143d14f1dc80e01971bfb54b9aa21a3f0cfaf398895fff8a3b127e348220",
+      "observation_patch": "kernel-proxy-native-call-live-20261030/direct/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    },
+    {
+      "manifest": "kernel-proxy-native-call-live-20261030/direct/build/provider/manifest.json",
+      "reference": "kernel_module/kd_exec.c",
+      "base_sha256": "3b8bdacad12aa4e53919f299f2381d301a7a8b9ee7fbcb21d87eb1268ff2b889",
+      "final_sha256": "8fc4f78d0d816ab217324fdcb69e1f518547977a34fc4cfcd49afd336a149c73",
+      "observation_patch": "kernel-proxy-native-call-live-20261030/direct/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    },
+    {
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/build/provider/manifest.json",
+      "reference": "kernel_module/execution/wrapper_entry.inc",
+      "base_sha256": "39456538b48f10e84f2f68f46324136a5d41b44b5cdc79368d62bec966bc0f2d",
+      "final_sha256": "1769143d14f1dc80e01971bfb54b9aa21a3f0cfaf398895fff8a3b127e348220",
+      "observation_patch": "kernel-proxy-native-call-live-r2-20261030/direct/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    },
+    {
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/direct/build/provider/manifest.json",
+      "reference": "kernel_module/kd_exec.c",
+      "base_sha256": "3b8bdacad12aa4e53919f299f2381d301a7a8b9ee7fbcb21d87eb1268ff2b889",
+      "final_sha256": "8fc4f78d0d816ab217324fdcb69e1f518547977a34fc4cfcd49afd336a149c73",
+      "observation_patch": "kernel-proxy-native-call-live-r2-20261030/direct/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    },
+    {
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/manifest.json",
+      "reference": "kernel_module/execution/wrapper_entry.inc",
+      "base_sha256": "39456538b48f10e84f2f68f46324136a5d41b44b5cdc79368d62bec966bc0f2d",
+      "final_sha256": "1769143d14f1dc80e01971bfb54b9aa21a3f0cfaf398895fff8a3b127e348220",
+      "observation_patch": "kernel-proxy-native-call-live-r2-20261030/indirect/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    },
+    {
+      "manifest": "kernel-proxy-native-call-live-r2-20261030/indirect/build/provider/manifest.json",
+      "reference": "kernel_module/kd_exec.c",
+      "base_sha256": "3b8bdacad12aa4e53919f299f2381d301a7a8b9ee7fbcb21d87eb1268ff2b889",
+      "final_sha256": "8fc4f78d0d816ab217324fdcb69e1f518547977a34fc4cfcd49afd336a149c73",
+      "observation_patch": "kernel-proxy-native-call-live-r2-20261030/indirect/native-call-observation.patch",
+      "patch_sha256": "200a8732d25a935347465403f84f98a78fbce21efa036e96e3d29652d4822786"
+    }
+  ],
+  "profiles_r2": {
+    "source_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+    "unit_drivers_passed": 4,
+    "unit_drivers_failed": 0,
+    "basic_runner_cases": 9,
+    "nano_runner_cases": 12,
+    "blocks": [
+      {
+        "name": "kernel-identity",
+        "argv": [
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "kernel_integration/linux70/verify.py",
+          "--running"
+        ],
+        "returncode": 0
+      },
+      {
+        "name": "unit",
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/tests/unit",
+          "run",
+          "PY_TESTS=lock_api/test_kernel_api_provider.py bench/test_kernel_profiles.py"
+        ],
+        "returncode": 0
+      },
+      {
+        "name": "basic-runner",
+        "argv": [
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "bench/basic/test_run.py"
+        ],
+        "returncode": 0
+      },
+      {
+        "name": "nano-runner",
+        "argv": [
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "bench/rwlock_compare",
+          "-p",
+          "test_nano.py"
+        ],
+        "returncode": 0
+      },
+      {
+        "name": "build-default-off",
+        "argv": [
+          "make",
+          "-C",
+          "/root/kdlock-evidence/10.176.26.71/tests/kernel-proxy-profiles-r2-unit-20261030/default-off/kernel_module",
+          "KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+          "W=1",
+          "KDLOCK_SELFTEST=0",
+          "KDLOCK_NUMA=1",
+          "KDLOCK_SPIN_BATCH=1024",
+          "KDLOCK_MUTEX_BATCH=1024",
+          "KDLOCK_MUTEX_NUMA_BOUNDARY=1024",
+          "KDLOCK_MUTEX_DIAGNOSTICS=0",
+          "UBSAN_SANITIZE=n"
+        ],
+        "returncode": 0
+      }
+    ],
+    "performance_claim": false
+  },
+  "limits": [
+    "No new functional execution, kernel boot, syscall/MM validation or performance evidence.",
+    "Recorded source manifests are now authenticated against archive bytes, including historical leaves; this does not make those leaves compiler dependencies.",
+    "The earlier Git authentication and functional arithmetic remain separate in verification.json.",
+    "Binary/image equality authenticates retained bytes, not every runtime instruction or mitigation path."
+  ]
+}

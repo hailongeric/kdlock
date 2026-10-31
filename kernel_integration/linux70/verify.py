@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from types import SimpleNamespace
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,7 +29,13 @@ BUNDLE_ROOT = Path("/root/kdlock-kernel-baselines/linux70-kdlock1-20261027")
 MM_RELEASE = "7.0.0-38-kdmm1"
 MM_SOURCE_ROOT = Path("/mnt/kdlock-builds/linux-7.0.0-38-kdmm1/source")
 MM_BUILD_ROOT = MM_SOURCE_ROOT.parent / "build"
-VARIANTS = ("kdlock1", "kdmm1-native", "kdmm1-kd")
+SCOPE_RELEASE = "7.0.0-38-kdscope1"
+SCOPE_SOURCE_ROOT = Path("/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source")
+SCOPE_BUILD_ROOT = SCOPE_SOURCE_ROOT.parent / "build"
+SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd")
+VARIANTS = ("kdlock1", "kdmm1-native", "kdmm1-kd", *SCOPE_VARIANTS)
+SOURCE_SCOPE = "named core/MM inputs; not a complete source-tree audit"
+COMPOSED_SCOPE = "named core/MM/API inputs with exact composition; not a complete source-tree audit"
 SYSTEM_ROOT = Path("/")
 PACKAGE = "linux=7.0.0-38.38"
 ACQUISITION_SHA256 = "5c5e8a574cf8affb7aedd66e9f609ca006041c1cde0d3fc4e086a4f9849f545a"
@@ -67,6 +74,10 @@ def variant_settings(variant="kdlock1"):
     if variant == "kdlock1":
         return dict(release=RELEASE, source=SOURCE_ROOT, build=BUILD_ROOT,
                     bundle=BUNDLE_ROOT, mmap_mode=None, mmap_config="n")
+    if variant in SCOPE_VARIANTS:
+        return dict(release=SCOPE_RELEASE, source=SCOPE_SOURCE_ROOT, build=SCOPE_BUILD_ROOT,
+                    bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261030"),
+                    mmap_mode="off" if variant == "kdscope1-native" else "on", mmap_config="y")
     mode = "off" if variant == "kdmm1-native" else "on"
     return dict(release=MM_RELEASE, source=MM_SOURCE_ROOT, build=MM_BUILD_ROOT,
                 bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261027"),
@@ -77,6 +88,10 @@ def check_variant_config(config, variant="kdlock1"):
     selected = variant_settings(variant)
     require(config.get("CONFIG_KDLOCK_MMAP", "n") == selected["mmap_config"],
             "MM configuration differs from selected identity variant")
+    require(config.get("CONFIG_KD_API_LOCKS", "n") == ("y" if variant in SCOPE_VARIANTS else "n"),
+            "API configuration differs from selected identity variant")
+    if variant in SCOPE_VARIANTS:
+        require(config.get("CONFIG_DEBUG_SPINLOCK", "n") == "n", "scope API layout requires native spin geometry")
 
 
 def read_manifest(bundle):
@@ -200,11 +215,23 @@ def check_installed(manifest, build, *, variant="kdlock1"):
                 "installed module header/source link mismatch: " + name)
 
 
-def check_provenance(bundle, manifest, source, config):
+def scope_composer():
+    spec = importlib.util.spec_from_file_location("scope_composer", Path(__file__).with_name("compose_scope.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def check_provenance(bundle, manifest, source, config, *, variant="kdlock1"):
     require(manifest["source_package"] == PACKAGE, "Ubuntu source package mismatch")
     require(manifest["source_archives"] == SOURCE_ARCHIVES, "authenticated source archive identity mismatch")
-    require(manifest["source_scope"] == "named core/MM inputs; not a complete source-tree audit",
+    scoped = variant in SCOPE_VARIANTS
+    require(manifest["source_scope"] == (COMPOSED_SCOPE if scoped else SOURCE_SCOPE),
             "unsupported source scope")
+    if not scoped:
+        require(manifest.get("api") is None and
+                not (source / "include/linux/kd_api_lock.h").exists(),
+                "API overlay requires the explicit scope identity variant")
     require(manifest["bundle_files"].get("source-acquisition.json") == ACQUISITION_SHA256,
             "source acquisition receipt mismatch")
     require(manifest["core_patch"] == "core-kernel.patch", "core patch identity missing")
@@ -219,6 +246,7 @@ def check_provenance(bundle, manifest, source, config):
     mmap = manifest.get("mmap")
     require(config.get("CONFIG_KDLOCK_MMAP", "n") in ("n", "y"), "unsupported mmap config")
     if mmap is None:
+        require(not scoped, "scope identity requires MM preparation")
         require(not overlay_present and config.get("CONFIG_KDLOCK_MMAP", "n") == "n",
                 "MM overlay/config requires preparation identity")
         return
@@ -242,8 +270,16 @@ def check_provenance(bundle, manifest, source, config):
         relative_path(name)
         require(manifest["bundle_files"].get("mmap-inputs/" + name) == sha,
                 "MM generation input omitted or changed: " + name)
-    for name, sha in (receipt["outputs"] | receipt["native_body_sha256"]).items():
-        require(manifest["source_files"].get(name) == sha, "MM source output mismatch: " + name)
+    if scoped:
+        try:
+            scope_composer().check_bundle(SimpleNamespace(SOURCE_ARCHIVES=SOURCE_ARCHIVES,
+                                          CORE_PATHS=CORE_PATHS, BASE_SOURCE=BASE_SOURCE),
+                                          bundle, manifest, source, receipt)
+        except ValueError as error:
+            raise BaselineError(str(error)) from error
+    else:
+        for name, sha in (receipt["outputs"] | receipt["native_body_sha256"]).items():
+            require(manifest["source_files"].get(name) == sha, "MM source output mismatch: " + name)
 
 
 def verify(bundle, build_root, *, build=True, running=False, variant="kdlock1"):
@@ -261,7 +297,7 @@ def verify(bundle, build_root, *, build=True, running=False, variant="kdlock1"):
     config = config_values(build_root / ".config")
     check_variant_config(config, variant)
     require(manifest["configuration"] == config, "recorded configuration mismatch")
-    check_provenance(bundle, manifest, source, config)
+    check_provenance(bundle, manifest, source, config, variant=variant)
     policy = manifest["runtime_policy"]
     check_runtime(policy, policy["cmdline"], policy["preempt_control"], variant=variant)
     result["config"] = True

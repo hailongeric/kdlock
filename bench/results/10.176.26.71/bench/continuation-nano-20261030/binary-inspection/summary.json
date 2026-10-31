@@ -1,0 +1,459 @@
+{
+  "artifacts": {
+    "acfa33a5": {
+      "sha256": "24026421a78f84cfb561c9bf0bd4ad5918438132dfedc730caa84ed8de9c920b",
+      "text_size": 128380,
+      "types": {
+        "kd_exec_frame": [
+          656
+        ],
+        "kd_mutex_node": [
+          320
+        ],
+        "kd_spin_batch": [
+          200
+        ],
+        "kd_mutex": [
+          32
+        ],
+        "kd_spin_node": [
+          128
+        ]
+      },
+      "spin_batch_members": {
+        "outer": 0,
+        "next": 16,
+        "request": 24,
+        "exe": 32,
+        "diag": 40,
+        "lock": 48,
+        "cursor": 56,
+        "call": 64,
+        "pending": 176,
+        "fast_previous": 177,
+        "numa_scan_left": 178,
+        "counter": 180,
+        "queue_end": 184,
+        "saved_tail": 192
+      }
+    },
+    "8446f4ec": {
+      "sha256": "6ce9ef1449d8d8a173c593e060fec3c3e0558428fb4b97a600fd23ab1f612e60",
+      "text_size": 130009,
+      "types": {
+        "kd_exec_frame": [
+          656
+        ],
+        "kd_mutex_node": [
+          320
+        ],
+        "kd_spin_batch": [
+          208
+        ],
+        "kd_mutex": [
+          32
+        ],
+        "kd_spin_node": [
+          128
+        ]
+      },
+      "spin_batch_members": {
+        "outer": 0,
+        "next": 16,
+        "request": 24,
+        "exe": 32,
+        "diag": 40,
+        "lock": 48,
+        "cursor": 56,
+        "call": 64,
+        "pending": 176,
+        "fast_previous": 177,
+        "numa_scan_left": 178,
+        "proxy_context": 180,
+        "counter": 184,
+        "queue_end": 192,
+        "saved_tail": 200
+      }
+    },
+    "8617e97c": {
+      "sha256": "e602695d23676fa0e05f467ff92e23abe25b373d2f8792449af23d679f02c33d",
+      "text_size": 134694,
+      "types": {
+        "kd_exec_frame": [
+          656
+        ],
+        "kd_mutex_node": [
+          320
+        ],
+        "kd_spin_batch": [
+          208
+        ],
+        "kd_mutex": [
+          32
+        ],
+        "kd_spin_node": [
+          128
+        ]
+      },
+      "spin_batch_members": {
+        "outer": 0,
+        "next": 16,
+        "request": 24,
+        "exe": 32,
+        "diag": 40,
+        "lock": 48,
+        "cursor": 56,
+        "call": 64,
+        "pending": 176,
+        "fast_previous": 177,
+        "numa_scan_left": 178,
+        "proxy_context": 180,
+        "counter": 184,
+        "queue_end": 192,
+        "saved_tail": 200
+      }
+    }
+  },
+  "comparison": {
+    "acfa33a5-to-8617e97c": {
+      "kd_down_read": {
+        "old_size": 820,
+        "new_size": 820,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_interruptible": {
+        "old_size": 361,
+        "new_size": 361,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_killable": {
+        "old_size": 361,
+        "new_size": 361,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_trylock": {
+        "old_size": 93,
+        "new_size": 93,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_non_owner": {
+        "old_size": 22,
+        "new_size": 22,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read": {
+        "old_size": 36,
+        "new_size": 36,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read.part.0": {
+        "old_size": 98,
+        "new_size": 98,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read_non_owner": {
+        "old_size": 36,
+        "new_size": 36,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write": {
+        "old_size": 408,
+        "new_size": 408,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_interruptible": {
+        "old_size": 446,
+        "new_size": 446,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_killable": {
+        "old_size": 446,
+        "new_size": 446,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_trylock": {
+        "old_size": 209,
+        "new_size": 209,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_write": {
+        "old_size": 134,
+        "new_size": 134,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_downgrade_write": {
+        "old_size": 132,
+        "new_size": 132,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_drain_readers": {
+        "old_size": 764,
+        "new_size": 764,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_write_release": {
+        "old_size": 127,
+        "new_size": 127,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_delegate_enter": {
+        "old_size": 441,
+        "new_size": 441,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_delegate_exit": {
+        "old_size": 115,
+        "new_size": 115,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_down_write_clobber_v1": {
+        "old_size": 94,
+        "new_size": 94,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "run_combiner": {
+        "old_size": 4892,
+        "new_size": 5169,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_exe_dispatch": {
+        "old_size": 11040,
+        "new_size": 12016,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_exe_dispatch.cold": {
+        "old_size": 417,
+        "new_size": 421,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_mutex_run_combiner": {
+        "old_size": 1118,
+        "new_size": 1118,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": true
+      },
+      "kd_mutex_execute_cs": {
+        "old_size": 6053,
+        "new_size": 6021,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "_kd_mutex_lock_abi": {
+        "old_size": 1156,
+        "new_size": 1156,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "__kd_mutex_lock_slowpath": {
+        "old_size": 1119,
+        "new_size": 1170,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_mutex_origin_instruction": {
+        "added": true,
+        "new_size": 1400
+      },
+      "kd_mutex_origin_instruction_waiter": {
+        "added": true,
+        "new_size": 472
+      },
+      "kd_jit_origin_instruction": {
+        "added": true,
+        "new_size": 910
+      }
+    },
+    "8446f4ec-to-8617e97c": {
+      "kd_down_read": {
+        "old_size": 820,
+        "new_size": 820,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_interruptible": {
+        "old_size": 361,
+        "new_size": 361,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_killable": {
+        "old_size": 361,
+        "new_size": 361,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_trylock": {
+        "old_size": 93,
+        "new_size": 93,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_read_non_owner": {
+        "old_size": 22,
+        "new_size": 22,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read": {
+        "old_size": 36,
+        "new_size": 36,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read.part.0": {
+        "old_size": 98,
+        "new_size": 98,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_read_non_owner": {
+        "old_size": 36,
+        "new_size": 36,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write": {
+        "old_size": 408,
+        "new_size": 408,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_interruptible": {
+        "old_size": 446,
+        "new_size": 446,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_killable": {
+        "old_size": 446,
+        "new_size": 446,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_down_write_trylock": {
+        "old_size": 209,
+        "new_size": 209,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_up_write": {
+        "old_size": 134,
+        "new_size": 134,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_downgrade_write": {
+        "old_size": 132,
+        "new_size": 132,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_drain_readers": {
+        "old_size": 764,
+        "new_size": 764,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_write_release": {
+        "old_size": 127,
+        "new_size": 127,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_delegate_enter": {
+        "old_size": 441,
+        "new_size": 441,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_delegate_exit": {
+        "old_size": 115,
+        "new_size": 115,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "kd_rwsem_down_write_clobber_v1": {
+        "old_size": 94,
+        "new_size": 94,
+        "same_raw_bytes": true,
+        "same_normalized_instructions": true
+      },
+      "run_combiner": {
+        "old_size": 5169,
+        "new_size": 5169,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": true
+      },
+      "kd_exe_dispatch": {
+        "old_size": 12229,
+        "new_size": 12016,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_exe_dispatch.cold": {
+        "old_size": 413,
+        "new_size": 421,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_mutex_run_combiner": {
+        "old_size": 1118,
+        "new_size": 1118,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": true
+      },
+      "kd_mutex_execute_cs": {
+        "old_size": 6053,
+        "new_size": 6021,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "_kd_mutex_lock_abi": {
+        "old_size": 1156,
+        "new_size": 1156,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "__kd_mutex_lock_slowpath": {
+        "old_size": 1119,
+        "new_size": 1170,
+        "same_raw_bytes": false,
+        "same_normalized_instructions": false
+      },
+      "kd_mutex_origin_instruction": {
+        "added": true,
+        "new_size": 1400
+      },
+      "kd_mutex_origin_instruction_waiter": {
+        "added": true,
+        "new_size": 472
+      },
+      "kd_jit_origin_instruction": {
+        "added": true,
+        "new_size": 910
+      }
+    }
+  }
+}

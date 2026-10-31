@@ -47,7 +47,8 @@ IMPLICIT_SOURCE_MEMORY = {
 }
 
 
-def jit_phase_blocks(blocks, databases, roots, resumable_targets):
+def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_history=None,
+                     indirect_call_native=False):
     """Select code that can execute before this JIT episode ends.
 
     A missing direct callee transfers the saved CALL state to the original
@@ -56,6 +57,7 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets):
     edges. Recompute this scope on every translation, including learned targets.
     """
     roots = set(roots)
+    indirect_history = indirect_history or {}
     if roots - blocks.keys() or (blocks and not roots):
         raise ContextFlowLimit("missing or invalid JIT phase roots")
     successors, exits = {}, set()
@@ -65,6 +67,9 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets):
             raise ContextFlowLimit("missing JIT phase location database", start)
         targets = {db.get_location_offset(edge.loc_key) for edge in block.bto}
         for index, line in enumerate(block.lines):
+            next_ip = line.offset + line.l
+            if line.name.upper() == "RET" or line.name.upper().startswith("J"):
+                targets.update(indirect_history.get(next_ip, ()))
             if line.name.upper() != "CALL" or not line.args:
                 continue
             target = static_address(line.args[0], db, line.offset + line.l)
@@ -79,9 +84,22 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets):
                 exits.add(start)
                 targets.clear()
                 break
+            if not direct and indirect_call_native and not (
+                    set(indirect_history.get(next_ip, ())) &
+                    (blocks.keys() | set(resumable_targets))):
+                # Every target in this image either has a Native stub or takes
+                # the fresh CALL exit. Its source fall-through can execute only
+                # in that native suffix, unless another live branch reaches it.
+                if index != len(block.lines) - 1:
+                    raise ContextFlowLimit("native indirect CALL is not a block terminator", line.offset)
+                exits.add(start)
+                targets.clear()
+                break
             targets.add(line.offset + line.l)
             if target in blocks:
                 targets.add(target)
+            if not direct:
+                targets.update(indirect_history.get(next_ip, ()))
         successors[start] = targets & blocks.keys()
     reached, pending = set(), sorted(roots)
     while pending:

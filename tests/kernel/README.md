@@ -13,7 +13,7 @@ may keep their small module directly in their test directory.
 
 | Test | Runner | Kernel payload |
 | --- | --- | --- |
-| Conditional instruction exit (mutex, spin, rwlock, rwsem) | [jit_escape](jit_escape/README.md) | [payload](jit_escape/payload/README.md) |
+| Conditional instruction exit (mutex, spin, rwlock, rwsem) | [jit_continuation](jit_continuation/README.md) | [payload](jit_continuation/payload/README.md) |
 | Checked spin pointer-load continuation | [spin/address_guard](spin/address_guard/README.md) | [payload](spin/address_guard/payload/module.c) |
 | Original kernel strcmp delegation | [spin/string_service](spin/string_service/README.md) | [payload](spin/string_service/payload/module.c) |
 | Reader/writer exclusion and delegation | [rwlock](rwlock/README.md) | [payload](rwlock/payload/README.md) |

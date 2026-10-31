@@ -113,7 +113,7 @@ def sources(root):
 
 def idle():
     rt.idle()
-    for name in (MODULE, "jit_escape_test", "rwsem_probe", "rwlock_bench", "rwlock_test", "real_api",
+    for name in (MODULE, "jit_continuation_test", "rwsem_probe", "rwlock_bench", "rwlock_test", "real_api",
                  "tc_allocator_guard", "tclock_backend_km", "tclock_mutex_backend_km",
                  "tclock_rwlock_backend_km", "kd_mutex_local_probe", "kd_spin_irq_api_test"):
         rt.require(not Path("/sys/module", name).exists(), "existing module: " + name)

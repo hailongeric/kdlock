@@ -34,7 +34,11 @@ def main():
     ):
         code += definition(mutex, marker) + '\n'
     code += without_includes(read_source(ROOT / 'kernel_module/kd_mutex_osq.c'))
-    code += definition(read_source(ROOT / 'kernel_module/kd_mutex_local.c'),
+    local_source = read_source(ROOT / 'kernel_module/kd_mutex_local.c')
+    common = definition(local_source,
+                        'static __always_inline bool kd_local_spin_common(struct kd_mutex *lock, bool waiter,')
+    code += common
+    code += definition(local_source,
                        'static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,')
     mutations = {
         'decode-loses-slot': ('& KD_MUTEX_TAIL_IDX_MASK;', '& 0;'),
@@ -57,6 +61,19 @@ def main():
         'reuse-before-osq-retirement': (
             'BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);',
             '(void)node;'),
+        'ordinary-queue-polls-signals': (
+            'return kd_mutex_osq_lock_common(lock, node, false);',
+            'return kd_mutex_osq_lock_common(lock, node, true);'),
+        'scoped-queue-ignores-signals': (
+            'return kd_mutex_osq_lock_common(lock, node, true);',
+            'return kd_mutex_osq_lock_common(lock, node, false);'),
+        'scoped-owner-spin-ignores-signals': (
+            common, common.replace('stop_signals && signal_pending(current)',
+                                   'false && signal_pending(current)')),
+        'signal-precedes-completed-acquisition': (
+            '\tfor (;;) {\n\t\towner = kd_try_common(lock, false);',
+            '\tfor (;;) {\n\t\tif (stop_signals && signal_pending(current))\n'
+            '\t\t\tgoto done;\n\t\towner = kd_try_common(lock, false);'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-mutex-osq-') as tmp:
         path = Path(tmp)

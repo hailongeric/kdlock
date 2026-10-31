@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "source_package": "linux=7.0.0-38.38",
+  "files": {
+    "Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+    "arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+    "arch/x86/mm/pat/set_memory.c": "2c72c815dc9a4dbb29afa5cda38095668ad0fb14ffafb7d161219e89a551fd4b",
+    "debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+    "fs/file.c": "ef5fba737f8e7b9ed57a16c1330dd1e310174cfe075ee402ef501c38bc95e91b",
+    "fs/locks.c": "306a5eaabb72ff5a57e4c4107c33bd5a7bff6553ef247d7301256ce0623c7b40",
+    "fs/pipe.c": "56251a2dd4baac01424132e2b96413b14d85d9ff13284146658be5d3c347b68c",
+    "fs/proc/fd.c": "0252148d80564c87e085b6f6d745540c85b8ac6afadecb0218b167b2a7d82cb9",
+    "include/asm-generic/vmlinux.lds.h": "0fc49a3e24fcc535d7acc97461021b07e1e43473d2c5a7c84b8d3dd857951773",
+    "include/linux/fdtable.h": "57626bfc142bab7cf6b3f5c6b3d4b95ed880a17a8ba9209619bb71c8d458b00d",
+    "include/linux/mm_types.h": "f9a57641c76b5b4c08e9926db18d9c3459c6267ca24c2dc85f6cf70dc4030c8b",
+    "include/linux/mmap_lock.h": "1fdaaf36b883a654d9f36987a4de0cedb6a26dbd6f096efc7e86b75174a94fb2",
+    "include/linux/pipe_fs_i.h": "2b019a445635f12d3e7adfb74f65af47fbd105e2aa99cb00a07305f7538ccaea",
+    "include/linux/sched/mm.h": "e17bca2fb861783e88d3d412fc46342ab5f80284efab18428bb7cec044bb79f6",
+    "init/Kconfig": "c94d452b20157fd93b4cdce2147d5f4c777f65b97ea7c98bddbd1a6a30c567a7",
+    "io_uring/openclose.c": "7134e6e0cb8db879aa15ae52a082d3ce618da3a38a87a0ed176b83b304896c41",
+    "kernel/bpf/mmap_unlock_work.h": "439f3163e8f4416ba284f3a70f9918431c6e83ed3c5caa8a6d6a11c06467a3aa",
+    "kernel/bpf/stackmap.c": "f7741b7498ed96eaaa8e52f4fd0a9e418dbd56c0ab627f71cdbd30741b93db4b",
+    "kernel/bpf/task_iter.c": "745b6130bbb720d23b8c677b4c5f4ef25cc492c9862e8b2a13492dca4d926623",
+    "kernel/fork.c": "c75a8498349a9f1ac8650ce85ecd47768e5ffb5005a1e04424e19e1579ca0328",
+    "kernel/kallsyms.c": "dc225d36a2e1f4c91bf1c266c31d60d6869c9d14df65d7dbe4e7f1176799d748",
+    "kernel/locking/Makefile": "2a65f237452ffa65e8b594e62c5effdc512af4b4a90da64fb711f9a145f8f604",
+    "kernel/locking/spinlock.c": "09941766a9ec02e07e3bc07b0b10b92154288a6dfe5a0c11cab2a45993dbea69",
+    "kernel/sched/core.c": "8a4c000ddf69ab5334452e55f67346ba7c8fc6e46f382a9c93e61befbbc17cbc",
+    "kernel/watch_queue.c": "9a083a382550e06f57d2ef2427e7b3a92918acf5ea943fb1f783789a3ed4029f",
+    "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+    "mm/Kconfig": "1aef6e588feddb5abf8d6f0d48f3e30cd143866cf00ade0f1fc55e49a27d25d1",
+    "mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+    "mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+    "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+    "mm/mmap_lock.c": "0a96ba385637570efff70e86a4a22f8254a75bff9fed6dfd3710786962d2d359",
+    "mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+    "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+  },
+  "new_core_files": [
+    "include/linux/kd_spin_hooks.h"
+  ],
+  "composition_rule": "pristine+MM-Makefile-suffix+API-Makefile-suffix-v1"
+}

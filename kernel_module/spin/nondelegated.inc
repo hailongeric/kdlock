@@ -87,6 +87,7 @@ static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *wo
 	node->completed = false;
 	node->next = NULL;
 	node->socket_id = IRQ_NUMA_NODE; /* non-combinable, including task callers */
+	node->proxy_context = 0;
 	node->cpuid = smp_processor_id();
 	node->execution = NULL;
 	/* rsp stays untouched: a suspended combiner can reuse this scheduler

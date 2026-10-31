@@ -157,6 +157,10 @@ def main():
     code += "#define cpu_relax() ((void)0)\nstatic __always_inline bool\n"
     code += definition(spin, "kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)")
     code += "#undef cpu_relax\n"
+    code += "static u8 kd_spin_proxy_context(void) { return fixture_proxy_context; }\n"
+    code += "static __always_inline bool\n" + definition(
+        spin, "kd_spin_proxy_context_matches(u8 origin, u8 executor)"
+    )
     code += definition(spin, "static void kd_spin_batch_run(void *opaque)")
     for name, prefix in (
         ("execute_cs", "static int\n"),

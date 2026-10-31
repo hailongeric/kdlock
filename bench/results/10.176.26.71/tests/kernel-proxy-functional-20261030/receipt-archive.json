@@ -1,0 +1,9 @@
+{
+  "scope": "Closed receipt/log subset only; no ELF, full source/build tree or captured executable code",
+  "absolute_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/receipts.tar.gz",
+  "main_repository_relative_path": "bench/results/10.176.26.71/raw/tests/kernel-proxy-functional-20261030/receipts.tar.gz",
+  "sha256": "1e78b352ca3a745bf15ff73e09769244b451e4d61ba976d3403ade0099aa949e",
+  "bytes": 491013,
+  "members": 1921,
+  "uncompressed_receipt_bytes": 3288418
+}

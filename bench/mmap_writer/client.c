@@ -161,6 +161,49 @@ static int chain_frame(const char **text, char symbol[64], unsigned long *offset
 	*text = next ? next + 1 : top + strlen(top);
 	return 1;
 }
+static const char *writer_chain_tail(const char **remaining, char symbol[64],
+		unsigned long *offset, const char *waiter, unsigned long wait_offset)
+{
+	/* A bounded ELF-derived extension carries real intermediate CALL returns.
+	 * Tail jumps have no return word and are absent from this stack description.
+	 * The same parser serves the retained diagnostic and positive classifier. */
+	size_t length=strcspn(chain_waiter,"|");
+	if(strlen(waiter)!=length || strncmp(waiter,chain_waiter,length) ||
+	   (wait_offset!=chain_wait[0] && wait_offset!=chain_wait[1]))
+		return "waiter_symbol_or_return";
+	const char *next=chain_waiter+length;
+	unsigned depth=0;
+	while(*next) {
+		if(*next++!='|' || ++depth>6)return "intermediate_description";
+		const char *at=strchr(next,'@');
+		if(!at || at==next || (size_t)(at-next)>=64)return "intermediate_description";
+		char expected[64];memcpy(expected,next,(size_t)(at-next));expected[at-next]=0;
+		for(const char *p=expected;*p;p++)
+			if(!((*p>='a' && *p<='z') || (*p>='A' && *p<='Z') ||
+			     (*p>='0' && *p<='9') || *p=='_'))return "intermediate_description";
+		unsigned long returns[2];unsigned count=0;
+		next=at+1;
+		do {
+			char *end;errno=0;
+			if(count==2 || *next<'0' || *next>'9')return "intermediate_description";
+			returns[count]=strtoul(next,&end,10);
+			if(errno || !returns[count++])return "intermediate_description";
+			next=end;
+			if(*next!=':')break;
+			next++;
+		} while(1);
+		if(*next && *next!='|')return "intermediate_description";
+		if(!chain_frame(remaining,symbol,offset) || strcmp(symbol,expected) ||
+		   (*offset!=returns[0] && (count!=2 || *offset!=returns[1])))
+			return "intermediate_symbol_or_return";
+	}
+	if(strcmp(waiter,chain_acquire)) {
+		if(!chain_frame(remaining,symbol,offset) || strcmp(symbol,chain_acquire) || *offset!=chain_adapter)
+			return "adapter_symbol_or_return";
+	}
+	if(!chain_frame(remaining,symbol,offset))return "caller_frame";
+	return NULL;
+}
 static void writer_observation(uint64_t tid,const char *first,const char *last,
 		const char *chan1,const char *chan2,const char *sched1,const char *sched2,
 		const char *buffer,unsigned long mmap_site,unsigned long munmap_site)
@@ -174,15 +217,8 @@ static void writer_observation(uint64_t tid,const char *first,const char *last,
 	if(!chain_frame(&remaining,symbol,&offset)) { chain_error="first_frame";goto emit; }
 	strcpy(waiter,symbol);wait_offset=offset;
 	if(chain_waiter) {
-		if(strcmp(waiter,chain_waiter) || (offset!=chain_wait[0] && offset!=chain_wait[1])) {
-			chain_error="waiter_symbol_or_return";goto emit;
-		}
-		if(strcmp(chain_waiter,chain_acquire)) {
-			if(!chain_frame(&remaining,symbol,&offset) || strcmp(symbol,chain_acquire) || offset!=chain_adapter) {
-				chain_error="adapter_symbol_or_return";goto emit;
-			}
-		}
-		if(!chain_frame(&remaining,symbol,&offset)) { chain_error="caller_frame";goto emit; }
+		chain_error=writer_chain_tail(&remaining,symbol,&offset,waiter,wait_offset);
+		if(chain_error)goto emit;
 	}
 	site=(!strcmp(symbol,"vm_mmap_pgoff") && offset==mmap_site) ||
 	     (!strcmp(symbol,"__vm_munmap") && offset==munmap_site);
@@ -237,11 +273,7 @@ static int writer_contention(struct worker *workers,unsigned n,unsigned long mma
 			if(!chain_frame(&remaining,symbol,&offset))continue;
 			strcpy(waiter,symbol);wait_offset=offset;
 			if(chain_waiter) {
-				if(strcmp(waiter,chain_waiter) || (offset!=chain_wait[0] && offset!=chain_wait[1]))continue;
-				if(strcmp(chain_waiter,chain_acquire)) {
-					if(!chain_frame(&remaining,symbol,&offset) || strcmp(symbol,chain_acquire) || offset!=chain_adapter)continue;
-				}
-				if(!chain_frame(&remaining,symbol,&offset))continue;
+				if(writer_chain_tail(&remaining,symbol,&offset,waiter,wait_offset))continue;
 			}
 			int site=(!strcmp(symbol,"vm_mmap_pgoff") && offset==mmap_site) ||
 			         (!strcmp(symbol,"__vm_munmap") && offset==munmap_site);

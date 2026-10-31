@@ -34,7 +34,7 @@ struct kd_source_info {
  * per-CPU arena. It starts after ALIGN(core_static_size, 4) on each possible
  * CPU. Its address extent survives module unload; object validity does not.
  * This excludes dynamic chunks and the first unit's possibly freed tail. */
-#define KD_JIT_CAPS_VERSION 12
+#define KD_JIT_CAPS_VERSION 13
 #define KD_JIT_CAP_MUTEX_STACK (1U << 0)
 #define KD_JIT_CAP_PERCPU_MODULE (1U << 1)
 #define KD_JIT_CAP_MUTEX_IMAGES (1U << 3)
@@ -51,6 +51,10 @@ struct kd_source_info {
 #define KD_JIT_CAP_DIRECT_STRINGS (1U << 10)
 /* Immutable ABI1/3 instruction markers, only from a single physical root. */
 #define KD_JIT_CAP_ROOT_NATIVE_ESCAPE (1U << 11)
+/* Optional v12 extension: exact near-indirect CALL native continuation. */
+#define KD_JIT_CAP_INDIRECT_CALL (1U << 12)
+/* One exact original-task instruction can resume the retained ABI2 image. */
+#define KD_JIT_CAP_ORIGIN_INSTRUCTION (1U << 13)
 #define KD_JIT_MUTEX_STACK_BYTES 256
 #define KD_JIT_PERCPU_MODULE_BYTES (8 * 1024)
 #define KD_JIT_PERCPU_ALIGNMENT 4

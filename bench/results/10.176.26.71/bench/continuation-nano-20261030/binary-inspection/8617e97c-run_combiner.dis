@@ -1,0 +1,1078 @@
+
+/tmp/kdlock-continuation-8617e97c-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000014e50 <run_combiner>:
+   14e50:	push   %rbp
+   14e51:	mov    %rsp,%rbp
+   14e54:	push   %r15
+   14e56:	push   %r14
+   14e58:	push   %r13
+   14e5a:	mov    %rdx,%r13
+   14e5d:	push   %r12
+   14e5f:	mov    %rsi,%r12
+   14e62:	push   %rbx
+   14e63:	mov    %rcx,%rbx
+   14e66:	and    $0xfffffffffffffff0,%rsp
+   14e6a:	sub    $0x120,%rsp
+   14e71:	mov    0x10(%rdx),%rdx
+   14e75:	mov    %rdi,0x38(%rsp)
+   14e7a:	mov    %gs:0x0(%rip),%rax        # 14e82 <run_combiner+0x32>
+   14e82:	mov    %rax,0x118(%rsp)
+   14e8a:	xor    %eax,%eax
+   14e8c:	mov    (%rsi),%r8
+   14e8f:	test   %r8,%r8
+   14e92:	je     1521e <run_combiner+0x3ce>
+   14e98:	lea    0x48(%rsp),%rdi
+   14e9d:	mov    $0x19,%ecx
+   14ea2:	movq   $0x0,0x40(%rsp)
+   14eab:	rep stos %rax,%es:(%rdi)
+   14eae:	mov    $0x400,%eax
+   14eb3:	mov    %r13,0x58(%rsp)
+   14eb8:	mov    %ax,0xf2(%rsp)
+   14ec0:	mov    %gs:0x0(%rip),%eax        # 14ec7 <run_combiner+0x77>
+   14ec7:	and    $0x7fffffff,%eax
+   14ecc:	cmp    $0x1,%eax
+   14ecf:	je     156ec <run_combiner+0x89c>
+   14ed5:	movb   $0x0,0xf4(%rsp)
+   14edd:	cmpl   $0xff,0x8(%r12)
+   14ee6:	je     152b3 <run_combiner+0x463>
+   14eec:	cmpl   $0xff,0x8(%r8)
+   14ef4:	je     152b3 <run_combiner+0x463>
+   14efa:	call   14eff <run_combiner+0xaf>
+   14eff:	mov    %al,0x1f(%rsp)
+   14f03:	test   %al,%al
+   14f05:	je     152b3 <run_combiner+0x463>
+   14f0b:	mov    %gs:0x0(%rip),%rax        # 14f13 <run_combiner+0xc3>
+   14f13:	mov    %rbx,0x68(%rsp)
+   14f18:	lea    0x0(%rax),%r14
+   14f1f:	mov    0x0(%rax),%rax
+   14f26:	test   %rax,%rax
+   14f29:	je     158f6 <run_combiner+0xaa6>
+   14f2f:	mov    0x8(%r14),%rax
+   14f33:	test   %rax,%rax
+   14f36:	je     1597a <run_combiner+0xb2a>
+   14f3c:	mov    0x10(%r14),%rax
+   14f40:	test   %rax,%rax
+   14f43:	je     15984 <run_combiner+0xb34>
+   14f49:	mov    0x18(%r14),%rax
+   14f4d:	test   %rax,%rax
+   14f50:	je     1598e <run_combiner+0xb3e>
+   14f56:	mov    0x20(%r14),%rax
+   14f5a:	test   %rax,%rax
+   14f5d:	je     15998 <run_combiner+0xb48>
+   14f63:	mov    0x28(%r14),%rax
+   14f67:	test   %rax,%rax
+   14f6a:	je     1589f <run_combiner+0xa4f>
+   14f70:	mov    0x30(%r14),%rax
+   14f74:	test   %rax,%rax
+   14f77:	je     15a38 <run_combiner+0xbe8>
+   14f7d:	mov    0x38(%r14),%rax
+   14f81:	mov    $0x7,%esi
+   14f86:	cmp    $0x1,%rax
+   14f8a:	sbb    $0xffffffff,%esi
+   14f8d:	test   %rbx,%rbx
+   14f90:	je     1585f <run_combiner+0xa0f>
+   14f96:	sub    $0x0,%rbx
+   14f9d:	mov    0x0(%rip),%rax        # 14fa4 <run_combiner+0x154>
+   14fa4:	sar    $0x7,%rbx
+   14fa8:	mov    %ebx,%ebx
+   14faa:	lea    (%rbx,%rbx,2),%rdi
+   14fae:	shl    $0x5,%rdi
+   14fb2:	incq   %gs:0x8(%rax,%rdi,1)
+   14fb8:	mov    0x0(%rip),%rax        # 14fbf <run_combiner+0x16f>
+   14fbf:	add    %rdi,%rax
+   14fc2:	add    $0x48,%rdi
+   14fc6:	mov    %gs:0x48(%rax),%edx
+   14fca:	jmp    14fe2 <run_combiner+0x192>
+   14fcc:	mov    0x0(%rip),%rcx        # 14fd3 <run_combiner+0x183>
+   14fd3:	mov    %edx,%eax
+   14fd5:	add    %rdi,%rcx
+   14fd8:	cmpxchg %esi,%gs:(%rcx)
+   14fdc:	cmp    %eax,%edx
+   14fde:	je     14fe6 <run_combiner+0x196>
+   14fe0:	mov    %eax,%edx
+   14fe2:	cmp    %esi,%edx
+   14fe4:	jl     14fcc <run_combiner+0x17c>
+   14fe6:	mov    %gs:0x0(%rip),%rax        # 14fee <run_combiner+0x19e>
+   14fee:	add    $0x0,%rax
+   14ff4:	mov    %rax,0x20(%rsp)
+   14ff9:	mov    0x38(%rsp),%rax
+   14ffe:	mov    %r12,0x78(%rsp)
+   15003:	mov    %r14,0x28(%rsp)
+   15008:	mov    %rax,0x70(%rsp)
+   1500d:	mov    %r13,0x30(%rsp)
+   15012:	movzbl 0xf0(%rsp),%edx
+   1501a:	test   %dl,%dl
+   1501c:	je     15425 <run_combiner+0x5d5>
+   15022:	mov    0xc8(%rsp),%eax
+   15029:	mov    0x20(%r12),%r13
+   1502e:	mov    0x50(%rsp),%rbx
+   15033:	mov    0x88(%rsp),%rdx
+   1503b:	and    $0xfffffffd,%eax
+   1503e:	cmp    $0x1,%eax
+   15041:	jne    1533d <run_combiner+0x4ed>
+   15047:	cmp    $0x7,%rdx
+   1504b:	jne    1535c <run_combiner+0x50c>
+   15051:	mov    0xd0(%rsp),%rax
+   15059:	cmpl   $0x2,(%rax)
+   1505c:	jne    1535c <run_combiner+0x50c>
+   15062:	cmpq   $0x0,0xd8(%rsp)
+   1506b:	je     1535c <run_combiner+0x50c>
+   15071:	mov    0x288(%r13),%rsi
+   15078:	lea    0x80(%rsp),%rdi
+   15080:	call   4740 <kd_jit_note_direct_calls.isra.0>
+   15085:	test   %al,%al
+   15087:	je     1535c <run_combiner+0x50c>
+   1508d:	mov    0xc0(%rsp),%r14
+   15095:	test   %r14,%r14
+   15098:	jne    15f62 <run_combiner+0x1112>
+   1509e:	cmpq   $0x1,0x90(%rsp)
+   150a7:	je     15a78 <run_combiner+0xc28>
+   150ad:	andb   $0xfb,0x27(%r13)
+   150b2:	test   %r13,%r13
+   150b5:	je     15a52 <run_combiner+0xc02>
+   150bb:	cmpb   $0x0,0x24(%r13)
+   150c0:	jne    15a52 <run_combiner+0xc02>
+   150c6:	cmpb   $0x0,0x23(%r13)
+   150cb:	je     15a52 <run_combiner+0xc02>
+   150d1:	mov    %gs:0x0(%rip),%rdx        # 150d9 <run_combiner+0x289>
+   150d9:	lea    0x0(%rdx),%rax
+   150e0:	cmpl   $0x1,0x0(%rdx)
+   150e7:	jne    15a52 <run_combiner+0xc02>
+   150ed:	mov    %gs:0x0(%rip),%rdi        # 150f5 <run_combiner+0x2a5>
+   150f5:	cmp    %rdi,0x1488(%rax)
+   150fc:	jne    15a52 <run_combiner+0xc02>
+   15102:	cmp    0x1480(%rax),%r13
+   15109:	jne    15a52 <run_combiner+0xc02>
+   1510f:	cmpb   $0x0,0x21(%r13)
+   15114:	je     15a52 <run_combiner+0xc02>
+   1511a:	cmpb   $0x0,0x1f(%r13)
+   1511f:	je     15a52 <run_combiner+0xc02>
+   15125:	cmpb   $0x0,0x20(%r13)
+   1512a:	jne    15a52 <run_combiner+0xc02>
+   15130:	cmpq   $0x0,0xe8(%r13)
+   15138:	jne    15a52 <run_combiner+0xc02>
+   1513e:	mov    0x18(%r13),%r15d
+   15142:	test   %r15d,%r15d
+   15145:	jne    15a52 <run_combiner+0xc02>
+   1514b:	cmpb   $0x0,0x26(%r13)
+   15150:	jne    15a52 <run_combiner+0xc02>
+   15156:	mov    0x14(%r13),%edx
+   1515a:	cmp    $0x2,%edx
+   1515d:	je     15a42 <run_combiner+0xbf2>
+   15163:	test   %edx,%edx
+   15165:	jne    15a52 <run_combiner+0xc02>
+   1516b:	mov    0xd0(%r13),%rdx
+   15172:	test   %rdx,%rdx
+   15175:	je     15a54 <run_combiner+0xc04>
+   1517b:	mov    0x8(%r13),%rdi
+   1517f:	cmp    %rdi,0x80(%rdx)
+   15186:	jne    15a52 <run_combiner+0xc02>
+   1518c:	movb   $0x1,0x26(%r13)
+   15191:	movb   $0x3,0x1e(%r13)
+   15196:	mov    $0x4,%r11d
+   1519c:	xor    %r14d,%r14d
+   1519f:	mov    %r11w,0x1c(%r13)
+   151a4:	movl   $0x0,0x1490(%rax)
+   151ae:	movq   $0x0,0x1480(%rax)
+   151b9:	movq   $0x0,0x1488(%rax)
+   151c4:	movb   $0x3,0x1e(%r13)
+   151c9:	mov    %r14w,0x1c(%r13)
+   151ce:	mov    0x100(%rsp),%rdx
+   151d6:	test   %rdx,%rdx
+   151d9:	jne    16062 <run_combiner+0x1212>
+   151df:	mov    0x68(%rsp),%rax
+   151e4:	test   %rax,%rax
+   151e7:	je     1520a <run_combiner+0x3ba>
+   151e9:	sub    $0x0,%rax
+   151ef:	mov    0x0(%rip),%rdx        # 151f6 <run_combiner+0x3a6>
+   151f6:	sar    $0x7,%rax
+   151fa:	mov    %eax,%eax
+   151fc:	lea    (%rax,%rax,2),%rax
+   15200:	shl    $0x5,%rax
+   15204:	incq   %gs:0x10(%rdx,%rax,1)
+   1520a:	mov    $0x100,%r10d
+   15210:	mov    %r10w,0xf0(%rsp)
+   15219:	jmp    153c0 <run_combiner+0x570>
+   1521e:	mov    (%rdx),%eax
+   15220:	and    $0xffff0000,%eax
+   15225:	mov    %eax,%edx
+   15227:	je     15266 <run_combiner+0x416>
+   15229:	shr    $0x10,%eax
+   1522c:	shr    $0x12,%edx
+   1522f:	and    $0x3,%eax
+   15232:	sub    $0x1,%edx
+   15235:	shl    $0x7,%rax
+   15239:	movslq %edx,%rdx
+   1523c:	add    $0x0,%rax
+   15242:	add    0x0(,%rdx,8),%rax
+   1524a:	cmp    %rax,%rsi
+   1524d:	je     15266 <run_combiner+0x416>
+   1524f:	mov    (%rsi),%rax
+   15252:	test   %rax,%rax
+   15255:	jne    15262 <run_combiner+0x412>
+   15257:	pause  
+   15259:	mov    (%r12),%rax
+   1525d:	test   %rax,%rax
+   15260:	je     15257 <run_combiner+0x407>
+   15262:	mov    (%r12),%r8
+   15266:	xor    %eax,%eax
+   15268:	lea    0x48(%rsp),%rdi
+   1526d:	mov    $0x19,%ecx
+   15272:	movq   $0x0,0x40(%rsp)
+   1527b:	rep stos %rax,%es:(%rdi)
+   1527e:	mov    $0x400,%eax
+   15283:	mov    %r13,0x58(%rsp)
+   15288:	mov    %ax,0xf2(%rsp)
+   15290:	mov    %gs:0x0(%rip),%eax        # 15297 <run_combiner+0x447>
+   15297:	and    $0x7fffffff,%eax
+   1529c:	cmp    $0x1,%eax
+   1529f:	je     15305 <run_combiner+0x4b5>
+   152a1:	xor    %eax,%eax
+   152a3:	mov    %al,0xf4(%rsp)
+   152aa:	test   %r8,%r8
+   152ad:	jne    14edd <run_combiner+0x8d>
+   152b3:	mov    0x10(%r13),%rax
+   152b7:	movb   $0x1,(%rax)
+   152ba:	movb   $0x0,0x41(%r12)
+   152c0:	lock addl $0x0,-0x4(%rsp)
+   152c6:	mov    0x118(%rsp),%rax
+   152ce:	sub    %gs:0x0(%rip),%rax        # 152d6 <run_combiner+0x486>
+   152d6:	jne    1607a <run_combiner+0x122a>
+   152dc:	lea    -0x28(%rbp),%rsp
+   152e0:	pop    %rbx
+   152e1:	pop    %r12
+   152e3:	pop    %r13
+   152e5:	pop    %r14
+   152e7:	pop    %r15
+   152e9:	pop    %rbp
+   152ea:	xor    %eax,%eax
+   152ec:	xor    %edx,%edx
+   152ee:	xor    %ecx,%ecx
+   152f0:	xor    %esi,%esi
+   152f2:	xor    %edi,%edi
+   152f4:	xor    %r8d,%r8d
+   152f7:	xor    %r9d,%r9d
+   152fa:	xor    %r10d,%r10d
+   152fd:	xor    %r11d,%r11d
+   15300:	jmp    15305 <run_combiner+0x4b5>
+   15305:	mov    %gs:0x0(%rip),%rax        # 1530d <run_combiner+0x4bd>
+   1530d:	cmpw   $0x0,0x978(%rax)
+   15315:	jne    152a1 <run_combiner+0x451>
+   15317:	mov    0x97c(%rax),%eax
+   1531d:	test   %eax,%eax
+   1531f:	jne    152a1 <run_combiner+0x451>
+   15321:	call   *0x0(%rip)        # 15327 <run_combiner+0x4d7>
+   15327:	and    $0x200,%eax
+   1532c:	cmp    $0x1,%rax
+   15330:	sbb    %eax,%eax
+   15332:	and    $0x2,%eax
+   15335:	add    $0x1,%eax
+   15338:	jmp    152a3 <run_combiner+0x453>
+   1533d:	cmp    $0x1,%rdx
+   15341:	jne    1535c <run_combiner+0x50c>
+   15343:	mov    0x80(%rsp),%rax
+   1534b:	mov    0xa8(%rsp),%rdi
+   15353:	cmp    %rdi,(%rax)
+   15356:	je     1587c <run_combiner+0xa2c>
+   1535c:	cmpb   $0x0,0x21(%r13)
+   15361:	je     1536b <run_combiner+0x51b>
+   15363:	mov    %r13,%rdi
+   15366:	call   4ba0 <kd_spin_jit_prepare_complex.part.0>
+   1536b:	lea    0x40(%rsp),%rdx
+   15370:	movb   $0x0,0xf1(%rsp)
+   15378:	mov    %rdx,0x238(%r13)
+   1537f:	mov    0x38(%rsp),%rdi
+   15384:	mov    %r12,%rsi
+   15387:	call   134d0 <execute_cs>
+   1538c:	xor    %edx,%edx
+   1538e:	mov    %eax,%r8d
+   15391:	mov    %gs:0x0(%rip),%eax        # 15398 <run_combiner+0x548>
+   15398:	and    $0x7fffffff,%eax
+   1539d:	cmp    $0x1,%eax
+   153a0:	je     157b6 <run_combiner+0x966>
+   153a6:	lea    -0x2(%r8),%eax
+   153aa:	mov    %dl,0xf4(%rsp)
+   153b1:	cmp    $0x1,%eax
+   153b4:	jbe    15707 <run_combiner+0x8b7>
+   153ba:	cmp    $0x7,%r8d
+   153be:	je     153cb <run_combiner+0x57b>
+   153c0:	mov    $0x1,%edx
+   153c5:	mov    %dx,0x40(%r12)
+   153cb:	movzbl 0x48(%rsp),%eax
+   153d0:	test   %al,%al
+   153d2:	jne    1582d <run_combiner+0x9dd>
+   153d8:	test   %rbx,%rbx
+   153db:	je     15510 <run_combiner+0x6c0>
+   153e1:	cmpl   $0xff,0x8(%rbx)
+   153e8:	je     15510 <run_combiner+0x6c0>
+   153ee:	cmpl   $0x3ff,0xf8(%rsp)
+   153f9:	ja     15510 <run_combiner+0x6c0>
+   153ff:	mov    (%rbx),%rax
+   15402:	test   %rax,%rax
+   15405:	je     157f6 <run_combiner+0x9a6>
+   1540b:	cmpl   $0xff,0x8(%rax)
+   15412:	je     15819 <run_combiner+0x9c9>
+   15418:	mov    %rbx,0x78(%rsp)
+   1541d:	mov    %rbx,%r12
+   15420:	jmp    15012 <run_combiner+0x1c2>
+   15425:	mov    0x20(%rsp),%rax
+   1542a:	mov    0x58(%rax),%rax
+   1542e:	addl   $0x1,0xf8(%rsp)
+   15436:	mov    %rax,0x108(%rsp)
+   1543e:	mov    (%r12),%rbx
+   15442:	test   %rbx,%rbx
+   15445:	je     15799 <run_combiner+0x949>
+   1544b:	mov    %gs:0x0(%rip),%esi        # 15452 <run_combiner+0x602>
+   15452:	cmp    %esi,0x8(%rbx)
+   15455:	je     15576 <run_combiner+0x726>
+   1545b:	movzwl 0xf2(%rsp),%eax
+   15463:	test   %ax,%ax
+   15466:	je     15576 <run_combiner+0x726>
+   1546c:	mov    %gs:0x0(%rip),%rdi        # 15474 <run_combiner+0x624>
+   15474:	movzbl 0x1f(%rsp),%r9d
+   1547a:	xor    %ecx,%ecx
+   1547c:	jmp    154b9 <run_combiner+0x669>
+   1547e:	mov    %gs:0x0(%rip),%rcx        # 15486 <run_combiner+0x636>
+   15486:	lea    0x0(%rcx),%rax
+   1548d:	cmpq   $0x0,0x0(%rcx)
+   15495:	je     15506 <run_combiner+0x6b6>
+   15497:	mov    0x58(%rax),%rcx
+   1549b:	mov    %rbx,(%rcx)
+   1549e:	mov    %rbx,0x58(%rax)
+   154a2:	movzwl 0xf2(%rsp),%eax
+   154aa:	mov    (%rbx),%rbx
+   154ad:	test   %ax,%ax
+   154b0:	je     15570 <run_combiner+0x720>
+   154b6:	mov    %r9d,%ecx
+   154b9:	test   %rbx,%rbx
+   154bc:	je     158a9 <run_combiner+0xa59>
+   154c2:	mov    (%rbx),%r8
+   154c5:	test   %r8,%r8
+   154c8:	je     15576 <run_combiner+0x726>
+   154ce:	cmpl   $0xff,0x8(%rbx)
+   154d5:	je     15576 <run_combiner+0x726>
+   154db:	cmpl   $0xff,0x8(%r8)
+   154e3:	je     15576 <run_combiner+0x726>
+   154e9:	sub    $0x1,%eax
+   154ec:	mov    %ax,0xf2(%rsp)
+   154f4:	cmp    %esi,0x8(%rbx)
+   154f7:	je     15576 <run_combiner+0x726>
+   154f9:	test   %cl,%cl
+   154fb:	je     1547e <run_combiner+0x62e>
+   154fd:	mov    %rbx,0x0(%rdi)
+   15504:	jmp    154a2 <run_combiner+0x652>
+   15506:	mov    %rbx,0x50(%rax)
+   1550a:	mov    %rbx,0x58(%rax)
+   1550e:	jmp    154a2 <run_combiner+0x652>
+   15510:	mov    0x28(%rsp),%r14
+   15515:	mov    0x30(%rsp),%r13
+   1551a:	mov    %rbx,0x50(%rsp)
+   1551f:	test   %al,%al
+   15521:	jne    15832 <run_combiner+0x9e2>
+   15527:	mov    0x50(%rsp),%rbx
+   1552c:	cmpq   $0x0,0x50(%r14)
+   15531:	je     1554e <run_combiner+0x6fe>
+   15533:	mov    0x58(%r14),%rax
+   15537:	mov    %rbx,(%rax)
+   1553a:	mov    0x50(%r14),%rbx
+   1553e:	movq   $0x0,0x58(%r14)
+   15546:	movq   $0x0,0x50(%r14)
+   1554e:	cmpb   $0x0,0x0(%rip)        # 15555 <run_combiner+0x705>
+   15555:	je     1555b <run_combiner+0x70b>
+   1555b:	mov    0x10(%r13),%rax
+   1555f:	movb   $0x1,(%rax)
+   15562:	movb   $0x0,0x41(%rbx)
+   15566:	call   1556b <run_combiner+0x71b>
+   1556b:	jmp    152c6 <run_combiner+0x476>
+   15570:	test   %rbx,%rbx
+   15573:	sete   %dl
+   15576:	mov    0x0(%rip),%ecx        # 1557c <run_combiner+0x72c>
+   1557c:	mov    %rbx,0x50(%rsp)
+   15581:	movb   $0x0,0x48(%rsp)
+   15586:	test   %ecx,%ecx
+   15588:	je     15625 <run_combiner+0x7d5>
+   1558e:	test   %dl,%dl
+   15590:	jne    15625 <run_combiner+0x7d5>
+   15596:	cmpl   $0xff,0x8(%rbx)
+   1559d:	je     15625 <run_combiner+0x7d5>
+   155a3:	mov    0x20(%rbx),%rax
+   155a7:	test   %rax,%rax
+   155aa:	je     15625 <run_combiner+0x7d5>
+   155ac:	cmp    $0x1,%ecx
+   155af:	je     159a2 <run_combiner+0xb52>
+   155b5:	mov    0x28(%rbx),%rdx
+   155b9:	prefetcht0 (%rax)
+   155bc:	prefetcht0 0xd0(%rax)
+   155c3:	test   %rdx,%rdx
+   155c6:	je     15625 <run_combiner+0x7d5>
+   155c8:	cmpb   $0x0,0x18(%rbx)
+   155cc:	jne    15869 <run_combiner+0xa19>
+   155d2:	prefetcht0 0x18(%rdx)
+   155d6:	cmpb   $0x0,0x19(%rbx)
+   155da:	je     155f1 <run_combiner+0x7a1>
+   155dc:	prefetcht0 0x170(%rax)
+   155e3:	prefetcht0 0x1b0(%rax)
+   155ea:	prefetcht0 0x1d0(%rax)
+   155f1:	mov    0x30(%rbx),%rdx
+   155f5:	test   %rdx,%rdx
+   155f8:	je     15625 <run_combiner+0x7d5>
+   155fa:	prefetcht0 -0x8(%rdx)
+   155fe:	movzbl 0x1a(%rbx),%eax
+   15602:	test   %al,%al
+   15604:	je     15625 <run_combiner+0x7d5>
+   15606:	lea    -0x1(%rax),%ecx
+   15609:	lea    0x40(%rdx),%rax
+   1560d:	shl    $0x6,%rcx
+   15611:	add    %rax,%rcx
+   15614:	jmp    1561a <run_combiner+0x7ca>
+   15616:	add    $0x40,%rax
+   1561a:	prefetcht0 (%rdx)
+   1561d:	mov    %rax,%rdx
+   15620:	cmp    %rax,%rcx
+   15623:	jne    15616 <run_combiner+0x7c6>
+   15625:	mov    0x20(%r12),%r13
+   1562a:	movzbl 0x27(%r13),%eax
+   1562f:	test   $0x1,%al
+   15631:	jne    156da <run_combiner+0x88a>
+   15637:	movzbl 0x1b(%r12),%edx
+   1563d:	cmp    %dl,0xf4(%rsp)
+   15644:	jne    1575f <run_combiner+0x90f>
+   1564a:	test   %dl,%dl
+   1564c:	je     1575f <run_combiner+0x90f>
+   15652:	test   $0x2,%al
+   15654:	je     156da <run_combiner+0x88a>
+   1565a:	mov    %gs:0x0(%rip),%rax        # 15662 <run_combiner+0x812>
+   15662:	mov    0x0(%rax),%r8d
+   15669:	test   %r8d,%r8d
+   1566c:	je     15689 <run_combiner+0x839>
+   1566e:	mov    %gs:0x0(%rip),%rdi        # 15676 <run_combiner+0x826>
+   15676:	cmp    %rdi,0x0(%rax)
+   1567d:	jne    15689 <run_combiner+0x839>
+   1567f:	cmpq   $0x0,0x0(%rax)
+   15687:	jne    156da <run_combiner+0x88a>
+   15689:	lea    0x0(%rax),%r14
+   15690:	mov    0x0(%rax),%rax
+   15697:	test   %rax,%rax
+   1569a:	je     156da <run_combiner+0x88a>
+   1569c:	mov    0x8(%r14),%r15
+   156a0:	test   %r15,%r15
+   156a3:	je     158fd <run_combiner+0xaad>
+   156a9:	mov    0x10(%r14),%rax
+   156ad:	test   %rax,%rax
+   156b0:	je     156da <run_combiner+0x88a>
+   156b2:	mov    0x18(%r14),%rax
+   156b6:	test   %rax,%rax
+   156b9:	je     156da <run_combiner+0x88a>
+   156bb:	mov    0x20(%r14),%rax
+   156bf:	test   %rax,%rax
+   156c2:	je     156da <run_combiner+0x88a>
+   156c4:	mov    0x28(%r14),%rax
+   156c8:	test   %rax,%rax
+   156cb:	je     156da <run_combiner+0x88a>
+   156cd:	mov    0x30(%r14),%rax
+   156d1:	test   %rax,%rax
+   156d4:	je     156da <run_combiner+0x88a>
+   156d6:	mov    0x38(%r14),%rax
+   156da:	movb   $0x0,0xf1(%rsp)
+   156e2:	lea    0x40(%rsp),%rdx
+   156e7:	jmp    1537f <run_combiner+0x52f>
+   156ec:	mov    %gs:0x0(%rip),%rax        # 156f4 <run_combiner+0x8a4>
+   156f4:	cmpw   $0x0,0x978(%rax)
+   156fc:	je     15317 <run_combiner+0x4c7>
+   15702:	jmp    14ed5 <run_combiner+0x85>
+   15707:	mov    0x108(%rsp),%rax
+   1570f:	mov    0x28(%rsp),%r14
+   15714:	mov    0x30(%rsp),%r13
+   15719:	test   %rax,%rax
+   1571c:	je     158c2 <run_combiner+0xa72>
+   15722:	mov    0x20(%rsp),%rdi
+   15727:	mov    %rax,0x58(%rdi)
+   1572b:	cmp    $0x2,%r8d
+   1572f:	je     1578b <run_combiner+0x93b>
+   15731:	mov    0x38(%rsp),%rcx
+   15736:	mov    %gs:0x0(%rip),%esi        # 1573d <run_combiner+0x8ed>
+   1573d:	mov    $0x0,%rdx
+   15744:	mov    $0x0,%rdi
+   1574b:	call   15750 <run_combiner+0x900>
+   15750:	mov    %r12,0x50(%rsp)
+   15755:	movzbl 0x48(%rsp),%eax
+   1575a:	jmp    1551f <run_combiner+0x6cf>
+   1575f:	mov    0x108(%rsp),%rax
+   15767:	movb   $0x0,0xf1(%rsp)
+   1576f:	mov    0x28(%rsp),%r14
+   15774:	mov    0x30(%rsp),%r13
+   15779:	test   %rax,%rax
+   1577c:	je     158dc <run_combiner+0xa8c>
+   15782:	mov    0x20(%rsp),%rdi
+   15787:	mov    %rax,0x58(%rdi)
+   1578b:	cmpb   $0x0,0x0(%rip)        # 15792 <run_combiner+0x942>
+   15792:	jne    15750 <run_combiner+0x900>
+   15794:	jmp    15799 <run_combiner+0x949>
+   15799:	movzwl 0xf2(%rsp),%eax
+   157a1:	test   %ax,%ax
+   157a4:	je     158a9 <run_combiner+0xa59>
+   157aa:	mov    %gs:0x0(%rip),%esi        # 157b1 <run_combiner+0x961>
+   157b1:	jmp    1546c <run_combiner+0x61c>
+   157b6:	mov    %gs:0x0(%rip),%rax        # 157be <run_combiner+0x96e>
+   157be:	cmpw   $0x0,0x978(%rax)
+   157c6:	jne    153a6 <run_combiner+0x556>
+   157cc:	mov    0x97c(%rax),%eax
+   157d2:	test   %eax,%eax
+   157d4:	jne    153a6 <run_combiner+0x556>
+   157da:	call   *0x0(%rip)        # 157e0 <run_combiner+0x990>
+   157e0:	and    $0x200,%eax
+   157e5:	cmp    $0x1,%rax
+   157e9:	sbb    %edx,%edx
+   157eb:	and    $0x2,%edx
+   157ee:	add    $0x1,%edx
+   157f1:	jmp    153a6 <run_combiner+0x556>
+   157f6:	xor    %edx,%edx
+   157f8:	jmp    15803 <run_combiner+0x9b3>
+   157fa:	test   %rax,%rax
+   157fd:	jne    1540b <run_combiner+0x5bb>
+   15803:	pause  
+   15805:	add    $0x1,%edx
+   15808:	mov    (%rbx),%rax
+   1580b:	cmp    $0x8,%edx
+   1580e:	jne    157fa <run_combiner+0x9aa>
+   15810:	test   %rax,%rax
+   15813:	jne    1540b <run_combiner+0x5bb>
+   15819:	mov    0x28(%rsp),%r14
+   1581e:	mov    0x30(%rsp),%r13
+   15823:	movzbl 0x48(%rsp),%eax
+   15828:	jmp    1551a <run_combiner+0x6ca>
+   1582d:	mov    0x30(%rsp),%r13
+   15832:	incq   %gs:0x0(%rip)        # 1583a <run_combiner+0x9ea>
+   1583a:	xor    %eax,%eax
+   1583c:	mov    0x10(%r13),%rdi
+   15840:	mov    $0x1,%edx
+   15845:	lock cmpxchg %edx,(%rdi)
+   15849:	test   %eax,%eax
+   1584b:	jne    15896 <run_combiner+0xa46>
+   1584d:	mov    %r13,%rdi
+   15850:	call   15855 <run_combiner+0xa05>
+   15855:	test   %eax,%eax
+   15857:	je     15566 <run_combiner+0x716>
+   1585d:	ud2    
+   1585f:	mov    %r14,0x20(%rsp)
+   15864:	jmp    14ff9 <run_combiner+0x1a9>
+   15869:	prefetcht0 (%rdx)
+   1586c:	prefetcht0 0x40(%rdx)
+   15870:	prefetcht0 0x80(%rdx)
+   15877:	jmp    155d6 <run_combiner+0x786>
+   1587c:	mov    0xa0(%rsp),%rdi
+   15884:	cmp    %rdi,0x80(%rax)
+   1588b:	jne    1535c <run_combiner+0x50c>
+   15891:	jmp    15071 <run_combiner+0x221>
+   15896:	mov    %eax,%esi
+   15898:	call   3f60 <kd_spin_acquire_nondelegated_contended>
+   1589d:	jmp    1584d <run_combiner+0x9fd>
+   1589f:	mov    $0x5,%esi
+   158a4:	jmp    14f8d <run_combiner+0x13d>
+   158a9:	movq   $0x0,0x50(%rsp)
+   158b2:	movb   $0x0,0x48(%rsp)
+   158b7:	mov    0x0(%rip),%eax        # 158bd <run_combiner+0xa6d>
+   158bd:	jmp    15625 <run_combiner+0x7d5>
+   158c2:	mov    0x20(%rsp),%rax
+   158c7:	movq   $0x0,0x50(%rax)
+   158cf:	mov    0x108(%rsp),%rax
+   158d7:	jmp    15722 <run_combiner+0x8d2>
+   158dc:	mov    0x20(%rsp),%rax
+   158e1:	movq   $0x0,0x50(%rax)
+   158e9:	mov    0x108(%rsp),%rax
+   158f1:	jmp    15782 <run_combiner+0x932>
+   158f6:	xor    %esi,%esi
+   158f8:	jmp    14f8d <run_combiner+0x13d>
+   158fd:	mov    0x68(%rsp),%rax
+   15902:	test   %rax,%rax
+   15905:	je     15912 <run_combiner+0xac2>
+   15907:	mov    0x8(%rax),%eax
+   1590a:	test   %eax,%eax
+   1590c:	jne    156da <run_combiner+0x88a>
+   15912:	mov    0x60(%rsp),%rdx
+   15917:	mov    0x0(%r13),%rsi
+   1591b:	test   %rdx,%rdx
+   1591e:	je     1592d <run_combiner+0xadd>
+   15920:	mov    0x10(%rdx),%rax
+   15924:	cmp    %rax,%rsi
+   15927:	je     15f51 <run_combiner+0x1101>
+   1592d:	xor    %edi,%edi
+   1592f:	call   15934 <run_combiner+0xae4>
+   15934:	mov    %rax,%rdx
+   15937:	test   %rax,%rax
+   1593a:	je     156da <run_combiner+0x88a>
+   15940:	mov    0xc(%rax),%eax
+   15943:	cmp    $0x1,%eax
+   15946:	jne    1594d <run_combiner+0xafd>
+   15948:	mov    %rdx,0x60(%rsp)
+   1594d:	mov    0xd0(%r13),%r8
+   15954:	movb   $0x1,0x21(%r13)
+   15959:	test   %r8,%r8
+   1595c:	je     15f36 <run_combiner+0x10e6>
+   15962:	cmpq   $0x0,0xe8(%r13)
+   1596a:	je     15ade <run_combiner+0xc8e>
+   15970:	movb   $0x0,0x21(%r13)
+   15975:	jmp    156da <run_combiner+0x88a>
+   1597a:	mov    $0x1,%esi
+   1597f:	jmp    14f8d <run_combiner+0x13d>
+   15984:	mov    $0x2,%esi
+   15989:	jmp    14f8d <run_combiner+0x13d>
+   1598e:	mov    $0x3,%esi
+   15993:	jmp    14f8d <run_combiner+0x13d>
+   15998:	mov    $0x4,%esi
+   1599d:	jmp    14f8d <run_combiner+0x13d>
+   159a2:	mov    0xd0(%rax),%rdx
+   159a9:	test   %rdx,%rdx
+   159ac:	je     15625 <run_combiner+0x7d5>
+   159b2:	prefetcht0 (%rax)
+   159b5:	prefetcht0 0xd0(%rax)
+   159bc:	mov    0x14(%rax),%r9d
+   159c0:	test   %r9d,%r9d
+   159c3:	jne    15a6f <run_combiner+0xc1f>
+   159c9:	prefetcht0 (%rdx)
+   159cc:	prefetcht0 0x40(%rdx)
+   159d0:	prefetcht0 0x80(%rdx)
+   159d7:	movzbl 0x24(%rax),%ecx
+   159db:	test   %cl,%cl
+   159dd:	je     159f4 <run_combiner+0xba4>
+   159df:	prefetcht0 0x170(%rax)
+   159e6:	prefetcht0 0x1b0(%rax)
+   159ed:	prefetcht0 0x1d0(%rax)
+   159f4:	mov    0xe0(%rax),%rax
+   159fb:	test   %rax,%rax
+   159fe:	je     15625 <run_combiner+0x7d5>
+   15a04:	mov    0x20(%rax),%rax
+   15a08:	mov    0x8(%rdx),%rdx
+   15a0c:	lea    0x8(%rax),%rcx
+   15a10:	cmp    %rcx,%rdx
+   15a13:	jb     15625 <run_combiner+0x7d5>
+   15a19:	mov    %rdx,%rcx
+   15a1c:	sub    %rax,%rcx
+   15a1f:	cmp    $0x3fff,%rcx
+   15a26:	ja     15625 <run_combiner+0x7d5>
+   15a2c:	prefetcht0 (%rdx)
+   15a2f:	prefetcht0 -0x8(%rdx)
+   15a33:	jmp    15625 <run_combiner+0x7d5>
+   15a38:	mov    $0x6,%esi
+   15a3d:	jmp    14f8d <run_combiner+0x13d>
+   15a42:	mov    0x10(%r13),%edx
+   15a46:	and    $0xfffffffd,%edx
+   15a49:	cmp    $0x1,%edx
+   15a4c:	je     1518c <run_combiner+0x33c>
+   15a52:	ud2    
+   15a54:	lea    0x28(%r13),%rdx
+   15a58:	cmpb   $0x0,0x25(%r13)
+   15a5d:	je     1517b <run_combiner+0x32b>
+   15a63:	mov    0xf8(%r13),%rdx
+   15a6a:	jmp    1517b <run_combiner+0x32b>
+   15a6f:	prefetcht0 0x18(%rdx)
+   15a73:	jmp    159d7 <run_combiner+0xb87>
+   15a78:	mov    0x0(%rip),%rax        # 15a7f <run_combiner+0xc2f>
+   15a7f:	mov    0xa0(%rsp),%rdx
+   15a87:	mov    0x0(%r13),%rsi
+   15a8b:	test   %rax,%rax
+   15a8e:	je     15a99 <run_combiner+0xc49>
+   15a90:	cmp    %rax,%rdx
+   15a93:	je     1613b <run_combiner+0x12eb>
+   15a99:	cmpb   $0x0,0x0(%rip)        # 15aa0 <run_combiner+0xc50>
+   15aa0:	je     15aa6 <run_combiner+0xc56>
+   15aa6:	cmpb   $0x0,0x0(%rip)        # 15aad <run_combiner+0xc5d>
+   15aad:	je     150ad <run_combiner+0x25d>
+   15ab3:	mov    0x0(%rip),%rax        # 15aba <run_combiner+0xc6a>
+   15aba:	cmp    %rax,0xa0(%rsp)
+   15ac2:	jne    150ad <run_combiner+0x25d>
+   15ac8:	test   %rax,%rax
+   15acb:	je     150ad <run_combiner+0x25d>
+   15ad1:	incq   %gs:0x0(%rip)        # 15ad9 <run_combiner+0xc89>
+   15ad9:	jmp    150ad <run_combiner+0x25d>
+   15ade:	mov    0x18(%r13),%edi
+   15ae2:	test   %edi,%edi
+   15ae4:	jne    15970 <run_combiner+0xb20>
+   15aea:	cmpb   $0x0,0x22(%r13)
+   15aef:	je     15970 <run_combiner+0xb20>
+   15af5:	cmpb   $0x0,0x20(%r13)
+   15afa:	jne    15970 <run_combiner+0xb20>
+   15b00:	cmpb   $0x0,0x24(%r13)
+   15b05:	jne    15970 <run_combiner+0xb20>
+   15b0b:	cmpb   $0x0,0x26(%r13)
+   15b10:	jne    15970 <run_combiner+0xb20>
+   15b16:	cmpw   $0x1,0x1c(%r13)
+   15b1c:	jne    15970 <run_combiner+0xb20>
+   15b22:	cmpq   $0x0,0x8(%r13)
+   15b27:	je     15970 <run_combiner+0xb20>
+   15b2d:	cmpq   $0x0,0x8(%r8)
+   15b32:	je     15970 <run_combiner+0xb20>
+   15b38:	lea    0x28(%r13),%rax
+   15b3c:	cmp    %rax,%r8
+   15b3f:	jne    15970 <run_combiner+0xb20>
+   15b45:	cmpb   $0x0,0x1f(%r13)
+   15b4a:	jne    15970 <run_combiner+0xb20>
+   15b50:	cmpq   $0x0,0xd8(%r13)
+   15b58:	je     15970 <run_combiner+0xb20>
+   15b5e:	cmpq   $0x0,0xe0(%r13)
+   15b66:	je     15970 <run_combiner+0xb20>
+   15b6c:	mov    0x0(%r13),%rax
+   15b70:	cmp    %rax,(%r8)
+   15b73:	jne    15970 <run_combiner+0xb20>
+   15b79:	test   %rax,%rax
+   15b7c:	je     15970 <run_combiner+0xb20>
+   15b82:	mov    0x0(%rip),%esi        # 15b88 <run_combiner+0xd38>
+   15b88:	test   %esi,%esi
+   15b8a:	jne    15970 <run_combiner+0xb20>
+   15b90:	mov    0x288(%r13),%rdi
+   15b97:	mov    (%rdx),%esi
+   15b99:	mov    %rdi,0x10(%rsp)
+   15b9e:	test   %esi,%esi
+   15ba0:	jne    15970 <run_combiner+0xb20>
+   15ba6:	mov    0x4(%rdx),%r9d
+   15baa:	test   %r9d,%r9d
+   15bad:	jne    15970 <run_combiner+0xb20>
+   15bb3:	mov    0x10(%rdx),%rsi
+   15bb7:	cmp    %rsi,%rax
+   15bba:	jne    15970 <run_combiner+0xb20>
+   15bc0:	mov    0x18(%rdx),%rax
+   15bc4:	test   %rax,%rax
+   15bc7:	je     15970 <run_combiner+0xb20>
+   15bcd:	mov    0xc(%rdx),%eax
+   15bd0:	sub    $0x1,%eax
+   15bd3:	jne    15970 <run_combiner+0xb20>
+   15bd9:	xor    %eax,%eax
+   15bdb:	cmpl   $0x0,0x10(%r13)
+   15be0:	setne  %al
+   15be3:	cmp    %eax,0x14(%r13)
+   15be7:	jne    15970 <run_combiner+0xb20>
+   15bed:	mov    %r13,%rsi
+   15bf0:	mov    %rdx,%rdi
+   15bf3:	mov    %r9d,0x18(%rsp)
+   15bf8:	mov    %r8,(%rsp)
+   15bfc:	mov    %rdx,0x8(%rsp)
+   15c01:	call   4310 <kd_jit_select_image>
+   15c06:	mov    %rax,%rsi
+   15c09:	test   %rax,%rax
+   15c0c:	je     15970 <run_combiner+0xb20>
+   15c12:	mov    (%rax),%rax
+   15c15:	mov    0x8(%rsp),%rdx
+   15c1a:	mov    (%rsp),%r8
+   15c1e:	mov    0x18(%rsp),%r9d
+   15c23:	test   %rax,%rax
+   15c26:	je     15c35 <run_combiner+0xde5>
+   15c28:	cmpl   $0x4357444b,0x19(%rax)
+   15c2f:	je     16148 <run_combiner+0x12f8>
+   15c35:	mov    0x30(%rdx),%edx
+   15c38:	cmp    0x10(%r13),%edx
+   15c3c:	jne    15970 <run_combiner+0xb20>
+   15c42:	mov    %edx,%edi
+   15c44:	and    $0xfffffffd,%edi
+   15c47:	sub    $0x1,%edi
+   15c4a:	jne    16116 <run_combiner+0x12c6>
+   15c50:	test   %r9d,%r9d
+   15c53:	je     15970 <run_combiner+0xb20>
+   15c59:	movzbl 0x2d(%rax),%eax
+   15c5d:	cmp    %eax,%edx
+   15c5f:	jne    15970 <run_combiner+0xb20>
+   15c65:	cmpq   $0x0,0x0(%rip)        # 15c6d <run_combiner+0xe1d>
+   15c6d:	je     15970 <run_combiner+0xb20>
+   15c73:	cmpq   $0x0,0x0(%rip)        # 15c7b <run_combiner+0xe2b>
+   15c7b:	je     15970 <run_combiner+0xb20>
+   15c81:	mov    %rsi,0x288(%r13)
+   15c88:	mov    %r13,%rdi
+   15c8b:	mov    %rsi,0x8(%rsp)
+   15c90:	mov    %r8,(%rsp)
+   15c94:	call   47e0 <kd_jit_direct_entry>
+   15c99:	mov    0x8(%rsp),%rsi
+   15c9e:	test   %al,%al
+   15ca0:	je     16105 <run_combiner+0x12b5>
+   15ca6:	mov    (%rsi),%rdx
+   15ca9:	mov    %r13,%rdi
+   15cac:	mov    %rdx,0x8(%rsp)
+   15cb1:	call   4900 <kd_jit_root_escape_entry>
+   15cb6:	test   %al,%al
+   15cb8:	je     16105 <run_combiner+0x12b5>
+   15cbe:	mov    0x8(%rsp),%rdx
+   15cc3:	test   %rdx,%rdx
+   15cc6:	je     16105 <run_combiner+0x12b5>
+   15ccc:	cmpl   $0x4257444b,0x9(%rdx)
+   15cd3:	jne    16105 <run_combiner+0x12b5>
+   15cd9:	cmpl   $0x32303042,0xc(%rdx)
+   15ce0:	mov    (%rsp),%r8
+   15ce4:	jne    16105 <run_combiner+0x12b5>
+   15cea:	mov    0x10(%r13),%eax
+   15cee:	mov    %r8,0x80(%rsp)
+   15cf6:	and    $0xfffffffd,%eax
+   15cf9:	sub    $0x1,%eax
+   15cfc:	mov    0xd8(%r13),%rax
+   15d03:	sete   %sil
+   15d07:	mov    %rax,0x88(%rsp)
+   15d0f:	mov    0xe0(%r13),%rax
+   15d16:	mov    %rax,0x90(%rsp)
+   15d1e:	jne    160d2 <run_combiner+0x1282>
+   15d24:	add    $0x20,%rdx
+   15d28:	mov    %rdx,0x98(%rsp)
+   15d30:	mov    0x8(%r13),%rax
+   15d34:	mov    %rax,0xa0(%rsp)
+   15d3c:	mov    0x0(%rip),%rax        # 15d43 <run_combiner+0xef3>
+   15d43:	mov    %rax,0xa8(%rsp)
+   15d4b:	mov    0x8(%r8),%rax
+   15d4f:	movzbl %sil,%esi
+   15d53:	mov    %rax,0xb0(%rsp)
+   15d5b:	mov    0x10(%r13),%eax
+   15d5f:	mov    %rsi,0xd8(%rsp)
+   15d67:	mov    %rax,0xc8(%rsp)
+   15d6f:	lea    0x14(%r13),%rax
+   15d73:	mov    %rax,0xd0(%rsp)
+   15d7b:	mov    0x288(%r13),%rax
+   15d82:	test   %rax,%rax
+   15d85:	je     15d9f <run_combiner+0xf4f>
+   15d87:	testb  $0x10,0x18(%rax)
+   15d8b:	je     15d9f <run_combiner+0xf4f>
+   15d8d:	xor    %esi,%esi
+   15d8f:	mov    %rsi,0xe0(%rsp)
+   15d97:	mov    %rsi,0xe8(%rsp)
+   15d9f:	cmpb   $0x0,0x0(%rip)        # 15da6 <run_combiner+0xf56>
+   15da6:	jne    160ac <run_combiner+0x125c>
+   15dac:	xor    %ecx,%ecx
+   15dae:	xor    %eax,%eax
+   15db0:	mov    %rcx,0xb8(%rsp)
+   15db8:	mov    %rax,0xc0(%rsp)
+   15dc0:	test   %r13,%r13
+   15dc3:	je     15970 <run_combiner+0xb20>
+   15dc9:	cmpb   $0x0,0x22(%r13)
+   15dce:	je     15970 <run_combiner+0xb20>
+   15dd4:	cmpq   $0x0,0xd8(%r13)
+   15ddc:	je     15970 <run_combiner+0xb20>
+   15de2:	cmpq   $0x0,0xe0(%r13)
+   15dea:	je     15970 <run_combiner+0xb20>
+   15df0:	cmpb   $0x0,0x1f(%r13)
+   15df5:	jne    15970 <run_combiner+0xb20>
+   15dfb:	mov    %gs:0x0(%rip),%rcx        # 15e03 <run_combiner+0xfb3>
+   15e03:	mov    0x0(%rcx),%eax
+   15e09:	cmp    $0x7,%eax
+   15e0c:	ja     15970 <run_combiner+0xb20>
+   15e12:	mov    0x0(%rcx),%rdx
+   15e19:	test   %eax,%eax
+   15e1b:	setne  %dil
+   15e1f:	test   %rdx,%rdx
+   15e22:	setne  %sil
+   15e26:	cmp    %sil,%dil
+   15e29:	jne    15970 <run_combiner+0xb20>
+   15e2f:	test   %eax,%eax
+   15e31:	je     15e41 <run_combiner+0xff1>
+   15e33:	cmp    %gs:0x0(%rip),%rdx        # 15e3b <run_combiner+0xfeb>
+   15e3b:	jne    15970 <run_combiner+0xb20>
+   15e41:	mov    0x0(%rip),%eax        # 15e47 <run_combiner+0xff7>
+   15e47:	test   %eax,%eax
+   15e49:	jne    15970 <run_combiner+0xb20>
+   15e4f:	mov    0x0(%rcx),%rax
+   15e56:	mov    %rax,0xe8(%r13)
+   15e5d:	mov    0x0(%rcx),%eax
+   15e63:	mov    %eax,0x18(%r13)
+   15e67:	cmpb   $0x0,0x24(%r13)
+   15e6c:	jne    16277 <run_combiner+0x1427>
+   15e72:	test   %eax,%eax
+   15e74:	je     1626d <run_combiner+0x141d>
+   15e7a:	movb   $0x0,0x21(%r13)
+   15e7f:	mov    %r13,%rdi
+   15e82:	mov    %rcx,0x10(%rsp)
+   15e87:	call   45a0 <kd_exec_frame_prepare_complex.part.0>
+   15e8c:	mov    0x10(%rsp),%rcx
+   15e91:	movabs $0x100000001,%rax
+   15e9b:	mov    %rax,0x218(%r13)
+   15ea2:	mov    %gs:0x0(%rip),%rax        # 15eaa <run_combiner+0x105a>
+   15eaa:	movb   $0x1,0x23(%r13)
+   15eaf:	movw   $0x1,0x1c(%r13)
+   15eb6:	mov    %rax,0x0(%rcx)
+   15ebd:	addl   $0x1,0x0(%rcx)
+   15ec4:	mov    %r13,0x0(%rcx)
+   15ecb:	movb   $0x2,0x1e(%r13)
+   15ed0:	cmpl   $0x3,0x10(%r13)
+   15ed5:	jne    161b0 <run_combiner+0x1360>
+   15edb:	movzbl 0x27(%r13),%eax
+   15ee0:	test   $0x1,%al
+   15ee2:	jne    161b0 <run_combiner+0x1360>
+   15ee8:	test   $0x4,%al
+   15eea:	jne    1626b <run_combiner+0x141b>
+   15ef0:	cmpb   $0x0,0x1f(%r13)
+   15ef5:	jne    1626b <run_combiner+0x141b>
+   15efb:	mov    0x8(%r13),%rdx
+   15eff:	xor    %eax,%eax
+   15f01:	mov    $0xff,%edi
+   15f06:	lea    -0x40(%rdx),%rsi
+   15f0a:	lock cmpxchg %edi,-0x40(%rdx)
+   15f0f:	test   %eax,%eax
+   15f11:	je     161ab <run_combiner+0x135b>
+   15f17:	lock addl $0x100,-0x40(%rdx)
+   15f1f:	mov    $0xff,%edi
+   15f24:	mov    -0x40(%rdx),%eax
+   15f27:	cmp    $0x100,%eax
+   15f2c:	je     1619c <run_combiner+0x134c>
+   15f32:	pause  
+   15f34:	jmp    15f24 <run_combiner+0x10d4>
+   15f36:	lea    0x28(%r13),%r8
+   15f3a:	cmpb   $0x0,0x25(%r13)
+   15f3f:	je     15962 <run_combiner+0xb12>
+   15f45:	mov    0xf8(%r13),%r8
+   15f4c:	jmp    15962 <run_combiner+0xb12>
+   15f51:	mov    0xc(%rdx),%eax
+   15f54:	cmp    $0x1,%eax
+   15f57:	jne    1592d <run_combiner+0xadd>
+   15f5d:	jmp    1594d <run_combiner+0xafd>
+   15f62:	cmpb   $0x0,0x0(%rip)        # 15f69 <run_combiner+0x1119>
+   15f69:	je     1509e <run_combiner+0x24e>
+   15f6f:	call   15f74 <run_combiner+0x1124>
+   15f74:	movabs $0x7ffffffffffffffe,%rsi
+   15f7e:	mov    %rax,%rdx
+   15f81:	mov    0x0(%rip),%rax        # 15f88 <run_combiner+0x1138>
+   15f88:	cmp    %rax,%rsi
+   15f8b:	jb     1609d <run_combiner+0x124d>
+   15f91:	lea    0x1(%rax),%rcx
+   15f95:	lock cmpxchg %rcx,0x0(%rip)        # 15f9e <run_combiner+0x114e>
+   15f9e:	jne    15f88 <run_combiner+0x1138>
+   15fa0:	cmp    %r14,%rdx
+   15fa3:	jb     1608e <run_combiner+0x123e>
+   15fa9:	mov    0x0(%rip),%rax        # 15fb0 <run_combiner+0x1160>
+   15fb0:	sub    %r14,%rdx
+   15fb3:	test   %rax,%rax
+   15fb6:	js     1608e <run_combiner+0x123e>
+   15fbc:	movabs $0x7fffffffffffffff,%rcx
+   15fc6:	sub    %rax,%rcx
+   15fc9:	cmp    %rdx,%rcx
+   15fcc:	jb     1608e <run_combiner+0x123e>
+   15fd2:	lea    (%rdx,%rax,1),%rcx
+   15fd6:	lock cmpxchg %rcx,0x0(%rip)        # 15fdf <run_combiner+0x118f>
+   15fdf:	jne    15fb3 <run_combiner+0x1163>
+   15fe1:	cmpb   $0x0,0x0(%rip)        # 15fe8 <run_combiner+0x1198>
+   15fe8:	mov    0xb8(%rsp),%r14
+   15ff0:	je     1509e <run_combiner+0x24e>
+   15ff6:	call   15ffb <run_combiner+0x11ab>
+   15ffb:	movabs $0x7ffffffffffffffe,%rsi
+   16005:	mov    %rax,%rdx
+   16008:	mov    0x0(%rip),%rax        # 1600f <run_combiner+0x11bf>
+   1600f:	cmp    %rax,%rsi
+   16012:	jb     160f6 <run_combiner+0x12a6>
+   16018:	lea    0x1(%rax),%rcx
+   1601c:	lock cmpxchg %rcx,0x0(%rip)        # 16025 <run_combiner+0x11d5>
+   16025:	jne    1600f <run_combiner+0x11bf>
+   16027:	cmp    %r14,%rdx
+   1602a:	jb     1607f <run_combiner+0x122f>
+   1602c:	mov    0x0(%rip),%rax        # 16033 <run_combiner+0x11e3>
+   16033:	sub    %r14,%rdx
+   16036:	test   %rax,%rax
+   16039:	js     1607f <run_combiner+0x122f>
+   1603b:	movabs $0x7fffffffffffffff,%rcx
+   16045:	sub    %rax,%rcx
+   16048:	cmp    %rdx,%rcx
+   1604b:	jb     1607f <run_combiner+0x122f>
+   1604d:	lea    (%rdx,%rax,1),%rcx
+   16051:	lock cmpxchg %rcx,0x0(%rip)        # 1605a <run_combiner+0x120a>
+   1605a:	je     1509e <run_combiner+0x24e>
+   16060:	jmp    16036 <run_combiner+0x11e6>
+   16062:	mov    0x20(%r12),%rax
+   16067:	xor    %edi,%edi
+   16069:	lea    0x2b8(%rax),%rsi
+   16070:	call   16075 <run_combiner+0x1225>
+   16075:	jmp    151df <run_combiner+0x38f>
+   1607a:	call   1607f <run_combiner+0x122f>
+   1607f:	movl   $0x1,0x0(%rip)        # 16089 <run_combiner+0x1239>
+   16089:	jmp    1509e <run_combiner+0x24e>
+   1608e:	movl   $0x1,0x0(%rip)        # 16098 <run_combiner+0x1248>
+   16098:	jmp    15fe1 <run_combiner+0x1191>
+   1609d:	movl   $0x1,0x0(%rip)        # 160a7 <run_combiner+0x1257>
+   160a7:	jmp    15fa0 <run_combiner+0x1150>
+   160ac:	call   160b1 <run_combiner+0x1261>
+   160b1:	mov    %rax,0xb8(%rsp)
+   160b9:	xor    %eax,%eax
+   160bb:	cmpb   $0x0,0x0(%rip)        # 160c2 <run_combiner+0x1272>
+   160c2:	je     15db8 <run_combiner+0xf68>
+   160c8:	call   160cd <run_combiner+0x127d>
+   160cd:	jmp    15db8 <run_combiner+0xf68>
+   160d2:	add    $0x10,%rdx
+   160d6:	mov    %rdx,0x98(%rsp)
+   160de:	mov    0x8(%r13),%rax
+   160e2:	mov    %rax,0xa0(%rsp)
+   160ea:	mov    0x0(%rip),%rax        # 160f1 <run_combiner+0x12a1>
+   160f1:	jmp    15d43 <run_combiner+0xef3>
+   160f6:	movl   $0x1,0x0(%rip)        # 16100 <run_combiner+0x12b0>
+   16100:	jmp    16027 <run_combiner+0x11d7>
+   16105:	mov    0x10(%rsp),%rax
+   1610a:	mov    %rax,0x288(%r13)
+   16111:	jmp    15970 <run_combiner+0xb20>
+   16116:	cmp    $0x2,%edx
+   16119:	je     16168 <run_combiner+0x1318>
+   1611b:	test   %edx,%edx
+   1611d:	jne    15970 <run_combiner+0xb20>
+   16123:	test   %r9d,%r9d
+   16126:	je     15c81 <run_combiner+0xe31>
+   1612c:	cmpb   $0x0,0x2d(%rax)
+   16130:	jne    15970 <run_combiner+0xb20>
+   16136:	jmp    15c81 <run_combiner+0xe31>
+   1613b:	incq   %gs:0x0(%rip)        # 16143 <run_combiner+0x12f3>
+   16143:	jmp    15a99 <run_combiner+0xc49>
+   16148:	cmpl   $0x32303043,0x1c(%rax)
+   1614f:	jne    15c35 <run_combiner+0xde5>
+   16155:	xor    %r9d,%r9d
+   16158:	cmpl   $0x4241444b,0x29(%rax)
+   1615f:	sete   %r9b
+   16163:	jmp    15c35 <run_combiner+0xde5>
+   16168:	test   %r9d,%r9d
+   1616b:	je     15970 <run_combiner+0xb20>
+   16171:	cmpb   $0x2,0x2d(%rax)
+   16175:	jne    15970 <run_combiner+0xb20>
+   1617b:	cmpq   $0x0,0x0(%rip)        # 16183 <run_combiner+0x1333>
+   16183:	je     15970 <run_combiner+0xb20>
+   16189:	cmpq   $0x0,0x0(%rip)        # 16191 <run_combiner+0x1341>
+   16191:	jne    15c81 <run_combiner+0xe31>
+   16197:	jmp    15970 <run_combiner+0xb20>
+   1619c:	lock cmpxchg %edi,(%rsi)
+   161a0:	cmp    $0x100,%eax
+   161a5:	jne    15f24 <run_combiner+0x10d4>
+   161ab:	orb    $0x4,0x27(%r13)
+   161b0:	mov    0xc(%r12),%eax
+   161b5:	mov    %eax,0x40(%r14)
+   161b9:	cmpq   $0x0,0xc0(%rsp)
+   161c2:	jne    1624d <run_combiner+0x13fd>
+   161c8:	movb   $0x1,0x1f(%r13)
+   161cd:	mov    0x0(%rip),%rax        # 161d4 <run_combiner+0x1384>
+   161d4:	movb   $0x1,0xf0(%rsp)
+   161dc:	incq   %gs:0xc10(%rax)
+   161e4:	cmpb   $0x0,0xf1(%rsp)
+   161ec:	je     161f6 <run_combiner+0x13a6>
+   161ee:	incq   %gs:0xc18(%rax)
+   161f6:	mov    0xc8(%rsp),%edx
+   161fd:	mov    0x80(%rsp),%rdi
+   16205:	lea    0x88(%rsp),%rsi
+   1620d:	mov    0x98(%rsp),%rax
+   16215:	and    $0xfffffffd,%edx
+   16218:	cmp    $0x1,%edx
+   1621b:	lea    0x80(%rsp),%rdx
+   16223:	jne    16234 <run_combiner+0x13e4>
+   16225:	call   1622a <run_combiner+0x13da>
+   1622a:	mov    0x78(%rsp),%r12
+   1622f:	jmp    15012 <run_combiner+0x1c2>
+   16234:	push   %rbp
+   16235:	sub    $0x8,%rsp
+   16239:	call   1623e <run_combiner+0x13ee>
+   1623e:	add    $0x8,%rsp
+   16242:	pop    %rbp
+   16243:	mov    0x78(%rsp),%r12
+   16248:	jmp    15012 <run_combiner+0x1c2>
+   1624d:	cmpb   $0x0,0x0(%rip)        # 16254 <run_combiner+0x1404>
+   16254:	je     1625e <run_combiner+0x140e>
+   16256:	call   1625b <run_combiner+0x140b>
+   1625b:	mov    %rax,%r15
+   1625e:	mov    %r15,0x100(%rsp)
+   16266:	jmp    161c8 <run_combiner+0x1378>
+   1626b:	ud2    
+   1626d:	movb   $0x1,0x21(%r13)
+   16272:	jmp    15ea2 <run_combiner+0x1052>
+   16277:	movb   $0x0,0x21(%r13)
+   1627c:	jmp    15e91 <run_combiner+0x1041>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

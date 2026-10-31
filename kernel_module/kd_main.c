@@ -21,6 +21,7 @@
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_comm.h"
+#include "kd_api_provider.h"
 #include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
@@ -98,13 +99,18 @@ static int __init kdlock_km_init(void)
 
 	/* Device calls can acquire the KD publication mutex as soon as cdev_add
 	 * exposes them. Its private OSQ and all execution services must be ready. */
-	ret = kd_sys_init();
+	ret = kd_api_provider_init();
 	if (ret)
 		goto err_mutex;
+	ret = kd_sys_init();
+	if (ret)
+		goto err_api;
 
 	KD_PR_INFO("kd kernel module init: direct spin/mutex APIs; global hooks disabled\n");
 	return 0;
 
+err_api:
+	kd_api_provider_exit();
 err_mutex:
 	kd_mutex_exit();
 err_spinlock:
@@ -126,6 +132,7 @@ err_source:
 static void __exit kdlock_km_exit(void)
 {
 	kd_sys_exit();
+	kd_api_provider_exit();
 	synchronize_rcu();
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();

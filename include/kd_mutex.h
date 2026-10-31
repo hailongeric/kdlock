@@ -74,6 +74,10 @@ struct kd_mutex_osq_node {
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.
  */
+struct kd_origin_request;
+#define KD_MUTEX_RESUME_NATIVE 1U
+#define KD_MUTEX_RESUME_INSTRUCTION 2U
+
 struct kd_mutex_node {
 	struct kd_mutex_node *next;
 	unsigned long gsbase; /* logical waiter's kernel GS base   */
@@ -109,10 +113,14 @@ struct kd_mutex_node {
 	 * the five-line stride and isolate the producer's next pointer too. */
 	u8 completed;
 	u8 locked;
-	bool native_resume;
+	u8 native_resume; /* cold outcome: native suffix or retained instruction */
 	/* Cold native suffix metadata, written only before a native release wake. */
 	unsigned int native_spin_pins;
-	struct kd_exec_frame *native_transfer;
+	union {
+		struct kd_exec_frame *native_transfer;
+		/* Only KD_MUTEX_RESUME_INSTRUCTION owns this alternative. */
+		struct kd_origin_request *origin_request;
+	};
 };
 
 void kd_mutex_init(struct kd_mutex *lock);

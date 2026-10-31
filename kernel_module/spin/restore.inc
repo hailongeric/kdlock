@@ -45,11 +45,12 @@
 	[reg_si] "i"(offsetof(struct kd_regs, si)), \
 	[reg_di] "i"(offsetof(struct kd_regs, di))
 
-/* Reached only through a checked instruction marker. All C cleanup and
+/* Reached only through a checked instruction marker or a completed original-
+ * task instruction's validated post-state. All C cleanup and
  * scheduling ran before this call. Merge source arithmetic flags into the
  * waiter's control flags; installing the executor's IF/DF/AC would change
  * task context. After POPF, the return path must preserve flags through the
- * untouched original instruction. The verified guest's return thunks meet
+ * original instruction boundary. The verified guest's return thunks meet
  * that contract; use its configured mitigation instead of a bare return. */
 static __attribute__((noipa, noreturn)) noinline notrace void
 kd_jump_to_saved_regs_with_flags(struct kd_regs *regs)
@@ -127,7 +128,8 @@ jump_to_saved_regs(struct kd_regs *regs)
 __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs_in_cs(struct kd_regs *regs)
 {
-	if (regs->orig_ax == KD_REG_NATIVE_ESCAPE_TAG)
+	if (regs->orig_ax == KD_REG_NATIVE_ESCAPE_TAG ||
+	    regs->orig_ax == KD_REG_ORIGIN_SUFFIX_TAG)
 		kd_jump_to_saved_regs_with_flags(regs);
 	asm volatile("movq %c[reg_r15](%%rdi), %%r15\n"
 				 "movq %c[reg_r14](%%rdi), %%r14\n"

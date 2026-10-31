@@ -14,9 +14,10 @@ import indirect_jump
 import solve_bug
 import special_inst
 import native_escape
+import origin_instructions
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
-from miasm.expression.expression import ExprLoc
+from miasm.expression.expression import ExprId, ExprLoc, ExprMem
 from translation_scope import find_resumable_call_continuations
 
 
@@ -40,7 +41,7 @@ def wrapper_context_inputs(assembly):
 
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
-    preserve_flags=True, root_only=False,
+    preserve_flags=True, root_only=False, origin_sites=None,
 ):
     dispatch_targets = {entry} if root_only else set(block_dict)
     if not root_only:
@@ -54,6 +55,10 @@ def write_entry_dispatch(
     f.write("MOV     R14, PT_RIP\n")
     if preserve_flags:
         f.write("PUSHFQ\n")
+    if origin_sites:
+        if not preserve_flags or root_only:
+            raise ValueError("original-task instruction dispatch requires a resumable flags contract")
+        origin_instructions.entry_dispatch(f, origin_sites)
     for offset in ordered_targets:
         f.write(f"CMP     R14, 0x{offset:x}\n")
         target = (f"kd_dispatch_{offset:x}" if preserve_flags else
@@ -77,17 +82,22 @@ def write_entry_dispatch(
             if body_witness:
                 f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
             f.write(f"JMP     loc_{offset:x}\n")
+    if origin_sites:
+        origin_instructions.continuation_dispatch(f, origin_sites)
 
 
 def emit_jit_assembly(
     entry, block_dict, db_dict, jump_table, missing_callees,
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
     terminal_clobber_unlocks=(),
+    terminal_unlock_aliases=None,
+    indirect_call_native=False,
     native_escapes=False,
     root_native_escape=False,
     address_guards=None,
     native_calls=None,
     trusted_source=False,
+    origin_sites=None,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -99,6 +109,8 @@ def emit_jit_assembly(
     continuation_targets.intersection_update(
         line.offset for block in block_dict.values() for line in block.lines
     )
+    if origin_sites:
+        continuation_targets.update(line.offset + line.l for line, _ in origin_sites.values())
     continuation_labels = continuation_targets - set(block_dict)
     emitted_continuation_labels = set()
     emitted_offsets = {line.offset for block in block_dict.values() for line in block.lines}
@@ -110,6 +122,7 @@ def emit_jit_assembly(
         f, entry, block_dict, continuation_targets, body_witness=body_witness,
         preserve_flags=True,
         root_only=root_native_escape or native_calls is not None,
+        origin_sites=origin_sites,
     )
     budget_rips = []
 
@@ -179,13 +192,23 @@ def emit_jit_assembly(
                       else None)
             if address_guards is not None:
                 f.write(address_guards.emit(line, reg_map))
-            if native_escapes and native_escape.descriptor(line):
+            if origin_sites and line.offset in origin_sites:
+                diagnostics.warn("ORIGIN_INSTRUCTION_SERVICE", "emit_waiter_instruction",
+                                 "retain the same immutable JIT successor after one original-task instruction",
+                                 source_ip=hex(line.offset), instruction=line.name)
+                f.write(origin_instructions.marker(line, reg_map))
+                # The wrapper will import the FULL packet, not the predecessor's
+                # physical scratch allocation, when it returns at this label.
+                reg_map = conflict.block_init()
+            elif native_escapes and native_escape.descriptor(line):
                 diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
-                                 "stop before source instruction and disable future delegation",
+                                 "resume this invocation's native suffix before the source instruction",
                                  source_ip=hex(line.offset), instruction=line.name)
                 f.write(special_inst.native_escape_marker(line, reg_map))
             elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
-                f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
+                f.write(special_inst.terminal_clobber_unlock(
+                    target, offset, reg_map,
+                    identity_target=(terminal_unlock_aliases or {}).get(target)))
             elif native_calls is not None and target in native_calls.services:
                 f.write(native_calls.emit(line, offset, target, reg_map))
             else:
@@ -197,7 +220,12 @@ def emit_jit_assembly(
                 if temp_j == 0:
                     f.write("POPFQ\n")
         f.write("\n\n")
-    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True))
+    indirect_calls = {line.offset + line.l: line.offset
+                      for block in block_dict.values() for line in block.lines
+                      if indirect_call_native and line.name == "CALL" and line.args and
+                      isinstance(line.args[0], (ExprId, ExprMem))}
+    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True,
+                                        indirect_calls=indirect_calls))
     direct_targets = set(native_calls.services) if native_calls is not None else set()
     f.write(indirect_jump.make_callee_table(
         [target for target in missing_callees if target not in direct_targets],
@@ -247,4 +275,9 @@ def emit_jit_assembly(
         # after its exit code, placing the validated directory at image end.
         result = ("#ifndef KD_EMIT_GUARD_DIRECTORY\n" + result + "#else\n"
                   + address_guards.metadata() + "#endif\n")
+    if origin_sites:
+        if native_calls is not None or (address_guards is not None and address_guards.sites):
+            raise ValueError("original-task instruction metadata cannot share another trailer")
+        result = ("#ifndef KD_EMIT_ORIGIN_DIRECTORY\n" + result + "#else\n"
+                  + origin_instructions.metadata(origin_sites) + "#endif\n")
     return result

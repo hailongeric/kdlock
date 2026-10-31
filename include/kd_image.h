@@ -137,11 +137,74 @@ struct kd_image_upload {
 	unsigned long covered;
 };
 
+#define KD_ORIGIN_SITE_MAX 64U
+struct kd_origin_site {
+	unsigned long ip;
+	unsigned long next_ip;
+	unsigned int continuation_offset;
+	unsigned char kind;
+	unsigned char length;
+	unsigned char reserved[2];
+	unsigned char opcode[8];
+} __attribute__((packed));
+struct kd_origin_footer {
+	unsigned char magic[8];
+	unsigned int offset;
+	unsigned int count;
+} __attribute__((packed));
+
+/* Same immutable source/continuation directory for publisher and executor.
+ * This contract cannot share a footer with direct calls or address guards. */
+static inline const struct kd_origin_site *
+kd_image_origin_sites(const struct kd_jit_image *image, unsigned int *count)
+{
+	const unsigned char *code;
+	const struct kd_origin_footer *footer;
+
+	if (!image || !image->code ||
+	    image->requirements != (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ORIGIN_INSN) ||
+	    image->length < KD_IMAGE_HEADER_SIZE + sizeof(*footer))
+		return 0;
+	code = image->code;
+	footer = (const void *)(code + image->length - sizeof(*footer));
+	if (__builtin_memcmp(footer->magic, "KDOS0001", 8) || !footer->count ||
+	    footer->count > KD_ORIGIN_SITE_MAX || footer->offset < KD_IMAGE_HEADER_SIZE ||
+	    (unsigned long)footer->offset + footer->count * sizeof(struct kd_origin_site) !=
+		image->length - sizeof(*footer))
+		return 0;
+	*count = footer->count;
+	return (const void *)(code + footer->offset);
+}
+
+static inline int kd_image_origin_site_valid(const struct kd_jit_image *image,
+					    const struct kd_origin_site *site)
+{
+	const struct kd_origin_site *sites;
+	unsigned int i, count;
+
+	sites = kd_image_origin_sites(image, &count);
+	if (!sites || !site->ip || site->ip > ~0UL - site->length ||
+	    site->next_ip != site->ip + site->length ||
+	    site->continuation_offset < KD_IMAGE_HEADER_SIZE ||
+	    site->continuation_offset >= (unsigned long)((const char *)sites - (const char *)image->code) ||
+	    site->reserved[0] || site->reserved[1])
+		return 0;
+	if (!((site->kind == 1 && site->length == 2 && site->opcode[0] == 0x0f && site->opcode[1] == 0x31) ||
+	      (site->kind == 2 && site->length == 3 && site->opcode[0] == 0x0f && site->opcode[1] == 0x01 && site->opcode[2] == 0xf9) ||
+	      (site->kind == 3 && site->length == 2 && site->opcode[0] == 0x0f && site->opcode[1] == 0xa2)))
+		return 0;
+	for (i = site->length; i < sizeof(site->opcode); i++)
+		if (site->opcode[i])
+			return 0;
+	return 1;
+}
+
 struct kd_jit_image *kd_image_alloc(void);
 struct kd_jit_image *kd_image_alloc_direct(void);
 int kd_image_direct_available(void);
 void kd_image_discard(struct kd_jit_image *image);
 int kd_image_validate_address_guards(const struct kd_jit_image *image);
+int kd_image_validate_origin_sites(const struct kd_jit_image *image);
 int kd_image_relocate_direct(struct kd_jit_image *image);
 int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 		     unsigned long base_generation);

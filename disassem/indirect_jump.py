@@ -15,12 +15,13 @@ class ReturnFlowError(ValueError):
         self.offset = offset
 
 
-def find(blocks, db_dict, pre_jump_table, *, max_visits=65536):
+def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=()):
     # Stage the union with learned IJ history. On failure the caller must
     # reject, never observe a partially populated return whitelist.
     jump_table = {source: set(targets) for source, targets in pre_jump_table.items()}
     callers, returns = defaultdict(set), defaultdict(set)
     missing_callees = set()
+    terminal_targets = set(terminal_targets)
     work = 0
 
     def spend(amount, offset):
@@ -52,6 +53,15 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536):
                 (name.startswith("J") or name == "CALL") and not direct
             ):
                 jump_table.setdefault(offset, set())
+                if name == "CALL":
+                    # A learned indirect CALL has already pushed its real
+                    # return word. Listed terminal targets use a native stub,
+                    # never a decoded body or an invented return edge.
+                    missing_callees.update(jump_table[offset] & terminal_targets)
+                else:
+                    # Native CALL contracts do not authorize a RET/JMP miss
+                    # to enter the same function with an unrelated stack.
+                    jump_table[offset].difference_update(terminal_targets)
                 if name == "RET":
                     returns[start].add(offset)
 
@@ -90,8 +100,9 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536):
     return sorted(missing_callees)
 
 
-def make_jump_table(jump_table, *, preserve_flags=False):
+def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
     ret_str = ""
+    indirect_calls = indirect_calls or {}
     for offset, psb_targets in sorted(jump_table.items()):
         ret_str += "ij_" + hex(offset)[2:] + ":\n"
         if preserve_flags:
@@ -106,8 +117,17 @@ def make_jump_table(jump_table, *, preserve_flags=False):
                                        if preserve_flags else f"loc_{psb_tgt:x}"])
         if preserve_flags:
             ret_str += "POPFQ\n"
-        ret_str += make_inst("MOVABS", ["R15", hex(offset)])
-        ret_str += make_inst("JMP", ["ij_failed"])
+        if offset in indirect_calls:
+            # Only an actual source CALL reaches this stub, after target
+            # evaluation and the virtual push. orig_ax is provenance scratch
+            # for the distinct FULL exit, never a native FLAGS-restore tag.
+            ret_str += make_inst("MOVABS", ["R15", hex(indirect_calls[offset])])
+            ret_str += make_inst("MOV", ["QWORD PTR[REG_BANK + KD_REG_ORIG_AX]", "R15"])
+            ret_str += make_inst("MOV", ["Stack_IJ", "11"])
+            ret_str += make_inst("JMP", ["full_exit"])
+        else:
+            ret_str += make_inst("MOVABS", ["R15", hex(offset)])
+            ret_str += make_inst("JMP", ["ij_failed"])
         if preserve_flags:
             for target in sorted(set(psb_targets)):
                 ret_str += f"kd_ij_{offset:x}_{target:x}:\nPOPFQ\n"

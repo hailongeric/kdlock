@@ -1,0 +1,85 @@
+{
+  "completed": true,
+  "source_commit": "8617e97c02432a7c0b931aa8263d5edd0f6eb5b8",
+  "phase": "origin",
+  "boot_id": "677b7afa-5358-4ece-a650-5f4a4adecd55",
+  "performance_accepted": false,
+  "timing_started": false,
+  "driver_pid": 1140095,
+  "started": 1793333665.762065,
+  "basic_campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-20261030",
+  "inputs": {
+    "controller.py": "2da7279db96b444f1bded26724349177793787024c6dc937b154b9acbe44dc53",
+    "unit.json": "455fed932ddf38decb6bfe93ee55a79345c5144afb750f120a4a7273a94b39f0",
+    "sync.json": "c38e1e0f6ae448c0b5b1155822c50b50041c496ac148c7785a2c7015645ac58a",
+    "host-before.json": "a3ebfde0a464133b79d6baa9a261417f9b4db4760c27c8cde397b3c84f04466f",
+    "host-reference.json": "cbdd4de1bd9ad2abc143658a6eaa0c8e77d3f77fdf61151d89c365d0a2d539a0"
+  },
+  "host_admission": {
+    "mode": "FUNCTIONAL_ONLY",
+    "performance_accepted": false,
+    "timing_gate": "NOT_APPLICABLE",
+    "original_threads": 67,
+    "observed_threads": 68,
+    "additional_workers": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "start_ticks": 172078012,
+        "tid": 738806
+      }
+    ],
+    "memory_bindings": [
+      [
+        "7469b7c00000",
+        "bind:1",
+        4
+      ],
+      [
+        "746cb7e00000",
+        "bind:0",
+        4
+      ]
+    ]
+  },
+  "basic_dependency": {
+    "campaign": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-20261030",
+    "owner_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-20261030/basic-control/owner.json",
+    "owner_sha256": "ef05f576931ca8c7811e98d2159a066a8f8193722c1e99fc0da965a280c5073c",
+    "result_path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-20261030/basic/result.json",
+    "result_sha256": "b72c7caad2ab243bf9f5fd48a376923111a6d0988d3911f2f3fdbef9de5534e4"
+  },
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "tests/kernel/jit_continuation/run.py",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "--kernel-variant",
+    "kdlock1",
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/continuation-live-8617e97c-r2-20261030/origin",
+    "--cpus",
+    "0-15",
+    "--warmup-iterations",
+    "10000",
+    "--iterations",
+    "10000",
+    "--phase-timeout",
+    "120",
+    "--family",
+    "mutex",
+    "--mutex-api",
+    "public",
+    "--origin-instructions"
+  ],
+  "pid": 1140096,
+  "state": "EXITED",
+  "returncode": 0,
+  "finished": 1793333707.0718734,
+  "final_idle": true,
+  "result_sha256": "6e4cd29779e344f08e52cd069c73378810c4e7720d0f3bcbadc375b939469086"
+}

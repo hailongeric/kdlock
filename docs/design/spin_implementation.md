@@ -24,6 +24,21 @@ make the node pools or unlock protocols interchangeable.
 
 ## Public API and caller state
 
+The October 30 candidate adds a saved context discriminator for physical root
+waiters. It is captured after the provider's single preemption pin and before
+publication: task context, exact preempt count one, no BH/migration/pre-existing
+PREEMPT_RCU nesting, plus the caller's IRQ-enable state. The combiner compares
+that saved discriminator against its actual context before either simple or
+generic root execution. A mismatch leaves the unexecuted request queued for
+ordinary local acquisition; it does not replay or mark it complete. The field
+uses existing node padding, and a batch caches its context only across simple
+paired bodies; generic service returns refresh the next-root context.
+
+This is a root admission contract, not permission to translate arbitrary
+inline IRQ/preempt/RCU changes or CPU-local operations. Virtual nested requests
+retain their separate exact-ticket/ledger contract. Explicit IRQ/BH APIs remain
+local. Live validation and nano acceptance of this candidate are pending.
+
 Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization and
 [`kd_spin_api.h`](../../include/kd_spin_api.h) for ordinary paired operations.
 The public macros use the shared ABI1 assembly boundary to call

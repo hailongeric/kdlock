@@ -20,6 +20,7 @@
 #include <linux/version.h>
 
 #include "exe.h"
+#include "kd_api_provider.h"
 #include "kd_lock.h"
 #include "kd_mutex.h"
 #include "kd_source.h"
@@ -56,6 +57,7 @@ static int kd_dev_open(struct inode *inode, struct file *file)
 static int kd_dev_release(struct inode *inode, struct file *file)
 {
 	(void)inode;
+	kd_api_provider_release(file);
 	/* dup/fork share one open description; only its final release drops this. */
 	if (file->private_data) {
 		struct kd_image_upload *upload = file->private_data;
@@ -75,7 +77,8 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 			KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |
 			KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |
 			KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |
-			KD_JIT_CAP_ROOT_NATIVE_ESCAPE,
+			KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |
+			KD_JIT_CAP_ORIGIN_INSTRUCTION,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -108,6 +111,10 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 	int ret;
 
 	switch (command) {
+	case KD_API_SELECT:
+	case KD_API_CANCEL:
+	case KD_API_QUERY:
+		return kd_api_provider_ioctl(file, command, arg);
 	case KD_JIT_CAPS:
 		/* The open description pins this provider. Report immutable build
 		 * semantics even while draining; this query opens no admission,
@@ -307,6 +314,9 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			upload->image->requirements = head.requirements;
 			upload->image->entry_abi = head.entry_abi;
 			ret = kd_image_validate_address_guards(upload->image);
+			if (ret)
+				return ret;
+			ret = kd_image_validate_origin_sites(upload->image);
 			if (ret)
 				return ret;
 			ret = kd_image_relocate_direct(upload->image);

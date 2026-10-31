@@ -182,6 +182,8 @@ class DeviceSessionTests(unittest.TestCase):
         self.assertFalse(device_session._audited_strings)
         self.assertFalse(device_session._direct_strings)
         self.assertFalse(device_session._root_native_escape)
+        self.assertFalse(device_session._indirect_call)
+        self.assertFalse(device_session._origin_instruction)
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.mutex_stack_bytes()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
@@ -200,6 +202,10 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.direct_strings()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.root_native_escape()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.indirect_call()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.origin_instruction()
         with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(len(self.caps_queries), 2)
@@ -221,7 +227,8 @@ class DeviceSessionTests(unittest.TestCase):
                         'native_escape': False, 'address_guard': False,
                         'string_services': False, 'string_write': False,
                         'audited_strings': False, 'direct_strings': False,
-                        'root_native_escape': False})
+                        'root_native_escape': False, 'indirect_call': False,
+                        'origin_instruction': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -305,7 +312,7 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._audited_strings)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.audited_strings()
-        for version, features in ((9, 1019), (10, 635), (13, 1019)):
+        for version, features in ((9, 1019), (10, 635), (14, 1019)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -325,7 +332,7 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._direct_strings)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.direct_strings()
-        for version, features in ((10, 2043), (11, 1531), (11, 1659), (13, 2043)):
+        for version, features in ((10, 2043), (11, 1531), (11, 1659), (14, 2043)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -347,12 +354,53 @@ class DeviceSessionTests(unittest.TestCase):
                     device_session.root_native_escape()
         # Old/future providers and a root bit without the shared flags contract
         # cannot opt into the new retained-root restore merely by setting bit11.
-        for version, features in ((11, 4091), (13, 4091), (12, 2075)):
+        for version, features in ((11, 4091), (14, 4091), (12, 2075)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                     self.fail("unnegotiated root marker restore admitted")
                 self.assertFalse(device_session._root_native_escape)
+
+    def test_indirect_call_exit_requires_optional_bit_on_this_v12_lease(self):
+        for version, features, expected in (
+                (11, 2043, False), (12, 59, False), (12, 4091, False),
+                (12, 27 | 4096, True), (12, 59 | 4096, True),
+                (12, 4091 | 4096, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session() as fd:
+                    self.assertEqual(device_session.indirect_call(), expected)
+                    self.caps_packet = device_session.CAPS_STRUCT.pack(12, 59 | 4096, 256, 8192)
+                    self.assertEqual(device_session.indirect_call(), expected)
+                    self.assertEqual(self.caps_queries[-1], fd)
+                self.assertFalse(device_session._indirect_call)
+                with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+                    device_session.indirect_call()
+        for version in (11, 14):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 4096, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+                self.fail("unnegotiated indirect CALL exit admitted")
+            self.assertFalse(device_session._indirect_call)
+
+    def test_origin_instruction_requires_v13_flags_contract_and_this_lease(self):
+        for version, features, expected in ((12, 59, False), (13, 59, False),
+                                            (13, 59 | 8192, True),
+                                            (13, 59 | 4096 | 8192, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session() as fd:
+                    self.assertEqual(device_session.origin_instruction(), expected)
+                    self.caps_packet = device_session.CAPS_STRUCT.pack(13, 59 | 8192, 256, 8192)
+                    self.assertEqual(device_session.origin_instruction(), expected)
+                    self.assertEqual(self.caps_queries[-1], fd)
+                self.assertFalse(device_session._origin_instruction)
+                with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+                    device_session.origin_instruction()
+        for version,features in ((12,59|8192),(13,27|8192),(14,59|8192)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version,features,256,8192)
+            with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+                self.fail("unnegotiated original-task instruction contract admitted")
+            self.assertFalse(device_session._origin_instruction)
 
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
@@ -362,7 +410,7 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.CAPS_STRUCT.pack(*values)
             for values in (
                 (0, 1, 256, 0),
-                (13, 1, 256, 0),
+                (14, 1, 256, 0),
                 (1, 3, 256, 0),
                 (1, 0, 256, 0),
                 (1, 1, 0, 0),

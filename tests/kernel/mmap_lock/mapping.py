@@ -34,6 +34,10 @@ def chain_proof(row, mode):
     frames = [(name, int(offset, 16)) for name, offset in
               re.findall(r'\] ([A-Za-z0-9_]+)\+0x([0-9a-f]+)/', row['raw_stack'])]
     expected = [(chain['waiter'], row['wait_return_offset'])]
+    for index, frame in enumerate(chain.get('intermediate', []), 1):
+        rt.require(len(frames) > index and frames[index][0] == frame['symbol'] and
+                   frames[index][1] in frame['return_offsets'], 'intermediate writer return differs')
+        expected.append(frames[index])
     if chain['waiter'] != SITES['adapter']:
         expected.append((SITES['adapter'], chain['adapter_return']))
     expected.append((row['caller'], SITES['sites'][row['caller']]['return_offset']))
@@ -184,7 +188,8 @@ def main():
         rt.write_json(out / 'result.json', result)
         chain = SITES['chains'][a.mode]
         proof_args = [str(SITES['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
-        proof_args += [chain['waiter'], *map(str, chain['wait_returns']), str(chain['adapter_return']), SITES['adapter']]
+        proof_args += [linux70_sites.waiter_argument(chain), *map(str, chain['wait_returns']),
+                       str(chain['adapter_return']), SITES['adapter']]
         plan = [('scope', 1, 1), ('cycle', 1, 1000), ('cycle', 16, 5000),
                 ('lifetime', 1, 1), ('lifetime', 16, 1), ('exit', 1, 1)]
         for i, (mode, count, iterations) in enumerate(plan):
