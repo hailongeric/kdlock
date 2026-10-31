@@ -48,6 +48,15 @@ static void atomic_long_inc(long *counter)
 }
 static void smp_mb__after_atomic(void)
 { assert(stage == 3); after++; stage = 4; }
+/* Model the full ordering of the returning atomic primitive. The mutation
+ * cases replace it with individual steps to retain ordering controls. */
+static long atomic_long_inc_return(long *counter)
+{
+    smp_mb__before_atomic();
+    atomic_long_inc(counter);
+    smp_mb__after_atomic();
+    return *counter;
+}
 static long atomic_long_read_acquire(long *counter)
 {
     assert(counter == &sem.admission && stage == 4);

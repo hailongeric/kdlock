@@ -128,9 +128,7 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 	/* Publish before checking the phase again. This full barrier and the
 	 * writer's reservation RMW prohibit both missing each other's admission.
 	 * A speculative count can overlap a writer, but cannot touch its payload. */
-	smp_mb__before_atomic();
-	atomic_long_inc(&sem->readers);
-	smp_mb__after_atomic();
+	atomic_long_inc_return(&sem->readers);
 	if (!atomic_long_read_acquire(&sem->admission))
 		return 1;
 	kd_up_read(sem);
@@ -174,32 +172,24 @@ out:
 	return acquired;
 }
 
-static noinline void kd_rwsem_read_slowpath(struct kd_rwsem *sem)
+void kd_down_read(struct kd_rwsem *sem)
 {
 	unsigned int retries = 8;
 
-	/* The entry already consumed the first failed probe. Keep its scheduler
-	 * check and pause, and at most seven more probes, before queueing. */
+	might_sleep();
+	/* Avoid a queue round trip when a brief writer phase is about to end.
+	 * Longer contention uses one optimistic admission head, not an entire
+	 * cohort retrying the shared count for the full polling budget. */
 	do {
+		if (kd_down_read_trylock(sem))
+			return;
 		if (need_resched())
 			break;
 		cpu_relax();
-		if (!--retries)
-			break;
-		if (kd_down_read_trylock(sem))
-			return;
-	} while (true);
+	} while (--retries);
 	if (kd_rwsem_spin_read(sem))
 		return;
 	wait_event(sem->phase_wait, kd_down_read_trylock(sem));
-}
-
-void kd_down_read(struct kd_rwsem *sem)
-{
-	might_sleep();
-	if (likely(kd_down_read_trylock(sem)))
-		return;
-	kd_rwsem_read_slowpath(sem);
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
