@@ -38,8 +38,9 @@ int main(int argc,char **argv)
     fixture_worker=&w;fixture_limit=strtoul(argv[2],NULL,10);
     CHECK(fixture_limit && fixture_limit<=8);
     for(unsigned i=0;i<7;i++)fixture_samples[i]=argv[i+3];
-    if(!strcmp(argv[1],"kd")) {
-        chain_waiter="kd_mmap_down_write_killable";
+    if(!strcmp(argv[1],"kd") || !strcmp(argv[1],"gate") || !strncmp(argv[1],"chain=",6)) {
+        chain_waiter=!strcmp(argv[1],"kd") ? "kd_mmap_down_write_killable" :
+          !strcmp(argv[1],"gate") ? "kd_mmap_local_lock_slow_signal|kd_mmap_down_write_killable@69:77" : argv[1]+6;
         chain_wait[0]=chain_wait[1]=203;chain_adapter=43;
         chain_acquire="kd_mmap_write_lock_killable";
     } else if(!strcmp(argv[1],"native")) {
@@ -81,10 +82,12 @@ class WriterObservation(unittest.TestCase):
     def sample(self, mode='kd', caller='__vm_munmap'):
         offset = {'__vm_munmap':136, 'vm_mmap_pgoff':231}[caller]
         frames = [(caller,offset)]
-        if mode in ('kd','native'):
-            frames.insert(0,('kd_mmap_write_lock_killable',43 if mode=='kd' else 60))
-        if mode=='kd':
-            frames.insert(0,('kd_mmap_down_write_killable',203))
+        if mode in ('kd','native','gate'):
+            frames.insert(0,('kd_mmap_write_lock_killable',60 if mode=='native' else 43))
+        if mode in ('kd','gate'):
+            frames.insert(0,('kd_mmap_down_write_killable',69 if mode=='gate' else 203))
+        if mode=='gate':
+            frames.insert(0,('kd_mmap_local_lock_slow_signal',203))
         stack = ''.join(f'[<0>] {name}+0x{off:x}/0x200\n' for name,off in frames)
         return ['2 (mw_worker) D 0 0\n',frames[0][0],'100 200 3\n',stack,
                 '100 200 3\n',frames[0][0],'2 (mw_worker) D 0 0\n']
@@ -97,7 +100,7 @@ class WriterObservation(unittest.TestCase):
         return rows
 
     def test_exact_native_kd_and_historical_classifier_paths(self):
-        for mode in ('native','kd','legacy'):
+        for mode in ('native','kd','legacy','gate'):
             for caller in ('vm_mmap_pgoff','__vm_munmap'):
                 with self.subTest(mode=mode,caller=caller):
                     sample=self.sample(mode,caller);rows=self.invoke(sample,mode=mode)
@@ -112,6 +115,25 @@ class WriterObservation(unittest.TestCase):
                         self.assertEqual(diagnostic[key],sample[index])
                     self.assertEqual(rows[1]['event'],'writer_stack')
                     self.assertEqual(rows[1]['caller'],caller)
+
+    def test_gate_intermediate_return_is_required_and_tail_frame_is_absent(self):
+        sample=self.sample('gate')
+        for offset in ('45','4d'):
+            changed=sample.copy();changed[3]=changed[3].replace('+0x45/','+0x'+offset+'/')
+            self.assertTrue(self.invoke(changed,mode='gate')[-1]['accepted'])
+        for stack in (sample[3].replace('+0x45/','+0x46/'),
+                      sample[3].replace('kd_mmap_down_write_killable','other'),
+                      ''.join(sample[3].splitlines(keepends=True)[0:1]+sample[3].splitlines(keepends=True)[2:]),
+                      sample[3].replace('[<0>] kd_mmap_down_write_killable',
+                          '[<0>] kd_mmap_mutex_local_lock_signal+0x1/0x200\n[<0>] kd_mmap_down_write_killable')):
+            bad=sample.copy();bad[3]=stack;rows=self.invoke(bad,mode='gate')
+            self.assertFalse(rows[-1]['accepted'])
+            self.assertIn('intermediate_symbol_or_return',rows[0]['rejections'])
+        for suffix in ('|writer@0','|writer@1:2:3','|writer@1:',
+                       '|writer@18446744073709551616','|writer@-1','|writer@1x','|writer'):
+            rows=self.invoke(sample,mode='chain=kd_mmap_local_lock_slow_signal'+suffix)
+            self.assertFalse(rows[-1]['accepted'])
+            self.assertIn('intermediate_description',rows[0]['rejections'])
 
     def test_each_rejected_chain_and_sleep_bracket_stays_rejected(self):
         base=self.sample()

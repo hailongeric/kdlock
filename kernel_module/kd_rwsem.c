@@ -2,6 +2,7 @@
 /* Reader/ordinary-writer/delegated-writer phases around an unchanged KD mutex. */
 #include <linux/module.h>
 #include <linux/limits.h>
+#include <linux/sched/signal.h>
 #include "kd_rwsem.h"
 #include "kd_lock.h"
 #include "kd_mutex_local.h"
@@ -34,6 +35,25 @@
 	if (!kd_rwsem_poll(condition)) \
 		wait_event(queue, condition); \
 } while (0)
+
+/* Signalable callers stop spinning for any signal, but only the subsequent
+ * wait decides whether that signal cancels this acquisition. Test the condition
+ * first: it can consume the caller's one exact phase reservation. */
+#define kd_rwsem_poll_state(condition, state) ({ \
+	unsigned int kd_rwsem_budget = 16384; \
+	bool kd_rwsem_ready = false; \
+	do { \
+		if (condition) { \
+			kd_rwsem_ready = true; \
+			break; \
+		} \
+		if (need_resched() || \
+		    ((state) != TASK_UNINTERRUPTIBLE && signal_pending(current))) \
+			break; \
+		cpu_relax(); \
+	} while (--kd_rwsem_budget); \
+	kd_rwsem_ready; \
+})
 
 void kd_rwsem_init(struct kd_rwsem *sem)
 {
@@ -81,8 +101,7 @@ static int kd_rwsem_drain_readers(struct kd_rwsem *sem, unsigned int state)
 {
 	long ret;
 
-	if (state == TASK_UNINTERRUPTIBLE &&
-	    kd_rwsem_poll(!atomic_long_read_acquire(&sem->readers)))
+	if (kd_rwsem_poll_state(!atomic_long_read_acquire(&sem->readers), state))
 		return 0;
 	/* An IRQ-disabled reader cannot safely wake a sleeping writer. Only
 	 * schedulable, unpublished writers wait here; one-jiffy sleeps provide
@@ -109,7 +128,9 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 	/* Publish before checking the phase again. This full barrier and the
 	 * writer's reservation RMW prohibit both missing each other's admission.
 	 * A speculative count can overlap a writer, but cannot touch its payload. */
-	atomic_long_inc_return(&sem->readers);
+	smp_mb__before_atomic();
+	atomic_long_inc(&sem->readers);
+	smp_mb__after_atomic();
 	if (!atomic_long_read_acquire(&sem->admission))
 		return 1;
 	kd_up_read(sem);
@@ -153,24 +174,32 @@ out:
 	return acquired;
 }
 
-void kd_down_read(struct kd_rwsem *sem)
+static noinline void kd_rwsem_read_slowpath(struct kd_rwsem *sem)
 {
 	unsigned int retries = 8;
 
-	might_sleep();
-	/* Avoid a queue round trip when a brief writer phase is about to end.
-	 * Longer contention uses one optimistic admission head, not an entire
-	 * cohort retrying the shared count for the full polling budget. */
+	/* The entry already consumed the first failed probe. Keep its scheduler
+	 * check and pause, and at most seven more probes, before queueing. */
 	do {
-		if (kd_down_read_trylock(sem))
-			return;
 		if (need_resched())
 			break;
 		cpu_relax();
-	} while (--retries);
+		if (!--retries)
+			break;
+		if (kd_down_read_trylock(sem))
+			return;
+	} while (true);
 	if (kd_rwsem_spin_read(sem))
 		return;
 	wait_event(sem->phase_wait, kd_down_read_trylock(sem));
+}
+
+void kd_down_read(struct kd_rwsem *sem)
+{
+	might_sleep();
+	if (likely(kd_down_read_trylock(sem)))
+		return;
+	kd_rwsem_read_slowpath(sem);
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
@@ -204,53 +233,88 @@ static void kd_rwsem_release_local(struct kd_rwsem *sem)
 	kd_rwsem_wake(&sem->phase_wait);
 }
 
+static __always_inline int kd_rwsem_wait_local(struct kd_rwsem *sem,
+					      unsigned int state)
+{
+	if (kd_rwsem_poll_state(kd_rwsem_reserve_local(sem), state))
+		return 0;
+	if (state == TASK_INTERRUPTIBLE)
+		return wait_event_interruptible(sem->phase_wait,
+			kd_rwsem_reserve_local(sem)) ? -EINTR : 0;
+	if (state == TASK_KILLABLE)
+		return wait_event_killable(sem->phase_wait,
+			kd_rwsem_reserve_local(sem)) ? -EINTR : 0;
+	wait_event(sem->phase_wait, kd_rwsem_reserve_local(sem));
+	return 0;
+}
+
+static __always_inline int kd_rwsem_lock_gate(struct kd_rwsem *sem,
+					     unsigned int state)
+{
+	if (state == TASK_UNINTERRUPTIBLE) {
+		kd_mutex_local_lock(&sem->gate);
+		return 0;
+	}
+	/* Prepared local callers are still unpublished. Their phase-first order
+	 * remains, while any pending signal can end gate spinning for both modes. */
+	return kd_mutex_local_lock_signal(&sem->gate, state);
+}
+
+static __always_inline int kd_rwsem_down_write_state(struct kd_rwsem *sem,
+						     unsigned int state)
+{
+	bool prepared = READ_ONCE(sem->prepared_writes);
+	int ret;
+
+	/* Preparation is quiescent and object-wide. Positive reservations need
+	 * the gate, so only unprepared writers may queue at the gate first. */
+	if (prepared) {
+		ret = kd_rwsem_wait_local(sem, state);
+		if (ret)
+			return ret;
+		ret = kd_rwsem_lock_gate(sem, state);
+		if (ret)
+			goto release_phase;
+	} else {
+		ret = kd_rwsem_lock_gate(sem, state);
+		if (ret)
+			return ret;
+		ret = kd_rwsem_wait_local(sem, state);
+		if (ret) {
+			/* The gate may precede the prior writer's phase release.
+			 * This caller has no phase to release until its own CAS. */
+			kd_mutex_local_unlock(&sem->gate);
+			return ret;
+		}
+	}
+	ret = kd_rwsem_drain_readers(sem, state);
+	if (!ret)
+		return 0;
+	kd_mutex_local_unlock(&sem->gate);
+release_phase:
+	/* Wait macros remove their waiter before rollback reopens admission. */
+	kd_rwsem_release_local(sem);
+	return ret;
+}
+
 void kd_down_write(struct kd_rwsem *sem)
 {
 	might_sleep();
-	kd_rwsem_wait(sem->phase_wait, kd_rwsem_reserve_local(sem));
-	kd_mutex_local_lock(&sem->gate);
-	kd_rwsem_drain_readers(sem, TASK_UNINTERRUPTIBLE);
+	kd_rwsem_down_write_state(sem, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL_GPL(kd_down_write);
 
 int kd_down_write_interruptible(struct kd_rwsem *sem)
 {
-	int ret;
-
 	might_sleep();
-	ret = wait_event_interruptible(sem->phase_wait, kd_rwsem_reserve_local(sem));
-	if (ret)
-		return -EINTR;
-	ret = kd_mutex_lock_interruptible(&sem->gate);
-	if (!ret) {
-		ret = kd_rwsem_drain_readers(sem, TASK_INTERRUPTIBLE);
-		if (!ret)
-			return 0;
-		kd_mutex_local_unlock(&sem->gate);
-	}
-	/* Wait macros remove their waiter before rollback reopens admission. */
-	kd_rwsem_release_local(sem);
-	return -EINTR;
+	return kd_rwsem_down_write_state(sem, TASK_INTERRUPTIBLE);
 }
 EXPORT_SYMBOL_GPL(kd_down_write_interruptible);
 
 int kd_down_write_killable(struct kd_rwsem *sem)
 {
-	int ret;
-
 	might_sleep();
-	ret = wait_event_killable(sem->phase_wait, kd_rwsem_reserve_local(sem));
-	if (ret)
-		return -EINTR;
-	ret = kd_mutex_lock_killable(&sem->gate);
-	if (!ret) {
-		ret = kd_rwsem_drain_readers(sem, TASK_KILLABLE);
-		if (!ret)
-			return 0;
-		kd_mutex_local_unlock(&sem->gate);
-	}
-	kd_rwsem_release_local(sem);
-	return -EINTR;
+	return kd_rwsem_down_write_state(sem, TASK_KILLABLE);
 }
 EXPORT_SYMBOL_GPL(kd_down_write_killable);
 
@@ -357,6 +421,7 @@ static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
 void kd_rwsem_delegate_enter(struct kd_rwsem *sem)
 {
 	might_sleep();
+	BUG_ON(!READ_ONCE(sem->prepared_writes));
 	kd_rwsem_wait(sem->phase_wait, kd_rwsem_reserve_delegate(sem));
 	/* No producer has published yet. A sleeping reader can resume even when
 	 * it shares this CPU. Positive admission prevents new accepted readers or

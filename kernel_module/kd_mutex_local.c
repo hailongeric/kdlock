@@ -167,15 +167,16 @@ static void kd_local_wake_add(struct wake_q_head *head, struct task_struct *task
 	head->lastp = &node->next;
 }
 
-static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
-					 struct kd_mutex_node *borrowed)
+static __always_inline bool kd_local_spin_common(struct kd_mutex *lock, bool waiter,
+						struct kd_mutex_node *borrowed,
+						bool stop_signals)
 {
 	struct task_struct *owner;
 	struct kd_mutex_osq_node *node = NULL;
 	bool acquired = false;
 
 	if (!waiter) {
-		if (need_resched())
+		if (need_resched() || (stop_signals && signal_pending(current)))
 			goto fail;
 		owner = kd_owner(lock);
 		if (owner && !owner_on_cpu(owner))
@@ -183,7 +184,8 @@ static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
 		node = borrowed ? &borrowed->osq : kd_mutex_osq_node_get(lock);
 		if (!node)
 			goto fail;
-		if (!kd_mutex_osq_lock(&lock->osq, node))
+		if (!(stop_signals ? kd_mutex_osq_lock_signal(&lock->osq, node) :
+		      kd_mutex_osq_lock(&lock->osq, node)))
 			goto release;
 	}
 	for (;;) {
@@ -192,10 +194,13 @@ static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
 			acquired = true;
 			break;
 		}
+		if (stop_signals && signal_pending(current))
+			goto done;
 		while (kd_owner(lock) == owner) {
 			/* Preemption pins the RCU lifetime; recheck before dereference. */
 			barrier();
-			if (!owner_on_cpu(owner) || need_resched())
+			if (!owner_on_cpu(owner) || need_resched() ||
+			    (stop_signals && signal_pending(current)))
 				goto done;
 			cpu_relax();
 		}
@@ -221,16 +226,25 @@ fail:
 	return false;
 }
 
+static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
+					 struct kd_mutex_node *borrowed)
+{
+	return kd_local_spin_common(lock, waiter, borrowed, false);
+}
+
 /* These are internal wait-list spinlocks. Use native raw-spin functions,
  * bypassing the captured kernel's public caller-clobber macro wrappers. */
-static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state,
-				      struct kd_mutex_node *node)
+static __always_inline int
+kd_local_lock_slow_common(struct kd_mutex *lock, unsigned int state,
+			  struct kd_mutex_node *node, bool stop_signals)
 {
 	struct kd_local_waiter waiter = { .task = current };
 	int ret = 0;
 
 	preempt_disable();
-	if (!kd_try_common(lock, false) || kd_local_spin(lock, false, node))
+	if (!kd_try_common(lock, false) ||
+	    (stop_signals ? kd_local_spin_common(lock, false, node, true) :
+	     kd_local_spin(lock, false, node)))
 		goto out;
 	_raw_spin_lock(&lock->wait_lock);
 	if (!kd_try_common(lock, false))
@@ -253,7 +267,8 @@ static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state
 		first = READ_ONCE(lock->wait_head) == &waiter;
 		set_current_state(state);
 		if (!kd_try_common(lock, first) ||
-		    (first && kd_local_spin(lock, true, NULL))) {
+		    (first && (stop_signals ? kd_local_spin_common(lock, true, NULL, true) :
+			   kd_local_spin(lock, true, NULL)))) {
 			_raw_spin_lock(&lock->wait_lock);
 			break;
 		}
@@ -270,6 +285,19 @@ out:
 	return ret;
 }
 
+/* Ordinary mutex/delegation callers retain their original spin policy. */
+static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state,
+				      struct kd_mutex_node *node)
+{
+	return kd_local_lock_slow_common(lock, state, node, false);
+}
+
+static noinline int kd_local_lock_slow_signal(struct kd_mutex *lock,
+					     unsigned int state)
+{
+	return kd_local_lock_slow_common(lock, state, NULL, true);
+}
+
 static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state,
 			       struct kd_mutex_node *node)
 {
@@ -281,6 +309,21 @@ static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state,
 	    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, (unsigned long)current))
 		return 0;
 	return kd_local_lock_slow(lock, state, node);
+}
+
+/* Private signalable rwsem gate entry; no new public lock ABI or symbol export.
+ * The fast acquisition wins before signals. Only failed optimistic spinning
+ * yields for any signal; the wait-list state still decides cancellation. */
+int kd_mutex_local_lock_signal(struct kd_mutex *lock, unsigned int state)
+{
+	unsigned long zero = 0;
+
+	might_sleep();
+	BUG_ON(kd_owner(lock) == current);
+	if (!atomic_long_read(&lock->owner) &&
+	    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, (unsigned long)current))
+		return 0;
+	return kd_local_lock_slow_signal(lock, state);
 }
 
 void kd_mutex_local_lock(struct kd_mutex *lock)

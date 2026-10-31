@@ -45,7 +45,8 @@ def arguments(parser):
 def guest(boot_id=None, *, release=RELEASE):
     actual = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     require(os.geteuid() == 0 and ROOT == Path('/root/host_fs/kdlock') and
-            release in (RELEASE, '7.0.0-38-kdmm1', '7.0.0-38-kdscope1') and os.uname().release == release and
+            release in (RELEASE, '7.0.0-38-kdmm1', '7.0.0-38-kdscope1', '7.0.0-38-kdscope3') and
+            os.uname().release == release and
             (boot_id is None or actual == boot_id),
             'verified Linux 7 development guest and selected boot required')
     tag = os.environ.get('KDLOCK_SNAPSHOT_TAG', '')

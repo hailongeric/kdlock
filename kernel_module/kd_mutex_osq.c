@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/percpu.h>
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 #include <linux/bug.h>
 #include "kd_mutex_local.h"
 
@@ -87,8 +88,9 @@ osq_wait_next(struct optimistic_spin_queue *lock,
 	return next;
 }
 
-bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
-		       struct kd_mutex_osq_node *node)
+static __always_inline bool
+kd_mutex_osq_lock_common(struct optimistic_spin_queue *lock,
+			 struct kd_mutex_osq_node *node, bool stop_signals)
 {
 	struct kd_mutex_osq_node *prev, *next;
 	int curr = node->tail;
@@ -144,6 +146,7 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
 	 */
 	if (smp_cond_load_relaxed(&node->locked,
 				  VAL == KD_MUTEX_OSQ_GRANTED || need_resched() ||
+				  (stop_signals && signal_pending(current)) ||
 				  vcpu_is_preempted(node_cpu(node->prev))) ==
 	    KD_MUTEX_OSQ_GRANTED)
 		return true;
@@ -209,6 +212,20 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
 
 	osq_retire(node);
 	return false;
+}
+
+/* Constant selectors keep ordinary mutex/delegation admission on its existing
+ * path. A signal only requests the same exact unlink; a concurrent grant wins. */
+bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
+		       struct kd_mutex_osq_node *node)
+{
+	return kd_mutex_osq_lock_common(lock, node, false);
+}
+
+bool kd_mutex_osq_lock_signal(struct optimistic_spin_queue *lock,
+			      struct kd_mutex_osq_node *node)
+{
+	return kd_mutex_osq_lock_common(lock, node, true);
 }
 
 void kd_mutex_osq_unlock(struct optimistic_spin_queue *lock,

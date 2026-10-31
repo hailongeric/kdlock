@@ -13,6 +13,11 @@ ASM = '''0000000000001000 <vm_mmap_pgoff>:
 
 
 class WriterSites(unittest.TestCase):
+    def assembly(self, name, start, target, address, *, tail=False):
+        opcode = bytes([0xe9 if tail else 0xe8])+(address-start-5).to_bytes(4, 'little', signed=True)
+        return (f'{start:016x} <{name}>:\n {start:x}: {opcode.hex(" ")} '
+                f'{"jmp" if tail else "call"} {address:x} <{target}>\n {start+5:x}: 90 nop\n')
+
     def test_exact_direct_call_return(self):
         row = sites.call_return(ASM, 'vm_mmap_pgoff')
         self.assertEqual(row['return_offset'], 10)
@@ -38,6 +43,69 @@ class WriterSites(unittest.TestCase):
         text = ASM.replace('<vm_mmap_pgoff>', '<unrelated>')
         with self.assertRaises(sites.rt.Failure):
             sites.call_return(text, 'vm_mmap_pgoff')
+
+    def test_gate_call_and_tail_edges_keep_only_real_return_words(self):
+        writer, gate, slow = 'kd_mmap_down_write_killable', 'kd_mmap_mutex_local_lock_signal', 'kd_mmap_local_lock_slow_signal'
+        for tail in (False, True):
+            assembly = {writer:self.assembly(writer,0x1000,gate,0x2000),
+                        gate:self.assembly(gate,0x2000,slow,0x3000,tail=tail),
+                        slow:self.assembly(slow,0x3000,'schedule',0x4000)}
+            chain=sites.gate_chain(assembly,writer,43)
+            self.assertEqual(chain['waiter'],slow)
+            self.assertEqual(chain['wait_returns'],[5,5])
+            self.assertEqual([frame['symbol'] for frame in chain['intermediate']],
+                             [writer] if tail else [gate,writer])
+            self.assertEqual(chain['edges'][1]['kind'],'tail' if tail else 'call')
+            self.assertTrue(chain['waiter_argument'].endswith('|'+writer+'@5'))
+            bad=dict(assembly);bad[gate]=bad[gate].replace('fb 0f','fa 0f')
+            with self.assertRaises(sites.rt.Failure):sites.gate_chain(bad,writer,43)
+
+    def test_outlined_scheduler_keeps_its_actual_caller_return(self):
+        writer, gate, slow, scheduling = ('kd_mmap_down_write_killable', 'kd_mmap_mutex_local_lock_signal',
+                                         'kd_mmap_local_lock_slow_signal', 'kd_mmap_local_schedule')
+        assembly={writer:self.assembly(writer,0x1000,gate,0x2000),
+                  gate:self.assembly(gate,0x2000,slow,0x3000,tail=True),
+                  slow:self.assembly(slow,0x3000,scheduling,0x5000),
+                  scheduling:self.assembly(scheduling,0x5000,'schedule',0x4000)}
+        chain=sites.gate_chain(assembly,writer,43)
+        self.assertEqual(chain['waiter'],scheduling)
+        self.assertEqual(chain['intermediate'],[dict(symbol=slow,return_offsets=[5]),dict(symbol=writer,return_offsets=[5])])
+        bad=dict(assembly);bad[slow]+=' 3006: e8 f5 0f 00 00 call 4000 <schedule>\n 300b: 90 nop\n'
+        with self.assertRaises(sites.rt.Failure):sites.gate_chain(bad,writer,43)
+
+    def test_tail_target_and_intermediate_description_are_bounded(self):
+        text=self.assembly('gate',0x2000,'slow',0x3000,tail=True)
+        for bad in (text.replace('e9','e8'),text.replace('fb 0f','fa 0f'),text.replace('jmp','jmp *')):
+            with self.assertRaises(sites.rt.Failure):sites.linked_edge(bad,'gate','slow')
+        chain=dict(waiter='slow',intermediate=[dict(symbol='writer',return_offsets=[12,20])])
+        self.assertEqual(sites.waiter_argument(chain),'slow|writer@12:20')
+        for frames in ([dict(symbol='writer',return_offsets=[0])],
+                       [dict(symbol='writer',return_offsets=[1,2,3])],
+                       [dict(symbol='writer|other',return_offsets=[1])],
+                       [dict(symbol='writer',return_offsets=[1])]*7):
+            with self.assertRaises(sites.rt.Failure):sites.waiter_argument(dict(waiter='slow',intermediate=frames))
+
+    def test_python_proof_requires_the_same_intermediate_call_returns(self):
+        mapping=sites.common.module('writer_chain_test_mapping',sites.ROOT/'tests/kernel/mmap_lock/mapping.py')
+        original=mapping.SITES
+        mapping.SITES=dict(adapter='adapter',sites={'vm_mmap_pgoff':dict(return_offset=10)},chains={'kd':dict(
+            waiter='slow',wait_returns=[5,9],adapter_return=43,
+            intermediate=[dict(symbol='writer',return_offsets=[12,20])])})
+        row=dict(proof='EXACT_MMAP_WRITER_CHAIN',acquire='adapter',caller='vm_mmap_pgoff',
+                 waiter='slow',wait_return_offset=5,adapter_return_offset=43,return_offset=10,
+                 raw_stack='[<0>] slow+0x5/0x80\n[<0>] writer+0xc/0x80\n[<0>] adapter+0x2b/0x80\n'
+                           '[<0>] vm_mmap_pgoff+0xa/0x100\n',
+                 state_before='D',state_after='D',wchan_before='slow',wchan_after='slow',
+                 schedstat_before='1 2 3\n',schedstat_after='1 2 3\n')
+        try:
+            mapping.chain_proof(row,'kd')
+            for change in (dict(raw_stack=row['raw_stack'].replace('writer+0xc/','writer+0xd/')),
+                           dict(raw_stack=row['raw_stack'].replace('[<0>] writer+0xc/0x80\n','')),
+                           dict(raw_stack=row['raw_stack'].replace('writer+','other+')),
+                           dict(state_after='R'),dict(schedstat_after='2 2 3\n')):
+                with self.assertRaises(sites.rt.Failure):mapping.chain_proof(dict(row,**change),'kd')
+        finally:
+            mapping.SITES=original
 
     def witness(self):
         return dict(proof='FILTERED_SCHED_RETURN_SITE', acquire='down_write_killable',

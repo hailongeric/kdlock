@@ -79,6 +79,8 @@ class SharedLinux70(unittest.TestCase):
         self.assertEqual(shared_platform.profile('native')['build'],shared_platform.BUILD)
         self.assertEqual(shared_platform.profile('native','kdscope1-native')['build'],
                          Path('/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build'))
+        self.assertEqual(shared_platform.profile('native','kdscope3-native')['build'],
+                         Path('/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build'))
         parser=argparse.ArgumentParser()
         shared_platform.arguments(parser,required=False)
         for variant in (None,*shared_platform.PROFILES):
@@ -89,9 +91,11 @@ class SharedLinux70(unittest.TestCase):
                  patch.object(Path,'read_text',return_value='nokaslr nopvspin kd_mmap='+shared_platform.MODES[mode]):
                 shared_platform.guest(args)
                 expected_variant=variant or 'kdmm1-native'
-                family='kdscope1' if expected_variant.startswith('kdscope1-') else 'kdmm1'
-                date='20261030' if family=='kdscope1' else '20261027'
-                self.assertEqual(args.kernel_source,Path('/mnt/kdlock-builds/linux-7.0.0-38-'+family+'/build'))
+                family=expected_variant.rsplit('-',1)[0]
+                disk,date={'kdmm1':('kdlock-builds','20261027'),
+                           'kdscope1':('kdlock-builds','20261030'),
+                           'kdscope3':('kdlock-builds2','20261031')}[family]
+                self.assertEqual(args.kernel_source,Path('/mnt/'+disk+'/linux-7.0.0-38-'+family+'/build'))
                 self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+expected_variant+'-'+date))
                 self.assertEqual(args.kernel_variant,expected_variant)
                 gate.assert_called_once_with('boot',release='7.0.0-38-'+family)
@@ -107,7 +111,7 @@ class SharedLinux70(unittest.TestCase):
              patch.object(Path,'read_text',return_value='kd_mmap=off kd_mmap=on'):
             with self.assertRaises(linux70.rt.Failure): shared_platform.guest(args)
 
-    def test_writer_receipt_uses_shared_adapter_for_both_enabled_families(self):
+    def test_writer_receipt_uses_shared_adapter_for_all_enabled_families(self):
         sites=linux70.common.module('shared_mm_site_tests',linux70.ROOT/'bench/mmap_writer/sites.py')
         for variant in ('kdlock1',*shared_platform.PROFILES):
             binding=dict(variant=variant)

@@ -1,4 +1,27 @@
-# `kdscope1` source composition and identity
+# Scoped Linux 7 source composition and identity
+
+## October 31 scope3 profile preparation
+
+The separate `kdscope3-native` and `kdscope3-kd` profiles start from
+`8446f4ecb08816380a4c233197a8ce5e4d333aac`. This isolated recipe uses the
+canonical source/output pair
+`/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/{source,build}`, release
+`7.0.0-38-kdscope3`, and bundles
+`/root/kdlock-kernel-baselines/linux70-kdscope3-{native,kd}-20261031`.
+The common harness continues to recognize the unchanged scope1 profiles.
+
+Both scope3 modes retain `CONFIG_KDLOCK_MMAP=y`, `CONFIG_KD_API_LOCKS=y`,
+`CONFIG_DEBUG_SPINLOCK=n`, upstream version code 458766 and the existing
+configuration/runtime checks. Native selects `kd_mmap=off`; KD selects
+`kd_mmap=on`. Profile selection does not establish a runtime or performance
+pass. The reviewed local mutex C/header, OSQ C and rwsem C are copied from
+`1b6f256b13e8743aa1fd7bdc958cc82ae7726463`; their runtime bytes are unchanged
+from `7fa989c124810222042f9560d0e83a7dea197d2f`. The exact writer-chain classifier
+is included. Composition, generated-source comparison, builds and boot checks
+remain pending. See the
+[recipe plan](../../docs/design/rwsem_writer_scope3.md).
+
+## Original scope1 recipe
 
 Status: source-only implementation and focused test sources; no preparation, build, install, reboot or test execution is established by this document. The candidate API package is still under source review. Preserve all existing `kdlock1` and `kdmm1-*` profiles and their frozen bundles.
 

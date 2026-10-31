@@ -18,3 +18,13 @@ before composing/building on the VM. The paired MM harness must be identical
 for scope1 and scope3, including its explicitly selected eligibility policy.
 No profile name supplies a functional or performance pass. Builds, fixtures,
 boot checks and fresh one-round comparisons remain pending.
+
+The initial implementation copied into this recipe is
+`7fa989c124810222042f9560d0e83a7dea197d2f`: the local mutex C/header, OSQ C and
+rwsem C, plus the exact intermediate writer-chain classifier and affected
+fixtures. The four runtime input files at the recipe base match f7 byte for
+byte before this change. The complete candidate reference is now
+`1b6f256b13e8743aa1fd7bdc958cc82ae7726463`, whose only changes after the runtime
+commit fix a multiple-observer completion in the separate live fixture and
+document its failed attempt. Runtime bytes in this recipe remain identical.
+Kernel compilation and MM execution remain pending.

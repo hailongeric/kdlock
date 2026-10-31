@@ -57,8 +57,11 @@ class KernelProfiles(unittest.TestCase):
                  patch.object(Path,'read_text',return_value='kd_mmap='+('on' if args.mode=='kd' else 'off')):
                 bench.guest(args)
                 family=variant.rsplit('-',1)[0] if variant!='kdlock1' else variant
-                date='20261030' if family=='kdscope1' else '20261027'
-                self.assertEqual(args.kernel_source,Path('/mnt/kdlock-builds/linux-7.0.0-38-'+family+'/build'))
+                disk,date={'kdlock1':('kdlock-builds','20261027'),
+                           'kdmm1':('kdlock-builds','20261027'),
+                           'kdscope1':('kdlock-builds','20261030'),
+                           'kdscope3':('kdlock-builds2','20261031')}[family]
+                self.assertEqual(args.kernel_source,Path('/mnt/'+disk+'/linux-7.0.0-38-'+family+'/build'))
                 self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-'+date))
                 if variant=='kdlock1': gate.assert_called_once_with('boot')
                 else: gate.assert_called_once_with('boot',release='7.0.0-38-'+family)
