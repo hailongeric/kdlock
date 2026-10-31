@@ -36,12 +36,12 @@ the queued wait uses the first site. A scheduling return by itself therefore
 does not prove a sleeping writer. Preserve the original failed sites receipt
 and all three instructions rather than selecting two addresses.
 
-This companion revision will consume the exact common classifier's bounded
+This companion revision consumes the exact common classifier's bounded
 three-return representation. Its five chain arguments remain the same length:
 the legacy `waiter wait0 wait1 adapter_return adapter` form is unchanged; a
 three-return chain uses `waiter --wait-returns 712:989:1491 adapter_return adapter`.
 The list must contain exactly three positive, distinct decimal offsets. The
-client will use the parser extracted from the named common harness, including
+client uses the parser extracted from the named common harness, including
 its rejection of malformed or over-capacity lists. Real intermediate CALL
 frames retain their separate six-frame, two-return-per-frame bounds.
 

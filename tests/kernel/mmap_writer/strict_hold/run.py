@@ -179,7 +179,8 @@ def main():
             files[str(source / leaf)] = sha(source / leaf)
         result['classifier'] = dict(source_sha256=sha(ROOT / 'bench/mmap_writer/client.c'),
             extracted_sha256=sha(source / 'classifier.inc'), functions=['json_string', 'task_state',
-            'chain_frame', 'writer_chain_tail', 'writer_observation', 'writer_contention'], changed_bodies=False)
+            'chain_wait_arguments', 'chain_frame', 'writer_chain_tail', 'writer_observation',
+            'writer_contention'], changed_bodies=False)
 
         def verify():
             platform.verify_boot(a)
@@ -202,7 +203,7 @@ def main():
         rt.command(['insmod', module], out / 'load.log')
         chain = actual_sites['chains'][a.mode]
         proof_args = [str(actual_sites['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
-        proof_args += [sites.waiter_argument(chain), *map(str, chain['wait_returns']),
+        proof_args += [sites.waiter_argument(chain), *sites.wait_arguments(chain),
                        str(chain['adapter_return']), actual_sites['adapter']]
         result['state'] = 'RUNNING'
         rt.write_json(out / 'result.json', result)

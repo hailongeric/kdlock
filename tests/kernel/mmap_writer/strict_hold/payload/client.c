@@ -21,7 +21,9 @@
 static unsigned checks;
 #define CHECK(x) do { checks++; if (!(x)) { fprintf(stderr, "FAIL line %d: %s errno=%d\n", __LINE__, #x, errno); exit(1); } } while (0)
 static const char *chain_waiter, *chain_acquire;
-static unsigned long chain_wait[2], chain_adapter;
+#define CHAIN_WAIT_CAPACITY 3
+static unsigned long chain_wait[CHAIN_WAIT_CAPACITY], chain_adapter;
+static unsigned chain_wait_count = 2;
 struct worker { struct mw_identity observed; _Atomic int done; };
 static uint64_t target_pid;
 static struct worker *watched;
@@ -127,8 +129,9 @@ int main(int argc, char **argv)
 	CHECK(argc == 9 && (!strcmp(argv[1], "mmap") || !strcmp(argv[1], "munmap")));
 	int unmap = !strcmp(argv[1], "munmap");
 	unsigned long mmap_site = strtoul(argv[2], NULL, 0), munmap_site = strtoul(argv[3], NULL, 0);
-	chain_waiter = argv[4]; chain_wait[0] = strtoul(argv[5], NULL, 0);
-	chain_wait[1] = strtoul(argv[6], NULL, 0); chain_adapter = strtoul(argv[7], NULL, 0);
+	chain_waiter = argv[4];
+	CHECK(chain_wait_arguments(argv[5], argv[6]));
+	chain_adapter = strtoul(argv[7], NULL, 0);
 	chain_acquire = argv[8];
 	CHECK(mmap_site && munmap_site && *chain_waiter && *chain_acquire &&
 	      chain_wait[0] && chain_wait[1] && chain_adapter && sysconf(_SC_PAGESIZE) == 4096);
