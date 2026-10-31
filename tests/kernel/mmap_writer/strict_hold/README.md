@@ -6,10 +6,25 @@ mmap/munmap pairs with all 16 workers joined and zero operation, VMA or context
 errors, but failed its unchanged strict sleeping-writer requirement. Preserve
 that failed receipt and raw log. A later test cannot change its verdict.
 
-The frozen harness is `f4ae82cfdf053c679c5d09ee8e503a7919764c9b`; the compared
+The original campaign's frozen harness was `f4ae82cfdf053c679c5d09ee8e503a7919764c9b`; its compared
 providers remain `f7a84065e84474380faa37eeadfdf534abd72a68` and
 `22d62d5c13cad3c61c97dd47524da908769f1a52`. This diagnostic changes no production
 source, built-in kernel, scored application, archive, or existing runner.
+
+The new chain-aware revision accepts one explicitly named common harness source
+and its complete manifest hash/commit. The canonical source view must be the
+same read-only recipe, and both comparison arms use those same bytes. The
+runner passes the exact ELF-derived intermediate-frame description through
+`sites.waiter_argument`; the client still extracts the actual classifier
+functions without rewriting their bodies. Every real CALL return remains
+mandatory, and a checked tail jump does not create a stack frame. Neither the
+module nor the target/observer protocol changes. Both `mmap` and `munmap` still
+require a positive exact witness and all nine negative controls.
+
+This prospective revision is intended to run freshly on both comparison arms
+before timing. It does not reuse an old strict witness as a new pass or alter
+the earlier failure. Its source-only status remains distinct from the original
+diagnostic's recorded VM validation.
 
 ## Exact test boundary
 

@@ -14,10 +14,6 @@ import sys
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 ROOT = Path('/root/host_fs/kdlock')
-RECIPE = Path('/mnt/kdlock-builds2/kdlock-scope2-recipe-f4ae82cf')
-MANIFEST = RECIPE.with_name(RECIPE.name + '.manifest.json')
-MANIFEST_SHA = '57b031b6c2b27e33a3d7434abf7864b7e8b0aebb00e7a38dc4e135d64314bb7b'
-HARNESS = 'f4ae82cfdf053c679c5d09ee8e503a7919764c9b'
 LEAVES = ('README.md', 'run.py', 'payload/Makefile', 'payload/api.h',
           'payload/module.c', 'payload/client.c')
 MUTATIONS = ('different_lock', 'wrong_caller_return', 'wrong_wait_return',
@@ -81,10 +77,21 @@ def validate(rows, operation, mode, proof, require):
 
 
 def main():
-    # Establish the fixed source identity before importing its runtime gates.
-    if os.geteuid() != 0 or sha(MANIFEST) != MANIFEST_SHA or not os.path.samefile(ROOT, RECIPE):
+    # Establish explicit complete source identity before importing runtime gates.
+    bootstrap = argparse.ArgumentParser(add_help=False)
+    for name in ('harness-source', 'harness-manifest'):
+        bootstrap.add_argument('--' + name, type=Path, required=True)
+    for name in ('harness-manifest-sha256', 'harness-commit'):
+        bootstrap.add_argument('--' + name, required=True)
+    harness, _ = bootstrap.parse_known_args()
+    if (os.geteuid() != 0 or not re.fullmatch('[0-9a-f]{40}', harness.harness_commit) or
+            sha(harness.harness_manifest) != harness.harness_manifest_sha256 or
+            not ROOT.is_mount() or not os.path.samefile(ROOT, harness.harness_source) or
+            not os.statvfs(ROOT).f_flag & os.ST_RDONLY):
         raise RuntimeError('actual guest root and frozen common harness required')
-    manifest = json.loads(MANIFEST.read_bytes())
+    manifest = json.loads(harness.harness_manifest.read_bytes())
+    if manifest.get('source_commit') != harness.harness_commit:
+        raise RuntimeError('common harness commit differs')
     for name, row in manifest['files'].items():
         if sha(ROOT / name) != row['sha256']:
             raise RuntimeError('common harness differs: ' + name)
@@ -93,7 +100,7 @@ def main():
     rt = platform.rt
     sites = load_module('strict_hold_sites', ROOT / 'bench/mmap_writer/sites.py')
     mapping = load_module('strict_hold_mapping', ROOT / 'tests/kernel/mmap_lock/mapping.py')
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(description=__doc__, parents=[bootstrap])
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--output', type=Path, required=True)
     for name in ('writer-sites', 'api-result', 'diagnostic-manifest'):
@@ -119,7 +126,8 @@ def main():
     out.mkdir(parents=True)
     result = dict(schema=1, diagnostic='same-mm-held-writer-v1', state='PREPARATION', passed=False,
                   drained=False, final_idle=False, accepted=False, timing=False, boot_id=a.boot_id,
-                  mode=a.mode, harness_commit=HARNESS, diagnostic_commit=diagnostic['commit'], cases=[],
+                  mode=a.mode, harness_commit=a.harness_commit,
+                  harness_manifest_sha256=a.harness_manifest_sha256, diagnostic_commit=diagnostic['commit'], cases=[],
                   diagnostic_manifest_sha256=a.diagnostic_manifest_sha256, api_result_sha256=a.api_result_sha256)
     rt.write_json(out / 'result.json', result)
     fd, messages = None, ''
@@ -146,6 +154,7 @@ def main():
             shutil.copyfile(original, saved)
             files[str(original)] = files[str(saved)] = sha(original)
         for name, original in (('diagnostic-manifest.json', a.diagnostic_manifest),
+                               ('harness-manifest.json', a.harness_manifest),
                                ('api-result.json', a.api_result), ('writer-sites.json', a.writer_sites)):
             saved = out / name
             shutil.copyfile(original, saved)
@@ -170,7 +179,7 @@ def main():
             files[str(source / leaf)] = sha(source / leaf)
         result['classifier'] = dict(source_sha256=sha(ROOT / 'bench/mmap_writer/client.c'),
             extracted_sha256=sha(source / 'classifier.inc'), functions=['json_string', 'task_state',
-            'chain_frame', 'writer_observation', 'writer_contention'], changed_bodies=False)
+            'chain_frame', 'writer_chain_tail', 'writer_observation', 'writer_contention'], changed_bodies=False)
 
         def verify():
             platform.verify_boot(a)
@@ -193,7 +202,8 @@ def main():
         rt.command(['insmod', module], out / 'load.log')
         chain = actual_sites['chains'][a.mode]
         proof_args = [str(actual_sites['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
-        proof_args += [chain['waiter'], *map(str, chain['wait_returns']), str(chain['adapter_return']), actual_sites['adapter']]
+        proof_args += [sites.waiter_argument(chain), *map(str, chain['wait_returns']),
+                       str(chain['adapter_return']), actual_sites['adapter']]
         result['state'] = 'RUNNING'
         rt.write_json(out / 'result.json', result)
         for index, operation in enumerate(('mmap', 'munmap'), 1):
