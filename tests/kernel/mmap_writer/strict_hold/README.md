@@ -26,6 +26,34 @@ before timing. It does not reuse an old strict witness as a new pass or alter
 the earlier failure. Its source-only status remains distinct from the original
 diagnostic's recorded VM validation.
 
+## Complete scheduling-return lists
+
+The scope3 sites step stopped before loading a module because the linked
+`kd_mmap_local_lock_slow_signal` contains three direct scheduling returns:
+`0x2c8`, `0x3dd`, and `0x5d3`. All are reachable for a killable writer. The latter
+two explicitly restore `TASK_RUNNING` before yielding from optimistic spinning;
+the queued wait uses the first site. A scheduling return by itself therefore
+does not prove a sleeping writer. Preserve the original failed sites receipt
+and all three instructions rather than selecting two addresses.
+
+This companion revision will consume the exact common classifier's bounded
+three-return representation. Its five chain arguments remain the same length:
+the legacy `waiter wait0 wait1 adapter_return adapter` form is unchanged; a
+three-return chain uses `waiter --wait-returns 712:989:1491 adapter_return adapter`.
+The list must contain exactly three positive, distinct decimal offsets. The
+client will use the parser extracted from the named common harness, including
+its rejection of malformed or over-capacity lists. Real intermediate CALL
+frames retain their separate six-frame, two-return-per-frame bounds.
+
+Both actual syscall cases still require the exact object and task identities,
+two `D` state samples, matching wait channel, unchanged scheduler counters and
+the complete caller/adapter/intermediate-frame chain. All nine existing
+negative controls remain mandatory for each case. The kernel payload, UAPI,
+holder lifetime, deadlines and release/join protocol remain unchanged. New
+diagnostic source and common-classifier identities are recorded separately;
+the original baseline witness and measured results are not relabeled. This
+extension is source-only until its VM compilation and actual cases complete.
+
 ## Exact test boundary
 
 One file binds the target task's actual `mm_struct` with `mmgrab`. A test-only
