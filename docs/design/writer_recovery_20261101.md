@@ -21,8 +21,9 @@ estimate. Functional correctness remains mandatory regardless of performance.
 
 The October 31 candidate meets the 2% per-profile mean bound, but its worst
 Nano point is -20.496300%, which fails the 10% point bound. It is not a minor
-loss. The user has been asked whether the requested one-time promotion also
-includes this specific exception. Promotion is pending that clarification.
+loss. The user explicitly confirmed that the one-time promotion includes this
+specific -20.50% point on November 1. It remains outside the minor-loss
+definition and is accepted only for this promotion.
 The separate known mmap1_processes loss is -22.385920% at 60 workers; it remains
 unresolved even if promotion is authorized. The exception is specific to these
 recorded results and is not an open-ended relaxation for new large losses.
