@@ -32,7 +32,15 @@ MM_BUILD_ROOT = MM_SOURCE_ROOT.parent / "build"
 SCOPE_RELEASE = "7.0.0-38-kdscope1"
 SCOPE_SOURCE_ROOT = Path("/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source")
 SCOPE_BUILD_ROOT = SCOPE_SOURCE_ROOT.parent / "build"
-SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd")
+SCOPE2_RELEASE = "7.0.0-38-kdscope3"
+SCOPE2_SOURCE_ROOT = Path("/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source")
+SCOPE2_BUILD_ROOT = SCOPE2_SOURCE_ROOT.parent / "build"
+SCOPE2_VARIANTS = ("kdscope3-native", "kdscope3-kd")
+RECOVERY_RELEASE = "7.0.0-38-kdscope4"
+RECOVERY_SOURCE_ROOT = Path("/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source")
+RECOVERY_BUILD_ROOT = RECOVERY_SOURCE_ROOT.parent / "build"
+RECOVERY_VARIANTS = ("kdscope4-native", "kdscope4-kd")
+SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd", *SCOPE2_VARIANTS, *RECOVERY_VARIANTS)
 VARIANTS = ("kdlock1", "kdmm1-native", "kdmm1-kd", *SCOPE_VARIANTS)
 SOURCE_SCOPE = "named core/MM inputs; not a complete source-tree audit"
 COMPOSED_SCOPE = "named core/MM/API inputs with exact composition; not a complete source-tree audit"
@@ -74,6 +82,14 @@ def variant_settings(variant="kdlock1"):
     if variant == "kdlock1":
         return dict(release=RELEASE, source=SOURCE_ROOT, build=BUILD_ROOT,
                     bundle=BUNDLE_ROOT, mmap_mode=None, mmap_config="n")
+    if variant in SCOPE2_VARIANTS:
+        return dict(release=SCOPE2_RELEASE, source=SCOPE2_SOURCE_ROOT, build=SCOPE2_BUILD_ROOT,
+                    bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261031"),
+                    mmap_mode="off" if variant == "kdscope3-native" else "on", mmap_config="y")
+    if variant in RECOVERY_VARIANTS:
+        return dict(release=RECOVERY_RELEASE, source=RECOVERY_SOURCE_ROOT, build=RECOVERY_BUILD_ROOT,
+                    bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261101"),
+                    mmap_mode="off" if variant == "kdscope4-native" else "on", mmap_config="y")
     if variant in SCOPE_VARIANTS:
         return dict(release=SCOPE_RELEASE, source=SCOPE_SOURCE_ROOT, build=SCOPE_BUILD_ROOT,
                     bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261030"),

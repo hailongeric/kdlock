@@ -99,6 +99,18 @@ def waiter_argument(chain):
     return result
 
 
+def wait_arguments(chain):
+    """Keep the two legacy argument positions; name the exact three-site form."""
+    waits = chain['wait_returns']
+    rt.require(len(waits) in (2, 3) and
+               all(type(value) is int and 0 < value < 1 << 64 for value in waits),
+               'invalid scheduling return arguments')
+    if len(waits) == 2:
+        return list(map(str, waits))
+    rt.require(len(set(waits)) == 3, 'three scheduling returns must be distinct')
+    return ['--wait-returns', ':'.join(map(str, waits))]
+
+
 def gate_chain(assembly, writer, adapter_return):
     gate, slow, scheduling = ('kd_mmap_mutex_local_lock_signal',
                               'kd_mmap_local_lock_slow_signal', 'kd_mmap_local_schedule')
@@ -112,7 +124,7 @@ def gate_chain(assembly, writer, adapter_return):
         edges.append(linked_edge(assembly[slow], slow, scheduling))
         waiter = scheduling
     waits = call_returns(assembly[waiter], waiter, 'schedule')
-    rt.require(1 <= len(waits) <= 2, 'too many gate scheduling return sites')
+    rt.require(1 <= len(waits) <= 3, 'too many gate scheduling return sites')
     for previous, following in zip(edges, edges[1:]):
         rt.require({row['target_address'] for row in previous['instructions']} ==
                    {row['function_address'] for row in following['instructions']},
@@ -121,7 +133,8 @@ def gate_chain(assembly, writer, adapter_return):
                {row['function_address'] for row in waits}, 'gate schedule target differs')
     frames = [dict(symbol=edge['caller'], return_offsets=[row['return_offset'] for row in edge['instructions']])
               for edge in reversed(edges) if edge['kind'] == 'call']
-    chain = dict(waiter=waiter, wait_returns=([row['return_offset'] for row in waits]*2)[:2],
+    returns = [row['return_offset'] for row in waits]
+    chain = dict(waiter=waiter, wait_returns=returns * 2 if len(returns) == 1 else returns,
                  adapter_return=adapter_return, intermediate=frames, edges=edges,
                  instructions=waits, shape='local-signal-gate-v1')
     chain['waiter_argument'] = waiter_argument(chain)
