@@ -68,3 +68,24 @@ Source/Git/offline analysis run on 380G10. Builds, fixtures and timing run only
 on VM 10.176.26.71, after idle, capacity and recovery-snapshot verification.
 Use frozen inputs and new output directories. Never force unload or overwrite
 prior receipts. Preserve the main checkout's unrelated changes.
+
+## Scope4 receipt-routing correction
+
+The first scope4 preparation from `aeec505307fc01354bc3e660b7a64d0b279b7111`
+passed the two writer-observation units and the identity/profile units, then
+failed `bench/mmap_writer/test_linux70.py`. Its existing all-profile assertion
+found that `sites.checked_receipt` routed the new scope4 variants through the
+ordinary-kernel derivation instead of the shared-MM derivation. No kernel
+composition, compilation, installation or MM timing had started. The failed
+preparation records no remaining child process and remains failed.
+
+Add only `kdscope4-native` and `kdscope4-kd` to that dispatcher's explicit
+shared-MM variant set. Preserve exact disassembly/receipt comparison and the
+existing all-profile assertion. The lock provider remains byte-identical to
+`66c68c17457c0ae60d09ff1f3d89b5fff16a500c`; the completed Nano measurements
+retain that identity and are not repeated for this harness correction.
+
+Freeze the corrected recipe in a new directory and use new preparation/build
+receipts. Check the affected shared-MM fixture in the VM, then proceed through
+kernel preparation, build and the fresh promoted/recovery MM pair. Keep the
+original recipe, failed controller records and the stopped queued stages intact.
