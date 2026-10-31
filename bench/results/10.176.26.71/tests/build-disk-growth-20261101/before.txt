@@ -1,0 +1,17 @@
+NAME            SIZE FSTYPE   MOUNTPOINTS
+fd0             4096          
+loop0       66883584 squashfs /snap/core20/2922
+loop1       77574144 squashfs /snap/core22/2955
+loop2       77619200 squashfs /snap/core22/2987
+loop3       46882816 squashfs /snap/snapd/28254
+loop4      120782848 squashfs /snap/lxd/40911
+sda     109735575552          
+├─sda1  109619166720 ext4     /
+├─sda14      4194304          
+└─sda15    111149056 vfat     /boot/efi
+sdb     141733920768 ext4     /mnt/kdlock-builds
+sdc     103079215104 ext4     /mnt/kdlock-builds2
+TARGET              SOURCE   FSTYPE OPTIONS
+/mnt/kdlock-builds2 /dev/sdc ext4   rw,relatime
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2  916G  735G  134G  85% /

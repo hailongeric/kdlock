@@ -1,0 +1,22 @@
+{
+  "guest.json": {
+    "source": "/tmp/kdlock-reader-recovery-disk-growth-guest-20261101.json",
+    "sha256": "08cd595477f5be6b8c80b1c49f2190af6dca577575e70f81d353ff45a5cf31ab",
+    "bytes": 435
+  },
+  "monitor.txt": {
+    "source": "/tmp/kdlock-reader-recovery-disk-growth-monitor-20261101.txt",
+    "sha256": "4e716245e93d92eb3209341c1c8fe58d5e171d62d94a22cb3be79ac696519eab",
+    "bytes": 4844
+  },
+  "before.txt": {
+    "source": "/tmp/kdlock-reader-recovery-disk-inspection-20261101.txt",
+    "sha256": "b6db03ad323e252ef77ae472ea2734ba86319a479d54916faf7114183e251fdd",
+    "bytes": 737
+  },
+  "plan.md": {
+    "source": "/tmp/kdlock-reader-recovery-disk-growth-20261101.md",
+    "sha256": "246e033c7f645b40485a8275ce5d36e7eb26eebf3a0ff3bd3fd5dbe9443fd789",
+    "bytes": 825
+  }
+}

@@ -1,0 +1,42 @@
+i[K[Din[K[D[Dinf[K[D[D[Dinfo[K[D[D[D[Dinfo [K[D[D[D[D[Dinfo b[K[D[D[D[D[D[Dinfo bl[K[D[D[D[D[D[D[Dinfo blo[K[D[D[D[D[D[D[D[Dinfo bloc[K[D[D[D[D[D[D[D[D[Dinfo block[K
+drive_system (#block104): /home/eric/vm/qemu-disks/ubuntu22.04.img (qcow2)
+    Attached to:      /machine/peripheral-anon/device[0]
+    Cache mode:       writeback
+
+drive_data1 (#block307): /home/eric/vm/qemu-disks/sda.qcow2 (qcow2)
+    Attached to:      /machine/peripheral-anon/device[1]
+    Cache mode:       writeback
+
+floppy0: [not inserted]
+    Attached to:      /machine/unattached/device[79]
+    Removable device: not locked, tray closed
+
+sd0: [not inserted]
+    Removable device: not locked, tray closed
+
+drive_kdlock_builds2 (#block555): /home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2 (qcow2)
+    Attached to:      kdlock-builds2
+    Cache mode:       writeback
+(qemu) 
+b[K[Dbl[K[D[Dblo[K[D[D[Dbloc[K[D[D[D[Dblock[K[D[D[D[D[Dblock_[K[D[D[D[D[D[Dblock_r[K[D[D[D[D[D[D[Dblock_re[K[D[D[D[D[D[D[D[Dblock_res[K[D[D[D[D[D[D[D[D[Dblock_resi[K[D[D[D[D[D[D[D[D[D[Dblock_resiz[K[D[D[D[D[D[D[D[D[D[D[Dblock_resize[K[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize [K[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize d[K[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize dr[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize dri[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize driv[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_k[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kd[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdl[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlo[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdloc[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_b[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_bu[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_bui[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_buil[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_build[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2 [K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2 1[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2 16[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2 160[K[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[D[Dblock_resize drive_kdlock_builds2 160G[K
+(qemu) 
+i[K[Din[K[D[Dinf[K[D[D[Dinfo[K[D[D[D[Dinfo [K[D[D[D[D[Dinfo b[K[D[D[D[D[D[Dinfo bl[K[D[D[D[D[D[D[Dinfo blo[K[D[D[D[D[D[D[D[Dinfo bloc[K[D[D[D[D[D[D[D[D[Dinfo block[K
+drive_system (#block104): /home/eric/vm/qemu-disks/ubuntu22.04.img (qcow2)
+    Attached to:      /machine/peripheral-anon/device[0]
+    Cache mode:       writeback
+
+drive_data1 (#block307): /home/eric/vm/qemu-disks/sda.qcow2 (qcow2)
+    Attached to:      /machine/peripheral-anon/device[1]
+    Cache mode:       writeback
+
+floppy0: [not inserted]
+    Attached to:      /machine/unattached/device[79]
+    Removable device: not locked, tray closed
+
+sd0: [not inserted]
+    Removable device: not locked, tray closed
+
+drive_kdlock_builds2 (#block555): /home/eric/vm/qemu-disks/kdlock-builds2-20261031/builds.qcow2 (qcow2)
+    Attached to:      kdlock-builds2
+    Cache mode:       writeback
+(qemu) 
