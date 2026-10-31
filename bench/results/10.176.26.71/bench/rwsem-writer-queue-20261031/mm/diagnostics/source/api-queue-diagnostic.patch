@@ -1,0 +1,283 @@
+diff --git a/tests/kernel/mmap_lock/README.md b/tests/kernel/mmap_lock/README.md
+new file mode 100644
+index 00000000..7773f022
+--- /dev/null
++++ b/tests/kernel/mmap_lock/README.md
+@@ -0,0 +1,50 @@
++# Actual-mm API fixture queue observations
++
++This fixture calls the mmap lock APIs on retained real mm objects. It is
++mechanism and lifetime evidence, separate from unchanged applications invoking
++their actual system calls. Native and KD modes retain the same API, signal,
++downgrade, reader, IRQ-release, deferred-reference and destruction checks.
++
++The scope3 API attempt using diagnostic harness `9d10ae77` failed its old
++`phase_wait` assertion for a writer blocked behind another writer. All workers
++joined and the object became idle, but the probe reported one error and stopped
++before completing its checks. Preserve that failed receipt. The unprepared
++scope3 writer now queues at the physical gate before reserving its phase;
++killable readers still use `phase_wait`, and a writer that owns the gate and
++phase waits for existing readers on `reader_drain`. One Boolean selecting
++between two wait queues no longer describes these three intervals.
++
++The correction names the waiting kind and exact worker at every call site.
++A gate observation checks the retained holder's physical ownership,
++closed admission, zero readers, WAITERS flag and the singleton ring's exact
++worker under `gate.wait_lock`. It requires empty phase/drain queues, no
++OSQ membership and no delegation. Reader-phase and reader-drain observations
++retain their own exact queue, owner, phase and reader-count checks. Timed reader
++drain can unlink and requeue, so a bounded observation waits for its actual
++parked publication; deadline expiry remains a failed check. The controlled cases
++have only the one specified acquisition waiter when sampled.
++The Native branch retains its existing contention and parked-worker checks;
++it does not pretend to have the KD queue topology.
++
++The gate waiter type is private. A test-only header completes its exact
++captured `list_head` plus `task` layout and flag definitions. Before building,
++the runner derives the same declaration from the named harness's
++`kernel_module/kd_mutex_local.c`, applies the maintained generated prefix, and
++requires byte equality with that header. It retains this source hash and
++copy. No unlocked waiter-pointer dereference, new kernel export or production
++instrumentation is introduced. The task reference and object remain retained
++until the existing ordinary joins complete.
++
++Pending nonfatal signals must still leave killable acquisitions waiting. Fatal
++cancellation must still return `-EINTR`. Before releasing the original holder,
++the fixture checks exact queue removal and unchanged holder state, or the
++writer's exact gate/phase rollback when draining readers. Downgrade still moves
++a blocked writer from the gate to reader drainage before allowing it to enter.
++Timeouts remain failures and do not establish drain or authorize forced unload.
++
++Only this README, the API runner, payload module and test-only layout header
++change. The kernel, provider, application binaries, timing runner and eligibility
++policy remain frozen. Earlier classifier checks and baseline replay keep their
++original `9d10ae77` identities; a fresh API result must identify this successor.
++This correction is initially source-reviewed only. Compilation and live checks
++run in the VM and supply their own results.
+diff --git a/tests/kernel/mmap_lock/payload/gate_waiter_layout.h b/tests/kernel/mmap_lock/payload/gate_waiter_layout.h
+new file mode 100644
+index 00000000..8db6a18a
+--- /dev/null
++++ b/tests/kernel/mmap_lock/payload/gate_waiter_layout.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Test-only view checked against the captured local-gate source by run.py. */
++#ifndef KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H
++#define KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H
++#include <linux/list.h>
++
++#define KD_MMAP_WAITERS 1UL
++#define KD_MMAP_HANDOFF 2UL
++#define KD_MMAP_PICKUP 4UL
++#define KD_MMAP_FLAGS 7UL
++
++struct kd_mmap_local_waiter {
++	struct list_head list;
++	struct task_struct *task;
++};
++
++#endif
+diff --git a/tests/kernel/mmap_lock/payload/module.c b/tests/kernel/mmap_lock/payload/module.c
+index 22d2e772..5927bbc0 100644
+--- a/tests/kernel/mmap_lock/payload/module.c
++++ b/tests/kernel/mmap_lock/payload/module.c
+@@ -19,6 +19,7 @@
+ #include <linux/uaccess.h>
+ #include "api.h"
+ #include "backend_trylock.h"
++#include "gate_waiter_layout.h"
+ 
+ #ifndef CONFIG_KDLOCK_MMAP
+ #error "This probe requires the actual mmap-lock integration kernel"
+@@ -187,17 +188,92 @@ static void join_all(void)
+ 	check(idle(probe_mm));
+ }
+ 
+-static void queue_check(bool drain)
++enum probe_wait_kind {
++	PROBE_READER_PHASE,
++	PROBE_WRITER_GATE,
++	PROBE_READER_DRAIN,
++};
++
++static bool queue_task(wait_queue_head_t *queue, struct task_struct *task)
++{
++	unsigned long flags;
++	bool exact = false;
++
++	spin_lock_irqsave(&queue->lock, flags);
++	if (list_is_singular(&queue->head)) {
++		wait_queue_entry_t *entry = list_first_entry(&queue->head, wait_queue_entry_t, entry);
++
++		exact = entry->private == task;
++	}
++	spin_unlock_irqrestore(&queue->lock, flags);
++	return exact;
++}
++
++static void queue_check(enum probe_wait_kind kind, struct task_struct *task,
++			struct task_struct *owner, long readers)
+ {
+ 	check(mmap_lock_is_contended(probe_mm));
+ 	if (probe_mm->mmap_lock.use_kd) {
+ 		struct kd_mmap_rwsem *s = &probe_mm->mmap_lock.kd;
+-		check(waitqueue_active(drain ? &s->reader_drain : &s->phase_wait));
+-		check(!waitqueue_active(drain ? &s->phase_wait : &s->reader_drain));
++		unsigned long flags, word, end = jiffies + 5 * HZ;
++		bool gate, exact, phase, drain, stopped;
++
++		/* The timed drain can briefly unlink and requeue. Observe its actual
++		 * parked publication, never infer membership from a sampled pointer.
++		 * This scenario has exactly one acquisition waiter; its task and mm
++		 * references stay held until join_all. */
++		do {
++			struct kd_mmap_local_waiter *head;
++
++			raw_spin_lock_irqsave(&s->gate.wait_lock, flags);
++			word = atomic_long_read(&s->gate.owner);
++			head = s->gate.wait_head;
++			gate = head != NULL;
++			exact = head && head->task == task &&
++				head->list.next == &head->list && head->list.prev == &head->list;
++			raw_spin_unlock_irqrestore(&s->gate.wait_lock, flags);
++			phase = queue_task(&s->phase_wait, task);
++			drain = queue_task(&s->reader_drain, task);
++			stopped = (READ_ONCE(task->__state) & TASK_UNINTERRUPTIBLE) &&
++				!READ_ONCE(task->on_cpu);
++			if (stopped && (kind == PROBE_WRITER_GATE ? exact :
++				kind == PROBE_READER_PHASE ? phase : drain))
++				break;
++			msleep(1);
++		} while (time_before(jiffies, end));
++		check(stopped);
++		check(!READ_ONCE(s->prepared_writes));
++		check((word & ~KD_MMAP_FLAGS) == (unsigned long)owner);
++		check(atomic_long_read(&s->admission) == -1 && atomic_long_read(&s->readers) == readers);
++		check(kind == PROBE_WRITER_GATE ? exact && (word & KD_MMAP_WAITERS) :
++			!gate && !(word & KD_MMAP_FLAGS));
++		check(kind == PROBE_READER_PHASE ? phase : !waitqueue_active(&s->phase_wait));
++		check(kind == PROBE_READER_DRAIN ? drain : !waitqueue_active(&s->reader_drain));
++		check(!atomic_read(&s->gate.osq.tail) && !atomic_read(&s->reader_osq.tail));
+ 		check(!atomic_read(&s->gate.delegation_state) && !READ_ONCE(s->gate.delegation_tail));
+ 	}
+ }
+ 
++static void cancelled_queue_check(bool drain)
++{
++	check(drain ? kd_mmap_is_locked(&probe_mm->mmap_lock) :
++		kd_mmap_is_write_owner(&probe_mm->mmap_lock));
++	if (probe_mm->mmap_lock.use_kd) {
++		struct kd_mmap_rwsem *s = &probe_mm->mmap_lock.kd;
++
++		/* Completion follows return from the lock API, so the stack waiter
++		 * has already unlinked and a draining writer has rolled back both
++		 * gate and phase. The original holder has not been released. */
++		check(!READ_ONCE(s->gate.wait_head) && !atomic_read(&s->gate.osq.tail));
++		check(!waitqueue_active(&s->phase_wait) && !waitqueue_active(&s->reader_drain));
++		check(atomic_long_read(&s->gate.owner) == (drain ? 0 : (unsigned long)current));
++		check(atomic_long_read(&s->admission) == (drain ? 0 : -1));
++		check(atomic_long_read(&s->readers) == (drain ? 1 : 0));
++		check(!atomic_read(&s->reader_osq.tail) && !atomic_read(&s->gate.delegation_state) &&
++			!READ_ONCE(s->gate.delegation_tail));
++	}
++}
++
+ static int cancellation(bool writer, bool drain)
+ {
+ 	int ret;
+@@ -211,7 +287,8 @@ static int cancellation(bool writer, bool drain)
+ 	if (ret)
+ 		goto release;
+ 	check(parked(workers[0].task));
+-	queue_check(drain);
++	queue_check(drain ? PROBE_READER_DRAIN : writer ? PROBE_WRITER_GATE : PROBE_READER_PHASE,
++		workers[0].task, drain ? workers[0].task : current, drain ? 1 : 0);
+ 	check(!send_sig(SIGUSR1, workers[0].task, 1));
+ 	msleep(20);
+ 	check(!completion_done(&workers[0].done) && !completion_done(&workers[0].entered));
+@@ -219,6 +296,8 @@ static int cancellation(bool writer, bool drain)
+ 	done = wait_for_completion_timeout(&workers[0].done, 5 * HZ);
+ 	check(done);
+ 	check(workers[0].result == -EINTR);
++	if (done)
++		cancelled_queue_check(drain);
+ 	if (drain) {
+ 		bool acquired = mmap_read_trylock(probe_mm);
+ 		check(acquired);
+@@ -250,7 +329,7 @@ static int sleeping(struct kd_mmap_probe_result *r)
+ 	if (ret)
+ 		goto join;
+ 	r->writer_slept = parked(workers[2].task);
+-	queue_check(true);
++	queue_check(PROBE_READER_DRAIN, workers[2].task, workers[2].task, 2);
+ 	check(!completion_done(&workers[2].entered));
+ 	ret = start(3, false, false);
+ 	if (ret)
+@@ -284,12 +363,12 @@ static int downgrade(void)
+ 		return ret;
+ 	}
+ 	check(parked(workers[0].task));
+-	queue_check(false);
++	queue_check(PROBE_WRITER_GATE, workers[0].task, current, 0);
+ 	atomic_inc(&reading);
+ 	mmap_write_downgrade(probe_mm);
+ 	msleep(20);
+ 	check(parked(workers[0].task));
+-	queue_check(true);
++	queue_check(PROBE_READER_DRAIN, workers[0].task, workers[0].task, 1);
+ 	check(!completion_done(&workers[0].entered));
+ 	atomic_dec(&reading);
+ 	mmap_read_unlock(probe_mm);
+diff --git a/tests/kernel/mmap_lock/run.py b/tests/kernel/mmap_lock/run.py
+index 55017175..f88af6ad 100644
+--- a/tests/kernel/mmap_lock/run.py
++++ b/tests/kernel/mmap_lock/run.py
+@@ -6,6 +6,7 @@ import hashlib
+ import json
+ import os
+ from pathlib import Path
++import re
+ import shutil
+ import struct
+ import sys
+@@ -30,6 +31,21 @@ def idle():
+                    p.name != 'rwsem_probe', 'existing project module: ' + p.name)
+ 
+ 
++def gate_waiter_layout(text):
++    """Complete only the source-bound private waiter tag used by this fixture."""
++    flags = re.findall(r'^#define KD_(?:WAITERS|HANDOFF|PICKUP|FLAGS) [^\n]+$', text, re.M)
++    structs = re.findall(r'^struct kd_local_waiter \{\n(?:[^\n]*\n)*?\};$', text, re.M)
++    rt.require(len(flags) == 4 and len(structs) == 1, 'captured gate layout declaration differs')
++    declaration = '\n'.join(flags) + '\n\n' + structs[0]
++    return ('/* SPDX-License-Identifier: GPL-2.0 */\n'
++            '/* Test-only view checked against the captured local-gate source by run.py. */\n'
++            '#ifndef KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H\n'
++            '#define KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H\n'
++            '#include <linux/list.h>\n\n' +
++            declaration.replace('kd_', 'kd_mmap_').replace('KD_', 'KD_MMAP_') +
++            '\n\n#endif\n')
++
++
+ def main():
+     p = argparse.ArgumentParser(description=__doc__)
+     p.add_argument('--output', type=Path)
+@@ -87,6 +103,18 @@ def main():
+         result.update(shared_platform.admit(a,out))
+         support=shared_platform.freeze_support(out)
+         source, hashes = out / 'source', {}
++        layout_source = ROOT / 'kernel_module/kd_mutex_local.c'
++        layout_header = ROOT / 'tests/kernel/mmap_lock/payload/gate_waiter_layout.h'
++        rt.require(layout_header.read_text() == gate_waiter_layout(layout_source.read_text()),
++                   'test-only gate view differs from captured source')
++        layout_copy = source / 'kernel_module/kd_mutex_local.c'
++        layout_copy.parent.mkdir(parents=True)
++        shutil.copyfile(layout_source, layout_copy)
++        hashes['kernel_module/kd_mutex_local.c'] = rt.digest(layout_source)
++        result['queue_observation'] = dict(schema=1, kinds=['reader-phase', 'writer-gate', 'reader-drain'],
++            gate_source_sha256=hashes['kernel_module/kd_mutex_local.c'],
++            gate_layout_sha256=rt.digest(layout_header), singleton_task_checked_under_wait_lock=True,
++            cancellation_holder_checked_before_release=True)
+         for directory in ('tests/kernel/mmap_lock', 'tests/unit', 'include', 'daemon'):
+             for path in (ROOT / directory).rglob('*'):
+                 rel = path.relative_to(ROOT)

@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "action": "append",
+  "passed": true,
+  "state": "ENTRIES_APPENDED_NOT_ARMED",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdscope3",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/build/result.json",
+    "sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/host-state.json",
+    "sha256": "976a5694667b12b4a848d21b9c2671dc108f7462373726eb83461de2f4d7e7cb"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456370.9363403,
+      "pid": 770258,
+      "process_group": 770258,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.001001,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "root-uuid",
+      "argv": [
+        "findmnt",
+        "-n",
+        "-o",
+        "UUID",
+        "--target",
+        "/"
+      ],
+      "started": 1793456371.0103889,
+      "pid": 770259,
+      "process_group": 770259,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.0338085,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/root-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "boot-uuid",
+      "argv": [
+        "findmnt",
+        "-n",
+        "-o",
+        "UUID",
+        "--target",
+        "/boot"
+      ],
+      "started": 1793456371.0468624,
+      "pid": 770260,
+      "process_group": 770260,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.0693483,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/boot-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "grub-uuid",
+      "argv": [
+        "grub-probe",
+        "--target=fs_uuid",
+        "/boot"
+      ],
+      "started": 1793456371.0795605,
+      "pid": 770261,
+      "process_group": 770261,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.1188836,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/grub-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "grub-syntax",
+      "argv": [
+        "grub-script-check",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/custom.cfg"
+      ],
+      "started": 1793456371.1316347,
+      "pid": 770262,
+      "process_group": 770262,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.1549273,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/grub-syntax.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "grub-installed-syntax",
+      "argv": [
+        "grub-script-check",
+        "/boot/grub/custom.cfg"
+      ],
+      "started": 1793456371.17259,
+      "pid": 770263,
+      "process_group": 770263,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456371.1997347,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/grub-installed-syntax.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "started": 1793456368.323536,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/result.json",
+    "sha256": "080d0d84a548c26a7e4541323a376f52212cd9af37f2087b1ca0aed2b23a8fd9"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/protected-before.json",
+    "sha256": "36890520f5d2c69cfed404023d1adaba360de4153dde38b879b0ad8f7af997b1"
+  },
+  "installation": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/result.json",
+    "sha256": "080d0d84a548c26a7e4541323a376f52212cd9af37f2087b1ca0aed2b23a8fd9"
+  },
+  "root_uuid": "aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "entries": {
+    "native": "kdlock-7.0.0-38-kdscope3-native",
+    "kd": "kdlock-7.0.0-38-kdscope3-kd"
+  },
+  "custom_after": {
+    "bytes": 6305,
+    "mode": 33188,
+    "sha256": "8d9aff4a2a07bef260ec9c63f931ff305f516def27062b58043486309cff702b"
+  },
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/protected-after.json",
+    "sha256": "be1f96d0aa7e112c8d5f27d20541d651f8389a249c4914c36b6322c20f0dbd17"
+  },
+  "final_idle": true,
+  "finished": 1793456372.8754852
+}

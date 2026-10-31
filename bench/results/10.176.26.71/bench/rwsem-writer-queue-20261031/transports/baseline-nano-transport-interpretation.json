@@ -1,0 +1,10 @@
+{
+  "observed_local_wrapper_exit": 1,
+  "remote_controller_exit": 0,
+  "actual_completed": true,
+  "actual_idle": true,
+  "validated_points": 210,
+  "issue": "Outer wrapper checked passed; controller reports completed. Original receipts preserved, no measurement repeated.",
+  "result_sha256": "7498adc2d4ba6d404b89fa9074dc5f1649872ee3a8f36666c288fc12b4ea07dd",
+  "wrapper_sha256": "b0524b531957592c12facb5e0651f52b67abcc9637cd81ea60543fc6d79e407f"
+}

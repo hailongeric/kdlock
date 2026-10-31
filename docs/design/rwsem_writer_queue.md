@@ -98,3 +98,30 @@ comparisons even if nano has a loss, keeping the candidate unaccepted. If any
 required gate fails, retain the exact candidate and evidence, state the remaining
 limits and use the measured cause to propose a next iteration. One round does
 not establish repeat variance or prove that an unchanged path has regressed.
+
+## Evidence status: October 31
+
+The isolated implementation is `1b6f256b13e8743aa1fd7bdc958cc82ae7726463`.
+Focused correctness passed after a live-fixture completion-consumption fix;
+the original failed attempt and its separate drain remain retained. The fresh
+f7/candidate nano comparison completed all 420 points under one strict host
+cohort, with one round per point. It retains 95 whole-window losses, 95 peak
+losses and 101 coordinates losing either metric out of 210. The no-regression
+gate is false, and the candidate is not accepted or promoted.
+
+The [completed report](../../bench/results/10.176.26.71/bench/rwsem-writer-queue-20261031/README.md)
+separates measured instructions, CPU accounting, successful guest completion
+and the baseline outer transport's completion-field mismatch. These records
+do not establish parking as the cause of the losses. The separate scope3 recipe
+is `7814c61a0be20f5db3b9fb41b6079ef6d2938b5f`; its actual-MM correctness checks
+passed with explicit return-site and API queue-observation diagnostic revisions.
+Both original failures remain retained, and the baseline keeps its original
+source identity and measured points. The paired unchanged `mmap1` comparison
+validated all 84 original points: threads have 20 gains and one loss, processes
+15 gains and six losses. At 20 threads the measured ratio is 5.95×; at 60
+processes it is 0.77614×. These gains do not close either no-regression gate.
+The ordinary kernel, underlying source view and pool settings were restored;
+the candidate remains unaccepted. A later reader-only ablation may retain the
+writer queue while restoring f7 reader admission/entry shape to investigate the
+nano losses. The 60-process sample skew remains a separate unresolved issue;
+neither proposed investigation is a measured remedy.

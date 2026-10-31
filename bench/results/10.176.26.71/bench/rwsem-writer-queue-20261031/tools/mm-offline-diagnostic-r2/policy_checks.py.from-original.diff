@@ -1,0 +1,32 @@
+--- /tmp/kdlock-writer-queue-mm-offline-20261031/policy_checks.py
++++ /tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/policy_checks.py
+@@ -34,7 +34,16 @@
+         all(v.isdigit()for v in stack['schedstat_before'].split()),'held exact sleeping chain differs')
+ 
+ def check_policy(ar,e,c,owners,results,bind,git):
+- members=e['logical_steps'];mapping=results['mapping'];policies={x[0]:'mmap-functional-v1'if x[0]=='02-cycle-16'else'mmap-writer-proof-v1'for x in PLAN}
++ members=e['logical_steps']
++ if c['harness']['commit']=='de5e4f06a6d60e531a8b329d3c7f2c5335d5e707':
++  api=results['api'];q=api['queue_observation'];prefix=str(Path(members['api']['result']).parent)
++  expected={p:a.sha(git.blob(c['harness']['commit'],p))for p in('kernel_module/kd_mutex_local.c','tests/kernel/mmap_lock/payload/gate_waiter_layout.h')}
++  a.need(q==dict(schema=1,kinds=['reader-phase','writer-gate','reader-drain'],gate_source_sha256=expected['kernel_module/kd_mutex_local.c'],
++         gate_layout_sha256=expected['tests/kernel/mmap_lock/payload/gate_waiter_layout.h'],singleton_task_checked_under_wait_lock=True,
++         cancellation_holder_checked_before_release=True),'fresh API exact queue observation differs')
++  source=ar.json(prefix+'/source-sha256.json')
++  a.need(all(source[p]==h==ar.hashes[prefix+'/source/'+p]for p,h in expected.items()),'API queue layout source correspondence differs')
++ mapping=results['mapping'];policies={x[0]:'mmap-functional-v1'if x[0]=='02-cycle-16'else'mmap-writer-proof-v1'for x in PLAN}
+  a.need(mapping.get('eligibility_policy')=='mmap-functional-v1'and mapping.get('performance_qualified')is False and
+         mapping.get('source_unchanged')is True and mapping.get('case_policies')==policies and
+         [(z['name'],z['mode'],z['threads'],z['iterations'])for z in mapping['cases']]==PLAN and
+@@ -57,8 +66,10 @@
+  for start,end in(('static void json_string(','static int proc_text('),('static char task_state(','/* Called only after successful joins')):
+   a.need(text.count(start)==text.count(end)==1 and text.index(start)<text.index(end),'classifier extraction bounds differ');pieces.append(text[text.index(start):text.index(end)])
+  source=a.sha(text.encode());extracted=a.sha(''.join(pieces).encode());cl=strict['classifier']
++ expected_functions=['json_string','task_state','chain_frame','writer_chain_tail','writer_observation','writer_contention']
++ if d['commit']=='31d3bc28d55abcab3f8af379a0e57c6e80d7d399':expected_functions.insert(2,'chain_wait_arguments')
+  a.need(cl.get('source_sha256')==source and cl.get('extracted_sha256')==extracted and cl.get('changed_bodies')is False and
+-        cl.get('functions')==['json_string','task_state','chain_frame','writer_chain_tail','writer_observation','writer_contention']and
++        cl.get('functions')==expected_functions and
+         ar.hashes[sprefix+'/source/payload/classifier.inc']==extracted and ar.hashes[sprefix+'/frozen-classifier-source/bench/mmap_writer/client.c']==source,'held classifier differs')
+  bind(strict['files']);a.need([z['operation']for z in strict['cases']]==['mmap','munmap'],'both held syscall witnesses required');sites=results['sites']
+  for index,case in enumerate(strict['cases'],1):

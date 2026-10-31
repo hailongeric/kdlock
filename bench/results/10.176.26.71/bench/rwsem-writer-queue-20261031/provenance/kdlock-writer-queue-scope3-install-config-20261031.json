@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "kernel_config_sha256": "97582805d5492dc81fc5bacd55b7b723e636a6e344b02328159c92d6e5cf6db4",
+  "install_controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "recipe": "/mnt/kdlock-builds2/kdlock-scope3-recipe-7814c61a",
+  "manifest": "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+  "manifest_sha256": "a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411",
+  "commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+  "release": "7.0.0-38-kdscope3",
+  "ubuntu": "/mnt/kdlock-builds/ubuntu-7.0.0-38-source",
+  "build_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/build/result.json",
+  "build_result_sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e",
+  "data_mount": "/mnt/kdlock-builds2",
+  "stage": "/mnt/kdlock-builds2/kdlock-scope3-modules-stage-7814c61a-20261031",
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "variants": {
+    "native": "kdscope3-native",
+    "kd": "kdscope3-kd"
+  },
+  "bundles": {
+    "native": "/root/kdlock-kernel-baselines/linux70-kdscope3-native-20261031",
+    "kd": "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031"
+  },
+  "mmap_prepare": "/mnt/kdlock-builds2/kdlock-scope3-mmap-prepare-7814c61a-20261031/prepare.json",
+  "api_prepare": "/mnt/kdlock-builds2/kdlock-scope3-api-prepare-7814c61a-20261031/prepare.json",
+  "normal_build": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+  "normal_bundle": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+  "normal_bundle_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17"
+}

@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/tmp/kdlock-writer-queue-kernel-20261031.py", line 61, in <module>
+    build.mkdir();shutil.copy2(old/'build/.config',build/'.config');sign=source/'debian/scripts/sign-module';before=sha(sign);sign.chmod(sign.stat().st_mode|0o100);assert sha(sign)==before
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/shutil.py", line 529, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/shutil.py", line 313, in copyfile
+    with open(src, 'rb') as fsrc:
+         ~~~~^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build/.config'

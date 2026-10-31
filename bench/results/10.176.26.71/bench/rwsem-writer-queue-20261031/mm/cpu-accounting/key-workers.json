@@ -1,0 +1,68 @@
+[
+  {
+    "baseline_occupancy": 0.37839022104884495,
+    "baseline_result_sha256": "a1b7803e8b67b98e986acc561cf9cb6eb8d24f2ee677437fda594afb6a637b95",
+    "candidate_occupancy": 0.986390652310143,
+    "candidate_result_sha256": "904763b742a32a3ff6e27ed9697d016b9d0bde616cb31421d25c2321ee3bf428",
+    "causal_attribution": null,
+    "model": "threads",
+    "occupancy_percentage_point_change": 60.8000431261298,
+    "performance_accepted": false,
+    "workers": 20
+  },
+  {
+    "baseline_occupancy": 0.447124623775267,
+    "baseline_result_sha256": "dc21c4cf988d1b01148680edd28f6b6422418f9d999390dd7dd181f8778fc572",
+    "candidate_occupancy": 0.9834410609727041,
+    "candidate_result_sha256": "3a68656180f6114de21a6d017a3f86aefd060da6c609e8c1d951f323bdf5050c",
+    "causal_attribution": null,
+    "model": "threads",
+    "occupancy_percentage_point_change": 53.63164371974371,
+    "performance_accepted": false,
+    "workers": 32
+  },
+  {
+    "baseline_occupancy": 0.4786757655273103,
+    "baseline_result_sha256": "68b421970290fd2312624643d4ccf3abb0cbeeb1cf96e26067f7712d9488cb8a",
+    "candidate_occupancy": 0.9821005663122606,
+    "candidate_result_sha256": "44e173dbab2616f4210bda3fb4c909325a897247e57ab009c69e04625c0b3909",
+    "causal_attribution": null,
+    "model": "threads",
+    "occupancy_percentage_point_change": 50.34248007849502,
+    "performance_accepted": false,
+    "workers": 60
+  },
+  {
+    "baseline_occupancy": 0.9786715062036347,
+    "baseline_result_sha256": "052896d8658dcdaf888decbf9f76603bd07c25dd74f5e37ab687e253cc21f13d",
+    "candidate_occupancy": 0.9694887033589797,
+    "candidate_result_sha256": "ac300a65ba3d83bb5cb6a1800c705b6cc1be105c337269a6394fe7be4a5ae90d",
+    "causal_attribution": null,
+    "model": "processes",
+    "occupancy_percentage_point_change": -0.9182802844654958,
+    "performance_accepted": false,
+    "workers": 20
+  },
+  {
+    "baseline_occupancy": 0.954142012110188,
+    "baseline_result_sha256": "f5994b0ab6b222627c11fc633afc2663c981bd016a42e28cf7234ef1660ba900",
+    "candidate_occupancy": 0.9576430513687357,
+    "candidate_result_sha256": "bbeee9a308c639119204db7cffd774979a779358a8a6d25ce37a10060254a3b8",
+    "causal_attribution": null,
+    "model": "processes",
+    "occupancy_percentage_point_change": 0.3501039258547678,
+    "performance_accepted": false,
+    "workers": 32
+  },
+  {
+    "baseline_occupancy": 0.9840144880073493,
+    "baseline_result_sha256": "c8161e6cfd4c4ba843fb5fc95f50b5e02b0103cbe824d3bcb826faab8e2f0ac1",
+    "candidate_occupancy": 0.9847487889162845,
+    "candidate_result_sha256": "f4e6f835ce43f99ba0e10770f705d2191faee091146468b3bcdfe83f00de9fa3",
+    "causal_attribution": null,
+    "model": "processes",
+    "occupancy_percentage_point_change": 0.07343009089352392,
+    "performance_accepted": false,
+    "workers": 60
+  }
+]

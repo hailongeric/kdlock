@@ -1,0 +1,35 @@
+--- /tmp/kdlock-writer-queue-mm-cpu-occupancy-20261031.py
++++ /tmp/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.py
+@@ -11,6 +11,10 @@
+ 
+ RECIPE='7814c61a0be20f5db3b9fb41b6079ef6d2938b5f'
+ CONFIG='b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602'
++CANDIDATE_RECIPE='de5e4f06a6d60e531a8b329d3c7f2c5335d5e707'
++CANDIDATE_CONFIG='fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584'
++GENERATIONS=dict(baseline=RECIPE,compatibility='9d10ae77290873df23804293f364862a2b55f385',candidate=CANDIDATE_RECIPE)
++PROVENANCE='2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364'
+ POLICY='mmap-functional-held-writer-v1'
+ WORKERS=[*range(1,9),*range(12,61,4)]
+ SCOPE='whole upstream lifetime including warmup and reaped workers'
+@@ -63,12 +67,19 @@
+     points=checked(x.comparison/'points.json',x.points_sha256);spec=checked(x.inputs,x.inputs_sha256)
+     expected={(arm,model,n)for arm in('baseline','candidate')for model in('threads','processes')for n in WORKERS}
+     need(validation.get('completed')is True and validation.get('validated')is True and validation.get('points')==84 and validation.get('pairs')==42 and
+-         validation.get('harness_commit')==RECIPE and validation.get('config_sha256')==CONFIG and validation.get('inputs_sha256')==x.inputs_sha256 and
++         validation.get('baseline_harness_commit')==RECIPE and validation.get('baseline_config_sha256')==CONFIG and
++         validation.get('diagnostic_generations_separate')is True and validation.get('diagnostic_generations')==GENERATIONS and
++         validation.get('diagnostic_provenance_sha256')==spec.get('diagnostic_provenance_sha256')==PROVENANCE and
++         all(validation['grids'][arm]['harness_commit']==commit and validation['grids'][arm]['config_sha256']==spec['arms'][arm]['config_sha256']==config
++             for arm,commit,config in(('baseline',RECIPE,CONFIG),('candidate',CANDIDATE_RECIPE,CANDIDATE_CONFIG)))and
++         validation.get('inputs_sha256')==x.inputs_sha256 and
+          validation.get('strict_host_qualified')is True and validation.get('shared_functional_policy')==POLICY and
+          spec.get('schema')==1 and set(spec['arms'])=={'baseline','candidate'},'completed current paired comparison required')
+     need(len(points)==84 and {(z['arm'],z['model'],z['workers'])for z in points}==expected and all(z['round']==0 for z in points),'complete original point map required')
+     need(not x.output.exists(),'new diagnostic output required');x.output.mkdir(parents=True)
+-    receipt=dict(schema=1,completed=False,validated=False,script_sha256=sha(__file__),harness_commit=RECIPE,config_sha256=CONFIG,
++    receipt=dict(schema=2,completed=False,validated=False,script_sha256=sha(__file__),
++        diagnostic_generations=GENERATIONS,diagnostic_provenance_sha256=PROVENANCE,diagnostic_generations_separate=True,
++        arm_configs=dict(baseline=CONFIG,candidate=CANDIDATE_CONFIG),
+         validation_sha256=x.validation_sha256,points_sha256=x.points_sha256,inputs_sha256=x.inputs_sha256,performance_accepted=False,
+         scope='Whole upstream lifetime including six warmups, collector process and reaped workers; no timed-tail or parking/spinning attribution')
+     save(x.output/'validation.json',receipt)

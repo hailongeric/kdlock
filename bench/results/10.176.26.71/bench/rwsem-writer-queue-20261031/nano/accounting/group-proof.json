@@ -1,0 +1,102 @@
+[
+  {
+    "arm": "baseline",
+    "file": "mutex-throughput.tar.gz",
+    "sha256": "f88635ab31c08d89d92f7cc18e029451d1f871750af1fe8ffe1b54d15ca1b080"
+  },
+  {
+    "arm": "baseline",
+    "file": "mutex-locality.tar.gz",
+    "sha256": "52c58cef3260fba5d8e2ea37da29bab092856d492c9fb53e4dedf7ecf22fa285"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwsem-throughput-read.tar.gz",
+    "sha256": "cc79b59e633c9bb5dd71805d4ed2913614411813097a21edf429de2d6cbdaf77"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwsem-throughput-mixed.tar.gz",
+    "sha256": "10f60c7f37b84b460ed92596dae562343ccf29e0afb7febe83b5b8f455d76b1f"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwsem-locality-read.tar.gz",
+    "sha256": "9d3b632fc0733e13f5697ec611827e448724cb806a69793203b0dd5d9457e432"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwsem-locality-mixed.tar.gz",
+    "sha256": "9d2a65da0363b70f15f645c962e234b409536fb856bd4230db1f1db7822b35d9"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwlock-throughput-read.tar.gz",
+    "sha256": "0d563e266dfe88694a228d5cb18bbf7efa5becae44335e9cbbaaee22a6c0025b"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwlock-throughput-mixed.tar.gz",
+    "sha256": "c72f96f57d74b8da7c77a438e8658c1e93827c73fcb6dd823ae6a2728c8e89e3"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwlock-locality-read.tar.gz",
+    "sha256": "d62a1ed1a7336b1366bab8b9c28180bea07628a67421b9cc73552e60459aab43"
+  },
+  {
+    "arm": "baseline",
+    "file": "rwlock-locality-mixed.tar.gz",
+    "sha256": "b98fcf144c397abcfd11b87dd3e7beb516bdf7fa60b71a8745cd66e6c1660638"
+  },
+  {
+    "arm": "candidate",
+    "file": "mutex-throughput.tar.gz",
+    "sha256": "35d1a35fd0076f413fb70b4a3702210be89c2d15071f1f7bb4dd214465f2fff3"
+  },
+  {
+    "arm": "candidate",
+    "file": "mutex-locality.tar.gz",
+    "sha256": "0863469ae17356047d726aa4d74252f8417d22be51c9a04842ee14eeec133f0e"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwsem-throughput-read.tar.gz",
+    "sha256": "1ccb2d9316a00b8fdb284a82ed14170887f172250f23efebcde27fb0829d8cbd"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwsem-throughput-mixed.tar.gz",
+    "sha256": "95ce6d907866725630d2e4de9c1f83622d1df0f1c4438596afa078a859a80463"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwsem-locality-read.tar.gz",
+    "sha256": "84c2fd25ae912556e74cab04366a8a690742a7e4980520996943f0fbd0a30649"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwsem-locality-mixed.tar.gz",
+    "sha256": "847ee22b04b683717631f6ffeb6bfec9d6e9acab26f8cd1c1b1f00d195a9889a"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwlock-throughput-read.tar.gz",
+    "sha256": "0645ed6158245a7f50d28b68f61ab2ae395d81768cc8192d6ce57d8c44a15829"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwlock-throughput-mixed.tar.gz",
+    "sha256": "3395915f74f68651e0508b672a3abdfc06b7f4c28d15cb9e5dc57e901a5093e9"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwlock-locality-read.tar.gz",
+    "sha256": "295fc4a1c1a5387c9d35685c2a5d83ce343d54148f8ec3267ceb7abd80297272"
+  },
+  {
+    "arm": "candidate",
+    "file": "rwlock-locality-mixed.tar.gz",
+    "sha256": "d3e91ac36d81a805cd7a7d523862fce2d96937f5f244c5fec2604cb97ccfdab3"
+  }
+]

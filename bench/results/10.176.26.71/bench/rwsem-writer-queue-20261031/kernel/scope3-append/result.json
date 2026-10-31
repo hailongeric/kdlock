@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "completed": true,
+  "state": "COMPLETE",
+  "controller_sha256": "21f15ebbd677783461b8db87d5aa39bc75818994e7e1ab15cf3abdb469c87cac",
+  "transport_sha256": "0d48e27a4dbd6838e349431d50f671ce7b59346ab4afed59ca8f54449310ffd7",
+  "uploads_sha256": "ec02c08556b3e8048fb002b410ceb05311495c4c623ad6cdf91e3893a78fcc2f",
+  "spec_sha256": "2bc62261498b4ef65d6bd2ad3411f5510d4a0655951485f2a8f8df97a7686ee5",
+  "started": 1793456365.2325375,
+  "child_completion_unknown": false,
+  "total_input_bytes": 486623,
+  "commands": [
+    {
+      "name": "upload",
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import base64,hashlib,json,os,pathlib,sys\nx=json.load(sys.stdin);rows=x['\"'\"'\"'\"'\"'\"'\"'\"'files'\"'\"'\"'\"'\"'\"'\"'\"'];result=[]\nfor row in rows:\n p=pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']);data=base64.b64decode(row['\"'\"'\"'\"'\"'\"'\"'\"'data'\"'\"'\"'\"'\"'\"'\"'\"'],validate=True)\n assert p.is_absolute() and str(p)==row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"'] and '\"'\"'\"'\"'\"'\"'\"'\"'..'\"'\"'\"'\"'\"'\"'\"'\"'not in p.parts\n assert (p.is_relative_to('\"'\"'\"'\"'\"'\"'\"'\"'/tmp'\"'\"'\"'\"'\"'\"'\"'\"')and p!=pathlib.Path('\"'\"'\"'\"'\"'\"'\"'\"'/tmp'\"'\"'\"'\"'\"'\"'\"'\"'))or str(p)in x['\"'\"'\"'\"'\"'\"'\"'\"'data_files'\"'\"'\"'\"'\"'\"'\"'\"']\n assert p.parent.is_dir() and p.parent.resolve()==p.parent and not p.is_symlink()\n assert hashlib.sha256(data).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"'] and len(data)==row['\"'\"'\"'\"'\"'\"'\"'\"'bytes'\"'\"'\"'\"'\"'\"'\"'\"']\n if p.exists():assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\nfor row in rows:\n p=pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']);existed=p.exists()\n if not existed:\n  with p.open('\"'\"'\"'\"'\"'\"'\"'\"'xb'\"'\"'\"'\"'\"'\"'\"'\"')as f:f.write(base64.b64decode(row['\"'\"'\"'\"'\"'\"'\"'\"'data'\"'\"'\"'\"'\"'\"'\"'\"'],validate=True));f.flush();os.fsync(f.fileno())\n  fd=os.open(p.parent,os.O_DIRECTORY);os.fsync(fd);os.close(fd)\n assert not p.is_symlink()and p.is_file()and hashlib.sha256(p.read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\n result.append(dict(guest=str(p),sha256=row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"'],bytes=p.stat().st_size,status='\"'\"'\"'\"'\"'\"'\"'\"'retained-identical'\"'\"'\"'\"'\"'\"'\"'\"'if existed else'\"'\"'\"'\"'\"'\"'\"'\"'uploaded-new'\"'\"'\"'\"'\"'\"'\"'\"'))\nfor row in rows:assert hashlib.sha256(pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']).read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\nprint(json.dumps(dict(completed=True,files=result)))\n'\"'\"''"
+      ],
+      "started": 1793456365.2370665,
+      "pid": 3363492,
+      "returncode": 0,
+      "finished": 1793456366.3500073
+    },
+    {
+      "name": "step",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-reviewed-guest-step-transport-20261031.py",
+        "--spec",
+        "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/spec.json",
+        "--output",
+        "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/step"
+      ],
+      "started": 1793456366.3622346,
+      "pid": 3363493,
+      "returncode": 0,
+      "finished": 1793456373.402996
+    }
+  ],
+  "guest_step_started": true,
+  "guest_drain_unknown": false,
+  "automatic_retry": false,
+  "automatic_next": false,
+  "upload_result_sha256": "5cdfaf21e23bb67ffae6d65494e57d9b5840e51e158f9b7ca840f67d0332e8a5",
+  "step_owner_sha256": "35203328d3ca5aa45c4c8fc29a625768240a81ec1e91a237e79f42a302a5a824",
+  "step_result_sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe",
+  "guest_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+  "finished": 1793456373.4059982
+}

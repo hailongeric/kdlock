@@ -1,0 +1,106 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 8017,
+      "sha256": "ff8f7de438a5bc1ed08ed93e2024093cf36435dc3f2d4e0748406de31663f238"
+    },
+    "all-accounting.json": {
+      "bytes": 7309868,
+      "sha256": "ed8ef8616d17139253984b905cf892c39b5e48af5a1e12cdc04f0e9a47f02b94"
+    },
+    "group-proof.json": {
+      "bytes": 3129,
+      "sha256": "ed7b7f17652c154eb7012612bff1c5833d116eda4f99d31a4f175c79ce54ac10"
+    },
+    "key-workers.json": {
+      "bytes": 33283,
+      "sha256": "1a022dd22d5d8cabb9c382db0fa9b23b3ac2fff8df4da8b32f3ec01e78b988aa"
+    },
+    "pairs.json": {
+      "bytes": 173513,
+      "sha256": "3e20abb42f5823e6946d087c5367c35c6f88eaaa0b74abb1b754a35a6a709d88"
+    },
+    "raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/measure.json": {
+      "bytes": 42411,
+      "sha256": "58ae91da73e7b30d0f6b82dbcbfd3ea20885001b007f756cf5a4c76e07f91fa0"
+    },
+    "raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/session.json": {
+      "bytes": 54739,
+      "sha256": "d776fcb44f1cb8810e71f3e423aa0dbdf73e9e6893541dcddbcda8ceb6f622f5"
+    },
+    "raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/warmup.json": {
+      "bytes": 3253,
+      "sha256": "ed4cc40e6a10980ffd6398c474c11ade9c66807a43cc6a80a67cc50d7c1da52f"
+    },
+    "raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/measure.json": {
+      "bytes": 82522,
+      "sha256": "ec93aee9de7170b0cba49ac0da77b290e3ce387972d7c4c9e162f17ec86e427c"
+    },
+    "raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/session.json": {
+      "bytes": 100033,
+      "sha256": "4d1eb404dfe52b78d147379ad0ba1da4d974aef3f380e6eda5fbdad6ddf0e0d3"
+    },
+    "raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/warmup.json": {
+      "bytes": 7492,
+      "sha256": "8f2e81a0308532ff18939e6c791a0f06f6a78afc13eeed4c95211e1d0a3a606d"
+    },
+    "raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/measure.json": {
+      "bytes": 54086,
+      "sha256": "c93b5c8f3f5982de933bb78a862775948d2c08740c66f19596612fdef47bca7f"
+    },
+    "raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/session.json": {
+      "bytes": 67814,
+      "sha256": "9e303181b5840ce43b0fca6cacb8f7df427d8fa970c00d9fad121cc4c2efb067"
+    },
+    "raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/warmup.json": {
+      "bytes": 4401,
+      "sha256": "5ecab767a6f30f79a0f8d8e6f123ebc5c874f0c16f712b64489d9ded81b60fa2"
+    },
+    "raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/measure.json": {
+      "bytes": 42338,
+      "sha256": "e2fe1f645dcf686c20fa86778fa23a490f3ce429ce70e0346e73c75d8f2bca28"
+    },
+    "raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/session.json": {
+      "bytes": 54663,
+      "sha256": "64fcb8dfb885f72539a468054572d94a369c73331bafcfb9b40009f4df197f20"
+    },
+    "raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/warmup.json": {
+      "bytes": 3253,
+      "sha256": "372eeae45c4381a471aba0d6c7c9555b09cccb2d6ebd8334f115f59f451f4665"
+    },
+    "raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/measure.json": {
+      "bytes": 81790,
+      "sha256": "8ae6aac9c1d76ebc67fda4f6820dc50de2a6d9a0c6430ea443f97df4ac78ba0c"
+    },
+    "raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/session.json": {
+      "bytes": 99256,
+      "sha256": "8b7ce92979588eb57a236b58c8cbddc1916b94be89b98a590c8a1ea0540e4d5f"
+    },
+    "raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/warmup.json": {
+      "bytes": 7492,
+      "sha256": "f0a4662f184d06d7839c0b66b60beb7b0fd5ff465a5661cbda1e9350ef900de8"
+    },
+    "raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/measure.json": {
+      "bytes": 53927,
+      "sha256": "41820b836b00d416bb3181e062dc02c57400cf6473451df950714f1af9e28d38"
+    },
+    "raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/session.json": {
+      "bytes": 67649,
+      "sha256": "2e4ca3c5ae7aba15b17be7814944ca6f393745d9200722c080e4804419ce067a"
+    },
+    "raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/warmup.json": {
+      "bytes": 4401,
+      "sha256": "65e9b41b6fbd0e4cecd284fe78d64df758cac98848e2bb1ee4f1b42e04b084a7"
+    },
+    "selected.json": {
+      "bytes": 65842,
+      "sha256": "793452c6c211557be19ba1fa01d3f3d73a32d01608891b28bbdf8115f70268b3"
+    },
+    "validation.json": {
+      "bytes": 868,
+      "sha256": "b05ef8695be41a5930cbcdfde85048912b5af8e478921ec1b1b0ecc19b712656"
+    }
+  },
+  "performance_accepted": false,
+  "schema": 1
+}

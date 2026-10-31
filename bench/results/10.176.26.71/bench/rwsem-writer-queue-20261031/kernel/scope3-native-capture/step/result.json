@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "action": "capture",
+  "passed": true,
+  "state": "BOOT_RUNTIME_IDENTITY_VERIFIED",
+  "boot_id": "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+  "release": "7.0.0-38-kdscope3",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/build/result.json",
+    "sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/host-state.json",
+    "sha256": "6b1e55467355d7b0ca6f83e938bed780018713e607a98606a3ad7f99f8acf3bf"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-after",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456575.7767634,
+      "pid": 2783,
+      "process_group": 2783,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456575.8323638,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/environment-after.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "capture",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope3-recipe-7814c61a/kernel_integration/linux70/capture.py",
+        "--variant",
+        "kdscope3-native",
+        "--preempt",
+        "lazy",
+        "--source",
+        "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+        "--build",
+        "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+        "--output",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-native-20261031",
+        "--mmap-prepare",
+        "/mnt/kdlock-builds2/kdlock-scope3-mmap-prepare-7814c61a-20261031/prepare.json",
+        "--api-prepare",
+        "/mnt/kdlock-builds2/kdlock-scope3-api-prepare-7814c61a-20261031/prepare.json",
+        "--composition",
+        "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/composition.json",
+        "--acquisition",
+        "/mnt/kdlock-builds/ubuntu-7.0.0-38-source/source-acquisition.json",
+        "--source-archives",
+        "/mnt/kdlock-builds/ubuntu-7.0.0-38-source/downloads"
+      ],
+      "started": 1793456579.9988732,
+      "pid": 2784,
+      "process_group": 2784,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456582.543891,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/capture.log",
+        "sha256": "0d6efe3d9e37f7386f8fd1097adc5a44a407950aa8512348e05034c8e674abeb"
+      }
+    },
+    {
+      "name": "verify",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope3-recipe-7814c61a/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdscope3-native",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-native-20261031",
+        "--build-root",
+        "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+        "--running"
+      ],
+      "started": 1793456582.558151,
+      "pid": 2787,
+      "process_group": 2787,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456583.4971457,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/verify.log",
+        "sha256": "0d6efe3d9e37f7386f8fd1097adc5a44a407950aa8512348e05034c8e674abeb"
+      }
+    }
+  ],
+  "started": 1793456574.0433016,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-request/result.json",
+    "sha256": "22de061ad7639ebbf9e395b0da654841db593b6cc6c712b33c85fd8debc58406"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/protected-before.json",
+    "sha256": "be1f96d0aa7e112c8d5f27d20541d651f8389a249c4914c36b6322c20f0dbd17"
+  },
+  "mode": "native",
+  "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope3-native-20261031",
+  "bundle_manifest_sha256": "7aaaa3f8b83a65695b8cec6131a0344b1a20afcf3ab6179f83bf69463b68e66c",
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+    "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+  },
+  "verification": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "off",
+    "ok": true,
+    "running_build_id": "0bdd45b1d7df96a0aaa1db9cd6f049ff08f75ebd",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope3 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+    "variant": "kdscope3-native"
+  },
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/protected-after.json",
+    "sha256": "be1f96d0aa7e112c8d5f27d20541d651f8389a249c4914c36b6322c20f0dbd17"
+  },
+  "final_idle": true,
+  "finished": 1793456585.1393042
+}

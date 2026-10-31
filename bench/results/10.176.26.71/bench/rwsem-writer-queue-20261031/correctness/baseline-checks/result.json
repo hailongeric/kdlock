@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "passed": true,
+  "completed": true,
+  "state": "COMPLETE",
+  "source_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdlock1",
+  "source_unchanged_before": true,
+  "blocks": [
+    {
+      "name": "unit",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "-B",
+        "run",
+        "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "PY_TESTS=mutex/test_mutex_osq.py mutex/test_mutex_state.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py"
+      ],
+      "started": 1793445611.1471155,
+      "pid": 8655,
+      "returncode": 0,
+      "finished": 1793445633.673503,
+      "log_sha256": "ae7a7645f803204fa92e28b1d028cbf6e6c9869afe916420ea1d70688a2f1bfd"
+    },
+    {
+      "name": "rwsem",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-20261031/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793445634.698742,
+      "pid": 8999,
+      "returncode": 0,
+      "finished": 1793445653.6614,
+      "log_sha256": "741c185a1a56ffbefba8e6286a7e0f8f60ed8cd083bf3694f62376ae28443689",
+      "result_sha256": "d762a39c35baa7f770510004ac826a59e5eb86c73dd8c3165d688268df1a6017"
+    },
+    {
+      "name": "mutex",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/mutex/local/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-20261031/mutex",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793445654.6838024,
+      "pid": 9882,
+      "returncode": 0,
+      "finished": 1793445672.7413814,
+      "log_sha256": "3fb916ac8baa7cdb2d6d0cc0cd187a7cb12404c97c44926fb516c097f10afe9e",
+      "result_sha256": "12b53389fc5566042a5429d43d745e69e69278a2d981960a93fdaa4bb85155d2"
+    }
+  ],
+  "drained": true,
+  "source_unchanged_after": true,
+  "finished": 1793445673.254857
+}

@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/tests/kernel/mmap_lock/run.py", line 171, in <module>
+    main()
+    ~~~~^^
+  File "/root/host_fs/kdlock/tests/kernel/mmap_lock/run.py", line 152, in main
+    data = rt.command([sys.executable, Path(__file__), '--client', '--mode', a.mode],
+                      out / 'probe.json', timeout=120)
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 109, in command
+    require(result == 0, f"command exited {result}: {args}; see {path}")
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 46, in require
+    raise Failure(status, message)
+bench_runtime.Failure: command exited 1: ['/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3', PosixPath('/root/host_fs/kdlock/tests/kernel/mmap_lock/run.py'), '--client', '--mode', 'kd']; see /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/run/probe.json

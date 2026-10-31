@@ -1,0 +1,260 @@
+{
+  "artifact_execution": false,
+  "commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "completed": true,
+  "files": {
+    "mutex-locality/provider-inventory.json": "4969fb141f5b671b6301a45aad8bfce2f01f6ab4feac0950b9efa5f83b202e83",
+    "mutex-locality/workload-inventory.json": "361356f9c3b6a104dd888cf2288a871c64e2d03603ed575af00f096c26d782dc",
+    "mutex-throughput/provider-inventory.json": "979d7eb964f9bf4f494bdc1f930987e2335f1289c202a511691645002a28afff",
+    "mutex-throughput/provider/objdump.txt": "94d02982060432f44da2cfa8ae95c9a0f610fc2bac3744fc4794ba558549032c",
+    "mutex-throughput/provider/provider.ko": "53fee49c68b5736668d4345b73d545ccf0da7f0c7e4b6c27e14866647e2173ab",
+    "mutex-throughput/provider/selected-functions.json": "056af46ff1014d422f467a5c0abc476a001c848593fee68a3714f5665f941705",
+    "mutex-throughput/workload-inventory.json": "8dd26b778186d6eb9700a9e32c69a1e81b06b1cb91751d17a233e1276f718392",
+    "mutex-throughput/workload/objdump.txt": "88e5fe5dde2fbf16c56a59727eb7fdf82b30e458c60bf0dd60440380d2985a8a",
+    "mutex-throughput/workload/selected-functions.json": "87c8e0c8049d17be503a84133553d7635873f8e1250936de5f7d7ae666f9eb8b",
+    "mutex-throughput/workload/workload.ko": "f2ede228f42453d56f419a5799dad48916d162f2bef9829380295379a2c7b790",
+    "rwlock-locality-mixed/provider-inventory.json": "ceb8e119975679f1042e118b19dfe5de389e653775c883f9a7179e29737d5a59",
+    "rwlock-locality-mixed/workload-inventory.json": "ca08dfd56bc1ce97bd88320a759875cb9524e3c5d00aae285f35b1ce4c26a0f9",
+    "rwlock-locality-read/provider-inventory.json": "0850fef1d0b4068e76f4c7273b5ef004ea55a5ecfbd6ce9b84302c195bb86414",
+    "rwlock-locality-read/workload-inventory.json": "be4ba3a77865bb64385ae8ab79f85fbdee56f008d7a42734527f131795e676f4",
+    "rwlock-throughput-mixed/provider-inventory.json": "b32634f61231428b6f5273b67eac673f2a23f268263f1e0d33d572f82916578d",
+    "rwlock-throughput-mixed/workload-inventory.json": "ffc4592a08622262aea8159eb12f4c6c010f6c7ce63e7e2e0c0e22fb1b5f5533",
+    "rwlock-throughput-read/provider-inventory.json": "46e9a3edf1c85ba33b03cd59355809419ee2065a9243b89c5ef122ba11897336",
+    "rwlock-throughput-read/provider/objdump.txt": "40a8425ce8fc6e78b6ff926b8cbee3a8f4e354046402cfdafb5333efc1f701d1",
+    "rwlock-throughput-read/provider/provider.ko": "1b0e4d30ed428d5023336dae78da92956c03a7361cd476dae360e36ee2061100",
+    "rwlock-throughput-read/provider/selected-functions.json": "056af46ff1014d422f467a5c0abc476a001c848593fee68a3714f5665f941705",
+    "rwlock-throughput-read/workload-inventory.json": "3d219fe98396e7c54838413bacc956ae8518b8e3cfd7d77d4282017c5ec5be02",
+    "rwlock-throughput-read/workload/objdump.txt": "3ecb5b5c6e2f31be52dd6dc6fe3cd071fdf89359ddce0633d27b41b80c8700c6",
+    "rwlock-throughput-read/workload/selected-functions.json": "24f305f8aeb62f77b1abb605a69f6e4417818dad9534842a8f0439e8e9773f0f",
+    "rwlock-throughput-read/workload/workload.ko": "5a1944d1f9e4c1abe39f8d12737044bfd04068ddb4d0c10d5f24be62400dec77",
+    "rwsem-locality-mixed/provider-inventory.json": "b063146fb29500e70fbe3878a2abffa588ab105b6f7cc5aea01f47a75675f844",
+    "rwsem-locality-mixed/workload-inventory.json": "4f0e4d25691b9724a1e838b093d4a30a2891787bba4d22a43fbc266e401f5b19",
+    "rwsem-locality-read/provider-inventory.json": "5ee011c1b65e6aecf555aae3df45a8b21a0df0b44fe98f6935c1fd677c54ac54",
+    "rwsem-locality-read/workload-inventory.json": "cc9bfefc67f09e818ace09a8c1fd85235db4705dd1d6587cb4d3729b4159f324",
+    "rwsem-throughput-mixed/provider-inventory.json": "6c09a9018094da402247c78faeb28853e738264c88715b4aa51cd5899e600042",
+    "rwsem-throughput-mixed/workload-inventory.json": "e5939eecac9bfcff3c1d106dbde11befab49eee8b0319e494f2d5c5ca4252c0b",
+    "rwsem-throughput-read/provider-inventory.json": "f778146044dceaf0c23e317f5a8071cbb785f7fc03d5a75804a9bb34109dd6e3",
+    "rwsem-throughput-read/provider/objdump.txt": "b8f60621922d0527f8bf6cc30078b31142453bcd8e434f4bc9b9524ee93f0b44",
+    "rwsem-throughput-read/provider/provider.ko": "ee27c027566ad51b1e8c2383d94b689e53d726f3cabc03387f718edc4a069044",
+    "rwsem-throughput-read/provider/selected-functions.json": "056af46ff1014d422f467a5c0abc476a001c848593fee68a3714f5665f941705",
+    "rwsem-throughput-read/workload-inventory.json": "c1062a41307ccd13196f0bd96e2798b26711fb1df474a60c6638f6c20553dfe9",
+    "rwsem-throughput-read/workload/objdump.txt": "544b351c56b1c693a2b62917ebbc3e1d8b1240eaa85c9c4fb730b49ff0decc21",
+    "rwsem-throughput-read/workload/selected-functions.json": "ae3c54a9d398dfdc8f914b2e81cbba857e2193e13d164ddcefc9b91d29af816b",
+    "rwsem-throughput-read/workload/workload.ko": "cb66f0d663bc08edb8510075c51f281eb17654e8cd03c66f09e4695e571334a3"
+  },
+  "finished": 1793451163.6227446,
+  "inputs": {
+    "archive_index_sha256": "9f9bb5ea99c75567213da5626d8483b9f283b8feb97ad5d2b0018422ca50dd14",
+    "arm_path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/analysis-arm.json",
+    "arm_sha256": "052c4768def34572a74bdff7177ce9568f3175d001530b28133410532a82628f",
+    "owner_sha256": "7498adc2d4ba6d404b89fa9074dc5f1649872ee3a8f36666c288fc12b4ea07dd",
+    "transfer_path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/transfer.json",
+    "transfer_sha256": "713527dc9cb7c1a2a987ddf72426d96252679aaecf071886b55dbd2bc6d28cd0"
+  },
+  "label": "baseline",
+  "performance_accepted": false,
+  "profiles": {
+    "mutex-locality": {
+      "archive_group": "mutex-locality.tar.gz",
+      "archive_sha256": "52c58cef3260fba5d8e2ea37da29bab092856d492c9fb53e4dedf7ecf22fa285",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866088,
+          "inventory": "mutex-locality/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "2647059010166b0cebec69593a25ae8f36461d34ebf8f884d0e9e736d05b4a78"
+        },
+        "workload": {
+          "bytes": 424552,
+          "inventory": "mutex-locality/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/mutex-locality/build/mutex-cacheline-c16-kdlock/rwlock_bench.ko",
+          "sha256": "82411599828e0c45a86048d681cf38d46266a95f66d6240ebb5313861af182cc"
+        }
+      }
+    },
+    "mutex-throughput": {
+      "archive_group": "mutex-throughput.tar.gz",
+      "archive_sha256": "f88635ab31c08d89d92f7cc18e029451d1f871750af1fe8ffe1b54d15ca1b080",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866152,
+          "elf": "mutex-throughput/provider/provider.ko",
+          "inventory": "mutex-throughput/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/mutex-throughput/build/provider/kernel_module/kdlock_km.ko",
+          "selected": "mutex-throughput/provider/selected-functions.json",
+          "selected_functions": 131,
+          "sha256": "53fee49c68b5736668d4345b73d545ccf0da7f0c7e4b6c27e14866647e2173ab"
+        },
+        "workload": {
+          "bytes": 416944,
+          "elf": "mutex-throughput/workload/workload.ko",
+          "inventory": "mutex-throughput/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/mutex-throughput/build/mutex-cacheline-c01-kdlock/rwlock_bench.ko",
+          "selected": "mutex-throughput/workload/selected-functions.json",
+          "selected_functions": 18,
+          "sha256": "f2ede228f42453d56f419a5799dad48916d162f2bef9829380295379a2c7b790"
+        }
+      }
+    },
+    "rwlock-locality-mixed": {
+      "archive_group": "rwlock-locality-mixed.tar.gz",
+      "archive_sha256": "b98fcf144c397abcfd11b87dd3e7beb516bdf7fa60b71a8745cd66e6c1660638",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866312,
+          "inventory": "rwlock-locality-mixed/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "85e21dbfaad0f41042312c3b2d1499ea8a95e298a721902f385425b5f11625f3"
+        },
+        "workload": {
+          "bytes": 470048,
+          "inventory": "rwlock-locality-mixed/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-locality-mixed/build/cacheline-c16-kdlock/rwlock_bench.ko",
+          "sha256": "936144cb6558b8001b98190a6850aeefb996e10a6ee8e3486bc9df688fe00d0f"
+        }
+      }
+    },
+    "rwlock-locality-read": {
+      "archive_group": "rwlock-locality-read.tar.gz",
+      "archive_sha256": "d62a1ed1a7336b1366bab8b9c28180bea07628a67421b9cc73552e60459aab43",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866280,
+          "inventory": "rwlock-locality-read/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-locality-read/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "61a334a10cafe0be034f5a4e14d4f8e467a57f482212ed4d7bf1ffd5934457a1"
+        },
+        "workload": {
+          "bytes": 470040,
+          "inventory": "rwlock-locality-read/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-locality-read/build/cacheline-c16-kdlock/rwlock_bench.ko",
+          "sha256": "4795fc4af2639b05f2da558295e329b37acf0cdd94affb6bbae56b2014efb384"
+        }
+      }
+    },
+    "rwlock-throughput-mixed": {
+      "archive_group": "rwlock-throughput-mixed.tar.gz",
+      "archive_sha256": "c72f96f57d74b8da7c77a438e8658c1e93827c73fcb6dd823ae6a2728c8e89e3",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866376,
+          "inventory": "rwlock-throughput-mixed/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "eeee705e47b33c510c035ba7763094e8648efd0c7164c654415915d6492be815"
+        },
+        "workload": {
+          "bytes": 462168,
+          "inventory": "rwlock-throughput-mixed/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-throughput-mixed/build/cacheline-c01-kdlock/rwlock_bench.ko",
+          "sha256": "f7a43cbb1757da144a2b02271d75f1638792bb64ff3acde6c4a8caaffbe4b855"
+        }
+      }
+    },
+    "rwlock-throughput-read": {
+      "archive_group": "rwlock-throughput-read.tar.gz",
+      "archive_sha256": "0d563e266dfe88694a228d5cb18bbf7efa5becae44335e9cbbaaee22a6c0025b",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866344,
+          "elf": "rwlock-throughput-read/provider/provider.ko",
+          "inventory": "rwlock-throughput-read/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+          "selected": "rwlock-throughput-read/provider/selected-functions.json",
+          "selected_functions": 131,
+          "sha256": "1b0e4d30ed428d5023336dae78da92956c03a7361cd476dae360e36ee2061100"
+        },
+        "workload": {
+          "bytes": 462160,
+          "elf": "rwlock-throughput-read/workload/workload.ko",
+          "inventory": "rwlock-throughput-read/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwlock-throughput-read/build/cacheline-c01-kdlock/rwlock_bench.ko",
+          "selected": "rwlock-throughput-read/workload/selected-functions.json",
+          "selected_functions": 18,
+          "sha256": "5a1944d1f9e4c1abe39f8d12737044bfd04068ddb4d0c10d5f24be62400dec77"
+        }
+      }
+    },
+    "rwsem-locality-mixed": {
+      "archive_group": "rwsem-locality-mixed.tar.gz",
+      "archive_sha256": "9d2a65da0363b70f15f645c962e234b409536fb856bd4230db1f1db7822b35d9",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866280,
+          "inventory": "rwsem-locality-mixed/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-locality-mixed/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "07117e29a617669cca6dd0553526bebd2f6c6c3b197ae70c5a8b7bf4b158e3c7"
+        },
+        "workload": {
+          "bytes": 428376,
+          "inventory": "rwsem-locality-mixed/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-locality-mixed/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+          "sha256": "442f0c28aefd0836b294f9a471e1440c38216068e528e4c848c2c687d893bcda"
+        }
+      }
+    },
+    "rwsem-locality-read": {
+      "archive_group": "rwsem-locality-read.tar.gz",
+      "archive_sha256": "9d3b632fc0733e13f5697ec611827e448724cb806a69793203b0dd5d9457e432",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866248,
+          "inventory": "rwsem-locality-read/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-locality-read/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "bf63b4bb98f48544f4956896165341aeb9bfa74a5c5608af9672dd4001b5662d"
+        },
+        "workload": {
+          "bytes": 428368,
+          "inventory": "rwsem-locality-read/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-locality-read/build/rwsem-cacheline-c16-kdlock/rwlock_bench.ko",
+          "sha256": "93bb419b8adc57243975dc30225db11417df1a052757f0ca67c9411a71f03684"
+        }
+      }
+    },
+    "rwsem-throughput-mixed": {
+      "archive_group": "rwsem-throughput-mixed.tar.gz",
+      "archive_sha256": "10f60c7f37b84b460ed92596dae562343ccf29e0afb7febe83b5b8f455d76b1f",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866344,
+          "inventory": "rwsem-throughput-mixed/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-throughput-mixed/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "955d66c1c84418afd219a624f896b60249323871a5cc60280614707c087685b2"
+        },
+        "workload": {
+          "bytes": 420760,
+          "inventory": "rwsem-throughput-mixed/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-throughput-mixed/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+          "sha256": "d47ef21b844161ae2a9e9b0515f778c4345229531d34661678e95cc8eabbfe26"
+        }
+      }
+    },
+    "rwsem-throughput-read": {
+      "archive_group": "rwsem-throughput-read.tar.gz",
+      "archive_sha256": "cc79b59e633c9bb5dd71805d4ed2913614411813097a21edf429de2d6cbdaf77",
+      "artifacts": {
+        "provider": {
+          "bytes": 4866312,
+          "elf": "rwsem-throughput-read/provider/provider.ko",
+          "inventory": "rwsem-throughput-read/provider-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-throughput-read/build/provider/kernel_module/kdlock_km.ko",
+          "selected": "rwsem-throughput-read/provider/selected-functions.json",
+          "selected_functions": 131,
+          "sha256": "ee27c027566ad51b1e8c2383d94b689e53d726f3cabc03387f718edc4a069044"
+        },
+        "workload": {
+          "bytes": 420752,
+          "elf": "rwsem-throughput-read/workload/workload.ko",
+          "inventory": "rwsem-throughput-read/workload-inventory.json",
+          "member": "writer-queue-nano-f7a84065-20261031/rwsem-throughput-read/build/rwsem-cacheline-c01-kdlock/rwlock_bench.ko",
+          "selected": "rwsem-throughput-read/workload/selected-functions.json",
+          "selected_functions": 18,
+          "sha256": "cb66f0d663bc08edb8510075c51f281eb17654e8cd03c66f09e4695e571334a3"
+        }
+      }
+    }
+  },
+  "started": 1793451147.6798475,
+  "tests": false,
+  "tool_sha256": "81039f0f107e45b9f8049b9946216b657ab952978dc4e2e4d4041e0d6c32d07e",
+  "vm_actions": false
+}

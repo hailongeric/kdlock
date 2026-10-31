@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/bench/mmap_writer/sites.py", line 259, in <module>
+    main()
+    ~~~~^^
+  File "/root/host_fs/kdlock/bench/mmap_writer/sites.py", line 247, in main
+    evidence = (derive_shared if args.mode else derive)(vmlinux, out, rt.command)
+  File "/root/host_fs/kdlock/bench/mmap_writer/sites.py", line 171, in derive_shared
+    chain = gate_chain(assembly, waiter, kd['return_offset'])
+  File "/root/host_fs/kdlock/bench/mmap_writer/sites.py", line 115, in gate_chain
+    rt.require(1 <= len(waits) <= 2, 'too many gate scheduling return sites')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 46, in require
+    raise Failure(status, message)
+bench_runtime.Failure: too many gate scheduling return sites

@@ -1,0 +1,273 @@
+{
+  "api_fixture_delta": {
+    "tests/kernel/mmap_lock/README.md": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "c5894dd588e1e5aab3bcb24a65066c2f47b50c79c963a17b051ed36948b6b2cf"
+      },
+      "before": null
+    },
+    "tests/kernel/mmap_lock/payload/gate_waiter_layout.h": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "28f0d23484872e1fb0dff3ebf800c3c91cbcf8fe01706f59a395d4e41ae027a1"
+      },
+      "before": null
+    },
+    "tests/kernel/mmap_lock/payload/module.c": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "09fc5751d9a4270a99e9aa7be519b52049b7be241c7e59104667e9634e2f01ad"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "2a016d8a56e2be2a469beab71611821afe784aec822063e48b1888d5fc73ee08"
+      }
+    },
+    "tests/kernel/mmap_lock/run.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "76060e4f67cc37c5714d61f2d712a7cbb9d57c075a908b57124c7b55d451b6a7"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "361ddb7e4dd5de11accab6ef9fb2d6b52a2e557bcb7f09246aa04518524b11aa"
+      }
+    }
+  },
+  "arms": {
+    "baseline": {
+      "config": {
+        "path": "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json",
+        "sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602"
+      },
+      "diagnostic_manifest": {
+        "path": "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+        "sha256": "84c13c193fe331185d2e1eb1c357862ffff0f664f6e27030e82b90756d2e27d1"
+      },
+      "harness_manifest": {
+        "path": "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+        "sha256": "a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411"
+      },
+      "mapping_adapter": {
+        "path": "/tmp/kdlock-writer-queue-mapping-functional-20261031.py",
+        "sha256": "61c364342100152b51fb266a5b5ff7c79fc3bdfdf9a36282b6faae90e052c91c"
+      }
+    },
+    "candidate": {
+      "config": {
+        "path": "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+        "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+      },
+      "diagnostic_manifest": {
+        "path": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+        "sha256": "ed9fcddaf0b4dba2f4af3afd722cff5f184abcf6611177192d7d1666f9b5172e"
+      },
+      "harness_manifest": {
+        "path": "/mnt/kdlock-builds2/kdlock-writer-sites-de5e4f06-20261031.manifest.json",
+        "sha256": "e3948a7984167827c5dc8e6125a4db9c9b20c0d74ff8aaa1912ae73679804c60"
+      },
+      "mapping_adapter": {
+        "path": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+        "sha256": "8e303ba5a77799ca6151448e8689f6c29c922a86dc1f66b8a0ed65bad077b64d"
+      }
+    }
+  },
+  "baseline_scores_repeated": false,
+  "compatibility": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-baseline-replay-20261031/result.json",
+    "sha256": "8625c593c058f892e3760f26f93181ceedd9f6421eb527b294087f76eae49137"
+  },
+  "controller_sha256": "36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d",
+  "diagnostic_delta": {
+    "README.md": {
+      "after": "8589f3d799a17699303fba7c47bc9ef342f7cada89fbb0eef0a7b0cc4176bbd1",
+      "before": "c5e3ac1f393f4361fed0dfbce005aaa865bc53b2b4a06bf990fe5a3b801a3a8d"
+    },
+    "payload/client.c": {
+      "after": "39d675799bc981ce3dca2fc650226b07241e1e96c895d31957519c50b9998af3",
+      "before": "9a62a242769d87be15107946255cf44b351f169b36cab791106c3de069428dc1"
+    },
+    "run.py": {
+      "after": "d2bf9e985af2b41cf2ce819d84651f1d73f0015bfbc5e5ae3d29731f5d0002b5",
+      "before": "7f6ef98bf718d179319e2128ea54e6847991569b509c1ae6d054a63df5a07a32"
+    }
+  },
+  "evidence_files": [
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-mm-source-view-20261031/candidate-sites3-unbind/result.json",
+      "sha256": "91d13dd5ec429a2069b0107b860054f9d92f09107b123a8891b66b5d69ed161f"
+    }
+  ],
+  "failed_api": {
+    "log": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/controller.log",
+      "sha256": "66b3f25bce47ad703a3f2f9ea2b8b559d2b4eeef92e2038f13fb97cd5b93e8ae"
+    },
+    "owner": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/owner.json",
+      "sha256": "d921d51700dd11fe8e18aac488ff7d8b09e5929ffb7ea0f489bf2e3539c60237"
+    },
+    "retirement": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-api-drain-20261031/result.json",
+      "sha256": "fd5563cf6433d34f60f340aa83e55dbbb7820631846327cc0836774e81cd707c"
+    }
+  },
+  "failed_sites": {
+    "idle": {
+      "path": "/tmp/kdlock-writer-queue-sites-failure-idle-20261031.json",
+      "sha256": "86ce93e7fc52c4db66869b70a56508384cc8bcc2e3e28ee1f9c4c47d232411eb"
+    },
+    "log": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/controller.log",
+      "sha256": "78920261e84202b6598c46b277495df3305bfdada87b2cca40a480d3c34ca5c3"
+    },
+    "owner": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/owner.json",
+      "sha256": "dbeabe1b93a54f094fc7693994ea31035696f865944c5184e1ecfb2dfe9671a3"
+    }
+  },
+  "focused_checks": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-checks-20261031/result.json",
+    "sha256": "83881aff2dcef313e81c3c05f114ed7e1a7fc3dbf2e2b19a84d87dfad88a348e"
+  },
+  "harness_delta": {
+    "bench/mmap_writer/client.c": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "d2011b7d84268388ec74308607ae6ceaa6676731b4e492da469277aef2910a92"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "edfd54bc5419238df07f69ed2c7a69332b5c30d95ece2525d17297ff5d1a7ab2"
+      }
+    },
+    "bench/mmap_writer/sites.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "7ff361262b68dab48d75062a9f0d5f3ebbd6fdd7986626420d71faf269061fe4"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "0ccaddc017a9fa77e2ebfb59da0c787a6d45779aec4ccc52c6a3ceacf4ee60c0"
+      }
+    },
+    "tests/kernel/mmap_lock/README.md": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "c5894dd588e1e5aab3bcb24a65066c2f47b50c79c963a17b051ed36948b6b2cf"
+      },
+      "before": null
+    },
+    "tests/kernel/mmap_lock/mapping.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "1794da4a7a541f8420a8705bbbc05a5b840c2a919c77b32bf23edfe209725936"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "349d02f2933a945f66c3961f5371b8c4aa42f0962bb5edfac3b8b3b9a961b882"
+      }
+    },
+    "tests/kernel/mmap_lock/payload/gate_waiter_layout.h": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "28f0d23484872e1fb0dff3ebf800c3c91cbcf8fe01706f59a395d4e41ae027a1"
+      },
+      "before": null
+    },
+    "tests/kernel/mmap_lock/payload/module.c": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "09fc5751d9a4270a99e9aa7be519b52049b7be241c7e59104667e9634e2f01ad"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "2a016d8a56e2be2a469beab71611821afe784aec822063e48b1888d5fc73ee08"
+      }
+    },
+    "tests/kernel/mmap_lock/run.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "76060e4f67cc37c5714d61f2d712a7cbb9d57c075a908b57124c7b55d451b6a7"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "361ddb7e4dd5de11accab6ef9fb2d6b52a2e557bcb7f09246aa04518524b11aa"
+      }
+    },
+    "tests/kernel/mmap_writer/README.md": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "f6ee80a4b60f8019404e2cf60792ae3e1b5fff65579195f116a5f47ea159a77d"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "9d0f8f17f468ad262762f1c52e0c1bc77edd94d2ab20195b0bd5906657e3a133"
+      }
+    },
+    "tests/unit/bench/test_mmap_writer_observation.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "227b4710fcdb3981dd21ae49a01269e541ff083ddd6e782d9e3fc877a1c0ed37"
+      },
+      "before": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "f80fdf0eed147d42a3f98cd51b82c4aca621edda80aaa3e26d1b203dcbbc8d67"
+      }
+    },
+    "tests/unit/bench/test_mmap_writer_return_sites.py": {
+      "after": {
+        "kind": "file",
+        "mode": 436,
+        "sha256": "75b04f047f281df1af8011a3da93a3c6a5b1cc651703f6375bfb70467d4941f3"
+      },
+      "before": null
+    }
+  },
+  "kind": "bounded-mm-diagnostic-delta-v2",
+  "performance_accepted": false,
+  "return_diagnostic": {
+    "config": {
+      "path": "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json",
+      "sha256": "9fe4313c5fc78470b40a292e1f8f356d8e9dda03742e576e9e2b024e4f0c7a92"
+    },
+    "harness_manifest": {
+      "path": "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77-20261031.manifest.json",
+      "sha256": "2169e01b6edf22edbb446634268617fe4889b47c12f6e7d91c36458c001ad02c"
+    }
+  },
+  "schema": 2,
+  "unchanged_timed_runtime": {
+    "bench/mmap1/run.py": "863c4aa07eda2324dba6a14c3b811b571a4f72c561ce4c162e559af91b114410",
+    "bench/mmap_fault/mm_platform.py": "7f61eb98c1031a0186d04308ff6eebb1c3abd07c0704934a03d54018d2225cd8",
+    "bench/mmap_lock/eligibility.py": "fd5617428d9ed2635deb38216bddfec2b988e6c8f0e2cdc3b814aea869130681",
+    "bench/mmap_writer/linux70.py": "3ac744ab4d606da5284c384d272de73e09ead8cdd2fc5ca444b58589318860ad",
+    "kernel_module/kd_mutex_local.c": "eb3c7b1d84f9d9c34500362a1ef5c8cf0b5c26fed5479672b338caf202bfbc2e",
+    "kernel_module/kd_mutex_local.h": "cd0e88adf60f6fbe3049d67ec32ff011288f40fd27aa0f790de96f2d36be1303",
+    "kernel_module/kd_mutex_osq.c": "cee7edf52284941816d3c2ba369ee07251e76a5728ae28b95865728a219da6a9",
+    "kernel_module/kd_rwsem.c": "dc1d445c1dd0566bca7833daaa84105e8224d53d36699fc7175c0304437e7b6b"
+  }
+}

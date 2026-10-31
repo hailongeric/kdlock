@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "completed": true,
+  "state": "COMPLETE",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "controller_sha256": "54f627eabb30c579ffb6f9a30fcd2dc1b862cb7d70037d30035c0148acff7bd7",
+  "plan_sha256": "598c9ee34f2681ace8cafd035a224ce3838c752a1be4c1f7c7a191655042a87a",
+  "source_commit": "de5e4f06a6d60e531a8b329d3c7f2c5335d5e707",
+  "base_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "changed_paths": [
+    "bench/mmap_writer/client.c",
+    "bench/mmap_writer/sites.py",
+    "tests/kernel/mmap_lock/README.md",
+    "tests/kernel/mmap_lock/mapping.py",
+    "tests/kernel/mmap_lock/payload/gate_waiter_layout.h",
+    "tests/kernel/mmap_lock/payload/module.c",
+    "tests/kernel/mmap_lock/run.py",
+    "tests/kernel/mmap_writer/README.md",
+    "tests/unit/bench/test_mmap_writer_observation.py",
+    "tests/unit/bench/test_mmap_writer_return_sites.py"
+  ],
+  "started": 1793459900.2257245,
+  "passed": true,
+  "final_idle": true,
+  "files": 5850,
+  "manifest_sha256": "e3948a7984167827c5dc8e6125a4db9c9b20c0d74ff8aaa1912ae73679804c60",
+  "original_recipe_unchanged": true,
+  "finished": 1793459902.6412807
+}

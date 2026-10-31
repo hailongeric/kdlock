@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "passed": true,
+  "completed": true,
+  "state": "COMPLETE",
+  "source_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdlock1",
+  "source_unchanged_before": true,
+  "blocks": [
+    {
+      "name": "rwsem",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793446535.5278711,
+      "pid": 20989,
+      "returncode": 0,
+      "finished": 1793446554.9424481,
+      "log_sha256": "35b5d8af2a212199df61d20a00911240cffa9e943402bfddda2fe79e882a2432",
+      "result_sha256": "329b2d29974f6145a9c9d5761b6f84b5b32286b24aa2a041b644baba7c87bb8f"
+    },
+    {
+      "name": "mutex",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/mutex/local/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/mutex",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793446555.964758,
+      "pid": 21880,
+      "returncode": 0,
+      "finished": 1793446574.5267153,
+      "log_sha256": "3fb916ac8baa7cdb2d6d0cc0cd187a7cb12404c97c44926fb516c097f10afe9e",
+      "result_sha256": "2978d943246706d67046884c57e2d168919b67c216993a3210fd92d189d3fc43"
+    }
+  ],
+  "drained": true,
+  "retained_checks": [
+    {
+      "source_commit": "7fa989c124810222042f9560d0e83a7dea197d2f",
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/result.json",
+      "result_sha256": "5d3740b52f89a50e4201272d2e3ef89e707ec8beb1fa83acc12a9ea113ff7e80",
+      "blocks": [
+        {
+          "name": "unit",
+          "argv": [
+            "make",
+            "-C",
+            "/root/host_fs/kdlock/tests/unit",
+            "-B",
+            "run",
+            "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "PY_TESTS=mutex/test_mutex_osq.py mutex/test_mutex_state.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py mutex/test_rwsem_writer_queue.py"
+          ],
+          "started": 1793446223.572213,
+          "pid": 17553,
+          "returncode": 0,
+          "finished": 1793446259.227708,
+          "log_sha256": "1f0491d6bc7b26b1eda94fd7fe4d86d946ebb1b40aa62fefc5c581b7a5df1d95"
+        },
+        {
+          "name": "writer-sites",
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "bench/mmap_writer/test_sites.py"
+          ],
+          "started": 1793446260.2612004,
+          "pid": 18100,
+          "returncode": 0,
+          "finished": 1793446260.4766872,
+          "log_sha256": "31d461d4f5ea9a76ac910ab10c6f0bdaffcf73105fffad0bef6b67b23d0e121f"
+        },
+        {
+          "name": "writer-observation",
+          "argv": [
+            "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+            "tests/unit/bench/test_mmap_writer_observation.py"
+          ],
+          "started": 1793446261.494814,
+          "pid": 18101,
+          "returncode": 0,
+          "finished": 1793446262.1613133,
+          "log_sha256": "b717e40e08ff00639b8b857c98d179682eb260aa1c28ca26629175fe8d019988"
+        }
+      ],
+      "changed_nonunit_paths": [
+        "tests/kernel/rwsem/README.md",
+        "tests/kernel/rwsem/payload/gate_signal.inc"
+      ],
+      "test_inputs_unchanged": true
+    }
+  ],
+  "source_unchanged_after": true,
+  "finished": 1793446575.0401464
+}

@@ -1,0 +1,814 @@
+rwsem.log
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/tests/kernel/rwsem/run.py", line 168, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/root/host_fs/kdlock/tests/kernel/rwsem/run.py", line 146, in main
+    gate_data = rt.command([sys.executable, source / 'tests/kernel/rwsem/run.py',
+                            '--gate-signal-client'], path / 'gate-signal.json', timeout=30)
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 109, in command
+    require(result == 0, f"command exited {result}: {args}; see {path}")
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 46, in require
+    raise Failure(status, message)
+bench_runtime.Failure: command exited 1: ['/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3', PosixPath('/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem/run.py'), '--gate-signal-client']; see /mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/local/gate-signal.json
+
+rwsem/build-probe.log
+make: Entering directory '/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem'
+make -C /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build M=/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem W=1 modules
+make[1]: Entering directory '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'
+make[2]: Entering directory '/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem'
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+  You are using:           gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+  CC [M]  module.o
+  CC [M]  payload/compat.o
+  LD [M]  rwsem_probe.o
+  MODPOST Module.symvers
+  CC [M]  rwsem_probe.mod.o
+  CC [M]  .module-common.o
+  LD [M]  rwsem_probe.ko
+  BTF [M] rwsem_probe.ko
+make[2]: Leaving directory '/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem'
+make[1]: Leaving directory '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'
+make: Leaving directory '/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem/source/tests/kernel/rwsem'
+
+rwsem/local/result.json
+{"errors": 0, "api_checks": 17, "readers_slept": 2, "writer_slept": 1, "late_reader_slept": 1, "cancellation_checks": 10, "colocated": 1, "idle": 1, "outer_readers_slept": 2, "outer_writer_slept": 1, "downgrade_checks": 1, "publication_checks": 3}
+
+rwsem/local/gate-signal.json
+{"errors": 2, "cases": 1, "osq_observed": 1, "scoped_retired": 0, "nonfatal_wait": 0, "fatal_cancel": 0, "interruptible_cancel": 0, "idle": 1}
+
+rwsem/local/kernel.log
+6,1125,46770464047,-;end_point[0] = ffffffffc1217a60
+
+6,1126,46770464058,-;end_point[1] = ffffffffc1217b10
+
+6,1127,46770464068,-;end_point[2] = ffffffffc12037a0
+
+6,1128,46770464071,-;end_point[3] = ffffffffc121a500
+
+6,1129,46770464073,-;end_point[4] = ffffffffc1200680
+
+6,1130,46770464076,-;mutex_lock addr = ffffffffc121b540
+
+6,1131,46770464092,-;hostcall service id=1 symbol=ktime_get addr=ffffffff815684d0 flags=7
+
+6,1132,46770464240,-;hostcall service unavailable id=2 symbol=ktime_get_ns
+
+6,1133,46770464263,-;hostcall service id=3 symbol=int_sqrt addr=ffffffff81cc6e90 flags=7
+
+6,1134,46770464306,-;hostcall service id=4 symbol=strcmp addr=ffffffff826c4d50 flags=7
+
+6,1135,46770464443,-;hostcall service unavailable id=5 symbol=strscpy_pad
+
+6,1136,46770479507,-;JIT code block pool ready: 64/64
+
+6,1137,46770479514,-;JIT direct-call pool ready: 0/64; shared image limit=64
+
+6,1138,46770481277,-;kd kernel module init: direct spin/mutex APIs; global hooks disabled
+
+6,1139,46770673631,-;exe added 0 ffffffffc09ea4f3 19003 lock_kind=2
+
+6,1140,46775969398,-;rwsem probe check failed at line 159
+
+6,1141,46775969415,-;rwsem probe check failed at line 199
+
+
+Module                  Size  Used by
+rwsem_probe            28672  1
+kdlock_km             282624  1 rwsem_probe
+nfnetlink              20480  1
+cfg80211             1462272  0
+binfmt_misc            24576  1
+nls_iso8859_1          12288  1
+intel_rapl_msr         20480  0
+intel_rapl_common      57344  1 intel_rapl_msr
+intel_uncore_frequency_common    20480  0
+skx_edac_common        28672  0
+nfit                   81920  1 skx_edac_common
+kvm_intel             544768  0
+ppdev                  24576  0
+kvm                  1507328  1 kvm_intel
+irqbypass              16384  1 kvm
+rapl                   20480  0
+joydev                 32768  0
+input_leds             12288  0
+parport_pc             53248  0
+i2c_piix4              32768  0
+i2c_smbus              20480  1 i2c_piix4
+parport                77824  2 parport_pc,ppdev
+mac_hid                12288  0
+sch_fq_codel           28672  2
+dm_multipath           45056  0
+efi_pstore             12288  0
+dmi_sysfs              28672  0
+qemu_fw_cfg            24576  0
+virtiofs               36864  0
+vmw_vsock_virtio_transport    20480  0
+vmw_vsock_virtio_transport_common    61440  1 vmw_vsock_virtio_transport
+vsock                  73728  2 vmw_vsock_virtio_transport_common,vmw_vsock_virtio_transport
+autofs4                57344  2
+btrfs                2244608  0
+libblake2b             20480  1 btrfs
+raid10                 73728  0
+raid456               200704  0
+async_raid6_recov      20480  1 raid456
+async_memcpy           16384  2 raid456,async_raid6_recov
+async_pq               20480  2 raid456,async_raid6_recov
+async_xor              16384  3 async_pq,raid456,async_raid6_recov
+async_tx               16384  5 async_pq,async_memcpy,async_xor,raid456,async_raid6_recov
+xor                    24576  2 async_xor,btrfs
+raid6_pq              126976  4 async_pq,btrfs,raid456,async_raid6_recov
+raid1                  61440  0
+raid0                  24576  0
+linear                 16384  0
+psmouse               217088  0
+vga16fb                36864  0
+serio_raw              20480  0
+ghash_clmulni_intel    12288  0
+floppy                135168  0
+bochs                  24576  0
+pata_acpi              12288  0
+vgastate               16384  1 vga16fb
+aesni_intel            98304  0
+
+    PID     TID STAT COMMAND         WCHAN
+      1       1 Ss   systemd         do_epoll_wait
+      2       2 S    kthreadd        kthreadd
+      3       3 S    pool_workqueue_ kthread_worker_fn
+      4       4 I<   kworker/R-rcu_g rescuer_thread
+      5       5 I<   kworker/R-sync_ rescuer_thread
+      6       6 I<   kworker/R-kvfre rescuer_thread
+      7       7 I<   kworker/R-slub_ rescuer_thread
+      8       8 I<   kworker/R-netns rescuer_thread
+     10      10 I<   kworker/0:0H-ev worker_thread
+     12      12 I    kworker/u256:0- worker_thread
+     13      13 I<   kworker/R-mm_pe rescuer_thread
+     14      14 S    ksoftirqd/0     smpboot_thread_fn
+     15      15 S<   pr/ttyS0        nbcon_kthread_func
+     16      16 I    rcu_preempt     rcu_gp_fqs_loop
+     17      17 S    rcu_exp_par_gp_ kthread_worker_fn
+     18      18 S    rcu_exp_gp_kthr kthread_worker_fn
+     19      19 S    migration/0     smpboot_thread_fn
+     20      20 S    kprobe-optimize kprobe_optimizer_thread
+     21      21 S    idle_inject/0   smpboot_thread_fn
+     22      22 S    cpuhp/0         smpboot_thread_fn
+     23      23 S    cpuhp/1         smpboot_thread_fn
+     24      24 S    idle_inject/1   smpboot_thread_fn
+     25      25 S    migration/1     smpboot_thread_fn
+     26      26 S    ksoftirqd/1     smpboot_thread_fn
+     27      27 I    kworker/1:0-eve worker_thread
+     28      28 I<   kworker/1:0H-ev worker_thread
+     29      29 S    cpuhp/2         smpboot_thread_fn
+     30      30 S    idle_inject/2   smpboot_thread_fn
+     31      31 S    migration/2     smpboot_thread_fn
+     32      32 S    ksoftirqd/2     smpboot_thread_fn
+     34      34 I<   kworker/2:0H-ev worker_thread
+     35      35 S    cpuhp/3         smpboot_thread_fn
+     36      36 S    idle_inject/3   smpboot_thread_fn
+     37      37 S    migration/3     smpboot_thread_fn
+     38      38 S    ksoftirqd/3     smpboot_thread_fn
+     40      40 I<   kworker/3:0H-ev worker_thread
+     41      41 S    cpuhp/4         smpboot_thread_fn
+     42      42 S    idle_inject/4   smpboot_thread_fn
+     43      43 S    migration/4     smpboot_thread_fn
+     44      44 S    ksoftirqd/4     smpboot_thread_fn
+     46      46 I<   kworker/4:0H-ev worker_thread
+     47      47 S    cpuhp/5         smpboot_thread_fn
+     48      48 S    idle_inject/5   smpboot_thread_fn
+     49      49 S    migration/5     smpboot_thread_fn
+     50      50 S    ksoftirqd/5     smpboot_thread_fn
+     52      52 I<   kworker/5:0H-ev worker_thread
+     53      53 S    cpuhp/6         smpboot_thread_fn
+     54      54 S    idle_inject/6   smpboot_thread_fn
+     55      55 S    migration/6     smpboot_thread_fn
+     56      56 S    ksoftirqd/6     smpboot_thread_fn
+     57      57 I    kworker/6:0-eve worker_thread
+     58      58 I<   kworker/6:0H-ev worker_thread
+     59      59 S    cpuhp/7         smpboot_thread_fn
+     60      60 S    idle_inject/7   smpboot_thread_fn
+     61      61 S    migration/7     smpboot_thread_fn
+     62      62 S    ksoftirqd/7     smpboot_thread_fn
+     64      64 I<   kworker/7:0H-ev worker_thread
+     65      65 S    cpuhp/8         smpboot_thread_fn
+     66      66 S    idle_inject/8   smpboot_thread_fn
+     67      67 S    migration/8     smpboot_thread_fn
+     68      68 S    ksoftirqd/8     smpboot_thread_fn
+     70      70 I<   kworker/8:0H-ev worker_thread
+     71      71 S    cpuhp/9         smpboot_thread_fn
+     72      72 S    idle_inject/9   smpboot_thread_fn
+     73      73 S    migration/9     smpboot_thread_fn
+     74      74 S    ksoftirqd/9     smpboot_thread_fn
+     76      76 I<   kworker/9:0H-ev worker_thread
+     77      77 S    cpuhp/10        smpboot_thread_fn
+     78      78 S    idle_inject/10  smpboot_thread_fn
+     79      79 S    migration/10    smpboot_thread_fn
+     80      80 S    ksoftirqd/10    smpboot_thread_fn
+     82      82 I<   kworker/10:0H-e worker_thread
+     83      83 S    cpuhp/11        smpboot_thread_fn
+     84      84 S    idle_inject/11  smpboot_thread_fn
+     85      85 S    migration/11    smpboot_thread_fn
+     86      86 S    ksoftirqd/11    smpboot_thread_fn
+     88      88 I<   kworker/11:0H-e worker_thread
+     89      89 S    cpuhp/12        smpboot_thread_fn
+     90      90 S    idle_inject/12  smpboot_thread_fn
+     91      91 S    migration/12    smpboot_thread_fn
+     92      92 S    ksoftirqd/12    smpboot_thread_fn
+     94      94 I<   kworker/12:0H-e worker_thread
+     95      95 S    cpuhp/13        smpboot_thread_fn
+     96      96 S    idle_inject/13  smpboot_thread_fn
+     97      97 S    migration/13    smpboot_thread_fn
+     98      98 S    ksoftirqd/13    smpboot_thread_fn
+    100     100 I<   kworker/13:0H-e worker_thread
+    101     101 S    cpuhp/14        smpboot_thread_fn
+    102     102 S    idle_inject/14  smpboot_thread_fn
+    103     103 S    migration/14    smpboot_thread_fn
+    104     104 S    ksoftirqd/14    smpboot_thread_fn
+    106     106 I<   kworker/14:0H-e worker_thread
+    107     107 S    cpuhp/15        smpboot_thread_fn
+    108     108 S    idle_inject/15  smpboot_thread_fn
+    109     109 S    migration/15    smpboot_thread_fn
+    110     110 S    ksoftirqd/15    smpboot_thread_fn
+    112     112 I<   kworker/15:0H-e worker_thread
+    113     113 S    cpuhp/16        smpboot_thread_fn
+    114     114 S    idle_inject/16  smpboot_thread_fn
+    115     115 S    migration/16    smpboot_thread_fn
+    116     116 S    ksoftirqd/16    smpboot_thread_fn
+    118     118 I<   kworker/16:0H-e worker_thread
+    119     119 S    rcu_exp_par_gp_ kthread_worker_fn
+    120     120 S    cpuhp/17        smpboot_thread_fn
+    121     121 S    idle_inject/17  smpboot_thread_fn
+    122     122 S    migration/17    smpboot_thread_fn
+    123     123 S    ksoftirqd/17    smpboot_thread_fn
+    125     125 I<   kworker/17:0H-e worker_thread
+    126     126 S    cpuhp/18        smpboot_thread_fn
+    127     127 S    idle_inject/18  smpboot_thread_fn
+    128     128 S    migration/18    smpboot_thread_fn
+    129     129 S    ksoftirqd/18    smpboot_thread_fn
+    131     131 I<   kworker/18:0H-e worker_thread
+    132     132 S    cpuhp/19        smpboot_thread_fn
+    133     133 S    idle_inject/19  smpboot_thread_fn
+    134     134 S    migration/19    smpboot_thread_fn
+    135     135 S    ksoftirqd/19    smpboot_thread_fn
+    137     137 I<   kworker/19:0H-e worker_thread
+    138     138 S    cpuhp/20        smpboot_thread_fn
+    139     139 S    idle_inject/20  smpboot_thread_fn
+    140     140 S    migration/20    smpboot_thread_fn
+    141     141 S    ksoftirqd/20    smpboot_thread_fn
+    143     143 I<   kworker/20:0H-e worker_thread
+    144     144 S    cpuhp/21        smpboot_thread_fn
+    145     145 S    idle_inject/21  smpboot_thread_fn
+    146     146 S    migration/21    smpboot_thread_fn
+    147     147 S    ksoftirqd/21    smpboot_thread_fn
+    149     149 I<   kworker/21:0H-e worker_thread
+    150     150 S    cpuhp/22        smpboot_thread_fn
+    151     151 S    idle_inject/22  smpboot_thread_fn
+    152     152 S    migration/22    smpboot_thread_fn
+    153     153 S    ksoftirqd/22    smpboot_thread_fn
+    155     155 I<   kworker/22:0H-e worker_thread
+    156     156 S    cpuhp/23        smpboot_thread_fn
+    157     157 S    idle_inject/23  smpboot_thread_fn
+    158     158 S    migration/23    smpboot_thread_fn
+    159     159 S    ksoftirqd/23    smpboot_thread_fn
+    161     161 I<   kworker/23:0H-e worker_thread
+    162     162 S    cpuhp/24        smpboot_thread_fn
+    163     163 S    idle_inject/24  smpboot_thread_fn
+    164     164 S    migration/24    smpboot_thread_fn
+    165     165 S    ksoftirqd/24    smpboot_thread_fn
+    167     167 I<   kworker/24:0H-e worker_thread
+    168     168 S    cpuhp/25        smpboot_thread_fn
+    169     169 S    idle_inject/25  smpboot_thread_fn
+    170     170 S    migration/25    smpboot_thread_fn
+    171     171 S    ksoftirqd/25    smpboot_thread_fn
+    173     173 I<   kworker/25:0H-e worker_thread
+    174     174 S    cpuhp/26        smpboot_thread_fn
+    175     175 S    idle_inject/26  smpboot_thread_fn
+    176     176 S    migration/26    smpboot_thread_fn
+    177     177 S    ksoftirqd/26    smpboot_thread_fn
+    179     179 I<   kworker/26:0H-e worker_thread
+    180     180 S    cpuhp/27        smpboot_thread_fn
+    181     181 S    idle_inject/27  smpboot_thread_fn
+    182     182 S    migration/27    smpboot_thread_fn
+    183     183 S    ksoftirqd/27    smpboot_thread_fn
+    185     185 I<   kworker/27:0H-e worker_thread
+    186     186 S    cpuhp/28        smpboot_thread_fn
+    187     187 S    idle_inject/28  smpboot_thread_fn
+    188     188 S    migration/28    smpboot_thread_fn
+    189     189 S    ksoftirqd/28    smpboot_thread_fn
+    191     191 I<   kworker/28:0H-e worker_thread
+    192     192 S    cpuhp/29        smpboot_thread_fn
+    193     193 S    idle_inject/29  smpboot_thread_fn
+    194     194 S    migration/29    smpboot_thread_fn
+    195     195 S    ksoftirqd/29    smpboot_thread_fn
+    196     196 I    kworker/29:0-ev worker_thread
+    197     197 I<   kworker/29:0H-e worker_thread
+    198     198 S    cpuhp/30        smpboot_thread_fn
+    199     199 S    idle_inject/30  smpboot_thread_fn
+    200     200 S    migration/30    smpboot_thread_fn
+    201     201 S    ksoftirqd/30    smpboot_thread_fn
+    203     203 I<   kworker/30:0H-e worker_thread
+    204     204 S    cpuhp/31        smpboot_thread_fn
+    205     205 S    idle_inject/31  smpboot_thread_fn
+    206     206 S    migration/31    smpboot_thread_fn
+    207     207 S    ksoftirqd/31    smpboot_thread_fn
+    209     209 I<   kworker/31:0H-e worker_thread
+    210     210 S    cpuhp/32        smpboot_thread_fn
+    211     211 S    idle_inject/32  smpboot_thread_fn
+    212     212 S    migration/32    smpboot_thread_fn
+    213     213 S    ksoftirqd/32    smpboot_thread_fn
+    215     215 I<   kworker/32:0H-e worker_thread
+    216     216 S    rcu_exp_par_gp_ kthread_worker_fn
+    217     217 S    cpuhp/33        smpboot_thread_fn
+    218     218 S    idle_inject/33  smpboot_thread_fn
+    219     219 S    migration/33    smpboot_thread_fn
+    220     220 S    ksoftirqd/33    smpboot_thread_fn
+    222     222 I<   kworker/33:0H-e worker_thread
+    223     223 S    cpuhp/34        smpboot_thread_fn
+    224     224 S    idle_inject/34  smpboot_thread_fn
+    225     225 S    migration/34    smpboot_thread_fn
+    226     226 S    ksoftirqd/34    smpboot_thread_fn
+    228     228 I<   kworker/34:0H-e worker_thread
+    229     229 S    cpuhp/35        smpboot_thread_fn
+    230     230 S    idle_inject/35  smpboot_thread_fn
+    231     231 S    migration/35    smpboot_thread_fn
+    232     232 S    ksoftirqd/35    smpboot_thread_fn
+    233     233 I    kworker/35:0-mm worker_thread
+    234     234 I<   kworker/35:0H-e worker_thread
+    235     235 S    cpuhp/36        smpboot_thread_fn
+    236     236 S    idle_inject/36  smpboot_thread_fn
+    237     237 S    migration/36    smpboot_thread_fn
+    238     238 S    ksoftirqd/36    smpboot_thread_fn
+    239     239 I    kworker/36:0-ev worker_thread
+    240     240 I<   kworker/36:0H-e worker_thread
+    241     241 S    cpuhp/37        smpboot_thread_fn
+    242     242 S    idle_inject/37  smpboot_thread_fn
+    243     243 S    migration/37    smpboot_thread_fn
+    244     244 S    ksoftirqd/37    smpboot_thread_fn
+    246     246 I<   kworker/37:0H-e worker_thread
+    247     247 S    cpuhp/38        smpboot_thread_fn
+    248     248 S    idle_inject/38  smpboot_thread_fn
+    249     249 S    migration/38    smpboot_thread_fn
+    250     250 S    ksoftirqd/38    smpboot_thread_fn
+    251     251 I    kworker/38:0-ev worker_thread
+    252     252 I<   kworker/38:0H-e worker_thread
+    253     253 S    cpuhp/39        smpboot_thread_fn
+    254     254 S    idle_inject/39  smpboot_thread_fn
+    255     255 S    migration/39    smpboot_thread_fn
+    256     256 S    ksoftirqd/39    smpboot_thread_fn
+    258     258 I<   kworker/39:0H-e worker_thread
+    259     259 S    cpuhp/40        smpboot_thread_fn
+    260     260 S    idle_inject/40  smpboot_thread_fn
+    261     261 S    migration/40    smpboot_thread_fn
+    262     262 S    ksoftirqd/40    smpboot_thread_fn
+    264     264 I<   kworker/40:0H-e worker_thread
+    265     265 S    cpuhp/41        smpboot_thread_fn
+    266     266 S    idle_inject/41  smpboot_thread_fn
+    267     267 S    migration/41    smpboot_thread_fn
+    268     268 S    ksoftirqd/41    smpboot_thread_fn
+    270     270 I<   kworker/41:0H-e worker_thread
+    271     271 S    cpuhp/42        smpboot_thread_fn
+    272     272 S    idle_inject/42  smpboot_thread_fn
+    273     273 S    migration/42    smpboot_thread_fn
+    274     274 S    ksoftirqd/42    smpboot_thread_fn
+    276     276 I<   kworker/42:0H-e worker_thread
+    277     277 S    cpuhp/43        smpboot_thread_fn
+    278     278 S    idle_inject/43  smpboot_thread_fn
+    279     279 S    migration/43    smpboot_thread_fn
+    280     280 S    ksoftirqd/43    smpboot_thread_fn
+    281     281 I    kworker/43:0-mm worker_thread
+    282     282 I<   kworker/43:0H-e worker_thread
+    283     283 S    cpuhp/44        smpboot_thread_fn
+    284     284 S    idle_inject/44  smpboot_thread_fn
+    285     285 S    migration/44    smpboot_thread_fn
+    286     286 S    ksoftirqd/44    smpboot_thread_fn
+    288     288 I<   kworker/44:0H-e worker_thread
+    289     289 S    cpuhp/45        smpboot_thread_fn
+    290     290 S    idle_inject/45  smpboot_thread_fn
+    291     291 S    migration/45    smpboot_thread_fn
+    292     292 S    ksoftirqd/45    smpboot_thread_fn
+    294     294 I<   kworker/45:0H-e worker_thread
+    295     295 S    cpuhp/46        smpboot_thread_fn
+    296     296 S    idle_inject/46  smpboot_thread_fn
+    297     297 S    migration/46    smpboot_thread_fn
+    298     298 S    ksoftirqd/46    smpboot_thread_fn
+    300     300 I<   kworker/46:0H-e worker_thread
+    301     301 S    cpuhp/47        smpboot_thread_fn
+    302     302 S    idle_inject/47  smpboot_thread_fn
+    303     303 S    migration/47    smpboot_thread_fn
+    304     304 S    ksoftirqd/47    smpboot_thread_fn
+    306     306 I<   kworker/47:0H-e worker_thread
+    307     307 S    cpuhp/48        smpboot_thread_fn
+    308     308 S    idle_inject/48  smpboot_thread_fn
+    309     309 S    migration/48    smpboot_thread_fn
+    310     310 S    ksoftirqd/48    smpboot_thread_fn
+    312     312 I<   kworker/48:0H-e worker_thread
+    313     313 S    rcu_exp_par_gp_ kthread_worker_fn
+    314     314 S    cpuhp/49        smpboot_thread_fn
+    315     315 S    idle_inject/49  smpboot_thread_fn
+    316     316 S    migration/49    smpboot_thread_fn
+    317     317 S    ksoftirqd/49    smpboot_thread_fn
+    319     319 I<   kworker/49:0H-e worker_thread
+    320     320 S    cpuhp/50        smpboot_thread_fn
+    321     321 S    idle_inject/50  smpboot_thread_fn
+    322     322 S    migration/50    smpboot_thread_fn
+    323     323 S    ksoftirqd/50    smpboot_thread_fn
+    325     325 I<   kworker/50:0H-e worker_thread
+    326     326 S    cpuhp/51        smpboot_thread_fn
+    327     327 S    idle_inject/51  smpboot_thread_fn
+    328     328 S    migration/51    smpboot_thread_fn
+    329     329 S    ksoftirqd/51    smpboot_thread_fn
+    331     331 I<   kworker/51:0H-e worker_thread
+    332     332 S    cpuhp/52        smpboot_thread_fn
+    333     333 S    idle_inject/52  smpboot_thread_fn
+    334     334 S    migration/52    smpboot_thread_fn
+    335     335 S    ksoftirqd/52    smpboot_thread_fn
+    337     337 I<   kworker/52:0H-e worker_thread
+    338     338 S    cpuhp/53        smpboot_thread_fn
+    339     339 S    idle_inject/53  smpboot_thread_fn
+    340     340 S    migration/53    smpboot_thread_fn
+    341     341 S    ksoftirqd/53    smpboot_thread_fn
+    343     343 I<   kworker/53:0H-e worker_thread
+    344     344 S    cpuhp/54        smpboot_thread_fn
+    345     345 S    idle_inject/54  smpboot_thread_fn
+    346     346 S    migration/54    smpboot_thread_fn
+    347     347 S    ksoftirqd/54    smpboot_thread_fn
+    349     349 I<   kworker/54:0H-e worker_thread
+    350     350 S    cpuhp/55        smpboot_thread_fn
+    351     351 S    idle_inject/55  smpboot_thread_fn
+    352     352 S    migration/55    smpboot_thread_fn
+    353     353 S    ksoftirqd/55    smpboot_thread_fn
+    355     355 I<   kworker/55:0H-e worker_thread
+    356     356 S    cpuhp/56        smpboot_thread_fn
+    357     357 S    idle_inject/56  smpboot_thread_fn
+    358     358 S    migration/56    smpboot_thread_fn
+    359     359 S    ksoftirqd/56    smpboot_thread_fn
+    361     361 I<   kworker/56:0H-e worker_thread
+    362     362 S    cpuhp/57        smpboot_thread_fn
+    363     363 S    idle_inject/57  smpboot_thread_fn
+    364     364 S    migration/57    smpboot_thread_fn
+    365     365 S    ksoftirqd/57    smpboot_thread_fn
+    367     367 I<   kworker/57:0H-e worker_thread
+    368     368 S    cpuhp/58        smpboot_thread_fn
+    369     369 S    idle_inject/58  smpboot_thread_fn
+    370     370 S    migration/58    smpboot_thread_fn
+    371     371 S    ksoftirqd/58    smpboot_thread_fn
+    373     373 I<   kworker/58:0H-e worker_thread
+    374     374 S    cpuhp/59        smpboot_thread_fn
+    375     375 S    idle_inject/59  smpboot_thread_fn
+    376     376 S    migration/59    smpboot_thread_fn
+    377     377 S    ksoftirqd/59    smpboot_thread_fn
+    379     379 I<   kworker/59:0H-e worker_thread
+    380     380 S    cpuhp/60        smpboot_thread_fn
+    381     381 S    idle_inject/60  smpboot_thread_fn
+    382     382 S    migration/60    smpboot_thread_fn
+    383     383 S    ksoftirqd/60    smpboot_thread_fn
+    384     384 I    kworker/60:0-mm worker_thread
+    385     385 I<   kworker/60:0H-e worker_thread
+    386     386 S    cpuhp/61        smpboot_thread_fn
+    387     387 S    idle_inject/61  smpboot_thread_fn
+    388     388 S    migration/61    smpboot_thread_fn
+    389     389 S    ksoftirqd/61    smpboot_thread_fn
+    391     391 I<   kworker/61:0H-e worker_thread
+    392     392 S    cpuhp/62        smpboot_thread_fn
+    393     393 S    idle_inject/62  smpboot_thread_fn
+    394     394 S    migration/62    smpboot_thread_fn
+    395     395 S    ksoftirqd/62    smpboot_thread_fn
+    396     396 I    kworker/62:0-ev worker_thread
+    397     397 I<   kworker/62:0H-e worker_thread
+    398     398 S    cpuhp/63        smpboot_thread_fn
+    399     399 S    idle_inject/63  smpboot_thread_fn
+    400     400 S    migration/63    smpboot_thread_fn
+    401     401 S    ksoftirqd/63    smpboot_thread_fn
+    403     403 I<   kworker/63:0H-e worker_thread
+    406     406 S    kdevtmpfs       devtmpfs_work_loop
+    407     407 I<   kworker/R-inet_ rescuer_thread
+    408     408 I    rcu_tasks_kthre rcu_tasks_one_gp
+    409     409 I    rcu_tasks_rude_ rcu_tasks_one_gp
+    410     410 S    kauditd         kauditd_thread
+    411     411 S    khungtaskd      watchdog
+    413     413 S    oom_reaper      oom_reaper
+    415     415 I<   kworker/R-write rescuer_thread
+    416     416 S    kcompactd0      kcompactd
+    417     417 S    kcompactd1      kcompactd
+    419     419 SN   ksmd            ksm_scan_thread
+    420     420 SN   khugepaged      khugepaged
+    421     421 I<   kworker/R-kbloc rescuer_thread
+    422     422 I<   kworker/R-blkcg rescuer_thread
+    423     423 I<   kworker/R-kinte rescuer_thread
+    424     424 S    irq/9-acpi      irq_thread
+    427     427 I<   kworker/R-tpm_d rescuer_thread
+    428     428 I<   kworker/R-ata_s rescuer_thread
+    429     429 I<   kworker/R-md_bi rescuer_thread
+    430     430 I<   kworker/R-md_ll rescuer_thread
+    431     431 I<   kworker/R-md_ll rescuer_thread
+    432     432 I<   kworker/R-edac- rescuer_thread
+    433     433 I<   kworker/R-devfr rescuer_thread
+    434     434 S    watchdogd       kthread_worker_fn
+    435     435 I    kworker/16:1-ev worker_thread
+    436     436 I<   kworker/R-quota rescuer_thread
+    437     437 S    kswapd0         kswapd
+    438     438 S    kswapd1         kswapd
+    439     439 S    ecryptfs-kthrea ecryptfs_threadfn
+    440     440 I<   kworker/R-kthro rescuer_thread
+    441     441 I<   kworker/R-acpi_ rescuer_thread
+    442     442 S    scsi_eh_0       scsi_error_handler
+    443     443 I<   kworker/R-scsi_ rescuer_thread
+    444     444 S    scsi_eh_1       scsi_error_handler
+    445     445 I<   kworker/R-scsi_ rescuer_thread
+    446     446 S    scsi_eh_2       scsi_error_handler
+    447     447 I<   kworker/R-scsi_ rescuer_thread
+    453     453 I    kworker/5:1-eve worker_thread
+    454     454 I<   kworker/R-mld   rescuer_thread
+    455     455 I<   kworker/R-ipv6_ rescuer_thread
+    456     456 I    kworker/u256:1  worker_thread
+    457     457 I<   kworker/R-kstrp rescuer_thread
+    458     458 I    kworker/4:1-eve worker_thread
+    466     466 I    kworker/33:1-ev worker_thread
+    467     467 I    kworker/37:1-ev worker_thread
+    469     469 I    kworker/47:1-ev worker_thread
+    470     470 I    kworker/52:1-mm worker_thread
+    471     471 I    kworker/57:1-mm worker_thread
+    472     472 I    kworker/62:1-ev worker_thread
+    477     477 I    kworker/36:1-ev worker_thread
+    479     479 I    kworker/48:1-mm worker_thread
+    480     480 I    kworker/53:1-ev worker_thread
+    483     483 I<   kworker/u259:0  worker_thread
+    484     484 I<   kworker/u260:0  worker_thread
+    485     485 I<   kworker/u261:0  worker_thread
+    496     496 I<   kworker/R-charg rescuer_thread
+    497     497 I<   kworker/0:1H-kb worker_thread
+    533     533 I<   kworker/32:1H-k worker_thread
+    536     536 I<   kworker/60:1H-k worker_thread
+    539     539 I<   kworker/62:1H-k worker_thread
+    678     678 I<   kworker/6:1H-kb worker_thread
+    679     679 I<   kworker/5:1H-kb worker_thread
+    680     680 I<   kworker/10:1H-k worker_thread
+    682     682 I<   kworker/11:1H-k worker_thread
+    684     684 I<   kworker/17:1H-k worker_thread
+    685     685 I<   kworker/8:1H-kb worker_thread
+    686     686 S    card0-crtc0     kthread_worker_fn
+    699     699 I<   kworker/33:1H-k worker_thread
+    700     700 I<   kworker/61:1H-k worker_thread
+    701     701 I<   kworker/34:1H-k worker_thread
+    716     716 I<   kworker/58:1H-k worker_thread
+    717     717 I<   kworker/57:1H-k worker_thread
+    718     718 I<   kworker/13:1H-k worker_thread
+    719     719 I<   kworker/59:1H-k worker_thread
+    720     720 I<   kworker/26:1H-k worker_thread
+    721     721 I<   kworker/18:1H-k worker_thread
+    722     722 I<   kworker/3:1H-kb worker_thread
+    726     726 I<   kworker/48:1H-k worker_thread
+    727     727 I<   kworker/42:1H-k worker_thread
+    728     728 I<   kworker/35:1H-k worker_thread
+    730     730 I    kworker/61:1-ev worker_thread
+    731     731 I    kworker/32:1-cg worker_thread
+    732     732 I    kworker/63:1-ev worker_thread
+    736     736 I    kworker/58:1-ev worker_thread
+    738     738 I<   kworker/44:1H-k worker_thread
+    739     739 I<   kworker/45:1H-k worker_thread
+    740     740 I<   kworker/46:1H-k worker_thread
+    741     741 I    kworker/34:1-ev worker_thread
+    744     744 I<   kworker/47:1H-k worker_thread
+    747     747 I<   kworker/43:1H-k worker_thread
+    749     749 I<   kworker/2:1H-kb worker_thread
+    754     754 I    kworker/19:1-ev worker_thread
+    755     755 I    kworker/24:1-ev worker_thread
+    756     756 I    kworker/20:1-ev worker_thread
+    757     757 I    kworker/23:1-ev worker_thread
+    765     765 I    kworker/39:1-mm worker_thread
+    766     766 I    kworker/45:1-ev worker_thread
+    769     769 I    kworker/50:1-ev worker_thread
+    771     771 I    kworker/59:1-ev worker_thread
+    772     772 I    kworker/54:1-ev worker_thread
+    773     773 I    kworker/55:1-mm worker_thread
+    774     774 I    kworker/56:1-ev worker_thread
+    796     796 I<   kworker/R-raid5 rescuer_thread
+    801     801 I<   kworker/9:1H-kb worker_thread
+    804     804 I<   kworker/7:1H-kb worker_thread
+    822     822 I<   kworker/14:1H-k worker_thread
+    826     826 I<   kworker/4:1H-kb worker_thread
+    832     832 I<   kworker/12:1H-k worker_thread
+    835     835 I<   kworker/16:1H-k worker_thread
+    844     844 I<   kworker/20:1H-k worker_thread
+    846     846 I<   kworker/21:1H-k worker_thread
+    848     848 I<   kworker/29:1H-k worker_thread
+    849     849 S    jbd2/sda1-8     kjournald2
+    850     850 I<   kworker/R-ext4- rescuer_thread
+    877     877 I<   kworker/25:1H-k worker_thread
+    878     878 I<   kworker/30:1H-k worker_thread
+    879     879 I<   kworker/28:1H-k worker_thread
+    880     880 I<   kworker/27:1H-k worker_thread
+    881     881 I<   kworker/1:1H-kb worker_thread
+    882     882 I<   kworker/31:1H-k worker_thread
+    883     883 I<   kworker/22:1H-k worker_thread
+    885     885 I<   kworker/15:1H-k worker_thread
+    886     886 I<   kworker/37:1H-k worker_thread
+    888     888 I<   kworker/24:1H-k worker_thread
+    889     889 I<   kworker/38:1H-k worker_thread
+    891     891 I<   kworker/23:1H-k worker_thread
+    892     892 I<   kworker/19:1H-k worker_thread
+    893     893 I<   kworker/49:1H-k worker_thread
+    932     932 I<   kworker/39:1H-k worker_thread
+    933     933 I<   kworker/36:1H-k worker_thread
+    940     940 I<   kworker/41:1H-k worker_thread
+    945     945 S    psimon          psi_rtpoll_worker
+    951     951 S<s  systemd-journal do_epoll_wait
+    976     976 I<   kworker/R-kmpat rescuer_thread
+    977     977 I<   kworker/R-kmpat rescuer_thread
+    994     994 SLsl multipathd      futex_do_wait
+    994    1003 SLsl multipathd      futex_do_wait
+    994    1005 SLsl multipathd      poll_schedule_timeout.constprop.0
+    994    1006 SLsl multipathd      poll_schedule_timeout.constprop.0
+    994    1007 SLsl multipathd      poll_schedule_timeout.constprop.0
+    994    1008 SLsl multipathd      hrtimer_nanosleep
+    994    1009 SLsl multipathd      futex_do_wait
+    994    1010 SLsl multipathd      futex_do_wait
+    997     997 I    kworker/17:3-ev worker_thread
+   1011    1011 I    kworker/37:2-cg worker_thread
+   1019    1019 I<   kworker/40:1H-k worker_thread
+   1020    1020 Ssl  systemd-timesyn do_epoll_wait
+   1020    1028 Ssl  sd-resolve      skb_wait_for_more_packets
+   1024    1024 Ss   systemd-resolve do_epoll_wait
+   1027    1027 Ss   systemd-udevd   do_epoll_wait
+   1034    1034 I    kworker/40:2-ev worker_thread
+   1035    1035 S    psimon          psi_rtpoll_worker
+   1040    1040 I<   kworker/50:1H-k worker_thread
+   1082    1082 I<   kworker/51:1H-k worker_thread
+   1085    1085 I<   kworker/52:1H-k worker_thread
+   1087    1087 I<   kworker/53:1H-k worker_thread
+   1090    1090 I<   kworker/56:1H-k worker_thread
+   1100    1100 I<   kworker/54:1H-k worker_thread
+   1102    1102 I<   kworker/55:1H-k worker_thread
+   1110    1110 I<   kworker/63:1H-k worker_thread
+   1285    1285 I    kworker/46:2-ev worker_thread
+   1343    1343 I<   kworker/R-nfit  rescuer_thread
+   1350    1350 S    jbd2/sdb-8      kjournald2
+   1351    1351 S    jbd2/sdc-8      kjournald2
+   1352    1352 I<   kworker/R-ext4- rescuer_thread
+   1353    1353 I<   kworker/R-ext4- rescuer_thread
+   1565    1565 I    kworker/53:2-ev worker_thread
+   1585    1585 Ss   systemd-network do_epoll_wait
+   1607    1607 Ss   dbus-daemon     do_epoll_wait
+   1617    1617 Ssl  snapd           futex_do_wait
+   1617    1636 Ssl  snapd           futex_do_wait
+   1617    1637 Ssl  snapd           futex_do_wait
+   1617    1638 Ssl  snapd           futex_do_wait
+   1617    1639 Ssl  snapd           futex_do_wait
+   1617    1640 Ssl  snapd           futex_do_wait
+   1617    1658 Ssl  snapd           do_epoll_wait
+   1617    1660 Ssl  snapd           futex_do_wait
+   1617    1661 Ssl  snapd           futex_do_wait
+   1617    1664 Ssl  snapd           futex_do_wait
+   1617    1665 Ssl  snapd           futex_do_wait
+   1617    1667 Ssl  snapd           poll_schedule_timeout.constprop.0
+   1617    1670 Ssl  snapd           futex_do_wait
+   1617    1672 Ssl  snapd           futex_do_wait
+   1617    1671 Ssl  snapd           futex_do_wait
+   1617    1674 Ssl  snapd           futex_do_wait
+   1617    1675 Ssl  snapd           futex_do_wait
+   1617    1677 Ssl  snapd           futex_do_wait
+   1617    1679 Ssl  snapd           futex_do_wait
+   1617    1680 Ssl  snapd           futex_do_wait
+   1617    1681 Ssl  snapd           futex_do_wait
+   1617    1690 Ssl  snapd           futex_do_wait
+   1617    1833 Ssl  snapd           futex_do_wait
+   1617    1909 Ssl  snapd           futex_do_wait
+   1617    1910 Ssl  snapd           futex_do_wait
+   1617    1911 Ssl  snapd           futex_do_wait
+   1620    1620 Ss   systemd-logind  do_epoll_wait
+   1685    1685 I<   kworker/R-cfg80 rescuer_thread
+   1726    1726 Ssl  unattended-upgr poll_schedule_timeout.constprop.0
+   1726    1826 Ssl  gmain           poll_schedule_timeout.constprop.0
+   1735    1735 Ssl  rsyslogd        poll_schedule_timeout.constprop.0
+   1735    1769 Ssl  in:imuxsock     poll_schedule_timeout.constprop.0
+   1735    1770 Ssl  in:imklog       syslog_print
+   1735    1771 Ssl  rs:main Q:Reg   futex_do_wait
+   1870    1870 Ss   cron            hrtimer_nanosleep
+   1879    1879 Ss+  agetty          poll_schedule_timeout.constprop.0
+   1883    1883 Ss+  agetty          poll_schedule_timeout.constprop.0
+   1921    1921 Ss   sshd            poll_schedule_timeout.constprop.0
+   2410    2410 I    kworker/41:2-ev worker_thread
+   2412    2412 I    kworker/42:2-ev worker_thread
+   2563    2563 I    kworker/15:2-ev worker_thread
+   2717    2717 I    kworker/26:2-ev worker_thread
+   3228    3228 I    kworker/57:0-ev worker_thread
+   3463    3463 I    kworker/19:2-ev worker_thread
+   3474    3474 I    kworker/30:1-ev worker_thread
+   3481    3481 I    kworker/47:0-ev worker_thread
+   3506    3506 I    kworker/30:3-cg worker_thread
+   3573    3573 I    kworker/9:0-eve worker_thread
+   3616    3616 I    kworker/52:0-mm worker_thread
+   3669    3669 I    kworker/63:2-ev worker_thread
+   3670    3670 I    kworker/21:1-ev worker_thread
+   3784    3784 Ssl  polkitd         poll_schedule_timeout.constprop.0
+   3784    3786 Ssl  gmain           poll_schedule_timeout.constprop.0
+   3784    3787 Ssl  pool-spawner    futex_do_wait
+   3784    3788 Ssl  gdbus           poll_schedule_timeout.constprop.0
+   3954    3954 I    kworker/25:2-ev worker_thread
+   3969    3969 I    kworker/11:1-ev worker_thread
+   3975    3975 I    kworker/3:0-eve worker_thread
+   3993    3993 I    kworker/u257:4- worker_thread
+   4100    4100 I    kworker/29:2    worker_thread
+   4129    4129 I    kworker/26:1-ev worker_thread
+   4155    4155 I    kworker/0:1-cgr worker_thread
+   4213    4213 I    kworker/24:2-ev worker_thread
+   4214    4214 I    kworker/28:2-ev worker_thread
+   4234    4234 I    kworker/14:2-ev worker_thread
+   4256    4256 I    kworker/25:1-ev worker_thread
+   4275    4275 I    kworker/51:2-ev worker_thread
+   4453    4453 I    kworker/38:2-mm worker_thread
+   4457    4457 I    kworker/44:1-ev worker_thread
+   4459    4459 I    kworker/10:1-ev worker_thread
+   4482    4482 I    kworker/12:2-ev worker_thread
+   4642    4642 I    kworker/8:2-eve worker_thread
+   4667    4667 I    kworker/56:0-ev worker_thread
+   4670    4670 I    kworker/45:0-ev worker_thread
+   4687    4687 I    kworker/7:2-eve worker_thread
+   4698    4698 I    kworker/7:0-eve worker_thread
+   4710    4710 I    kworker/1:2-eve worker_thread
+   4732    4732 I    kworker/u258:0- worker_thread
+   4789    4789 I    kworker/12:0-ev worker_thread
+   4797    4797 I    kworker/18:0-ev worker_thread
+   4843    4843 I    kworker/27:2-ev worker_thread
+   4874    4874 I    kworker/28:0-ev worker_thread
+   4875    4875 I    kworker/22:0-ev worker_thread
+   4882    4882 I    kworker/13:0-cg worker_thread
+   4885    4885 I    kworker/27:1-ev worker_thread
+   4887    4887 I    kworker/43:1-ev worker_thread
+   4889    4889 Ss   sshd-session    poll_schedule_timeout.constprop.0
+   4894    4894 Ss   systemd         do_epoll_wait
+   4896    4896 S    (sd-pam)        do_sigtimedwait.isra.0
+   4901    4901 S    psimon          psi_rtpoll_worker
+   5094    5094 S    sshd-session    poll_schedule_timeout.constprop.0
+   5095    5095 Ss+  zsh             poll_schedule_timeout.constprop.0
+   5119    5119 I    kworker/18:2-ev worker_thread
+   5369    5369 I    kworker/59:0    worker_thread
+   5370    5370 I    kworker/49:2-ev worker_thread
+   5375    5375 I    kworker/13:2-ev worker_thread
+   5501    5501 I    kworker/48:2-mm worker_thread
+   5502    5502 I    kworker/41:0-ev worker_thread
+   5629    5629 I    kworker/31:2-cg worker_thread
+   5884    5884 I    kworker/16:2-ev worker_thread
+   5885    5885 I    kworker/58:2-ev worker_thread
+   5892    5892 I    kworker/2:2-eve worker_thread
+   6018    6018 I    kworker/11:0-ev worker_thread
+   6021    6021 I    kworker/46:1-mm worker_thread
+   6260    6260 I    kworker/55:0    worker_thread
+   6261    6261 I    kworker/49:1-ev worker_thread
+   6383    6383 I    kworker/u258:1- worker_thread
+   6645    6645 I    kworker/61:2-ev worker_thread
+   6895    6895 I    kworker/33:2    worker_thread
+   6897    6897 I    kworker/50:0-mm worker_thread
+   6905    6905 I    kworker/42:0    worker_thread
+   6910    6910 I    kworker/21:0-ev worker_thread
+   6922    6922 I    kworker/40:1-ev worker_thread
+   6925    6925 I    kworker/3:2-eve worker_thread
+   6932    6932 I    kworker/31:1-ev worker_thread
+   6945    6945 I    kworker/23:0-ev worker_thread
+   6946    6946 I    kworker/51:0-me worker_thread
+   6948    6948 I    kworker/4:2-eve worker_thread
+   7260    7260 I    kworker/22:1-cg worker_thread
+   7265    7265 I    kworker/0:0-eve worker_thread
+   7266    7266 I    kworker/u257:1- worker_thread
+   7267    7267 I    kworker/u257:2- worker_thread
+   7268    7268 I    kworker/6:2-eve worker_thread
+   7272    7272 I    kworker/15:0-ev worker_thread
+   7390    7390 I    kworker/52:2-ev worker_thread
+   7401    7401 I    kworker/32:2-ev worker_thread
+   7626    7626 I    kworker/8:0-mm_ worker_thread
+   7627    7627 I    kworker/9:1     worker_thread
+   7628    7628 I    kworker/54:2-ev worker_thread
+   7629    7629 I    kworker/5:2-mm_ worker_thread
+   7630    7630 I    kworker/10:0-ev worker_thread
+   8080    8080 I    kworker/20:0-ev worker_thread
+   8081    8081 I    kworker/39:2-mm worker_thread
+   8458    8458 I    kworker/2:0-eve worker_thread
+   8805    8805 I    kworker/u258:3- worker_thread
+  10102   10102 I    kworker/35:2-ev worker_thread
+  10986   10986 I    kworker/17:1-ev worker_thread
+  12474   12474 I    kworker/60:2-ev worker_thread
+  14146   14146 I    kworker/44:2-mm worker_thread
+  16279   16279 I    kworker/34:0-cg worker_thread
+  16513   16513 I    kworker/19:0-ev worker_thread
+  16514   16514 I    kworker/14:1-ev worker_thread
+  16516   16516 I    kworker/35:1-ev worker_thread
+  16517   16517 I    kworker/1:1-eve worker_thread
+  16518   16518 I    kworker/10:2-ev worker_thread
+  16641   16641 I    kworker/50:2-mm worker_thread
+  17090   17090 I    kworker/7:1-eve worker_thread
+  17095   17095 I    kworker/22:2-cg worker_thread
+  17217   17217 I    kworker/32:0-cg worker_thread
+  17606   17606 I    kworker/39:0-mm worker_thread
+  17643   17643 I    kworker/44:0-mm worker_thread
+  17860   17860 I    kworker/u258:2- worker_thread
+  18121   18121 I    kworker/20:2    worker_thread
+  19149   19149 I    kworker/34:2-cg worker_thread
+  19150   19150 I    kworker/u257:0- worker_thread
+  19263   19263 I    kworker/6:1-eve worker_thread
+  19264   19264 I    kworker/18:1    worker_thread
+  19265   19265 Ss   sshd-session    poll_schedule_timeout.constprop.0
+  19374   19374 S    sshd-session    poll_schedule_timeout.constprop.0
+  19375   19375 Ss   python3         anon_pipe_read
+  19377   19377 R    ps              -
+

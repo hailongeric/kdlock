@@ -1,0 +1,100 @@
+{
+  "archive_prefix": "candidate",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "completed": true,
+  "finished_ns": 1793460700968871784,
+  "groups": [
+    {
+      "bytes": 10749125,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate-archives/checks.tar.gz",
+      "roots": [
+        "candidate/api-queue-proof",
+        "candidate/completed",
+        "candidate/endpoint",
+        "candidate/faults",
+        "candidate/mapping",
+        "candidate/mmap1-identity",
+        "candidate/sites-queue-proof",
+        "candidate/strict-hold"
+      ],
+      "sha256": "d4610356cb798549b07ed58f1484dc7cda260d7c5f13b31208db206511919b16"
+    },
+    {
+      "bytes": 1088418,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate-archives/mmap1.tar.gz",
+      "roots": [
+        "candidate/mmap1-measure"
+      ],
+      "sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e"
+    },
+    {
+      "bytes": 3683745,
+      "file": "attempts.tar.gz",
+      "group": "attempts",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate-archives/attempts.tar.gz",
+      "roots": [
+        "candidate/api",
+        "candidate/sites",
+        "candidate/sites3"
+      ],
+      "sha256": "89501688115a69841c041bf5c604f60101b02fc24aaf0eff215a33607da2cbe9"
+    },
+    {
+      "bytes": 1827788,
+      "file": "inputs.tar.gz",
+      "group": "inputs",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate-archives/inputs.tar.gz",
+      "roots": [
+        "candidate/preservation-inputs"
+      ],
+      "sha256": "444aed8d5180c50a87e5fdf240e190325cc03dfa866cdf26c8631f4e7318247c"
+    },
+    {
+      "bytes": 1346,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate-archives/metadata.tar.gz",
+      "roots": [
+        "candidate/final-health.json"
+      ],
+      "sha256": "c59729508c592c840910fbf1899dfd61aa96134119cfcf93a43d9cb3aeab68d3"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "066a2c9f019b6304069213e621c8eebf7867ce21c6d87a38f15eb29bb352e4ec",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "0bdd45b1d7df96a0aaa1db9cd6f049ff08f75ebd",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope3 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+    "variant": "kdscope3-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope3",
+  "kernel_variant": "kdscope3-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793460697188699711
+}

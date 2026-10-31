@@ -1,0 +1,332 @@
+{
+  "all_observed_losses": [
+    {
+      "baseline": 288860.5,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 287385.5,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -0.5106271020094422,
+      "metric": "pairs_per_nominal_second",
+      "model": "threads",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.9948937289799056,
+      "round": 0,
+      "workers": 1
+    },
+    {
+      "baseline": 1750584.5,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1710457.5,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -2.2922058318236016,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.977077941681764,
+      "round": 0,
+      "workers": 8
+    },
+    {
+      "baseline": 1846878.0,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1845012.0,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -0.1010353688765564,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.9989896463112344,
+      "round": 0,
+      "workers": 16
+    },
+    {
+      "baseline": 1807459.5,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1794661.0,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -0.7080933210398377,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.9929190667896016,
+      "round": 0,
+      "workers": 24
+    },
+    {
+      "baseline": 1805924.5,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1793176.0,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -0.7059265212914445,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.9929407347870856,
+      "round": 0,
+      "workers": 28
+    },
+    {
+      "baseline": 1415044.0,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1412753.5,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -0.16186775817571553,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.9983813224182428,
+      "round": 0,
+      "workers": 40
+    },
+    {
+      "baseline": 1577534.0,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate": 1224388.5,
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "change_pct": -22.385920049900665,
+      "metric": "pairs_per_nominal_second",
+      "model": "processes",
+      "observed_loss": true,
+      "performance_accepted": false,
+      "qualification": "strict-host/shared-functional-held-writer",
+      "ratio": 0.7761407995009934,
+      "round": 0,
+      "workers": 60
+    }
+  ],
+  "archive_inputs": {
+    "baseline": {
+      "index_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+      "mmap1_group_sha256": "c4cc6772bd5a7712670d707fcd60ef77ac907282c729933b9fdae678edbb36fd"
+    },
+    "candidate": {
+      "index_sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+      "mmap1_group_sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e"
+    }
+  },
+  "arithmetic_passed": true,
+  "completed": true,
+  "diagnostic_generations": {
+    "baseline": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+    "candidate": "de5e4f06a6d60e531a8b329d3c7f2c5335d5e707",
+    "compatibility": "9d10ae77290873df23804293f364862a2b55f385"
+  },
+  "full_analyzer_rerun": false,
+  "input_sha256": "dc942d6ef8e37d91f97186e7c922a53109f4c7a7bcd17ed574c1489d240bd661",
+  "key_workers": [
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "a05c8acb3298dbcd6c4541b848594d99eb53ff93c2832d86d7fee2f4d6eee9c6",
+        "numerator": 73322,
+        "post_marker_totals": [
+          36613,
+          36709
+        ],
+        "result_sha256": "a1b7803e8b67b98e986acc561cf9cb6eb8d24f2ee677437fda594afb6a637b95",
+        "score": 36661.0
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "f91b98858874daa3ed91c54c12db32d08b77917ee68cb420d617bbe44fadfd9f",
+        "numerator": 436233,
+        "post_marker_totals": [
+          219746,
+          216487
+        ],
+        "result_sha256": "904763b742a32a3ff6e27ed9697d016b9d0bde616cb31421d25c2321ee3bf428",
+        "score": 218116.5
+      },
+      "change_pct": 494.95512942909363,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 20
+    },
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "fec58558f258fedc5b012710d4dce7249fb7c2cc0dc2d44b98e9ca0645a90ae5",
+        "numerator": 49287,
+        "post_marker_totals": [
+          24867,
+          24420
+        ],
+        "result_sha256": "dc21c4cf988d1b01148680edd28f6b6422418f9d999390dd7dd181f8778fc572",
+        "score": 24643.5
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "67e4909569f9131079829cff14d771a257aeef0c2135c7477e143255504c9739",
+        "numerator": 393844,
+        "post_marker_totals": [
+          196362,
+          197482
+        ],
+        "result_sha256": "3a68656180f6114de21a6d017a3f86aefd060da6c609e8c1d951f323bdf5050c",
+        "score": 196922.0
+      },
+      "change_pct": 699.0829224744862,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 32
+    },
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "2905733b6803627d65b9414b43bea21f84718b9a3709204291c28da59dbda9cd",
+        "numerator": 13133,
+        "post_marker_totals": [
+          6593,
+          6540
+        ],
+        "result_sha256": "68b421970290fd2312624643d4ccf3abb0cbeeb1cf96e26067f7712d9488cb8a",
+        "score": 6566.5
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "f597367987aed2cf3a97782b51cb45424054cadda6144183f49205ec47c69a2b",
+        "numerator": 247275,
+        "post_marker_totals": [
+          124629,
+          122646
+        ],
+        "result_sha256": "44e173dbab2616f4210bda3fb4c909325a897247e57ab009c69e04625c0b3909",
+        "score": 123637.5
+      },
+      "change_pct": 1782.8523566587985,
+      "model": "threads",
+      "observed_loss": false,
+      "workers": 60
+    },
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "f90c8c6f629dd6906580373e11b3fbb8719f6a2bd50ffaeefeaf9d0748ec6a44",
+        "numerator": 3635322,
+        "post_marker_totals": [
+          1812982,
+          1822340
+        ],
+        "result_sha256": "052896d8658dcdaf888decbf9f76603bd07c25dd74f5e37ab687e253cc21f13d",
+        "score": 1817661.0
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "f64f54be8d46c59dc87b4235abd55f9645219c672a4e494cccbe39e049d9d99a",
+        "numerator": 3637025,
+        "post_marker_totals": [
+          1813661,
+          1823364
+        ],
+        "result_sha256": "ac300a65ba3d83bb5cb6a1800c705b6cc1be105c337269a6394fe7be4a5ae90d",
+        "score": 1818512.5
+      },
+      "change_pct": 0.046845919013494,
+      "model": "processes",
+      "observed_loss": false,
+      "workers": 20
+    },
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "396e668c4fdf96bc717f925dc3faf9968fc914e174b579b92b604629577a7a22",
+        "numerator": 3573522,
+        "post_marker_totals": [
+          1783298,
+          1790224
+        ],
+        "result_sha256": "f5994b0ab6b222627c11fc633afc2663c981bd016a42e28cf7234ef1660ba900",
+        "score": 1786761.0
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "00dcd8b05d025980868294cad56ca1e2876091194f8ca1060694e6ce8ace7a7c",
+        "numerator": 3604075,
+        "post_marker_totals": [
+          1803105,
+          1800970
+        ],
+        "result_sha256": "bbeee9a308c639119204db7cffd774979a779358a8a6d25ce37a10060254a3b8",
+        "score": 1802037.5
+      },
+      "change_pct": 0.854982843256602,
+      "model": "processes",
+      "observed_loss": false,
+      "workers": 32
+    },
+    {
+      "baseline": {
+        "denominator": 2,
+        "log_sha256": "e7c4f6d6651bc2095de2eeede4d16000fc0456037e0468feceed445db4b931d4",
+        "numerator": 3155068,
+        "post_marker_totals": [
+          1578258,
+          1576810
+        ],
+        "result_sha256": "c8161e6cfd4c4ba843fb5fc95f50b5e02b0103cbe824d3bcb826faab8e2f0ac1",
+        "score": 1577534.0
+      },
+      "candidate": {
+        "denominator": 2,
+        "log_sha256": "fdb3640b5996885c940d3ce2380c0dd8ca7541b413774dfbcdce289793690fb3",
+        "numerator": 2448777,
+        "post_marker_totals": [
+          1224791,
+          1223986
+        ],
+        "result_sha256": "f4e6f835ce43f99ba0e10770f705d2191faee091146468b3bcdfe83f00de9fa3",
+        "score": 1224388.5
+      },
+      "change_pct": -22.385920049900665,
+      "model": "processes",
+      "observed_loss": true,
+      "workers": 60
+    }
+  ],
+  "limits": [
+    "Independent sample/arithmetic review only; full protocol qualification is the separately retained analyzer result.",
+    "Score is mmap/munmap pairs per two nominal seconds; not observed joined wall time.",
+    "Strict host qualification and shared functional/held-writer policy are separate from performance acceptance.",
+    "One round, seven retained losses, no Native parity or causal claim."
+  ],
+  "models": {
+    "processes": {
+      "gains": 15,
+      "losses": 6,
+      "pairs": 21
+    },
+    "threads": {
+      "gains": 20,
+      "losses": 1,
+      "pairs": 21
+    }
+  },
+  "original_logs_checked": 84,
+  "pairs_checked": 42,
+  "performance_accepted": false,
+  "result_sha256": {
+    "comparisons.json": "830912a56c5540f24021e207c7bdce1ebc1613682ebe8c6206aca3ec40b3e470",
+    "key-workers.json": "d43032671e03164fb227aa817bf71338d93adbfbac8aeead07a13a290da5973d",
+    "observed-losses.json": "f0eea75f1079dbb06e22ba779109ba27283c99a5f1a2908caf8f6d6494240669",
+    "points.json": "5f8caee87bc4698681eb837041f6a15657767d698d141d0bd988f0966b85d481",
+    "processes.csv": "73bcd5b7e653671191a28d2bae951bcd5e6435df1455dfe0fbcb7c2d83ef1706",
+    "threads.csv": "e61cfdd5b90cd7e346e9be831e9373991b84f181350e505c3bfd562497ecb1ca",
+    "validation.json": "e53f3cc53148f57001c1881a7d826e02a9038246068be1db36fa1abc69e29722"
+  },
+  "schema": 1,
+  "script_sha256": "9e16826e9e195570ffaa74d94a00d252667458f3bebf329084dc08673d64d6a4",
+  "source_host_only": true,
+  "workload_or_test_execution": false
+}

@@ -1,0 +1,21 @@
+{
+  "comparison_validation_sha256": "73e96ee362fd55cdda8a859f05ee4688b89a404ad36a56f0aea65d32d4bcf234",
+  "completed": true,
+  "either_losses": 101,
+  "group_count": 20,
+  "limits": [
+    "One sequential round, no variance estimate or causal attribution.",
+    "Worker thread CPU time brackets ioctl; whole wall includes start/config/release and collector completion.",
+    "Kernel-active interval has a different clock boundary; diagnostic ratio is not exact scheduling accounting.",
+    "No measured park/spin/OSQ/wake counter in the selected raw schema."
+  ],
+  "no_regression_evidence_gate": false,
+  "pairs": 210,
+  "peak_losses": 95,
+  "performance_accepted": false,
+  "points": 420,
+  "script_sha256": "895c8522c926f7fba6490e76fd2bc23dcc528f80bb073082d9bd44a7360772f7",
+  "source_only_archive_analysis": true,
+  "strict_qualified": true,
+  "whole_losses": 95
+}

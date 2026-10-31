@@ -1,0 +1,58 @@
+{
+  "output": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031",
+  "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "release": "7.0.0-38-kdlock1",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "sync": "/tmp/kdlock-writer-queue-corrected-sync-20261031.json",
+  "sync_sha256": "61dd817b858345038a4f85bdc30e77f7024a74088b89c56ac60dc68573f183a1",
+  "steps": [
+    {
+      "name": "rwsem",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "timeout": 900,
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/rwsem/result.json"
+    },
+    {
+      "name": "mutex",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/mutex/local/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/mutex",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "timeout": 900,
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/mutex/result.json"
+    }
+  ],
+  "retained_checks": [
+    {
+      "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/result.json",
+      "result_sha256": "5d3740b52f89a50e4201272d2e3ef89e707ec8beb1fa83acc12a9ea113ff7e80",
+      "sync": "/tmp/kdlock-writer-queue-candidate-sync-20261031.json",
+      "sync_sha256": "9fe27f559b218b9d98348b314844039caba1258a71a594253756f4de7a8422df",
+      "blocks": [
+        "unit",
+        "writer-sites",
+        "writer-observation"
+      ],
+      "changed_nonunit_paths": [
+        "tests/kernel/rwsem/README.md",
+        "tests/kernel/rwsem/payload/gate_signal.inc"
+      ]
+    }
+  ]
+}

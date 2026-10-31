@@ -1,0 +1,350 @@
+diff --git a/bench/mmap_writer/client.c b/bench/mmap_writer/client.c
+index c69d7a54..8d8a6cd8 100644
+--- a/bench/mmap_writer/client.c
++++ b/bench/mmap_writer/client.c
+@@ -22,7 +22,9 @@ static unsigned checks;
+ /* Optional exact integration chain, independently decoded from its kernel ELF.
+  * The six-argument recovery-kernel interface retains its original proof. */
+ static const char *chain_waiter, *chain_acquire;
+-static unsigned long chain_wait[2], chain_adapter;
++#define CHAIN_WAIT_CAPACITY 3
++static unsigned long chain_wait[CHAIN_WAIT_CAPACITY], chain_adapter;
++static unsigned chain_wait_count = 2;
+ #define CHECK(x) do { checks++;if(!(x)) { fprintf(stderr,"FAIL line %d: %s errno=%d\n",__LINE__,#x,errno);exit(1); } } while(0)
+ static void pin(unsigned cpu)
+ {
+@@ -152,6 +154,36 @@ static char task_state(const char *text)
+ {
+ 	const char *end=strrchr(text,')');return end && end[1]==' ' ? end[2] : '?';
+ }
++static int chain_wait_arguments(const char *first, const char *second)
++{
++	/* Keep the old two-number form. Only the explicit new form carries three
++	 * exact PCs; it does not change the sleep or complete-stack classifier. */
++	if (strcmp(first, "--wait-returns")) {
++		chain_wait[0] = strtoul(first, NULL, 0);
++		chain_wait[1] = strtoul(second, NULL, 0);
++		chain_wait_count = 2;
++		return chain_wait[0] && chain_wait[1];
++	}
++	unsigned long values[CHAIN_WAIT_CAPACITY];
++	const char *next = second;
++	for (unsigned i = 0; i < CHAIN_WAIT_CAPACITY; i++) {
++		char *end;
++		if (*next < '0' || *next > '9') return 0;
++		errno = 0;
++		values[i] = strtoul(next, &end, 10);
++		if (errno || !values[i]) return 0;
++		for (unsigned j = 0; j < i; j++)
++			if (values[j] == values[i]) return 0;
++		if (i + 1 < CHAIN_WAIT_CAPACITY) {
++			if (*end != ':') return 0;
++			next = end + 1;
++		} else if (*end) return 0;
++	}
++	for (unsigned i = 0; i < CHAIN_WAIT_CAPACITY; i++)
++		chain_wait[i] = values[i];
++	chain_wait_count = CHAIN_WAIT_CAPACITY;
++	return 1;
++}
+ static int chain_frame(const char **text, char symbol[64], unsigned long *offset)
+ {
+ 	const char *top = strstr(*text, "] ");
+@@ -168,8 +200,11 @@ static const char *writer_chain_tail(const char **remaining, char symbol[64],
+ 	 * Tail jumps have no return word and are absent from this stack description.
+ 	 * The same parser serves the retained diagnostic and positive classifier. */
+ 	size_t length=strcspn(chain_waiter,"|");
++	int allowed = 0;
++	for (unsigned i = 0; i < chain_wait_count; i++)
++		allowed |= wait_offset == chain_wait[i];
+ 	if(strlen(waiter)!=length || strncmp(waiter,chain_waiter,length) ||
+-	   (wait_offset!=chain_wait[0] && wait_offset!=chain_wait[1]))
++	   !allowed)
+ 		return "waiter_symbol_or_return";
+ 	const char *next=chain_waiter+length;
+ 	unsigned depth=0;
+@@ -320,7 +355,7 @@ int main(int argc,char **argv)
+ 	if(functional)CHECK(!strcmp(argv[11],"--eligibility-policy") && !strcmp(argv[12],"mmap-functional-v1"));
+ 	const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
+ 	if(argc>=11) {
+-		chain_waiter=argv[6];chain_wait[0]=strtoul(argv[7],NULL,0);chain_wait[1]=strtoul(argv[8],NULL,0);
++		chain_waiter=argv[6];CHECK(chain_wait_arguments(argv[7],argv[8]));
+ 		chain_adapter=strtoul(argv[9],NULL,0);chain_acquire=argv[10];
+ 		CHECK(*chain_waiter && *chain_acquire && chain_wait[0] && chain_wait[1] && chain_adapter);
+ 	}
+diff --git a/bench/mmap_writer/sites.py b/bench/mmap_writer/sites.py
+index 977110b5..e8d23453 100644
+--- a/bench/mmap_writer/sites.py
++++ b/bench/mmap_writer/sites.py
+@@ -99,6 +99,18 @@ def waiter_argument(chain):
+     return result
+ 
+ 
++def wait_arguments(chain):
++    """Keep the two legacy argument positions; name the exact three-site form."""
++    waits = chain['wait_returns']
++    rt.require(len(waits) in (2, 3) and
++               all(type(value) is int and 0 < value < 1 << 64 for value in waits),
++               'invalid scheduling return arguments')
++    if len(waits) == 2:
++        return list(map(str, waits))
++    rt.require(len(set(waits)) == 3, 'three scheduling returns must be distinct')
++    return ['--wait-returns', ':'.join(map(str, waits))]
++
++
+ def gate_chain(assembly, writer, adapter_return):
+     gate, slow, scheduling = ('kd_mmap_mutex_local_lock_signal',
+                               'kd_mmap_local_lock_slow_signal', 'kd_mmap_local_schedule')
+@@ -112,7 +124,7 @@ def gate_chain(assembly, writer, adapter_return):
+         edges.append(linked_edge(assembly[slow], slow, scheduling))
+         waiter = scheduling
+     waits = call_returns(assembly[waiter], waiter, 'schedule')
+-    rt.require(1 <= len(waits) <= 2, 'too many gate scheduling return sites')
++    rt.require(1 <= len(waits) <= 3, 'too many gate scheduling return sites')
+     for previous, following in zip(edges, edges[1:]):
+         rt.require({row['target_address'] for row in previous['instructions']} ==
+                    {row['function_address'] for row in following['instructions']},
+@@ -121,7 +133,8 @@ def gate_chain(assembly, writer, adapter_return):
+                {row['function_address'] for row in waits}, 'gate schedule target differs')
+     frames = [dict(symbol=edge['caller'], return_offsets=[row['return_offset'] for row in edge['instructions']])
+               for edge in reversed(edges) if edge['kind'] == 'call']
+-    chain = dict(waiter=waiter, wait_returns=([row['return_offset'] for row in waits]*2)[:2],
++    returns = [row['return_offset'] for row in waits]
++    chain = dict(waiter=waiter, wait_returns=returns * 2 if len(returns) == 1 else returns,
+                  adapter_return=adapter_return, intermediate=frames, edges=edges,
+                  instructions=waits, shape='local-signal-gate-v1')
+     chain['waiter_argument'] = waiter_argument(chain)
+diff --git a/tests/kernel/mmap_lock/mapping.py b/tests/kernel/mmap_lock/mapping.py
+index 1600810b..c7d41d90 100644
+--- a/tests/kernel/mmap_lock/mapping.py
++++ b/tests/kernel/mmap_lock/mapping.py
+@@ -188,7 +188,7 @@ def main():
+         rt.write_json(out / 'result.json', result)
+         chain = SITES['chains'][a.mode]
+         proof_args = [str(SITES['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
+-        proof_args += [linux70_sites.waiter_argument(chain), *map(str, chain['wait_returns']),
++        proof_args += [linux70_sites.waiter_argument(chain), *linux70_sites.wait_arguments(chain),
+                        str(chain['adapter_return']), SITES['adapter']]
+         plan = [('scope', 1, 1), ('cycle', 1, 1000), ('cycle', 16, 5000),
+                 ('lifetime', 1, 1), ('lifetime', 16, 1), ('exit', 1, 1)]
+diff --git a/tests/kernel/mmap_writer/README.md b/tests/kernel/mmap_writer/README.md
+index de3d846b..aad77b8b 100644
+--- a/tests/kernel/mmap_writer/README.md
++++ b/tests/kernel/mmap_writer/README.md
+@@ -48,3 +48,34 @@ requires bracketing `D` states, matching wait channels and unchanged scheduler
+ execution counters. Unexpected compiler call-chain shapes fail closed.
+ The old [writer_sites.json](writer_sites.json) retains its historical 6.1 identity.
+ See the [retained diagnosis](../../../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md).
++
++## Three scheduling return sites
++
++The diagnostic revision based on `7814c61a0be20f5db3b9fb41b6079ef6d2938b5f`
++extends only the userspace representation of exact scheduling return PCs.
++The scope3 ELF has three `schedule` returns in
++`kd_mmap_local_lock_slow_signal`: `0x2c8`, `0x3dd` and `0x5d3`.
++All three remain in the decoded instruction and return lists. The two spin
++rescheduling branches remain reachable in the killable writer path, so dropping
++them would produce an incomplete description. A return PC alone does not prove
++sleep: the existing task/mm/lock identity, complete caller chain, `D` state,
++wait-channel and unchanged scheduler-bracket checks remain authoritative.
++
++The original two-number client form and argument count are preserved. Only a
++three-return receipt uses `--wait-returns 712:989:1491` in the two existing
++return-argument positions. This explicit form requires exactly three distinct,
++positive decimal offsets; malformed values, overflow and a fourth return are
++refused. The six-intermediate-frame limit and two returns per intermediate frame
++remain unchanged. The mapping runner and separately versioned strict-held
++diagnostic use the same argument helper and classifier.
++
++Focused VM checks cover each of the three exact PCs, missing or malformed third
++returns, the four-site bound, old-form compatibility and the unchanged rejection
++of wrong frames or sleep brackets. Replay of the original baseline ELF capture
++and positive raw chains is compatibility evidence only: it does not repeat or
++relabel the completed baseline 42-point measurement. Preserve that baseline's
++original source, diagnostic, receipts and timing bytes, and retain the failed
++candidate capture as a failed attempt. Candidate live correctness uses the new
++diagnostic identity before its first timing point. Kernel/runtime sources,
++payload ioctl layouts, upstream applications and timed workload code are outside
++this change. Source review is not a VM execution pass; all new checks are pending.
+diff --git a/tests/unit/bench/test_mmap_writer_observation.py b/tests/unit/bench/test_mmap_writer_observation.py
+index 43ac7819..8a5f8f35 100644
+--- a/tests/unit/bench/test_mmap_writer_observation.py
++++ b/tests/unit/bench/test_mmap_writer_observation.py
+@@ -32,7 +32,7 @@ MAIN = r'''
+ #undef main
+ int main(int argc,char **argv)
+ {
+-    CHECK(argc==10);
++    CHECK(argc==10 || argc==12);
+     struct worker w={0};
+     w.observed.tid=2;w.observed.mm=100;w.observed.mmap_lock=200;
+     fixture_worker=&w;fixture_limit=strtoul(argv[2],NULL,10);
+@@ -47,6 +47,7 @@ int main(int argc,char **argv)
+         chain_waiter=chain_acquire="kd_mmap_write_lock_killable";
+         chain_wait[0]=chain_wait[1]=chain_adapter=60;
+     } else CHECK(!strcmp(argv[1],"legacy"));
++    if(argc==12)CHECK(chain_wait_arguments(argv[10],argv[11]));
+     int accepted=writer_contention(&w,1,231,136);
+     printf("{\"event\":\"fixture_result\",\"accepted\":%s,\"reads\":%u}\n",
+            accepted?"true":"false",fixture_reads);
+@@ -59,7 +60,8 @@ class WriterObservation(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         if os.geteuid() != 0 or os.uname().release not in (
+-                '7.0.0-38-kdlock1', '7.0.0-38-kdmm1'):
++                '7.0.0-38-kdlock1', '7.0.0-38-kdmm1',
++                '7.0.0-38-kdscope1', '7.0.0-38-kdscope3'):
+             raise RuntimeError('C classifier fixture must run in the Linux 7 development VM')
+         text = (ROOT/'bench/mmap_writer/client.c').read_text()
+         begin = 'static int proc_text('
+@@ -92,13 +94,45 @@ class WriterObservation(unittest.TestCase):
+         return ['2 (mw_worker) D 0 0\n',frames[0][0],'100 200 3\n',stack,
+                 '100 200 3\n',frames[0][0],'2 (mw_worker) D 0 0\n']
+ 
+-    def invoke(self, sample, *, mode='kd', limit=1):
+-        result = subprocess.run([str(self.binary),mode,str(limit),*sample],
++    def invoke(self, sample, *, mode='kd', limit=1, wait_args=()):
++        result = subprocess.run([str(self.binary),mode,str(limit),*sample,*wait_args],
+                                 check=True,capture_output=True,text=True,timeout=5)
+         rows = [json.loads(line) for line in result.stdout.splitlines()]
+         self.assertEqual(rows[-1]['event'],'fixture_result')
+         return rows
+ 
++    def test_all_three_exact_wait_returns_retain_the_full_classifier(self):
++        for caller in ('vm_mmap_pgoff', '__vm_munmap'):
++            for offset in (712, 989, 1491):
++                with self.subTest(caller=caller, offset=offset):
++                    sample = self.sample('gate', caller)
++                    sample[3] = sample[3].replace('+0xcb/', f'+0x{offset:x}/')
++                    args = ('--wait-returns', '712:989:1491')
++                    self.assertTrue(self.invoke(sample, mode='gate', wait_args=args)[-1]['accepted'])
++                    bad = sample.copy()
++                    bad[3] = bad[3].replace(f'+0x{offset:x}/', f'+0x{offset-1:x}/')
++                    self.assertFalse(self.invoke(bad, mode='gate', wait_args=args)[-1]['accepted'])
++                    bad = sample.copy(); bad[6] = '2 (mw_worker) R 0 0\n'
++                    self.assertFalse(self.invoke(bad, mode='gate', wait_args=args)[-1]['accepted'])
++
++    def test_explicit_return_list_rejects_malformed_third_and_fourth_values(self):
++        for text in ('712:989', '712:989:', '712:989:0', '712:989:-1',
++                     '712:989:+1491', '712:989:1491x', '712:989:0x5d3',
++                     '712:989:18446744073709551616', '712:989:712',
++                     '712:989:1491:2000', '712::1491', ' 712:989:1491'):
++            with self.subTest(text=text), self.assertRaises(subprocess.CalledProcessError) as error:
++                self.invoke(self.sample('gate'), mode='gate', wait_args=('--wait-returns', text))
++            self.assertEqual(error.exception.returncode, 1)
++            self.assertIn('chain_wait_arguments', error.exception.stderr)
++
++    def test_legacy_two_number_arguments_preserve_duplicate_and_distinct_returns(self):
++        sample = self.sample('gate')
++        self.assertEqual(self.invoke(sample, mode='gate'),
++                         self.invoke(sample, mode='gate', wait_args=('203', '203')))
++        for offset in (203, 217):
++            changed = sample.copy(); changed[3] = changed[3].replace('+0xcb/', f'+0x{offset:x}/')
++            self.assertTrue(self.invoke(changed, mode='gate', wait_args=('203', '217'))[-1]['accepted'])
++
+     def test_exact_native_kd_and_historical_classifier_paths(self):
+         for mode in ('native','kd','legacy','gate'):
+             for caller in ('vm_mmap_pgoff','__vm_munmap'):
+diff --git a/tests/unit/bench/test_mmap_writer_return_sites.py b/tests/unit/bench/test_mmap_writer_return_sites.py
+new file mode 100644
+index 00000000..57e7ca24
+--- /dev/null
++++ b/tests/unit/bench/test_mmap_writer_return_sites.py
+@@ -0,0 +1,97 @@
++"""VM-only exact site-decoder fixtures; synthetic ELF listings, no live module."""
++import ast
++import os
++from pathlib import Path
++import re
++import types
++import unittest
++
++ROOT = Path(__file__).resolve().parents[3]
++
++
++class SiteFailure(RuntimeError):
++    pass
++
++
++def require(condition, message):
++    if not condition:
++        raise SiteFailure(message)
++
++
++def listing(name, start, targets):
++    """One real E8 encoding and following instruction boundary per target."""
++    rows = [f'{start:x} <{name}>:']
++    for index, (target, address) in enumerate(targets):
++        pc = start + index * 6
++        code = b'\xe8' + (address - pc - 5).to_bytes(4, 'little', signed=True)
++        rows += [f' {pc:x}: {code.hex(" ")} call {address:x} <{target}>',
++                 f' {pc+5:x}: 90 nop']
++    return '\n'.join(rows) + '\n'
++
++
++class WriterReturnSites(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        if os.geteuid() != 0 or os.uname().release not in (
++                '7.0.0-38-kdlock1', '7.0.0-38-kdscope1', '7.0.0-38-kdscope3'):
++            raise RuntimeError('writer site fixtures must run in the Linux 7 development VM')
++        source = ROOT / 'bench/mmap_writer/sites.py'
++        names = {'function_rows', 'call_returns', 'linked_edge', 'waiter_argument',
++                 'wait_arguments', 'gate_chain'}
++        nodes = [node for node in ast.parse(source.read_text()).body
++                 if isinstance(node, ast.FunctionDef) and node.name in names]
++        if {node.name for node in nodes} != names:
++            raise RuntimeError('actual site-decoder extraction changed')
++        cls.code = dict(re=re, ACQUIRE='down_write_killable', rt=types.SimpleNamespace(require=require))
++        exec(compile(ast.Module(body=nodes, type_ignores=[]), str(source), 'exec'), cls.code)
++
++    def assembly(self, count):
++        writer, gate, slow = ('kd_mmap_down_write_killable',
++                             'kd_mmap_mutex_local_lock_signal', 'kd_mmap_local_lock_slow_signal')
++        return {writer: listing(writer, 0x1000, [(gate, 0x2000)] * 2),
++                gate: listing(gate, 0x2000, [(slow, 0x3000)]),
++                slow: listing(slow, 0x3000, [('schedule', 0x5000)] * count)}
++
++    def chain(self, assembly):
++        return self.code['gate_chain'](assembly, 'kd_mmap_down_write_killable', 43)
++
++    def test_three_calls_keep_every_decoded_pc_and_both_intermediate_frames(self):
++        chain = self.chain(self.assembly(3))
++        self.assertEqual(chain['wait_returns'], [5, 11, 17])
++        self.assertEqual([row['return_offset'] for row in chain['instructions']], [5, 11, 17])
++        self.assertEqual(chain['intermediate'], [
++            dict(symbol='kd_mmap_mutex_local_lock_signal', return_offsets=[5]),
++            dict(symbol='kd_mmap_down_write_killable', return_offsets=[5, 11])])
++        self.assertEqual(self.code['wait_arguments'](chain), ['--wait-returns', '5:11:17'])
++
++    def test_one_and_two_site_argument_forms_stay_unchanged(self):
++        for count, returns in ((1, [5, 5]), (2, [5, 11])):
++            chain = self.chain(self.assembly(count))
++            self.assertEqual(chain['wait_returns'], returns)
++            self.assertEqual(len(chain['instructions']), count)
++            self.assertEqual(self.code['wait_arguments'](chain), list(map(str, returns)))
++
++    def test_fourth_site_is_refused_without_truncation(self):
++        with self.assertRaisesRegex(SiteFailure, 'too many gate'):
++            self.chain(self.assembly(4))
++        with self.assertRaises(SiteFailure):
++            self.code['wait_arguments'](dict(wait_returns=[5, 11, 17, 23]))
++
++    def test_third_call_bytes_and_next_boundary_are_checked(self):
++        for old, new in (('e8 ef 1f 00 00', 'e8 ee 1f 00 00'),
++                         ('3011: 90 nop', '3012: 90 nop')):
++            assembly = self.assembly(3)
++            slow = 'kd_mmap_local_lock_slow_signal'
++            self.assertIn(old, assembly[slow])
++            assembly[slow] = assembly[slow].replace(old, new)
++            with self.assertRaisesRegex(SiteFailure, 'bytes/target/return boundary'):
++                self.chain(assembly)
++
++    def test_argument_values_are_positive_bounded_and_three_distinct(self):
++        for values in ([5, 11, 0], [5, 11, 1 << 64], [5, 11, True], [5, 11, 5]):
++            with self.subTest(values=values), self.assertRaises(SiteFailure):
++                self.code['wait_arguments'](dict(wait_returns=values))
++
++
++if __name__ == '__main__':
++    unittest.main()

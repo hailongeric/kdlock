@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "campaign": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031",
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "harness": {
+    "source": "/mnt/kdlock-builds2/kdlock-scope3-recipe-7814c61a",
+    "commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+    "manifest": {
+      "path": "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+      "sha256": "a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411"
+    }
+  },
+  "arms": {
+    "baseline": {
+      "variant": "kdscope1-kd",
+      "release": "7.0.0-38-kdscope1",
+      "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+      "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+      "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+      "provider_comparison_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+    },
+    "candidate": {
+      "variant": "kdscope3-kd",
+      "release": "7.0.0-38-kdscope3",
+      "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+      "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031",
+      "kernel_project_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+      "provider_comparison_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463"
+    }
+  },
+  "application": {
+    "inputs": {
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+      "sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0"
+    },
+    "preparation": {
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/result.json",
+      "sha256": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4"
+    },
+    "upstream_commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f",
+    "binary_sha256": {
+      "threads": "e6a8102ff408e0a3909248fef301a41b0b0bd07861662002e4e13833534f59c6",
+      "processes": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733"
+    }
+  },
+  "mapping_adapter": {
+    "path": "/tmp/kdlock-writer-queue-mapping-functional-20261031.py",
+    "sha256": "61c364342100152b51fb266a5b5ff7c79fc3bdfdf9a36282b6faae90e052c91c",
+    "base_mapping_sha256": "349d02f2933a945f66c3961f5371b8c4aa42f0962bb5edfac3b8b3b9a961b882"
+  },
+  "identity_adapter": {
+    "path": "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py",
+    "sha256": "5c23db457fc9cfc91ff68c7f392e5c003812cb54a66fe082a0e73a0b459b6120",
+    "commit": "d22a36567de28c024ebb8d1c79997c0d39541bd2"
+  },
+  "strict_diagnostic": {
+    "commit": "f4f5f671859be780ee1e6749213aadff1bf518b7",
+    "runner": {
+      "path": "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/run.py",
+      "sha256": "7f6ef98bf718d179319e2128ea54e6847991569b509c1ae6d054a63df5a07a32"
+    },
+    "manifest": {
+      "path": "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+      "sha256": "84c13c193fe331185d2e1eb1c357862ffff0f664f6e27030e82b90756d2e27d1"
+    }
+  },
+  "pool": {
+    "activation": {
+      "path": "/tmp/kdlock-writer-queue-policy-20261031.json",
+      "sha256": "41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b"
+    },
+    "reference": {
+      "path": "/tmp/kdlock-writer-queue-reference-20261031.json",
+      "sha256": "249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198"
+    },
+    "controller_sha256": "6f1f718b6ba72b9b4899b3437e6211d8dd891f4041acd7aca36906c12953b8b4",
+    "cohort": "writer-queue-20261031",
+    "snapshot": "kdlock-builddisk-clean-20261031"
+  }
+}

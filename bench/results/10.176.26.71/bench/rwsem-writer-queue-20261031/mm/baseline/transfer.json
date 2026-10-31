@@ -1,0 +1,175 @@
+{
+  "completed": true,
+  "started": 1793457741.7462838,
+  "arm": "baseline",
+  "boot_id": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+  "kernel": {
+    "variant": "kdscope1-kd",
+    "release": "7.0.0-38-kdscope1",
+    "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+    "kernel_project_commit": "8446f4ecb08816380a4c233197a8ce5e4d333aac",
+    "provider_comparison_commit": "f7a84065e84474380faa37eeadfdf534abd72a68"
+  },
+  "harness_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "config_sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602",
+  "expected_sha256": {
+    "archive-owner": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b",
+    "archive": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+    "inventory": "08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e",
+    "aliases": "53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f",
+    "preservation-map": "1a1d5d9b283e47b8887b7d504e383f20c5ccc0163b6cfa9c39c68a3ca1f95196"
+  },
+  "remote_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031",
+  "roots": [
+    "baseline-archive-control",
+    "baseline-archives"
+  ],
+  "destination": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031",
+  "script_sha256": "c5213f89aebba29bbab7b57d4dd449cf5c938cf248754e933f7064c2f0e0769f",
+  "mount_namespace": "mnt:[4026531841]",
+  "destination_device": 28,
+  "performance_accepted": false,
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "offline_analysis_pending": true,
+  "scope": "Read-only transport and host archive-byte verification; no score validation or guest drain inference",
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,subprocess,sys\nbase=pathlib.Path(sys.argv[1]);name=sys.argv[2];expected=json.loads(sys.argv[3])\nboot,harness,archiver,config_sha=sys.argv[4:8];kernel=json.loads(sys.argv[8]);steps=json.loads(sys.argv[9]);policy=sys.argv[10]\ncontrol=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"');archives=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')\npaths={'\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'alias-map.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'preservation-map.json'\"'\"'\"'\"'\"'\"'\"'\"'}\ndef need(v,m):\n if not v:raise RuntimeError(m)\ndef sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()\nneed(all(p.is_file() and not p.is_symlink() and sha(p)==expected[n] for n,p in paths.items()),'\"'\"'\"'\"'\"'\"'\"'\"'actual receipt hashes differ'\"'\"'\"'\"'\"'\"'\"'\"')\no,a,aliases,preservation=[json.loads(paths[n].read_bytes())for n in ('\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"')]\nneed(o.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'state'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'COMPLETE'\"'\"'\"'\"'\"'\"'\"'\"' and o.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and o.get('\"'\"'\"'\"'\"'\"'\"'\"'idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'drain_unknown'\"'\"'\"'\"'\"'\"'\"'\"')is False and o.get('\"'\"'\"'\"'\"'\"'\"'\"'child_returncode'\"'\"'\"'\"'\"'\"'\"'\"')==0 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and o.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and o.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel'\"'\"'\"'\"'\"'\"'\"'\"')==kernel and o.get('\"'\"'\"'\"'\"'\"'\"'\"'script_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==archiver and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and o.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')==policy and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False and set(o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'])==set(steps),'\"'\"'\"'\"'\"'\"'\"'\"'archive owner incomplete or generation differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(o['\"'\"'\"'\"'\"'\"'\"'\"'archives_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     o['\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'preservation_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive receipt chain differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(a.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_base'\"'\"'\"'\"'\"'\"'\"'\"')==str(base/name) and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'archive_prefix'\"'\"'\"'\"'\"'\"'\"'\"')==name and a.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_variant'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'variant'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_release'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'release'\"'\"'\"'\"'\"'\"'\"'\"'] and a['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a['\"'\"'\"'\"'\"'\"'\"'\"'health_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==o['\"'\"'\"'\"'\"'\"'\"'\"'final_health_sha256'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive index identity differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'owners'\"'\"'\"'\"'\"'\"'\"'\"')==o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'bundle_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/kernel-bundle/manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'config_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/config.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_manifest_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/harness-manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_manifest_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/diagnostic-manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')==policy and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False and set(aliases['\"'\"'\"'\"'\"'\"'\"'\"'logical_steps'\"'\"'\"'\"'\"'\"'\"'\"'])==set(steps),'\"'\"'\"'\"'\"'\"'\"'\"'alias map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'original_paths_retained'\"'\"'\"'\"'\"'\"'\"'\"')is True and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False,'\"'\"'\"'\"'\"'\"'\"'\"'preservation map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nmore={control/'\"'\"'\"'\"'\"'\"'\"'\"'controller.py'\"'\"'\"'\"'\"'\"'\"'\"':archiver,control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"':o['\"'\"'\"'\"'\"'\"'\"'\"'bindings_sha256'\"'\"'\"'\"'\"'\"'\"'\"'],control/'\"'\"'\"'\"'\"'\"'\"'\"'config.json'\"'\"'\"'\"'\"'\"'\"'\"':config_sha}\nneed(all(sha(p)==h for p,h in more.items()),'\"'\"'\"'\"'\"'\"'\"'\"'archive control input differs'\"'\"'\"'\"'\"'\"'\"'\"')\nbindings=json.loads((control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"').read_bytes())\nneed(bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     bindings['\"'\"'\"'\"'\"'\"'\"'\"'config'\"'\"'\"'\"'\"'\"'\"'\"']['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']==config_sha and bindings['\"'\"'\"'\"'\"'\"'\"'\"'owners'\"'\"'\"'\"'\"'\"'\"'\"']==o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'actual archive bindings differ'\"'\"'\"'\"'\"'\"'\"'\"')\nbound={**{p:expected[n]for n,p in paths.items()},**more}\ncode=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(base),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'])\nneed(code==0 and all(sha(p)==h for p,h in bound.items()),'\"'\"'\"'\"'\"'\"'\"'\"'transport or final receipt check failed'\"'\"'\"'\"'\"'\"'\"'\"')\n'\"'\"' /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031 baseline '\"'\"'{\"archive-owner\": \"bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b\", \"archive\": \"6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955\", \"inventory\": \"08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e\", \"aliases\": \"53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f\", \"preservation-map\": \"1a1d5d9b283e47b8887b7d504e383f20c5ccc0163b6cfa9c39c68a3ca1f95196\"}'\"'\"' 971baf1a-f9b2-4689-9937-62ab79f4ade2 7814c61a0be20f5db3b9fb41b6079ef6d2938b5f 42d56405e4a731230bf423371e6bc7ea15ae08e51e138e3fc9e09ab83e068489 b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602 '\"'\"'{\"variant\": \"kdscope1-kd\", \"release\": \"7.0.0-38-kdscope1\", \"build\": \"/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build\", \"bundle\": \"/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030\", \"kernel_project_commit\": \"8446f4ecb08816380a4c233197a8ce5e4d333aac\", \"provider_comparison_commit\": \"f7a84065e84474380faa37eeadfdf534abd72a68\"}'\"'\"' '\"'\"'[\"sites\", \"api\", \"mapping\", \"faults\", \"completed\", \"strict-hold\", \"mmap1-identity\", \"mmap1-measure\", \"endpoint\"]'\"'\"' mmap-functional-held-writer-v1'"
+  ],
+  "pid": 3367176,
+  "returncode": 0,
+  "transport_sha256": "9e12a45b58d0137353b2c3d4f8e8f6e3e11fac87da0d2bf2a7a9cf584f62e7bd",
+  "transport_bytes": 13834240,
+  "files": {
+    "baseline-archives/inputs.tar.gz": {
+      "sha256": "218f193694d607818fcab90bca290b92f9e4d9f3de29d69e818b6e8b5fba343d",
+      "bytes": 1169154,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457707
+    },
+    "baseline-archives/archive_run.py": {
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+      "bytes": 11669,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457704
+    },
+    "baseline-archives/input-inventory.json": {
+      "sha256": "08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e",
+      "bytes": 757203,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457704
+    },
+    "baseline-archives/archives.json": {
+      "sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+      "bytes": 3354,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457707
+    },
+    "baseline-archives/checks.tar.gz": {
+      "sha256": "5d0d969243d9cb3f5d64b4010a8ce24bce56678aab036541d1c21fcbeace402d",
+      "bytes": 10665821,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457706
+    },
+    "baseline-archives/mmap1.tar.gz": {
+      "sha256": "c4cc6772bd5a7712670d707fcd60ef77ac907282c729933b9fdae678edbb36fd",
+      "bytes": 1086928,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457706
+    },
+    "baseline-archives/metadata.tar.gz": {
+      "sha256": "e79b5dec4ef3263823564728e15724f5f0dd6532f94f81b17c57420ebdb84124",
+      "bytes": 1339,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457707
+    },
+    "baseline-archive-control/controller.py": {
+      "sha256": "42d56405e4a731230bf423371e6bc7ea15ae08e51e138e3fc9e09ab83e068489",
+      "bytes": 18641,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457702
+    },
+    "baseline-archive-control/alias-map.json": {
+      "sha256": "53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f",
+      "bytes": 21252,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457702
+    },
+    "baseline-archive-control/archive.log": {
+      "sha256": "b1e6a54a85b0185e5049356e1c30866daa87f7184a0f598123a96d310441f30d",
+      "bytes": 1492,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457707
+    },
+    "baseline-archive-control/config.json": {
+      "sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602",
+      "bytes": 3709,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457702
+    },
+    "baseline-archive-control/preservation-map.json": {
+      "sha256": "1a1d5d9b283e47b8887b7d504e383f20c5ccc0163b6cfa9c39c68a3ca1f95196",
+      "bytes": 70855,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457703
+    },
+    "baseline-archive-control/bindings.json": {
+      "sha256": "80f04affaa6df1c04ee8041ab923a0ec05109b73854446b47b0ec51a374f9929",
+      "bytes": 2508,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457702
+    },
+    "baseline-archive-control/owner.json": {
+      "sha256": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b",
+      "bytes": 4854,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793457708
+    }
+  },
+  "group_archives": 4,
+  "regular_members": 2021,
+  "member_manifest_sha256": "a87598a37968e9c8c9e848d59f6b7491f8ab04a25c5136dbf56cb99f4dc197f5",
+  "archive_provenance_sha256": "3b1010edb81a069906d276bc5f4b10d5f1a59ca093ec9632587d893d9f2abf9d",
+  "offline_reader_sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+  "offline_reader_dependency_sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+  "analysis_arm_sha256": "0b7a8fb2fef5d0e97df35a0fba66fc2e8cb932ddb97899ba54549089b3605990",
+  "transport_verified": true,
+  "archive_members_verified": true,
+  "finished": 1793457743.9108055,
+  "transport_intermediate_removed": true,
+  "removal_scope": "Only verified task-created transport.tar and derived receipt-cache; original compressed groups/control retained"
+}

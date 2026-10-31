@@ -1,0 +1,54 @@
+FUNCTIONAL spin
+FUNCTIONAL mutex
+FUNCTIONAL rwlock
+FUNCTIONAL rwsem
+[
+  {
+    "family": "spin",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1596592,
+    "jit_completions": 1596592,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+    "receipt_sha256": "f6a9b0ad956b71f9e9e3c51de9d7d1071cf3bfffc5daef1fa4abe14fa4ff7bda",
+    "performance_accepted": false
+  },
+  {
+    "family": "mutex",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1588690,
+    "jit_completions": 1588690,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+    "receipt_sha256": "9c0aaa335a42734b8e1ff4c3d97f6424507247240fe72a31457cc01688394483",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwlock",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 20881,
+    "jit_completions": 20881,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+    "receipt_sha256": "ab737925eb7b7fa8dcf6ef33ebab8b06b77d920f861026d21bbb940b70588a6d",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwsem",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1589375,
+    "jit_completions": 1589375,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+    "receipt_sha256": "2759a0567f371f13051cf4cef1ca556cacf2f69ae270e49ad74d9a68056f38a2",
+    "performance_accepted": false
+  }
+]

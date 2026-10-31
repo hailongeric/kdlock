@@ -1,0 +1,166 @@
+--- /tmp/kdlock-writer-queue-mm-offline-20261031/mmap_compare.py
++++ /tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/mmap_compare.py
+@@ -7,11 +7,13 @@
+ import nano_core as a
+ from fresh_controls import F7,CAND,POOL,PROPERTIES,checked,save,host_identity,pool,qualification
+ from policy_checks import check_policy,diagnostic_sources
++from diagnostic_provenance import validate as validate_provenance, refs as provenance_refs
+ RECIPE='7814c61a0be20f5db3b9fb41b6079ef6d2938b5f'
+ MANIFEST='a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411'
+ CONFIG='b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602'
+ CONTROLLER='36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d'
+ ARCHIVER='42d56405e4a731230bf423371e6bc7ea15ae08e51e138e3fc9e09ab83e068489'
++CANDIDATE_ARCHIVER='fd52c123f07d1c9de1996dd2fc8540b8cb8794e2cfe9b22937b6af1a444bd7b0'
+ WATCHER='90cfab0d77f2b6514fee09a39aec91910354ec7198455c2c932ef6c782d8bb1a'
+ INPUTS='beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0'
+ PREP='512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4'
+@@ -43,23 +45,24 @@
+     return namespace['parse_output'],a.sha(source)
+ 
+ def archive_controls(ar,e,label):
++ CONFIG=e['config_sha256'];ARCHIVER_PIN=ARCHIVER if label=='baseline'else CANDIDATE_ARCHIVER
+  control=Path(e['control']);pins=e['expected_sha256']
+  a.need(set(pins)=={'archive-owner','archive','inventory','aliases','preservation-map'} and
+         pins['archive']==e['archives_sha256'] and pins['archive-owner']==e['archive_owner_sha256'],'five finalized control hashes required')
+  owner=checked(control/'owner.json',pins['archive-owner']);amap=checked(control/'alias-map.json',pins['aliases'])
+  preservation=checked(control/'preservation-map.json',pins['preservation-map'])
+  checked(ar.directory/'input-inventory.json',pins['inventory']);c=checked(control/'config.json',CONFIG)
+- bindings=checked(control/'bindings.json',owner['bindings_sha256'])
+- a.need(a.file_sha(control/'controller.py')==ARCHIVER and owner.get('completed')is True and owner.get('idle')is True and
++ bindings=checked(control/'bindings.json',owner['bindings_sha256']);RECIPE=c['harness']['commit']
++ a.need(a.file_sha(control/'controller.py')==ARCHIVER_PIN and owner.get('completed')is True and owner.get('idle')is True and
+   owner.get('drain_unknown')is False and owner.get('child_returncode')==0 and owner.get('state')=='COMPLETE'and
+-  owner['script_sha256']==ARCHIVER and owner['arm']==label and owner['boot_id']==ar.meta['boot_id']and
++  owner['script_sha256']==ARCHIVER_PIN and owner['arm']==label and owner['boot_id']==ar.meta['boot_id']and
+   owner['kernel']==c['arms'][label]and owner['harness_commit']==RECIPE and owner['config_sha256']==CONFIG and
+   owner['eligibility_policy']==POLICY and owner['performance_accepted']is False and owner['step_owners']==e['owners'],'archive control identity differs')
+  a.need(owner['archives_sha256']==pins['archive']and owner['input_inventory_sha256']==pins['inventory']and
+   owner['alias_map_sha256']==pins['aliases']and owner['preservation_map_sha256']==pins['preservation-map']and
+   ar.hashes['preservation-inputs/alias-map.json']==pins['aliases']and ar.json('preservation-inputs/alias-map.json')==amap and
+   ar.hashes['preservation-inputs/preservation-map.json']==pins['preservation-map']and ar.json('preservation-inputs/preservation-map.json')==preservation and
+-  ar.hashes['preservation-inputs/archive-controller.py']==ARCHIVER and ar.hashes['preservation-inputs/archive-bindings.json']==owner['bindings_sha256'],'archive/control byte linkage differs')
++  ar.hashes['preservation-inputs/archive-controller.py']==ARCHIVER_PIN and ar.hashes['preservation-inputs/archive-bindings.json']==owner['bindings_sha256'],'archive/control byte linkage differs')
+  a.need(bindings['schema']==1 and bindings['arm']==label and bindings['boot_id']==owner['boot_id']and
+   bindings['config']['sha256']==CONFIG and bindings['owners']==e['owners']and
+   ar.meta['guest_base']==c['campaign']+'/'+label and ar.meta['kernel_variant']==c['arms'][label]['variant']and
+@@ -73,6 +76,8 @@
+   a.need(ar.hashes.get(row['member'])==row['sha256'],'preserved original member differs')
+   a.need(row['source']not in source or source[row['source']]==row['sha256'],'conflicting preserved original');source[row['source']]=row['sha256']
+  for original,member in e['aliases'].items():a.need(source.get(original)==ar.hashes[member],'alias lacks exact preserved original')
++ if label=='candidate':
++  a.need(owner['diagnostic_provenance']==bindings['diagnostic_provenance']and owner['diagnostic_provenance']['sha256']==e['diagnostic_provenance_sha256']and ar.hashes[e['diagnostic_provenance_member']]==e['diagnostic_provenance_sha256'],'candidate diagnostic provenance linkage differs')
+  return dict(control=str(control),expected_sha256=pins,archive_owner_sha256=e['archive_owner_sha256'])
+ 
+ def main():
+@@ -82,13 +87,13 @@
+  spec=checked(x.inputs,x.inputs_sha256);a.need(spec.get('schema')==1 and set(spec['arms'])=={'baseline','candidate'},'two fresh arms required')
+  a.need(not x.output.exists(),'new analysis output required');x.output.mkdir(parents=True)
+  receipt=dict(completed=False,validated=False,performance_accepted=False,inputs_sha256=x.inputs_sha256,script_sha256=a.file_sha(Path(__file__)),
+-              harness_commit=RECIPE,config_sha256=CONFIG,eligibility_policy=POLICY)
++              baseline_harness_commit='7814c61a0be20f5db3b9fb41b6079ef6d2938b5f',baseline_config_sha256='b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602',eligibility_policy=POLICY,diagnostic_generations_separate=True)
+  save(x.output/'validation.json',receipt)
+  try:
+   git=a.Git(x.trusted_checkout);parse,parser_sha=parser(git)
+   with tempfile.TemporaryDirectory(prefix='kd-writer-queue-mm-',dir=x.cache_root)as tmp:
+    entries=dict(spec.get('support',{}));a.need(not set(entries)&set(spec['arms']),'support/scored labels collide');entries.update(spec['arms'])
+-   archives={};absolute={};kernel_files={};dependencies={};configs={}
++   archives={};absolute={};kernel_files={};dependencies={};configs={};source_contexts={}
+    for label,e in entries.items():
+     a.need(a.safe(label)==label and'/'not in label,'simple archive label required');directory=Path(e['archives']);checked(directory/'archives.json',e['archives_sha256'])
+     a.need(not x.output.resolve().is_relative_to(directory.resolve()),'output overlaps raw archive');cache=Path(tmp)/label;cache.mkdir();ar=a.Archive(directory,cache);archives[label]=ar
+@@ -97,11 +102,30 @@
+     for original,member in e.get('aliases',{}).items():
+      a.need(Path(original).is_absolute()and member in ar.hashes,'alias lacks retained bytes');digest=ar.hashes[member]
+      a.need(original not in absolute or absolute[original]==digest,'alias changes original bytes');absolute[original]=digest
++   ca=archives['candidate'];ce=entries['candidate'];proof_member=ce['diagnostic_provenance_member']
++   a.need(proof_member=='preservation-inputs/diagnostic-provenance/record.json'and ca.hashes[proof_member]==ce['diagnostic_provenance_sha256']==spec['diagnostic_provenance_sha256'],'explicit candidate diagnostic provenance required')
++   proof=ca.json(proof_member)
++   def proof_member_for(ref):
++    prefix=ca.meta['guest_base']+'/'
++    member=ref['path'][len(prefix):]if ref['path'].startswith(prefix)else ce['aliases'][ref['path']]
++    a.need(ca.hashes.get(member)==ref['sha256'],'diagnostic provenance reference differs');return member
++   proof_bytes=original_logs(ca,{proof_member_for(ref)for ref in provenance_refs(proof)})
++   checked_provenance=validate_provenance(proof,lambda ref:proof_bytes[proof_member_for(ref)].encode(),git.blob)
++   for name,digest in checked_provenance['compatibility']['input_sha256']['baseline_files'].items():
++    a.need(archives['baseline'].hashes.get(name)==digest,'compatibility did not use original baseline archive bytes')
++   receipt['diagnostic_provenance_sha256']=ce['diagnostic_provenance_sha256']
++   receipt['diagnostic_delta']=dict(harness=checked_provenance['harness_delta'],strict=checked_provenance['diagnostic_delta'])
++   receipt['baseline_compatibility']=checked_provenance['compatibility']
++   receipt['diagnostic_generations']=dict(baseline=checked_provenance['configs']['baseline']['harness']['commit'],
++       compatibility=checked_provenance['return_diagnostic_manifest']['source_commit'],candidate=checked_provenance['configs']['candidate']['harness']['commit'])
++   receipt['retained_failed_attempts']=dict(sites=proof['failed_sites'],api=proof['failed_api'])
+    prep_ref=spec['preparation'];pa=archives[prep_ref['archive']];inputs=pa.json(prep_ref['inputs_member']);prep=pa.json(prep_ref['result_member'])
+    a.need(pa.hashes[prep_ref['inputs_member']]==INPUTS and pa.hashes[prep_ref['result_member']]==PREP and prep.get('passed')is True and
+           prep.get('action')=='prepare'and prep['inputs_sha256']==INPUTS and inputs['binary_sha256']==BINARIES and inputs['executable_modified']is False,'unchanged original application preparation differs')
+    for label in spec['arms']:
+     ar=archives[label];e=entries[label];archive_controls(ar,e,label);c=ar.json(e['config_member']);configs[label]=c
++    CONFIG=proof['arms'][label]['config']['sha256'];RECIPE=c['harness']['commit'];MANIFEST=c['harness']['manifest']['sha256']
++    a.need(c==checked_provenance['configs'][label],'archive configuration differs from complete diagnostic proof')
+     a.need(ar.hashes[e['config_member']]==CONFIG and c['harness']['commit']==RECIPE and c['harness']['manifest']['sha256']==MANIFEST and
+            c['eligibility_policy']==POLICY and e['config_sha256']==CONFIG and e['eligibility_policy']==POLICY,'shared current config differs')
+     amap=ar.json('preservation-inputs/alias-map.json')
+@@ -113,25 +137,42 @@
+      for name,digest in bundle[kind+'_files'].items():
+       path=bundle[kind+'_root']+'/'+name;a.need(path not in kernel_files or kernel_files[path]==digest,'kernel input alias differs')
+       a.need(path not in absolute or absolute[path]==digest,'archived/kernel identity alias differs');kernel_files[path]=digest
+-    manifest=ar.json(e['harness_manifest_member']);a.need(ar.hashes[e['harness_manifest_member']]==MANIFEST and manifest['source_commit']==RECIPE and len(manifest['files'])==5847,'common harness differs')
++    manifest=ar.json(e['harness_manifest_member']);a.need(ar.hashes[e['harness_manifest_member']]==MANIFEST and manifest['source_commit']==RECIPE and manifest==checked_provenance['harness_manifests'][label],'common harness differs')
++    source_contexts[label]=dict(absolute)
+     for name,row in manifest['files'].items():
+      for prefix in('/root/host_fs/kdlock/',c['harness']['source']+'/'):
+-      path=prefix+name;a.need(path not in absolute or absolute[path]==row['sha256'],'captured common source alias differs');absolute[path]=row['sha256']
+-    diagnostic=diagnostic_sources(ar,e,c,git)
++      path=prefix+name;a.need(path not in source_contexts[label] or source_contexts[label][path]==row['sha256'],'captured per-arm source alias differs');source_contexts[label][path]=row['sha256']
++    diagnostic=diagnostic_sources(ar,e,c,git);historical={}
++    if label=='candidate':
++     failed=checked_provenance['failed_api'];fp=str(Path(failed['output']).relative_to(ar.meta['guest_base']))
++     a.need(e['logical_steps']['api']['owner']!=fp+'/owner.json'and
++            e['logical_steps']['sites']['owner']!=str(Path(checked_provenance['failed_sites']['output']).relative_to(ar.meta['guest_base']))+'/owner.json',
++            'original failed attempts cannot become successful logical steps')
++     captured=ar.json(fp+'/run/source-sha256.json');original_map=checked_provenance['return_diagnostic_manifest']['files']
++     for name,digest in captured.items():
++      member=fp+'/run/source/'+name
++      a.need(name in original_map and digest==original_map[name]['sha256']==ar.hashes.get(member),'failed API original source snapshot differs: '+name)
++      historical[member]=digest
++     a.need(ar.hashes.get(fp+'/run/runner.py')==original_map['tests/kernel/mmap_lock/run.py']['sha256'],'failed API runner generation differs')
++     for name,digest in checked_provenance['failed_api_retirement']['failed_input_sha256'].items():
++      a.need(ar.hashes.get(fp+'/'+name)==digest,'failed API retained evidence differs')
+     for name,digest in ar.hashes.items():
+      if name in diagnostic:continue
++     if name in historical:a.need(digest==historical[name],'failed API source member differs');continue
+      for marker in('/runtime-source/','/source/'):
+       if marker in name:
+        relative=name.split(marker,1)[1]
+        if relative in manifest['files']:a.need(digest==manifest['files'][relative]['sha256'],'captured common source differs: '+name)
++   active_absolute=absolute
+    def bind(files,external=None):
+     for name,digest in files.items():
+-     if name in absolute:a.need(absolute[name]==digest,'retained original binding differs: '+name)
++     if name in active_absolute:a.need(active_absolute[name]==digest,'retained per-arm original binding differs: '+name)
+      elif name in kernel_files:a.need(kernel_files[name]==digest,'runner kernel identity differs: '+name)
+      else:a.need(external is not None and external.get(name)==digest,'unretained prerequisite: '+name);dependencies[name]=digest
+    bind(inputs['files'],inputs['dependencies']);points=[];grids={};cohort=None
+    for label in('baseline','candidate'):
+     ar=archives[label];e=entries[label];c=configs[label];arm=c['arms'][label];bundle=ar.json(e['bundle_member']);boot=ar.meta['boot_id'];members=e['logical_steps']
++    CONFIG=proof['arms'][label]['config']['sha256'];RECIPE=c['harness']['commit'];MANIFEST=c['harness']['manifest']['sha256'];active_absolute=source_contexts[label]
+     a.need(set(members)==set(e['owners'])==set(STEPS),'nine exact logical witnesses required');owners={};results={}
+     for step in STEPS:
+      op=members[step]['owner'];rp=members[step]['result'];owner=ar.json(op);r=ar.json(rp);owners[step]=owner;results[step]=r
+@@ -208,7 +249,7 @@
+      points.append(dict(arm=label,model=model,workers=n,round=0,score=parsed['pairs_per_nominal_second'],numerator=parsed['completed_pairs'],denominator=2,
+       metric='pairs_per_nominal_second',qualification='strict-host/shared-functional-held-writer',boot_id=boot,kernel_project_commit=arm['kernel_project_commit'],
+       provider_comparison_commit=arm['provider_comparison_commit'],result_sha256=ar.hashes[member],log_sha256=ar.hashes[name],performance_accepted=False))
+-    grids[label]=dict(archive_controls=dict(control=e['control'],expected_sha256=e['expected_sha256']),owners=e['owners'],logical_steps=members,archive=ar.provenance,kernel_binding=r['kernel_binding'],policy_evidence=policy_evidence,started=owner['started'],finished=owner['child_finished'])
++    grids[label]=dict(archive_controls=dict(control=e['control'],expected_sha256=e['expected_sha256']),owners=e['owners'],logical_steps=members,archive=ar.provenance,kernel_binding=r['kernel_binding'],harness_commit=RECIPE,config_sha256=CONFIG,policy_evidence=policy_evidence,started=owner['started'],finished=owner['child_finished'])
+    a.need(grids['baseline']['finished']<=grids['candidate']['started'],'arms overlap or chronology differs');comparisons=[]
+    for model,n,_ in[(m,n,0)for m in('threads','processes')for n in a.THREADS]:
+     old=next(s for s in points if(s['arm'],s['model'],s['workers'])==('baseline',model,n));new=next(s for s in points if(s['arm'],s['model'],s['workers'])==('candidate',model,n))
+@@ -223,7 +264,7 @@
+    receipt.update(completed=True,validated=True,points=84,pairs=42,grids=grids,pure_parser_sha256=parser_sha,pool_activation_sha256=cohort['pool'],host_reference_sha256=cohort['reference'],
+     strict_host_qualified=True,shared_functional_policy=POLICY,models={m:dict(pairs=21,losses=sum(z['observed_loss']for z in comparisons if z['model']==m),gains=sum(z['ratio']>1 for z in comparisons if z['model']==m))for m in('threads','processes')},
+     no_regression_evidence_gate=not any(z['observed_loss']for z in comparisons),runner_verified_external_dependencies=dependencies,runner_verified_kernel_files=kernel_files,
+-    limits=['One round; no statistical or causal claim.','Unchanged application, distinct built-in kernel recipes.','Both arms use fresh common functional mapping plus separate artificial held-writer proof.',
++    limits=['One round; no statistical or causal claim.','Unchanged application, distinct built-in kernel recipes.','Both arms use the same functional/held-writer policy with a proven bounded diagnostic-only source delta.',
+             'Original application preparation contributes bytes only; no historical timing/eligibility substitution.','No timed parking/JIT instrumentation or automatic acceptance.'])
+  except BaseException as error:receipt['error']=repr(error);raise
+  finally:save(x.output/'validation.json',receipt)

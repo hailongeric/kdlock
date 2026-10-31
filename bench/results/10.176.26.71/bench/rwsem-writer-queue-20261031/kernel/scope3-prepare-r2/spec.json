@@ -1,0 +1,14 @@
+{
+  "script": "/tmp/kdlock-writer-queue-scope3-prepare-resume-20261031.py",
+  "script_sha256": "edae8ef7033e49a84d3a37fc705e333d68f33be6f79937ea2b96cb0dc74c7d9a",
+  "argv": [
+    "prepare",
+    "--config",
+    "/tmp/kdlock-writer-queue-scope3-kernel-r2-20261031.json",
+    "--sha256",
+    "97582805d5492dc81fc5bacd55b7b723e636a6e344b02328159c92d6e5cf6db4"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/prepare/result.json",
+  "timeout": 3600,
+  "affinity": "0-63"
+}

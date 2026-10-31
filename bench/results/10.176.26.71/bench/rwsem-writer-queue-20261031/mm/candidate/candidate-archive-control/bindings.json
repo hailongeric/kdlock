@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "config": {
+    "path": "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+    "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+  },
+  "arm": "candidate",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "bundle_manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+  "owners": {
+    "sites": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites-queue-proof/owner.json",
+      "sha256": "90fae36af37a722f72a39dca17c815964f42acd9fe840290e19c32737e69a0ea"
+    },
+    "api": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api-queue-proof/owner.json",
+      "sha256": "ceeb04d023deddf067ca98b120403b5924f184fcb0cd7ba8dbe11e56fd149453"
+    },
+    "mapping": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mapping/owner.json",
+      "sha256": "9d67c8a95a868a1a5ed106bd6934c1866b0889b71001a4727cb899f6860b4a66"
+    },
+    "faults": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/faults/owner.json",
+      "sha256": "ab9596fb031fe0594aadd895d5d756a2e67e08700c6ec752d814d6b3a8a71cc5"
+    },
+    "completed": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/completed/owner.json",
+      "sha256": "ef56e6961f6438d814ede127ec3882940ec0ae58498ccd40f42305088e1f1ec2"
+    },
+    "strict-hold": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/strict-hold/owner.json",
+      "sha256": "d00d6d85c056e62e01e86b661c9bf68d3c52b0c1e1cee04be294554091a47949"
+    },
+    "mmap1-identity": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mmap1-identity/owner.json",
+      "sha256": "8afe6535e36c3c8217d90a685a709d1e1d3774368252f9caa1fdf8b815d4cbda"
+    },
+    "mmap1-measure": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mmap1-measure/owner.json",
+      "sha256": "d2498b0cbd791f1cf85324fe62edc49d4674acfa04cc53bc5b665135869b8143"
+    },
+    "endpoint": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/endpoint/owner.json",
+      "sha256": "12f34aa2e071c2f39887f49c8695d423d459900c2b32edcd9119f5e2cf040230"
+    }
+  },
+  "extra_files": [],
+  "diagnostic_provenance": {
+    "path": "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.json",
+    "sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364"
+  }
+}

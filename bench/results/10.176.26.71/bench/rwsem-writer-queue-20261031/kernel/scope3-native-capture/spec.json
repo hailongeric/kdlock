@@ -1,0 +1,39 @@
+{
+  "script": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+  "script_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "argv": [
+    "capture",
+    "--config",
+    "/tmp/kdlock-writer-queue-scope3-install-config-20261031.json",
+    "--config-sha256",
+    "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+    "--boot-id",
+    "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+    "--host-state",
+    "/tmp/kdlock-writer-queue-scope3-native-capture-host-20261031.json",
+    "--host-state-sha256",
+    "6b1e55467355d7b0ca6f83e938bed780018713e607a98606a3ad7f99f8acf3bf",
+    "--prior",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-request/result.json",
+    "--prior-sha256",
+    "22de061ad7639ebbf9e395b0da654841db593b6cc6c712b33c85fd8debc58406",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/result.json",
+  "timeout": 2400,
+  "affinity": "0-63",
+  "success_key": "passed",
+  "route": "scope3",
+  "action": "capture",
+  "label": "native-capture",
+  "boot_id": "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+  "source_host_bindings": {
+    "/tmp/kdlock-writer-queue-scope3-install-config-20261031.json": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+    "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture-host.json": "6b1e55467355d7b0ca6f83e938bed780018713e607a98606a3ad7f99f8acf3bf",
+    "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request-recovered/step/owner.json": "e6198d040e7682f987ef576db097eb185ffe7ef63868073223b4d76a84f93937",
+    "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request-recovered/step/result.json": "22de061ad7639ebbf9e395b0da654841db593b6cc6c712b33c85fd8debc58406"
+  },
+  "source_host_builder_sha256": "40fc4d461514b52e840b8de973bde474aa07d7ffe2e18c1eb31aa07d15167966",
+  "commands_executed": false
+}

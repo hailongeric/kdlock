@@ -1,0 +1,34 @@
+{
+  "archive_receipt_sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+  "directory": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives",
+  "groups": [
+    {
+      "bytes": 10749125,
+      "file": "checks.tar.gz",
+      "sha256": "d4610356cb798549b07ed58f1484dc7cda260d7c5f13b31208db206511919b16"
+    },
+    {
+      "bytes": 1088418,
+      "file": "mmap1.tar.gz",
+      "sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e"
+    },
+    {
+      "bytes": 3683745,
+      "file": "attempts.tar.gz",
+      "sha256": "89501688115a69841c041bf5c604f60101b02fc24aaf0eff215a33607da2cbe9"
+    },
+    {
+      "bytes": 1827788,
+      "file": "inputs.tar.gz",
+      "sha256": "444aed8d5180c50a87e5fdf240e190325cc03dfa866cdf26c8631f4e7318247c"
+    },
+    {
+      "bytes": 1346,
+      "file": "metadata.tar.gz",
+      "sha256": "c59729508c592c840910fbf1899dfd61aa96134119cfcf93a43d9cb3aeab68d3"
+    }
+  ],
+  "inventory_sha256": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b",
+  "paths": 3523,
+  "regular_files": 2714
+}

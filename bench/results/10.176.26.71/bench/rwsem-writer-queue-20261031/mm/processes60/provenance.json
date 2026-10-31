@@ -1,0 +1,38 @@
+[
+  {
+    "arm": "baseline",
+    "archive_index_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+    "archive_group": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archives/mmap1.tar.gz",
+    "archive_group_sha256": "c4cc6772bd5a7712670d707fcd60ef77ac907282c729933b9fdae678edbb36fd",
+    "member": "mmap1-measure/run/processes-n60-r00/result.json",
+    "path": "/tmp/kdlock-writer-queue-mm-processes60-20261031/baseline-result.json",
+    "sha256": "c8161e6cfd4c4ba843fb5fc95f50b5e02b0103cbe824d3bcb826faab8e2f0ac1"
+  },
+  {
+    "arm": "baseline",
+    "archive_index_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+    "archive_group": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archives/mmap1.tar.gz",
+    "archive_group_sha256": "c4cc6772bd5a7712670d707fcd60ef77ac907282c729933b9fdae678edbb36fd",
+    "member": "mmap1-measure/run/processes-n60-r00/upstream.log",
+    "path": "/tmp/kdlock-writer-queue-mm-processes60-20261031/baseline-upstream.log",
+    "sha256": "e7c4f6d6651bc2095de2eeede4d16000fc0456037e0468feceed445db4b931d4"
+  },
+  {
+    "arm": "candidate",
+    "archive_index_sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+    "archive_group": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives/mmap1.tar.gz",
+    "archive_group_sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e",
+    "member": "mmap1-measure/run/processes-n60-r00/result.json",
+    "path": "/tmp/kdlock-writer-queue-mm-processes60-20261031/candidate-result.json",
+    "sha256": "f4e6f835ce43f99ba0e10770f705d2191faee091146468b3bcdfe83f00de9fa3"
+  },
+  {
+    "arm": "candidate",
+    "archive_index_sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+    "archive_group": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives/mmap1.tar.gz",
+    "archive_group_sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e",
+    "member": "mmap1-measure/run/processes-n60-r00/upstream.log",
+    "path": "/tmp/kdlock-writer-queue-mm-processes60-20261031/candidate-upstream.log",
+    "sha256": "fdb3640b5996885c940d3ce2380c0dd8ca7541b413774dfbcdce289793690fb3"
+  }
+]

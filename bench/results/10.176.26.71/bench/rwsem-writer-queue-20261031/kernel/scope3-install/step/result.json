@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "action": "install",
+  "passed": true,
+  "state": "INSTALLED_NOT_ARMED",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdscope3",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/build/result.json",
+    "sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/host-state.json",
+    "sha256": "232c96ce79bc8167bde1dfad3eb99f4e754eeffb2685ad886900db3b4496247b"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "copy-modules",
+      "argv": [
+        "cp",
+        "-a",
+        "--reflink=never",
+        "--",
+        "/mnt/kdlock-builds2/kdlock-scope3-modules-stage-7814c61a-20261031/lib/modules/7.0.0-38-kdscope3",
+        "/lib/modules/7.0.0-38-kdscope3"
+      ],
+      "started": 1793456260.4939053,
+      "pid": 763913,
+      "process_group": 763913,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456261.4397995,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/copy-modules.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "depmod",
+      "argv": [
+        "depmod",
+        "-a",
+        "7.0.0-38-kdscope3"
+      ],
+      "started": 1793456262.86387,
+      "pid": 763915,
+      "process_group": 763915,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456263.7087872,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/depmod.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "initramfs",
+      "argv": [
+        "mkinitramfs",
+        "-o",
+        "/boot/initrd.img-7.0.0-38-kdscope3",
+        "7.0.0-38-kdscope3"
+      ],
+      "started": 1793456265.190232,
+      "pid": 763916,
+      "process_group": 763916,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456277.6126053,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/initramfs.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "extract-initramfs",
+      "argv": [
+        "unmkinitramfs",
+        "/boot/initrd.img-7.0.0-38-kdscope3",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/initramfs"
+      ],
+      "started": 1793456277.6250906,
+      "pid": 769751,
+      "process_group": 769751,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456278.1155407,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/extract-initramfs.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "started": 1793456257.9419959,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/stage/result.json",
+    "sha256": "d14d5b29c9c06158d5ec21d15bd80be64d0d21eeaf7b0f57cd8dbdb4a29e2ca9"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/protected-before.json",
+    "sha256": "36890520f5d2c69cfed404023d1adaba360de4153dde38b879b0ad8f7af997b1"
+  },
+  "boot_files": {
+    "/boot/vmlinuz-7.0.0-38-kdscope3": {
+      "bytes": 17121792,
+      "mode": 33188,
+      "sha256": "31b3f5e9d95fabbbad9f6415c4df86594d54c75b462fd066e75994807c8e6f28"
+    },
+    "/boot/System.map-7.0.0-38-kdscope3": {
+      "bytes": 10544094,
+      "mode": 33188,
+      "sha256": "f7153e52df15f8179ada897c939120e0be39f56967ca6e5dc6e654ecef7869d9"
+    },
+    "/boot/config-7.0.0-38-kdscope3": {
+      "bytes": 308552,
+      "mode": 33188,
+      "sha256": "4b25e919c4935ef17130dbcbf657e8c0f392d55b0715ac1f3dbf9a64a79aead1"
+    },
+    "/boot/initrd.img-7.0.0-38-kdscope3": {
+      "bytes": 103167402,
+      "mode": 33188,
+      "sha256": "c3573c4a9e15038d15547fc071668128677718fa76b1ceef02f78303b59af2e6"
+    }
+  },
+  "module_manifest": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/installed-modules.json",
+    "sha256": "1e272d04ab1496a7ea0de5f321097daea611ca15629e828a62ef0f329f50fb20"
+  },
+  "initramfs_modules": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/initramfs-modules.json",
+    "sha256": "4d84d32b61dd057b975c1bff954054caa9c27f6dba4990ddc7ce2035ef15cd24"
+  },
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/install/protected-after.json",
+    "sha256": "36890520f5d2c69cfed404023d1adaba360de4153dde38b879b0ad8f7af997b1"
+  },
+  "final_idle": true,
+  "finished": 1793456283.253758
+}

@@ -1,0 +1,120 @@
+{
+  "local_files": {
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/controller.log": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/controller.log",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/owner.json": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api/step/result.json",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/controller.log": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites-failure.log",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/owner.json": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites/step/result.json",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-api-drain-20261031/result.json": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-drain/step/result.json",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-mm-source-view-20261031/candidate-sites3-unbind/result.json": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites3-unbind/result.json",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-baseline-replay-20261031/result.json": "/tmp/kdlock-writer-queue-controls-20261031/sites3-baseline-replay/step/result.json",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-checks-20261031/result.json": "/tmp/kdlock-writer-queue-controls-20261031/sites3-checks/step/result.json",
+    "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json": "/tmp/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+    "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77-20261031.manifest.json": "/tmp/kdlock-writer-sites-9d10ae77-20261031.manifest.json",
+    "/mnt/kdlock-builds2/kdlock-writer-sites-de5e4f06-20261031.manifest.json": "/tmp/kdlock-writer-sites-de5e4f06-20261031.manifest.json",
+    "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json": "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+    "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+    "/tmp/kdlock-writer-queue-mapping-functional-20261031.py": "/tmp/kdlock-writer-queue-mapping-functional-20261031.py",
+    "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+    "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json": "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+    "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json": "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json",
+    "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json": "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json",
+    "/tmp/kdlock-writer-queue-sites-failure-idle-20261031.json": "/tmp/kdlock-writer-queue-candidate-mm-sites-asm-20261031/receipt.json"
+  },
+  "record": {
+    "arms": {
+      "baseline": {
+        "config": {
+          "path": "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json",
+          "sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602"
+        },
+        "diagnostic_manifest": {
+          "path": "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+          "sha256": "84c13c193fe331185d2e1eb1c357862ffff0f664f6e27030e82b90756d2e27d1"
+        },
+        "harness_manifest": {
+          "path": "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+          "sha256": "a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411"
+        },
+        "mapping_adapter": {
+          "path": "/tmp/kdlock-writer-queue-mapping-functional-20261031.py",
+          "sha256": "61c364342100152b51fb266a5b5ff7c79fc3bdfdf9a36282b6faae90e052c91c"
+        }
+      },
+      "candidate": {
+        "config": {
+          "path": "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+          "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+        },
+        "diagnostic_manifest": {
+          "path": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+          "sha256": "ed9fcddaf0b4dba2f4af3afd722cff5f184abcf6611177192d7d1666f9b5172e"
+        },
+        "harness_manifest": {
+          "path": "/mnt/kdlock-builds2/kdlock-writer-sites-de5e4f06-20261031.manifest.json",
+          "sha256": "e3948a7984167827c5dc8e6125a4db9c9b20c0d74ff8aaa1912ae73679804c60"
+        },
+        "mapping_adapter": {
+          "path": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+          "sha256": "8e303ba5a77799ca6151448e8689f6c29c922a86dc1f66b8a0ed65bad077b64d"
+        }
+      }
+    },
+    "baseline_scores_repeated": false,
+    "compatibility": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-baseline-replay-20261031/result.json",
+      "sha256": "8625c593c058f892e3760f26f93181ceedd9f6421eb527b294087f76eae49137"
+    },
+    "controller_sha256": "36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d",
+    "evidence_files": [
+      {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-mm-source-view-20261031/candidate-sites3-unbind/result.json",
+        "sha256": "91d13dd5ec429a2069b0107b860054f9d92f09107b123a8891b66b5d69ed161f"
+      }
+    ],
+    "failed_api": {
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/controller.log",
+        "sha256": "66b3f25bce47ad703a3f2f9ea2b8b559d2b4eeef92e2038f13fb97cd5b93e8ae"
+      },
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api/owner.json",
+        "sha256": "d921d51700dd11fe8e18aac488ff7d8b09e5929ffb7ea0f489bf2e3539c60237"
+      },
+      "retirement": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-api-drain-20261031/result.json",
+        "sha256": "fd5563cf6433d34f60f340aa83e55dbbb7820631846327cc0836774e81cd707c"
+      }
+    },
+    "failed_sites": {
+      "idle": {
+        "path": "/tmp/kdlock-writer-queue-sites-failure-idle-20261031.json",
+        "sha256": "86ce93e7fc52c4db66869b70a56508384cc8bcc2e3e28ee1f9c4c47d232411eb"
+      },
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/controller.log",
+        "sha256": "78920261e84202b6598c46b277495df3305bfdada87b2cca40a480d3c34ca5c3"
+      },
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites/owner.json",
+        "sha256": "dbeabe1b93a54f094fc7693994ea31035696f865944c5184e1ecfb2dfe9671a3"
+      }
+    },
+    "focused_checks": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-checks-20261031/result.json",
+      "sha256": "83881aff2dcef313e81c3c05f114ed7e1a7fc3dbf2e2b19a84d87dfad88a348e"
+    },
+    "kind": "bounded-mm-diagnostic-delta-v2",
+    "performance_accepted": false,
+    "return_diagnostic": {
+      "config": {
+        "path": "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json",
+        "sha256": "9fe4313c5fc78470b40a292e1f8f356d8e9dda03742e576e9e2b024e4f0c7a92"
+      },
+      "harness_manifest": {
+        "path": "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77-20261031.manifest.json",
+        "sha256": "2169e01b6edf22edbb446634268617fe4889b47c12f6e7d91c36458c001ad02c"
+      }
+    },
+    "schema": 2
+  }
+}

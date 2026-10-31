@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "passed": true,
+  "source_host_only": true,
+  "arm": "baseline",
+  "analysis_arm": {
+    "path": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/analysis-arm.json",
+    "sha256": "0b7a8fb2fef5d0e97df35a0fba66fc2e8cb932ddb97899ba54549089b3605990"
+  },
+  "transfer": {
+    "path": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/transfer.json",
+    "sha256": "7a4f270c863aaa29ffccbffc156fa5ff8e0bfea2dbaf0a7f335a9e1b0c68fcae"
+  },
+  "expected_sha256": {
+    "aliases": "53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f",
+    "archive": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+    "archive-owner": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b",
+    "inventory": "08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e",
+    "preservation-map": "1a1d5d9b283e47b8887b7d504e383f20c5ccc0163b6cfa9c39c68a3ca1f95196"
+  },
+  "archive_groups": 4,
+  "regular_members": 2021,
+  "nine_owner_hashes_match": true,
+  "raw_scores_reparsed": false,
+  "pair_comparison": "PENDING_CANDIDATE",
+  "performance_accepted": false
+}

@@ -1,0 +1,6 @@
+4,725,1437222459,-;kd_mmap_probe: loading out-of-tree module taints kernel.
+
+5,726,1437222471,-;kd_mmap_probe: module verification failed: signature and/or required key missing - tainting kernel
+
+3,727,1437378270,-;kd_mmap_probe: check failed at line 195
+

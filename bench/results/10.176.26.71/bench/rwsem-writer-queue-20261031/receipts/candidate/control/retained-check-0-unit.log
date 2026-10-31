@@ -1,0 +1,142 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_control_call basic/test_control_call.c
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_daemon_policy basic/test_daemon_policy.c
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, runpy, sys; script = sys.argv.pop(1); sys.path.insert(0, os.path.dirname(script)); runpy.run_path(script, run_name='__main__')
+                                                                                                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.qgtqc5/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":17578,"started_ns":46711719433853,"finished_ns":46711719865983,"wall_ns":432130,"user_ns":363000,"system_ns":0,"maxrss_kib":1088,"minor_faults":30,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, runpy, sys; script = sys.argv.pop(1); sys.path.insert(0, os.path.dirname(script)); runpy.run_path(script, run_name='__main__')
+                                                                                                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.qgtqc5/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":17579,"started_ns":46711719893946,"finished_ns":46711770606806,"wall_ns":50712860,"user_ns":46468000,"system_ns":4040000,"maxrss_kib":12716,"minor_faults":1866,"major_faults":0,"voluntary_cs":1,"involuntary_cs":1,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":17580,"started_ns":46711770676945,"finished_ns":46711794671008,"wall_ns":23994063,"user_ns":19895000,"system_ns":3979000,"maxrss_kib":10632,"minor_faults":1223,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":17581,"started_ns":46711794711314,"finished_ns":46711818943811,"wall_ns":24232497,"user_ns":23133000,"system_ns":1005000,"maxrss_kib":10612,"minor_faults":1220,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":17582,"started_ns":46711818974453,"finished_ns":46711842895437,"wall_ns":23920984,"user_ns":20723000,"system_ns":3108000,"maxrss_kib":10612,"minor_faults":1222,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":17583,"started_ns":46711842923015,"finished_ns":46711867136020,"wall_ns":24213005,"user_ns":20118000,"system_ns":4023000,"maxrss_kib":10668,"minor_faults":1221,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":17584,"started_ns":46711867163197,"finished_ns":46711891215998,"wall_ns":24052801,"user_ns":20985000,"system_ns":2997000,"maxrss_kib":10664,"minor_faults":1222,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":17585,"started_ns":46711891251657,"finished_ns":46711915513690,"wall_ns":24262033,"user_ns":20160000,"system_ns":4032000,"maxrss_kib":10648,"minor_faults":1220,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":17586,"started_ns":46711915539392,"finished_ns":46711939586552,"wall_ns":24047160,"user_ns":20963000,"system_ns":2994000,"maxrss_kib":10656,"minor_faults":1220,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":17587,"started_ns":46711939612599,"finished_ns":46711963900572,"wall_ns":24287973,"user_ns":20179000,"system_ns":4035000,"maxrss_kib":10652,"minor_faults":1220,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":17588,"started_ns":46711963926787,"finished_ns":46711987985385,"wall_ns":24058598,"user_ns":21904000,"system_ns":2086000,"maxrss_kib":10564,"minor_faults":1221,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+mutex osq production: 26 scenarios PASS
+mutex osq mutation detected: decode-loses-slot
+mutex osq mutation detected: vcpu-decodes-encoded-slot
+mutex osq mutation detected: cancel-loses-backlink
+mutex osq mutation detected: cancel-loses-forward-link
+mutex osq mutation detected: cancel-ignores-grant
+mutex osq mutation detected: retirement-keeps-membership
+mutex osq mutation detected: release-borrowed-reservation
+mutex osq mutation detected: leak-temporary-reservation
+mutex osq mutation detected: skip-spin-queue-retirement
+mutex osq mutation detected: reuse-before-osq-retirement
+mutex osq mutation detected: ordinary-queue-polls-signals
+mutex osq mutation detected: scoped-queue-ignores-signals
+mutex osq mutation detected: scoped-owner-spin-ignores-signals
+mutex osq mutation detected: signal-precedes-completed-acquisition
+
+PASS embedded mutex state: 32 bytes/8 alignment; versioned node records, owner phases, PICKUP, release handoff, 131072 independent roots
+mutex state mutation detected: gate-claim-accepts-held
+mutex state mutation detected: record-overflow-not-rejected
+mutex state mutation detected: record-odd-not-rejected
+mutex state mutation detected: record-identity-not-checked
+mutex state mutation detected: record-generation-not-advanced
+mutex state mutation detected: record-exit-keeps-key
+mutex state mutation detected: invalid-phase-not-rejected
+mutex state mutation detected: foreign-task-query-authorized
+mutex state mutation detected: pickup-authorized
+mutex state mutation detected: physical-owner-ignored
+mutex state mutation detected: acquiring-authorized
+mutex state mutation detected: releasing-authorized
+mutex state mutation detected: combiner-not-authorized
+mutex state mutation detected: held-before-physical
+mutex state mutation detected: free-before-physical-release
+mutex state mutation detected: releasing-phase-skipped
+mutex state mutation detected: post-release-clears-successor
+
+PASS public rwsem native facade and preparation routing
+PASS public rwsem: compiled local/prepared calls, exact unlock-before-phase release, downgrade and ABI2 endpoint
+
+PASS rwsem read admission: bounded polling, released fallback, ordered cohort wake, exact writer reservations
+rwsem read mutation detected: lost-slot-release
+rwsem read mutation detected: lost-queue-release
+rwsem read mutation detected: failure-returns-ownership
+rwsem read mutation detected: early-retry-budget
+rwsem read mutation detected: repeat-successful-first-probe
+rwsem read mutation detected: lost-first-failed-pause
+rwsem read mutation detected: unbounded-poll
+rwsem read mutation detected: lost-wake-barrier
+rwsem read mutation detected: lost-cohort-wake
+rwsem read mutation detected: wake-before-barrier
+rwsem read mutation detected: wake-while-pinned
+rwsem read mutation detected: wake-with-reader-cohort
+rwsem read mutation detected: wake-only-on-read-acquisition
+rwsem read mutation detected: local-writer-ignores-readers
+rwsem read mutation detected: new-delegated-cohort-ignores-readers
+rwsem read mutation detected: queued-readers-block-existing-cohort
+rwsem read mutation detected: queue-hint-not-rechecked-after-cas-failure
+rwsem read mutation detected: delegated-reservation-saturates-early
+PASS rwsem reader count: 21 deterministic admission/release cases
+rwsem reader count mutation detected: missing-before-atomic-order
+rwsem reader count mutation detected: missing-after-atomic-order
+rwsem reader count mutation detected: publication-before-order
+rwsem reader count mutation detected: ignore-closed-phase-recheck
+rwsem reader count mutation detected: missing-reader-rollback
+rwsem reader count mutation detected: double-reader-rollback
+rwsem reader count mutation detected: wake-from-irq-disabled-release
+rwsem reader count mutation detected: wake-from-atomic-release
+
+PASS generated MM retains local unlock/downgrade and no public delegation dependency
+
+PASS writer queue: 82 scenarios; deterministic primitives only
+writer queue mutation detected: nonfatal-poll-ignored
+writer queue mutation detected: poll-budget-shortened
+writer queue mutation detected: reservation-repeated
+writer queue mutation detected: queued-reader-hint-ignored
+writer queue mutation detected: unprepared-uses-phase-first
+writer queue mutation detected: prepared-uses-gate-first
+writer queue mutation detected: scoped-gate-ignored
+writer queue mutation detected: unowned-phase-released
+writer queue mutation detected: rollback-phase-leaked
+writer queue mutation detected: rollback-before-unlock
+writer queue mutation detected: reader-drain-skipped
+writer queue mutation detected: timeout-treated-as-success
+writer queue mutation detected: internal-preparation-omitted
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 8 passed, 0 failed
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'

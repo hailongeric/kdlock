@@ -1,0 +1,262 @@
+[
+  {
+    "lock_kind": "mutex",
+    "workload": "c01",
+    "write_percent": 100,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.0062530514522965,
+    "whole_geomean_change_pct": 0.6253051452296488,
+    "whole_losses": 5,
+    "peak_geomean_ratio": 1.0061785397150231,
+    "peak_geomean_change_pct": 0.6178539715023135,
+    "peak_losses": 6,
+    "either_metric_losses": 6,
+    "reference_execution_counts": {
+      "NO_JIT": 3,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 18
+    },
+    "current_execution_counts": {
+      "NO_JIT": 3,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 18
+    }
+  },
+  {
+    "lock_kind": "mutex",
+    "workload": "c16",
+    "write_percent": 100,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.004600064663512,
+    "whole_geomean_change_pct": 0.4600064663512038,
+    "whole_losses": 9,
+    "peak_geomean_ratio": 1.0048187620965408,
+    "peak_geomean_change_pct": 0.4818762096540752,
+    "peak_losses": 8,
+    "either_metric_losses": 9,
+    "reference_execution_counts": {
+      "NO_JIT": 2,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 19
+    },
+    "current_execution_counts": {
+      "NO_JIT": 2,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 19
+    }
+  },
+  {
+    "lock_kind": "rwsem",
+    "workload": "c01",
+    "write_percent": 1,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 0.9919054678297453,
+    "whole_geomean_change_pct": -0.8094532170254687,
+    "whole_losses": 10,
+    "peak_geomean_ratio": 0.991245318397822,
+    "peak_geomean_change_pct": -0.875468160217796,
+    "peak_losses": 9,
+    "either_metric_losses": 10,
+    "reference_execution_counts": {
+      "NO_JIT": 18,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 3
+    },
+    "current_execution_counts": {
+      "NO_JIT": 17,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 4
+    }
+  },
+  {
+    "lock_kind": "rwsem",
+    "workload": "c01",
+    "write_percent": 20,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 0.9827821199129165,
+    "whole_geomean_change_pct": -1.721788008708347,
+    "whole_losses": 13,
+    "peak_geomean_ratio": 0.9833086624360062,
+    "peak_geomean_change_pct": -1.6691337563993769,
+    "peak_losses": 13,
+    "either_metric_losses": 13,
+    "reference_execution_counts": {
+      "NO_JIT": 5,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 16
+    },
+    "current_execution_counts": {
+      "NO_JIT": 4,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 17
+    }
+  },
+  {
+    "lock_kind": "rwsem",
+    "workload": "c16",
+    "write_percent": 1,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.0052080152722254,
+    "whole_geomean_change_pct": 0.5208015272225364,
+    "whole_losses": 7,
+    "peak_geomean_ratio": 1.0045631687697252,
+    "peak_geomean_change_pct": 0.4563168769725179,
+    "peak_losses": 7,
+    "either_metric_losses": 7,
+    "reference_execution_counts": {
+      "NO_JIT": 10,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 11
+    },
+    "current_execution_counts": {
+      "NO_JIT": 10,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 11
+    }
+  },
+  {
+    "lock_kind": "rwsem",
+    "workload": "c16",
+    "write_percent": 20,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.0020887950562443,
+    "whole_geomean_change_pct": 0.20887950562442636,
+    "whole_losses": 8,
+    "peak_geomean_ratio": 1.002457109182308,
+    "peak_geomean_change_pct": 0.2457109182308015,
+    "peak_losses": 8,
+    "either_metric_losses": 8,
+    "reference_execution_counts": {
+      "NO_JIT": 3,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 18
+    },
+    "current_execution_counts": {
+      "NO_JIT": 3,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 18
+    }
+  },
+  {
+    "lock_kind": "rwlock",
+    "workload": "c01",
+    "write_percent": 1,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.0065315066203577,
+    "whole_geomean_change_pct": 0.653150662035773,
+    "whole_losses": 11,
+    "peak_geomean_ratio": 1.006696812666409,
+    "peak_geomean_change_pct": 0.6696812666409091,
+    "peak_losses": 11,
+    "either_metric_losses": 12,
+    "reference_execution_counts": {
+      "NO_JIT": 11,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 10
+    },
+    "current_execution_counts": {
+      "NO_JIT": 11,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 10
+    }
+  },
+  {
+    "lock_kind": "rwlock",
+    "workload": "c01",
+    "write_percent": 20,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 0.9904369425500621,
+    "whole_geomean_change_pct": -0.9563057449937906,
+    "whole_losses": 11,
+    "peak_geomean_ratio": 0.9899124980324395,
+    "peak_geomean_change_pct": -1.0087501967560475,
+    "peak_losses": 11,
+    "either_metric_losses": 12,
+    "reference_execution_counts": {
+      "NO_JIT": 8,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 13
+    },
+    "current_execution_counts": {
+      "NO_JIT": 8,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 13
+    }
+  },
+  {
+    "lock_kind": "rwlock",
+    "workload": "c16",
+    "write_percent": 1,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 1.0033819284985885,
+    "whole_geomean_change_pct": 0.3381928498588538,
+    "whole_losses": 9,
+    "peak_geomean_ratio": 1.0018529793672863,
+    "peak_geomean_change_pct": 0.18529793672863448,
+    "peak_losses": 11,
+    "either_metric_losses": 12,
+    "reference_execution_counts": {
+      "NO_JIT": 11,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 10
+    },
+    "current_execution_counts": {
+      "NO_JIT": 11,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 10
+    }
+  },
+  {
+    "lock_kind": "rwlock",
+    "workload": "c16",
+    "write_percent": 20,
+    "points": 21,
+    "unscored_coordinates": 0,
+    "performance_accepted": false,
+    "geomean_scope": "All 21 measured ratios, including NO_JIT; one round, no significance claim",
+    "whole_geomean_ratio": 0.9989018979492872,
+    "whole_geomean_change_pct": -0.10981020507128125,
+    "whole_losses": 12,
+    "peak_geomean_ratio": 0.9985101801097646,
+    "peak_geomean_change_pct": -0.14898198902354443,
+    "peak_losses": 11,
+    "either_metric_losses": 12,
+    "reference_execution_counts": {
+      "NO_JIT": 8,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 13
+    },
+    "current_execution_counts": {
+      "NO_JIT": 8,
+      "PARTIAL_JIT": 0,
+      "RETURNED_JIT": 13
+    }
+  }
+]

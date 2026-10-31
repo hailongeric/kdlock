@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "action": "arm",
+  "passed": true,
+  "state": "ARMED_NOT_REBOOTED",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdscope3",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-kernel-r2-20261031/build/result.json",
+    "sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/host-state.json",
+    "sha256": "b361298d19f7267f7c461f3d80adaaacc00df1f53aba27248c4f3ba7c50771d3"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456417.5110753,
+      "pid": 770758,
+      "process_group": 770758,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456417.5713236,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "arm-once",
+      "argv": [
+        "grub-reboot",
+        "kdlock-7.0.0-38-kdscope3-native"
+      ],
+      "started": 1793456417.5808244,
+      "pid": 770759,
+      "process_group": 770759,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456417.6691778,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/arm-once.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "environment-after",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456417.6788304,
+      "pid": 770772,
+      "process_group": 770772,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456417.7087042,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/environment-after.log",
+        "sha256": "7f1d2f34a029ce4e510097a27250f451ee3e1ae74bc70ff56e18a29cb8eb94a1"
+      }
+    }
+  ],
+  "started": 1793456414.8760607,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+    "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/protected-before.json",
+    "sha256": "be1f96d0aa7e112c8d5f27d20541d651f8389a249c4914c36b6322c20f0dbd17"
+  },
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+    "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+  },
+  "mode": "native",
+  "entry": "kdlock-7.0.0-38-kdscope3-native",
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-arm/protected-after.json",
+    "sha256": "af14c2d0c3be6d8990ae5c9d4c97d32e31f52f19ef3424be1ebc0267c7b484e8"
+  },
+  "final_idle": true,
+  "finished": 1793456419.3781035
+}

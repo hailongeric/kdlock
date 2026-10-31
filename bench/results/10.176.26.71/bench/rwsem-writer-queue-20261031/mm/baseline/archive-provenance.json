@@ -1,0 +1,29 @@
+{
+  "archive_receipt_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+  "directory": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archives",
+  "groups": [
+    {
+      "bytes": 10665821,
+      "file": "checks.tar.gz",
+      "sha256": "5d0d969243d9cb3f5d64b4010a8ce24bce56678aab036541d1c21fcbeace402d"
+    },
+    {
+      "bytes": 1086928,
+      "file": "mmap1.tar.gz",
+      "sha256": "c4cc6772bd5a7712670d707fcd60ef77ac907282c729933b9fdae678edbb36fd"
+    },
+    {
+      "bytes": 1169154,
+      "file": "inputs.tar.gz",
+      "sha256": "218f193694d607818fcab90bca290b92f9e4d9f3de29d69e818b6e8b5fba343d"
+    },
+    {
+      "bytes": 1339,
+      "file": "metadata.tar.gz",
+      "sha256": "e79b5dec4ef3263823564728e15724f5f0dd6532f94f81b17c57420ebdb84124"
+    }
+  ],
+  "inventory_sha256": "08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e",
+  "paths": 2655,
+  "regular_files": 2021
+}

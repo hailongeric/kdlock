@@ -1,0 +1,13 @@
+{"abi": 1, "use_kd": 1, "mm": 18379471558817694720, "lock": 18379471558817695168, "checks": 46, "errors": 1, "api_checks": 8, "nested_checks": 1, "cancellation_checks": 2, "readers_slept": 0, "writer_slept": 0, "late_reader_slept": 0, "downgrade_checks": 0, "transfer_checks": 0, "irq_checks": 0, "destroy_checks": 0, "idle": 1}
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/tests/kernel/mmap_lock/run.py", line 171, in <module>
+    main()
+    ~~~~^^
+  File "/root/host_fs/kdlock/tests/kernel/mmap_lock/run.py", line 53, in main
+    rt.require(all(row[k] == v for k, v in expected.items()) and row['mm'] and
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               row['lock'] and row['checks'] >= 100, 'probe result differs', 'CHECK_FAILED')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/host_fs/kdlock/bench/spin_cacheline/bench_runtime.py", line 46, in require
+    raise Failure(status, message)
+bench_runtime.Failure: probe result differs

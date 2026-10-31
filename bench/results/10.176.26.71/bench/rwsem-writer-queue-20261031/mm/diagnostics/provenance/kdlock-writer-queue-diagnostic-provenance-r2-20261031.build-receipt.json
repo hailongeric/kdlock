@@ -1,0 +1,39 @@
+{
+  "api_fixture_delta_paths": [
+    "tests/kernel/mmap_lock/README.md",
+    "tests/kernel/mmap_lock/payload/gate_waiter_layout.h",
+    "tests/kernel/mmap_lock/payload/module.c",
+    "tests/kernel/mmap_lock/run.py"
+  ],
+  "completed": true,
+  "harness_delta_paths": [
+    "bench/mmap_writer/client.c",
+    "bench/mmap_writer/sites.py",
+    "tests/kernel/mmap_lock/README.md",
+    "tests/kernel/mmap_lock/mapping.py",
+    "tests/kernel/mmap_lock/payload/gate_waiter_layout.h",
+    "tests/kernel/mmap_lock/payload/module.c",
+    "tests/kernel/mmap_lock/run.py",
+    "tests/kernel/mmap_writer/README.md",
+    "tests/unit/bench/test_mmap_writer_observation.py",
+    "tests/unit/bench/test_mmap_writer_return_sites.py"
+  ],
+  "helper_sha256": "a30f16ccb4036ff5acc186c029359456bcbcbedce8c89a7820cf931bf8cc4bfb",
+  "inputs_sha256": "0ebfd6f06d8175b315ab4928f84499b7c8c2da0568b82656257d0642ded2168d",
+  "intermediate_tracked_files": 5848,
+  "performance_accepted": false,
+  "record_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+  "returncode": 0,
+  "schema": 1,
+  "source_host_only": true,
+  "strict_delta_paths": [
+    "README.md",
+    "payload/client.c",
+    "run.py"
+  ],
+  "tracked_files": {
+    "baseline": 5847,
+    "candidate": 5850
+  },
+  "workload_or_test_executed": false
+}

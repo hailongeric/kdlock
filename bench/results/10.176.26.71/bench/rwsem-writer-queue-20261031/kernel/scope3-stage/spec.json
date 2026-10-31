@@ -1,0 +1,22 @@
+{
+  "script": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+  "script_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "argv": [
+    "stage",
+    "--config",
+    "/tmp/kdlock-writer-queue-scope3-install-config-20261031.json",
+    "--config-sha256",
+    "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+    "--boot-id",
+    "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+    "--host-state",
+    "/tmp/kdlock-writer-queue-scope3-stage-host-20261031.json",
+    "--host-state-sha256",
+    "b9d65c97ec2a05ef41ce0b7edd192952d7e3e9ffa40e97ed2b1e62940aaa7579",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/stage"
+  ],
+  "result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/stage/result.json",
+  "timeout": 4000,
+  "affinity": "0-63"
+}

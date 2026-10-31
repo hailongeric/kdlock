@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "passed": false,
+  "completed": false,
+  "state": "FAILED",
+  "source_commit": "7fa989c124810222042f9560d0e83a7dea197d2f",
+  "boot_id": "fa97b9f8-fefc-49b9-abc1-636861e64fc0",
+  "release": "7.0.0-38-kdlock1",
+  "source_unchanged_before": true,
+  "blocks": [
+    {
+      "name": "unit",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "-B",
+        "run",
+        "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "PY_TESTS=mutex/test_mutex_osq.py mutex/test_mutex_state.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py mutex/test_rwsem_writer_queue.py"
+      ],
+      "started": 1793446223.572213,
+      "pid": 17553,
+      "returncode": 0,
+      "finished": 1793446259.227708,
+      "log_sha256": "1f0491d6bc7b26b1eda94fd7fe4d86d946ebb1b40aa62fefc5c581b7a5df1d95"
+    },
+    {
+      "name": "writer-sites",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "bench/mmap_writer/test_sites.py"
+      ],
+      "started": 1793446260.2612004,
+      "pid": 18100,
+      "returncode": 0,
+      "finished": 1793446260.4766872,
+      "log_sha256": "31d461d4f5ea9a76ac910ab10c6f0bdaffcf73105fffad0bef6b67b23d0e121f"
+    },
+    {
+      "name": "writer-observation",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "tests/unit/bench/test_mmap_writer_observation.py"
+      ],
+      "started": 1793446261.494814,
+      "pid": 18101,
+      "returncode": 0,
+      "finished": 1793446262.1613133,
+      "log_sha256": "b717e40e08ff00639b8b857c98d179682eb260aa1c28ca26629175fe8d019988"
+    },
+    {
+      "name": "rwsem",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/host_fs/kdlock/tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793446263.177354,
+      "pid": 18145,
+      "returncode": 1,
+      "finished": 1793446287.5539246,
+      "log_sha256": "46eafed82c340c2d28f9794fabf9b2688ea393105edc49254703253ad622fbcf"
+    }
+  ],
+  "drained": false,
+  "error": "AssertionError('rwsem')",
+  "finished": 1793446287.5544045
+}

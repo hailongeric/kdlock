@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "completed": true,
+  "state": "COMPLETE",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "controller_sha256": "54f627eabb30c579ffb6f9a30fcd2dc1b862cb7d70037d30035c0148acff7bd7",
+  "plan_sha256": "635d19cd8670e22a77c014596117c28d81ad8be268edf216de13d86ca3fa95bf",
+  "source_commit": "9d10ae77290873df23804293f364862a2b55f385",
+  "base_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "changed_paths": [
+    "bench/mmap_writer/client.c",
+    "bench/mmap_writer/sites.py",
+    "tests/kernel/mmap_lock/mapping.py",
+    "tests/kernel/mmap_writer/README.md",
+    "tests/unit/bench/test_mmap_writer_observation.py",
+    "tests/unit/bench/test_mmap_writer_return_sites.py"
+  ],
+  "started": 1793459019.2583063,
+  "passed": true,
+  "final_idle": true,
+  "files": 5848,
+  "manifest_sha256": "2169e01b6edf22edbb446634268617fe4889b47c12f6e7d91c36458c001ad02c",
+  "original_recipe_unchanged": true,
+  "finished": 1793459021.7044935
+}

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "config": {
+    "path": "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json",
+    "sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602"
+  },
+  "arm": "baseline",
+  "boot_id": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "owners": {
+    "sites": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/sites/owner.json",
+      "sha256": "62a3a6321e103d1e3748ddf66265eb69789e091a05dcba2bc822b8a03c697333"
+    },
+    "api": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/api/owner.json",
+      "sha256": "d5894bb296c6d336a5beffd4383c472d6121e28825f45e2cdf3571df20935c5d"
+    },
+    "mapping": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/owner.json",
+      "sha256": "bad0e69a94e2a4e0322417673066edba1eace785adf1ae44cc05050e62e3edfa"
+    },
+    "faults": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/faults/owner.json",
+      "sha256": "62e4f0eb7fcae771700ab364680e910f82791b1dfab0588494ec69b9eb204fee"
+    },
+    "completed": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/completed/owner.json",
+      "sha256": "79470986337a859f00c20803a1b62d47c6c32934caa70a5571a9846769ab9cb8"
+    },
+    "strict-hold": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/strict-hold/owner.json",
+      "sha256": "db564ff826c0b8500944ad280f450bcaf377b963d991127a6b29d379071aa6af"
+    },
+    "mmap1-identity": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mmap1-identity/owner.json",
+      "sha256": "ee031e638069cad46519e812fdb9faaf54d8aee2aa99e8f6c80da6a8d1471969"
+    },
+    "mmap1-measure": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mmap1-measure/owner.json",
+      "sha256": "daf48d12910b745fc59a334e18c7d2dceaa8d13718e2caf533da3d7740eb59ac"
+    },
+    "endpoint": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/endpoint/owner.json",
+      "sha256": "8d7540aaf65c5439b14dc8ca3b615cdc241f6f4e4c0ea4a9e55e9ed366039532"
+    }
+  },
+  "extra_files": []
+}

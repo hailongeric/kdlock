@@ -1,0 +1,13 @@
+{
+  "script": "/tmp/kdlock-writer-queue-checks-20261031.py",
+  "script_sha256": "c03138959ef96884704b561d14c6631cd95ce0b8edebab618b3f80aae1a81b3a",
+  "argv": [
+    "--config",
+    "/tmp/kdlock-writer-queue-candidate-checks-20261031.json",
+    "--sha256",
+    "cac896cdcf3e3b856d85b8b9bca5b6782d7a8413ef1071e4f776a7545fb1ad8b"
+  ],
+  "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/result.json",
+  "timeout": 3500,
+  "affinity": "0-63"
+}

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "completed": false,
+  "state": "FAILED",
+  "controller_sha256": "21f15ebbd677783461b8db87d5aa39bc75818994e7e1ab15cf3abdb469c87cac",
+  "transport_sha256": "0d48e27a4dbd6838e349431d50f671ce7b59346ab4afed59ca8f54449310ffd7",
+  "uploads_sha256": "2ba2fa0861f6d83ee13782b7244b6294538072cbadeccf26580275c0072728f2",
+  "spec_sha256": "d4238f689d5036893b54df77481f70a831b3fc4fefe04e5b87557ba9c0e99d1e",
+  "started": 1793456653.2456887,
+  "child_completion_unknown": false,
+  "total_input_bytes": 500209,
+  "commands": [
+    {
+      "name": "upload",
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "eric@10.176.26.71",
+        "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import base64,hashlib,json,os,pathlib,sys\nx=json.load(sys.stdin);rows=x['\"'\"'\"'\"'\"'\"'\"'\"'files'\"'\"'\"'\"'\"'\"'\"'\"'];result=[]\nfor row in rows:\n p=pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']);data=base64.b64decode(row['\"'\"'\"'\"'\"'\"'\"'\"'data'\"'\"'\"'\"'\"'\"'\"'\"'],validate=True)\n assert p.is_absolute() and str(p)==row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"'] and '\"'\"'\"'\"'\"'\"'\"'\"'..'\"'\"'\"'\"'\"'\"'\"'\"'not in p.parts\n assert (p.is_relative_to('\"'\"'\"'\"'\"'\"'\"'\"'/tmp'\"'\"'\"'\"'\"'\"'\"'\"')and p!=pathlib.Path('\"'\"'\"'\"'\"'\"'\"'\"'/tmp'\"'\"'\"'\"'\"'\"'\"'\"'))or str(p)in x['\"'\"'\"'\"'\"'\"'\"'\"'data_files'\"'\"'\"'\"'\"'\"'\"'\"']\n assert p.parent.is_dir() and p.parent.resolve()==p.parent and not p.is_symlink()\n assert hashlib.sha256(data).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"'] and len(data)==row['\"'\"'\"'\"'\"'\"'\"'\"'bytes'\"'\"'\"'\"'\"'\"'\"'\"']\n if p.exists():assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\nfor row in rows:\n p=pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']);existed=p.exists()\n if not existed:\n  with p.open('\"'\"'\"'\"'\"'\"'\"'\"'xb'\"'\"'\"'\"'\"'\"'\"'\"')as f:f.write(base64.b64decode(row['\"'\"'\"'\"'\"'\"'\"'\"'data'\"'\"'\"'\"'\"'\"'\"'\"'],validate=True));f.flush();os.fsync(f.fileno())\n  fd=os.open(p.parent,os.O_DIRECTORY);os.fsync(fd);os.close(fd)\n assert not p.is_symlink()and p.is_file()and hashlib.sha256(p.read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\n result.append(dict(guest=str(p),sha256=row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"'],bytes=p.stat().st_size,status='\"'\"'\"'\"'\"'\"'\"'\"'retained-identical'\"'\"'\"'\"'\"'\"'\"'\"'if existed else'\"'\"'\"'\"'\"'\"'\"'\"'uploaded-new'\"'\"'\"'\"'\"'\"'\"'\"'))\nfor row in rows:assert hashlib.sha256(pathlib.Path(row['\"'\"'\"'\"'\"'\"'\"'\"'guest'\"'\"'\"'\"'\"'\"'\"'\"']).read_bytes()).hexdigest()==row['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']\nprint(json.dumps(dict(completed=True,files=result)))\n'\"'\"''"
+      ],
+      "started": 1793456653.2495916,
+      "pid": 3364263,
+      "returncode": 0,
+      "finished": 1793456654.0717542
+    },
+    {
+      "name": "step",
+      "argv": [
+        "/usr/bin/python3",
+        "/tmp/kdlock-reviewed-guest-step-transport-20261031.py",
+        "--spec",
+        "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/spec.json",
+        "--output",
+        "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/step"
+      ],
+      "started": 1793456654.0867186,
+      "pid": 3364264,
+      "returncode": 1,
+      "finished": 1793456656.3606403
+    }
+  ],
+  "guest_step_started": true,
+  "guest_drain_unknown": true,
+  "automatic_retry": false,
+  "automatic_next": false,
+  "upload_result_sha256": "d9e430ecac49d1f9d6e7be645d214c17379f6613d7fbd85c2ca73c95ac46e5bf",
+  "error": "AssertionError('step')",
+  "finished": 1793456656.3614743
+}

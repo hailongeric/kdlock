@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "action": "capture",
+  "passed": true,
+  "completed": true,
+  "state": "BOOT_RUNTIME_IDENTITY_VERIFIED",
+  "boot_id": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+  "release": "7.0.0-38-kdscope1",
+  "controller_sha256": "9424d4afcb6ca8c8f0ccbe0eb0443407647414861afba2d245c3a07676a803e6",
+  "support_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+    "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+  },
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/request/result.json",
+    "sha256": "c86a502b13f42590787510d8d3e310aaa9a5f973b77c5199d7639ef4d505add1"
+  },
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "host_state_sha256": "15bbf4943133b99e55b79e1096c953ecfe054d7f681d788cc1acf7481821df55",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 6305,
+      "mode": 33188,
+      "sha256": "8d9aff4a2a07bef260ec9c63f931ff305f516def27062b58043486309cff702b"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 33188,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    },
+    "/etc/default/grub": {
+      "bytes": 1236,
+      "mode": 33188,
+      "sha256": "e02f11d6ea1b3c31d789afdae3bb5589038c49eb94dc0de18f7d8a6d0c475250"
+    }
+  },
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456721.2172306,
+      "pid": 2617,
+      "process_group": 2617,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456721.30367,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/capture/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "restore-build-bind",
+      "argv": [
+        "mount",
+        "--bind",
+        "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build"
+      ],
+      "started": 1793456722.5109391,
+      "pid": 2618,
+      "process_group": 2618,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456722.534562,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/capture/restore-build-bind.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "verify-scope1",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope3-recipe-7814c61a/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdscope1-kd",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+        "--build-root",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+        "--running"
+      ],
+      "started": 1793456722.5422392,
+      "pid": 2619,
+      "process_group": 2619,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456723.5796208,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/capture/verify-scope1.log",
+        "sha256": "481275891863cc628c11592e5aee311c65e3a346a909919a1042a60413bb1703"
+      }
+    }
+  ],
+  "started": 1793456721.2128792,
+  "drain_unknown": false,
+  "performance_accepted": false,
+  "source_changed": false,
+  "default_changed": false,
+  "automatic_retry": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "mode": "kd",
+  "verification": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/source",
+    "variant": "kdscope1-kd"
+  },
+  "running_kernel_validated": true,
+  "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030",
+  "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build",
+  "backing": "/root/kdlock-build-output/linux-7.0.0-38-kdscope1",
+  "previous_boot_id": "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+  "final_idle": true,
+  "finished": 1793456723.8425121
+}

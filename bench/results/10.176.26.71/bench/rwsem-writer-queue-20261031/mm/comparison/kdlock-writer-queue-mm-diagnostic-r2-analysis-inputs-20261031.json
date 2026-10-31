@@ -1,0 +1,423 @@
+{
+  "arms": {
+    "baseline": {
+      "aliases": {
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/README.md": "preservation-inputs/diagnostic-source/README.md",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/payload/Makefile": "preservation-inputs/diagnostic-source/payload/Makefile",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/payload/api.h": "preservation-inputs/diagnostic-source/payload/api.h",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/payload/client.c": "preservation-inputs/diagnostic-source/payload/client.c",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/payload/module.c": "preservation-inputs/diagnostic-source/payload/module.c",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-chain-f4f5f671/run.py": "preservation-inputs/diagnostic-source/run.py",
+        "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json": "preservation-inputs/harness-manifest.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-base-sha256.json": "preservation-inputs/kernel-bundle/api-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/include/kd_api_control.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_api_control.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/include/kd_config.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_config.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/include/kd_mutex_types.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_mutex_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/include/kd_spin_type.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_spin_type.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock_types.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_provider.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_provider.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Kconfig": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Kconfig",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Makefile": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.S": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.S",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.c": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-inputs/kernel_integration/real_api/prepare.py": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/prepare.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-lock-binding.patch": "preservation-inputs/kernel-bundle/api-lock-binding.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/api-prepare.json": "preservation-inputs/kernel-bundle/api-prepare.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition-inputs/kernel_integration/linux70/compose_scope.py": "preservation-inputs/kernel-bundle/composition-inputs/kernel_integration/linux70/compose_scope.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition-inputs/kernel_integration/linux70/scope-base-sha256.json": "preservation-inputs/kernel-bundle/composition-inputs/kernel_integration/linux70/scope-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition.json": "preservation-inputs/kernel-bundle/composition.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition/api/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/api/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition/base/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/base/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition/mmap/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/mmap/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition/pristine-api/fs/file.c": "preservation-inputs/kernel-bundle/composition/pristine-api/fs/file.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/composition/pristine-api/fs/pipe.c": "preservation-inputs/kernel-bundle/composition/pristine-api/fs/pipe.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/core-kernel.patch": "preservation-inputs/kernel-bundle/core-kernel.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/guest.config": "preservation-inputs/kernel-bundle/guest.config",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/manifest.json": "preservation-inputs/kernel-bundle/manifest.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-base-sha256.json": "preservation-inputs/kernel-bundle/mmap-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_config.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_config.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_lock.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_mutex.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_mutex.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_mutex_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_mutex_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_regs.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_regs.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_rwsem.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_rwsem.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/include/kd_rwsem_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_rwsem_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/linux70/prepare_mmap.py": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/linux70/prepare_mmap.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/Makefile": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_integration/mmap_lock/prepare.py": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/prepare.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_module/kd_mutex_local.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_local.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_module/kd_mutex_local.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_local.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_module/kd_mutex_osq.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_osq.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-inputs/kernel_module/kd_rwsem.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_rwsem.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-lock.patch": "preservation-inputs/kernel-bundle/mmap-lock.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/mmap-prepare.json": "preservation-inputs/kernel-bundle/mmap-prepare.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/scope-base-sha256.json": "preservation-inputs/kernel-bundle/scope-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030/source-acquisition.json": "preservation-inputs/kernel-bundle/source-acquisition.json",
+        "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py": "preservation-inputs/external/5c23db457fc9cfc91ff68c7f392e5c003812cb54a66fe082a0e73a0b459b6120-kdlock-scope-mmap1-identity-runner-r1-20261030.py",
+        "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json": "preservation-inputs/diagnostic-manifest.json",
+        "/tmp/kdlock-writer-queue-mapping-functional-20261031.py": "preservation-inputs/external/61c364342100152b51fb266a5b5ff7c79fc3bdfdf9a36282b6faae90e052c91c-kdlock-writer-queue-mapping-functional-20261031.py",
+        "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json": "preservation-inputs/config.json",
+        "/tmp/kdlock-writer-queue-mm-20261031.py": "preservation-inputs/external/36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d-kdlock-writer-queue-mm-20261031.py",
+        "/tmp/kdlock-writer-queue-mm-baseline-api-bindings-20261031.json": "preservation-inputs/external/1c8a0cff2d1be0028ee8445880fa6306c0d03a01a4c970df1c0c814da8346cae-kdlock-writer-queue-mm-baseline-api-bindings-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-endpoint-bindings-20261031.json": "preservation-inputs/external/986061db49ff7a9a33a795910b44bd5eae6c6475197593b619263e266260b349-kdlock-writer-queue-mm-baseline-endpoint-bindings-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-endpoint-bindings-20261031.json.watcher.json": "preservation-inputs/external/0b72141e77ebf8dedb9af8e63b3ee90d8bd5c55980231ea097bbe3203748cd26-kdlock-writer-queue-mm-baseline-endpoint-bindings-20261031.json.watcher.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-endpoint-host-20261031.json": "preservation-inputs/external/5ed95372605292beb422db554a87b711b91a30e7fe93ca0d9b748c2a925c9c05-kdlock-writer-queue-mm-baseline-endpoint-host-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-endpoint-policy-20261031.json": "preservation-inputs/external/c6cdec4d25f82f7b7bf71a56d5cec349390cfc8b2c6f04f9c4374ec3b18eec65-kdlock-writer-queue-mm-baseline-endpoint-policy-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-sites-bindings-20261031.json": "preservation-inputs/external/1c8a0cff2d1be0028ee8445880fa6306c0d03a01a4c970df1c0c814da8346cae-kdlock-writer-queue-mm-baseline-sites-bindings-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-sites-host-20261031.json": "preservation-inputs/external/7cde193cdfe5d1d9e2faba3ed1467c0a1959ada28a310c92bce535b58896816a-kdlock-writer-queue-mm-baseline-sites-host-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-baseline-sites-policy-20261031.json": "preservation-inputs/external/48863add2fb1a1f5bad99447a63a87467a80453f607bb978ac53b326e221d3c5-kdlock-writer-queue-mm-baseline-sites-policy-20261031.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-completed.bindings.json": "preservation-inputs/external/bca9bd6d1c3d3ddb4437f54cfab8e1476ad39a36ce414e99274853f8d706102c-kdlock-writer-queue-mm-mm-baseline-completed.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-completed.host.json": "preservation-inputs/external/26e36c132cd519b50fd5682498544f03b5bf45c81ae2248a501a6d64c562b1cb-kdlock-writer-queue-mm-mm-baseline-completed.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-completed.pool.json": "preservation-inputs/external/da484857c96feae5bd3a28fcbb4f9c90cb3273aaf5fb0a5d12ac7df5f0078fc2-kdlock-writer-queue-mm-mm-baseline-completed.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-faults.bindings.json": "preservation-inputs/external/70cfac2858c8d9376de78fc39fc2bc244ea4b6551eefe55e73d42de49e51bdc4-kdlock-writer-queue-mm-mm-baseline-faults.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-faults.host.json": "preservation-inputs/external/7142d8e0aa5f1c982143f87ffeedec7798a2fca47852f7c1222088152d497329-kdlock-writer-queue-mm-mm-baseline-faults.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-faults.pool.json": "preservation-inputs/external/8b278e214a852dfc1798547f11cae0136d7bf65737e945aff32c8abf90f7419e-kdlock-writer-queue-mm-mm-baseline-faults.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mapping.bindings.json": "preservation-inputs/external/3e4ec280ac3147afa4b20b1de5f7f788d211446b4e16558805c6e06d4d456cd7-kdlock-writer-queue-mm-mm-baseline-mapping.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mapping.host.json": "preservation-inputs/external/ee339340cbb32c6a17f58c0506f5bacaa6f45c2f51acf5f625d16bf5b2306de5-kdlock-writer-queue-mm-mm-baseline-mapping.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mapping.pool.json": "preservation-inputs/external/74db98cd30a168e5ed36c0eca1fb35f11db52b0e1fba9df0885511df861d808b-kdlock-writer-queue-mm-mm-baseline-mapping.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-identity.bindings.json": "preservation-inputs/external/8b2d385dab4735fe75f891e5fb4014e248e18d734d9f7b1555af370227a77aa6-kdlock-writer-queue-mm-mm-baseline-mmap1-identity.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-identity.host.json": "preservation-inputs/external/c5919088d94ffa3a6a78b0166273add411aa70daad013e4059be9b013ebcbd93-kdlock-writer-queue-mm-mm-baseline-mmap1-identity.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-identity.pool.json": "preservation-inputs/external/e23697a34bcb385840722f792b6f1cb4dbda424bc95d4783c8017f9e1a1ecf7c-kdlock-writer-queue-mm-mm-baseline-mmap1-identity.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-measure.bindings.json": "preservation-inputs/external/2916fb539a93ea87a407744198decb7e77d4e8fa09bd05282e32cc3d8a1a79f3-kdlock-writer-queue-mm-mm-baseline-mmap1-measure.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-measure.host.json": "preservation-inputs/external/4786fc408c8ddc3e78521b877ae8c3504ee275822789ae9375a2d588bab339fe-kdlock-writer-queue-mm-mm-baseline-mmap1-measure.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-mmap1-measure.pool.json": "preservation-inputs/external/c37cac25d292e7f27be431666ee655b74e521c7128a454abed5ef4b649c25754-kdlock-writer-queue-mm-mm-baseline-mmap1-measure.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-strict-hold.bindings.json": "preservation-inputs/external/7ed14d2e3267d1fa7f750488b2610ef793ec5dde1bf19d0eca142f35b9d1fe35-kdlock-writer-queue-mm-mm-baseline-strict-hold.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-strict-hold.host.json": "preservation-inputs/external/da77fecd786bb3f354c2f5221a319c4b00a13008e799f1810a9f1985cfb7ae16-kdlock-writer-queue-mm-mm-baseline-strict-hold.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-baseline-strict-hold.pool.json": "preservation-inputs/external/355c92f637804cbe5d9434cdb522c8f4b53308afff0795db1d91378d4445a882-kdlock-writer-queue-mm-mm-baseline-strict-hold.pool.json",
+        "/tmp/kdlock-writer-queue-policy-20261031.json": "preservation-inputs/external/41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b-kdlock-writer-queue-policy-20261031.json",
+        "/tmp/kdlock-writer-queue-reference-20261031.json": "preservation-inputs/external/249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198-kdlock-writer-queue-reference-20261031.json"
+      },
+      "archive_owner_sha256": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b",
+      "archives": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archives",
+      "archives_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+      "bundle_member": "preservation-inputs/kernel-bundle/manifest.json",
+      "config_member": "preservation-inputs/config.json",
+      "config_sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602",
+      "control": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archive-control",
+      "diagnostic_manifest_member": "preservation-inputs/diagnostic-manifest.json",
+      "eligibility_policy": "mmap-functional-held-writer-v1",
+      "expected_sha256": {
+        "aliases": "53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f",
+        "archive": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+        "archive-owner": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b",
+        "inventory": "08b379e7afd30f8f601a1053079b9d9a3ecde899d0c3f8569368369308aee52e",
+        "preservation-map": "1a1d5d9b283e47b8887b7d504e383f20c5ccc0163b6cfa9c39c68a3ca1f95196"
+      },
+      "harness_manifest_member": "preservation-inputs/harness-manifest.json",
+      "logical_steps": {
+        "api": {
+          "owner": "api/owner.json",
+          "result": "api/run/result.json"
+        },
+        "completed": {
+          "owner": "completed/owner.json",
+          "result": "completed/run/result.json"
+        },
+        "endpoint": {
+          "owner": "endpoint/owner.json",
+          "result": "endpoint/run/result.json"
+        },
+        "faults": {
+          "owner": "faults/owner.json",
+          "result": "faults/run/result.json"
+        },
+        "mapping": {
+          "owner": "mapping/owner.json",
+          "result": "mapping/run/result.json"
+        },
+        "mmap1-identity": {
+          "owner": "mmap1-identity/owner.json",
+          "result": "mmap1-identity/run/result.json"
+        },
+        "mmap1-measure": {
+          "owner": "mmap1-measure/owner.json",
+          "result": "mmap1-measure/run/result.json"
+        },
+        "sites": {
+          "owner": "sites/owner.json",
+          "result": "sites/run/writer-sites.json"
+        },
+        "strict-hold": {
+          "owner": "strict-hold/owner.json",
+          "result": "strict-hold/run/result.json"
+        }
+      },
+      "measurement_policy_member": "mmap1-measure/measurement-policy.json",
+      "measurement_policy_sha256": "919aff9f6ac42c5314fe5ed92bba7b7b3293d9e59d35929b962d7dc4b8cbb043",
+      "owners": {
+        "api": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/api/owner.json",
+          "sha256": "d5894bb296c6d336a5beffd4383c472d6121e28825f45e2cdf3571df20935c5d"
+        },
+        "completed": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/completed/owner.json",
+          "sha256": "79470986337a859f00c20803a1b62d47c6c32934caa70a5571a9846769ab9cb8"
+        },
+        "endpoint": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/endpoint/owner.json",
+          "sha256": "8d7540aaf65c5439b14dc8ca3b615cdc241f6f4e4c0ea4a9e55e9ed366039532"
+        },
+        "faults": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/faults/owner.json",
+          "sha256": "62e4f0eb7fcae771700ab364680e910f82791b1dfab0588494ec69b9eb204fee"
+        },
+        "mapping": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/owner.json",
+          "sha256": "bad0e69a94e2a4e0322417673066edba1eace785adf1ae44cc05050e62e3edfa"
+        },
+        "mmap1-identity": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mmap1-identity/owner.json",
+          "sha256": "ee031e638069cad46519e812fdb9faaf54d8aee2aa99e8f6c80da6a8d1471969"
+        },
+        "mmap1-measure": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mmap1-measure/owner.json",
+          "sha256": "daf48d12910b745fc59a334e18c7d2dceaa8d13718e2caf533da3d7740eb59ac"
+        },
+        "sites": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/sites/owner.json",
+          "sha256": "62a3a6321e103d1e3748ddf66265eb69789e091a05dcba2bc822b8a03c697333"
+        },
+        "strict-hold": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/strict-hold/owner.json",
+          "sha256": "db564ff826c0b8500944ad280f450bcaf377b963d991127a6b29d379071aa6af"
+        }
+      }
+    },
+    "candidate": {
+      "aliases": {
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/00-scope-1.jsonl": "preservation-inputs/external/1e4c2f5e8a219b47e444009a62a53e2dc65c1c4990f60239b6989fceffe64e8e-00-scope-1.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/01-cycle-1.jsonl": "preservation-inputs/external/67f67ce0ebda46152f62a2909daa8ad1fed708e4d40a5ba566a8a6c72ff7893f-01-cycle-1.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/02-cycle-16.jsonl": "preservation-inputs/external/85d5a19dfb652b3c13549de6a4f8995eeb28d88975485d57606e503d7b3fcdea-02-cycle-16.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/03-lifetime-1.jsonl": "preservation-inputs/external/de7f81697b0bd01a34f4a3e7aaa3be0a1fedc11f67feb5361457a930858cb17a-03-lifetime-1.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/04-lifetime-16.jsonl": "preservation-inputs/external/f8cfd77cc138ed5ff005cc5d16aa1b67eb299be635e9f9e4e1bdc66312cc5e6f-04-lifetime-16.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/05-exit-1.jsonl": "preservation-inputs/external/04d2415c6639f122453edf5c102f7c4339486db29bfb3985c28e398d6c904f9c-05-exit-1.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/mapping/run/result.json": "preservation-inputs/external/3cfc1375ce781dd41e725073985f1f29346f0b5ddf6ddfa18da9ca471ca00cc5-result.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/sites/run/writer-sites.json": "preservation-inputs/external/488a6a489caca01bac974a7ce09c0f5faa7cc20c3248e7c73d936ec5d3282491-writer-sites.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/strict-hold/run/mmap.jsonl": "preservation-inputs/external/3749c50c2a813ff2d0d898f9a405c117e1673462202c5779f34c269a8f798259-mmap.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/strict-hold/run/munmap.jsonl": "preservation-inputs/external/4110f5d7a0376cb3169085b2b95898f5d9d6f00d4a6ec6c27a4f3c345b6177a8-munmap.jsonl",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/baseline/strict-hold/run/result.json": "preservation-inputs/external/bc28387235e74aaf25b881e43b4b7e0d159b1b53877d875a04a93df99ce073f8-result.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-api-drain-20261031/result.json": "preservation-inputs/diagnostic-provenance/17-result.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-mm-source-view-20261031/candidate-sites3-unbind/result.json": "preservation-inputs/diagnostic-provenance/18-result.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-baseline-replay-20261031/result.json": "preservation-inputs/diagnostic-provenance/10-result.json",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-sites-checks-20261031/result.json": "preservation-inputs/diagnostic-provenance/11-result.json",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/README.md": "preservation-inputs/diagnostic-source/README.md",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/payload/Makefile": "preservation-inputs/diagnostic-source/payload/Makefile",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/payload/api.h": "preservation-inputs/diagnostic-source/payload/api.h",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/payload/client.c": "preservation-inputs/diagnostic-source/payload/client.c",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/payload/module.c": "preservation-inputs/diagnostic-source/payload/module.c",
+        "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28/run.py": "preservation-inputs/diagnostic-source/run.py",
+        "/mnt/kdlock-builds2/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json": "preservation-inputs/diagnostic-provenance/2-kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+        "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77-20261031.manifest.json": "preservation-inputs/diagnostic-provenance/9-kdlock-writer-sites-9d10ae77-20261031.manifest.json",
+        "/mnt/kdlock-builds2/kdlock-writer-sites-de5e4f06-20261031.manifest.json": "preservation-inputs/harness-manifest.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-base-sha256.json": "preservation-inputs/kernel-bundle/api-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/include/kd_api_control.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_api_control.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/include/kd_config.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_config.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/include/kd_mutex_types.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_mutex_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/include/kd_spin_type.h": "preservation-inputs/kernel-bundle/api-inputs/include/kd_spin_type.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock_types.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_lock_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_provider.h": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/include/linux/kd_api_provider.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Kconfig": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Kconfig",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Makefile": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.S": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.S",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.c": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/overlay/kernel/locking/kd_api/bridge.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-inputs/kernel_integration/real_api/prepare.py": "preservation-inputs/kernel-bundle/api-inputs/kernel_integration/real_api/prepare.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-lock-binding.patch": "preservation-inputs/kernel-bundle/api-lock-binding.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/api-prepare.json": "preservation-inputs/kernel-bundle/api-prepare.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition-inputs/kernel_integration/linux70/compose_scope.py": "preservation-inputs/kernel-bundle/composition-inputs/kernel_integration/linux70/compose_scope.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition-inputs/kernel_integration/linux70/scope-base-sha256.json": "preservation-inputs/kernel-bundle/composition-inputs/kernel_integration/linux70/scope-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition.json": "preservation-inputs/kernel-bundle/composition.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition/api/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/api/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition/base/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/base/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition/mmap/kernel/locking/Makefile": "preservation-inputs/kernel-bundle/composition/mmap/kernel/locking/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition/pristine-api/fs/file.c": "preservation-inputs/kernel-bundle/composition/pristine-api/fs/file.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/composition/pristine-api/fs/pipe.c": "preservation-inputs/kernel-bundle/composition/pristine-api/fs/pipe.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/core-kernel.patch": "preservation-inputs/kernel-bundle/core-kernel.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/guest.config": "preservation-inputs/kernel-bundle/guest.config",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/manifest.json": "preservation-inputs/kernel-bundle/manifest.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-base-sha256.json": "preservation-inputs/kernel-bundle/mmap-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_config.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_config.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_lock.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_mutex.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_mutex.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_mutex_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_mutex_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_regs.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_regs.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_rwsem.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_rwsem.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/include/kd_rwsem_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/include/kd_rwsem_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/linux70/prepare_mmap.py": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/linux70/prepare_mmap.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock_types.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock_types.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/Makefile": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/Makefile",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_integration/mmap_lock/prepare.py": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_integration/mmap_lock/prepare.py",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_module/kd_mutex_local.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_local.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_module/kd_mutex_local.h": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_local.h",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_module/kd_mutex_osq.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_mutex_osq.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-inputs/kernel_module/kd_rwsem.c": "preservation-inputs/kernel-bundle/mmap-inputs/kernel_module/kd_rwsem.c",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-lock.patch": "preservation-inputs/kernel-bundle/mmap-lock.patch",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/mmap-prepare.json": "preservation-inputs/kernel-bundle/mmap-prepare.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/scope-base-sha256.json": "preservation-inputs/kernel-bundle/scope-base-sha256.json",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031/source-acquisition.json": "preservation-inputs/kernel-bundle/source-acquisition.json",
+        "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py": "preservation-inputs/external/5c23db457fc9cfc91ff68c7f392e5c003812cb54a66fe082a0e73a0b459b6120-kdlock-scope-mmap1-identity-runner-r1-20261030.py",
+        "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json": "preservation-inputs/diagnostic-provenance/1-kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+        "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json": "preservation-inputs/diagnostic-manifest.json",
+        "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.json": "preservation-inputs/diagnostic-provenance/record.json",
+        "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.py": "preservation-inputs/external/a30f16ccb4036ff5acc186c029359456bcbcbedce8c89a7820cf931bf8cc4bfb-kdlock-writer-queue-diagnostic-provenance-r2-20261031.py",
+        "/tmp/kdlock-writer-queue-mapping-functional-20261031.py": "preservation-inputs/diagnostic-provenance/3-kdlock-writer-queue-mapping-functional-20261031.py",
+        "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py": "preservation-inputs/diagnostic-provenance/7-kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+        "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json": "preservation-inputs/config.json",
+        "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json": "preservation-inputs/diagnostic-provenance/0-kdlock-writer-queue-mm-20261031.config-r2.json",
+        "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json": "preservation-inputs/diagnostic-provenance/8-kdlock-writer-queue-mm-20261031.config-sites3.json",
+        "/tmp/kdlock-writer-queue-mm-20261031.py": "preservation-inputs/external/36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d-kdlock-writer-queue-mm-20261031.py",
+        "/tmp/kdlock-writer-queue-mm-candidate-endpoint.bindings.json": "preservation-inputs/external/239e72715af48bac3deb3d1a0b5bea74da7ec93fd728ba4aaada296e28f123ec-kdlock-writer-queue-mm-candidate-endpoint.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-candidate-endpoint.bindings.json.watcher.json": "preservation-inputs/external/ba87dfc9a96a80ba735b01b891123ff005c57397cf0c1355056cf52688f6fd3e-kdlock-writer-queue-mm-candidate-endpoint.bindings.json.watcher.json",
+        "/tmp/kdlock-writer-queue-mm-candidate-endpoint.host.json": "preservation-inputs/external/744f52687623bbdf468cbcc11825d368e4deaf49126bda1a9593744fae2cc957-kdlock-writer-queue-mm-candidate-endpoint.host.json",
+        "/tmp/kdlock-writer-queue-mm-candidate-endpoint.pool.json": "preservation-inputs/external/e70de2107d10fc840ea7c35831103ad9b58e0d943cb232678812bf4282a7c98a-kdlock-writer-queue-mm-candidate-endpoint.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-api-queue-proof.bindings.json": "preservation-inputs/external/907ed15b42876943324019681ae2586df854bce7fcf1cf89a421d84bbc0ba9ff-kdlock-writer-queue-mm-mm-candidate-api-queue-proof.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-api-queue-proof.host.json": "preservation-inputs/external/17624674dc1695cba7cfc52b3861160c60dfa99d236064e8ac2b3348b84fdf15-kdlock-writer-queue-mm-mm-candidate-api-queue-proof.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-api-queue-proof.pool.json": "preservation-inputs/external/ed99e85ad89195120f673609396c509c5bdfba550835c365a1f966e1352fd364-kdlock-writer-queue-mm-mm-candidate-api-queue-proof.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-completed.bindings.json": "preservation-inputs/external/be61fca96e262f24ffdc02587ed2f6d75eb9a535fb7927afde4af74a2aaaf8be-kdlock-writer-queue-mm-mm-candidate-completed.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-completed.host.json": "preservation-inputs/external/fa45de3b888d8cbb724ba7b654448f64d2d4ea5b31e1dc4f06e6a4010c2b611f-kdlock-writer-queue-mm-mm-candidate-completed.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-completed.pool.json": "preservation-inputs/external/93bd0ecc24fb3e3d73d198a9662b9bac25fd03f577e6d4279bb5d70a82787807-kdlock-writer-queue-mm-mm-candidate-completed.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-faults.bindings.json": "preservation-inputs/external/33beae4913b112e7f7d4daee6477407c0653bf766c4b0a9b385cc85d1b4fd957-kdlock-writer-queue-mm-mm-candidate-faults.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-faults.host.json": "preservation-inputs/external/f3d37cd0b148fa1c86ca2157f74f792f716d21d43b2ab0cfc2f7703f4d9adf4f-kdlock-writer-queue-mm-mm-candidate-faults.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-faults.pool.json": "preservation-inputs/external/c4fd2be562d3902776650562da62d9ece2022eb9a19495c426214c0441064c16-kdlock-writer-queue-mm-mm-candidate-faults.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mapping.bindings.json": "preservation-inputs/external/3423f8258414fd766f6d2da1dac1966fbe60af91aed99b0f22376905ba6c7a39-kdlock-writer-queue-mm-mm-candidate-mapping.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mapping.host.json": "preservation-inputs/external/f9d11c3e28cbd89cc3d2bf39b7dad1f547e106f2f996ad0ba2f47ccd001734e4-kdlock-writer-queue-mm-mm-candidate-mapping.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mapping.pool.json": "preservation-inputs/external/98368775021c9ec445a5bcc9c8becd707933dc008f4ef57c29598344b03a568c-kdlock-writer-queue-mm-mm-candidate-mapping.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-identity.bindings.json": "preservation-inputs/external/3e6c4016ec5804461983c2c22901f492d2b09f368c1260d4fd951a91c70c11a2-kdlock-writer-queue-mm-mm-candidate-mmap1-identity.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-identity.host.json": "preservation-inputs/external/5a1875e2aaab9363a2eb820d0d6a207d6fdfdd4789ac690f2280f36aa410fa06-kdlock-writer-queue-mm-mm-candidate-mmap1-identity.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-identity.pool.json": "preservation-inputs/external/aa2a12fc40bbfaa413ebc717cdec2863f641d86943282b3ee004511368216bf7-kdlock-writer-queue-mm-mm-candidate-mmap1-identity.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-measure.bindings.json": "preservation-inputs/external/7c784843ee3f06d77c641aacc637b151e0786cea1485bc635f280e82058fdd66-kdlock-writer-queue-mm-mm-candidate-mmap1-measure.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-measure.host.json": "preservation-inputs/external/335bd58c33434b71fd21b457fac17f9120c6373aa548d49c96602ca5003cc7c7-kdlock-writer-queue-mm-mm-candidate-mmap1-measure.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-mmap1-measure.pool.json": "preservation-inputs/external/e7ac0fe0981c9ea98671d42f39885f9345f5703551910110c9f11d9060caa9d6-kdlock-writer-queue-mm-mm-candidate-mmap1-measure.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.bindings.json": "preservation-inputs/external/331c6804b22f33c37450378ff6db6c991a2db705482d8c3d5199bb31df898c62-kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.host.json": "preservation-inputs/external/a6ec7d0fc50c1c77371df5d4fadef300eabd28ef648a1d801537458cb477002c-kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.pool.json": "preservation-inputs/external/5af41d2e9a0654244c6c4d281820b268e5589699856230a370e5c9de1df38d28-kdlock-writer-queue-mm-mm-candidate-sites-queue-proof.pool.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-strict-hold.bindings.json": "preservation-inputs/external/1f64558b7049ba39e5e2ec27c5886c6723d1c2f9b8a4e6343efa70fffd52112c-kdlock-writer-queue-mm-mm-candidate-strict-hold.bindings.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-strict-hold.host.json": "preservation-inputs/external/26f4df03909b8bf67b8366cd7ccf6513db0e1cd9e3cbab3ec5ab9f4a3e447fe5-kdlock-writer-queue-mm-mm-candidate-strict-hold.host.json",
+        "/tmp/kdlock-writer-queue-mm-mm-candidate-strict-hold.pool.json": "preservation-inputs/external/1b0de38f13992fda1578bac9f9851b9592d4ab742393b1a7e33bd7d101a3162a-kdlock-writer-queue-mm-mm-candidate-strict-hold.pool.json",
+        "/tmp/kdlock-writer-queue-policy-20261031.json": "preservation-inputs/external/41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b-kdlock-writer-queue-policy-20261031.json",
+        "/tmp/kdlock-writer-queue-reference-20261031.json": "preservation-inputs/external/249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198-kdlock-writer-queue-reference-20261031.json",
+        "/tmp/kdlock-writer-queue-sites-failure-idle-20261031.json": "preservation-inputs/diagnostic-provenance/12-kdlock-writer-queue-sites-failure-idle-20261031.json"
+      },
+      "archive_owner_sha256": "8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83",
+      "archives": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives",
+      "archives_sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+      "bundle_member": "preservation-inputs/kernel-bundle/manifest.json",
+      "config_member": "preservation-inputs/config.json",
+      "config_sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584",
+      "control": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control",
+      "diagnostic_manifest_member": "preservation-inputs/diagnostic-manifest.json",
+      "diagnostic_provenance_member": "preservation-inputs/diagnostic-provenance/record.json",
+      "diagnostic_provenance_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+      "eligibility_policy": "mmap-functional-held-writer-v1",
+      "expected_sha256": {
+        "aliases": "a246db49c7d1d2175551bc239f0e24182a6a5c7a8ac90d4f0243daf8ff1e4e72",
+        "archive": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+        "archive-owner": "8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83",
+        "inventory": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b",
+        "preservation-map": "a81acb7edacae9abe6905a76174aeb10e13bab3615d063a38e02f6492911996e"
+      },
+      "harness_manifest_member": "preservation-inputs/harness-manifest.json",
+      "logical_steps": {
+        "api": {
+          "owner": "api-queue-proof/owner.json",
+          "result": "api-queue-proof/run/result.json"
+        },
+        "completed": {
+          "owner": "completed/owner.json",
+          "result": "completed/run/result.json"
+        },
+        "endpoint": {
+          "owner": "endpoint/owner.json",
+          "result": "endpoint/run/result.json"
+        },
+        "faults": {
+          "owner": "faults/owner.json",
+          "result": "faults/run/result.json"
+        },
+        "mapping": {
+          "owner": "mapping/owner.json",
+          "result": "mapping/run/result.json"
+        },
+        "mmap1-identity": {
+          "owner": "mmap1-identity/owner.json",
+          "result": "mmap1-identity/run/result.json"
+        },
+        "mmap1-measure": {
+          "owner": "mmap1-measure/owner.json",
+          "result": "mmap1-measure/run/result.json"
+        },
+        "sites": {
+          "owner": "sites-queue-proof/owner.json",
+          "result": "sites-queue-proof/run/writer-sites.json"
+        },
+        "strict-hold": {
+          "owner": "strict-hold/owner.json",
+          "result": "strict-hold/run/result.json"
+        }
+      },
+      "measurement_policy_member": "mmap1-measure/measurement-policy.json",
+      "measurement_policy_sha256": "9c783084c45c9ca46759c32fd64be5c3ad581245aed60ff151b29916f961a124",
+      "owners": {
+        "api": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/api-queue-proof/owner.json",
+          "sha256": "ceeb04d023deddf067ca98b120403b5924f184fcb0cd7ba8dbe11e56fd149453"
+        },
+        "completed": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/completed/owner.json",
+          "sha256": "ef56e6961f6438d814ede127ec3882940ec0ae58498ccd40f42305088e1f1ec2"
+        },
+        "endpoint": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/endpoint/owner.json",
+          "sha256": "12f34aa2e071c2f39887f49c8695d423d459900c2b32edcd9119f5e2cf040230"
+        },
+        "faults": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/faults/owner.json",
+          "sha256": "ab9596fb031fe0594aadd895d5d756a2e67e08700c6ec752d814d6b3a8a71cc5"
+        },
+        "mapping": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mapping/owner.json",
+          "sha256": "9d67c8a95a868a1a5ed106bd6934c1866b0889b71001a4727cb899f6860b4a66"
+        },
+        "mmap1-identity": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mmap1-identity/owner.json",
+          "sha256": "8afe6535e36c3c8217d90a685a709d1e1d3774368252f9caa1fdf8b815d4cbda"
+        },
+        "mmap1-measure": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/mmap1-measure/owner.json",
+          "sha256": "d2498b0cbd791f1cf85324fe62edc49d4674acfa04cc53bc5b665135869b8143"
+        },
+        "sites": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/sites-queue-proof/owner.json",
+          "sha256": "90fae36af37a722f72a39dca17c815964f42acd9fe840290e19c32737e69a0ea"
+        },
+        "strict-hold": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031/candidate/strict-hold/owner.json",
+          "sha256": "d00d6d85c056e62e01e86b661c9bf68d3c52b0c1e1cee04be294554091a47949"
+        }
+      }
+    }
+  },
+  "diagnostic_provenance_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+  "performance_accepted": false,
+  "preparation": {
+    "archive": "original-native-a",
+    "inputs_member": "mmap1-prepare/inputs.json",
+    "result_member": "mmap1-prepare/result.json"
+  },
+  "schema": 1,
+  "support": {
+    "original-native-a": {
+      "aliases": {},
+      "archives": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/kdscope1-mm-f7a84065-20261030/native-a/native-a-archives",
+      "archives_sha256": "bac8be952ab2d7722480a40affbed34a347e3260f107da3697a686615b260028"
+    }
+  }
+}

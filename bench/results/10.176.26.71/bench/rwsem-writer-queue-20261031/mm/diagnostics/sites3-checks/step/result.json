@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "passed": true,
+  "completed": true,
+  "drained": true,
+  "final_idle": true,
+  "drain_unknown": false,
+  "state": "COMPLETE",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "source_commit": "9d10ae77290873df23804293f364862a2b55f385",
+  "manifest_sha256": "2169e01b6edf22edbb446634268617fe4889b47c12f6e7d91c36458c001ad02c",
+  "controller_sha256": "bca44095e3a7f1cc04db9dc2b396f9c374243caec47edce7221b5b044d324b8c",
+  "checks": [
+    {
+      "name": "test_mmap_writer_return_sites.py",
+      "script_sha256": "75b04f047f281df1af8011a3da93a3c6a5b1cc651703f6375bfb70467d4941f3",
+      "started": 1793459153.2243233,
+      "pid": 6323,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793459153.353686,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "533131dad8973c589ae697ab1dd346cc55caa134cd1e536cedf26f1b057c0f1f",
+      "passed": true
+    },
+    {
+      "name": "test_mmap_writer_observation.py",
+      "script_sha256": "227b4710fcdb3981dd21ae49a01269e541ff083ddd6e782d9e3fc877a1c0ed37",
+      "started": 1793459153.3544378,
+      "pid": 6324,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793459154.2354295,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5a2939d069509468a5cc90b66e5901139f5debc371789b32fca400acf6bb59ba",
+      "passed": true
+    }
+  ],
+  "started": 1793459153.2241015,
+  "finished": 1793459154.8237894
+}

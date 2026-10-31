@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "baseline_commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+  "candidate_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "runtime_commit": "7fa989c124810222042f9560d0e83a7dea197d2f",
+  "kernel_recipe_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "nano": {
+    "completed_points": 420,
+    "matched_coordinates": 210,
+    "strict_qualified": true,
+    "whole_losses": 95,
+    "peak_losses": 95,
+    "either_losses": 101,
+    "rounds_per_point": 1,
+    "gate_passed": false
+  },
+  "mm": {
+    "started": true,
+    "baseline_points": 42,
+    "baseline_archive_fetched": true,
+    "baseline_boot_id": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+    "baseline_bundle_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+    "candidate_comparison": "COMPLETE",
+    "paired_analysis": "PASSED",
+    "candidate_boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+    "candidate_correctness": "PASSED_WITH_EXPLICIT_DIAGNOSTIC_REVISIONS",
+    "baseline_timing_repeated": false,
+    "diagnostic_provenance_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+    "diagnostic_generations": {
+      "baseline": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+      "return_sites": "9d10ae77290873df23804293f364862a2b55f385",
+      "api_queue": "de5e4f06a6d60e531a8b329d3c7f2c5335d5e707",
+      "strict": "31d3bc28d55abcab3f8af379a0e57c6e80d7d399"
+    },
+    "api_checks": 218,
+    "api_errors": 0,
+    "candidate_points": 42,
+    "candidate_archive_fetched": true,
+    "paired_points": 84,
+    "matched_coordinates": 42,
+    "strict_host_qualified": true,
+    "threads": {
+      "gains": 20,
+      "losses": 1,
+      "geometric_mean_ratio": 5.591584668570964
+    },
+    "processes": {
+      "gains": 15,
+      "losses": 6,
+      "geometric_mean_ratio": 0.9967261222585571
+    },
+    "gate_passed": false,
+    "cpu_accounting": {
+      "validated": true,
+      "points": 84,
+      "scope": "whole upstream lifetime including warmup and reaped workers"
+    }
+  },
+  "performance_accepted": false,
+  "promoted": false,
+  "kernel_preparation": {
+    "initial_passed": false,
+    "retained_initial_result_sha256": "038bbc28ff913501b55e9b5304d33b27d3d34a50bcbdb5787b8ed17ae0041f19",
+    "reused_completed_blocks": 8,
+    "continued_passed": true,
+    "continued_commands": 5,
+    "continued_result_sha256": "e7cf59cbf46df7a7f5805d11540e6bad21be82fea9562db1aa6f4eca6b77aef6",
+    "full_build": "PASSED",
+    "installed": true,
+    "full_build_result_sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e",
+    "full_build_drained": true,
+    "installation_result_sha256": "080d0d84a548c26a7e4541323a376f52212cd9af37f2087b1ca0aed2b23a8fd9"
+  },
+  "boots": {
+    "scope3_native": {
+      "boot_id": "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+      "verified": true,
+      "build_id": "0bdd45b1d7df96a0aaa1db9cd6f049ff08f75ebd"
+    },
+    "baseline_scope1_kd": {
+      "boot_id": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "verified": true,
+      "build_id": "a17d565ee157601e030d1b3c77c13e63fa62c994"
+    },
+    "candidate_scope3_kd": {
+      "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "verified": true,
+      "build_id": "0bdd45b1d7df96a0aaa1db9cd6f049ff08f75ebd"
+    }
+  },
+  "restoration": {
+    "completed": true,
+    "source_unbound": true,
+    "normal_boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+    "normal_release": "7.0.0-38-kdlock1",
+    "normal_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "final_idle": true,
+    "reboot_transport_failure_retained": true,
+    "pool_properties": {
+      "thread_pool_min": 0,
+      "thread_pool_max": 64,
+      "aio_max_batch": 0
+    },
+    "original_task_map_restored": false,
+    "source_sync_or_promotion": false,
+    "qom_object_remains": true
+  }
+}

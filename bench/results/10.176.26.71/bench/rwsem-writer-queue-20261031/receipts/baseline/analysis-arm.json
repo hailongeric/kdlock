@@ -1,0 +1,9 @@
+{
+  "archives": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-archives",
+  "archives_sha256": "9f9bb5ea99c75567213da5626d8483b9f283b8feb97ad5d2b0018422ca50dd14",
+  "control": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control",
+  "owner_sha256": "7498adc2d4ba6d404b89fa9074dc5f1649872ee3a8f36666c288fc12b4ea07dd",
+  "archive_owner_sha256": "2a52c98463eb1b4492610ace420353188e98e76e09e2427c8727a63abf3febf0",
+  "basic": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-f7-basic-20261031",
+  "cohort_sha256": "58c4050871f2d483a01ae1c423326c45ad2d03704a9c0b8a9ce4ba4b58751a0a"
+}

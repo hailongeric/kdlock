@@ -1,0 +1,67 @@
+{
+  "activation_receipt_sha256": "41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b",
+  "calls": [
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "eric@10.176.26.71",
+        "sudo -n taskset -c 63 python3 -c 'import hashlib,json,os,pathlib,sys\nx=json.loads(sys.argv[1]);p=pathlib.Path(x['\"'\"'script'\"'\"'])\nassert hashlib.sha256(p.read_bytes()).hexdigest()==x['\"'\"'sha256'\"'\"']\nos.execv('\"'\"'/usr/bin/python3'\"'\"',['\"'\"'python3'\"'\"',str(p),*x['\"'\"'args'\"'\"']])\n' '{\"script\": \"/tmp/kdlock-writer-queue-pool-20261031.py\", \"sha256\": \"6f1f718b6ba72b9b4899b3437e6211d8dd891f4041acd7aca36906c12953b8b4\", \"args\": [\"verify\", \"--capture-helper\", \"/tmp/kdlock-qemu-stable-pool-capture-host-20261030.py\", \"--inventory\", \"/tmp/kdlock-qemu-readonly-inventory-20261030.json\", \"--snapshot\", \"kdlock-builddisk-clean-20261031\", \"--cohort\", \"writer-queue-20261031\", \"--policy\", \"/tmp/kdlock-writer-queue-pool-activate-20261031/result.json\", \"--policy-sha256\", \"41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b\", \"--output\", \"/tmp/kdlock-writer-queue-nano-1b6f256b-endpoint-20261031\"]}'"
+      ],
+      "finished": 1793453985.0218098,
+      "name": "verify",
+      "pid": 3355585,
+      "returncode": 0,
+      "started": 1793453983.091939,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b5f5658e9fd35851c51093dec7c4956d4966307863691c02f5973d278616117d"
+    },
+    {
+      "argv": [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "eric@10.176.26.71",
+        "sudo -n python3 -c 'import base64,json,pathlib,sys\np=pathlib.Path(sys.argv[1]);r=p/'\"'\"'result.json'\"'\"';v=json.loads(r.read_bytes())\nassert v['\"'\"'action'\"'\"']=='\"'\"'verify'\"'\"' and v['\"'\"'completed'\"'\"'] is True\nh=p/'\"'\"'after.host.json'\"'\"';assert v['\"'\"'captures'\"'\"']['\"'\"'after'\"'\"']['\"'\"'path'\"'\"']==str(h)\nprint(json.dumps({'\"'\"'policy'\"'\"':base64.b64encode(r.read_bytes()).decode(),'\"'\"'host'\"'\"':base64.b64encode(h.read_bytes()).decode()}))\n' /tmp/kdlock-writer-queue-nano-1b6f256b-endpoint-20261031"
+      ],
+      "finished": 1793453985.2984216,
+      "name": "read",
+      "pid": 3355586,
+      "returncode": 0,
+      "started": 1793453985.022905,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e6b633e15219968f12ed73c983bc66b2af99b96e48e1c613c6166e9839189ce0"
+    }
+  ],
+  "cohort": "writer-queue-20261031",
+  "cohort_sha256": "58c4050871f2d483a01ae1c423326c45ad2d03704a9c0b8a9ce4ba4b58751a0a",
+  "completed": true,
+  "completion_marker": "COMPLETE writer-queue-nano 1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "endpoint_policy": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-endpoint-policy.json",
+  "endpoint_policy_sha256": "217777ab3acf1b033921bcbc25cce6a94a01dc4ecb3e3e9e78d67911dfa4b03d",
+  "finished": 1793453985.3201003,
+  "guest_work_started": false,
+  "host_output": "/tmp/kdlock-writer-queue-nano-1b6f256b-endpoint-20261031",
+  "output": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-endpoint.json",
+  "output_sha256": "98d9cc41180e621b7d6d4ccb422a0746947825c14f419577691537803b4cd031",
+  "performance_accepted": false,
+  "policy_controller_sha256": "6f1f718b6ba72b9b4899b3437e6211d8dd891f4041acd7aca36906c12953b8b4",
+  "returncode": 0,
+  "run_log": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-run/stdout",
+  "run_log_sha256": "9d0be1c63b7f9e72f7531d4df210ecdfe3788994e7dbdca23c7f4c02900c59b9",
+  "schema": 1,
+  "script_sha256": "1857baca9f699907c9eb418e8cb347d601095be95d688e1b9d604aa3fc8a2731",
+  "snapshot_tag": "kdlock-builddisk-clean-20261031",
+  "source_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "started": 1793450619.5481424,
+  "state": "COMPLETE"
+}

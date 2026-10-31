@@ -1,0 +1,184 @@
+{
+  "completed": true,
+  "started": 1793460745.802146,
+  "arm": "candidate",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "kernel": {
+    "variant": "kdscope3-kd",
+    "release": "7.0.0-38-kdscope3",
+    "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031",
+    "kernel_project_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+    "provider_comparison_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463"
+  },
+  "harness_commit": "de5e4f06a6d60e531a8b329d3c7f2c5335d5e707",
+  "config_sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584",
+  "expected_sha256": {
+    "archive-owner": "8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83",
+    "archive": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+    "inventory": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b",
+    "aliases": "a246db49c7d1d2175551bc239f0e24182a6a5c7a8ac90d4f0243daf8ff1e4e72",
+    "preservation-map": "a81acb7edacae9abe6905a76174aeb10e13bab3615d063a38e02f6492911996e"
+  },
+  "diagnostic_provenance_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+  "remote_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031",
+  "roots": [
+    "candidate-archive-control",
+    "candidate-archives"
+  ],
+  "destination": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031",
+  "script_sha256": "37401608c912621e602ced5d01020ce8b645229a874cd2089e2509821711ba81",
+  "mount_namespace": "mnt:[4026531841]",
+  "destination_device": 28,
+  "performance_accepted": false,
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "offline_analysis_pending": true,
+  "scope": "Read-only transport and host archive-byte verification; no score validation or guest drain inference",
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "eric@10.176.26.71",
+    "/home/eric/vm/qemu-scripts/vm_ssh.sh 'python3 -c '\"'\"'import hashlib,json,pathlib,subprocess,sys\nbase=pathlib.Path(sys.argv[1]);name=sys.argv[2];expected=json.loads(sys.argv[3])\nboot,harness,archiver,config_sha=sys.argv[4:8];kernel=json.loads(sys.argv[8]);steps=json.loads(sys.argv[9]);policy=sys.argv[10];provenance_sha=sys.argv[11];provenance_helper_sha=sys.argv[12]\ncontrol=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"');archives=base/(name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"')\npaths={'\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'owner.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'archives.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"':archives/'\"'\"'\"'\"'\"'\"'\"'\"'input-inventory.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'alias-map.json'\"'\"'\"'\"'\"'\"'\"'\"',\n       '\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"':control/'\"'\"'\"'\"'\"'\"'\"'\"'preservation-map.json'\"'\"'\"'\"'\"'\"'\"'\"'}\ndef need(v,m):\n if not v:raise RuntimeError(m)\ndef sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()\nneed(all(p.is_file() and not p.is_symlink() and sha(p)==expected[n] for n,p in paths.items()),'\"'\"'\"'\"'\"'\"'\"'\"'actual receipt hashes differ'\"'\"'\"'\"'\"'\"'\"'\"')\no,a,aliases,preservation=[json.loads(paths[n].read_bytes())for n in ('\"'\"'\"'\"'\"'\"'\"'\"'archive-owner'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"')]\nneed(o.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'state'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'COMPLETE'\"'\"'\"'\"'\"'\"'\"'\"' and o.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and o.get('\"'\"'\"'\"'\"'\"'\"'\"'idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'drain_unknown'\"'\"'\"'\"'\"'\"'\"'\"')is False and o.get('\"'\"'\"'\"'\"'\"'\"'\"'child_returncode'\"'\"'\"'\"'\"'\"'\"'\"')==0 and o.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and o.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and o.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel'\"'\"'\"'\"'\"'\"'\"'\"')==kernel and o.get('\"'\"'\"'\"'\"'\"'\"'\"'script_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==archiver and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and o.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')==policy and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_provenance_helper_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==provenance_helper_sha and\n     o.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False and set(o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'])==set(steps),'\"'\"'\"'\"'\"'\"'\"'\"'archive owner incomplete or generation differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(o['\"'\"'\"'\"'\"'\"'\"'\"'archives_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'archive'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     o['\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and o['\"'\"'\"'\"'\"'\"'\"'\"'preservation_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'preservation-map'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive receipt chain differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(a.get('\"'\"'\"'\"'\"'\"'\"'\"'completed'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_idle'\"'\"'\"'\"'\"'\"'\"'\"')is True and a.get('\"'\"'\"'\"'\"'\"'\"'\"'guest_base'\"'\"'\"'\"'\"'\"'\"'\"')==str(base/name) and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'archive_prefix'\"'\"'\"'\"'\"'\"'\"'\"')==name and a.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_variant'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'variant'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a.get('\"'\"'\"'\"'\"'\"'\"'\"'kernel_release'\"'\"'\"'\"'\"'\"'\"'\"')==kernel['\"'\"'\"'\"'\"'\"'\"'\"'release'\"'\"'\"'\"'\"'\"'\"'\"'] and a['\"'\"'\"'\"'\"'\"'\"'\"'input_inventory_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==expected['\"'\"'\"'\"'\"'\"'\"'\"'inventory'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     a['\"'\"'\"'\"'\"'\"'\"'\"'health_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==o['\"'\"'\"'\"'\"'\"'\"'\"'final_health_sha256'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'archive index identity differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'owners'\"'\"'\"'\"'\"'\"'\"'\"')==o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'] and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'bundle_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/kernel-bundle/manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'config_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/config.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_manifest_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/harness-manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_manifest_member'\"'\"'\"'\"'\"'\"'\"'\"')=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/diagnostic-manifest.json'\"'\"'\"'\"'\"'\"'\"'\"' and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'eligibility_policy'\"'\"'\"'\"'\"'\"'\"'\"')==policy and\n     aliases.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False and set(aliases['\"'\"'\"'\"'\"'\"'\"'\"'logical_steps'\"'\"'\"'\"'\"'\"'\"'\"'])==set(steps),'\"'\"'\"'\"'\"'\"'\"'\"'alias map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nneed(preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'harness_commit'\"'\"'\"'\"'\"'\"'\"'\"')==harness and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'config_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==config_sha and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'alias_map_sha256'\"'\"'\"'\"'\"'\"'\"'\"')==expected['\"'\"'\"'\"'\"'\"'\"'\"'aliases'\"'\"'\"'\"'\"'\"'\"'\"'] and preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'original_paths_retained'\"'\"'\"'\"'\"'\"'\"'\"')is True and\n     preservation.get('\"'\"'\"'\"'\"'\"'\"'\"'performance_accepted'\"'\"'\"'\"'\"'\"'\"'\"')is False,'\"'\"'\"'\"'\"'\"'\"'\"'preservation map differs'\"'\"'\"'\"'\"'\"'\"'\"')\nmore={control/'\"'\"'\"'\"'\"'\"'\"'\"'controller.py'\"'\"'\"'\"'\"'\"'\"'\"':archiver,control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"':o['\"'\"'\"'\"'\"'\"'\"'\"'bindings_sha256'\"'\"'\"'\"'\"'\"'\"'\"'],control/'\"'\"'\"'\"'\"'\"'\"'\"'config.json'\"'\"'\"'\"'\"'\"'\"'\"':config_sha}\nneed(all(sha(p)==h for p,h in more.items()),'\"'\"'\"'\"'\"'\"'\"'\"'archive control input differs'\"'\"'\"'\"'\"'\"'\"'\"')\nbindings=json.loads((control/'\"'\"'\"'\"'\"'\"'\"'\"'bindings.json'\"'\"'\"'\"'\"'\"'\"'\"').read_bytes())\nneed(bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'schema'\"'\"'\"'\"'\"'\"'\"'\"')==1 and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'arm'\"'\"'\"'\"'\"'\"'\"'\"')==name and bindings.get('\"'\"'\"'\"'\"'\"'\"'\"'boot_id'\"'\"'\"'\"'\"'\"'\"'\"')==boot and\n     bindings['\"'\"'\"'\"'\"'\"'\"'\"'config'\"'\"'\"'\"'\"'\"'\"'\"']['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']==config_sha and bindings['\"'\"'\"'\"'\"'\"'\"'\"'owners'\"'\"'\"'\"'\"'\"'\"'\"']==o['\"'\"'\"'\"'\"'\"'\"'\"'step_owners'\"'\"'\"'\"'\"'\"'\"'\"'],'\"'\"'\"'\"'\"'\"'\"'\"'actual archive bindings differ'\"'\"'\"'\"'\"'\"'\"'\"')\nprovenance=pathlib.Path(o['\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_provenance'\"'\"'\"'\"'\"'\"'\"'\"']['\"'\"'\"'\"'\"'\"'\"'\"'path'\"'\"'\"'\"'\"'\"'\"'\"'])\nneed(o['\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_provenance'\"'\"'\"'\"'\"'\"'\"'\"']['\"'\"'\"'\"'\"'\"'\"'\"'sha256'\"'\"'\"'\"'\"'\"'\"'\"']==provenance_sha and sha(provenance)==provenance_sha and aliases['\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_provenance_sha256'\"'\"'\"'\"'\"'\"'\"'\"']==provenance_sha and aliases['\"'\"'\"'\"'\"'\"'\"'\"'diagnostic_provenance_member'\"'\"'\"'\"'\"'\"'\"'\"']=='\"'\"'\"'\"'\"'\"'\"'\"'preservation-inputs/diagnostic-provenance/record.json'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'actual diagnostic provenance differs'\"'\"'\"'\"'\"'\"'\"'\"')\nbound={**{p:expected[n]for n,p in paths.items()},**more,provenance:provenance_sha}\ncode=subprocess.call(['\"'\"'\"'\"'\"'\"'\"'\"'tar'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'--hard-dereference'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-C'\"'\"'\"'\"'\"'\"'\"'\"',str(base),'\"'\"'\"'\"'\"'\"'\"'\"'-cf'\"'\"'\"'\"'\"'\"'\"'\"','\"'\"'\"'\"'\"'\"'\"'\"'-'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archives'\"'\"'\"'\"'\"'\"'\"'\"',name+'\"'\"'\"'\"'\"'\"'\"'\"'-archive-control'\"'\"'\"'\"'\"'\"'\"'\"'])\nneed(code==0 and all(sha(p)==h for p,h in bound.items()),'\"'\"'\"'\"'\"'\"'\"'\"'transport or final receipt check failed'\"'\"'\"'\"'\"'\"'\"'\"')\n'\"'\"' /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/writer-queue-mm-20261031 candidate '\"'\"'{\"archive-owner\": \"8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83\", \"archive\": \"1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a\", \"inventory\": \"2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b\", \"aliases\": \"a246db49c7d1d2175551bc239f0e24182a6a5c7a8ac90d4f0243daf8ff1e4e72\", \"preservation-map\": \"a81acb7edacae9abe6905a76174aeb10e13bab3615d063a38e02f6492911996e\"}'\"'\"' aeec1214-6ea3-401f-9b68-d850e21f26ba de5e4f06a6d60e531a8b329d3c7f2c5335d5e707 fd52c123f07d1c9de1996dd2fc8540b8cb8794e2cfe9b22937b6af1a444bd7b0 fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584 '\"'\"'{\"variant\": \"kdscope3-kd\", \"release\": \"7.0.0-38-kdscope3\", \"build\": \"/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build\", \"bundle\": \"/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031\", \"kernel_project_commit\": \"7814c61a0be20f5db3b9fb41b6079ef6d2938b5f\", \"provider_comparison_commit\": \"1b6f256b13e8743aa1fd7bdc958cc82ae7726463\"}'\"'\"' '\"'\"'[\"sites\", \"api\", \"mapping\", \"faults\", \"completed\", \"strict-hold\", \"mmap1-identity\", \"mmap1-measure\", \"endpoint\"]'\"'\"' mmap-functional-held-writer-v1 2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364 a30f16ccb4036ff5acc186c029359456bcbcbedce8c89a7820cf931bf8cc4bfb'"
+  ],
+  "pid": 3377604,
+  "returncode": 0,
+  "transport_sha256": "f7ad76d30b71d7c76c8905e3b91f283b1f3d4d4fe4806f665b7209d7d54dc009",
+  "transport_bytes": 18534400,
+  "files": {
+    "candidate-archives/inputs.tar.gz": {
+      "sha256": "444aed8d5180c50a87e5fdf240e190325cc03dfa866cdf26c8631f4e7318247c",
+      "bytes": 1827788,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460700
+    },
+    "candidate-archives/archive_run.py": {
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+      "bytes": 11669,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460697
+    },
+    "candidate-archives/input-inventory.json": {
+      "sha256": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b",
+      "bytes": 1011850,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460697
+    },
+    "candidate-archives/archives.json": {
+      "sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a",
+      "bytes": 3814,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460700
+    },
+    "candidate-archives/checks.tar.gz": {
+      "sha256": "d4610356cb798549b07ed58f1484dc7cda260d7c5f13b31208db206511919b16",
+      "bytes": 10749125,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460699
+    },
+    "candidate-archives/mmap1.tar.gz": {
+      "sha256": "e08b9a9882736c92ed8f32aa99b40e426f8e866affef5ff284571572aafdec4e",
+      "bytes": 1088418,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460699
+    },
+    "candidate-archives/metadata.tar.gz": {
+      "sha256": "c59729508c592c840910fbf1899dfd61aa96134119cfcf93a43d9cb3aeab68d3",
+      "bytes": 1346,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460700
+    },
+    "candidate-archives/attempts.tar.gz": {
+      "sha256": "89501688115a69841c041bf5c604f60101b02fc24aaf0eff215a33607da2cbe9",
+      "bytes": 3683745,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460700
+    },
+    "candidate-archive-control/controller.py": {
+      "sha256": "fd52c123f07d1c9de1996dd2fc8540b8cb8794e2cfe9b22937b6af1a444bd7b0",
+      "bytes": 21445,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460695
+    },
+    "candidate-archive-control/alias-map.json": {
+      "sha256": "a246db49c7d1d2175551bc239f0e24182a6a5c7a8ac90d4f0243daf8ff1e4e72",
+      "bytes": 26874,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460695
+    },
+    "candidate-archive-control/archive.log": {
+      "sha256": "7de45048d432b74d6de94323720c995a687846ba0e964b179ba9bb92dc3202ac",
+      "bytes": 1886,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460700
+    },
+    "candidate-archive-control/config.json": {
+      "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584",
+      "bytes": 3722,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460695
+    },
+    "candidate-archive-control/preservation-map.json": {
+      "sha256": "a81acb7edacae9abe6905a76174aeb10e13bab3615d063a38e02f6492911996e",
+      "bytes": 79442,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460695
+    },
+    "candidate-archive-control/bindings.json": {
+      "sha256": "6191a112eee6afe73968a22ffedb6198385b657b2cda66397e02fe1ec1e9ce7b",
+      "bytes": 2745,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460695
+    },
+    "candidate-archive-control/owner.json": {
+      "sha256": "8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83",
+      "bytes": 5331,
+      "mode": 420,
+      "uid": 0,
+      "gid": 0,
+      "mtime": 1793460701
+    }
+  },
+  "group_archives": 5,
+  "regular_members": 2714,
+  "member_manifest_sha256": "fe01fd35a85b2a6c1839891ddf6f6d971d1160b95734b7d1ab9e504c42027155",
+  "archive_provenance_sha256": "b1d374617b8d6f9a39b627206eb0e934e4435961a648c2354431acecdc4c3e59",
+  "offline_reader_sha256": "782280a1b63dda4a08dda36fd1db621ee3121111a273a705f97b2637fbef309f",
+  "offline_reader_dependency_sha256": "f77e60625bdc2a53e7b1629c76355028be393f381d0d5a270a422461dc034f79",
+  "analysis_arm_sha256": "af9c99373802430551942bd2bf13222f6a3051d23fa2b8793298fe5adc8a1413",
+  "transport_verified": true,
+  "archive_members_verified": true,
+  "finished": 1793460748.7522626,
+  "transport_intermediate_removed": true,
+  "removal_scope": "Only verified task-created transport.tar and derived receipt-cache; original compressed groups/control retained"
+}

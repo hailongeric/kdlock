@@ -1,0 +1,37 @@
+{
+  "arm_configs": {
+    "baseline": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602",
+    "candidate": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+  },
+  "clamped": false,
+  "completed": true,
+  "diagnostic_generations": {
+    "baseline": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+    "candidate": "de5e4f06a6d60e531a8b329d3c7f2c5335d5e707",
+    "compatibility": "9d10ae77290873df23804293f364862a2b55f385"
+  },
+  "diagnostic_generations_separate": true,
+  "diagnostic_provenance_sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364",
+  "files": {
+    "comparisons.json": "7333166e02826d595b9ef366a20c1d0737581e39c7f4998b65f0fb74c86b2349",
+    "key-workers.json": "aac094095d6f62e3948ef3ee36c0144ffffbd9976d7e5fcdab6c8bc029b63503",
+    "points.json": "a4434ff1cbdf68905c596c05ad731c4445e650bf8ec568adfce8976532cc1d84",
+    "processes.csv": "33239296d433f144cd9a31d2fcf2792cd4f3e99b41fb9aa59f85c6cbc8bd3d35",
+    "threads.csv": "f50b5fa9f744d64650354e9a4882813b876238563e4e8bb6f0c37d6da6681c80"
+  },
+  "inputs_sha256": "dc942d6ef8e37d91f97186e7c922a53109f4c7a7bcd17ed574c1489d240bd661",
+  "limitations": [
+    "Whole upstream lifetime, including all six warmups; differs from the two-second score interval.",
+    "CPU accounting includes the upstream collector and reaped workers; denominator uses configured workers.",
+    "No spin/park/OSQ counters or causal attribution; no acceptance or score reclassification."
+  ],
+  "pairs": 42,
+  "performance_accepted": false,
+  "points": 84,
+  "points_sha256": "5f8caee87bc4698681eb837041f6a15657767d698d141d0bd988f0966b85d481",
+  "schema": 2,
+  "scope": "Whole upstream lifetime including six warmups, collector process and reaped workers; no timed-tail or parking/spinning attribution",
+  "script_sha256": "4c9f786639d2a08ca105cf139a6f2d1c08d8a10eea2cf8c5fdc58757f5502907",
+  "validated": true,
+  "validation_sha256": "e53f3cc53148f57001c1881a7d826e02a9038246068be1db36fa1abc69e29722"
+}

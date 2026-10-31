@@ -1,0 +1,7 @@
+{
+  "original_transport": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/step",
+  "original_owner_sha256": "e6198d040e7682f987ef576db097eb185ffe7ef63868073223b4d76a84f93937",
+  "guest_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-request/result.json",
+  "fetched_sha256": "22de061ad7639ebbf9e395b0da654841db593b6cc6c712b33c85fd8debc58406",
+  "original_transport_unchanged": true
+}

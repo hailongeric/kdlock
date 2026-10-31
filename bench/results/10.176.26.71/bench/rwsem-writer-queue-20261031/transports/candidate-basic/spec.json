@@ -1,0 +1,30 @@
+{
+  "script": "/root/host_fs/kdlock/bench/basic/run.py",
+  "script_sha256": "24269f4d9a743246e7fd58cf7e45117a9138c4b5843ee3bcd42fbcc5fc172c67",
+  "argv": [
+    "--output",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031",
+    "--families",
+    "spin",
+    "mutex",
+    "rwlock",
+    "rwsem",
+    "--host-state",
+    "/tmp/kdlock-writer-queue-candidate-basic-host-20261031.json",
+    "--host-reference",
+    "/tmp/kdlock-writer-queue-reference-20261031.json",
+    "--host-reference-sha256",
+    "249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198",
+    "--snapshot-tag",
+    "kdlock-builddisk-clean-20261031",
+    "--kernel-source",
+    "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "--kernel-variant",
+    "kdlock1"
+  ],
+  "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-basic-20261031/result.json",
+  "timeout": 8000,
+  "affinity": "0-63"
+}

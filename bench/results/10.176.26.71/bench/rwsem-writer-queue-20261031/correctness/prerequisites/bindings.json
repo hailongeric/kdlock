@@ -1,0 +1,22 @@
+[
+  {
+    "local": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/baseline-rwsem-source-sha256.json",
+    "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-20261031/rwsem/source-sha256.json",
+    "sha256": "9fa49aeea1b3eee60cdbb29abf3f2e9e5fad8d9ead6b3e940afc35f84397e793"
+  },
+  {
+    "local": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/baseline-rwsem-result.json",
+    "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-20261031/rwsem/result.json",
+    "sha256": "d762a39c35baa7f770510004ac826a59e5eb86c73dd8c3165d688268df1a6017"
+  },
+  {
+    "local": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/candidate-rwsem-source-sha256.json",
+    "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/rwsem/source-sha256.json",
+    "sha256": "49e2578fbf6a0893df902bff8b2094ab17492a3256ede79b0bedc87cacea3793"
+  },
+  {
+    "local": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/candidate-rwsem-result.json",
+    "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-1b6f256b-20261031/rwsem/result.json",
+    "sha256": "329b2d29974f6145a9c9d5761b6f84b5b32286b24aa2a041b644baba7c87bb8f"
+  }
+]

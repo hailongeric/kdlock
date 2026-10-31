@@ -1,0 +1,31 @@
+{
+  "transport_completed": true,
+  "started": 1793446390.0477824,
+  "spec_sha256": "c7662b16fa7e342369d287fe7ead290ad6758bb1f67524a8125a34ec10022993",
+  "argv": [
+    "env",
+    "-u",
+    "KERNELRELEASE",
+    "-u",
+    "KBUILD_OUTPUT",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "LC_ALL=C",
+    "PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "KDLOCK_RECOVERY_CONFIRMED=1",
+    "KDLOCK_SNAPSHOT_TAG=kdlock-builddisk-clean-20261031",
+    "taskset",
+    "-c",
+    "0-63",
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/tmp/kdlock-writer-queue-drain-failed-probe-20261031.py"
+  ],
+  "guest_result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/failed-probe-drain/result.json",
+  "child_completion_unknown": false,
+  "pid": 3325668,
+  "returncode": 0,
+  "finished": 1793446390.8159568,
+  "result_sha256": "7eceacc1b4d04279df31a49ef4a5a3eb412a93226e756bbaa221dd01a852b5f9",
+  "step_passed": true,
+  "step_state": null,
+  "step_error": null
+}

@@ -1,0 +1,13 @@
+{
+  "completed": false,
+  "state": "FAILED",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "source_commit": "31d3bc28d55abcab3f8af379a0e57c6e80d7d399",
+  "source": "/mnt/kdlock-builds2/kdlock-strict-hold-return-sites-31d3bc28",
+  "archive_sha256": "d7a81abbbae48e1d6a8324398fb01b8eeccffdc9d7d0da7480d610e88bc8e1e2",
+  "manifest_sha256": "ed9fcddaf0b4dba2f4af3afd722cff5f184abcf6611177192d7d1666f9b5172e",
+  "controller_sha256": "62bfcdc655f4e0a3ac061d60db57b512831ea16f5e7990e078074722617b3d34",
+  "started": 1793459076.4561493,
+  "error": "AssertionError()",
+  "finished": 1793459076.465685
+}

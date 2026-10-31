@@ -1,0 +1,685 @@
+{
+  "application_lock_identity": "not-observed-in-this-process",
+  "argv": [
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+    "-t",
+    "60",
+    "-s",
+    "2",
+    "-m"
+  ],
+  "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+  "drained": true,
+  "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+  "instrumentation": "none",
+  "model": "processes",
+  "nominal_seconds": 2,
+  "observation_finished_ns": 2743869874843,
+  "output": {
+    "completed_pairs": 2448777,
+    "elapsed_interval_seconds_observed": false,
+    "measurement": [
+      {
+        "max": 20825,
+        "min": 20162,
+        "total": 1224791
+      },
+      {
+        "max": 21162,
+        "min": 19974,
+        "total": 1223986
+      }
+    ],
+    "nominal_seconds": 2,
+    "pairs_per_nominal_second": 1224388.5,
+    "upstream_average": 1224388,
+    "upstream_average_divisor": 2,
+    "upstream_counter_boundary": "-s2: six pre-marker samples, two post-marker samples, integer average divides by2",
+    "warmup": [
+      {
+        "max": 20644,
+        "min": 20007,
+        "total": 1218473
+      },
+      {
+        "max": 21108,
+        "min": 19956,
+        "total": 1222186
+      },
+      {
+        "max": 21090,
+        "min": 20029,
+        "total": 1222957
+      },
+      {
+        "max": 20956,
+        "min": 19926,
+        "total": 1223862
+      },
+      {
+        "max": 21040,
+        "min": 19951,
+        "total": 1220525
+      },
+      {
+        "max": 20847,
+        "min": 19997,
+        "total": 1225244
+      }
+    ]
+  },
+  "passed": true,
+  "pid": 19020,
+  "process_elapsed_ns": 8103824454,
+  "returncode": 0,
+  "round": 0,
+  "schema": 1,
+  "scored": true,
+  "started_ns": 2743747944749,
+  "state": "COMPLETE",
+  "system_cpu_seconds": 476.9295430000002,
+  "user_cpu_seconds": 1.8843359999999976,
+  "workers": 60,
+  "workers_observed": [
+    {
+      "cpus": [
+        0
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19021,
+      "tid": 19021
+    },
+    {
+      "cpus": [
+        1
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19022,
+      "tid": 19022
+    },
+    {
+      "cpus": [
+        2
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19023,
+      "tid": 19023
+    },
+    {
+      "cpus": [
+        3
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19024,
+      "tid": 19024
+    },
+    {
+      "cpus": [
+        4
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19025,
+      "tid": 19025
+    },
+    {
+      "cpus": [
+        5
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19026,
+      "tid": 19026
+    },
+    {
+      "cpus": [
+        6
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274377,
+      "tgid": 19027,
+      "tid": 19027
+    },
+    {
+      "cpus": [
+        7
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19028,
+      "tid": 19028
+    },
+    {
+      "cpus": [
+        8
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19029,
+      "tid": 19029
+    },
+    {
+      "cpus": [
+        9
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19030,
+      "tid": 19030
+    },
+    {
+      "cpus": [
+        10
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19031,
+      "tid": 19031
+    },
+    {
+      "cpus": [
+        11
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19032,
+      "tid": 19032
+    },
+    {
+      "cpus": [
+        12
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19033,
+      "tid": 19033
+    },
+    {
+      "cpus": [
+        13
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19034,
+      "tid": 19034
+    },
+    {
+      "cpus": [
+        14
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19035,
+      "tid": 19035
+    },
+    {
+      "cpus": [
+        15
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19036,
+      "tid": 19036
+    },
+    {
+      "cpus": [
+        16
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19037,
+      "tid": 19037
+    },
+    {
+      "cpus": [
+        17
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19038,
+      "tid": 19038
+    },
+    {
+      "cpus": [
+        18
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19039,
+      "tid": 19039
+    },
+    {
+      "cpus": [
+        19
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19040,
+      "tid": 19040
+    },
+    {
+      "cpus": [
+        20
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274378,
+      "tgid": 19041,
+      "tid": 19041
+    },
+    {
+      "cpus": [
+        21
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19042,
+      "tid": 19042
+    },
+    {
+      "cpus": [
+        22
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19043,
+      "tid": 19043
+    },
+    {
+      "cpus": [
+        23
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19044,
+      "tid": 19044
+    },
+    {
+      "cpus": [
+        24
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19045,
+      "tid": 19045
+    },
+    {
+      "cpus": [
+        25
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19046,
+      "tid": 19046
+    },
+    {
+      "cpus": [
+        26
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19047,
+      "tid": 19047
+    },
+    {
+      "cpus": [
+        27
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19048,
+      "tid": 19048
+    },
+    {
+      "cpus": [
+        28
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19049,
+      "tid": 19049
+    },
+    {
+      "cpus": [
+        29
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19050,
+      "tid": 19050
+    },
+    {
+      "cpus": [
+        30
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19051,
+      "tid": 19051
+    },
+    {
+      "cpus": [
+        31
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19052,
+      "tid": 19052
+    },
+    {
+      "cpus": [
+        32
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274379,
+      "tgid": 19053,
+      "tid": 19053
+    },
+    {
+      "cpus": [
+        33
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19054,
+      "tid": 19054
+    },
+    {
+      "cpus": [
+        34
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19055,
+      "tid": 19055
+    },
+    {
+      "cpus": [
+        35
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19056,
+      "tid": 19056
+    },
+    {
+      "cpus": [
+        36
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19057,
+      "tid": 19057
+    },
+    {
+      "cpus": [
+        37
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19058,
+      "tid": 19058
+    },
+    {
+      "cpus": [
+        38
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19059,
+      "tid": 19059
+    },
+    {
+      "cpus": [
+        39
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19060,
+      "tid": 19060
+    },
+    {
+      "cpus": [
+        40
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19061,
+      "tid": 19061
+    },
+    {
+      "cpus": [
+        41
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19062,
+      "tid": 19062
+    },
+    {
+      "cpus": [
+        42
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19063,
+      "tid": 19063
+    },
+    {
+      "cpus": [
+        43
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19064,
+      "tid": 19064
+    },
+    {
+      "cpus": [
+        44
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19065,
+      "tid": 19065
+    },
+    {
+      "cpus": [
+        45
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274380,
+      "tgid": 19066,
+      "tid": 19066
+    },
+    {
+      "cpus": [
+        46
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19067,
+      "tid": 19067
+    },
+    {
+      "cpus": [
+        47
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19068,
+      "tid": 19068
+    },
+    {
+      "cpus": [
+        48
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19069,
+      "tid": 19069
+    },
+    {
+      "cpus": [
+        49
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19070,
+      "tid": 19070
+    },
+    {
+      "cpus": [
+        50
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19071,
+      "tid": 19071
+    },
+    {
+      "cpus": [
+        51
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19072,
+      "tid": 19072
+    },
+    {
+      "cpus": [
+        52
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19073,
+      "tid": 19073
+    },
+    {
+      "cpus": [
+        53
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19074,
+      "tid": 19074
+    },
+    {
+      "cpus": [
+        54
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19075,
+      "tid": 19075
+    },
+    {
+      "cpus": [
+        55
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19076,
+      "tid": 19076
+    },
+    {
+      "cpus": [
+        56
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19077,
+      "tid": 19077
+    },
+    {
+      "cpus": [
+        57
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274381,
+      "tgid": 19078,
+      "tid": 19078
+    },
+    {
+      "cpus": [
+        58
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274382,
+      "tgid": 19079,
+      "tid": 19079
+    },
+    {
+      "cpus": [
+        59
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 19020,
+      "start_ticks": 274382,
+      "tgid": 19080,
+      "tid": 19080
+    }
+  ]
+}

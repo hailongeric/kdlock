@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "action": "arm",
+  "passed": true,
+  "completed": true,
+  "state": "SCOPE1_ARMED",
+  "boot_id": "0f19d2af-f3e4-4204-bb5d-a1d294afd731",
+  "release": "7.0.0-38-kdscope3",
+  "controller_sha256": "9424d4afcb6ca8c8f0ccbe0eb0443407647414861afba2d245c3a07676a803e6",
+  "support_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "config_sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d",
+  "source_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "provider_commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/append/result.json",
+    "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+  },
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope3-install-20261031/native-capture/result.json",
+    "sha256": "9227d5f4c350fa99b3e7f97749dc81e0ff11f20d4a544ba515364d792a5757ab"
+  },
+  "old_append_sha256": "5d7f51277d78aef4d86c7c4f210e163700ea9876e8f78ad1b7c3a2458e95a93e",
+  "bundle_manifest_sha256": "b9f13f4b7db03872c6c6d09e71144aa86013098968bcf817c35aa9bdb71e9fcb",
+  "host_state_sha256": "9879f5985c42fa3fb5e8f884fa0c2af09f7d415cc253c07907dc6ccd3463dec7",
+  "protected": {
+    "/boot/grub/custom.cfg": {
+      "bytes": 6305,
+      "mode": 33188,
+      "sha256": "8d9aff4a2a07bef260ec9c63f931ff305f516def27062b58043486309cff702b"
+    },
+    "/boot/grub/grub.cfg": {
+      "bytes": 11388,
+      "mode": 33188,
+      "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+    },
+    "/etc/default/grub": {
+      "bytes": 1236,
+      "mode": 33188,
+      "sha256": "e02f11d6ea1b3c31d789afdae3bb5589038c49eb94dc0de18f7d8a6d0c475250"
+    }
+  },
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456630.5586848,
+      "pid": 3287,
+      "process_group": 3287,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456630.613157,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/arm/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "arm-existing",
+      "argv": [
+        "grub-reboot",
+        "kdscope1-kd-20261030"
+      ],
+      "started": 1793456630.6211774,
+      "pid": 3288,
+      "process_group": 3288,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456630.6752062,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/arm/arm-existing.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "environment-after",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793456630.6825485,
+      "pid": 3301,
+      "process_group": 3301,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793456630.7113109,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope1-boot-20261031/arm/environment-after.log",
+        "sha256": "a2f1fe501a06199b372bbce2757c4d6a13122c5bec5ceaea94e2d4b42b40ffc2"
+      }
+    }
+  ],
+  "started": 1793456630.551158,
+  "drain_unknown": false,
+  "performance_accepted": false,
+  "source_changed": false,
+  "default_changed": false,
+  "automatic_retry": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "entry": "kdscope1-kd-20261030",
+  "arm_environment_before": {
+    "next_entry": ""
+  },
+  "environment_after": {
+    "next_entry": "kdscope1-kd-20261030"
+  },
+  "final_idle": true,
+  "finished": 1793456630.9728875
+}

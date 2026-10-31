@@ -1,0 +1,53 @@
+{
+  "passed": true,
+  "completed": true,
+  "action": "bind",
+  "arm": "candidate",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "config_sha256": "9fe4313c5fc78470b40a292e1f8f356d8e9dda03742e576e9e2b024e4f0c7a92",
+  "controller_sha256": "c1eb7974385df9945c4834e85e05b39b251d5807779df4a0a99aecec9ee0b576",
+  "root": "/root/host_fs/kdlock",
+  "recipe": "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77",
+  "started": 1793459183.6854305,
+  "commands": [
+    {
+      "argv": [
+        "mount",
+        "--bind",
+        "/mnt/kdlock-builds2/kdlock-writer-sites-9d10ae77",
+        "/root/host_fs/kdlock"
+      ],
+      "started": 1793459183.6859376,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "finished": 1793459183.688146
+    },
+    {
+      "argv": [
+        "mount",
+        "-o",
+        "remount,bind,ro",
+        "/root/host_fs/kdlock"
+      ],
+      "started": 1793459183.6883361,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "finished": 1793459183.690422
+    }
+  ],
+  "state": "COMPLETE",
+  "underlying": {
+    "device": 2049,
+    "inode": 2353000,
+    "mode": 493,
+    "files": {
+      "kernel_module/kd_rwsem.c": "dc1d445c1dd0566bca7833daaa84105e8224d53d36699fc7175c0304437e7b6b",
+      "kernel_module/kd_exec.c": "2893e8af93368b42318fbb0e0f963ee59d5fcc24b4e5d047f3749a6925e86fb6",
+      "include/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8"
+    }
+  },
+  "final_idle": true,
+  "finished": 1793459183.7712955
+}

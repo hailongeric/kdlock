@@ -1,0 +1,32 @@
+{
+  "arms": [
+    {
+      "commit": "f7a84065e84474380faa37eeadfdf534abd72a68",
+      "label": "baseline",
+      "output": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/writer-queue-nano-f7a84065-20261031",
+      "prior_live_sha256": "d762a39c35baa7f770510004ac826a59e5eb86c73dd8c3165d688268df1a6017",
+      "prior_live_source_sha256": "9fa49aeea1b3eee60cdbb29abf3f2e9e5fad8d9ead6b3e940afc35f84397e793",
+      "prior_unit_sha256": "e4c0e01e10f558315c2cd351f92c025f5ce16d5f210872c1aca31136d5307f77",
+      "source_map_sha256": "489ff4c771b3baf3c4a34e3ef7c24fc5ff38281909fee769937bd68fc8ad37b4"
+    },
+    {
+      "commit": "1b6f256b13e8743aa1fd7bdc958cc82ae7726463",
+      "label": "candidate",
+      "output": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/writer-queue-nano-1b6f256b-20261031",
+      "prior_live_sha256": "329b2d29974f6145a9c9d5761b6f84b5b32286b24aa2a041b644baba7c87bb8f",
+      "prior_live_source_sha256": "49e2578fbf6a0893df902bff8b2094ab17492a3256ede79b0bedc87cacea3793",
+      "prior_unit_sha256": "b7f7e949b35e8ca686df0e85f27e36dd26404ab363258f732c83c5568b5334a8",
+      "source_map_sha256": "7928ac143331603c052cf1528af478f420108a65fca5ad1e5fed6603eee9a744"
+    }
+  ],
+  "common_input_sha256": "bf677df76ee05a5bda06f0e320307681e1990ef7c27b9a51bef773d4309e6257",
+  "evidence_parent": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench",
+  "performance_accepted": false,
+  "runtime_paths": [
+    "kernel_module/kd_mutex_local.c",
+    "kernel_module/kd_mutex_local.h",
+    "kernel_module/kd_mutex_osq.c",
+    "kernel_module/kd_rwsem.c"
+  ],
+  "schema": 1
+}

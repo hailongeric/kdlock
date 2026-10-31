@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "files": {
+    "archive_helpers.py": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda",
+    "fresh_controls.py": "518c40e2e7ea74df0b7216a4d49965d0c2b826c9b21f84792e3c201add7ea073",
+    "nano_compare.py": "b12a9f2435dde819751b14bd810a85ca025ce8d9801c84f57041f17c43524417",
+    "nano_core.py": "3ec336f7d4ef5bf100f1639c9c77a36405593c7a47099348b4e25ac5caceba0b",
+    "nano_functions.py": "369c7688f686d9fe0b03054ab1a09136b3cf697c8ca787dca55c034836a7d14a",
+    "../kdlock-writer-queue-nano-fetch-20261031.py": "f7377f4216ed2d1a07d2371379acdf6ba261f254187b7e8733729bb9029a02cf"
+  },
+  "executed": false,
+  "controller_sha256": "1857baca9f699907c9eb418e8cb347d601095be95d688e1b9d604aa3fc8a2731",
+  "cohort_sha256": "58c4050871f2d483a01ae1c423326c45ad2d03704a9c0b8a9ce4ba4b58751a0a"
+}

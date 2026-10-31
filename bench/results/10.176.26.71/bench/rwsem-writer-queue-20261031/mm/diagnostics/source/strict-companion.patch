@@ -1,0 +1,89 @@
+diff --git a/tests/kernel/mmap_writer/strict_hold/README.md b/tests/kernel/mmap_writer/strict_hold/README.md
+index 29ffae50..e49cbbe5 100644
+--- a/tests/kernel/mmap_writer/strict_hold/README.md
++++ b/tests/kernel/mmap_writer/strict_hold/README.md
+@@ -26,6 +26,34 @@ before timing. It does not reuse an old strict witness as a new pass or alter
+ the earlier failure. Its source-only status remains distinct from the original
+ diagnostic's recorded VM validation.
+ 
++## Complete scheduling-return lists
++
++The scope3 sites step stopped before loading a module because the linked
++`kd_mmap_local_lock_slow_signal` contains three direct scheduling returns:
++`0x2c8`, `0x3dd`, and `0x5d3`. All are reachable for a killable writer. The latter
++two explicitly restore `TASK_RUNNING` before yielding from optimistic spinning;
++the queued wait uses the first site. A scheduling return by itself therefore
++does not prove a sleeping writer. Preserve the original failed sites receipt
++and all three instructions rather than selecting two addresses.
++
++This companion revision consumes the exact common classifier's bounded
++three-return representation. Its five chain arguments remain the same length:
++the legacy `waiter wait0 wait1 adapter_return adapter` form is unchanged; a
++three-return chain uses `waiter --wait-returns 712:989:1491 adapter_return adapter`.
++The list must contain exactly three positive, distinct decimal offsets. The
++client uses the parser extracted from the named common harness, including
++its rejection of malformed or over-capacity lists. Real intermediate CALL
++frames retain their separate six-frame, two-return-per-frame bounds.
++
++Both actual syscall cases still require the exact object and task identities,
++two `D` state samples, matching wait channel, unchanged scheduler counters and
++the complete caller/adapter/intermediate-frame chain. All nine existing
++negative controls remain mandatory for each case. The kernel payload, UAPI,
++holder lifetime, deadlines and release/join protocol remain unchanged. New
++diagnostic source and common-classifier identities are recorded separately;
++the original baseline witness and measured results are not relabeled. This
++extension is source-only until its VM compilation and actual cases complete.
++
+ ## Exact test boundary
+ 
+ One file binds the target task's actual `mm_struct` with `mmgrab`. A test-only
+diff --git a/tests/kernel/mmap_writer/strict_hold/payload/client.c b/tests/kernel/mmap_writer/strict_hold/payload/client.c
+index f89a793c..34820909 100644
+--- a/tests/kernel/mmap_writer/strict_hold/payload/client.c
++++ b/tests/kernel/mmap_writer/strict_hold/payload/client.c
+@@ -21,7 +21,9 @@
+ static unsigned checks;
+ #define CHECK(x) do { checks++; if (!(x)) { fprintf(stderr, "FAIL line %d: %s errno=%d\n", __LINE__, #x, errno); exit(1); } } while (0)
+ static const char *chain_waiter, *chain_acquire;
+-static unsigned long chain_wait[2], chain_adapter;
++#define CHAIN_WAIT_CAPACITY 3
++static unsigned long chain_wait[CHAIN_WAIT_CAPACITY], chain_adapter;
++static unsigned chain_wait_count = 2;
+ struct worker { struct mw_identity observed; _Atomic int done; };
+ static uint64_t target_pid;
+ static struct worker *watched;
+@@ -127,8 +129,9 @@ int main(int argc, char **argv)
+ 	CHECK(argc == 9 && (!strcmp(argv[1], "mmap") || !strcmp(argv[1], "munmap")));
+ 	int unmap = !strcmp(argv[1], "munmap");
+ 	unsigned long mmap_site = strtoul(argv[2], NULL, 0), munmap_site = strtoul(argv[3], NULL, 0);
+-	chain_waiter = argv[4]; chain_wait[0] = strtoul(argv[5], NULL, 0);
+-	chain_wait[1] = strtoul(argv[6], NULL, 0); chain_adapter = strtoul(argv[7], NULL, 0);
++	chain_waiter = argv[4];
++	CHECK(chain_wait_arguments(argv[5], argv[6]));
++	chain_adapter = strtoul(argv[7], NULL, 0);
+ 	chain_acquire = argv[8];
+ 	CHECK(mmap_site && munmap_site && *chain_waiter && *chain_acquire &&
+ 	      chain_wait[0] && chain_wait[1] && chain_adapter && sysconf(_SC_PAGESIZE) == 4096);
+diff --git a/tests/kernel/mmap_writer/strict_hold/run.py b/tests/kernel/mmap_writer/strict_hold/run.py
+index e095a1f0..7329c2d8 100644
+--- a/tests/kernel/mmap_writer/strict_hold/run.py
++++ b/tests/kernel/mmap_writer/strict_hold/run.py
+@@ -179,7 +179,8 @@ def main():
+             files[str(source / leaf)] = sha(source / leaf)
+         result['classifier'] = dict(source_sha256=sha(ROOT / 'bench/mmap_writer/client.c'),
+             extracted_sha256=sha(source / 'classifier.inc'), functions=['json_string', 'task_state',
+-            'chain_frame', 'writer_chain_tail', 'writer_observation', 'writer_contention'], changed_bodies=False)
++            'chain_wait_arguments', 'chain_frame', 'writer_chain_tail', 'writer_observation',
++            'writer_contention'], changed_bodies=False)
+ 
+         def verify():
+             platform.verify_boot(a)
+@@ -202,7 +203,7 @@ def main():
+         rt.command(['insmod', module], out / 'load.log')
+         chain = actual_sites['chains'][a.mode]
+         proof_args = [str(actual_sites['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
+-        proof_args += [sites.waiter_argument(chain), *map(str, chain['wait_returns']),
++        proof_args += [sites.waiter_argument(chain), *sites.wait_arguments(chain),
+                        str(chain['adapter_return']), actual_sites['adapter']]
+         result['state'] = 'RUNNING'
+         rt.write_json(out / 'result.json', result)

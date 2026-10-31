@@ -1,0 +1,8 @@
+{
+  "script": "/tmp/kdlock-writer-queue-drain-failed-probe-20261031.py",
+  "script_sha256": "36b4d069dfacd74e28d20360e5266bc46a3061dc2e2a7595523475f8ef650dca",
+  "argv": [],
+  "result": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-7fa989c1-20261031/failed-probe-drain/result.json",
+  "timeout": 150,
+  "affinity": "0-63"
+}

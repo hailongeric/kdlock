@@ -1,0 +1,51 @@
+--- /tmp/kdlock-writer-queue-mm-offline-sites3-20261031/mmap_compare.py
++++ /tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/mmap_compare.py
+@@ -13,7 +13,7 @@
+ CONFIG='b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602'
+ CONTROLLER='36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d'
+ ARCHIVER='42d56405e4a731230bf423371e6bc7ea15ae08e51e138e3fc9e09ab83e068489'
+-CANDIDATE_ARCHIVER='PENDING_NEW_ARCHIVER_REVIEW'
++CANDIDATE_ARCHIVER='fd52c123f07d1c9de1996dd2fc8540b8cb8794e2cfe9b22937b6af1a444bd7b0'
+ WATCHER='90cfab0d77f2b6514fee09a39aec91910354ec7198455c2c932ef6c782d8bb1a'
+ INPUTS='beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0'
+ PREP='512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4'
+@@ -111,9 +111,14 @@
+     a.need(ca.hashes.get(member)==ref['sha256'],'diagnostic provenance reference differs');return member
+    proof_bytes=original_logs(ca,{proof_member_for(ref)for ref in provenance_refs(proof)})
+    checked_provenance=validate_provenance(proof,lambda ref:proof_bytes[proof_member_for(ref)].encode(),git.blob)
++   for name,digest in checked_provenance['compatibility']['input_sha256']['baseline_files'].items():
++    a.need(archives['baseline'].hashes.get(name)==digest,'compatibility did not use original baseline archive bytes')
+    receipt['diagnostic_provenance_sha256']=ce['diagnostic_provenance_sha256']
+    receipt['diagnostic_delta']=dict(harness=checked_provenance['harness_delta'],strict=checked_provenance['diagnostic_delta'])
+    receipt['baseline_compatibility']=checked_provenance['compatibility']
++   receipt['diagnostic_generations']=dict(baseline=checked_provenance['configs']['baseline']['harness']['commit'],
++       compatibility=checked_provenance['return_diagnostic_manifest']['source_commit'],candidate=checked_provenance['configs']['candidate']['harness']['commit'])
++   receipt['retained_failed_attempts']=dict(sites=proof['failed_sites'],api=proof['failed_api'])
+    prep_ref=spec['preparation'];pa=archives[prep_ref['archive']];inputs=pa.json(prep_ref['inputs_member']);prep=pa.json(prep_ref['result_member'])
+    a.need(pa.hashes[prep_ref['inputs_member']]==INPUTS and pa.hashes[prep_ref['result_member']]==PREP and prep.get('passed')is True and
+           prep.get('action')=='prepare'and prep['inputs_sha256']==INPUTS and inputs['binary_sha256']==BINARIES and inputs['executable_modified']is False,'unchanged original application preparation differs')
+@@ -137,9 +142,23 @@
+     for name,row in manifest['files'].items():
+      for prefix in('/root/host_fs/kdlock/',c['harness']['source']+'/'):
+       path=prefix+name;a.need(path not in source_contexts[label] or source_contexts[label][path]==row['sha256'],'captured per-arm source alias differs');source_contexts[label][path]=row['sha256']
+-    diagnostic=diagnostic_sources(ar,e,c,git)
++    diagnostic=diagnostic_sources(ar,e,c,git);historical={}
++    if label=='candidate':
++     failed=checked_provenance['failed_api'];fp=str(Path(failed['output']).relative_to(ar.meta['guest_base']))
++     a.need(e['logical_steps']['api']['owner']!=fp+'/owner.json'and
++            e['logical_steps']['sites']['owner']!=str(Path(checked_provenance['failed_sites']['output']).relative_to(ar.meta['guest_base']))+'/owner.json',
++            'original failed attempts cannot become successful logical steps')
++     captured=ar.json(fp+'/run/source-sha256.json');original_map=checked_provenance['return_diagnostic_manifest']['files']
++     for name,digest in captured.items():
++      member=fp+'/run/source/'+name
++      a.need(name in original_map and digest==original_map[name]['sha256']==ar.hashes.get(member),'failed API original source snapshot differs: '+name)
++      historical[member]=digest
++     a.need(ar.hashes.get(fp+'/run/runner.py')==original_map['tests/kernel/mmap_lock/run.py']['sha256'],'failed API runner generation differs')
++     for name,digest in checked_provenance['failed_api_retirement']['failed_input_sha256'].items():
++      a.need(ar.hashes.get(fp+'/'+name)==digest,'failed API retained evidence differs')
+     for name,digest in ar.hashes.items():
+      if name in diagnostic:continue
++     if name in historical:a.need(digest==historical[name],'failed API source member differs');continue
+      for marker in('/runtime-source/','/source/'):
+       if marker in name:
+        relative=name.split(marker,1)[1]

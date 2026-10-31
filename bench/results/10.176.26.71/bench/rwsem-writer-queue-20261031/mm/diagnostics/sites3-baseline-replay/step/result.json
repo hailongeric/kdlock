@@ -1,0 +1,97 @@
+{
+  "baseline_archive_sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955",
+  "baseline_harness_commit": "7814c61a0be20f5db3b9fb41b6079ef6d2938b5f",
+  "baseline_scores_repeated": false,
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "candidate_harness_commit": "9d10ae77290873df23804293f364862a2b55f385",
+  "child_pid": 9940,
+  "child_returncode": 0,
+  "complete_site_receipt_unchanged": true,
+  "completed": true,
+  "drain_unknown": false,
+  "drained": true,
+  "final_idle": true,
+  "final_idle_scope": "replay compiler and classifier children only",
+  "finished": 1793459561.865978,
+  "input_sha256": {
+    "baseline_files": {
+      "mapping/run/00-scope-1.jsonl": "1e4c2f5e8a219b47e444009a62a53e2dc65c1c4990f60239b6989fceffe64e8e",
+      "mapping/run/01-cycle-1.jsonl": "67f67ce0ebda46152f62a2909daa8ad1fed708e4d40a5ba566a8a6c72ff7893f",
+      "mapping/run/02-cycle-16.jsonl": "85d5a19dfb652b3c13549de6a4f8995eeb28d88975485d57606e503d7b3fcdea",
+      "mapping/run/03-lifetime-1.jsonl": "de7f81697b0bd01a34f4a3e7aaa3be0a1fedc11f67feb5361457a930858cb17a",
+      "mapping/run/04-lifetime-16.jsonl": "f8cfd77cc138ed5ff005cc5d16aa1b67eb299be635e9f9e4e1bdc66312cc5e6f",
+      "mapping/run/05-exit-1.jsonl": "04d2415c6639f122453edf5c102f7c4339486db29bfb3985c28e398d6c904f9c",
+      "mapping/run/result.json": "3cfc1375ce781dd41e725073985f1f29346f0b5ddf6ddfa18da9ca471ca00cc5",
+      "sites/run/writer-sites.json": "488a6a489caca01bac974a7ce09c0f5faa7cc20c3248e7c73d936ec5d3282491",
+      "strict-hold/run/mmap.jsonl": "3749c50c2a813ff2d0d898f9a405c117e1673462202c5779f34c269a8f798259",
+      "strict-hold/run/munmap.jsonl": "4110f5d7a0376cb3169085b2b95898f5d9d6f00d4a6ec6c27a4f3c345b6177a8",
+      "strict-hold/run/result.json": "bc28387235e74aaf25b881e43b4b7e0d159b1b53877d875a04a93df99ce073f8"
+    },
+    "baseline_source": {
+      "bench/mmap_writer/client.c": "edfd54bc5419238df07f69ed2c7a69332b5c30d95ece2525d17297ff5d1a7ab2",
+      "bench/mmap_writer/sites.py": "0ccaddc017a9fa77e2ebfb59da0c787a6d45779aec4ccc52c6a3ceacf4ee60c0",
+      "tests/kernel/mmap_lock/mapping.py": "349d02f2933a945f66c3961f5371b8c4aa42f0962bb5edfac3b8b3b9a961b882",
+      "workload_modules/mmap_writer/mmap_writer_uapi.h": "ddc60bcc7fcbcd0f083612fae02cc6140e6841c8a431f03d0d3fbceeba119699"
+    },
+    "candidate_source": {
+      "bench/mmap_writer/client.c": "d2011b7d84268388ec74308607ae6ceaa6676731b4e492da469277aef2910a92",
+      "bench/mmap_writer/sites.py": "7ff361262b68dab48d75062a9f0d5f3ebbd6fdd7986626420d71faf269061fe4",
+      "tests/kernel/mmap_lock/mapping.py": "1794da4a7a541f8420a8705bbbc05a5b840c2a919c77b32bf23edfe209725936",
+      "workload_modules/mmap_writer/mmap_writer_uapi.h": "ddc60bcc7fcbcd0f083612fae02cc6140e6841c8a431f03d0d3fbceeba119699"
+    }
+  },
+  "kind": "writer-sites-baseline-compatibility",
+  "legacy_argument_form_unchanged": true,
+  "mapping_result_sha256": "3cfc1375ce781dd41e725073985f1f29346f0b5ddf6ddfa18da9ca471ca00cc5",
+  "observation_functions_unchanged": true,
+  "original_receipts_unchanged": true,
+  "passed": true,
+  "performance_accepted": false,
+  "replay_only": true,
+  "replayed_c_positive_chains": [
+    {
+      "caller": "vm_mmap_pgoff",
+      "input": "strict-hold/run/mmap.jsonl",
+      "output_sha256": "abd0aa2aa6d1df1c70dc4a6b45827ccd4446c8e14207dd65618b162136ad8aa3",
+      "wait_return_offset": 299,
+      "waiter": "kd_mmap_down_write_killable"
+    },
+    {
+      "caller": "__vm_munmap",
+      "input": "strict-hold/run/munmap.jsonl",
+      "output_sha256": "1e869cf4618260ad3dbd33aed09723fe15ebe0a2b441624c1f1d32f40aa16ef2",
+      "wait_return_offset": 299,
+      "waiter": "kd_mmap_down_write_killable"
+    }
+  ],
+  "replayed_python_positive_chains": [
+    {
+      "caller": "__vm_munmap",
+      "full_proc_input_retained": false,
+      "input": "mapping/run/02-cycle-16.jsonl",
+      "wait_return_offset": 299,
+      "waiter": "kd_mmap_down_write_killable"
+    },
+    {
+      "caller": "vm_mmap_pgoff",
+      "full_proc_input_retained": true,
+      "input": "strict-hold/run/mmap.jsonl",
+      "wait_return_offset": 299,
+      "waiter": "kd_mmap_down_write_killable"
+    },
+    {
+      "caller": "__vm_munmap",
+      "full_proc_input_retained": true,
+      "input": "strict-hold/run/munmap.jsonl",
+      "wait_return_offset": 299,
+      "waiter": "kd_mmap_down_write_killable"
+    }
+  ],
+  "schema": 1,
+  "script_sha256": "64a72d1ae125a43fc9af7fc5902a4b91e85ab72eb50f3bca6fd8e2cac657d3e3",
+  "started": 1793459560.841813,
+  "strict_hold_result_sha256": "bc28387235e74aaf25b881e43b4b7e0d159b1b53877d875a04a93df99ce073f8",
+  "timing": false,
+  "timing_reused_without_modification": true,
+  "writer_sites_sha256": "488a6a489caca01bac974a7ce09c0f5faa7cc20c3248e7c73d936ec5d3282491"
+}

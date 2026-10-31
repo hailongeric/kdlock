@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "completed": true,
+  "final_idle": true,
+  "state": "COMPLETE",
+  "boot_id": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+  "controller_sha256": "bd6aaf13a98f40a3bd26dd23e5ef96de032690178e5b886dc683f4739dd9233e",
+  "failed_input_sha256": {
+    "owner.json": "d921d51700dd11fe8e18aac488ff7d8b09e5929ffb7ea0f489bf2e3539c60237",
+    "controller.log": "66b3f25bce47ad703a3f2f9ea2b8b559d2b4eeef92e2038f13fb97cd5b93e8ae",
+    "run/result.json": "cd33ad4ae946c4dd75d5c089dd868d9dbc939912c682f1cb8d39b277185684f1",
+    "run/probe.json": "30f3803e750a1cb542b0ea43a9b53ef4abde109ea05087c9a3c16b272d57ebe7"
+  },
+  "probe": {
+    "abi": 1,
+    "use_kd": 1,
+    "mm": 18379471558817694720,
+    "lock": 18379471558817695168,
+    "checks": 46,
+    "errors": 1,
+    "api_checks": 8,
+    "nested_checks": 1,
+    "cancellation_checks": 2,
+    "readers_slept": 0,
+    "writer_slept": 0,
+    "late_reader_slept": 0,
+    "downgrade_checks": 0,
+    "transfer_checks": 0,
+    "irq_checks": 0,
+    "destroy_checks": 0,
+    "idle": 1
+  },
+  "worker_tasks": [],
+  "started": 1793459452.9927812,
+  "returncode": 0,
+  "drained": true,
+  "failed_evidence_unchanged": true,
+  "finished": 1793459453.0939906
+}

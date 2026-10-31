@@ -1,0 +1,47 @@
+{
+  "threads": {
+    "pairs": 21,
+    "gains": 20,
+    "losses": 1,
+    "geometric_mean_ratio": 5.591584668570964,
+    "worst": {
+      "model": "threads",
+      "workers": 1,
+      "round": 0,
+      "metric": "pairs_per_nominal_second",
+      "baseline": 288860.5,
+      "candidate": 287385.5,
+      "ratio": 0.9948937289799056,
+      "change_pct": -0.5106271020094422,
+      "observed_loss": true,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "qualification": "strict-host/shared-functional-held-writer",
+      "performance_accepted": false
+    }
+  },
+  "processes": {
+    "pairs": 21,
+    "gains": 15,
+    "losses": 6,
+    "geometric_mean_ratio": 0.9967261222585571,
+    "worst": {
+      "model": "processes",
+      "workers": 60,
+      "round": 0,
+      "metric": "pairs_per_nominal_second",
+      "baseline": 1577534.0,
+      "candidate": 1224388.5,
+      "ratio": 0.7761407995009934,
+      "change_pct": -22.385920049900665,
+      "observed_loss": true,
+      "baseline_boot": "971baf1a-f9b2-4689-9937-62ab79f4ade2",
+      "candidate_boot": "aeec1214-6ea3-401f-9b68-d850e21f26ba",
+      "qualification": "strict-host/shared-functional-held-writer",
+      "performance_accepted": false
+    }
+  },
+  "source": "Derived from the exact validated 42-pair comparison; separate per-model means, one round and no variance estimate.",
+  "validation_sha256": "e53f3cc53148f57001c1881a7d826e02a9038246068be1db36fa1abc69e29722",
+  "performance_accepted": false
+}

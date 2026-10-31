@@ -1,0 +1,54 @@
+FUNCTIONAL spin
+FUNCTIONAL mutex
+FUNCTIONAL rwlock
+FUNCTIONAL rwsem
+[
+  {
+    "family": "spin",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1596925,
+    "jit_completions": 1596925,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-basic-20261031/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+    "receipt_sha256": "85b35404d3330dead040b854c43a978b41904f01e1b388f003440e313f47aeb6",
+    "performance_accepted": false
+  },
+  {
+    "family": "mutex",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1586299,
+    "jit_completions": 1586299,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-basic-20261031/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+    "receipt_sha256": "4332eb18bb225d98ef59e36696cfead11256da64668441aa46f0309cc0fb094d",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwlock",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 22373,
+    "jit_completions": 22373,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-basic-20261031/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+    "receipt_sha256": "20d3bc1f50332a1a9c428123be05226ca5a360b328b5bdb61764512df0b6bcc1",
+    "performance_accepted": false
+  },
+  {
+    "family": "rwsem",
+    "passed": true,
+    "drained": true,
+    "execution": "RETURNED_JIT",
+    "jit_entries": 1589407,
+    "jit_completions": 1589407,
+    "operations": 1600000,
+    "receipt": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/writer-queue-f7-basic-20261031/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+    "receipt_sha256": "1143136a7f01e678df890638a9b127db3e8485493364368d98d8a0fa1bb18010",
+    "performance_accepted": false
+  }
+]

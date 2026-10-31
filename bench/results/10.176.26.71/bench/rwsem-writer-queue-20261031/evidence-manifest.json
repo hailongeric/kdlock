@@ -1,0 +1,2085 @@
+{
+  "schema": 1,
+  "copied": [
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/validation.json",
+      "file": "nano/validation.json",
+      "bytes": 128279,
+      "sha256": "73e96ee362fd55cdda8a859f05ee4688b89a404ad36a56f0aea65d32d4bcf234"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/comparison/summary.json",
+      "file": "nano/comparison/summary.json",
+      "bytes": 8660,
+      "sha256": "132d2e52d733f97c09eeb257bab81d6fcc0807d87a6e6f860ad94fbd279a7c4d"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/comparison/profiles.json",
+      "file": "nano/comparison/profiles.json",
+      "bytes": 7602,
+      "sha256": "d79aa11f8c15434c4700ab8a890354f251d0970155c1768f4dafc29046e1ac48"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/comparison/profiles.csv",
+      "file": "nano/comparison/profiles.csv",
+      "bytes": 1310,
+      "sha256": "fbfbc8df3f7c5b056dd6c3ed125ac5e7a8306801b739f9055e7bfe4871afa9e9"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/comparison/points.csv",
+      "file": "nano/comparison/points.csv",
+      "bytes": 110358,
+      "sha256": "82d1209d17daf74d7e1cef01d357ca341590cd2c6adabe9c27dd3695f10bbe7d"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/comparison/key-workers.json",
+      "file": "nano/comparison/key-workers.json",
+      "bytes": 300268,
+      "sha256": "8109406f7df16b1ef7260a568910dca5a7180a0e656faa8dfe2e8264184ff783"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/baseline/campaign.json",
+      "file": "nano/baseline/campaign.json",
+      "bytes": 61850,
+      "sha256": "da39b61c7dad89e9a7521e38df7a11bbca9e6946ac5ea42a975d3db903fc5d40"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/baseline/provider-audit.json",
+      "file": "nano/baseline/provider-audit.json",
+      "bytes": 57732,
+      "sha256": "2c5a45822c8cce942879e6fc74ef4302f735ccb692193b35c03dd5d0049d9e18"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/baseline/elf-provenance.json",
+      "file": "nano/baseline/elf-provenance.json",
+      "bytes": 42697,
+      "sha256": "c652d8b856a110198cadec303ef00eee54ec69ad0026971ffdefa7b8508941d2"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/transfer.json",
+      "file": "receipts/baseline/transfer.json",
+      "bytes": 658387,
+      "sha256": "713527dc9cb7c1a2a987ddf72426d96252679aaecf071886b55dbd2bc6d28cd0"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/transport-links.json",
+      "file": "receipts/baseline/transport-links.json",
+      "bytes": 3859,
+      "sha256": "1c9f5df781cbaf77874862c9f974106cbe2f2f2cc07d0903b2b1f8b7170528e1"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/analysis-arm.json",
+      "file": "receipts/baseline/analysis-arm.json",
+      "bytes": 682,
+      "sha256": "052c4768def34572a74bdff7177ce9568f3175d001530b28133410532a82628f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-archives/archives.json",
+      "file": "receipts/baseline/archives.json",
+      "bytes": 7313,
+      "sha256": "9f9bb5ea99c75567213da5626d8483b9f283b8feb97ad5d2b0018422ca50dd14"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/owner.json",
+      "file": "receipts/baseline/control/owner.json",
+      "bytes": 6891,
+      "sha256": "7498adc2d4ba6d404b89fa9074dc5f1649872ee3a8f36666c288fc12b4ea07dd"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/archive-owner.json",
+      "file": "receipts/baseline/control/archive-owner.json",
+      "bytes": 2897,
+      "sha256": "2a52c98463eb1b4492610ace420353188e98e76e09e2427c8727a63abf3febf0"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/endpoint-receipt.json",
+      "file": "receipts/baseline/control/endpoint-receipt.json",
+      "bytes": 4070,
+      "sha256": "b4742ecbdf55ca148bf38e42573e7c60820fa34e5ec47eaf58519348141da09f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/endpoint-policy.json",
+      "file": "receipts/baseline/control/endpoint-policy.json",
+      "bytes": 90087,
+      "sha256": "75a2b15d3e175b2aaa64bb2538fba3969f582698e7b566910a2fca475d946ada"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/sync.json",
+      "file": "receipts/baseline/control/sync.json",
+      "bytes": 912045,
+      "sha256": "ddba2ca9075c2042aa1d92b8f086de7f50a44a0a3c47452038026e7a525409d1"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/prior-unit.json",
+      "file": "receipts/baseline/control/prior-unit.json",
+      "bytes": 2575,
+      "sha256": "e4c0e01e10f558315c2cd351f92c025f5ce16d5f210872c1aca31136d5307f77"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/prior-live.json",
+      "file": "receipts/baseline/control/prior-live.json",
+      "bytes": 1547,
+      "sha256": "d762a39c35baa7f770510004ac826a59e5eb86c73dd8c3165d688268df1a6017"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/prior-live-source.json",
+      "file": "receipts/baseline/control/prior-live-source.json",
+      "bytes": 20333,
+      "sha256": "9fa49aeea1b3eee60cdbb29abf3f2e9e5fad8d9ead6b3e940afc35f84397e793"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/basic-result.json",
+      "file": "receipts/baseline/control/basic-result.json",
+      "bytes": 11032,
+      "sha256": "714058a4cbd946812f9e70466c8186001a9dd621c0fee4e2160dee5b22698df5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-basic/owner.json",
+      "file": "transports/baseline-basic/owner.json",
+      "bytes": 1745,
+      "sha256": "db3c2f3e2ac1b7e64c4dcc84d0cd65e5fc308957f2820a76248d944c22299f71"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-basic/spec.json",
+      "file": "transports/baseline-basic/spec.json",
+      "bytes": 1026,
+      "sha256": "c5331635e37b3b26480583dcaa7e60242938c7e10ccb9a1eed385d7487113686"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-basic/stdout",
+      "file": "transports/baseline-basic/stdout",
+      "bytes": 1974,
+      "sha256": "b5234fc5919f89945b678417a0ead35a2c0dc21bc973c2ce9dbebd792297faa3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-basic/stderr",
+      "file": "transports/baseline-basic/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-run/owner.json",
+      "file": "transports/baseline-nano-run/owner.json",
+      "bytes": 3300,
+      "sha256": "b0524b531957592c12facb5e0651f52b67abcc9637cd81ea60543fc6d79e407f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-run/spec.json",
+      "file": "transports/baseline-nano-run/spec.json",
+      "bytes": 2584,
+      "sha256": "7b12a2bacebaf69893de8f35bd19e32bd0546c7befbb02aa08331f4202a0523a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-run/stdout",
+      "file": "transports/baseline-nano-run/stdout",
+      "bytes": 68,
+      "sha256": "7a575261122263f4e3342fe4acc67a3a63e1d19992df64d74a56605ed02db44c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-run/stderr",
+      "file": "transports/baseline-nano-run/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-archive/owner.json",
+      "file": "transports/baseline-nano-archive/owner.json",
+      "bytes": 2482,
+      "sha256": "f389b37f3a5f395cbd73257aed76fe924298182f4ed8a3243689966668926ce8"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-archive/spec.json",
+      "file": "transports/baseline-nano-archive/spec.json",
+      "bytes": 1800,
+      "sha256": "661ba8f71d2050bafc259cb5674562810f35b68b9ed75cc627bd3ce12b271611"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-archive/stdout",
+      "file": "transports/baseline-nano-archive/stdout",
+      "bytes": 76,
+      "sha256": "fd3c3bc008f65f976a1dfe5e27e757328bbba1f4f7bd7186355eb5a7a74a5152"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-archive/stderr",
+      "file": "transports/baseline-nano-archive/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/candidate/campaign.json",
+      "file": "nano/candidate/campaign.json",
+      "bytes": 64825,
+      "sha256": "12bf9f208f415a65df028b9fe2fb955cc4d57f7460b03f61924e8a2c142a614f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/candidate/provider-audit.json",
+      "file": "nano/candidate/provider-audit.json",
+      "bytes": 57732,
+      "sha256": "c576001057c0cd5fcb7d2f65a7fcf53b6952e2027d73bed30cc1a9857d7e6d6f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-comparison-20261031/candidate/elf-provenance.json",
+      "file": "nano/candidate/elf-provenance.json",
+      "bytes": 42697,
+      "sha256": "523c0c44e0096e08b8e3e9a404c70a2487d4cb8321b5e20724f8cab72124f17c"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/transfer.json",
+      "file": "receipts/candidate/transfer.json",
+      "bytes": 674001,
+      "sha256": "c184d2e17b19d406fcc10e9435813535fd9b75277efd688ad101d9400552138b"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/transport-links.json",
+      "file": "receipts/candidate/transport-links.json",
+      "bytes": 4003,
+      "sha256": "703ee7aaf56d9ef1e94be3809242cc9d3be56fc865ca67c4438418f885f8aa36"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/analysis-arm.json",
+      "file": "receipts/candidate/analysis-arm.json",
+      "bytes": 688,
+      "sha256": "835d73a27a5519f7a8b07593d42e658fdd273282bd30a3960e1cd1b1e6e047ec"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-archives/archives.json",
+      "file": "receipts/candidate/archives.json",
+      "bytes": 7313,
+      "sha256": "bcc2240b0281c119057075e00724da45994a81587d7a1a855e4a501690583397"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/owner.json",
+      "file": "receipts/candidate/control/owner.json",
+      "bytes": 7623,
+      "sha256": "a876a2a30fcf6b2e7a0302d417f31f8e1a0367d1ecdde6a6df4c6a486fa03c82"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/archive-owner.json",
+      "file": "receipts/candidate/control/archive-owner.json",
+      "bytes": 2897,
+      "sha256": "dd109ad779aff3ae0995785744514ab6120ea243f17bb4629d6a5ea6878bf678"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/endpoint-receipt.json",
+      "file": "receipts/candidate/control/endpoint-receipt.json",
+      "bytes": 4093,
+      "sha256": "d3c5f65d46962c6c20d183c96cf3863d2acb42c84827b72d8671de30b466e5fa"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/endpoint-policy.json",
+      "file": "receipts/candidate/control/endpoint-policy.json",
+      "bytes": 90099,
+      "sha256": "217777ab3acf1b033921bcbc25cce6a94a01dc4ecb3e3e9e78d67911dfa4b03d"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/sync.json",
+      "file": "receipts/candidate/control/sync.json",
+      "bytes": 912638,
+      "sha256": "c4c68a6cbc211e1acdfca4deaf56da2ac9a6e98fbe7dd70395431adbb01069f0"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/prior-unit.json",
+      "file": "receipts/candidate/control/prior-unit.json",
+      "bytes": 4113,
+      "sha256": "b7f7e949b35e8ca686df0e85f27e36dd26404ab363258f732c83c5568b5334a8"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/prior-live.json",
+      "file": "receipts/candidate/control/prior-live.json",
+      "bytes": 1784,
+      "sha256": "329b2d29974f6145a9c9d5761b6f84b5b32286b24aa2a041b644baba7c87bb8f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/prior-live-source.json",
+      "file": "receipts/candidate/control/prior-live-source.json",
+      "bytes": 20449,
+      "sha256": "49e2578fbf6a0893df902bff8b2094ab17492a3256ede79b0bedc87cacea3793"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/basic-result.json",
+      "file": "receipts/candidate/control/basic-result.json",
+      "bytes": 11080,
+      "sha256": "25620f399ad6afedbb8d9505cf42089964fd6f650c38cd3e30acd47864297f29"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/prior-unit-config.json",
+      "file": "receipts/candidate/control/prior-unit-config.json",
+      "bytes": 2429,
+      "sha256": "7e393beea899a9fe2145374485f4336bd28778fda91cf17780059e540d3dda1f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/retained-check-0-result.json",
+      "file": "receipts/candidate/control/retained-check-0-result.json",
+      "bytes": 2549,
+      "sha256": "5d3740b52f89a50e4201272d2e3ef89e707ec8beb1fa83acc12a9ea113ff7e80"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/retained-check-0-unit.log",
+      "file": "receipts/candidate/control/retained-check-0-unit.log",
+      "bytes": 11134,
+      "sha256": "1f0491d6bc7b26b1eda94fd7fe4d86d946ebb1b40aa62fefc5c581b7a5df1d95"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/retained-check-0-writer-observation.log",
+      "file": "receipts/candidate/control/retained-check-0-writer-observation.log",
+      "bytes": 103,
+      "sha256": "b717e40e08ff00639b8b857c98d179682eb260aa1c28ca26629175fe8d019988"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/retained-check-0-writer-sites.log",
+      "file": "receipts/candidate/control/retained-check-0-writer-sites.log",
+      "bytes": 106,
+      "sha256": "31d461d4f5ea9a76ac910ab10c6f0bdaffcf73105fffad0bef6b67b23d0e121f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-basic/owner.json",
+      "file": "transports/candidate-basic/owner.json",
+      "bytes": 1758,
+      "sha256": "aec844eb426c1191e154f66eabb2d1f6154f85cffe5de887ee3c0da3a7e814f0"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-basic/spec.json",
+      "file": "transports/candidate-basic/spec.json",
+      "bytes": 1039,
+      "sha256": "45bdd1e5408130329a5dc8d412b40910571f0d971368b59d443e3f86195977f6"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-basic/stdout",
+      "file": "transports/candidate-basic/stdout",
+      "bytes": 1998,
+      "sha256": "611270e5fec4de8785e2629f358360c0767ec297b6c0da70153643230b46fc90"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-basic/stderr",
+      "file": "transports/candidate-basic/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-run/owner.json",
+      "file": "transports/candidate-nano-run/owner.json",
+      "bytes": 3325,
+      "sha256": "5e0e42833ca3a97e26d1804ce4e6720e5598a2f2a7e07a62d946971828dbad04"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-run/spec.json",
+      "file": "transports/candidate-nano-run/spec.json",
+      "bytes": 2640,
+      "sha256": "489563343157c78956d5b44ed3043ed9f3ca29ea2b82ce640e74dcdf767adfdf"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-run/stdout",
+      "file": "transports/candidate-nano-run/stdout",
+      "bytes": 68,
+      "sha256": "9d0be1c63b7f9e72f7531d4df210ecdfe3788994e7dbdca23c7f4c02900c59b9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-run/stderr",
+      "file": "transports/candidate-nano-run/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-archive/owner.json",
+      "file": "transports/candidate-nano-archive/owner.json",
+      "bytes": 2485,
+      "sha256": "3b1833df504b7e28db73f608a1afea2814b95dccec710b3b7be1c0473bec21b3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-archive/spec.json",
+      "file": "transports/candidate-nano-archive/spec.json",
+      "bytes": 1803,
+      "sha256": "0ec4cb361ee785f18cb82f3b1e1c59cb7264d4c0470e0189291334cb053b09a7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-archive/stdout",
+      "file": "transports/candidate-nano-archive/stdout",
+      "bytes": 76,
+      "sha256": "be69c0f92dbfcc7c8f78fea72318a3b0832928941269aa87e81798dfb4f1e580"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-nano-archive/stderr",
+      "file": "transports/candidate-nano-archive/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-checks/owner.json",
+      "file": "correctness/baseline-checks/owner.json",
+      "bytes": 1197,
+      "sha256": "c4347f13cbf18201e580381d04fdba469d1eb7b652a3eeb53e018ffe5b6e9c3b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-checks/result.json",
+      "file": "correctness/baseline-checks/result.json",
+      "bytes": 2575,
+      "sha256": "e4c0e01e10f558315c2cd351f92c025f5ce16d5f210872c1aca31136d5307f77"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-checks/spec.json",
+      "file": "correctness/baseline-checks/spec.json",
+      "bytes": 478,
+      "sha256": "7013b3497837a02a10e69ac7ab05a0f8b8b2674044324387b99b5c17bf2cad8a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-checks/stdout",
+      "file": "correctness/baseline-checks/stdout",
+      "bytes": 170,
+      "sha256": "30f7e414d12638da6372fcab3f234824ccb1bd64348af55a45e859715e70184f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-checks/stderr",
+      "file": "correctness/baseline-checks/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-checks/owner.json",
+      "file": "correctness/candidate-checks/owner.json",
+      "bytes": 1223,
+      "sha256": "3f3f43729f2b4eff33b6bb3d5db601612f2ce9b6a015d5395c175892334f908a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-checks/result.json",
+      "file": "correctness/candidate-checks/result.json",
+      "bytes": 2549,
+      "sha256": "5d3740b52f89a50e4201272d2e3ef89e707ec8beb1fa83acc12a9ea113ff7e80"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-checks/spec.json",
+      "file": "correctness/candidate-checks/spec.json",
+      "bytes": 485,
+      "sha256": "5f01d3c6da2b6a7ddf088edc38217a5576a3ba4050a571d9fd65b6211f11a6ba"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-checks/stdout",
+      "file": "correctness/candidate-checks/stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-checks/stderr",
+      "file": "correctness/candidate-checks/stderr",
+      "bytes": 179,
+      "sha256": "9fa0efc0aea88573c5aa43af4ceacdde3f79bb87ea3367c3dc3db340598acd12"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/corrected-checks/owner.json",
+      "file": "correctness/corrected-checks/owner.json",
+      "bytes": 1207,
+      "sha256": "f231784fa345f441cde80261a1d2261c0151eae495eaf4fe162700024a0dd16b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/corrected-checks/result.json",
+      "file": "correctness/corrected-checks/result.json",
+      "bytes": 4113,
+      "sha256": "b7f7e949b35e8ca686df0e85f27e36dd26404ab363258f732c83c5568b5334a8"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/corrected-checks/spec.json",
+      "file": "correctness/corrected-checks/spec.json",
+      "bytes": 488,
+      "sha256": "f53ee83ff15f28bfa8dd2c5828c1955fda219cd5f10fff0b5dd7e63d49947810"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/corrected-checks/stdout",
+      "file": "correctness/corrected-checks/stdout",
+      "bytes": 176,
+      "sha256": "5a82e16d2c9ff33f5a562275fc2ddb8b304af2e939e15947219950d2c2f9644f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/corrected-checks/stderr",
+      "file": "correctness/corrected-checks/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/drain/owner.json",
+      "file": "correctness/drain/owner.json",
+      "bytes": 1062,
+      "sha256": "4256e4dea788c28f17215e23e6bb070525afdab0b106401e46f2b4fe7bbe0260"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/drain/result.json",
+      "file": "correctness/drain/result.json",
+      "bytes": 934,
+      "sha256": "7eceacc1b4d04279df31a49ef4a5a3eb412a93226e756bbaa221dd01a852b5f9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/drain/spec.json",
+      "file": "correctness/drain/spec.json",
+      "bytes": 346,
+      "sha256": "c7662b16fa7e342369d287fe7ead290ad6758bb1f67524a8125a34ec10022993"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/drain/stdout",
+      "file": "correctness/drain/stdout",
+      "bytes": 712,
+      "sha256": "62034b99dec7d10f6755f6a5e8f0ec1877c1325d41a13cd25e054893c403da5d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/drain/stderr",
+      "file": "correctness/drain/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/baseline-rwsem-result.json",
+      "file": "correctness/prerequisites/baseline-rwsem-result.json",
+      "bytes": 1547,
+      "sha256": "d762a39c35baa7f770510004ac826a59e5eb86c73dd8c3165d688268df1a6017"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/baseline-rwsem-source-sha256.json",
+      "file": "correctness/prerequisites/baseline-rwsem-source-sha256.json",
+      "bytes": 20333,
+      "sha256": "9fa49aeea1b3eee60cdbb29abf3f2e9e5fad8d9ead6b3e940afc35f84397e793"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/bindings.json",
+      "file": "correctness/prerequisites/bindings.json",
+      "bytes": 1257,
+      "sha256": "d5165b561515b916d6734fdfc03e6ea0593776528a7821f0501f35b96cc3116e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/candidate-rwsem-result.json",
+      "file": "correctness/prerequisites/candidate-rwsem-result.json",
+      "bytes": 1784,
+      "sha256": "329b2d29974f6145a9c9d5761b6f84b5b32286b24aa2a041b644baba7c87bb8f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/prerequisites/candidate-rwsem-source-sha256.json",
+      "file": "correctness/prerequisites/candidate-rwsem-source-sha256.json",
+      "bytes": 20449,
+      "sha256": "49e2578fbf6a0893df902bff8b2094ab17492a3256ede79b0bedc87cacea3793"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/candidate-failure-inspection.txt",
+      "file": "correctness/candidate-failure-inspection.txt",
+      "bytes": 42502,
+      "sha256": "66825b7a0d64b7d8d1ab887ba2ba30d82cb735b945dbc171a538aff4e349be0f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/baseline-nano-transport-interpretation.json",
+      "file": "transports/baseline-nano-transport-interpretation.json",
+      "bytes": 451,
+      "sha256": "265a4d694dd5179b602af0feade75f2205602d70f32ef626870fd59b7ba7d5b5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/nano-comparison-inputs.json",
+      "file": "nano/inputs.json",
+      "bytes": 1503,
+      "sha256": "740fa1c032da2aa8bb19911acecfe8355748c15de2ecd78d09037bd59e72a3c2"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-progress-20261031.json",
+      "file": "provenance/progress-snapshot.json",
+      "bytes": 8143,
+      "sha256": "d2430ff59a1150af79f9d4796b6f5cc76ef590e0ae1bc6c97f17be8a6de5ea41"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-20261031.cohort.json",
+      "file": "provenance/nano-cohort.json",
+      "bytes": 1598,
+      "sha256": "58c4050871f2d483a01ae1c423326c45ad2d03704a9c0b8a9ce4ba4b58751a0a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-20261031.config-r2.json",
+      "file": "provenance/mm-config-pending.json",
+      "bytes": 3709,
+      "sha256": "b15f6ec4b235e46907978e512b2429906f1bdfa937340ac32f0f9fe76181e602"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-provider-pair-20261031.md",
+      "file": "provider/README.md",
+      "bytes": 5441,
+      "sha256": "a6eca0de86b29eaf24d3453f5b813b5472c9bc08eb3bfab852a9046182095646"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-provider-pair-facts-20261031.json",
+      "file": "provider/facts.json",
+      "bytes": 51238,
+      "sha256": "f873ce9af5333340f5fbab109974ccd0f61572fbaebc3c5fed60569f76e65bee"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-provider-pair-20261031/comparison.json",
+      "file": "provider/comparison.json",
+      "bytes": 147715,
+      "sha256": "2ed7ec2afa76722b558364c7020b88fbab0a874fe78987c2c0064727ae2f5c2f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-provider-baseline-20261031/capture.json",
+      "file": "provider/baseline-capture.json",
+      "bytes": 15538,
+      "sha256": "850614716fb25ec1646214842818defcd8596cd4942c0dd2a317e6c37ab8f1c0"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-provider-candidate-20261031/capture.json",
+      "file": "provider/candidate-capture.json",
+      "bytes": 15539,
+      "sha256": "5118834bb43898ce3e8cfda4a900e4a147c30744cd87dee537ab4f812c8510e8"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-20261031.py",
+      "file": "tools/kdlock-writer-queue-nano-20261031.py",
+      "bytes": 46501,
+      "sha256": "1857baca9f699907c9eb418e8cb347d601095be95d688e1b9d604aa3fc8a2731"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-spec-20261031.py",
+      "file": "tools/kdlock-writer-queue-nano-spec-20261031.py",
+      "bytes": 5307,
+      "sha256": "87094d88a95f7d48d096214613a5ec455d8fc0552701924ad2eff48a9be7b054"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-spec-r2-20261031.py",
+      "file": "tools/kdlock-writer-queue-nano-spec-r2-20261031.py",
+      "bytes": 5333,
+      "sha256": "60209c18301480311a33b6eab2275fcf5aa0689a10f1679447d773fecceb0719"
+    },
+    {
+      "source": "/tmp/kdlock-reviewed-guest-step-transport-20261031.py",
+      "file": "tools/kdlock-reviewed-guest-step-transport-20261031.py",
+      "bytes": 2387,
+      "sha256": "0d48e27a4dbd6838e349431d50f671ce7b59346ab4afed59ca8f54449310ffd7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-provider-inspection-20261031.py",
+      "file": "tools/kdlock-writer-queue-provider-inspection-20261031.py",
+      "bytes": 16597,
+      "sha256": "81039f0f107e45b9f8049b9946216b657ab952978dc4e2e4d4041e0d6c32d07e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/README.md",
+      "file": "tools/nano-offline/README.md",
+      "bytes": 7000,
+      "sha256": "8d55af151310fc6a06b984ee87acae607ca6c785ef1889d1639df4e41c10f302"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/archive_helpers.py",
+      "file": "tools/nano-offline/archive_helpers.py",
+      "bytes": 3938,
+      "sha256": "23091e89adb274d48f437e11a622c2de7ffdefdaf0655b0ec1c6ea720b754dda"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/fresh_controls.py",
+      "file": "tools/nano-offline/fresh_controls.py",
+      "bytes": 13255,
+      "sha256": "518c40e2e7ea74df0b7216a4d49965d0c2b826c9b21f84792e3c201add7ea073"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/manifest.json",
+      "file": "tools/nano-offline/manifest.json",
+      "bytes": 814,
+      "sha256": "c69d6cf957f36a7a26ab0a793e93aab93d07511564cbca71f999858041431465"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/nano_compare.py",
+      "file": "tools/nano-offline/nano_compare.py",
+      "bytes": 3577,
+      "sha256": "b12a9f2435dde819751b14bd810a85ca025ce8d9801c84f57041f17c43524417"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/nano_core.py",
+      "file": "tools/nano-offline/nano_core.py",
+      "bytes": 34745,
+      "sha256": "3ec336f7d4ef5bf100f1639c9c77a36405593c7a47099348b4e25ac5caceba0b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-offline-20261031/nano_functions.py",
+      "file": "tools/nano-offline/nano_functions.py",
+      "bytes": 10334,
+      "sha256": "369c7688f686d9fe0b03054ab1a09136b3cf697c8ca787dca55c034836a7d14a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-spec-r2-20261031.md",
+      "file": "tools/nano-spec-correction.md",
+      "bytes": 1286,
+      "sha256": "c1cc2b052eccddf762c0f12d33417282463f6ed9f8c1c0fc592824f05ab8dafe"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/README.md",
+      "file": "nano/accounting/README.md",
+      "bytes": 8017,
+      "sha256": "ff8f7de438a5bc1ed08ed93e2024093cf36435dc3f2d4e0748406de31663f238"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/validation.json",
+      "file": "nano/accounting/validation.json",
+      "bytes": 868,
+      "sha256": "b05ef8695be41a5930cbcdfde85048912b5af8e478921ec1b1b0ecc19b712656"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/pairs.json",
+      "file": "nano/accounting/pairs.json",
+      "bytes": 173513,
+      "sha256": "3e20abb42f5823e6946d087c5367c35c6f88eaaa0b74abb1b754a35a6a709d88"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/selected.json",
+      "file": "nano/accounting/selected.json",
+      "bytes": 65842,
+      "sha256": "793452c6c211557be19ba1fa01d3f3d73a32d01608891b28bbdf8115f70268b3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/key-workers.json",
+      "file": "nano/accounting/key-workers.json",
+      "bytes": 33283,
+      "sha256": "1a022dd22d5d8cabb9c382db0fa9b23b3ac2fff8df4da8b32f3ec01e78b988aa"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/group-proof.json",
+      "file": "nano/accounting/group-proof.json",
+      "bytes": 3129,
+      "sha256": "ed7b7f17652c154eb7012612bff1c5833d116eda4f99d31a4f175c79ce54ac10"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031/manifest.json",
+      "file": "nano/accounting/manifest.json",
+      "bytes": 4869,
+      "sha256": "4259e3f378e409e761e014579a36ad360aeafcab00918f7bf505c0845bc93e30"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-nano-accounting-20261031.py",
+      "file": "tools/kdlock-writer-queue-nano-accounting-20261031.py",
+      "bytes": 7998,
+      "sha256": "895c8522c926f7fba6490e76fd2bc23dcc528f80bb073082d9bd44a7360772f7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare/owner.json",
+      "file": "kernel/scope3-prepare/owner.json",
+      "bytes": 1276,
+      "sha256": "4ede85a1bd813bec5274b93fb40df70fd41bd72f64e0a749012c63c8a0fb81ef"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare/result.json",
+      "file": "kernel/scope3-prepare/result.json",
+      "bytes": 12392,
+      "sha256": "038bbc28ff913501b55e9b5304d33b27d3d34a50bcbdb5787b8ed17ae0041f19"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare/spec.json",
+      "file": "kernel/scope3-prepare/spec.json",
+      "bytes": 511,
+      "sha256": "bcd3d52b4edad4064ecc8354d5090afa8d47a1748a86a7f9834a1731df7dc0e5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare/stdout",
+      "file": "kernel/scope3-prepare/stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare/stderr",
+      "file": "kernel/scope3-prepare/stderr",
+      "bytes": 774,
+      "sha256": "7117e1acd3efbb8bd40b283ec37473bd01581b0738173c04983c3742c4c3f020"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare-r2/owner.json",
+      "file": "kernel/scope3-prepare-r2/owner.json",
+      "bytes": 1251,
+      "sha256": "844e51abaa9c260fd965fe6794b154ae609076cef8afaeb265c9338cc6956bbc"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare-r2/result.json",
+      "file": "kernel/scope3-prepare-r2/result.json",
+      "bytes": 13106,
+      "sha256": "e7cf59cbf46df7a7f5805d11540e6bad21be82fea9562db1aa6f4eca6b77aef6"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare-r2/spec.json",
+      "file": "kernel/scope3-prepare-r2/spec.json",
+      "bytes": 532,
+      "sha256": "ff6e07b5b1d99b9a40f600842a16c9f98857eda1a3a2c5f54e6b9d11b2eebb90"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare-r2/stdout",
+      "file": "kernel/scope3-prepare-r2/stdout",
+      "bytes": 152,
+      "sha256": "1e9100b9d418ebd4807a5be1d8deedc7636e88a5067ac5bdf474b3d2c2ab6a02"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-prepare-r2/stderr",
+      "file": "kernel/scope3-prepare-r2/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-build-bind.json",
+      "file": "kernel/scope1-build-bind.json",
+      "bytes": 259,
+      "sha256": "c6c29245281532d53ef947acff4adcb0db156bab735abe63adb0572d3a901390"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-build-r2/owner.json",
+      "file": "kernel/scope3-build-r2/owner.json",
+      "bytes": 1232,
+      "sha256": "240d788aed96ebf63984afa4dbe80b9f714146c8245dbbd3b4c4767efe41d507"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-build-r2/result.json",
+      "file": "kernel/scope3-build-r2/result.json",
+      "bytes": 8651,
+      "sha256": "f8050de510e5fa9b679ab1177c881951f227b8a660011ac89a836bc51a52717e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-build-r2/spec.json",
+      "file": "kernel/scope3-build-r2/spec.json",
+      "bytes": 513,
+      "sha256": "efd77350670ef0b63818e83e50330bee11d0b4ecd24a4805534cd39ff42a1c83"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-build-r2/stdout",
+      "file": "kernel/scope3-build-r2/stdout",
+      "bytes": 148,
+      "sha256": "bda0ec47a8b3b5df9cb150feb287260a70e76e1fc3730d4457868d0f05b6b41d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-build-r2/stderr",
+      "file": "kernel/scope3-build-r2/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/result.json",
+      "file": "kernel/scope3-stage/result.json",
+      "bytes": 4176,
+      "sha256": "0c2e39cc7f41f26ef9fde7a6fe2ee2a03b7ebcf36b98f2e74fde6e4dc31686ab"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/spec.json",
+      "file": "kernel/scope3-stage/spec.json",
+      "bytes": 894,
+      "sha256": "180e6165248bd1c183ce050ca35c4b39cd34f762429c832b13d7a8aed9ab9490"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/step/owner.json",
+      "file": "kernel/scope3-stage/step/owner.json",
+      "bytes": 1623,
+      "sha256": "f96275ee32f1d40029033abf33c1b2b4060490298915b3a32b32a09d17ad1c2a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/step/result.json",
+      "file": "kernel/scope3-stage/step/result.json",
+      "bytes": 1053929,
+      "sha256": "d14d5b29c9c06158d5ec21d15bd80be64d0d21eeaf7b0f57cd8dbdb4a29e2ca9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/step/stdout",
+      "file": "kernel/scope3-stage/step/stdout",
+      "bytes": 180,
+      "sha256": "99f4fd41f67f0f4dbda9010ab3de97d1e8b6a237c901438a67050996282f9b32"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-stage/step/stderr",
+      "file": "kernel/scope3-stage/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/result.json",
+      "file": "kernel/scope3-install/result.json",
+      "bytes": 4183,
+      "sha256": "94f4f68bc3ce4ea65e7d0c9bc37ce8bca8a8baf5e9e6ef8ca5679e79b806975d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/spec.json",
+      "file": "kernel/scope3-install/spec.json",
+      "bytes": 1128,
+      "sha256": "20ce5d6546b1e7a8a9abd63318d62f16aaa9e10532e1c2d03a84fa05c6c44fd9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/step/owner.json",
+      "file": "kernel/scope3-install/step/owner.json",
+      "bytes": 1858,
+      "sha256": "c843d1a75f79199de17c31681cc7b605c3d79a3a9b438c5223fd826ee71abaa7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/step/result.json",
+      "file": "kernel/scope3-install/step/result.json",
+      "bytes": 5794,
+      "sha256": "080d0d84a548c26a7e4541323a376f52212cd9af37f2087b1ca0aed2b23a8fd9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/step/stdout",
+      "file": "kernel/scope3-install/step/stdout",
+      "bytes": 183,
+      "sha256": "b0053fc85d20c42beca14295b76715b85dd861bb0a709843b64a47f186821158"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-install/step/stderr",
+      "file": "kernel/scope3-install/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/result.json",
+      "file": "kernel/scope3-append/result.json",
+      "bytes": 4179,
+      "sha256": "8ce7649cc5827fa5ae980f82b90b0590eca3b40d8b4a4d5262943a22220ba692"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/spec.json",
+      "file": "kernel/scope3-append/spec.json",
+      "bytes": 1125,
+      "sha256": "2bc62261498b4ef65d6bd2ad3411f5510d4a0655951485f2a8f8df97a7686ee5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/step/owner.json",
+      "file": "kernel/scope3-append/step/owner.json",
+      "bytes": 1863,
+      "sha256": "35203328d3ca5aa45c4c8fc29a625768240a81ec1e91a237e79f42a302a5a824"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/step/result.json",
+      "file": "kernel/scope3-append/step/result.json",
+      "bytes": 6222,
+      "sha256": "2fd8f2b0d3aa093090ba346c3b1babb26d8fb8e98622591438953c78c15a2ffe"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/step/stdout",
+      "file": "kernel/scope3-append/step/stdout",
+      "bytes": 188,
+      "sha256": "db76c3470d173894650e1e6fcb0f7d856f6febef06f907880919d6a7f0b2c1d1"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-append/step/stderr",
+      "file": "kernel/scope3-append/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/result.json",
+      "file": "kernel/scope3-native-arm/result.json",
+      "bytes": 4190,
+      "sha256": "913ed88e8f11c7a7422e808faa2170e621a1bdc44a6cf7bc3894cbc3de897b28"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/spec.json",
+      "file": "kernel/scope3-native-arm/spec.json",
+      "bytes": 1161,
+      "sha256": "47353b4aa02a7e31e39b851b763c544c590d61e6fffba5045570ffb33633afd0"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/step/owner.json",
+      "file": "kernel/scope3-native-arm/step/owner.json",
+      "bytes": 1891,
+      "sha256": "33fccddd9bb253a14b57d8a890486f131c6a9fbb7f438a750b6650153aff4085"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/step/result.json",
+      "file": "kernel/scope3-native-arm/step/result.json",
+      "bytes": 4025,
+      "sha256": "46629fd58793e91a7162809906e9dc7efa0515db0d5e3a9cc9f2eb1ec272bf0a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/step/stdout",
+      "file": "kernel/scope3-native-arm/step/stdout",
+      "bytes": 181,
+      "sha256": "6ce5976d9577b04f49c81046a4d45e90f1606fa96c779028df76ab52fc6bf2a5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-arm/step/stderr",
+      "file": "kernel/scope3-native-arm/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/result.json",
+      "file": "kernel/scope3-native-request/result.json",
+      "bytes": 3915,
+      "sha256": "d89b30b3eda02d4d7fbecb91bbc01d31822ddbcf7a6896ef452ddf3a6c3b7da3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/spec.json",
+      "file": "kernel/scope3-native-request/spec.json",
+      "bytes": 1149,
+      "sha256": "65628d9eafcc138dcd2fd15a942d41fd2be8ec4e57aac2b9d0a4e270e21ad049"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/step/owner.json",
+      "file": "kernel/scope3-native-request/step/owner.json",
+      "bytes": 1711,
+      "sha256": "e6198d040e7682f987ef576db097eb185ffe7ef63868073223b4d76a84f93937"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/step/result.json",
+      "file": "kernel/scope3-native-request/step/result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/step/stdout",
+      "file": "kernel/scope3-native-request/step/stdout",
+      "bytes": 200,
+      "sha256": "e238bba8c2dc1c35a6466152a57cab0e1cd24b3da806adc606fc79a71a75f672"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request/step/stderr",
+      "file": "kernel/scope3-native-request/step/stderr",
+      "bytes": 48,
+      "sha256": "138644feac9a90519ea062e71704f2087a623470d9f991db9110943552fec422"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/result.json",
+      "file": "kernel/scope3-native-capture/result.json",
+      "bytes": 4202,
+      "sha256": "1ddb0038ebb4f90c70467f08f1a84b959c7a757648408aac27ff38c33489db0e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/spec.json",
+      "file": "kernel/scope3-native-capture/spec.json",
+      "bytes": 2092,
+      "sha256": "d3ce96803b105f8d079a526cb79cae6e065a6b4f692b965b08b3469e5fe76605"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/step/owner.json",
+      "file": "kernel/scope3-native-capture/step/owner.json",
+      "bytes": 1899,
+      "sha256": "ea346d3c17498b2181356f5df50d2826c2cb680a03770065615d3d612f891fb7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/step/result.json",
+      "file": "kernel/scope3-native-capture/step/result.json",
+      "bytes": 6274,
+      "sha256": "9227d5f4c350fa99b3e7f97749dc81e0ff11f20d4a544ba515364d792a5757ab"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/step/stdout",
+      "file": "kernel/scope3-native-capture/step/stdout",
+      "bytes": 201,
+      "sha256": "604b74617d3e01e4facecd1eae0ed29f3fc060cc5175ca9665309e90cd7a596a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-capture/step/stderr",
+      "file": "kernel/scope3-native-capture/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/result.json",
+      "file": "kernel/scope1-arm/result.json",
+      "bytes": 4166,
+      "sha256": "51b753c3c54839f3ec21a8e576848b4b27c1b411f74afe329237685cbebe6d40"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/spec.json",
+      "file": "kernel/scope1-arm/spec.json",
+      "bytes": 2528,
+      "sha256": "d19081006a914bc76131fedcbe0fd5521826e5f0a05c81d2fa3d068abd8d0028"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/step/owner.json",
+      "file": "kernel/scope1-arm/step/owner.json",
+      "bytes": 2064,
+      "sha256": "cf6e476d3e8aa4a11cc3f898f3234cb2356803697bc2302f1290c0daa04e125a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/step/result.json",
+      "file": "kernel/scope1-arm/step/result.json",
+      "bytes": 3955,
+      "sha256": "6be4d7172a0aeae852d19391b81a0a6f01e4ddf21598e20c6cad642e3cb79665"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/step/stdout",
+      "file": "kernel/scope1-arm/step/stdout",
+      "bytes": 167,
+      "sha256": "9cc0f14c6c485d786e6be21a3cb7b40619416e4dbcf182f32745c15dcaef82e7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-arm/step/stderr",
+      "file": "kernel/scope1-arm/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/result.json",
+      "file": "kernel/scope1-request/result.json",
+      "bytes": 3902,
+      "sha256": "98e292e70d6d76a9a7de7a423f6423323e968d0210d9ee387cecdb26bdfbe9af"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/spec.json",
+      "file": "kernel/scope1-request/spec.json",
+      "bytes": 2511,
+      "sha256": "d4238f689d5036893b54df77481f70a831b3fc4fefe04e5b87557ba9c0e99d1e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/step/owner.json",
+      "file": "kernel/scope1-request/step/owner.json",
+      "bytes": 1902,
+      "sha256": "824e1e064e7ca874304d634e879324d4ab1eed509213173d0321e80d4cd4ec74"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/step/result.json",
+      "file": "kernel/scope1-request/step/result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/step/stdout",
+      "file": "kernel/scope1-request/step/stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request/step/stderr",
+      "file": "kernel/scope1-request/step/stderr",
+      "bytes": 48,
+      "sha256": "138644feac9a90519ea062e71704f2087a623470d9f991db9110943552fec422"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/result.json",
+      "file": "kernel/scope1-capture/result.json",
+      "bytes": 4180,
+      "sha256": "9545337ccb2496be25288f6145805023c47597c942f3dd269e595f331051b5e0"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/spec.json",
+      "file": "kernel/scope1-capture/spec.json",
+      "bytes": 2552,
+      "sha256": "18b28d5c59173ebccf5e5655e6f5bdb7e681f39cb9db977a0a67f1db21674005"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/step/owner.json",
+      "file": "kernel/scope1-capture/step/owner.json",
+      "bytes": 2089,
+      "sha256": "b808fa4c1fba8017725fc84be3ecba6052446777b8d81ed296b473e7957cec15"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/step/result.json",
+      "file": "kernel/scope1-capture/step/result.json",
+      "bytes": 6138,
+      "sha256": "447eecc0f1b64b5b38f188dc33e2ccb65eb6556a4f4ff033d5406ca57af505a5"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/step/stdout",
+      "file": "kernel/scope1-capture/step/stdout",
+      "bytes": 189,
+      "sha256": "d2c9ace18a4f9e71b7b98e0ea9d6a2467cd131341880ffe0ecdbb568d0ef9c5c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-capture/step/stderr",
+      "file": "kernel/scope1-capture/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/result.json",
+      "file": "kernel/mm-baseline-bind/result.json",
+      "bytes": 4186,
+      "sha256": "437550e856525c06f69e9e6950b3ce6e7ef3595c5dc1c8683ffae5e9df7e2a21"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/spec.json",
+      "file": "kernel/mm-baseline-bind/spec.json",
+      "bytes": 747,
+      "sha256": "73d935fa668a89c45173061fb372efc0bc9d81ff9f7d978a4fb1606530533188"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/step/owner.json",
+      "file": "kernel/mm-baseline-bind/step/owner.json",
+      "bytes": 1466,
+      "sha256": "18b303f820f583bc0943d477671683fcdb786dd3343c335440e97e211e69b359"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/step/result.json",
+      "file": "kernel/mm-baseline-bind/step/result.json",
+      "bytes": 1517,
+      "sha256": "14311f8806cc34ac26633d137e0e4b7042c16cdfc0397561271e548bbb9c1c52"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/step/stdout",
+      "file": "kernel/mm-baseline-bind/step/stdout",
+      "bytes": 1265,
+      "sha256": "9f33d47b42630c91139c0ea84655c7a96850dcda9158380eea72a9777ee646f7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-bind/step/stderr",
+      "file": "kernel/mm-baseline-bind/step/stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request-recovered/recovery.json",
+      "file": "kernel/scope3-native-request-recovered/recovery.json",
+      "bytes": 463,
+      "sha256": "5fb8ee0d6751f80131b326c7bd9f27afae8fecea49e6a52ae2d8146127ac5774"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-native-request-recovered/step/result.json",
+      "file": "kernel/scope3-native-request-recovered/step/result.json",
+      "bytes": 3391,
+      "sha256": "22de061ad7639ebbf9e395b0da654841db593b6cc6c712b33c85fd8debc58406"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request-recovered/recovery.json",
+      "file": "kernel/scope1-request-recovered/recovery.json",
+      "bytes": 446,
+      "sha256": "c181c03ef1639a9386e19a79c8e9715934a8bc3ffe2948636444b36d149b7997"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope1-request-recovered/step/result.json",
+      "file": "kernel/scope1-request-recovered/step/result.json",
+      "bytes": 3328,
+      "sha256": "c86a502b13f42590787510d8d3e310aaa9a5f973b77c5199d7639ef4d505add1"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-scope3-install-config-20261031.json",
+      "file": "provenance/kdlock-writer-queue-scope3-install-config-20261031.json",
+      "bytes": 1966,
+      "sha256": "c4d7a1b4e09ac90b305a12cbda9b9cb1d8160074fa83466ca6d6b633bf18be7d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-baseline-descriptor-review-20261031.json",
+      "file": "provenance/kdlock-writer-queue-mm-baseline-descriptor-review-20261031.json",
+      "bytes": 1106,
+      "sha256": "bce34bb895446716782b5bf0ab61bb36202f19abd4cd50cc9ff3cfa0fb350786"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "file": "tools/kdlock-writer-queue-install-boot-20261031.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-scope1-boot-20261031.py",
+      "file": "tools/kdlock-writer-queue-scope1-boot-20261031.py",
+      "bytes": 13836,
+      "sha256": "9424d4afcb6ca8c8f0ccbe0eb0443407647414861afba2d245c3a07676a803e6"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-source-view-20261031.py",
+      "file": "tools/kdlock-writer-queue-mm-source-view-20261031.py",
+      "bytes": 4532,
+      "sha256": "c39db64aaa15e35aebb7a4e65461441fc6e0a7a41f52d9620697c820327ba5d9"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/analysis-arm.json",
+      "file": "mm/baseline/analysis-arm.json",
+      "bytes": 21983,
+      "sha256": "0b7a8fb2fef5d0e97df35a0fba66fc2e8cb932ddb97899ba54549089b3605990"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/transfer.json",
+      "file": "mm/baseline/transfer.json",
+      "bytes": 16805,
+      "sha256": "7a4f270c863aaa29ffccbffc156fa5ff8e0bfea2dbaf0a7f335a9e1b0c68fcae"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/archive-provenance.json",
+      "file": "mm/baseline/archive-provenance.json",
+      "bytes": 938,
+      "sha256": "3b1010edb81a069906d276bc5f4b10d5f1a59ca093ec9632587d893d9f2abf9d"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archive-control/owner.json",
+      "file": "mm/baseline/baseline-archive-control/owner.json",
+      "bytes": 4854,
+      "sha256": "bafcaac5711b284ad058b3b2b26be8511890ed6e6b41e56707fa01c672636a7b"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archive-control/alias-map.json",
+      "file": "mm/baseline/baseline-archive-control/alias-map.json",
+      "bytes": 21252,
+      "sha256": "53cc98c6cc673236740c46b57788602c56531afda5fa02041a2c336441c4d76f"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archive-control/bindings.json",
+      "file": "mm/baseline/baseline-archive-control/bindings.json",
+      "bytes": 2508,
+      "sha256": "80f04affaa6df1c04ee8041ab923a0ec05109b73854446b47b0ec51a374f9929"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-baseline-20261031/baseline-archives/archives.json",
+      "file": "mm/baseline/baseline-archives/archives.json",
+      "bytes": 3354,
+      "sha256": "6b11ca66a1c785cf4a450bf79d9700b858a56efd3260849054e1e19ebcf9d955"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-sites/step/result.json",
+      "bytes": 6896,
+      "sha256": "dbeabe1b93a54f094fc7693994ea31035696f865944c5184e1ecfb2dfe9671a3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-api/step/result.json",
+      "bytes": 7132,
+      "sha256": "d921d51700dd11fe8e18aac488ff7d8b09e5929ffb7ea0f489bf2e3539c60237"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-drain/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-api-drain/step/result.json",
+      "bytes": 1196,
+      "sha256": "fd5563cf6433d34f60f340aa83e55dbbb7820631846327cc0836774e81cd707c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-checks/step/result.json",
+      "file": "mm/diagnostics/sites3-checks/step/result.json",
+      "bytes": 1540,
+      "sha256": "83881aff2dcef313e81c3c05f114ed7e1a7fc3dbf2e2b19a84d87dfad88a348e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-baseline-replay/step/result.json",
+      "file": "mm/diagnostics/sites3-baseline-replay/step/result.json",
+      "bytes": 4754,
+      "sha256": "8625c593c058f892e3760f26f93181ceedd9f6421eb527b294087f76eae49137"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-strict-extract/step/result.json",
+      "file": "mm/diagnostics/sites3-strict-extract/step/result.json",
+      "bytes": 603,
+      "sha256": "6638a0443d405b0d120cde5754c412456baf1bd05ccf643d2e6e298e17bb5c51"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-strict-extract/result.json",
+      "file": "mm/diagnostics/sites3-strict-extract/result.json",
+      "bytes": 3913,
+      "sha256": "9bd74e505a98b811f0ebb63ce152e9b8586580a144396cb204941bf262a5996e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-strict-extract-r2/step/result.json",
+      "file": "mm/diagnostics/sites3-strict-extract-r2/step/result.json",
+      "bytes": 1150,
+      "sha256": "9fae76efc851dcb0af19dbc1512b2a5799babefc7e413c60bb2086bd9cf7628b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-strict-extract-r2/result.json",
+      "file": "mm/diagnostics/sites3-strict-extract-r2/result.json",
+      "bytes": 4196,
+      "sha256": "e52a6399958606cdd6acc4ec50caf759183691fb5a3b1457c7b55dddc79f9104"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/sites3-materialize/result.json",
+      "file": "mm/diagnostics/sites3-materialize/result.json",
+      "bytes": 954,
+      "sha256": "01bd41f16b7b2e9b0b4eb40ecfb5c82b6b90cd874b1d7c843c1222bcbde58251"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/queue-proof-materialize/result.json",
+      "file": "mm/diagnostics/queue-proof-materialize/result.json",
+      "bytes": 1137,
+      "sha256": "0996686bc8c85b3469b9e8c3971772821275ba2ba06be5fe37a28717449e4d57"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-queue-proof/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-api-queue-proof/step/result.json",
+      "bytes": 7442,
+      "sha256": "ceeb04d023deddf067ca98b120403b5924f184fcb0cd7ba8dbe11e56fd149453"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-queue-proof/actual-result.json",
+      "file": "mm/diagnostics/mm-candidate-api-queue-proof/actual-result.json",
+      "bytes": 10988,
+      "sha256": "7280acffa55f8e41b84ac03c62b220b84befb6197eaed08fad149d214cf16f52"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites-queue-proof/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-sites-queue-proof/step/result.json",
+      "bytes": 7199,
+      "sha256": "90fae36af37a722f72a39dca17c815964f42acd9fe840290e19c32737e69a0ea"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites3-bind/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-sites3-bind/step/result.json",
+      "bytes": 1515,
+      "sha256": "bf3a9c2cdd084fa7bb8e9bb5d9c8a505e51e91ca7a4b9fef6451e149cfa828c9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites3-unbind/result.json",
+      "file": "mm/diagnostics/mm-candidate-sites3-unbind/result.json",
+      "bytes": 1417,
+      "sha256": "91d13dd5ec429a2069b0107b860054f9d92f09107b123a8891b66b5d69ed161f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-queue-proof-bind/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-queue-proof-bind/step/result.json",
+      "bytes": 1516,
+      "sha256": "4f56bc23d94924e81c8aab44026c8b555833a2330b9dc1f25b908fa0e5801d61"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-bind/step/result.json",
+      "file": "mm/diagnostics/mm-candidate-bind/step/result.json",
+      "bytes": 1519,
+      "sha256": "f55d13f1664450c11343514bc61db21d4f471d1b0932b622216490315f066a19"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-baseline-unbind/step/result.json",
+      "file": "mm/diagnostics/mm-baseline-unbind/step/result.json",
+      "bytes": 1409,
+      "sha256": "fbcb8319fc7590d5d688862d97c3a1f9c4a27c26f4867f2764ecbf48f5ae6026"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-kd-capture/step/result.json",
+      "file": "mm/diagnostics/scope3-kd-capture/step/result.json",
+      "bytes": 6214,
+      "sha256": "499ad2053457de3fbd2b88b17766b66ca8485299e2d829e1a0530ee2b328de81"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-sites-failure.log",
+      "file": "mm/diagnostics/failed-sites/controller.log",
+      "bytes": 865,
+      "sha256": "78920261e84202b6598c46b277495df3305bfdada87b2cca40a480d3c34ca5c3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-candidate-mm-sites-asm-20261031/receipt.json",
+      "file": "mm/diagnostics/failed-sites/independent-idle.json",
+      "bytes": 1814,
+      "sha256": "86ce93e7fc52c4db66869b70a56508384cc8bcc2e3e28ee1f9c4c47d232411eb"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/controller.log",
+      "file": "mm/diagnostics/failed-api/controller.log",
+      "bytes": 1041,
+      "sha256": "66b3f25bce47ad703a3f2f9ea2b8b559d2b4eeef92e2038f13fb97cd5b93e8ae"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/run/kernel.log",
+      "file": "mm/diagnostics/failed-api/run/kernel.log",
+      "bytes": 256,
+      "sha256": "c255a08f71e90bfa5c3d3001fef6f9cd8082e2bbed9594a985dc426579a14168"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/run/load.log",
+      "file": "mm/diagnostics/failed-api/run/load.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/run/probe.json",
+      "file": "mm/diagnostics/failed-api/run/probe.json",
+      "bytes": 1059,
+      "sha256": "30f3803e750a1cb542b0ea43a9b53ef4abde109ea05087c9a3c16b272d57ebe7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-api-failure/run/result.json",
+      "file": "mm/diagnostics/failed-api/run/result.json",
+      "bytes": 10443,
+      "sha256": "cd33ad4ae946c4dd75d5c089dd868d9dbc939912c682f1cb8d39b277185684f1"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-20261031.config-sites3.json",
+      "file": "mm/diagnostics/provenance/kdlock-writer-queue-mm-20261031.config-sites3.json",
+      "bytes": 3722,
+      "sha256": "9fe4313c5fc78470b40a292e1f8f356d8e9dda03742e576e9e2b024e4f0c7a92"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+      "file": "mm/diagnostics/provenance/kdlock-writer-queue-mm-20261031.config-queue-proof.json",
+      "bytes": 3722,
+      "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+    },
+    {
+      "source": "/tmp/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+      "file": "mm/diagnostics/provenance/kdlock-strict-hold-chain-f4f5f671-20261031.manifest.json",
+      "bytes": 623,
+      "sha256": "84c13c193fe331185d2e1eb1c357862ffff0f664f6e27030e82b90756d2e27d1"
+    },
+    {
+      "source": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+      "file": "mm/diagnostics/provenance/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+      "bytes": 623,
+      "sha256": "ed9fcddaf0b4dba2f4af3afd722cff5f184abcf6611177192d7d1666f9b5172e"
+    },
+    {
+      "source": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031-r2.md",
+      "file": "mm/diagnostics/provenance/kdlock-strict-hold-return-sites-31d3bc28-20261031-r2.md",
+      "bytes": 1274,
+      "sha256": "b0c60284f5a0347f8cd34a692f0c39906617d648dca6bbcf8f3e241a9f0eb242"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.json",
+      "file": "mm/diagnostics/provenance/kdlock-writer-queue-diagnostic-provenance-r2-20261031.json",
+      "bytes": 10380,
+      "sha256": "2196af5157c900d9faf9ea61b7d51d3f6852d9c3cba6351654d593d88a5ad364"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.inputs.json",
+      "file": "mm/diagnostics/provenance/kdlock-writer-queue-diagnostic-provenance-r2-20261031.inputs.json",
+      "bytes": 7690,
+      "sha256": "0ebfd6f06d8175b315ab4928f84499b7c8c2da0568b82656257d0642ded2168d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.build-receipt.json",
+      "file": "mm/diagnostics/provenance/kdlock-writer-queue-diagnostic-provenance-r2-20261031.build-receipt.json",
+      "bytes": 1307,
+      "sha256": "a4173f71224a83ae12ac4c93ab5d2c6cad9e5d77098405c57528a30614844189"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-diagnostic-provenance-r2-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-diagnostic-provenance-r2-20261031.py",
+      "bytes": 18215,
+      "sha256": "a30f16ccb4036ff5acc186c029359456bcbcbedce8c89a7820cf931bf8cc4bfb"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-diagnostic-provenance-r2-20261031.md",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-diagnostic-provenance-r2-20261031.md",
+      "bytes": 2940,
+      "sha256": "6957d576a9ab59fab4fd064a9a2400fa44dfac4e2910624f4ee9c6e0ba57cc5a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-sites-baseline-replay-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-sites-baseline-replay-20261031.py",
+      "bytes": 15659,
+      "sha256": "64a72d1ae125a43fc9af7fc5902a4b91e85ab72eb50f3bca6fd8e2cac657d3e3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+      "bytes": 14024,
+      "sha256": "8e303ba5a77799ca6151448e8689f6c29c922a86dc1f66b8a0ed65bad077b64d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-archive-diagnostic-r2-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-archive-diagnostic-r2-20261031.py",
+      "bytes": 21445,
+      "sha256": "fd52c123f07d1c9de1996dd2fc8540b8cb8794e2cfe9b22937b6af1a444bd7b0"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-archive-diagnostic-r2-20261031.md",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-archive-diagnostic-r2-20261031.md",
+      "bytes": 3205,
+      "sha256": "ef3df7910185e09292cae06be78fcc5e1e2a26f63ccb1e02afc0f96874572b59"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/README.md",
+      "file": "tools/mm-offline-diagnostic-r2/README.md",
+      "bytes": 3299,
+      "sha256": "19d160af0cd291ba49b1a71018cedfee4e1d63fb442e23098233c680ca9939ab"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/diagnostic_provenance.py",
+      "file": "tools/mm-offline-diagnostic-r2/diagnostic_provenance.py",
+      "bytes": 18215,
+      "sha256": "a30f16ccb4036ff5acc186c029359456bcbcbedce8c89a7820cf931bf8cc4bfb"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/fresh_controls.py",
+      "file": "tools/mm-offline-diagnostic-r2/fresh_controls.py",
+      "bytes": 13255,
+      "sha256": "518c40e2e7ea74df0b7216a4d49965d0c2b826c9b21f84792e3c201add7ea073"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/manifest.json",
+      "file": "tools/mm-offline-diagnostic-r2/manifest.json",
+      "bytes": 946,
+      "sha256": "328e687437153a21f4202905c578d1359da3fc0aa7fc7cc7e1bd2cf1d0702a31"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/mmap_compare.py",
+      "file": "tools/mm-offline-diagnostic-r2/mmap_compare.py",
+      "bytes": 28892,
+      "sha256": "d56d36fcfee5a3cdcf021348b0a21c36dc285e111ba20d8da84b6ebb7e4fcc2c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/mmap_compare.py.diff",
+      "file": "tools/mm-offline-diagnostic-r2/mmap_compare.py.diff",
+      "bytes": 4387,
+      "sha256": "45853676094236d4cbbc099b7d01942ee3727d87151e4548f380729d1738773a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/mmap_compare.py.from-original.diff",
+      "file": "tools/mm-offline-diagnostic-r2/mmap_compare.py.from-original.diff",
+      "bytes": 16999,
+      "sha256": "110949a8d6af708fa073d040a86f495bd186dc3d7fa30a24a3b7fe3b4a87978b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/nano_core.py",
+      "file": "tools/mm-offline-diagnostic-r2/nano_core.py",
+      "bytes": 34745,
+      "sha256": "3ec336f7d4ef5bf100f1639c9c77a36405593c7a47099348b4e25ac5caceba0b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/policy_checks.py",
+      "file": "tools/mm-offline-diagnostic-r2/policy_checks.py",
+      "bytes": 10066,
+      "sha256": "01b9374f30a6875df03b1737dc89f721e97e129b525966cad151097971acb12f"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/policy_checks.py.diff",
+      "file": "tools/mm-offline-diagnostic-r2/policy_checks.py.diff",
+      "bytes": 2862,
+      "sha256": "9bba2b567f6e6674f4e2d8ad90b26ea4b8332fc0e48a8c4b842191e1efde3e6c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-offline-diagnostic-r2-20261031/policy_checks.py.from-original.diff",
+      "file": "tools/mm-offline-diagnostic-r2/policy_checks.py.from-original.diff",
+      "bytes": 3215,
+      "sha256": "140fbddcd65b087f224f76423beb93902d625c27c0047ee742a14e45bd06f78e"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-return-site-diagnostic.patch",
+      "file": "mm/diagnostics/source/return-site-diagnostic.patch",
+      "bytes": 18605,
+      "sha256": "0f46127b92e8a3b4c102d85537cc6479852a5e4a5969617ea2d2143aebe533fa"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-api-queue-diagnostic.patch",
+      "file": "mm/diagnostics/source/api-queue-diagnostic.patch",
+      "bytes": 12747,
+      "sha256": "f2b3ac2b3539aac2900f79334717b8fc3d25e525d4c2b79bf8f9346c67ed148c"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-strict-companion.patch",
+      "file": "mm/diagnostics/source/strict-companion.patch",
+      "bytes": 5387,
+      "sha256": "281679b3093b712e2284a435ef1009793617bec6d20634ae63a7e1f39a3250f5"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/comparisons.json",
+      "file": "mm/comparison/comparisons.json",
+      "bytes": 20386,
+      "sha256": "830912a56c5540f24021e207c7bdce1ebc1613682ebe8c6206aca3ec40b3e470"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/key-workers.json",
+      "file": "mm/comparison/key-workers.json",
+      "bytes": 2914,
+      "sha256": "d43032671e03164fb227aa817bf71338d93adbfbac8aeead07a13a290da5973d"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/observed-losses.json",
+      "file": "mm/comparison/observed-losses.json",
+      "bytes": 3420,
+      "sha256": "f0eea75f1079dbb06e22ba779109ba27283c99a5f1a2908caf8f6d6494240669"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/points.json",
+      "file": "mm/comparison/points.json",
+      "bytes": 57594,
+      "sha256": "5f8caee87bc4698681eb837041f6a15657767d698d141d0bd988f0966b85d481"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/processes.csv",
+      "file": "mm/comparison/processes.csv",
+      "bytes": 4883,
+      "sha256": "73bcd5b7e653671191a28d2bae951bcd5e6435df1455dfe0fbcb7c2d83ef1706"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/threads.csv",
+      "file": "mm/comparison/threads.csv",
+      "bytes": 4780,
+      "sha256": "e61cfdd5b90cd7e346e9be831e9373991b84f181350e505c3bfd562497ecb1ca"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-comparison-diagnostic-r2-20261031/validation.json",
+      "file": "mm/comparison/validation.json",
+      "bytes": 64873,
+      "sha256": "e53f3cc53148f57001c1881a7d826e02a9038246068be1db36fa1abc69e29722"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/comparisons.json",
+      "file": "mm/cpu-accounting/comparisons.json",
+      "bytes": 19730,
+      "sha256": "7333166e02826d595b9ef366a20c1d0737581e39c7f4998b65f0fb74c86b2349"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/key-workers.json",
+      "file": "mm/cpu-accounting/key-workers.json",
+      "bytes": 2819,
+      "sha256": "aac094095d6f62e3948ef3ee36c0144ffffbd9976d7e5fcdab6c8bc029b63503"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/points.json",
+      "file": "mm/cpu-accounting/points.json",
+      "bytes": 88835,
+      "sha256": "a4434ff1cbdf68905c596c05ad731c4445e650bf8ec568adfce8976532cc1d84"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/processes.csv",
+      "file": "mm/cpu-accounting/processes.csv",
+      "bytes": 22052,
+      "sha256": "33239296d433f144cd9a31d2fcf2792cd4f3e99b41fb9aa59f85c6cbc8bd3d35"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/threads.csv",
+      "file": "mm/cpu-accounting/threads.csv",
+      "bytes": 21804,
+      "sha256": "f50b5fa9f744d64650354e9a4882813b876238563e4e8bb6f0c37d6da6681c80"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031/validation.json",
+      "file": "mm/cpu-accounting/validation.json",
+      "bytes": 1996,
+      "sha256": "24eb06a51e4f676293756d777d51088ed3de59884be89d2acce816d6ce690cfd"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-processes60-20261031/baseline-result.json",
+      "file": "mm/processes60/baseline-result.json",
+      "bytes": 19570,
+      "sha256": "c8161e6cfd4c4ba843fb5fc95f50b5e02b0103cbe824d3bcb826faab8e2f0ac1"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-processes60-20261031/baseline-upstream.log",
+      "file": "mm/processes60/baseline-upstream.log",
+      "bytes": 362,
+      "sha256": "e7c4f6d6651bc2095de2eeede4d16000fc0456037e0468feceed445db4b931d4"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-processes60-20261031/candidate-result.json",
+      "file": "mm/processes60/candidate-result.json",
+      "bytes": 19624,
+      "sha256": "f4e6f835ce43f99ba0e10770f705d2191faee091146468b3bcdfe83f00de9fa3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-processes60-20261031/candidate-upstream.log",
+      "file": "mm/processes60/candidate-upstream.log",
+      "bytes": 354,
+      "sha256": "fdb3640b5996885c940d3ce2380c0dd8ca7541b413774dfbcdce289793690fb3"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-processes60-20261031/provenance.json",
+      "file": "mm/processes60/provenance.json",
+      "bytes": 2283,
+      "sha256": "2e8f5fe35311e358bbe255ea4c75c5ae76635bf618b893e8cec0674fcd1f186a"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/analysis-arm.json",
+      "file": "mm/candidate/analysis-arm.json",
+      "bytes": 27636,
+      "sha256": "af9c99373802430551942bd2bf13222f6a3051d23fa2b8793298fe5adc8a1413"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/transfer.json",
+      "file": "mm/candidate/transfer.json",
+      "bytes": 18264,
+      "sha256": "2373499d4770732c42903a3185eb8484723a788a9cca7e1c8b60d81d9f236161"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/archive-provenance.json",
+      "file": "mm/candidate/archive-provenance.json",
+      "bytes": 1107,
+      "sha256": "b1d374617b8d6f9a39b627206eb0e934e4435961a648c2354431acecdc4c3e59"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control/owner.json",
+      "file": "mm/candidate/candidate-archive-control/owner.json",
+      "bytes": 5331,
+      "sha256": "8351ea9d6034828c6c62b8d0e49f7927f92e6358c9fe6daeaa9a4fe342074c83"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control/alias-map.json",
+      "file": "mm/candidate/candidate-archive-control/alias-map.json",
+      "bytes": 26874,
+      "sha256": "a246db49c7d1d2175551bc239f0e24182a6a5c7a8ac90d4f0243daf8ff1e4e72"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control/preservation-map.json",
+      "file": "mm/candidate/candidate-archive-control/preservation-map.json",
+      "bytes": 79442,
+      "sha256": "a81acb7edacae9abe6905a76174aeb10e13bab3615d063a38e02f6492911996e"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control/bindings.json",
+      "file": "mm/candidate/candidate-archive-control/bindings.json",
+      "bytes": 2745,
+      "sha256": "6191a112eee6afe73968a22ffedb6198385b657b2cda66397e02fe1ec1e9ce7b"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archive-control/config.json",
+      "file": "mm/candidate/candidate-archive-control/config.json",
+      "bytes": 3722,
+      "sha256": "fafaac5315038e45f150feb4d24a45913a848dfaed8e8c51236952d5087c8584"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives/archives.json",
+      "file": "mm/candidate/candidate-archives/archives.json",
+      "bytes": 3814,
+      "sha256": "1b3b6cf19f5a5455fee47b0d850fa8040b3bd6840a95cf211a16e74b9373e75a"
+    },
+    {
+      "source": "/dev/shm/kdlock-writer-queue-mm-candidate-diagnostic-r2-20261031/candidate-archives/input-inventory.json",
+      "file": "mm/candidate/candidate-archives/input-inventory.json",
+      "bytes": 1011850,
+      "sha256": "2f514951ca0e972f85f8b816a6ef0aac0fd37bf8341f3a1edfb54633c3afe34b"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-diagnostic-r2-analysis-inputs-20261031.json",
+      "file": "mm/comparison/kdlock-writer-queue-mm-diagnostic-r2-analysis-inputs-20261031.json",
+      "bytes": 51902,
+      "sha256": "dc942d6ef8e37d91f97186e7c922a53109f4c7a7bcd17ed574c1489d240bd661"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-arithmetic-review-20261031.json",
+      "file": "mm/comparison/kdlock-writer-queue-mm-arithmetic-review-20261031.json",
+      "bytes": 11279,
+      "sha256": "aefb09fc2752839bba7d45de1e47dd6d7106166a6e632e5da2da52e7cb3d16b9"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-fetch-diagnostic-r2-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-fetch-diagnostic-r2-20261031.py",
+      "bytes": 24685,
+      "sha256": "37401608c912621e602ced5d01020ce8b645229a874cd2089e2509821711ba81"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-fetch-diagnostic-r2-20261031.md",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-fetch-diagnostic-r2-20261031.md",
+      "bytes": 1743,
+      "sha256": "2839853f4c82dde57b98f8c9b1a4a5d9a32c4f3f7c370a449e165c1927a5be25"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.py",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.py",
+      "bytes": 10104,
+      "sha256": "4c9f786639d2a08ca105cf139a6f2d1c08d8a10eea2cf8c5fdc58757f5502907"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.md",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.md",
+      "bytes": 2668,
+      "sha256": "e15ed10d1406acba5de1c198d14e4c442ac57498f46aea8c27b3cf55a4d26513"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.py.diff",
+      "file": "tools/mm-diagnostics/kdlock-writer-queue-mm-cpu-occupancy-diagnostic-r2-20261031.py.diff",
+      "bytes": 3263,
+      "sha256": "ddf0824965548bd1e22b9f180546338547dc2a5cd1ac8cce08eb77cbabb1ba27"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/mm-candidate-queue-proof-unbind/result.json",
+      "file": "restoration/mm-candidate-queue-proof-unbind/result.json",
+      "bytes": 1422,
+      "sha256": "5c0c72fd29cc37551d276a6a5cdc5dc6ddf418b33bdb1706607c01c11a028f7d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-verify/step/result.json",
+      "file": "restoration/scope3-normal-verify/step/result.json",
+      "bytes": 4391,
+      "sha256": "c41854f2c3501cb9fb4af378e68688c1b1397dbe8427e637e7da092a86766a1a"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-request/step/owner.json",
+      "file": "restoration/scope3-normal-request/step/owner.json",
+      "bytes": 1722,
+      "sha256": "3fb4ebbe01a1fef901fa1501eb9ed03727e8140e6f41410e6ef7e39dd740bda8"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-request/step/result.json",
+      "file": "restoration/scope3-normal-request/step/result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-request/result.json",
+      "file": "restoration/scope3-normal-request/result.json",
+      "bytes": 3916,
+      "sha256": "4443dc397f77d75da4efe4483d10a5f74f928302066fbdec51ba57ea31e6261d"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-request-recovered/step/result.json",
+      "file": "restoration/scope3-normal-request-recovered/step/result.json",
+      "bytes": 3343,
+      "sha256": "f11c7460c7b27233101ce9dc9a4a3b4300c79d48570f961869d6083c4304dbf7"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/scope3-normal-request-recovered/step/owner.json",
+      "file": "restoration/scope3-normal-request-recovered/step/owner.json",
+      "bytes": 1722,
+      "sha256": "3fb4ebbe01a1fef901fa1501eb9ed03727e8140e6f41410e6ef7e39dd740bda8"
+    },
+    {
+      "source": "/tmp/kdlock-writer-queue-controls-20261031/pool-restore/result.json",
+      "file": "restoration/pool-restore/result.json",
+      "bytes": 206310,
+      "sha256": "5850eaa3c12c9b51cc42b625a5c89193a16650f77ff21970da6fb5e32516827e"
+    }
+  ],
+  "external": [
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/host-before.json",
+      "bytes": 449463,
+      "sha256": "3a6a96cbb6b8e62d1e18540fc0611877377c4284aa03b0924caabaa74543fe20",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/host-after.json",
+      "bytes": 449445,
+      "sha256": "2d69fdb09db0165430c19f7cd9b80db3cd7cfbada725291db21b434e488c7ba1",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/host-reference.json",
+      "bytes": 449471,
+      "sha256": "249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-f7a84065-20261031/writer-queue-nano-f7a84065-20261031-control/policy-receipt.json",
+      "bytes": 312413,
+      "sha256": "41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/host-before.json",
+      "bytes": 449450,
+      "sha256": "2f345151b9144c9808bc8b577f95dd02d627b6db636ce32a199e26f78364f4e5",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/host-after.json",
+      "bytes": 449456,
+      "sha256": "98d9cc41180e621b7d6d4ccb422a0746947825c14f419577691537803b4cd031",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/host-reference.json",
+      "bytes": 449471,
+      "sha256": "249ac70a92705afbd138e46e272010427ef98cff3c7906d724650423db020198",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/policy-receipt.json",
+      "bytes": 312413,
+      "sha256": "41272e05fbec14df9aad450a3980718a48ce33ec5d8c4a1e870266c01f032f7b",
+      "purpose": "Full original host/pool capture remains in the verified external archive control directory"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/retained-check-0-sync.json",
+      "bytes": 912613,
+      "sha256": "9fe27f559b218b9d98348b314844039caba1258a71a594253756f4de7a8422df",
+      "purpose": "Exact retained-check source maps verified by the completed offline comparison"
+    },
+    {
+      "path": "/dev/shm/kdlock-writer-queue-nano-1b6f256b-20261031/writer-queue-nano-1b6f256b-20261031-control/prior-unit-sync.json",
+      "bytes": 912613,
+      "sha256": "61dd817b858345038a4f85bdc30e77f7024a74088b89c56ac60dc68573f183a1",
+      "purpose": "Exact retained-check source maps verified by the completed offline comparison"
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/all-accounting.json",
+      "bytes": 7309868,
+      "sha256": "ed8ef8616d17139253984b905cf892c39b5e48af5a1e12cdc04f0e9a47f02b94",
+      "purpose": "Full 420-session accounting is retained externally; compact pairs and selected records are copied."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/measure.json",
+      "bytes": 42411,
+      "sha256": "58ae91da73e7b30d0f6b82dbcbfd3ea20885001b007f756cf5a4c76e07f91fa0",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/session.json",
+      "bytes": 54739,
+      "sha256": "d776fcb44f1cb8810e71f3e423aa0dbdf73e9e6893541dcddbcda8ceb6f622f5",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/warmup.json",
+      "bytes": 3253,
+      "sha256": "ed4cc40e6a10980ffd6398c474c11ade9c66807a43cc6a80a67cc50d7c1da52f",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/measure.json",
+      "bytes": 82522,
+      "sha256": "ec93aee9de7170b0cba49ac0da77b290e3ce387972d7c4c9e162f17ec86e427c",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/session.json",
+      "bytes": 100033,
+      "sha256": "4d1eb404dfe52b78d147379ad0ba1da4d974aef3f380e6eda5fbdad6ddf0e0d3",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/warmup.json",
+      "bytes": 7492,
+      "sha256": "8f2e81a0308532ff18939e6c791a0f06f6a78afc13eeed4c95211e1d0a3a606d",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/measure.json",
+      "bytes": 54086,
+      "sha256": "c93b5c8f3f5982de933bb78a862775948d2c08740c66f19596612fdef47bca7f",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/session.json",
+      "bytes": 67814,
+      "sha256": "9e303181b5840ce43b0fca6cacb8f7df427d8fa970c00d9fad121cc4c2efb067",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/baseline/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/warmup.json",
+      "bytes": 4401,
+      "sha256": "5ecab767a6f30f79a0f8d8e6f123ebc5c874f0c16f712b64489d9ded81b60fa2",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/measure.json",
+      "bytes": 42338,
+      "sha256": "e2fe1f645dcf686c20fa86778fa23a490f3ce429ce70e0346e73c75d8f2bca28",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/session.json",
+      "bytes": 54663,
+      "sha256": "64fcb8dfb885f72539a468054572d94a369c73331bafcfb9b40009f4df197f20",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/mutex-throughput/mutex-cacheline-c01-kdlock-w100-t05-r00/warmup.json",
+      "bytes": 3253,
+      "sha256": "372eeae45c4381a471aba0d6c7c9555b09cccb2d6ebd8334f115f59f451f4665",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/measure.json",
+      "bytes": 81790,
+      "sha256": "8ae6aac9c1d76ebc67fda4f6820dc50de2a6d9a0c6430ea443f97df4ac78ba0c",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/session.json",
+      "bytes": 99256,
+      "sha256": "8b7ce92979588eb57a236b58c8cbddc1916b94be89b98a590c8a1ea0540e4d5f",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwlock-locality-read/cacheline-c16-kdlock-w001-t16-r00/warmup.json",
+      "bytes": 7492,
+      "sha256": "f0a4662f184d06d7839c0b66b60beb7b0fd5ff465a5661cbda1e9350ef900de8",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/measure.json",
+      "bytes": 53927,
+      "sha256": "41820b836b00d416bb3181e062dc02c57400cf6473451df950714f1af9e28d38",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/session.json",
+      "bytes": 67649,
+      "sha256": "2e4ca3c5ae7aba15b17be7814944ca6f393745d9200722c080e4804419ce067a",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-nano-accounting-20261031/raw-selected/candidate/rwsem-throughput-read/rwsem-cacheline-c01-kdlock-w001-t08-r00/warmup.json",
+      "bytes": 4401,
+      "sha256": "65e9b41b6fbd0e4cecd284fe78d64df758cac98848e2bb1ee4f1b42e04b084a7",
+      "purpose": "Exact selected original session/measure/warmup bytes remain external and hash-bound by accounting validation."
+    },
+    {
+      "path": "/tmp/kdlock-writer-queue-scope3-7814c61a-20261031.manifest.json",
+      "bytes": 1277764,
+      "sha256": "a3f46b1e1006652d2c8c25e083eab93f76d2e2e970f896457a2ca94da4193411",
+      "purpose": "Complete tracked source map retained externally; exact delta record and Git correspondence are copied."
+    },
+    {
+      "path": "/tmp/kdlock-writer-sites-9d10ae77-20261031.manifest.json",
+      "bytes": 1277866,
+      "sha256": "2169e01b6edf22edbb446634268617fe4889b47c12f6e7d91c36458c001ad02c",
+      "purpose": "Complete tracked source map retained externally; exact delta record and Git correspondence are copied."
+    },
+    {
+      "path": "/tmp/kdlock-writer-sites-de5e4f06-20261031.manifest.json",
+      "bytes": 1278231,
+      "sha256": "e3948a7984167827c5dc8e6125a4db9c9b20c0d74ff8aaa1912ae73679804c60",
+      "purpose": "Complete tracked source map retained externally; exact delta record and Git correspondence are copied."
+    }
+  ],
+  "captured_bytes_unchanged": true,
+  "raw_archives_copied": false
+}
