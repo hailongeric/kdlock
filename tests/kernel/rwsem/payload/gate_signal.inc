@@ -49,7 +49,8 @@ static int gate_signal_waiter(void *data)
 		kd_down_write_interruptible(&signal_sem);
 	if (!c->waiter_result)
 		kd_up_write(&signal_sem);
-	complete(&c->waiter_done);
+	/* Both the outcome check and the join path observe this completion. */
+	complete_all(&c->waiter_done);
 	return 0;
 }
 

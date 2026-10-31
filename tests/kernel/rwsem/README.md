@@ -147,3 +147,16 @@ observations, not throughput or delegation measurements. The focused
 [writer queue fixture](../../unit/mutex/test_rwsem_writer_queue.py) extracts the
 production phase/gate/poll/drain functions and checks exact local reservation
 and rollback effects with deterministic primitives.
+
+The first writer-queue candidate `7fa989c1` passed its focused unit checks and
+the original live API record (`api_checks=17`, `cancellation_checks=10`), but its
+new gate-signal record failed with `errors=2`, `cases=1`, `osq_observed=1`,
+`scoped_retired=0`, `idle=1`. This failed attempt remains evidence. The first
+completion wait consumed the waiter's single `complete()` notification. The
+subsequent `completion_done()` therefore suppressed the retirement counter, and
+the join-path wait timed out; the final three-case check then also failed. The
+actual cancellation, holder ownership, queue-retirement and worker joins passed
+in that attempted case. The fixture now uses `complete_all()` for this one
+completion, which deliberately has multiple observers. This is a diagnostic
+notification correction; no lock implementation changes accompany it. The
+corrected live result requires a new VM run and does not replace the failed one.
