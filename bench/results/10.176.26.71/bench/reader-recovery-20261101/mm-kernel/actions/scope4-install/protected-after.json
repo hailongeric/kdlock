@@ -1,0 +1,162 @@
+{
+  "/boot/System.map-6.1.159-kdclobber2": {
+    "bytes": 5133645,
+    "mode": 33188,
+    "sha256": "e52ed9012806d5370eea13dd74c545ebf7419635df0665386caa0943a3790995"
+  },
+  "/boot/System.map-7.0.0-38-generic": {
+    "bytes": 11028836,
+    "mode": 33152,
+    "sha256": "68e234fc7a6bc98a952dcef1c71f5f68e456b685d25ec39925088cf0c732dd35"
+  },
+  "/boot/System.map-7.0.0-38-kdlock1": {
+    "bytes": 10530773,
+    "mode": 33188,
+    "sha256": "1b06d9aee8db0dcb36480985a83ef1d48cba19ef2f1be9abb82955bed7b53159"
+  },
+  "/boot/System.map-7.0.0-38-kdmm1": {
+    "bytes": 10539806,
+    "mode": 33188,
+    "sha256": "f3c5d10dabeea5a99a208dad5dd2e50d070aa262366874bd899f5665c8f97036"
+  },
+  "/boot/System.map-7.0.0-38-kdscope1": {
+    "bytes": 10543429,
+    "mode": 33188,
+    "sha256": "63701d6024fd1cda7b6e4ede27b24cc1a6be4e0528acd64f3e3df6b18fe53334"
+  },
+  "/boot/System.map-7.0.0-38-kdscope2": {
+    "bytes": 10543429,
+    "mode": 33188,
+    "sha256": "51f7b819bd5452aeb003d6b539395fc5007737105f2da71e54032cfc5b3bb750"
+  },
+  "/boot/System.map-7.0.0-38-kdscope3": {
+    "bytes": 10544094,
+    "mode": 33188,
+    "sha256": "f7153e52df15f8179ada897c939120e0be39f56967ca6e5dc6e654ecef7869d9"
+  },
+  "/boot/config-6.1.159-kdclobber2": {
+    "bytes": 264462,
+    "mode": 33188,
+    "sha256": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd"
+  },
+  "/boot/config-7.0.0-38-generic": {
+    "bytes": 308501,
+    "mode": 33188,
+    "sha256": "6cb18717c6914d4947489eedf8cb69ac23db3faa8ef9b9f563ff02c346dcd32d"
+  },
+  "/boot/config-7.0.0-38-kdlock1": {
+    "bytes": 308540,
+    "mode": 33188,
+    "sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed"
+  },
+  "/boot/config-7.0.0-38-kdmm1": {
+    "bytes": 308527,
+    "mode": 33188,
+    "sha256": "4de7ee42b58ee852c9a786c7d0701151babeb09637d9bca9d6393c0ca2918f96"
+  },
+  "/boot/config-7.0.0-38-kdscope1": {
+    "bytes": 308552,
+    "mode": 33188,
+    "sha256": "7131e48d4bb556e54f9fc287c04e6fab33a3de80eb923a215872a01a07609f4b"
+  },
+  "/boot/config-7.0.0-38-kdscope2": {
+    "bytes": 308552,
+    "mode": 33188,
+    "sha256": "1db0292bc0f63703f8946e8ab21d618e853fc7a48321aa09d87c9b7b54db6283"
+  },
+  "/boot/config-7.0.0-38-kdscope3": {
+    "bytes": 308552,
+    "mode": 33188,
+    "sha256": "4b25e919c4935ef17130dbcbf657e8c0f392d55b0715ac1f3dbf9a64a79aead1"
+  },
+  "/boot/grub/custom.cfg": {
+    "bytes": 6305,
+    "mode": 33188,
+    "sha256": "8d9aff4a2a07bef260ec9c63f931ff305f516def27062b58043486309cff702b"
+  },
+  "/boot/grub/grub.cfg": {
+    "bytes": 11388,
+    "mode": 33188,
+    "sha256": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b"
+  },
+  "/boot/grub/grubenv": {
+    "bytes": 1024,
+    "mode": 33188,
+    "sha256": "0e8344eff0b558d225092d5ccc2aef2247f81e3d829e2edfe48eb04a19fdbc11"
+  },
+  "/boot/initrd.img-6.1.159-kdclobber2": {
+    "bytes": 78240626,
+    "mode": 33188,
+    "sha256": "ff77ff8919ca9608d187825f7c43bee87b811fe253a6d53a37ba10681dd69064"
+  },
+  "/boot/initrd.img-7.0.0-38-generic": {
+    "bytes": 97492619,
+    "mode": 33188,
+    "sha256": "69e5fe046151e832564d7790ebdd8425c6d2dd807e5e37a0796d8a8f4ea7a70c"
+  },
+  "/boot/initrd.img-7.0.0-38-kdlock1": {
+    "bytes": 103189900,
+    "mode": 33188,
+    "sha256": "a13aaa736d57c6d9a52e8acea99ee6de42379882f000cbbff857a05de68e0769"
+  },
+  "/boot/initrd.img-7.0.0-38-kdmm1": {
+    "bytes": 103170170,
+    "mode": 33188,
+    "sha256": "93b627bba19a585916edebc65e555471e875c30abfc38f3009668ca7ae811ca2"
+  },
+  "/boot/initrd.img-7.0.0-38-kdscope1": {
+    "bytes": 103182918,
+    "mode": 33188,
+    "sha256": "e21e0ad9f9cbd784abd35bfca747bf77ae60fc237b8cd47d0dd466c9b07bcf43"
+  },
+  "/boot/initrd.img-7.0.0-38-kdscope2": {
+    "bytes": 103167972,
+    "mode": 33188,
+    "sha256": "c808305f6c2843121d787a9960914858b047fa6b4192f9e3e8ab87a1b1b067a9"
+  },
+  "/boot/initrd.img-7.0.0-38-kdscope3": {
+    "bytes": 103167402,
+    "mode": 33188,
+    "sha256": "c3573c4a9e15038d15547fc071668128677718fa76b1ceef02f78303b59af2e6"
+  },
+  "/boot/vmlinuz-6.1.159-kdclobber2": {
+    "bytes": 12468736,
+    "mode": 33188,
+    "sha256": "3221e8ee72eb947d06ed7b2a2ab3bae348d6edd798cdd55ae439c040227ad19d"
+  },
+  "/boot/vmlinuz-7.0.0-38-generic": {
+    "bytes": 17320328,
+    "mode": 33152,
+    "sha256": "9f55ef7253055a9cf68f8a04323c93dead2fca617386d842fbde9ca7b178b27e"
+  },
+  "/boot/vmlinuz-7.0.0-38-kdlock1": {
+    "bytes": 17109504,
+    "mode": 33188,
+    "sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71"
+  },
+  "/boot/vmlinuz-7.0.0-38-kdmm1": {
+    "bytes": 17113600,
+    "mode": 33188,
+    "sha256": "13188436b3846705d19fda994934a692b446e9118b69c3c69cd1f54810babee3"
+  },
+  "/boot/vmlinuz-7.0.0-38-kdscope1": {
+    "bytes": 17121792,
+    "mode": 33188,
+    "sha256": "66121427893c9805b211d79415e25cd17bb58fb39927c61096c3ffe642ad4a6b"
+  },
+  "/boot/vmlinuz-7.0.0-38-kdscope2": {
+    "bytes": 17117696,
+    "mode": 33188,
+    "sha256": "d16245f3033c6f77047890123317bef0ea3177607a802f072825e1a995683dcf"
+  },
+  "/boot/vmlinuz-7.0.0-38-kdscope3": {
+    "bytes": 17121792,
+    "mode": 33188,
+    "sha256": "31b3f5e9d95fabbbad9f6415c4df86594d54c75b462fd066e75994807c8e6f28"
+  },
+  "/etc/default/grub": {
+    "bytes": 1236,
+    "mode": 33188,
+    "sha256": "e02f11d6ea1b3c31d789afdae3bb5589038c49eb94dc0de18f7d8a6d0c475250"
+  }
+}

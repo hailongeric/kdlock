@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "arm": "promoted",
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "bundle_manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+  "host_state": {
+    "path": "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.host.json",
+    "sha256": "3d5aa3161544cee8715685f8ee81e7d4364ba23895b9244de7bb63c0c1c780aa"
+  },
+  "pool_verification": {
+    "path": "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.pool.json",
+    "sha256": "d301ce7da86389c314f4adb606f150655d33bcfff29e1d3b6bf5eb8a239788ea"
+  },
+  "prerequisite_owners": {}
+}

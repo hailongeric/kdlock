@@ -1,0 +1,88 @@
+{
+  "archive_prefix": "recovery",
+  "boot_id": "2204494e-17f2-43a7-8c1c-03036f9ad300",
+  "completed": true,
+  "finished_ns": 1793478420775880253,
+  "groups": [
+    {
+      "bytes": 10827026,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery-archives/checks.tar.gz",
+      "roots": [
+        "recovery/api",
+        "recovery/completed",
+        "recovery/endpoint",
+        "recovery/faults",
+        "recovery/mapping",
+        "recovery/mmap1-identity",
+        "recovery/sites",
+        "recovery/strict-hold"
+      ],
+      "sha256": "9355ca284bd9c6a7014fbed17ac244d1bc6aa3879220d9cc6c879fd42dcd5bf5"
+    },
+    {
+      "bytes": 1094015,
+      "file": "mmap1.tar.gz",
+      "group": "mmap1",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery-archives/mmap1.tar.gz",
+      "roots": [
+        "recovery/mmap1-measure"
+      ],
+      "sha256": "b5c107afb783353496a43d60665cde9f913ba6070ebe1776b674cfa65af9cc03"
+    },
+    {
+      "bytes": 1236589,
+      "file": "inputs.tar.gz",
+      "group": "inputs",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery-archives/inputs.tar.gz",
+      "roots": [
+        "recovery/preservation-inputs"
+      ],
+      "sha256": "41794bb52c96de03e9b9642b1c1ace7403c108a086066fb338d0ac9442bb78b8"
+    },
+    {
+      "bytes": 1317,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery-archives/metadata.tar.gz",
+      "roots": [
+        "recovery/final-health.json"
+      ],
+      "sha256": "b77adda2d58ff7d8e28447ca5fbfd1ba18da95a8eb16608ebbfd254edc7a982f"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "d9c57c17157d3ca869d9d86f537a376adda7726c17797ce0505b0938385f1824",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "a3886569bbad3c0bc684d721f9209c393fb5f0d74ea95451724d32f03eef0149",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+    "bundle_files": 48,
+    "config": true,
+    "installed_files": 4,
+    "mmap_mode": "on",
+    "ok": true,
+    "running_build_id": "a3bd8cda22af4c668b952472822188c6f3708440",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope4 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+      "mmap_mode": "on",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 61,
+    "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+    "variant": "kdscope4-kd"
+  },
+  "kernel_release": "7.0.0-38-kdscope4",
+  "kernel_variant": "kdscope4-kd",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793478417843630371
+}

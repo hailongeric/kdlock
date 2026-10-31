@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "action": "arm",
+  "passed": true,
+  "state": "ARMED_NOT_REBOOTED",
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "release": "7.0.0-38-kdscope4",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "provider_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+    "sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/host-state.json",
+    "sha256": "4a0073fe812568dcca2e4ac2202cd763a0488b5a1e10feb049ba74afb77a4572"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793477887.1326454,
+      "pid": 14339,
+      "process_group": 14339,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477887.1760705,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "arm-once",
+      "argv": [
+        "grub-reboot",
+        "kdlock-7.0.0-38-kdscope4-kd"
+      ],
+      "started": 1793477887.1857865,
+      "pid": 14340,
+      "process_group": 14340,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477887.2736754,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/arm-once.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "environment-after",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793477887.2837632,
+      "pid": 14353,
+      "process_group": 14353,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477887.313918,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/environment-after.log",
+        "sha256": "4b141ac653b0406f2882b360db1b4f60cafcd37acdc7d84e4704b233cf0a9e13"
+      }
+    }
+  ],
+  "started": 1793477880.8304207,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+    "sha256": "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/protected-before.json",
+    "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+  },
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+    "sha256": "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7"
+  },
+  "mode": "kd",
+  "entry": "kdlock-7.0.0-38-kdscope4-kd",
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/protected-after.json",
+    "sha256": "4f36b7b3444e6558e32bee8a77e74eb6f2ff075d54a85083a2932ca9fb4db0e8"
+  },
+  "final_idle": true,
+  "finished": 1793477889.125717
+}

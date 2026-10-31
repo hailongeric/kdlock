@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "arm": "recovery",
+  "boot_id": "2204494e-17f2-43a7-8c1c-03036f9ad300",
+  "bundle_manifest_sha256": "5bb0fcbd453f307ae159746da133163247538acf7d3f152fa05ceeb53a633957",
+  "host_state": {
+    "path": "/tmp/kdlock-reader-mm-recovery-sites-r2-20261101.host.json",
+    "sha256": "e30b87716d877d0bf1158f669a71e9f565e773776668f1167c75aac11a88391c"
+  },
+  "pool_verification": {
+    "path": "/tmp/kdlock-reader-mm-recovery-sites-r2-20261101.pool.json",
+    "sha256": "0e3e0e2f2e0cba44963df3fd8209e13107c11a33d9efe30199400f3cc0ea8d2b"
+  },
+  "prerequisite_owners": {}
+}

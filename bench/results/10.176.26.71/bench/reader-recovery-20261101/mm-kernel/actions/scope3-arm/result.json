@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "completed": true,
+  "action": "arm",
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "controller_sha256": "6ea635581ac0f8befe3118ca6681c5d924e511d745f9472b40901a0770dca847",
+  "config_sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+  "harness_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "bundle_manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+  "protected": {
+    "/boot/grub/custom.cfg": "bbddc061839ce260af8e007cb5d7bd4ed0dccf5ea0d4ea911bc29a58cfb9ade1",
+    "/boot/grub/grub.cfg": "a43cfb63b53b719a4b7fdceb6652036106a5320f083c9b18210538565b32c74b",
+    "/etc/default/grub": "e02f11d6ea1b3c31d789afdae3bb5589038c49eb94dc0de18f7d8a6d0c475250"
+  },
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793477345.4267554,
+      "pid": 797435,
+      "returncode": 0,
+      "finished": 1793477345.4820473,
+      "remaining_processes": []
+    },
+    {
+      "name": "verify-installed",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/mnt/kdlock-builds2/kdlock-scope4-recipe-9f9fb90e/kernel_integration/linux70/verify.py",
+        "--variant",
+        "kdscope3-kd",
+        "--bundle",
+        "/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031",
+        "--build-root",
+        "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build"
+      ],
+      "started": 1793477345.492544,
+      "pid": 797436,
+      "returncode": 0,
+      "finished": 1793477346.7833204,
+      "remaining_processes": []
+    },
+    {
+      "name": "arm-existing",
+      "argv": [
+        "grub-reboot",
+        "kdlock-7.0.0-38-kdscope3-kd"
+      ],
+      "started": 1793477346.7982519,
+      "pid": 797438,
+      "returncode": 0,
+      "finished": 1793477346.8536887,
+      "remaining_processes": []
+    },
+    {
+      "name": "environment-after",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793477346.862959,
+      "pid": 797451,
+      "returncode": 0,
+      "finished": 1793477346.8930194,
+      "remaining_processes": []
+    }
+  ],
+  "started": 1793477345.4149048,
+  "entry": "kdlock-7.0.0-38-kdscope3-kd",
+  "drain_unknown": false,
+  "environment_before": {
+    "next_entry": ""
+  },
+  "state": "ARMED",
+  "environment_after": {
+    "next_entry": "kdlock-7.0.0-38-kdscope3-kd"
+  },
+  "expected_cmdline": [
+    "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope3",
+    "root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961",
+    "ro",
+    "nokaslr",
+    "nopvspin",
+    "console=tty1",
+    "console=ttyS0",
+    "preempt=lazy",
+    "kd_mmap=on"
+  ],
+  "append_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+  "append_sha256": "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7",
+  "final_idle": true,
+  "finished": 1793477346.9478283
+}

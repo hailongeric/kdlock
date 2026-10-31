@@ -1,0 +1,43 @@
+{
+  "completed": true,
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "steps": [
+    {
+      "name": "prepare",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-reader-scope4-kernel-resume-20261101.py",
+        "prepare",
+        "--config",
+        "/tmp/kdlock-reader-scope4-kernel-r3-20261101.json",
+        "--sha256",
+        "649eac65616876b1095c53c76df62819f1aaa61f9ba5164a9a98482d700e28fc"
+      ],
+      "started": 1793475977.831801,
+      "pid": 124640,
+      "returncode": 0,
+      "finished": 1793476108.2716885
+    },
+    {
+      "name": "build",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-reader-scope4-kernel-resume-20261101.py",
+        "build",
+        "--config",
+        "/tmp/kdlock-reader-scope4-kernel-r3-20261101.json",
+        "--sha256",
+        "649eac65616876b1095c53c76df62819f1aaa61f9ba5164a9a98482d700e28fc"
+      ],
+      "started": 1793476108.2722802,
+      "pid": 129482,
+      "returncode": 0,
+      "finished": 1793477012.0823567
+    }
+  ],
+  "started": 1793475977.8315873,
+  "build_result": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+  "build_result_sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d",
+  "finished": 1793477012.1286848
+}

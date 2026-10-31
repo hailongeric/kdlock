@@ -1,0 +1,1002 @@
+{
+  "completed": true,
+  "scope": "Top-level build/action receipts, inputs and logs; installed images and unpacked initramfs remain in the VM",
+  "files": [
+    {
+      "name": "kernel-build/build/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/config.json",
+      "bytes": 2064,
+      "sha256": "649eac65616876b1095c53c76df62819f1aaa61f9ba5164a9a98482d700e28fc"
+    },
+    {
+      "name": "kernel-build/build/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/controller.py",
+      "bytes": 8609,
+      "sha256": "08bf976c739f412a7cf2753e2cdc041d868d4d77c10c74f72c8653cd83172dc0"
+    },
+    {
+      "name": "kernel-build/build/kernel.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/kernel.log",
+      "bytes": 1943483,
+      "sha256": "719163906c188415e0980db91a2fcdee88a7a3ff8f6d452a7fac4dff4dec4565"
+    },
+    {
+      "name": "kernel-build/build/recipe-manifest.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/recipe-manifest.json",
+      "bytes": 1296425,
+      "sha256": "cf4fe6f839d49f05c0a253aa8b14cce88815c1b8c22dbf2ec7f11cecbea1b975"
+    },
+    {
+      "name": "kernel-build/build/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+      "bytes": 8651,
+      "sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d"
+    },
+    {
+      "name": "kernel-build/prepare/affected-objects.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/affected-objects.log",
+      "bytes": 1076,
+      "sha256": "404462c35899c20e8ceb32b48500ae0962d1935837aa18134fb2035c27df9aa7"
+    },
+    {
+      "name": "kernel-build/prepare/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/config.json",
+      "bytes": 2064,
+      "sha256": "649eac65616876b1095c53c76df62819f1aaa61f9ba5164a9a98482d700e28fc"
+    },
+    {
+      "name": "kernel-build/prepare/configure.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/configure.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "kernel-build/prepare/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/controller.py",
+      "bytes": 8609,
+      "sha256": "08bf976c739f412a7cf2753e2cdc041d868d4d77c10c74f72c8653cd83172dc0"
+    },
+    {
+      "name": "kernel-build/prepare/olddefconfig.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/olddefconfig.log",
+      "bytes": 894,
+      "sha256": "3d680393a587c498bb51f3ba55fb8a16c29333a7581ce43765c5d95f32aca561"
+    },
+    {
+      "name": "kernel-build/prepare/prepare.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/prepare.log",
+      "bytes": 15379,
+      "sha256": "2a0aa1876ea1d601ea8c48d75961e2e6c001530a1ebc24ee6748b238c277b401"
+    },
+    {
+      "name": "kernel-build/prepare/recipe-manifest.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/recipe-manifest.json",
+      "bytes": 1296425,
+      "sha256": "cf4fe6f839d49f05c0a253aa8b14cce88815c1b8c22dbf2ec7f11cecbea1b975"
+    },
+    {
+      "name": "kernel-build/prepare/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/result.json",
+      "bytes": 16952,
+      "sha256": "8417e7c3c0fa86908b8fb6417e1d25221f516ab57d645a375d83dffb881cfe04"
+    },
+    {
+      "name": "kernel-build/prepare/rustavailable.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/prepare/rustavailable.log",
+      "bytes": 333,
+      "sha256": "c64363cc29f7dc43a697190e1c511b40384cad95921e021deadae7b213ea9a04"
+    },
+    {
+      "name": "build-launch/build.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-scope4-build-controller-r3-20261101/build.log",
+      "bytes": 148,
+      "sha256": "8b2b3bbb9b47033d584dd833b0c64aea7618b2ed326f3561391acb4b75b30148"
+    },
+    {
+      "name": "build-launch/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-scope4-build-controller-r3-20261101/config.json",
+      "bytes": 2064,
+      "sha256": "649eac65616876b1095c53c76df62819f1aaa61f9ba5164a9a98482d700e28fc"
+    },
+    {
+      "name": "build-launch/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-scope4-build-controller-r3-20261101/controller.py",
+      "bytes": 2520,
+      "sha256": "c68fcb3d53d30813c64dd6decb3f1f71c1f0931e0abb75873adda4f23bfa3b55"
+    },
+    {
+      "name": "build-launch/prepare.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-scope4-build-controller-r3-20261101/prepare.log",
+      "bytes": 152,
+      "sha256": "67e68c4afb81183d1eac139e99933f583248a5e615ced86970d85482ef7811b3"
+    },
+    {
+      "name": "build-launch/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-scope4-build-controller-r3-20261101/result.json",
+      "bytes": 1483,
+      "sha256": "c478e6bbb81be381b00ffecd475606432b382ca76874b58fa38748ebde60a387"
+    },
+    {
+      "name": "actions/normal-request/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/normal-request/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/normal-request/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/environment-before.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/normal-request/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/host-state.json",
+      "bytes": 447346,
+      "sha256": "04f98cc96298cc39df23d9634adf1aba65ec342b0a691707d55884a4585be8f3"
+    },
+    {
+      "name": "actions/normal-request/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/protected-before.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/normal-request/reboot.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/reboot.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/normal-request/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/result.json",
+      "bytes": 3338,
+      "sha256": "86f782bfd36044ff5ff721df781273465b6a18476ee1adfdccdcf4cf322b4c12"
+    },
+    {
+      "name": "actions/normal-verify/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/normal-verify/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/normal-verify/environment-after.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/environment-after.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/normal-verify/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/host-state.json",
+      "bytes": 446991,
+      "sha256": "5d1b813f8e3f0cc7f195c58d1409a917fdb8ad55a84523e6f196db0701e2ffed"
+    },
+    {
+      "name": "actions/normal-verify/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/protected-after.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/normal-verify/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/protected-before.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/normal-verify/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/result.json",
+      "bytes": 4373,
+      "sha256": "d28911a77c8274eac4bc04b46128ce6de36540388ebaed376c17a8a9376767b4"
+    },
+    {
+      "name": "actions/normal-verify/verify-normal.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-verify/verify-normal.log",
+      "bytes": 575,
+      "sha256": "e77d41577382584376230ecc904947edda5b7544a20f43bb93789011d23541d0"
+    },
+    {
+      "name": "actions/scope3-arm/arm-existing.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/arm-existing.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope3-arm/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/config.json",
+      "bytes": 3756,
+      "sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003"
+    },
+    {
+      "name": "actions/scope3-arm/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/controller.py",
+      "bytes": 9050,
+      "sha256": "6ea635581ac0f8befe3118ca6681c5d924e511d745f9472b40901a0770dca847"
+    },
+    {
+      "name": "actions/scope3-arm/environment-after.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/environment-after.log",
+      "bytes": 39,
+      "sha256": "6116679ca2e15ad44239e6e06997e3aa843586fafdb93a51f245ebc3b10a957c"
+    },
+    {
+      "name": "actions/scope3-arm/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/environment-before.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/scope3-arm/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/host-state.json",
+      "bytes": 448062,
+      "sha256": "4a4861331e8ed4e6e3bc72f5bd5a4552189caaae6c51f27bc9ec73dc4e2a9e5c"
+    },
+    {
+      "name": "actions/scope3-arm/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/result.json",
+      "bytes": 3043,
+      "sha256": "d7fc916d22f2450ed78ea0d54e06d8e9cffb0d46cacebfb3a44fbd68eb7a9a42"
+    },
+    {
+      "name": "actions/scope3-arm/verify-installed.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-arm/verify-installed.log",
+      "bytes": 304,
+      "sha256": "480f849093546a4d052f947e8b7db13acfc32173968afd5ee509d6c5ca9a3eec"
+    },
+    {
+      "name": "actions/scope3-capture/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/config.json",
+      "bytes": 3756,
+      "sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003"
+    },
+    {
+      "name": "actions/scope3-capture/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/controller.py",
+      "bytes": 9050,
+      "sha256": "6ea635581ac0f8befe3118ca6681c5d924e511d745f9472b40901a0770dca847"
+    },
+    {
+      "name": "actions/scope3-capture/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/environment-before.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/scope3-capture/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/host-state.json",
+      "bytes": 447702,
+      "sha256": "02fd5702410ad91dea32e5d1153967aa0c32a2ce7bc05a3cd8a4449c9c6f134c"
+    },
+    {
+      "name": "actions/scope3-capture/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/result.json",
+      "bytes": 2721,
+      "sha256": "4958d3efbdc8d7a9da22e7a862d6751e9c503488ff828fd4052841693739d822"
+    },
+    {
+      "name": "actions/scope3-capture/verify-running.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-capture/verify-running.log",
+      "bytes": 668,
+      "sha256": "e5c58a503c406e3c438f5b7de51e458e830e789f238342ca015ae3257f71f52c"
+    },
+    {
+      "name": "actions/scope3-request/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/config.json",
+      "bytes": 3756,
+      "sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003"
+    },
+    {
+      "name": "actions/scope3-request/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/controller.py",
+      "bytes": 9050,
+      "sha256": "6ea635581ac0f8befe3118ca6681c5d924e511d745f9472b40901a0770dca847"
+    },
+    {
+      "name": "actions/scope3-request/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/environment-before.log",
+      "bytes": 39,
+      "sha256": "6116679ca2e15ad44239e6e06997e3aa843586fafdb93a51f245ebc3b10a957c"
+    },
+    {
+      "name": "actions/scope3-request/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/host-state.json",
+      "bytes": 448062,
+      "sha256": "463b2e887eee4bcbd9127f8dbd35669137ed2c4b827027316da3e73be70a6f4a"
+    },
+    {
+      "name": "actions/scope3-request/reboot.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/reboot.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope3-request/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope3-request/result.json",
+      "bytes": 1864,
+      "sha256": "ab4cb24cf6c0805cd84fa0c292749eb71feee405d3a2c68b1a548d112d299125"
+    },
+    {
+      "name": "actions/scope4-append/boot-uuid.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/boot-uuid.log",
+      "bytes": 37,
+      "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+    },
+    {
+      "name": "actions/scope4-append/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-append/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-append/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/environment-before.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/scope4-append/grub-installed-syntax.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-installed-syntax.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-append/grub-syntax.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-syntax.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-append/grub-uuid.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-uuid.log",
+      "bytes": 37,
+      "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+    },
+    {
+      "name": "actions/scope4-append/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/host-state.json",
+      "bytes": 448062,
+      "sha256": "b7298e7c90c970098d4c704e06314f59d827fa683406a31318653082e6ad0392"
+    },
+    {
+      "name": "actions/scope4-append/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/protected-after.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/scope4-append/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/protected-before.json",
+      "bytes": 5292,
+      "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+    },
+    {
+      "name": "actions/scope4-append/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+      "bytes": 6271,
+      "sha256": "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7"
+    },
+    {
+      "name": "actions/scope4-append/root-uuid.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/root-uuid.log",
+      "bytes": 37,
+      "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+    },
+    {
+      "name": "actions/scope4-arm/arm-once.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/arm-once.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-arm/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-arm/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-arm/environment-after.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/environment-after.log",
+      "bytes": 39,
+      "sha256": "4b141ac653b0406f2882b360db1b4f60cafcd37acdc7d84e4704b233cf0a9e13"
+    },
+    {
+      "name": "actions/scope4-arm/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/environment-before.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/scope4-arm/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/host-state.json",
+      "bytes": 447704,
+      "sha256": "4a0073fe812568dcca2e4ac2202cd763a0488b5a1e10feb049ba74afb77a4572"
+    },
+    {
+      "name": "actions/scope4-arm/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/protected-after.json",
+      "bytes": 5292,
+      "sha256": "4f36b7b3444e6558e32bee8a77e74eb6f2ff075d54a85083a2932ca9fb4db0e8"
+    },
+    {
+      "name": "actions/scope4-arm/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/protected-before.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/scope4-arm/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-arm/result.json",
+      "bytes": 3995,
+      "sha256": "3bb15114f7ef01ed7e4287a42f8887165a40985137f421cdd9032ab5f0a722de"
+    },
+    {
+      "name": "actions/scope4-capture/capture.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/capture.log",
+      "bytes": 668,
+      "sha256": "58a98346ddcc347e0df91df90c3b5c35517e11da70fdd7e03c590b51e081a520"
+    },
+    {
+      "name": "actions/scope4-capture/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-capture/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-capture/environment-after.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/environment-after.log",
+      "bytes": 12,
+      "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+    },
+    {
+      "name": "actions/scope4-capture/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/host-state.json",
+      "bytes": 447345,
+      "sha256": "ec5f04442bbce055254a5ceef061529d79192c1ed39b3ec52c6ea87e37fc53e7"
+    },
+    {
+      "name": "actions/scope4-capture/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/protected-after.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/scope4-capture/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/protected-before.json",
+      "bytes": 5292,
+      "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+    },
+    {
+      "name": "actions/scope4-capture/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/result.json",
+      "bytes": 6226,
+      "sha256": "6396d422d6022c681b8081b23b0eb1b8696f3cd04d9b4dab3525841c2af2e816"
+    },
+    {
+      "name": "actions/scope4-capture/verify.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/verify.log",
+      "bytes": 668,
+      "sha256": "58a98346ddcc347e0df91df90c3b5c35517e11da70fdd7e03c590b51e081a520"
+    },
+    {
+      "name": "actions/scope4-install/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-install/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-install/copy-modules.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/copy-modules.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-install/depmod.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/depmod.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-install/extract-initramfs.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/extract-initramfs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-install/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/host-state.json",
+      "bytes": 448074,
+      "sha256": "862238b9f1c279b29cdc7c9e723b8a07d02ac6a1d312cf69da549a7b04ef3d73"
+    },
+    {
+      "name": "actions/scope4-install/initramfs-modules.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/initramfs-modules.json",
+      "bytes": 173694,
+      "sha256": "920156ef444baca82eee7b6112545deb5d2e48d7559c936cbfe816237346b08a"
+    },
+    {
+      "name": "actions/scope4-install/initramfs.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/initramfs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-install/installed-modules.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/installed-modules.json",
+      "bytes": 1301330,
+      "sha256": "e71d3aa6e86f7bb38c4eaf6ae0735ad393e41da5cc7eba21cf0c552a299efcbd"
+    },
+    {
+      "name": "actions/scope4-install/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/protected-after.json",
+      "bytes": 5292,
+      "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+    },
+    {
+      "name": "actions/scope4-install/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/protected-before.json",
+      "bytes": 5292,
+      "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+    },
+    {
+      "name": "actions/scope4-install/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/result.json",
+      "bytes": 5841,
+      "sha256": "0443e0db7bb58df2411b68ea5e0fbb08afb1943ca546119dbc2e51d74c152df9"
+    },
+    {
+      "name": "actions/scope4-request/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-request/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-request/environment-before.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/environment-before.log",
+      "bytes": 39,
+      "sha256": "4b141ac653b0406f2882b360db1b4f60cafcd37acdc7d84e4704b233cf0a9e13"
+    },
+    {
+      "name": "actions/scope4-request/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/host-state.json",
+      "bytes": 447704,
+      "sha256": "88c79d7c0ac6539e35b349f9c25c2876b4362e191afe288dbcc51de8237794a1"
+    },
+    {
+      "name": "actions/scope4-request/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/protected-before.json",
+      "bytes": 5292,
+      "sha256": "4f36b7b3444e6558e32bee8a77e74eb6f2ff075d54a85083a2932ca9fb4db0e8"
+    },
+    {
+      "name": "actions/scope4-request/reboot.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/reboot.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "actions/scope4-request/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-request/result.json",
+      "bytes": 3334,
+      "sha256": "c557908a26232bf9238d38dd0522b2d49460f92270a286e16da7f6d938cf4eda"
+    },
+    {
+      "name": "actions/scope4-stage/build-module-identities.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/build-module-identities.json",
+      "bytes": 1455219,
+      "sha256": "69137b69a33fccf1e81e2d8f719b8eafeaefa8931844c64a06d93c21873eb814"
+    },
+    {
+      "name": "actions/scope4-stage/config.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/config.json",
+      "bytes": 1960,
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "name": "actions/scope4-stage/controller.py",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/controller.py",
+      "bytes": 35273,
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "name": "actions/scope4-stage/host-state.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/host-state.json",
+      "bytes": 448075,
+      "sha256": "2778f0641d722e70eaa73abad223f4a58f20b98e96c051903943f066c5333d7e"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-0.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-0.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1024.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1024.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1152.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1152.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-128.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-128.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1280.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1280.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1408.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1408.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1536.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1536.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1664.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1664.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1792.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1792.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-1920.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-1920.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2048.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2048.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2176.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2176.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2304.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2304.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2432.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2432.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-256.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-256.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2560.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2560.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2688.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2688.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2816.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2816.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-2944.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-2944.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3072.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3072.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3200.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3200.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3328.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3328.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3456.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3456.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3584.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3584.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3712.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3712.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-384.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-384.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3840.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3840.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-3968.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-3968.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4096.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4096.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4224.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4224.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4352.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4352.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4480.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4480.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4608.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4608.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4736.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4736.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4864.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4864.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-4992.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-4992.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-512.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-512.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5120.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5120.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5248.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5248.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5376.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5376.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5504.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5504.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5632.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5632.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5760.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5760.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-5888.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-5888.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6016.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6016.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6144.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6144.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6272.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6272.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-640.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-640.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6400.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6400.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6528.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6528.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6656.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6656.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-6784.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-6784.log",
+      "bytes": 6318,
+      "sha256": "ea54c2157d25aa9172ac126134cfa7c56c9a97f5807e5c3fbb3c39782908fee6"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-768.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-768.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/module-release-896.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/module-release-896.log",
+      "bytes": 6912,
+      "sha256": "bcd8bf5e551fd8241d9faf35313803e2d4d0d2586ad74e78c23177e9fa4fd58b"
+    },
+    {
+      "name": "actions/scope4-stage/modules-install.log",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/modules-install.log",
+      "bytes": 3053547,
+      "sha256": "b14530c248b16ca1d24a3ab97650a20b4a17dc9f0fa7a63768d3fd10a383aec1"
+    },
+    {
+      "name": "actions/scope4-stage/protected-after.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/protected-after.json",
+      "bytes": 5292,
+      "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+    },
+    {
+      "name": "actions/scope4-stage/protected-before.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/protected-before.json",
+      "bytes": 5292,
+      "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+    },
+    {
+      "name": "actions/scope4-stage/result.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/result.json",
+      "bytes": 1054168,
+      "sha256": "e6525ca85f11983cc763945a7a8b5ab343f1971f95b671982f9eec8a78600de0"
+    },
+    {
+      "name": "actions/scope4-stage/staged-modules.json",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/staged-modules.json",
+      "bytes": 1301330,
+      "sha256": "e71d3aa6e86f7bb38c4eaf6ae0735ad393e41da5cc7eba21cf0c552a299efcbd"
+    }
+  ]
+}

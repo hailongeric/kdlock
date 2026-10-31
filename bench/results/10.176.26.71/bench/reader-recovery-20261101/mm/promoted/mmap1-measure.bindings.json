@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "arm": "promoted",
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "bundle_manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+  "host_state": {
+    "path": "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.host.json",
+    "sha256": "99fd8f4fd6b67757186dbfc8f5672a50661dc5dd5a645df61dc85ad0c3e68695"
+  },
+  "pool_verification": {
+    "path": "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.pool.json",
+    "sha256": "e4d7e4e06d9c79d8fbec47a90ecb63d2df9d3be97f67273f05593998b84acb00"
+  },
+  "prerequisite_owners": {
+    "api": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api/owner.json",
+      "sha256": "e08b6bedb51c826179ff0862761f8df9e946ed86455a0a9aa610e1550a0cbc7b"
+    },
+    "mapping": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping/owner.json",
+      "sha256": "a35052b04c463809e8d373485fe66e33b76ff2878fab244dc19f71ad2155eba8"
+    },
+    "faults": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults/owner.json",
+      "sha256": "ce0bdcb246ab35f3beb14e6d9214a3232aa8d4dc0e1e485848b765b6ab72641e"
+    },
+    "completed": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed/owner.json",
+      "sha256": "8aa5c3c50f7ee03b019adc1e3a432ce444cd2ac4c443b8c1322f174754eb3a74"
+    },
+    "strict-hold": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold/owner.json",
+      "sha256": "4a99e1af0e2244b0c6573c1bdb7538ada56c0d0d36532c029c3151a385f7b632"
+    },
+    "mmap1-identity": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity/owner.json",
+      "sha256": "1546f0bfa49cb6ee2278dbf75e76a4a0a45873446217a700c96d32367f09ec8b"
+    }
+  }
+}

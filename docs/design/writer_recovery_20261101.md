@@ -68,3 +68,36 @@ Source/Git/offline analysis run on 380G10. Builds, fixtures and timing run only
 on VM 10.176.26.71, after idle, capacity and recovery-snapshot verification.
 Use frozen inputs and new output directories. Never force unload or overwrite
 prior receipts. Preserve the main checkout's unrelated changes.
+
+## Completed iteration and remaining limits
+
+The exact promotion is merge `e0f9696cf7ba6268bbbfa5131a9ee881f6553809`.
+The isolated reader restoration is `66c68c17457c0ae60d09ff1f3d89b5fff16a500c`;
+its corrected scope4 kernel/measurement recipe is
+`9f9fb90e9de861fddeb498e068c0c31122919337`. The 96-to-160 GiB second-disk
+expansion preserved earlier builds and enabled the full scoped-kernel build.
+
+[The completed report](../../bench/results/10.176.26.71/bench/reader-recovery-20261101/README.md)
+retains three fresh Nano arms (210 points each) and the promoted/recovery MM
+pair (42 points each), one round per point. Basic/affected checks and 218
+actual-MM API assertions per kernel passed. Two preparation failures and an
+offline import failure are retained separately from the successful continuation.
+
+Reader restoration remains unaccepted. Nano workload means meet the 2% bound,
+but point losses exceed 10%. MM geometric means are -0.780% for threads and
+-1.192% for processes against the fresh promoted arm; 60 processes loses
+11.261%. There is no fresh f7a84065 MM arm: its phase-queue protocol needs an
+explicit source-bound correctness fixture before a common comparison. Do not
+combine historical MM ratios with this new pair or claim the process gap fixed.
+
+The 60-process observation again separates a skewed worker distribution from
+a nearly uniform one, with about 98.5%/98.4% lifetime CPU occupancy. The new
+skewed arm is promoted 1b6f256b itself. CPU/call-site and per-worker attribution
+is the next step; extra parking or a particular global lock is not established.
+Keep any such diagnostics separate from scored execution and preserve unchanged
+application binaries and native MM bodies.
+
+Keep the candidate at `codex/archive-reader-recovery-20261101` and the MM recipe
+at `codex/archive-reader-scope4-20261101`. Neither is merged into master. The
+normal development kernel is restored; QEMU pool settings are restored to
+min=0/max=64/aio-max-batch=0, without claiming the old task map was restored.

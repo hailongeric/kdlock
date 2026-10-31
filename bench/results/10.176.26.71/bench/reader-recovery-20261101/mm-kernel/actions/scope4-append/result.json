@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "action": "append",
+  "passed": true,
+  "state": "ENTRIES_APPENDED_NOT_ARMED",
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "release": "7.0.0-38-kdscope4",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "provider_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+    "sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/host-state.json",
+    "sha256": "b7298e7c90c970098d4c704e06314f59d827fa683406a31318653082e6ad0392"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793477336.1612236,
+      "pid": 796868,
+      "process_group": 796868,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.3323445,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "root-uuid",
+      "argv": [
+        "findmnt",
+        "-n",
+        "-o",
+        "UUID",
+        "--target",
+        "/"
+      ],
+      "started": 1793477336.341988,
+      "pid": 796869,
+      "process_group": 796869,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.365273,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/root-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "boot-uuid",
+      "argv": [
+        "findmnt",
+        "-n",
+        "-o",
+        "UUID",
+        "--target",
+        "/boot"
+      ],
+      "started": 1793477336.3746285,
+      "pid": 796870,
+      "process_group": 796870,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.3968616,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/boot-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "grub-uuid",
+      "argv": [
+        "grub-probe",
+        "--target=fs_uuid",
+        "/boot"
+      ],
+      "started": 1793477336.405849,
+      "pid": 796871,
+      "process_group": 796871,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.4373238,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-uuid.log",
+        "sha256": "b13dc2970317ee1477828b29e03b6aee7cad09cf26b9de6be9c5707ec42b50b7"
+      }
+    },
+    {
+      "name": "grub-syntax",
+      "argv": [
+        "grub-script-check",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/custom.cfg"
+      ],
+      "started": 1793477336.4485075,
+      "pid": 796872,
+      "process_group": 796872,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.4727385,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-syntax.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "grub-installed-syntax",
+      "argv": [
+        "grub-script-check",
+        "/boot/grub/custom.cfg"
+      ],
+      "started": 1793477336.4867046,
+      "pid": 796873,
+      "process_group": 796873,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477336.5087276,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/grub-installed-syntax.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "started": 1793477333.2991943,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/result.json",
+    "sha256": "0443e0db7bb58df2411b68ea5e0fbb08afb1943ca546119dbc2e51d74c152df9"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/protected-before.json",
+    "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+  },
+  "installation": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/result.json",
+    "sha256": "0443e0db7bb58df2411b68ea5e0fbb08afb1943ca546119dbc2e51d74c152df9"
+  },
+  "root_uuid": "aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "normal_default": "gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961>gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961",
+  "entries": {
+    "native": "kdlock-7.0.0-38-kdscope4-native",
+    "kd": "kdlock-7.0.0-38-kdscope4-kd"
+  },
+  "custom_after": {
+    "bytes": 7063,
+    "mode": 33188,
+    "sha256": "bbddc061839ce260af8e007cb5d7bd4ed0dccf5ea0d4ea911bc29a58cfb9ade1"
+  },
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/protected-after.json",
+    "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+  },
+  "final_idle": true,
+  "finished": 1793477338.3789916
+}

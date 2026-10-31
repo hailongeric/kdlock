@@ -1,0 +1,96 @@
+{
+  "completed": true,
+  "arm": "recovery",
+  "commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "source": "/tmp/kdlock-reader-mm-recovery-evidence-r2-20261101",
+  "destination": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/reader-recovery-mm-20261101/recovery",
+  "validation_sha256": "0390f6e330a81a2968e1e9b7cb139af92b1f37c420c89e299b1a4c4dda7c0831",
+  "transfer_sha256": "28afa05ff5e9b7b1b5d35e24722f1df0486ecf32cb83c78db8730bd9c6ff7f75",
+  "files": {
+    "analysis-arm.json": {
+      "bytes": 22783,
+      "sha256": "9fdf57d41a4c840409b0b1222222ed1a110050d1c0529a61f519aed1ff978d6a"
+    },
+    "archive-provenance.json": {
+      "bytes": 940,
+      "sha256": "c7425124cc066c870fd377f4e2e84e4ac8e23c606b1aa603c79958371c052555"
+    },
+    "member-sha256.json": {
+      "bytes": 273308,
+      "sha256": "674dbe3af6b952f4f3ce36d146079d75854a638a16d1808b8685fb5844ec418b"
+    },
+    "recovery-archive-control/alias-map.json": {
+      "bytes": 22048,
+      "sha256": "20a8e70df27360552e38d5359d520b88442d3262b8396a2a20563201847ae818"
+    },
+    "recovery-archive-control/archive.log": {
+      "bytes": 1516,
+      "sha256": "899429f72ecac08914853c3d32645e183a3ae07a75857ad825536bc50e2bd73f"
+    },
+    "recovery-archive-control/bindings.json": {
+      "bytes": 2894,
+      "sha256": "9d18c3e4e4e0a70b4e8c5cbe6bdc1207bd799768114a3b9ae2b3e991578873b4"
+    },
+    "recovery-archive-control/config.json": {
+      "bytes": 3756,
+      "sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003"
+    },
+    "recovery-archive-control/controller.py": {
+      "bytes": 18731,
+      "sha256": "56ba402cd98ac0379e47c0b8bddfa5b5cb4277c8b1367a8ed479861696dae6b0"
+    },
+    "recovery-archive-control/owner.json": {
+      "bytes": 4929,
+      "sha256": "4d1a271b02b4193c21b42a630120892b7915780a444256e0208497b87dc6442c"
+    },
+    "recovery-archive-control/preservation-map.json": {
+      "bytes": 72165,
+      "sha256": "ec2ddb1526b2fbb96c6938617a499b61227a7d497d2405edeacdd03abe460504"
+    },
+    "recovery-archives/archive_run.py": {
+      "bytes": 11669,
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad"
+    },
+    "recovery-archives/archives.json": {
+      "bytes": 3386,
+      "sha256": "30c8cee20cfe7040c3f338483524abe2cf58f9be602a692f6ea34bbb4dbd98df"
+    },
+    "recovery-archives/checks.tar.gz": {
+      "bytes": 10827026,
+      "sha256": "9355ca284bd9c6a7014fbed17ac244d1bc6aa3879220d9cc6c879fd42dcd5bf5"
+    },
+    "recovery-archives/input-inventory.json": {
+      "bytes": 770205,
+      "sha256": "a3886569bbad3c0bc684d721f9209c393fb5f0d74ea95451724d32f03eef0149"
+    },
+    "recovery-archives/inputs.tar.gz": {
+      "bytes": 1236589,
+      "sha256": "41794bb52c96de03e9b9642b1c1ace7403c108a086066fb338d0ac9442bb78b8"
+    },
+    "recovery-archives/metadata.tar.gz": {
+      "bytes": 1317,
+      "sha256": "b77adda2d58ff7d8e28447ca5fbfd1ba18da95a8eb16608ebbfd254edc7a982f"
+    },
+    "recovery-archives/mmap1.tar.gz": {
+      "bytes": 1094015,
+      "sha256": "b5c107afb783353496a43d60665cde9f913ba6070ebe1776b674cfa65af9cc03"
+    },
+    "transfer.json": {
+      "bytes": 16823,
+      "sha256": "28afa05ff5e9b7b1b5d35e24722f1df0486ecf32cb83c78db8730bd9c6ff7f75"
+    },
+    "transport.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "started": 1793478548.2553113,
+  "originals_retained": true,
+  "excluded": [
+    "transport.tar"
+  ],
+  "exclusion_reason": "Redundant transfer container; extracted bytes and original compressed benchmark groups remain retained",
+  "regular_files": 19,
+  "bytes": 14384100,
+  "finished": 1793478548.4178803
+}

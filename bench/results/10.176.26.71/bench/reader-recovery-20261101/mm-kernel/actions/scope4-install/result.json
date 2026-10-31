@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "action": "install",
+  "passed": true,
+  "state": "INSTALLED_NOT_ARMED",
+  "boot_id": "8e8525e4-8024-48e8-8578-05efad0caf3e",
+  "release": "7.0.0-38-kdscope4",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "provider_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+    "sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/host-state.json",
+    "sha256": "862238b9f1c279b29cdc7c9e723b8a07d02ac6a1d312cf69da549a7b04ef3d73"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "copy-modules",
+      "argv": [
+        "cp",
+        "-a",
+        "--reflink=never",
+        "--",
+        "/mnt/kdlock-builds2/kdlock-scope4-modules-stage-9f9fb90e-20261101/lib/modules/7.0.0-38-kdscope4",
+        "/lib/modules/7.0.0-38-kdscope4"
+      ],
+      "started": 1793477300.7073982,
+      "pid": 790349,
+      "process_group": 790349,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477301.7813685,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/copy-modules.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "depmod",
+      "argv": [
+        "depmod",
+        "-a",
+        "7.0.0-38-kdscope4"
+      ],
+      "started": 1793477303.2234128,
+      "pid": 790350,
+      "process_group": 790350,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477304.1170764,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/depmod.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "initramfs",
+      "argv": [
+        "mkinitramfs",
+        "-o",
+        "/boot/initrd.img-7.0.0-38-kdscope4",
+        "7.0.0-38-kdscope4"
+      ],
+      "started": 1793477305.6111977,
+      "pid": 790351,
+      "process_group": 790351,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477321.091108,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/initramfs.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "extract-initramfs",
+      "argv": [
+        "unmkinitramfs",
+        "/boot/initrd.img-7.0.0-38-kdscope4",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/initramfs"
+      ],
+      "started": 1793477321.1043491,
+      "pid": 796302,
+      "process_group": 796302,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793477321.5942996,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/extract-initramfs.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "started": 1793477298.0536878,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-stage/result.json",
+    "sha256": "e6525ca85f11983cc763945a7a8b5ab343f1971f95b671982f9eec8a78600de0"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/protected-before.json",
+    "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+  },
+  "boot_files": {
+    "/boot/vmlinuz-7.0.0-38-kdscope4": {
+      "bytes": 17117696,
+      "mode": 33188,
+      "sha256": "e2ea7faadbd7a5e77aff447b1d4020b3b098f4ece6fcaa791931464cf8035443"
+    },
+    "/boot/System.map-7.0.0-38-kdscope4": {
+      "bytes": 10543994,
+      "mode": 33188,
+      "sha256": "ac3f96c9ae4306786032414e68492e4a5c3351551d78391e058634e5f6907ed4"
+    },
+    "/boot/config-7.0.0-38-kdscope4": {
+      "bytes": 308552,
+      "mode": 33188,
+      "sha256": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd"
+    },
+    "/boot/initrd.img-7.0.0-38-kdscope4": {
+      "bytes": 103170105,
+      "mode": 33188,
+      "sha256": "3e7ab9a1e8b187a6f29a4f12d1bb13f3112421a44b4a1c7aa9060ada1ded7c23"
+    }
+  },
+  "module_manifest": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/installed-modules.json",
+    "sha256": "e71d3aa6e86f7bb38c4eaf6ae0735ad393e41da5cc7eba21cf0c552a299efcbd"
+  },
+  "initramfs_modules": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/initramfs-modules.json",
+    "sha256": "920156ef444baca82eee7b6112545deb5d2e48d7559c936cbfe816237346b08a"
+  },
+  "protected_after": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-install/protected-after.json",
+    "sha256": "617f855c061dd742a28efbf8b592fc4c4a11f8f5658f28163cbeba7a61a4b913"
+  },
+  "final_idle": true,
+  "finished": 1793477326.9894485
+}

@@ -77,3 +77,21 @@ fixture: exact target membership on the old phase queue or the new gate queue,
 with all cancellation, holder ownership, rollback and downgrade assertions
 retained. Merely omitting the writer-queue assertion would not establish the
 same correctness evidence. No such selector is implemented in this iteration.
+
+## Completed reader-restoration comparison
+
+The fresh [60-process inspection](mm/process60/README.md) again observes a
+skewed versus near-uniform distribution, but now the skewed arm is the promoted
+1b6f256b provider. Recovery loses another 11.260800% against that fresh promoted
+arm. Reader restoration therefore does not resolve the process-side problem,
+and the observation does not uniquely implicate the old f7a84065 protocol.
+No new production change is justified by a parking-only explanation.
+
+For the next iteration, first collect separately labelled per-worker progress
+and CPU-time/call-site attribution at 60 processes, with the application binary
+unchanged and no changes to native MM bodies. Determine whether shared
+accounting, another global path, or placement explains the fast-worker skew
+before changing the admission protocol again. Such diagnostic runs would not
+replace or be pooled with these one-round scores. A fresh f7a84065 comparison
+also needs the exact phase-queue fixture described above. Retain this candidate
+and all losses; do not promote its reader restoration.

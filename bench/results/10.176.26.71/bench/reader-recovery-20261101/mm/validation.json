@@ -1,0 +1,638 @@
+{
+  "completed": true,
+  "validated": true,
+  "performance_accepted": false,
+  "inputs_sha256": "64c6e16dc181dc129af905644f747cd4e0fd412e83acec71de24b5fbf993e0a1",
+  "script_sha256": "d5a7b5023d8a043772625ee0fb619e22d3ee2fe60c980e3a167a09f7ccc29ca6",
+  "harness_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "config_sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "points": 84,
+  "pairs": 42,
+  "grids": {
+    "promoted": {
+      "archive_controls": {
+        "control": "/tmp/kdlock-reader-mm-promoted-evidence-r2-20261101/promoted-archive-control",
+        "expected_sha256": {
+          "aliases": "0ef8b97162157ce48f75b7222cc620fe7d22e073a95c4220b6ef2991c99b4429",
+          "archive": "33f5f73ae8851f06fcbfed4564684bdc70f9dd8f8cdfc9eda9f243e6235063ce",
+          "archive-owner": "a0febfa09b08939f14ab31e98265f7c166a45235e94cdd293d9e743f074177d1",
+          "inventory": "1eb38ad8e688604ee8c8936550ad701911c8a728ba146246c534908688a63d75",
+          "preservation-map": "08471d65400aa5be8af73eb373dcd37d5c072510c90371fd37575f210c5e6dd6"
+        }
+      },
+      "owners": {
+        "api": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api/owner.json",
+          "sha256": "e08b6bedb51c826179ff0862761f8df9e946ed86455a0a9aa610e1550a0cbc7b"
+        },
+        "completed": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed/owner.json",
+          "sha256": "8aa5c3c50f7ee03b019adc1e3a432ce444cd2ac4c443b8c1322f174754eb3a74"
+        },
+        "endpoint": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/endpoint/owner.json",
+          "sha256": "d1ee2506818ef03eaaa83df9d9b8a73b3bc0c638549f15a00da949c9ff76dbc2"
+        },
+        "faults": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults/owner.json",
+          "sha256": "ce0bdcb246ab35f3beb14e6d9214a3232aa8d4dc0e1e485848b765b6ab72641e"
+        },
+        "mapping": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping/owner.json",
+          "sha256": "a35052b04c463809e8d373485fe66e33b76ff2878fab244dc19f71ad2155eba8"
+        },
+        "mmap1-identity": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity/owner.json",
+          "sha256": "1546f0bfa49cb6ee2278dbf75e76a4a0a45873446217a700c96d32367f09ec8b"
+        },
+        "mmap1-measure": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/owner.json",
+          "sha256": "da541e2e4777785efca17d3a8898001b86b4086e424728d9b78c322bfd374991"
+        },
+        "sites": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites/owner.json",
+          "sha256": "9bda7b650b65eef910babb63170b0ebaa38e8e7d055a6841d7a9f536b4590204"
+        },
+        "strict-hold": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold/owner.json",
+          "sha256": "4a99e1af0e2244b0c6573c1bdb7538ada56c0d0d36532c029c3151a385f7b632"
+        }
+      },
+      "logical_steps": {
+        "api": {
+          "owner": "api/owner.json",
+          "result": "api/run/result.json"
+        },
+        "completed": {
+          "owner": "completed/owner.json",
+          "result": "completed/run/result.json"
+        },
+        "endpoint": {
+          "owner": "endpoint/owner.json",
+          "result": "endpoint/run/result.json"
+        },
+        "faults": {
+          "owner": "faults/owner.json",
+          "result": "faults/run/result.json"
+        },
+        "mapping": {
+          "owner": "mapping/owner.json",
+          "result": "mapping/run/result.json"
+        },
+        "mmap1-identity": {
+          "owner": "mmap1-identity/owner.json",
+          "result": "mmap1-identity/run/result.json"
+        },
+        "mmap1-measure": {
+          "owner": "mmap1-measure/owner.json",
+          "result": "mmap1-measure/run/result.json"
+        },
+        "sites": {
+          "owner": "sites/owner.json",
+          "result": "sites/run/writer-sites.json"
+        },
+        "strict-hold": {
+          "owner": "strict-hold/owner.json",
+          "result": "strict-hold/run/result.json"
+        }
+      },
+      "archive": {
+        "directory": "/tmp/kdlock-reader-mm-promoted-evidence-r2-20261101/promoted-archives",
+        "archive_receipt_sha256": "33f5f73ae8851f06fcbfed4564684bdc70f9dd8f8cdfc9eda9f243e6235063ce",
+        "inventory_sha256": "1eb38ad8e688604ee8c8936550ad701911c8a728ba146246c534908688a63d75",
+        "paths": 2699,
+        "regular_files": 2064,
+        "groups": [
+          {
+            "file": "checks.tar.gz",
+            "bytes": 10824750,
+            "sha256": "bc091d16ba142ac6ff62ed2ec6e18a119e775977e1a095fea2ab7d22cd316271"
+          },
+          {
+            "file": "mmap1.tar.gz",
+            "bytes": 1094220,
+            "sha256": "0bccbf03e463a633bb1a425b8ef41633b1995184dc83455aeca4b79396f292c4"
+          },
+          {
+            "file": "inputs.tar.gz",
+            "bytes": 1237246,
+            "sha256": "d155fc158e7051a0001da9c123caa2033d1f8ceb0b4725346e514ee56052d775"
+          },
+          {
+            "file": "metadata.tar.gz",
+            "bytes": 1346,
+            "sha256": "aacdc8bf23421db510169d0e81d852b534f69c860d7830e09fb22e3b0597505c"
+          }
+        ]
+      },
+      "kernel_binding": {
+        "build_files": {
+          ".config": "4b25e919c4935ef17130dbcbf657e8c0f392d55b0715ac1f3dbf9a64a79aead1",
+          "Makefile": "b5221a081e873e06072cb65c8d3e3aef1d3c507eb52ff2a07058a1ee1cf9e90a",
+          "Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+          "System.map": "f7153e52df15f8179ada897c939120e0be39f56967ca6e5dc6e654ecef7869d9",
+          "arch/x86/boot/bzImage": "31b3f5e9d95fabbbad9f6415c4df86594d54c75b462fd066e75994807c8e6f28",
+          "include/config/auto.conf": "f72e391f5a220c6e8f37eb73a2d22ea409ae9ac9f377c7b1b770dd4b70438741",
+          "include/config/kernel.release": "969d2645efd30e1e1dd1b15bf245dbe3ef4a6f6546c829cb50b21b38de69dd6f",
+          "include/generated/autoconf.h": "e41c85f2f53ac0ed1d43aac704f934632ab7ad9b8b1c617e30a52cf2c6a1816e",
+          "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+          "include/generated/utsrelease.h": "fdd5c482ce3646e8d91fa668e713b10a938c08d1c4402ad3f0e38610d261a47c",
+          "include/generated/utsversion.h": "f22d5aafbb16cb93fbc64b1f058b53f9503454e73298e95842a38a4ce270fd58",
+          "vmlinux": "a8596aed4c054e9f4ca27d0d7e61057e7550ee2d424f31bed8a7cb1143876870"
+        },
+        "build_id": "0bdd45b1d7df96a0aaa1db9cd6f049ff08f75ebd",
+        "configuration_sha256": "4b25e919c4935ef17130dbcbf657e8c0f392d55b0715ac1f3dbf9a64a79aead1",
+        "kernel_mmap_backend": "kd",
+        "manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+        "private_backing_locks": false,
+        "release": "7.0.0-38-kdscope3",
+        "runtime_policy": {
+          "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope3 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+          "mmap_mode": "on",
+          "preempt": "lazy",
+          "preempt_control": "full (lazy)"
+        },
+        "source_files": {
+          "Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+          "arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+          "arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+          "debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+          "fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+          "fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+          "fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+          "fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+          "include/asm-generic/vmlinux.lds.h": "6a499367d4dcff8d07ebd1cb8d41462681a7ce7227ff95786a662160daa84ee1",
+          "include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+          "include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+          "include/linux/kd_api/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+          "include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+          "include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+          "include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+          "include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+          "include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+          "include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+          "include/linux/kd_mmap_lock.h": "1b33f4883bb4eec01dff3e745817a0a6c8ac740be4c50a0e3e3c8ea789de16ae",
+          "include/linux/kd_mmap_lock_types.h": "2bfc75888de71276c8a09d080e19f11cbbaddfa4f3de31088db44c1631d20f4a",
+          "include/linux/kd_mmap_mutex_types.h": "71735df505a3cd7157db490b6460bf3163ec3e14b1e3dcdc5fe33c7aa1ba028a",
+          "include/linux/kd_mmap_rwsem_types.h": "96d14fadaa6a4ebaf71510c5bf887c827bdaf91466606625a6ef3d3beba6e633",
+          "include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+          "include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+          "include/linux/mmap_lock.h": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+          "include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+          "include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+          "init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+          "io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+          "kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+          "kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+          "kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+          "kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+          "kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+          "kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+          "kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+          "kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+          "kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+          "kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+          "kernel/locking/kd_mmap/Makefile": "556f42ea2a3335457a154df340b9211a5ea4bde6ef5eef137cac5a08ae2bcc84",
+          "kernel/locking/kd_mmap/adapter.c": "6f1d12d7b9525e759696cff89588247d2ce8d46e0bcc7959d4f279003ae5021e",
+          "kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+          "kernel/locking/kd_mmap/kd_mmap_mutex.h": "c41a3ab932fe2ded5c22e797487cb31baec3092762702fd97606bec94fee6098",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "77573ce49ae61b0d59a22ab1645271c398a081a9bc0a2fb9f7ffd21e3621d757",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "71df7a2cfb18e480b23c259cd44013cf94ae6b26558069ae874b4200b6bb7363",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+          "kernel/locking/kd_mmap/kd_mmap_regs.h": "95deb721e542ac15782b73ad2014866ef36cad4d14b0c6199b506b7b07818f8e",
+          "kernel/locking/kd_mmap/kd_mmap_rwsem.c": "846a9dc06a0410e4afe479e6a60f48fce7d962664f7486169e796c7af9610e7e",
+          "kernel/locking/kd_mmap/kd_mmap_rwsem.h": "0fbc2da5827ab7039716a780f2fb85a47dda71a07cf3e647a22651f93d9acd6d",
+          "kernel/locking/kd_mmap/pool.c": "0fd0073fe1e24557432e43bde8ac9239a9c4c6d89b4ff8278c1f924a1229de95",
+          "kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+          "kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+          "kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+          "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+          "mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+          "mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+          "mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+          "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+          "mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+          "mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+          "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+        },
+        "variant": "kdscope3-kd"
+      },
+      "policy_evidence": {
+        "policy": "mmap-functional-held-writer-v1",
+        "incidental_writer_observation": "observed",
+        "strict_syscalls": 2,
+        "strict_negative_controls": 18,
+        "scope": "Same shared prospective policy; artificial held intervals are separate from scored execution",
+        "performance_accepted": false
+      },
+      "started": 1793477502.4631069,
+      "finished": 1793477851.0610986
+    },
+    "recovery": {
+      "archive_controls": {
+        "control": "/tmp/kdlock-reader-mm-recovery-evidence-r2-20261101/recovery-archive-control",
+        "expected_sha256": {
+          "aliases": "20a8e70df27360552e38d5359d520b88442d3262b8396a2a20563201847ae818",
+          "archive": "30c8cee20cfe7040c3f338483524abe2cf58f9be602a692f6ea34bbb4dbd98df",
+          "archive-owner": "4d1a271b02b4193c21b42a630120892b7915780a444256e0208497b87dc6442c",
+          "inventory": "a3886569bbad3c0bc684d721f9209c393fb5f0d74ea95451724d32f03eef0149",
+          "preservation-map": "ec2ddb1526b2fbb96c6938617a499b61227a7d497d2405edeacdd03abe460504"
+        }
+      },
+      "owners": {
+        "api": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/api/owner.json",
+          "sha256": "053a05e320d0b5be485a54a9c2cb19ea624629c0421a50773d9942f365650c60"
+        },
+        "completed": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/completed/owner.json",
+          "sha256": "d99b5d1d802151fe041b012fa1a2a8463491db39fef4f2c3de60355413d94978"
+        },
+        "endpoint": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/endpoint/owner.json",
+          "sha256": "873cde48d6fce73114287dbad8229c292fa41252db1a26ff217a1b53fd89c5a3"
+        },
+        "faults": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/faults/owner.json",
+          "sha256": "b1cb8f48979e3e7f001f497bbbee4d9ef1e4407f5a99f119a4de871c932bc19b"
+        },
+        "mapping": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/mapping/owner.json",
+          "sha256": "5a44518c5ebf1861dbc52abd06c9f58837f2b82ed060145f5895a48820171b1e"
+        },
+        "mmap1-identity": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/mmap1-identity/owner.json",
+          "sha256": "3600ed0a6669fdb6c3c0abb0a14456586e7a95f508e1194fbb67f3540be4e514"
+        },
+        "mmap1-measure": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/mmap1-measure/owner.json",
+          "sha256": "2ef8e1cfcc08b60bcfed66b0207d7ea3abedd632abf90761834a80c5aa7c1b7e"
+        },
+        "sites": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/sites/owner.json",
+          "sha256": "44d7b29b81b91c99773a567e3b7302b27ef49fc3daeddc714c1fbee35973fb17"
+        },
+        "strict-hold": {
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/recovery/strict-hold/owner.json",
+          "sha256": "e6afa9e55f535794d5af5f81734be8f3655da2578232bcb13fa11b444c2bf037"
+        }
+      },
+      "logical_steps": {
+        "api": {
+          "owner": "api/owner.json",
+          "result": "api/run/result.json"
+        },
+        "completed": {
+          "owner": "completed/owner.json",
+          "result": "completed/run/result.json"
+        },
+        "endpoint": {
+          "owner": "endpoint/owner.json",
+          "result": "endpoint/run/result.json"
+        },
+        "faults": {
+          "owner": "faults/owner.json",
+          "result": "faults/run/result.json"
+        },
+        "mapping": {
+          "owner": "mapping/owner.json",
+          "result": "mapping/run/result.json"
+        },
+        "mmap1-identity": {
+          "owner": "mmap1-identity/owner.json",
+          "result": "mmap1-identity/run/result.json"
+        },
+        "mmap1-measure": {
+          "owner": "mmap1-measure/owner.json",
+          "result": "mmap1-measure/run/result.json"
+        },
+        "sites": {
+          "owner": "sites/owner.json",
+          "result": "sites/run/writer-sites.json"
+        },
+        "strict-hold": {
+          "owner": "strict-hold/owner.json",
+          "result": "strict-hold/run/result.json"
+        }
+      },
+      "archive": {
+        "directory": "/tmp/kdlock-reader-mm-recovery-evidence-r2-20261101/recovery-archives",
+        "archive_receipt_sha256": "30c8cee20cfe7040c3f338483524abe2cf58f9be602a692f6ea34bbb4dbd98df",
+        "inventory_sha256": "a3886569bbad3c0bc684d721f9209c393fb5f0d74ea95451724d32f03eef0149",
+        "paths": 2699,
+        "regular_files": 2064,
+        "groups": [
+          {
+            "file": "checks.tar.gz",
+            "bytes": 10827026,
+            "sha256": "9355ca284bd9c6a7014fbed17ac244d1bc6aa3879220d9cc6c879fd42dcd5bf5"
+          },
+          {
+            "file": "mmap1.tar.gz",
+            "bytes": 1094015,
+            "sha256": "b5c107afb783353496a43d60665cde9f913ba6070ebe1776b674cfa65af9cc03"
+          },
+          {
+            "file": "inputs.tar.gz",
+            "bytes": 1236589,
+            "sha256": "41794bb52c96de03e9b9642b1c1ace7403c108a086066fb338d0ac9442bb78b8"
+          },
+          {
+            "file": "metadata.tar.gz",
+            "bytes": 1317,
+            "sha256": "b77adda2d58ff7d8e28447ca5fbfd1ba18da95a8eb16608ebbfd254edc7a982f"
+          }
+        ]
+      },
+      "kernel_binding": {
+        "build_files": {
+          ".config": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd",
+          "Makefile": "470bf65feb908c7ee8a6e270ef73c1c83bd19b10b25ebada3667ab696dda1274",
+          "Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+          "System.map": "ac3f96c9ae4306786032414e68492e4a5c3351551d78391e058634e5f6907ed4",
+          "arch/x86/boot/bzImage": "e2ea7faadbd7a5e77aff447b1d4020b3b098f4ece6fcaa791931464cf8035443",
+          "include/config/auto.conf": "a8ef39aaecf8d1145e467dcbdb21be293615bfcfc59ec74b060409da008a038a",
+          "include/config/kernel.release": "da4b128d2bad817c98773b41aba9d7092960585b114653e4cb955cbe0daa8076",
+          "include/generated/autoconf.h": "05def7b70cc1b49de72bee3f836044bdbfed4b083fabf097b89adda2ad0148f9",
+          "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+          "include/generated/utsrelease.h": "a5e72a81697d05ffb03357727d569c4ad553d4a2afc4978576dd838d6370d2b2",
+          "include/generated/utsversion.h": "8163fdf80c8422ab62d3c03f49a6dd720df36e5ae536639bc3f92fdcafa06122",
+          "vmlinux": "e8c0b6bb7fb9434432ba96a5b96eac27592a2bce50d4607dff5aea18be4c71c0"
+        },
+        "build_id": "a3bd8cda22af4c668b952472822188c6f3708440",
+        "configuration_sha256": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd",
+        "kernel_mmap_backend": "kd",
+        "manifest_sha256": "5bb0fcbd453f307ae159746da133163247538acf7d3f152fa05ceeb53a633957",
+        "private_backing_locks": false,
+        "release": "7.0.0-38-kdscope4",
+        "runtime_policy": {
+          "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope4 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+          "mmap_mode": "on",
+          "preempt": "lazy",
+          "preempt_control": "full (lazy)"
+        },
+        "source_files": {
+          "Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+          "arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+          "arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+          "debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+          "fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+          "fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+          "fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+          "fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+          "include/asm-generic/vmlinux.lds.h": "6a499367d4dcff8d07ebd1cb8d41462681a7ce7227ff95786a662160daa84ee1",
+          "include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+          "include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+          "include/linux/kd_api/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+          "include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+          "include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+          "include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+          "include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+          "include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+          "include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+          "include/linux/kd_mmap_lock.h": "1b33f4883bb4eec01dff3e745817a0a6c8ac740be4c50a0e3e3c8ea789de16ae",
+          "include/linux/kd_mmap_lock_types.h": "2bfc75888de71276c8a09d080e19f11cbbaddfa4f3de31088db44c1631d20f4a",
+          "include/linux/kd_mmap_mutex_types.h": "71735df505a3cd7157db490b6460bf3163ec3e14b1e3dcdc5fe33c7aa1ba028a",
+          "include/linux/kd_mmap_rwsem_types.h": "96d14fadaa6a4ebaf71510c5bf887c827bdaf91466606625a6ef3d3beba6e633",
+          "include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+          "include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+          "include/linux/mmap_lock.h": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+          "include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+          "include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+          "init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+          "io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+          "kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+          "kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+          "kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+          "kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+          "kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+          "kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+          "kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+          "kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+          "kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+          "kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+          "kernel/locking/kd_mmap/Makefile": "556f42ea2a3335457a154df340b9211a5ea4bde6ef5eef137cac5a08ae2bcc84",
+          "kernel/locking/kd_mmap/adapter.c": "6f1d12d7b9525e759696cff89588247d2ce8d46e0bcc7959d4f279003ae5021e",
+          "kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+          "kernel/locking/kd_mmap/kd_mmap_mutex.h": "dee9e01d9d3e588c99c7f56e13dec196dc28cb390d4817445183b6be082f5c6f",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "77573ce49ae61b0d59a22ab1645271c398a081a9bc0a2fb9f7ffd21e3621d757",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "71df7a2cfb18e480b23c259cd44013cf94ae6b26558069ae874b4200b6bb7363",
+          "kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+          "kernel/locking/kd_mmap/kd_mmap_regs.h": "727d65f9da02fa6dacc8e1150331f7bcd5de003f80350aafc93a62e43f5ef4b1",
+          "kernel/locking/kd_mmap/kd_mmap_rwsem.c": "a73f249a711967248b7b9ca2a7e079822cc93b58bce89b8f6aa5e57e8848504e",
+          "kernel/locking/kd_mmap/kd_mmap_rwsem.h": "0fbc2da5827ab7039716a780f2fb85a47dda71a07cf3e647a22651f93d9acd6d",
+          "kernel/locking/kd_mmap/pool.c": "0fd0073fe1e24557432e43bde8ac9239a9c4c6d89b4ff8278c1f924a1229de95",
+          "kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+          "kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+          "kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+          "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+          "mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+          "mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+          "mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+          "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+          "mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+          "mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+          "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+        },
+        "variant": "kdscope4-kd"
+      },
+      "policy_evidence": {
+        "policy": "mmap-functional-held-writer-v1",
+        "incidental_writer_observation": "observed",
+        "strict_syscalls": 2,
+        "strict_negative_controls": 18,
+        "scope": "Same shared prospective policy; artificial held intervals are separate from scored execution",
+        "performance_accepted": false
+      },
+      "started": 1793478055.726329,
+      "finished": 1793478404.3757288
+    }
+  },
+  "pure_parser_sha256": "863c4aa07eda2324dba6a14c3b811b571a4f72c561ce4c162e559af91b114410",
+  "pool_activation_sha256": "bbdc3ec1e800298d6a98db387f8d221da6df10539240eecd74c7fddce39502a0",
+  "host_reference_sha256": "39f5f77b97dd043268f81db164cf171f87e4d24a1fab61366fe18a8b1f98f58f",
+  "strict_host_qualified": true,
+  "shared_functional_policy": "mmap-functional-held-writer-v1",
+  "models": {
+    "threads": {
+      "pairs": 21,
+      "losses": 12,
+      "gains": 9
+    },
+    "processes": {
+      "pairs": 21,
+      "losses": 10,
+      "gains": 11
+    }
+  },
+  "no_regression_evidence_gate": false,
+  "runner_verified_external_dependencies": {
+    "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "/usr/bin/ld": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+    "/usr/bin/make": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+    "/usr/bin/x86_64-linux-gnu-gcc-15": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+    "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "/usr/lib/x86_64-linux-gnu/libhwloc.so.15": "cfd75dcb8bdc371974de69ae545d031ed9c5521eff670ebf32b0cbb3f4eaa92c",
+    "/usr/lib/x86_64-linux-gnu/libhwloc.so.15.10.2": "cfd75dcb8bdc371974de69ae545d031ed9c5521eff670ebf32b0cbb3f4eaa92c",
+    "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "/usr/lib/x86_64-linux-gnu/libudev.so.1": "f1e45a4aff33dcd3bfd2f9903eb5858d9702c247653b6f4f6acdfaf19f62d157",
+    "/usr/lib/x86_64-linux-gnu/libudev.so.1.7.12": "f1e45a4aff33dcd3bfd2f9903eb5858d9702c247653b6f4f6acdfaf19f62d157"
+  },
+  "runner_verified_kernel_files": {
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/asm-generic/vmlinux.lds.h": "6a499367d4dcff8d07ebd1cb8d41462681a7ce7227ff95786a662160daa84ee1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_mmap_lock.h": "1b33f4883bb4eec01dff3e745817a0a6c8ac740be4c50a0e3e3c8ea789de16ae",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_mmap_lock_types.h": "2bfc75888de71276c8a09d080e19f11cbbaddfa4f3de31088db44c1631d20f4a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_mmap_mutex_types.h": "71735df505a3cd7157db490b6460bf3163ec3e14b1e3dcdc5fe33c7aa1ba028a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_mmap_rwsem_types.h": "96d14fadaa6a4ebaf71510c5bf887c827bdaf91466606625a6ef3d3beba6e633",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/mmap_lock.h": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/Makefile": "556f42ea2a3335457a154df340b9211a5ea4bde6ef5eef137cac5a08ae2bcc84",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/adapter.c": "6f1d12d7b9525e759696cff89588247d2ce8d46e0bcc7959d4f279003ae5021e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_mutex.h": "c41a3ab932fe2ded5c22e797487cb31baec3092762702fd97606bec94fee6098",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "77573ce49ae61b0d59a22ab1645271c398a081a9bc0a2fb9f7ffd21e3621d757",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "71df7a2cfb18e480b23c259cd44013cf94ae6b26558069ae874b4200b6bb7363",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_regs.h": "95deb721e542ac15782b73ad2014866ef36cad4d14b0c6199b506b7b07818f8e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_rwsem.c": "846a9dc06a0410e4afe479e6a60f48fce7d962664f7486169e796c7af9610e7e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/kd_mmap_rwsem.h": "0fbc2da5827ab7039716a780f2fb85a47dda71a07cf3e647a22651f93d9acd6d",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/kd_mmap/pool.c": "0fd0073fe1e24557432e43bde8ac9239a9c4c6d89b4ff8278c1f924a1229de95",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/source/mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/.config": "4b25e919c4935ef17130dbcbf657e8c0f392d55b0715ac1f3dbf9a64a79aead1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/Makefile": "b5221a081e873e06072cb65c8d3e3aef1d3c507eb52ff2a07058a1ee1cf9e90a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/System.map": "f7153e52df15f8179ada897c939120e0be39f56967ca6e5dc6e654ecef7869d9",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/arch/x86/boot/bzImage": "31b3f5e9d95fabbbad9f6415c4df86594d54c75b462fd066e75994807c8e6f28",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/config/auto.conf": "f72e391f5a220c6e8f37eb73a2d22ea409ae9ac9f377c7b1b770dd4b70438741",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/config/kernel.release": "969d2645efd30e1e1dd1b15bf245dbe3ef4a6f6546c829cb50b21b38de69dd6f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/generated/autoconf.h": "e41c85f2f53ac0ed1d43aac704f934632ab7ad9b8b1c617e30a52cf2c6a1816e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/generated/utsrelease.h": "fdd5c482ce3646e8d91fa668e713b10a938c08d1c4402ad3f0e38610d261a47c",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/include/generated/utsversion.h": "f22d5aafbb16cb93fbc64b1f058b53f9503454e73298e95842a38a4ce270fd58",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build/vmlinux": "a8596aed4c054e9f4ca27d0d7e61057e7550ee2d424f31bed8a7cb1143876870",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/asm-generic/vmlinux.lds.h": "6a499367d4dcff8d07ebd1cb8d41462681a7ce7227ff95786a662160daa84ee1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_mmap_lock.h": "1b33f4883bb4eec01dff3e745817a0a6c8ac740be4c50a0e3e3c8ea789de16ae",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_mmap_lock_types.h": "2bfc75888de71276c8a09d080e19f11cbbaddfa4f3de31088db44c1631d20f4a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_mmap_mutex_types.h": "71735df505a3cd7157db490b6460bf3163ec3e14b1e3dcdc5fe33c7aa1ba028a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_mmap_rwsem_types.h": "96d14fadaa6a4ebaf71510c5bf887c827bdaf91466606625a6ef3d3beba6e633",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/mmap_lock.h": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/Makefile": "556f42ea2a3335457a154df340b9211a5ea4bde6ef5eef137cac5a08ae2bcc84",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/adapter.c": "6f1d12d7b9525e759696cff89588247d2ce8d46e0bcc7959d4f279003ae5021e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_mutex.h": "dee9e01d9d3e588c99c7f56e13dec196dc28cb390d4817445183b6be082f5c6f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "77573ce49ae61b0d59a22ab1645271c398a081a9bc0a2fb9f7ffd21e3621d757",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "71df7a2cfb18e480b23c259cd44013cf94ae6b26558069ae874b4200b6bb7363",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_regs.h": "727d65f9da02fa6dacc8e1150331f7bcd5de003f80350aafc93a62e43f5ef4b1",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_rwsem.c": "a73f249a711967248b7b9ca2a7e079822cc93b58bce89b8f6aa5e57e8848504e",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/kd_mmap_rwsem.h": "0fbc2da5827ab7039716a780f2fb85a47dda71a07cf3e647a22651f93d9acd6d",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/kd_mmap/pool.c": "0fd0073fe1e24557432e43bde8ac9239a9c4c6d89b4ff8278c1f924a1229de95",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source/mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/.config": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/Makefile": "470bf65feb908c7ee8a6e270ef73c1c83bd19b10b25ebada3667ab696dda1274",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/System.map": "ac3f96c9ae4306786032414e68492e4a5c3351551d78391e058634e5f6907ed4",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/arch/x86/boot/bzImage": "e2ea7faadbd7a5e77aff447b1d4020b3b098f4ece6fcaa791931464cf8035443",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/config/auto.conf": "a8ef39aaecf8d1145e467dcbdb21be293615bfcfc59ec74b060409da008a038a",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/config/kernel.release": "da4b128d2bad817c98773b41aba9d7092960585b114653e4cb955cbe0daa8076",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/generated/autoconf.h": "05def7b70cc1b49de72bee3f836044bdbfed4b083fabf097b89adda2ad0148f9",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/generated/utsrelease.h": "a5e72a81697d05ffb03357727d569c4ad553d4a2afc4978576dd838d6370d2b2",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/include/generated/utsversion.h": "8163fdf80c8422ab62d3c03f49a6dd720df36e5ae536639bc3f92fdcafa06122",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build/vmlinux": "e8c0b6bb7fb9434432ba96a5b96eac27592a2bce50d4607dff5aea18be4c71c0"
+  },
+  "limits": [
+    "One round; no statistical or causal claim.",
+    "Unchanged application, distinct built-in kernel recipes.",
+    "Both arms use fresh common functional mapping plus separate artificial held-writer proof.",
+    "Original application preparation contributes bytes only; no historical timing/eligibility substitution.",
+    "No timed parking/JIT instrumentation or automatic acceptance."
+  ]
+}

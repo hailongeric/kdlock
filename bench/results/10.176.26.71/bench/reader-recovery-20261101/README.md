@@ -1,9 +1,9 @@
-# Reader restoration: fresh Nano evidence and pending MM comparison
+# Reader restoration: fresh Nano and mmap1 comparisons
 
 The isolated reader-restoration candidate remains **unaccepted**. All three
 Nano arms completed and drained 210 points each, with one measurement per point
-and full archived-data validation. The MM comparison is still pending; these
-Nano results do not establish recovery of the known 60-process mmap1 loss.
+and full archived-data validation. The [fresh MM comparison](mm/README.md) is complete. It does not establish
+recovery against a newly measured f7a84065 MM reference.
 
 The exact promoted provider is `1b6f256b13e8743aa1fd7bdc958cc82ae7726463`, merged
 as `e0f9696cf7ba6268bbbfa5131a9ee881f6553809` under the documented one-time
@@ -46,7 +46,7 @@ The [machine-readable summaries](nano/comparison-summary.json) retain separate
 qualification, point, workload-mean and acceptance fields. Historical October 31
 scores are not pooled into these comparisons.
 
-The complete point grids are also shown in the [promoted comparison figure](figures/nano-recovery-versus-promoted.png) and [reference comparison figure](figures/nano-recovery-versus-reference.png). Both include every point and label losses beyond 10%.
+The complete point grids are also shown in the [promoted comparison figure](figures/nano-recovery-versus-promoted.png) and [reference comparison figure](figures/nano-recovery-versus-reference.png). Both include every point and label losses beyond 10%; an asterisk marks a point where one or both runs reported NO_JIT.
 
 The [four-worker mutex c01 inspection](nano/mutex-c01-n04/README.md) retains the
 new outlier, worker CPU totals, raw records and static function-byte comparison.
@@ -104,3 +104,14 @@ two reviewed header paths to the explicit six-file delta, then configure and
 build into the still-absent output directory. Use new preparation/build records;
 the two earlier failed preparations remain failed. No Nano point is repeated.
 MM timing and recovery of the 60-process loss remain unverified.
+
+The first MM offline-analysis attempt stopped at import: the copied shared
+control helper had been shortened while `nano_core.py` still imported its
+`load_control` export. This happened before any archive was scored. Preserve
+that failed attempt and restore the complete original helper in a new analysis
+directory, retaining the current cohort constants and every evidence check.
+Analyze the same completed archives; do not rerun any measurement.
+
+The later [MM results and restoration record](mm/README.md) complete the
+promoted/recovery comparison. The preparation failures above remain historical
+failed attempts. The reader candidate remains isolated and unaccepted.

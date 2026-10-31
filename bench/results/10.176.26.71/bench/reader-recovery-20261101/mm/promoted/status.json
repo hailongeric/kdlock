@@ -1,0 +1,459 @@
+{
+  "completed": true,
+  "coordinator_sha256": "12652d93708db2f28b7a15f3de8b4aa061734f7165ef99589a3e2f071dc5775a",
+  "arm": "promoted",
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "config_sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+  "controller_sha256": "36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d",
+  "steps": [
+    {
+      "step": "sites",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "sites",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-sites-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "c10adc80a6a3bd4a92acac2bf9dd9a1e2eee8c100aa7f416851ece9009823bfe",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites"
+      ],
+      "started": 1793477391.0041256,
+      "completed": true,
+      "finished": 1793477400.9394438,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites/owner.json",
+        "sha256": "9bda7b650b65eef910babb63170b0ebaa38e8e7d055a6841d7a9f536b4590204"
+      }
+    },
+    {
+      "step": "api",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "api",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-api-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "66d33fb974b170f44bd21a90e2c84e5038c8d54d20746fe737fe1c49a4e7e5a4",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api"
+      ],
+      "started": 1793477404.970878,
+      "completed": true,
+      "finished": 1793477415.2563858,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api/owner.json",
+        "sha256": "e08b6bedb51c826179ff0862761f8df9e946ed86455a0a9aa610e1550a0cbc7b"
+      }
+    },
+    {
+      "step": "mapping",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "mapping",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-mapping-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "7bc7b558e037d816105e961a345358e9d9b401bfc47014a75b88126457e235e8",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping"
+      ],
+      "started": 1793477419.29844,
+      "completed": true,
+      "finished": 1793477431.8911977,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping/owner.json",
+        "sha256": "a35052b04c463809e8d373485fe66e33b76ff2878fab244dc19f71ad2155eba8"
+      }
+    },
+    {
+      "step": "faults",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "faults",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "33f90976bc4ac21132791b292b699cb3dde2cffce0fcbffe67f890bd859439f4",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults"
+      ],
+      "started": 1793477435.9881089,
+      "completed": true,
+      "finished": 1793477441.055116,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults/owner.json",
+        "sha256": "ce0bdcb246ab35f3beb14e6d9214a3232aa8d4dc0e1e485848b765b6ab72641e"
+      }
+    },
+    {
+      "step": "completed",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "completed",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-completed-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "2b9f657f5ae6d831f4b0e477eb62e7f7d25cad704d6c268cf9fe8b0fc08b6e72",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed"
+      ],
+      "started": 1793477445.1519027,
+      "completed": true,
+      "finished": 1793477452.4771917,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed/owner.json",
+        "sha256": "8aa5c3c50f7ee03b019adc1e3a432ce444cd2ac4c443b8c1322f174754eb3a74"
+      }
+    },
+    {
+      "step": "strict-hold",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "strict-hold",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "ef223345a2c8bd689c7f5c8857aea649d38f23357a9953124838a6ca60c97a10",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold"
+      ],
+      "started": 1793477456.4996715,
+      "completed": true,
+      "finished": 1793477468.7947457,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold/owner.json",
+        "sha256": "4a99e1af0e2244b0c6573c1bdb7538ada56c0d0d36532c029c3151a385f7b632"
+      }
+    },
+    {
+      "step": "mmap1-identity",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "mmap1-identity",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-mmap1-identity-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "bb8da898ac33e712cc54e8141e0fcf4fa9be5129c57b1eb60dd38dcd98c0f9ed",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity"
+      ],
+      "started": 1793477472.825478,
+      "completed": true,
+      "finished": 1793477497.0549378,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity/owner.json",
+        "sha256": "1546f0bfa49cb6ee2278dbf75e76a4a0a45873446217a700c96d32367f09ec8b"
+      }
+    },
+    {
+      "step": "mmap1-measure",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "mmap1-measure",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "054071e9c1704c79b50ee0875a34854aa60cb79add647c0fc58f561e537727aa",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure"
+      ],
+      "started": 1793477501.1536386,
+      "completed": true,
+      "finished": 1793477852.792497,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/owner.json",
+        "sha256": "da541e2e4777785efca17d3a8898001b86b4086e424728d9b78c322bfd374991"
+      }
+    },
+    {
+      "step": "endpoint",
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/endpoint",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-mm-20261031.py",
+        "endpoint",
+        "--config",
+        "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+        "--config-sha256",
+        "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003",
+        "--bindings",
+        "/tmp/kdlock-reader-mm-promoted-endpoint-r2-20261101.bindings.json",
+        "--bindings-sha256",
+        "5d4037394d65588e57571b1d97dcee95924d3325d0d1f9e94f2f5dc9211c9693",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/endpoint"
+      ],
+      "started": 1793477856.8917093,
+      "completed": true,
+      "finished": 1793477859.6044548,
+      "owner": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/endpoint/owner.json",
+        "sha256": "d1ee2506818ef03eaaa83df9d9b8a73b3bc0c638549f15a00da949c9ff76dbc2"
+      }
+    }
+  ],
+  "uploads": [
+    {
+      "local": "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+      "path": "/tmp/kdlock-reader-recovery-mm-r2-20261101.json",
+      "sha256": "6d950639b6b9ae30049b36fa26f88a2c584418b7bd70a2b96f8a96afb0239003"
+    },
+    {
+      "local": "/tmp/kdlock-writer-queue-mm-20261031.py",
+      "path": "/tmp/kdlock-writer-queue-mm-20261031.py",
+      "sha256": "36db793b4c354eed620d579b5689d244c6e95e99e3d43d1a6650bcaf6423942d"
+    },
+    {
+      "local": "/tmp/kdlock-reader-recovery-pool-activate-r2-20261101.result.json",
+      "path": "/tmp/kdlock-reader-recovery-pool-activate-r2-20261101.result.json",
+      "sha256": "bbdc3ec1e800298d6a98db387f8d221da6df10539240eecd74c7fddce39502a0"
+    },
+    {
+      "local": "/tmp/kdlock-reader-recovery-reference-20261101.json",
+      "path": "/tmp/kdlock-reader-recovery-reference-20261101.json",
+      "sha256": "39f5f77b97dd043268f81db164cf171f87e4d24a1fab61366fe18a8b1f98f58f"
+    },
+    {
+      "local": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+      "path": "/tmp/kdlock-writer-queue-mapping-functional-sites3-20261031.py",
+      "sha256": "8e303ba5a77799ca6151448e8689f6c29c922a86dc1f66b8a0ed65bad077b64d"
+    },
+    {
+      "local": "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py",
+      "path": "/tmp/kdlock-scope-mmap1-identity-runner-r1-20261030.py",
+      "sha256": "5c23db457fc9cfc91ff68c7f392e5c003812cb54a66fe082a0e73a0b459b6120"
+    },
+    {
+      "local": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+      "path": "/tmp/kdlock-strict-hold-return-sites-31d3bc28-20261031.manifest.json",
+      "sha256": "ed9fcddaf0b4dba2f4af3afd722cff5f184abcf6611177192d7d1666f9b5172e"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/sites.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-sites-r2-20261101.pool.json",
+      "sha256": "e8aaf34734fe483ec4dd57c544070c4b685f98fe2a76f1e6841b97d3915fe070"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/sites.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-sites-r2-20261101.host.json",
+      "sha256": "d262ad916dc8dc2f08a97cc8a8b5a8cb79fc08ec37981697d6cdacb288a58938"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/sites.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-sites-r2-20261101.bindings.json",
+      "sha256": "c10adc80a6a3bd4a92acac2bf9dd9a1e2eee8c100aa7f416851ece9009823bfe"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/api.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-api-r2-20261101.pool.json",
+      "sha256": "1bf5e61168ba1ab98d3ae107eb671eb88673e41fb21b3038866f2378a638327f"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/api.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-api-r2-20261101.host.json",
+      "sha256": "d11907a3f7dc0b56a29c3c7f073e1278b338593ea9141e500841256fc1db53fb"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/api.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-api-r2-20261101.bindings.json",
+      "sha256": "66d33fb974b170f44bd21a90e2c84e5038c8d54d20746fe737fe1c49a4e7e5a4"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mapping.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mapping-r2-20261101.pool.json",
+      "sha256": "3253da2258e9d208ec88f2b48b18e8ab90e426b08ef277650dd4b625d572832b"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mapping.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mapping-r2-20261101.host.json",
+      "sha256": "5827047ca7c17e7bbb24eff2c798bd11804b882910c3221698d0041223515b3a"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mapping.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mapping-r2-20261101.bindings.json",
+      "sha256": "7bc7b558e037d816105e961a345358e9d9b401bfc47014a75b88126457e235e8"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/faults.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.pool.json",
+      "sha256": "d301ce7da86389c314f4adb606f150655d33bcfff29e1d3b6bf5eb8a239788ea"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/faults.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.host.json",
+      "sha256": "3d5aa3161544cee8715685f8ee81e7d4364ba23895b9244de7bb63c0c1c780aa"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/faults.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-faults-r2-20261101.bindings.json",
+      "sha256": "33f90976bc4ac21132791b292b699cb3dde2cffce0fcbffe67f890bd859439f4"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/completed.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-completed-r2-20261101.pool.json",
+      "sha256": "fea102db10dd8274d6d352ed82f5918cd2f622a71366b10b754fb46d6ba48f75"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/completed.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-completed-r2-20261101.host.json",
+      "sha256": "c5dff0ada20ba250690b13143ec99498e56d70ed98d5b23ff31dd0f5da1d6495"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/completed.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-completed-r2-20261101.bindings.json",
+      "sha256": "2b9f657f5ae6d831f4b0e477eb62e7f7d25cad704d6c268cf9fe8b0fc08b6e72"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/strict-hold.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.pool.json",
+      "sha256": "7d314ee1780d1137f11b8812bcc8bd575969133f67a5993a3facae8f43daa9d0"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/strict-hold.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.host.json",
+      "sha256": "27e7d757ddb9beac1ddfbaa5912152606371587dc304498d8432bebe5ae2aad5"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/strict-hold.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.bindings.json",
+      "sha256": "ef223345a2c8bd689c7f5c8857aea649d38f23357a9953124838a6ca60c97a10"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-identity.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-identity-r2-20261101.pool.json",
+      "sha256": "289618d24b8d309020cc6cfd3d97888479e4e31cde6cb2b6038415a10f168fb8"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-identity.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-identity-r2-20261101.host.json",
+      "sha256": "cbd53e689d3a03bd8bbe1628931fe257f7d2af3370577ba87037a9a08ccc54fe"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-identity.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-identity-r2-20261101.bindings.json",
+      "sha256": "bb8da898ac33e712cc54e8141e0fcf4fa9be5129c57b1eb60dd38dcd98c0f9ed"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-measure.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.pool.json",
+      "sha256": "e4d7e4e06d9c79d8fbec47a90ecb63d2df9d3be97f67273f05593998b84acb00"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-measure.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.host.json",
+      "sha256": "99fd8f4fd6b67757186dbfc8f5672a50661dc5dd5a645df61dc85ad0c3e68695"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/mmap1-measure.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-mmap1-measure-r2-20261101.bindings.json",
+      "sha256": "054071e9c1704c79b50ee0875a34854aa60cb79add647c0fc58f561e537727aa"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/endpoint.pool.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-endpoint-r2-20261101.pool.json",
+      "sha256": "ae2aee9d48fdf7b939df262bfc533fa3d4b8fa246efb4108ecc0e179eaafcc5f"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/endpoint.host.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-endpoint-r2-20261101.host.json",
+      "sha256": "ed2a230c6537f6a12bef9e369f1600e142e5d51be368344a969815e62d74cd70"
+    },
+    {
+      "local": "/tmp/kdlock-reader-mm-promoted-r2-20261101/endpoint.bindings.json",
+      "path": "/tmp/kdlock-reader-mm-promoted-endpoint-r2-20261101.bindings.json",
+      "sha256": "5d4037394d65588e57571b1d97dcee95924d3325d0d1f9e94f2f5dc9211c9693"
+    }
+  ],
+  "started": 1793477382.9301963,
+  "phase": "endpoint-readback",
+  "child_pid": 3423506,
+  "owners": {
+    "sites": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites/owner.json",
+      "sha256": "9bda7b650b65eef910babb63170b0ebaa38e8e7d055a6841d7a9f536b4590204"
+    },
+    "api": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api/owner.json",
+      "sha256": "e08b6bedb51c826179ff0862761f8df9e946ed86455a0a9aa610e1550a0cbc7b"
+    },
+    "mapping": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping/owner.json",
+      "sha256": "a35052b04c463809e8d373485fe66e33b76ff2878fab244dc19f71ad2155eba8"
+    },
+    "faults": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/faults/owner.json",
+      "sha256": "ce0bdcb246ab35f3beb14e6d9214a3232aa8d4dc0e1e485848b765b6ab72641e"
+    },
+    "completed": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/completed/owner.json",
+      "sha256": "8aa5c3c50f7ee03b019adc1e3a432ce444cd2ac4c443b8c1322f174754eb3a74"
+    },
+    "strict-hold": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/strict-hold/owner.json",
+      "sha256": "4a99e1af0e2244b0c6573c1bdb7538ada56c0d0d36532c029c3151a385f7b632"
+    },
+    "mmap1-identity": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-identity/owner.json",
+      "sha256": "1546f0bfa49cb6ee2278dbf75e76a4a0a45873446217a700c96d32367f09ec8b"
+    },
+    "mmap1-measure": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/owner.json",
+      "sha256": "da541e2e4777785efca17d3a8898001b86b4086e424728d9b78c322bfd374991"
+    },
+    "endpoint": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/endpoint/owner.json",
+      "sha256": "d1ee2506818ef03eaaa83df9d9b8a73b3bc0c638549f15a00da949c9ff76dbc2"
+    }
+  },
+  "performance_accepted": false,
+  "finished": 1793477859.605993
+}

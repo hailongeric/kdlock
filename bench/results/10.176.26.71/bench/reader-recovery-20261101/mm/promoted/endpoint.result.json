@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "completed": true,
+  "passed": true,
+  "drained": true,
+  "final_idle": true,
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "mode": "kd",
+  "grid_points": 42,
+  "rounds_per_point": 1,
+  "host_strict_qualified": true,
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "measure_owner": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/owner.json",
+    "sha256": "da541e2e4777785efca17d3a8898001b86b4086e424728d9b78c322bfd374991"
+  },
+  "measure_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/run/result.json",
+    "sha256": "72a37f41bf1f170acdd2d61b64bb4f6da9b1b33c63f8625edadfac5b64fcfadb"
+  },
+  "measurement_policy": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mmap1-measure/measurement-policy.json",
+    "sha256": "e1f482019fad3cce6f4299c6fef33b3f0a889384357c1bb722b11da303763542"
+  },
+  "host_before_sha256": "99fd8f4fd6b67757186dbfc8f5672a50661dc5dd5a645df61dc85ad0c3e68695",
+  "host_after_sha256": "ed2a230c6537f6a12bef9e369f1600e142e5d51be368344a969815e62d74cd70",
+  "host_reference_sha256": "39f5f77b97dd043268f81db164cf171f87e4d24a1fab61366fe18a8b1f98f58f",
+  "pool_verification_sha256": "ae2aee9d48fdf7b939df262bfc533fa3d4b8fa246efb4108ecc0e179eaafcc5f",
+  "captured_utc": "2026-10-31T20:17:33.952346+00:00",
+  "capture_delay_from_child_exit_seconds": 2.891247510910034,
+  "comparison_to_reference": {
+    "strict_host_gate": "PASS",
+    "exploratory": false,
+    "task_set_unchanged": true,
+    "additional_workers": [],
+    "retired_workers": [],
+    "original_threads": 131,
+    "observed_threads": 131,
+    "fixed_frequency_khz": 2000000,
+    "performance_accepted": false,
+    "host_endpoint": "PENDING"
+  },
+  "comparison_to_before": {
+    "strict_host_gate": "PASS",
+    "exploratory": false,
+    "task_set_unchanged": true,
+    "additional_workers": [],
+    "retired_workers": [],
+    "original_threads": 131,
+    "observed_threads": 131,
+    "fixed_frequency_khz": 2000000,
+    "performance_accepted": false,
+    "host_endpoint": "PENDING"
+  },
+  "performance_accepted": false
+}

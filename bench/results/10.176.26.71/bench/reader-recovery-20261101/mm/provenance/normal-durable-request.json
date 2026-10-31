@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "action": "normal-request",
+  "passed": true,
+  "state": "REBOOT_REQUESTED_NOT_VERIFIED",
+  "boot_id": "2204494e-17f2-43a7-8c1c-03036f9ad300",
+  "release": "7.0.0-38-kdscope4",
+  "source_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+  "provider_commit": "66c68c17457c0ae60d09ff1f3d89b5fff16a500c",
+  "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "build_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/writer-queue-scope4-kernel-r4-20261101/build/result.json",
+    "sha256": "0a38e65db86bbedd6ccb4d2ca4e4c197d09ec7a171f444245c94c04d3542c20d"
+  },
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+  "host_state": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/host-state.json",
+    "sha256": "04f98cc96298cc39df23d9634adf1aba65ec342b0a691707d55884a4585be8f3"
+  },
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "commands": [
+    {
+      "name": "environment-before",
+      "argv": [
+        "grub-editenv",
+        "/boot/grub/grubenv",
+        "list"
+      ],
+      "started": 1793478434.6329741,
+      "pid": 14167,
+      "process_group": 14167,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793478434.7255402,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/environment-before.log",
+        "sha256": "fad93690c26602e1193b1966d2f00d667928540056608d6dbcfac2e6982546d0"
+      }
+    },
+    {
+      "name": "reboot",
+      "argv": [
+        "systemctl",
+        "reboot"
+      ],
+      "started": 1793478434.7392645,
+      "pid": 14168,
+      "process_group": 14168,
+      "returncode": 0,
+      "remaining_processes": [],
+      "finished": 1793478434.7642672,
+      "log": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/reboot.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "started": 1793478433.5151682,
+  "performance_accepted": false,
+  "drain_unknown": false,
+  "prior": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/result.json",
+    "sha256": "6396d422d6022c681b8081b23b0eb1b8696f3cd04d9b4dab3525841c2af2e816"
+  },
+  "protected_before": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/normal-request/protected-before.json",
+    "sha256": "107830b5f594ac97c7af6bfefd171d3e95daf1eec5306ea88fc11e263dc5eac5"
+  },
+  "capture": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-capture/result.json",
+    "sha256": "6396d422d6022c681b8081b23b0eb1b8696f3cd04d9b4dab3525841c2af2e816"
+  },
+  "append": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+    "sha256": "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7"
+  },
+  "pre_request_idle": true
+}

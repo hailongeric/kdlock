@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "arm": "promoted",
+  "boot_id": "dae9e9ec-d63a-4f53-b2b9-834a8cd8441b",
+  "bundle_manifest_sha256": "c0b832fc285a665b566022160d45b6ea1f93d148158872d313f1590bc22138c0",
+  "host_state": {
+    "path": "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.host.json",
+    "sha256": "27e7d757ddb9beac1ddfbaa5912152606371587dc304498d8432bebe5ae2aad5"
+  },
+  "pool_verification": {
+    "path": "/tmp/kdlock-reader-mm-promoted-strict-hold-r2-20261101.pool.json",
+    "sha256": "7d314ee1780d1137f11b8812bcc8bd575969133f67a5993a3facae8f43daa9d0"
+  },
+  "prerequisite_owners": {
+    "sites": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/sites/owner.json",
+      "sha256": "9bda7b650b65eef910babb63170b0ebaa38e8e7d055a6841d7a9f536b4590204"
+    },
+    "api": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/api/owner.json",
+      "sha256": "e08b6bedb51c826179ff0862761f8df9e946ed86455a0a9aa610e1550a0cbc7b"
+    },
+    "mapping": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/reader-recovery-mm-r2-20261101/promoted/mapping/owner.json",
+      "sha256": "a35052b04c463809e8d373485fe66e33b76ff2878fab244dc19f71ad2155eba8"
+    }
+  }
+}

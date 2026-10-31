@@ -1,0 +1,46 @@
+{
+  "promoted": {
+    "source_result_sha256": "72a37f41bf1f170acdd2d61b64bb4f6da9b1b33c63f8625edadfac5b64fcfadb",
+    "cpu_seconds": 479.1129330000005,
+    "lifetime_wall_seconds": 8.105783766,
+    "cpu_capacity_fraction": 0.9851256560154344,
+    "samples": [
+      {
+        "max": 314879,
+        "min": 18650,
+        "total": 1435940,
+        "largest_share": 0.2192842319316963,
+        "remaining_59_mean": 19001.033898305086
+      },
+      {
+        "max": 313054,
+        "min": 18483,
+        "total": 1436085,
+        "largest_share": 0.21799127488971753,
+        "remaining_59_mean": 19034.42372881356
+      }
+    ]
+  },
+  "recovery": {
+    "source_result_sha256": "079c0f062a3b07da031209f8dad9ed04fef1c7daa8585ee8c4df57e183c05ff9",
+    "cpu_seconds": 478.2404019999998,
+    "lifetime_wall_seconds": 8.103310654,
+    "cpu_capacity_fraction": 0.9836317163444964,
+    "samples": [
+      {
+        "max": 22129,
+        "min": 20846,
+        "total": 1276451,
+        "largest_share": 0.017336348986369238,
+        "remaining_59_mean": 21259.694915254237
+      },
+      {
+        "max": 21665,
+        "min": 20845,
+        "total": 1272161,
+        "largest_share": 0.017030077167905635,
+        "remaining_59_mean": 21194.84745762712
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "completed": false,
+  "phase": "OFFLINE_ANALYSIS",
+  "started": 1793476001.2005773,
+  "performance_accepted": false,
+  "argv": [
+    "python3",
+    "/tmp/kdlock-reader-mm-offline-r2-20261101/mmap_compare.py",
+    "--inputs",
+    "/tmp/kdlock-reader-mm-offline-watch-r2-20261101/inputs.json",
+    "--inputs-sha256",
+    "64c6e16dc181dc129af905644f747cd4e0fd412e83acec71de24b5fbf993e0a1",
+    "--trusted-checkout",
+    "/home/eric/vm/vm-shared/kdlock",
+    "--output",
+    "/tmp/kdlock-reader-mm-analysis-r2-20261101"
+  ],
+  "child_pid": 3,
+  "error": "AssertionError(1)",
+  "finished": 1793478429.0427413
+}
