@@ -188,7 +188,7 @@ def main():
         rt.write_json(out / 'result.json', result)
         chain = SITES['chains'][a.mode]
         proof_args = [str(SITES['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
-        proof_args += [linux70_sites.waiter_argument(chain), *map(str, chain['wait_returns']),
+        proof_args += [linux70_sites.waiter_argument(chain), *linux70_sites.wait_arguments(chain),
                        str(chain['adapter_return']), SITES['adapter']]
         plan = [('scope', 1, 1), ('cycle', 1, 1000), ('cycle', 16, 5000),
                 ('lifetime', 1, 1), ('lifetime', 16, 1), ('exit', 1, 1)]
