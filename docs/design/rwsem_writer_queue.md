@@ -98,3 +98,24 @@ comparisons even if nano has a loss, keeping the candidate unaccepted. If any
 required gate fails, retain the exact candidate and evidence, state the remaining
 limits and use the measured cause to propose a next iteration. One round does
 not establish repeat variance or prove that an unchanged path has regressed.
+
+## November 1 promotion decision
+
+The user explicitly authorized promotion despite the historical failed
+performance gates. Merge `e0f9696cf7ba6268bbbfa5131a9ee881f6553809` brings
+`1b6f256b13e8743aa1fd7bdc958cc82ae7726463` into master. The exception accepts
+minor Nano losses, the separately acknowledged -20.496300% Nano point and the
+known -22.385920% result at 60 mmap1 processes. The latter two are not minor
+regressions, and neither is a corrected performance result.
+
+The [November 1 policy and recovery plan](writer_recovery_20261101.md) supersedes
+the original promotion gate for this specific merge. Its future minor-Nano
+limits are 2% geometric mean loss per workload and 10% at every point,
+separately for whole-window and qualified peak throughput. Original results
+remain preserved in report commit `710cfba70c8c0bab4b20784d6fa3c1e4d508c442`.
+
+Recovery branch `codex/reader-recovery-20261101` starts at the promotion merge.
+Its reader-only candidate `66c68c17457c0ae60d09ff1f3d89b5fff16a500c` restores
+the f7a84065 reader entry while preserving the writer queue. It is a separate
+experiment and is not included in this promotion. No new performance outcome
+is established by this documentation.
