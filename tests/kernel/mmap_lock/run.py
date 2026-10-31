@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import struct
 import sys
@@ -28,6 +29,21 @@ def idle():
     for p in Path('/sys/module').iterdir():
         rt.require(not p.name.startswith(('kd_', 'tc_', 'tclock_', 'jit_')) and
                    p.name != 'rwsem_probe', 'existing project module: ' + p.name)
+
+
+def gate_waiter_layout(text):
+    """Complete only the source-bound private waiter tag used by this fixture."""
+    flags = re.findall(r'^#define KD_(?:WAITERS|HANDOFF|PICKUP|FLAGS) [^\n]+$', text, re.M)
+    structs = re.findall(r'^struct kd_local_waiter \{\n(?:[^\n]*\n)*?\};$', text, re.M)
+    rt.require(len(flags) == 4 and len(structs) == 1, 'captured gate layout declaration differs')
+    declaration = '\n'.join(flags) + '\n\n' + structs[0]
+    return ('/* SPDX-License-Identifier: GPL-2.0 */\n'
+            '/* Test-only view checked against the captured local-gate source by run.py. */\n'
+            '#ifndef KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H\n'
+            '#define KD_MMAP_PROBE_GATE_WAITER_LAYOUT_H\n'
+            '#include <linux/list.h>\n\n' +
+            declaration.replace('kd_', 'kd_mmap_').replace('KD_', 'KD_MMAP_') +
+            '\n\n#endif\n')
 
 
 def main():
@@ -87,6 +103,18 @@ def main():
         result.update(shared_platform.admit(a,out))
         support=shared_platform.freeze_support(out)
         source, hashes = out / 'source', {}
+        layout_source = ROOT / 'kernel_module/kd_mutex_local.c'
+        layout_header = ROOT / 'tests/kernel/mmap_lock/payload/gate_waiter_layout.h'
+        rt.require(layout_header.read_text() == gate_waiter_layout(layout_source.read_text()),
+                   'test-only gate view differs from captured source')
+        layout_copy = source / 'kernel_module/kd_mutex_local.c'
+        layout_copy.parent.mkdir(parents=True)
+        shutil.copyfile(layout_source, layout_copy)
+        hashes['kernel_module/kd_mutex_local.c'] = rt.digest(layout_source)
+        result['queue_observation'] = dict(schema=1, kinds=['reader-phase', 'writer-gate', 'reader-drain'],
+            gate_source_sha256=hashes['kernel_module/kd_mutex_local.c'],
+            gate_layout_sha256=rt.digest(layout_header), singleton_task_checked_under_wait_lock=True,
+            cancellation_holder_checked_before_release=True)
         for directory in ('tests/kernel/mmap_lock', 'tests/unit', 'include', 'daemon'):
             for path in (ROOT / directory).rglob('*'):
                 rel = path.relative_to(ROOT)
