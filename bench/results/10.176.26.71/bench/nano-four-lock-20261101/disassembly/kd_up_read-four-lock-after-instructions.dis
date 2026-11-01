@@ -1,0 +1,24 @@
+
+/tmp/kdlock-four-lock-candidate-provider-20261101.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001e230 <kd_up_read>:
+   1e230:	e8 00 00 00 00       	call   1e235 <kd_up_read+0x5>
+   1e235:	f0 48 ff 4f 40       	lock decq 0x40(%rdi)
+   1e23a:	75 11                	jne    1e24d <kd_up_read+0x1d>
+   1e23c:	55                   	push   %rbp
+   1e23d:	48 89 e5             	mov    %rsp,%rbp
+   1e240:	e8 4b ff ff ff       	call   1e190 <kd_up_read.part.0>
+   1e245:	5d                   	pop    %rbp
+   1e246:	31 ff                	xor    %edi,%edi
+   1e248:	e9 00 00 00 00       	jmp    1e24d <kd_up_read+0x1d>
+   1e24d:	31 ff                	xor    %edi,%edi
+   1e24f:	e9 00 00 00 00       	jmp    1e254 <kd_up_read+0x24>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

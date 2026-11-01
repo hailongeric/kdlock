@@ -1,0 +1,9 @@
+{
+  "completed": true,
+  "files": 119,
+  "bytes": 4388961,
+  "sha256": "c8b652b819a2106680c246dd9b043397b067965a0ef12cb5631ce962d0cd334f",
+  "input_inventory_sha256": "213b269c32315eee680b10a78c8a1a0bdcb6ca841730e8209f143dc9f64f3aff",
+  "unchanged_inputs": true,
+  "source_archive": "/tmp/kdlock-four-lock-host-receipts-20261102/host-receipts.tar.gz"
+}

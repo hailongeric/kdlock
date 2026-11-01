@@ -225,3 +225,46 @@ loss at eight workers. Preserve this result and add focused eight-worker
 c01/c16 w1 profiles to the follow-up. Favorable c16 w20 averages do not excuse
 that point; the retained rwsem/OSQ changes are still candidates, not accepted
 performance improvements across the whole grid.
+
+
+## Completed evidence and acceptance
+
+The [complete report](../../bench/results/10.176.26.71/bench/nano-four-lock-20261101/README.md)
+retains 288 baseline Native/TCLock/KD points, 96 grouping-candidate points,
+96 restored-reader-path points and six component points. Each scored point has
+one round; cycle/PMU observations remain separate. All scored runs completed
+with correct data and final drain. Failed setup, missing observation capacity,
+the initial parser failure and the follow-up fixture compilation failure remain
+recorded independently.
+
+The grouping candidate `822036777ae5731f24c56cbf50751d6e075ed1e1` has 41
+negative comparisons and loses up to 23.48%; grouping is withdrawn. Follow-up
+`1ba4cc6e59f5451eaecafcf1c3a36861d026e5d9` passes ten unit groups, all four
+basic returned-JIT checks and the directly affected live fixtures. Its rwsem
+c16/w1 and c16/w20 geometric means improve 6.08% and 7.90%, but it has 35
+negative comparisons, including a 21.90% c01/w1 eight-worker loss. It is not
+accepted or promoted. Production rwlock/spin bytes are restored to baseline;
+negative observations in those controls remain explicit rather than being
+assigned to an unmodified lock algorithm.
+
+Separate designs at `1055d8de` and `9cf4298e` preceded component implementations
+`252825407cd40d91a32010e82c8c111a768e7fcf` (reader-entry only) and
+`4df80e5a14d0368b07c5c0a63b49f0b79b80ca4f` (OSQ64 only). Each passed five
+affected unit groups and basic/local mutex/rwsem checks. Reader-entry alone
+recovers the single-worker c01/w1 score by 7.17%; OSQ64 alone improves the
+split-node c16/w20 score by 6.08%. However, both components retain the
+8-worker c01/w1 loss, approximately 30% below the original baseline. No
+component receives a full-grid acceptance claim from its three measured points.
+
+All eight-worker c01/w1 variants have zero returned JIT bodies, near-full worker
+CPU use and balanced completions. The exact cause of that score difference
+remains unresolved; the comparisons do not isolate parking or one uniquely
+responsible edit. Additional address/first-probe observations are specified in
+the report's next iteration. Do not weaken ownership, cancellation, reader
+locality or barriers to remove a negative result.
+
+All guest evidence and source/host controllers are archived and hash-verified.
+The guest is idle, the prior pool settings are restored, and master remains
+`7231ddf0963ff2cc730590c09cc81e7f96f93095` with unrelated work preserved.
+The restored settings are distinct from an exact restoration of the historical
+QEMU task map; the report retains that final-state limitation.

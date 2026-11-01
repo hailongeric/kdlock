@@ -1,0 +1,109 @@
+{
+  "archive_prefix": "nano-four-lock-reader-entry-r2-20261101",
+  "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+  "completed": true,
+  "finished_ns": 1793556893929074421,
+  "groups": [
+    {
+      "bytes": 70335748,
+      "file": "scores.tar.gz",
+      "group": "scores",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-r2-20261101-archives/scores.tar.gz",
+      "roots": [
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-contiguous",
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-split20",
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-split32",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-contiguous",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-split20",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-split32",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-contiguous",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-split20",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-split32",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-contiguous",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-split20",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-split32"
+      ],
+      "sha256": "0c5abe529dad4ffe773bcac76c82abd7a2603b3120ee51b15975596968ce6165"
+    },
+    {
+      "bytes": 111141434,
+      "file": "diagnostics.tar.gz",
+      "group": "diagnostics",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-r2-20261101-archives/diagnostics.tar.gz",
+      "roots": [
+        "nano-four-lock-reader-entry-r2-20261101/after-record1",
+        "nano-four-lock-reader-entry-r2-20261101/after-record60",
+        "nano-four-lock-reader-entry-r2-20261101/after-record8",
+        "nano-four-lock-reader-entry-r2-20261101/basic",
+        "nano-four-lock-reader-entry-r2-20261101/irq",
+        "nano-four-lock-reader-entry-r2-20261101/mutex-local",
+        "nano-four-lock-reader-entry-r2-20261101/rw-build-instrumented",
+        "nano-four-lock-reader-entry-r2-20261101/rw-live-instrumented",
+        "nano-four-lock-reader-entry-r2-20261101/rwsem"
+      ],
+      "sha256": "a10176d7aa02d50affc4029cee0d762281d887fd8412122351ccb7ca5c8fea6c"
+    },
+    {
+      "bytes": 6733745,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-r2-20261101-archives/metadata.tar.gz",
+      "roots": [
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-contiguous-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-split20-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-mutex-split32-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-record1-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-record60-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-record8-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-contiguous-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-split20-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwlock-split32-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-contiguous-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-split20-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-rwsem-split32-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-contiguous-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-split20-control",
+        "nano-four-lock-reader-entry-r2-20261101/after-spin-split32-control",
+        "nano-four-lock-reader-entry-r2-20261101/basic-control",
+        "nano-four-lock-reader-entry-r2-20261101/final-health.json",
+        "nano-four-lock-reader-entry-r2-20261101/irq-control",
+        "nano-four-lock-reader-entry-r2-20261101/mutex-local-control",
+        "nano-four-lock-reader-entry-r2-20261101/rw-build-instrumented-control",
+        "nano-four-lock-reader-entry-r2-20261101/rw-live-instrumented-control",
+        "nano-four-lock-reader-entry-r2-20261101/rwsem-control",
+        "nano-four-lock-reader-entry-r2-20261101/unit-control"
+      ],
+      "sha256": "9feb2287712a651d35f3f68204a7b0014f95ac63eb5ef6ccbec39d0338539783"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-r2-20261101",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "fa082511a3a9f457cea040d1cba6a83580cc51e04473bf4cbc15341d04fefed0",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "0a683c1f6f2026bdfdac370dafe38145c0f930a0aa0f908101a8c99c764df466",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "kernel_release": "7.0.0-38-kdlock1",
+  "kernel_variant": "kdlock1",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793556853493453344
+}

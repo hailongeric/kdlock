@@ -1,0 +1,2990 @@
+{
+  "nano-four-lock-20261101/numa-events-same/mutex-c16-w100/mutex-cacheline-c16-kdlock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 8076288,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "24528440",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112732173",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.03709327849626,
+        "runtime_ns": 40112732173.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 24528440.0,
+        "value_text": "24528440"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1633",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112732173",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00020219685083048053,
+        "runtime_ns": 40112732173.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1633.0,
+        "value_text": "1633"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11222",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112732173",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0013894997305692912,
+        "runtime_ns": 40112732173.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11222.0,
+        "value_text": "11222"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/mutex-c16-w100/mutex-cacheline-c16-tclock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 3690496,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "14993312",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40129219562",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4.062682089345172,
+        "runtime_ns": 40129219562.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 14993312.0,
+        "value_text": "14993312"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "2088",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40129219562",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0005657776082130966,
+        "runtime_ns": 40129219562.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 2088.0,
+        "value_text": "2088"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9963",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40129219562",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.002699637121947836,
+        "runtime_ns": 40129219562.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9963.0,
+        "value_text": "9963"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwlock-c16-w001/cacheline-c16-kdlock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 21534464,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "52060839",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112161898",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.417559081108311,
+        "runtime_ns": 40112161898.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 52060839.0,
+        "value_text": "52060839"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1611",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112161898",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 7.481031336558923e-05,
+        "runtime_ns": 40112161898.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1611.0,
+        "value_text": "1611"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9820",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112161898",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0004560132074798797,
+        "runtime_ns": 40112161898.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9820.0,
+        "value_text": "9820"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwlock-c16-w001/cacheline-c16-tclock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 16944128,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40699949",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112777776",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.4020090617823473,
+        "runtime_ns": 40112777776.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 40699949.0,
+        "value_text": "40699949"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1521",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112777776",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 8.976561083580105e-05,
+        "runtime_ns": 40112777776.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1521.0,
+        "value_text": "1521"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9212",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112777776",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0005436691696380009,
+        "runtime_ns": 40112777776.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9212.0,
+        "value_text": "9212"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwlock-c16-w020/cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 8363520,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "29335549",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40109601979",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.5075600943143557,
+        "runtime_ns": 40109601979.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 29335549.0,
+        "value_text": "29335549"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1684",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40109601979",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00020135062748699112,
+        "runtime_ns": 40109601979.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1684.0,
+        "value_text": "1684"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10758",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40109601979",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.001286300505050505,
+        "runtime_ns": 40109601979.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10758.0,
+        "value_text": "10758"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwlock-c16-w020/cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 7653376,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "27292915",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40101464345",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.566127549463139,
+        "runtime_ns": 40101464345.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 27292915.0,
+        "value_text": "27292915"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1302",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40101464345",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00017012100280974044,
+        "runtime_ns": 40101464345.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1302.0,
+        "value_text": "1302"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11080",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40101464345",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0014477271206850414,
+        "runtime_ns": 40101464345.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11080.0,
+        "value_text": "11080"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwsem-c01-w020/rwsem-cacheline-c01-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 10170880,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "36090150",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40109901041",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.548380277812736,
+        "runtime_ns": 40109901041.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 36090150.0,
+        "value_text": "36090150"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1929",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40109901041",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00018965910521016863,
+        "runtime_ns": 40109901041.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1929.0,
+        "value_text": "1929"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9340",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40109901041",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0009183079536873898,
+        "runtime_ns": 40109901041.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9340.0,
+        "value_text": "9340"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwsem-c01-w020/rwsem-cacheline-c01-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 11312896,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "39676705",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40102621720",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.507210266937838,
+        "runtime_ns": 40102621720.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 39676705.0,
+        "value_text": "39676705"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1630",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40102621720",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00014408335407662193,
+        "runtime_ns": 40102621720.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1630.0,
+        "value_text": "1630"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10042",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40102621720",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0008876595347468942,
+        "runtime_ns": 40102621720.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10042.0,
+        "value_text": "10042"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 9347072,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "34546754",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40114331530",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.695997420368646,
+        "runtime_ns": 40114331530.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 34546754.0,
+        "value_text": "34546754"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1485",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40114331530",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00015887328138694128,
+        "runtime_ns": 40114331530.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1485.0,
+        "value_text": "1485"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10001",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40114331530",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0010699607320880807,
+        "runtime_ns": 40114331530.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10001.0,
+        "value_text": "10001"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-same/rwsem-c16-w020/rwsem-cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 9090816,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "33590657",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40114304852",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.695010106903495,
+        "runtime_ns": 40114304852.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 33590657.0,
+        "value_text": "33590657"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1273",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40114304852",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00014003143392188336,
+        "runtime_ns": 40114304852.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1273.0,
+        "value_text": "1273"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10013",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40114304852",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0011014412787586944,
+        "runtime_ns": 40114304852.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10013.0,
+        "value_text": "10013"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/mutex-c16-w100/mutex-cacheline-c16-kdlock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 7937024,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "24101109",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40108796369",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.036542285874403,
+        "runtime_ns": 40108796369.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 24101109.0,
+        "value_text": "24101109"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11568",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40108796369",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0014574732292607405,
+        "runtime_ns": 40108796369.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11568.0,
+        "value_text": "11568"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "432718",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40108796369",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.05451892296155335,
+        "runtime_ns": 40108796369.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 432718.0,
+        "value_text": "432718"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/mutex-c16-w100/mutex-cacheline-c16-tclock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 3467264,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "14072090",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40099699967",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4.058557410107797,
+        "runtime_ns": 40099699967.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 14072090.0,
+        "value_text": "14072090"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "3877",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40099699967",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0011181727148552865,
+        "runtime_ns": 40099699967.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 3877.0,
+        "value_text": "3877"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "156077",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40099699967",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.045014455201565266,
+        "runtime_ns": 40099699967.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 156077.0,
+        "value_text": "156077"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwlock-c16-w001/cacheline-c16-kdlock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 17724160,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "41796315",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112329762",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.358154913970535,
+        "runtime_ns": 40112329762.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 41796315.0,
+        "value_text": "41796315"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "25642",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112329762",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0014467258250884668,
+        "runtime_ns": 40112329762.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 25642.0,
+        "value_text": "25642"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10284264",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112329762",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.5802398533978479,
+        "runtime_ns": 40112329762.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10284264.0,
+        "value_text": "10284264"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwlock-c16-w001/cacheline-c16-tclock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 14132736,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "33792674",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40100547549",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.3910921423848857,
+        "runtime_ns": 40100547549.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 33792674.0,
+        "value_text": "33792674"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "25642",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40100547549",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0018143691356012027,
+        "runtime_ns": 40100547549.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 25642.0,
+        "value_text": "25642"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "6952649",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40100547549",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.4919535042613122,
+        "runtime_ns": 40100547549.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 6952649.0,
+        "value_text": "6952649"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwlock-c16-w020/cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 4964352,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "17369949",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112748528",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.49893581277073,
+        "runtime_ns": 40112748528.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 17369949.0,
+        "value_text": "17369949"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "191810",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112748528",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.03863746970400165,
+        "runtime_ns": 40112748528.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 191810.0,
+        "value_text": "191810"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "16775245",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112748528",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.3791409231255156,
+        "runtime_ns": 40112748528.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 16775245.0,
+        "value_text": "16775245"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwlock-c16-w020/cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 7009536,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "25218490",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40112529412",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.5977402783864725,
+        "runtime_ns": 40112529412.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 25218490.0,
+        "value_text": "25218490"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "18549",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40112529412",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.002646252191300537,
+        "runtime_ns": 40112529412.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 18549.0,
+        "value_text": "18549"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "2950918",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40112529412",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.4209862107848508,
+        "runtime_ns": 40112529412.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 2950918.0,
+        "value_text": "2950918"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwsem-c01-w020/rwsem-cacheline-c01-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 7026944,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "26347611",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40098349270",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.749512021157419,
+        "runtime_ns": 40098349270.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 26347611.0,
+        "value_text": "26347611"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "569097",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40098349270",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.08098783767168202,
+        "runtime_ns": 40098349270.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 569097.0,
+        "value_text": "569097"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "8316033",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40098349270",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.1834494482950197,
+        "runtime_ns": 40098349270.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 8316033.0,
+        "value_text": "8316033"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwsem-c01-w020/rwsem-cacheline-c01-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 8086272,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "28556617",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40094586490",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.5314934991056446,
+        "runtime_ns": 40094586490.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 28556617.0,
+        "value_text": "28556617"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "308451",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40094586490",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.03814501911387596,
+        "runtime_ns": 40094586490.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 308451.0,
+        "value_text": "308451"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "8860999",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40094586490",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.0958076849257605,
+        "runtime_ns": 40094586490.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 8860999.0,
+        "value_text": "8860999"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 6499584,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "24289727",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40102424746",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.7371202526192446,
+        "runtime_ns": 40102424746.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 24289727.0,
+        "value_text": "24289727"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "822070",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40102424746",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.12648040243806372,
+        "runtime_ns": 40102424746.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 822070.0,
+        "value_text": "822070"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "12240954",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40102424746",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.8833442263381779,
+        "runtime_ns": 40102424746.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 12240954.0,
+        "value_text": "12240954"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/numa-events-split/rwsem-c16-w020/rwsem-cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 6070016,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "22812983",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40110039888",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.7583068973788536,
+        "runtime_ns": 40110039888.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 22812983.0,
+        "value_text": "22812983"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "260161",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40110039888",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.04286001882037873,
+        "runtime_ns": 40110039888.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 260161.0,
+        "value_text": "260161"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "12569478",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40110039888",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.0707487426721776,
+        "runtime_ns": 40110039888.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 12569478.0,
+        "value_text": "12569478"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/mutex-c16-w100/mutex-cacheline-c16-kdlock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 8010240,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "258924",
+          "",
+          "cache-misses:k",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.03232412511984659,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 258924.0,
+        "value_text": "258924"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "461",
+          "",
+          "context-switches",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5.755133429210611e-05,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 461.0,
+        "value_text": "461"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.4968040907638223e-06,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79152692797",
+          "",
+          "cycles:k",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 9881.438358526086,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79152692797.0,
+        "value_text": "79152692797"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20546631996",
+          "",
+          "instructions:k",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2565.045740951582,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20546631996.0,
+        "value_text": "20546631996"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40108.76",
+          "msec",
+          "task-clock",
+          "40108758152",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.005007185802173218,
+        "runtime_ns": 40108758152.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40108.76,
+        "value_text": "40108.76"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/mutex-c16-w100/mutex-cacheline-c16-tclock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 3669248,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "257779",
+          "",
+          "cache-misses:k",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.07025390488732296,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 257779.0,
+        "value_text": "257779"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "478",
+          "",
+          "context-switches",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00013027192492848672,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 478.0,
+        "value_text": "478"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5.450708156003628e-06,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "78899720059",
+          "",
+          "cycles:k",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 21502.967381599716,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 78899720059.0,
+        "value_text": "78899720059"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9836727935",
+          "",
+          "instructions:k",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2680.856659184661,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9836727935.0,
+        "value_text": "9836727935"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40136.32",
+          "msec",
+          "task-clock",
+          "40136321011",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.010938568338798577,
+        "runtime_ns": 40136321011.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40136.32,
+        "value_text": "40136.32"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/rwlock-c16-w001/cacheline-c16-kdlock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 21519872,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "257582",
+          "",
+          "cache-misses:k",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.011969494985843782,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 257582.0,
+        "value_text": "257582"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "460",
+          "",
+          "context-switches",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.1375591825081487e-05,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 460.0,
+        "value_text": "460"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 9.293735576122385e-07,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79033451559",
+          "",
+          "cycles:k",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3672.5800022881176,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79033451559.0,
+        "value_text": "79033451559"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "15328962773",
+          "",
+          "instructions:k",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 712.3166333424288,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 15328962773.0,
+        "value_text": "15328962773"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40110.87",
+          "msec",
+          "task-clock",
+          "40110869921",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0018638990975411007,
+        "runtime_ns": 40110869921.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40110.87,
+        "value_text": "40110.87"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/rwlock-c16-w001/cacheline-c16-tclock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 15860736,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "339041",
+          "",
+          "cache-misses:k",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.02137612025066176,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 339041.0,
+        "value_text": "339041"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "443",
+          "",
+          "context-switches",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.7930608012137645e-05,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 443.0,
+        "value_text": "443"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.2609755310220156e-06,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79023994162",
+          "",
+          "cycles:k",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4982.36615009543,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79023994162.0,
+        "value_text": "79023994162"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11985045442",
+          "",
+          "instructions:k",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 755.6424520274469,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11985045442.0,
+        "value_text": "11985045442"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40099.24",
+          "msec",
+          "task-clock",
+          "40099243146",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.002528208022628962,
+        "runtime_ns": 40099243146.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40099.24,
+        "value_text": "40099.24"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 9605632,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "277340",
+          "",
+          "cache-misses:k",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.028872644715100475,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 277340.0,
+        "value_text": "277340"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "493",
+          "",
+          "context-switches",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5.132405655348862e-05,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 493.0,
+        "value_text": "493"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.082111827727733e-06,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79042781680",
+          "",
+          "cycles:k",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 8228.795531621448,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79042781680.0,
+        "value_text": "79042781680"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "15743400108",
+          "",
+          "instructions:k",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1638.9759786758434,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 15743400108.0,
+        "value_text": "15743400108"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40112.68",
+          "msec",
+          "task-clock",
+          "40112680113",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0041759542734928845,
+        "runtime_ns": 40112680113.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40112.68,
+        "value_text": "40112.68"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-same/rwsem-c16-w020/rwsem-cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 9068800,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "260594",
+          "",
+          "cache-misses:k",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.028735224064925898,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 260594.0,
+        "value_text": "260594"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "423",
+          "",
+          "context-switches",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4.664343683839097e-05,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 423.0,
+        "value_text": "423"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.205363443895554e-06,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79050696567",
+          "",
+          "cycles:k",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 8716.775821167079,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79050696567.0,
+        "value_text": "79050696567"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "233928278328",
+          "",
+          "instructions:k",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 25794.84367589979,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 233928278328.0,
+        "value_text": "233928278328"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40119.36",
+          "msec",
+          "task-clock",
+          "40119358030",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.004423888496824277,
+        "runtime_ns": 40119358030.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40119.36,
+        "value_text": "40119.36"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/mutex-c16-w100/mutex-cacheline-c16-kdlock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 7781376,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1647325",
+          "",
+          "cache-misses:k",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.21170098964501907,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1647325.0,
+        "value_text": "1647325"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "473",
+          "",
+          "context-switches",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 6.078616429793394e-05,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 473.0,
+        "value_text": "473"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.5702395051980524e-06,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "78988404419",
+          "",
+          "cycles:k",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 10150.955874513711,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 78988404419.0,
+        "value_text": "78988404419"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20100981000",
+          "",
+          "instructions:k",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2583.2167729717726,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20100981000.0,
+        "value_text": "20100981000"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40105.46",
+          "msec",
+          "task-clock",
+          "40105464937",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.005154031883307014,
+        "runtime_ns": 40105464937.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40105.46,
+        "value_text": "40105.46"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/mutex-c16-w100/mutex-cacheline-c16-tclock-w100-t20-r00/perf-stat.json": {
+    "completed_operations": 3602688,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "681641",
+          "",
+          "cache-misses:k",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.18920345031265545,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 681641.0,
+        "value_text": "681641"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "536",
+          "",
+          "context-switches",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0001487778014637959,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 536.0,
+        "value_text": "536"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5.551410502380445e-06,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79000788978",
+          "",
+          "cycles:k",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 21928.290481440523,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79000788978.0,
+        "value_text": "79000788978"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9848750168",
+          "",
+          "instructions:k",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2733.7227558978184,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9848750168.0,
+        "value_text": "9848750168"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40108.29",
+          "msec",
+          "task-clock",
+          "40108287365",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.01113287911692603,
+        "runtime_ns": 40108287365.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40108.29,
+        "value_text": "40108.29"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/rwlock-c16-w001/cacheline-c16-kdlock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 16161792,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "16495757",
+          "",
+          "cache-misses:k",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.0206638595522082,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 16495757.0,
+        "value_text": "16495757"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "457",
+          "",
+          "context-switches",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.8276567350947223e-05,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 457.0,
+        "value_text": "457"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.2374865361464868e-06,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "78983512250",
+          "",
+          "cycles:k",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4887.051649346805,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 78983512250.0,
+        "value_text": "78983512250"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "12170856328",
+          "",
+          "instructions:k",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 753.0635419636634,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 12170856328.0,
+        "value_text": "12170856328"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40100.40",
+          "msec",
+          "task-clock",
+          "40100404445",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.002481185254704429,
+        "runtime_ns": 40100404445.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40100.4,
+        "value_text": "40100.40"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/rwlock-c16-w001/cacheline-c16-tclock-w001-t20-r00/perf-stat.json": {
+    "completed_operations": 14652416,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "15234205",
+          "",
+          "cache-misses:k",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.0397060116229295,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 15234205.0,
+        "value_text": "15234205"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "451",
+          "",
+          "context-switches",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.077990687679083e-05,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 451.0,
+        "value_text": "451"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.3649626109441611e-06,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "78986417511",
+          "",
+          "cycles:k",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5390.675333747008,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 78986417511.0,
+        "value_text": "78986417511"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11479683265",
+          "",
+          "instructions:k",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 783.4669221103195,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11479683265.0,
+        "value_text": "11479683265"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40102.84",
+          "msec",
+          "task-clock",
+          "40102835307",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.002736943859633797,
+        "runtime_ns": 40102835307.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40102.84,
+        "value_text": "40102.84"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 6490624,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "35269872",
+          "",
+          "cache-misses:k",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 5.433972450106492,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 35269872.0,
+        "value_text": "35269872"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "706",
+          "",
+          "context-switches",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00010877228445215745,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 706.0,
+        "value_text": "706"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.0813678315058766e-06,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "78945779600",
+          "",
+          "cycles:k",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 12163.049284629644,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 78945779600.0,
+        "value_text": "78945779600"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "13305734686",
+          "",
+          "instructions:k",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2049.993141799617,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 13305734686.0,
+        "value_text": "13305734686"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40105.12",
+          "msec",
+          "task-clock",
+          "40105119963",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.006178931332334149,
+        "runtime_ns": 40105119963.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40105.12,
+        "value_text": "40105.12"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-20261101/stat-split/rwsem-c16-w020/rwsem-cacheline-c16-tclock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 6087680,
+    "events": {
+      "cache-misses:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "43956316",
+          "",
+          "cache-misses:k",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 7.220536559083263,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 43956316.0,
+        "value_text": "43956316"
+      },
+      "context-switches": {
+        "multiplexed": false,
+        "raw_fields": [
+          "450",
+          "",
+          "context-switches",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 7.391978553406223e-05,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 450.0,
+        "value_text": "450"
+      },
+      "cpu-migrations": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20",
+          "",
+          "cpu-migrations",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.285323801513877e-06,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20.0,
+        "value_text": "20"
+      },
+      "cycles:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "79034995034",
+          "",
+          "cycles:k",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 12982.777516886565,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 79034995034.0,
+        "value_text": "79034995034"
+      },
+      "instructions:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "205279226772",
+          "",
+          "instructions:k",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 33720.43648352082,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 205279226772.0,
+        "value_text": "205279226772"
+      },
+      "task-clock": {
+        "multiplexed": false,
+        "raw_fields": [
+          "40114.90",
+          "msec",
+          "task-clock",
+          "40114904939",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.006589521788267452,
+        "runtime_ns": 40114904939.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "msec",
+        "value": 40114.9,
+        "value_text": "40114.90"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-candidate-20261101/after-events-same/rwlock-c16-w020/cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 7727360,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "32554066",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40115690001",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 4.212831549196621,
+        "runtime_ns": 40115690001.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 32554066.0,
+        "value_text": "32554066"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1956",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40115690001",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00025312655292363754,
+        "runtime_ns": 40115690001.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1956.0,
+        "value_text": "1956"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "10615",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40115690001",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0013736903677323174,
+        "runtime_ns": 40115690001.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 10615.0,
+        "value_text": "10615"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-candidate-20261101/after-events-same/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 10476800,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "39113148",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40115419725",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.733310552840562,
+        "runtime_ns": 40115419725.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 39113148.0,
+        "value_text": "39113148"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "1753",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40115419725",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.00016732208307880268,
+        "runtime_ns": 40115419725.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 1753.0,
+        "value_text": "1753"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "9352",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40115419725",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.0008926389737324374,
+        "runtime_ns": 40115419725.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 9352.0,
+        "value_text": "9352"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-candidate-20261101/after-events-split/rwlock-c16-w020/cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 5150464,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "20220498",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40106088133",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.9259565740096427,
+        "runtime_ns": 40106088133.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 20220498.0,
+        "value_text": "20220498"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "224477",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40106088133",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.04358384021323127,
+        "runtime_ns": 40106088133.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 224477.0,
+        "value_text": "224477"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "14038584",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40106088133",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 2.725693063770565,
+        "runtime_ns": 40106088133.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 14038584.0,
+        "value_text": "14038584"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  },
+  "nano-four-lock-candidate-20261101/after-events-split/rwsem-c16-w020/rwsem-cacheline-c16-kdlock-w020-t20-r00/perf-stat.json": {
+    "completed_operations": 6599936,
+    "events": {
+      "mem_inst_retired.lock_loads:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "24471082",
+          "",
+          "mem_inst_retired.lock_loads:k",
+          "40107457716",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 3.7077756511578293,
+        "runtime_ns": 40107457716.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 24471082.0,
+        "value_text": "24471082"
+      },
+      "mem_load_l3_miss_retired.remote_dram:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "930101",
+          "",
+          "mem_load_l3_miss_retired.remote_dram:k",
+          "40107457716",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 0.14092576049222297,
+        "runtime_ns": 40107457716.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 930101.0,
+        "value_text": "930101"
+      },
+      "mem_load_l3_miss_retired.remote_hitm:k": {
+        "multiplexed": false,
+        "raw_fields": [
+          "11965652",
+          "",
+          "mem_load_l3_miss_retired.remote_hitm:k",
+          "40107457716",
+          "100.00",
+          "",
+          ""
+        ],
+        "reported_unit_per_completed_op": 1.8129951563166673,
+        "runtime_ns": 40107457716.0,
+        "runtime_percent": 100.0,
+        "scaling_status": "FULL_RUNTIME",
+        "unit": "",
+        "value": 11965652.0,
+        "value_text": "11965652"
+      }
+    },
+    "scope": "Measured client and inherited threads, including client startup/collection; preparation and warmup excluded",
+    "status": "FULL_RUNTIME"
+  }
+}

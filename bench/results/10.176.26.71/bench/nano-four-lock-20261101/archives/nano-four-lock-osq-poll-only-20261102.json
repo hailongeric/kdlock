@@ -1,0 +1,79 @@
+{
+  "archive_prefix": "nano-four-lock-osq-poll-only-20261102",
+  "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+  "completed": true,
+  "finished_ns": 1793557538759674147,
+  "groups": [
+    {
+      "bytes": 32767081,
+      "file": "diagnostics.tar.gz",
+      "group": "diagnostics",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-osq-poll-only-20261102-archives/diagnostics.tar.gz",
+      "roots": [
+        "nano-four-lock-osq-poll-only-20261102/after-record8",
+        "nano-four-lock-osq-poll-only-20261102/basic",
+        "nano-four-lock-osq-poll-only-20261102/mutex-local",
+        "nano-four-lock-osq-poll-only-20261102/rwsem"
+      ],
+      "sha256": "57b77d42899ee4a7b0c65c55f553cf8c6a49f700e015f34d17f6f0708b5f339b"
+    },
+    {
+      "bytes": 11468438,
+      "file": "scores.tar.gz",
+      "group": "scores",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-osq-poll-only-20261102-archives/scores.tar.gz",
+      "roots": [
+        "nano-four-lock-osq-poll-only-20261102/after-rwsem-contiguous",
+        "nano-four-lock-osq-poll-only-20261102/after-rwsem-split20"
+      ],
+      "sha256": "e267d3197b3d7702e6c95a657a5a5cc7546e0133f1bd63b22fb645a048ef73db"
+    },
+    {
+      "bytes": 2212372,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-osq-poll-only-20261102-archives/metadata.tar.gz",
+      "roots": [
+        "nano-four-lock-osq-poll-only-20261102/after-record8-control",
+        "nano-four-lock-osq-poll-only-20261102/after-rwsem-contiguous-control",
+        "nano-four-lock-osq-poll-only-20261102/after-rwsem-split20-control",
+        "nano-four-lock-osq-poll-only-20261102/basic-control",
+        "nano-four-lock-osq-poll-only-20261102/final-health.json",
+        "nano-four-lock-osq-poll-only-20261102/mutex-local-control",
+        "nano-four-lock-osq-poll-only-20261102/rwsem-control",
+        "nano-four-lock-osq-poll-only-20261102/unit-control"
+      ],
+      "sha256": "d28121dbbcb33811f2b101b4f186127e4aa86fb89d39e91f9cc8fe6bdf11e4a2"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-osq-poll-only-20261102",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "df47866884202160ff6c9537ef3890e2036796bc3e03d45db3c313c272960a6b",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "5e18dcd0530658978b53f9e37c3183e2a0f3c5cc6fb9eb8c5c96000e499a5097",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "kernel_release": "7.0.0-38-kdlock1",
+  "kernel_variant": "kdlock1",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793557528831155406
+}

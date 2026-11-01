@@ -1,0 +1,38 @@
+
+/tmp/kdlock-four-lock-candidate-provider-20261101.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001fd60 <kd_down_read>:
+   1fd60:	e8 00 00 00 00       	call   1fd65 <kd_down_read+0x5>
+   1fd65:	55                   	push   %rbp
+   1fd66:	48 89 e5             	mov    %rsp,%rbp
+   1fd69:	53                   	push   %rbx
+   1fd6a:	48 89 fb             	mov    %rdi,%rbx
+   1fd6d:	e8 00 00 00 00       	call   1fd72 <kd_down_read+0x12>
+   1fd72:	48 8b 83 80 00 00 00 	mov    0x80(%rbx),%rax
+   1fd79:	48 85 c0             	test   %rax,%rax
+   1fd7c:	75 26                	jne    1fda4 <kd_down_read+0x44>
+   1fd7e:	b8 01 00 00 00       	mov    $0x1,%eax
+   1fd83:	f0 48 0f c1 43 40    	lock xadd %rax,0x40(%rbx)
+   1fd89:	48 8b 83 80 00 00 00 	mov    0x80(%rbx),%rax
+   1fd90:	48 85 c0             	test   %rax,%rax
+   1fd93:	74 17                	je     1fdac <kd_down_read+0x4c>
+   1fd95:	f0 48 ff 4b 40       	lock decq 0x40(%rbx)
+   1fd9a:	75 08                	jne    1fda4 <kd_down_read+0x44>
+   1fd9c:	48 89 df             	mov    %rbx,%rdi
+   1fd9f:	e8 ec e3 ff ff       	call   1e190 <kd_up_read.part.0>
+   1fda4:	48 89 df             	mov    %rbx,%rdi
+   1fda7:	e8 64 fc ff ff       	call   1fa10 <kd_down_read_slowpath>
+   1fdac:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+   1fdb0:	c9                   	leave
+   1fdb1:	31 c0                	xor    %eax,%eax
+   1fdb3:	31 ff                	xor    %edi,%edi
+   1fdb5:	e9 00 00 00 00       	jmp    1fdba <kd_down_read+0x5a>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

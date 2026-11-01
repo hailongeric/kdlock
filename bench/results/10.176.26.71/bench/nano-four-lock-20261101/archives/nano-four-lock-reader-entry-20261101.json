@@ -1,0 +1,58 @@
+{
+  "archive_prefix": "nano-four-lock-reader-entry-20261101",
+  "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+  "completed": true,
+  "finished_ns": 1793556851310710837,
+  "groups": [
+    {
+      "bytes": 304945,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-20261101-archives/checks.tar.gz",
+      "roots": [
+        "nano-four-lock-reader-entry-20261101/unit-control"
+      ],
+      "sha256": "2a37344f48a54836a2541e9590c07b888d16ad3de671354aefb5333ca9519765"
+    },
+    {
+      "bytes": 515,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-20261101-archives/metadata.tar.gz",
+      "roots": [
+        "nano-four-lock-reader-entry-20261101/final-health.json"
+      ],
+      "sha256": "3835f6f977a252f1ed00dec8d27d64c94cf08582515479da584e61d7fef6eb36"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-20261101",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "022e6ac277d79ce8656b50eed2d552d1f8d2b14593d598c03d8ddafacb3d41d5",
+  "idle_source_sha256": "d7ddca7a8ae9b7792ad128980bfff979c14df9b8ca2473b7b845c71d992ce8d7",
+  "input_inventory_sha256": "087729605c9ffab4d9c4304f01c85971e530f2729256ddeff42fe027aeefba19",
+  "kernel_identity": {
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "kernel_release": "7.0.0-38-kdlock1",
+  "kernel_variant": "kdlock1",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad",
+  "started_ns": 1793556851062575568
+}

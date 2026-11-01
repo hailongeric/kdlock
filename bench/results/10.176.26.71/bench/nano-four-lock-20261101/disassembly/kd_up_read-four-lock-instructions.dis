@@ -1,0 +1,24 @@
+
+/tmp/kdlock-four-lock-pilot-analysis-20261101/pilot-r2/rwsem-c16-w020/build/provider/kernel_module/kdlock_km.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000001dda0 <kd_up_read>:
+   1dda0:	call   1dda5 <kd_up_read+0x5>
+   1dda5:	lock decq 0x40(%rdi)
+   1ddaa:	jne    1ddbd <kd_up_read+0x1d>
+   1ddac:	push   %rbp
+   1ddad:	mov    %rsp,%rbp
+   1ddb0:	call   1dd20 <kd_up_read.part.0>
+   1ddb5:	pop    %rbp
+   1ddb6:	xor    %edi,%edi
+   1ddb8:	jmp    1ddbd <kd_up_read+0x1d>
+   1ddbd:	xor    %edi,%edi
+   1ddbf:	jmp    1ddc4 <kd_up_read+0x24>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .altinstr_replacement:

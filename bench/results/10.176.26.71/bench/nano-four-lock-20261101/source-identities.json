@@ -1,0 +1,112 @@
+{
+  "baseline": {
+    "commit": "87a3a41f1ba3746b7716e611541068bd3ab6e975",
+    "release": "7.0.0-38-kdlock1",
+    "boot": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "snapshot": "kdlock-builddisk-clean-20261031",
+    "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "timeout": 3600,
+    "frozen_common_sha256": "ee7b924472f50af41dcb453323fe7fa5af99d31f6e211e92994442edac300ed2",
+    "tracked_file_count": 6672,
+    "core_sources": {
+      "include/kd_rwlock.h": "b951b499d7f8e97794bfe4ed92738fb96d0d52de142fbcc876a7c0da3214a683",
+      "include/kd_rwsem_types.h": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "kernel_module/kd_rwsem.c": "a79de861222cd3fccf8dc5f5dcb5c024882f578fb4e27993754416b287adbdcd",
+      "kernel_module/kd_mutex_osq.c": "cee7edf52284941816d3c2ba369ee07251e76a5728ae28b95865728a219da6a9",
+      "kernel_module/spin/nondelegated.inc": "c3760980e993a589071ff047e96a7b35de44370c44bff42a79b04c6046259944",
+      "bench/nano/profile.py": "b84f22f750607b90ac83933c4bcdcf17035c1041a1a13e789c9a5bd4a0ad693b",
+      "workload_modules/rwlock_bench/payload.h": "87c69189cccfb8e457f77f2578565d7250cb75c534b82acc2ef37a042e22ce7f",
+      "tclock_backend/komb_rwlock.c": "d6f316da16e3a03e985802ea9046e5805047c604de481d443673725f840bd0b5",
+      "tclock_backend/komb_rwsem.c": "b0c2f9fcbe173221035dac9b4d2dfa4811e6872d44d092eeb49c3fa428a7396a",
+      "tclock_backend/aqs.c": "f9c4ddc88a39732e739a4bb46cadf36624a7c3ef478e89c5489e98cd14dcaf00"
+    }
+  },
+  "grouping": {
+    "commit": "822036777ae5731f24c56cbf50751d6e075ed1e1",
+    "release": "7.0.0-38-kdlock1",
+    "boot": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "snapshot": "kdlock-builddisk-clean-20261031",
+    "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "timeout": 3600,
+    "frozen_common_sha256": "bd42261434146ea311dd2d2ebd29e557591e2db4a31fd469e4d76bb128887fc8",
+    "tracked_file_count": 6672,
+    "core_sources": {
+      "include/kd_rwlock.h": "5c140b5183e16e066a9f42a6aef96866fab5e1179d3c1559cd9995a63b5192b3",
+      "include/kd_rwsem_types.h": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "kernel_module/kd_rwsem.c": "a1c659c685fd49283a7c4e9827aca6ac1fe3727f7bdc36e777fbae38330af7ac",
+      "kernel_module/kd_mutex_osq.c": "1eb58d39dde4096d019696f95b356309ebac64032ee34c44abad8a8da2b2a18d",
+      "kernel_module/spin/nondelegated.inc": "58f7961e9dbcbe6c76b7bd0208afc0405a264d227bd6c31e2fc1fdfc10424f61",
+      "bench/nano/profile.py": "b84f22f750607b90ac83933c4bcdcf17035c1041a1a13e789c9a5bd4a0ad693b",
+      "workload_modules/rwlock_bench/payload.h": "87c69189cccfb8e457f77f2578565d7250cb75c534b82acc2ef37a042e22ce7f",
+      "tclock_backend/komb_rwlock.c": "d6f316da16e3a03e985802ea9046e5805047c604de481d443673725f840bd0b5",
+      "tclock_backend/komb_rwsem.c": "b0c2f9fcbe173221035dac9b4d2dfa4811e6872d44d092eeb49c3fa428a7396a",
+      "tclock_backend/aqs.c": "f9c4ddc88a39732e739a4bb46cadf36624a7c3ef478e89c5489e98cd14dcaf00"
+    }
+  },
+  "reader-entry": {
+    "commit": "1ba4cc6e59f5451eaecafcf1c3a36861d026e5d9",
+    "release": "7.0.0-38-kdlock1",
+    "boot": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "snapshot": "kdlock-builddisk-clean-20261031",
+    "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "timeout": 3600,
+    "frozen_common_sha256": "4c7d62dce3abd289591266b808e81b7cd0724b39616241a040d4d0c43257ae5d",
+    "tracked_file_count": 6672,
+    "core_sources": {
+      "include/kd_rwlock.h": "b951b499d7f8e97794bfe4ed92738fb96d0d52de142fbcc876a7c0da3214a683",
+      "include/kd_rwsem_types.h": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "kernel_module/kd_rwsem.c": "a1c659c685fd49283a7c4e9827aca6ac1fe3727f7bdc36e777fbae38330af7ac",
+      "kernel_module/kd_mutex_osq.c": "1eb58d39dde4096d019696f95b356309ebac64032ee34c44abad8a8da2b2a18d",
+      "kernel_module/spin/nondelegated.inc": "c3760980e993a589071ff047e96a7b35de44370c44bff42a79b04c6046259944",
+      "bench/nano/profile.py": "b84f22f750607b90ac83933c4bcdcf17035c1041a1a13e789c9a5bd4a0ad693b",
+      "workload_modules/rwlock_bench/payload.h": "87c69189cccfb8e457f77f2578565d7250cb75c534b82acc2ef37a042e22ce7f",
+      "tclock_backend/komb_rwlock.c": "d6f316da16e3a03e985802ea9046e5805047c604de481d443673725f840bd0b5",
+      "tclock_backend/komb_rwsem.c": "b0c2f9fcbe173221035dac9b4d2dfa4811e6872d44d092eeb49c3fa428a7396a",
+      "tclock_backend/aqs.c": "f9c4ddc88a39732e739a4bb46cadf36624a7c3ef478e89c5489e98cd14dcaf00"
+    }
+  },
+  "reader-only": {
+    "commit": "252825407cd40d91a32010e82c8c111a768e7fcf",
+    "release": "7.0.0-38-kdlock1",
+    "boot": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "snapshot": "kdlock-builddisk-clean-20261031",
+    "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "timeout": 3600,
+    "frozen_common_sha256": "b3e4e5aa3df1ecd7d4f4582e1a58c5cf1186d7f70a546db47936978c8a4b85fa",
+    "tracked_file_count": 6672,
+    "core_sources": {
+      "include/kd_rwlock.h": "b951b499d7f8e97794bfe4ed92738fb96d0d52de142fbcc876a7c0da3214a683",
+      "include/kd_rwsem_types.h": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "kernel_module/kd_rwsem.c": "a1c659c685fd49283a7c4e9827aca6ac1fe3727f7bdc36e777fbae38330af7ac",
+      "kernel_module/kd_mutex_osq.c": "cee7edf52284941816d3c2ba369ee07251e76a5728ae28b95865728a219da6a9",
+      "kernel_module/spin/nondelegated.inc": "c3760980e993a589071ff047e96a7b35de44370c44bff42a79b04c6046259944",
+      "bench/nano/profile.py": "b84f22f750607b90ac83933c4bcdcf17035c1041a1a13e789c9a5bd4a0ad693b",
+      "workload_modules/rwlock_bench/payload.h": "87c69189cccfb8e457f77f2578565d7250cb75c534b82acc2ef37a042e22ce7f",
+      "tclock_backend/komb_rwlock.c": "d6f316da16e3a03e985802ea9046e5805047c604de481d443673725f840bd0b5",
+      "tclock_backend/komb_rwsem.c": "b0c2f9fcbe173221035dac9b4d2dfa4811e6872d44d092eeb49c3fa428a7396a",
+      "tclock_backend/aqs.c": "f9c4ddc88a39732e739a4bb46cadf36624a7c3ef478e89c5489e98cd14dcaf00"
+    }
+  },
+  "osq-only": {
+    "commit": "4df80e5a14d0368b07c5c0a63b49f0b79b80ca4f",
+    "release": "7.0.0-38-kdlock1",
+    "boot": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "snapshot": "kdlock-builddisk-clean-20261031",
+    "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "timeout": 3600,
+    "frozen_common_sha256": "9201e85330683eaec1e7c3852062f8c62f4383b51f513c9a6baafb41fb584d5f",
+    "tracked_file_count": 6672,
+    "core_sources": {
+      "include/kd_rwlock.h": "b951b499d7f8e97794bfe4ed92738fb96d0d52de142fbcc876a7c0da3214a683",
+      "include/kd_rwsem_types.h": "e80b0f4d274dead29d4d0286e11d4a6a42e6215cd4dc1191fcf355e8a3ac3a58",
+      "kernel_module/kd_rwsem.c": "a79de861222cd3fccf8dc5f5dcb5c024882f578fb4e27993754416b287adbdcd",
+      "kernel_module/kd_mutex_osq.c": "1eb58d39dde4096d019696f95b356309ebac64032ee34c44abad8a8da2b2a18d",
+      "kernel_module/spin/nondelegated.inc": "c3760980e993a589071ff047e96a7b35de44370c44bff42a79b04c6046259944",
+      "bench/nano/profile.py": "b84f22f750607b90ac83933c4bcdcf17035c1041a1a13e789c9a5bd4a0ad693b",
+      "workload_modules/rwlock_bench/payload.h": "87c69189cccfb8e457f77f2578565d7250cb75c534b82acc2ef37a042e22ce7f",
+      "tclock_backend/komb_rwlock.c": "d6f316da16e3a03e985802ea9046e5805047c604de481d443673725f840bd0b5",
+      "tclock_backend/komb_rwsem.c": "b0c2f9fcbe173221035dac9b4d2dfa4811e6872d44d092eeb49c3fa428a7396a",
+      "tclock_backend/aqs.c": "f9c4ddc88a39732e739a4bb46cadf36624a7c3ef478e89c5489e98cd14dcaf00"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "completed": true,
+  "files": 611,
+  "bytes": 59517681,
+  "sha256": "1f10fdf0a6a0bdcbb77e58f18b54752b7d66f1c314cb95939afd63cc62d1d6b2",
+  "input_inventory_sha256": "452e254a915ed2a344565f48ea4fbf6c677fdf3a6c3051aa892571708bf85f06",
+  "unchanged_inputs": true,
+  "source_archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/source-controllers.tar.gz",
+  "created_ns": 1793557808686940707
+}

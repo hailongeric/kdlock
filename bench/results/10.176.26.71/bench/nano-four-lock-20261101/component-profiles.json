@@ -1,0 +1,696 @@
+{
+  "rwsem-reader-only/after-record8/rwsem-c01-w001/rwsem-cacheline-c01-kdlock-w001-t08-r00/perf-worker-summary.json": {
+    "clock": "CLOCK_MONOTONIC",
+    "event": "cycles:k",
+    "full_cohort_begin_ns": 38142970220492,
+    "full_cohort_end_ns": 38144969542275,
+    "generated_ranges": [
+      {
+        "end": 18419722476448400310,
+        "entry": 18446744072646205499,
+        "generation": 1,
+        "image_bytes": 950,
+        "image_sha256": "032ca23906d71d21ab0f67c28e7e494928cd7b9363a8c1b64188979c77c319a0",
+        "start": 18419722476448399360
+      }
+    ],
+    "hot_paths": [
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 10952435279,
+        "samples": 2827,
+        "symbol": "rb_run",
+        "worker_period_share": 0.41722682862194294
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 5233365689,
+        "samples": 1351,
+        "symbol": "kd_down_read",
+        "worker_period_share": 0.19936210658345213
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 3750246458,
+        "samples": 968,
+        "symbol": "kd_up_read",
+        "worker_period_share": 0.14286351814579068
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 3207689790,
+        "samples": 828,
+        "symbol": "kd_mutex_osq_lock",
+        "worker_period_share": 0.12219512868072216
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 1336461378,
+        "samples": 345,
+        "symbol": "kd_down_read_slowpath",
+        "worker_period_share": 0.05091174045901903
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 511355883,
+        "samples": 132,
+        "symbol": "kd_rwsem_drain_readers",
+        "worker_period_share": 0.019479813203766596
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 391308687,
+        "samples": 101,
+        "symbol": "__raw_callee_save___kvm_vcpu_is_preempted",
+        "worker_period_share": 0.01490668315587008
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 302139022,
+        "samples": 78,
+        "symbol": "kd_rwsem_delegate_enter",
+        "worker_period_share": 0.011509815190937632
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 120072268,
+        "samples": 31,
+        "symbol": "kd_up_read.part.0",
+        "worker_period_share": 0.004574085151558922
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 116235949,
+        "samples": 30,
+        "symbol": "kd_mutex_osq_unlock",
+        "worker_period_share": 0.004427942748597538
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 85237674,
+        "samples": 22,
+        "symbol": "rb_read",
+        "worker_period_share": 0.003247080991231214
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 46469385,
+        "samples": 12,
+        "symbol": "native_write_msr",
+        "worker_period_share": 0.001770224944285844
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 27126817,
+        "samples": 7,
+        "symbol": "its_return_thunk",
+        "worker_period_share": 0.001033380754070175
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 23253136,
+        "samples": 6,
+        "symbol": "kd_mutex_osq_node_get",
+        "worker_period_share": 0.0008858150668460783
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 23235021,
+        "samples": 6,
+        "symbol": "kd_mutex_local_unlock",
+        "worker_period_share": 0.0008851249861646633
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 19347303,
+        "samples": 5,
+        "symbol": "kd_rwsem_write_release",
+        "worker_period_share": 0.0007370245673631433
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 11617556,
+        "samples": 3,
+        "symbol": "asm_sysvec_apic_timer_interrupt",
+        "worker_period_share": 0.00044256422637910253
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 7749862,
+        "samples": 2,
+        "symbol": "kd_mutex_osq_node_put",
+        "worker_period_share": 0.0002952266105345052
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 7749146,
+        "samples": 2,
+        "symbol": "kd_mutex_direct_lock_clobber_v1",
+        "worker_period_share": 0.0002951993349193855
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 7748219,
+        "samples": 2,
+        "symbol": "kd_mutex_release_node",
+        "worker_period_share": 0.00029516402137858114
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7748101,
+        "samples": 2,
+        "symbol": "native_apic_msr_eoi",
+        "worker_period_share": 0.0002951595262353072
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3874914,
+        "samples": 1,
+        "symbol": "pvclock_clocksource_read_nowd",
+        "worker_period_share": 0.00014761265766186568
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3874789,
+        "samples": 1,
+        "symbol": "tmigr_requires_handle_remote",
+        "worker_period_share": 0.0001476078958575501
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3873299,
+        "samples": 1,
+        "symbol": "error_entry",
+        "worker_period_share": 0.00014755113515010828
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3873206,
+        "samples": 1,
+        "symbol": "_raw_spin_lock_irq",
+        "worker_period_share": 0.00014754759236769747
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3873131,
+        "samples": 1,
+        "symbol": "__update_load_avg_cfs_rq",
+        "worker_period_share": 0.00014754473528510813
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3873065,
+        "samples": 1,
+        "symbol": "get_jiffies_update",
+        "worker_period_share": 0.0001475422210524295
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872717,
+        "samples": 1,
+        "symbol": "update_process_times",
+        "worker_period_share": 0.0001475289641892149
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872509,
+        "samples": 1,
+        "symbol": "_raw_spin_lock",
+        "worker_period_share": 0.00014752104054683375
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872430,
+        "samples": 1,
+        "symbol": "x86_pmu_disable",
+        "worker_period_share": 0.0001475180310865063
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872389,
+        "samples": 1,
+        "symbol": "x86_pmu_enable",
+        "worker_period_share": 0.0001475164692146908
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872312,
+        "samples": 1,
+        "symbol": "hrtimer_interrupt",
+        "worker_period_share": 0.0001475135359432324
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872226,
+        "samples": 1,
+        "symbol": "__cgroup_account_cputime",
+        "worker_period_share": 0.00014751025982186327
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871770,
+        "samples": 1,
+        "symbol": "__update_load_avg_se",
+        "worker_period_share": 0.00014749288875972
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871259,
+        "samples": 1,
+        "symbol": "task_tick_fair",
+        "worker_period_share": 0.0001474734225036779
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3870999,
+        "samples": 1,
+        "symbol": "sched_core_idle_cpu",
+        "worker_period_share": 0.00014746351795070145
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3870084,
+        "samples": 1,
+        "symbol": "update_entity_lag",
+        "worker_period_share": 0.00014742866154311135
+      }
+    ],
+    "interpretation": "Flat sampled-period attribution, not elapsed latency or per-function inclusive time; startup/other threads and unknown/JIT ranges remain explicit.",
+    "lost_event_lines": [],
+    "sampled_begin_ns": 38143270220492,
+    "sampled_end_ns": 38144969542275,
+    "settle_ns": 300000000,
+    "status": "OBSERVED",
+    "timestamp_precision_ns": 1,
+    "totals": {
+      "client_tree_period": 30904404153,
+      "client_tree_samples": 8041,
+      "other_client_thread_period": 25955508,
+      "other_client_thread_samples": 39,
+      "worker_outside_settled_cohort_period": 4627894923,
+      "worker_outside_settled_cohort_samples": 1226,
+      "worker_settled_cohort_period": 26250553722,
+      "worker_settled_cohort_samples": 6776
+    }
+  },
+  "osq-poll-only/after-record8/rwsem-c01-w001/rwsem-cacheline-c01-kdlock-w001-t08-r00/perf-worker-summary.json": {
+    "clock": "CLOCK_MONOTONIC",
+    "event": "cycles:k",
+    "full_cohort_begin_ns": 38465566484086,
+    "full_cohort_end_ns": 38467565879920,
+    "generated_ranges": [
+      {
+        "end": 18419722476451308470,
+        "entry": 18446744072646205499,
+        "generation": 1,
+        "image_bytes": 950,
+        "image_sha256": "032ca23906d71d21ab0f67c28e7e494928cd7b9363a8c1b64188979c77c319a0",
+        "start": 18419722476451307520
+      }
+    ],
+    "hot_paths": [
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 18222954319,
+        "samples": 4705,
+        "symbol": "rb_run",
+        "worker_period_share": 0.6943512214659664
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 4609047080,
+        "samples": 1190,
+        "symbol": "kd_down_read",
+        "worker_period_share": 0.17561902498188148
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 1425377388,
+        "samples": 368,
+        "symbol": "kd_up_read",
+        "worker_period_share": 0.05431131050884839
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 949078478,
+        "samples": 245,
+        "symbol": "kd_mutex_osq_lock",
+        "worker_period_share": 0.036162841048186484
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 457160587,
+        "samples": 118,
+        "symbol": "kd_up_read.part.0",
+        "worker_period_share": 0.01741923984622969
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 143339404,
+        "samples": 37,
+        "symbol": "kd_rwsem_drain_readers",
+        "worker_period_share": 0.005461676987678764
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 92990739,
+        "samples": 24,
+        "symbol": "rb_read",
+        "worker_period_share": 0.0035432362985375753
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 58108547,
+        "samples": 15,
+        "symbol": "kd_rwsem_delegate_enter",
+        "worker_period_share": 0.0022141163216874396
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 42631887,
+        "samples": 11,
+        "symbol": "kd_mutex_osq_unlock",
+        "worker_period_share": 0.0016244074530212323
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 38689809,
+        "samples": 10,
+        "symbol": "kd_rwsem_write_release",
+        "worker_period_share": 0.0014742020238411673
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 30935201,
+        "samples": 8,
+        "symbol": "native_write_msr",
+        "worker_period_share": 0.0011787273470937347
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 19377258,
+        "samples": 5,
+        "symbol": "kd_mutex_local_unlock",
+        "worker_period_share": 0.0007383337808695941
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 15485931,
+        "samples": 4,
+        "symbol": "native_apic_msr_eoi",
+        "worker_period_share": 0.0005900621225931788
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 7751730,
+        "samples": 2,
+        "symbol": "rb_entry",
+        "worker_period_share": 0.000295365015998665
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7749567,
+        "samples": 2,
+        "symbol": "__raw_callee_save___kvm_vcpu_is_preempted",
+        "worker_period_share": 0.0002952825989730971
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7747406,
+        "samples": 2,
+        "symbol": "pvclock_clocksource_read_nowd",
+        "worker_period_share": 0.000295200258153748
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 7747299,
+        "samples": 2,
+        "symbol": "kd_mutex_release_node",
+        "worker_period_share": 0.00029519618112104536
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7742180,
+        "samples": 2,
+        "symbol": "x86_pmu_disable",
+        "worker_period_share": 0.0002950011313041791
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7741586,
+        "samples": 2,
+        "symbol": "profile_pc",
+        "worker_period_share": 0.00029497849805721314
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7741002,
+        "samples": 2,
+        "symbol": "asm_sysvec_apic_timer_interrupt",
+        "worker_period_share": 0.0002949562458413409
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 7740958,
+        "samples": 2,
+        "symbol": "__intel_pmu_enable_all.isra.0",
+        "worker_period_share": 0.00029495456930452864
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 3876051,
+        "samples": 1,
+        "symbol": "kd_mutex_osq_node_get",
+        "worker_period_share": 0.00014768959517767535
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[rwlock_bench]",
+        "period": 3875636,
+        "samples": 1,
+        "symbol": "rb_write",
+        "worker_period_share": 0.0001476737823872867
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 3875420,
+        "samples": 1,
+        "symbol": "kd_mutex_direct_lock_clobber_v1",
+        "worker_period_share": 0.00014766555211566274
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3874225,
+        "samples": 1,
+        "symbol": "kvm_sched_clock_read",
+        "worker_period_share": 0.00014762001889996528
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kdlock_km]",
+        "period": 3874101,
+        "samples": 1,
+        "symbol": "kd_rwsem_down_write_clobber_v1",
+        "worker_period_share": 0.00014761529411440335
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3873986,
+        "samples": 1,
+        "symbol": "ktime_get",
+        "worker_period_share": 0.00014761091225682578
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872443,
+        "samples": 1,
+        "symbol": "rb_erase",
+        "worker_period_share": 0.00014755211915906747
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3872219,
+        "samples": 1,
+        "symbol": "get_jiffies_update",
+        "worker_period_share": 0.00014754358406256855
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871499,
+        "samples": 1,
+        "symbol": "__irq_exit_rcu",
+        "worker_period_share": 0.00014751614982382196
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871461,
+        "samples": 1,
+        "symbol": "perf_adjust_freq_unthr_context",
+        "worker_period_share": 0.0001475147019056659
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871355,
+        "samples": 1,
+        "symbol": "update_cfs_group",
+        "worker_period_share": 0.00014751066297607264
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871275,
+        "samples": 1,
+        "symbol": "__update_load_avg_se",
+        "worker_period_share": 0.00014750761472732304
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871229,
+        "samples": 1,
+        "symbol": "_raw_spin_unlock_irqrestore",
+        "worker_period_share": 0.000147505861984292
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871019,
+        "samples": 1,
+        "symbol": "__update_load_avg_cfs_rq",
+        "worker_period_share": 0.00014749786033132424
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3871011,
+        "samples": 1,
+        "symbol": "tick_nohz_handler",
+        "worker_period_share": 0.00014749755550644929
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3870754,
+        "samples": 1,
+        "symbol": "update_curr",
+        "worker_period_share": 0.00014748776300734114
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3870454,
+        "samples": 1,
+        "symbol": "sched_balance_trigger",
+        "worker_period_share": 0.00014747633207453005
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3869789,
+        "samples": 1,
+        "symbol": "sched_clock_noinstr",
+        "worker_period_share": 0.00014745099350679884
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3868325,
+        "samples": 1,
+        "symbol": "_raw_spin_lock",
+        "worker_period_share": 0.0001473952105546808
+      },
+      {
+        "category": "SYMBOL",
+        "dso": "[kernel.kallsyms]",
+        "period": 3866712,
+        "samples": 1,
+        "symbol": "_raw_spin_lock_irqsave",
+        "worker_period_share": 0.00014733375023926658
+      }
+    ],
+    "interpretation": "Flat sampled-period attribution, not elapsed latency or per-function inclusive time; startup/other threads and unknown/JIT ranges remain explicit.",
+    "lost_event_lines": [],
+    "sampled_begin_ns": 38465866484086,
+    "sampled_end_ns": 38467565879920,
+    "settle_ns": 300000000,
+    "status": "OBSERVED",
+    "timestamp_precision_ns": 1,
+    "totals": {
+      "client_tree_period": 30901529847,
+      "client_tree_samples": 8045,
+      "other_client_thread_period": 27104359,
+      "other_client_thread_samples": 43,
+      "worker_outside_settled_cohort_period": 4629848168,
+      "worker_outside_settled_cohort_samples": 1226,
+      "worker_settled_cohort_period": 26244577320,
+      "worker_settled_cohort_samples": 6776
+    }
+  }
+}

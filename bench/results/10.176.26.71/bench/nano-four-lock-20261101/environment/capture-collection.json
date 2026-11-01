@@ -1,0 +1,10 @@
+{
+  "completed": true,
+  "restore_completed": true,
+  "restored_settings": true,
+  "captures_verified": [
+    "before",
+    "restored"
+  ],
+  "earlier_collection_error": "wrapper requested after.host.json; restore writes restored.host.json; no second mutation was issued"
+}

@@ -1,0 +1,53 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "base": "nano-four-lock-20261101",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-20261101-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-20261101",
+      "archive_receipt_sha256": "90be11fcff25c75ffb7ec711d1a6e86d44b5337f525d745d975617daae38dccc",
+      "files_verified": 3,
+      "bytes": 799689692
+    },
+    {
+      "base": "nano-four-lock-candidate-20261101",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-candidate-20261101-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-candidate-20261101",
+      "archive_receipt_sha256": "6d752d45f315a7722b58fe83639161bd96a6070a1389ec30b0e3821021a89309",
+      "files_verified": 3,
+      "bytes": 283198596
+    },
+    {
+      "base": "nano-four-lock-reader-entry-20261101",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-20261101-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-reader-entry-20261101",
+      "archive_receipt_sha256": "475087865d028e0d050306f755f3c1f1e53a40de538499a34b8d8920ac776365",
+      "files_verified": 2,
+      "bytes": 305460
+    },
+    {
+      "base": "nano-four-lock-reader-entry-r2-20261101",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-reader-entry-r2-20261101-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-reader-entry-r2-20261101",
+      "archive_receipt_sha256": "78bde52fd1d9c3fe179788037a6305b28050c6cde385cad8e5301ee7abbd3364",
+      "files_verified": 3,
+      "bytes": 188210927
+    },
+    {
+      "base": "nano-four-lock-rwsem-reader-only-20261102",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-rwsem-reader-only-20261102-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-rwsem-reader-only-20261102",
+      "archive_receipt_sha256": "1c0c54c1d5c1cfa0c33eda4b4dec5f41fe651634e40c749371c27fd3e6dcad29",
+      "files_verified": 3,
+      "bytes": 46474066
+    },
+    {
+      "base": "nano-four-lock-osq-poll-only-20261102",
+      "guest": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/nano-four-lock-osq-poll-only-20261102-archives",
+      "local": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/nano-four-lock-20261101/nano-four-lock-osq-poll-only-20261102",
+      "archive_receipt_sha256": "708f06165617a6254367a2fc1da263609f5d37fdcb66f322b81d04e281aba705",
+      "files_verified": 3,
+      "bytes": 46447891
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "nano-four-lock-20261101": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 399,
+    "free_bytes": {
+      "/": 6478409728,
+      "/mnt/kdlock-builds": 32532148224,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 3789476475,
+    "captured_ns": 1793554032332966992,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  },
+  "nano-four-lock-candidate-20261101": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 117,
+    "free_bytes": {
+      "/": 6478409728,
+      "/mnt/kdlock-builds": 31712878592,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 1239489500,
+    "captured_ns": 1793554207370451042,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  },
+  "nano-four-lock-osq-poll-only-20261102": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 6,
+    "free_bytes": {
+      "/": 6467305472,
+      "/mnt/kdlock-builds": 29907329024,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 190456534,
+    "captured_ns": 1793557527898698947,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  },
+  "nano-four-lock-reader-entry-20261101": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 0,
+    "free_bytes": {
+      "/": 6467538944,
+      "/mnt/kdlock-builds": 30552014848,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 1058200,
+    "captured_ns": 1793556850122156966,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  },
+  "nano-four-lock-reader-entry-r2-20261101": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 108,
+    "free_bytes": {
+      "/": 6467538944,
+      "/mnt/kdlock-builds": 30551674880,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 814774229,
+    "captured_ns": 1793556852582806367,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  },
+  "nano-four-lock-rwsem-reader-only-20261102": {
+    "idle": true,
+    "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+    "per_session_kernel_faults": [],
+    "kernel_logs_checked": 6,
+    "free_bytes": {
+      "/": 6467391488,
+      "/mnt/kdlock-builds": 30155943936,
+      "/mnt/kdlock-builds2": 55020310528
+    },
+    "input_regular_bytes": 190780749,
+    "captured_ns": 1793557205134532984,
+    "scope": "Per-session kernel logs and current project idle state; historical boot messages are not classified as new faults"
+  }
+}
