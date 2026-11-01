@@ -225,3 +225,36 @@ loss at eight workers. Preserve this result and add focused eight-worker
 c01/c16 w1 profiles to the follow-up. Favorable c16 w20 averages do not excuse
 that point; the retained rwsem/OSQ changes are still candidates, not accepted
 performance improvements across the whole grid.
+
+## Component comparisons after the reader-entry follow-up
+
+The rwsem c01 w1 eight-worker result remains lower in
+`1ba4cc6e59f5451eaecafcf1c3a36861d026e5d9`: 8.8599 versus 11.3437
+million operations/second for the baseline. Both baseline and the first
+candidate complete this case without returned JIT bodies, with approximately
+two CPU-seconds per worker during the two-second run and balanced worker
+progress. These observations do not identify parking or a starved worker as
+the dominant cause. The new eight-worker profile spends 25.31% in read entry,
+19.46% in read release and 6.30% in OSQ. There is no matching baseline c01
+cycle profile, so percentages alone cannot explain the score difference.
+
+Compare the two independent changes in separate source versions. One arm
+keeps the reader code placement and empty-drain check but restores the original
+OSQ polling code and its fixtures. The other keeps bounded OSQ observations
+but restores the original rwsem entry/release code and its fixtures. Keep the
+fixture-only `proxy_context` correction in both. All restores are exact,
+path-specific copies from `87a3a41f1ba3746b7716e611541068bd3ab6e975`.
+Neither arm changes reader-body locality, ownership, cancellation, downgrade
+or fairness. Neither is an accepted global optimization.
+
+Finish and archive the full follow-up before synchronizing either arm. Run
+basic mutex/rwsem, affected actual-C queue/reader checks and the live local
+mutex/rwsem API checks. Capture an unscored eight-worker c01 w1 cycle profile,
+then one scored round each for c01 w1 at one and eight same-node workers and
+c16 w20 at twenty split-node workers. Preserve the original baseline, both
+full candidate grids and both component comparisons separately. A result
+limited to these three points does not establish a full-grid regression pass.
+If both arms retain the loss, report the remaining causal uncertainty rather
+than selecting a favorable result or repeating an unchanged point.
+
+This arm restores the OSQ code and retains only the rwsem reader changes.
