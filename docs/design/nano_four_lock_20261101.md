@@ -71,3 +71,53 @@ sampled before its worker-name setup, with spaces in its name. Accept the full
 name before the numeric PID/TID fields and retain it in the non-worker bucket.
 The pilot failure and raw samples remain separate from successful diagnostics;
 no scored measurement had started. This correction changes observation only.
+
+## Profile-driven candidate: consecutive rwlock reader admission
+
+Cycle samples at 20 workers locate the largest rwlock cost in the local MCS
+admission queue. In c16 w20 it accounts for 72.6% of worker sampled periods on
+one node and 71.9% with ten workers on each node. Read-only bodies still run on
+their original tasks; only a small fraction of writes return through JIT in
+these mixed cases. These are diagnostic samples, not throughput scores.
+
+The existing slow reader withdraws its speculative count, takes the spin gate,
+adds its read count, observes writer release, and releases the gate. Every
+queued reader currently transfers physical gate ownership through that sequence.
+The inspected TCLock gate can combine its short reader-admission interval;
+its user read body remains outside that interval. This difference motivates an
+independent KD implementation using its existing native MCS queue.
+
+Proposed change, limited to rwlock slow admission:
+
+- A reader that already holds the gate first admits its own read, using the
+  existing count and writer-release ordering. It may then credit consecutive,
+  fully linked, compatible reader requests while it still owns that gate.
+- Each credited reader receives one exact count increment before a release
+  notification. Its original task observes that notification with acquire
+  ordering, retires its own queue slot, and executes its own read body. It must
+  neither increment twice nor release a gate it never physically owned.
+- Keep the terminal node, writers, ordinary spin requests and incompatible
+  saved contexts as ordinary queue-head handoffs. Never wait for an unfinished
+  successor publication just to extend this group. Preserve FIFO order and the
+  existing 1024 maximum; introduce no NUMA-local count cutoff.
+- Use the unused eight bytes in the node header for the reader object pointer.
+  Keep the 128-byte node stride and isolated notification cacheline. Clear the
+  discriminator on other publications. Do not copy packets, create JIT frames,
+  run reader bodies remotely, change writer admission, or alter reader unlock.
+- Interrupt readers keep their existing counted bypass. Ordinary readers with
+  incompatible IRQ/preemption state receive the original local admission path.
+  One out-of-line slowpath symbol is needed by the inline public reader macro;
+  it is an implementation helper, not another exported API family.
+
+Acceptance requires actual-C queue fixtures for ordinary spin exclusion, mixed
+reader/writer order, exact reader credits, terminal and delayed links, bounded
+service, incompatible contexts and node reuse. Run the live rwlock and IRQ/BH
+checks and all four basic checks before matching the one-round timing scenarios.
+Rwsem, mutex and spin remain comparison controls for this first lock candidate.
+An observed improvement must be established by uninstrumented before/after data.
+
+The optional mutex batch-observation module failed to load: its 7,976-byte
+static per-CPU section exceeded the available reserved module allocation.
+The failure drained and no batch observation or scored point ran. Retain it as
+unavailable evidence; supported cycle, scheduling and remote-memory counters
+continue. This is a diagnostic-build limit, not an ownership or data failure.
