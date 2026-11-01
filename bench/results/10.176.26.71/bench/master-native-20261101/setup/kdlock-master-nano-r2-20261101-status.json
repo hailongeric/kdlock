@@ -1,0 +1,98 @@
+{
+  "completed": false,
+  "started": 1793508629.7373405,
+  "prior_correctness": [
+    {
+      "source_commit": "1f10e050b204eb3ee747b5682211343213e3fb16",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "-B",
+        "run",
+        "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "PY_TESTS=mutex/test_mutex_osq.py mutex/test_mutex_state.py mutex/test_rwsem_api.py mutex/test_rwsem_read_admission.py infrastructure/test_mmap_rwsem_generation.py mutex/test_rwsem_writer_queue.py"
+      ],
+      "started": 1793508498.0760374,
+      "passed": true,
+      "drained": true,
+      "pid": 4990,
+      "returncode": 0,
+      "unit_count": 8,
+      "source_unchanged": true,
+      "finished": 1793508535.0041223
+    },
+    {
+      "source_commit": "1f10e050b204eb3ee747b5682211343213e3fb16",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "tests/kernel/rwsem/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/master-native-master-20261101/rwsem",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793508535.6109576,
+      "passed": true,
+      "drained": true,
+      "pid": 5534,
+      "returncode": 0,
+      "source_unchanged": true,
+      "finished": 1793508556.4238338
+    },
+    {
+      "source_commit": "1f10e050b204eb3ee747b5682211343213e3fb16",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "tests/kernel/mutex/local/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/master-native-master-20261101/local-mutex",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027"
+      ],
+      "started": 1793508557.0253737,
+      "passed": true,
+      "drained": true,
+      "pid": 6297,
+      "returncode": 0,
+      "source_unchanged": true,
+      "finished": 1793508576.2295716
+    },
+    {
+      "source_commit": "1f10e050b204eb3ee747b5682211343213e3fb16",
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "bench/basic/run.py",
+        "--output",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/master-native-master-20261101/basic",
+        "--kernel-source",
+        "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+        "--host-state",
+        "/tmp/kdlock-master-reference-20261101.json",
+        "--host-reference",
+        "/tmp/kdlock-master-reference-20261101.json",
+        "--host-reference-sha256",
+        "5f3d3af9c171dd6dacdb5b5a37d757fd792d82fad9cdd884da8e5b80c46950bf",
+        "--snapshot-tag",
+        "kdlock-builddisk-clean-20261031"
+      ],
+      "started": 1793508576.8300724,
+      "passed": false,
+      "drained": false,
+      "pid": 7040,
+      "returncode": 1,
+      "error": "AssertionError()",
+      "finished": 1793508577.847467
+    }
+  ],
+  "phase": "basic",
+  "child_pid": 3440174,
+  "error": "AssertionError(('basic', 1))",
+  "finished": 1793508633.4235005
+}
