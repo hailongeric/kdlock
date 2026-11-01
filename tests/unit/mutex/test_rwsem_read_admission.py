@@ -400,9 +400,8 @@ def main():
     delegate = definition(source, 'static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)')
     local_phase = next(line for line in source.splitlines()
                        if line.startswith('#define KD_RWSEM_LOCAL_WRITER '))
-    slow = definition(source, 'static noinline void kd_rwsem_read_slowpath(struct kd_rwsem *sem)')
     fast = definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
-    code = local_phase + '\n' + poll + spin + local + delegate + slow + fast
+    code = local_phase + '\n' + poll + spin + local + delegate + fast
     queue_guard = ('\t\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
                    '\t\t\treturn false;\n')
     delegate_loop = '\twhile (phase >= 0 && phase < LONG_MAX) {'
@@ -419,10 +418,10 @@ def main():
         'failure-returns-ownership': ('return acquired;', '(void)acquired; return true;'),
         'early-retry-budget': ('unsigned int retries = 8;', 'unsigned int retries = 9;'),
         'repeat-successful-first-probe': (
-            fast, fast.replace('if (likely(kd_down_read_trylock(sem)))',
-                               'if (likely(kd_down_read_trylock(sem)) && false)', 1)),
+            fast, fast.replace('if (kd_down_read_trylock(sem))',
+                               'if (kd_down_read_trylock(sem) && false)', 1)),
         'lost-first-failed-pause': (
-            slow, slow.replace('cpu_relax();', '(void)cpu_relax;', 1)),
+            fast, fast.replace('cpu_relax();', '(void)cpu_relax;', 1)),
         'unbounded-poll': ('while (--kd_rwsem_budget)', 'while (--kd_rwsem_budget || true)'),
         'lost-wake-barrier': ('smp_mb();', '(void)smp_mb;'),
         'lost-cohort-wake': ('kd_rwsem_wake(&sem->phase_wait);', '(void)kd_rwsem_wake;'),
@@ -495,11 +494,15 @@ def count_checks(source, compiler, path):
     fixture = ROOT / 'tests/unit/mutex/rwsem_read_count_fixture.c'
     (path / 'count_fixture.c').write_text(read_source(fixture))
     mutations = {
-        'missing-before-atomic-order': ('smp_mb__before_atomic();', '(void)smp_mb__before_atomic;'),
-        'missing-after-atomic-order': ('smp_mb__after_atomic();', '(void)smp_mb__after_atomic;'),
+        'missing-before-atomic-order': (
+            'atomic_long_inc_return(&sem->readers);',
+            '(void)atomic_long_inc_return; atomic_long_inc(&sem->readers); smp_mb__after_atomic();'),
+        'missing-after-atomic-order': (
+            'atomic_long_inc_return(&sem->readers);',
+            '(void)atomic_long_inc_return; smp_mb__before_atomic(); atomic_long_inc(&sem->readers);'),
         'publication-before-order': (
-            'smp_mb__before_atomic();\n\tatomic_long_inc(&sem->readers);',
-            'atomic_long_inc(&sem->readers);\n\tsmp_mb__before_atomic();'),
+            'atomic_long_inc_return(&sem->readers);',
+            '(void)atomic_long_inc_return; atomic_long_inc(&sem->readers); smp_mb__before_atomic(); smp_mb__after_atomic();'),
         'ignore-closed-phase-recheck': (
             'if (!atomic_long_read_acquire(&sem->admission))',
             'if ((void)atomic_long_read_acquire(&sem->admission), true)'),
