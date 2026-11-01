@@ -101,3 +101,25 @@ Keep the candidate at `codex/archive-reader-recovery-20261101` and the MM recipe
 at `codex/archive-reader-scope4-20261101`. Neither is merged into master. The
 normal development kernel is restored; QEMU pool settings are restored to
 min=0/max=64/aio-max-batch=0, without claiming the old task map was restored.
+
+## Subsequent explicit promotion and fresh master campaign
+
+On November 1, after reviewing the completed losses above, the user explicitly
+requested merging `66c68c17457c0ae60d09ff1f3d89b5fff16a500c` into master.
+This supersedes the earlier decision to leave that candidate isolated. It does
+not change the recorded failed performance gates or establish a performance fix.
+The promotion includes the observed Nano point losses and fresh 60-process
+MM loss of 11.260800% against the prior promoted provider.
+
+After the merge, freeze the resulting master source and run a new campaign:
+all ten Nano workloads; mmap1 threads and processes separately; and the
+maintained real-world syscall workloads. Every arm uses exactly one measurement
+round at workers 1,2,3,4,5,6,7,8,12,16,20,24,28,32,36,40,44,48,52,56,60.
+Retain every positive/negative result, failed prerequisite and unrun point.
+Select fresh comparison arms explicitly; historical scores are context only.
+Run basic and directly affected checks before timing, verify idle state and
+recovery before synchronization/live work, and preserve exact source, kernel,
+configuration and topology identities. Execute real APIs through syscalls with
+native bodies unchanged. Restore the normal VM kernel and temporary runtime
+settings after archiving. Source/Git/static work stays on 380G10; all builds,
+functional checks and timing stay in the designated VM.
