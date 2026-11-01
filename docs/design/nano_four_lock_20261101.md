@@ -175,3 +175,39 @@ Keep the existing context refusal and wake helper for an actually queued writer.
 The directly affected reader-admission fixture must cover the initial fast
 success, all eight failed attempts, reschedule paths, rollback and wake ordering;
 live rwsem checks still cover atomic try/unlock, downgrade and cancellation.
+
+## Follow-up: withdraw reader grouping after measured losses
+
+Candidate `822036777ae5731f24c56cbf50751d6e075ed1e1` passed the focused
+correctness checks, but its completed contiguous rwlock scores already exceed
+the regression allowance. c01 w20 at 36 workers falls from 4.3487 to 3.9101
+million operations/second (-10.09%); c01 w1 at 36 workers falls from 7.7073 to
+6.8389 (-11.27%). c16 w20 at 60 workers improves from 2.5015 to 2.6397, but
+that isolated gain does not justify the other losses. Finish its planned grid
+and preserve every result; do not change its frozen running inputs.
+
+The diagnostic c16 w20 split-node remote modified-line loads decrease from
+3.37914 to 2.72569 per completed operation, while locked loads increase from
+3.49894 to 3.92596. A lower value for one transfer event does not establish a
+cheaper complete protocol. Credited reader nodes also bypass the physical
+queue-head heat qualification, and returned-write counts change substantially.
+That interaction is a source-backed investigation target, not an isolated
+causal explanation of every loss. Reader credit correctness is insufficient
+evidence for promoting this grouping policy.
+
+Create a separate candidate which restores exactly the nine code/fixture paths
+changed by `79a742819736791dd267a18f1ae23bcf556158fa` to their baseline bytes.
+Keep that experiment and its design in Git history. Retain the independently
+profiled bounded OSQ predecessor observations and rwsem reader code placement.
+No ownership, cancellation, fairness, IRQ/BH or reader-body semantics change.
+The first scored rwsem c01 w20 single-worker result moves from approximately
+1.809 to 1.915 million operations/second; the independent candidate must still
+be validated rather than inheriting that score.
+
+After the original candidate finishes and its evidence is archived, synchronize
+only while idle. Run basic plus the affected queue, rwlock and rwsem checks,
+then one fresh round of the same 96 KD scenarios for the new source version.
+Keep the original Native/TCLock baseline arms and all versions separate. Do not
+repeat an unchanged scored point or replace a lower result with a higher one.
+Report both the withdrawn grouping experiment and the follow-up, and keep
+master unchanged unless a later explicit promotion is authorized.
