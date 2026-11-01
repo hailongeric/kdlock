@@ -211,3 +211,17 @@ Keep the original Native/TCLock baseline arms and all versions separate. Do not
 repeat an unchanged scored point or replace a lower result with a higher one.
 Report both the withdrawn grouping experiment and the follow-up, and keep
 master unchanged unless a later explicit promotion is authorized.
+
+The first follow-up validation at
+`f0f72fcf59bf113ad9c1c7f3871d941a7e3331c4` stopped in a baseline fixture:
+its minimal `kd_spin_node` declaration omitted `proxy_context`, which the
+restored production path already writes. Nine unit groups passed and that one
+group failed to compile; no live workload or score ran for this version.
+Add only the missing fixture field and validate a new committed source. This
+does not change the restored production rwlock/spin code.
+
+The completed grouping-candidate table also records a 28.88% rwsem c01 w1
+loss at eight workers. Preserve this result and add focused eight-worker
+c01/c16 w1 profiles to the follow-up. Favorable c16 w20 averages do not excuse
+that point; the retained rwsem/OSQ changes are still candidates, not accepted
+performance improvements across the whole grid.
