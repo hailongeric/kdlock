@@ -32,7 +32,7 @@ MAIN = r'''
 #undef main
 int main(int argc,char **argv)
 {
-    CHECK(argc==10);
+    CHECK(argc==10 || argc==12);
     struct worker w={0};
     w.observed.tid=2;w.observed.mm=100;w.observed.mmap_lock=200;
     fixture_worker=&w;fixture_limit=strtoul(argv[2],NULL,10);
@@ -47,6 +47,7 @@ int main(int argc,char **argv)
         chain_waiter=chain_acquire="kd_mmap_write_lock_killable";
         chain_wait[0]=chain_wait[1]=chain_adapter=60;
     } else CHECK(!strcmp(argv[1],"legacy"));
+    if(argc==12)CHECK(chain_wait_arguments(argv[10],argv[11]));
     int accepted=writer_contention(&w,1,231,136);
     printf("{\"event\":\"fixture_result\",\"accepted\":%s,\"reads\":%u}\n",
            accepted?"true":"false",fixture_reads);
@@ -59,7 +60,8 @@ class WriterObservation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if os.geteuid() != 0 or os.uname().release not in (
-                '7.0.0-38-kdlock1', '7.0.0-38-kdmm1'):
+                '7.0.0-38-kdlock1', '7.0.0-38-kdmm1',
+                '7.0.0-38-kdscope1', '7.0.0-38-kdscope3'):
             raise RuntimeError('C classifier fixture must run in the Linux 7 development VM')
         text = (ROOT/'bench/mmap_writer/client.c').read_text()
         begin = 'static int proc_text('
@@ -92,12 +94,44 @@ class WriterObservation(unittest.TestCase):
         return ['2 (mw_worker) D 0 0\n',frames[0][0],'100 200 3\n',stack,
                 '100 200 3\n',frames[0][0],'2 (mw_worker) D 0 0\n']
 
-    def invoke(self, sample, *, mode='kd', limit=1):
-        result = subprocess.run([str(self.binary),mode,str(limit),*sample],
+    def invoke(self, sample, *, mode='kd', limit=1, wait_args=()):
+        result = subprocess.run([str(self.binary),mode,str(limit),*sample,*wait_args],
                                 check=True,capture_output=True,text=True,timeout=5)
         rows = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertEqual(rows[-1]['event'],'fixture_result')
         return rows
+
+    def test_all_three_exact_wait_returns_retain_the_full_classifier(self):
+        for caller in ('vm_mmap_pgoff', '__vm_munmap'):
+            for offset in (712, 989, 1491):
+                with self.subTest(caller=caller, offset=offset):
+                    sample = self.sample('gate', caller)
+                    sample[3] = sample[3].replace('+0xcb/', f'+0x{offset:x}/')
+                    args = ('--wait-returns', '712:989:1491')
+                    self.assertTrue(self.invoke(sample, mode='gate', wait_args=args)[-1]['accepted'])
+                    bad = sample.copy()
+                    bad[3] = bad[3].replace(f'+0x{offset:x}/', f'+0x{offset-1:x}/')
+                    self.assertFalse(self.invoke(bad, mode='gate', wait_args=args)[-1]['accepted'])
+                    bad = sample.copy(); bad[6] = '2 (mw_worker) R 0 0\n'
+                    self.assertFalse(self.invoke(bad, mode='gate', wait_args=args)[-1]['accepted'])
+
+    def test_explicit_return_list_rejects_malformed_third_and_fourth_values(self):
+        for text in ('712:989', '712:989:', '712:989:0', '712:989:-1',
+                     '712:989:+1491', '712:989:1491x', '712:989:0x5d3',
+                     '712:989:18446744073709551616', '712:989:712',
+                     '712:989:1491:2000', '712::1491', ' 712:989:1491'):
+            with self.subTest(text=text), self.assertRaises(subprocess.CalledProcessError) as error:
+                self.invoke(self.sample('gate'), mode='gate', wait_args=('--wait-returns', text))
+            self.assertEqual(error.exception.returncode, 1)
+            self.assertIn('chain_wait_arguments', error.exception.stderr)
+
+    def test_legacy_two_number_arguments_preserve_duplicate_and_distinct_returns(self):
+        sample = self.sample('gate')
+        self.assertEqual(self.invoke(sample, mode='gate'),
+                         self.invoke(sample, mode='gate', wait_args=('203', '203')))
+        for offset in (203, 217):
+            changed = sample.copy(); changed[3] = changed[3].replace('+0xcb/', f'+0x{offset:x}/')
+            self.assertTrue(self.invoke(changed, mode='gate', wait_args=('203', '217'))[-1]['accepted'])
 
     def test_exact_native_kd_and_historical_classifier_paths(self):
         for mode in ('native','kd','legacy','gate'):

@@ -145,3 +145,12 @@ kernel recipe separately from the measured provider commit; reuse of an existing
 compiled kernel requires verified matching generated lock sources and does not
 change its original recipe identity. No old score supplies a fresh baseline.
 Restore temporary host settings and the ordinary development kernel afterward.
+
+The MM/syscall harness needs the already validated `kdscope4-native` and
+`kdscope4-kd` profiles, including exact three-site writer scheduling observations
+and shared MM return-site derivation. Carry forward those reviewed harness and
+fixture changes from `9f9fb90e9de861fddeb498e068c0c31122919337`. Extend the
+original-body syscall controller to the explicit scope4 Native-MM profile,
+keeping both syscall backends on one image and all existing identity checks.
+These are measurement support changes; production lock sources remain identical
+to the merged candidate. The frozen Nano input is not edited during its run.

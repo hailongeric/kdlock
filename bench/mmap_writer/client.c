@@ -22,7 +22,9 @@ static unsigned checks;
 /* Optional exact integration chain, independently decoded from its kernel ELF.
  * The six-argument recovery-kernel interface retains its original proof. */
 static const char *chain_waiter, *chain_acquire;
-static unsigned long chain_wait[2], chain_adapter;
+#define CHAIN_WAIT_CAPACITY 3
+static unsigned long chain_wait[CHAIN_WAIT_CAPACITY], chain_adapter;
+static unsigned chain_wait_count = 2;
 #define CHECK(x) do { checks++;if(!(x)) { fprintf(stderr,"FAIL line %d: %s errno=%d\n",__LINE__,#x,errno);exit(1); } } while(0)
 static void pin(unsigned cpu)
 {
@@ -152,6 +154,36 @@ static char task_state(const char *text)
 {
 	const char *end=strrchr(text,')');return end && end[1]==' ' ? end[2] : '?';
 }
+static int chain_wait_arguments(const char *first, const char *second)
+{
+	/* Keep the old two-number form. Only the explicit new form carries three
+	 * exact PCs; it does not change the sleep or complete-stack classifier. */
+	if (strcmp(first, "--wait-returns")) {
+		chain_wait[0] = strtoul(first, NULL, 0);
+		chain_wait[1] = strtoul(second, NULL, 0);
+		chain_wait_count = 2;
+		return chain_wait[0] && chain_wait[1];
+	}
+	unsigned long values[CHAIN_WAIT_CAPACITY];
+	const char *next = second;
+	for (unsigned i = 0; i < CHAIN_WAIT_CAPACITY; i++) {
+		char *end;
+		if (*next < '0' || *next > '9') return 0;
+		errno = 0;
+		values[i] = strtoul(next, &end, 10);
+		if (errno || !values[i]) return 0;
+		for (unsigned j = 0; j < i; j++)
+			if (values[j] == values[i]) return 0;
+		if (i + 1 < CHAIN_WAIT_CAPACITY) {
+			if (*end != ':') return 0;
+			next = end + 1;
+		} else if (*end) return 0;
+	}
+	for (unsigned i = 0; i < CHAIN_WAIT_CAPACITY; i++)
+		chain_wait[i] = values[i];
+	chain_wait_count = CHAIN_WAIT_CAPACITY;
+	return 1;
+}
 static int chain_frame(const char **text, char symbol[64], unsigned long *offset)
 {
 	const char *top = strstr(*text, "] ");
@@ -168,8 +200,11 @@ static const char *writer_chain_tail(const char **remaining, char symbol[64],
 	 * Tail jumps have no return word and are absent from this stack description.
 	 * The same parser serves the retained diagnostic and positive classifier. */
 	size_t length=strcspn(chain_waiter,"|");
+	int allowed = 0;
+	for (unsigned i = 0; i < chain_wait_count; i++)
+		allowed |= wait_offset == chain_wait[i];
 	if(strlen(waiter)!=length || strncmp(waiter,chain_waiter,length) ||
-	   (wait_offset!=chain_wait[0] && wait_offset!=chain_wait[1]))
+	   !allowed)
 		return "waiter_symbol_or_return";
 	const char *next=chain_waiter+length;
 	unsigned depth=0;
@@ -320,7 +355,7 @@ int main(int argc,char **argv)
 	if(functional)CHECK(!strcmp(argv[11],"--eligibility-policy") && !strcmp(argv[12],"mmap-functional-v1"));
 	const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
 	if(argc>=11) {
-		chain_waiter=argv[6];chain_wait[0]=strtoul(argv[7],NULL,0);chain_wait[1]=strtoul(argv[8],NULL,0);
+		chain_waiter=argv[6];CHECK(chain_wait_arguments(argv[7],argv[8]));
 		chain_adapter=strtoul(argv[9],NULL,0);chain_acquire=argv[10];
 		CHECK(*chain_waiter && *chain_acquire && chain_wait[0] && chain_wait[1] && chain_adapter);
 	}

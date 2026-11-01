@@ -325,8 +325,11 @@ def main():
     platform.arguments(parser)
     identity.arguments(parser)
     args = parser.parse_args()
-    rt.require(args.kernel_variant == 'kdscope1-native', 'reviewed enabled-API kernel in Native MM mode required')
-    platform.guest(args.boot_id, release='7.0.0-38-kdscope1')
+    releases = {'kdscope1-native': '7.0.0-38-kdscope1',
+                'kdscope4-native': '7.0.0-38-kdscope4'}
+    rt.require(args.kernel_variant in releases, 'reviewed enabled-API kernel in Native MM mode required')
+    release = releases[args.kernel_variant]
+    platform.guest(args.boot_id, release=release)
     rt.idle()
     out = args.output.resolve()
     rt.require(not out.exists() and not out.is_relative_to(ROOT), 'new external output required')
@@ -368,7 +371,7 @@ def main():
         else:
             binaries, files = build(out,args)
         def verify():
-            platform.guest(args.boot_id, release='7.0.0-38-kdscope1')
+            platform.guest(args.boot_id, release=release)
             policy = result['kernel_identity']['runtime_policy']
             rt.require(Path('/proc/cmdline').read_text().strip() == policy['cmdline'] and
                        Path('/sys/kernel/debug/sched/preempt').read_text().strip() == policy['preempt_control'],

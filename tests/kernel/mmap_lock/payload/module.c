@@ -19,6 +19,7 @@
 #include <linux/uaccess.h>
 #include "api.h"
 #include "backend_trylock.h"
+#include "gate_waiter_layout.h"
 
 #ifndef CONFIG_KDLOCK_MMAP
 #error "This probe requires the actual mmap-lock integration kernel"
@@ -187,14 +188,89 @@ static void join_all(void)
 	check(idle(probe_mm));
 }
 
-static void queue_check(bool drain)
+enum probe_wait_kind {
+	PROBE_READER_PHASE,
+	PROBE_WRITER_GATE,
+	PROBE_READER_DRAIN,
+};
+
+static bool queue_task(wait_queue_head_t *queue, struct task_struct *task)
+{
+	unsigned long flags;
+	bool exact = false;
+
+	spin_lock_irqsave(&queue->lock, flags);
+	if (list_is_singular(&queue->head)) {
+		wait_queue_entry_t *entry = list_first_entry(&queue->head, wait_queue_entry_t, entry);
+
+		exact = entry->private == task;
+	}
+	spin_unlock_irqrestore(&queue->lock, flags);
+	return exact;
+}
+
+static void queue_check(enum probe_wait_kind kind, struct task_struct *task,
+			struct task_struct *owner, long readers)
 {
 	check(mmap_lock_is_contended(probe_mm));
 	if (probe_mm->mmap_lock.use_kd) {
 		struct kd_mmap_rwsem *s = &probe_mm->mmap_lock.kd;
-		check(waitqueue_active(drain ? &s->reader_drain : &s->phase_wait));
-		check(!waitqueue_active(drain ? &s->phase_wait : &s->reader_drain));
+		unsigned long flags, word, end = jiffies + 5 * HZ;
+		bool gate, exact, phase, drain, stopped;
+
+		/* The timed drain can briefly unlink and requeue. Observe its actual
+		 * parked publication, never infer membership from a sampled pointer.
+		 * This scenario has exactly one acquisition waiter; its task and mm
+		 * references stay held until join_all. */
+		do {
+			struct kd_mmap_local_waiter *head;
+
+			raw_spin_lock_irqsave(&s->gate.wait_lock, flags);
+			word = atomic_long_read(&s->gate.owner);
+			head = s->gate.wait_head;
+			gate = head != NULL;
+			exact = head && head->task == task &&
+				head->list.next == &head->list && head->list.prev == &head->list;
+			raw_spin_unlock_irqrestore(&s->gate.wait_lock, flags);
+			phase = queue_task(&s->phase_wait, task);
+			drain = queue_task(&s->reader_drain, task);
+			stopped = (READ_ONCE(task->__state) & TASK_UNINTERRUPTIBLE) &&
+				!READ_ONCE(task->on_cpu);
+			if (stopped && (kind == PROBE_WRITER_GATE ? exact :
+				kind == PROBE_READER_PHASE ? phase : drain))
+				break;
+			msleep(1);
+		} while (time_before(jiffies, end));
+		check(stopped);
+		check(!READ_ONCE(s->prepared_writes));
+		check((word & ~KD_MMAP_FLAGS) == (unsigned long)owner);
+		check(atomic_long_read(&s->admission) == -1 && atomic_long_read(&s->readers) == readers);
+		check(kind == PROBE_WRITER_GATE ? exact && (word & KD_MMAP_WAITERS) :
+			!gate && !(word & KD_MMAP_FLAGS));
+		check(kind == PROBE_READER_PHASE ? phase : !waitqueue_active(&s->phase_wait));
+		check(kind == PROBE_READER_DRAIN ? drain : !waitqueue_active(&s->reader_drain));
+		check(!atomic_read(&s->gate.osq.tail) && !atomic_read(&s->reader_osq.tail));
 		check(!atomic_read(&s->gate.delegation_state) && !READ_ONCE(s->gate.delegation_tail));
+	}
+}
+
+static void cancelled_queue_check(bool drain)
+{
+	check(drain ? kd_mmap_is_locked(&probe_mm->mmap_lock) :
+		kd_mmap_is_write_owner(&probe_mm->mmap_lock));
+	if (probe_mm->mmap_lock.use_kd) {
+		struct kd_mmap_rwsem *s = &probe_mm->mmap_lock.kd;
+
+		/* Completion follows return from the lock API, so the stack waiter
+		 * has already unlinked and a draining writer has rolled back both
+		 * gate and phase. The original holder has not been released. */
+		check(!READ_ONCE(s->gate.wait_head) && !atomic_read(&s->gate.osq.tail));
+		check(!waitqueue_active(&s->phase_wait) && !waitqueue_active(&s->reader_drain));
+		check(atomic_long_read(&s->gate.owner) == (drain ? 0 : (unsigned long)current));
+		check(atomic_long_read(&s->admission) == (drain ? 0 : -1));
+		check(atomic_long_read(&s->readers) == (drain ? 1 : 0));
+		check(!atomic_read(&s->reader_osq.tail) && !atomic_read(&s->gate.delegation_state) &&
+			!READ_ONCE(s->gate.delegation_tail));
 	}
 }
 
@@ -211,7 +287,8 @@ static int cancellation(bool writer, bool drain)
 	if (ret)
 		goto release;
 	check(parked(workers[0].task));
-	queue_check(drain);
+	queue_check(drain ? PROBE_READER_DRAIN : writer ? PROBE_WRITER_GATE : PROBE_READER_PHASE,
+		workers[0].task, drain ? workers[0].task : current, drain ? 1 : 0);
 	check(!send_sig(SIGUSR1, workers[0].task, 1));
 	msleep(20);
 	check(!completion_done(&workers[0].done) && !completion_done(&workers[0].entered));
@@ -219,6 +296,8 @@ static int cancellation(bool writer, bool drain)
 	done = wait_for_completion_timeout(&workers[0].done, 5 * HZ);
 	check(done);
 	check(workers[0].result == -EINTR);
+	if (done)
+		cancelled_queue_check(drain);
 	if (drain) {
 		bool acquired = mmap_read_trylock(probe_mm);
 		check(acquired);
@@ -250,7 +329,7 @@ static int sleeping(struct kd_mmap_probe_result *r)
 	if (ret)
 		goto join;
 	r->writer_slept = parked(workers[2].task);
-	queue_check(true);
+	queue_check(PROBE_READER_DRAIN, workers[2].task, workers[2].task, 2);
 	check(!completion_done(&workers[2].entered));
 	ret = start(3, false, false);
 	if (ret)
@@ -284,12 +363,12 @@ static int downgrade(void)
 		return ret;
 	}
 	check(parked(workers[0].task));
-	queue_check(false);
+	queue_check(PROBE_WRITER_GATE, workers[0].task, current, 0);
 	atomic_inc(&reading);
 	mmap_write_downgrade(probe_mm);
 	msleep(20);
 	check(parked(workers[0].task));
-	queue_check(true);
+	queue_check(PROBE_READER_DRAIN, workers[0].task, workers[0].task, 1);
 	check(!completion_done(&workers[0].entered));
 	atomic_dec(&reading);
 	mmap_read_unlock(probe_mm);

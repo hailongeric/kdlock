@@ -41,3 +41,10 @@ The controller requires an explicitly reviewed enabled-API schema-2 kernel
 profile, real recovery snapshot, current fixed-frequency host capture, and a
 new external output tree. New profiles and installation are separate gates;
 this documentation is a candidate contract, not performance evidence.
+
+The explicit `kdscope4-native` profile is also supported for the fresh master
+campaign. It uses the same original syscall bodies and binding protocol as
+`kdscope1-native`, with the restored reader-entry implementation in the MM
+backend. Both syscall arms run on this single image with MM mode off; object
+selection still distinguishes Native and KD syscall locks. Its schema-2 bundle
+and exact build path are verified independently from the older scope1 image.

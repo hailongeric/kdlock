@@ -41,6 +41,18 @@ EXPECTED = {
     'kdscope1-kd': ('7.0.0-38-kdscope1',
                    '/mnt/kdlock-builds/linux-7.0.0-38-kdscope1/build',
                    '/root/kdlock-kernel-baselines/linux70-kdscope1-kd-20261030'),
+    'kdscope3-native': ('7.0.0-38-kdscope3',
+                       '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build',
+                       '/root/kdlock-kernel-baselines/linux70-kdscope3-native-20261031'),
+    'kdscope3-kd': ('7.0.0-38-kdscope3',
+                   '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope3/build',
+                   '/root/kdlock-kernel-baselines/linux70-kdscope3-kd-20261031'),
+    'kdscope4-native': ('7.0.0-38-kdscope4',
+                       '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build',
+                       '/root/kdlock-kernel-baselines/linux70-kdscope4-native-20261101'),
+    'kdscope4-kd': ('7.0.0-38-kdscope4',
+                   '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build',
+                   '/root/kdlock-kernel-baselines/linux70-kdscope4-kd-20261101'),
 }
 IDENTITY_OPTIONS = ('--kernel-variant', '--kernel-source', '--kernel-baseline')
 
@@ -76,7 +88,7 @@ class KernelProfileTests(unittest.TestCase):
         for variant in EXPECTED:
             self.assertEqual(parser.parse_args(['--kernel-variant', variant]).kernel_variant,
                              variant)
-        for variant in ('kdmm1-native', 'kdmm1-kd', 'kdscope1', 'native', 'unknown'):
+        for variant in ('kdmm1-native', 'kdmm1-kd', 'kdscope1', 'kdscope3', 'kdscope4', 'native', 'unknown'):
             with self.subTest(variant=variant), patch.object(sys, 'stderr'), \
                     self.assertRaises(SystemExit):
                 parser.parse_args(['--kernel-variant', variant])
@@ -170,7 +182,7 @@ class KernelProfileTests(unittest.TestCase):
     def test_scope_child_parsers_accept_actual_functional_commands(self):
         # Run only by the VM unit runner. --dry-run exercises both actual child
         # parsers/planners; it neither builds nor enters a live workload.
-        for variant in ('kdscope1-native', 'kdscope1-kd'):
+        for variant in ('kdscope1-native', 'kdscope1-kd', 'kdscope3-native', 'kdscope3-kd'):
             for row in basic.plan(Path('/tmp/kernel-profile-plan'), basic.FAMILIES,
                                   kernel_variant=variant):
                 with self.subTest(variant=variant, family=row['family']):
