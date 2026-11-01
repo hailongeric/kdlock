@@ -332,7 +332,6 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->completed = false;
 	curr_node->next = NULL;
 	curr_node->socket_id = numa_node_id();
-	curr_node->read_admission = NULL;
 	curr_node->cpuid = smp_processor_id();
 	curr_node->proxy_context = kd_spin_proxy_context();
 	curr_node->rsp = READ_ONCE(input->rsp);

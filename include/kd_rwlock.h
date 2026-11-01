@@ -53,9 +53,6 @@ static inline u32 kd_rwlock_state(kd_rwlock_t *lock)
 	return atomic_read(&lock->cnts);
 }
 
-/* Called only after withdrawing a speculative task-reader count. */
-void kd_rwlock_read_slowpath(kd_rwlock_t *lock);
-
 static __always_inline void __kd_read_lock_pinned(kd_rwlock_t *lock)
 {
 	u32 cnts;
@@ -76,7 +73,13 @@ static __always_inline void __kd_read_lock_pinned(kd_rwlock_t *lock)
 	/* Do not wait in the admission queue while counted as an active reader:
 	 * its writer head may already be waiting for that count to reach zero. */
 	atomic_sub(KD_RWLOCK_READER_BIAS, &lock->cnts);
-	kd_rwlock_read_slowpath(lock);
+	kd_spin_direct_native_lock_inline(&lock->gate);
+	/* The count prevents another ungated writer from entering. A fast writer
+	 * which won before this increment can still be active: wait for its
+	 * release while holding the gate, before allowing the reader body. */
+	atomic_add(KD_RWLOCK_READER_BIAS, &lock->cnts);
+	atomic_cond_read_acquire(&lock->cnts, !(VAL & KD_RWLOCK_WRITER_LOCKED));
+	kd_spin_direct_native_release_inline(&lock->gate);
 }
 
 static __always_inline void kd_read_lock(kd_rwlock_t *lock)

@@ -182,7 +182,6 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 	node->completed = false;
 	node->next = NULL;
 	node->socket_id = numa_node_id();
-	node->read_admission = NULL;
 	node->cpuid = smp_processor_id();
 	/* Never reuse a preceding physical root's context discriminator. */
 	node->proxy_context = 0;

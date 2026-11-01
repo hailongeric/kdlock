@@ -55,8 +55,6 @@ struct kd_spin_continuation_stack {
 	struct kd_spin_continuation records[KD_SPIN_CONT_SLOTS];
 };
 
-struct kd_rwlock;
-
 struct kd_spin_node {
 	struct kd_spin_node *next;
 	int socket_id;
@@ -76,8 +74,6 @@ struct kd_spin_node {
 	struct kd_spin_continuation *execution;
 	struct kd_regs *prefetch_regs;
 	unsigned long prefetch_sp;
-	/* Native rwlock admission only; no reader body or execution frame. */
-	struct kd_rwlock *read_admission;
 	/* A successor writes next while this CPU polls locked. Isolate those
 	 * accesses; only the release notification belongs on the polling line.
 	 * Align the member so the type/array stride also covers whole x86 lines,
