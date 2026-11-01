@@ -238,7 +238,8 @@ the initial parser failure and the follow-up fixture compilation failure remain
 recorded independently.
 
 The grouping candidate `822036777ae5731f24c56cbf50751d6e075ed1e1` has 41
-negative comparisons and loses up to 23.48%; grouping is withdrawn. Follow-up
+negative comparisons; its rwlock points lose up to 23.48% and rwsem c01/w1
+at eight workers loses 28.88%. Grouping is withdrawn. Follow-up
 `1ba4cc6e59f5451eaecafcf1c3a36861d026e5d9` passes ten unit groups, all four
 basic returned-JIT checks and the directly affected live fixtures. Its rwsem
 c16/w1 and c16/w20 geometric means improve 6.08% and 7.90%, but it has 35
