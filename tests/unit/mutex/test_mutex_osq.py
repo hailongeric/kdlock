@@ -41,6 +41,12 @@ def main():
     code += definition(local_source,
                        'static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,')
     mutations = {
+        'predecessor-polled-every-iteration': (
+            '#define KD_MUTEX_OSQ_PREDECESSOR_POLLS 64U',
+            '#define KD_MUTEX_OSQ_PREDECESSOR_POLLS 1U'),
+        'predecessor-observation-too-late': (
+            '#define KD_MUTEX_OSQ_PREDECESSOR_POLLS 64U',
+            '#define KD_MUTEX_OSQ_PREDECESSOR_POLLS 128U'),
         'decode-loses-slot': ('& KD_MUTEX_TAIL_IDX_MASK;', '& 0;'),
         'vcpu-decodes-encoded-slot': (
             'return (node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;',

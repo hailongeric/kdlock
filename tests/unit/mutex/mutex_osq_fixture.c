@@ -42,6 +42,8 @@ static unsigned long expected_schedule_slots;
 static bool resched, acquire_now = true;
 static bool pending_signal, signal_on_try;
 static unsigned int signal_checks, signal_at;
+static unsigned int predecessor_checks, poll_count;
+static bool predecessor_preempted;
 static struct task_struct task = { 1, true }, peer = { 2, true };
 static struct task_struct *current = &task;
 static struct kd_mutex lock, other_lock;
@@ -76,7 +78,12 @@ static bool signal_pending(struct task_struct *who)
 		pending_signal = true;
 	return pending_signal;
 }
-static bool vcpu_is_preempted(int id) { CHECK(id >= 0 && id < CPUS); return false; }
+static bool vcpu_is_preempted(int id)
+{
+	CHECK(id >= 0 && id < CPUS);
+	predecessor_checks++;
+	return predecessor_preempted;
+}
 static void cpu_relax(void)
 {
 	CHECK(++steps < 200);
@@ -86,6 +93,7 @@ static void cpu_relax(void)
 static void before_poll(void)
 {
 	CHECK(++steps < 200);
+	poll_count++;
 	if (poll_hook)
 		poll_hook();
 }
@@ -142,6 +150,8 @@ static void reset(void)
 	resched = false;
 	pending_signal = signal_on_try = false;
 	signal_checks = signal_at = 0;
+	predecessor_checks = poll_count = 0;
+	predecessor_preempted = false;
 	acquire_now = true;
 	expected_schedule_slots = 0;
 	poll_hook = relax_hook = NULL;
@@ -470,6 +480,43 @@ static void scoped_signal_gate(void)
 	CHECK(kd_local_spin(&lock, false, NULL));
 	CHECK(!signal_checks && !schedules && !kd_mutex_reserved_nodes[0]); checks++;
 }
+static unsigned int bounded_mode;
+static void bounded_poll(void)
+{
+	if (!bounded_mode && poll_count == 2)
+		predecessor_preempted = true;
+	if (bounded_mode && poll_count == 7) {
+		if (bounded_mode == 1)
+			resched = true;
+		else
+			pending_signal = true;
+		if (bounded_mode == 3) {
+			resched = true;
+			grant_poll();
+		}
+	}
+}
+static void bounded_predecessor_observation(void)
+{
+	for (bounded_mode = 0; bounded_mode < 4; bounded_mode++) {
+		reset(); head_at(2); b = kd_mutex_osq_node_get(&lock);
+		poll_hook = bounded_poll;
+		bool acquired = kd_mutex_osq_lock_signal(&lock.osq, b);
+		CHECK(acquired == (bounded_mode == 3));
+		CHECK(poll_count == (bounded_mode ? 7U : 65U));
+		CHECK(predecessor_checks == (bounded_mode ? 1U : 2U));
+		CHECK(!schedules);
+		if (acquired) {
+			CHECK(a->locked == KD_MUTEX_OSQ_IDLE && b->locked == KD_MUTEX_OSQ_GRANTED);
+			kd_mutex_osq_unlock(&lock.osq, b);
+		} else {
+			CHECK(!a->next && b->locked == KD_MUTEX_OSQ_IDLE);
+			CHECK(lock.osq.tail.counter == (int)a->tail);
+			kd_mutex_osq_unlock(&lock.osq, a);
+		}
+		CHECK(!lock.osq.tail.counter); release_at(b); release_at(a); checks++;
+	}
+}
 int main(void)
 {
 	CHECK(sizeof(struct kd_mutex) == 32 && _Alignof(struct kd_mutex) == 8);
@@ -481,6 +528,7 @@ int main(void)
 	shared_spin_lifetimes();
 	scoped_signal_queue();
 	scoped_signal_gate();
+	bounded_predecessor_observation();
 	printf("mutex osq production: %u scenarios PASS\n", checks);
 	return 0;
 }

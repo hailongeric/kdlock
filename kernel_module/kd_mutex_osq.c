@@ -88,6 +88,24 @@ osq_wait_next(struct optimistic_spin_queue *lock,
 	return next;
 }
 
+/* The local grant/scheduler/signal checks still run on every iteration.
+ * Only the remote predecessor observation is spaced: first poll, then every
+ * 64 polls. Resolve the current backlink each time because unlink can replace
+ * it. A preempted predecessor therefore delays this advisory abort by at most
+ * 63 intervening polls, without changing queue ownership or cancellation. */
+#define KD_MUTEX_OSQ_PREDECESSOR_POLLS 64U
+static __always_inline bool
+kd_mutex_osq_predecessor_preempted(struct kd_mutex_osq_node *node,
+				 unsigned int *remaining)
+{
+	if (*remaining) {
+		--*remaining;
+		return false;
+	}
+	*remaining = KD_MUTEX_OSQ_PREDECESSOR_POLLS - 1;
+	return vcpu_is_preempted(node_cpu(READ_ONCE(node->prev)));
+}
+
 static __always_inline bool
 kd_mutex_osq_lock_common(struct optimistic_spin_queue *lock,
 			 struct kd_mutex_osq_node *node, bool stop_signals)
@@ -95,6 +113,7 @@ kd_mutex_osq_lock_common(struct optimistic_spin_queue *lock,
 	struct kd_mutex_osq_node *prev, *next;
 	int curr = node->tail;
 	int old;
+	unsigned int predecessor_remaining = 0;
 
 	BUG_ON(node_cpu(node) != smp_processor_id());
 	BUG_ON(READ_ONCE(node->locked) != KD_MUTEX_OSQ_IDLE);
@@ -147,7 +166,8 @@ kd_mutex_osq_lock_common(struct optimistic_spin_queue *lock,
 	if (smp_cond_load_relaxed(&node->locked,
 				  VAL == KD_MUTEX_OSQ_GRANTED || need_resched() ||
 				  (stop_signals && signal_pending(current)) ||
-				  vcpu_is_preempted(node_cpu(node->prev))) ==
+				  kd_mutex_osq_predecessor_preempted(node,
+						&predecessor_remaining)) ==
 	    KD_MUTEX_OSQ_GRANTED)
 		return true;
 
