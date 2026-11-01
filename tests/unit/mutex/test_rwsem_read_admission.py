@@ -401,8 +401,7 @@ def main():
     local_phase = next(line for line in source.splitlines()
                        if line.startswith('#define KD_RWSEM_LOCAL_WRITER '))
     fast = definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
-    slow = definition(source, 'static noinline void kd_down_read_slowpath(struct kd_rwsem *sem)')
-    code = local_phase + '\n' + poll + spin + local + delegate + slow + fast
+    code = local_phase + '\n' + poll + spin + local + delegate + fast
     queue_guard = ('\t\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
                    '\t\t\treturn false;\n')
     delegate_loop = '\twhile (phase >= 0 && phase < LONG_MAX) {'
@@ -417,12 +416,12 @@ def main():
         'lost-slot-release': ('kd_mutex_osq_node_put(node);', '(void)kd_mutex_osq_node_put; (void)node;'),
         'lost-queue-release': ('kd_mutex_osq_unlock(&sem->reader_osq, node);', '(void)kd_mutex_osq_unlock; (void)node;'),
         'failure-returns-ownership': ('return acquired;', '(void)acquired; return true;'),
-        'early-retry-budget': ('unsigned int retries = 7;', 'unsigned int retries = 8;'),
+        'early-retry-budget': ('unsigned int retries = 8;', 'unsigned int retries = 9;'),
         'repeat-successful-first-probe': (
-            fast, fast.replace('if (likely(kd_down_read_trylock(sem)))',
-                               'if (likely(kd_down_read_trylock(sem)) && false)', 1)),
+            fast, fast.replace('if (kd_down_read_trylock(sem))',
+                               'if (kd_down_read_trylock(sem) && false)', 1)),
         'lost-first-failed-pause': (
-            slow, slow.replace('cpu_relax();', '(void)cpu_relax;', 1)),
+            fast, fast.replace('cpu_relax();', '(void)cpu_relax;', 1)),
         'unbounded-poll': ('while (--kd_rwsem_budget)', 'while (--kd_rwsem_budget || true)'),
         'lost-wake-barrier': ('smp_mb();', '(void)smp_mb;'),
         'lost-cohort-wake': ('kd_rwsem_wake(&sem->phase_wait);', '(void)kd_rwsem_wake;'),
@@ -509,8 +508,6 @@ def count_checks(source, compiler, path):
             'if ((void)atomic_long_read_acquire(&sem->admission), true)'),
         'missing-reader-rollback': ('kd_up_read(sem);', '(void)kd_up_read;'),
         'double-reader-rollback': ('kd_up_read(sem);', 'kd_up_read(sem); kd_up_read(sem);'),
-        'empty-queue-inspects-context': ('waitqueue_active(&sem->reader_drain)',
-                                       '(waitqueue_active(&sem->reader_drain), true)'),
         'wake-from-irq-disabled-release': ('!irqs_disabled()', '(irqs_disabled(), true)'),
         'wake-from-atomic-release': ('!in_atomic()', '(in_atomic(), true)'),
     }

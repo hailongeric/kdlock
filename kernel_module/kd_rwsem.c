@@ -90,11 +90,8 @@ void kd_up_read(struct kd_rwsem *sem)
 	/* Trylock rollback and a matching read unlock may run under rq_lock.
 	 * Never acquire a waitqueue/scheduler lock from that atomic context.
 	 * Reader-drain waiters recheck on a timer, so omitting this wake cannot
-	 * strand them. Check queue presence before reading caller context; the
-	 * ordered decrement and enqueuer recheck cover an empty-queue race. No
-	 * deferred reference outlives this decrement. */
+	 * strand them. No deferred reference outlives this ordered decrement. */
 	if (atomic_long_dec_and_test(&sem->readers) &&
-	    waitqueue_active(&sem->reader_drain) &&
 	    !irqs_disabled() && !in_atomic())
 		kd_rwsem_wake(&sem->reader_drain);
 }
@@ -175,16 +172,14 @@ out:
 	return acquired;
 }
 
-/* Keep wait-queue storage and its register/frame setup off the successful
- * first-attempt path. The caller already made the first of eight quick probes.
- * Its failed probe still gets the same reschedule check and PAUSE here. */
-static noinline void kd_down_read_slowpath(struct kd_rwsem *sem)
+void kd_down_read(struct kd_rwsem *sem)
 {
-	unsigned int retries = 7;
+	unsigned int retries = 8;
 
-	if (need_resched())
-		goto queued;
-	cpu_relax();
+	might_sleep();
+	/* Avoid a queue round trip when a brief writer phase is about to end.
+	 * Longer contention uses one optimistic admission head, not an entire
+	 * cohort retrying the shared count for the full polling budget. */
 	do {
 		if (kd_down_read_trylock(sem))
 			return;
@@ -192,18 +187,9 @@ static noinline void kd_down_read_slowpath(struct kd_rwsem *sem)
 			break;
 		cpu_relax();
 	} while (--retries);
-queued:
 	if (kd_rwsem_spin_read(sem))
 		return;
 	wait_event(sem->phase_wait, kd_down_read_trylock(sem));
-}
-
-void kd_down_read(struct kd_rwsem *sem)
-{
-	might_sleep();
-	if (likely(kd_down_read_trylock(sem)))
-		return;
-	kd_down_read_slowpath(sem);
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
