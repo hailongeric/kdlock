@@ -121,3 +121,31 @@ static per-CPU section exceeded the available reserved module allocation.
 The failure drained and no batch observation or scored point ran. Retain it as
 unavailable evidence; supported cycle, scheduling and remote-memory counters
 continue. This is a diagnostic-build limit, not an ownership or data failure.
+
+## Profile-driven candidate: bounded predecessor observations
+
+The c16 w20 rwsem same-node cycle profile assigns 32.3% to
+`kd_mutex_osq_lock` and another 4.47% to
+`__raw_callee_save___kvm_vcpu_is_preempted`. Disassembly places most OSQ samples
+at its PAUSE/recheck loop, which currently decodes `node->prev->tail` and checks
+the predecessor vCPU on every unsuccessful poll. The split-node PMU observation
+also records 0.12648 remote-DRAM loads per KD operation versus 0.04286 for
+TCLock. These whole-client counters do not attribute those loads to this exact
+address; that attribution remains a hypothesis to measure, not a proven cause.
+
+Keep grant, local `need_resched()` and applicable signal tests on every poll.
+Check the predecessor vCPU immediately on the first unsuccessful poll and then
+once every 64 polls, always resolving the current backlink at that observation.
+This reduces repeated remote metadata reads and hypervisor calls. A newly
+preempted predecessor can delay unlink by at most 63 intervening polls; the
+local scheduler and signal response receive no such delay. Exact grant-before-
+cancellation ordering, OSQ unlink, slot retirement and all lock ownership are
+unchanged. No new shared state, sleeping policy or body delegation is introduced.
+
+This independent change affects the shared optimistic queue used by rwsem
+readers and local mutex admission; it does not change the rwlock gate algorithm.
+Add deterministic actual-C checks for the polling interval, immediate local
+reschedule/signal response, and a simultaneous grant. Run the existing OSQ
+rollback/cancellation, local-mutex and rwsem live checks before timing. Keep
+the full four-family comparison, including unchanged spin controls, and retain
+any loss. The expected benefit remains unmeasured until that candidate runs.
