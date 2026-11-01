@@ -31,6 +31,7 @@ struct kd_spin_node {
  int socket_id, cpuid;
  unsigned long rsp;
  void *execution;
+ uint8_t proxy_context;
  uint8_t locked __attribute__((aligned(64)));
  bool completed;
 } __attribute__((aligned(64)));
