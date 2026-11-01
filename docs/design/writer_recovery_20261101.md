@@ -123,3 +123,25 @@ configuration and topology identities. Execute real APIs through syscalls with
 native bodies unchanged. Restore the normal VM kernel and temporary runtime
 settings after archiving. Source/Git/static work stays on 380G10; all builds,
 functional checks and timing stay in the designated VM.
+
+### Fresh master comparison baseline
+
+The user selected fresh Linux Native versus merged master KD for every suite.
+The measured provider target is `1f10e050b204eb3ee747b5682211343213e3fb16`;
+its production lock sources match `66c68c17457c0ae60d09ff1f3d89b5fff16a500c`.
+Run exactly one measurement at each of 1, 2, 3, 4, 5, 6, 7, 8, 12, 16,
+20, 24, 28, 32, 36, 40, 44, 48, 52, 56 and 60 workers. Retain every
+result, including failures and losses, without replacement measurements.
+
+The campaign covers ten Nano workloads (mutex c01/c16 w100, rwsem and
+rwlock c01/c16 w1/w20), unchanged mmap1 threads and processes, and the
+original-body syscall suite: setfd, pipe FIONREAD and F_GETPIPE_SZ.
+These syscall cases use `bench/kernel_api/run.py` and whole-object binding.
+Previous copied-body adapter measurements are separate mechanism evidence.
+
+Freeze the provider source, verify the recovery snapshot and fresh host controls,
+then run basic and affected functional checks before timing. Record the actual
+kernel recipe separately from the measured provider commit; reuse of an existing
+compiled kernel requires verified matching generated lock sources and does not
+change its original recipe identity. No old score supplies a fresh baseline.
+Restore temporary host settings and the ordinary development kernel afterward.
