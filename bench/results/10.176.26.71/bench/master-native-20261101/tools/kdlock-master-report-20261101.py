@@ -30,7 +30,7 @@ def pair(label,by,metrics=('whole',)):
   summary.append(s)
  out=a.output/label;out.mkdir()
  with (out/'points.csv').open('w') as f:
-  w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
+  w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator="\n");w.writeheader();w.writerows(rows)
  (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
  (out/'points.json').write_text(json.dumps(rows,indent=2)+'\n')
  return summary

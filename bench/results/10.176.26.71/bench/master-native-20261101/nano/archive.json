@@ -1,0 +1,23 @@
+{
+  "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/master-nano-20261101.tar.gz",
+  "sha256": "03094cbb0bab15325eac56fecf107f9a70dc298da57362e02217ed8fb094e425",
+  "size": 113757937,
+  "inputs": [
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/master-native-master-20261101"
+  ],
+  "local": "/tmp/kdlock-master-followthrough-r2-20261101/nano.tar.gz",
+  "retained_path": "bench/results/10.176.26.71/raw/bench/master-native-20261101/nano.tar.gz",
+  "record_files_verified": {
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/mutex-locality/records.json": "07a7776d16188a8a3ec3f5895a2f5c13288ccdacb673456f0246c22e14277bc3",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/mutex-throughput/records.json": "102a8132ef110d35751b8307f4d52881e3b1871d961b9e6361284a9fc6661385",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwlock-locality-mixed/records.json": "d5e5a09a1adb4982e1ff6788bc7388f31b3a3ae486f0126a5607f1edf3e41fed",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwlock-locality-read/records.json": "a9e85b3a19b2a9bbe0bf689ad99a1f96041e64128f3d59fcc84d72aca3e977ee",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwlock-throughput-mixed/records.json": "0a2b9387c2ab4f95a7313f75986ebea079acf2a85bd7de1bfb6d3cf468e2a49a",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwlock-throughput-read/records.json": "212993d1155c2f029e402b054203243afd4a5e43bd77fe1be0ee9852c8618354",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwsem-locality-mixed/records.json": "f88b1a9887c10ad0143889c81b8356be3b8ec361782c2de4aafafcff4888cf9a",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwsem-locality-read/records.json": "691082d602030a06cdbe037ee5702a6b2cb0433644255e78b367881542d03b30",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwsem-throughput-mixed/records.json": "eb4c9b1d76a8cd3c6ac026f533ac43fb6b254454ec9af9120f950c645e45bf6b",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101/nano/rwsem-throughput-read/records.json": "1b5966dedfebe9899a1fea3e49e213a336b91762c5d5a1ceb5b633ce9b3a898a"
+  }
+}
