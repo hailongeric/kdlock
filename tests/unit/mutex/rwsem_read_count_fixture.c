@@ -16,6 +16,7 @@ static unsigned int decrements, wake_calls, irq_checks, atomic_checks;
 static unsigned int race_at;
 static long writer_saw_readers;
 static bool irq_off, atomic_context;
+static bool enqueue_on_empty, enqueuer_rechecked;
 
 static long atomic_long_read(long *counter)
 {
@@ -74,6 +75,18 @@ static bool irqs_disabled(void)
 { irq_checks++; return irq_off; }
 static bool in_atomic(void)
 { atomic_checks++; return atomic_context; }
+static bool waitqueue_active(int *queue)
+{
+    assert(queue == &sem.reader_drain && !sem.readers && stage == 5);
+    bool active = *queue != 0;
+    if (!active && enqueue_on_empty) {
+        *queue = 1;
+        /* A racing enqueuer observes the fully ordered final decrement at
+         * its ordinary post-publication predicate recheck and need not wait. */
+        enqueuer_rechecked = !sem.readers;
+    }
+    return active;
+}
 static void kd_rwsem_wake(int *queue)
 {
     assert(queue == &sem.reader_drain && !sem.readers);
@@ -91,6 +104,8 @@ static void reset(long readers, long phase)
     decrements = wake_calls = irq_checks = atomic_checks = race_at = 0;
     writer_saw_readers = -1;
     irq_off = atomic_context = false;
+    sem.reader_drain = 1;
+    enqueue_on_empty = enqueuer_rechecked = false;
 }
 
 int main(void)
@@ -115,6 +130,15 @@ int main(void)
         kd_up_read(&sem);
         assert(sem.readers == (long)prior && decrements == 1);
         assert(wake_calls == !prior && irq_checks == !prior && atomic_checks == !prior);
+        cases++;
+    }
+    for (unsigned int race = 0; race < 2; race++) {
+        reset(0, 0); sem.reader_drain = 0; enqueue_on_empty = race;
+        assert(kd_down_read_trylock(&sem));
+        kd_up_read(&sem);
+        assert(!sem.readers && decrements == 1);
+        assert(!irq_checks && !atomic_checks && !wake_calls);
+        assert(enqueuer_rechecked == (race != 0));
         cases++;
     }
     /* A writer can close between the first observation and publication, or

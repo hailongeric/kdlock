@@ -95,6 +95,8 @@ static void cpu_relax(void) { assert(!in_wait); ++pauses; }
 static void might_sleep(void) { assert(!phase_owned && !sem.gate.owned); }
 static bool irqs_disabled(void) { return irq; }
 static bool in_atomic(void) { return irq; }
+static bool waitqueue_active(int *q)
+{ assert(q==&sem.reader_drain); return true; }
 static void kd_rwsem_wake(int *q)
 {
     if(q==&sem.phase_wait) { assert(!phase_owned && !sem.gate.owned); ++wake_phase; }
