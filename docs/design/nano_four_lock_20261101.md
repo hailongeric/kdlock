@@ -149,3 +149,29 @@ reschedule/signal response, and a simultaneous grant. Run the existing OSQ
 rollback/cancellation, local-mutex and rwsem live checks before timing. Keep
 the full four-family comparison, including unchanged spin controls, and retain
 any loss. The expected benefit remains unmeasured until that candidate runs.
+
+## Profile-driven candidate: ordinary rwsem reader overhead
+
+The scored one-worker rwsem points lose 5.6–7.0% to TCLock, where OSQ waiting
+cannot explain the difference. The c01 w1 single-worker cycle profile assigns
+3.42% to `kd_down_read` and 3.78% to `kd_up_read` plus its outlined fragment;
+TCLock's corresponding routines account for 1.65% and 2.36%. The common
+register-only post-work dominates both profiles. These percentages describe
+sampled work, not the exact portion of the throughput loss recoverable by an edit.
+
+Disassembly shows that KD's ordinary read entry carries five callee-register
+saves, a 56-byte local frame and frame-integrity bookkeeping for its inlined
+wait-queue path even when its first admission succeeds. Keep `might_sleep()`
+and the first admission in the ordinary entry, and outline only the failed path.
+That helper must preserve the remaining seven quick attempts, including the
+original reschedule checks and PAUSE order, before the existing OSQ/wait path.
+This changes code placement, not read admission or the polling budget.
+
+The last-reader release also calls a fragment which reads IRQ/preempt state
+before discovering an empty reader-drain wait queue. Test queue presence first
+after the same fully ordered decrement. An enqueuer racing an empty observation
+still performs its original predicate recheck; no count or barrier is removed.
+Keep the existing context refusal and wake helper for an actually queued writer.
+The directly affected reader-admission fixture must cover the initial fast
+success, all eight failed attempts, reschedule paths, rollback and wake ordering;
+live rwsem checks still cover atomic try/unlock, downgrade and cancellation.
