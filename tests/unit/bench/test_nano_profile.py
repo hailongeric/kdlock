@@ -186,7 +186,8 @@ class NanoProfileTests(unittest.TestCase):
         self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 1024))
         self.assertEqual(args.profiles, ['mutex-throughput', 'mutex-locality'])
         self.assertEqual(profile.selected_backends(args), ['native', 'kdlock'])
-        self.assertEqual(set(profile.PROFILES), {'mutex-throughput', 'mutex-locality'})
+        self.assertEqual(len(profile.PROFILES), 12)
+        self.assertEqual(profile.PROFILES['rwsem-c16-w020'], ('rwsem', 20, 16))
         with patch.object(profile.sys, 'stderr'), self.assertRaises(SystemExit):
             profile.parser().parse_args(['--mode', 'stat', '--output', '/tmp/retired-profile',
                                         '--source-commit', 'a' * 40, '--profiles', 'mutex'])
@@ -198,6 +199,26 @@ class NanoProfileTests(unittest.TestCase):
             self.assertEqual(argv[argv.index('--post-work-rounds') + 1], post)
             self.assertEqual(argv[argv.index('--repeats') + 1], '1')
             self.assertEqual(argv[argv.index('--write-percent') + 1], '100')
+
+    def test_linux7_explicit_split_cohort_and_tclock(self):
+        args = profile.parser().parse_args(['--mode', 'record', '--output', '/tmp/profile',
+            '--source-commit', 'a' * 40, '--profiles', 'rwsem-c16-w020',
+            '--threads', '4', '--cpus', '0', '1', '32', '33', '--backends', 'kdlock', 'tclock'])
+        argv = profile.runner_arguments(args, 'rwsem-c16-w020')
+        self.assertEqual(argv[argv.index('--cpus') + 1:argv.index('--collector-cpu')],
+                         ['0', '1', '32', '33'])
+        self.assertEqual(argv[argv.index('--lock-kind') + 1], 'rwsem')
+        self.assertEqual(argv[argv.index('--write-percent') + 1], '20')
+        self.assertEqual(argv[argv.index('--kernel-variant') + 1], 'kdlock1')
+        self.assertNotIn('6.1.159', ' '.join(argv))
+        for cpus in ([0, 1, 2], [0, 0, 32, 33], [0, 1, 32, 63]):
+            args.cpus = cpus
+            with self.assertRaises(ValueError):
+                profile.runner_arguments(args, 'rwsem-c16-w020')
+        args.cpus = None
+        args.mode = 'batch'
+        with self.assertRaises(ValueError):
+            profile.runner_arguments(args, 'rwsem-c16-w020')
 
     def test_batch_defaults_select_only_kd_and_allow_the_same_node_boundary(self):
         args = profile.parser().parse_args(['--mode', 'batch', '--output', '/tmp/new-profile',

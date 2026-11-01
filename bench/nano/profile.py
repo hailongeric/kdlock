@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only, unscored diagnostics for the active mutex nano profiles.
+"""Guest-only, unscored diagnostics for mutex, rwlock and rwsem Nano profiles.
 
 Only the measured client is wrapped. Preparation, translation and warmup retain
 their ordinary boundaries. The inherited client includes startup/collection;
@@ -26,12 +26,19 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PERF = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/tools/perf')
+sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
+import kernel_identity
+
+PERF = Path('/usr/bin/perf')
 EVENTS = ('cycles:k', 'instructions:k', 'cache-references:k', 'cache-misses:k',
           'branches:k', 'branch-misses:k', 'task-clock', 'context-switches',
           'cpu-migrations', 'page-faults')
-PROFILES = {'mutex-throughput': ('cacheline', 1, 256),
-            'mutex-locality': ('cacheline', 16, 256)}
+# Historical CLI aliases remain readable; new campaigns use explicit payload names.
+PROFILES = {'mutex-throughput': ('mutex', 100, 1),
+            'mutex-locality': ('mutex', 100, 16)}
+PROFILES.update({f'{kind}-c{lines:02d}-w{percent:03d}': (kind, percent, lines)
+    for kind in ('mutex', 'rwlock', 'rwsem')
+    for lines in (1, 16) for percent in ((100,) if kind == 'mutex' else (1, 20))})
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
@@ -422,6 +429,7 @@ def profiled_session(runner, args, perf, perf_sha):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
+    kernel_identity.benchmark_arguments(p)
     p.add_argument('--mode', choices=('stat', 'record', 'batch'), required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--source-root', type=Path, default=ROOT)
@@ -429,8 +437,10 @@ def parser():
     p.add_argument('--perf', type=Path, default=PERF)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
                    default=['mutex-throughput', 'mutex-locality'])
-    p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
-    p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
+    p.add_argument('--threads', nargs='+', type=int, choices=range(1, 61), default=[16, 36, 60])
+    p.add_argument('--cpus', nargs='+', type=int,
+                   help='ordered cohort CPUs; defaults to contiguous placement')
+    p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--mutex-batch-limit', type=int, default=1024)
     p.add_argument('--mutex-numa-boundary', type=int, default=1024)
@@ -447,16 +457,23 @@ def selected_backends(args):
 
 def runner_arguments(args, profile):
     selected_mutex_policy(args)
-    workload, lines, post = PROFILES[profile]
-    return ['--output', str(args.output.resolve() / profile), '--lock-kind', 'mutex',
-        '--workloads', workload, '--cachelines', str(lines), '--write-percent', '100',
-        '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
+    kind, percent, lines = PROFILES[profile]
+    cpus = args.cpus if args.cpus is not None else list(range(max(args.threads)))
+    require(len(cpus) >= max(args.threads) and len(cpus) == len(set(cpus)) and
+            all(0 <= cpu < 63 for cpu in cpus), 'invalid worker CPU list')
+    require(args.mode != 'batch' or kind == 'mutex', 'batch observations require mutex')
+    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 1024) or
+            kind == 'mutex', 'nondefault mutex policy requires mutex profiles')
+    return ['--output', str(args.output.resolve() / profile), '--lock-kind', kind,
+        '--workloads', 'cacheline', '--cachelines', str(lines), '--write-percent', str(percent),
+        '--threads', *map(str, args.threads), '--cpus', *map(str, cpus),
         '--collector-cpu', '63', '--backends', *selected_backends(args), '--repeats', '1',
-        '--duration-ms', '2000', '--post-work-rounds', str(post),
+        '--duration-ms', '2000', '--post-work-rounds', '256',
         '--mutex-batch-limit', str(args.mutex_batch_limit),
         '--mutex-numa-boundary', str(args.mutex_numa_boundary),
-        '--kernel-source', '/root/linux-6.1.159-kdclobber2',
-        '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
+        '--kernel-variant', args.kernel_variant,
+        '--kernel-source', str(args.kernel_source),
+        '--kernel-baseline', str(args.kernel_baseline)]
 
 
 def main():
@@ -469,13 +486,18 @@ def main():
     require(re.fullmatch(r'[0-9a-f]{40}', args.source_commit), 'record a full source commit')
     require(all(re.fullmatch(r'[A-Za-z0-9_:./=-]+', event) for event in [*args.events, args.record_event]),
             'unsupported event syntax')
+    kernel_identity.benchmark_profile(args)
+    commands = {profile: runner_arguments(args, profile) for profile in args.profiles}
     if args.dry_run:
-        print(json.dumps({profile: runner_arguments(args, profile) for profile in args.profiles}, indent=2))
+        print(json.dumps(commands, indent=2))
         return 0
-    require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
+    require(os.geteuid() == 0 and
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-            os.environ.get('KDLOCK_SNAPSHOT_TAG') == 'before-mutex-kdonly-20261017T140354Z',
-            'confirmed recovery guest required')
+            bool(os.environ.get('KDLOCK_SNAPSHOT_TAG')), 'confirmed recovery guest required')
+    kernel_identity.benchmark_profile(args, release=os.uname().release)
+    identity = kernel_identity.check(args.kernel_source, args.kernel_baseline, variant=args.kernel_variant)
+    require(identity.get('schema') == 2 and identity.get('runtime_policy_verified') is True,
+            'verified Linux 7 build and runtime policy required')
     root, out = args.source_root.resolve(), args.output.resolve()
     require(str(root).startswith('/root/') and not out.exists() and not out.is_relative_to(root),
             'use the guest checkout and a new external evidence directory')
@@ -488,6 +510,7 @@ def main():
         fcntl.flock(owner, fcntl.LOCK_EX | fcntl.LOCK_NB)
         runner.idle()
         out.mkdir(parents=True)
+        save(out / 'kernel-identity.json', identity)
         perf, tool_sha, events = None, None, []
         if args.mode != 'batch':
             perf = out / 'tools/perf'
