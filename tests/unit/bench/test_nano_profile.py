@@ -85,7 +85,7 @@ class NanoProfileTests(unittest.TestCase):
                  workers=[dict(active_started_ns=1_000_000_000, kernel_finished_ns=2_100_000_000)])
         def line(comm, timestamp, period, address, symbol='func', dso='kernel'):
             return f'{comm} 10/11 [000] {timestamp}: {period} cycles:k: {address:x} {symbol} ({dso})'
-        text = '\n'.join([line('python3', '1.1', 10, 0x10),
+        text = '\n'.join([line('Thread-1 (worke', '1.1', 10, 0x10),
             line('rb_worker', '0.9', 20, 0x10), line('rb_worker', '1.2', 30, 0x1001, '[unknown]', '[unknown]'),
             line('rb_worker', '1.3', 40, 0x20, '[unknown]', '[unknown]'),
             line('rb_worker', '1.4', 50, 0x30),

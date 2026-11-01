@@ -61,3 +61,13 @@ reader locality, cancellation ordering and exact ownership/retirement records.
 No fairness or oversubscription redesign is included. Promotion requires a
 separate review of every measured regression; previous one-time exceptions do
 not automatically apply to this candidate.
+
+## Initial check and profiler correction
+
+At `925a15677ba5abaa78b1e9c1a9d3bf6d5a98fdf6`, all four basic lock checks
+returned JIT bodies and drained. The basic unit programs and 21 focused profiler
+assertions passed. The pilot then exposed a parser assumption: a thread can be
+sampled before its worker-name setup, with spaces in its name. Accept the full
+name before the numeric PID/TID fields and retain it in the non-worker bucket.
+The pilot failure and raw samples remain separate from successful diagnostics;
+no scored measurement had started. This correction changes observation only.

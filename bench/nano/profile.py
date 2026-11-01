@@ -197,7 +197,7 @@ def parse_stat(text, events, allow_multiplex=False):
                 events=rows, scope='Measured client and inherited threads, including client startup/collection; preparation and warmup excluded')
 
 
-SAMPLE = re.compile(r'^\s*(\S+)\s+(\d+)/(\d+)\s+\[(\d+)\]\s+'
+SAMPLE = re.compile(r'^\s*(\S(?:.*?\S)?)\s+(\d+)/(\d+)\s+\[(\d+)\]\s+'
                     r'(\d+(?:\.\d+)?):\s+(\d+)\s+(\S+):\s+'
                     r'([0-9a-fA-F]+)\s+(.*?)\s+\(([^)]*)\)\s*$')
 
