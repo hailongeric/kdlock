@@ -1,0 +1,11 @@
+{
+  "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/master-kd-mm-20261101.tar.gz",
+  "sha256": "0f083d105c9ee1d0f51138885bf1ca97e4c971d466d9341be1ff60a0af7518d0",
+  "size": 11721458,
+  "inputs": [
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101-controller-logs/kd"
+  ],
+  "local": "/tmp/kdlock-master-followthrough-r3-20261101/kd-mm.tar.gz",
+  "retained_path": "bench/results/10.176.26.71/raw/bench/master-native-20261101/kd-mm.tar.gz"
+}

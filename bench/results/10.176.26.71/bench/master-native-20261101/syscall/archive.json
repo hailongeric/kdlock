@@ -1,0 +1,11 @@
+{
+  "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/master-syscall-20261101.tar.gz",
+  "sha256": "8fab1e08910257728f4b1d5eada9c6c76847b331e6c34760c2b94bef3db1a472",
+  "size": 14351861,
+  "inputs": [
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/syscall-functional",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/syscall-measure"
+  ],
+  "local": "/tmp/kdlock-master-followthrough-r3-20261101/syscall.tar.gz",
+  "retained_path": "bench/results/10.176.26.71/raw/bench/master-native-20261101/syscall.tar.gz"
+}

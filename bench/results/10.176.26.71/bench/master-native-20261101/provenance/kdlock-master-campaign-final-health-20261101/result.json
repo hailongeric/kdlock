@@ -1,0 +1,11 @@
+{
+  "idle": true,
+  "release": "7.0.0-38-kdlock1",
+  "boot_id": "3deecc38-d39f-4966-b1ff-9abecda3f029",
+  "source_bound": false,
+  "free_bytes": {
+    "/": 6527135744,
+    "/mnt/kdlock-builds": 37797875712,
+    "/mnt/kdlock-builds2": 55020310528
+  }
+}

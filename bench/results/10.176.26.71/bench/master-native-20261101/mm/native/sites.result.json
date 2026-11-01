@@ -1,0 +1,282 @@
+{
+  "adapter": "kd_mmap_write_lock_killable",
+  "captured": true,
+  "chains": {
+    "kd": {
+      "adapter_call": {
+        "acquire": "kd_mmap_down_write_killable",
+        "call_address": "0xffffffff814f42e6",
+        "call_bytes": "e8e52f0000",
+        "call_line": "ffffffff814f42e6:\te8 e5 2f 00 00       \tcall   ffffffff814f72d0 <kd_mmap_down_write_killable>",
+        "function_address": "0xffffffff814f42c0",
+        "next_line": "ffffffff814f42eb:\tc9                   \tleave",
+        "return_address": "0xffffffff814f42eb",
+        "return_offset": 43,
+        "target_address": "0xffffffff814f72d0"
+      },
+      "adapter_return": 43,
+      "edges": [
+        {
+          "caller": "kd_mmap_down_write_killable",
+          "instructions": [
+            {
+              "acquire": "kd_mmap_mutex_local_lock_signal",
+              "call_address": "0xffffffff814f7456",
+              "call_bytes": "e815efffff",
+              "call_line": "ffffffff814f7456:\te8 15 ef ff ff       \tcall   ffffffff814f6370 <kd_mmap_mutex_local_lock_signal>",
+              "function_address": "0xffffffff814f72d0",
+              "next_line": "ffffffff814f745b:\t41 89 c4             \tmov    %eax,%r12d",
+              "return_address": "0xffffffff814f745b",
+              "return_offset": 395,
+              "target_address": "0xffffffff814f6370"
+            },
+            {
+              "acquire": "kd_mmap_mutex_local_lock_signal",
+              "call_address": "0xffffffff814f74f7",
+              "call_bytes": "e874eeffff",
+              "call_line": "ffffffff814f74f7:\te8 74 ee ff ff       \tcall   ffffffff814f6370 <kd_mmap_mutex_local_lock_signal>",
+              "function_address": "0xffffffff814f72d0",
+              "next_line": "ffffffff814f74fc:\t41 89 c4             \tmov    %eax,%r12d",
+              "return_address": "0xffffffff814f74fc",
+              "return_offset": 556,
+              "target_address": "0xffffffff814f6370"
+            }
+          ],
+          "kind": "call",
+          "target": "kd_mmap_mutex_local_lock_signal"
+        },
+        {
+          "caller": "kd_mmap_mutex_local_lock_signal",
+          "instructions": [
+            {
+              "acquire": "kd_mmap_local_lock_slow_signal",
+              "call_address": "0xffffffff814f63c1",
+              "call_bytes": "e89aefffff",
+              "call_line": "ffffffff814f63c1:\te8 9a ef ff ff       \tcall   ffffffff814f5360 <kd_mmap_local_lock_slow_signal>",
+              "function_address": "0xffffffff814f6370",
+              "next_line": "ffffffff814f63c6:\t5b                   \tpop    %rbx",
+              "return_address": "0xffffffff814f63c6",
+              "return_offset": 86,
+              "target_address": "0xffffffff814f5360"
+            }
+          ],
+          "kind": "call",
+          "target": "kd_mmap_local_lock_slow_signal"
+        }
+      ],
+      "instructions": [
+        {
+          "acquire": "schedule",
+          "call_address": "0xffffffff814f5623",
+          "call_bytes": "e858d91f01",
+          "call_line": "ffffffff814f5623:\te8 58 d9 1f 01       \tcall   ffffffff826f2f80 <schedule>",
+          "function_address": "0xffffffff814f5360",
+          "next_line": "ffffffff814f5628:\t65 ff 05 01 5a f1 02 \tincl   %gs:0x2f15a01(%rip)        # ffffffff8440b030 <__preempt_count>",
+          "return_address": "0xffffffff814f5628",
+          "return_offset": 712,
+          "target_address": "0xffffffff826f2f80"
+        },
+        {
+          "acquire": "schedule",
+          "call_address": "0xffffffff814f5738",
+          "call_bytes": "e843d81f01",
+          "call_line": "ffffffff814f5738:\te8 43 d8 1f 01       \tcall   ffffffff826f2f80 <schedule>",
+          "function_address": "0xffffffff814f5360",
+          "next_line": "ffffffff814f573d:\t65 ff 05 ec 58 f1 02 \tincl   %gs:0x2f158ec(%rip)        # ffffffff8440b030 <__preempt_count>",
+          "return_address": "0xffffffff814f573d",
+          "return_offset": 989,
+          "target_address": "0xffffffff826f2f80"
+        },
+        {
+          "acquire": "schedule",
+          "call_address": "0xffffffff814f592e",
+          "call_bytes": "e84dd61f01",
+          "call_line": "ffffffff814f592e:\te8 4d d6 1f 01       \tcall   ffffffff826f2f80 <schedule>",
+          "function_address": "0xffffffff814f5360",
+          "next_line": "ffffffff814f5933:\t65 ff 05 f6 56 f1 02 \tincl   %gs:0x2f156f6(%rip)        # ffffffff8440b030 <__preempt_count>",
+          "return_address": "0xffffffff814f5933",
+          "return_offset": 1491,
+          "target_address": "0xffffffff826f2f80"
+        }
+      ],
+      "intermediate": [
+        {
+          "return_offsets": [
+            86
+          ],
+          "symbol": "kd_mmap_mutex_local_lock_signal"
+        },
+        {
+          "return_offsets": [
+            395,
+            556
+          ],
+          "symbol": "kd_mmap_down_write_killable"
+        }
+      ],
+      "shape": "local-signal-gate-v1",
+      "wait_returns": [
+        712,
+        989,
+        1491
+      ],
+      "waiter": "kd_mmap_local_lock_slow_signal",
+      "waiter_argument": "kd_mmap_local_lock_slow_signal|kd_mmap_mutex_local_lock_signal@86|kd_mmap_down_write_killable@395:556"
+    },
+    "native": {
+      "adapter_return": 60,
+      "instructions": [
+        {
+          "acquire": "down_write_killable",
+          "call_address": "0xffffffff814f42f7",
+          "call_bytes": "e8043d2001",
+          "call_line": "ffffffff814f42f7:\te8 04 3d 20 01       \tcall   ffffffff826f8000 <down_write_killable>",
+          "function_address": "0xffffffff814f42c0",
+          "next_line": "ffffffff814f42fc:\tc9                   \tleave",
+          "return_address": "0xffffffff814f42fc",
+          "return_offset": 60,
+          "target_address": "0xffffffff826f8000"
+        }
+      ],
+      "wait_returns": [
+        60,
+        60
+      ],
+      "waiter": "kd_mmap_write_lock_killable"
+    }
+  },
+  "kernel_binding": {
+    "build_files": {
+      ".config": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd",
+      "Makefile": "470bf65feb908c7ee8a6e270ef73c1c83bd19b10b25ebada3667ab696dda1274",
+      "Module.symvers": "e28cfc4bb5d25918157353fa0aeca12b741018c0f988d4f0ada2159f508dac6b",
+      "System.map": "ac3f96c9ae4306786032414e68492e4a5c3351551d78391e058634e5f6907ed4",
+      "arch/x86/boot/bzImage": "e2ea7faadbd7a5e77aff447b1d4020b3b098f4ece6fcaa791931464cf8035443",
+      "include/config/auto.conf": "a8ef39aaecf8d1145e467dcbdb21be293615bfcfc59ec74b060409da008a038a",
+      "include/config/kernel.release": "da4b128d2bad817c98773b41aba9d7092960585b114653e4cb955cbe0daa8076",
+      "include/generated/autoconf.h": "05def7b70cc1b49de72bee3f836044bdbfed4b083fabf097b89adda2ad0148f9",
+      "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+      "include/generated/utsrelease.h": "a5e72a81697d05ffb03357727d569c4ad553d4a2afc4978576dd838d6370d2b2",
+      "include/generated/utsversion.h": "8163fdf80c8422ab62d3c03f49a6dd720df36e5ae536639bc3f92fdcafa06122",
+      "vmlinux": "e8c0b6bb7fb9434432ba96a5b96eac27592a2bce50d4607dff5aea18be4c71c0"
+    },
+    "build_id": "a3bd8cda22af4c668b952472822188c6f3708440",
+    "configuration_sha256": "4d34bb5190ad79ed4a16fabbe4db985599b4f772ecd43de6b82f52458fc1e3fd",
+    "kernel_mmap_backend": "native",
+    "manifest_sha256": "f75daa01b5972ac133bec69a2e2451599e30f693ff3cbad78d29dcbe7718ad40",
+    "private_backing_locks": false,
+    "release": "7.0.0-38-kdscope4",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope4 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+      "mmap_mode": "off",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "source_files": {
+      "Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+      "arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+      "arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+      "debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+      "fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+      "fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+      "fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+      "fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+      "include/asm-generic/vmlinux.lds.h": "6a499367d4dcff8d07ebd1cb8d41462681a7ce7227ff95786a662160daa84ee1",
+      "include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+      "include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+      "include/linux/kd_api/kd_mutex_types.h": "e85a5f29d556c6cf8fd89ff769d897af2b499b43bc22f52b2011677b2e4125b8",
+      "include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+      "include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+      "include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+      "include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+      "include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+      "include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+      "include/linux/kd_mmap_lock.h": "1b33f4883bb4eec01dff3e745817a0a6c8ac740be4c50a0e3e3c8ea789de16ae",
+      "include/linux/kd_mmap_lock_types.h": "2bfc75888de71276c8a09d080e19f11cbbaddfa4f3de31088db44c1631d20f4a",
+      "include/linux/kd_mmap_mutex_types.h": "71735df505a3cd7157db490b6460bf3163ec3e14b1e3dcdc5fe33c7aa1ba028a",
+      "include/linux/kd_mmap_rwsem_types.h": "96d14fadaa6a4ebaf71510c5bf887c827bdaf91466606625a6ef3d3beba6e633",
+      "include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+      "include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+      "include/linux/mmap_lock.h": "4c10da7d1cf32d7ffc1f052d93c15403774ecb6a2b4dfd83cabb358d0bcea759",
+      "include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+      "include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+      "init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+      "io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+      "kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+      "kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+      "kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+      "kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+      "kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+      "kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+      "kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+      "kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+      "kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+      "kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+      "kernel/locking/kd_mmap/Makefile": "556f42ea2a3335457a154df340b9211a5ea4bde6ef5eef137cac5a08ae2bcc84",
+      "kernel/locking/kd_mmap/adapter.c": "6f1d12d7b9525e759696cff89588247d2ce8d46e0bcc7959d4f279003ae5021e",
+      "kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+      "kernel/locking/kd_mmap/kd_mmap_mutex.h": "dee9e01d9d3e588c99c7f56e13dec196dc28cb390d4817445183b6be082f5c6f",
+      "kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "77573ce49ae61b0d59a22ab1645271c398a081a9bc0a2fb9f7ffd21e3621d757",
+      "kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "71df7a2cfb18e480b23c259cd44013cf94ae6b26558069ae874b4200b6bb7363",
+      "kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+      "kernel/locking/kd_mmap/kd_mmap_regs.h": "727d65f9da02fa6dacc8e1150331f7bcd5de003f80350aafc93a62e43f5ef4b1",
+      "kernel/locking/kd_mmap/kd_mmap_rwsem.c": "a73f249a711967248b7b9ca2a7e079822cc93b58bce89b8f6aa5e57e8848504e",
+      "kernel/locking/kd_mmap/kd_mmap_rwsem.h": "0fbc2da5827ab7039716a780f2fb85a47dda71a07cf3e647a22651f93d9acd6d",
+      "kernel/locking/kd_mmap/pool.c": "0fd0073fe1e24557432e43bde8ac9239a9c4c6d89b4ff8278c1f924a1229de95",
+      "kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+      "kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+      "kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+      "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+      "mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+      "mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+      "mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+      "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+      "mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+      "mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+      "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+    },
+    "variant": "kdscope4-native"
+  },
+  "outputs": {
+    "__vm_munmap.asm": "086c7ad8b52a1d61f1580f02e48a5886f2fd373b94f08a22902952e4d18af848",
+    "down_write_killable.asm": "6157602b9b6930d31c9c3af9873188641c767e496d53a263fea2d5296eee784e",
+    "in_sched_functions.asm": "a59a0bc363c4fc414a6d4015f4ac4f440834cc469d9f06b988f4275235ee15fb",
+    "kd_mmap_down_write_killable.asm": "5dac5dadd06069a8629de51bbebbb585947d5672e17cbb044b41ca09c6089741",
+    "kd_mmap_local_lock_slow_signal.asm": "4d0804c362ffd307386fcadccd686d28810cb8108bd117fca0b3a1d4ef7c76a3",
+    "kd_mmap_local_schedule.asm": "d3eadc9df04b7c02b0c5f1664623dbfd761ca605bfa9ae292245a233c4cdac10",
+    "kd_mmap_mutex_local_lock_signal.asm": "6de1c14bf3c463882ee10bf55863e8de1475dd252839c8053bf1c1cb9d8935cf",
+    "kd_mmap_write_lock_killable.asm": "6fe45192a6181e6f0cb76e3b8d4ca6d00f7b0c5b655d3940685993d935641194",
+    "rwsem_down_write_slowpath.asm": "903821bd177fb1344721b385ded7572773300060f0c119dad83b7ef86984a466",
+    "stack_trace_consume_entry_nosched.asm": "201ea4abaa75cb6fc87dcbe7c43a5d66afe5cb2bcc67ee89453a575972b5402c",
+    "stack_trace_save_tsk.asm": "62599a44c36e5a08c3ecbac56ca40955b0089c7af7cff7da8db030cc92825ac4",
+    "vm_mmap_pgoff.asm": "89c7525a74187e856f4f78fc71065bf349291eaf23ae5fab18b45ce13ec1b207"
+  },
+  "schema": 1,
+  "scope": "Exact writer-call return PCs only; no live contention/teardown pass.",
+  "script_sha256": "396351982c878d5fa48705e8eae4e0b4061fab3151eb484174e68df0f1cf5412",
+  "sites": {
+    "__vm_munmap": {
+      "acquire": "kd_mmap_write_lock_killable",
+      "call_address": "0xffffffff81818443",
+      "call_bytes": "e878becdff",
+      "call_line": "ffffffff81818443:\te8 78 be cd ff       \tcall   ffffffff814f42c0 <kd_mmap_write_lock_killable>",
+      "function_address": "0xffffffff818183c0",
+      "next_line": "ffffffff81818448:\t85 c0                \ttest   %eax,%eax",
+      "return_address": "0xffffffff81818448",
+      "return_offset": 136,
+      "target_address": "0xffffffff814f42c0"
+    },
+    "vm_mmap_pgoff": {
+      "acquire": "kd_mmap_write_lock_killable",
+      "call_address": "0xffffffff817b33c2",
+      "call_bytes": "e8f90ed4ff",
+      "call_line": "ffffffff817b33c2:\te8 f9 0e d4 ff       \tcall   ffffffff814f42c0 <kd_mmap_write_lock_killable>",
+      "function_address": "0xffffffff817b32e0",
+      "next_line": "ffffffff817b33c7:\t85 c0                \ttest   %eax,%eax",
+      "return_address": "0xffffffff817b33c7",
+      "return_offset": 231,
+      "target_address": "0xffffffff814f42c0"
+    }
+  },
+  "vmlinux_sha256": "e8c0b6bb7fb9434432ba96a5b96eac27592a2bce50d4607dff5aea18be4c71c0"
+}

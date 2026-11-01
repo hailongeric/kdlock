@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "state": "COMPLETE",
+  "completed": true,
+  "passed": true,
+  "drained": true,
+  "final_idle": true,
+  "drain_unknown": false,
+  "arm": "kd",
+  "step": "sites",
+  "boot_id": "fb973f91-6b5f-485b-9f96-0b0c5a718c0f",
+  "kernel": {
+    "variant": "kdscope4-kd",
+    "release": "7.0.0-38-kdscope4",
+    "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+    "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope4-kd-20261101",
+    "kernel_project_commit": "9f9fb90e9de861fddeb498e068c0c31122919337",
+    "provider_comparison_commit": "1f10e050b204eb3ee747b5682211343213e3fb16"
+  },
+  "config_sha256": "25c8b5db692cdebfb838bee4c00b0ba362783a946e362ef1850c56c6e6a955e7",
+  "bindings_sha256": "50ba80f8d747fe5a0b9e4c48b9540771d3fe090117016e93b1df783eec493660",
+  "controller_sha256": "6f408c39e3005783a1c6f183446527da65314c151630a2995d6a18e2008f2bd7",
+  "harness_commit": "e97e218fb087093b31a9c65944622c32db09784e",
+  "harness_manifest_sha256": "26adca6613ac01941a4c5458a1a9aa7d1af2006da2e6db1733211d4e6c9bf599",
+  "bundle_manifest_sha256": "5bb0fcbd453f307ae159746da133163247538acf7d3f152fa05ceeb53a633957",
+  "pool_activation_sha256": "b1c758c635abc72b16a113ee106251c636f2d48dc10d850d1e43d6891336be69",
+  "host_reference_sha256": "5f3d3af9c171dd6dacdb5b5a37d757fd792d82fad9cdd884da8e5b80c46950bf",
+  "host_state_sha256": "3a0a264491b27e362b96c0d2592ac9e0e81023bbc5b5b1cc08603cb167af4502",
+  "pool_verification_sha256": "c50d6107e83efee0aeae11e83ec379a2498fa5c581a55f3c3b7843b9c0161d77",
+  "host_admission": {
+    "strict_host_gate": "PASS",
+    "exploratory": false,
+    "task_set_unchanged": true,
+    "additional_workers": [],
+    "retired_workers": [],
+    "original_threads": 131,
+    "observed_threads": 131,
+    "fixed_frequency_khz": 2000000,
+    "performance_accepted": false,
+    "host_endpoint": "PENDING"
+  },
+  "eligibility_policy": "mmap-functional-held-writer-v1",
+  "application": {
+    "inputs": {
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+      "sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0"
+    },
+    "preparation": {
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/result.json",
+      "sha256": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4"
+    },
+    "upstream_commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f",
+    "binary_sha256": {
+      "threads": "e6a8102ff408e0a3909248fef301a41b0b0bd07861662002e4e13833534f59c6",
+      "processes": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733"
+    }
+  },
+  "prerequisite_owners": {},
+  "prerequisite_bindings": {
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/result.json": "512fbd6f6855cdb109f33641d17107b629cd47a0ceea2e553c5efab6b1c4dac4",
+    "/tmp/kdlock-master-mm-config-r2-20261101.json": "25c8b5db692cdebfb838bee4c00b0ba362783a946e362ef1850c56c6e6a955e7",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/config.json": "25c8b5db692cdebfb838bee4c00b0ba362783a946e362ef1850c56c6e6a955e7",
+    "/tmp/kdlock-master-mm-kd-sites-r1-20261101.bindings.json": "50ba80f8d747fe5a0b9e4c48b9540771d3fe090117016e93b1df783eec493660",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/bindings.json": "50ba80f8d747fe5a0b9e4c48b9540771d3fe090117016e93b1df783eec493660",
+    "/tmp/kdlock-master-mm-step-20261101.py": "6f408c39e3005783a1c6f183446527da65314c151630a2995d6a18e2008f2bd7",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/controller.py": "6f408c39e3005783a1c6f183446527da65314c151630a2995d6a18e2008f2bd7",
+    "/mnt/kdlock-builds2/kdlock-master-mm-e97e218f-20261101.manifest.json": "26adca6613ac01941a4c5458a1a9aa7d1af2006da2e6db1733211d4e6c9bf599",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/harness-manifest.json": "26adca6613ac01941a4c5458a1a9aa7d1af2006da2e6db1733211d4e6c9bf599",
+    "/tmp/kdlock-master-mm-kd-sites-r1-20261101.host.json": "3a0a264491b27e362b96c0d2592ac9e0e81023bbc5b5b1cc08603cb167af4502",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/host-before.json": "3a0a264491b27e362b96c0d2592ac9e0e81023bbc5b5b1cc08603cb167af4502",
+    "/tmp/kdlock-master-reference-20261101.json": "5f3d3af9c171dd6dacdb5b5a37d757fd792d82fad9cdd884da8e5b80c46950bf",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/host-reference.json": "5f3d3af9c171dd6dacdb5b5a37d757fd792d82fad9cdd884da8e5b80c46950bf",
+    "/tmp/kdlock-master-pool-activate-20261101.result.json": "b1c758c635abc72b16a113ee106251c636f2d48dc10d850d1e43d6891336be69",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/pool-activation.json": "b1c758c635abc72b16a113ee106251c636f2d48dc10d850d1e43d6891336be69",
+    "/tmp/kdlock-master-mm-kd-sites-r1-20261101.pool.json": "c50d6107e83efee0aeae11e83ec379a2498fa5c581a55f3c3b7843b9c0161d77",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/inputs/pool-verification.json": "c50d6107e83efee0aeae11e83ec379a2498fa5c581a55f3c3b7843b9c0161d77"
+  },
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "bench/mmap_writer/sites.py",
+    "--mode",
+    "kd",
+    "--boot-id",
+    "fb973f91-6b5f-485b-9f96-0b0c5a718c0f",
+    "--kernel-variant",
+    "kdscope4-kd",
+    "--kernel-source",
+    "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/linux70-kdscope4-kd-20261101",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/run"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites",
+  "started": 1793518464.3843422,
+  "child_started": true,
+  "child_returncode": 0,
+  "performance_accepted": false,
+  "pid": 4267,
+  "deadline_seconds": 3600,
+  "child_finished": 1793518472.200491,
+  "remaining_processes": [],
+  "child_log_sha256": "9b95bb7433a52eeeac1e3db8243e4616152de98b7801c71e49edfdd0edc025ad",
+  "result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/master-native-mm-20261101/kd/sites/run/writer-sites.json",
+    "sha256": "f4e6d2621a3e357f224d92daf149457ef60e20d5067baa5ca305210db020c077"
+  },
+  "finished": 1793518473.0188758
+}

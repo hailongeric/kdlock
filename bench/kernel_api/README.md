@@ -48,3 +48,8 @@ campaign. It uses the same original syscall bodies and binding protocol as
 backend. Both syscall arms run on this single image with MM mode off; object
 selection still distinguishes Native and KD syscall locks. Its schema-2 bundle
 and exact build path are verified independently from the older scope1 image.
+
+The [fresh master campaign](../results/10.176.26.71/bench/master-native-20261101/README.md)
+records all 126 one-round Native/KD points and six functional arms on scope4.
+Setfd and F_GETPIPE_SZ have positive geometric means; FIONREAD has a negative
+geometric mean. All points and identity limits are retained in that report.

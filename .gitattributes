@@ -79,3 +79,6 @@ bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/pro
 bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/unit.log -whitespace
 # Preserve unified-API compiler, disassembly and kernel diagnostics verbatim.
 bench/results/10.176.26.71/tests/mutex-api-20261020/**/*.log -whitespace
+
+# Retain exact SSH reboot disconnect receipts for the master campaign.
+bench/results/10.176.26.71/bench/master-native-20261101/provenance/kernel-actions/*/action.stderr whitespace=cr-at-eol

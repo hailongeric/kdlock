@@ -1,0 +1,63 @@
+{
+  "completed": true,
+  "controller": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+  "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+  "action": "arm",
+  "boot_id": "7bbc2f59-be06-4e21-a61b-fa7bb74e0196",
+  "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+  "guest_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/kd-arm",
+  "uploads": [
+    {
+      "local": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+      "path": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+      "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+    },
+    {
+      "local": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "path": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+    },
+    {
+      "local": "/tmp/kdlock-master-action-kd-arm-20261101/host.json",
+      "path": "/tmp/kdlock-master-action-kd-arm-20261101.host.json",
+      "sha256": "199665fff151de962a9c8f559e89835231947a807e9475dc53725098b0baf640"
+    }
+  ],
+  "started": 1793518398.829794,
+  "phase": "readback",
+  "child_pid": 3451927,
+  "upload-0_returncode": 0,
+  "upload-1_returncode": 0,
+  "host-verify_returncode": 0,
+  "read-pool.json_returncode": 0,
+  "read-host.json_returncode": 0,
+  "upload-2_returncode": 0,
+  "argv": [
+    "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+    "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+    "arm",
+    "--config",
+    "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+    "--config-sha256",
+    "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+    "--boot-id",
+    "7bbc2f59-be06-4e21-a61b-fa7bb74e0196",
+    "--host-state",
+    "/tmp/kdlock-master-action-kd-arm-20261101.host.json",
+    "--host-state-sha256",
+    "199665fff151de962a9c8f559e89835231947a807e9475dc53725098b0baf640",
+    "--output",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/kd-arm",
+    "--prior",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+    "--prior-sha256",
+    "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7",
+    "--mode",
+    "kd"
+  ],
+  "action_returncode": 0,
+  "readback_returncode": 0,
+  "result_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/kd-arm/result.json",
+  "result_sha256": "d449ac1f2edb182f6fdd5931076d77d54b9a8830b77b7a9ee1159c1f9c606e0e",
+  "finished": 1793518410.2407525
+}

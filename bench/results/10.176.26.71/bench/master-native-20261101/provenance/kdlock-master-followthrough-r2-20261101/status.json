@@ -1,0 +1,221 @@
+{
+  "completed": false,
+  "started": 1793509141.3492682,
+  "actions": [
+    {
+      "label": "native-arm",
+      "status": "/tmp/kdlock-master-action-native-arm-20261101/status.json",
+      "completed": true,
+      "controller": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+      "action": "arm",
+      "boot_id": "e5fdef36-89c7-416a-97d6-72ff85dbee6a",
+      "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+      "guest_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-arm",
+      "uploads": [
+        {
+          "local": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "path": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+        },
+        {
+          "local": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "path": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+        },
+        {
+          "local": "/tmp/kdlock-master-action-native-arm-20261101/host.json",
+          "path": "/tmp/kdlock-master-action-native-arm-20261101.host.json",
+          "sha256": "0b9af2ba7e2c72f16a45e3e18d66272bbcef10ffc2280cccd01fe75535dba0a1"
+        }
+      ],
+      "started": 1793512985.1379542,
+      "phase": "readback",
+      "child_pid": 3445600,
+      "upload-0_returncode": 0,
+      "upload-1_returncode": 0,
+      "host-verify_returncode": 0,
+      "read-pool.json_returncode": 0,
+      "read-host.json_returncode": 0,
+      "upload-2_returncode": 0,
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+        "arm",
+        "--config",
+        "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+        "--config-sha256",
+        "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+        "--boot-id",
+        "e5fdef36-89c7-416a-97d6-72ff85dbee6a",
+        "--host-state",
+        "/tmp/kdlock-master-action-native-arm-20261101.host.json",
+        "--host-state-sha256",
+        "0b9af2ba7e2c72f16a45e3e18d66272bbcef10ffc2280cccd01fe75535dba0a1",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-arm",
+        "--prior",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reader-kernel-actions-r2-20261101/scope4-append/result.json",
+        "--prior-sha256",
+        "5eeed244fa7082a61d777fd87d4270cb903da7a5de1e8d659bb95fd2a3a94cc7",
+        "--mode",
+        "native"
+      ],
+      "action_returncode": 0,
+      "readback_returncode": 0,
+      "result_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-arm/result.json",
+      "result_sha256": "dfd106aa8090c384c84f1b60ca7e964ff323c5174e4411fa20599a33b6de5123",
+      "finished": 1793512999.774122
+    },
+    {
+      "label": "native-request",
+      "status": "/tmp/kdlock-master-action-native-request-20261101/status.json",
+      "completed": false,
+      "controller": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+      "action": "request",
+      "boot_id": "e5fdef36-89c7-416a-97d6-72ff85dbee6a",
+      "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+      "guest_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-request",
+      "uploads": [
+        {
+          "local": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "path": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+        },
+        {
+          "local": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "path": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+        },
+        {
+          "local": "/tmp/kdlock-master-action-native-request-20261101/host.json",
+          "path": "/tmp/kdlock-master-action-native-request-20261101.host.json",
+          "sha256": "3a0e0d8ee5ee24bb87e3fd11e18ccb008b51879495c579bec24e56bc55e9f7d3"
+        }
+      ],
+      "started": 1793512999.8647594,
+      "phase": "action",
+      "child_pid": 3445608,
+      "upload-0_returncode": 0,
+      "upload-1_returncode": 0,
+      "host-verify_returncode": 0,
+      "read-pool.json_returncode": 0,
+      "read-host.json_returncode": 0,
+      "upload-2_returncode": 0,
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+        "request",
+        "--config",
+        "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+        "--config-sha256",
+        "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+        "--boot-id",
+        "e5fdef36-89c7-416a-97d6-72ff85dbee6a",
+        "--host-state",
+        "/tmp/kdlock-master-action-native-request-20261101.host.json",
+        "--host-state-sha256",
+        "3a0e0d8ee5ee24bb87e3fd11e18ccb008b51879495c579bec24e56bc55e9f7d3",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-request",
+        "--prior",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-arm/result.json",
+        "--prior-sha256",
+        "dfd106aa8090c384c84f1b60ca7e964ff323c5174e4411fa20599a33b6de5123"
+      ],
+      "action_returncode": 255,
+      "transport_disconnected": true,
+      "reboot_action_invoked": true,
+      "completion_requires_readback": true,
+      "finished": 1793513006.5059566
+    },
+    {
+      "label": "native-capture",
+      "status": "/tmp/kdlock-master-action-native-capture-20261101/status.json",
+      "completed": true,
+      "controller": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+      "controller_sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf",
+      "action": "capture",
+      "boot_id": "7bbc2f59-be06-4e21-a61b-fa7bb74e0196",
+      "config_sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+      "guest_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-capture",
+      "uploads": [
+        {
+          "local": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "path": "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+          "sha256": "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4"
+        },
+        {
+          "local": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "path": "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+          "sha256": "544ef3df8d43df22a0422e7f85d50d017a4b469535c6410361444c006774cdcf"
+        },
+        {
+          "local": "/tmp/kdlock-master-action-native-capture-20261101/host.json",
+          "path": "/tmp/kdlock-master-action-native-capture-20261101.host.json",
+          "sha256": "40df3c7b2c55307684031cd4d8704c645b6999e738db22fc71eecb2438c599cf"
+        }
+      ],
+      "started": 1793513025.5582118,
+      "phase": "readback",
+      "child_pid": 3445652,
+      "upload-0_returncode": 0,
+      "upload-1_returncode": 0,
+      "host-verify_returncode": 0,
+      "read-pool.json_returncode": 0,
+      "read-host.json_returncode": 0,
+      "upload-2_returncode": 0,
+      "argv": [
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/tmp/kdlock-writer-queue-install-boot-20261031.py",
+        "capture",
+        "--config",
+        "/tmp/kdlock-reader-scope4-install-r2-20261101.json",
+        "--config-sha256",
+        "2a7940a7fb2100bd2a43efa99760192d3357e78338529440574e73b97c111ba4",
+        "--boot-id",
+        "7bbc2f59-be06-4e21-a61b-fa7bb74e0196",
+        "--host-state",
+        "/tmp/kdlock-master-action-native-capture-20261101.host.json",
+        "--host-state-sha256",
+        "40df3c7b2c55307684031cd4d8704c645b6999e738db22fc71eecb2438c599cf",
+        "--output",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-capture",
+        "--prior",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-request/result.json",
+        "--prior-sha256",
+        "c6a22621e948b1d6ddf385c7d3c5f28b0dd00f61b80d34356a2023e6e1f4eb83",
+        "--mode",
+        "native"
+      ],
+      "action_returncode": 0,
+      "readback_returncode": 0,
+      "result_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/master-actions-20261101/native-capture/result.json",
+      "result_sha256": "7ce9d6807c01ee8fd1a80a8f6de7875d9669dbf460f942fd1d8a119fbf7a7658",
+      "finished": 1793513045.007658
+    }
+  ],
+  "archives": [
+    {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/master-nano-20261101.tar.gz",
+      "sha256": "03094cbb0bab15325eac56fecf107f9a70dc298da57362e02217ed8fb094e425",
+      "size": 113757937,
+      "inputs": [
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/bench/master-native-20261101",
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/master-native-master-20261101"
+      ],
+      "local": "/tmp/kdlock-master-followthrough-r2-20261101/nano.tar.gz"
+    }
+  ],
+  "phase": "native-bind",
+  "child_pid": 3445655,
+  "source_preparation": {
+    "completed": true,
+    "recipe": "/mnt/kdlock-builds2/kdlock-master-recipe-e97e218f",
+    "compiled_kernel_recipe": "9f9fb90e9de861fddeb498e068c0c31122919337",
+    "provider_matches": true
+  },
+  "error": "AssertionError(('native-bind', 1))",
+  "finished": 1793513046.2910192
+}

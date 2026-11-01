@@ -1,0 +1,2102 @@
+[
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 1,
+    "whole_native_ops_s": 1916228.015563385,
+    "whole_kd_ops_s": 1916341.4125515197,
+    "whole_change_pct": 0.0059177189360326565,
+    "peak_native_ops_s": 1927447.3792000846,
+    "peak_kd_ops_s": 1927422.0427276897,
+    "peak_change_pct": -0.0013145091621313831
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 2,
+    "whole_native_ops_s": 3835159.203853734,
+    "whole_kd_ops_s": 3849644.186140449,
+    "whole_change_pct": 0.37768920445753196,
+    "peak_native_ops_s": 3856570.2951840814,
+    "peak_kd_ops_s": 3854895.5293853236,
+    "peak_change_pct": -0.043426300328275325
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 3,
+    "whole_native_ops_s": 5692076.755802736,
+    "whole_kd_ops_s": 5681219.941686233,
+    "whole_change_pct": -0.1907355536875932,
+    "peak_native_ops_s": 5727045.134434061,
+    "peak_kd_ops_s": 5715588.200758075,
+    "peak_change_pct": -0.2000496487639114
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 4,
+    "whole_native_ops_s": 2816678.1742961574,
+    "whole_kd_ops_s": 3150865.4030581526,
+    "whole_change_pct": 11.864586867312354,
+    "peak_native_ops_s": 2834743.899242513,
+    "peak_kd_ops_s": 3170971.2768860697,
+    "peak_change_pct": 11.860943689953851
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 5,
+    "whole_native_ops_s": 2810989.5413575806,
+    "whole_kd_ops_s": 2999309.176776516,
+    "whole_change_pct": 6.699407189113393,
+    "peak_native_ops_s": 2836455.2661100794,
+    "peak_kd_ops_s": 3020092.357097417,
+    "peak_change_pct": 6.4741754675785135
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 6,
+    "whole_native_ops_s": 3063667.652238236,
+    "whole_kd_ops_s": 2777958.974375718,
+    "whole_change_pct": -9.325707299020724,
+    "peak_native_ops_s": 3085298.6844818112,
+    "peak_kd_ops_s": 2797364.8905813615,
+    "peak_change_pct": -9.332444711063992
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 7,
+    "whole_native_ops_s": 2972148.0251635215,
+    "whole_kd_ops_s": 3266302.5074636424,
+    "whole_change_pct": 9.897033384935039,
+    "peak_native_ops_s": 3001165.220183355,
+    "peak_kd_ops_s": 3287009.934815796,
+    "peak_change_pct": 9.524457790930207
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 8,
+    "whole_native_ops_s": 3093349.798533196,
+    "whole_kd_ops_s": 3701120.6526864,
+    "whole_change_pct": 19.647660101078657,
+    "peak_native_ops_s": 3116082.4204032416,
+    "peak_kd_ops_s": 3723419.6682405225,
+    "peak_change_pct": 19.490410261956015
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 12,
+    "whole_native_ops_s": 2905663.0906551494,
+    "whole_kd_ops_s": 4490285.724764301,
+    "whole_change_pct": 54.535663105796004,
+    "peak_native_ops_s": 2924162.760604535,
+    "peak_kd_ops_s": 4519137.116190495,
+    "peak_change_pct": 54.54465042350167
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 16,
+    "whole_native_ops_s": 3002318.484597158,
+    "whole_kd_ops_s": 4607274.384588742,
+    "whole_change_pct": 53.45721675516819,
+    "peak_native_ops_s": 3044170.020212392,
+    "peak_kd_ops_s": 4639398.723850511,
+    "peak_change_pct": 52.40274666152911
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 20,
+    "whole_native_ops_s": 2728682.7179877707,
+    "whole_kd_ops_s": 4457896.693155117,
+    "whole_change_pct": 63.37174944408823,
+    "peak_native_ops_s": 2766498.5516042486,
+    "peak_kd_ops_s": 4490164.6999379825,
+    "peak_change_pct": 62.304972013602075
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 24,
+    "whole_native_ops_s": 2795103.948284561,
+    "whole_kd_ops_s": 4501242.754029924,
+    "whole_change_pct": 61.04026316418292,
+    "peak_native_ops_s": 2827223.3166942257,
+    "peak_kd_ops_s": 4531153.449950224,
+    "peak_change_pct": 60.268678572173954
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 28,
+    "whole_native_ops_s": 2784568.8921515583,
+    "whole_kd_ops_s": 4555318.997621976,
+    "whole_change_pct": 63.59153513713962,
+    "peak_native_ops_s": 2812580.347736152,
+    "peak_kd_ops_s": 4584980.721586292,
+    "peak_change_pct": 63.01687968760594
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 32,
+    "whole_native_ops_s": 2896471.554878039,
+    "whole_kd_ops_s": 4495957.234611648,
+    "whole_change_pct": 55.22186734545571,
+    "peak_native_ops_s": 2923147.045412299,
+    "peak_kd_ops_s": 4525187.146698919,
+    "peak_change_pct": 54.80532030713008
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 36,
+    "whole_native_ops_s": 2523215.6551106977,
+    "whole_kd_ops_s": 4300231.438968285,
+    "whole_change_pct": 70.42663120206531,
+    "peak_native_ops_s": 2560848.8774562865,
+    "peak_kd_ops_s": 4330481.539062679,
+    "peak_change_pct": 69.10336166982974
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 40,
+    "whole_native_ops_s": 2226571.0944650094,
+    "whole_kd_ops_s": 4137094.831676467,
+    "whole_change_pct": 85.80564716576049,
+    "peak_native_ops_s": 2277175.048836682,
+    "peak_kd_ops_s": 4164441.8434750587,
+    "peak_change_pct": 82.87754582602274
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 44,
+    "whole_native_ops_s": 2019172.3264771157,
+    "whole_kd_ops_s": 4343841.644224955,
+    "whole_change_pct": 115.12981270913758,
+    "peak_native_ops_s": 2090272.1765663573,
+    "peak_kd_ops_s": 4373290.402199218,
+    "peak_change_pct": 109.22109815302248
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 48,
+    "whole_native_ops_s": 1861043.8897778827,
+    "whole_kd_ops_s": 4340543.626547288,
+    "whole_change_pct": 133.2316637124198,
+    "peak_native_ops_s": 1909757.440925029,
+    "peak_kd_ops_s": 4371823.966407862,
+    "peak_change_pct": 128.9203787204663
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 52,
+    "whole_native_ops_s": 1722450.5821627532,
+    "whole_kd_ops_s": 4389937.202898438,
+    "whole_change_pct": 154.86578531538012,
+    "peak_native_ops_s": 1773520.827807153,
+    "peak_kd_ops_s": 4422745.081762392,
+    "peak_change_pct": 149.37655157006745
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 56,
+    "whole_native_ops_s": 1776370.5164968276,
+    "whole_kd_ops_s": 4322640.286136587,
+    "whole_change_pct": 143.34114116357023,
+    "peak_native_ops_s": 1879526.6063669878,
+    "peak_kd_ops_s": 4356200.024266202,
+    "peak_change_pct": 131.77112840591684
+  },
+  {
+    "workload": "mutex-c01-w100",
+    "workers": 60,
+    "whole_native_ops_s": 1767435.3180933192,
+    "whole_kd_ops_s": 4346978.233153131,
+    "whole_change_pct": 145.94836306895695,
+    "peak_native_ops_s": 1826635.8064609617,
+    "peak_kd_ops_s": 4385039.882375795,
+    "peak_change_pct": 140.06098352312745
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 1,
+    "whole_native_ops_s": 1916293.4068036368,
+    "whole_kd_ops_s": 1916836.0470143096,
+    "whole_change_pct": 0.028317177773828917,
+    "peak_native_ops_s": 1927070.3231760443,
+    "peak_kd_ops_s": 1927679.6016128822,
+    "peak_change_pct": 0.03161682422849754
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 2,
+    "whole_native_ops_s": 2133285.334413309,
+    "whole_kd_ops_s": 2789061.296041344,
+    "whole_change_pct": 30.740189840023646,
+    "peak_native_ops_s": 2136015.269629644,
+    "peak_kd_ops_s": 2806237.269837423,
+    "peak_change_pct": 31.377210160299374
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 3,
+    "whole_native_ops_s": 2151285.9363011364,
+    "whole_kd_ops_s": 1899410.6052144337,
+    "whole_change_pct": -11.708128930539585,
+    "peak_native_ops_s": 2164050.469573212,
+    "peak_kd_ops_s": 1911423.9081138421,
+    "peak_change_pct": -11.67378326020243
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 4,
+    "whole_native_ops_s": 2275972.491166762,
+    "whole_kd_ops_s": 2090804.953798472,
+    "whole_change_pct": -8.135754631786662,
+    "peak_native_ops_s": 2290320.129490766,
+    "peak_kd_ops_s": 2104500.4519935837,
+    "peak_change_pct": -8.113262207519345
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 5,
+    "whole_native_ops_s": 2344263.6419087728,
+    "whole_kd_ops_s": 2182182.321684767,
+    "whole_change_pct": -6.913954442941151,
+    "peak_native_ops_s": 2352307.4719019653,
+    "peak_kd_ops_s": 2195431.090721442,
+    "peak_change_pct": -6.669042336275899
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 6,
+    "whole_native_ops_s": 2381889.9294768586,
+    "whole_kd_ops_s": 2301487.896238657,
+    "whole_change_pct": -3.3755562019551544,
+    "peak_native_ops_s": 2386996.1672941027,
+    "peak_kd_ops_s": 2308263.827502159,
+    "peak_change_pct": -3.2983856811632295
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 7,
+    "whole_native_ops_s": 2364564.5116271945,
+    "whole_kd_ops_s": 3153099.4711238146,
+    "whole_change_pct": 33.34799941465685,
+    "peak_native_ops_s": 2377831.8372390317,
+    "peak_kd_ops_s": 3173575.6677254713,
+    "peak_change_pct": 33.46510119110864
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 8,
+    "whole_native_ops_s": 2402228.6165843084,
+    "whole_kd_ops_s": 3526815.9176488454,
+    "whole_change_pct": 46.814332878257446,
+    "peak_native_ops_s": 2416318.0176138026,
+    "peak_kd_ops_s": 3548132.052546533,
+    "peak_change_pct": 46.840441807839326
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 12,
+    "whole_native_ops_s": 2396122.6223105746,
+    "whole_kd_ops_s": 4243038.155092468,
+    "whole_change_pct": 77.07934124844233,
+    "peak_native_ops_s": 2411513.456760154,
+    "peak_kd_ops_s": 4271054.434627995,
+    "peak_change_pct": 77.11095174090867
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 16,
+    "whole_native_ops_s": 2407836.2567809066,
+    "whole_kd_ops_s": 4253521.122963471,
+    "whole_change_pct": 76.65325501203743,
+    "peak_native_ops_s": 2424135.2788021257,
+    "peak_kd_ops_s": 4300019.010843303,
+    "peak_change_pct": 77.38362410897035
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 20,
+    "whole_native_ops_s": 2429582.3725707848,
+    "whole_kd_ops_s": 4054247.200740702,
+    "whole_change_pct": 66.87012741415433,
+    "peak_native_ops_s": 2448146.4668130158,
+    "peak_kd_ops_s": 4088557.5469194073,
+    "peak_change_pct": 67.00624747513044
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 24,
+    "whole_native_ops_s": 2427610.434309417,
+    "whole_kd_ops_s": 4047584.203581002,
+    "whole_change_pct": 66.73120803801535,
+    "peak_native_ops_s": 2449038.5027238852,
+    "peak_kd_ops_s": 4066224.276722943,
+    "peak_change_pct": 66.03349731743218
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 28,
+    "whole_native_ops_s": 2386682.775243536,
+    "whole_kd_ops_s": 4026220.9673760417,
+    "whole_change_pct": 68.69527065511285,
+    "peak_native_ops_s": 2408897.576388107,
+    "peak_kd_ops_s": 4055094.331063322,
+    "peak_change_pct": 68.33817970556957
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 32,
+    "whole_native_ops_s": 2400865.8566546245,
+    "whole_kd_ops_s": 4070672.8733137622,
+    "whole_change_pct": 69.55020048416421,
+    "peak_native_ops_s": 2423346.3798301932,
+    "peak_kd_ops_s": 4098505.5991690136,
+    "peak_change_pct": 69.12586798492259
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 36,
+    "whole_native_ops_s": 1802885.4519781272,
+    "whole_kd_ops_s": 3842392.918372082,
+    "whole_change_pct": 113.1246283093696,
+    "peak_native_ops_s": 1823712.2607626675,
+    "peak_kd_ops_s": 3870932.835883199,
+    "peak_change_pct": 112.25567865976807
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 40,
+    "whole_native_ops_s": 1746914.8488936357,
+    "whole_kd_ops_s": 3744192.8416233924,
+    "whole_change_pct": 114.33173139461732,
+    "peak_native_ops_s": 1785167.4660829282,
+    "peak_kd_ops_s": 3771739.0940299197,
+    "peak_change_pct": 111.28208785397544
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 44,
+    "whole_native_ops_s": 1605840.5838747735,
+    "whole_kd_ops_s": 3958941.7501538824,
+    "whole_change_pct": 146.53392060880984,
+    "peak_native_ops_s": 1651671.3623085148,
+    "peak_kd_ops_s": 3985517.3033316713,
+    "peak_change_pct": 141.3020770524941
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 48,
+    "whole_native_ops_s": 1671211.5509882737,
+    "whole_kd_ops_s": 3998320.6722690677,
+    "whole_change_pct": 139.24683083387345,
+    "peak_native_ops_s": 1755298.9609042283,
+    "peak_kd_ops_s": 4029256.151283861,
+    "peak_change_pct": 129.54814199902575
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 52,
+    "whole_native_ops_s": 1514263.6763496643,
+    "whole_kd_ops_s": 4035820.5229418664,
+    "whole_change_pct": 166.5203283929225,
+    "peak_native_ops_s": 1557154.7146424714,
+    "peak_kd_ops_s": 4068021.987664709,
+    "peak_change_pct": 161.24712910102463
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 56,
+    "whole_native_ops_s": 1561761.7570900347,
+    "whole_kd_ops_s": 3958079.1859805626,
+    "whole_change_pct": 153.43681057701693,
+    "peak_native_ops_s": 1629593.4381668672,
+    "peak_kd_ops_s": 3987838.483599436,
+    "peak_change_pct": 144.713705283777
+  },
+  {
+    "workload": "mutex-c16-w100",
+    "workers": 60,
+    "whole_native_ops_s": 1444819.2951129638,
+    "whole_kd_ops_s": 3978086.461903242,
+    "whole_change_pct": 175.3345332083355,
+    "peak_native_ops_s": 1486498.936872195,
+    "peak_kd_ops_s": 4003165.333202511,
+    "peak_change_pct": 169.3015940950311
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 1,
+    "whole_native_ops_s": 1916482.2331226915,
+    "whole_kd_ops_s": 1910251.528942565,
+    "whole_change_pct": -0.32511150233698327,
+    "peak_native_ops_s": 1927662.2719326392,
+    "peak_kd_ops_s": 1928570.567602425,
+    "peak_change_pct": 0.04711902510159405
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 2,
+    "whole_native_ops_s": 3835753.45225285,
+    "whole_kd_ops_s": 3854061.3720563115,
+    "whole_change_pct": 0.4772965737072754,
+    "peak_native_ops_s": 3857358.534568662,
+    "peak_kd_ops_s": 3860463.5416727327,
+    "peak_change_pct": 0.08049568315324773
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 3,
+    "whole_native_ops_s": 5752733.012716427,
+    "whole_kd_ops_s": 5755151.384611183,
+    "whole_change_pct": 0.042038660396892524,
+    "peak_native_ops_s": 5784669.942660994,
+    "peak_kd_ops_s": 5787440.787540323,
+    "peak_change_pct": 0.04789979215400475
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 4,
+    "whole_native_ops_s": 7580145.095997696,
+    "whole_kd_ops_s": 7573204.431610881,
+    "whole_change_pct": -0.09156374052099459,
+    "peak_native_ops_s": 7623362.664351387,
+    "peak_kd_ops_s": 7620580.0118858935,
+    "peak_change_pct": -0.03650164091636432
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 5,
+    "whole_native_ops_s": 9135812.576205479,
+    "whole_kd_ops_s": 9257135.219079971,
+    "whole_change_pct": 1.3279896217494702,
+    "peak_native_ops_s": 9152821.695079673,
+    "peak_kd_ops_s": 9275801.769730108,
+    "peak_change_pct": 1.3436301803688044
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 6,
+    "whole_native_ops_s": 9341887.105898004,
+    "whole_kd_ops_s": 9912706.973466992,
+    "whole_change_pct": 6.110327186555287,
+    "peak_native_ops_s": 9413749.694019768,
+    "peak_kd_ops_s": 9932136.824279096,
+    "peak_change_pct": 5.506701868105135
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 7,
+    "whole_native_ops_s": 8196156.076255794,
+    "whole_kd_ops_s": 9908998.510749036,
+    "whole_change_pct": 20.89811880785597,
+    "peak_native_ops_s": 8229539.262563871,
+    "peak_kd_ops_s": 9970658.057160886,
+    "peak_change_pct": 21.15694134320927
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 8,
+    "whole_native_ops_s": 7815450.145502413,
+    "whole_kd_ops_s": 7264241.481716824,
+    "whole_change_pct": -7.052807624942692,
+    "peak_native_ops_s": 7863634.026972554,
+    "peak_kd_ops_s": 7307813.006766773,
+    "peak_change_pct": -7.068246287903202
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 12,
+    "whole_native_ops_s": 7011098.964671798,
+    "whole_kd_ops_s": 7835093.016965459,
+    "whole_change_pct": 11.752708904063148,
+    "peak_native_ops_s": 7037008.806665917,
+    "peak_kd_ops_s": 7886496.565933651,
+    "peak_change_pct": 12.071716585931291
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 16,
+    "whole_native_ops_s": 6770485.045679835,
+    "whole_kd_ops_s": 7758759.240813931,
+    "whole_change_pct": 14.59680050197736,
+    "peak_native_ops_s": 6841906.586226393,
+    "peak_kd_ops_s": 7807023.185583281,
+    "peak_change_pct": 14.105959898660236
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 20,
+    "whole_native_ops_s": 7225834.8445762,
+    "whole_kd_ops_s": 7777128.972212128,
+    "whole_change_pct": 7.629486965782739,
+    "peak_native_ops_s": 7273347.254103736,
+    "peak_kd_ops_s": 7826884.426469383,
+    "peak_change_pct": 7.610487345469896
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 24,
+    "whole_native_ops_s": 7507057.59219084,
+    "whole_kd_ops_s": 8544442.900258016,
+    "whole_change_pct": 13.818800446479962,
+    "peak_native_ops_s": 7560205.989297318,
+    "peak_kd_ops_s": 8595270.666604014,
+    "peak_change_pct": 13.6909586692743
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 28,
+    "whole_native_ops_s": 7600252.8388790665,
+    "whole_kd_ops_s": 8289100.314324739,
+    "whole_change_pct": 9.063481045286759,
+    "peak_native_ops_s": 7653413.114607817,
+    "peak_kd_ops_s": 8349013.027202856,
+    "peak_change_pct": 9.0887542875135
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 32,
+    "whole_native_ops_s": 7797139.637290733,
+    "whole_kd_ops_s": 8398460.86476902,
+    "whole_change_pct": 7.712074625448495,
+    "peak_native_ops_s": 7848865.761285093,
+    "peak_kd_ops_s": 8452999.312393157,
+    "peak_change_pct": 7.697080947517043
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 36,
+    "whole_native_ops_s": 7040682.205270612,
+    "whole_kd_ops_s": 7659986.64110975,
+    "whole_change_pct": 8.796085631808959,
+    "peak_native_ops_s": 7094488.807974358,
+    "peak_kd_ops_s": 7707365.48301262,
+    "peak_change_pct": 8.638771469332296
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 40,
+    "whole_native_ops_s": 7028951.083578492,
+    "whole_kd_ops_s": 7507246.375456499,
+    "whole_change_pct": 6.804646755835764,
+    "peak_native_ops_s": 7073215.539429051,
+    "peak_kd_ops_s": 7555343.647880421,
+    "peak_change_pct": 6.81625076690775
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 44,
+    "whole_native_ops_s": 6593313.56252014,
+    "whole_kd_ops_s": 7553257.4727361575,
+    "whole_change_pct": 14.559354732843953,
+    "peak_native_ops_s": 6653118.237413181,
+    "peak_kd_ops_s": 7609055.287539127,
+    "peak_change_pct": 14.36825584656416
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 48,
+    "whole_native_ops_s": 6599065.977714281,
+    "whole_kd_ops_s": 7279784.197751881,
+    "whole_change_pct": 10.3153722411089,
+    "peak_native_ops_s": 6667565.011254023,
+    "peak_kd_ops_s": 7361125.372092254,
+    "peak_change_pct": 10.402003725011877
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 52,
+    "whole_native_ops_s": 6171088.795013851,
+    "whole_kd_ops_s": 7586460.120462658,
+    "whole_change_pct": 22.935520334635374,
+    "peak_native_ops_s": 6231022.428516751,
+    "peak_kd_ops_s": 7648132.346753821,
+    "peak_change_pct": 22.742815236092827
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 56,
+    "whole_native_ops_s": 7165666.593341482,
+    "whole_kd_ops_s": 7517966.924859746,
+    "whole_change_pct": 4.916504653532594,
+    "peak_native_ops_s": 7244034.552713709,
+    "peak_kd_ops_s": 7580107.152936445,
+    "peak_change_pct": 4.639301452487388
+  },
+  {
+    "workload": "rwlock-c01-w1",
+    "workers": 60,
+    "whole_native_ops_s": 6864766.985777402,
+    "whole_kd_ops_s": 7551558.604219505,
+    "whole_change_pct": 10.004587480755212,
+    "peak_native_ops_s": 6941224.826209659,
+    "peak_kd_ops_s": 7612526.4008326605,
+    "peak_change_pct": 9.671226497205598
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 1,
+    "whole_native_ops_s": 1916217.8511670737,
+    "whole_kd_ops_s": 1918003.6324647248,
+    "whole_change_pct": 0.09319302064552115,
+    "peak_native_ops_s": 1927669.8797331315,
+    "peak_kd_ops_s": 1929361.617121671,
+    "peak_change_pct": 0.08776074193646011
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 2,
+    "whole_native_ops_s": 3834561.8772204258,
+    "whole_kd_ops_s": 3853661.06348856,
+    "whole_change_pct": 0.49808001225888354,
+    "peak_native_ops_s": 3857565.090718247,
+    "peak_kd_ops_s": 3860005.819810245,
+    "peak_change_pct": 0.06327123547107405
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 3,
+    "whole_native_ops_s": 5734100.265635747,
+    "whole_kd_ops_s": 5730021.630212638,
+    "whole_change_pct": -0.07112947514281709,
+    "peak_native_ops_s": 5766825.321074092,
+    "peak_kd_ops_s": 5764210.465230691,
+    "peak_change_pct": -0.045343073490455854
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 4,
+    "whole_native_ops_s": 4970928.009740773,
+    "whole_kd_ops_s": 5719279.652022601,
+    "whole_change_pct": 15.054566085354626,
+    "peak_native_ops_s": 5007428.535750354,
+    "peak_kd_ops_s": 5731365.834378774,
+    "peak_change_pct": 14.457266708049787
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 5,
+    "whole_native_ops_s": 4639210.76811694,
+    "whole_kd_ops_s": 5625373.488823673,
+    "whole_change_pct": 21.25712260120092,
+    "peak_native_ops_s": 4670262.385061261,
+    "peak_kd_ops_s": 5664392.623666998,
+    "peak_change_pct": 21.28638942826113
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 6,
+    "whole_native_ops_s": 4165665.5702918805,
+    "whole_kd_ops_s": 5714581.472639214,
+    "whole_change_pct": 37.18291533995621,
+    "peak_native_ops_s": 4177915.682820461,
+    "peak_kd_ops_s": 5750927.129999316,
+    "peak_change_pct": 37.650626929764506
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 7,
+    "whole_native_ops_s": 4420185.541629045,
+    "whole_kd_ops_s": 5827650.76810403,
+    "whole_change_pct": 31.841768025788973,
+    "peak_native_ops_s": 4451979.42875207,
+    "peak_kd_ops_s": 5863306.152659795,
+    "peak_change_pct": 31.701106137036493
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 8,
+    "whole_native_ops_s": 4105824.660415969,
+    "whole_kd_ops_s": 5708735.09871001,
+    "whole_change_pct": 39.039914532824874,
+    "peak_native_ops_s": 4132217.4862855542,
+    "peak_kd_ops_s": 5721950.164810935,
+    "peak_change_pct": 38.47166040513492
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 12,
+    "whole_native_ops_s": 4094898.267729307,
+    "whole_kd_ops_s": 5820165.579359358,
+    "whole_change_pct": 42.13211657115825,
+    "peak_native_ops_s": 4144520.596361619,
+    "peak_kd_ops_s": 5860472.051441501,
+    "peak_change_pct": 41.40289365641654
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 16,
+    "whole_native_ops_s": 4321818.591200678,
+    "whole_kd_ops_s": 5380732.032042793,
+    "whole_change_pct": 24.501570773888748,
+    "peak_native_ops_s": 4354441.502235738,
+    "peak_kd_ops_s": 5436576.010977685,
+    "peak_change_pct": 24.85128134541108
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 20,
+    "whole_native_ops_s": 4334125.545589569,
+    "whole_kd_ops_s": 5634839.295093759,
+    "whole_change_pct": 30.010984587832333,
+    "peak_native_ops_s": 4366576.170466893,
+    "peak_kd_ops_s": 5688240.497358649,
+    "peak_change_pct": 30.26774926842597
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 24,
+    "whole_native_ops_s": 4222664.895364635,
+    "whole_kd_ops_s": 5632526.6317547,
+    "whole_change_pct": 33.38796166226024,
+    "peak_native_ops_s": 4253013.54349001,
+    "peak_kd_ops_s": 5690609.297715708,
+    "peak_change_pct": 33.80181463156147
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 28,
+    "whole_native_ops_s": 4356709.055146721,
+    "whole_kd_ops_s": 5644893.252467673,
+    "whole_change_pct": 29.567827022995232,
+    "peak_native_ops_s": 4388686.574756009,
+    "peak_kd_ops_s": 5695708.286747933,
+    "peak_change_pct": 29.781614378889422
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 32,
+    "whole_native_ops_s": 4310451.587831064,
+    "whole_kd_ops_s": 5635075.719266351,
+    "whole_change_pct": 30.730518704231933,
+    "peak_native_ops_s": 4342758.9953947365,
+    "peak_kd_ops_s": 5672927.721041268,
+    "peak_change_pct": 30.629577350645153
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 36,
+    "whole_native_ops_s": 3762676.6043132823,
+    "whole_kd_ops_s": 4415397.065708496,
+    "whole_change_pct": 17.34723788504646,
+    "peak_native_ops_s": 3796030.4316981444,
+    "peak_kd_ops_s": 4456152.98319625,
+    "peak_change_pct": 17.38981189365232
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 40,
+    "whole_native_ops_s": 3406047.298391179,
+    "whole_kd_ops_s": 3950917.3228597715,
+    "whole_change_pct": 15.997136173826988,
+    "peak_native_ops_s": 3434493.512947734,
+    "peak_kd_ops_s": 3994363.939468368,
+    "peak_change_pct": 16.3013971175072
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 44,
+    "whole_native_ops_s": 3245666.8683282062,
+    "whole_kd_ops_s": 3797068.5443855547,
+    "whole_change_pct": 16.988856171223986,
+    "peak_native_ops_s": 3273758.9027251876,
+    "peak_kd_ops_s": 3897291.1049344917,
+    "peak_change_pct": 19.046369043555856
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 48,
+    "whole_native_ops_s": 3327324.7910244907,
+    "whole_kd_ops_s": 3713601.6408788143,
+    "whole_change_pct": 11.609231863877877,
+    "peak_native_ops_s": 3356771.8247897793,
+    "peak_kd_ops_s": 3754622.374638054,
+    "peak_change_pct": 11.852177348193461
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 52,
+    "whole_native_ops_s": 3282727.6277831066,
+    "whole_kd_ops_s": 3634895.131716669,
+    "whole_change_pct": 10.727892894708058,
+    "peak_native_ops_s": 3316046.259101314,
+    "peak_kd_ops_s": 3693178.0152016133,
+    "peak_change_pct": 11.372934109866929
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 56,
+    "whole_native_ops_s": 3144562.6713986075,
+    "whole_kd_ops_s": 3541383.957889866,
+    "whole_change_pct": 12.619283759250521,
+    "peak_native_ops_s": 3173968.6047671353,
+    "peak_kd_ops_s": 3585678.6789938994,
+    "peak_change_pct": 12.9714601968147
+  },
+  {
+    "workload": "rwlock-c01-w20",
+    "workers": 60,
+    "whole_native_ops_s": 3223373.0332229226,
+    "whole_kd_ops_s": 3504032.2137448513,
+    "whole_change_pct": 8.707002808213883,
+    "peak_native_ops_s": 3253713.14653069,
+    "peak_kd_ops_s": 3543288.422148281,
+    "peak_change_pct": 8.899840353976929
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 1,
+    "whole_native_ops_s": 1917231.20740624,
+    "whole_kd_ops_s": 1917526.4605905998,
+    "whole_change_pct": 0.015399978010965931,
+    "peak_native_ops_s": 1928320.6416311446,
+    "peak_kd_ops_s": 1929611.1665718863,
+    "peak_change_pct": 0.06692481078509616
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 2,
+    "whole_native_ops_s": 3827296.974789754,
+    "whole_kd_ops_s": 3844420.0222004056,
+    "whole_change_pct": 0.447392703608851,
+    "peak_native_ops_s": 3849901.6919781035,
+    "peak_kd_ops_s": 3850713.7832355504,
+    "peak_change_pct": 0.021093818035389234
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 3,
+    "whole_native_ops_s": 5656516.8288067365,
+    "whole_kd_ops_s": 5652622.418037678,
+    "whole_change_pct": -0.06884821325423562,
+    "peak_native_ops_s": 5688841.2756680725,
+    "peak_kd_ops_s": 5686603.685062414,
+    "peak_change_pct": -0.039332976562889144
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 4,
+    "whole_native_ops_s": 7306068.964218743,
+    "whole_kd_ops_s": 7417083.188211424,
+    "whole_change_pct": 1.5194795523607807,
+    "peak_native_ops_s": 7347187.093441339,
+    "peak_kd_ops_s": 7431659.315214906,
+    "peak_change_pct": 1.1497219371066958
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 5,
+    "whole_native_ops_s": 8504726.284007387,
+    "whole_kd_ops_s": 8869829.196048554,
+    "whole_change_pct": 4.292941358121305,
+    "peak_native_ops_s": 8553796.56789206,
+    "peak_kd_ops_s": 8923699.289770136,
+    "peak_change_pct": 4.324427392469921
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 6,
+    "whole_native_ops_s": 9603933.713609384,
+    "whole_kd_ops_s": 9080307.706054175,
+    "whole_change_pct": -5.45220347380363,
+    "peak_native_ops_s": 9623284.934774868,
+    "peak_kd_ops_s": 9142606.842082476,
+    "peak_change_pct": -4.994948148686785
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 7,
+    "whole_native_ops_s": 10576849.441075258,
+    "whole_kd_ops_s": 10773465.489524245,
+    "whole_change_pct": 1.858928308891561,
+    "peak_native_ops_s": 10652908.331166882,
+    "peak_kd_ops_s": 10849121.747477444,
+    "peak_change_pct": 1.8418765111918534
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 8,
+    "whole_native_ops_s": 11141460.625886219,
+    "whole_kd_ops_s": 11139785.797439948,
+    "whole_change_pct": -0.015032395684100308,
+    "peak_native_ops_s": 11223387.832846854,
+    "peak_kd_ops_s": 11168422.794946764,
+    "peak_change_pct": -0.48973659931119684
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 12,
+    "whole_native_ops_s": 9795373.319298903,
+    "whole_kd_ops_s": 10473530.735139634,
+    "whole_change_pct": 6.923242164794496,
+    "peak_native_ops_s": 9861795.985368863,
+    "peak_kd_ops_s": 10535093.656430481,
+    "peak_change_pct": 6.827333196311658
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 16,
+    "whole_native_ops_s": 9839722.899374558,
+    "whole_kd_ops_s": 9395563.05793968,
+    "whole_change_pct": -4.513946642370481,
+    "peak_native_ops_s": 9907943.510663234,
+    "peak_kd_ops_s": 9456582.535500126,
+    "peak_change_pct": -4.555546513535724
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 20,
+    "whole_native_ops_s": 10030170.483038533,
+    "whole_kd_ops_s": 10239548.329742916,
+    "whole_change_pct": 2.0874804377298384,
+    "peak_native_ops_s": 10066698.638429437,
+    "peak_kd_ops_s": 10303759.853703676,
+    "peak_change_pct": 2.354905255326334
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 24,
+    "whole_native_ops_s": 10243770.317638945,
+    "whole_kd_ops_s": 10408699.696183102,
+    "whole_change_pct": 1.61004565145475,
+    "peak_native_ops_s": 10310708.780896273,
+    "peak_kd_ops_s": 10475433.333248222,
+    "peak_change_pct": 1.5976064871229045
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 28,
+    "whole_native_ops_s": 10590806.799022494,
+    "whole_kd_ops_s": 10160844.598840436,
+    "whole_change_pct": -4.059768139871478,
+    "peak_native_ops_s": 10667698.379794607,
+    "peak_kd_ops_s": 10234582.121252736,
+    "peak_change_pct": -4.060072221035272
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 32,
+    "whole_native_ops_s": 10272781.865651352,
+    "whole_kd_ops_s": 10322614.264709495,
+    "whole_change_pct": 0.4850915721744675,
+    "peak_native_ops_s": 10349202.794505553,
+    "peak_kd_ops_s": 10401017.12626218,
+    "peak_change_pct": 0.5006601260546972
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 36,
+    "whole_native_ops_s": 9254323.673844393,
+    "whole_kd_ops_s": 8051843.9153724,
+    "whole_change_pct": -12.993707599298443,
+    "peak_native_ops_s": 9460045.04002718,
+    "peak_kd_ops_s": 8116834.129225665,
+    "peak_change_pct": -14.198779235385716
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 40,
+    "whole_native_ops_s": 8931105.277066791,
+    "whole_kd_ops_s": 8285297.749381455,
+    "whole_change_pct": -7.230992219335219,
+    "peak_native_ops_s": 9005316.84821754,
+    "peak_kd_ops_s": 8360367.407790156,
+    "peak_change_pct": -7.1618739384504915
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 44,
+    "whole_native_ops_s": 9333118.79022002,
+    "whole_kd_ops_s": 8049504.590897956,
+    "whole_change_pct": -13.753325422870832,
+    "peak_native_ops_s": 9414104.70723335,
+    "peak_kd_ops_s": 8101214.183411313,
+    "peak_change_pct": -13.945994490727031
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 48,
+    "whole_native_ops_s": 9130327.29198278,
+    "whole_kd_ops_s": 7191221.0755361365,
+    "whole_change_pct": -21.238080020957696,
+    "peak_native_ops_s": 9230409.470454942,
+    "peak_kd_ops_s": 7260946.702045764,
+    "peak_change_pct": -21.336678234190064
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 52,
+    "whole_native_ops_s": 9027483.6584458,
+    "whole_kd_ops_s": 7988134.0874637505,
+    "whole_change_pct": -11.51317033966237,
+    "peak_native_ops_s": 9134861.990061192,
+    "peak_kd_ops_s": 8044274.013363515,
+    "peak_change_pct": -11.938746068459993
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 56,
+    "whole_native_ops_s": 9232198.60803729,
+    "whole_kd_ops_s": 8304847.396894464,
+    "whole_change_pct": -10.04474936593651,
+    "peak_native_ops_s": 9319829.184285752,
+    "peak_kd_ops_s": 8364570.382424904,
+    "peak_change_pct": -10.249745815851629
+  },
+  {
+    "workload": "rwlock-c16-w1",
+    "workers": 60,
+    "whole_native_ops_s": 9316379.047043689,
+    "whole_kd_ops_s": 8179788.984704582,
+    "whole_change_pct": -12.199912182617489,
+    "peak_native_ops_s": 9438694.35821366,
+    "peak_kd_ops_s": 8244822.844301083,
+    "peak_change_pct": -12.648693437918723
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 1,
+    "whole_native_ops_s": 1916149.64583382,
+    "whole_kd_ops_s": 1918510.3448488568,
+    "whole_change_pct": 0.12320013836963906,
+    "peak_native_ops_s": 1928577.1320495852,
+    "peak_kd_ops_s": 1929925.2420591884,
+    "peak_change_pct": 0.06990179377324157
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 2,
+    "whole_native_ops_s": 3594763.096441436,
+    "whole_kd_ops_s": 3706378.2189024556,
+    "whole_change_pct": 3.104936805752523,
+    "peak_native_ops_s": 3620909.2297361665,
+    "peak_kd_ops_s": 3728654.8831055854,
+    "peak_change_pct": 2.9756518745229554
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 3,
+    "whole_native_ops_s": 3918522.2115117745,
+    "whole_kd_ops_s": 4187499.23703145,
+    "whole_change_pct": 6.864246545023511,
+    "peak_native_ops_s": 3944948.612248339,
+    "peak_kd_ops_s": 4212895.516536533,
+    "peak_change_pct": 6.79215195493974
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 4,
+    "whole_native_ops_s": 3900031.357794221,
+    "whole_kd_ops_s": 4281296.69723573,
+    "whole_change_pct": 9.775955741472409,
+    "peak_native_ops_s": 3927035.627900334,
+    "peak_kd_ops_s": 4309572.408945979,
+    "peak_change_pct": 9.741107983025232
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 5,
+    "whole_native_ops_s": 3831700.9500111933,
+    "whole_kd_ops_s": 4361350.1148345135,
+    "whole_change_pct": 13.82282103256971,
+    "peak_native_ops_s": 3856202.9858553214,
+    "peak_kd_ops_s": 4390817.180731576,
+    "peak_change_pct": 13.863746198974392
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 6,
+    "whole_native_ops_s": 3642553.4822202297,
+    "whole_kd_ops_s": 4364176.721613473,
+    "whole_change_pct": 19.81091678998206,
+    "peak_native_ops_s": 3666998.008751373,
+    "peak_kd_ops_s": 4379399.867564986,
+    "peak_change_pct": 19.427386028393002
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 7,
+    "whole_native_ops_s": 3710246.967710928,
+    "whole_kd_ops_s": 4198870.2860534955,
+    "whole_change_pct": 13.169563174497467,
+    "peak_native_ops_s": 3734528.1401401707,
+    "peak_kd_ops_s": 4226444.139515663,
+    "peak_change_pct": 13.172105843525085
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 8,
+    "whole_native_ops_s": 3688916.4811535566,
+    "whole_kd_ops_s": 4404061.333900013,
+    "whole_change_pct": 19.386311845228455,
+    "peak_native_ops_s": 3714551.815604166,
+    "peak_kd_ops_s": 4436267.147902244,
+    "peak_change_pct": 19.429405433685986
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 12,
+    "whole_native_ops_s": 3668168.380000508,
+    "whole_kd_ops_s": 4241381.993727164,
+    "whole_change_pct": 15.626698513948178,
+    "peak_native_ops_s": 3695923.6683943374,
+    "peak_kd_ops_s": 4282025.332172302,
+    "peak_change_pct": 15.858056506686214
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 16,
+    "whole_native_ops_s": 3669245.9206205355,
+    "whole_kd_ops_s": 4232335.228907156,
+    "whole_change_pct": 15.346186122934814,
+    "peak_native_ops_s": 3696263.8199011246,
+    "peak_kd_ops_s": 4276032.067200519,
+    "peak_change_pct": 15.685250716625077
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 20,
+    "whole_native_ops_s": 3677363.3111672658,
+    "whole_kd_ops_s": 4260645.444241346,
+    "whole_change_pct": 15.861422538882497,
+    "peak_native_ops_s": 3706841.065812672,
+    "peak_kd_ops_s": 4304985.218449011,
+    "peak_change_pct": 16.136223323758948
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 24,
+    "whole_native_ops_s": 3658791.1465011346,
+    "whole_kd_ops_s": 4108978.7756235744,
+    "whole_change_pct": 12.304272397536264,
+    "peak_native_ops_s": 3691515.5209611678,
+    "peak_kd_ops_s": 4148007.9817793993,
+    "peak_change_pct": 12.365990559329232
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 28,
+    "whole_native_ops_s": 3605548.6138095474,
+    "whole_kd_ops_s": 4181285.6647330173,
+    "whole_change_pct": 15.968084543870798,
+    "peak_native_ops_s": 3639360.600776308,
+    "peak_kd_ops_s": 4222291.644416676,
+    "peak_change_pct": 16.017402713982865
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 32,
+    "whole_native_ops_s": 3612636.837823805,
+    "whole_kd_ops_s": 4209599.283173978,
+    "whole_change_pct": 16.52428605887144,
+    "peak_native_ops_s": 3667447.7754679993,
+    "peak_kd_ops_s": 4245303.644509846,
+    "peak_change_pct": 15.7563489494573
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 36,
+    "whole_native_ops_s": 2820640.6920106737,
+    "whole_kd_ops_s": 3227035.770182918,
+    "whole_change_pct": 14.407899571304439,
+    "peak_native_ops_s": 2842452.196352455,
+    "peak_kd_ops_s": 3256193.492877593,
+    "peak_change_pct": 14.555787325326586
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 40,
+    "whole_native_ops_s": 2608808.140573574,
+    "whole_kd_ops_s": 2845370.7149499874,
+    "whole_change_pct": 9.067841007441913,
+    "peak_native_ops_s": 2631920.4204788804,
+    "peak_kd_ops_s": 2869058.5460646176,
+    "peak_change_pct": 9.010079626290125
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 44,
+    "whole_native_ops_s": 2461647.5820455733,
+    "whole_kd_ops_s": 2671211.4976762114,
+    "whole_change_pct": 8.51315668250512,
+    "peak_native_ops_s": 2483196.523524867,
+    "peak_kd_ops_s": 2703873.5230950937,
+    "peak_change_pct": 8.886811715448871
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 48,
+    "whole_native_ops_s": 2412310.0499812565,
+    "whole_kd_ops_s": 2536898.3714331663,
+    "whole_change_pct": 5.1646894002235655,
+    "peak_native_ops_s": 2432853.057609987,
+    "peak_kd_ops_s": 2561662.0168977124,
+    "peak_change_pct": 5.294563881892067
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 52,
+    "whole_native_ops_s": 2350371.733983088,
+    "whole_kd_ops_s": 2534752.1637612698,
+    "whole_change_pct": 7.844734818424626,
+    "peak_native_ops_s": 2385803.4167456985,
+    "peak_kd_ops_s": 2567550.8043698804,
+    "peak_change_pct": 7.617869366290475
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 56,
+    "whole_native_ops_s": 2345068.8555296836,
+    "whole_kd_ops_s": 2483964.0352421487,
+    "whole_change_pct": 5.922861470994745,
+    "peak_native_ops_s": 2370551.4107020553,
+    "peak_kd_ops_s": 2516451.7486350355,
+    "peak_change_pct": 6.15470043274744
+  },
+  {
+    "workload": "rwlock-c16-w20",
+    "workers": 60,
+    "whole_native_ops_s": 2294612.600487006,
+    "whole_kd_ops_s": 2492004.078589451,
+    "whole_change_pct": 8.602387961285963,
+    "peak_native_ops_s": 2315944.744432529,
+    "peak_kd_ops_s": 2518169.182178645,
+    "peak_change_pct": 8.731833444310722
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 1,
+    "whole_native_ops_s": 1907197.9945894592,
+    "whole_kd_ops_s": 1788529.4305937302,
+    "whole_change_pct": -6.222141819170346,
+    "peak_native_ops_s": 1926802.1063624842,
+    "peak_kd_ops_s": 1798900.815618303,
+    "peak_change_pct": -6.638008663258099
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 2,
+    "whole_native_ops_s": 3830909.8775445675,
+    "whole_kd_ops_s": 3371636.4419345087,
+    "whole_change_pct": -11.988625425572042,
+    "peak_native_ops_s": 3853620.962917245,
+    "peak_kd_ops_s": 3406664.120909923,
+    "peak_change_pct": -11.598360251522221
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 3,
+    "whole_native_ops_s": 5709975.398830642,
+    "whole_kd_ops_s": 4750459.864073494,
+    "whole_change_pct": -16.804197351772288,
+    "peak_native_ops_s": 5746264.0545437755,
+    "peak_kd_ops_s": 4778086.166777856,
+    "peak_change_pct": -16.848823489069343
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 4,
+    "whole_native_ops_s": 5271107.350184117,
+    "whole_kd_ops_s": 6282643.951236033,
+    "whole_change_pct": 19.190210592402046,
+    "peak_native_ops_s": 5308588.90933076,
+    "peak_kd_ops_s": 6318251.622212143,
+    "peak_change_pct": 19.019417968242493
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 5,
+    "whole_native_ops_s": 5428811.500177965,
+    "whole_kd_ops_s": 7757369.929845167,
+    "whole_change_pct": 42.89260051837993,
+    "peak_native_ops_s": 5467296.005439456,
+    "peak_kd_ops_s": 7801943.966060626,
+    "peak_change_pct": 42.702058902580205
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 6,
+    "whole_native_ops_s": 3987740.1603048523,
+    "whole_kd_ops_s": 8929942.040612891,
+    "whole_change_pct": 123.93490251707426,
+    "peak_native_ops_s": 4034430.656153164,
+    "peak_kd_ops_s": 8980838.575713323,
+    "peak_change_pct": 122.60485657415083
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 7,
+    "whole_native_ops_s": 3799811.402305415,
+    "whole_kd_ops_s": 10377541.524999471,
+    "whole_change_pct": 173.106752579963,
+    "peak_native_ops_s": 3844505.508560398,
+    "peak_kd_ops_s": 10439034.10418367,
+    "peak_change_pct": 171.53125625492055
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 8,
+    "whole_native_ops_s": 3972713.4476264543,
+    "whole_kd_ops_s": 11466700.85488394,
+    "whole_change_pct": 188.63649508209207,
+    "peak_native_ops_s": 4009295.870928802,
+    "peak_kd_ops_s": 11536153.768326042,
+    "peak_change_pct": 187.73515698789157
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 12,
+    "whole_native_ops_s": 3974471.449117936,
+    "whole_kd_ops_s": 8416462.146912668,
+    "whole_change_pct": 111.76305465172112,
+    "peak_native_ops_s": 4025331.6260725646,
+    "peak_kd_ops_s": 8482085.635738442,
+    "peak_change_pct": 110.71768548953673
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 16,
+    "whole_native_ops_s": 4013153.944306334,
+    "whole_kd_ops_s": 8417696.264416294,
+    "whole_change_pct": 109.75263798088055,
+    "peak_native_ops_s": 4062751.400616562,
+    "peak_kd_ops_s": 8471983.094898485,
+    "peak_change_pct": 108.52821793656338
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 20,
+    "whole_native_ops_s": 3955904.871594682,
+    "whole_kd_ops_s": 8913498.611905312,
+    "whole_change_pct": 125.32135886048627,
+    "peak_native_ops_s": 3997848.7429781356,
+    "peak_kd_ops_s": 8956084.827380173,
+    "peak_change_pct": 124.02260323407023
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 24,
+    "whole_native_ops_s": 3805082.6141247153,
+    "whole_kd_ops_s": 8314818.44439656,
+    "whole_change_pct": 118.5187363220817,
+    "peak_native_ops_s": 3851879.3743339973,
+    "peak_kd_ops_s": 8347334.5477109905,
+    "peak_change_pct": 116.70809847606591
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 28,
+    "whole_native_ops_s": 3916799.1093079397,
+    "whole_kd_ops_s": 8179306.925740494,
+    "whole_change_pct": 108.8263068254654,
+    "peak_native_ops_s": 3952629.182971469,
+    "peak_kd_ops_s": 8235031.078167799,
+    "peak_change_pct": 108.34312294321897
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 32,
+    "whole_native_ops_s": 3850326.1698922403,
+    "whole_kd_ops_s": 8734859.894702625,
+    "whole_change_pct": 126.86025830759915,
+    "peak_native_ops_s": 3895442.346121619,
+    "peak_kd_ops_s": 8792262.44827538,
+    "peak_change_pct": 125.70639396137216
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 36,
+    "whole_native_ops_s": 3175176.1619707406,
+    "whole_kd_ops_s": 7044436.826029644,
+    "whole_change_pct": 121.85971633326211,
+    "peak_native_ops_s": 3220113.437462096,
+    "peak_kd_ops_s": 7093984.270469197,
+    "peak_change_pct": 120.30230947578846
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 40,
+    "whole_native_ops_s": 3116688.3122889716,
+    "whole_kd_ops_s": 7465519.011610806,
+    "whole_change_pct": 139.53370576629612,
+    "peak_native_ops_s": 3166952.540563289,
+    "peak_kd_ops_s": 7513261.381116559,
+    "peak_change_pct": 137.239468696939
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 44,
+    "whole_native_ops_s": 3067475.1628420353,
+    "whole_kd_ops_s": 7062071.4557254175,
+    "whole_change_pct": 130.22424244121225,
+    "peak_native_ops_s": 3111687.8542701113,
+    "peak_kd_ops_s": 7107373.152983775,
+    "peak_change_pct": 128.4089370735069
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 48,
+    "whole_native_ops_s": 2929225.9111945415,
+    "whole_kd_ops_s": 6553783.917031686,
+    "whole_change_pct": 123.73774217909488,
+    "peak_native_ops_s": 2978917.9331002235,
+    "peak_kd_ops_s": 6599587.84775502,
+    "peak_change_pct": 121.5431239116644
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 52,
+    "whole_native_ops_s": 2855388.1653269236,
+    "whole_kd_ops_s": 7490847.760417666,
+    "whole_change_pct": 162.34078614527044,
+    "peak_native_ops_s": 2909422.572405215,
+    "peak_kd_ops_s": 7541294.500642704,
+    "peak_change_pct": 159.20244697931
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 56,
+    "whole_native_ops_s": 2821202.0385004873,
+    "whole_kd_ops_s": 7233071.225436248,
+    "whole_change_pct": 156.3826031148318,
+    "peak_native_ops_s": 2898771.2558806,
+    "peak_kd_ops_s": 7283776.224285597,
+    "peak_change_pct": 151.271162203963
+  },
+  {
+    "workload": "rwsem-c01-w1",
+    "workers": 60,
+    "whole_native_ops_s": 2762176.943687498,
+    "whole_kd_ops_s": 7302928.755346127,
+    "whole_change_pct": 164.3903306786979,
+    "peak_native_ops_s": 2820151.6890823026,
+    "peak_kd_ops_s": 7423982.801106511,
+    "peak_change_pct": 163.24764124735177
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 1,
+    "whole_native_ops_s": 1915339.4045632016,
+    "whole_kd_ops_s": 1807290.7123275714,
+    "whole_change_pct": -5.641229537606208,
+    "peak_native_ops_s": 1927270.6734059108,
+    "peak_kd_ops_s": 1820138.6133712928,
+    "peak_change_pct": -5.558744887934819
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 2,
+    "whole_native_ops_s": 3831831.990188647,
+    "whole_kd_ops_s": 3622102.920258383,
+    "whole_change_pct": -5.473336786875638,
+    "peak_native_ops_s": 3854758.74652291,
+    "peak_kd_ops_s": 3630277.213124943,
+    "peak_change_pct": -5.823491122510715
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 3,
+    "whole_native_ops_s": 5435079.010474834,
+    "whole_kd_ops_s": 4187904.5853065625,
+    "whole_change_pct": -22.946757954477505,
+    "peak_native_ops_s": 5479251.61650116,
+    "peak_kd_ops_s": 4219913.731090349,
+    "peak_change_pct": -22.98375715432057
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 4,
+    "whole_native_ops_s": 1956729.469601899,
+    "whole_kd_ops_s": 4890708.365965295,
+    "whole_change_pct": 149.94300141860288,
+    "peak_native_ops_s": 1976299.5057741252,
+    "peak_kd_ops_s": 4920293.528820815,
+    "peak_change_pct": 148.96497289228
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 5,
+    "whole_native_ops_s": 1892051.3391394918,
+    "whole_kd_ops_s": 5259868.747764314,
+    "whole_change_pct": 177.99820432761146,
+    "peak_native_ops_s": 1907779.8403746833,
+    "peak_kd_ops_s": 5293371.133935219,
+    "peak_change_pct": 177.46236866071578
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 6,
+    "whole_native_ops_s": 1880597.9790093068,
+    "whole_kd_ops_s": 5665789.937669271,
+    "whole_change_pct": 201.27597715775445,
+    "peak_native_ops_s": 1895169.6742266808,
+    "peak_kd_ops_s": 5699377.370262127,
+    "peak_change_pct": 200.73177340112008
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 7,
+    "whole_native_ops_s": 1885223.5392291627,
+    "whole_kd_ops_s": 5710819.150944498,
+    "whole_change_pct": 202.9253047243172,
+    "peak_native_ops_s": 1901852.626292643,
+    "peak_kd_ops_s": 5747618.354192891,
+    "peak_change_pct": 202.2115528161061
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 8,
+    "whole_native_ops_s": 1905393.1602734257,
+    "whole_kd_ops_s": 5576901.673276626,
+    "whole_change_pct": 192.69033759291622,
+    "peak_native_ops_s": 1920849.5428569021,
+    "peak_kd_ops_s": 5618784.541133483,
+    "peak_change_pct": 192.5155987374523
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 12,
+    "whole_native_ops_s": 1894141.7611547445,
+    "whole_kd_ops_s": 5618673.831009561,
+    "whole_change_pct": 196.63428293689026,
+    "peak_native_ops_s": 1914878.2702266292,
+    "peak_kd_ops_s": 5654485.524568413,
+    "peak_change_pct": 195.29216621687365
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 16,
+    "whole_native_ops_s": 1892404.7290546936,
+    "whole_kd_ops_s": 5045401.150804764,
+    "whole_change_pct": 166.61321826885705,
+    "peak_native_ops_s": 1912305.7533221378,
+    "peak_kd_ops_s": 5077132.698366795,
+    "peak_change_pct": 165.49795656612898
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 20,
+    "whole_native_ops_s": 1876289.2068029393,
+    "whole_kd_ops_s": 5256998.572091519,
+    "whole_change_pct": 180.18061144470704,
+    "peak_native_ops_s": 1901216.0959051733,
+    "peak_kd_ops_s": 5297532.1356352875,
+    "peak_change_pct": 178.6391377100729
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 24,
+    "whole_native_ops_s": 1877120.97509451,
+    "whole_kd_ops_s": 5225025.123669333,
+    "whole_change_pct": 178.3531372242144,
+    "peak_native_ops_s": 1899216.9989199922,
+    "peak_kd_ops_s": 5267869.0002424335,
+    "peak_change_pct": 177.3705691997311
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 28,
+    "whole_native_ops_s": 1863563.9442965807,
+    "whole_kd_ops_s": 5291167.844625523,
+    "whole_change_pct": 183.92735654813944,
+    "peak_native_ops_s": 1885813.951880665,
+    "peak_kd_ops_s": 5319606.427377406,
+    "peak_change_pct": 182.08543170827238
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 32,
+    "whole_native_ops_s": 1829680.6972773317,
+    "whole_kd_ops_s": 5149863.21764989,
+    "whole_change_pct": 181.46240080650014,
+    "peak_native_ops_s": 1856103.5865568223,
+    "peak_kd_ops_s": 5188698.684397353,
+    "peak_change_pct": 179.5479046523844
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 36,
+    "whole_native_ops_s": 1351463.0643253175,
+    "whole_kd_ops_s": 4070964.86353187,
+    "whole_change_pct": 201.22649822947193,
+    "peak_native_ops_s": 1380470.378164124,
+    "peak_kd_ops_s": 4100409.5371497464,
+    "peak_change_pct": 197.02988213357008
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 40,
+    "whole_native_ops_s": 1162614.0351127447,
+    "whole_kd_ops_s": 3829427.8109546076,
+    "whole_change_pct": 229.380834507408,
+    "peak_native_ops_s": 1182703.110999575,
+    "peak_kd_ops_s": 3863846.7611003728,
+    "peak_change_pct": 226.69625412879816
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 44,
+    "whole_native_ops_s": 1124769.536422741,
+    "whole_kd_ops_s": 3801195.417137941,
+    "whole_change_pct": 237.95326900721415,
+    "peak_native_ops_s": 1141759.0980103125,
+    "peak_kd_ops_s": 3830312.261770421,
+    "peak_change_pct": 235.4746433328465
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 48,
+    "whole_native_ops_s": 1128931.8737324767,
+    "whole_kd_ops_s": 3744919.185559004,
+    "whole_change_pct": 231.72233619177968,
+    "peak_native_ops_s": 1150356.4655678244,
+    "peak_kd_ops_s": 3772566.6720633046,
+    "peak_change_pct": 227.9476218878935
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 52,
+    "whole_native_ops_s": 1145260.9368427175,
+    "whole_kd_ops_s": 3671000.8553618826,
+    "whole_change_pct": 220.53838014262362,
+    "peak_native_ops_s": 1161937.7588312554,
+    "peak_kd_ops_s": 3696812.294249779,
+    "peak_change_pct": 218.15923582415016
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 56,
+    "whole_native_ops_s": 1164369.6279731235,
+    "whole_kd_ops_s": 3733302.044252006,
+    "whole_change_pct": 220.6286006232189,
+    "peak_native_ops_s": 1180114.9668128665,
+    "peak_kd_ops_s": 3758471.2490956886,
+    "peak_change_pct": 218.48348294795227
+  },
+  {
+    "workload": "rwsem-c01-w20",
+    "workers": 60,
+    "whole_native_ops_s": 1175242.3832740306,
+    "whole_kd_ops_s": 3693509.0940014767,
+    "whole_change_pct": 214.27636941683227,
+    "peak_native_ops_s": 1190388.893671622,
+    "peak_kd_ops_s": 3722170.395413606,
+    "peak_change_pct": 212.68524220962664
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 1,
+    "whole_native_ops_s": 1914008.8457276232,
+    "whole_kd_ops_s": 1780840.92576587,
+    "whole_change_pct": -6.957539420938708,
+    "peak_native_ops_s": 1925118.1518865742,
+    "peak_kd_ops_s": 1792013.5325925155,
+    "peak_change_pct": -6.91410130664547
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 2,
+    "whole_native_ops_s": 3799707.1814518063,
+    "whole_kd_ops_s": 3131030.263331855,
+    "whole_change_pct": -17.598117070285944,
+    "peak_native_ops_s": 3822926.6049825083,
+    "peak_kd_ops_s": 3161218.1684895465,
+    "peak_change_pct": -17.30894952653661
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 3,
+    "whole_native_ops_s": 5420177.526381701,
+    "whole_kd_ops_s": 4551328.824136677,
+    "whole_change_pct": -16.029893818349407,
+    "peak_native_ops_s": 5436334.629633749,
+    "peak_kd_ops_s": 4578128.602600444,
+    "peak_change_pct": -15.786482722295613
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 4,
+    "whole_native_ops_s": 5283237.071927518,
+    "whole_kd_ops_s": 5928642.6190985385,
+    "whole_change_pct": 12.216100439641142,
+    "peak_native_ops_s": 5295872.44734721,
+    "peak_kd_ops_s": 5963939.256407453,
+    "peak_change_pct": 12.614858377015636
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 5,
+    "whole_native_ops_s": 5171737.861297907,
+    "whole_kd_ops_s": 7287627.800114008,
+    "whole_change_pct": 40.91255194216463,
+    "peak_native_ops_s": 5214715.08078544,
+    "peak_kd_ops_s": 7331518.948243315,
+    "peak_change_pct": 40.5928959619984
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 6,
+    "whole_native_ops_s": 4147705.837838296,
+    "whole_kd_ops_s": 8492726.161495704,
+    "whole_change_pct": 104.75719574949292,
+    "peak_native_ops_s": 4182132.117723411,
+    "peak_kd_ops_s": 8516798.41438619,
+    "peak_change_pct": 103.64728264544647
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 7,
+    "whole_native_ops_s": 3758773.827134196,
+    "whole_kd_ops_s": 9570343.178949013,
+    "whole_change_pct": 154.61343563322978,
+    "peak_native_ops_s": 3810962.5940862806,
+    "peak_kd_ops_s": 9634583.888850419,
+    "peak_change_pct": 152.81234467640883
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 8,
+    "whole_native_ops_s": 3639885.182736302,
+    "whole_kd_ops_s": 10109272.743112022,
+    "whole_change_pct": 177.73603384687883,
+    "peak_native_ops_s": 3679490.9863250596,
+    "peak_kd_ops_s": 10187719.005105967,
+    "peak_change_pct": 176.87848789326935
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 12,
+    "whole_native_ops_s": 3728599.51714655,
+    "whole_kd_ops_s": 9809869.008851763,
+    "whole_change_pct": 163.0979530984634,
+    "peak_native_ops_s": 3768288.936738198,
+    "peak_kd_ops_s": 9878173.345790364,
+    "peak_change_pct": 162.13948854837108
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 16,
+    "whole_native_ops_s": 3675872.2761315536,
+    "whole_kd_ops_s": 10674052.255512794,
+    "whole_change_pct": 190.38147829080847,
+    "peak_native_ops_s": 3712780.0554309725,
+    "peak_kd_ops_s": 10747702.738206206,
+    "peak_change_pct": 189.47857340713475
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 20,
+    "whole_native_ops_s": 3563066.199210388,
+    "whole_kd_ops_s": 10709724.092996996,
+    "whole_change_pct": 200.5760627004455,
+    "peak_native_ops_s": 3606361.475109663,
+    "peak_kd_ops_s": 10786749.861551372,
+    "peak_change_pct": 199.10340202997446
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 24,
+    "whole_native_ops_s": 3680665.7031815876,
+    "whole_kd_ops_s": 10223760.049993875,
+    "whole_change_pct": 177.76931877177543,
+    "peak_native_ops_s": 3717842.3785319533,
+    "peak_kd_ops_s": 10309096.770168612,
+    "peak_change_pct": 177.28708537233135
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 28,
+    "whole_native_ops_s": 3577036.5558285536,
+    "whole_kd_ops_s": 11142676.449628277,
+    "whole_change_pct": 211.50580307802542,
+    "peak_native_ops_s": 3621512.298514954,
+    "peak_kd_ops_s": 11246715.162189042,
+    "peak_change_pct": 210.55300203732284
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 32,
+    "whole_native_ops_s": 3375568.374443718,
+    "whole_kd_ops_s": 10851883.979876412,
+    "whole_change_pct": 221.48316301442907,
+    "peak_native_ops_s": 3415875.2975117625,
+    "peak_kd_ops_s": 10960080.244993035,
+    "peak_change_pct": 220.85715344985584
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 36,
+    "whole_native_ops_s": 2817470.8114383263,
+    "whole_kd_ops_s": 9229151.574480105,
+    "whole_change_pct": 227.5686667990217,
+    "peak_native_ops_s": 2857786.8035458406,
+    "peak_kd_ops_s": 9328613.320165904,
+    "peak_change_pct": 226.42789548161156
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 40,
+    "whole_native_ops_s": 2690767.423546036,
+    "whole_kd_ops_s": 9661928.776109768,
+    "whole_change_pct": 259.07706818364727,
+    "peak_native_ops_s": 2720691.22613086,
+    "peak_kd_ops_s": 9750908.492747461,
+    "peak_change_pct": 258.3982040701616
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 44,
+    "whole_native_ops_s": 2583128.2512252363,
+    "whole_kd_ops_s": 10116988.713235462,
+    "whole_change_pct": 291.65646182827913,
+    "peak_native_ops_s": 2615279.4094403666,
+    "peak_kd_ops_s": 10238223.95230235,
+    "peak_change_pct": 291.47725154511073
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 48,
+    "whole_native_ops_s": 2528056.570628023,
+    "whole_kd_ops_s": 10087298.17343675,
+    "whole_change_pct": 299.01394180158127,
+    "peak_native_ops_s": 2569376.483371204,
+    "peak_kd_ops_s": 10225473.632254135,
+    "peak_change_pct": 297.97490552406657
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 52,
+    "whole_native_ops_s": 2487538.831588191,
+    "whole_kd_ops_s": 9576551.665632118,
+    "whole_change_pct": 284.9809918150256,
+    "peak_native_ops_s": 2518176.2749925717,
+    "peak_kd_ops_s": 9698183.162388537,
+    "peak_change_pct": 285.1272549383837
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 56,
+    "whole_native_ops_s": 2322080.539492076,
+    "whole_kd_ops_s": 10171971.932211883,
+    "whole_change_pct": 338.05422590711976,
+    "peak_native_ops_s": 2437951.733080978,
+    "peak_kd_ops_s": 10331204.077810174,
+    "peak_change_pct": 323.76573488409656
+  },
+  {
+    "workload": "rwsem-c16-w1",
+    "workers": 60,
+    "whole_native_ops_s": 2342410.830260412,
+    "whole_kd_ops_s": 9581713.413194442,
+    "whole_change_pct": 309.0534969106686,
+    "peak_native_ops_s": 2378199.4834081344,
+    "peak_kd_ops_s": 9909231.804587005,
+    "peak_change_pct": 316.6694961343759
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 1,
+    "whole_native_ops_s": 1914330.3385845828,
+    "whole_kd_ops_s": 1803757.5361288819,
+    "whole_change_pct": -5.776056526244899,
+    "peak_native_ops_s": 1925460.0622720835,
+    "peak_kd_ops_s": 1814326.2365105632,
+    "peak_change_pct": -5.771806330294904
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 2,
+    "whole_native_ops_s": 2532243.3554386217,
+    "whole_kd_ops_s": 2715517.92418527,
+    "whole_change_pct": 7.237636475697351,
+    "peak_native_ops_s": 2561674.048017122,
+    "peak_kd_ops_s": 2739491.1532221437,
+    "peak_change_pct": 6.941441489898459
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 3,
+    "whole_native_ops_s": 1987498.512817956,
+    "whole_kd_ops_s": 3584957.629418909,
+    "whole_change_pct": 80.37536160648546,
+    "peak_native_ops_s": 2010362.660933523,
+    "peak_kd_ops_s": 3608719.300545304,
+    "peak_change_pct": 79.5058857126592
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 4,
+    "whole_native_ops_s": 1767761.9537631911,
+    "whole_kd_ops_s": 3759038.6515262295,
+    "whole_change_pct": 112.64393905095828,
+    "peak_native_ops_s": 1782066.0347451717,
+    "peak_kd_ops_s": 3783574.022091641,
+    "peak_change_pct": 112.31390691045169
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 5,
+    "whole_native_ops_s": 1778592.2195100454,
+    "whole_kd_ops_s": 4005909.975986083,
+    "whole_change_pct": 125.22925334113988,
+    "peak_native_ops_s": 1791480.4153410597,
+    "peak_kd_ops_s": 4034529.108955456,
+    "peak_change_pct": 125.20643119547401
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 6,
+    "whole_native_ops_s": 1740251.0802906333,
+    "whole_kd_ops_s": 4221710.8012898,
+    "whole_change_pct": 142.59205175064432,
+    "peak_native_ops_s": 1752382.8544622518,
+    "peak_kd_ops_s": 4249598.455979228,
+    "peak_change_pct": 142.50399649586214
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 7,
+    "whole_native_ops_s": 1739240.4266495379,
+    "whole_kd_ops_s": 4056883.069408045,
+    "whole_change_pct": 133.2560241382613,
+    "peak_native_ops_s": 1754849.0859302403,
+    "peak_kd_ops_s": 4089596.219105131,
+    "peak_change_pct": 133.04546538469134
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 8,
+    "whole_native_ops_s": 1732969.8827923215,
+    "whole_kd_ops_s": 4079146.577372809,
+    "whole_change_pct": 135.38473564238234,
+    "peak_native_ops_s": 1746055.4137004907,
+    "peak_kd_ops_s": 4107046.4856230873,
+    "peak_change_pct": 135.218564851779
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 12,
+    "whole_native_ops_s": 1722236.7891324025,
+    "whole_kd_ops_s": 4170932.9200783474,
+    "whole_change_pct": 142.18115339293763,
+    "peak_native_ops_s": 1739087.1479800437,
+    "peak_kd_ops_s": 4200779.608009294,
+    "peak_change_pct": 141.55083963954968
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 16,
+    "whole_native_ops_s": 1705453.6995423655,
+    "whole_kd_ops_s": 4488461.004924799,
+    "whole_change_pct": 163.18281206515394,
+    "peak_native_ops_s": 1722631.635694377,
+    "peak_kd_ops_s": 4521069.933804118,
+    "peak_change_pct": 162.45134712051868
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 20,
+    "whole_native_ops_s": 1681933.0615109226,
+    "whole_kd_ops_s": 4822622.022230103,
+    "whole_change_pct": 186.73091293525204,
+    "peak_native_ops_s": 1700328.2931277668,
+    "peak_kd_ops_s": 4861395.356185979,
+    "peak_change_pct": 185.90921975681565
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 24,
+    "whole_native_ops_s": 1724171.6286437807,
+    "whole_kd_ops_s": 4894582.584994996,
+    "whole_change_pct": 183.88024160013785,
+    "peak_native_ops_s": 1744714.2691877487,
+    "peak_kd_ops_s": 4934508.177060558,
+    "peak_change_pct": 182.8261489119257
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 28,
+    "whole_native_ops_s": 1702672.5700395822,
+    "whole_kd_ops_s": 4860626.119549947,
+    "whole_change_pct": 185.47039548754526,
+    "peak_native_ops_s": 1724282.2579295007,
+    "peak_kd_ops_s": 4899816.170560691,
+    "peak_change_pct": 184.16555050820605
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 32,
+    "whole_native_ops_s": 1661838.1414108367,
+    "whole_kd_ops_s": 4800283.172142194,
+    "whole_change_pct": 188.85383314568395,
+    "peak_native_ops_s": 1700681.575954705,
+    "peak_kd_ops_s": 4835938.77324015,
+    "peak_change_pct": 184.35298186407513
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 36,
+    "whole_native_ops_s": 1240936.921957596,
+    "whole_kd_ops_s": 3751764.207651785,
+    "whole_change_pct": 202.33319206372897,
+    "peak_native_ops_s": 1262077.1098434185,
+    "peak_kd_ops_s": 3780848.9005310023,
+    "peak_change_pct": 199.57352613740684
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 40,
+    "whole_native_ops_s": 1053274.8607623568,
+    "whole_kd_ops_s": 3622489.4295632155,
+    "whole_change_pct": 243.9263163407574,
+    "peak_native_ops_s": 1069006.9002281178,
+    "peak_kd_ops_s": 3650757.2532061464,
+    "peak_change_pct": 241.50923183256373
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 44,
+    "whole_native_ops_s": 1023190.9644194233,
+    "whole_kd_ops_s": 3466210.884572129,
+    "whole_change_pct": 238.76480589710044,
+    "peak_native_ops_s": 1037471.6962469934,
+    "peak_kd_ops_s": 3489852.3569188872,
+    "peak_change_pct": 236.3804882141141
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 48,
+    "whole_native_ops_s": 1049401.02644886,
+    "whole_kd_ops_s": 3620933.905499417,
+    "whole_change_pct": 245.04768093781485,
+    "peak_native_ops_s": 1061349.4915533892,
+    "peak_kd_ops_s": 3647960.383150239,
+    "peak_change_pct": 243.70962743017768
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 52,
+    "whole_native_ops_s": 1047201.1089868178,
+    "whole_kd_ops_s": 3470929.991097051,
+    "whole_change_pct": 231.44827304998046,
+    "peak_native_ops_s": 1060657.1543177995,
+    "peak_kd_ops_s": 3536167.811066379,
+    "peak_change_pct": 233.39404695203277
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 56,
+    "whole_native_ops_s": 1050730.462787993,
+    "whole_kd_ops_s": 3672877.4623729563,
+    "whole_change_pct": 249.55467576598062,
+    "peak_native_ops_s": 1075933.628544267,
+    "peak_kd_ops_s": 3699158.1493917075,
+    "peak_change_pct": 243.8091394537645
+  },
+  {
+    "workload": "rwsem-c16-w20",
+    "workers": 60,
+    "whole_native_ops_s": 1093355.332300716,
+    "whole_kd_ops_s": 3631827.885217688,
+    "whole_change_pct": 232.1726960964591,
+    "peak_native_ops_s": 1107241.3190712754,
+    "peak_kd_ops_s": 3662450.8631236823,
+    "peak_change_pct": 230.7725967267595
+  }
+]

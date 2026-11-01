@@ -1,0 +1,35 @@
+[
+  {
+    "workload": "pipebytes",
+    "points": 21,
+    "whole": {
+      "geomean_change_pct": -15.713908006560128,
+      "minimum_change_pct": -38.87230706943181,
+      "maximum_change_pct": 54.54285513897161,
+      "loss_points": 14,
+      "workers60_change_pct": 7.104788499300008
+    }
+  },
+  {
+    "workload": "pipecap",
+    "points": 21,
+    "whole": {
+      "geomean_change_pct": 28.24988405332134,
+      "minimum_change_pct": -20.006499629368857,
+      "maximum_change_pct": 98.26940810351826,
+      "loss_points": 6,
+      "workers60_change_pct": 98.26940810351826
+    }
+  },
+  {
+    "workload": "setfd",
+    "points": 21,
+    "whole": {
+      "geomean_change_pct": 52.93003561469911,
+      "minimum_change_pct": -2.6147455197405023,
+      "maximum_change_pct": 162.14229572561177,
+      "loss_points": 3,
+      "workers60_change_pct": 149.43500309413008
+    }
+  }
+]

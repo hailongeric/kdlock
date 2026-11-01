@@ -1,0 +1,296 @@
+[
+  {
+    "workload": "processes",
+    "workers": 1,
+    "whole_native_ops_s": 362549.0,
+    "whole_kd_ops_s": 354921.0,
+    "whole_change_pct": -2.1039914604646492
+  },
+  {
+    "workload": "processes",
+    "workers": 2,
+    "whole_native_ops_s": 666243.5,
+    "whole_kd_ops_s": 651798.5,
+    "whole_change_pct": -2.1681262181169503
+  },
+  {
+    "workload": "processes",
+    "workers": 3,
+    "whole_native_ops_s": 990188.5,
+    "whole_kd_ops_s": 959658.0,
+    "whole_change_pct": -3.0833018157653824
+  },
+  {
+    "workload": "processes",
+    "workers": 4,
+    "whole_native_ops_s": 1307785.5,
+    "whole_kd_ops_s": 1274667.5,
+    "whole_change_pct": -2.5323724723970376
+  },
+  {
+    "workload": "processes",
+    "workers": 5,
+    "whole_native_ops_s": 1613605.5,
+    "whole_kd_ops_s": 1581061.5,
+    "whole_change_pct": -2.016849843409685
+  },
+  {
+    "workload": "processes",
+    "workers": 6,
+    "whole_native_ops_s": 1859543.5,
+    "whole_kd_ops_s": 1849269.5,
+    "whole_change_pct": -0.5525011918247724
+  },
+  {
+    "workload": "processes",
+    "workers": 7,
+    "whole_native_ops_s": 2062751.0,
+    "whole_kd_ops_s": 2077856.5,
+    "whole_change_pct": 0.7322987602478515
+  },
+  {
+    "workload": "processes",
+    "workers": 8,
+    "whole_native_ops_s": 1843244.0,
+    "whole_kd_ops_s": 1910493.5,
+    "whole_change_pct": 3.6484317865675964
+  },
+  {
+    "workload": "processes",
+    "workers": 12,
+    "whole_native_ops_s": 1883733.5,
+    "whole_kd_ops_s": 1894319.5,
+    "whole_change_pct": 0.5619690895766416
+  },
+  {
+    "workload": "processes",
+    "workers": 16,
+    "whole_native_ops_s": 1891653.0,
+    "whole_kd_ops_s": 1912227.5,
+    "whole_change_pct": 1.0876466244073235
+  },
+  {
+    "workload": "processes",
+    "workers": 20,
+    "whole_native_ops_s": 1854722.0,
+    "whole_kd_ops_s": 1862459.0,
+    "whole_change_pct": 0.4171514652869801
+  },
+  {
+    "workload": "processes",
+    "workers": 24,
+    "whole_native_ops_s": 1820458.5,
+    "whole_kd_ops_s": 1819295.5,
+    "whole_change_pct": -0.06388500479411752
+  },
+  {
+    "workload": "processes",
+    "workers": 28,
+    "whole_native_ops_s": 1809312.5,
+    "whole_kd_ops_s": 1816756.5,
+    "whole_change_pct": 0.4114269922967928
+  },
+  {
+    "workload": "processes",
+    "workers": 32,
+    "whole_native_ops_s": 1783091.0,
+    "whole_kd_ops_s": 1777957.0,
+    "whole_change_pct": -0.2879269762451786
+  },
+  {
+    "workload": "processes",
+    "workers": 36,
+    "whole_native_ops_s": 1565781.0,
+    "whole_kd_ops_s": 1566072.0,
+    "whole_change_pct": 0.018584974527091624
+  },
+  {
+    "workload": "processes",
+    "workers": 40,
+    "whole_native_ops_s": 1438151.5,
+    "whole_kd_ops_s": 1440012.5,
+    "whole_change_pct": 0.12940222222763698
+  },
+  {
+    "workload": "processes",
+    "workers": 44,
+    "whole_native_ops_s": 1365511.5,
+    "whole_kd_ops_s": 1369142.5,
+    "whole_change_pct": 0.26590768367751316
+  },
+  {
+    "workload": "processes",
+    "workers": 48,
+    "whole_native_ops_s": 1319872.5,
+    "whole_kd_ops_s": 1313365.0,
+    "whole_change_pct": -0.4930400474288277
+  },
+  {
+    "workload": "processes",
+    "workers": 52,
+    "whole_native_ops_s": 1290834.0,
+    "whole_kd_ops_s": 1292180.0,
+    "whole_change_pct": 0.10427367113043928
+  },
+  {
+    "workload": "processes",
+    "workers": 56,
+    "whole_native_ops_s": 1269473.0,
+    "whole_kd_ops_s": 1269819.5,
+    "whole_change_pct": 0.02729479083052322
+  },
+  {
+    "workload": "processes",
+    "workers": 60,
+    "whole_native_ops_s": 1252931.0,
+    "whole_kd_ops_s": 1254773.0,
+    "whole_change_pct": 0.14701527857479135
+  },
+  {
+    "workload": "threads",
+    "workers": 1,
+    "whole_native_ops_s": 294102.0,
+    "whole_kd_ops_s": 289791.0,
+    "whole_change_pct": -1.465817981516615
+  },
+  {
+    "workload": "threads",
+    "workers": 2,
+    "whole_native_ops_s": 261102.5,
+    "whole_kd_ops_s": 253763.0,
+    "whole_change_pct": -2.810965042464164
+  },
+  {
+    "workload": "threads",
+    "workers": 3,
+    "whole_native_ops_s": 245963.0,
+    "whole_kd_ops_s": 245675.0,
+    "whole_change_pct": -0.1170907819468825
+  },
+  {
+    "workload": "threads",
+    "workers": 4,
+    "whole_native_ops_s": 250369.5,
+    "whole_kd_ops_s": 234344.5,
+    "whole_change_pct": -6.40054000187723
+  },
+  {
+    "workload": "threads",
+    "workers": 5,
+    "whole_native_ops_s": 238501.5,
+    "whole_kd_ops_s": 236075.5,
+    "whole_change_pct": -1.0171843782953105
+  },
+  {
+    "workload": "threads",
+    "workers": 6,
+    "whole_native_ops_s": 234555.0,
+    "whole_kd_ops_s": 233741.5,
+    "whole_change_pct": -0.34682697022020426
+  },
+  {
+    "workload": "threads",
+    "workers": 7,
+    "whole_native_ops_s": 243049.5,
+    "whole_kd_ops_s": 246068.0,
+    "whole_change_pct": 1.2419280846082792
+  },
+  {
+    "workload": "threads",
+    "workers": 8,
+    "whole_native_ops_s": 236305.5,
+    "whole_kd_ops_s": 237688.0,
+    "whole_change_pct": 0.5850477453973824
+  },
+  {
+    "workload": "threads",
+    "workers": 12,
+    "whole_native_ops_s": 221050.0,
+    "whole_kd_ops_s": 227454.5,
+    "whole_change_pct": 2.897308301289292
+  },
+  {
+    "workload": "threads",
+    "workers": 16,
+    "whole_native_ops_s": 227497.0,
+    "whole_kd_ops_s": 230575.5,
+    "whole_change_pct": 1.3532046576438361
+  },
+  {
+    "workload": "threads",
+    "workers": 20,
+    "whole_native_ops_s": 219715.0,
+    "whole_kd_ops_s": 233803.5,
+    "whole_change_pct": 6.412170311539955
+  },
+  {
+    "workload": "threads",
+    "workers": 24,
+    "whole_native_ops_s": 217142.5,
+    "whole_kd_ops_s": 208534.0,
+    "whole_change_pct": -3.9644473099462285
+  },
+  {
+    "workload": "threads",
+    "workers": 28,
+    "whole_native_ops_s": 204923.0,
+    "whole_kd_ops_s": 208727.0,
+    "whole_change_pct": 1.8563070031182516
+  },
+  {
+    "workload": "threads",
+    "workers": 32,
+    "whole_native_ops_s": 193982.5,
+    "whole_kd_ops_s": 218347.5,
+    "whole_change_pct": 12.560411377314962
+  },
+  {
+    "workload": "threads",
+    "workers": 36,
+    "whole_native_ops_s": 155197.5,
+    "whole_kd_ops_s": 167628.5,
+    "whole_change_pct": 8.009793972196722
+  },
+  {
+    "workload": "threads",
+    "workers": 40,
+    "whole_native_ops_s": 136144.0,
+    "whole_kd_ops_s": 150707.0,
+    "whole_change_pct": 10.69676225173346
+  },
+  {
+    "workload": "threads",
+    "workers": 44,
+    "whole_native_ops_s": 128951.0,
+    "whole_kd_ops_s": 134673.0,
+    "whole_change_pct": 4.4373444176470045
+  },
+  {
+    "workload": "threads",
+    "workers": 48,
+    "whole_native_ops_s": 120282.5,
+    "whole_kd_ops_s": 131767.0,
+    "whole_change_pct": 9.547939226404512
+  },
+  {
+    "workload": "threads",
+    "workers": 52,
+    "whole_native_ops_s": 119748.0,
+    "whole_kd_ops_s": 128577.0,
+    "whole_change_pct": 7.372983264856203
+  },
+  {
+    "workload": "threads",
+    "workers": 56,
+    "whole_native_ops_s": 111697.5,
+    "whole_kd_ops_s": 125718.5,
+    "whole_change_pct": 12.552653371830157
+  },
+  {
+    "workload": "threads",
+    "workers": 60,
+    "whole_native_ops_s": 114904.0,
+    "whole_kd_ops_s": 126258.0,
+    "whole_change_pct": 9.881292209148507
+  }
+]

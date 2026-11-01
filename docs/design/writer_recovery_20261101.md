@@ -154,3 +154,12 @@ original-body syscall controller to the explicit scope4 Native-MM profile,
 keeping both syscall backends on one image and all existing identity checks.
 These are measurement support changes; production lock sources remain identical
 to the merged candidate. The frozen Nano input is not edited during its run.
+
+The fresh Native comparison is complete: 420 Nano, 84 mmap1 and 126 original-body
+syscall points, exactly one round each. See the
+[complete campaign report](../../bench/results/10.176.26.71/bench/master-native-20261101/README.md).
+Mmap1 geometric-mean changes are +3.35% for threads and -0.28% for processes;
+at sixty workers they are +9.88% and +0.15%. The report retains the negative
+rwlock c16-w1 and FIONREAD means and every individual loss. This Native baseline
+does not remeasure the earlier master-relative losses or close that policy gate.
+The ordinary kernel and temporary host settings were restored.
