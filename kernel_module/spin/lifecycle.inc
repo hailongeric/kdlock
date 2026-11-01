@@ -58,6 +58,7 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(__alignof__(struct kd_spin_node) < L1_CACHE_BYTES);
 	BUILD_BUG_ON(__alignof__(kd_spin_nodes) < 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_node) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_node, read_admission) != 56);
 	BUILD_BUG_ON(offsetof(struct kd_spin_node, completed) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_node, locked) != L1_CACHE_BYTES + 1);
 	BUILD_BUG_ON(sizeof(kd_spinlock_t) != sizeof(u32));

@@ -30,6 +30,8 @@ def main():
         (Path(directory)/'spin_mcs_policy.h').write_text('\n'.join(sampling) + '\n')
         source = read_source(ROOT/'kernel_module/kd_spinlock.c')
         direct = (ROOT/'include/kd_spin_direct.h').read_text()
+        (Path(directory)/'spin_native_release.h').write_text(definition(direct,
+            'static __always_inline void kd_spin_direct_native_release_inline(kd_spinlock_t *lock)'))
         paired = 'void ' + definition(source,
             'kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)')
         paired += definition(direct,

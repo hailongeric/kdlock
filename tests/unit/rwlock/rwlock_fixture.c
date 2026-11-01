@@ -107,6 +107,16 @@ static int kd_spin_prepare(kd_spinlock_t *p, unsigned long ip, unsigned int abi)
 #include "rwlock_production.h"
 #include "rwlock_native_release.h"
 
+/* This header fixture substitutes the gate engine. The separate native-MCS
+ * fixture executes the production group admission and notification code. */
+void kd_rwlock_read_slowpath(kd_rwlock_t *lock)
+{
+	kd_spin_direct_native_lock_inline(&lock->gate);
+	atomic_add(KD_RWLOCK_READER_BIAS, &lock->cnts);
+	atomic_cond_read_acquire(&lock->cnts, !(VAL & KD_RWLOCK_WRITER_LOCKED));
+	kd_spin_direct_native_release_inline(&lock->gate);
+}
+
 /* Substitute the gate engine, retaining the production writer admission. */
 void kd_rwlock_lock_pinned_clobber_v1(kd_spinlock_t *gate, unsigned long sp,
 				    unsigned long ip, unsigned long bp)

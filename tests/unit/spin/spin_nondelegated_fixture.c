@@ -8,11 +8,18 @@
 #include <stdlib.h>
 
 typedef uint32_t u32;
+typedef uint8_t u8;
 typedef struct { u32 counter; } atomic_t;
 struct qspinlock {
  union { atomic_t val; struct { uint8_t locked, pending; uint16_t tail; }; uint16_t locked_pending; };
 };
 typedef struct qspinlock kd_spinlock_t;
+typedef struct kd_rwlock { atomic_t cnts; struct qspinlock gate; } kd_rwlock_t;
+#define KD_RWLOCK_READER_BIAS 0x200U
+#define KD_RWLOCK_WRITER_LOCKED 0xffU
+#define KD_RWLOCK_WRITER_WAITING 0x100U
+#define KD_RWLOCK_WRITER_MASK 0x1ffU
+#define EXPORT_SYMBOL_GPL(name)
 #define __percpu
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define noinline __attribute__((noinline))
@@ -29,8 +36,10 @@ typedef struct qspinlock kd_spinlock_t;
 struct kd_spin_node {
  struct kd_spin_node *next;
  int socket_id, cpuid;
+ u8 proxy_context;
  unsigned long rsp;
  void *execution;
+ kd_rwlock_t *read_admission;
  uint8_t locked __attribute__((aligned(64)));
  bool completed;
 } __attribute__((aligned(64)));
@@ -56,6 +65,7 @@ static _Thread_local struct { unsigned int nondelegated; } kd_spin_fast_cpu;
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
 #define WRITE_ONCE(x,v) __atomic_store_n(&(x), v, __ATOMIC_RELAXED)
 #define smp_wmb() __atomic_thread_fence(__ATOMIC_RELEASE)
+#define atomic_add(n,p) ((void)__atomic_fetch_add(&(p)->counter,(n),__ATOMIC_SEQ_CST))
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define LOAD_UNTIL(p, condition, order) ({ \
  __auto_type pointer = (p); __typeof__(*pointer) VAL; \
@@ -138,6 +148,12 @@ static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *p)
 static void clear_pending(struct qspinlock *p) { __atomic_fetch_and(&p->val.counter, ~256U, __ATOMIC_RELAXED); }
 static void clear_pending_set_locked(struct qspinlock *p) { __atomic_store_n(&p->locked_pending, 1, __ATOMIC_RELAXED); }
 static void set_locked(struct qspinlock *p) { __atomic_store_n(&p->locked, 1, __ATOMIC_RELAXED); }
+static unsigned int kd_combiner_batch_size = 4;
+static bool check_irq_node(struct kd_spin_node *node) { return node->socket_id==IRQ_NUMA_NODE; }
+static u8 kd_spin_proxy_context(void) { return pins==1 ? 1 : 0; }
+static bool kd_spin_proxy_context_matches(u8 origin, u8 executor)
+{ return origin && origin==executor; }
+#include "spin_native_release.h"
 #include "kernel_module/spin/nondelegated.inc"
 #include "spin_direct_native.h"
 
@@ -265,12 +281,101 @@ static void queue_qualification(void)
   assert(!scripted_word && word.locked==1 && !states[0].node_count && pins==1);
   assert(!mcs_samples && snapshot_reads==1);
   assert(rate_hot==(n>=6) && veto_calls==(n<6));
-  assert(linked_reads==(n<6 ? n : 6));
+  assert(linked_reads==(n<6 ? n : 6)+(n ? 1U : 0U));
   if(n) assert(!pool[1][0].locked);
   for(unsigned int i=2;i<=n;i++) assert(pool[i][0].locked);
  }
  scripted_followers=0; changing_word=NULL; pins=0; rate_hot=0; mcs_samples=mcs_entries=0;
  linked_reads=snapshot_reads=veto_calls=0; queued=swaps=cas_calls=local_reads=0;
+}
+
+/* Execute the actual group walk. Only the original queued callers may retire
+ * their own slots; the head credits a fully linked prefix and leaves a real
+ * boundary node. A missing link never prompts a wait or a speculative credit. */
+static void reader_groups(void)
+{
+ kd_rwlock_t rw={0}, other={0};
+ for(unsigned int variant=0;variant<8;variant++) {
+  link_chain(6); rw.cnts.counter=0;
+  for(unsigned int i=0;i<=6;i++) {
+   pool[i][0].read_admission=&rw;
+   pool[i][0].execution=NULL;
+   pool[i][0].proxy_context=1;
+   pool[i][0].completed=false;
+   pool[i][0].rsp=0x900+i;
+  }
+  kd_combiner_batch_size=4;
+  unsigned int credited=3;
+  if(variant==1) { pool[2][0].read_admission=NULL; credited=2; }
+  if(variant==2) { pool[2][0].proxy_context=3; credited=2; }
+  if(variant==3) { pool[2][0].next=NULL; credited=2; }
+  if(variant==4) { kd_combiner_batch_size=1024; credited=6; }
+  if(variant==5) { kd_combiner_batch_size=1; credited=0; }
+  if(variant==6) { pool[0][0].read_admission=&other; credited=0; }
+  if(variant==7) { pool[0][0].execution=&other; credited=0; }
+  struct kd_spin_node *boundary=kd_rwlock_admit_readers(&rw,&pool[0][0],1);
+  assert(boundary==&pool[credited][0]);
+  assert(rw.cnts.counter==(credited+1)*KD_RWLOCK_READER_BIAS);
+  for(unsigned int i=0;i<=6;i++) {
+   assert(pool[i][0].completed==(i<credited));
+   assert(pool[i][0].locked==(i>=credited));
+   assert(pool[i][0].rsp==0x900+i);
+  }
+ }
+ /* A context-zero head also declines every follower. */
+ link_chain(1); rw.cnts.counter=0; pool[0][0].execution=NULL;
+ pool[0][0].read_admission=&rw; pool[0][0].completed=false;
+ assert(kd_rwlock_admit_readers(&rw,&pool[0][0],0)==&pool[0][0]);
+ assert(rw.cnts.counter==KD_RWLOCK_READER_BIAS && pool[0][0].locked);
+ kd_combiner_batch_size=4;
+}
+
+static kd_rwlock_t rwlock;
+static unsigned int rw_readers, rw_writers;
+static unsigned long rw_value, rw_mirror, rw_write_total;
+static void *reader_writer(void *arg)
+{
+ cpu=(long)arg;
+ pthread_barrier_wait(&start);
+ unsigned int writes=0;
+ for(unsigned int i=0;i<20000;i++) {
+  preempt_disable();
+  bool write=(i+cpu)%5==0;
+  if(write) {
+   kd_spin_direct_native_lock_inline(&rwlock.gate);
+   atomic_add(KD_RWLOCK_WRITER_WAITING,&rwlock.cnts);
+   atomic_cond_read_acquire(&rwlock.cnts,VAL==KD_RWLOCK_WRITER_WAITING);
+   u32 expected=KD_RWLOCK_WRITER_WAITING;
+   while(!atomic_try_cmpxchg_relaxed(&rwlock.cnts,&expected,KD_RWLOCK_WRITER_LOCKED)) {
+    atomic_cond_read_acquire(&rwlock.cnts,VAL==KD_RWLOCK_WRITER_WAITING);
+    expected=KD_RWLOCK_WRITER_WAITING;
+   }
+   assert(!__atomic_load_n(&rw_readers,__ATOMIC_SEQ_CST));
+   assert(!__atomic_fetch_add(&rw_writers,1,__ATOMIC_SEQ_CST));
+   rw_value++; cpu_relax(); rw_mirror=rw_value;
+   assert(__atomic_fetch_sub(&rw_writers,1,__ATOMIC_SEQ_CST)==1);
+   __atomic_fetch_and(&rwlock.cnts.counter,~KD_RWLOCK_WRITER_LOCKED,__ATOMIC_RELEASE);
+   kd_spin_direct_native_release_inline(&rwlock.gate);
+   writes++;
+  } else {
+   u32 count=__atomic_add_fetch(&rwlock.cnts.counter,KD_RWLOCK_READER_BIAS,__ATOMIC_ACQUIRE);
+   if(count&KD_RWLOCK_WRITER_MASK) {
+    atomic_add(-KD_RWLOCK_READER_BIAS,&rwlock.cnts);
+    kd_rwlock_read_slowpath(&rwlock);
+   }
+   assert(!__atomic_load_n(&rw_writers,__ATOMIC_SEQ_CST));
+   __atomic_fetch_add(&rw_readers,1,__ATOMIC_SEQ_CST);
+   assert(rw_value==rw_mirror);
+   cpu_relax();
+   assert(rw_value==rw_mirror && !__atomic_load_n(&rw_writers,__ATOMIC_SEQ_CST));
+   __atomic_fetch_sub(&rw_readers,1,__ATOMIC_SEQ_CST);
+   __atomic_fetch_sub(&rwlock.cnts.counter,KD_RWLOCK_READER_BIAS,__ATOMIC_RELEASE);
+  }
+  assert(pins==1 && !states[cpu].node_count && !kd_spin_fast_cpu.nondelegated);
+  preempt_enable();
+ }
+ __atomic_fetch_add(&rw_write_total,writes,__ATOMIC_RELAXED);
+ return NULL;
 }
 int main(int argc, char **argv)
 {
@@ -292,6 +397,14 @@ int main(int argc, char **argv)
  if(thread_count==CPUS) assert(queue_total && read_total);
  assert(sample_total==queue_total);
  pthread_barrier_destroy(&start);
+ reader_groups();
+ pthread_barrier_init(&start,NULL,thread_count);
+ for(unsigned long i=0;i<thread_count;i++) assert(!pthread_create(&threads[i],NULL,reader_writer,(void *)i));
+ for(unsigned int i=0;i<thread_count;i++) assert(!pthread_join(threads[i],NULL));
+ assert(rw_value==rw_write_total && rw_mirror==rw_value);
+ assert(!rwlock.cnts.counter && !rwlock.gate.val.counter && !rw_readers && !rw_writers);
+ pthread_barrier_destroy(&start);
+ printf("PASS bounded reader credits, writer/context boundaries, terminal/missing links, %lu mixed writes with original-thread reads\n",rw_write_total);
  /* A pre-existing reserved slot must survive a later nondelegating waiter. */
  cpu=0; states[0].node_count=1; pool[0][0].rsp=0x1234;
  kd_spin_acquire_nondelegated(&lock);
