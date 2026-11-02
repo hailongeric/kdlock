@@ -102,6 +102,8 @@ jit_test_call_wait(unsigned long index, unsigned long a1, unsigned long a2,
 	return result;
 }
 
+#include "helper_native.inc"
+
 static int helper_register(void)
 {
 	static const struct kd_service_call_desc descriptors[] = {
@@ -109,6 +111,16 @@ static int helper_register(void)
 		  .nargs = 6, .result_kind = KD_SERVICE_CALL_WORD, .context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN },
 		{ .symbol = "jit_test_call_wait", .target = (unsigned long)jit_test_call_wait,
 		  .nargs = 6, .result_kind = KD_SERVICE_CALL_WORD, .context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN },
+		{ .symbol = "jit_test_native_spin_lock", .target = (unsigned long)jit_test_native_spin_lock,
+		  .nargs = 1, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_SPIN_LOCK },
+		{ .symbol = "jit_test_native_spin_try", .target = (unsigned long)jit_test_native_spin_try,
+		  .nargs = 1, .result_kind = KD_SERVICE_CALL_WORD, .context_kind = KD_SERVICE_CALL_SPIN_TRYLOCK },
+		{ .symbol = "jit_test_native_spin_unlock", .target = (unsigned long)jit_test_native_spin_unlock,
+		  .nargs = 1, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_SPIN_UNLOCK },
+		{ .symbol = "jit_test_native_rcu_lock", .target = (unsigned long)jit_test_native_rcu_lock,
+		  .nargs = 0, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_RCU_LOCK },
+		{ .symbol = "jit_test_native_rcu_unlock", .target = (unsigned long)jit_test_native_rcu_unlock,
+		  .nargs = 0, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_RCU_UNLOCK },
 	};
 	int result = kd_service_call_register(descriptors, ARRAY_SIZE(descriptors), THIS_MODULE);
 

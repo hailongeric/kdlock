@@ -21,7 +21,7 @@ static bool killable_idle(void)
 	unsigned int i;
 
 #ifdef JIT_CONTINUATION_HELPER
-	if (!kd_mutex_is_idle(&helper_child))
+	if (!kd_mutex_is_idle(&helper_child) || raw_spin_is_locked(&helper_native_lock))
 		return false;
 #endif
 	for (i = 0; i < 4; ++i)
@@ -59,6 +59,32 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
 	WRITE_ONCE(slot->prefix, READ_ONCE(slot->prefix) + 1);
 #ifdef JIT_CONTINUATION_HELPER
+	if (flags & (JIT_KILLABLE_NATIVE_PAIRS | JIT_KILLABLE_NATIVE_EARLY)) {
+		jit_test_native_spin_lock(&helper_native_lock);
+		if (flags & JIT_KILLABLE_NATIVE_EARLY) {
+			WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+			if (atomic_dec_return(&writers))
+				atomic_inc(&failures);
+			kd_up_write(&test_lock);
+			/* A Native ticket keeps this scalar tail on E after the KD
+			 * writer is released. The final Native release ends the scope. */
+			WRITE_ONCE(helper_native_body_after, READ_ONCE(helper_native_body_after) + 1);
+			jit_test_native_spin_unlock(&helper_native_lock);
+			return 0;
+		}
+		if (jit_test_native_spin_try(&helper_native_lock))
+			atomic_inc(&failures);
+		for (i = 0; i < 9; ++i)
+			jit_test_native_rcu_lock();
+		for (i = 0; i < 9; ++i)
+			jit_test_native_rcu_unlock();
+		jit_test_native_spin_unlock(&helper_native_lock);
+		if (jit_test_native_spin_try(&helper_native_lock))
+			jit_test_native_spin_unlock(&helper_native_lock);
+		else
+			atomic_inc(&failures);
+		WRITE_ONCE(helper_native_body_after, READ_ONCE(helper_native_body_after) + 1);
+	}
 	if (flags & (JIT_KILLABLE_HELPER | JIT_KILLABLE_HELPER_WAIT)) {
 		unsigned long index = slot - killable_slots;
 		unsigned long value;
@@ -223,6 +249,8 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 #ifdef JIT_CONTINUATION_HELPER
 	if (cmd == JIT_HELPER_SNAPSHOT)
 		return helper_snapshot(user);
+	if (cmd == JIT_NATIVE_SNAPSHOT)
+		return helper_native_snapshot(user);
 	if (cmd == JIT_HELPER_UNREGISTER) {
 		if (!killable_idle() || atomic_cmpxchg(&control, 0, -1))
 			return -EBUSY;
@@ -284,6 +312,9 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 			memset(killable_slots, 0, sizeof(killable_slots));
 #ifdef JIT_CONTINUATION_HELPER
 			memset(helper_slots, 0, sizeof(helper_slots));
+			memset(helper_native_events, 0, sizeof(helper_native_events));
+			WRITE_ONCE(helper_native_count, 0);
+			WRITE_ONCE(helper_native_body_after, 0);
 #endif
 			WRITE_ONCE(killable_release, 0);
 			WRITE_ONCE(hot, 0);
@@ -302,6 +333,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE
 #ifdef JIT_CONTINUATION_HELPER
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
+	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
 #endif
 	    ) || run.reserved ||
 	    (run.operation != JIT_KILLABLE_ROOT && run.flags))

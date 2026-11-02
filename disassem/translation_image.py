@@ -113,7 +113,7 @@ def emit_jit_assembly(
     native_calls=None,
     trusted_source=False,
     origin_sites=None,
-    budget_resume_enabled=False, returning_targets=None,
+    budget_resume_enabled=False, returning_targets=None, returning_services=(),
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -252,7 +252,7 @@ def emit_jit_assembly(
     direct_targets = set(native_calls.services) if native_calls is not None else set()
     f.write(indirect_jump.make_callee_table(
         [target for target in missing_callees if target not in direct_targets],
-        resolved_hostcalls))
+        resolved_hostcalls, returning_services=returning_services))
     # The source RIP is needed only if the budget expires. Keep its material-
     # ization off the frequently executed branch-block path; the exit resumes
     # at the same untouched source block as the previous INC/TEST sequence.

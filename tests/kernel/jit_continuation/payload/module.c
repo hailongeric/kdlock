@@ -557,6 +557,7 @@ static int __init continuation_init(void)
 #endif
 #ifdef JIT_CONTINUATION_HELPER
 	BUILD_BUG_ON(sizeof(struct jit_helper_snapshot) != 1496);
+	BUILD_BUG_ON(sizeof(struct jit_native_snapshot) != 1976);
 #endif
 #if defined(JIT_CONTINUATION_SPINNING) || defined(JIT_CONTINUATION_ORIGIN_INSTRUCTIONS)
 	if (!boot_cpu_has(X86_FEATURE_RDTSCP))

@@ -1,5 +1,6 @@
 """Guest-only returning-primitive observation and normal retirement checks."""
 from pathlib import Path
+import copy
 import struct
 import sys
 import unittest
@@ -43,12 +44,13 @@ class HelperObservations(unittest.TestCase):
             self.validate(self.events()[:-1])
 
     def test_registration_arity_and_unique_target(self):
-        table = ('a 1000 6 1 1 jit_test_call_scalar\n'
-                 'b 2000 6 1 1 jit_test_call_wait\n')
+        table = ''.join(f'{10 + index:x} {(index + 1) * 0x1000:x} {arity} {result} {context} {name}\n'
+                        for index, (name, (arity, result, context)) in enumerate(helper.DECLARATIONS.items()))
         rows, _ = helper.call_table(table)
         self.assertEqual(rows['jit_test_call_scalar']['cookie'], 10)
         for changed in (table.replace(' 6 ', ' 7 ', 1), table.replace('b 2000', '0 2000'),
-                        table.replace('b 2000', 'b 1000'), table + table.splitlines()[0] + '\n'):
+                        table.replace('b 2000', 'b 1000'), table + table.splitlines()[0] + '\n',
+                        table.replace(' 1 2 4 ', ' 1 2 1 ')):
             with self.assertRaises(helper.rt.Failure):
                 helper.call_table(changed)
 
@@ -66,6 +68,79 @@ class HelperObservations(unittest.TestCase):
         self.assertEqual(decoded['child_released'], 1)
         with self.assertRaises(helper.rt.Failure):
             helper.decode_helper_snapshot(data[:-8])
+
+    def native_state(self, early=False):
+        rows = []
+        for operation, before, after, rcu_before, rcu_after, value, _, _ in helper.native_plan(early):
+            rows.append(dict(zip(helper.NATIVE_FIELDS,
+                (operation, 10, 0x1800, before, after, rcu_before, rcu_after, 0, 0, value))))
+        return dict(version=1, count=len(rows), errors=0, lock_address=0x8000, body_after=1,
+                    stack_low=0x1000, stack_high=0x5000, events=rows)
+
+    def native_messages(self, early=False):
+        names = {1: 'jit_test_native_spin_lock', 2: 'jit_test_native_spin_try',
+                 3: 'jit_test_native_spin_unlock', 4: 'jit_test_native_rcu_lock',
+                 5: 'jit_test_native_rcu_unlock'}
+        descriptors = {name: dict(target=0x1000 + index * 0x100)
+                       for index, name in enumerate(helper.SYMBOLS)}
+        lines = []
+        plan = helper.native_plan(early)
+        for sequence, expected in enumerate(plan, 1):
+            operation, _, after, _, rcu_after, value, owner_stage, acquisition = expected
+            for stage, task in (('request', 20), ('enter', 10), ('done', 10),
+                                ('complete' if early and sequence == len(plan) else 'resume', 20)):
+                lines.append(f'kd_service primitive: stage={stage} origin=10 executor=20 task={task} '
+                    f'identity=100 generation=7 sequence={sequence} target={descriptors[names[operation]]["target"]:x} '
+                    f'return={0x400 + sequence * 8:x} image_generation=44 ax={value:x} flags=202')
+            lines.append(f'kd_service native: stage={owner_stage} origin=10 executor=20 task=10 '
+                f'identity=100 generation=7 sequence={sequence} acquisition_seq={acquisition} '
+                f'kind={1 if operation <= 3 else 2} object={"8000" if operation <= 3 else "0"} '
+                f'preempt={after} rcu={rcu_after}')
+        return '\n'.join(lines), descriptors
+
+    def test_native_pair_context_results_and_final_complete(self):
+        root = dict(identity=0x100, generation=7, executor=20)
+        for early, count in ((False, 23), (True, 2)):
+            state = self.native_state(early)
+            messages, descriptors = self.native_messages(early)
+            checked = helper.validate_native_trace(messages, root, 10, descriptors, 44, state, early)
+            self.assertEqual(len(checked['owners']), count)
+            self.assertEqual(max(row['rcu_after'] for row in state['events']), 0 if early else 9)
+        messages, descriptors = self.native_messages(True)
+        for changed in (messages.replace('stage=complete', 'stage=resume'),
+                        messages.replace('acquisition_seq=1 kind=1', 'acquisition_seq=2 kind=1', 1),
+                        messages.replace('stage=release origin=10 executor=20 task=10',
+                                         'stage=release origin=10 executor=20 task=20')):
+            with self.assertRaises(helper.rt.Failure):
+                helper.validate_native_trace(changed, root, 10, descriptors, 44, self.native_state(True), True)
+        messages, descriptors = self.native_messages()
+        with self.assertRaises(helper.rt.Failure):
+            helper.validate_native_trace(messages.replace('stage=not_granted', 'stage=grant'), root, 10,
+                                         descriptors, 44, self.native_state())
+        for index, field, value in ((1, 'result', 1), (1, 'preempt_after', 2),
+                                     (2, 'rcu_after', 0), (0, 'pid', 20),
+                                     (0, 'stack_address', 0x5000), (22, 'irqs_after', 1)):
+            state = copy.deepcopy(self.native_state())
+            state['events'][index][field] = value
+            with self.subTest(field=field), self.assertRaises(helper.rt.Failure):
+                helper.validate_native_observation(state, 10)
+
+    def test_native_observation_abi_and_censoring(self):
+        state = self.native_state(True)
+        words = [1, 2, 0, 0x8000, 1, 0x1000, 0x5000]
+        for event in state['events']:
+            words.extend(event[name] for name in helper.NATIVE_FIELDS)
+        words.extend([0] * (247 - len(words)))
+        data = struct.pack('=247Q', *words)
+        decoded = helper.decode_native_snapshot(data)
+        self.assertEqual(decoded, state)
+        for mutated in (data[:-8], struct.pack('=247Q', 1, 25, *words[2:])):
+            with self.assertRaises(helper.rt.Failure):
+                helper.decode_native_snapshot(mutated)
+        state['count'] = 1
+        state['events'] = state['events'][:1]
+        with self.assertRaises(helper.rt.Failure):
+            helper.validate_native_observation(state, 10, True)
 
     def test_optional_hook_follows_source_retire_before_unload(self):
         session = bench_session.Session.__new__(bench_session.Session)

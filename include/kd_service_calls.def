@@ -11,11 +11,11 @@ KD_SERVICE_CALL(kmem_cache_prefill_sheaf, 3, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_refill_sheaf, 4, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_alloc_from_sheaf_noprof, 3, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_return_sheaf, 3, KD_SERVICE_CALL_VOID)
-KD_SERVICE_CALL(kmem_cache_free, 2, KD_SERVICE_CALL_VOID)
-KD_SERVICE_CALL(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID)
-KD_SERVICE_CALL(kfree, 1, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CONTEXT(kmem_cache_free, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(kfree, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
-KD_SERVICE_CALL(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).
  * The temporary reader-exclusion wait finishes before either API returns. */
 KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)
@@ -31,5 +31,32 @@ KD_SERVICE_CALL(dynamic_cond_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(dynamic_might_resched, 0, KD_SERVICE_CALL_WORD)
 /* include/linux/rcupdate.h: void (struct rcu_head *, rcu_callback_t).
  * These enqueue callbacks; no read-side ownership survives the return. */
-KD_SERVICE_CALL(call_rcu, 2, KD_SERVICE_CALL_VOID)
-KD_SERVICE_CALL(call_rcu_hurry, 2, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CONTEXT(call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(call_rcu_hurry, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/pgtable-generic.c: conditional pointer result; ptlp is argument four.
+ * Ordinary Native APIs retain separate spin and RCU records after return. */
+KD_SERVICE_CONTEXT(pte_offset_map_lock, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_LOCK)
+KD_SERVICE_CONTEXT(__pte_offset_map, 3, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+KD_SERVICE_CONTEXT(pte_offset_map_ro_nolock, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+KD_SERVICE_CONTEXT(pte_offset_map_rw_nolock, 5, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+/* kernel/locking/spinlock.c, include/linux/spinlock_api_smp.h and RCU API:
+ * plain forms only; IRQ/BH variants require their own saved-state contract. */
+KD_SERVICE_CONTEXT(_raw_spin_lock, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SPIN_LOCK)
+KD_SERVICE_CONTEXT(_raw_spin_trylock, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_SPIN_TRYLOCK)
+KD_SERVICE_CONTEXT(_raw_spin_unlock, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SPIN_UNLOCK)
+KD_SERVICE_CONTEXT(__rcu_read_lock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_LOCK)
+KD_SERVICE_CONTEXT(__rcu_read_unlock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_UNLOCK)
+/* x86-64 PV callbacks: DI/SI/DX/CX arguments, AX result. Exact identity
+ * callback preserves the remaining registers and arithmetic flags. */
+KD_SERVICE_CONTEXT(_paravirt_ident_64, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(paravirt_ret0, 0, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* arch/x86/include/asm/pgtable_64.h: void (entry pointer, one-word entry). */
+KD_SERVICE_CONTEXT(native_set_pte, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pmd, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pud, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_p4d, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pgd, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/rmap.c and arch/x86/mm/tlb.c: actual TLB API owns CPU-local operations;
+ * flush_tlb_mm_range balances its own get_cpu()/put_cpu() protection. */
+KD_SERVICE_CONTEXT(flush_tlb_batched_pending, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(flush_tlb_mm_range, 5, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)

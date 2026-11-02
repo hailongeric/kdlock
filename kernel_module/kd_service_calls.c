@@ -29,13 +29,41 @@ static unsigned int kd_service_call_count;
 static bool kd_service_call_frozen;
 static DEFINE_MUTEX(kd_service_call_configuration);
 
+static bool kd_service_call_context_valid(const struct kd_service_call_desc *desc)
+{
+	switch (desc->context_kind) {
+	case KD_SERVICE_CALL_BALANCED_ORIGIN:
+	case KD_SERVICE_CALL_ATOMIC_ORIGIN:
+		return true;
+	case KD_SERVICE_CALL_PTE_LOCK:
+		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 4 &&
+			desc->result_kind == KD_SERVICE_CALL_WORD;
+	case KD_SERVICE_CALL_SPIN_LOCK:
+	case KD_SERVICE_CALL_SPIN_UNLOCK:
+		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 1 &&
+			desc->result_kind == KD_SERVICE_CALL_VOID;
+	case KD_SERVICE_CALL_SPIN_TRYLOCK:
+		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 1 &&
+			desc->result_kind == KD_SERVICE_CALL_WORD;
+	case KD_SERVICE_CALL_RCU_LOCK:
+	case KD_SERVICE_CALL_RCU_UNLOCK:
+		return IS_ENABLED(CONFIG_PREEMPT_RCU) && !desc->nargs &&
+			desc->result_kind == KD_SERVICE_CALL_VOID;
+	case KD_SERVICE_CALL_PTE_RCU:
+		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs >= 3 &&
+			desc->nargs <= 5 && desc->result_kind == KD_SERVICE_CALL_WORD;
+	default:
+		return false;
+	}
+}
+
 static bool kd_service_call_valid(const struct kd_service_call_desc *desc)
 {
 	return desc->symbol && *desc->symbol && desc->target && desc->nargs <= 6 &&
 		!desc->reserved &&
 		(desc->result_kind == KD_SERVICE_CALL_WORD ||
 		 desc->result_kind == KD_SERVICE_CALL_VOID) &&
-		desc->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN &&
+		kd_service_call_context_valid(desc) &&
 		strnlen(desc->symbol, KD_SERVICE_CALL_NAME) < KD_SERVICE_CALL_NAME &&
 		!strpbrk(desc->symbol, " \t\r\n");
 }
@@ -168,6 +196,12 @@ bool kd_service_call_matches(const struct kd_service_call_entry *entry,
 		smp_load_acquire(&entry->active);
 }
 
+unsigned int kd_service_call_context(const struct kd_service_call_entry *entry)
+{
+	BUG_ON(!entry || !atomic_read(&entry->users));
+	return entry->context_kind;
+}
+
 int kd_service_calls_pin(void)
 {
 	unsigned int i;
@@ -223,17 +257,22 @@ int kd_service_calls_init(void)
 	struct kd_service_call_desc desc;
 	int result;
 
-#define KD_SERVICE_CALL(name, args, result_type) do { \
+#define KD_SERVICE_CONTEXT(name, args, result_type, context) do { \
 	desc = (struct kd_service_call_desc){ .symbol = #name, \
 		.target = kallsyms_lookup_name(#name), .nargs = args, \
-		.result_kind = result_type, .context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN }; \
+		.result_kind = result_type, .context_kind = context }; \
+	if (context >= KD_SERVICE_CALL_PTE_LOCK && !IS_ENABLED(CONFIG_PREEMPT_RCU)) \
+		break; \
 	if (desc.target) { \
 		result = kd_service_call_register(&desc, 1, NULL); \
 		if (result) return result; \
 	} \
 } while (0);
+#define KD_SERVICE_CALL(name, args, result_type) \
+	KD_SERVICE_CONTEXT(name, args, result_type, KD_SERVICE_CALL_BALANCED_ORIGIN)
 #include "kd_service_calls.def"
 #undef KD_SERVICE_CALL
+#undef KD_SERVICE_CONTEXT
 	return 0;
 }
 

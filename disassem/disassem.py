@@ -323,8 +323,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         # in this image requires the returning-service execution contract.
         # Unrelated ordinary images keep their existing publication format.
         if returning_services and any(
-                line.name == 'CALL' and isinstance(line.args[0], ExprLoc) and
-                db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services
+                line.name == 'CALL' and
+                (not isinstance(line.args[0], ExprLoc) or
+                 db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
                 for block in block_dict.values() for line in block.lines):
             service_queue_required = True
         block_dict, boundary_error = context_policy.critical_section_blocks(
@@ -649,8 +650,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     returning_targets = {
         line.offset + line.l
         for block in block_dict.values() for line in block.lines
-        if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
-        and db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services
+        if line.name == 'CALL' and returning_services
+        and (not isinstance(line.args[0], ExprLoc)
+             or db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
         and line.offset + line.l in emitted_pcs
     }
     assembly = emit_jit_assembly(
@@ -669,6 +671,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         origin_sites=origin_sites,
         budget_resume_enabled=budget_resume_enabled,
         returning_targets=returning_targets,
+        returning_services=returning_services,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 

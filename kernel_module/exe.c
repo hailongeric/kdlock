@@ -511,8 +511,24 @@ returned_wrapper:
 		 * an original-task suffix. Unsupported reached operations are reported
 		 * as an integration boundary with the committed packet unchanged. */
 		if (cont && cont->service_ops) {
-			if (args[0] == KD_EXE_CALL_MISS) {
-				call_ret = fault_kind ? -EINVAL : kd_jit_service_control(frame, regs);
+			if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL) {
+				call_ret = fault_kind ? -EINVAL : 0;
+				if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
+					unsigned int length;
+					unsigned long return_ip, site = regs->orig_ax;
+
+					/* A registered dynamic target still needs the exact
+					 * source CALL and its unconsumed successor word. */
+					call_ret = kd_source_pin_target(site);
+					if (!call_ret)
+						call_ret = kd_jit_indirect_call_length(site, &length);
+					if (!call_ret && (site > ~0UL - length ||
+					    copy_from_kernel_nofault(&return_ip, (void *)regs->sp,
+						 sizeof(return_ip)) || return_ip != site + length))
+						call_ret = -EINVAL;
+				}
+				if (!call_ret)
+					call_ret = kd_jit_service_control(frame, regs);
 				if (call_ret == KD_EXE_KNOWN_SERVICE) {
 					ret_flag = KD_EXE_RUN_SERVICE;
 					break;

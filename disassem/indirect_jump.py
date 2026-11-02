@@ -121,6 +121,7 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
             # Only an actual source CALL reaches this stub, after target
             # evaluation and the virtual push. orig_ax is provenance scratch
             # for the distinct FULL exit, never a native FLAGS-restore tag.
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
             ret_str += make_inst("MOVABS", ["R15", hex(indirect_calls[offset])])
             ret_str += make_inst("MOV", ["QWORD PTR[REG_BANK + KD_REG_ORIG_AX]", "R15"])
             ret_str += make_inst("MOV", ["Stack_IJ", "11"])
@@ -136,7 +137,7 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
     return ret_str
 
 
-def make_callee_table(callee_list, hostcalls=None):
+def make_callee_table(callee_list, hostcalls=None, *, returning_services=()):
     hostcalls = hostcalls or {}
     ret_str = ""
     for offset in sorted(callee_list):
@@ -146,6 +147,8 @@ def make_callee_table(callee_list, hostcalls=None):
                 f"/* KD_HOSTCALL id={service.service_id} symbol={service.symbol} */\n"
             )
         ret_str += "loc_" + hex(offset)[2:] + ":\n"
+        if offset in returning_services:
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
         ret_str += make_inst("MOVABS", ["R14", hex(offset)])
         ret_str += make_inst("MOV", ["Stack_IJ", "0x5" if service else "0x1"])
         # The common exit publishes SP for COMPLETE, reduced and FULL packets.

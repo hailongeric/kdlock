@@ -33,8 +33,23 @@ SYM_FUNC_START(kd_service_origin_bridge)
 	movq KD_REG_CX(%rbx), %rcx
 	movq KD_REG_R8(%rbx), %r8
 	movq KD_REG_R9(%rbx), %r9
-	movq KD_ORIGIN_CALL_TARGET(%r12), %r11
-	CALL_NOSPEC r11
+	/* Some declared callbacks preserve ordinary volatile registers. Import
+	 * every source value before the call; keep the target in our saved R13. */
+	movq KD_ORIGIN_CALL_TARGET(%r12), %r13
+	movq KD_REG_AX(%rbx), %rax
+	movq KD_REG_R10(%rbx), %r10
+	movq KD_REG_R11(%rbx), %r11
+	/* The source CALL exported arithmetic flags. Keep O's actual IF/control
+	 * state and use only our saved registers while importing source inputs. */
+	pushfq
+	popq %r14
+	andq $~KD_REG_ARITHMETIC_FLAGS, %r14
+	movq KD_REG_FLAGS(%rbx), %r15
+	andq $KD_REG_ARITHMETIC_FLAGS, %r15
+	orq %r15, %r14
+	pushq %r14
+	popfq
+	CALL_NOSPEC r13
 	/* Save every C-volatile output and flags before context restoration can
 	 * change them. Source callee-saved virtual values stay in the packet. */
 	pushfq

@@ -156,6 +156,9 @@ executes the matching Native release once; its record and any CPU-context
 authority survive until the actual release acknowledgment. Conditional failed
 acquisition creates no owner record. Counters can describe context depth but
 cannot replace individual Native lock records.
+An ordinary trylock of an already held object is still invoked on O and may
+return false; it is not treated as recursive blocking acquisition. Its unused
+candidate record cannot alter the earlier acquisition's exact authority.
 
 A paired Native API is distinct from the balanced primitive contract. The
 runtime must retain E's immediate execution capacity across acquisition and a
@@ -165,6 +168,45 @@ sleeping is allowed while the source's Native atomic context forbids it.
 Balanced helper calls inside that interval must observe O's actual retained
 Native context after removing only the engine-owned pin. Preserve actual
 Native signals, conditional results and all enclosing KD ownership records.
+
+The module descriptor context values distinguish balanced task calls (1),
+balanced nonblocking calls (2), conditional PTE spin-plus-RCU grant (3), ordinary
+spin acquire/try/release (4/5/6), RCU acquire/release (7/8), and conditional PTE
+RCU-only grant (9). The sysfs row shape is unchanged. Eight cold records per
+root are a storage fast path, not an API limit: a further acquisition retains
+one executor C-stack spill record before invoking the Native API, and released
+records are reused. Kernel-stack pressure is an explicit unvalidated boundary.
+The frontend accepts only those nine declared context values. A source
+indirect CALL keeps its exact successor in the immutable image when returning
+services are available; the runtime must still match the evaluated target to
+an exact registered descriptor before authorizing that continuation. Merely
+having a successor does not authorize an unknown callback. Images without a
+reached direct or indirect service call retain their ordinary publication
+requirements. Arithmetic flags at the actual source CALL boundary are saved
+before dispatch metadata changes them, for helper interfaces that preserve
+flags as well as ordinary C-volatile values.
+Every successful grant names O, root UID/generation, acquisition service
+sequence, kind and exact lock object; observed preemption/RCU depths only check
+those live records. With the supported preemptible-RCU configuration, each
+ordinary Native spin record contributes one Native preempt disable, while each
+RCU record contributes one task read-side nesting reference. The engine pin is
+accounted separately and is the only pin temporarily removed by the bridge.
+Balanced potentially sleeping calls are refused while either Native kind is
+live. A nonblocking context call may preserve that surrounding interval.
+
+Releasing the outer KD owner does not complete a root that still holds Native
+records. The final Native release can instead be its completion endpoint. That
+API has already executed on O, so completion leaves its original source CALL
+word unconsumed for the existing final RET restoration. An intermediate Native
+result consumes that word once and resumes E; final completion must never both
+pop it in the runtime and let the restoration RET pop another source word.
+Every registered direct CALL and admitted indirect CALL exports its source
+arithmetic flags. Immediately before the Native CALL, the bridge merges those
+bits with O's physical control flags without changing its IRQ state or source
+volatile inputs. It captures the callee's output flags before restoring the
+engine context. This also preserves a declared callback that leaves arithmetic
+flags and non-result registers unchanged. A special Native ABI still needs an
+exact argument/result and context declaration; a matching name is insufficient.
 
 Any source instruction that mutates CPU-local state outside those API calls
 needs its own faithful lowering or returning instruction service. In particular
@@ -621,6 +663,42 @@ baseline 7231ddf0963ff2cc730590c09cc81e7f96f93095. Stage 2 must report current
 local behavior honestly while adding generic observations; Stage 3 cannot claim
 forced replacement until the entry, phase, executor-context and startup
 capabilities above are implemented and validated together.
+
+## Returning GS memory instruction transactions
+
+Unlocked GS-relative INC and DEC must execute as one instruction on the
+original task's CPU. Replacing GS by a saved remote address preserves the
+address but loses the CPU-local read/modify/write contract. The retained
+protocol therefore adds a separate instruction transaction for 32-bit and
+64-bit memory operands. Immutable image metadata records the exact source
+bytes, instruction length, operation and JIT successor. The runtime decodes the
+same bytes, computes the effective offset from the existing FULL virtual GPR
+packet, and validates the retained image and original task before publication.
+The executor suspends before the original task touches the packet. The original
+task executes one unlocked INC or DEC, preserves input CF, records all resulting
+arithmetic flags, and acknowledges completion. Only then may the executor
+resume the exact successor. Virtual GPRs and SP do not change, and no CALL return
+word is constructed or consumed. Source bytes and the successor remain pinned
+through image retirement; neither a quota nor an unsupported reached operation
+permits an implicit original-task suffix.
+
+The original task performs the transaction on its ordinary task stack. Its
+runtime preemption pin is separate from source context. Exact accesses to
+__preempt_count require 32-bit INC/DEC handling which removes only that runtime
+pin while computing Native flags, retains each source preemption transition,
+and restores the runtime pin before acknowledgment. Subsequent Native calls and
+root completion must validate both the retained Native-spin records and these
+source transitions. In particular, DEC's zero test includes x86's inverted
+need-reschedule bit; a count biased by the runtime pin cannot supply its result.
+Other widths, LOCK/REP or address-size prefixes, non-GS segments and instructions
+without a decoded emitted successor remain explicit unsupported reached points.
+They must not execute through the remote ordinary RMW lowering.
+
+Focused validation will decode exact positive and negative byte forms, inspect
+generated FULL exit and arithmetic-flags reentry, then exercise source GPRs,
+unchanged SP/CF, increment/decrement results, exact acknowledgment/generation,
+interrupt-visible local updates and matched preemption transitions in a VM
+fixture. This source checkpoint supplies no measurement or execution receipt.
 
 ## Instrumentation checkpoint, November 2
 

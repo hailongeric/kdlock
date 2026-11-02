@@ -470,6 +470,14 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 	call->entry = entry;
 	call->packet = cont->packet;
 	call->target = call->call.target;
+	call->context_kind = kd_service_call_context(entry);
+	call->object = cont->packet->di;
+	call->object_out = call->context_kind == KD_SERVICE_CALL_PTE_LOCK ?
+		cont->packet->cx : 0;
+	call->spin_owner = NULL;
+	call->rcu_owner = NULL;
+	call->executor_pinned = false;
+	local_save_flags(call->executor_irq_flags);
 	call->native_sp = 0;
 	call->shadow_sp = 0;
 	call->shadow_bp = 0;
@@ -491,6 +499,7 @@ int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence
 	struct kd_origin_call *call;
 	struct kd_service_call_entry *entry;
 	unsigned long return_ip;
+	bool complete;
 
 	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
 	    cont->state != KD_CONT_BOUND || cont->executor != current ||
@@ -510,19 +519,29 @@ int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence
 	    kd_exec_cont_call_word(cont, &return_ip) || return_ip != call->call.return_ip)
 		return -EINVAL;
 	entry = call->entry;
-	/* This is one C CALL result, never root completion or another acquisition.
-	 * Its volatile outputs and arithmetic flags were captured by the bridge. */
-	cont->packet->sp += sizeof(unsigned long);
-	cont->packet->ip = return_ip;
-	cont->packet->orig_ax = KD_REG_SERVICE_REENTRY_TAG;
+	if (cont->service_ops->outer_released(cont->service_scope)) {
+		cont->frame.outer_unlock_seen = true;
+		cont->frame.jit_lock_released[0] = true;
+	}
+	complete = cont->frame.outer_unlock_seen &&
+		cont->service_ops->all_released(cont->service_scope);
+	/* The final restoration RET consumes the last API's original CALL word.
+	 * Other returning primitives consume it here before continuing on E. */
+	if (!complete) {
+		cont->packet->sp += sizeof(unsigned long);
+		cont->packet->ip = return_ip;
+	}
+	cont->packet->orig_ax = complete ? 0 : KD_REG_SERVICE_REENTRY_TAG;
 	cont->frame.control_call = call->call;
 	cont->frame.control_call.phase = KD_CALL_COMPLETE;
 	cont->frame.continuation_ip = cont->packet->ip;
 	cont->frame.continuation_sp = cont->packet->sp;
 	call->entry = NULL;
+	call->spin_owner = NULL;
+	call->rcu_owner = NULL;
 	smp_store_release(&call->phase, KD_ORIGIN_CALL_CONSUMED);
 	kd_service_call_put(entry);
-	return 0;
+	return complete ? KD_EXE_RUN_TO_UNLOCK : 0;
 }
 
 int kd_exec_cont_service_child(struct kd_exec_continuation *cont,

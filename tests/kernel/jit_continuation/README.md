@@ -67,7 +67,7 @@ MM execution. Source is unvalidated until matching VM receipts exist.
 
 ## Returning original-task primitives
 
-`--mode helper --family rwsem --cpus 0-3` adds a separate two-phase functional
+`--mode helper --family rwsem --cpus 0-3` adds a separate four-phase functional
 check using the same module, publication and normal retirement machinery.
 The existing eleven `killable` phases keep their typed-only image requirement
 384. Helper mode has reachable declared primitive CALLs and requires 896
@@ -93,6 +93,20 @@ bind one source return PC, transaction sequence, root identity/generation and
 immutable image generation. Their actual tasks must be E, O, O, E, followed
 by the parent's returned completion on the same E. The parent prefix and
 post-helper marker must each occur once.
+
+Two further phases observe ordinary Native spin/RCU pairs through declared
+returning primitives. The first acquires a spinlock on O, verifies an actual
+Native trylock of that held object returns false without another acquisition,
+holds nine nested RCU read intervals, then releases them and the spinlock. A
+later trylock must succeed and receive exactly one matching release. Nine
+simultaneous RCU intervals exercise retained storage beyond the eight cold
+records. Each primitive records O's task-stack address and actual preemption,
+IRQ and RCU counts before/after the Native API; the parser checks the complete
+sequence, exact transaction identity and return to the same E. The second
+phase releases the outer KD writer while a Native spinlock remains held, runs
+one scalar marker, then releases that final Native lock. That last transaction
+must report `complete` on E, and normal request/frame/source retirement must
+still finish. These are generic lock mechanism checks, not MM execution.
 
 A registration pin keeps the fixture loaded. Unregister while source admission
 is open must return `-EBUSY` and preserve that pin. After callers, transactions,

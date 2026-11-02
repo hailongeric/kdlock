@@ -56,6 +56,8 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_TRUE 32U
 #define JIT_KILLABLE_HELPER 64U
 #define JIT_KILLABLE_HELPER_WAIT 128U
+#define JIT_KILLABLE_NATIVE_PAIRS 256U
+#define JIT_KILLABLE_NATIVE_EARLY 512U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
@@ -98,4 +100,23 @@ struct jit_helper_snapshot {
 };
 #define JIT_HELPER_SNAPSHOT _IOR('E', 12, struct jit_helper_snapshot)
 #define JIT_HELPER_UNREGISTER _IO('E', 13)
+
+#define JIT_NATIVE_EVENTS 24
+enum jit_native_operation {
+	JIT_NATIVE_SPIN_LOCK = 1,
+	JIT_NATIVE_SPIN_TRY,
+	JIT_NATIVE_SPIN_UNLOCK,
+	JIT_NATIVE_RCU_LOCK,
+	JIT_NATIVE_RCU_UNLOCK,
+};
+struct jit_native_event {
+	__u64 operation, pid, stack_address;
+	__u64 preempt_before, preempt_after, rcu_before, rcu_after;
+	__u64 irqs_before, irqs_after, result;
+};
+struct jit_native_snapshot {
+	__u64 version, count, errors, lock_address, body_after, stack_low, stack_high;
+	struct jit_native_event events[JIT_NATIVE_EVENTS];
+};
+#define JIT_NATIVE_SNAPSHOT _IOR('E', 14, struct jit_native_snapshot)
 #endif

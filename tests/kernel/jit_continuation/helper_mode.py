@@ -1,4 +1,4 @@
-"""Two returning-primitive checks using the existing continuation lifecycle."""
+"""Returning primitives and Native pairs using the continuation lifecycle."""
 import errno
 import fcntl
 import os
@@ -15,7 +15,16 @@ FIELDS = ('origin_stack', 'calls', 'pid', 'stack_address', 'stack_low', 'stack_h
           'sleep_calls', 'jiffies_delta', 'switches_delta', 'child_acquired', 'child_released', 'signal_seen')
 ARGUMENTS = (0x1122334455667788, 0x89ABCDEF01234567, 0x1020304050607080,
              0x55AA00FF88776611, 0xDEADBEEF2468ACE0)
-SYMBOLS = ('jit_test_call_scalar', 'jit_test_call_wait')
+DECLARATIONS = {
+    'jit_test_call_scalar': (6, 1, 1), 'jit_test_call_wait': (6, 1, 1),
+    'jit_test_native_spin_lock': (1, 2, 4), 'jit_test_native_spin_try': (1, 1, 5),
+    'jit_test_native_spin_unlock': (1, 2, 6), 'jit_test_native_rcu_lock': (0, 2, 7),
+    'jit_test_native_rcu_unlock': (0, 2, 8),
+}
+SYMBOLS = tuple(DECLARATIONS)
+NATIVE_SNAPSHOT = 0x87B8450E
+NATIVE_FIELDS = ('operation', 'pid', 'stack_address', 'preempt_before', 'preempt_after',
+                 'rcu_before', 'rcu_after', 'irqs_before', 'irqs_after', 'result')
 
 
 def expected_result(index):
@@ -42,6 +51,24 @@ def decode_helper_snapshot(buffer):
     return state
 
 
+def native_snapshot():
+    buffer = bytearray(1976)
+    with open(DEVICE, 'rb', buffering=0) as device:
+        fcntl.ioctl(device, NATIVE_SNAPSHOT, buffer, True)
+    return decode_native_snapshot(buffer)
+
+
+def decode_native_snapshot(buffer):
+    rt.require(len(buffer) == 1976, 'Native observation size differs', 'DATA_ERROR')
+    words = struct.unpack('=247Q', buffer)
+    state = dict(zip(('version', 'count', 'errors', 'lock_address', 'body_after', 'stack_low', 'stack_high'), words[:7]))
+    rt.require(state['version'] == 1 and state['count'] <= 24,
+               'Native observation version/count differs', 'DATA_ERROR')
+    state['events'] = [dict(zip(NATIVE_FIELDS, words[7 + index * 10:17 + index * 10]))
+                       for index in range(state['count'])]
+    return state
+
+
 def descriptor_rows(text):
     rows = []
     for line in text.splitlines():
@@ -60,8 +87,9 @@ def call_table(text):
                'primitive fixture descriptor missing or duplicated', 'DATA_ERROR')
     selected = {name: selected[name][0] for name in SYMBOLS}
     rt.require(all(row['cookie'] > 0 and row['target'] > 0 and
-                   (row['nargs'], row['result'], row['context']) == (6, 1, 1) for row in selected.values()) and
-               len({row['target'] for row in selected.values()}) == 2,
+                   (row['nargs'], row['result'], row['context']) == DECLARATIONS[name]
+                   for name, row in selected.items()) and
+               len({row['target'] for row in selected.values()}) == len(SYMBOLS),
                'primitive declaration target/arity/result/context differs', 'DATA_ERROR')
     return selected, rows
 
@@ -82,9 +110,10 @@ def primitive_events(messages):
     return rows
 
 
-def validate_transaction(events, root, pid, target, image_generation, result):
-    rows = [row for row in events if row['origin'] == pid]
-    rt.require([row['stage'] for row in rows] == ['request', 'enter', 'done', 'resume'],
+def validate_transaction(events, root, pid, target, image_generation, result, sequence=None, final=False):
+    rows = [row for row in events if row['origin'] == pid and
+            (sequence is None or row['sequence'] == sequence)]
+    rt.require([row['stage'] for row in rows] == ['request', 'enter', 'done', 'complete' if final else 'resume'],
                'primitive transaction missing, repeated or out of order', 'DATA_ERROR')
     rt.require(rows[0]['sequence'] > 0 and rows[0]['return'] > 0 and all(
         row['identity'] == root['identity'] and row['generation'] == root['generation'] and
@@ -94,9 +123,80 @@ def validate_transaction(events, root, pid, target, image_generation, result):
         'primitive transaction changed root, executor, target, sequence or image', 'DATA_ERROR')
     rt.require(root['executor'] != pid and
                [row['task'] for row in rows] == [root['executor'], pid, pid, root['executor']] and
-               rows[2]['ax'] == rows[3]['ax'] == result and rows[2]['flags'] == rows[3]['flags'],
+               rows[2]['ax'] == rows[3]['ax'] and (result is None or rows[2]['ax'] == result) and
+               rows[2]['flags'] == rows[3]['flags'],
                'primitive actual task or full AX return differs', 'DATA_ERROR')
     return rows
+
+
+def native_plan(early=False):
+    # Each tuple is (operation, preempt before/after, RCU before/after,
+    # actual trylock result, owner stage, acquisition sequence).
+    plan = [(1, 0, 1, 0, 0, 0, 'grant', 1)]
+    if early:
+        return plan + [(3, 1, 0, 0, 0, 0, 'release', 1)]
+    plan.append((2, 1, 1, 0, 0, 0, 'not_granted', 2))
+    plan.extend((4, 1, 1, depth, depth + 1, 0, 'grant', depth + 3) for depth in range(9))
+    plan.extend((5, 1, 1, depth, depth - 1, 0, 'release', depth + 2) for depth in range(9, 0, -1))
+    plan.extend(((3, 1, 0, 0, 0, 0, 'release', 1),
+                 (2, 0, 1, 0, 0, 1, 'grant', 22), (3, 1, 0, 0, 0, 0, 'release', 22)))
+    return plan
+
+
+def validate_native_observation(state, pid, early=False):
+    plan = native_plan(early)
+    rt.require(not state['errors'] and state['count'] == len(plan) and state['body_after'] == 1 and
+               state['lock_address'] > 0 and 0 < state['stack_low'] < state['stack_high'] and
+               len(state['events']) == len(plan), 'Native body/count/retirement observation differs', 'DATA_ERROR')
+    for event, expected in zip(state['events'], plan):
+        operation, before, after, rcu_before, rcu_after, result, _, _ = expected
+        rt.require(event['operation'] == operation and event['pid'] == pid and
+                   state['stack_low'] <= event['stack_address'] < state['stack_high'] and
+                   (event['preempt_before'], event['preempt_after'], event['rcu_before'], event['rcu_after'],
+                    event['result']) == (before, after, rcu_before, rcu_after, result) and
+                   event['irqs_before'] == event['irqs_after'] == 0,
+                   'Native API task/stack, grant result or context delta differs', 'DATA_ERROR')
+    return plan
+
+
+def native_events(messages):
+    rows = []
+    for line in messages.splitlines():
+        if 'kd_service native:' not in line:
+            continue
+        fields = dict(re.findall(r'(\w+)=([^\s]+)', line))
+        required = {'stage', 'origin', 'executor', 'task', 'identity', 'generation',
+                    'sequence', 'acquisition_seq', 'kind', 'object', 'preempt', 'rcu'}
+        rt.require(required <= fields.keys(), 'Native owner trace incomplete', 'DATA_ERROR')
+        row = dict(stage=fields['stage'])
+        row.update((key, int(fields[key], 16 if key in ('identity', 'object') else 10))
+                   for key in required - {'stage'})
+        rows.append(row)
+    return rows
+
+
+def validate_native_trace(messages, root, pid, descriptors, image_generation, observation, early=False):
+    plan = validate_native_observation(observation, pid, early)
+    transactions = primitive_events(messages)
+    rt.require(len([row for row in transactions if row['origin'] == pid]) == len(plan) * 4,
+               'Native primitive transaction count differs', 'DATA_ERROR')
+    owners = [row for row in native_events(messages) if row['origin'] == pid]
+    rt.require(len(owners) == len(plan), 'Native owner grant/release count differs', 'DATA_ERROR')
+    symbols = {1: 'jit_test_native_spin_lock', 2: 'jit_test_native_spin_try',
+               3: 'jit_test_native_spin_unlock', 4: 'jit_test_native_rcu_lock', 5: 'jit_test_native_rcu_unlock'}
+    checked = []
+    for sequence, (expected, owner) in enumerate(zip(plan, owners), 1):
+        operation, _, after, _, rcu_after, value, stage, acquired = expected
+        checked.append(validate_transaction(transactions, root, pid, descriptors[symbols[operation]]['target'],
+            image_generation, value if operation == 2 else None, sequence, early and sequence == len(plan)))
+        rt.require(owner['stage'] == stage and owner['identity'] == root['identity'] and
+                   owner['generation'] == root['generation'] and owner['executor'] == root['executor'] and
+                   owner['task'] == owner['origin'] == pid and owner['sequence'] == sequence and
+                   owner['acquisition_seq'] == acquired and owner['kind'] == (1 if operation <= 3 else 2) and
+                   owner['object'] == (observation['lock_address'] if operation <= 3 else 0) and
+                   owner['preempt'] == after and owner['rcu'] == rcu_after,
+                   'Native owner identity, acquisition pairing or actual context differs', 'DATA_ERROR')
+    return dict(transactions=checked, owners=owners, observation=observation)
 
 
 def session_class(base):
@@ -187,6 +287,21 @@ def session_class(base):
                               execution='ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN')
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN'
+                self.save()
+            for early, flags in ((False, 256), (True, 512)):
+                result = self.phase_begin('native-early-outer-release' if early else 'native-spin-try-rcu-depth9')
+                client = self.start(result['name'] + '-root', 0, 1, flags)
+                pid = client[2]['pid']
+                self.observe(result['name'] + '-returned', lambda state: state['slots'][1]['returned'] == 1)
+                self.join(client)
+                self.faults()
+                messages = self.messages[self.trace_start:]
+                roots = [row for row in trace_events(messages) if row['event'] == 'enter' and row['origin'] == pid]
+                rt.require(len(roots) == 1, 'Native root actual executor record missing', 'NO_JIT')
+                result['native_pairs'] = validate_native_trace(messages, roots[0], pid, self.helper_descriptors,
+                    self.record['image_registry'][0]['generation'], native_snapshot(), early)
+                self.phase_end(result, successful=[pid])
+                result['execution'] = 'NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE'
                 self.save()
             trace.write_text('0\n')
             rt.require(trace.read_text().strip() == 'N', 'service trace final readback differs')
