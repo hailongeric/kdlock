@@ -1057,3 +1057,46 @@ unaccepted until exact per-invocation joins are added. Retained loader/native
 ownership traces also require their own joins; helper-fixture ownership evidence
 cannot be relabeled as application ownership evidence. No diagnostic pass may
 be reported as universal API equivalence or performance acceptance.
+
+### Bounded text lookahead for retained ordinary-callee closure
+
+Candidate `3b018e27df7823ee3c31a315e320fb463d524685` passes the corrected C
+entry fixture, provider build, eight live helper phases and eleven killable
+phases. Actual-application preparation next stops at the 256 KiB cached-text
+limit, before binding any MM object. The first failed sites are
+`setup_arg_pages` (`0xffffffff818e05bd`) and `vm_brk_flags`
+(`0xffffffff817f77e5`). They are required ELF startup entries among the 55
+registered sites, not the application's mmap loop. The actual audited entries
+remain `vm_mmap_pgoff` at `0xffffffff817b6da8` and `__vm_munmap` at
+`0xffffffff8181c57b`; neither application model has run.
+
+The limit counts complete read windows, including unused lookahead. Each cold
+target currently adds a page-aligned 8 KiB window. Static interval replay of
+logged target addresses shows that padding dominates the failed frontier; it
+is not a measurement of total decoded instructions or a proof that an image
+will fit after changing the window. Old cached bytes must remain mandatory,
+so shrinking only after the failure cannot recover that storage.
+
+For the general retained ABI2 ordinary-callee closure, select 1 KiB forward
+lookahead aligned to 16 bytes from the initial read. Carry this immutable
+per-translation policy through every extension; keep the existing 8 KiB/page
+policy for other translation paths. No global setting or MM-specific selector
+is introduced. Existing missing/truncated-block discovery extends the cache as
+needed, including backward branches and linear instruction boundaries. Every
+new target still requires the full 15-byte instruction prefix. Preserve all
+previous bytes, source-pin-before-read, exact scope reachability and the
+existing optional-lookahead retry. Do not discard cold branches or source
+bytes to force publication.
+
+Keep the 256 KiB cache limit, 32 expansion passes and 640 KiB generated-image
+limit unchanged. Record requested/cache/decoded byte counts separately so a
+later resource decision is based on evidence. A reached instruction still
+needs faithful lowering or an explicit supported returning service; compact
+lookahead adds no Native continuation or origin suffix.
+
+Focused validation covers compact multi-root closure, maximum-length and
+truncated instructions, backward extension, mandatory old bytes, source
+refusal and budget exhaustion. Then repeat complete 55-site preparation and
+the two unchanged application models. A remaining cache/pass/image limit is
+a retained failure, not a delegation result; general image fragments would
+need a separate continuation/lifetime design if compact lookahead is insufficient.
