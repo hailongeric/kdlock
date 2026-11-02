@@ -86,6 +86,17 @@ prove its physical ownership, and O may prove its logical ownership only while
 authorized to service that exact continuation. A locked/count hint is not an
 owner query.
 
+Provider activation and each immutable object binding also own a source
+residency lease. Acquire the object's lease inside the builtin registration
+critical section before exposing its provider pointer; release it exactly once
+with that binding at destruction. Source retirement must test these leases
+under its own admission guard and return busy without closing admission while
+any lease remains. Closing first would strand still-live bound objects on a
+provider that can no longer admit their next ordinary acquisition. Deactivation
+stops new binding before releasing activation's lease. Lease counts describe
+exact matched factory/destructor references; they never authorize lock
+acquisition, ownership or approximate request retirement.
+
 Bootstrap is a separate gate. Prepare immutable core lock-site images before
 enabling new provider bindings; keep translator/controller infrastructure on
 its existing object backends. No published delegated MM request may revert to
