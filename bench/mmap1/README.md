@@ -83,6 +83,27 @@ substitutes for this real syscall workload. The local adapter currently keeps
 native MM bodies on the originating task; this runner does not enable or prove
 delegated MM, change fairness, or add killable polling.
 
+The delegated candidate uses an explicit execution-session contract at the
+Python `run_point` boundary. The ordinary Native path keeps its existing idle
+checks. An opted-in session verifies one frozen provider module identity, its
+selected parameters, the exact daemon PID/start time/executable/workspace,
+the complete ready immutable image registry and an open source with no live
+frames or publishers before and after each application lifetime. This is an
+alternative exact execution environment, not a general idle exemption. The
+controller must start itself and the daemon before provider activation, prepare
+every recorded writer site, activate only after every image is ready, and then
+launch fresh unchanged application processes so their new mms select the
+provider. Deactivation precedes exact binding/frame/publisher drain and normal
+source retirement. The execution-session verifier does not perform those
+lifecycle transitions or turn object selection into delegation proof.
+
+The identity probe's ABI2 appends the immutable provider pointer and a route
+value to the original task/mm/lock/backing/CPU fields: Native is 0, builtin KD
+is 1, and module provider is 2. Runtime request identity/generation and actual
+O/E execution events must be joined to the observed task lifetime and backing
+lock before claiming returned delegated MM execution. Diagnostic tracing stays
+separate from throughput measurements.
+
 The implementation and focused runner fixtures are source-reviewed first.
 Builds, unit tests and live measurements run only in the VM under the root
 controller. Until those checks complete this directory is an implementation

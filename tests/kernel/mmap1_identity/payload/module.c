@@ -36,6 +36,8 @@ static int observe(struct kprobe *probe, struct pt_regs *regs)
 	u64 start;
 	bool use_kd = false;
 	void *backing;
+	const void *provider = NULL;
+	u64 route = 0;
 
 	(void)probe;
 	/* vm_mmap_pgoff(file, addr, len, prot, flags, pgoff), native C ABI.
@@ -53,6 +55,8 @@ static int observe(struct kprobe *probe, struct pt_regs *regs)
 #ifdef CONFIG_KDLOCK_MMAP
 	use_kd = READ_ONCE(mm->mmap_lock.use_kd);
 	backing = use_kd ? (void *)&mm->mmap_lock.kd : (void *)&mm->mmap_lock.native;
+	provider = READ_ONCE(mm->mmap_lock.provider);
+	route = use_kd ? (provider ? 2 : 1) : 0;
 #else
 	backing = &mm->mmap_lock;
 #endif
@@ -62,7 +66,8 @@ static int observe(struct kprobe *probe, struct pt_regs *regs)
 		if (row->tid != (u64)tid || row->start_boottime_ns != start)
 			continue;
 		if (row->mm != (unsigned long)mm || row->lock != (unsigned long)&mm->mmap_lock ||
-		    row->backing != (unsigned long)backing || row->use_kd != use_kd)
+		    row->backing != (unsigned long)backing || row->use_kd != use_kd ||
+		    row->provider != (unsigned long)provider || row->route != route)
 			snapshot.errors++;
 		goto out;
 	}
@@ -84,6 +89,8 @@ static int observe(struct kprobe *probe, struct pt_regs *regs)
 	row->backing = (unsigned long)backing;
 	row->use_kd = use_kd;
 	row->cpu = raw_smp_processor_id();
+	row->provider = (unsigned long)provider;
+	row->route = route;
 	snapshot.refs_acquired++;
 	snapshot.count++;
 out:
@@ -148,7 +155,7 @@ static int __init observation_init(void)
 
 	if (strcmp(target, "mmap1_threads") && strcmp(target, "mmap1_processes"))
 		return -EINVAL;
-	snapshot.abi = 1;
+	snapshot.abi = 2;
 	result = register_kprobe(&mapping_probe);
 	if (result)
 		return result;

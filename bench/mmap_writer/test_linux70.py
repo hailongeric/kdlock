@@ -95,7 +95,8 @@ class SharedLinux70(unittest.TestCase):
                 disk,date={'kdmm1':('kdlock-builds','20261027'),
                            'kdscope1':('kdlock-builds','20261030'),
                            'kdscope3':('kdlock-builds2','20261031'),
-                           'kdscope4':('kdlock-builds2','20261101')}[family]
+                           'kdscope4':('kdlock-builds2','20261101'),
+                           'kdscope5':('kdlock-builds2','20261103')}[family]
                 self.assertEqual(args.kernel_source,Path('/mnt/'+disk+'/linux-7.0.0-38-'+family+'/build'))
                 self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+expected_variant+'-'+date))
                 self.assertEqual(args.kernel_variant,expected_variant)

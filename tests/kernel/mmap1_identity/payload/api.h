@@ -7,6 +7,7 @@
 #define KD_MMAP1_IDENTITY_CAPACITY 128
 struct kd_mmap1_identity_record {
 	__u64 tid, tgid, start_boottime_ns, mm, lock, backing, use_kd, cpu;
+	__u64 provider, route;
 };
 struct kd_mmap1_identity_snapshot {
 	__u64 abi, count, overflow, errors, stopped, refs_acquired, refs_released;

@@ -36,9 +36,10 @@ def observed(model='threads'):
     records = [dict(tid=101+i, tgid=100 if model=='threads' else 101+i,
                     start_boottime_ns=(1000+i)*10_000_000+99, mm=0x1000+(0 if model=='threads' else i*0x1000),
                     lock=0x1100+(0 if model=='threads' else i*0x1000),
-                    backing=0x1100+(0 if model=='threads' else i*0x1000), use_kd=1, cpu=i)
+                    backing=0x1100+(0 if model=='threads' else i*0x1000), use_kd=1, cpu=i,
+                    provider=0, route=1)
                for i in range(2)]
-    snapshot = dict(abi=1, count=2, overflow=0, errors=0, stopped=1,
+    snapshot = dict(abi=2, count=2, overflow=0, errors=0, stopped=1,
                     refs_acquired=2, refs_released=2, repeat_equal=True, records=records)
     return snapshot, session
 
@@ -61,7 +62,8 @@ class KernelProfiles(unittest.TestCase):
                            'kdmm1':('kdlock-builds','20261027'),
                            'kdscope1':('kdlock-builds','20261030'),
                            'kdscope3':('kdlock-builds2','20261031'),
-                           'kdscope4':('kdlock-builds2','20261101')}[family]
+                           'kdscope4':('kdlock-builds2','20261101'),
+                           'kdscope5':('kdlock-builds2','20261103')}[family]
                 self.assertEqual(args.kernel_source,Path('/mnt/'+disk+'/linux-7.0.0-38-'+family+'/build'))
                 self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-'+date))
                 if variant=='kdlock1': gate.assert_called_once_with('boot')
@@ -197,6 +199,19 @@ class ObjectObservation(unittest.TestCase):
             self.assertTrue(result['actual_mmap_lock_observed'])
             self.assertFalse(result['delegated_execution_proved'])
 
+    def test_provider_selection_is_distinct_from_execution_proof(self):
+        snapshot, session = observed()
+        for row in snapshot['records']:
+            row.update(provider=0x9000, route=2)
+        result = observer.validate(snapshot, session, 'kd', 100, provider=0x9000)
+        self.assertEqual(result['provider_routes'], [2])
+        self.assertFalse(result['delegated_execution_proved'])
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate(snapshot, session, 'kd', 100, provider=0x9001)
+        snapshot['records'][0]['route'] = 1
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate(snapshot, session, 'kd', 100)
+
     def test_task_cpu_backend_pointer_and_reference_mutations_reject(self):
         changes = [lambda s:s.update(refs_released=1),lambda s:s.update(stopped=0),
                    lambda s:s.update(overflow=1),lambda s:s.update(errors=1),
@@ -257,6 +272,86 @@ class ObjectObservation(unittest.TestCase):
             bad=words.copy();bad[offset]=value
             with self.assertRaises(observer.rt.Failure):observer.decode(encode(bad))
         with self.assertRaises(observer.rt.Failure):observer.decode(encode(words)[:-8])
+
+    def delegated_messages(self, snapshot, *, downgrade=False):
+        lines = []
+        stamp = 1
+        for row in snapshot['records']:
+            for entry in (0xA000, 0xB000):
+                stages = ('enter', 'downgrade', 'read_release', 'returned') if downgrade else \
+                         ('enter', 'release', 'returned')
+                for stage in stages:
+                    lines.append(f'6,{stamp},{stamp},-;kd_service event={stage} origin={row["tid"]} '
+                        f'executor=200 identity={row["tid"] * 0x100 + entry:x} generation={entry} '
+                        f'object={row["backing"]:x} depth=0 entry={entry:x} may_delegate=1')
+                    stamp += 1
+        return '\n'.join(lines)
+
+    def test_actual_delegation_requires_joined_completed_roots(self):
+        snapshot, session = observed()
+        for row in snapshot['records']:
+            row.update(provider=0x9000, route=2)
+        sites = dict(mmap=[0xA000], munmap=[0xB000])
+        messages = self.delegated_messages(snapshot, downgrade=True)
+        checked = observer.validate_delegated(snapshot, session, 100, messages, sites, 0x9000)
+        self.assertEqual(checked['completed_request_count'], 4)
+        self.assertEqual(checked['downgraded_read_tails'], 4)
+        self.assertTrue(checked['delegated_execution_proved'])
+        self.assertFalse(checked['fresh_reader_drain_observed'])
+        self.assertFalse(checked['physical_batch_length_measured'])
+        self.assertTrue(all(row['request_wall_ns'] == 3000 for row in checked['completed_requests']))
+        for changed in (messages.replace('executor=200', 'executor=101', 1),
+                        messages.replace('object=1100', 'object=1101', 1),
+                        messages.replace('event=read_release', 'event=release', 1),
+                        '\n'.join(messages.splitlines()[:-1]), messages + '\n' + messages.splitlines()[0]):
+            with self.assertRaises(observer.rt.Failure):
+                observer.validate_delegated(snapshot, session, 100, changed, sites, 0x9000)
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate_delegated(snapshot, session, 100, messages,
+                                        dict(mmap=[0xA000], munmap=[0xC000]), 0x9000)
+
+
+class ExecutionContract(unittest.TestCase):
+    def expected(self, root):
+        provider, daemon = root/'provider.ko', root/'daemon'
+        provider.write_text('exact module')
+        daemon.write_text('exact daemon')
+        return dict(schema=1, boot_id='boot', source=dict(state=0, modules=0),
+            provider=dict(path=str(provider), sha256=bench.rt.digest(provider), note_sha256='a'*64),
+            daemon=dict(pid=700, start_ticks=99, executable=str(daemon),
+                        executable_sha256=bench.rt.digest(daemon), cwd=str(root), argv=[str(daemon)]),
+            parameters=dict(rwsem_provider_active='Y', rwsem_provider_mode='active',
+                            jit_timing='N', service_trace='N'),
+            registry=[dict(pid=0, tgid=0, status=0, entry_abi=2, lock_kind=2,
+                           entry=0x1000, code=0x2000, generation=1, requirements=896)],
+            files={str(provider):bench.rt.digest(provider), str(daemon):bench.rt.digest(daemon)})
+
+    def test_exact_hash_bound_contract_and_negative_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            expected=self.expected(root)
+            path=root/'session.json'
+            def save(value):
+                path.write_text(json.dumps(value))
+                return bench.execution.ExecutionSession(path,bench.rt.digest(path))
+            session=save(expected)
+            self.assertFalse(session.identity()['delegated_execution_proved'])
+            session.expected['parameters']['service_trace']='Y'
+            with self.assertRaises(bench.rt.Failure):session.verify()
+            mutations=(lambda row:row['parameters'].update(rwsem_provider_active='N'),
+                       lambda row:row['registry'][0].update(generation=0),
+                       lambda row:row['files'].pop(row['provider']['path']),
+                       lambda row:row['source'].update(frames=0))
+            for mutate in mutations:
+                bad=copy.deepcopy(expected);mutate(bad)
+                with self.assertRaises(bench.rt.Failure):save(bad)
+
+    def test_an_arbitrary_idle_waiver_is_not_a_session(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(bench,'idle') as idle:
+            with self.assertRaises(bench.rt.Failure):
+                bench.run_point(Path(directory)/'point',dict(model='threads',workers=2),{},lambda:None,
+                                execution_session=object())
+            idle.assert_not_called()
 
 
 class LaunchLifetime(unittest.TestCase):

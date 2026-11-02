@@ -38,6 +38,13 @@ PROFILES = {
                               api_enabled=True)
         for mode in MODES
     },
+    **{
+        'kdscope5-'+mode: dict(variant='kdscope5-'+mode, mode=mode, release='7.0.0-38-kdscope5',
+                              build=Path('/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'),
+                              bundle=Path('/root/kdlock-kernel-baselines/linux70-kdscope5-'+mode+'-20261103'),
+                              api_enabled=True)
+        for mode in MODES
+    },
 }
 
 

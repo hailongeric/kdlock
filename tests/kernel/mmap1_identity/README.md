@@ -7,6 +7,14 @@ records the actual current PID/TID and task start time, `current->mm`,
 `&mm->mmap_lock`, selected physical backend address, backend field and CPU.
 The field types come from the exact verified running kernel build headers.
 
+ABI2 preserves those record fields in order and appends the immutable provider
+pointer and route: 0 for Native, 1 for builtin KD, and 2 for a module provider.
+The pointer is observed while the originating task holds its mm lifetime;
+the probe's existing retained mm reference prevents later address reuse.
+Route 2 establishes object binding only. Actual other-task execution still
+requires exact retained request enter/returned events joined to this task
+lifetime and backing lock; downgrade/read-tail events remain separate evidence.
+
 A fixed 128-entry table records each task lifetime once. The probe takes one
 `mmgrab` per record to prevent recorded object reuse until observation ends.
 Stopping unregisters the kprobe (waiting for handlers) before dropping those

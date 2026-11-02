@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT/'bench/mmap_fault'))
 import timing as common
 rt, identity, platform = common.rt, common.kernel_identity, common.mm_platform
 mm = common.module('mmap1_existing_mm_checks', ROOT/'bench/mmap_writer/linux70.py')
+execution = common.module('mmap1_execution_session', ROOT/'bench/mmap1/execution_session.py')
 REVISION = '75f66e45697e6f5f49c33dd950c4e6b289198f8f'
 PINNED = {
     'main.c': '48d4640f151801fdfb5f3915c822cf280c713df3c1998068e16ce0c961cbf746',
@@ -278,9 +279,14 @@ def task_gone(row):
         return True
 
 
-def run_point(out, spec, inputs, verify, *, diagnostic=False):
+def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None):
     """One normal upstream lifetime; observations end during its own warmup."""
-    idle(allow_identity_probe=diagnostic)
+    if execution_session is None:
+        idle(allow_identity_probe=diagnostic)
+    else:
+        rt.require(isinstance(execution_session, execution.ExecutionSession),
+                   'explicit verified execution-session contract required')
+        execution_session.verify(allow_identity_probe=diagnostic)
     verify()
     out.mkdir()
     binary = inputs['binaries'][spec['model']]
@@ -288,6 +294,8 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False):
     result = dict(schema=1, **spec, passed=False, drained=False, scored=not diagnostic,
                   state='RUNNING', argv=command, executable_sha256=inputs['binary_sha256'][spec['model']],
                   application_lock_identity='not-observed-in-this-process', instrumentation='identity-kprobe' if diagnostic else 'none')
+    if execution_session is not None:
+        result['execution_session'] = execution_session.identity()
     rt.write_json(out/'result.json', result)
     fd = os.open('/dev/kmsg', os.O_RDONLY|os.O_NONBLOCK)
     os.lseek(fd, 0, os.SEEK_END)
@@ -341,7 +349,10 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False):
         # A diagnostic receipt proves progress/shape, never contributes a score.
         result['output'] = parsed if not diagnostic else dict(output_valid=True, measured_samples=len(parsed['measurement']))
         verify()
-        idle(allow_identity_probe=diagnostic)
+        if execution_session is None:
+            idle(allow_identity_probe=diagnostic)
+        else:
+            result['execution_session_after'] = execution_session.verify(allow_identity_probe=diagnostic)
         result.update(state='COMPLETE', passed=True)
     except BaseException as error:
         result.update(state='FAILED', passed=False, error=repr(error))
