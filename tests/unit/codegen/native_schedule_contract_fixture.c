@@ -44,7 +44,7 @@ int main(void)
 	desc.result_kind = KD_SERVICE_CALL_WORD;
 	CHECK(!kd_service_call_context_valid(&desc));
 	desc.result_kind = KD_SERVICE_CALL_VOID;
-	desc.context_kind = KD_SERVICE_CALL_SCHEDULE_ORIGIN + 1;
+	desc.context_kind = KD_SERVICE_CALL_NONRETURNING_ORIGIN + 1;
 	CHECK(!kd_service_call_context_valid(&desc));
 
 	for (pins = 0; pins != 3; ++pins) {

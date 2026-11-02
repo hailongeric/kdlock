@@ -88,6 +88,10 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 	case KD_SERVICE_CALL_ATOMIC_ORIGIN:
 	case KD_SERVICE_CALL_SCHEDULE_ORIGIN:
 		break;
+	case KD_SERVICE_CALL_NONRETURNING_ORIGIN:
+		/* The Native terminal inherits every exact live acquisition. It
+		 * neither needs a spare record nor balances/releases an existing one. */
+		break;
 	default:
 		return -EOPNOTSUPP;
 	}

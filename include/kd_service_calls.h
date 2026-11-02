@@ -39,6 +39,8 @@ enum kd_service_call_context {
 	KD_SERVICE_CALL_PTE_RCU,
 	/* Native preemption entry: no spin/preempt pin may survive its CALL. */
 	KD_SERVICE_CALL_SCHEDULE_ORIGIN,
+	/* Exact Native terminal; its original source CALL word must remain live. */
+	KD_SERVICE_CALL_NONRETURNING_ORIGIN,
 };
 
 enum kd_native_owner_kind {
@@ -126,6 +128,8 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame);
 int kd_exec_cont_native_complete(struct kd_exec_continuation *continuation,
 	u64 sequence);
 void kd_service_origin_bridge(struct kd_origin_call *call);
+void kd_service_origin_terminal_bridge(struct kd_origin_call *call) __noreturn;
+void kd_service_origin_terminal_restore(struct kd_origin_call *call) __noreturn;
 void kd_service_origin_context_begin(struct kd_origin_call *call);
 void kd_service_origin_context_end(struct kd_origin_call *call);
 #endif

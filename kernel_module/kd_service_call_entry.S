@@ -77,6 +77,22 @@ SYM_FUNC_START(kd_service_origin_bridge)
 	RET
 SYM_FUNC_END(kd_service_origin_bridge)
 
+/* A terminal target receives the source CALL word, never this bridge's return
+ * address. The full-packet restorer also restores the source frame chain. */
+SYM_FUNC_START(kd_service_origin_terminal_bridge)
+	endbr64
+	movq %rdi, %r12
+	movq KD_ORIGIN_CALL_NATIVE_SP(%r12), %rsp
+	UNWIND_HINT_UNDEFINED
+	movq KD_ORIGIN_CALL_PACKET(%r12), %rbx
+	movq KD_REG_BP(%rbx), %rbp
+	movq %r12, %rdi
+	call kd_service_origin_context_begin
+	movq %r12, %rdi
+	call kd_service_origin_terminal_restore
+	ud2
+SYM_FUNC_END(kd_service_origin_terminal_bridge)
+
 /* Instruction service has no source CALL word and no virtual GPR results.
  * Its fixed helper stores only the exact arithmetic flags in cold metadata. */
 SYM_FUNC_START(kd_service_memory_bridge)

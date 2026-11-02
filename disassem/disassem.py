@@ -161,6 +161,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     hostcall_targets = set(resolved_hostcalls)
     terminal_targets = set(native_terminals.resolve(get_kernel_symbol))
     returning_services = memread.device_session.service_calls() if abi == 2 else {}
+    nonreturning_targets = {address for address, descriptor in returning_services.items()
+                           if descriptor['context_kind'] == 11}
     bound_controls = memread.device_session.rwsem_controls() if abi == 2 else {}
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
@@ -325,6 +327,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 indirect_history=jump_table,
                 indirect_call_native=indirect_call_native,
                 returning_indirect=bool(returning_services),
+                nonreturning_targets=nonreturning_targets,
             )
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
@@ -349,6 +352,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             native_exits=native_exits,
             runtime_delimited=service_queue_required,
             retained_candidate=trusted_source and abi == 2 and lock_kind == "mutex",
+            nonreturning_targets=nonreturning_targets,
         )
         if boundary_error and trusted_source and abi == 2 and lock_kind == "mutex":
             # The historical counter is only a lexical boundary. Deep or
@@ -364,6 +368,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                  clobber_mutex_unlock, direct_mutex_unlock} | service_releases,
                 discovered_targets & block_dict.keys(), native_exits=native_exits,
                 runtime_delimited=True,
+                nonreturning_targets=nonreturning_targets,
             )
         if boundary_error:
             offset, reason = boundary_error
@@ -647,6 +652,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             indirect_history=jump_table,
             indirect_call_native=indirect_call_native,
             returning_indirect=bool(returning_services),
+            nonreturning_targets=nonreturning_targets,
         )
         live_offsets = {line.offset + line.l
                         for block in block_dict.values() for line in block.lines}
@@ -690,6 +696,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         for block in block_dict.values() for line in block.lines
         if line.name == 'CALL' and has_returning_call
         and line.offset + line.l in emitted_pcs
+        and (not line.args or not isinstance(line.args[0], ExprLoc) or
+             db_dict[block].get_location_offset(line.args[0].loc_key) not in nonreturning_targets)
     }
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
@@ -710,6 +718,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         budget_resume_enabled=budget_resume_enabled,
         returning_targets=returning_targets,
         returning_services=returning_services,
+        nonreturning_targets=nonreturning_targets,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 

@@ -298,7 +298,9 @@ def parse_service_calls(text):
         nargs, result_kind, context_kind = (int(value, 10) for value in fields[2:5])
         if (not 0 < cookie < 1 << 64 or not 0 < target < 1 << 64 or
                 cookie in cookies or target in result or not 0 <= nargs <= 6 or
-                result_kind not in (1, 2) or context_kind not in range(1, 11)):
+                result_kind not in (1, 2) or context_kind not in range(1, 12) or
+                (context_kind == 11 and
+                 (nargs != 0 or result_kind != 2 or fields[-1] != '__stack_chk_fail'))):
             raise ValueError("inconsistent returning CALL registry row")
         cookies.add(cookie)
         result[target] = dict(cookie=cookie, nargs=nargs, result_kind=result_kind,

@@ -13,7 +13,7 @@
 #include "kd_service_calls.h"
 #include "kd_source.h"
 
-#define KD_SERVICE_CALL_MAX 64U
+#define KD_SERVICE_CALL_MAX 128U
 #define KD_SERVICE_CALL_NAME 96U
 struct kd_service_call_entry {
 	unsigned long target;
@@ -43,6 +43,9 @@ static bool kd_service_call_context_valid(const struct kd_service_call_desc *des
 		return true;
 	case KD_SERVICE_CALL_SCHEDULE_ORIGIN:
 		return !desc->nargs && desc->result_kind == KD_SERVICE_CALL_VOID;
+	case KD_SERVICE_CALL_NONRETURNING_ORIGIN:
+		return !desc->nargs && desc->result_kind == KD_SERVICE_CALL_VOID &&
+			desc->symbol && !strcmp(desc->symbol, "__stack_chk_fail");
 	case KD_SERVICE_CALL_PTE_LOCK:
 		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 4 &&
 			desc->result_kind == KD_SERVICE_CALL_WORD;
@@ -72,8 +75,52 @@ static bool kd_service_call_valid(const struct kd_service_call_desc *desc)
 		(desc->result_kind == KD_SERVICE_CALL_WORD ||
 		 desc->result_kind == KD_SERVICE_CALL_VOID) &&
 		kd_service_call_context_valid(desc) &&
+		(desc->context_kind != KD_SERVICE_CALL_NONRETURNING_ORIGIN ||
+		 desc->target == kallsyms_lookup_name("__stack_chk_fail")) &&
 		strnlen(desc->symbol, KD_SERVICE_CALL_NAME) < KD_SERVICE_CALL_NAME &&
 		!strpbrk(desc->symbol, " \t\r\n");
+}
+
+static int kd_service_call_format(char *buffer, size_t size, u64 cookie,
+	unsigned long target, unsigned int nargs, unsigned int result_kind,
+	unsigned int context_kind, const char *symbol)
+{
+	return snprintf(buffer, size, "%llx %lx %u %u %u %s\n",
+		(unsigned long long)cookie, target, nargs, result_kind, context_kind, symbol);
+}
+
+/* Validate the exact exported snapshot before publishing any of this batch.
+ * Internal slot capacity and one-page discovery capacity are separate bounds. */
+static int kd_service_call_configuration_size(const struct kd_service_call_desc *descs,
+	unsigned int count)
+{
+	char row[160];
+	size_t bytes = 0;
+	unsigned int i;
+	int length;
+
+	for (i = 0; i < kd_service_call_count; ++i) {
+		const struct kd_service_call_entry *entry = &kd_service_call_entries[i];
+
+		if (!entry->active)
+			continue;
+		length = kd_service_call_format(row, sizeof(row), entry->cookie,
+			entry->target, entry->nargs, entry->result_kind,
+			entry->context_kind, entry->symbol);
+		if (length < 0 || (size_t)length >= sizeof(row))
+			return -EOVERFLOW;
+		bytes += length;
+	}
+	for (i = 0; i < count; ++i) {
+		length = kd_service_call_format(row, sizeof(row), kd_service_call_count + i + 1,
+			descs[i].target, descs[i].nargs, descs[i].result_kind,
+			descs[i].context_kind, descs[i].symbol);
+		if (length < 0 || (size_t)length >= sizeof(row))
+			return -EOVERFLOW;
+		bytes += length;
+	}
+	/* snprintf's final NUL occupies one byte in the fixed PAGE_SIZE buffer. */
+	return bytes < PAGE_SIZE ? 0 : -ENOSPC;
 }
 
 int kd_service_call_register(const struct kd_service_call_desc *descs,
@@ -112,6 +159,9 @@ int kd_service_call_register(const struct kd_service_call_desc *descs,
 				goto out;
 			}
 	}
+	result = kd_service_call_configuration_size(descs, count);
+	if (result)
+		goto out;
 	for (i = 0; i < count; ++i) {
 		struct kd_service_call_entry *entry =
 			&kd_service_call_entries[kd_service_call_count];
@@ -239,17 +289,19 @@ static int kd_service_call_table_get(char *buffer, const struct kernel_param *pa
 	mutex_lock(&kd_service_call_configuration);
 	for (i = 0; i < kd_service_call_count; ++i) {
 		const struct kd_service_call_entry *entry = &kd_service_call_entries[i];
+		int length;
 
 		if (!entry->active)
 			continue;
-		if (PAGE_SIZE - used < 160) {
+		length = kd_service_call_format(buffer + used, PAGE_SIZE - used,
+			entry->cookie, entry->target, entry->nargs, entry->result_kind,
+			entry->context_kind, entry->symbol);
+
+		if (length < 0 || (size_t)length >= PAGE_SIZE - used) {
 			used = -EOVERFLOW;
 			break;
 		}
-		used += scnprintf(buffer + used, PAGE_SIZE - used,
-			"%llx %lx %u %u %u %s\n", (unsigned long long)entry->cookie,
-			entry->target, entry->nargs, entry->result_kind,
-			entry->context_kind, entry->symbol);
+		used += length;
 	}
 	mutex_unlock(&kd_service_call_configuration);
 	return used;

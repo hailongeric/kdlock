@@ -70,11 +70,46 @@ class ReturningCallTests(unittest.TestCase):
         row = '1 ffffffff81001000 6 1 1 primitive_call\n'
         self.assertEqual(len(parse(row)), 1)
         for text in (row + row, row.replace('6 1 1', '7 1 1'),
-                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 11'),
+                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 12'),
                      row.replace('1 ffffffff', '0 ffffffff'), '1 ffffffff81001000',
                      'x' * 4097):
             with self.subTest(text=text[:100]), self.assertRaises(ValueError):
                 parse(text)
+
+    def test_nonreturning_registry_is_exact_zero_arg_void_target(self):
+        parse = translator.memread.device_session.parse_service_calls
+        row = '1 ffffffff81001000 0 2 11 __stack_chk_fail\n'
+        self.assertEqual(parse(row)[0xffffffff81001000]['context_kind'], 11)
+        for text in (row.replace('0 2 11', '1 2 11'), row.replace('0 2 11', '0 1 11'),
+                     row.replace('__stack_chk_fail', 'panic')):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                parse(text)
+
+    def test_conditional_nonreturning_call_keeps_other_path_without_cold_closure(self):
+        # Source failure branch remains explicit. Its impossible CALL return
+        # contains another ordinary CALL which must never enter the image.
+        raw = bytearray.fromhex('85c0751c480534120000e8f1500000c3')
+        raw.extend(b'\x90' * (0x20 - len(raw)))
+        raw.extend(b'\xe8' + struct.pack('<i', 0x5500 - 0x1025))
+        raw.extend(b'\xe8' + struct.pack('<i', 0x5700 - 0x102a) + b'\xc3')
+        options = {}
+        assembly, log, status = render(
+            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            native_escape_capable=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                            'kd_rwsem_up_write_clobber_v1': 0x6100},
+            returning_services={0x5500: dict(cookie=1, nargs=0, result_kind=2,
+                                             context_kind=11, symbol='__stack_chk_fail')},
+            build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(options['requirements'], 896)
+        self.assertIn(b'loc_1020:', assembly)
+        self.assertIn(b'loc_5500:', assembly)
+        self.assertIn(b'0x1234', assembly)
+        self.assertNotIn(b'loc_1025:', assembly)
+        self.assertNotIn(b'loc_5700:', assembly)
+        self.assertNotIn(b'kd_service_dispatch_1025:', assembly)
 
     def test_native_tail_target_keeps_real_callers_successor(self):
         raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')

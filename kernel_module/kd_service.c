@@ -354,7 +354,39 @@ kd_service_origin_context_begin(struct kd_origin_call *call)
 	    kd_service_origin_rcu_depth() != call->baseline_rcu || irqs_disabled());
 	kd_service_primitive_trace("enter", root);
 	/* This change can schedule. The assembly already moved onto task->stack. */
-	preempt_enable();
+	if (call->context_kind == KD_SERVICE_CALL_NONRETURNING_ORIGIN) {
+		/* Preserve the terminal's source context without introducing a new
+		 * reschedule before its Native diagnostic consumes the CALL word. */
+		barrier();
+		preempt_count_dec();
+	} else {
+		preempt_enable();
+	}
+}
+
+__attribute__((noipa, noreturn)) noinline notrace void
+kd_service_origin_terminal_restore(struct kd_origin_call *call)
+{
+	struct kd_exec_continuation *cont = container_of(call, struct kd_exec_continuation, origin_call);
+	struct kd_service_root *root = container_of(cont, struct kd_service_root, continuation);
+	unsigned long return_ip;
+
+	BUG_ON(current != call->origin || !call->servicing ||
+	    call->context_kind != KD_SERVICE_CALL_NONRETURNING_ORIGIN ||
+	    call->phase != KD_ORIGIN_CALL_RUNNING ||
+	    cont->state != KD_CONT_SUSPENDED || call->executor != root->worker ||
+	    call->packet->sp != call->call.stack || call->packet->ip != call->target ||
+	    !kd_service_call_matches(call->entry, call->target) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)call->call.stack, sizeof(return_ip)) ||
+	    return_ip != call->call.return_ip ||
+	    preempt_count() != call->baseline_preempt ||
+	    kd_service_origin_rcu_depth() != call->baseline_rcu || irqs_disabled());
+	/* No completion is published. The exact acquisitions, image and source
+	 * remain retained while the Native nonreturning target runs on O. */
+	kd_service_primitive_trace("terminal", root);
+	call->packet->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	jump_to_saved_regs_in_cs(call->packet);
+	BUG();
 }
 
 __attribute__((noipa)) noinline notrace void
@@ -400,6 +432,8 @@ static void kd_service_origin_primitive(struct kd_service_root *root)
 	BUG_ON(call->native_sp < cont->stack_base + 512);
 	WRITE_ONCE(call->servicing, true);
 	smp_store_release(&call->phase, KD_ORIGIN_CALL_RUNNING);
+	if (call->context_kind == KD_SERVICE_CALL_NONRETURNING_ORIGIN)
+		kd_service_origin_terminal_bridge(call);
 	kd_service_origin_bridge(call);
 	/* The Native helper and bridge frames have left the source task stack.
 	 * Only now can a resumed E overwrite that lower stack with JIT frames. */

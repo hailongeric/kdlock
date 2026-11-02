@@ -11,6 +11,7 @@
 
 struct kd_regs resume_packet, result_packet;
 unsigned long caller_stack, caller_flags;
+unsigned long original_call_word;
 static unsigned char target_stack[4096] __attribute__((aligned(16)));
 extern void run_restore(void), escaped_landing(void);
 
@@ -39,6 +40,7 @@ asm(".text\n"
     "movq %r8,result_packet+88(%rip)\nmovq %rax,result_packet+96(%rip)\n"
     "movq %rcx,result_packet+104(%rip)\nmovq %rdx,result_packet+112(%rip)\n"
     "movq %rsi,result_packet+120(%rip)\nmovq %rdi,result_packet+128(%rip)\n"
+    "movq (%rsp),%rax\nmovq %rax,original_call_word(%rip)\n"
     "movq caller_stack(%rip),%rsp\naddq $8,%rsp\n"
     "popq %r15\npopq %r14\npopq %r13\npopq %r12\npopq %rbx\npopq %rbp\nretq\n");
 
@@ -64,12 +66,17 @@ int main(void)
 		resume_packet.flags = ~KD_REG_ARITHMETIC_FLAGS | arithmetic;
 		unchanged = resume_packet;
 		memset(target_stack, 0xa5, sizeof(target_stack));
+		/* A terminal Native target must observe its actual source caller,
+		 * after the transfer's own target word has been consumed below SP. */
+		*(unsigned long *)resume_packet.sp = 0x73194286abcdef00UL + pattern;
 		memset(&result_packet, 0, sizeof(result_packet));
 		run_restore();
 		assert(!memcmp(&resume_packet, &unchanged, sizeof(unchanged)));
 		for (size_t byte = 0; byte < sizeof(target_stack); byte++)
-			if (byte < sizeof(target_stack) - 80 || byte >= sizeof(target_stack) - 64)
+			if (byte < sizeof(target_stack) - 80 || byte >= sizeof(target_stack) - 56)
 				assert(target_stack[byte] == 0xa5);
+		assert(original_call_word == 0x73194286abcdef00UL + pattern);
+		assert(*(unsigned long *)resume_packet.sp == original_call_word);
 		assert(!memcmp(&result_packet.sp, &resume_packet.sp,
 			       KD_REG_ORIG_AX - KD_REG_SP));
 		assert((result_packet.flags & KD_REG_ARITHMETIC_FLAGS) == arithmetic);

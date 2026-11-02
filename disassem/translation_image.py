@@ -117,9 +117,10 @@ def emit_jit_assembly(
     memory_sites=None,
     memory_preempt_symbol=None,
     budget_resume_enabled=False, returning_targets=None, returning_services=(),
+    nonreturning_targets=(),
 ):
     continuation_targets = find_resumable_call_continuations(
-        block_dict, db_dict, keep_call_stack
+        block_dict, db_dict, set(keep_call_stack) - set(nonreturning_targets)
     )
     # The outer unlock's return PC may be in the native suffix trimmed by
     # critical_section_blocks. COMPLETE returns there physically; it is not

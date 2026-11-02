@@ -840,6 +840,44 @@ Simple encodable address64 GS addresses retain their existing lowering. The
 original overlap and nonoverlap assertions remain required; the failed attempt does
 not count as an instruction execution pass.
 
+### Exact nonreturning Native target
+
+Ordinary direct-callee closure must not expand a compiler's conditional
+`__stack_chk_fail` edge through its diagnostic graph or invent a return from
+that target. The captured Linux 7 source at kernel/panic.c:1147–1160 calls
+`panic` with `__builtin_return_address(0)`; include/linux/panic.h declares
+`panic` nonreturning. Context 11, `KD_SERVICE_CALL_NONRETURNING_ORIGIN`, is
+therefore limited to the exact kernel `__stack_chk_fail` address, zero arguments
+and VOID result. There is no direct `panic` descriptor or varargs adaptation.
+Runtime admission accepts this terminal without reserving or retiring Native
+records: existing spin/preemption pins and RCU records remain unchanged, and
+their actual pin requirement still determines whether E retains its CPU.
+
+Translation retains every source branch, but a direct CALL to that declared
+target ends only its own path: neither the callee body nor the nonexistent CALL
+fallthrough is fetched, and no service reentry successor is emitted. The reached
+transaction keeps the actual source CALL word. Once E has suspended and O has
+switched onto its Native task stack, context entry removes only O's runtime
+pin. Full-register and arithmetic-flags restoration then transfers to the exact
+target with the source SP and original CALL word intact, using the existing
+flags-aware transfer rather than a new C CALL to the target. This preserves the
+Native return-address diagnostic and the source frame chain. Existing physical
+Native and KD acquisitions remain owned; no DONE, result ACK, successful body
+return, source/module release or frame retirement is published on this path.
+E continues to retain its pending request and any required CPU pin. This is a
+terminal Native operation, not a successful completion or an original-task
+critical-section suffix.
+
+The immutable registry has 128 internal slots. Before committing any new
+configuration batch, its exact formatted active rows plus the proposed rows
+must fit in one PAGE_SIZE buffer, including the trailing NUL. A rejected batch
+publishes no entries. The frontend's 4096-byte snapshot contract stays unchanged;
+raising internal slot capacity cannot produce a truncated descriptor table.
+Focused checks cover the conditional graph boundary, descriptor identity and
+arity, exact table capacity, and the existing full-register transfer with a
+retained original CALL word. They never intentionally invoke the Native terminal
+target in a live VM.
+
 ## Instrumentation checkpoint, November 2
 
 The generic [API observer](../../tests/kernel/rwsem/observe/README.md) was built
@@ -858,3 +896,38 @@ new implementation states. Every current capture states proxy_proof=false;
 delegation length, critical-section ratio and performance acceptance remain
 unestablished. Production lock and MM integration sources are unchanged from
 the stated baseline. No delegated candidate kernel has been built or run.
+
+## Actual-MM execution-session preparation identity, November 3
+
+The external mmap1 controller starts its own process and the translation daemon
+before activating the provider, so both retain their original object bindings.
+It writes the generic `rwsem_provider_mode=prepare` action itself and remains
+alive through the observation. `kd_exe_add_abi(0, ...)` selects kernel lookup
+PID zero, while `kernel_module/execution/registry_publish.inc` records the
+actual preparing task's TGID. The immutable session receipt therefore binds
+the exact controller PID/start time/executable/workspace/argv and requires every
+prewarmed row to use that TGID, PID zero and ready status zero. A fabricated
+TGID zero is not a valid preparation receipt.
+
+The daemon keeps one writable `/dev/kd_dev` open description from `daemon.c`
+startup until normal process exit. `kernel_module/sys.c` increments the source
+writer ledger for that description; `kd_source.c` decrements it only on final
+release. An idle live daemon therefore requires exactly one source writer,
+not zero. The session receipt declares that count and the daemon's exact
+writable device descriptor, including PID/start time, descriptor number,
+flags and device identity. Before and after each application lifetime, the
+verifier requires the complete observed writable-device descriptor set to
+contain precisely that one descriptor, no daemon child, zero live source
+frames and an unchanged ready registry. Zero or extra writers, another
+publisher, duplicated writable descriptors or changed task identities fail
+the session. Read-only registry/status descriptors do not acquire a writer.
+
+This is an endpoint observation contract, not a barrier against arbitrary new
+device opens between observations. The controller remains responsible for
+exclusive experiment ownership, immutable inputs and continuous diagnostic
+collection. After stopping new object binding and draining application/object
+leases, normal daemon closure must reduce the writer count to zero before
+source retirement. These corrections preserve Native idle checks and do not
+establish delegated MM execution or performance. Focused VM fixtures cover the
+real daemon-writer state, the preparing TGID, extra/changed writers and task
+identity changes; source inspection alone is not a fixture pass.

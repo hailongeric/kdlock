@@ -49,7 +49,8 @@ IMPLICIT_SOURCE_MEMORY = {
 
 
 def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_history=None,
-                     indirect_call_native=False, returning_indirect=False):
+                     indirect_call_native=False, returning_indirect=False,
+                     nonreturning_targets=()):
     """Select code that can execute before this JIT episode ends.
 
     A missing direct callee transfers the saved CALL state to the original
@@ -58,10 +59,11 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
     edges. Recompute this scope on every translation, including learned targets.
     """
     roots = set(roots)
+    nonreturning_targets = set(nonreturning_targets)
     indirect_history = indirect_history or {}
     if roots - blocks.keys() or (blocks and not roots):
         raise ContextFlowLimit("missing or invalid JIT phase roots")
-    successors, exits = {}, set()
+    successors, exits, terminal_lengths = {}, set(), {}
     for start, block in blocks.items():
         db = databases.get(block)
         if db is None:
@@ -77,6 +79,13 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
             direct = isinstance(line.args[0], (ExprLoc, ExprInt))
             if direct and target is None:
                 raise ContextFlowLimit("unresolved direct CALL target", line.offset)
+            if direct and target in nonreturning_targets:
+                # The source CALL word is real, but no return or decoded
+                # callee belongs to this path. Other incoming branches keep
+                # their own reachability, including a shared successor PC.
+                terminal_lengths[start] = index + 1
+                targets.clear()
+                break
             if direct and target not in blocks and target not in resumable_targets:
                 if index != len(block.lines) - 1:
                     raise ContextFlowLimit(
@@ -112,11 +121,13 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
     selected, selected_dbs = {}, {}
     for start in sorted(reached):
         original = block = blocks[start]
-        if start in exits:
+        if start in exits or start in terminal_lengths:
             # Keep a suffix reached by another JIT branch, but remove this
             # native-only edge so its clobbered state cannot reenter analysis.
             block = copy(block)
             block.bto = set()
+            if start in terminal_lengths:
+                block.lines = block.lines[:terminal_lengths[start]]
         selected[start] = block
         selected_dbs[block] = databases[original]
     return selected, selected_dbs, exits & reached
@@ -498,7 +509,7 @@ def instruction_rejection(
 
 def critical_section_blocks(
     blocks, databases, entry, locks, unlocks, extra_targets, *, native_exits=(),
-    runtime_delimited=False, retained_candidate=False,
+    runtime_delimited=False, retained_candidate=False, nonreturning_targets=(),
 ):
     """Exclude the caller's post-unlock code, but scan discovered callees in full.
 
@@ -511,6 +522,7 @@ def critical_section_blocks(
     # executor's exact acquisition records. Legacy/checked callers retain
     # the original boundary and its fixed-resource refusal below.
     pending = deque([(entry, None if runtime_delimited else 1)])
+    nonreturning_targets = set(nonreturning_targets)
     pending.extend((target, None) for target in extra_targets if target != entry)
     visited = set()
     lengths = {}
@@ -534,6 +546,9 @@ def critical_section_blocks(
                     stopped = True
                     break
                 target = static_address(line.args[0], db, next_ip)
+                if target in nonreturning_targets:
+                    stopped = True
+                    break
                 if (retained_candidate and not runtime_delimited and depth is None
                         and target in locks | unlocks):
                     # The caller's count does not include locks returned from
