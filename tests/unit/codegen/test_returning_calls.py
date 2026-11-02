@@ -97,6 +97,27 @@ class ReturningCallTests(unittest.TestCase):
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_5500:', assembly)
 
+    def test_conditional_native_tail_keeps_both_source_paths(self):
+        raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')
+        raw.extend(b'\x90' * (0x20 - len(raw)))
+        raw.extend(b'\x85\xc0\x0f\x85' + struct.pack('<i', 0x5500 - 0x1028))
+        raw.extend(b'\xc3' + b'\x90' * 16)
+        options = {}
+        assembly, log, status = render(
+            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            native_escape_capable=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                            'kd_rwsem_up_write_clobber_v1': 0x6100},
+            returning_services={0x5500: dict(cookie=1, nargs=1, result_kind=1,
+                                             context_kind=2, symbol='primitive_call')},
+            build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(options['requirements'], 896)
+        self.assertIn(b'kd_service_dispatch_1005:', assembly)
+        self.assertIn(b'loc_5500:', assembly)
+        self.assertIn(b'loc_1028:', assembly)
+
 
 if __name__ == '__main__':
     unittest.main()

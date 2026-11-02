@@ -49,7 +49,7 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     callers[callee].add(offset)
                 else:
                     missing_callees.add(callee)
-            elif name == "JMP" and direct:
+            elif name.startswith("J") and direct:
                 callee = db.get_location_offset(line.args[0].loc_key)
                 if callee in terminal_targets:
                     # A Native tail target inherits the real caller's CALL

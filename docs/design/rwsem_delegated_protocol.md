@@ -244,6 +244,10 @@ declared primitives and lock controls stay resumable boundaries. A decoded
 callee's tail jump to a declared primitive inherits the source caller's real
 return word. Existing source-size/expansion limits remain explicit resource
 limits; this does not assert that every MM callback or source graph is ready.
+Compiler sibling calls may also use a direct conditional branch to that
+primitive. Such a branch needs the same target stub and caller-return
+continuation as an unconditional tail jump; its untaken branch stays in the
+translated image. This does not authorize indirect jumps to arbitrary helpers.
 
 The final ownership release can itself be an instruction, for example the
 last inline preemption decrement after an earlier outer unlock. Unlike a CALL,

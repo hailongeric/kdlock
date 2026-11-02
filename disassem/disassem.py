@@ -333,7 +333,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         # in this image requires the returning-service execution contract.
         # Unrelated ordinary images keep their existing publication format.
         if returning_services and any(
-                line.name in ('CALL', 'JMP') and
+                (line.name == 'CALL' or line.name.startswith('J')) and
                 ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
                  isinstance(line.args[0], ExprLoc) and
                  db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
@@ -680,7 +680,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                              and not has_escapes and not root_escapes
                              and not origin_sites)
     has_returning_call = bool(returning_services) and any(
-        line.name in ('CALL', 'JMP') and
+        (line.name == 'CALL' or line.name.startswith('J')) and
         ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
          isinstance(line.args[0], ExprLoc) and
          db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
