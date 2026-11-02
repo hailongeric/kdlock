@@ -210,11 +210,15 @@ trace. No already published delegated invocation has an origin suffix route.
 This initial eligibility distinction is not proof that a reached unsupported
 operation is serviced by the new retained runtime.
 
-A worker probes an uncommitted root once and returns it to dispatch when it is
-not ready. Tentative physical custody is transferred back with exact PICKUP
-and acknowledgment before actor handback. It never occupies a worker waiting
-for an unrelated holder to unlock. Nested LOCAL admission may block its already
-committed parent's worker, just as the corresponding Native acquisition may.
+The default dispatcher selects committed roots only. O performs canonical
+readiness/cancellation arbitration while queued and preemptible, including
+selected reader drainage. E receives that same successful acquisition through
+physical PICKUP and acknowledgment; O never executes its body. An unready root
+therefore consumes no service worker. The bounded tentative actor handback
+helper remains available but is not the default selector policy. Idle workers
+wait for work-sequence changes rather than waking on a periodic timer. Nested
+LOCAL admission may block its already committed parent's worker, just as the
+corresponding Native acquisition may.
 
 Before requesting origin pinning, an executor reserves a CPU with no captured
 origin needing to run there. The active-root list supplies exact origin CPU
