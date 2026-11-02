@@ -67,8 +67,9 @@ CPU capacity. Nested pending requests do not consume another root slot/worker.
 
 The image keeps its exact source/image/task/stack leases through returned-body
 and unlock acknowledgment. Deep or changing writer nesting uses explicit image
-requirement bit 256 plus budget-resume bit 128, protocol 3/header 64; ordinary
-images retain protocol 2/header 48. Legacy execution refuses the extra bit.
+requirement bit 8 (value 256) plus budget-resume bit 7 (value 128), protocol
+3/header 64; ordinary images retain protocol 2/header 48. Legacy execution
+refuses the extra bit.
 There is no new public depth-eight or allocation-error return. The tested depth
 is nine; arbitrary stack/allocation pressure remains unvalidated.
 
@@ -165,7 +166,9 @@ result. The final checkpoint's exact identities are retained separately.
 3. Source-close/replacement races, all-CPU/oversubscribed operation, arbitrary
    nesting/stack headroom, private spill allocation pressure and a blocking
    holder colocated with a pinned origin are unvalidated. A 512-byte restore
-   margin assertion is not a general stack-pressure proof.
+   margin assertion is not a general stack-pressure proof. Publication of
+   requirements 384 does not prove an actual instruction-budget exhaustion,
+   yield and resume; this matrix records no explicit budget-yield witness.
 4. The killable live root is rwsem. Mutex signal variants are compiled and
    nested controls are exercised, but this receipt is not top-level live
    interruptible-mutex service coverage. Ordinary mutex has only the reduced
