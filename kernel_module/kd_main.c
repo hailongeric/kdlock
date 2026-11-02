@@ -28,6 +28,7 @@
 #include "kd_mutex.h"
 #include "kd_spinlock.h"
 #include "kd_spin_entry.h"
+#include "kd_service_api.h"
 #include "sys.h"
 #include "utils.h"
 
@@ -84,6 +85,9 @@ static int __init kdlock_km_init(void)
 	ret = kd_mutex_init_percpu();
 	if (ret)
 		goto err_spinlock;
+	ret = kd_service_init();
+	if (ret)
+		goto err_mutex_storage;
 
 #ifdef KDLOCK_SELFTEST
 	ret = kd_hotlock_lifetime_check();
@@ -112,6 +116,8 @@ static int __init kdlock_km_init(void)
 err_api:
 	kd_api_provider_exit();
 err_mutex:
+	kd_service_exit();
+err_mutex_storage:
 	kd_mutex_exit();
 err_spinlock:
 	kd_spinlock_exit();
@@ -134,6 +140,7 @@ static void __exit kdlock_km_exit(void)
 	kd_sys_exit();
 	kd_api_provider_exit();
 	synchronize_rcu();
+	kd_service_exit();
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();
 	WARN_ON_ONCE(kd_spin_entries_check_idle());

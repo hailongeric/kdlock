@@ -14,3 +14,4 @@
 #include "exe.c"
 #include "kd_spinlock.c"
 #include "kd_mutex.c"
+#include "kd_service.c"

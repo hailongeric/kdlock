@@ -9,6 +9,7 @@
 struct task_struct;
 struct kd_wait_request;
 struct kd_wait_node;
+struct kd_admission;
 
 /* A view, not embedded storage. Existing objects provide their guard and one
  * head word. Distinct condition heads can use the same object's guard. */
@@ -52,6 +53,14 @@ struct kd_wait_selection {
 	struct task_struct *executor;
 };
 
+/* Exact pending physical/phase cleanup custody, separate from selection.
+ * A request cannot acknowledge cancellation while this token remains live. */
+struct kd_wait_cleanup {
+	struct kd_wait_request *request;
+	u64 generation;
+	void *owner;
+};
+
 /* The caller retains this record through all queue, selection and execution
  * obligations. Immutable inputs are initialized before any publication.
  * State and memberships are protected by guard. Out-of-guard state polling is
@@ -73,6 +82,9 @@ struct kd_wait_request {
 	/* Local head promotion has the same exact selection lifetime, without
 	 * borrowing a temporary selector's stack record. */
 	struct kd_wait_selection local_selection;
+	struct kd_wait_cleanup *cleanup;
+	struct kd_admission *admission;
+	raw_spinlock_t *terminal_guard;
 	void *context;
 };
 
@@ -143,12 +155,30 @@ kd_wait_decide_locked(const struct kd_wait_queue *queue,
 void kd_wait_selection_drop_locked(struct kd_wait_request *request,
 				   struct kd_wait_selection *selection);
 bool kd_wait_cancel_ack_locked(struct kd_wait_request *request);
+void kd_wait_cleanup_take_locked(struct kd_wait_request *request,
+				 struct kd_wait_cleanup *cleanup, void *owner);
+void kd_wait_cleanup_drop_locked(struct kd_wait_request *request,
+				 struct kd_wait_cleanup *cleanup);
+/* A captured cancellation transfers to retained state before publishing ACK.
+ * The caller proves sole actor custody, as for the postgrant rebind operation.
+ * Return the old object guard for unlock. Only after unlocking it may the
+ * caller take the retained guard and publish cancel_ack; no object access may
+ * follow that acknowledgment. An independently retained cleanup token may
+ * remain across this move; cancel_ack still refuses until its final release
+ * and exact token drop under the retained guard. */
+raw_spinlock_t *kd_wait_cancel_rebind_locked(struct kd_wait_request *request,
+					    raw_spinlock_t *retained_guard);
 void kd_wait_set_state_locked(struct kd_wait_request *request,
 			     enum kd_wait_state state);
 /* A conventional local call returns at acquisition, before its caller's body.
  * Its adapter first transfers exact acquisition authority to the physical
  * owner record. This acknowledges only the request's result, not lock release. */
 void kd_wait_finish_local_locked(struct kd_wait_request *request);
+/* Postgrant storage transfer, never another publication/election. Both exact
+ * descriptors name the same invocation, and the old descriptor has no queue,
+ * selection or cleanup users. The destination remains under the same guard. */
+void kd_wait_move_acquired_locked(struct kd_wait_request *source,
+				 struct kd_wait_request *destination);
 /* Legacy continuation handoff first transfers ongoing packet/execution and
  * acquisition authority to an independently retained owner/frame record. This
  * acknowledges that transfer, not physical release or returned body completion.

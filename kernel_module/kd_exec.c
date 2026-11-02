@@ -86,6 +86,9 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 		return false;
 	if (frame->has_continuation && !frame->mutex_backend)
 		return false;
+	if (kd_exec_frame_continuation(frame) &&
+	    kd_exec_frame_continuation(frame)->service_ops)
+		return kd_exec_cont_frame_valid(frame);
 	if (kd_exec_frame_continuation(frame) && !kd_exec_cont_frame_valid(frame))
 		return false;
 

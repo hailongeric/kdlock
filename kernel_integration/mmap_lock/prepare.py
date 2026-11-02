@@ -43,6 +43,7 @@ def generated_sources(target):
     private = target / 'kernel/locking/kd_mmap'
     for name in ('include/kd_config.h', 'include/kd_mutex_types.h', 'include/kd_rwsem_types.h',
                  'include/kd_wait_queue.h', 'kernel_module/kd_wait_queue.c',
+                 'include/kd_admission.h', 'kernel_module/kd_admission.c',
                  'include/kd_mutex.h', 'include/kd_rwsem.h', 'include/kd_regs.h',
                  'include/kd_lock.h', 'kernel_module/kd_mutex_local.h',
                  'kernel_module/kd_mutex_local.c', 'kernel_module/kd_mutex_osq.c',
@@ -60,23 +61,17 @@ def generated_sources(target):
             text = replace_once(text, 'int old = kd_io_prepare();', 'int old = io_schedule_prepare();')
             text = replace_once(text, 'kd_io_finish(old);', 'io_schedule_finish(old);')
         if name.endswith('kd_rwsem.c'):
-            # Builtin MM never delegates: keep the ordinary local unlock and
-            # negative-phase release, without a loadable API-router dependency.
-            text = replace_once(text, 'kd_mutex_api_unlock(&sem->gate);',
-                                'kd_mutex_local_unlock(&sem->gate);')
-            text = replace_once(text, 'kd_rwsem_write_release(sem);',
-                                'kd_rwsem_release_local(sem);')
-            # This condition mode belongs only to the module's prepared writer
-            # protocol. The local builtin has no producer for that mode.
-            text = replace_once(text, '\tKD_RWSEM_CONDITION_DELEGATE_WRITE,\n', '')
-            text = replace_once(text, 'static bool\nkd_rwsem_reserve_delegate(struct kd_rwsem *sem);\n', '')
-            text = replace_once(text, '\tcase KD_RWSEM_CONDITION_DELEGATE_WRITE:\n'
-                                '\t\treturn kd_rwsem_reserve_delegate(sem);\n', '')
-            start = text.index('static bool kd_rwsem_reserve_delegate(')
-            end = text.index('bool kd_rwsem_is_idle(', start)
-            # No executor or positive-phase admission exists in this builtin.
-            # All ordinary/local algorithms before this boundary are reused.
-            text = text[:start] + text[end:]
+            # The builtin retains the same selected-phase C writer algorithm,
+            # with physical local release for both up_write and downgrade.
+            # It has no loadable API router or continuation capture entry.
+            old = 'kd_mutex_api_unlock(&sem->gate);'
+            rt.require(text.count(old) == 2, 'local rwsem release boundaries changed')
+            text = text.replace(old, 'kd_mutex_local_unlock(&sem->gate);')
+        if name.endswith('kd_admission.c'):
+            # C writers share canonical admission/cleanup. Their builtin gate
+            # has no scheduling-service ownership or loadable unlock router.
+            text = replace_once(text, 'kd_mutex_api_unlock(a->gate);',
+                                'kd_mutex_local_unlock(a->gate);')
         if name in ('include/kd_mutex.h', 'include/kd_rwsem.h'):
             text = re.sub(r'#include "(kd_(?:mutex|rwsem)_types.h)"',
                           r'#include <linux/\1>', text)

@@ -36,7 +36,8 @@ MM_OUTPUTS = MM_PATCH_PATHS | {
     "kernel/locking/kd_mmap/pool.c", "kernel/locking/kd_mmap/Makefile",
     *("kernel/locking/kd_mmap/kd_mmap_" + suffix for suffix in
       ("mutex.h", "rwsem.h", "regs.h", "lock.h", "mutex_local.h",
-       "mutex_local.c", "mutex_osq.c", "rwsem.c", "wait_queue.c"))}
+       "mutex_local.c", "mutex_osq.c", "rwsem.c", "wait_queue.c",
+       "admission.h", "admission.c"))}
 API_OUTPUTS = API_PATCH_PATHS | {
     "include/linux/kd_api_provider.h", "include/linux/kd_api_lock_types.h",
     "include/linux/kd_api_lock.h", "include/linux/kd_api_control.h",

@@ -19,14 +19,24 @@ kd_rwsem_condition_active(const struct kd_rwsem_condition *condition)
 	return READ_ONCE(condition->head) != NULL;
 }
 
-/* Admission: 0 admits local readers, -1 reserves a local writer, positive
- * values retain exact delegated-writer reservations through their origin ACK.
+enum kd_rwsem_phase_kind {
+	KD_RWSEM_PHASE_NONE,
+	KD_RWSEM_PHASE_ADMISSION,
+	KD_RWSEM_PHASE_LOCAL,
+};
+
+/* Admission: 0 admits local readers, -1 names one selected writer phase.
+ * Queued writers carry no phase or reusable reader-drain result.
  * Participants must never acquire the embedded gate independently. */
 struct kd_rwsem {
 	struct kd_mutex gate;
 	/* Quiescent, monotonic preparation policy; not acquisition authority.
 	 * Fits the gate cacheline's existing padding, away from reader updates. */
 	unsigned int prepared_writes;
+	unsigned int selected_kind;
+	struct task_struct *selected_owner;
+	void *selected_identity;
+	u64 phase_generation;
 	atomic_long_t readers __aligned(64);
 	atomic_long_t admission __aligned(64);
 	struct kd_rwsem_condition phase_wait __aligned(64);
@@ -39,6 +49,8 @@ struct kd_rwsem {
 #define KD_RWSEM_INITIALIZER(name) { \
 	.gate = KD_MUTEX_INITIALIZER(name.gate), \
 	.prepared_writes = 0, \
+	.selected_kind = KD_RWSEM_PHASE_NONE, .selected_owner = NULL, \
+	.selected_identity = NULL, .phase_generation = 0, \
 	.readers = ATOMIC_LONG_INIT(0), \
 	.admission = ATOMIC_LONG_INIT(0), \
 	.phase_wait = { .head = NULL, .reserved = { 0, 0 } }, \

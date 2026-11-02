@@ -6,8 +6,8 @@
 #include "kd_mutex.h"
 
 /* Task-context sleeping reader/writer object. Admission is separate from the
- * unchanged KD mutex protocol: 0 admits readers, -1 reserves an ordinary writer,
- * and positive values count exact delegation-capable writer reservations.
+ * KD physical gate: 0 admits readers and -1 names one exact selected writer.
+ * Queued requests retain no reusable reader-drain result or phase reservation.
  * Every participant must use this API; never access the embedded gate directly.
  */
 void kd_rwsem_init(struct kd_rwsem *sem);
@@ -36,11 +36,6 @@ int kd_rwsem_is_locked(struct kd_rwsem *sem);
 int kd_rwsem_is_contended(struct kd_rwsem *sem);
 void kd_rwsem_assert_held(const struct kd_rwsem *sem);
 void kd_rwsem_assert_held_write(const struct kd_rwsem *sem);
-/* Provider implementation helpers: reservation before publication, release
- * only on the origin after exact mutex unlock/ACK. Never nested JIT controls. */
-void kd_rwsem_delegate_enter(struct kd_rwsem *sem);
-void kd_rwsem_delegate_exit(struct kd_rwsem *sem);
-void kd_rwsem_write_release(struct kd_rwsem *sem);
 /* Quiescent inspection after stopping/joining every user, not admission. */
 bool kd_rwsem_is_idle(struct kd_rwsem *sem);
 

@@ -12,6 +12,7 @@ enum kd_exec_cont_state {
 	KD_CONT_SUSPENDED,
 	KD_CONT_RETURNED,
 	KD_CONT_RETIRED,
+	KD_CONT_FINISHING,
 };
 
 enum kd_exec_cont_wait {
@@ -21,6 +22,49 @@ enum kd_exec_cont_wait {
 };
 
 struct kd_exec_continuation;
+
+enum kd_exec_service_api {
+	KD_SERVICE_NONE,
+	KD_SERVICE_MUTEX_LOCK,
+	KD_SERVICE_MUTEX_LOCK_INTERRUPTIBLE,
+	KD_SERVICE_MUTEX_LOCK_KILLABLE,
+	KD_SERVICE_MUTEX_UNLOCK,
+	KD_SERVICE_RWSEM_WRITE,
+	KD_SERVICE_RWSEM_WRITE_INTERRUPTIBLE,
+	KD_SERVICE_RWSEM_WRITE_KILLABLE,
+	KD_SERVICE_RWSEM_UP_WRITE,
+	KD_SERVICE_RWSEM_DOWNGRADE,
+	KD_SERVICE_RWSEM_UP_READ,
+};
+
+struct kd_exec_service_call {
+	enum kd_exec_service_api api;
+	unsigned long object;
+	unsigned int wait_state;
+	bool acquire;
+	bool may_delegate;
+	bool returns_integer;
+	struct kd_call_state call;
+	const struct kd_wait_request *child;
+	u64 child_generation;
+};
+
+/* These are read-only queries over root-owned retained acquisition records.
+ * They must not acquire an object lock, schedule or touch a released object. */
+struct kd_exec_service_ops {
+	bool (*validate)(const void *scope, const struct kd_exec_continuation *cont);
+	bool (*all_released)(const void *scope);
+	bool (*outer_released)(const void *scope);
+	bool (*has_nested)(const void *scope);
+	unsigned int (*depth)(const void *scope);
+};
+
+struct kd_exec_capture_lease {
+	struct task_struct *origin;
+	unsigned long stack_base;
+	void (*stack_put)(struct task_struct *task);
+	bool held;
+};
 
 /* These callbacks inspect a separately retained acquisition record, never an
  * object whose public unlock already permitted destruction. They do not grant
@@ -72,6 +116,10 @@ struct kd_exec_continuation {
 	raw_spinlock_t lifecycle_guard;
 	struct kd_exec_continuation *packet_owner;
 	struct task_struct *executor;
+	struct task_struct *resume_executor;
+	void *service_scope;
+	const struct kd_exec_service_ops *service_ops;
+	struct kd_exec_service_call service_call;
 	struct kd_call_state pending_call;
 	unsigned long stack_base;
 	void (*stack_put)(struct task_struct *task);
@@ -81,6 +129,26 @@ struct kd_exec_continuation {
 	bool source_lease;
 	bool stack_lease;
 };
+
+int kd_exec_capture_lease_get(struct kd_exec_capture_lease *lease,
+	struct task_struct *origin);
+void kd_exec_capture_lease_put(struct kd_exec_capture_lease *lease);
+int kd_exec_cont_adopt_acquired(struct kd_exec_continuation *continuation,
+	struct kd_wait_request *request, struct kd_regs *packet,
+	unsigned long entry_ip, unsigned long lock, unsigned long gsbase,
+	unsigned int entry_abi, struct kd_exec_capture_lease *lease);
+int kd_exec_cont_set_service(struct kd_exec_continuation *continuation,
+	void *scope, const struct kd_exec_service_ops *ops);
+int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
+	enum kd_exec_service_api api, unsigned long object, unsigned int wait_state,
+	bool acquire, bool may_delegate, bool returns_integer);
+int kd_exec_cont_service_child(struct kd_exec_continuation *continuation,
+	const struct kd_wait_request *child);
+/* Returns KD_EXE_RUN_TO_UNLOCK at the final release without consuming that
+ * source CALL word; the ordinary origin restoration consumes it exactly once.
+ * Other results advance the CALL and return zero for retained-image resume. */
+int kd_exec_cont_service_complete(struct kd_exec_continuation *continuation,
+	const struct kd_wait_request *child, int result);
 
 /* Internal errors never become new public lock results. Callers reserve the
  * anchor and capture resources before publication. Parent is optional; a child

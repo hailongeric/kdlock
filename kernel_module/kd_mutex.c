@@ -39,6 +39,7 @@
 #include "kd_jit_batch.h"
 #include "kd_source.h"
 #include "kd_segment.h"
+#include "kd_service_api.h"
 #include "exe.h"
 #include "utils.h"
 
@@ -120,6 +121,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 
 /* Cold topology and lifecycle do not change the packet's five-line ABI.
  * Each record has precisely the same reservation lifetime as its slot. */
+struct kd_service_root;
 struct kd_mutex_wait_record {
 	struct kd_wait_request request;
 	struct kd_wait_node member;
@@ -127,6 +129,7 @@ struct kd_mutex_wait_record {
 	raw_spinlock_t lifecycle_guard;
 	u64 invocation;
 	bool request_live;
+	struct kd_service_root *service;
 };
 struct kd_mutex_wait_pool {
 	struct kd_mutex_wait_record records[KD_MUTEX_MAX_NODES];

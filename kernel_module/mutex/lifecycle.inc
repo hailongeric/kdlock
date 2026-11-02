@@ -136,6 +136,8 @@ err_free:
 bool kd_mutex_check_idle(void)
 {
 	int cpu;
+	if (!kd_service_idle())
+		return false;
 
 	/* Controlled drain stops callers first. Never use an approximate sum:
 	 * a reserved sleeping executor or an imbalance on any CPU keeps us busy.

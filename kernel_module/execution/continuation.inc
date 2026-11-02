@@ -22,10 +22,30 @@ static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame)
 	    frame->regs_ref != cont->packet || frame->regs_borrowed ||
 	    cont->state == KD_CONT_UNUSED || cont->state == KD_CONT_RETIRED)
 		return false;
+	if (cont->service_ops &&
+	    !cont->service_ops->validate(cont->service_scope, cont))
+		return false;
 	if (kd_exec_frame_state(frame) == KD_EXEC_FRAME_SUSPENDED)
-		return cont->state == KD_CONT_SUSPENDED && !cont->executor &&
+		return (cont->state == KD_CONT_SUSPENDED || cont->state == KD_CONT_FINISHING) &&
+		       !cont->executor &&
 		       !frame->parent && !frame->depth;
-	return cont->state != KD_CONT_SUSPENDED;
+	if (cont->state == KD_CONT_SUSPENDED)
+		return false;
+	if (cont->service_ops) {
+		int state = kd_exec_frame_state(frame);
+
+		if (!frame->mutex_backend || !frame->complex_ready || !frame->gsbase ||
+		    !frame->logical_task || frame->depth >= KD_EXEC_MAX_NESTING ||
+		    (state != KD_EXEC_FRAME_RUNNING && state != KD_EXEC_FRAME_RESUME &&
+		     state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
+		    !cont->service_scope)
+			return false;
+		if (frame->completion_seen &&
+		    (state != KD_EXEC_FRAME_COMPLETE || !frame->outer_unlock_seen ||
+		     !cont->service_ops->all_released(cont->service_scope)))
+			return false;
+	}
+	return true;
 }
 
 static bool kd_exec_cont_no_stack_service(const struct kd_exec_frame *frame)
@@ -38,20 +58,67 @@ static bool kd_exec_cont_no_stack_service(const struct kd_exec_frame *frame)
 		 frame->control_call.phase == KD_CALL_PENDING);
 }
 
-int kd_exec_cont_init(struct kd_exec_continuation *cont,
+int kd_exec_capture_lease_get(struct kd_exec_capture_lease *lease,
+	struct task_struct *origin)
+{
+	unsigned long stack_base;
+
+	if (!lease || !origin)
+		return -EINVAL;
+	lease->held = false;
+	if (!kd_exec_task_stack_put)
+		return -EOPNOTSUPP;
+	if (!kd_source_frame_get())
+		return -ESHUTDOWN;
+	get_task_struct(origin);
+	stack_base = (unsigned long)try_get_task_stack(origin);
+	if (!stack_base) {
+		put_task_struct(origin);
+		kd_source_frame_put();
+		return -ESRCH;
+	}
+	lease->origin = origin;
+	lease->stack_base = stack_base;
+	lease->stack_put = kd_exec_task_stack_put;
+	lease->held = true;
+	return 0;
+}
+
+void kd_exec_capture_lease_put(struct kd_exec_capture_lease *lease)
+{
+	struct task_struct *origin;
+	void (*stack_put)(struct task_struct *);
+
+	if (!lease || !lease->held)
+		return;
+	origin = lease->origin;
+	stack_put = lease->stack_put;
+	lease->held = false;
+	stack_put(origin);
+	put_task_struct(origin);
+	kd_source_frame_put();
+}
+
+static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	struct kd_wait_request *request, struct kd_regs *packet,
 	unsigned long entry_ip, unsigned long lock, unsigned long gsbase,
-	unsigned int entry_abi, struct kd_exec_continuation *parent)
+	unsigned int entry_abi, struct kd_exec_continuation *parent,
+	struct kd_exec_capture_lease *adopt)
 {
 	struct kd_exec_continuation *root = parent ? parent->root : cont;
 	struct kd_exec_frame *frame;
 	unsigned long flags, stack_base;
 	bool source = false, stack = false;
+	struct kd_exec_capture_lease acquired_lease;
+	struct kd_exec_capture_lease *lease = adopt ? adopt : &acquired_lease;
+	int ret;
 
 	if (!cont || !request || !packet || !entry_ip || !lock || !gsbase ||
 	    !request->logical_origin || !request->physical_waiter ||
 	    !request->identity || !request->generation ||
-	    READ_ONCE(request->state) != KD_WAIT_PRIVATE ||
+	    (READ_ONCE(request->state) != KD_WAIT_PRIVATE &&
+	     (!adopt || (READ_ONCE(request->state) != KD_WAIT_ACQUIRED &&
+			 READ_ONCE(request->state) != KD_WAIT_EXECUTING))) ||
 	    (READ_ONCE(cont->state) != KD_CONT_UNUSED &&
 	     READ_ONCE(cont->state) != KD_CONT_RETIRED))
 		return -EINVAL;
@@ -62,18 +129,16 @@ int kd_exec_cont_init(struct kd_exec_continuation *cont,
 			return -EINVAL;
 		stack_base = root->stack_base;
 	} else {
-		if (!kd_exec_task_stack_put)
-			return -EOPNOTSUPP;
-		if (!kd_source_frame_get())
-			return -ESHUTDOWN;
-		source = true;
-		get_task_struct(request->logical_origin);
-		stack_base = (unsigned long)try_get_task_stack(request->logical_origin);
-		if (!stack_base) {
-			put_task_struct(request->logical_origin);
-			kd_source_frame_put();
-			return -ESRCH;
+		if (!adopt) {
+			ret = kd_exec_capture_lease_get(lease, request->logical_origin);
+			if (ret)
+				return ret;
 		}
+		if (!lease->held || lease->origin != request->logical_origin ||
+		    !lease->stack_base || !lease->stack_put)
+			return -EINVAL;
+		source = true;
+		stack_base = lease->stack_base;
 		stack = true;
 	}
 
@@ -93,14 +158,20 @@ int kd_exec_cont_init(struct kd_exec_continuation *cont,
 	raw_spin_lock_init(&cont->lifecycle_guard);
 	cont->packet_owner = parent ? NULL : cont;
 	cont->executor = NULL;
+	cont->resume_executor = NULL;
+	cont->service_scope = NULL;
+	cont->service_ops = NULL;
+	cont->service_call.api = KD_SERVICE_NONE;
 	cont->pending_call.phase = KD_CALL_NONE;
 	cont->stack_base = stack_base;
-	cont->stack_put = stack ? kd_exec_task_stack_put : NULL;
+	cont->stack_put = stack ? lease->stack_put : NULL;
 	cont->state = KD_CONT_READY;
 	cont->wait = KD_CONT_WAIT_NONE;
 	cont->result = 0;
 	cont->source_lease = source;
 	cont->stack_lease = stack;
+	if (source)
+		lease->held = false;
 
 	frame = &cont->frame;
 	kd_exec_frame_prepare(frame, entry_ip, lock, gsbase, request->logical_origin);
@@ -130,6 +201,38 @@ int kd_exec_cont_init(struct kd_exec_continuation *cont,
 	return 0;
 }
 
+int kd_exec_cont_init(struct kd_exec_continuation *cont,
+	struct kd_wait_request *request, struct kd_regs *packet,
+	unsigned long entry_ip, unsigned long lock, unsigned long gsbase,
+	unsigned int entry_abi, struct kd_exec_continuation *parent)
+{
+	return kd_exec_cont_init_storage(cont, request, packet, entry_ip, lock,
+		gsbase, entry_abi, parent, NULL);
+}
+
+int kd_exec_cont_adopt_acquired(struct kd_exec_continuation *cont,
+	struct kd_wait_request *request, struct kd_regs *packet,
+	unsigned long entry_ip, unsigned long lock, unsigned long gsbase,
+	unsigned int entry_abi, struct kd_exec_capture_lease *lease)
+{
+	if (!lease)
+		return -EINVAL;
+	return kd_exec_cont_init_storage(cont, request, packet, entry_ip, lock,
+		gsbase, entry_abi, NULL, lease);
+}
+
+int kd_exec_cont_set_service(struct kd_exec_continuation *cont,
+	void *scope, const struct kd_exec_service_ops *ops)
+{
+	if (!kd_exec_cont_valid(cont) || cont->state != KD_CONT_READY ||
+	    !scope || !ops || !ops->validate || !ops->all_released ||
+	    !ops->outer_released || !ops->has_nested || !ops->depth)
+		return -EINVAL;
+	cont->service_scope = scope;
+	cont->service_ops = ops;
+	return 0;
+}
+
 static struct kd_exec_frame *
 kd_exec_cont_activate(struct kd_exec_continuation *cont)
 {
@@ -142,6 +245,8 @@ kd_exec_cont_activate(struct kd_exec_continuation *cont)
 	/* The caller pins this physical CPU; request storage is not CPU-local
 	 * activation storage and remains live across a later suspend. */
 	if (!preempt_count() || !kd_exec_cont_valid(cont))
+		return NULL;
+	if (cont->resume_executor && cont->resume_executor != current)
 		return NULL;
 	acquired = smp_load_acquire(&cont->request->state);
 	if (acquired != KD_WAIT_ACQUIRED && acquired != KD_WAIT_EXECUTING)
@@ -232,17 +337,29 @@ int kd_exec_cont_suspend(struct kd_exec_continuation *cont,
 	raw_spin_lock_irqsave(&cont->root->guard, flags);
 	ret = cont->root->packet_owner == cont ?
 		kd_exec_cont_unbind(cont, true) : -EBUSY;
-	if (!ret)
+	if (!ret) {
 		cont->wait = reason;
+		get_task_struct(current);
+		cont->resume_executor = current;
+	}
 	raw_spin_unlock_irqrestore(&cont->root->guard, flags);
 	return ret;
 }
 
 struct kd_exec_frame *kd_exec_cont_resume(struct kd_exec_continuation *cont)
 {
+	struct kd_exec_frame *frame;
+	struct task_struct *resume;
+
 	if (!kd_exec_cont_valid(cont))
 		return NULL;
-	return kd_exec_cont_activate(cont);
+	resume = cont->resume_executor;
+	frame = kd_exec_cont_activate(cont);
+	if (frame && resume) {
+		cont->resume_executor = NULL;
+		put_task_struct(resume);
+	}
+	return frame;
 }
 
 int kd_exec_cont_child_begin(struct kd_exec_continuation *parent,
@@ -279,6 +396,114 @@ static int kd_exec_cont_call_word(struct kd_exec_continuation *cont,
 	    copy_from_kernel_nofault(return_ip, (void *)sp, sizeof(*return_ip)) ||
 	    !*return_ip)
 		return -EFAULT;
+	return 0;
+}
+
+int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
+	enum kd_exec_service_api api, unsigned long object, unsigned int wait_state,
+	bool acquire, bool may_delegate, bool returns_integer)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	unsigned long return_ip;
+	struct kd_exec_service_call pending;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops || !object ||
+	    api == KD_SERVICE_NONE || cont->state != KD_CONT_BOUND ||
+	    cont->executor != current || cont->root->packet_owner != cont ||
+	    cont->service_call.api != KD_SERVICE_NONE ||
+	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
+	    kd_exec_cont_call_word(cont, &return_ip))
+		return -EINVAL;
+	pending.api = api;
+	pending.object = object;
+	pending.wait_state = wait_state;
+	pending.acquire = acquire;
+	pending.may_delegate = may_delegate;
+	pending.returns_integer = returns_integer;
+	pending.child = NULL;
+	pending.child_generation = 0;
+	if (kd_call_begin(&pending.call, cont->packet->ip, cont->packet->sp, return_ip))
+		return -EINVAL;
+	cont->service_call = pending;
+	frame->control_call = pending.call;
+	return 0;
+}
+
+int kd_exec_cont_service_child(struct kd_exec_continuation *cont,
+	const struct kd_wait_request *child)
+{
+	if (!kd_exec_cont_valid(cont) || cont->state != KD_CONT_SUSPENDED ||
+	    cont->resume_executor != current || !child ||
+	    cont->service_call.api == KD_SERVICE_NONE || !cont->service_call.acquire ||
+	    cont->service_call.child || !child->identity || !child->generation ||
+	    child->logical_origin != cont->request->logical_origin ||
+	    child->physical_waiter != current || READ_ONCE(child->state) != KD_WAIT_PRIVATE)
+		return -EINVAL;
+	cont->service_call.child = child;
+	cont->service_call.child_generation = child->generation;
+	return 0;
+}
+
+int kd_exec_cont_service_complete(struct kd_exec_continuation *cont,
+	const struct kd_wait_request *child, int result)
+{
+	struct kd_exec_service_call *pending;
+	unsigned long return_ip;
+	bool complete;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
+	    !((cont->state == KD_CONT_SUSPENDED && cont->resume_executor == current) ||
+	      (cont->state == KD_CONT_BOUND && cont->executor == current &&
+	       kd_exec_current_frame() == &cont->frame)) ||
+	    cont->root->packet_owner != cont ||
+	    !cont->service_ops->validate(cont->service_scope, cont))
+		return -EINVAL;
+	pending = &cont->service_call;
+	if (pending->api == KD_SERVICE_NONE || pending->call.phase != KD_CALL_PENDING ||
+	    cont->packet->ip != pending->call.target ||
+	    cont->packet->sp != pending->call.stack ||
+	    kd_exec_cont_call_word(cont, &return_ip) || return_ip != pending->call.return_ip)
+		return -EINVAL;
+	if (pending->acquire) {
+		enum kd_wait_state state;
+
+		if (!child || child != pending->child ||
+		    child->generation != pending->child_generation ||
+		    child->logical_origin != cont->request->logical_origin ||
+		    child->physical_waiter != current)
+			return -EINVAL;
+		state = smp_load_acquire(&child->state);
+		if (result == -EINTR) {
+			if (!pending->returns_integer || state != KD_WAIT_CANCEL_ACK)
+				return -EINVAL;
+		} else if (result || (state != KD_WAIT_ACQUIRED && state != KD_WAIT_RETURN_ACK)) {
+			return -EINVAL;
+		}
+	} else if (child || result) {
+		return -EINVAL;
+	}
+	if (pending->returns_integer)
+		cont->packet->ax = (unsigned int)result;
+	/* A CALL result does not carry a block-budget flags transaction. Clear
+	 * old queue bytes before any regular FULL generated entry inspects tags. */
+	cont->packet->orig_ax = 0;
+	cont->frame.control_call = pending->call;
+	cont->frame.control_call.phase = KD_CALL_COMPLETE;
+	pending->api = KD_SERVICE_NONE;
+	if (cont->service_ops->outer_released(cont->service_scope)) {
+		cont->frame.outer_unlock_seen = true;
+		cont->frame.jit_lock_released[0] = true;
+	}
+	complete = cont->frame.outer_unlock_seen &&
+		cont->service_ops->all_released(cont->service_scope);
+	if (complete)
+		return KD_EXE_RUN_TO_UNLOCK;
+	/* CALL flags are not a live source input. Only its integer result, exact
+	 * return word and canonical virtual registers continue on this executor. */
+	cont->packet->sp += sizeof(unsigned long);
+	cont->packet->ip = return_ip;
+	cont->frame.continuation_ip = cont->packet->ip;
+	cont->frame.continuation_sp = cont->packet->sp;
 	return 0;
 }
 
@@ -497,6 +722,7 @@ int kd_exec_cont_return(struct kd_exec_continuation *cont, int result)
 	unsigned long flags;
 	enum kd_wait_state acquired;
 	int ret = -EINVAL;
+	struct task_struct *resume = NULL;
 
 	if (!kd_exec_cont_valid(cont))
 		return ret;
@@ -514,20 +740,41 @@ int kd_exec_cont_return(struct kd_exec_continuation *cont, int result)
 			goto out;
 		cont->state = KD_CONT_RETURNED;
 	} else {
-		if (cont->state != KD_CONT_BOUND || !cont->frame.executed ||
+		if ((cont->state != KD_CONT_BOUND && cont->state != KD_CONT_SUSPENDED) ||
+		    !cont->frame.executed ||
 		    !kd_exec_cont_no_stack_service(&cont->frame))
 			goto out;
+		if (cont->state == KD_CONT_SUSPENDED) {
+			if (cont->resume_executor != current ||
+			    !kd_exec_frame_can_complete(&cont->frame))
+				goto out;
+			/* A final typed release can complete with no active CPU frame.
+			 * FINISHING permits the ordinary completion event on that exact
+			 * unbound frame, without pretending it owns ctx.top. */
+			cont->state = KD_CONT_FINISHING;
+			if (kd_exec_frame_complete(&cont->frame)) {
+				cont->state = KD_CONT_SUSPENDED;
+				goto out;
+			}
+			cont->state = KD_CONT_RETURNED;
+			resume = cont->resume_executor;
+			cont->resume_executor = NULL;
+			goto completed;
+		}
 		if (!cont->frame.completion_seen && kd_exec_frame_complete(&cont->frame))
 			goto out;
 		ret = kd_exec_cont_unbind(cont, false);
 		if (ret)
 			goto out;
 	}
+completed:
 	cont->result = result;
 	cont->wait = KD_CONT_WAIT_NONE;
 	ret = 0;
 out:
 	raw_spin_unlock_irqrestore(&cont->root->guard, flags);
+	if (resume)
+		put_task_struct(resume);
 	return ret;
 }
 
@@ -551,6 +798,7 @@ int kd_exec_cont_retire(struct kd_exec_continuation *cont)
 	if ((cont->state != KD_CONT_RETURNED &&
 	     !(cont->state == KD_CONT_READY && acquired == KD_WAIT_PRIVATE)) ||
 	    cont->executor || !list_empty(&cont->children) || !list_empty(&cont->owners) ||
+	    cont->resume_executor || cont->service_call.api != KD_SERVICE_NONE ||
 	    !list_empty(&cont->storage_owners) ||
 	    READ_ONCE(cont->request->memberships) || READ_ONCE(cont->request->selection) ||
 	    READ_ONCE(cont->request->acquisition) ||

@@ -61,6 +61,9 @@ void kd_wait_request_init(struct kd_wait_request *request, void *identity,
 	request->local_selection.request = NULL;
 	request->local_selection.generation = 0;
 	request->local_selection.executor = NULL;
+	request->cleanup = NULL;
+	request->admission = NULL;
+	request->terminal_guard = NULL;
 	request->context = context;
 }
 
@@ -250,10 +253,49 @@ bool kd_wait_cancel_ack_locked(struct kd_wait_request *request)
 	if (request->state == KD_WAIT_CANCEL_ACK)
 		return true;
 	BUG_ON(request->state != KD_WAIT_CANCELING);
-	if (request->selection || request->memberships || request->acquisition)
+	if (request->selection || request->cleanup || request->memberships || request->acquisition ||
+	    (request->terminal_guard && request->guard != request->terminal_guard))
 		return false;
 	smp_store_release(&request->state, KD_WAIT_CANCEL_ACK);
 	return true;
+}
+
+void kd_wait_cleanup_take_locked(struct kd_wait_request *request,
+				 struct kd_wait_cleanup *cleanup, void *owner)
+{
+	kd_wait_assert_request(request);
+	BUG_ON(!cleanup || !owner || request->cleanup || cleanup->request ||
+	       (request->state != KD_WAIT_QUEUED && request->state != KD_WAIT_SELECTED_DRAINING));
+	cleanup->request = request;
+	cleanup->generation = request->generation;
+	cleanup->owner = owner;
+	request->cleanup = cleanup;
+}
+
+void kd_wait_cleanup_drop_locked(struct kd_wait_request *request,
+				 struct kd_wait_cleanup *cleanup)
+{
+	kd_wait_assert_request(request);
+	BUG_ON(!cleanup || request->cleanup != cleanup || cleanup->request != request ||
+	       cleanup->generation != request->generation);
+	request->cleanup = NULL;
+	cleanup->request = NULL;
+	cleanup->generation = 0;
+	cleanup->owner = NULL;
+}
+
+raw_spinlock_t *kd_wait_cancel_rebind_locked(struct kd_wait_request *request,
+					    raw_spinlock_t *retained_guard)
+{
+	raw_spinlock_t *old_guard;
+
+	kd_wait_assert_request(request);
+	BUG_ON(!retained_guard || request->state != KD_WAIT_CANCELING ||
+	       request->selection || request->memberships || request->acquisition ||
+	       request->terminal_guard != retained_guard);
+	old_guard = request->guard;
+	smp_store_release(&request->guard, retained_guard);
+	return old_guard;
 }
 
 enum kd_wait_decision
@@ -326,11 +368,35 @@ void kd_wait_finish_local_locked(struct kd_wait_request *request)
 	kd_wait_handoff_locked(request);
 }
 
+void kd_wait_move_acquired_locked(struct kd_wait_request *source,
+				 struct kd_wait_request *destination)
+{
+	kd_wait_assert_request(source);
+	BUG_ON(!destination || source == destination ||
+	       destination->guard != source->guard ||
+	       destination->state != KD_WAIT_PRIVATE ||
+	       source->state != KD_WAIT_ACQUIRED ||
+	       source->identity != destination->identity ||
+	       source->generation != destination->generation ||
+	       source->logical_origin != destination->logical_origin ||
+	       source->physical_waiter != destination->physical_waiter ||
+	       source->wait_state != destination->wait_state ||
+	       source->may_delegate != destination->may_delegate ||
+	       source->selection || source->cleanup || source->memberships || source->acquisition ||
+	       destination->selection || destination->cleanup ||
+	       destination->memberships || destination->acquisition);
+	/* Publish destination custody before the source result/storage retires.
+	 * No public acquisition is newly committed by this storage move. */
+	smp_store_release(&destination->state, KD_WAIT_ACQUIRED);
+	kd_wait_handoff_locked(source);
+	kd_wait_set_state_locked(source, KD_WAIT_RETIRED);
+}
+
 void kd_wait_handoff_locked(struct kd_wait_request *request)
 {
 	kd_wait_assert_request(request);
 	BUG_ON((request->state != KD_WAIT_ACQUIRED && request->state != KD_WAIT_EXECUTING) ||
-	       request->selection || request->memberships || request->acquisition);
+	       request->selection || request->cleanup || request->memberships || request->acquisition);
 	smp_store_release(&request->state, KD_WAIT_RETURN_ACK);
 }
 
@@ -342,7 +408,7 @@ raw_spinlock_t *kd_wait_rebind_locked(struct kd_wait_request *request,
 	kd_wait_assert_request(request);
 	BUG_ON(!retained_guard ||
 	       (request->state != KD_WAIT_ACQUIRED && request->state != KD_WAIT_EXECUTING) ||
-	       request->selection || request->memberships || request->acquisition);
+	       request->selection || request->cleanup || request->memberships || request->acquisition);
 	old_guard = request->guard;
 	/* Only the transport's sole lifecycle token can establish the absence of
 	 * actors which cached old_guard. This store does not revoke such a pointer
@@ -380,7 +446,7 @@ void kd_wait_set_state_locked(struct kd_wait_request *request,
 	}
 	BUG_ON(!valid);
 	if (state == KD_WAIT_RETURN_ACK || state == KD_WAIT_RETIRED)
-		BUG_ON(request->selection || request->memberships || request->acquisition);
+		BUG_ON(request->selection || request->cleanup || request->memberships || request->acquisition);
 	smp_store_release(&request->state, state);
 }
 

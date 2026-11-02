@@ -48,13 +48,28 @@ void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
 #define KD_EXE_RUN_NATIVE 6
 #define KD_EXE_NATIVE_DONE 7
 #define KD_EXE_KNOWN_NATIVE 8
+#define KD_EXE_KNOWN_SERVICE 9
+#define KD_EXE_RUN_SERVICE 10
+#define KD_EXE_RUN_YIELD 11
+#define KD_EXE_RUN_NEED_OWNER 12
 
 /* Kernel-only entry: pass the slot returned by find_ready and a validated
  * spin/mutex frame. Dispatch rechecks publication/admission after frame setup;
  * the admitted frame retains source residency through all continuations. */
+struct kd_exec_frame;
+/* Prepublication image eligibility; the caller separately retains its source
+ * lease. The returned immutable image survives controlled session teardown. */
+const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
+	unsigned long entry_ip);
+/* Actual acquisition is already committed. Enter exactly the admitted image
+ * without consulting fresh source/status admission again. */
+int kd_exe_on_retained_entry(struct kd_exec_frame *frame,
+	struct kd_exe_info *exe, const struct kd_jit_image *image);
 int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long entry_ip,
 			    unsigned long outer_lock_addr);
+/* Resume the already bound immutable generation; no fresh source admission. */
+int kd_exe_resume_retained(struct kd_exec_frame *frame);
 
 struct kd_exec_frame;
 struct kd_jit_batch_call;

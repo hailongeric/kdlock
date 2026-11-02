@@ -38,6 +38,12 @@ void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
 /* Captured publication and physical admission share this exact membership. */
 struct kd_wait_node *kd_mutex_request_member(struct kd_mutex_node *node);
 bool kd_mutex_local_trylock_locked(struct kd_mutex *lock, bool handoff);
+/* One bounded owner-word attempt for a canonical admission. A selected executor
+ * may consume only this request's designated PICKUP, never a live owner. */
+bool kd_mutex_admission_trylock_locked(struct kd_mutex *lock,
+				      struct kd_wait_request *request);
+bool kd_mutex_admission_transfer_locked(struct kd_mutex *lock,
+				       struct task_struct *target);
 /* Notify while the member and its exact selection are guarded and live. */
 void kd_mutex_wake_head_locked(struct kd_mutex *lock);
 #endif

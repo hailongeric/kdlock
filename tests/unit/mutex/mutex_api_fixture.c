@@ -126,6 +126,48 @@ extern void main_wrapper(struct kd_regs *, unsigned long *) __attribute__((weak)
 
 unsigned long capture_enabled, captured_sp, captured_bp, captured_ip;
 unsigned long captured_bytes, captured_stack[64];
+unsigned long signalable_calls;
+
+/* The integer wrapper has a distinct captured-success label. A conventional
+ * return must preserve its result and jump past that label. Poisoning every
+ * declared clobber below also checks the compiler's surrounding spills. */
+int api_signalable_result(struct kd_mutex *lock, unsigned long sp,
+			  unsigned long ip, unsigned long bp, unsigned int killable)
+{
+	const unsigned char *success = (const unsigned char *)ip;
+
+	assert(lock && sp && bp && success[0] == 0x31 && success[1] == 0xc0);
+	signalable_calls++;
+	if (capture_enabled && !captured_ip) {
+		captured_sp = sp;
+		captured_bp = bp;
+		captured_ip = ip;
+		captured_bytes = bp - sp + 16;
+		assert(captured_bytes <= sizeof(captured_stack));
+		memcpy(captured_stack, (void *)sp, captured_bytes);
+	}
+	return killable ? (kd_mutex_lock_killable)(lock) :
+		(kd_mutex_lock_interruptible)(lock);
+}
+
+asm(".text\n"
+    ".globl kd_mutex_lock_interruptible_clobber_v1\n"
+    "kd_mutex_lock_interruptible_clobber_v1:\n"
+    "xorl %r8d,%r8d\n jmp .Lapi_integer\n"
+    ".globl kd_mutex_lock_killable_clobber_v1\n"
+    "kd_mutex_lock_killable_clobber_v1:\n"
+    "movl $1,%r8d\n"
+    ".Lapi_integer:\n"
+    "leaq 8(%rsp),%rax\n cmpq %rax,%rsi\n jne .Lapi_integer_bad\n"
+    "cmpq %rbp,%rcx\n jne .Lapi_integer_bad\n"
+    "subq $8,%rsp\n call api_signalable_result\n addq $8,%rsp\n"
+    "movq $17,%rbx\n movq $18,%r12\n movq $19,%r13\n"
+    "movq $20,%r14\n movq $21,%r15\n"
+    "movq $23,%rdi\n movq $24,%rsi\n movq $25,%rdx\n"
+    "movq $26,%rcx\n movq $27,%r8\n movq $28,%r9\n"
+    "movq $29,%r10\n movq $30,%r11\n ret\n"
+    ".Lapi_integer_bad: ud2\n");
+
 asm(".text\n"
     ".globl kd_mutex_direct_lock_clobber_v1\n"
     "kd_mutex_direct_lock_clobber_v1:\n"
@@ -167,7 +209,15 @@ __attribute__((noinline, noipa)) unsigned long api_jit_case(void)
 {
 	volatile unsigned long body = 0x115;
 
+#if CASE_SIGNALABLE == 1
+	if (mutex_lock_interruptible(&test_lock))
+		return 0;
+#elif CASE_SIGNALABLE == 2
+	if (mutex_lock_killable(&test_lock))
+		return 0;
+#else
 	mutex_lock(&test_lock);
+#endif
 	body++;
 #if CASE_NESTED
 	mutex_lock(&inner_lock);
@@ -252,7 +302,7 @@ static void check_source_api(void)
 	mutex_unlock(&outer);
 	assert(!annotations && direct_locks == locks + 2);
 
-	/* Local variants keep their result contracts; each successful acquisition
+	/* Signalable wrappers keep their result contracts; each successful acquisition
 	 * uses the same public unlock spelling. Physical semantics are substituted
 	 * here; production routing/ACK fixtures exercise their real implementation. */
 	assert(mutex_trylock(&outer) == 1);
@@ -261,6 +311,9 @@ static void check_source_api(void)
 	cancel_result = -4;
 	assert(mutex_lock_interruptible(&outer) == -4 && !outer.owner);
 	assert(mutex_lock_killable(&outer) == -4 && !outer.owner);
+	unsigned int before_signal = evaluations;
+	assert(mutex_lock_killable(once(&outer)) == -4 && !outer.owner);
+	assert(evaluations == before_signal + 1);
 	cancel_result = 0;
 	assert(!mutex_lock_interruptible(&outer));
 	mutex_unlock(&outer);
@@ -275,6 +328,7 @@ static void check_source_api(void)
 	mutex_lock_io_nested(&outer, ++annotations);
 	mutex_unlock(&outer);
 	assert(!annotations);
+	assert(signalable_calls == 7);
 	atomic_t count = { 2 };
 	assert(!atomic_dec_and_mutex_lock(&count, &outer) && !outer.owner);
 	assert(atomic_dec_and_mutex_lock(&count, &outer) && outer.owner);
@@ -288,7 +342,7 @@ static void check_source_api(void)
 	struct lock_class_key key = { 0 };
 	__mutex_init(&outer, "fixture", &key);
 	mutex_destroy(&outer);
-	puts("PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants");
+	puts("PASS unified source API: single evaluation, nested/early release, addressable C symbols and integer Native result/captured-success labels");
 }
 
 static void check_temporary_names(void)

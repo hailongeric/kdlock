@@ -43,7 +43,8 @@ kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 	flags = _raw_spin_lock_irqsave(queue.guard);
 	BUG_ON(first->queue_head != queue.head);
 	scan = kd_wait_next_locked(&queue, first);
-	while (scan && batch->scan_left && scan->request->may_delegate &&
+	while (scan && batch->scan_left && !scan->request->admission &&
+	       scan->request->may_delegate &&
 	       scan->request->state == KD_WAIT_QUEUED) {
 		struct kd_mutex_node *candidate = scan->request->context;
 

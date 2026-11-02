@@ -22,8 +22,6 @@ def main():
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     core = "\n".join(definition(source, name) for name in (
         'static void kd_rwsem_release_local(struct kd_rwsem *sem)',
-        'void kd_rwsem_delegate_exit(struct kd_rwsem *sem)',
-        'void kd_rwsem_write_release(struct kd_rwsem *sem)',
         'void kd_up_write(struct kd_rwsem *sem)',
         'void kd_downgrade_write(struct kd_rwsem *sem)'))
     direct = stripped('include/kd_mutex_direct.h')
@@ -31,9 +29,14 @@ def main():
                     direct.index('/* Explicit outer-only pair.')]
     api_source = read_source(ROOT / 'kernel_module/kd_rwsem_api.c')
     provider = definition(api_source, 'int kd_rwsem_prepare(struct kd_rwsem *sem, unsigned long ip, unsigned int abi)')
-    provider += '\n' + definition(api_source, 'kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,')
-    # The definition helper begins at the identifier on this split signature.
-    provider = provider.replace('\nkd_rwsem_down_write_clobber_v1(', '\nvoid kd_rwsem_down_write_clobber_v1(')
+    for result, first_line in (
+        ('void', 'kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,'),
+        ('int', 'kd_rwsem_down_write_interruptible_clobber_v1(struct kd_rwsem *sem,'),
+        ('int', 'kd_rwsem_down_write_killable_clobber_v1(struct kd_rwsem *sem,'),
+        ('void', 'kd_rwsem_up_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,'),
+    ):
+        # These provider definitions split their return type and identifier.
+        provider += '\n' + result + ' ' + definition(api_source, first_line)
     with tempfile.TemporaryDirectory(prefix='kd-rwsem-api-') as directory:
         path = Path(directory)
         for name, text in {
@@ -60,20 +63,31 @@ def main():
                 symbols[words[-1]] = int(words[0], 16)
                 if len(words) == 4:
                     sizes[words[-1]] = int(words[1], 16)
-        entry, start = symbols['rwsem_entry'], symbols['write_body']
-        assert start < entry < start + sizes['write_body']
         sections = subprocess.check_output(['objdump', '-h', binary], text=True)
         base = int(next(line.split()[3] for line in sections.splitlines()
                         if line.split()[1:2] == ['.text']), 16)
         subprocess.run(['objcopy', '--dump-section', f'.text={path}/text.bin', binary], check=True)
-        raw = (path / 'text.bin').read_bytes()[start-base:start-base+sizes['write_body']]
-        assembly, log, status = render('', regions=[(raw, start, [entry])], entry=entry,
-            kernel_symbols={name: symbols[name] for name in ('kd_mutex_direct_lock_clobber_v1',
-                            'kd_mutex_direct_unlock_clobber_v1', 'kd_rwsem_write_release')},
-            abi=2, lock_kind='mutex', mutex_stack_bytes=256, return_status=True, trusted_source=True)
-        assert status == 0 and b'clobber_complete' in assembly, log
-        assert f"loc_{symbols['kd_rwsem_write_release']:x}:".encode() not in assembly
-        print('PASS public rwsem: compiled local/prepared calls, exact unlock-before-phase release, downgrade and ABI2 endpoint')
+        text = (path / 'text.bin').read_bytes()
+        controls = {name: symbols[name] for name in (
+            'kd_rwsem_down_write_clobber_v1',
+            'kd_rwsem_down_write_interruptible_clobber_v1',
+            'kd_rwsem_down_write_killable_clobber_v1',
+            'kd_rwsem_up_write_clobber_v1')}
+        for body, label in (('write_body', 'rwsem_entry'),
+                            ('interruptible_body', 'rwsem_interruptible_entry'),
+                            ('killable_body', 'rwsem_killable_entry')):
+            entry, start = symbols[label], symbols[body]
+            assert start < entry < start + sizes[body]
+            raw = text[start-base:start-base+sizes[body]]
+            assembly, log, status = render('', regions=[(raw, start, [entry])], entry=entry,
+                kernel_symbols=controls, abi=2, lock_kind='mutex', mutex_stack_bytes=256,
+                return_status=True, trusted_source=True)
+            assert status == 0 and b'clobber_complete' in assembly, log
+            for target in controls.values():
+                assert f'loc_{target:x}:'.encode() not in assembly
+            if body != 'write_body':
+                assert text[entry-base:entry-base+2] == b'\x31\xc0'
+        print('PASS public rwsem: compiled ordinary/integer capture, exact typed release, downgrade and ABI2 endpoints')
 
 
 if __name__ == '__main__':

@@ -768,6 +768,43 @@ constructors clear the bit. Only a retained mutex frame sets it. No packet,
 wrapper word, capture behavior or ownership protocol changes in this correction.
 Compile-time offset/size checks accompany the source for the next VM build.
 
+### Stage (c) retained execution joins
+
+Retained roots attach a root-owned linked acquisition scope through read-only
+validate/all_released/outer_released/has_nested/depth callbacks. Its records,
+not the legacy eight-entry compatibility vector, decide release and completion.
+Typed lock CALLs retain an exact pending CALL and child identity/generation;
+LOCAL admission runs on the same physical executor with the logical origin's
+signals. Resume binds that same task on its current CPU after a clean suspension.
+The final release leaves its source CALL word for the ordinary FULL restoration;
+continuing services consume their CALL exactly once. Source/task/stack leases
+can be obtained before publication and adopted after actual acquisition without
+another source-admission decision.
+
+`kd_exe_capture_image` checks initial immutable ABI2 image eligibility before
+publication. The caller retains that exact image together with its source
+lease. A missing or incompatible image is an explicit initial eligibility
+result; no delegated body has started. `kd_exe_on_retained_entry` enters the
+already admitted image after actual acquisition, and
+`kd_exe_resume_retained` continues that same generation after service or a
+budget pause. Neither committed entry nor resume consults fresh source/status
+admission. This first service slice supports typed writer/mutex acquisition,
+release, downgrade and downgraded `kd_up_read`; other reached operations remain
+explicit integration boundaries and never invoke the legacy native suffix
+transport for a retained service root.
+
+Instruction-budget continuation uses a separate versioned image requirement,
+KD_IMAGE_REQUIRE_BUDGET_RESUME (bit 7). Only eligible ABI2 mutex images emit it.
+At the exhausted block boundary, generated code stores the original arithmetic
+flags and KD_REG_BUDGET_READY_TAG before wrapper cleanup changes host flags.
+The runtime validates that FULL packet and retained immutable generation, changes
+the tag to KD_REG_BUDGET_REENTRY_TAG, and yields without consuming an instruction.
+The next dispatch recognizes that tag only on regular FULL entry, imports the
+saved arithmetic flags at an emitted block target, and clears the tag. Initial
+MINIMAL clobber entry never imports stale flags/tag words. Legacy images retain
+their previous budget-limit behavior. This is not an arbitrary native suffix or
+a fresh registry/source permission for already committed work.
+
 The first returned-JIT smoke preparation stopped because the benchmark's
 observation patch still expected kd_exec.h immediately followed by
 kd_source.h. The retained-frame header now sits between those includes.

@@ -13,6 +13,12 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 	if (frame && kd_exec_frame_continuation(frame) &&
 	    kd_exec_frame_continuation(frame)->state != KD_CONT_BOUND)
 		return false;
+	/* Service-owned records have their own exact release path. Legacy native
+	 * suffix registration must not treat the one-entry compatibility vector
+	 * as the complete linked acquisition set. */
+	if (frame && kd_exec_frame_continuation(frame) &&
+	    kd_exec_frame_continuation(frame)->service_ops)
+		return false;
 	if (!kd_exec_frame_validate(frame) || frame->completion_seen ||
 	    kd_exec_frame_state(frame) == KD_EXEC_FRAME_ERROR ||
 	    frame->outer_lock_index >= frame->jit_lock_depth ||

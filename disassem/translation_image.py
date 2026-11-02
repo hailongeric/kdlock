@@ -15,6 +15,7 @@ import solve_bug
 import special_inst
 import native_escape
 import origin_instructions
+import budget_resume
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
 from miasm.expression.expression import ExprId, ExprLoc, ExprMem
@@ -42,6 +43,7 @@ def wrapper_context_inputs(assembly):
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
     preserve_flags=True, root_only=False, origin_sites=None,
+    budget_targets=None,
 ):
     dispatch_targets = {entry} if root_only else set(block_dict)
     if not root_only:
@@ -55,6 +57,10 @@ def write_entry_dispatch(
     f.write("MOV     R14, PT_RIP\n")
     if preserve_flags:
         f.write("PUSHFQ\n")
+    if budget_targets is not None:
+        if not preserve_flags or root_only or origin_sites:
+            raise ValueError("budget reentry requires a FULL arithmetic-flags contract")
+        budget_resume.entry_dispatch(f, budget_targets)
     if origin_sites:
         if not preserve_flags or root_only:
             raise ValueError("original-task instruction dispatch requires a resumable flags contract")
@@ -84,6 +90,8 @@ def write_entry_dispatch(
             f.write(f"JMP     loc_{offset:x}\n")
     if origin_sites:
         origin_instructions.continuation_dispatch(f, origin_sites)
+    if budget_targets is not None:
+        budget_resume.continuation_dispatch(f, budget_targets)
 
 
 def emit_jit_assembly(
@@ -98,6 +106,7 @@ def emit_jit_assembly(
     native_calls=None,
     trusted_source=False,
     origin_sites=None,
+    budget_resume_enabled=False,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -116,6 +125,11 @@ def emit_jit_assembly(
     emitted_offsets = {line.offset for block in block_dict.values() for line in block.lines}
 
     f = StringIO()
+    budget_targets = {
+        offset for offset, block in block_dict.items()
+        if assist.check_is_branch(block.lines)
+        and db_dict[block].pretty_str(block.loc_key).startswith("l")
+    } if budget_resume_enabled else None
     if entry_guards is not None:
         entry_guards.emit(f, entry)
     write_entry_dispatch(
@@ -123,6 +137,7 @@ def emit_jit_assembly(
         preserve_flags=True,
         root_only=root_native_escape or native_calls is not None,
         origin_sites=origin_sites,
+        budget_targets=budget_targets,
     )
     budget_rips = []
 
@@ -235,7 +250,10 @@ def emit_jit_assembly(
     # at the same untouched source block as the previous INC/TEST sequence.
     for offset in budget_rips:
         f.write(f"kd_budget_limit_{offset:x}:\n")
-        f.write("POPFQ\n")
+        if budget_resume_enabled:
+            budget_resume.exhausted(f)
+        else:
+            f.write("POPFQ\n")
         f.write(make_inst("MOVABS", ["R14", hex(offset)]))
         f.write("JMP             inst_limit\n")
 

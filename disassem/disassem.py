@@ -16,6 +16,7 @@ from miasm_python314 import verify_runtime
 DEPENDENCY_IDENTITY = verify_runtime()
 
 import context_guards
+import budget_resume
 import address_guards as checked_addresses
 import constant_paths
 import context_policy
@@ -176,10 +177,46 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
     outer_mutex_lock = get_kernel_symbol("kd_mutex_outer_contended_clobber_v1")
-    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}
+    # General retained services keep the source CALL word. The runtime binds
+    # each operation to the exact acquisition; these targets must not be
+    # decoded as ordinary helpers, including callable local acquisitions.
+    service_acquire_names = (
+        "kd_mutex_lock_interruptible_clobber_v1",
+        "kd_mutex_lock_killable_clobber_v1",
+        "kd_rwsem_down_write_clobber_v1",
+        "kd_rwsem_down_write_interruptible_clobber_v1",
+        "kd_rwsem_down_write_killable_clobber_v1",
+        "kd_mutex_api_lock", "kd_mutex_lock_interruptible",
+        "kd_mutex_lock_killable", "kd_down_write",
+        "kd_down_write_interruptible", "kd_down_write_killable",
+    )
+    service_release_names = (
+        "kd_rwsem_up_write_clobber_v1", "kd_mutex_api_unlock",
+        "kd_up_write", "kd_up_read",
+    )
+    service_continue_names = ("kd_downgrade_write",)
+    service_symbols = {
+        address: name
+        for name in (*service_acquire_names, *service_release_names,
+                     *service_continue_names)
+        if (address := get_kernel_symbol(name))
+    }
+    service_acquires = {address for address, name in service_symbols.items()
+                        if name in service_acquire_names}
+    # Read release can end a downgraded tail, but may also release an unrelated
+    # local read. Only the exact runtime record decides that endpoint; counting
+    # it as a lexical writer unlock could cut the outer writer body early.
+    service_releases = {address for address, name in service_symbols.items()
+                        if name in service_release_names and name != "kd_up_read"}
+    service_clobbers = {address for address, name in service_symbols.items()
+                        if name.endswith("_clobber_v1")}
+    rwsem_clobber_lock = get_kernel_symbol("kd_rwsem_down_write_clobber_v1")
+    rwsem_clobber_unlock = get_kernel_symbol("kd_rwsem_up_write_clobber_v1")
+    clobber_targets = ({clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}) | service_clobbers
     if ((abi in {1, 3} and not (clobber_lock and clobber_unlock)) or
         (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
-                           (clobber_mutex_lock and clobber_mutex_unlock)))):
+                           (clobber_mutex_lock and clobber_mutex_unlock) or
+                           (rwsem_clobber_lock and rwsem_clobber_unlock)))):
         return reject_translation("clobber entry symbols unavailable")
     lock_symbols = {
         addr: (kind, name)
@@ -202,6 +239,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     }
     lock_symbols.pop(0, None)
     lock_symbols.pop(None, None)
+    # Rwsem write/read-tail services use the ABI2 mutex continuation backend;
+    # their distinct admission modes are interpreted by the runtime.
+    lock_symbols.update({address: ("mutex", name)
+                         for address, name in service_symbols.items()})
     keep_call_stack = set(lock_symbols) | hostcall_targets
     # Per-object bridges remain Native boundaries unless the exact terminal
     # outer-unlock metadata proves the selected KD object/class at runtime.
@@ -270,8 +311,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             block_dict,
             db_dict,
             entry,
-            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock},
-            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock},
+            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock} | service_acquires,
+            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock} | service_releases,
             discovered_targets & block_dict.keys(),
             native_exits=native_exits,
         )
@@ -399,7 +440,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 )
                 in ({raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock,
                      clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock,
-                     outer_mutex_lock} | (discovered_targets - {entry}))
+                     outer_mutex_lock} | service_acquires | (discovered_targets - {entry}))
                 for block in selected.values()
                 for line in block.lines
             )
@@ -563,12 +604,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
     origin_sites = {ip:site for ip,site in origin_sites.items()
                     if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
+    budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
+                             and not has_escapes and not root_escapes
+                             and not origin_sites)
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
-                                 {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()) | set(terminal_unlock_aliases),
+                                 ({direct_mutex_unlock or clobber_mutex_unlock,
+                                   rwsem_clobber_unlock} - {0, None}) if abi == 2 else set()) | set(terminal_unlock_aliases),
         terminal_unlock_aliases=terminal_unlock_aliases,
         indirect_call_native=indirect_call_native,
         native_escapes=has_escapes,
@@ -576,6 +621,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         address_guards=memory_guards,
         trusted_source=trusted_source,
         origin_sites=origin_sites,
+        budget_resume_enabled=budget_resume_enabled,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -587,7 +633,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
                       | (origin_instructions.REQUIREMENT if origin_sites else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
-                         and memory_guards.sites else 0)))
+                         and memory_guards.sites else 0)
+                      | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)))
     return 0
 
 

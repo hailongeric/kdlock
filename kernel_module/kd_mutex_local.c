@@ -110,6 +110,45 @@ bool kd_mutex_local_trylock_locked(struct kd_mutex *lock, bool handoff)
 	return !kd_try_common(lock, handoff);
 }
 
+bool kd_mutex_admission_trylock_locked(struct kd_mutex *lock,
+				      struct kd_wait_request *request)
+{
+	unsigned long old = atomic_long_read(&lock->owner);
+	unsigned long task = old & ~KD_FLAGS;
+	unsigned long flags = old & KD_FLAGS;
+
+	lockdep_assert_held(&lock->wait_lock);
+	BUG_ON(!request);
+	if (task) {
+		if (!(flags & KD_PICKUP))
+			return false;
+		if (task != (unsigned long)current &&
+		    (task != (unsigned long)request->physical_waiter ||
+		     !request->selection || request->selection->request != request ||
+		     request->selection->generation != request->generation ||
+		     request->selection->executor != current))
+			return false;
+		flags &= ~KD_PICKUP;
+	} else if (flags & (KD_HANDOFF | KD_PICKUP)) {
+		BUG();
+	}
+	return atomic_long_try_cmpxchg_acquire(&lock->owner, &old,
+					     (unsigned long)current | flags);
+}
+
+bool kd_mutex_admission_transfer_locked(struct kd_mutex *lock,
+				       struct task_struct *target)
+{
+	unsigned long old = atomic_long_read(&lock->owner);
+
+	lockdep_assert_held(&lock->wait_lock);
+	if (!target || target == current ||
+	    (old & ~KD_FLAGS) != (unsigned long)current || (old & KD_PICKUP))
+		return false;
+	return atomic_long_try_cmpxchg_release(&lock->owner, &old,
+		(unsigned long)target | (old & KD_FLAGS) | KD_PICKUP);
+}
+
 void kd_mutex_wake_head_locked(struct kd_mutex *lock)
 {
 	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
@@ -120,7 +159,8 @@ void kd_mutex_wake_head_locked(struct kd_mutex *lock)
 	if (!head || atomic_read(&lock->delegation_state) == KD_MUTEX_GATE_COMBINER)
 		return;
 	request = head->request;
-	if (!request->may_delegate || request->state != KD_WAIT_QUEUED)
+	if (request->admission || !request->may_delegate ||
+	    request->state != KD_WAIT_QUEUED)
 		return;
 	node = request->context;
 	BUG_ON(!node || node->lock != lock);
