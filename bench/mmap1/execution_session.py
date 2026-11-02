@@ -6,12 +6,16 @@ that an application invocation was delegated. Runtime trace joins do that.
 """
 import json
 import hashlib
+import os
 from pathlib import Path
+import stat
 
 import bench_runtime as rt
 
 PARAMETERS = Path('/sys/module/kdlock_km/parameters')
 NOTE = Path('/sys/module/kdlock_km/notes/.note.gnu.build-id')
+PROC = Path('/proc')
+DEVICE = Path('/dev/kd_dev')
 
 
 def module_note_sha256(path):
@@ -35,13 +39,42 @@ def registry(rows):
     return sorted(rows, key=lambda row: (row['pid'], row['tgid'], row['entry']))
 
 
+def device_writers():
+    """Observe every writable descriptor for this exact live device.
+
+    One daemon description is expected and the maintained daemon keeps only
+    one descriptor for it. Refusing extra duplicate descriptors avoids treating
+    descriptor counts as proof of distinct open descriptions.
+    """
+    device = DEVICE.stat()
+    rt.require(stat.S_ISCHR(device.st_mode), 'execution device is not a character device', 'DATA_ERROR')
+    rows = []
+    for process in PROC.glob('[0-9]*'):
+        for descriptor in (process / 'fd').glob('[0-9]*'):
+            try:
+                current = descriptor.stat()
+                if not stat.S_ISCHR(current.st_mode) or current.st_rdev != device.st_rdev:
+                    continue
+                lines = (process / 'fdinfo' / descriptor.name).read_text().splitlines()
+                flags = int(next(line.split()[1] for line in lines if line.startswith('flags:')), 8)
+                if flags & os.O_ACCMODE == os.O_RDONLY:
+                    continue
+                fields = (process / 'stat').read_text().rsplit(')', 1)[1].split()
+                rows.append(dict(pid=int(process.name), start_ticks=int(fields[19]), fd=int(descriptor.name),
+                                 flags=flags, device=current.st_dev, inode=current.st_ino, rdev=current.st_rdev))
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+    return sorted(rows, key=lambda row: (row['pid'], row['fd']))
+
+
 class ExecutionSession:
     """A hash-bound controller receipt, with no lifecycle side effects.
 
     Schema1 keys: boot_id; provider {path,sha256,note_sha256}; daemon
+    {pid,start_ticks,executable,executable_sha256,cwd,argv,device_writer}; preparer
     {pid,start_ticks,executable,executable_sha256,cwd,argv}; parameters (exact
     selected values); registry (complete ready rt.registry rows); source
-    {state,modules}; files (absolute immutable input file hashes).
+    {state,modules,writers:1}; files (absolute immutable input file hashes).
     """
     def __init__(self, path, sha256):
         self.path = Path(path).resolve(strict=True)
@@ -51,7 +84,8 @@ class ExecutionSession:
         expected = self.expected
         rt.require(expected.get('schema') == 1 and expected.get('boot_id') and
                    expected.get('source', {}).get('state') == 0 and
-                   set(expected['source']) == {'state', 'modules'} and
+                   set(expected['source']) == {'state', 'modules', 'writers'} and
+                   type(expected['source'].get('writers')) is int and expected['source']['writers'] == 1 and
                    type(expected['source'].get('modules')) is int and expected['source']['modules'] >= 0,
                    'execution-session schema/source differs', 'DATA_ERROR')
         values = expected.get('parameters', {})
@@ -59,23 +93,36 @@ class ExecutionSession:
                    values.get('rwsem_provider_mode') == 'active' and
                    values.get('jit_timing') == 'N' and values.get('service_trace') in ('Y', 'N'),
                    'active provider and explicit instrumentation parameters required', 'DATA_ERROR')
+        preparer = expected.get('preparer', {})
+        rt.require(type(preparer.get('pid')) is int and preparer['pid'] > 0 and
+                   type(preparer.get('start_ticks')) is int and preparer['start_ticks'] > 0 and
+                   preparer.get('argv'), 'exact live preparation controller required', 'DATA_ERROR')
         rows = expected.get('registry', [])
         rt.require(rows and len({(row['pid'], row['tgid'], row['entry']) for row in rows}) == len(rows) and
-                   all(row['pid'] == row['tgid'] == row['status'] == 0 and row['entry_abi'] == 2 and
+                   all(row['pid'] == row['status'] == 0 and row['tgid'] == preparer['pid'] and row['entry_abi'] == 2 and
                        row['lock_kind'] == 2 and row['entry'] > 0 and row['code'] > 0 and row['generation'] > 0
                        for row in rows), 'complete ready ABI2 image registry required', 'DATA_ERROR')
         files = expected.get('files', {})
         provider, daemon = expected['provider'], expected['daemon']
         rt.require(files and files.get(provider['path']) == provider['sha256'] and
                    files.get(daemon['executable']) == daemon['executable_sha256'] and
-                   daemon['pid'] > 0 and daemon['start_ticks'] > 0 and daemon['argv'],
+                   files.get(preparer['executable']) == preparer['executable_sha256'] and
+                   daemon['pid'] > 0 and daemon['pid'] != preparer['pid'] and daemon['start_ticks'] > 0 and daemon['argv'],
                    'module/daemon must be bound by immutable input hashes', 'DATA_ERROR')
+        writer = daemon.get('device_writer', {})
+        rt.require(set(writer) == {'pid', 'start_ticks', 'fd', 'flags', 'device', 'inode', 'rdev'} and
+                   all(type(value) is int and value >= 0 for value in writer.values()) and
+                   writer['pid'] == daemon['pid'] and writer['start_ticks'] == daemon['start_ticks'] and
+                   writer['flags'] & os.O_ACCMODE == os.O_RDWR and writer['inode'] > 0 and writer['rdev'] > 0,
+                   'exact daemon writable-device descriptor required', 'DATA_ERROR')
 
     def identity(self):
         return dict(path=str(self.path), sha256=self.sha256,
                     provider_sha256=self.expected['provider']['sha256'],
                     daemon_pid=self.expected['daemon']['pid'],
                     daemon_start_ticks=self.expected['daemon']['start_ticks'],
+                    preparer_pid=self.expected['preparer']['pid'],
+                    daemon_device_writer=self.expected['daemon']['device_writer'],
                     delegated_execution_proved=False)
 
     def verify(self, *, allow_identity_probe=False):
@@ -91,6 +138,11 @@ class ExecutionSession:
                    module_note_sha256(expected['provider']['path']) == expected['provider']['note_sha256'],
                    'loaded provider Build ID note differs', 'DATA_ERROR')
         daemon = expected['daemon']
+        preparer = expected['preparer']
+        preparing_task = task_identity(preparer['pid'])
+        rt.require(all(preparing_task[key] == preparer[key] for key in
+                       ('pid', 'start_ticks', 'executable', 'cwd', 'argv')),
+                   'exact preparation controller lifetime/workspace changed', 'UNDRAINED')
         actual = task_identity(daemon['pid'])
         rt.require(all(actual[key] == daemon[key] for key in
                        ('pid', 'start_ticks', 'executable', 'cwd', 'argv')) and
@@ -100,8 +152,9 @@ class ExecutionSession:
             rt.require((PARAMETERS / name).read_text().strip() == wanted,
                        'execution-session parameter changed: ' + name, 'DATA_ERROR')
         source = rt.status()
-        rt.require(source == dict(expected['source'], frames=0, writers=0),
-                   'source is not open with exact inactive frame/publisher state', 'UNDRAINED')
+        rt.require(source == dict(expected['source'], frames=0) and
+                   device_writers() == [daemon['device_writer']],
+                   'source must have zero frames and only its exact live daemon writer', 'UNDRAINED')
         rt.require(registry(rt.registry()) == registry(expected['registry']),
                    'immutable image registry changed', 'DATA_ERROR')
         allowed = {'kdlock_km'} | ({'kd_mmap1_identity'} if allow_identity_probe else set())
@@ -124,6 +177,9 @@ class ExecutionSession:
                 continue
         rt.require(task_identity(daemon['pid']) == actual,
                    'daemon identity changed across session observation', 'UNDRAINED')
+        rt.require(task_identity(preparer['pid']) == preparing_task and rt.status() == source and
+                   device_writers() == [daemon['device_writer']],
+                   'preparer or exact daemon-writer ledger changed across observation', 'UNDRAINED')
         bindings = int((PARAMETERS / 'rwsem_provider_bindings').read_text())
         rt.require(bindings >= 1, 'active factory has no source binding lease', 'UNDRAINED')
         return dict(source=source, bindings=bindings,
