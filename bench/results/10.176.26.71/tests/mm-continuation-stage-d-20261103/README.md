@@ -204,3 +204,42 @@ candidate. Fresh ELF file-backed mappings require those callback contracts;
 file VMA insertion retains a Native `mapping->i_mmap_rwsem` write acquisition.
 The Native MM bodies stay unchanged. Actual mmap1 thread/process delegation
 and performance remain pending until those intervals pass their own checks.
+
+## Native inner-writer checks on KD mode
+
+The same v2 kernel boots and passes schema-2 capture/verification in KD/on mode,
+boot `1c78f37f-4501-4a3b-b4be-49fb3167212a`. The generic module factory remains
+inactive during the standalone fixtures; this mode alone does not imply MM
+delegation.
+
+Source `370e8e7f964e80e6fe4bedc1df0387b9a753b897` passes all six affected unit
+drivers and provider compilation. Its first six live helper phases pass. The
+new blocked-writer phase fails because its snapshot can observe O blocked
+after the preceding log read, before the fixture has collected the root-enter
+record. The retained late log has the exact O `4762` / E `4691` entry and two
+Native grants with non-LIFO releases. Its 30-second holder deadline then ends
+the interval and records one fixture error. The phase remains failed; E
+scheduling and final Native release were not accepted in that attempt. Later
+inspection verifies zero active requests, empty Native waits and zero frames.
+Normal daemon closure, source retirement, exact descriptor unregister and
+normal unload follow, retaining the failure counter and original receipt.
+
+Commit `902ee2a0dcd33405f8c568e006735ce43ab18f2d` adds bounded collection of the
+exact root-enter record without changing lock code or weakening the Native
+blocked/scheduling checks. Its new observation fixture passes; the provider
+builds, all eight live helper phases and all eleven killable/nesting phases
+pass with normal retirement and unload. See [902-receipts.json](902-receipts.json).
+
+In the blocked Native-writer check, O `7709` schedules in actual Native
+down_write (switch count 1 to 2), while E `7672` on CPU `44` increases its
+switch count from 8 to 13 and a control task runs on that same CPU. Native
+ownership names both exact objects and releases the older acquisition first.
+The final-release phase keeps E executing after outer KD release until the
+last actual Native up_write ACK. These observations establish those general
+protocol transitions; they are not mmap1 or performance measurements.
+
+The unchanged mmap1 binary preparation is revalidated by its complete file
+manifest and original revision `75f66e45697e6f5f49c33dd950c4e6b289198f8f`.
+The actual-application controller still needs an explicit verified private-root
+admission path: the old common MM runner permits only the canonical VM
+checkout. No application diagnostic has started at this checkpoint.
