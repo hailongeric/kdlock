@@ -95,3 +95,8 @@ remain unmatched in the body-pairing view instead of being guessed.
 `missed` conservatively sums kretprobe instance misses and underlying kprobe
 misses, including recursion suppression. It is a completeness indicator, not a
 count attributed to the selected tasks; unrelated traffic can make it fail.
+
+The first Linux 7 observer build at `ba82a657` failed because `no_llseek` is
+absent in that kernel. The observer now leaves `.llseek` unset, so seeking is
+refused by VFS while ordinary sequential reads retain their file offset. The
+failed build is retained separately; no module or workload ran in that attempt.

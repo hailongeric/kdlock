@@ -319,7 +319,6 @@ static const struct file_operations observe_operations = {
 	.owner = THIS_MODULE,
 	.unlocked_ioctl = observe_ioctl,
 	.read = observe_read,
-	.llseek = no_llseek,
 };
 static struct miscdevice observe_device = {
 	.minor = MISC_DYNAMIC_MINOR,
