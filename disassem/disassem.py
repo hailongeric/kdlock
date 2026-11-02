@@ -176,6 +176,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
     outer_mutex_lock = get_kernel_symbol("kd_mutex_outer_contended_clobber_v1")
+    # These are typed runtime boundaries, not ordinary callees to learn. The
+    # executor validates the exact outer rwsem request and mode at each CALL.
+    # The checked analyzer retains its existing rwsem context restrictions.
+    rwsem_controls = ({address: name for name in (
+        "kd_downgrade_write", "kd_up_read", "kd_up_write",
+        "kd_rwsem_up_write_clobber_v1")
+        if (address := get_kernel_symbol(name))}
+        if lock_kind == "mutex" and abi == 2 else {})
+    rwsem_write_unlock = next((address for address, name in rwsem_controls.items()
+                              if name == "kd_rwsem_up_write_clobber_v1"), 0)
+    rwsem_unlocks = {address for address, name in rwsem_controls.items()
+                    if name != "kd_downgrade_write"}
     clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}
     if ((abi in {1, 3} and not (clobber_lock and clobber_unlock)) or
         (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
@@ -202,7 +214,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     }
     lock_symbols.pop(0, None)
     lock_symbols.pop(None, None)
-    keep_call_stack = set(lock_symbols) | hostcall_targets
+    keep_call_stack = set(lock_symbols) | hostcall_targets | set(rwsem_controls)
     # Per-object bridges remain Native boundaries unless the exact terminal
     # outer-unlock metadata proves the selected KD object/class at runtime.
     api_unlock_name = {1: "kd_api_files_unlock_clobber", 2: "kd_api_pipe_unlock_clobber"}.get(abi)
@@ -271,7 +283,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             db_dict,
             entry,
             {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock},
-            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock},
+            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock,
+             clobber_mutex_unlock, direct_mutex_unlock} | rwsem_unlocks,
             discovered_targets & block_dict.keys(),
             native_exits=native_exits,
         )
@@ -568,7 +581,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
-                                 {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()) | set(terminal_unlock_aliases),
+                                 {direct_mutex_unlock or clobber_mutex_unlock,
+                                  rwsem_write_unlock} - {0} if abi == 2 else set()) | set(terminal_unlock_aliases),
         terminal_unlock_aliases=terminal_unlock_aliases,
         indirect_call_native=indirect_call_native,
         native_escapes=has_escapes,

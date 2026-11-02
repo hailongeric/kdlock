@@ -22,6 +22,7 @@
 #include "kd_lock.h"
 #include "kd_spinlock.h"
 #include "kd_mutex.h"
+#include "kd_rwsem.h"
 
 #ifdef KDLOCK_SELFTEST
 bool kd_hotlock_role_trace;
@@ -30,6 +31,23 @@ module_param_named(hotlock_role_trace, kd_hotlock_role_trace, bool, 0444);
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_exec_context, kd_exec_context);
 static atomic64_t kd_exec_invariant_failures;
+static bool kd_rwsem_proxy_trace;
+module_param_named(rwsem_proxy_trace, kd_rwsem_proxy_trace, bool, 0444);
+MODULE_PARM_DESC(rwsem_proxy_trace, "Observe exact delegated writer/read-tail transitions");
+
+void kd_exec_rwsem_note(const char *stage, const struct kd_rwsem_request *request)
+{
+	if (!kd_rwsem_proxy_trace || !request)
+		return;
+	/* Read only the retained record. The final read decrement may already
+	 * have permitted another task to retire the rwsem object itself. */
+	pr_info("kd_rwsem proxy: stage=%s sem=%lx origin=%d executor=%d request=%lx identity=%lx sequence=%llu generation=%lu state=%u\n",
+		stage, (unsigned long)request->sem, request->origin->pid,
+		request->executor ? request->executor->pid : 0,
+		(unsigned long)request, (unsigned long)request->identity,
+		(unsigned long long)request->sequence, request->generation,
+		READ_ONCE(request->state));
+}
 
 struct kd_native_request {
 	unsigned long lock_addr;
@@ -73,6 +91,12 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	int state;
 
 	if (!frame)
+		return false;
+	if (frame->rwsem_request &&
+	    (!frame->mutex_backend ||
+	     frame->rwsem_request->origin != frame->logical_task ||
+	     frame->rwsem_request->executor != current ||
+	     (unsigned long)frame->rwsem_request->sem != frame->outer_lock_addr))
 		return false;
 
 	state = kd_exec_frame_state(frame);
@@ -270,7 +294,9 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 		ret = kd_exec_frame_lock_mark_released(frame,
 						       frame->outer_lock_addr);
 		if (!ret && frame->outer_unlock_hook &&
-		    (kd_exec_frame_has_unreleased_nested(frame) ||
+		    ((frame->rwsem_request &&
+		      READ_ONCE(frame->rwsem_request->state) == KD_RWSEM_REQUEST_READ) ||
+		     kd_exec_frame_has_unreleased_nested(frame) ||
 		     kd_exec_frame_remote_pending(frame))) {
 			struct kd_exec_outer_unlock *hook =
 				frame->outer_unlock_hook;

@@ -51,6 +51,7 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 #endif
 	frame->mutex_backend = false;
 	frame->image = NULL;
+	frame->rwsem_request = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = true;
 	frame->batch_lease = false;
@@ -172,6 +173,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 #endif
 	frame->mutex_backend = false;
 	frame->image = NULL;
+	frame->rwsem_request = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->complex_ready = true;
@@ -263,6 +265,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->depth = 0;
 	frame->mutex_backend = true;
 	frame->image = NULL;
+	frame->rwsem_request = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->batch_lease = true;
@@ -400,6 +403,11 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 	if (!frame || !ctx->depth || ctx->owner != current ||
 	    frame != ctx->top)
 		return -EINVAL;
+	/* Physical gate release is not the end of a downgraded read interval.
+	 * The exact record must publish its final decrement before frame reuse. */
+	if (frame->rwsem_request &&
+	    smp_load_acquire(&frame->rwsem_request->state) != KD_RWSEM_REQUEST_RELEASED)
+		return -EBUSY;
 
 	state = kd_exec_frame_state(frame);
 	if (frame->complex_ready &&

@@ -48,8 +48,13 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	u32 old_tail;
 
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
-	old_tail = kd_mutex_xchg_tail(lock, tail);
 	kd_mutex_waiter_enter(lock, curr_node);
+	if (curr_node->request_kind == KD_MUTEX_REQUEST_RWSEM)
+		kd_rwsem_request_init(kd_mutex_rwsem_request(curr_node),
+			container_of(lock, struct kd_rwsem, gate), current,
+			curr_node, READ_ONCE(curr_node->count_seq));
+	/* Initialize the exact record before either queue link exposes it. */
+	old_tail = kd_mutex_xchg_tail(lock, tail);
 
 	if (old_tail) {
 		/* --- waiter path: link behind prev, spin until woken --- */
@@ -86,6 +91,8 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 				kd_exe_queue_timing_start());
 
 	next_node = kd_mutex_head_successor(lock, curr_node);
+	if (curr_node->request_kind == KD_MUTEX_REQUEST_RWSEM)
+		kd_rwsem_request_unqueue(kd_mutex_rwsem_request(curr_node));
 	if (!next_node)
 		goto release;
 

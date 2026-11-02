@@ -234,5 +234,7 @@ bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame)
 bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)
 {
 	return kd_exec_frame_locks_released(frame) &&
+	       (!frame->rwsem_request ||
+		smp_load_acquire(&frame->rwsem_request->state) == KD_RWSEM_REQUEST_RELEASED) &&
 	       !kd_exec_frame_remote_pending(frame);
 }

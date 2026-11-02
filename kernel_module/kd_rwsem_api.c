@@ -31,14 +31,26 @@ __attribute__((noipa)) noinline notrace void
 kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
                               unsigned long ip, unsigned long bp)
 {
-	/* This is the original task before publication. Reader drainage may
-	 * sleep here; the mutex entry receives the caller's actual continuation,
-	 * never a continuation inside this returning helper. */
+	/* Pass the original caller's continuation and the exact rwsem identity.
+	 * Queue publication is not a reader-drain result. The selected executor
+	 * closes and drains its own phase before any caller body executes. */
 	if (!READ_ONCE(sem->prepared_writes)) {
 		(kd_down_write)(sem);
 		return;
 	}
-	kd_rwsem_delegate_enter(sem);
-	kd_mutex_direct_lock_clobber_v1(&sem->gate, sp, ip, bp);
+	kd_mutex_rwsem_lock_clobber_v1(sem, sp, ip, bp);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_down_write_clobber_v1);
+
+__attribute__((noipa)) noinline notrace void
+kd_rwsem_up_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
+                            unsigned long ip, unsigned long bp)
+{
+	/* The generated control handles this endpoint without entering the C
+	 * helper. Ordinary execution preserves the same public release route. */
+	(void)sp;
+	(void)ip;
+	(void)bp;
+	(kd_up_write)(sem);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_up_write_clobber_v1);

@@ -177,7 +177,7 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	struct task_struct *task;
 	unsigned long deadline;
 	bool queued = false;
-	bool gate_wait = writer && !drain && !READ_ONCE(sem.prepared_writes);
+	bool gate_wait = writer && !drain;
 
 	init_completion(&c.ready);
 	init_completion(&c.done);
@@ -321,7 +321,7 @@ static int sleeping_case(struct result *r, bool outer)
 	check(!waitqueue_active(&sem.phase_wait));
 	check(!completion_done(&workers[2].entered));
 	if (outer) {
-		check(atomic_long_read(&sem.admission) == 1);
+		check(atomic_long_read(&sem.admission) == -1);
 		unpublished(r);
 	}
 	ret = start(3, READER);
@@ -357,10 +357,12 @@ join:
 
 static int downgrade_case(struct result *r)
 {
+	u64 initial_generation, first_generation;
 	int ret;
 
 	init_workers();
 	(kd_down_write)(&sem);
+	initial_generation = READ_ONCE(sem.phase_generation);
 	ret = start(0, OUTER_WRITER);
 	if (ret) {
 		kd_up_write(&sem);
@@ -368,25 +370,47 @@ static int downgrade_case(struct result *r)
 	}
 	check(parked(workers[0].task));
 	check(atomic_long_read(&sem.admission) == -1);
-	check(waitqueue_active(&sem.phase_wait));
+	check(READ_ONCE(sem.gate.wait_head));
+	check(!waitqueue_active(&sem.phase_wait));
 	check(!waitqueue_active(&sem.reader_drain));
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
 	/* Conversion creates an admitted reader before reopening the phase. The
-	 * waiting outer caller can reserve, but must still sleep before pinning.
+	 * next selected writer must close and drain that new reader generation;
+	 * publication or a previous writer's drain cannot grant its body entry.
 	 */
 	atomic_inc(&reading);
 	kd_downgrade_write(&sem);
-	check(phase_is(1));
+	check(phase_is(-1));
 	check(parked(workers[0].task));
 	check(!waitqueue_active(&sem.phase_wait));
 	check(waitqueue_active(&sem.reader_drain));
-	check(atomic_long_read(&sem.admission) == 1);
+	check(atomic_long_read(&sem.admission) == -1);
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
+	/* A second writer waits at the physical gate while the first selected
+	 * writer drains this read. It must acquire a fresh phase after that
+	 * writer's release, rather than retaining an earlier drain decision.
+	 */
+	ret = start(1, WRITER);
+	if (ret) {
+		atomic_dec(&reading);
+		kd_up_read(&sem);
+		join_workers();
+		return ret;
+	}
+	check(parked(workers[1].task));
+	check(READ_ONCE(sem.gate.wait_head));
+	check(!completion_done(&workers[1].entered));
 	atomic_dec(&reading);
 	kd_up_read(&sem);
 	check(entered(0));
+	first_generation = READ_ONCE(sem.phase_generation);
+	check(first_generation > initial_generation);
+	check(!completion_done(&workers[1].entered));
+	complete(&workers[0].release);
+	check(entered(1));
+	check(READ_ONCE(sem.phase_generation) > first_generation);
 	join_workers();
 	r->downgrade_checks++;
 	return 0;
@@ -449,7 +473,7 @@ static int public_api_checks(void)
 	kd_up_read(&sem);
 	{ guard(kd_rwsem_write)(&sem); check(atomic_long_read(&sem.admission) == -1); }
 	kd_down_write(&sem);
-	check(atomic_long_read(&sem.admission) == 1);
+	check(atomic_long_read(&sem.admission) == -1);
 	routed_unlock(&sem);
 	check(kd_rwsem_is_idle(&sem) && READ_ONCE(sem.prepared_writes) == 1);
 	check(!kd_rwsem_compat_checks());

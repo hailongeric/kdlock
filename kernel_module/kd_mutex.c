@@ -30,6 +30,7 @@
 #include <linux/objtool.h>
 
 #include "kd_mutex.h"
+#include "kd_rwsem.h"
 #include "kd_mutex_state.h"
 #include "kd_mutex_local.h"
 #include "kd_mutex_stats.h"
@@ -117,6 +118,25 @@ struct kd_mutex_cpu_state {
 DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
+/* Parallel slot storage preserves the established five-cacheline node ABI. */
+static DEFINE_PER_CPU(struct kd_rwsem_request,
+		     kd_mutex_rwsem_requests[KD_MUTEX_MAX_NODES]);
+
+#define KD_MUTEX_REQUEST_ORDINARY 0U
+#define KD_MUTEX_REQUEST_RWSEM 1U
+
+static struct kd_rwsem_request *
+kd_mutex_rwsem_request(struct kd_mutex_node *node)
+{
+	int cpu;
+
+	if (node->request_kind != KD_MUTEX_REQUEST_RWSEM)
+		return NULL;
+	cpu = (node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;
+	BUG_ON(cpu < 0 || cpu >= nr_cpu_ids || node->slot < 0 ||
+	       node->slot >= KD_MUTEX_MAX_NODES);
+	return per_cpu_ptr(&kd_mutex_rwsem_requests[node->slot], cpu);
+}
 
 #include "mutex/queue.inc"
 #include "mutex/count.inc"
@@ -207,8 +227,9 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
  * _kd_mutex_lock_abi — fastpath cmpxchg, slowpath delegation queue.
  */
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
-	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
+kd_mutex_lock_abi_common(struct kd_mutex *lock, unsigned long rsp_value,
+	       unsigned long ret_addr, unsigned long bp, unsigned int abi,
+	       struct kd_rwsem *sem)
 {
 	struct kd_regs resume_regs;
 	bool resume_ready = false;
@@ -222,6 +243,12 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	 * The read-only hint avoids writing a busy gate just to find it busy. */
 	if (likely(!kd_mutex_gate_read(lock) && kd_mutex_gate_trylock(lock))) {
 		kd_mutex_claim_origin(lock);
+		if (sem) {
+			bool selected;
+
+			BUG_ON(kd_rwsem_select_write(sem, NULL, TASK_UNINTERRUPTIBLE,
+						    &selected));
+		}
 		return;
 	}
 
@@ -236,7 +263,10 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		preempt_enable();
 		migrate_enable();
 		kd_mutex_task_put(current);
-		kd_origin_mutex_lock(lock);
+		if (sem)
+			(kd_down_write)(sem);
+		else
+			kd_origin_mutex_lock(lock);
 		return;
 	}
 	{
@@ -266,6 +296,8 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 			curr_node->regs.ip = ret_addr;
 			curr_node->regs.bp = bp;
 		}
+		curr_node->request_kind = sem ? KD_MUTEX_REQUEST_RWSEM :
+			KD_MUTEX_REQUEST_ORDINARY;
 		curr_node->entry_abi = abi;
 		curr_node->packet_state = abi == KD_ENTRY_ABI_LEGACY ?
 			KD_PACKET_FULL : KD_PACKET_MINIMAL;
@@ -326,7 +358,38 @@ scheduler_restore:;
 		BUG(); /* jump_to_saved_regs() must never return */
 	}
 
+	if (sem) {
+		bool selected;
+
+		/* A stayed unselected while its executor serviced B. Each own-body
+		 * entry drains readers admitted after the preceding writer phase. */
+		BUG_ON(kd_rwsem_select_write(sem, NULL, TASK_UNINTERRUPTIBLE,
+					    &selected));
+	}
 	return;
+}
+
+void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long sp,
+		       unsigned long ip, unsigned long bp, unsigned int abi)
+{
+	kd_mutex_lock_abi_common(lock, sp, ip, bp, abi, NULL);
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_mutex_rwsem_lock_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
+			       unsigned long ip, unsigned long bp)
+{
+	might_sleep();
+	/* Local routing is confined to unpublished entry. A selected request
+	 * never resumes an arbitrary suffix on its origin. */
+	if (!kd_source_is_open() || kd_mutex_task_active(current) ||
+	    !kd_mutex_task_get(current)) {
+		(kd_down_write)(sem);
+		return;
+	}
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	kd_mutex_lock_abi_common(&sem->gate, sp, ip, bp,
+				 KD_ENTRY_ABI_MUTEX_CLOBBER_V1, sem);
 }
 
 /*

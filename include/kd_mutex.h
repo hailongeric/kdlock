@@ -47,6 +47,7 @@
 #include "kd_regs.h"
 
 struct kd_exec_frame;
+struct kd_rwsem;
 struct kd_mutex;
 struct kd_local_waiter;
 struct lock_class_key;
@@ -96,6 +97,8 @@ struct kd_mutex_node {
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
 	int numa_node; /* immutable slot locality, set before source publication */
+	/* Typed request tag uses existing padding without moving the packet. */
+	u32 request_kind;
 	/* Origin-only exact waiter record. The version never resets on slot reuse;
 	 * cold observations validate it without writing this CPU's cacheline. */
 	u64 count_seq;
@@ -154,6 +157,8 @@ int kd_mutex_local_runtime_init(void);
 void kd_mutex_local_runtime_exit(void);
 void kd_mutex_exit(void);
 
+void kd_mutex_rwsem_lock_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
+				   unsigned long ip, unsigned long bp);
 void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		       unsigned long ret_addr, unsigned long bp, unsigned int abi);
 int _kd_mutex_unlock_checked(struct kd_mutex *lock);

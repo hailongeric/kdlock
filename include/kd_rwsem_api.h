@@ -6,13 +6,16 @@
 #include "kd_rwsem.h"
 #include "kd_mutex_direct.h"
 
-/* Quiescent preparation is an object-wide promise for ordinary macro writers:
- * same-task lexical acquire/release, no downgrade and no translated nesting.
+/* Quiescent preparation enables ordinary macro writer continuations, including
+ * downgrade followed by the matching read release. Translated rwsem nesting
+ * still requires its own exact acquisition protocol.
  * Callable/signal/try/cleanup writer acquisitions remain local and can downgrade.
  * Never race preparation/reinitialization with any participant. */
 int kd_rwsem_prepare(struct kd_rwsem *sem, unsigned long ip, unsigned int abi);
 void kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
                                    unsigned long ip, unsigned long bp);
+void kd_rwsem_up_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
+                                 unsigned long ip, unsigned long bp);
 
 #define kd_down_write(sem) ({ \
 	__auto_type kd_rw_arg = (sem); \
@@ -33,10 +36,19 @@ void kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
 #define kd_up_write(sem) ({ \
 	__auto_type kd_rw_arg = (sem); \
 	struct kd_rwsem *kd_rw_sem = kd_rw_arg; \
-	/* JIT terminates at the mutex endpoint. Only the resumed origin reaches \
-	 * the phase release, after exact physical ownership and unlock ACK. */ \
-	KD_MUTEX_DIRECT_UNLOCK(&kd_rw_sem->gate); \
-	kd_rwsem_write_release(kd_rw_sem); \
+	unsigned long kd_sp, kd_ip, kd_bp; \
+	/* A minimal returned packet requires compiler spills on both sides of \
+	 * the protected body. The typed endpoint retires the exact rwsem phase; \
+	 * no origin-side decrement may modify a successor's selected phase. */ \
+	asm volatile("movq %%rsp, %%rsi\n\t" \
+	             "leaq 1f(%%rip), %%rdx\n\t" \
+	             "movq %%rbp, %%rcx\n\t" \
+	             "call kd_rwsem_up_write_clobber_v1\n\t1:\n\t" \
+	             : "+D"(kd_rw_sem), "=S"(kd_sp), "=d"(kd_ip), "=c"(kd_bp), \
+	               ASM_CALL_CONSTRAINT \
+	             : \
+	             : "rax", "rbx", "r8", "r9", "r10", "r11", \
+	               "r12", "r13", "r14", "r15", "cc", "memory"); \
 	(void)0; \
 })
 

@@ -92,6 +92,8 @@ struct kd_exec_outer_unlock {
 	bool released;
 };
 
+struct kd_rwsem_request;
+
 struct kd_exec_frame {
 	/* First 40 bytes plus regs.ip/sp/bp form one 64-byte hot line when
 	 * embedded at the aligned continuation base. Keep exact ABI/state widths;
@@ -164,7 +166,12 @@ struct kd_exec_frame {
 	 * A checked spin guard can retain both through original-waiter unlock. */
 	struct kd_spin_ref spin_origin;
 	const struct kd_jit_image *image;
+	/* Preallocated writer/read-credit record retained through frame retirement. */
+	struct kd_rwsem_request *rwsem_request;
 };
+
+/* Optional observations do not replace the request's ownership/lifetime state. */
+void kd_exec_rwsem_note(const char *stage, const struct kd_rwsem_request *request);
 
 struct kd_exec_context {
 	/* One physical owner while depth != 0; frames cannot migrate independently. */

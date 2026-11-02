@@ -6,8 +6,8 @@
 #include "kd_mutex.h"
 
 /* Task-context sleeping reader/writer object. Admission is separate from the
- * unchanged KD mutex protocol: 0 admits readers, -1 reserves an ordinary writer,
- * and positive values count exact delegation-capable writer reservations.
+ * unchanged KD mutex protocol: 0 admits readers and -1 closes one selected
+ * writer phase. Queued requests carry no reusable reader-drain result.
  * Every participant must use this API; never access the embedded gate directly.
  */
 void kd_rwsem_init(struct kd_rwsem *sem);
@@ -36,11 +36,33 @@ int kd_rwsem_is_locked(struct kd_rwsem *sem);
 int kd_rwsem_is_contended(struct kd_rwsem *sem);
 void kd_rwsem_assert_held(const struct kd_rwsem *sem);
 void kd_rwsem_assert_held_write(const struct kd_rwsem *sem);
-/* Provider implementation helpers: reservation before publication, release
- * only on the origin after exact mutex unlock/ACK. Never nested JIT controls. */
-void kd_rwsem_delegate_enter(struct kd_rwsem *sem);
-void kd_rwsem_delegate_exit(struct kd_rwsem *sem);
-void kd_rwsem_write_release(struct kd_rwsem *sem);
+/* Provider-only request/phase operations. The transport retains the record and
+ * origin through completion, and unqueues only after its queue is retired.
+ * Local selection passes NULL; it never owns an unselected reservation. */
+void kd_rwsem_request_init(struct kd_rwsem_request *request,
+			   struct kd_rwsem *sem, struct task_struct *origin,
+			   void *identity, u64 sequence);
+void kd_rwsem_request_unqueue(struct kd_rwsem_request *request);
+/* The executor already owns the physical gate and is schedulable. On failure,
+ * selected distinguishes interruption before selection from a drain rollback.
+ * A selected rollback releases its gate/ACK before release_write. Signal state
+ * applies to current, not to an independently published origin's cancellation. */
+int kd_rwsem_select_write(struct kd_rwsem *sem,
+			  struct kd_rwsem_request *request,
+			  unsigned int state, bool *selected);
+/* A request's logical writer endpoint may retain executor gate custody for a
+ * next selection. Local release follows its actual physical unlock/ACK. */
+void kd_rwsem_release_write(struct kd_rwsem *sem,
+			    struct kd_rwsem_request *request);
+/* begin publishes one read credit. The caller releases the physical gate/ACK
+ * before finish reopens admission. Neither operation completes the request. */
+void kd_rwsem_begin_downgrade(struct kd_rwsem *sem,
+			      struct kd_rwsem_request *request);
+void kd_rwsem_finish_downgrade(struct kd_rwsem *sem,
+			       struct kd_rwsem_request *request);
+/* Consume the exact read credit once; completion is published only after the
+ * fully ordered decrement. No physical unlock or post-decrement object access. */
+void kd_rwsem_finish_read(struct kd_rwsem_request *request);
 /* Quiescent inspection after stopping/joining every user, not admission. */
 bool kd_rwsem_is_idle(struct kd_rwsem *sem);
 

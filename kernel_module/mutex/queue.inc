@@ -188,6 +188,13 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	BUG_ON(READ_ONCE(node->counted_lock) || (READ_ONCE(node->count_seq) & 1));
 	BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);
 
+	if (node->request_kind == KD_MUTEX_REQUEST_RWSEM) {
+		struct kd_rwsem_request *request = kd_mutex_rwsem_request(node);
+
+		BUG_ON(request->identity != node ||
+		       smp_load_acquire(&request->state) != KD_RWSEM_REQUEST_RELEASED);
+	}
+	node->request_kind = KD_MUTEX_REQUEST_ORDINARY;
 	node->next = NULL;
 	node->lock = NULL;
 	node->task_struct_ptr = NULL;
