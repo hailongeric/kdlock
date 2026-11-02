@@ -104,6 +104,19 @@ O/E execution events must be joined to the observed task lifetime and backing
 lock before claiming returned delegated MM execution. Diagnostic tracing stays
 separate from throughput measurements.
 
+Diagnostic points and explicitly traced delegated sessions drain their own
+`/dev/kmsg` descriptor continuously onto the evidence filesystem. An independent
+external collector does not advance that descriptor. The diagnostic reader
+runs on collector CPU63, keeps only a bounded text tail for fault matching,
+and stores complete raw records in `kernel.log`, with every read error in
+`kernel-log-errors.jsonl`. The shared storage budget is 256 MiB, with 64 MiB
+additional free-space headroom required before launch. A ring overrun,
+exhausted budget, I/O error, kernel fault or unjoined reader fails the point;
+the retained prefix and error summary never count as a complete capture. Stop
+and join are bounded and do not imply drain when their deadline expires.
+Ordinary Native timing keeps its existing end-of-run reader and all fault
+checks. These continuously collected diagnostic points remain unscored.
+
 The implementation and focused runner fixtures are source-reviewed first.
 Builds, unit tests and live measurements run only in the VM under the root
 controller. Until those checks complete this directory is an implementation

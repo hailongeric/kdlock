@@ -19,6 +19,7 @@ import timing as common
 rt, identity, platform = common.rt, common.kernel_identity, common.mm_platform
 mm = common.module('mmap1_existing_mm_checks', ROOT/'bench/mmap_writer/linux70.py')
 execution = common.module('mmap1_execution_session', ROOT/'bench/mmap1/execution_session.py')
+kernel_log = common.module('mmap1_kernel_log', ROOT/'bench/mmap1/kernel_log.py')
 REVISION = '75f66e45697e6f5f49c33dd950c4e6b289198f8f'
 PINNED = {
     'main.c': '48d4640f151801fdfb5f3915c822cf280c713df3c1998068e16ce0c961cbf746',
@@ -291,19 +292,28 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     out.mkdir()
     binary = inputs['binaries'][spec['model']]
     command = argv(binary, spec['workers'])
-    result = dict(schema=1, **spec, passed=False, drained=False, scored=not diagnostic,
+    traced = diagnostic or (execution_session is not None and
+                           execution_session.expected['parameters']['service_trace'] == 'Y')
+    result = dict(schema=1, **spec, passed=False, drained=False, scored=not traced,
                   state='RUNNING', argv=command, executable_sha256=inputs['binary_sha256'][spec['model']],
-                  application_lock_identity='not-observed-in-this-process', instrumentation='identity-kprobe' if diagnostic else 'none')
+                  application_lock_identity='not-observed-in-this-process',
+                  instrumentation='identity-kprobe' if diagnostic else 'delegation-trace' if traced else 'none')
     if execution_session is not None:
         result['execution_session'] = execution_session.identity()
     rt.write_json(out/'result.json', result)
     fd = os.open('/dev/kmsg', os.O_RDONLY|os.O_NONBLOCK)
     os.lseek(fd, 0, os.SEEK_END)
     messages = ''
+    collector = None
     child = None
     started = time.monotonic_ns()
     before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
     try:
+        if traced:
+            collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT)
+            collector.start()
+            started = time.monotonic_ns()
+            before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
         with (out/'upstream.log').open('w') as log:
             previous = os.sched_getaffinity(0)
             try:
@@ -347,7 +357,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         result['drained'] = True
         parsed = parse_output((out/'upstream.log').read_text(), spec['workers'])
         # A diagnostic receipt proves progress/shape, never contributes a score.
-        result['output'] = parsed if not diagnostic else dict(output_valid=True, measured_samples=len(parsed['measurement']))
+        result['output'] = parsed if not traced else dict(output_valid=True, measured_samples=len(parsed['measurement']))
         verify()
         if execution_session is None:
             idle(allow_identity_probe=diagnostic)
@@ -359,18 +369,26 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         raise
     finally:
         try:
-            while True:
-                try:
-                    messages += os.read(fd, 1<<20).decode(errors='replace')+'\n'
-                except BlockingIOError:
-                    break
-            (out/'kernel.log').write_text(messages)
-            rt.require(not rt.FAULT.search(messages), 'kernel warning/fault')
+            if collector is not None:
+                summary = collector.finish()
+                result['kernel_log_collection'] = summary
+                rt.write_json(out/'kernel-log-result.json', summary)
+                rt.require(summary['complete'], 'diagnostic kernel log incomplete')
+                rt.require(not summary['fault_detected'], 'kernel warning/fault')
+            else:
+                while True:
+                    try:
+                        messages += os.read(fd, 1<<20).decode(errors='replace')+'\n'
+                    except BlockingIOError:
+                        break
+                (out/'kernel.log').write_text(messages)
+                rt.require(not rt.FAULT.search(messages), 'kernel warning/fault')
         except BaseException as error:
             result.update(state='FAILED', passed=False, log_error=repr(error))
             raise
         finally:
-            os.close(fd)
+            if collector is None or not collector.thread.is_alive():
+                os.close(fd)
             rt.write_json(out/'result.json', result)
     return result
 
