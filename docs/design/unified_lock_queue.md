@@ -755,3 +755,10 @@ clearing the bit does not write any spin combiner bytes. All legacy frame
 constructors clear the bit. Only a retained mutex frame sets it. No packet,
 wrapper word, capture behavior or ownership protocol changes in this correction.
 Compile-time offset/size checks accompany the source for the next VM build.
+
+The first returned-JIT smoke preparation stopped because the benchmark's
+observation patch still expected kd_exec.h immediately followed by
+kd_source.h. The retained-frame header now sits between those includes.
+Update that exact patch context while retaining all observations and the
+zero-fuzz application requirement. No workload or JIT body ran in that failed
+preparation; it is retained independently of subsequent attempts.

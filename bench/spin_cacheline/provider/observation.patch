@@ -195,10 +195,11 @@ diff --git a/kernel_module/execution/wrapper_entry.inc b/kernel_module/execution
 diff --git a/kernel_module/kd_exec.c b/kernel_module/kd_exec.c
 --- a/kernel_module/kd_exec.c
 +++ b/kernel_module/kd_exec.c
-@@ -17,6 +17,7 @@
+@@ -17,7 +17,8 @@
  
  #include "exe.h"
  #include "kd_exec.h"
+ #include "kd_exec_cont.h"
 +#include "utils.h"
  #include "kd_source.h"
  #include "kd_lock.h"
