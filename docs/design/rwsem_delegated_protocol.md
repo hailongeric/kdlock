@@ -44,17 +44,43 @@ kd_down_write macro cannot implement this merely by changing a function name.
 Callable/function-pointer entry must preserve the same observable behavior;
 unsupported entry forms must not be mislabeled as delegated execution.
 
+The result is also an execution-entry input. The existing ABI2 pristine packet
+imports SP/IP/BP, not an arbitrary incoming EAX. A future integer-returning
+source wrapper must therefore distinguish native return from committed proxy
+entry: the native return preserves zero or -EINTR, while the captured proxy
+success entry explicitly defines EAX as zero before the caller tests it. One
+possible assembly layout captures a label containing `xor %eax,%eax` and jumps
+over that label on the helper's ordinary return. This is a proposed ABI2
+construction requiring compiler/JIT validation, not implemented support. The
+two-word generated wrapper argument array remains unchanged. Cleanup
+constructors must not capture inside a helper that returns before its user's
+body. A capture-only helper that still acquires locally does not satisfy the
+delegation requirement and must not be presented as a completed protocol step.
+
 A request has these distinct states:
 
-  INITIAL -> QUEUED -> COMMITTED -> EXECUTING_WRITE -> RETURNED -> RETIRED
-                  \-> CANCELED -> RETIRED
+```text
+INITIAL -> QUEUED -> SELECTED_DRAINING -> COMMITTED -> EXECUTING_WRITE
+                                                        |
+                                                        v
+                                                     RETURNED -> RETIRED
+QUEUED or SELECTED_DRAINING -> cancellation cleanup -> CANCELED -> RETIRED
+```
 
-Only an uncommitted request may cancel. Selection and cancellation must compete
-on the same exact request state; a completed grant wins. Publication does not
-permit execution before commitment. Every committed request executes its body
-exactly once, with one completion and final lifetime retirement. No native
-continuation may replay the completed prefix or report cancellation after its
-body effects have committed.
+Only an uncommitted request may cancel; selection for reader drainage is not
+yet a successful public acquisition. Commitment follows physical gate ownership
+and a valid zero-reader observation. Selection and cancellation must compete
+on the same exact request state; a completed grant wins. Test the successful
+grant predicate before acting on a signal. A killable request may stop optimistic
+polling for any pending signal, but only the origin's killable cancellation
+predicate authorizes failure; a nonfatal signal alone must not cancel it.
+The executor cannot substitute its own pending-signal state for the origin's.
+Cancellation of selected work retires its gate/phase custody before returning
+failure, without publishing body execution or releasing somebody else's credit.
+Publication does not permit execution before commitment. Every committed
+request executes its body exactly once, with one completion and final lifetime
+retirement. No native continuation may replay the completed prefix or report
+cancellation after its body effects have committed.
 
 ### Writer phases that can downgrade
 
@@ -66,7 +92,9 @@ that a positive prepared cohort may reuse a pre-publication drain forever.
 
 Downgrade adds an explicit transition:
 
+```text
   EXECUTING_WRITE -> EXECUTING_DELEGATED_READ -> RETURNED_READ -> RETIRED
+```
 
 The read acquisition created by downgrade belongs logically to the same
 successful caller acquisition, while its body and final release execute on the
@@ -105,6 +133,52 @@ reader pass an exclusive-owner assertion. Releasing the gate must not let a
 successor use a stale drain result. The implementation must choose and validate
 one explicit ordering for this custody transfer rather than infer ownership from
 aggregate counters. Readers on other tasks may still execute concurrently.
+
+The first candidate design releases physical gate custody at downgrade, while
+retaining the exact delegated read acquisition. Queued request count is separate
+from reader admission. The selected executor owns the gate, closes admission,
+and drains active read credits for that request. At downgrade it first publishes
+its read credit and changes its ledger class, then releases the gate while the
+old writer admission is still closed. Only after physical unlock/ACK does it
+reopen shared admission. This retains the ordering of current local downgrade,
+without returning the read tail to origin. Ordinary readers can enter concurrently.
+
+A successor may acquire the physical gate before the prior phase reopens, but
+must wait for that phase, close admission for its own selection, and freshly
+drain active read credits. The delegated tail's outstanding credit prevents
+writer entry. No published request is already reader-drained. Every writer
+entry form, including local/signal and trylock, must follow the new ordering;
+trylock must fail and roll back rather than wait for a drain. A canceled
+reservation cannot decrement the delegated reader's credit. Aggregate admission
+and gate.owner cannot replace the exact selected-writer record for ownership
+queries or assertions.
+
+Gate unlock/ACK at downgrade is not logical body completion. The frame retains
+an unreleased delegated-read ledger entry, its source/stack/request state and
+the origin's suspension until final read release and returned completion. The
+matching up_read consumes the exact credit without unlocking a mutex. This is
+needed because current kd_up_read explicitly allows IRQ-disabled/atomic callers
+and avoids scheduler locks; attaching kd_mutex_local_unlock there could reach
+wake_up_q. No frame or source may retire merely because all physical gates are
+released while a delegated read credit remains live.
+
+Final delegated up_read may run while admission is closed by the next selected
+writer waiting for that credit. It must not require admission zero or retire the
+previous writer phase again. The selected writer's drain must remain schedulable:
+pinning it indefinitely on a CPU needed by the delegated read tail can prevent
+that tail from releasing. Bounded polling and its scheduling path retain exact
+request/frame custody; scheduling is not cancellation or proof of drainage.
+
+After closing admission, drain only already admitted read credits. Never wait
+for the reader-admission OSQ to become empty at that point: queued readers need
+admission to reopen, so that wait can deadlock. A pre-close reader preference is
+a policy decision, not a drain obligation. An authorized non-owner read release
+also needs exact credit/completion routing; merely decrementing an aggregate
+count would lose the request/frame obligation. No object pointer may be
+dereferenced after public release without a separately retained lifetime.
+These are implementation and fixture obligations, not validated behavior. All
+queued writers must use the new selected-phase protocol before delegated
+downgrade can be enabled.
 
 An original-task read unlock and an executor-side read unlock follow the same
 public up_read semantics; internal routing uses the exact acquisition record.
@@ -214,8 +288,47 @@ receipt must identify the reached source address/instruction/helper, saved
 context and missing semantic service. Such receipts fail candidate support;
 they are never counted as completed delegated execution.
 
+The current explicit helper boundaries include the following. Their existence
+in source is verified; the baseline API observer does not establish which helper
+branches mmap1 reached. These are implementation gaps to resolve or report at
+the exact reached site, not reasons to reject every branch of an enclosing body.
+
+| Current reached boundary | Evidence / missing executor behavior |
+| --- | --- |
+| schedule, schedule_timeout, io_schedule and __cond_resched | include/kd_native_terminals.def marks scheduler-context terminals; kernel_module/exe.c:667 routes a terminal CALL to the origin suffix. Need executor-side wait/resume using the physical executor's scheduler state while retaining logical request ownership. |
+| _raw_spin_lock and its IRQ/BH variants, Native mutex/rwsem helpers | The same terminal definition file marks Native-lock calls. Need exact nested ownership and saved/physical IRQ/preemption compatibility; numerical IF equality alone does not establish CPU-local context equivalence. |
+| __rcu_read_lock, __rcu_read_unlock, synchronize_rcu and migration/BH helpers | CPU-context terminals in the same file. Need explicit executor-side context nesting and matched release; substituting logical current does not preserve CPU-local exclusion. |
+| flush_tlb_mm_range, flush_tlb_kernel_range, switch_mm_irqs_off | Task/MM terminals in the same file. Require actual active-mm, CPU/TLB and ordering handling; translating a saved task pointer does not install those physical states. |
+| user-copy/fault helpers, kthread_use_mm and mmput | Task/MM terminals in the same file. Require address-space/fault/lifetime services; their mere presence does not prove they occur inside each anonymous mmap1 body. |
+
+The killable-entry, downgrade and final read-release gaps are unconditional
+protocol gaps where those APIs occur. The remaining named CALL boundaries are
+conditional until instruction/helper tracing establishes a reached site. No
+new local suffix or API failure has been installed to make these gaps appear to
+pass. An unsupported reached point remains a failed candidate, never a silent
+origin continuation or successful direct-replacement claim.
+
 Stage 1 is delivered on branch codex/rwsem-delegated-protocol-20261102 from
 baseline 7231ddf0963ff2cc730590c09cc81e7f96f93095. Stage 2 must report current
 local behavior honestly while adding generic observations; Stage 3 cannot claim
 forced replacement until the entry, phase, executor-context and startup
 capabilities above are implemented and validated together.
+
+## Instrumentation checkpoint, November 2
+
+The generic [API observer](../../tests/kernel/rwsem/observe/README.md) was built
+and checked in the VM at bbb79781e85305cf3881f21108d11d4bf063af7e. Its fourteen
+decoder fixtures passed. Fresh actual-MM API checks and unchanged mmap1
+thread/process identity checks passed on the existing local-only kdscope4
+image with kd_mmap=on. Four diagnostic observations at one and two workers
+captured 88,204 events with complete API pairs, including downgrade/read release,
+without probe misses or overflow. The [retained record](../../bench/results/10.176.26.71/tests/rwsem-protocol-observe-20261102/README.md)
+includes the two failed setup attempts, fixes, exact identities and archives.
+
+This completes baseline API observation only. It does not observe request
+publication, commitment, a logical origin or executor, delegated ownership or
+frame retirement. Protocol-transition instrumentation must accompany those
+new implementation states. Every current capture states proxy_proof=false;
+delegation length, critical-section ratio and performance acceptance remain
+unestablished. Production lock and MM integration sources are unchanged from
+the stated baseline. No delegated candidate kernel has been built or run.
