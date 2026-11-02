@@ -1,5 +1,5 @@
 /* Source-checked ordinary primitives, not Native MM/VMA bodies. Returning
- * operations balance their physical CPU state. The one explicit terminal
+ * operations use their declared CPU-state and ownership contexts. The terminal
  * keeps its actual Native context and source CALL word. Argument
  * counts exclude no hidden stack arguments; all are ordinary x86-64 C words.
  * Source identity: authenticated linux=7.0.0-38.38. */
@@ -26,6 +26,19 @@ KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(__vma_exclude_readers_for_detach, 1, KD_SERVICE_CALL_VOID)
 /* kernel/events/core.c: void (struct vm_area_struct *). */
 KD_SERVICE_CALL(perf_event_mmap, 1, KD_SERVICE_CALL_VOID)
+/* Existing filesystem file-operation callbacks. Prepare APIs receive only
+ * vm_area_desc *, unlike the two-argument inline vfs_mmap_prepare dispatcher.
+ * These callbacks return int and leave no Native acquisition outstanding. */
+KD_SERVICE_CALL(ext4_file_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(shmem_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_readonly_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_mmap, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_readonly_mmap, 2, KD_SERVICE_CALL_WORD)
+/* File-operation address selection: unsigned long (file *, addr, len,
+ * pgoff, flags). The actual Native API uses the original task's mm. */
+KD_SERVICE_CALL(thp_get_unmapped_area, 5, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(shmem_get_unmapped_area, 5, KD_SERVICE_CALL_WORD)
 /* kernel/sched/core.c: int (void), including its exact static-call entries.
  * The latter preserve the running kernel's selected reschedule behavior. */
 KD_SERVICE_CALL(__cond_resched, 0, KD_SERVICE_CALL_WORD)
@@ -65,6 +78,10 @@ KD_SERVICE_CONTEXT(_raw_spin_trylock, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_S
 KD_SERVICE_CONTEXT(_raw_spin_unlock, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SPIN_UNLOCK)
 KD_SERVICE_CONTEXT(__rcu_read_lock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_LOCK)
 KD_SERVICE_CONTEXT(__rcu_read_unlock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_UNLOCK)
+/* kernel/locking/rwsem.c: void (struct rw_semaphore *). Write ownership
+ * survives the acquire return and requires its exact Native release ACK. */
+KD_SERVICE_CONTEXT(down_write, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RWSEM_WRITE_LOCK)
+KD_SERVICE_CONTEXT(up_write, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK)
 /* x86-64 PV callbacks: DI/SI/DX/CX arguments, AX result. Exact identity
  * callback preserves the remaining registers and arithmetic flags. */
 KD_SERVICE_CONTEXT(_paravirt_ident_64, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)

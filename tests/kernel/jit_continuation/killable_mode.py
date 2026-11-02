@@ -106,9 +106,10 @@ def session_class(base):
             rt.write_json(self.path / (label + '.timeout.json'), state)
             raise rt.Failure('UNDRAINED', 'killable control predicate expired: ' + label, unsafe=True)
 
-        def start(self, label, operation, slot, flags=0):
+        def start(self, label, operation, slot, flags=0, *, cpu=None):
             log = (self.path / (label + '.worker.json')).open('w')
-            cpu = self.record['cpus'][slot % len(self.record['cpus'])]
+            cpu = self.record['cpus'][slot % len(self.record['cpus'])] if cpu is None else cpu
+            rt.require(type(cpu) is int and 0 <= cpu < os.cpu_count(), 'explicit fixture CPU is unavailable')
             argv = [sys.executable, self.translation_source / 'tests/kernel/jit_continuation/run.py',
                     '--killable-worker', str(cpu), str(operation), str(slot), str(flags)]
             process = subprocess.Popen(list(map(str, argv)), stdout=log, stderr=subprocess.STDOUT,

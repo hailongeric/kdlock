@@ -31,7 +31,7 @@ struct kd_origin_call {
 	unsigned int context_kind;
 	u64 sequence;
 	bool executor_pinned;
-	struct kd_native_owner *spin_owner, *rcu_owner;
+	struct kd_native_owner *spin_owner, *rcu_owner, *rwsem_owner;
 };
 struct kd_service_root {
 	struct { struct kd_origin_call origin_call; } continuation;

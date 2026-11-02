@@ -41,6 +41,8 @@ enum kd_service_call_context {
 	KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 	/* Exact Native terminal; its original source CALL word must remain live. */
 	KD_SERVICE_CALL_NONRETURNING_ORIGIN,
+	KD_SERVICE_CALL_RWSEM_WRITE_LOCK,
+	KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK,
 };
 
 enum kd_native_owner_kind {
@@ -48,6 +50,7 @@ enum kd_native_owner_kind {
 	KD_NATIVE_OWNER_SPIN,
 	KD_NATIVE_OWNER_RCU,
 	KD_NATIVE_OWNER_PREEMPT,
+	KD_NATIVE_OWNER_RWSEM_WRITE,
 };
 
 /* Each live record is authority for one actual Native acquisition. Context
@@ -106,6 +109,8 @@ struct kd_origin_call {
 	unsigned int phase;
 	bool servicing;
 	bool executor_pinned;
+	/* Cold Native writer custody; assembly consumes only the scalar prefix. */
+	struct kd_native_owner *rwsem_owner;
 };
 
 /* Descriptors are copied into provider-owned immutable slots. Configuration

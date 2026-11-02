@@ -47,6 +47,8 @@ enum jit_killable_operation {
 	JIT_KILLABLE_WRITE_HOLDER,
 	JIT_KILLABLE_READ_HOLDER,
 	JIT_KILLABLE_INNER_HOLDER,
+	JIT_KILLABLE_NATIVE_WRITE_HOLDER,
+	JIT_KILLABLE_NATIVE_WRITE_PROGRESS,
 };
 #define JIT_KILLABLE_NESTED 1U
 #define JIT_KILLABLE_DOWNGRADE 2U
@@ -60,11 +62,14 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_NATIVE_EARLY 512U
 #define JIT_KILLABLE_MEMORY 1024U
 #define JIT_KILLABLE_MEMORY_EARLY 2048U
+#define JIT_KILLABLE_NATIVE_WRITE 4096U
+#define JIT_KILLABLE_NATIVE_WRITE_EARLY 8192U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
 #define JIT_KILLABLE_RELEASE_TAIL 8ULL
 #define JIT_KILLABLE_RELEASE_HELPER 16ULL
+#define JIT_KILLABLE_RELEASE_NATIVE_WRITE 32ULL
 struct jit_killable_run {
 	__u32 operation, slot, flags, reserved;
 	__s64 result;
@@ -133,4 +138,17 @@ struct jit_memory_snapshot {
 	struct jit_memory_observation events[JIT_MEMORY_EVENTS];
 };
 #define JIT_MEMORY_SNAPSHOT _IOR('E', 15, struct jit_memory_snapshot)
+
+#define JIT_NATIVE_WRITE_EVENTS 8
+struct jit_native_write_event {
+	__u64 operation, object, pid, cpu, stack_address;
+	__u64 preempt_before, preempt_after, rcu_before, rcu_after;
+	__u64 irqs_before, irqs_after, switches_before, switches_after;
+};
+struct jit_native_write_snapshot {
+	__u64 version, errors, count, body_after, lock_a, lock_b, stack_low, stack_high;
+	__u64 attempts, grants, holder_active, native_waiters, progress, progress_pid, progress_cpu;
+	struct jit_native_write_event events[JIT_NATIVE_WRITE_EVENTS];
+};
+#define JIT_NATIVE_WRITE_SNAPSHOT _IOR('E', 16, struct jit_native_write_snapshot)
 #endif

@@ -21,6 +21,7 @@ DECLARATIONS = {
     'jit_test_native_spin_unlock': (1, 2, 6), 'jit_test_native_rcu_lock': (0, 2, 7),
     'jit_test_native_rcu_unlock': (0, 2, 8),
     'jit_test_memory_observe': (1, 2, 2),
+    'jit_test_native_write_lock': (1, 2, 12), 'jit_test_native_write_unlock': (1, 2, 13),
 }
 SYMBOLS = tuple(DECLARATIONS)
 NATIVE_SNAPSHOT = 0x87B8450E
@@ -308,6 +309,8 @@ def session_class(base):
                 self.save()
             from memory_mode import run_memory_checks
             run_memory_checks(self)
+            from native_write_mode import run_native_write_checks
+            run_native_write_checks(self)
             trace.write_text('0\n')
             rt.require(trace.read_text().strip() == 'N', 'service trace final readback differs')
             self.record.update(accepted=True, jit_status='RETURNING_ORIGINAL_TASK_PRIMITIVES',

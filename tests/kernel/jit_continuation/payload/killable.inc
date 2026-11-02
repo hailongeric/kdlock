@@ -21,7 +21,8 @@ static bool killable_idle(void)
 	unsigned int i;
 
 #ifdef JIT_CONTINUATION_HELPER
-	if (!kd_mutex_is_idle(&helper_child) || raw_spin_is_locked(&helper_native_lock))
+	if (!kd_mutex_is_idle(&helper_child) || raw_spin_is_locked(&helper_native_lock) ||
+	    rwsem_is_locked(&helper_native_write_a) || rwsem_is_locked(&helper_native_write_b))
 		return false;
 #endif
 	for (i = 0; i < 4; ++i)
@@ -59,6 +60,23 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
 	WRITE_ONCE(slot->prefix, READ_ONCE(slot->prefix) + 1);
 #ifdef JIT_CONTINUATION_HELPER
+	if (flags & (JIT_KILLABLE_NATIVE_WRITE | JIT_KILLABLE_NATIVE_WRITE_EARLY)) {
+		jit_test_native_write_lock(&helper_native_write_a);
+		if (flags & JIT_KILLABLE_NATIVE_WRITE_EARLY) {
+			WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+			if (atomic_dec_return(&writers))
+				atomic_inc(&failures);
+			kd_up_write(&test_lock);
+			WRITE_ONCE(helper_native_write_body_after, READ_ONCE(helper_native_write_body_after) + 1);
+			jit_test_native_write_unlock(&helper_native_write_a);
+			return 0;
+		}
+		jit_test_native_write_lock(&helper_native_write_b);
+		/* Keep B live across the non-LIFO release of the older A share. */
+		jit_test_native_write_unlock(&helper_native_write_a);
+		WRITE_ONCE(helper_native_write_body_after, READ_ONCE(helper_native_write_body_after) + 1);
+		jit_test_native_write_unlock(&helper_native_write_b);
+	}
 	if (flags & (JIT_KILLABLE_MEMORY | JIT_KILLABLE_MEMORY_EARLY)) {
 		jit_test_memory_observe(0);
 		if (flags & JIT_KILLABLE_MEMORY_EARLY) {
@@ -270,6 +288,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	unsigned int i;
 	unsigned int before_preempt;
 	bool before_irqs;
+	unsigned int max_operation = JIT_KILLABLE_INNER_HOLDER;
 	u64 release;
 	int result;
 
@@ -280,6 +299,8 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 		return helper_native_snapshot(user);
 	if (cmd == JIT_MEMORY_SNAPSHOT)
 		return helper_memory_snapshot(user);
+	if (cmd == JIT_NATIVE_WRITE_SNAPSHOT)
+		return helper_native_write_snapshot(user);
 	if (cmd == JIT_HELPER_UNREGISTER) {
 		if (!killable_idle() || atomic_cmpxchg(&control, 0, -1))
 			return -EBUSY;
@@ -322,7 +343,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 		u64 allowed = 15;
 
 #ifdef JIT_CONTINUATION_HELPER
-		allowed |= JIT_KILLABLE_RELEASE_HELPER;
+		allowed |= JIT_KILLABLE_RELEASE_HELPER | JIT_KILLABLE_RELEASE_NATIVE_WRITE;
 #endif
 		if (copy_from_user(&release, user, sizeof(release)))
 			return -EFAULT;
@@ -345,6 +366,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 			WRITE_ONCE(helper_native_count, 0);
 			WRITE_ONCE(helper_native_body_after, 0);
 			helper_memory_reset();
+			helper_native_write_reset();
 #endif
 			WRITE_ONCE(killable_release, 0);
 			WRITE_ONCE(hot, 0);
@@ -357,7 +379,10 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 		return -ENOTTY;
 	if (copy_from_user(&run, user, sizeof(run)))
 		return -EFAULT;
-	if (run.operation > JIT_KILLABLE_INNER_HOLDER || run.slot >= JIT_KILLABLE_SLOTS ||
+#ifdef JIT_CONTINUATION_HELPER
+	max_operation = JIT_KILLABLE_NATIVE_WRITE_PROGRESS;
+#endif
+	if (run.operation > max_operation || run.slot >= JIT_KILLABLE_SLOTS ||
 	    (run.flags != 0 && run.flags != JIT_KILLABLE_NESTED && run.flags != JIT_KILLABLE_DOWNGRADE &&
 	     run.flags != JIT_KILLABLE_DEPTH && run.flags != (JIT_KILLABLE_DEPTH | JIT_KILLABLE_EARLY) &&
 	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE
@@ -365,6 +390,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
 	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
 	     && run.flags != JIT_KILLABLE_MEMORY && run.flags != JIT_KILLABLE_MEMORY_EARLY
+	     && run.flags != JIT_KILLABLE_NATIVE_WRITE && run.flags != JIT_KILLABLE_NATIVE_WRITE_EARLY
 #endif
 	    ) || run.reserved ||
 	    (run.operation != JIT_KILLABLE_ROOT && run.flags))
@@ -382,6 +408,17 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 #endif
 	if (run.operation == JIT_KILLABLE_ROOT)
 		result = killable_body(&killable_slots[run.slot], run.flags);
+#ifdef JIT_CONTINUATION_HELPER
+	else if (run.operation == JIT_KILLABLE_NATIVE_WRITE_HOLDER) {
+		helper_native_write_hold();
+		result = 0;
+	} else if (run.operation == JIT_KILLABLE_NATIVE_WRITE_PROGRESS) {
+		WRITE_ONCE(helper_native_write_progress_pid, current->pid);
+		WRITE_ONCE(helper_native_write_progress_cpu, raw_smp_processor_id());
+		smp_store_release(&helper_native_write_progress, READ_ONCE(helper_native_write_progress) + 1);
+		result = 0;
+	}
+#endif
 	else {
 		bool read = run.operation == JIT_KILLABLE_READ_HOLDER;
 		u64 bit = run.operation == JIT_KILLABLE_INNER_HOLDER ?

@@ -483,6 +483,7 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 		cont->packet->cx : 0;
 	call->spin_owner = NULL;
 	call->rcu_owner = NULL;
+	call->rwsem_owner = NULL;
 	call->executor_pinned = false;
 	local_save_flags(call->executor_irq_flags);
 	call->native_sp = 0;
@@ -546,6 +547,7 @@ int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence
 	call->entry = NULL;
 	call->spin_owner = NULL;
 	call->rcu_owner = NULL;
+	call->rwsem_owner = NULL;
 	smp_store_release(&call->phase, KD_ORIGIN_CALL_CONSUMED);
 	kd_service_call_put(entry);
 	return complete ? KD_EXE_RUN_TO_UNLOCK : 0;

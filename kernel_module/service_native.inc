@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Retained authority for ordinary Native spin/RCU APIs. O is the actual
+/* Retained authority for ordinary Native lock/RCU APIs. O is the actual
  * Native owner. E receives permission only through the exact RPC ACK. */
 static struct kd_native_owner *kd_service_native_reserve(
 	struct kd_service_root *root, unsigned int kind, unsigned long object, u64 sequence)
@@ -42,6 +42,7 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 	unsigned int spins = kd_service_native_pins(root);
 	unsigned int rcu = kd_service_native_depth(root, KD_NATIVE_OWNER_RCU);
 
+	call->rwsem_owner = NULL;
 	if (!(call->executor_irq_flags & X86_EFLAGS_IF) || preempt_count() != 1)
 		return -EOPNOTSUPP;
 	if (call->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN && (spins || rcu))
@@ -51,6 +52,22 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 		return -EOPNOTSUPP;
 	call->executor_pinned = kd_service_native_executor_pinned(call->context_kind, spins);
 	switch (call->context_kind) {
+	case KD_SERVICE_CALL_RWSEM_WRITE_LOCK:
+		/* Native down_write may sleep. Existing writers do not pin a CPU,
+		 * but actual spin/preempt and RCU intervals forbid this wait. */
+		if (spins || rcu)
+			return -EOPNOTSUPP;
+		if (!call->object || kd_service_native_find(root, KD_NATIVE_OWNER_RWSEM_WRITE,
+			call->object))
+			return -EINVAL;
+		needed = 1;
+		break;
+	case KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK:
+		call->rwsem_owner = kd_service_native_find(root, KD_NATIVE_OWNER_RWSEM_WRITE,
+			call->object);
+		if (!call->rwsem_owner)
+			return -EINVAL;
+		break;
 	case KD_SERVICE_CALL_PTE_LOCK:
 		if (!call->object_out)
 			return -EINVAL;
@@ -99,6 +116,9 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 		free += owner->kind == KD_NATIVE_OWNER_FREE;
 	if (free < needed)
 		return -EAGAIN;
+	if (call->context_kind == KD_SERVICE_CALL_RWSEM_WRITE_LOCK)
+		call->rwsem_owner = kd_service_native_reserve(root,
+			KD_NATIVE_OWNER_RWSEM_WRITE, call->object, call->sequence);
 	if (call->context_kind == KD_SERVICE_CALL_PTE_LOCK ||
 	    call->context_kind == KD_SERVICE_CALL_SPIN_LOCK ||
 	    call->context_kind == KD_SERVICE_CALL_SPIN_TRYLOCK)
@@ -135,9 +155,18 @@ static void kd_service_native_finish(struct kd_service_root *root)
 	unsigned int rcu = call->baseline_rcu;
 	bool spin_grant = false, rcu_grant = false;
 	bool spin_release = false, rcu_release = false;
+	bool rwsem_grant = false;
 	unsigned long object;
 
 	switch (call->context_kind) {
+	case KD_SERVICE_CALL_RWSEM_WRITE_LOCK:
+		BUG_ON(!call->rwsem_owner || call->rwsem_owner->held ||
+			call->rwsem_owner->sequence != call->sequence);
+		rwsem_grant = true;
+		break;
+	case KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK:
+		BUG_ON(!call->rwsem_owner || !call->rwsem_owner->held);
+		break;
 	case KD_SERVICE_CALL_PTE_LOCK:
 		spin_grant = rcu_grant = !!call->packet->ax;
 		if (spin_grant) {
@@ -177,6 +206,19 @@ static void kd_service_native_finish(struct kd_service_root *root)
 	rcu += rcu_grant;
 	BUG_ON(preempt_count() != preempt || kd_service_origin_rcu_depth() != rcu ||
 		irqs_disabled());
+	if (call->rwsem_owner) {
+		struct kd_native_owner *owner = call->rwsem_owner;
+
+		BUG_ON(owner->kind != KD_NATIVE_OWNER_RWSEM_WRITE || owner->origin != current ||
+			owner->identity != call->identity || owner->generation != call->generation ||
+			owner->object != call->object);
+		/* Native up_write has returned. Only retained scalar metadata is
+		 * inspected here; no operation may dereference the released object. */
+		owner->held = rwsem_grant;
+		kd_service_native_trace(rwsem_grant ? "grant" : "release", root, owner);
+		if (!rwsem_grant)
+			owner->kind = KD_NATIVE_OWNER_FREE;
+	}
 	if (call->spin_owner) {
 		call->spin_owner->held = spin_grant;
 		kd_service_native_trace(spin_grant ? "grant" :

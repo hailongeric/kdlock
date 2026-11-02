@@ -403,3 +403,28 @@ instruction traps, memory faults or replay of a partially executed body.
 The string probe now requires valid short and 300-character inputs to complete
 delegated comparison calls, without the former helper prechecks. That change
 does not alter this instruction marker's continuation or repeated-eligibility checks.
+
+## Native rwsem writer pair observations
+
+Helper mode adds two phases for the general one-argument VOID writer contexts
+12/13. The first retains two distinct Native rwsems on O, releases the first
+while the second remains held, then releases the second. A conventional fixture
+holder initially owns the first semaphore. Before releasing it, the controller
+requires an actual Native waiter, an entered-but-ungranted O acquisition and a
+sleeping O; it then runs a lock-free fixture worker on the actual E CPU and
+observes E schedule while O remains blocked. The helper's before/after switch
+counts separately prove that the Native acquisition itself scheduled O.
+
+The second phase releases the outer KD writer while a Native writer remains,
+runs a scalar continuation effect on E, and ends through the final Native
+up_write completion. Exact origin/executor/root/generation, Native object and
+acquisition-sequence records must match, with balanced CPU state and complete
+retirement. No Native writer is described as a balanced acquire-and-release
+helper. The existing six helper and eleven killable phases remain unchanged.
+
+A separate version1 952-byte observation ioctl records up to eight Native
+writer events and their exact objects, actual task/CPU/stack, CPU state and
+context-switch totals. The 1496-, 1976- and 312-byte observation ABIs retain
+their layouts. Holder release is explicit and bounded; timeout retains the
+callers/modules and never authorizes forced task exit or unload. These are
+mechanism checks, not an MM workload or performance result.

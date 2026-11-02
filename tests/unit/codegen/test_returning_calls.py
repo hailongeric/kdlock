@@ -70,11 +70,22 @@ class ReturningCallTests(unittest.TestCase):
         row = '1 ffffffff81001000 6 1 1 primitive_call\n'
         self.assertEqual(len(parse(row)), 1)
         for text in (row + row, row.replace('6 1 1', '7 1 1'),
-                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 12'),
+                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 14'),
                      row.replace('1 ffffffff', '0 ffffffff'), '1 ffffffff81001000',
                      'x' * 4097):
             with self.subTest(text=text[:100]), self.assertRaises(ValueError):
                 parse(text)
+
+    def test_native_writer_pair_requires_one_argument_and_void_result(self):
+        parse = translator.memread.device_session.parse_service_calls
+        for context in (12, 13):
+            row = f'1 ffffffff81001000 1 2 {context} native_writer\n'
+            self.assertEqual(parse(row)[0xffffffff81001000]['context_kind'], context)
+            for text in (row.replace('1 2 ' + str(context), '0 2 ' + str(context)),
+                         row.replace('1 2 ' + str(context), '2 2 ' + str(context)),
+                         row.replace('1 2 ' + str(context), '1 1 ' + str(context))):
+                with self.subTest(text=text), self.assertRaises(ValueError):
+                    parse(text)
 
     def test_nonreturning_registry_is_exact_zero_arg_void_target(self):
         parse = translator.memread.device_session.parse_service_calls

@@ -31,7 +31,7 @@ int main(void)
 		.nargs = 0, .result_kind = KD_SERVICE_CALL_VOID,
 		.context_kind = KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 	};
-	unsigned int checks = 0, schedules = 0, policies = 0;
+	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -44,8 +44,23 @@ int main(void)
 	desc.result_kind = KD_SERVICE_CALL_WORD;
 	CHECK(!kd_service_call_context_valid(&desc));
 	desc.result_kind = KD_SERVICE_CALL_VOID;
-	desc.context_kind = KD_SERVICE_CALL_NONRETURNING_ORIGIN + 1;
+	desc.context_kind = KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK + 1;
 	CHECK(!kd_service_call_context_valid(&desc));
+	for (context = KD_SERVICE_CALL_RWSEM_WRITE_LOCK;
+	     context <= KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK; ++context) {
+		desc.context_kind = context;
+		desc.nargs = 1;
+		CHECK(kd_service_call_context_valid(&desc));
+		CHECK(!kd_service_call_requires_preempt_rcu(context));
+		CHECK(!kd_service_native_executor_pinned(context, 0));
+		CHECK(kd_service_native_executor_pinned(context, 1));
+		desc.nargs = 0;
+		CHECK(!kd_service_call_context_valid(&desc));
+		desc.nargs = 1;
+		desc.result_kind = KD_SERVICE_CALL_WORD;
+		CHECK(!kd_service_call_context_valid(&desc));
+		desc.result_kind = KD_SERVICE_CALL_VOID;
+	}
 
 	for (pins = 0; pins != 3; ++pins) {
 		for (rcu = 0; rcu != 3; ++rcu) {
@@ -84,9 +99,33 @@ int main(void)
 			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_WORD &&
 				primitive->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN);
 		}
+		{
+			static const struct { const char *name; unsigned int nargs; } file_calls[] = {
+				{ "ext4_file_mmap_prepare", 1 }, { "shmem_mmap_prepare", 1 },
+				{ "generic_file_mmap_prepare", 1 }, { "generic_file_readonly_mmap_prepare", 1 },
+				{ "generic_file_mmap", 2 }, { "generic_file_readonly_mmap", 2 },
+				{ "thp_get_unmapped_area", 5 }, { "shmem_get_unmapped_area", 5 },
+			};
+			size_t callback;
+
+			for (callback = 0; callback < sizeof(file_calls) / sizeof(file_calls[0]); ++callback)
+				if (!strcmp(primitive->symbol, file_calls[callback].name)) {
+					++callbacks;
+					CHECK(primitive->nargs == file_calls[callback].nargs &&
+						primitive->result_kind == KD_SERVICE_CALL_WORD &&
+						primitive->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN);
+				}
+		}
+		if (!strcmp(primitive->symbol, "down_write") || !strcmp(primitive->symbol, "up_write")) {
+			++writers;
+			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
+				primitive->context_kind == (!strcmp(primitive->symbol, "down_write") ?
+				KD_SERVICE_CALL_RWSEM_WRITE_LOCK : KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK));
+		}
 	}
 	CHECK(schedules == 8);
 	CHECK(policies == 2);
+	CHECK(callbacks == 8 && writers == 2);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

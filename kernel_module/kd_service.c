@@ -216,14 +216,14 @@ static struct kd_native_owner *kd_service_native_find(struct kd_service_root *ro
 
 	list_for_each_entry(owner, &root->native_owners, link) {
 		if (!owner->held || owner->kind != kind ||
-		    ((kind == KD_NATIVE_OWNER_SPIN || kind == KD_NATIVE_OWNER_PREEMPT) &&
+		    (kind != KD_NATIVE_OWNER_RCU &&
 		     owner->object != object))
 			continue;
 		BUG_ON(owner->origin != root->owner.request.logical_origin ||
 		    owner->identity != root->owner.request.identity ||
 		    owner->generation != root->owner.request.generation);
 		/* Anonymous RCU releases consume the latest exact read acquisition.
-		 * Native spin releases name their own object and need not be LIFO. */
+		 * Named Native releases match their exact object and need not be LIFO. */
 		if (!found || owner->sequence > found->sequence)
 			found = owner;
 	}

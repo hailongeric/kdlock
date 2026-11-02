@@ -103,6 +103,7 @@ jit_test_call_wait(unsigned long index, unsigned long a1, unsigned long a2,
 }
 
 #include "helper_native.inc"
+#include "helper_native_write.inc"
 #include "helper_memory.inc"
 
 static int helper_register(void)
@@ -124,6 +125,10 @@ static int helper_register(void)
 		  .nargs = 0, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_RCU_UNLOCK },
 		{ .symbol = "jit_test_memory_observe", .target = (unsigned long)jit_test_memory_observe,
 		  .nargs = 1, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_ATOMIC_ORIGIN },
+		{ .symbol = "jit_test_native_write_lock", .target = (unsigned long)jit_test_native_write_lock,
+		  .nargs = 1, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_RWSEM_WRITE_LOCK },
+		{ .symbol = "jit_test_native_write_unlock", .target = (unsigned long)jit_test_native_write_unlock,
+		  .nargs = 1, .result_kind = KD_SERVICE_CALL_VOID, .context_kind = KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK },
 	};
 	int result = kd_service_call_register(descriptors, ARRAY_SIZE(descriptors), THIS_MODULE);
 

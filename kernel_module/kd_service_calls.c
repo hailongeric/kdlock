@@ -46,6 +46,9 @@ static bool kd_service_call_context_valid(const struct kd_service_call_desc *des
 	case KD_SERVICE_CALL_NONRETURNING_ORIGIN:
 		return !desc->nargs && desc->result_kind == KD_SERVICE_CALL_VOID &&
 			desc->symbol && !strcmp(desc->symbol, "__stack_chk_fail");
+	case KD_SERVICE_CALL_RWSEM_WRITE_LOCK:
+	case KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK:
+		return desc->nargs == 1 && desc->result_kind == KD_SERVICE_CALL_VOID;
 	case KD_SERVICE_CALL_PTE_LOCK:
 		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 4 &&
 			desc->result_kind == KD_SERVICE_CALL_WORD;
