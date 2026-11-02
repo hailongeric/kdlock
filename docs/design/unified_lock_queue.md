@@ -762,3 +762,7 @@ kd_source.h. The retained-frame header now sits between those includes.
 Update that exact patch context while retaining all observations and the
 zero-fuzz application requirement. No workload or JIT body ran in that failed
 preparation; it is retained independently of subsequent attempts.
+The initial edit left four leading context lines and three trailing lines;
+the exact patch still refused that hunk. Regenerating the hunk with three
+lines on each side passes a full zero-fuzz static dry run. Neither preparation
+failure is a workload result.
