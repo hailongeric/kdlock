@@ -952,3 +952,62 @@ source retirement. These corrections preserve Native idle checks and do not
 establish delegated MM execution or performance. Focused VM fixtures cover the
 real daemon-writer state, the preparing TGID, extra/changed writers and task
 identity changes; source inspection alone is not a fixture pass.
+
+### General file-operation calls and retained Native writer ownership
+
+The fresh executable reaches file-backed mappings before its application loop.
+In the captured Linux 7 source, fs/binfmt_elf.c:396–423 and :1190 call vm_mmap
+for PT_LOAD segments; mm/util.c:579–583 holds the mmap writer around do_mmap.
+The file callback therefore runs inside that writer interval. The callback is
+a conditional file-backed branch of the general MM path, rather than a reason
+to move the entire MM body to O.
+
+Extend the exact returning-call roster with these Native APIs, preserving the
+existing implementations and passing their original arguments on O:
+
+| API | Word arguments | Return |
+| --- | --- | --- |
+| ext4_file_mmap_prepare | 1 | int |
+| shmem_mmap_prepare | 1 | int |
+| generic_file_mmap, generic_file_readonly_mmap | 2 | int |
+| generic_file_mmap_prepare, generic_file_readonly_mmap_prepare | 1 | int |
+| thp_get_unmapped_area, shmem_get_unmapped_area | 5 | unsigned long |
+
+The exact prototypes and callback assignments are captured in fs/ext4/file.c,
+mm/shmem.c, mm/filemap.c and include/linux/fs.h. The prepare callback receives
+only the vm_area_desc pointer, although the inline vfs_mmap_prepare dispatcher
+has two arguments. Each API balances its Native CPU state and returns to the
+same E/image. Source leases and the full Native CALL protocol remain required.
+There is no application-name test or filesystem replacement implementation.
+VMA allocation, merging and interval-tree bodies remain translated.
+
+File-backed VMA insertion also takes mapping->i_mmap_rwsem through Native
+down_write/up_write: mm/vma.c:1810–1820, its prepare/complete paths and file VMA
+unlinking use this pair. CPU-state balance does not imply that this lock was
+released. Add contexts 12/13 for those exact one-argument VOID APIs and a
+KD_NATIVE_OWNER_RWSEM_WRITE record. Reserve the exact object/origin/root
+identity/generation/acquisition sequence before Native acquisition; only the
+successful Native return grants that record. Blocking acquisition requires a
+valid sleepable Native context. This writer record is not a preemption pin;
+E may schedule while O waits in the actual Native API. Native up_write runs on
+the same O and retires the matching object record only after its return ACK.
+No later check dereferences the released semaphore. Different nested objects
+and non-LIFO releases use the existing retained record storage and spill path.
+
+The final Native writer release can end an otherwise released root, using the
+existing exact final-CALL completion route. Other held Native/KD acquisitions
+keep that root alive. Source task/stack, image and module lifetimes therefore
+outlast every returned Native writer share. The public kd_rwsem API, killable
+arbitration, reader drainage, downgrade and atomic final up_read do not change.
+This addition handles the Native inner write pair; it does not newly declare
+Native read, signal, try or downgrade CALL contracts. Their occurrence in a
+translated path still requires an explicit supported interval. The ordinary
+Native implementations outside the translated path remain unchanged.
+
+Focused validation must cover the descriptor prototypes, two different Native
+writer objects held together, non-LIFO release, a writer that actually blocks
+on O, a final Native release after the outer KD release, and exact retirement.
+Then rerun the unchanged mmap1 thread/process diagnostic with kd_mmap=on.
+The six helper and eleven killable/nesting phases at efd10ac8 pass on the
+identified scope5 Native/off kernel; those receipts cannot prove this later
+addition or actual delegated MM execution.
