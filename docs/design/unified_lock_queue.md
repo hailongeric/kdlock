@@ -793,6 +793,31 @@ release, downgrade and downgraded `kd_up_read`; other reached operations remain
 explicit integration boundaries and never invoke the legacy native suffix
 transport for a retained service root.
 
+Deep or dynamic lexical lock flow requires an additional image contract,
+`KD_IMAGE_REQUIRE_SERVICE_QUEUE` (bit 8). The ordinary lexical scope pass stays
+unchanged for images it can delimit within its historical eight-entry bound.
+When that pass encounters an excessive or changing depth in a trusted ABI2
+mutex entry, or lock controls in an ordinary callee whose entry depth is
+unknown, a retained scope instead follows the complete decoded reachable
+function and CALL continuations. It imposes no lexical depth counter; exact
+runtime acquisition records identify the final release, including out-of-order
+release and repeated child reuse. A non-delegable child still executes on its
+physical submitting executor. Its result returns to the same retained parent.
+This contract does not authorize a different executor or an origin suffix.
+
+Bit 8 requires publication protocol 3 for these images only. Existing fixed
+entry-directory positions and the two-word execution ABI remain unchanged.
+Byte 47 retains the low requirement bits; a little-endian full 32-bit requirement
+word follows at byte 48, and generated code begins after the 64-byte aligned
+header. Ordinary images retain protocol 2 and its 48-byte header byte for byte.
+The uploader and provider validate version, full word, low-byte consistency and
+the ABI2 mutex-only contract. A retained captured root can admit this image.
+Every legacy combiner rejects it before executing a generated instruction;
+legacy callers retain their existing local completion path and fixed ledger.
+The new scope therefore cannot silently expose the old ledger to depth-nine
+or changing-depth execution. Compilation and live depth-nine/reuse checks are
+required separately from this source contract.
+
 Instruction-budget continuation uses a separate versioned image requirement,
 KD_IMAGE_REQUIRE_BUDGET_RESUME (bit 7). Only eligible ABI2 mutex images emit it.
 At the exhausted block boundary, generated code stores the original arithmetic
