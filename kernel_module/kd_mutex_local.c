@@ -228,13 +228,13 @@ kd_local_lock_slow_common(struct kd_mutex *lock, unsigned int state,
 	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
 	struct kd_wait_request local_request;
 	struct kd_wait_node local_member;
-	struct kd_wait_node *member = borrowed ?
-		kd_mutex_request_member(borrowed) : &local_member;
+	struct kd_wait_node *member;
 	struct kd_wait_request *request;
 	unsigned long irq_flags;
 	int ret = 0;
 
 	preempt_disable();
+	member = borrowed ? kd_mutex_request_member(borrowed) : &local_member;
 	if (!borrowed) {
 		if (!kd_try_common(lock, false) ||
 		    kd_local_spin_common(lock, false, NULL, stop_signals))

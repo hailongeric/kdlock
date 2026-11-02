@@ -148,6 +148,13 @@ Slot lookup uses its immutable encoded CPU/slot identity. A sidecar remains
 reserved until queue, selection, execution and return obligations have ended.
 This stage does not claim to remove the existing finite capture capacity.
 
+The first VM compilation completed, but module loading rejected the enlarged
+static per-CPU section (8560 bytes). Cold sidecars therefore use a dynamic
+per-CPU pool allocated once during provider initialization and freed only after
+exact provider drain. This is still preallocation, not lock-path allocation;
+hot packet storage remains in its existing static per-CPU area. The failed
+attempt is retained separately from subsequent checks.
+
 Publication and removal of both local and captured mutex requests use the
 same head and guard. A captured head supplies its existing membership to the
 physical acquisition helper; the helper must not enqueue a second waiter for

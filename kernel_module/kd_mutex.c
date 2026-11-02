@@ -128,8 +128,12 @@ struct kd_mutex_wait_record {
 	u64 invocation;
 	bool request_live;
 };
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_wait_record,
-				     kd_mutex_wait_records[KD_MUTEX_MAX_NODES]);
+struct kd_mutex_wait_pool {
+	struct kd_mutex_wait_record records[KD_MUTEX_MAX_NODES];
+};
+/* Cold records use the dynamic per-CPU area, allocated before publication.
+ * The module's small reserved static per-CPU section keeps the hot ABI nodes. */
+static struct kd_mutex_wait_pool __percpu *kd_mutex_wait_pools;
 
 #include "mutex/queue.inc"
 #include "mutex/count.inc"

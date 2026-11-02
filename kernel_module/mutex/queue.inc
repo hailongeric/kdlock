@@ -31,7 +31,8 @@ kd_mutex_wait_record(struct kd_mutex_node *node)
 	int idx = (tail >> KD_MUTEX_TAIL_IDX_OFFSET) & KD_MUTEX_TAIL_IDX_MASK;
 
 	BUG_ON(cpu < 0 || cpu >= nr_cpu_ids || idx >= KD_MUTEX_MAX_NODES);
-	return per_cpu_ptr(&kd_mutex_wait_records[idx], cpu);
+	BUG_ON(!kd_mutex_wait_pools);
+	return &per_cpu_ptr(kd_mutex_wait_pools, cpu)->records[idx];
 }
 
 struct kd_wait_node *kd_mutex_request_member(struct kd_mutex_node *node)

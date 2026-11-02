@@ -224,7 +224,7 @@ static int kd_rwsem_try_read(struct kd_rwsem *sem, bool notify)
 	if (notify) {
 		kd_up_read(sem);
 	} else {
-		atomic_long_dec(&sem->readers);
+		(void)atomic_long_dec_and_test(&sem->readers);
 	}
 	return 0;
 }
