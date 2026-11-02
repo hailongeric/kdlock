@@ -44,8 +44,8 @@ def main():
         'missing_fresh_reader_drain': lambda text: replace_once(text,
             'if (atomic_long_read_acquire(&sem->readers)) {', 'if (false) {'),
         'executor_signal_instead_of_origin': lambda text: replace_once(text,
-            'signal_pending_state(request->wait_state, request->logical_origin)',
-            'signal_pending_state(request->wait_state, current)'),
+            'if (!signal_pending_state(request->wait_state, request->logical_origin))',
+            'if (!signal_pending_state(request->wait_state, current))'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-admission-') as directory:
         path = Path(directory)

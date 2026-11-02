@@ -320,8 +320,10 @@ static void test_local_child_and_early_parent_release(void)
 }
 int main(void)
 {
-	test_ready_before_fatal(); test_queued_return_before_holder();
-	test_reader_pickup_cancel_and_successor(); test_origin_signals();
+	/* Subject mutations must first reach a bounded direct decision, rather
+	 * than enter a deliberately broken cancellation wait indefinitely. */
+	test_ready_before_fatal(); test_origin_signals();
+	test_queued_return_before_holder(); test_reader_pickup_cancel_and_successor();
 	test_nested_identity_and_parent(); test_local_child_and_early_parent_release();
 	assert(!held_guards && !pins && !irq_disabled && scheduler_state == TASK_RUNNING);
 	assert(origin.refs == 1 && other_origin.refs == 1 && executor.refs == 1 && holder.refs == 1);
