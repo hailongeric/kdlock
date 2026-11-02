@@ -385,9 +385,13 @@ def main(executor=None, benchmark=False):
             if mutation:
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
-                # Preparation, invoke and return failures each record an error.
+                # Preparation/invoke/return each record errors. Indirect CALL
+                # source pinning has both legacy and retained consumers; the
+                # negative control changes both, while this fixture executes
+                # the legacy consumer and refuses retained-runtime doubles.
                 assert count == (3 if name == "service-error-allows-replay" else
-                                 2 if name == "timing-overflow-not-marked" else 1), (name, count)
+                                 2 if name in ("timing-overflow-not-marked",
+                                               "indirect-skips-source-site-lease") else 1), (name, count)
                 sources = {
                     path: text.replace(before, after)
                     for path, text in sources.items()
