@@ -68,6 +68,7 @@ struct kd_service_root {
 	int origin_cpu;
 	int result;
 	bool pooled;
+	bool work_notified;
 };
 
 static DEFINE_RAW_SPINLOCK(kd_service_dispatch_guard);
@@ -586,8 +587,7 @@ static struct kd_service_root *kd_service_claim(void)
 		struct kd_service_root *candidate = member->request->context;
 
 		if (candidate->actor == KD_SERVICE_ORIGIN &&
-		    candidate->owner.admission.committed &&
-		    candidate->origin_cpu != raw_smp_processor_id()) {
+		    candidate->owner.admission.committed) {
 			root = candidate;
 			root->worker = current;
 			smp_store_release(&root->actor, KD_SERVICE_EXECUTOR);
@@ -816,6 +816,7 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 	root->transport = KD_SERVICE_WAITING;
 	root->command = KD_SERVICE_OWNER_NONE;
 	root->result = 0;
+	root->work_notified = false;
 	INIT_LIST_HEAD(&root->active_link);
 	INIT_LIST_HEAD(&root->scope.owners);
 	root->scope.outer = &root->owner;
@@ -871,6 +872,7 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 	_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
 	for (;;) {
 		bool arbitrate;
+		bool notify = false;
 
 		/* Claim on every iteration: an executor may hand custody back
 		 * between the previous poll and this one. A notification read alone
@@ -892,9 +894,15 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 			BUG_ON(decision != KD_WAIT_PENDING && decision != KD_WAIT_GRANTED);
 			flags = _raw_spin_lock_irqsave(dispatch.guard);
 			root->actor = KD_SERVICE_ORIGIN;
+			if (decision == KD_WAIT_GRANTED && !root->work_notified) {
+				root->work_notified = true;
+				notify = true;
+			}
 			_raw_spin_unlock_irqrestore(dispatch.guard, flags);
-			atomic64_inc(&kd_service_work_sequence);
-			wake_up_all(&kd_service_work);
+			if (notify) {
+				atomic64_inc(&kd_service_work_sequence);
+				wake_up_all(&kd_service_work);
+			}
 		}
 		kd_service_origin_command(root);
 		if (smp_load_acquire(&root->transport) == KD_SERVICE_RESULT) {

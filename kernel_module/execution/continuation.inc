@@ -170,6 +170,7 @@ static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	cont->result = 0;
 	cont->source_lease = source;
 	cont->stack_lease = stack;
+	cont->body_reported = false;
 	if (source)
 		lease->held = false;
 

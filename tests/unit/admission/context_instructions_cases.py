@@ -343,7 +343,9 @@ class ContextInstructionsCases(ContextCaseSupport):
 
     def test_retained_deep_scope_uses_explicit_image_requirement(self):
         symbols = {"kd_mutex_local_lock": 0x3000,
-                   "kd_mutex_local_unlock": 0x4000}
+                   "kd_mutex_local_unlock": 0x4000,
+                   "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                   "kd_mutex_direct_unlock_clobber_v1": 0x7100}
         for children, expected in ((7, 128), (8, 384)):
             with self.subTest(children=children):
                 raw = bytearray()
@@ -375,7 +377,9 @@ class ContextInstructionsCases(ContextCaseSupport):
         assembly, log, status = render(
             raw.hex(), lock_kind="mutex", abi=2, trusted_source=True,
             kernel_symbols={"kd_mutex_local_lock": 0x3000,
-                            "kd_mutex_local_unlock": 0x4000},
+                            "kd_mutex_local_unlock": 0x4000,
+                            "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                            "kd_mutex_direct_unlock_clobber_v1": 0x7100},
             return_status=True, build_options=options,
         )
         self.assertEqual(status, 0, log)
@@ -396,7 +400,9 @@ class ContextInstructionsCases(ContextCaseSupport):
             "", regions=[(caller, 0x1000, [0x1000]), (callee, 0x2000, [0x2000])],
             lock_kind="mutex", abi=2, trusted_source=True,
             kernel_symbols={"kd_mutex_local_lock": 0x3000,
-                            "kd_mutex_local_unlock": 0x4000},
+                            "kd_mutex_local_unlock": 0x4000,
+                            "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                            "kd_mutex_direct_unlock_clobber_v1": 0x7100},
             return_status=True, build_options=options,
         )
         self.assertEqual(status, 0, log)

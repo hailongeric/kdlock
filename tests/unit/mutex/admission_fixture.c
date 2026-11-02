@@ -89,7 +89,7 @@ static void wake_up_q(struct wake_q_head *wake)
 	wake->first = WAKE_Q_TAIL; wake->lastp = &wake->first;
 }
 static long atomic_long_read(const atomic_long_t *p) { return READ_ONCE(*p); }
-static long atomic_long_read_acquire(const atomic_long_t *p)
+static inline long atomic_long_read_acquire(const atomic_long_t *p)
 { return __atomic_load_n(p, __ATOMIC_ACQUIRE); }
 static long atomic_long_cmpxchg(atomic_long_t *p, long old, long next)
 { return cmpxchg(p, old, next); }

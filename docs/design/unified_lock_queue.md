@@ -818,6 +818,12 @@ The new scope therefore cannot silently expose the old ledger to depth-nine
 or changing-depth execution. Compilation and live depth-nine/reuse checks are
 required separately from this source contract.
 
+The first three focused scope checks stopped at their ABI2 fixture setup:
+the synthetic symbol map omitted the required direct mutex clobber pair.
+Provide that pair at distinct, unreferenced control addresses before checking
+depth-nine, balanced-loop and callee-owned-child scope results. These setup
+failures provide no result about the new scope pass.
+
 Instruction-budget continuation uses a separate versioned image requirement,
 KD_IMAGE_REQUIRE_BUDGET_RESUME (bit 7). Only eligible ABI2 mutex images emit it.
 At the exhausted block boundary, generated code stores the original arithmetic

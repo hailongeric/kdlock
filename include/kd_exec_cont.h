@@ -129,6 +129,7 @@ struct kd_exec_continuation {
 	int result;
 	bool source_lease;
 	bool stack_lease;
+	bool body_reported;
 };
 
 int kd_exec_capture_lease_get(struct kd_exec_capture_lease *lease,

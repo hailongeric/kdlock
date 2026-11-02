@@ -230,6 +230,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	    !frame->gsbase || !frame->logical_task)
 		return KD_EXE_RUN_ERROR;
 	cont = kd_exec_frame_continuation(frame);
+	if (cont && cont->service_ops)
+		body_reported = cont->body_reported;
 	if (retained_entry && (!cont || !cont->service_ops || pending ||
 	    frame->executed || !frame->image || !frame->image->immutable ||
 	    frame->image->entry != exe))
@@ -419,6 +421,8 @@ returned_wrapper:
 			if (!body_reported && args[1] == 1) {
 				kd_exe_note_body(entry_ip, outer_lock_addr, args[1]);
 				body_reported = true;
+				if (cont && cont->service_ops)
+					cont->body_reported = true;
 			}
 			if (resume_after_hostcall)
 				atomic64_inc(&kd_hostcall_resumed);
