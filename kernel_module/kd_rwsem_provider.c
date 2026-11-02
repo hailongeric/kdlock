@@ -10,6 +10,7 @@
 #include "kd_rwsem.h"
 #include "kd_lock.h"
 #include "kd_service_api.h"
+#include "kd_service_calls.h"
 #include "kd_source.h"
 #include "exe.h"
 
@@ -190,6 +191,10 @@ bool kd_rwsem_provider_lookup_control(unsigned long target, void *source_argumen
 
 		if (binding->target != target)
 			continue;
+		/* Returning queries retain their facade argument and execute as a
+		 * balanced Native CALL, rather than an ownership-changing service. */
+		if (binding->flags & KD_RWSEM_CONTROL_PRIMITIVE)
+			continue;
 		storage = binding->resolve(source_argument, &kd_rwsem_ops);
 		if (!storage)
 			return false;
@@ -331,6 +336,55 @@ bool kd_rwsem_provider_active(void)
 
 int kd_rwsem_provider_init(void)
 {
+#ifdef CONFIG_KDLOCK_MMAP
+	const struct kd_rwsem_control_binding *controls;
+	struct kd_service_call_desc descriptors[5];
+	char labels[5][32];
+	unsigned int count, index, registered = 0;
+	int result;
+
+	controls = kd_rwsem_provider_controls(&count);
+	for (index = 0; index < count; ++index) {
+		const struct kd_rwsem_control_binding *binding = &controls[index];
+		unsigned char result_kind;
+
+		if (!(binding->flags & KD_RWSEM_CONTROL_PRIMITIVE))
+			continue;
+		switch (binding->operation) {
+		case KD_RWSEM_OP_ASSERT_HELD:
+		case KD_RWSEM_OP_ASSERT_HELD_WRITE:
+			result_kind = KD_SERVICE_CALL_VOID;
+			break;
+		case KD_RWSEM_OP_IS_LOCKED:
+		case KD_RWSEM_OP_IS_CONTENDED:
+		case KD_RWSEM_OP_IS_WRITE_OWNER:
+			result_kind = KD_SERVICE_CALL_WORD;
+			break;
+		default:
+			return -EINVAL;
+		}
+		if (registered == ARRAY_SIZE(descriptors) ||
+		    binding->flags != KD_RWSEM_CONTROL_PRIMITIVE)
+			return -EINVAL;
+		scnprintf(labels[registered], sizeof(labels[registered]),
+			  "rwsem_query_%u", binding->operation);
+		descriptors[registered] = (struct kd_service_call_desc) {
+			.symbol = labels[registered],
+			.target = binding->target,
+			.nargs = 1,
+			.result_kind = result_kind,
+			.context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN,
+		};
+		++registered;
+	}
+	if (registered != ARRAY_SIZE(descriptors))
+		return -EINVAL;
+	/* These targets are builtin facades. Their callback pins and the exact
+	 * bound object retain the module independently of the returning CALL. */
+	result = kd_service_call_register(descriptors, registered, NULL);
+	if (result)
+		return result;
+#endif
 	/* Registration remains an explicit post-preparation action. */
 	WRITE_ONCE(kd_rwsem_provider_initialized, true);
 	return 0;

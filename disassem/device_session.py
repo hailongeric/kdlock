@@ -299,7 +299,7 @@ def parse_rwsem_controls(text):
             raise ValueError('invalid rwsem control registry row')
         target, operation, flags = int(fields[0], 16), int(fields[1]), int(fields[2])
         if (not 0 < target < 1 << 64 or target in result or
-                operation not in range(1, 14) or flags & ~3 or
+                operation not in range(1, 19) or flags & ~7 or
                 not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.$]*', fields[3])):
             raise ValueError('inconsistent rwsem control registry row')
         result[target] = dict(operation=operation, flags=flags, symbol=fields[3])

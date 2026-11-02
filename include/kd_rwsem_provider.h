@@ -14,6 +14,7 @@ struct task_struct;
 #define KD_RWSEM_PROVIDER_PACKET_LAYOUT 2U
 #define KD_RWSEM_CONTROL_CAPTURE (1U << 0)
 #define KD_RWSEM_CONTROL_INTEGER (1U << 1)
+#define KD_RWSEM_CONTROL_PRIMITIVE (1U << 2)
 
 enum kd_rwsem_provider_operation {
 	KD_RWSEM_OP_DOWN_WRITE = 1,
@@ -29,6 +30,11 @@ enum kd_rwsem_provider_operation {
 	KD_RWSEM_OP_UP_READ,
 	KD_RWSEM_OP_DOWN_READ_NON_OWNER,
 	KD_RWSEM_OP_UP_READ_NON_OWNER,
+	KD_RWSEM_OP_ASSERT_HELD,
+	KD_RWSEM_OP_ASSERT_HELD_WRITE,
+	KD_RWSEM_OP_IS_LOCKED,
+	KD_RWSEM_OP_IS_CONTENDED,
+	KD_RWSEM_OP_IS_WRITE_OWNER,
 };
 
 /* An object chooses this entire protocol once, before publication. Opaque

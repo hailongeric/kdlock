@@ -58,6 +58,18 @@ grant a helper cannot turn committed body effects into failed acquisition.
 Nested general lock calls from a Native service must preserve their usual local
 task semantics and must not recursively capture the service infrastructure.
 
+The source-checked balanced roster additionally covers the ordinary per-CPU
+counter update, per-VMA writer exclusion and detach wait, perf mapping event,
+conditional reschedule entries and RCU callback enqueue. These are existing
+primitive APIs, not replacement MM bodies. Their Native invocation must finish
+with its entry IRQ/preemption context restored before E resumes; in particular,
+`__vma_start_write` finishes its temporary `rcuwait` task publication even when
+the wait condition was already true. The public RCU enqueue APIs do not retain
+an RCU read-side interval on return. Neither `__rcu_read_lock/unlock` nor Native
+spin acquire/release is designated balanced: their state spans later source
+instructions and requires a separate retained context record. The exact roster
+and argument/result contracts are maintained in `include/kd_service_calls.def`.
+
 ### General per-object execution provider
 
 The current builtin MM pool and adapter have no capture/image entry. Add a
@@ -85,6 +97,13 @@ Ownership assertions use exact retained object/request/phase identity: E may
 prove its physical ownership, and O may prove its logical ownership only while
 authorized to service that exact continuation. A locked/count hint is not an
 owner query.
+Ordinary facade queries/assertions are also explicit returning primitive
+bindings. Their metadata distinguishes them from acquisition/release controls,
+and declares one object argument plus a scalar or void result. This prevents
+the translator from following an opaque provider function pointer. An origin
+assertion runs only during the exact authorized helper transaction, where the
+existing retained logical-owner query proves its object/request/phase ticket.
+No assertion is weakened to an aggregate locked hint or omitted from execution.
 The three ordinary/nested/killable MM acquisition API wrappers must remain
 `__always_inline`: an outlined wrapper would capture its own returning frame
 before the protected caller's body. Only these API declarations change;
@@ -120,6 +139,42 @@ local body execution for a cold image. A cold entry, translator dependency or
 unsupported reached operation must be identified and resolved explicitly before
 claiming default delegated mmap/munmap. Initial local eligibility is not proxy
 proof. Missing GS/per-CPU/context handling cannot be excused by trusted source.
+
+### Retained Native inner-lock intervals
+
+An untouched anonymous mapping can share page-table ancestry with a neighbouring
+mapping. Consequently, munmap can reach a Native PTE lock and RCU read interval
+even though mmap1 never touches its own pages. This branch cannot be excluded
+from the protocol merely because an empty-page-table fast path exists.
+
+The captured Linux 7 objects retain callable `_raw_spin_unlock` and
+`__rcu_read_unlock` boundaries in the relevant PTE loop. This permits a general
+Native API extension: O acquires the exact inner lock/RCU authority, a retained
+record names its object, kind and acquisition/service generation, and E
+continues the translated body only with compatible IRQ/preemption state. O
+executes the matching Native release once; its record and any CPU-context
+authority survive until the actual release acknowledgment. Conditional failed
+acquisition creates no owner record. Counters can describe context depth but
+cannot replace individual Native lock records.
+
+A paired Native API is distinct from the balanced primitive contract. The
+runtime must retain E's immediate execution capacity across acquisition and a
+held Native spin interval; unpinning E after O obtains a spinlock can strand its
+unlock behind another spinning executor. No instruction-budget scheduling or
+sleeping is allowed while the source's Native atomic context forbids it.
+Balanced helper calls inside that interval must observe O's actual retained
+Native context after removing only the engine-owned pin. Preserve actual
+Native signals, conditional results and all enclosing KD ownership records.
+
+Any source instruction that mutates CPU-local state outside those API calls
+needs its own faithful lowering or returning instruction service. In particular
+remote unlocked preempt-count RMWs and their zero-test flags cannot be justified
+by pointer substitution. Identify the compiled release form and remaining GS
+operands for the exact image/configuration before enabling its pair contract.
+Likewise, the lazy-MMU interval and indirect PV/TLB operations require explicit
+physical-context handling. If consistent execution cannot be established,
+service that precise interval on its required actor with a resumable boundary;
+never silently route the entire mmap/munmap body to O or declare it a success.
 
 ### Focused delivery and acceptance
 

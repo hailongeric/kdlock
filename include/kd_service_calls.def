@@ -1,6 +1,8 @@
-/* Source-checked ordinary allocator primitives. These are returning C APIs,
- * not Native MM/VMA bodies. Each operation balances its physical CPU state.
- * Signatures: authenticated linux=7.0.0-38.38 mm/slub.c. */
+/* Source-checked ordinary primitives. These are returning C APIs, not Native
+ * MM/VMA bodies. Each operation balances its physical CPU state. Argument
+ * counts exclude no hidden stack arguments; all are ordinary x86-64 C words.
+ * Source identity: authenticated linux=7.0.0-38.38. */
+/* mm/slub.c: pointer, int or void result as declared by each public API. */
 KD_SERVICE_CALL(kmem_cache_alloc_noprof, 2, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_alloc_lru_noprof, 3, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_alloc_node_noprof, 3, KD_SERVICE_CALL_WORD)
@@ -12,3 +14,22 @@ KD_SERVICE_CALL(kmem_cache_return_sheaf, 3, KD_SERVICE_CALL_VOID)
 KD_SERVICE_CALL(kmem_cache_free, 2, KD_SERVICE_CALL_VOID)
 KD_SERVICE_CALL(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID)
 KD_SERVICE_CALL(kfree, 1, KD_SERVICE_CALL_VOID)
+/* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
+KD_SERVICE_CALL(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID)
+/* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).
+ * The temporary reader-exclusion wait finishes before either API returns. */
+KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__vma_exclude_readers_for_detach, 1, KD_SERVICE_CALL_VOID)
+/* kernel/events/core.c: void (struct vm_area_struct *). */
+KD_SERVICE_CALL(perf_event_mmap, 1, KD_SERVICE_CALL_VOID)
+/* kernel/sched/core.c: int (void), including its exact static-call entries.
+ * The latter preserve the running kernel's selected reschedule behavior. */
+KD_SERVICE_CALL(__cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__SCT__cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__SCT__might_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(dynamic_cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(dynamic_might_resched, 0, KD_SERVICE_CALL_WORD)
+/* include/linux/rcupdate.h: void (struct rcu_head *, rcu_callback_t).
+ * These enqueue callbacks; no read-side ownership survives the return. */
+KD_SERVICE_CALL(call_rcu, 2, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CALL(call_rcu_hurry, 2, KD_SERVICE_CALL_VOID)
