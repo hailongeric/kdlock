@@ -21,6 +21,19 @@ static struct kd_native_owner *kd_service_native_reserve(
 	BUG();
 }
 
+static bool kd_service_schedule_origin_allowed(unsigned int pins, unsigned int rcu)
+{
+	/* Native preemption can interrupt preemptible RCU. A spin or explicit
+	 * preempt-count acquisition still prevents this scheduling transaction. */
+	return !pins && (!rcu || IS_ENABLED(CONFIG_PREEMPT_RCU));
+}
+
+static bool kd_service_native_executor_pinned(unsigned int context, unsigned int pins)
+{
+	return pins || (context >= KD_SERVICE_CALL_PTE_LOCK &&
+		context <= KD_SERVICE_CALL_PTE_RCU);
+}
+
 static int kd_service_native_prepare(struct kd_service_root *root)
 {
 	struct kd_origin_call *call = &root->continuation.origin_call;
@@ -33,7 +46,10 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 		return -EOPNOTSUPP;
 	if (call->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN && (spins || rcu))
 		return -EOPNOTSUPP;
-	call->executor_pinned = spins || call->context_kind >= KD_SERVICE_CALL_PTE_LOCK;
+	if (call->context_kind == KD_SERVICE_CALL_SCHEDULE_ORIGIN &&
+	    !kd_service_schedule_origin_allowed(spins, rcu))
+		return -EOPNOTSUPP;
+	call->executor_pinned = kd_service_native_executor_pinned(call->context_kind, spins);
 	switch (call->context_kind) {
 	case KD_SERVICE_CALL_PTE_LOCK:
 		if (!call->object_out)
@@ -70,6 +86,7 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 		break;
 	case KD_SERVICE_CALL_BALANCED_ORIGIN:
 	case KD_SERVICE_CALL_ATOMIC_ORIGIN:
+	case KD_SERVICE_CALL_SCHEDULE_ORIGIN:
 		break;
 	default:
 		return -EOPNOTSUPP;

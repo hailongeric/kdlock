@@ -29,12 +29,20 @@ static unsigned int kd_service_call_count;
 static bool kd_service_call_frozen;
 static DEFINE_MUTEX(kd_service_call_configuration);
 
+static bool kd_service_call_requires_preempt_rcu(unsigned int context)
+{
+	return context >= KD_SERVICE_CALL_PTE_LOCK &&
+		context <= KD_SERVICE_CALL_PTE_RCU;
+}
+
 static bool kd_service_call_context_valid(const struct kd_service_call_desc *desc)
 {
 	switch (desc->context_kind) {
 	case KD_SERVICE_CALL_BALANCED_ORIGIN:
 	case KD_SERVICE_CALL_ATOMIC_ORIGIN:
 		return true;
+	case KD_SERVICE_CALL_SCHEDULE_ORIGIN:
+		return !desc->nargs && desc->result_kind == KD_SERVICE_CALL_VOID;
 	case KD_SERVICE_CALL_PTE_LOCK:
 		return IS_ENABLED(CONFIG_PREEMPT_RCU) && desc->nargs == 4 &&
 			desc->result_kind == KD_SERVICE_CALL_WORD;
@@ -261,7 +269,8 @@ int kd_service_calls_init(void)
 	desc = (struct kd_service_call_desc){ .symbol = #name, \
 		.target = kallsyms_lookup_name(#name), .nargs = args, \
 		.result_kind = result_type, .context_kind = context }; \
-	if (context >= KD_SERVICE_CALL_PTE_LOCK && !IS_ENABLED(CONFIG_PREEMPT_RCU)) \
+	if (kd_service_call_requires_preempt_rcu(context) && \
+	    !IS_ENABLED(CONFIG_PREEMPT_RCU)) \
 		break; \
 	if (desc.target) { \
 		result = kd_service_call_register(&desc, 1, NULL); \

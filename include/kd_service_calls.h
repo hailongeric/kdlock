@@ -37,6 +37,8 @@ enum kd_service_call_context {
 	KD_SERVICE_CALL_RCU_LOCK,
 	KD_SERVICE_CALL_RCU_UNLOCK,
 	KD_SERVICE_CALL_PTE_RCU,
+	/* Native preemption entry: no spin/preempt pin may survive its CALL. */
+	KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 };
 
 enum kd_native_owner_kind {

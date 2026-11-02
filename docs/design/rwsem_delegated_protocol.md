@@ -70,6 +70,33 @@ spin acquire/release is designated balanced: their state spans later source
 instructions and requires a separate retained context record. The exact roster
 and argument/result contracts are maintained in `include/kd_service_calls.def`.
 
+The next bounded continuation adds exact Native preemption-reschedule entries.
+The captured `perf_trace_mmap_lock_acquire_returned` DEC branch calls
+`__SCT__preempt_schedule_notrace`; this is conditional on both tracing and a
+pending reschedule, rather than a mandatory call in every mmap1 pair. The
+ordinary and notrace functions, their assembly thunks, static-call entries and
+dynamic-key functions are zero-argument, void APIs. Their actual selected
+Native implementation must run on O; a descriptor must not replace the source
+branch with an invented reschedule. Context 10, SCHEDULE_ORIGIN, requires zero
+retained NativeSpin/PREEMPT pins and permits retained RCU only with
+CONFIG_PREEMPT_RCU. Unlike a general balanced helper, involuntary preemption
+may validly occur inside a preemptible RCU read interval. The Native task-stack
+bridge removes only the runtime pin, and the return validates the same IRQ,
+pin and RCU baselines before resuming E. E remains preemptible while O services
+this scheduling transaction. The helper and its source CALL return normally;
+there is no suffix or additional public lock acquisition.
+
+Two existing public admission primitives also receive ordinary balanced O
+descriptors: `security_vm_enough_memory_mm(struct mm_struct *, long)` returns
+int, and `security_mmap_addr(unsigned long)` returns int. The former is reached
+for successful private writable, accounted mappings, the latter after a valid
+address is selected. Their callback dispatch and the associated accounting use
+O's actual task context. They do not create/remove VMAs or replace an enclosing
+MM body. The captured definitions are at `security/security.c:739` and
+`security/security.c:2623`; their lock-held call sites are `mm/vma.c:2433` and
+`mm/mmap.c:862`. This source extension requires separate focused validation;
+the version-16 read checkpoint does not establish these new paths.
+
 ### General per-object execution provider
 
 The current builtin MM pool and adapter have no capture/image entry. Add a

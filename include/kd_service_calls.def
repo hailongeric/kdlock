@@ -29,6 +29,21 @@ KD_SERVICE_CALL(__SCT__cond_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(__SCT__might_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(dynamic_cond_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(dynamic_might_resched, 0, KD_SERVICE_CALL_WORD)
+/* Native preemption entries are void (void). Keep exact thunks/static-call
+ * targets so the running kernel still selects whether to reschedule. They
+ * permit preemptible RCU, but never a retained spin or preempt-count pin. */
+KD_SERVICE_CONTEXT(preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_thunk, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_notrace_thunk, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(__SCT__preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(__SCT__preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(dynamic_preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(dynamic_preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+/* Existing public admission APIs: int (struct mm_struct *, long) and
+ * int (unsigned long). Callback dispatch uses the actual origin task. */
+KD_SERVICE_CALL(security_vm_enough_memory_mm, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(security_mmap_addr, 1, KD_SERVICE_CALL_WORD)
 /* include/linux/rcupdate.h: void (struct rcu_head *, rcu_callback_t).
  * These enqueue callbacks; no read-side ownership survives the return. */
 KD_SERVICE_CONTEXT(call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)

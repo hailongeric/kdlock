@@ -46,7 +46,7 @@ class ReturningCallTests(unittest.TestCase):
 
     def test_native_context_values_and_indirect_successor(self):
         parse = translator.memread.device_session.parse_service_calls
-        for context in range(1, 10):
+        for context in range(1, 11):
             row = f'1 ffffffff81001000 1 1 {context} primitive_call\n'
             self.assertEqual(parse(row)[0xffffffff81001000]['context_kind'], context)
         options = {}
@@ -70,7 +70,7 @@ class ReturningCallTests(unittest.TestCase):
         row = '1 ffffffff81001000 6 1 1 primitive_call\n'
         self.assertEqual(len(parse(row)), 1)
         for text in (row + row, row.replace('6 1 1', '7 1 1'),
-                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 10'),
+                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 11'),
                      row.replace('1 ffffffff', '0 ffffffff'), '1 ffffffff81001000',
                      'x' * 4097):
             with self.subTest(text=text[:100]), self.assertRaises(ValueError):
