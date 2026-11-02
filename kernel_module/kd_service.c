@@ -690,7 +690,7 @@ static void kd_service_free(struct kd_service_root *root)
 static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_service_shadow_wait(struct kd_service_root *root)
 {
-	struct kd_regs packet;
+	struct kd_regs *packet = &root->node->regs;
 	unsigned long flags, restore_sp;
 
 	/* This function is entered on independent storage before source execution
@@ -699,11 +699,10 @@ kd_service_shadow_wait(struct kd_service_root *root)
 	while (smp_load_acquire(&root->transport) != KD_SERVICE_RESULT)
 		cpu_relax();
 	BUG_ON(root->result);
-	packet = root->node->regs;
 	/* Reuse the Native helper's established stack depth when the source has
 	 * already unwound above it. Do not invent an extra 512-byte gap below
 	 * the live source SP. The return CALL word at packet.sp remains intact. */
-	restore_sp = min_t(unsigned long, root->node->rsp, packet.sp);
+	restore_sp = min_t(unsigned long, root->node->rsp, packet->sp);
 	BUG_ON(restore_sp < root->continuation.stack_base + 512 ||
 	       restore_sp > root->continuation.stack_base + THREAD_SIZE);
 	flags = _raw_spin_lock_irqsave(&root->lifecycle_guard);
@@ -720,7 +719,7 @@ kd_service_shadow_wait(struct kd_service_root *root)
 		     "andq $-16, %%rsp\n\t"
 		     "callq %P[resume]\n\t"
 		     "ud2\n\t"
-		     : : [stack] "r"(restore_sp), "D"(root), "S"(&packet),
+		     : : [stack] "r"(restore_sp), "D"(root), "S"(packet),
 			 [resume] "i"(kd_service_resume_packet)
 		     : "memory");
 	__builtin_unreachable();
@@ -880,8 +879,19 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 		flags = _raw_spin_lock_irqsave(dispatch.guard);
 		arbitrate = root->actor == KD_SERVICE_ORIGIN ||
 			root->actor == KD_SERVICE_ORIGIN_BUSY;
-		if (arbitrate)
+		if (arbitrate && a->committed) {
+			/* Commitment ends origin arbitration. Keep this request
+			 * continuously dispatchable: retaking BUSY could make every
+			 * awakened worker miss the one ready notification. */
+			root->actor = KD_SERVICE_ORIGIN;
+			arbitrate = false;
+			if (!root->work_notified) {
+				root->work_notified = true;
+				notify = true;
+			}
+		} else if (arbitrate) {
 			root->actor = KD_SERVICE_ORIGIN_BUSY;
+		}
 		_raw_spin_unlock_irqrestore(dispatch.guard, flags);
 		if (arbitrate) {
 			decision = kd_service_admission_step(root);
@@ -899,10 +909,10 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 				notify = true;
 			}
 			_raw_spin_unlock_irqrestore(dispatch.guard, flags);
-			if (notify) {
-				atomic64_inc(&kd_service_work_sequence);
-				wake_up_all(&kd_service_work);
-			}
+		}
+		if (notify) {
+			atomic64_inc(&kd_service_work_sequence);
+			wake_up_all(&kd_service_work);
 		}
 		kd_service_origin_command(root);
 		if (smp_load_acquire(&root->transport) == KD_SERVICE_RESULT) {
