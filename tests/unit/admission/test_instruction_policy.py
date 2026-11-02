@@ -215,7 +215,7 @@ class InstructionPolicyTests(unittest.TestCase):
                 self.assertTrue(assembly)
 
     def test_direct_lowering_cannot_copy_state_instructions(self):
-        for raw in ("0f30", "0f32", "9d", "cd80", "0f0138"):
+        for raw in ("0f30", "0f32", "9e", "cd80", "0f0138"):
             line = decode(raw)
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 special_inst.translate(line, line.l, LocationDB(), conflict.block_init(), True)

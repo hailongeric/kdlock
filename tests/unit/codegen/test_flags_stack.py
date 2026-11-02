@@ -7,13 +7,13 @@ import ctypes
 import mmap
 import unittest
 
+from test_jit_diagnostics import decode, render
+from test_jit_body_witness import run_image
+from test_ordinary_callee_bytes import source_bytes
 import conflict
 import instruction_policy
 import special_inst
 from miasm.core.locationdb import LocationDB
-from test_jit_diagnostics import decode, render
-from test_jit_body_witness import run_image
-from test_ordinary_callee_bytes import source_bytes
 
 
 ARITHMETIC = 0x8D5
