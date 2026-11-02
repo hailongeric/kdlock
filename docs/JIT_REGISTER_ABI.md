@@ -106,8 +106,9 @@ or runtime instruction service. `POPFQ`/`POPF` apply the processor's ordinary
 flag-write behavior on the executor. The opcode family is no longer rejected
 as flags access by the optional instruction-policy utility. Other instruction
 families retain their existing policy. The backend remains x86-64; the native
-encodings have 64-bit or operand-size-prefixed 16-bit stack words, not a 32-bit
-flags-stack operation in 64-bit mode.
+encodings have 64-bit or operand-size-prefixed 16-bit stack words; an effective
+REX.W keeps the 64-bit form even with a 66 prefix. There is no 32-bit flags-stack
+operation in this backend's 64-bit mode.
 
 ## Private packet layout
 

@@ -44,10 +44,11 @@ def process_flags_stack(line, reg_map):
     prefixes, opcode = instruction_policy.opcode_bytes(getattr(line, "b", b""))
     if line.args or not opcode or opcode[0] not in {0x9C, 0x9D}:
         raise ValueError("flags-stack instruction requires its source encoding")
-    # In this 64-bit backend, 66 selects the two-byte form; the default is
-    # eight bytes. Select explicit assembler mnemonics instead of depending on
-    # the pinned decoder's PUSHF/POPF spelling or the assembler's default size.
-    width = 2 if 0x66 in prefixes else 8
+    # In this 64-bit backend, 66 selects two bytes unless effective REX.W
+    # overrides it. Only a final REX prefix immediately before the opcode is
+    # effective. Use explicit assembler mnemonics for the selected word size.
+    rex_w = bool(prefixes and 0x48 <= prefixes[-1] <= 0x4F)
+    width = 2 if 0x66 in prefixes and not rex_w else 8
     suffix, memory = ("W", "WORD") if width == 2 else ("Q", "QWORD")
     code = release_conflict(reg_map)
     if opcode[0] == 0x9C:

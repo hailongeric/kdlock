@@ -153,6 +153,19 @@ class FlagsStackTests(unittest.TestCase):
                 if width == 2:
                     self.assertEqual(stack[7] & ((1 << 48) - 1),
                                      0xA1B2C3D4E5F60718 & ((1 << 48) - 1))
+                pop_directive = ", ".join(hex(byte) for byte in raw[:-1] + b"\x9d")
+                assembly = self.generate(f"""
+                    mov eax, 127
+                    add al, 1
+                    .byte {directive}
+                    xor eax, eax
+                    .byte {pop_directive}
+                    pushfq
+                    pop rax
+                    ret
+                """)
+                regs, _, _ = self.execute(assembly)
+                self.assertEqual(regs[12] & ARITHMETIC, ADD_FLAGS)
 
     def test_flags_survive_nested_call_and_block_dispatch(self):
         assembly = self.generate("""
