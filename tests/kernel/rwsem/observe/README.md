@@ -100,3 +100,10 @@ The first Linux 7 observer build at `ba82a657` failed because `no_llseek` is
 absent in that kernel. The observer now leaves `.llseek` unset, so seeking is
 refused by VFS while ordinary sequential reads retain their file offset. The
 failed build is retained separately; no module or workload ran in that attempt.
+
+The first fresh mmap1 identity prerequisite also stopped before application
+execution: an old untracked `.mod.c` in its payload directory was copied as
+source, then Kbuild regenerated the copy and correctly failed the frozen-input
+check. The maintained identity runner now excludes that generated filename
+class and retains `.inc` source fragments. Object/backend identity and input
+hash checks remain enabled. This fixes observation setup, not lock behavior.
