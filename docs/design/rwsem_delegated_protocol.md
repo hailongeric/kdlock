@@ -825,6 +825,21 @@ checks must cover dynamic aliases, operand boundaries, nonoverlap behavior,
 zero extension, TEST zero/carry flags and exact same-executor reentry before
 this slice supplies any execution or MM claim.
 
+The first version-16 VM codegen attempt preserved four assembler failures in
+the ordinary, nonoverlapping branch. Flattening the saved GS base together
+with a source base and index produced three address registers, which x86
+cannot encode. The correction forms complex and address32 source offsets with
+LEA in a tracked temporary before combining that offset with the saved GS
+base. The source address width is preserved before the 64-bit segment-base
+addition; source RIP still refers to the original next instruction. LEA and
+the existing register spill/reload helpers preserve arithmetic flags. The
+temporary is reserved before source register mapping, so stack-register
+recovery cannot overwrite it, and only that temporary is retired afterward.
+LEA source operands themselves ignore a segment prefix, as Native x86 does.
+Simple encodable address64 GS addresses retain their existing lowering. The
+original overlap and nonoverlap assertions remain required; the failed attempt does
+not count as an instruction execution pass.
+
 ## Instrumentation checkpoint, November 2
 
 The generic [API observer](../../tests/kernel/rwsem/observe/README.md) was built

@@ -108,6 +108,44 @@ class OriginContextReadCodegenTests(unittest.TestCase):
         self.assertEqual(list(data), [0x80000000, 0x101])
         self.assertEqual(args[1], 1)
 
+    def test_nonoverlap_complex_offsets_preserve_flags_and_source_registers(self):
+        variants = (("rax", "rcx", "rax", "rcx", PREEMPT + 4, 4),
+                    ("r12", "r13", "r12", "r13", PREEMPT + 4, 4),
+                    ("r12", "r13", "r12d", "r13d",
+                     0xffffaaaa00000000 | (PREEMPT + 4), 0x1234000000000004))
+        for base, index, ea_base, ea_index, base_value, index_value in variants:
+            with self.subTest(ea_base=ea_base, ea_index=ea_index):
+                _, assembly, options = compile_source(f"""
+                    xor eax,eax
+                    mov {base},{base_value}
+                    mov {index},{index_value}
+                    mov r15,0xffffaaaa00000000
+                    stc
+                    mov r15d,DWORD PTR gs:[{ea_base}+{ea_index}*2-8]
+                    mov QWORD PTR[rbp],r15
+                    setc BYTE PTR[rbp+8]
+                    setz BYTE PTR[rbp+9]
+                    test DWORD PTR gs:[{ea_base}+{ea_index}*2-8],0x80000000
+                    setz BYTE PTR[rbp+10]
+                    setc BYTE PTR[rbp+11]
+                    seto BYTE PTR[rbp+12]
+                    mov QWORD PTR[rbp+16],{base}
+                    mov QWORD PTR[rbp+24],{index}
+                    ret
+                """)
+                cpu = (ctypes.c_uint32 * 4)(0x80010001, 0xfedcba98, 0, 0)
+                data = (ctypes.c_ulong * 4)()
+                calls = []
+                def initialize(regs, stack): regs[2] = ctypes.addressof(data)
+                def service(regs, args, stack):
+                    if args[0] == 13: calls.append(regs[0])
+                    return False
+                run_image(assembly, [0x1000], initialize=initialize, resume=service,
+                    context=(ctypes.addressof(cpu) - PREEMPT, 0xbeef), abi=2,
+                    requirements=options["requirements"])
+                self.assertEqual(calls, [])
+                self.assertEqual(list(data), [0xfedcba98, 0x101, base_value, index_value])
+
     def test_partial_word_and_dword_tests_service_the_origin(self):
         for displacement, width, mask in ((1, "WORD", 0xffff), (0, "DWORD", 1),
                                           (-1, "WORD", 0xff00)):

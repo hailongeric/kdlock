@@ -1,6 +1,6 @@
 """Returning original-CPU service for exact unlocked GS memory INC/DEC."""
 
-from conflict import block_init, release_conflict, reverse_reg, spill_register
+from conflict import block_init, conflict_resolve, release_conflict, reverse_reg, spill_register
 from assist import make_inst
 from normal import process_normal, segment_operand
 from miasm.expression.expression import ExprId, ExprMem
@@ -142,6 +142,7 @@ def read_guard(line, reg_map, preempt_symbol):
     reg_map.dirty.clear()
     for operand in operands:
         _, address = segment_operand(operand)
+        code += conflict_resolve(reg_map, {"T1"}, line.offset + line.l)
         code += process_normal("LEA", [ExprId("RT1", address.size), ExprMem(address, 64)],
                                line.offset + line.l, reg_map)
         pointer = "R" + reverse_reg(reg_map, ExprId("RT1", 64))
