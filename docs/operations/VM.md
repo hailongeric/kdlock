@@ -49,6 +49,28 @@ does not delete stale leaves. Never synchronize or edit frozen inputs while a
 build, translator or workload is active. Do not edit either mirror as another
 source of truth. Follow [synchronization details](../../tools/vm/README.md).
 
+The shared MM benchmark guest gate also admits an immutable private snapshot
+at exactly one directory below `/root/kdlock-inputs`, alongside the unchanged
+canonical source route. This lets a newer module/runner revision coexist with
+the frozen kernel-component inputs required by schema-2 capture. A private
+snapshot must be a local ext4 copy, with no symlink component, leaf mount or
+nested mount. Its two root-local receipts are `source-state.json` and
+`source-sha256.json`. The parent controller supplies their exact hashes through
+`KDLOCK_PRIVATE_SOURCE_STATE_SHA256` and
+`KDLOCK_PRIVATE_SOURCE_MANIFEST_SHA256`; the guest does not invent expected
+hashes from the same files it is admitting.
+
+The state binds a 40-character `git_head`, empty `git_status`, empty
+`omitted_missing_tracked_paths`, and exact `files`/`transfer_bytes` totals from
+the committed source snapshot. Every other regular file in the private tree
+must occur exactly once in the manifest and match its SHA256; extra files,
+links, nonregular entries, omitted paths and count/byte mismatches refuse the
+snapshot. Keep Python bytecode output disabled and build outside that tree.
+The existing guest UID, release, boot UUID, pinned interpreter, recovery,
+kernel identity, mode, filesystem and host/topology gates still apply. The
+recorded environment includes this source provenance separately from the
+kernel-component identity; admitting the copy is not a runtime test pass.
+
 ## Kernel identity
 
 Normal `kdlock1` has Build ID
