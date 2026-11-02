@@ -1,7 +1,7 @@
 # Lower virtual CALL/RET/stack/control operations that cannot use plain copying.
 # CALL pushes the source return address; POP/PUSH use virtual SP, not physical
-# wrapper RSP. Processor-state instructions never execute in generated code;
-# separately admitted native markers stop before their original source bytes.
+# wrapper RSP. Flags-stack operations use balanced physical-stack transfers;
+# supported instruction markers stop before their original source bytes.
 import diagnostics
 import instruction_policy
 import native_escape
@@ -22,9 +22,43 @@ special_instruction = [
     "RET",
     "POP",
     "PUSH",
+    "PUSHF", "PUSHFW", "PUSHFD", "PUSHFQ",
+    "POPF", "POPFW", "POPFD", "POPFQ",
     "LEAVE",
     "ENDBR64",
 ]
+
+
+FLAGS_STACK_INSTRUCTIONS = frozenset({
+    "PUSHF", "PUSHFW", "PUSHFD", "PUSHFQ", "POPF", "POPFW", "POPFD", "POPFQ",
+})
+
+
+def process_flags_stack(line, reg_map):
+    """Transfer the executor's flag word through the virtual source stack.
+
+    Restoring stable mappings uses only flag-preserving moves/exchanges. No
+    temporary GPR is needed: POP/PUSH memory bridge the two stacks directly.
+    The physical stack is balanced before another source instruction runs.
+    """
+    prefixes, opcode = instruction_policy.opcode_bytes(getattr(line, "b", b""))
+    if line.args or not opcode or opcode[0] not in {0x9C, 0x9D}:
+        raise ValueError("flags-stack instruction requires its source encoding")
+    # In this 64-bit backend, 66 selects the two-byte form; the default is
+    # eight bytes. Select explicit assembler mnemonics instead of depending on
+    # the pinned decoder's PUSHF/POPF spelling or the assembler's default size.
+    width = 2 if 0x66 in prefixes else 8
+    suffix, memory = ("W", "WORD") if width == 2 else ("Q", "QWORD")
+    code = release_conflict(reg_map)
+    if opcode[0] == 0x9C:
+        code += make_inst("LEA", ["R13", f"[R13 - {width}]"])
+        code += f"PUSHF{suffix}\n"
+        code += make_inst("POP", [f"{memory} PTR[R13]"])
+    else:
+        code += make_inst("PUSH", [f"{memory} PTR[R13]"])
+        code += f"POPF{suffix}\n"
+        code += make_inst("LEA", ["R13", f"[R13 + {width}]"])
+    return code
 
 
 def native_escape_marker(line, reg_map):
@@ -139,6 +173,8 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
             )
             ret_str += process_push(ExprId("RT2", 64), offset, reg_map)
             ret_str += process_jump("JMP", line, args[0], offset, db, reg_map)
+    elif line.name in FLAGS_STACK_INSTRUCTIONS:
+        ret_str += process_flags_stack(line, reg_map)
     elif name == "PUSH":
         ret_str += process_push(args[0], offset, reg_map)
         ret_str += release_conflict(reg_map, block_end)

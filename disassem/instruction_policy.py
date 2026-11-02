@@ -2,7 +2,8 @@
 
 Only the scalar instruction families below may reach lowering. This is separate
 from address/alias and entry-value proofs: a known GPR input does not authorize
-RDMSR, POPFQ, or another access to the physical executor's context. New decoder
+RDMSR or another instruction without a lowering contract. Source flags-stack
+operations explicitly use the executor's flag-word behavior. New decoder
 mnemonics fail closed until their explicit and implicit state has been reviewed.
 
 native_escape.py separately recognizes a small exact-byte set that can become
@@ -28,7 +29,8 @@ SCALAR_INSTRUCTIONS = frozenset("""
     MOVSB MOVSW MOVSD MOVSQ LODSB LODSW LODSD LODSQ
     STOSB STOSW STOSD STOSQ CMPSB CMPSW CMPSD CMPSQ
     SCASB SCASW SCASD SCASQ XLAT XLATB
-    CALL RET PUSH POP LEAVE JMP JCXZ JECXZ JRCXZ
+    CALL RET PUSH POP PUSHF PUSHFW PUSHFD PUSHFQ POPF POPFW POPFD POPFQ
+    LEAVE JMP JCXZ JECXZ JRCXZ
     NOP ENDBR64 PAUSE LFENCE MFENCE SFENCE
     PREFETCHNTA PREFETCHT0 PREFETCHT1 PREFETCHT2 PREFETCHW PREFETCHWT1
 """.split()) | frozenset(
@@ -91,7 +93,7 @@ def encoding_rejection(raw):
         return "bounds-prefixed control transfer requires native context"
     if opcode[0] in {0xFA, 0xFB}:
         return "IRQ state modification requires native context"
-    if opcode[0] in {0x9C, 0x9D, 0x9E, 0x9F, 0xFC, 0xFD, 0xCF}:
+    if opcode[0] in {0x9E, 0x9F, 0xFC, 0xFD, 0xCF}:
         return "processor flags access requires native context"
     if opcode[0] in {0x8C, 0x8E}:
         return "direct segment register access requires native context"

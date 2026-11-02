@@ -28,7 +28,7 @@ ENTRIES = (("spin", 0), ("spin", 1), ("spin", 3), ("mutex", 0),
            ("mutex", 2))
 CORE = {
     "cli": "fa", "sti": "fb", "stac": "0f01cb", "clac": "0f01ca",
-    "rdmsr": "0f32", "wrmsr": "0f30", "pushfq": "9c", "popfq": "9d",
+    "rdmsr": "0f32", "wrmsr": "0f30",
     "rdpkru": "0f01ee", "wrpkru": "0f01ef", "xgetbv": "0f01d0",
     "xsetbv": "0f01d1", "swapgs": "0f01f8",
 }
@@ -60,6 +60,12 @@ class InstructionPolicyTests(unittest.TestCase):
                     self.assertIn('rip="0x1006"', log)
                     self.assertNotIn("minimal entry unavailable", log)
 
+    def test_flags_stack_opcodes_reach_dedicated_lowering(self):
+        for raw in ("9c", "669c", "9d", "669d"):
+            with self.subTest(raw=raw):
+                self.assertIsNone(instruction_policy.encoding_rejection(bytes.fromhex(raw)))
+                self.assertIsNone(instruction_policy.rejection(decode(raw)))
+
     def test_other_unvirtualized_state_and_effects_are_refused(self):
         cases = {
             "read_cr3": "0f20d8", "write_cr3": "0f22d8",
@@ -89,8 +95,7 @@ class InstructionPolicyTests(unittest.TestCase):
                 self.refuse("31c931c031d2" + raw + "c3" + "90" * 16)
 
     def test_aliases_operands_and_future_mnemonics_fail_closed(self):
-        for name in ("PUSHF", "PUSHFD", "PUSHFQ", "POPF", "POPFD", "POPFQ",
-                     "IRET", "IRETD", "IRETQ", "STAC", "CLAC", "WRMSRNS",
+        for name in ("IRET", "IRETD", "IRETQ", "STAC", "CLAC", "WRMSRNS",
                      "RDFSBASE", "RDGSBASE", "WRFSBASE", "WRGSBASE",
                      "INSTRUCTION_FROM_A_FUTURE_DECODER"):
             with self.subTest(name=name):
@@ -159,11 +164,11 @@ class InstructionPolicyTests(unittest.TestCase):
                 self.refuse(raw)
 
     def test_paired_enable_disable_is_still_native_only(self):
-        for raw in ("fafb", "0f01cb0f01ca", "9c9d"):
+        for raw in ("fafb", "0f01cb0f01ca"):
             self.refuse(raw + "c3" + "90" * 16)
 
     def test_branches_learned_callees_and_indirect_targets_are_checked(self):
-        for raw in ("0f30", "0f32", "9d", "0f01cb"):
+        for raw in ("0f30", "0f32", "9e", "0f01cb"):
             bad = bytes.fromhex(raw + "c3" + "90" * 16)
             with self.subTest(raw=raw):
                 self.refuse((bytes.fromhex("7501c3") + bad).hex())

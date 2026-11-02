@@ -90,6 +90,25 @@ trylock and last-reference acquisitions remain local; non-lockdep nested blockin
 annotations use the unified direct interface. No Linux mutex object participates.
 See [mutex routing](design/locking.md#entry-completion-and-task-routing).
 
+## Source PUSHF and POPF operations
+
+The translator lowers source `PUSHFQ`/`POPFQ` and their 16-bit forms through
+the virtual source stack. A flags push decrements virtual SP, captures the
+executor's flags on its physical stack, and pops that word into the virtual
+stack. A flags pop pushes the virtual word onto the physical stack, executes
+the corresponding flags restore, and increments virtual SP. Both transfers
+balance physical SP within the one lowered source instruction. Register-map
+restoration and virtual-SP adjustments use flag-preserving instructions.
+
+This is the explicitly selected executor-flags behavior. The lowering adds no
+incoming-flags capture, waiter/executor flags comparison, context-bit filtering
+or runtime instruction service. `POPFQ`/`POPF` apply the processor's ordinary
+flag-write behavior on the executor. The opcode family is no longer rejected
+as flags access by the optional instruction-policy utility. Other instruction
+families retain their existing policy. The backend remains x86-64; the native
+encodings have 64-bit or operand-size-prefixed 16-bit stack words, not a 32-bit
+flags-stack operation in 64-bit mode.
+
 ## Private packet layout
 
 `kd_regs` layout 2 has 21 eight-byte fields, total 168 bytes:

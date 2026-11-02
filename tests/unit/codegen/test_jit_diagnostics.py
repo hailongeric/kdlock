@@ -190,11 +190,11 @@ class JitDiagnosticsTests(unittest.TestCase):
         self.assertNotIn("INT_AS_NOP", log)
 
     def test_unhandled_special_names_cannot_be_silently_omitted(self):
-        for name in ("PUSHF", "POPF"):
+        for name in ("UNHANDLED_STACK_PUSH", "UNHANDLED_STACK_POP"):
             with self.subTest(name=name):
                 diagnostics.begin(7, 0x1000)
                 line = decode("9c")
-                # Exercise the existing dispatch names, not PUSHFQ/POPFQ aliases.
+                # Unknown stack operations still need an explicit lowering path.
                 line.name = name
                 diagnostics.set_instruction(0x1010, line)
                 with self.assertRaisesRegex(ValueError, "unsupported special instruction"):
