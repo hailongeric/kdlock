@@ -92,17 +92,21 @@ has no such public A. It acquires and executes B alone, finishes B's physical
 release and result handoff, then considers another request through fresh
 admission. It never manufactures a public grant to retain combining authority.
 
-Before selection, a captured caller uses a native-stack pending descriptor and
-remains preemptible. Service notification membership is distinct from object
+Before selection, a captured caller reserves stable cold request storage and
+remains preemptible. The preallocated CPU/slot sidecar is the ordinary case;
+private spill storage is obtained before publication when those slots are busy.
+Allocation failure is retried before publication rather than returned as a new
+public API error or made dependent on an ancestor releasing its slot. This
+spill policy needs allocation-pressure validation beyond this stage's focused
+checks. Service notification membership is distinct from object
 acquisition order: it schedules work and holds no hidden acquisition grant.
 Dispatcher preview uses identity/generation only; no queued node or packet
 pointer survives across a foreign body. Cancellation removes this notification
 membership as part of exact retirement.
 
-Selected execution transfers the descriptor into a preallocated CPU/slot
-sidecar before source-body execution can overwrite capture-helper frames. The
+The descriptor already resides outside capture-helper frames. The
 origin switches to its separately reserved protocol stack before publishing
-stack readiness. The transfer initializes scalar entry fields and moves exact
+stack readiness. Capture initializes scalar entry fields and exact
 leases/memberships; it does not copy a whole virtual register packet. Before
 commitment, cancellation returns through intact native helper frames. After
 commitment, completion resumes the captured post-release packet once.
