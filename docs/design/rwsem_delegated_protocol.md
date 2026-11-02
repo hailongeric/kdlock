@@ -12,11 +12,14 @@ Source baseline: 7231ddf0963ff2cc730590c09cc81e7f96f93095. Work is isolated
 from master. This document is a design, not evidence of an implemented protocol,
 a built kernel, proxy execution or measured performance.
 
-The user explicitly selected original-task execution after an explicit
-write-to-read downgrade. Ordinary read acquisitions and that read tail remain
-local. Returning at downgrade is a specified ownership transition; other
-unsupported reached operations must be reported explicitly and must not silently
-complete the remaining write body on the original task.
+The user's latest decision permits a delegated writer's downgraded read tail
+to continue on the executor. This deliberately changes the general rwsem rule
+that every read body executes locally. It applies to every equivalent caller,
+not to a selected syscall or workload. Ordinary direct read acquisitions still
+execute on their calling task. A delegated writer does not return to its origin
+at downgrade; the origin remains suspended through the matching read unlock and
+returned completion. Unsupported reached operations must be reported explicitly
+and must not silently complete the remaining body on the original task.
 
 ## Public behavior to preserve
 
@@ -24,7 +27,7 @@ complete the remaining write body on the original task.
   unchanged for all callers. Successful acquisition has priority over a pending
   signal. A failed killable acquire does not execute the caller's body and does
   not retain a reader share, phase reservation, physical gate or queue node.
-- Readers remain concurrent. Trylock remains nonblocking. No request can use an
+- Readers remain concurrent, including an executor-held downgraded share. Trylock remains nonblocking. No request can use an
   object initialized for a different protocol or change its protocol while live.
 - Existing exact acquisition, physical owner, source/frame lifetime and final
   unlock acknowledgment obligations remain. A count is not an ownership token.
@@ -63,14 +66,51 @@ that a positive prepared cohort may reuse a pre-publication drain forever.
 
 Downgrade adds an explicit transition:
 
-  EXECUTING_WRITE -> DOWNGRADED_READ -> RETURNED_READ -> RETIRED
+  EXECUTING_WRITE -> EXECUTING_DELEGATED_READ -> RETURNED_READ -> RETIRED
 
-Before returning to the origin, publish its exact read share and retire or
-suspend the exclusive phase so that no queued writer can enter using an earlier
-drain observation. Preserve all per-object release ordering. The origin resumes
-at the original downgrade continuation and eventually releases its own read
-share. The combiner must not execute that read tail. The request's execution,
-read ownership and frame/source retirement have separate completion points.
+The read acquisition created by downgrade belongs logically to the same
+successful caller acquisition, while its body and final release execute on the
+executor. Its exact record binds the lock, request, origin, executor, generation
+and one live read credit. This is a transfer of the request's execution/ownership
+class; it is not an ordinary down_read call and must not release/reacquire the
+lock with an unprotected gap.
+
+The transition must, in this order:
+
+1. Validate exact selected writer ownership and complete the native caller's
+   pre-downgrade ordering (including per-VMA release ordering in MM callers).
+2. Publish one exact read credit for the request before opening shared admission.
+3. Change the request's ownership ledger from exclusive to delegated-read and
+   end its exclusive phase. An object transition must not expose an unlocked
+   interval between the writer state and that reader credit.
+4. Continue the same captured continuation on the executor. Retain origin task,
+   stack, frame, source and object lifetimes; no completion notification permits
+   the origin to reuse its live stack while the read tail is still executing.
+5. At the matching up_read, consume that exact credit once, close the captured
+   continuation, acknowledge completion and retire the remaining state. A later
+   origin-side release must not consume the share a second time.
+
+Queued writers have reservations, not already valid reader-drain results. A
+writer may enter only after its own selected phase observes all live read
+credits drained, including every delegated downgrade credit. Any downgrade
+invalidates earlier phase/drain observations through a generation transition.
+A queued writer cannot bypass that recheck merely because it was published or
+reader-drained before the downgrade. The queue may close admission to new
+readers according to the general writer policy, but it cannot revoke an existing
+read credit or serialize ordinary readers as exclusive bodies.
+
+Physical gate custody, public exclusive ownership and shared ownership must be
+represented separately. A temporary retained gate must not make the delegated
+reader pass an exclusive-owner assertion. Releasing the gate must not let a
+successor use a stale drain result. The implementation must choose and validate
+one explicit ordering for this custody transfer rather than infer ownership from
+aggregate counters. Readers on other tasks may still execute concurrently.
+
+An original-task read unlock and an executor-side read unlock follow the same
+public up_read semantics; internal routing uses the exact acquisition record.
+Nested read shares, non-owner read transfers, trylocks and asynchronous release
+must retain their declared semantics. Supporting the new downgraded execution
+class does not authorize treating arbitrary read acquisitions as delegated.
 
 ### General executor and context handling
 
@@ -124,13 +164,13 @@ by itself enable delegation or establish support.
 
 Record request/lock identity, generation, origin/executor task identity, state
 transitions, cancellation/commit result, proxy entry/returned completion,
-downgrade transfer, final read release and retirement. Distinguish local,
+executor-side downgrade transfer, final delegated read release and retirement. Distinguish local,
 proxy, canceled and unsupported outcomes explicitly. Proxy evidence requires
 executor_tid != origin_tid; executing JIT on the originating task is not enough.
 
 Define episode length as completed other-task write bodies under one physical
 lock ownership interval. Also retain per-request queue wait and execution time,
-plus the explicit downgrade endpoint; do not combine independent locks into a
+plus the explicit write-to-read transition; do not combine independent locks into a
 batch. Reconcile all published requests after drain and report unresolved ones.
 
 All source edits, Git and static inspection run on 380G10. Builds, unit/kernel
@@ -141,7 +181,8 @@ prior scope4 bundles cannot certify it.
 
 After each coherent code change: build, retain logs, run affected general API
 checks and unchanged mmap1_threads/mmap1_processes with kd_mmap=on, including
-one and two workers as unscored functional cases. Keep kd_mmap=off checks and
+one and two workers as unscored functional cases. Require completed proxy
+write evidence and executor-side downgrade/read-tail release where reached. Keep kd_mmap=off checks and
 all existing cancellation, rollback, downgrade, ownership and drain oracles.
 No local-only fixture or NORMAL image substitutes for returned proxy evidence.
 
@@ -150,3 +191,31 @@ configuration, worker placement and one scored round per selected point. Report
 every gain/loss, exact source/image identities, episode distributions, explicit
 unsupported sites and remaining correctness limits. No promotion follows merely
 from compilation or a favorable score.
+
+
+## Required capability evidence before a candidate can be accepted
+
+The current source establishes missing capabilities, not a proof that all MM
+instructions are inherently impossible to delegate:
+
+| General point | Source evidence | Required candidate behavior |
+| --- | --- | --- |
+| Killable entry has no capture ABI | include/kd_rwsem.h and include/kd_rwsem_api.h; kernel_module/kd_rwsem_api.c | Preserve result/cancellation semantics with a complete continuation contract. |
+| Prepared cohorts pre-drain before publication | kernel_module/kd_rwsem.c, kd_rwsem_reserve_delegate and kd_rwsem_delegate_enter | Select/drain by current phase generation; no stale admission across downgrade. |
+| Ordinary downgrade requires local exclusive phase | kernel_module/kd_rwsem.c, kd_downgrade_write | Add the exact general delegated-read ownership class and final-release route. |
+| Native CALL continuation currently runs origin suffix | kernel_module/exe.c, ordinary CALL path | Executor-side service or explicit unsupported receipt; no successful origin suffix. |
+| Native wait/IRQ/RCU/MM terminals have physical context requirements | include/kd_native_terminals.def | Keep checks until equivalent executor-side context/service is implemented. |
+| Current image production requires userspace | kernel_module/kd_main.c and the translation daemon | Break the early-boot dependency without per-caller selection or silent local work. |
+
+No genuinely impossible instruction is established by merely finding an
+unsupported current helper. Allocation, sleeping, current->mm reads and
+conditional TLB work are not blanket rejection reasons. A precise unsupported
+receipt must identify the reached source address/instruction/helper, saved
+context and missing semantic service. Such receipts fail candidate support;
+they are never counted as completed delegated execution.
+
+Stage 1 is delivered on branch codex/rwsem-delegated-protocol-20261102 from
+baseline 7231ddf0963ff2cc730590c09cc81e7f96f93095. Stage 2 must report current
+local behavior honestly while adding generic observations; Stage 3 cannot claim
+forced replacement until the entry, phase, executor-context and startup
+capabilities above are implemented and validated together.
