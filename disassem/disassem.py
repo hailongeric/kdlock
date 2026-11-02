@@ -68,6 +68,29 @@ def reject_translation(detail):
     return context_policy.NATIVE_ONLY_EXIT
 
 
+def report_text_coverage(regions, blocks, *, expansion, pending_targets):
+    """Separate source-cache storage from the selected decoded byte union."""
+    ranges = [(start, start + len(data)) for data, start, _ in regions]
+    instructions = {
+        (line.offset, line.offset + line.l)
+        for block in blocks.values() for line in block.lines
+        if line.l > 0 and len(bytes(line.b)) == line.l and
+        any(start <= line.offset and line.offset + line.l <= end
+            for start, end in ranges)
+    }
+    cached = memread.union_bytes(ranges)
+    decoded = memread.union_bytes(instructions)
+    diagnostics.warn(
+        "DECODED_TEXT_COVERAGE", "record_text_bytes",
+        "decoded instruction coverage is not the source-cache budget",
+        expansion=expansion, cached_bytes=cached,
+        decoded_instruction_bytes=decoded, decoded_instructions=len(instructions),
+        cache_outside_selected_instructions=cached - decoded,
+        blocks=len(blocks), incomplete_blocks=sum(not block.lines for block in blocks.values()),
+        pending_targets=pending_targets,
+    )
+
+
 def run_build_step(command, **kwargs):
     try:
         return subprocess.run(command, check=True, **kwargs)
@@ -288,10 +311,17 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     native_terminal_controls = (
         {get_kernel_symbol("kd_rwlock_fast_write_unlock")} - {0}
         if root_escape_capable and abi == 3 else set())
+    direct_call_closure = (trusted_source and abi == 2 and lock_kind == "mutex"
+                           and bool(returning_services))
+    # One immutable policy covers initial history roots and every cold edge.
+    # Ordinary translation paths retain their established page-aligned window.
+    text_policy = (memread.RETAINED_WINDOW_POLICY if direct_call_closure else
+                   memread.DEFAULT_WINDOW_POLICY)
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
-        rets = memread.read(entry, jump_table, excluded_callees=excluded_targets)
+        rets = memread.read(entry, jump_table, excluded_callees=excluded_targets,
+                            policy=text_policy)
     except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
         return reject_translation(str(error))
     # Decoder seeds do not independently authorize execution. Rebuild reachability
@@ -300,8 +330,6 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     entry_guards = None
     memory_guards = None
     service_queue_required = False
-    direct_call_closure = (trusted_source and abi == 2 and lock_kind == "mutex"
-                           and bool(returning_services))
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
@@ -455,6 +483,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 min(added_roots), "<covered undecoded CFG block>"
             )
             if expansion == 32:
+                report_text_coverage(rets, block_dict, expansion=expansion,
+                                     pending_targets=len(added_roots))
                 return reject_translation("reachable text exceeds 32 CFG expansions")
             diagnostics.warn(
                 "CFG_ROOT_EXTEND",
@@ -588,9 +618,12 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             detail = f"{reason} at 0x{offset:x}" if offset else reason
             return reject_translation(detail)
         if not missing:
+            report_text_coverage(rets, block_dict, expansion=expansion, pending_targets=0)
             break
         diagnostics.set_instruction(min(missing), "<missing reachable CFG block>")
         if expansion == 32:
+            report_text_coverage(rets, block_dict, expansion=expansion,
+                                 pending_targets=len(missing))
             return reject_translation("reachable text exceeds 32 CFG expansions")
         diagnostics.warn(
             "TEXT_RANGE_EXTEND",
@@ -599,9 +632,11 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             targets=[hex(target) for target in sorted(missing)],
         )
         try:
-            rets = memread.extend_regions(rets, missing)
+            rets = memread.extend_regions(rets, missing, policy=text_policy)
             discovered_targets.update(missing)
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
+            report_text_coverage(rets, block_dict, expansion=expansion,
+                                 pending_targets=len(missing))
             return reject_translation(str(error))
 
     has_escapes = escape_capable and any(

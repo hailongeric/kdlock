@@ -1,6 +1,7 @@
 """Focused returning-CALL registry and emitted continuation checks."""
 import struct
 import unittest
+from unittest.mock import patch
 
 from test_jit_diagnostics import render, translator
 
@@ -43,6 +44,48 @@ class ReturningCallTests(unittest.TestCase):
         assembly, options = self.emit(False)
         self.assertEqual(options['requirements'], 128)
         self.assertNotIn(b'KD_REG_SERVICE_REENTRY_TAG', assembly)
+
+    def test_retained_text_policy_covers_initial_read_and_callee_extension(self):
+        base = 0xffffffffc1000000
+        callee, unlock = base + 0x4000, base + 0x5000
+        raw = b'\xe8' + struct.pack('<i', callee - base - 5)
+        raw += b'\xe8' + struct.pack('<i', unlock - base - 10) + b'\xc3'
+        body = bytes.fromhex('b82a000000c3')
+        reads, policies = [], []
+
+        def read(address, size):
+            reads.append((address, size))
+            if address == base:
+                self.assertEqual(size, len(raw))
+                return raw
+            self.assertEqual(address, callee)
+            return body + b'\x90' * (size - len(body))
+
+        memread = translator.memread
+        with patch.object(memread, 'extend_regions', wraps=memread.extend_regions) as extend:
+            assembly, log, status = render(
+                raw.hex(), entry=base, lock_kind='mutex', abi=2, trusted_source=True,
+                native_escape_capable=True, memory_reader=read, read_policies=policies,
+                kernel_symbols={'kd_mutex_direct_lock_clobber_v1': base + 0x6000,
+                                'kd_mutex_direct_unlock_clobber_v1': base + 0x6100,
+                                'kd_rwsem_up_write_clobber_v1': unlock},
+                returning_services={base + 0x5500: dict(cookie=1, nargs=1,
+                    result_kind=1, context_kind=1, symbol='unused_primitive')},
+                return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(policies, [memread.RETAINED_WINDOW_POLICY])
+        self.assertEqual(reads, [(base, len(raw)), (callee, 1024)])
+        extend.assert_called_once()
+        self.assertIs(extend.call_args.kwargs['policy'], policies[0])
+        self.assertIn(f'loc_{callee:x}:'.encode(), assembly)
+        self.assertIn('reason=TEXT_CACHE_PLAN', log)
+        self.assertIn('reason=DECODED_TEXT_COVERAGE', log)
+
+    def test_ordinary_translation_keeps_default_text_policy(self):
+        policies = []
+        _, log, status = render('90c3', read_policies=policies, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(policies, [translator.memread.DEFAULT_WINDOW_POLICY])
 
     def test_native_context_values_and_indirect_successor(self):
         parse = translator.memread.device_session.parse_service_calls

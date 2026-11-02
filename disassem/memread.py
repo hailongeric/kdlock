@@ -2,6 +2,7 @@
 # Pin source residency before reading; extend cold CFG windows without silently
 # treating missing bytes as a completed critical section. No execution occurs.
 import errno
+from typing import NamedTuple
 
 import device_session
 import diagnostics
@@ -10,6 +11,15 @@ from elftools.elf.elffile import ELFFile
 PAGE_SIZE = 0x1000
 WINDOW_SIZE = 2 * PAGE_SIZE
 MAX_TEXT_BYTES = 256 * 1024
+
+
+class TextWindowPolicy(NamedTuple):
+    lookahead: int
+    alignment: int
+
+
+DEFAULT_WINDOW_POLICY = TextWindowPolicy(WINDOW_SIZE, PAGE_SIZE)
+RETAINED_WINDOW_POLICY = TextWindowPolicy(1024, 16)
 
 
 class TextReadLimit(RuntimeError):
@@ -38,17 +48,38 @@ def read_kernel_addr_data(addr, size):
     return None
 
 
-def extend_regions(regions, targets):
+def union_bytes(ranges):
+    """Count each cached or decoded address byte once, including overlaps."""
+    total = 0
+    previous_end = None
+    for start, end in sorted(ranges):
+        if previous_end is None or start > previous_end:
+            total += end - start
+        elif end > previous_end:
+            total += end - previous_end
+        previous_end = end if previous_end is None else max(previous_end, end)
+    return total
+
+
+def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
     """Merge overlapping windows before decoding, including backward CFG edges."""
+    if (not isinstance(policy, TextWindowPolicy) or policy.lookahead < 15 or
+            policy.alignment <= 0 or policy.alignment & (policy.alignment - 1)):
+        raise ValueError("invalid text window policy")
     # Existing bytes remain mandatory. A new root needs the full maximum x86
-    # instruction length; the rest of its two-page window is only lookahead.
+    # instruction length; only new lookahead follows the translation's policy.
     windows = [(start, start + len(data), set(roots), start + len(data))
                for data, start, roots in regions]
+    previous_bytes = union_bytes((start, end) for start, end, _, _ in windows)
+    requested_bytes = 0
+    targets = sorted(set(targets))
     for target in targets:
-        start = target & ~(PAGE_SIZE - 1)
-        if not 0xFFFFFFFF80000000 < start < 0xFFFFFFFFFFFFFFFF - WINDOW_SIZE:
+        start = target & ~(policy.alignment - 1)
+        end = max(start + policy.lookahead, target + 15)
+        if not 0xFFFFFFFF80000000 < start < end < 0xFFFFFFFFFFFFFFFF:
             raise RuntimeError(f"JMP/CALL target {target:#x} is outside kernel space")
-        windows.append((start, start + WINDOW_SIZE, {target}, target + 15))
+        requested_bytes += end - start
+        windows.append((start, end, {target}, target + 15))
     merged = []
     for start, end, roots, required_end in sorted(windows, key=lambda window: window[0]):
         if merged and start <= merged[-1][1]:
@@ -57,7 +88,16 @@ def extend_regions(regions, targets):
             merged[-1][3] = max(required_end, merged[-1][3])
         else:
             merged.append([start, end, set(roots), required_end])
-    if sum(end - start for start, end, _, _ in merged) > MAX_TEXT_BYTES:
+    planned_bytes = sum(end - start for start, end, _, _ in merged)
+    diagnostics.warn(
+        "TEXT_CACHE_PLAN", "plan_leased_text", "cached windows include lookahead",
+        lookahead_bytes=policy.lookahead, alignment_bytes=policy.alignment,
+        previous_bytes=previous_bytes, requested_bytes=requested_bytes,
+        planned_bytes=planned_bytes, additional_bytes=planned_bytes - previous_bytes,
+        regions=len(merged), targets=len(targets), budget_bytes=MAX_TEXT_BYTES,
+        within_budget=planned_bytes <= MAX_TEXT_BYTES,
+    )
+    if planned_bytes > MAX_TEXT_BYTES:
         raise TextReadLimit(f"reachable text exceeds {MAX_TEXT_BYTES} bytes")
     result = []
     for start, end, roots, required_end in merged:
@@ -84,7 +124,7 @@ def extend_regions(regions, targets):
     return result
 
 
-def read(entry, jump_table, excluded_callees=None):
+def read(entry, jump_table, excluded_callees=None, *, policy=DEFAULT_WINDOW_POLICY):
     excluded_callees = excluded_callees or set()
     try:
         with open("./asm/ij_table.txt", "r", encoding="ascii") as table:
@@ -121,7 +161,7 @@ def read(entry, jump_table, excluded_callees=None):
 
     targets = sorted(set(targets))
 
-    res = extend_regions([], targets)
+    res = extend_regions([], targets, policy=policy)
     total_bytes = sum(len(chunk) for chunk, _, _ in res)
 
     print(

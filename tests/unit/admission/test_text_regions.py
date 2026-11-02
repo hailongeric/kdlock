@@ -901,5 +901,162 @@ class TextRegionTests(unittest.TestCase):
         )
 
 
+class CompactTextWindowTests(unittest.TestCase):
+    """Demand windows preserve complete source bytes with bounded lookahead."""
+
+    def setUp(self):
+        self.text = bytearray(b"\xc3" * 0x90000)
+        self.reads = []
+        self.policy = memread.RETAINED_WINDOW_POLICY
+
+    def put(self, address, data):
+        offset = address - BASE
+        self.text[offset:offset + len(data)] = data
+
+    def read_memory(self, address, size):
+        self.reads.append((address, size))
+        self.assertGreaterEqual(address, BASE)
+        self.assertLessEqual(address + size, BASE + len(self.text))
+        return bytes(self.text[address - BASE:address - BASE + size])
+
+    def extend(self, regions, targets, **kwargs):
+        with patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory):
+            return memread.extend_regions(regions, targets, policy=self.policy, **kwargs)
+
+    def render_retained(self, entry, regions):
+        return render(
+            "", entry=entry, regions=regions, memory_reader=self.read_memory,
+            lock_kind="mutex", abi=2, trusted_source=True, return_status=True,
+            kernel_symbols={
+                "kd_mutex_direct_lock_clobber_v1": BASE + 0x82000,
+                "kd_mutex_direct_unlock_clobber_v1": BASE + 0x83000,
+                "kd_rwsem_up_write_clobber_v1": BASE + 0x84000,
+            },
+            returning_services={BASE + 0x85000: dict(
+                cookie=1, nargs=1, result_kind=1, context_kind=1,
+                symbol="primitive_call")},
+        )
+
+    def test_compact_multi_root_closure_fits_without_raising_cache_limit(self):
+        targets = [BASE + 0x100 + index * 0x3000 for index in range(34)]
+        entry = targets[0]
+        body = bytearray()
+        for index, target in enumerate(targets[1:], 1):
+            body.extend(branch(entry + len(body), target, b"\xe8"))
+            self.put(target, b"\xb8" + struct.pack("<I", index) + b"\xc3")
+        body.extend(branch(entry + len(body), BASE + 0x84000, b"\xe8"))
+        body.extend(b"\xc3")
+        self.put(entry, body)
+        with (patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory),
+              self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
+            memread.extend_regions([], targets)
+        self.assertEqual(self.reads, [])
+        regions = self.extend([], targets)
+        self.assertEqual(sum(len(data) for data, _, _ in regions), 34 * 1024)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, set(targets))
+        self.assertTrue(all(size == 1024 for _, size in self.reads))
+        assembly, log, status = self.render_retained(entry, regions)
+        self.assertEqual(status, 0, log)
+        for target in targets:
+            self.assertIn(f"loc_{target:x}:".encode(), assembly)
+
+    def test_full_fifteen_byte_prefix_crosses_the_policy_alignment(self):
+        entry = BASE + 0xFFF
+        raw = bytes.fromhex("666666666666660f1f840000000000")
+        self.assertEqual(len(raw), 15)
+        self.put(entry, raw)
+        short = memread.TextWindowPolicy(16, 16)
+        with patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory):
+            regions = memread.extend_regions([], {entry}, policy=short)
+        data, start, roots = regions[0]
+        self.assertEqual(start, BASE + 0xFF0)
+        self.assertGreaterEqual(start + len(data), entry + 15)
+        self.assertEqual(data[entry - start:entry - start + 15], raw)
+        self.assertEqual(roots, [entry])
+
+    def test_backward_extension_keeps_original_entry_and_body(self):
+        entry, body = BASE + 0x4125, BASE + 0x1FFB
+        self.put(entry, branch(entry, body))
+        raw = bytes.fromhex("b8df9b5713")
+        raw += branch(body + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(body, raw)
+        initial = self.extend([], {entry})
+        old = initial[0][0]
+        self.reads.clear()
+        regions = self.extend(initial, {body})
+        self.assertEqual([start for _, start, _ in regions], [BASE + 0x1FF0, BASE + 0x4120])
+        self.assertEqual(regions[1][0], old)
+        assembly, log, status = self.render_retained(entry, regions)
+        self.assertEqual(status, 0, log)
+        self.assertIn(f"loc_{body:x}:".encode(), assembly)
+        self.assertIn(b"0x13579bdf", assembly.lower())
+
+    def test_truncated_instruction_fetches_a_complete_compact_extension(self):
+        entry, cut = BASE + 0x2110, BASE + 0x2125
+        self.put(entry, b"\x90" * (cut - entry))
+        raw = bytes.fromhex("48b87856341200000000")
+        raw += branch(cut + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(cut, raw)
+        # The cached prefix ends inside MOVABS, before the complete immediate.
+        initial = [[bytes(self.text[0x2110:0x212A]), entry, [entry]]]
+        assembly, log, status = self.render_retained(entry, initial)
+        self.assertEqual(status, 0, log)
+        self.assertIn("TEXT_RANGE_EXTEND", log)
+        self.assertIn(b"0x12345678", assembly.lower())
+        self.assertEqual(len(self.reads), 1)
+        address, size = self.reads[0]
+        self.assertEqual(address, entry)
+        self.assertGreaterEqual(address + size, cut + 15)
+        self.assertLessEqual(size, 1024 + 16)
+
+    def test_retry_retains_old_bytes_and_every_root(self):
+        old, target = BASE + 0xF03, BASE + 0xFE1
+        initial = [[bytes(self.text[0xF00:0x1000]), BASE + 0xF00, [old]]]
+        for error in (errno.EPERM, errno.ESTALE):
+            self.reads.clear()
+            def reader(address, size):
+                self.reads.append((address, size))
+                if address + size > BASE + 0x1000:
+                    raise device_session.SourceRefused("outside resident module text", errno=error)
+                return bytes(self.text[address - BASE:address - BASE + size])
+            with (self.subTest(error=error),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=reader)):
+                regions = memread.extend_regions(initial, {target}, policy=self.policy)
+            self.assertEqual(regions, [[initial[0][0], BASE + 0xF00, [old, target]]])
+            self.assertEqual(self.reads, [(BASE + 0xF00, 0x4E0), (BASE + 0xF00, 0x100)])
+
+    def test_source_refusal_never_discards_mandatory_old_bytes(self):
+        old, target = BASE + 0xF03, BASE + 0xF81
+        initial = [[bytes(self.text[0xF00:0x1100]), BASE + 0xF00, [old]]]
+        def reader(address, size):
+            self.reads.append((address, size))
+            raise device_session.SourceRefused("old prefix no longer resident", errno=errno.ESTALE)
+        with (patch.object(memread, "read_kernel_addr_data", side_effect=reader),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertTrue(all(address + size >= BASE + 0x1100 for address, size in self.reads))
+        self.assertEqual(initial[0][0], bytes(self.text[0xF00:0x1100]))
+
+    def test_split_required_instruction_is_not_trimmed_to_a_page(self):
+        entry = BASE + 0xFFF
+        def reader(address, size):
+            self.reads.append((address, size))
+            raise device_session.SourceRefused("required instruction crosses text", errno=errno.ESTALE)
+        with (patch.object(memread, "read_kernel_addr_data", side_effect=reader),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions([], {entry}, policy=self.policy)
+        self.assertEqual(self.reads, [(BASE + 0xFF0, 1024)])
+
+    def test_compact_budget_failure_happens_before_any_source_read(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        for error in (errno.EPERM, errno.ESTALE):
+            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 1024),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=
+                               device_session.SourceRefused("unavailable lookahead", errno=error)) as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "1024 bytes")):
+                memread.extend_regions([], targets, policy=self.policy)
+            reader.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
