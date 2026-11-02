@@ -18,6 +18,10 @@ typedef int atomic_t;
 #define S64_MAX LLONG_MAX
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
+/* This fixture executes one thread. The production frame's inline accessors
+ * require these declarations before frame_types.h, including pointer reads. */
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, value) ((x) = (value))
 
 /* Kernel asm/unaligned.h uses packed scalar loads. Keep this userspace
  * substitute independent of host alignment and byte order, reading four bytes. */
@@ -41,6 +45,16 @@ typedef struct {
 	int value;
 } raw_spinlock_t;
 #include "frame_types.h"
+
+/* Query-only declaration for production branches outside this fixture's
+ * legacy frame scope. No retained continuation is constructed here; its real
+ * ownership and service transactions have separate live fixtures. */
+struct kd_exec_continuation {
+	enum kd_exec_cont_state state;
+	const struct kd_exec_service_ops *service_ops;
+	void *service_scope;
+	bool body_reported;
+};
 
 static unsigned long stack[16];
 static struct task_struct executor = { .pid = 1 },
@@ -183,7 +197,6 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 	kd_hostcall_failed;
 static unsigned long kd_direct_strcmp, kd_direct_pad;
 
-#define READ_ONCE(x) (x)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 /* Count the real status acquire separately from the frame-state reads. */
 #define smp_load_acquire(p)                                                \
@@ -245,6 +258,31 @@ static unsigned long kd_direct_strcmp, kd_direct_pad;
 			STOP_MUTATION();                                \
 		}                                                       \
 	} while (0)
+
+/* These retained-runtime joins must remain unreachable for every legacy
+ * scenario and negative control below. A call is a fixture failure, never a
+ * fabricated validation or service result. */
+static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	CHECK(false);
+	return false;
+}
+
+static int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
+{
+	(void)frame;
+	CHECK(false);
+	return -EOPNOTSUPP;
+}
+
+static int kd_jit_service_control(struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	(void)frame;
+	(void)regs;
+	CHECK(false);
+	return -EOPNOTSUPP;
+}
 
 /* The backend handshake is tested separately. This double changes one scalar
  * result only when it reports execution; consumers must retain that effect. */

@@ -27,6 +27,9 @@ def main(executor=None, benchmark=False):
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += definition(read_source(ROOT / "include/kd_origin_service.h"),
                         "enum kd_origin_instruction {").rstrip() + ";\n"
+    continuation = read_source(ROOT / "include/kd_exec_cont.h")
+    for signature in ("enum kd_exec_cont_state {", "struct kd_exec_service_ops {"):
+        types += definition(continuation, signature).rstrip() + ";\n"
     types += '#include "kd_hostcall.h"\n'
     if executor is None:
         executor = read_source(ROOT / "kernel_module/exe.c")
