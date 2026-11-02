@@ -166,11 +166,10 @@ void kd_up_read(struct kd_rwsem *sem)
 {
 	/* Trylock rollback and a matching read unlock may run under rq_lock.
 	 * Never acquire a waitqueue/scheduler lock from that atomic context.
-	 * Reader-drain waiters recheck on a timer, so omitting this wake cannot
-	 * strand them. No deferred reference outlives this ordered decrement. */
-	if (atomic_long_dec_and_test(&sem->readers) &&
-	    !irqs_disabled() && !in_atomic())
-		kd_rwsem_wake(sem, &sem->reader_drain);
+	 * Every reader-drain waiter rechecks on a timer. The final credit may
+	 * let a writer retire the object immediately, so no object access or
+	 * deferred notification can follow this fully ordered decrement. */
+	(void)atomic_long_dec_and_test(&sem->readers);
 }
 EXPORT_SYMBOL_GPL(kd_up_read);
 
