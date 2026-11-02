@@ -1038,3 +1038,21 @@ inputs. Then rebuild the candidate and repeat focused image preparation. This
 is a general instruction-continuation correction; no MM body or per-caller
 routing changes. The failed preparation remains failed and unscored. All
 55 registered sites remain required before binding new MM objects.
+
+### Application diagnostic continuation criterion
+
+An actual-application model may pass the requested continuation diagnostic only
+when its worker traces contain a positive number of delegated downgraded read
+tails and a later writer on the same executor and object after read release.
+Merely computing empty lists cannot meet that criterion. Exact fresh reader
+drain is established separately by the controlled fixture with an extra reader;
+application traces alone do not establish that observation.
+
+The current entry identity probe and returned-root trace do not associate every
+KD root with an individual syscall return value or address. Whole unchanged
+application completion/progress and other-task root completion are separate
+observations. Keep `all_application_invocations_accounted=false`, unscored and
+unaccepted until exact per-invocation joins are added. Retained loader/native
+ownership traces also require their own joins; helper-fixture ownership evidence
+cannot be relabeled as application ownership evidence. No diagnostic pass may
+be reported as universal API equivalence or performance acceptance.
