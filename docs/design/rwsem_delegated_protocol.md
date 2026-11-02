@@ -1011,3 +1011,30 @@ Then rerun the unchanged mmap1 thread/process diagnostic with kd_mmap=on.
 The six helper and eleven killable/nesting phases at efd10ac8 pass on the
 identified scope5 Native/off kernel; those receipts cannot prove this later
 addition or actual delegated MM execution.
+
+### Runtime-patched indirect CALL continuation, November 3
+
+The first actual-application image preparation at
+`6763c3d3c09e9e26ca2a75456d84847303c384e7` stops before provider activation.
+At source PCs `0xffffffff81803423` and `0xffffffff817f6fab`, leased live text is
+`2e 2e 2e ff d0`: three CS prefixes followed by a near register CALL. The
+installed ELF instead has an E8 to the indirect thunk; Linux 7 alternatives
+replace it with this five-byte instruction. Python admission and the runtime
+CALL-word check both currently accept only an optional REX prefix. They must
+agree on the actual live instruction length, including these prefixes.
+
+Extend both decoders for the alternatives-generated register form: one to three
+CS prefixes, optional REX, then near FF /2 with register addressing. Preserve
+existing unprefixed register/memory forms. Do not accept other legacy prefixes,
+far transfers, extra bytes or a guessed five-byte length. Keep all source pins,
+target contracts and the exact unconsumed source return word. A registered
+indirect primitive uses the existing returning O transaction and resumes the
+same E/image at its actual successor. An unknown reached target remains an
+explicit unsupported point; this extension never enables an O suffix.
+
+Validate Python and C parser agreement on the observed bytes, alternatives
+forms for low/high registers, existing memory forms and malformed/truncated
+inputs. Then rebuild the candidate and repeat focused image preparation. This
+is a general instruction-continuation correction; no MM body or per-caller
+routing changes. The failed preparation remains failed and unscored. All
+55 registered sites remain required before binding new MM objects.
