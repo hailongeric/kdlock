@@ -119,5 +119,25 @@ class Services(unittest.TestCase):
         self.assertEqual(item.validate_services(proof, rows, other, snapshot)['other_worker_roots'], 1)
 
 
+class ApplicationContinuation(unittest.TestCase):
+    def test_positive_tail_and_later_writer_required_without_expanding_scope(self):
+        proof = dict(downgraded_read_tails=1, later_same_executor_writers=[
+            dict(read_request=[0x1001, 1], later_writer=[0x1002, 2], executor=200)],
+            fresh_reader_drain_observed=False, all_application_invocations_accounted=False,
+            physical_batch_length_measured=False)
+        original = copy.deepcopy(proof)
+        accepted = controller.require_observed_continuation(proof)
+        self.assertEqual(accepted['later_same_executor_writer_pairs'], 1)
+        self.assertEqual(proof, original)
+        for change in (lambda x: x.update(downgraded_read_tails=0),
+                       lambda x: x.update(later_same_executor_writers=[])):
+            missing = copy.deepcopy(proof)
+            change(missing)
+            with self.assertRaises(controller.rt.Failure):
+                controller.require_observed_continuation(missing)
+            self.assertFalse(missing['fresh_reader_drain_observed'])
+            self.assertFalse(missing['all_application_invocations_accounted'])
+
+
 if __name__ == '__main__':
     unittest.main()

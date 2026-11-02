@@ -129,6 +129,16 @@ def site_audit(args, binding):
     return audit
 
 
+def require_observed_continuation(proof):
+    rt.require(proof['downgraded_read_tails'] > 0,
+               'application diagnostic observed no delegated downgraded read tail', 'DATA_ERROR')
+    rt.require(proof['later_same_executor_writers'],
+               'application diagnostic observed no later writer on the same executor and object', 'DATA_ERROR')
+    return dict(downgraded_read_tails=proof['downgraded_read_tails'],
+                later_same_executor_writer_pairs=len(proof['later_same_executor_writers']),
+                scope='positive trace observations; fresh reader drainage is not inferred')
+
+
 class Daemon:
     """Use the maintained workspace and normal daemon start/stop methods."""
     def __init__(self, path, source, binary):
@@ -421,6 +431,8 @@ class Controller:
             record.update(proof=reference(self.model / 'delegated-proof.json'), application=reference(self.model / 'application/result.json'),
                 snapshot=reference(self.model / 'snapshot.json'), completed_requests=proof['completed_request_count'],
                 downgraded_read_tails=proof['downgraded_read_tails'], state='DRAINING')
+            self.save()
+            record['continuation_criterion'] = require_observed_continuation(proof)
             self.save()
             exact_session.verify(allow_identity_probe=True)
             (PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
