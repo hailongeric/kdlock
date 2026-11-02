@@ -840,6 +840,27 @@ Simple encodable address64 GS addresses retain their existing lowering. The
 original overlap and nonoverlap assertions remain required; the failed attempt does
 not count as an instruction execution pass.
 
+The `c51cee5c97484224258cfa857b175b96069ad2ad` guest attempt then compiled the
+provider and ordinary address forms, but one guarded-read execution check
+failed: a dynamic MOV-to-R15 service returned an expected packet value of
+`0x80000000`, while the following source store observed `0x45`; its recorded
+carry/zero result remained `0x101`. The other five read-codegen tests passed.
+Source inspection found that the shared successor retained the register map
+chosen by the ordinary load path. A service return imports the canonical
+packet, so that path cannot use the ordinary branch's cached physical register.
+Before each supported read's shared successor, the ordinary branch must flush
+its modified virtual GPRs and reset the translation map. These MOV stores
+preserve source flags; stable SP/BP values keep their existing physical slots.
+Ordinary lowering recovers any borrowed SP/BP slot after each instruction;
+the shared-successor join checks that invariant before resetting its map.
+It must not reload these registers unconditionally from the packet, whose
+slots can still contain the values preceding a legitimate source write to BP
+or SP. A nonoverlapping GS-to-BP load therefore keeps its new source value.
+The returning service already updates its exact packet destination and resumes
+with that same canonical mapping. Both simple and complex GS loads must retain
+the destination, source-register, zero-extension and flags assertions across
+this boundary. This correction adds no new execution or MM result by itself.
+
 ### Exact nonreturning Native target
 
 Ordinary direct-callee closure must not expand a compiler's conditional

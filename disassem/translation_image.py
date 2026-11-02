@@ -256,6 +256,16 @@ def emit_jit_assembly(
             else:
                 f.write(special_inst.translate(line, offset, db, reg_map, block_end,
                                                trusted_source=trusted_source))
+            if (memory_sites and line.offset in memory_sites and
+                    memory_sites[line.offset][1] and origin_memory.read_operands(line)):
+                # The ordinary read and returned instruction share next-PC.
+                # Publish dirty logical values before that label, then use the
+                # same canonical mapping imported by the service-return entry.
+                # MOV spills preserve the source instruction's live flags.
+                if reg_map.get("13") != "SP" or reg_map.get("12") != "BP":
+                    raise ValueError("memory read successor requires canonical virtual SP/BP")
+                f.write(conflict.release_conflict(reg_map))
+                reg_map = conflict.block_init()
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1

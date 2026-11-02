@@ -70,43 +70,46 @@ class OriginContextReadCodegenTests(unittest.TestCase):
         self.assertNotEqual(args[0], 13)
 
     def test_dynamic_alias_load_zero_extends_only_its_destination(self):
-        instruction = "mov r15d,DWORD PTR gs:[rax+rcx*2-8]"
-        raw, assembly, options = compile_source(f"""
-            xor eax,eax
-            mov rax,{PREEMPT}
-            mov rcx,4
-            mov r15,0xffffaaaa12345678
-            stc
-            {instruction}
-            mov QWORD PTR[rbp],r15
-            setc BYTE PTR[rbp+8]
-            setz BYTE PTR[rbp+9]
-            ret
-        """)
-        encoded = machine_code(instruction)
-        cpu = (ctypes.c_uint32 * 4)(0x80010001, 0, 0, 0)
-        data = (ctypes.c_ulong * 2)()
-        initial = []
-        calls = []
-        def initialize(regs, stack):
-            regs[2] = ctypes.addressof(data)
-            initial.append((regs[1], stack[8]))
-        def service(regs, args, stack):
-            if args[0] != 13: return False
-            calls.append(regs[0])
-            self.assertEqual(regs[0], 0x1000 + raw.index(encoded))
-            self.assertEqual((regs[1], stack[8]), initial[0])
-            self.assertEqual((regs[12], regs[13], regs[3]), (PREEMPT, 4, 0xffffaaaa12345678))
-            regs[3] = 0x80000000
-            regs[0] += len(encoded)
-            regs[17] = TAG
-            return True
-        _, args = run_image(assembly, [0x1000], initialize=initialize, resume=service,
-            context=(ctypes.addressof(cpu) - PREEMPT, 0xbeef), abi=2,
-            requirements=options["requirements"])[0]
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(list(data), [0x80000000, 0x101])
-        self.assertEqual(args[1], 1)
+        for address in ("rax+rcx*2-8", "rax"):
+            with self.subTest(address=address):
+                instruction = f"mov r15d,DWORD PTR gs:[{address}]"
+                raw, assembly, options = compile_source(f"""
+                    xor eax,eax
+                    mov rax,{PREEMPT}
+                    mov rcx,4
+                    mov r15,0xffffaaaa12345678
+                    stc
+                    {instruction}
+                    mov QWORD PTR[rbp],r15
+                    setc BYTE PTR[rbp+8]
+                    setz BYTE PTR[rbp+9]
+                    ret
+                """)
+                encoded = machine_code(instruction)
+                cpu = (ctypes.c_uint32 * 4)(0x80010001, 0, 0, 0)
+                data = (ctypes.c_ulong * 2)()
+                initial = []
+                calls = []
+                def initialize(regs, stack):
+                    regs[2] = ctypes.addressof(data)
+                    initial.append((regs[1], stack[8]))
+                def service(regs, args, stack):
+                    if args[0] != 13: return False
+                    calls.append(regs[0])
+                    self.assertEqual(regs[0], 0x1000 + raw.index(encoded))
+                    self.assertEqual((regs[1], stack[8]), initial[0])
+                    self.assertEqual((regs[12], regs[13], regs[3]),
+                                     (PREEMPT, 4, 0xffffaaaa12345678))
+                    regs[3] = 0x80000000
+                    regs[0] += len(encoded)
+                    regs[17] = TAG
+                    return True
+                _, args = run_image(assembly, [0x1000], initialize=initialize, resume=service,
+                    context=(ctypes.addressof(cpu) - PREEMPT, 0xbeef), abi=2,
+                    requirements=options["requirements"])[0]
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(list(data), [0x80000000, 0x101])
+                self.assertEqual(args[1], 1)
 
     def test_nonoverlap_complex_offsets_preserve_flags_and_source_registers(self):
         variants = (("rax", "rcx", "rax", "rcx", PREEMPT + 4, 4),
@@ -145,6 +148,33 @@ class OriginContextReadCodegenTests(unittest.TestCase):
                     requirements=options["requirements"])
                 self.assertEqual(calls, [])
                 self.assertEqual(list(data), [0xfedcba98, 0x101, base_value, index_value])
+
+    def test_nonoverlap_load_to_bp_keeps_the_updated_stable_value(self):
+        _, assembly, options = compile_source(f"""
+            xor eax,eax
+            mov rax,{PREEMPT + 8}
+            stc
+            mov rbp,QWORD PTR gs:[rax]
+            mov QWORD PTR[rbp],0x1234
+            setc BYTE PTR[rbp+8]
+            setz BYTE PTR[rbp+9]
+            ret
+        """)
+        before = (ctypes.c_ulong * 2)()
+        after = (ctypes.c_ulong * 2)()
+        cpu = (ctypes.c_ulong * 2)(0x80010001, ctypes.addressof(after))
+        calls = []
+        def initialize(regs, stack): regs[2] = ctypes.addressof(before)
+        def service(regs, args, stack):
+            if args[0] == 13: calls.append(regs[0])
+            return False
+        regs, _ = run_image(assembly, [0x1000], initialize=initialize, resume=service,
+            context=(ctypes.addressof(cpu) - PREEMPT, 0xbeef), abi=2,
+            requirements=options["requirements"])[0]
+        self.assertEqual(calls, [])
+        self.assertEqual(list(before), [0, 0])
+        self.assertEqual(list(after), [0x1234, 0x101])
+        self.assertEqual(regs[2], ctypes.addressof(after))
 
     def test_partial_word_and_dword_tests_service_the_origin(self):
         for displacement, width, mask in ((1, "WORD", 0xffff), (0, "DWORD", 1),
