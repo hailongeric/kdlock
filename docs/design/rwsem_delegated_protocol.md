@@ -1,5 +1,13 @@
 # General delegated rwsem protocol
 
+The current staged redesign is owned by
+[Unified lock queue: Stage (a)](unified_lock_queue.md). Its shared queue model,
+killable/nesting obligations and delivery gates supersede the earlier
+implementation-pass ordering below. This document retains the rwsem
+write/read-tail and executor-context requirements; neither document is evidence
+that those capabilities are implemented. Stop after the Stage (a) design commit
+and report before starting queue implementation.
+
 ## Objective and current stage
 
 The user requests general delegated execution for the unchanged public kdlock
