@@ -1,0 +1,94 @@
+[
+  {
+    "attempt": "mm-gs-first",
+    "source_commit": "a4b64cabde4d96cd5c33417ecbbbda61c6d75300",
+    "host_receipt": "/tmp/kdlock-mm-gs-first-20261103/reply.json",
+    "host_receipt_sha256": "713ef208a13ea283230caf2a76d07846c38361b8f9e6d101cc58c0540742578a",
+    "vm_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-gs-first-20261103",
+    "units": [
+      {
+        "args": [
+          "codegen/test_returning_calls.py"
+        ],
+        "returncode": 1,
+        "log": "unit-0.log"
+      },
+      {
+        "args": [
+          "codegen/test_origin_memory_codegen.py"
+        ],
+        "returncode": 1,
+        "log": "unit-1.log"
+      },
+      {
+        "args": [
+          "codegen/test_origin_memory_decode.py"
+        ],
+        "returncode": 0,
+        "log": "unit-2.log"
+      },
+      {
+        "args": [
+          "infrastructure/test_source_lifetime.py"
+        ],
+        "returncode": 1,
+        "log": "unit-3.log"
+      },
+      {
+        "args": [
+          "infrastructure/test_helper_continuation.py"
+        ],
+        "returncode": 0,
+        "log": "unit-4.log"
+      },
+      {
+        "args": [
+          "infrastructure/test_mmap_rwsem_generation.py"
+        ],
+        "returncode": 0,
+        "log": "unit-5.log"
+      },
+      {
+        "args": [
+          "bench/test_mmap1.py"
+        ],
+        "returncode": 0,
+        "log": "unit-6.log"
+      }
+    ],
+    "build_returncode": 2,
+    "live_started": false
+  },
+  {
+    "attempt": "mm-gs-second",
+    "source_commit": "9fd17324",
+    "host_receipt": "/tmp/kdlock-mm-gs-second-20261103/reply.json",
+    "host_receipt_sha256": "4c075b2c8a701f4586ccfe51efd680c455d75e518c1a1402d61f4e8edeab48d2",
+    "vm_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-gs-second-20261103",
+    "units": [
+      {
+        "args": [
+          "codegen/test_returning_calls.py"
+        ],
+        "returncode": 1,
+        "log": "unit-0.log"
+      },
+      {
+        "args": [
+          "codegen/test_origin_memory_codegen.py"
+        ],
+        "returncode": 0,
+        "log": "unit-1.log"
+      },
+      {
+        "args": [
+          "infrastructure/test_source_lifetime.py"
+        ],
+        "returncode": 0,
+        "log": "unit-2.log"
+      }
+    ],
+    "build_returncode": 0,
+    "live_started": false
+  }
+]

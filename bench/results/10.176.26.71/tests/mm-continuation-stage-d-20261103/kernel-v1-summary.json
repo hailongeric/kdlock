@@ -1,0 +1,73 @@
+{
+  "passed": true,
+  "state": "COMPLETE",
+  "drain_unknown": false,
+  "source_commit": "9529b070086c6d5ca7d6465de6cd71e279a1228c",
+  "boot_id": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+  "build_identity": {
+    "build_id": "1e29cde775b6cfd7f754b27888f85a8a457be5e1",
+    "machine": "x86_64",
+    "release": "7.0.0-38-kdscope5",
+    "version": "#1 SMP PREEMPT_DYNAMIC Mon Nov  2 18:45:13 UTC 2026"
+  },
+  "config_sha256": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa",
+  "composition_sha256": "f8ccabe538ea0c4a5d9084d1a0ef2b06c19025ed014c7a0346089ef535767446",
+  "outputs": {
+    ".config": {
+      "bytes": 308552,
+      "sha256": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa"
+    },
+    "Makefile": {
+      "bytes": 242,
+      "sha256": "b0f2713e042996aaf559d194413a77cc362c53dfc225a5e6a2fd3272536898a6"
+    },
+    "Module.symvers": {
+      "bytes": 2388063,
+      "sha256": "4abdbc0f16b486668bda8342fe3b16ddd5075b836ae17ea78ea73b5b0573ec1e"
+    },
+    "System.map": {
+      "bytes": 10551672,
+      "sha256": "14a37f284105bb490bbc9cc1fbe90ea7ca293b1cd48b7b17a4716d884173b449"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17138176,
+      "sha256": "f35e00e2c0457f4d60ecf24dc59037138a64b6b224c0b068c3e34d8c42325601"
+    },
+    "include/config/auto.conf": {
+      "bytes": 251856,
+      "sha256": "d2a3e7801a3858a978ce1ed5043d2aca9aabb32ab235358234efd9144bad4088"
+    },
+    "include/config/kernel.release": {
+      "bytes": 18,
+      "sha256": "8f323f5165d6061d4e1e15a4e4f51fd70744aab0376f36529b82a2070af63b91"
+    },
+    "include/generated/autoconf.h": {
+      "bytes": 381256,
+      "sha256": "4937a74860e7b8787af61440e76682f8117549f1935c3f30d50933771b61939e"
+    },
+    "include/generated/uapi/linux/version.h": {
+      "bytes": 216,
+      "sha256": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 40,
+      "sha256": "0617b58f8a201a7eea06ffda5bf70e79afd65db476eddca6cdc12fae3b27eeec"
+    },
+    "include/generated/utsversion.h": {
+      "bytes": 74,
+      "sha256": "660c822c182da7a59151034382ff366d927278334d01dffff0ce15e7d8737408"
+    },
+    "modules.order": {
+      "bytes": 226838,
+      "sha256": "53585e7c733e6ae2ca38882eb323756a8184adee0d878a49a2489b7f15e62f82"
+    },
+    "vmlinux": {
+      "bytes": 511819600,
+      "sha256": "11d59bd7bd37fa8d9ab37a4cb817921452da7c2de7f8e247246428ab45539d9b"
+    }
+  },
+  "host_build_receipt": "/tmp/kdlock-mm-scope5-v1-final-20261103/build-result.json",
+  "host_build_receipt_sha256": "28dcf2ae18c04c0e777cab874f3e0ca39de2db44c45084d5f45d7aaa8f0edfd9",
+  "installed": false,
+  "booted": false
+}
