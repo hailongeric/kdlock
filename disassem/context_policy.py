@@ -49,7 +49,7 @@ IMPLICIT_SOURCE_MEMORY = {
 
 
 def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_history=None,
-                     indirect_call_native=False):
+                     indirect_call_native=False, returning_indirect=False):
     """Select code that can execute before this JIT episode ends.
 
     A missing direct callee transfers the saved CALL state to the original
@@ -85,7 +85,7 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
                 exits.add(start)
                 targets.clear()
                 break
-            if not direct and indirect_call_native and not (
+            if not direct and indirect_call_native and not returning_indirect and not (
                     set(indirect_history.get(next_ip, ())) &
                     (blocks.keys() | set(resumable_targets))):
                 # Every target in this image either has a Native stub or takes

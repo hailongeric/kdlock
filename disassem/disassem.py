@@ -316,6 +316,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 keep_call_stack,
                 indirect_history=jump_table,
                 indirect_call_native=indirect_call_native,
+                returning_indirect=bool(returning_services),
             )
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
@@ -324,8 +325,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         # in this image requires the returning-service execution contract.
         # Unrelated ordinary images keep their existing publication format.
         if returning_services and any(
-                line.name == 'CALL' and
-                (not isinstance(line.args[0], ExprLoc) or
+                line.name in ('CALL', 'JMP') and
+                ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
+                 isinstance(line.args[0], ExprLoc) and
                  db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
                 for block in block_dict.values() for line in block.lines):
             service_queue_required = True
@@ -627,6 +629,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             keep_call_stack,
             indirect_history=jump_table,
             indirect_call_native=indirect_call_native,
+            returning_indirect=bool(returning_services),
         )
         live_offsets = {line.offset + line.l
                         for block in block_dict.values() for line in block.lines}
@@ -653,12 +656,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
                              and not has_escapes and not root_escapes
                              and not origin_sites)
+    has_returning_call = bool(returning_services) and any(
+        line.name in ('CALL', 'JMP') and
+        ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
+         isinstance(line.args[0], ExprLoc) and
+         db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
+        for block in block_dict.values() for line in block.lines)
     returning_targets = {
         line.offset + line.l
         for block in block_dict.values() for line in block.lines
-        if line.name == 'CALL' and returning_services
-        and (not isinstance(line.args[0], ExprLoc)
-             or db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
+        if line.name == 'CALL' and has_returning_call
         and line.offset + line.l in emitted_pcs
     }
     assembly = emit_jit_assembly(

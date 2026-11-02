@@ -11,6 +11,7 @@ from test_jit_diagnostics import decode, render
 from test_jit_body_witness import run_image
 from test_origin_instruction_codegen import image_bytes
 from test_rip_relative_codegen import machine_code
+from test_instruction_policy import SYMBOLS
 import origin_memory
 
 SERVICE_TAG = 0x4b44535643524545
@@ -22,6 +23,7 @@ def compile_source(source):
     options = {}
     assembly, log, status = render(raw.hex(), lock_kind="mutex", abi=2,
         trusted_source=True, body_witness=True, origin_memory_capable=True,
+        kernel_symbols=SYMBOLS,
         return_status=True, build_options=options)
     if status:
         raise AssertionError(log)

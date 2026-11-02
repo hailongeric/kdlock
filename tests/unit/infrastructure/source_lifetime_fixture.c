@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+typedef unsigned char u8;
+typedef unsigned int u32;
+typedef unsigned long long u64;
 #include "exe_info.h"
 #include "kd_image.h"
 #define GFP_KERNEL 0
@@ -22,7 +25,6 @@ int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_api_control.h"
 
 typedef long long s64;
-typedef unsigned long long u64;
 #define U64_MAX ULLONG_MAX
 typedef _Atomic long long atomic64_t;
 #define ATOMIC64_INIT(v) ATOMIC_VAR_INIT(v)

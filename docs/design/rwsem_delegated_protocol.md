@@ -220,6 +220,21 @@ never silently route the entire mmap/munmap body to O or declare it a success.
 
 ### Focused delivery and acceptance
 
+The first GS candidate's module build also exposed that Linux 7 hides
+`preempt_enable_no_resched` from modules. The instruction bridge must use the
+same ordered `barrier(); preempt_count_dec();` operations to remove its own
+engine pin on the Native task stack. It must not schedule before the source
+instruction computes its flags. The subsequent source reschedule branch remains
+an ordinary, separately executed source operation.
+
+The indirect returning-CALL check found a production scope error: the old
+Native-suffix reachability rule discarded the successor before the returning
+dispatcher could include it. A returning-service image explicitly retains that
+edge; the runtime still requires an exact declared target and CALL word.
+Registered tail jumps use the caller's actual retained return word and resume
+its source CALL successor. They do not manufacture another CALL word. Other
+images retain the earlier scope rule.
+
 The final ownership release can itself be an instruction, for example the
 last inline preemption decrement after an earlier outer unlock. Unlike a CALL,
 it has no source return word to consume. Completion must preserve the unchanged
@@ -730,6 +745,16 @@ generated FULL exit and arithmetic-flags reentry, then exercise source GPRs,
 unchanged SP/CF, increment/decrement results, exact acknowledgment/generation,
 interrupt-visible local updates and matched preemption transitions in a VM
 fixture. This source checkpoint supplies no measurement or execution receipt.
+
+The focused VM attempt at `a4b64cabde4d96cd5c33417ecbbbda61c6d75300`
+passed the production byte decoder and its three negative controls, the helper
+parser, generated MM dependency checks and MM benchmark runner units. It did
+not start live modules. Generated GS code checks stopped at their incomplete
+fake ABI2 symbol table; the source-lifetime C fixture failed because its newly
+included instruction metadata required scalar typedefs before that include.
+These are retained failed fixture attempts, not execution passes. The focused
+correction supplies the established fake lock symbols and fixes only typedef
+ordering; it adds no read-normalization protocol or new runtime claim.
 
 ## Instrumentation checkpoint, November 2
 

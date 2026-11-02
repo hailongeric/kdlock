@@ -76,6 +76,25 @@ class ReturningCallTests(unittest.TestCase):
             with self.subTest(text=text[:100]), self.assertRaises(ValueError):
                 parse(text)
 
+    def test_native_tail_target_keeps_real_callers_successor(self):
+        raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')
+        raw.extend(b'\x90' * (0x20 - len(raw)))
+        raw.extend(b'\xe9' + struct.pack('<i', 0x5500 - 0x1025))
+        options = {}
+        assembly, log, status = render(
+            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            native_escape_capable=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                            'kd_rwsem_up_write_clobber_v1': 0x6100},
+            returning_services={0x5500: dict(cookie=1, nargs=1, result_kind=1,
+                                             context_kind=2, symbol='primitive_call')},
+            build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(options['requirements'], 896)
+        self.assertIn(b'kd_service_dispatch_1005:', assembly)
+        self.assertIn(b'loc_5500:', assembly)
+
 
 if __name__ == '__main__':
     unittest.main()

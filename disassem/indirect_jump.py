@@ -49,6 +49,12 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     callers[callee].add(offset)
                 else:
                     missing_callees.add(callee)
+            elif name == "JMP" and direct:
+                callee = db.get_location_offset(line.args[0].loc_key)
+                if callee in terminal_targets:
+                    # A Native tail target inherits the real caller's CALL
+                    # word. Its runtime continuation returns to that caller.
+                    missing_callees.add(callee)
             elif name == "RET" or (
                 (name.startswith("J") or name == "CALL") and not direct
             ):
@@ -88,6 +94,8 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                 spend(1, start)
                 target = db_dict[block].get_location_offset(edge.loc_key)
                 if target not in blocks:
+                    if target in terminal_targets:
+                        continue
                     raise ReturnFlowError(
                         "missing CFG successor in return dispatch", start
                     )

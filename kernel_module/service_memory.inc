@@ -75,16 +75,13 @@ kd_service_memory_context_begin(struct kd_origin_memory *operation)
 	kd_service_memory_trace("enter", root);
 	/* The helper is already on O's task stack. Remove exactly the runtime
 	 * pin so preempt-count DEC computes the Native zero/need-resched flags. */
-	preempt_enable_no_resched();
+	barrier();
+	preempt_count_dec();
 }
 
 __attribute__((noipa)) noinline notrace void
 kd_service_memory_context_end(struct kd_origin_memory *operation)
 {
-	struct kd_exec_continuation *cont = container_of(operation,
-		struct kd_exec_continuation, origin_memory);
-	struct kd_service_root *root = container_of(cont, struct kd_service_root,
-		continuation);
 	unsigned int expected = operation->baseline_preempt;
 	struct kd_native_owner *owner = operation->preempt_owner;
 
