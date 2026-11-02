@@ -70,8 +70,6 @@ static bool atomic_long_dec_and_test(long *counter)
     decrements++;
     return --*counter == 0;
 }
-static void atomic_long_dec(long *counter)
-{ (void)atomic_long_dec_and_test(counter); }
 static bool irqs_disabled(void)
 { irq_checks++; return irq_off; }
 static bool in_atomic(void)

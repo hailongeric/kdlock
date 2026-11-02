@@ -84,11 +84,13 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 
 	if (!frame)
 		return false;
-	if (frame->continuation && !kd_exec_cont_frame_valid(frame))
+	if (frame->has_continuation && !frame->mutex_backend)
+		return false;
+	if (kd_exec_frame_continuation(frame) && !kd_exec_cont_frame_valid(frame))
 		return false;
 
 	state = kd_exec_frame_state(frame);
-	if (state == KD_EXEC_FRAME_SUSPENDED && !frame->continuation)
+	if (state == KD_EXEC_FRAME_SUSPENDED && !kd_exec_frame_continuation(frame))
 		return false;
 	if (frame->spin_simple && !frame->complex_ready)
 		return frame->request_frame && !frame->parent && !frame->depth &&
@@ -174,6 +176,18 @@ void kd_exec_context_init(void)
 {
 	int cpu;
 
+	/* The optional anchor fits the mutex-only union tail. Its discriminator
+	 * must not move the packet or enlarge aligned spin continuation records. */
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs) != 40);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, mutex_mixed) != 280);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, mutex_mixed.continuation) != 352);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, jit_lock_addr) != 368);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, image) != 648);
+	BUILD_BUG_ON(sizeof(((struct kd_exec_frame *)0)->mutex_mixed) != 80);
+	BUILD_BUG_ON(sizeof(struct kd_combiner_state) != 88);
+	BUILD_BUG_ON(sizeof(struct kd_exec_frame) != 656);
+	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, queued_at_ns) != 696);
+	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) != 704);
 	kd_exec_task_stack_put = (void *)kallsyms_lookup_name("put_task_stack");
 	atomic64_set(&kd_exec_invariant_failures, 0);
 	atomic64_set(&kd_native_started, 0);

@@ -559,7 +559,7 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 {
 	/* Retained requests first use FULL output for exact CALL-result/packet
 	 * transfer. Legacy ABI2 roots keep their existing minimal fast path. */
-	if (frame->continuation)
+	if (kd_exec_frame_continuation(frame))
 		return false;
 	if (frame->parent || frame->depth)
 		return false;

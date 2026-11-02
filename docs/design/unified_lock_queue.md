@@ -723,3 +723,35 @@ remain relevant until the separate resource and consumer migration is complete.
 No generalized depth, cancellation, read-tail execution or performance claim
 follows from the presence of these helper interfaces. Static review is distinct
 from the required VM compilation and runtime checks.
+
+### Retained-pointer storage correction
+
+The first infrastructure checkpoint, 6277cb9d, appended an eight-byte anchor
+pointer to kd_exec_frame. On the supported x86-64 layout this changes the frame
+from 656 to 664 bytes and the 64-byte-aligned kd_spin_continuation from 704 to
+768 bytes. The pointer is unused by current capture, so that extra stride has
+no functional purpose. The source correction below preserves the original
+frame and spin-record sizes; its compilation and performance remain unmeasured.
+
+The exact storage budget is:
+
+| Field | x86-64 byte offsets | Meaning |
+| --- | --- | --- |
+| Existing hot discriminator byte | 39 | spin_kind, spin_regs_decoded and rwlock_admitted keep their existing bits; has_continuation uses the next spare bit. regs still begins at 40. |
+| saved_combiner / mutex_mixed union | 280–367 | Existing 88-byte union; its following jit_lock_addr still begins at 368. |
+| mutex_mixed.spin_sequence | 280–343 | Existing eight exact spin sequences, unchanged. |
+| transfer_requested / transferred / picked_up | 344 / 345 / 346 | Existing mutex transfer flags, unchanged. |
+| Mutex-only retained pointer | 352–359 | Aligned pointer after the flags/padding; mutex_mixed grows from 72 to 80 bytes and remains smaller than saved_combiner. |
+| Remaining union tail | 360–367 | Still available to the existing saved_combiner layout. |
+| Frame end | 656 | Remove the appended pointer; image remains at 648. |
+| Spin continuation end | 704 | diag 656, storage 664, result 672, retired 676, jit_context 680 and queued_at_ns 696. |
+
+The new pointer overlaps saved_combiner.local_queue_head. Legacy spin frames
+must therefore never interpret it. kd_exec_frame_continuation first tests the
+hot discriminator and returns NULL without reading the union pointer when the
+bit is clear. Its pointer read uses READ_ONCE inside the selected branch.
+kd_exec_frame_set_continuation publishes the pointer before setting the bit;
+clearing the bit does not write any spin combiner bytes. All legacy frame
+constructors clear the bit. Only a retained mutex frame sets it. No packet,
+wrapper word, capture behavior or ownership protocol changes in this correction.
+Compile-time offset/size checks accompany the source for the next VM build.

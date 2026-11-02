@@ -120,6 +120,7 @@ struct kd_exec_frame {
 	u8 spin_kind : 1;
 	u8 spin_regs_decoded : 1;
 	u8 rwlock_admitted : 1;
+	u8 has_continuation : 1;
 	struct kd_regs regs;
 	struct kd_regs *regs_ref;
 	unsigned long gsbase;
@@ -146,6 +147,8 @@ struct kd_exec_frame {
 			bool transfer_requested;
 			bool transferred;
 			bool picked_up;
+			/* Only has_continuation permits reading this spin-union alias. */
+			struct kd_exec_continuation *continuation;
 		} mutex_mixed;
 	};
 	unsigned long jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
@@ -167,9 +170,27 @@ struct kd_exec_frame {
 	 * A checked spin guard can retain both through original-waiter unlock. */
 	struct kd_spin_ref spin_origin;
 	const struct kd_jit_image *image;
-	/* Optional stable request anchor; absent on every legacy frame. */
-	struct kd_exec_continuation *continuation;
 };
+
+/* Legacy spin frames own every saved_combiner word, including the location
+ * overlaid by this mutex-only pointer. Test the hot tag before the volatile
+ * pointer read; a clear tag neither reads nor clears any union storage. */
+static inline struct kd_exec_continuation *
+kd_exec_frame_continuation(const struct kd_exec_frame *frame)
+{
+	if (!frame->has_continuation)
+		return NULL;
+	return READ_ONCE(frame->mutex_mixed.continuation);
+}
+
+static inline void
+kd_exec_frame_set_continuation(struct kd_exec_frame *frame,
+			       struct kd_exec_continuation *continuation)
+{
+	if (continuation)
+		WRITE_ONCE(frame->mutex_mixed.continuation, continuation);
+	frame->has_continuation = !!continuation;
+}
 
 struct kd_exec_context {
 	/* One physical owner while depth != 0; frames cannot migrate independently. */

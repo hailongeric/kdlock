@@ -18,7 +18,8 @@ def main():
             source, 'void kd_wait_unlink_locked(',
             'WRITE_ONCE(*queue->head, node->next);', 'WRITE_ONCE(*queue->head, NULL);'),
         'old-generation-matches-reuse': lambda source: replace_once(
-            source, 'request->generation == generation && node->generation == generation', 'true'),
+            source, 'request->generation == generation && node->generation == generation',
+            '((void)generation, true)'),
         'acquisition-membership-not-retired': lambda source: replace_function(
             source, 'void kd_wait_unlink_locked(',
             'if (request->acquisition == node)', 'if (false && request->acquisition == node)'),

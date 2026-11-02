@@ -17,6 +17,8 @@ typedef struct {
 } raw_spinlock_t;
 typedef raw_spinlock_t kd_spinlock_t;
 #include "kd_regs.h"
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, value) ((x) = (value))
 #include "mixed_types.h"
 #define KD_EXE_KNOWN_NATIVE 8
 #define KD_SPIN_ENTRY_VIRTUAL 1
@@ -34,7 +36,6 @@ static unsigned long sequence;
 static int forced_reserve_error;
 #define CHECK(c) do { checks++; if (!(c)) { fprintf(stderr,"FAIL line=%d: %s\n",__LINE__,#c); failures++; } } while (0)
 #define BUG_ON(c) do { if (c) { CHECK(!(c)); exit(1); } } while (0)
-#define READ_ONCE(x) (x)
 #define smp_store_release(p,v) __atomic_store_n((p),(v),__ATOMIC_RELEASE)
 #define list_empty(h) ((h)->next == (h))
 static unsigned int atomic_cmpxchg_acquire(unsigned int *word, unsigned int old,

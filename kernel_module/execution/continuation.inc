@@ -15,7 +15,7 @@ static bool kd_exec_cont_valid(const struct kd_exec_continuation *cont)
 
 static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame)
 {
-	const struct kd_exec_continuation *cont = frame->continuation;
+	const struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
 
 	if (!kd_exec_cont_valid(cont) || &cont->frame != frame ||
 	    frame->logical_task != cont->request->logical_origin ||
@@ -112,7 +112,7 @@ int kd_exec_cont_init(struct kd_exec_continuation *cont,
 	frame->mutex_backend = true;
 	/* The root anchor owns the lease even while no physical frame is bound. */
 	frame->batch_lease = true;
-	frame->continuation = cont;
+	kd_exec_frame_set_continuation(frame, cont);
 	frame->mutex_mixed.transfer_requested = false;
 	frame->mutex_mixed.transferred = false;
 	frame->mutex_mixed.picked_up = false;

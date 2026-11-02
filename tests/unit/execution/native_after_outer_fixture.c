@@ -27,6 +27,8 @@ struct kd_mutex {
 	int value;
 };
 
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, value) ((x) = (value))
 #include "frame_types.h"
 
 #define THREAD_SIZE 1024UL
@@ -84,7 +86,6 @@ static unsigned int kd_spin_debug_word(raw_spinlock_t *lock)
 	return lock == (raw_spinlock_t *)&b ? spin_word : 0;
 }
 
-#define READ_ONCE(x) (x)
 #define unlikely(x) (x)
 #define cmpxchg(p, old, value) __sync_val_compare_and_swap(p, old, value)
 #define BUG_ON(expr)                                                    \

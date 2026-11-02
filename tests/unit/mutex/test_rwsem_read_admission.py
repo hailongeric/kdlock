@@ -407,8 +407,11 @@ int main(void)
 def main():
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
-    poll = source[source.index('#define kd_rwsem_poll(condition)'):
-                  source.index('#define kd_rwsem_wait(queue, condition)')]
+    # Extract this statement-expression macro itself. Its former neighboring
+    # wait macro was replaced by the common condition-channel implementation.
+    poll_start = source.index('#define kd_rwsem_poll(condition)')
+    poll_end = source.index('\n})\n', poll_start) + len('\n})\n')
+    poll = source[poll_start:poll_end]
     spin = definition(source, 'static bool kd_rwsem_spin_read(struct kd_rwsem *sem)')
     local = definition(source, 'static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)')
     delegate = definition(source, 'static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)')

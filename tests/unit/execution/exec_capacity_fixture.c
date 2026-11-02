@@ -31,6 +31,8 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 static bool kd_hotlock_role_trace;
 typedef uint64_t u64;
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, value) ((x) = (value))
 #include "frame_types.h"
 
 static struct kd_exec_context kd_exec_context[2];
@@ -122,7 +124,6 @@ static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 }
 
 #define this_cpu_ptr(p) (&(*(p))[cpu])
-#define READ_ONCE(x) (x)
 #define smp_load_acquire(p) (*(p))
 #define smp_store_release(p, value) (*(p) = (value))
 #define atomic64_inc(p) (++*(p))
