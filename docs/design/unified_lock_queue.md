@@ -1,5 +1,11 @@
 # Unified lock queue: Stage (a) design
 
+The authorized Stage (c) implementation is specified in
+[killable capture and exact request retirement](killable_queue_execution.md).
+It brings the necessary object-wide selected-writer admission forward rather
+than enabling capture on top of the old positive cohort. The Stage (b) receipts
+remain fixed evidence; they do not validate the new implementation.
+
 ## Artifact, scope and evidence status
 
 Stage (a) was committed and reported as a source-backed design at
