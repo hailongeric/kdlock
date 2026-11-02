@@ -415,6 +415,17 @@ sleeping O; it then runs a lock-free fixture worker on the actual E CPU and
 observes E schedule while O remains blocked. The helper's before/after switch
 counts separately prove that the Native acquisition itself scheduled O.
 
+The blocked-state snapshot and the userspace kmsg cursor are separate
+observations. O can enter its Native wait after the controller's preceding log
+drain, so a true blocked predicate does not imply that the earlier root-enter
+record has already been copied into the controller's message buffer. Before
+selecting E, the Native writer phase therefore drains logs in a bounded loop
+and requires one exact root-enter record for O, the expected outer object and
+entry, a positive request identity/generation and a distinct E. Missing,
+duplicate or inconsistent records retain the blocked state and fail the phase;
+the Native waiter and scheduling checks remain required. The stopped 370e8e7f
+attempt is retained separately from validation of this observation correction.
+
 The second phase releases the outer KD writer while a Native writer remains,
 runs a scalar continuation effect on E, and ends through the final Native
 up_write completion. Exact origin/executor/root/generation, Native object and

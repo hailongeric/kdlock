@@ -55,6 +55,28 @@ def observe(session, label, predicate, timeout=10):
     raise rt.Failure('UNDRAINED', 'Native writer observation expired: ' + label, unsafe=True)
 
 
+def wait_root_enter(session, label, pid, expected_object, expected_entry, timeout=10):
+    """A blocked snapshot does not advance this session's log reader."""
+    deadline = time.monotonic() + timeout
+    roots, reads = [], 0
+    while time.monotonic() < deadline:
+        session.faults()
+        reads += 1
+        roots = [event for event in trace_events(session.messages[session.trace_start:])
+                 if event['event'] == 'enter' and event['origin'] == pid and event['depth'] == 0]
+        if roots:
+            valid = (len(roots) == 1 and roots[0]['executor'] > 0 and roots[0]['executor'] != pid and
+                roots[0]['object'] == expected_object and roots[0]['entry'] == expected_entry and
+                roots[0]['identity'] > 0 and roots[0]['generation'] > 0 and roots[0]['may_delegate'])
+            rt.write_json(session.path / (label + '.json'), dict(roots=roots, capture_reads=reads))
+            if not valid:
+                raise rt.Failure('UNDRAINED', 'blocked writer root identity differs or is duplicated', unsafe=True)
+            return roots[0]
+        time.sleep(.005)
+    rt.write_json(session.path / (label + '.timeout.json'), dict(roots=roots, capture_reads=reads))
+    raise rt.Failure('UNDRAINED', 'blocked writer root-enter record not collected before deadline', unsafe=True)
+
+
 def plan(state, early=False):
     return [(1, state['lock_a'], 'grant', 1), (2, state['lock_a'], 'release', 1)] if early else [
         (1, state['lock_a'], 'grant', 1), (1, state['lock_b'], 'grant', 2),
@@ -112,21 +134,21 @@ def run_native_write_checks(session):
                 native['holder_active'] == native['native_waiters'] == native['attempts'] == 1 and native['grants'] == 0 and
                 state['phase'] == -1 and state['slots'][1]['prefix'] == 1 and not state['slots'][1]['returned'] and
                 process_observation(pid)['state'] == 'D')
-            roots = [event for event in trace_events(session.messages[session.trace_start:])
-                     if event['event'] == 'enter' and event['origin'] == pid]
-            rt.require(len(roots) == 1 and roots[0]['executor'] != pid, 'blocked writer executor not identified', 'NO_JIT')
-            before = process_observation(roots[0]['executor'])
+            root = wait_root_enter(session, result['name'] + '-root-enter', pid,
+                                   blocked['state']['lock_address'], blocked['state']['entry'])
+            before = process_observation(root['executor'])
             progress = session.start(result['name'] + '-executor-cpu-progress', 5, 2, cpu=before['cpu'])
             session.join(progress)
             def executor_scheduled(state, native):
-                after = process_observation(roots[0]['executor'])
+                after = process_observation(root['executor'])
                 return (after['start_ticks'] == before['start_ticks'] and after['switches'] > before['switches'] and
                     native['holder_active'] == native['native_waiters'] == native['attempts'] == native['progress'] == 1 and
                     native['grants'] == 0 and native['progress_pid'] == progress[2]['pid'] and
                     native['progress_cpu'] == before['cpu'] and process_observation(pid)['state'] == 'D')
             waiting = observe(session, result['name'] + '-executor-scheduled-origin-still-blocked', executor_scheduled)
             result['blocked_schedule'] = dict(blocked=blocked, before=before,
-                after=process_observation(roots[0]['executor']), progress_worker=progress[2], before_release=waiting)
+                after=process_observation(root['executor']), progress_worker=progress[2], before_release=waiting,
+                root_enter=root)
             control(RELEASE, 32)
             session.join(holder)
         observe(session, result['name'] + '-returned', lambda state, native:

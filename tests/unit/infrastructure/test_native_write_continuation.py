@@ -1,8 +1,11 @@
 """VM-only exact Native writer observation and transaction pairing fixtures."""
 import copy
+import json
 from pathlib import Path
 import struct
 import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 
 from source_text import ROOT
@@ -88,6 +91,36 @@ class NativeWriters(unittest.TestCase):
                         struct.pack('=119Q', *words[:-1], 1)):
             with self.assertRaises(writer.rt.Failure):
                 writer.decode_snapshot(changed)
+
+    def test_root_enter_is_collected_after_the_blocked_snapshot(self):
+        line = ('kd_service event=enter origin=10 executor=20 identity=100 generation=7 '
+                'object=8000 depth=0 entry=a000 may_delegate=1\n')
+        with tempfile.TemporaryDirectory() as directory:
+            session = SimpleNamespace(path=Path(directory), messages='', trace_start=0)
+            calls = []
+            def drain():
+                calls.append(1)
+                if len(calls) == 2:
+                    session.messages += line
+            session.faults = drain
+            root = writer.wait_root_enter(session, 'delayed-enter', 10, 0x8000, 0xA000)
+            self.assertEqual(root['executor'], 20)
+            self.assertEqual(json.loads((session.path/'delayed-enter.json').read_text())['capture_reads'], 2)
+            for name, changed in (('duplicate', line+line), ('same-task', line.replace('executor=20', 'executor=10')),
+                                  ('wrong-object', line.replace('object=8000', 'object=8001')),
+                                  ('wrong-entry', line.replace('entry=a000', 'entry=a001')),
+                                  ('zero-generation', line.replace('generation=7', 'generation=0'))):
+                session.messages = changed
+                session.faults = lambda: None
+                with self.assertRaises(writer.rt.Failure) as failure:
+                    writer.wait_root_enter(session, name, 10, 0x8000, 0xA000)
+                self.assertTrue(failure.exception.unsafe)
+                self.assertEqual(failure.exception.status, 'UNDRAINED')
+            session.messages = ''
+            with self.assertRaises(writer.rt.Failure) as failure:
+                writer.wait_root_enter(session, 'missing', 10, 0x8000, 0xA000, timeout=0)
+            self.assertTrue(failure.exception.unsafe)
+            self.assertTrue((session.path/'missing.timeout.json').is_file())
 
 
 if __name__ == '__main__':
