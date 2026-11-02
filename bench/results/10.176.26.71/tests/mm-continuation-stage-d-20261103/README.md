@@ -194,8 +194,8 @@ depth nine, 128 child reuses, and a nondelegable child control.
 In `executor-downgrade-and-fresh-writer`, origin `7729` enters, downgrades,
 releases its read share and returns on executor `7635`. The same executor then
 enters and completes origin `7730`'s new write request on the same lock. The
-fixture holds an additional reader and checks that this successor does not
-enter until that reader drains. This satisfies the controlled continuation
+fixture holds the delegated tail's retained read credit and checks that this
+successor does not enter until that credit is released. This satisfies the controlled continuation
 criterion; it is not mmap1 execution or a throughput result.
 
 The later file-callback and Native inner-writer addition at design commit
@@ -243,3 +243,57 @@ manifest and original revision `75f66e45697e6f5f49c33dd950c4e6b289198f8f`.
 The actual-application controller still needs an explicit verified private-root
 admission path: the old common MM runner permits only the canonical VM
 checkout. No application diagnostic has started at this checkpoint.
+
+## Private source admission and subsequent application attempts
+
+Frozen `6763c3d3c09e9e26ca2a75456d84847303c384e7` passes all nine private-source
+admission cases, provider compilation, all eight helper phases and all eleven
+killable/nesting phases. These checks use the same schema-2 KD/on kernel and
+boot above; both live suites report `passed=true` and `drained=true`. Existing
+build warnings remain in the retained log. See [676-receipts.json](676-receipts.json).
+The factory remains inactive during the controlled fixtures, so these passes
+do not establish delegated MM execution or application performance.
+
+In the controlled downgrade phase, origin `13224` enters, downgrades, releases
+its read share and returns on executor `13134`, request generation `7`. The
+same executor subsequently serves origin `13225`'s fresh write request,
+generation `11`, on the same lock `0xffffffffc0b9d9c0`. The fixture observes
+the new writer waiting with admission `-1`, one retained tail read credit and
+no successor body prefix before releasing that credit. Final state has zero
+errors, active requests, readers and queued requests, and an idle lock.
+
+This corrects the earlier interpretation of an "additional reader": the
+observed reader is the delegated tail's own retained read credit. The fixture
+does not add an independent reader after that tail returns. It proves the
+controlled two-request continuation and this fresh drain condition; it does
+not prove implicit reacquisition by the first origin, uninterrupted scheduling,
+actual mmap1 execution, or throughput. Original observations remain unchanged.
+
+Three later application attempts at the same frozen source remain failed and
+unscored:
+
+| Attempt | Last established boundary | Retained result |
+| --- | --- | --- |
+| First | Source admission, before controller/module start | Five generated `.pyc` files violate the frozen tree's exact file set. Each is archived by path, size and hash; tracked input bytes are unchanged, and the first failure remains retained. Revalidation observes 6,768 source files and 409,841,591 bytes. |
+| Second | `bench.admit`, before module load | `AssertionError('CPU outside caller affinity')`; the module is absent. The failed receipt retains `passed=false`, `accepted=false`, `scored=false` and `drained=false`. |
+| Third | Provider/probe build and load, then image preparation | The daemon rejects `CALL RAX` at `0xffffffff81803423` and `0xffffffff817f6fab`. Leased live bytes are `2e 2e 2e ff d0`, an alternatives-generated five-byte register CALL. Preparation stops before factory activation; `rwsem_provider_active=N` and bindings remain `0`. No application model completes. |
+
+The third attempt's original `drained=false` and failed status remain intact.
+Its first separate normal-retirement attempt stops while a translator is still
+active and leaves it untouched. The next separate attempt sends the daemon its
+normal SIGTERM; translator `16243` retains its device lease and completes
+without a signal. Source writers then fall from one to zero, with zero modules
+and frames; RETIRE reaches state `2`, and the observer/provider unload normally.
+That later receipt reports `passed=true`, `drained=true` and
+`normal_unload=true` for cleanup only. It does not turn the original application
+attempt into a pass or prove delegated MM execution.
+
+Design commits `bcaf6e7cf0820f5673f387e936f691f10422a0f4` and
+`d6ded31452695ef3af6373fe7cd8cb00a357fe1a` specify exact alternatives CALL
+continuation and the stronger application observation criterion. Source commit
+`bc9045bb53845525dcb2e7e3da2c107c93873399` updates the Python/C exact-length
+parsers; `8c8d5324b6b53ee9875e9854eda85a267a7f5320` requires positive application
+read-tail and subsequent same-executor/object writer observations. Their new VM
+checks remain pending at this entry. No earlier receipt is relabeled for these
+changes. Actual mmap1 delegation length, critical-section ratio, complete
+per-invocation accounting and performance acceptance remain unestablished.

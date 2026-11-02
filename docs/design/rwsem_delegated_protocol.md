@@ -1044,9 +1044,10 @@ routing changes. The failed preparation remains failed and unscored. All
 An actual-application model may pass the requested continuation diagnostic only
 when its worker traces contain a positive number of delegated downgraded read
 tails and a later writer on the same executor and object after read release.
-Merely computing empty lists cannot meet that criterion. Exact fresh reader
-drain is established separately by the controlled fixture with an extra reader;
-application traces alone do not establish that observation.
+Merely computing empty lists cannot meet that criterion. The controlled fixture
+demonstrates fresh writer admission waiting for the delegated tail's retained
+read credit; it does not add an independent reader after that tail returns.
+Application traces alone do not establish additional drain observations.
 
 The current entry identity probe and returned-root trace do not associate every
 KD root with an individual syscall return value or address. Whole unchanged
