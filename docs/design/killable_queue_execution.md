@@ -241,3 +241,21 @@ not yet connected to this service driver. See `execution/service_control.inc`,
 `kd_native_terminals.def` and the retained status handling in `kd_service.c`.
 Their presence must not be described as general MM or arbitrary-caller support.
 The candidate remains unaccepted outside the demonstrated supported slice.
+
+## Final reader-release access
+
+The Stage (c) review found that the ordinary `kd_up_read` still inspected and
+woke `reader_drain` after its last reader decrement. A selected writer can
+observe zero and finish using the object before that inspection. Native object
+lifetime rules therefore require the decrement to be the final object access,
+for ordinary readers as well as a retained downgraded read share.
+
+Remove that optional wake from ordinary `kd_up_read`. Every canonical writer
+waiting for reader drainage already uses bounded polling and a one-tick timed
+recheck in `kd_admission_wait`; the default captured-root producer also retries
+its canonical readiness predicate. No reader-drain consumer may depend on this
+wake for eventual progress. Keep phase reopening notifications separate. This
+preserves the atomic-compatible release contract without introducing a deferred
+object pointer, scheduler lock or new lifetime counter. Validate the production
+release with an inaccessible-page final-access fixture, then rerun the local
+rwsem probe and the same focused retained-killable matrix on the new commit.
