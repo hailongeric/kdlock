@@ -1,0 +1,64 @@
+[
+  {
+    "archive": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-stage-c-20261102-evidence.tar.xz",
+    "boot": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+    "final_idle": true,
+    "free": {
+      "/": 6461558784,
+      "/mnt/kdlock-builds": 29859647488,
+      "/mnt/kdlock-builds2": 54592192512
+    },
+    "local_path": "/tmp/kdlock-rwsem-killable-continuation/bench/results/10.176.26.71/raw/tests/unified-queue-stage-c-20261102/vm-evidence.tar.xz",
+    "names": [
+      "stage-c-first-20261102",
+      "stage-c-second-20261102",
+      "stage-c-local-20261102-a",
+      "stage-c-third-20261102",
+      "stage-c-rwsem-20261102-a",
+      "stage-c-fourth-20261102",
+      "stage-c-fifth-20261102",
+      "stage-c-sixth-20261102"
+    ],
+    "release": "7.0.0-38-kdlock1",
+    "role": "initial attempts through a2511373",
+    "sha256": "bcedd05b38546cd022e01b67b61f88d2dfbdf4ecd727d2ef8f8e3bac930a8fed",
+    "size": 13848752
+  },
+  {
+    "archive": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-stage-c-final-20261102-evidence.tar.xz",
+    "boot": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+    "final_idle": true,
+    "free": {
+      "/": 6461296640,
+      "/mnt/kdlock-builds": 29859647488,
+      "/mnt/kdlock-builds2": 54503354368
+    },
+    "local_path": "/tmp/kdlock-rwsem-killable-continuation/bench/results/10.176.26.71/raw/tests/unified-queue-stage-c-20261102/final-vm-evidence.tar.xz",
+    "names": [
+      "stage-c-seventh-20261102",
+      "stage-c-basic-20261102"
+    ],
+    "release": "7.0.0-38-kdlock1",
+    "role": "af28dfc1 retained and ordinary functional receipts",
+    "sha256": "3e3b3bf9c7f1a091f45c9dc802186d9a42b7a6472a10a939eb51ed6f91015af8",
+    "size": 7069720
+  },
+  {
+    "archive": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-stage-c-read-release-20261102-evidence.tar.xz",
+    "boot": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+    "final_idle": true,
+    "free": {
+      "/": 6452707328,
+      "/mnt/kdlock-builds": 29859647488,
+      "/mnt/kdlock-builds2": 54447603712
+    },
+    "local_path": "/tmp/kdlock-rwsem-killable-continuation/bench/results/10.176.26.71/raw/tests/unified-queue-stage-c-20261102/read-release-vm-evidence.tar.xz",
+    "names": [
+      "stage-c-eighth-20261102"
+    ],
+    "release": "7.0.0-38-kdlock1",
+    "role": "9370ae4e final reader release/local rwsem/retained receipts",
+    "sha256": "83249f8222cf0f71e53cee3a2a2675470e4b61fa105d48c58785b2968e629fcc",
+    "size": 4282708
+  }
+]

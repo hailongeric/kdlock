@@ -5,6 +5,12 @@ The authorized Stage (c) implementation is specified in
 It brings the necessary object-wide selected-writer admission forward rather
 than enabling capture on top of the old positive cohort. The Stage (b) receipts
 remain fixed evidence; they do not validate the new implementation.
+The [Stage (c) focused receipt](../../bench/results/10.176.26.71/tests/unified-queue-stage-c-20261102/README.md)
+now binds implementation `9370ae4e635bef487d16be475e37a5a1f9e27d7b` to a
+build and retained-killable/nested execution checks. The candidate remains on
+its isolated branch. Missing continuation services, MM execution and performance
+acceptance remain explicit gates; historical Stage (b) descriptions below are
+not the current selected-writer encoding.
 
 ## Artifact, scope and evidence status
 

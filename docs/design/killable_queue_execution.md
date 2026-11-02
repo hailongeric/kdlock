@@ -7,6 +7,15 @@ The independent changes on `master` are not part of this candidate's evidence.
 This design precedes code. The [shared queue model](unified_lock_queue.md)
 remains authoritative for API behavior, ownership and retirement requirements.
 
+Focused implementation checkpoint: `9370ae4e635bef487d16be475e37a5a1f9e27d7b`.
+The [Stage (c) receipts](../../bench/results/10.176.26.71/tests/unified-queue-stage-c-20261102/README.md)
+record its build, production final-reader-access fixture, local rwsem checks
+and all 11 retained-killable phases. This validates the exercised typed-writer
+slice, not arbitrary Native API replacement. Unsupported reached continuation
+services currently diagnose and call `BUG()`; they remain an explicit blocker
+for broader callers and MM integration. No performance acceptance or master
+promotion follows from these functional receipts.
+
 ## Implementation order and necessary dependencies
 
 1. Extend the common request with exact tentative-cleanup custody and terminal
