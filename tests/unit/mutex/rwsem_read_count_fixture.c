@@ -70,13 +70,15 @@ static bool atomic_long_dec_and_test(long *counter)
     decrements++;
     return --*counter == 0;
 }
+static void atomic_long_dec(long *counter)
+{ (void)atomic_long_dec_and_test(counter); }
 static bool irqs_disabled(void)
 { irq_checks++; return irq_off; }
 static bool in_atomic(void)
 { atomic_checks++; return atomic_context; }
-static void kd_rwsem_wake(int *queue)
+static void kd_rwsem_wake(struct kd_rwsem *s, int *queue)
 {
-    assert(queue == &sem.reader_drain && !sem.readers);
+    assert(s == &sem && queue == &sem.reader_drain && !sem.readers);
     assert(!irq_off && !atomic_context && stage == 5);
     wake_calls++;
 }

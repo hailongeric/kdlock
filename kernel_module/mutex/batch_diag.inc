@@ -114,7 +114,7 @@ static void kd_mutex_diag_scan_end(struct kd_mutex_batch_diag *diag,
 	/* Count an exhausted budget only when it prevented another otherwise
 	 * eligible deferral. A terminal remote waiter alone does not qualify. */
 	if (!scan_left && node && node->numa_node != numa_node &&
-	    smp_load_acquire(&node->next))
+	    kd_mutex_queue_successor(node->lock, node))
 		diag->scan_exhausted = true;
 }
 

@@ -30,12 +30,13 @@ MM_NATIVE_PATHS = frozenset(("mm/mmap.c", "mm/memory.c", "mm/madvise.c", "mm/rma
                            "mm/vma.c", "lib/maple_tree.c", "arch/x86/mm/fault.c"))
 MM_OUTPUTS = MM_PATCH_PATHS | {
     "include/linux/kd_mmap_config.h", "include/linux/kd_mmap_mutex_types.h",
-    "include/linux/kd_mmap_rwsem_types.h", "include/linux/kd_mmap_lock_types.h",
+    "include/linux/kd_mmap_rwsem_types.h", "include/linux/kd_mmap_wait_queue.h",
+    "include/linux/kd_mmap_lock_types.h",
     "include/linux/kd_mmap_lock.h", "kernel/locking/kd_mmap/adapter.c",
     "kernel/locking/kd_mmap/pool.c", "kernel/locking/kd_mmap/Makefile",
     *("kernel/locking/kd_mmap/kd_mmap_" + suffix for suffix in
       ("mutex.h", "rwsem.h", "regs.h", "lock.h", "mutex_local.h",
-       "mutex_local.c", "mutex_osq.c", "rwsem.c"))}
+       "mutex_local.c", "mutex_osq.c", "rwsem.c", "wait_queue.c"))}
 API_OUTPUTS = API_PATCH_PATHS | {
     "include/linux/kd_api_provider.h", "include/linux/kd_api_lock_types.h",
     "include/linux/kd_api_lock.h", "include/linux/kd_api_control.h",

@@ -116,8 +116,8 @@ static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
 		goto join;
 	r->osq_observed++;
 	check(!READ_ONCE(signal_sem.prepared_writes));
-	check(!waitqueue_active(&signal_sem.phase_wait));
-	check(!waitqueue_active(&signal_sem.reader_drain));
+	check(!kd_rwsem_condition_active(&signal_sem.phase_wait));
+	check(!kd_rwsem_condition_active(&signal_sem.reader_drain));
 	check(!atomic_read(&signal_sem.gate.delegation_state));
 	check(!READ_ONCE(signal_sem.gate.delegation_tail));
 	check(!send_sig(nonfatal_first ? SIGUSR1 : SIGKILL, c.waiter, 1));

@@ -25,8 +25,9 @@ def once(text, old, new):
 def main():
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     start = source.index('#define kd_rwsem_poll(condition)')
-    end = source.index('\nvoid kd_rwsem_init(', start)
+    end = source.index('\nenum kd_rwsem_condition_kind', start)
     macros = source[start:end]
+    condition_kind = definition(source, 'enum kd_rwsem_condition_kind {') + ';'
     names = (
         'void kd_up_read(', 'static int kd_rwsem_drain_readers(',
         'static bool kd_rwsem_reserve_local(', 'static void kd_rwsem_release_local(',
@@ -40,7 +41,7 @@ def main():
     )
     functions = {name: definition(source, next(line for line in source.splitlines()
                  if line.startswith(name))) for name in names}
-    code = macros + '\n' + '\n'.join(functions.values())
+    code = macros + '\n' + condition_kind + '\n' + '\n'.join(functions.values())
     def mutate(name, old, new):
         body = functions[name]
         return once(code, body, once(body, old, new))

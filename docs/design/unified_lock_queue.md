@@ -2,10 +2,11 @@
 
 ## Artifact, scope and evidence status
 
-Stage (a) is a source-backed design, not implemented support. Stop after this
-document is committed and reported. Stages (b) through (e) require separate
-artifacts and reports; no implementation, build, unit test or VM run belongs to
-this stage.
+Stage (a) was committed and reported as a source-backed design at
+81e2c674764eea877241021946062d53398f01f3. Implementation now proceeds in
+separate queue, cancellation and delegated-transition commits. Following the
+subsequent instruction, validation is incremental after the functional paths
+are connected; this does not turn an unrun stage into validated support.
 
 - Branch: codex/unified-lock-queue.
 - Design parent: f1a179b8f2e369f571b927ceb6443f51a0415b7f.
@@ -84,6 +85,34 @@ rwsem conditions and rwlock requests while retaining necessary queue instances
 and physical state. Stage (b) is not complete if it merely renames all the old
 queues or adds a wrapper around unchanged independent request lists.
 
+### Current rwsem condition integration and retained rwlock backend
+
+The Stage (b) source changes replace rwsem phase_wait and reader_drain topology
+with distinct common condition heads sharing gate.wait_lock. Short condition
+descriptors never run an independent acquisition election. Grant/rollback and
+prepared positive-cohort admission remain unchanged until the canonical killable
+driver and selected-phase protocol are connected together. The reader admission
+OSQ remains an independent physical membership at this point; its count is an
+optimistic-reader hint, not every parked reader. A future single-membership
+spin-to-park adapter must retain that distinction so a writer does not wait for
+parked readers that need its phase to reopen. These changes are unbuilt and
+unrun, and do not establish delegated killable support.
+
+Rwlock still uses the existing packed count and four-byte KD spin gate at
+offset 64. Task slow readers withdraw their speculative count before acquiring
+that gate; interrupt/BH readers bypass the queued-writer gate to avoid waiting
+for their interrupted reader: [kd_rwlock.h:56](../../include/kd_rwlock.h#L56).
+Writers own the gate and drain active readers before body entry:
+[kd_rwlock.h:128](../../include/kd_rwlock.h#L128). ABI3 dispatch still enters the
+spin backend at [spin/direct.inc:46](../../kernel_module/spin/direct.inc#L46)
+and performs executor admission at
+[spin/combiner.inc:137](../../kernel_module/spin/combiner.inc#L137). Moving only
+local callers to a new common head would leave two acquisition topologies.
+The pending join must migrate those ABI3 provider/combiner routes and the local
+slow-reader/writer adapter together, preserving the gate's size, count-byte
+release, exact pins/tickets and interrupt-reader exception. No partial rwlock
+header or alternative local queue is enabled by the condition-channel change.
+
 ### Why the earlier retirement warning still matters
 
 The explicit warning is about independently live OSQ and delegation memberships:
@@ -104,6 +133,42 @@ ends. Removing the legacy OSQ eliminates its membership; while it still exists,
 its existing separate links and full retirement proof remain mandatory.
 
 ## Queue, request, acquisition and activation model
+
+### Stage (b) storage and migration choices
+
+The common queue is a nonowning view of an existing raw guard and one head
+pointer. The mutex keeps its 32-byte layout: owner at 0, raw wait guard at 8,
+legacy OSQ word at 12 during migration, common head at 16, delegation gate at
+24, and a reserved compatibility word at 28. The last word no longer publishes
+an independently linked delegation chain. A circular node supplies the tail.
+Local waiters use stack-owned request/membership storage. Captured requests
+use cold sidecars paired with the existing preallocated CPU/slot storage, so
+the 320-byte packet, packet offsets and two-word wrapper ABI do not change.
+Slot lookup uses its immutable encoded CPU/slot identity. A sidecar remains
+reserved until queue, selection, execution and return obligations have ended.
+This stage does not claim to remove the existing finite capture capacity.
+
+Publication and removal of both local and captured mutex requests use the
+same head and guard. A captured head supplies its existing membership to the
+physical acquisition helper; the helper must not enqueue a second waiter for
+that acquisition. A gate reservation that cannot immediately acquire physical
+ownership is released before entering the common queue, preventing a later
+queue head from waiting behind its own reserved gate. Optimistic OSQ membership
+remains separate until its complete replacement, as required above.
+
+NUMA selection inspects and reorders pending members under the same guard;
+it cannot create a private deferred chain. A local-only member is a service
+boundary and never a body-dispatch candidate. Current captured waiters are
+uncancellable until the new killable capture and exact cleanup are connected;
+the presence of shared queue code alone does not enable killable delegation.
+The common request's readiness election is separate from condition membership:
+phase/drain wakeup is a retry opportunity and never a public acquisition grant.
+
+The runtime first adds request-owned continuation anchors and exact activation
+bindings. It keeps legacy activations unchanged until a caller uses those
+bindings. Replacing fixed logical-depth/resource limits and enabling nested
+proxy requests require the retained-storage extension; an unused anchor type
+does not establish either capability.
 
 Four identities have different lifetimes:
 
@@ -599,3 +664,55 @@ migration mapping, explicit current limitations and this validation matrix.
 It establishes no build, performance, cancellation or nesting implementation
 claim. The capacity, context-service and builtin-availability gates above remain
 visible prerequisites rather than silently weakened behavior.
+
+## Stage (b) retained continuation infrastructure
+
+The implementation in [kd_exec_cont.h](../../include/kd_exec_cont.h) and
+[continuation.inc](../../kernel_module/execution/continuation.inc) adds retained
+execution storage backed by a pointer to the common kd_wait_request. That common
+record remains the only acquisition/cancellation authority. The continuation
+does not repeat the signal election or change its state through an object guard
+after public release. Queue adapters own those transitions and the old-guard
+access retirement required before rebinding to retained lifecycle storage.
+
+The internal interfaces are:
+
+- kd_exec_cont_init: bind a private common request to its canonical packet;
+  retain the root's source/module, task and task-stack references. Child anchors
+  share those references through explicit parent/root identities and child links.
+- kd_exec_cont_bind, kd_exec_cont_suspend and kd_exec_cont_resume: use the
+  anchor's stable frame as a temporary physical activation. Suspend requires the
+  current top frame and no live native/remote stack service. It unbinds without
+  copying the packet, completing the request or dropping the source lease.
+- kd_exec_cont_child_begin and kd_exec_cont_child_acquired: transfer the one
+  packet execution token and consume the exact successful acquisition CALL once.
+- kd_exec_cont_child_return: return a canceled child's -EINTR or a LOCAL child's
+  acquisition result to its physical submitter's parent continuation; a proxied
+  child returns only after its own completed body endpoint. These are different
+  dispositions, and neither moves the parent's suffix to origin.
+- kd_exec_cont_owner_get, kd_exec_cont_owner_borrow and kd_exec_cont_owner_put:
+  retain references to independently authoritative acquisition records, with
+  generation validation and physical-release ACK callbacks. A reference moved
+  to a continuing parent keeps its creator anchor live until that exact
+  reference is released. A reference is not a physical acquisition.
+- kd_exec_cont_return and kd_exec_cont_retire: separate unbinding/body return
+  from final reuse. Children, owned references, transferred-reference storage,
+  memberships, selections and return state must permit retirement before source
+  or stack references are dropped.
+
+The matching put_task_stack helper is resolved once from core text. Its absence
+disables new retained capture initialization explicitly; it does not prevent
+legacy provider initialization or add a public lock error. The resolved release
+pointer is retained by the root that acquired the stack reference. New retained
+frames use FULL packet returns. Legacy frames initialize their optional anchor
+pointer to NULL and retain their existing ABI2 minimal completion route.
+
+These helpers are bounded infrastructure. Public killable capture, owner handoff,
+old-guard handover ACK, resumable MM CALL services and new proxy-child dispatch
+are not enabled by this addition. The existing lock ledger and its consumers
+remain unchanged; the new reference lists do not claim that every consumer has
+migrated. Existing four-slot storage and eight-entry physical-frame/lock limits
+remain relevant until the separate resource and consumer migration is complete.
+No generalized depth, cancellation, read-tail execution or performance claim
+follows from the presence of these helper interfaces. Static review is distinct
+from the required VM compilation and runtime checks.

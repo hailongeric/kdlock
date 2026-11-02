@@ -118,6 +118,19 @@ DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
 
+/* Cold topology and lifecycle do not change the packet's five-line ABI.
+ * Each record has precisely the same reservation lifetime as its slot. */
+struct kd_mutex_wait_record {
+	struct kd_wait_request request;
+	struct kd_wait_node member;
+	struct kd_wait_selection selection;
+	raw_spinlock_t lifecycle_guard;
+	u64 invocation;
+	bool request_live;
+};
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_wait_record,
+				     kd_mutex_wait_records[KD_MUTEX_MAX_NODES]);
+
 #include "mutex/queue.inc"
 #include "mutex/count.inc"
 
@@ -220,10 +233,18 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	/* The gate reserves delegation before physical acquisition. Its embedded
 	 * root lives with the caller-owned mutex, including detached frames/ACKs.
 	 * The read-only hint avoids writing a busy gate just to find it busy. */
+	preempt_disable();
 	if (likely(!kd_mutex_gate_read(lock) && kd_mutex_gate_trylock(lock))) {
-		kd_mutex_claim_origin(lock);
-		return;
+		if (kd_mutex_trylock(lock)) {
+			kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);
+			this_cpu_inc(kd_mutex_origin_acquires);
+			preempt_enable();
+			return;
+		}
+		/* Never retain a gate reservation while entering the queue. */
+		kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);
 	}
+	preempt_enable();
 
 	/* Published waiters keep preemption disabled until completion or native
 	 * handoff: their origin GS storage must not be reused by another task.
@@ -280,6 +301,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();
 		curr_node->saved_ret_addr = ret_addr;
+		kd_mutex_request_prepare(curr_node);
 		ret_val = abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ?
 			kd_mutex_clobber_wait(lock, curr_node) :
 			kd_mutex_lock_slowpath_asm(lock, curr_node);

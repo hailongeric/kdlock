@@ -7,18 +7,18 @@
 #include <linux/spinlock.h>
 #include <linux/osq_lock.h>
 
-struct kd_local_waiter;
+struct kd_wait_node;
 
-/* The physical object is independent of executor/JIT state. Its circular
- * waiter ring frees one word for the delegation root without changing the
- * native size or alignment. Equal geometry never permits mixed protocols. */
+/* One guarded circular queue holds local and captured acquisitions. Physical
+ * ownership and execution remain separate from membership. Equal geometry
+ * never permits mixed protocols. */
 struct kd_mutex {
 	atomic_long_t owner;
 	raw_spinlock_t wait_lock;
 	struct optimistic_spin_queue osq;
-	struct kd_local_waiter *wait_head;
+	struct kd_wait_node *wait_head;
 	atomic_t delegation_state;
-	u32 delegation_tail;
+	u32 delegation_tail; /* reserved; no independent tail publication */
 };
 
 #define KD_MUTEX_INITIALIZER(name) { \

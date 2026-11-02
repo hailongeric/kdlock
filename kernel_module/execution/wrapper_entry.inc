@@ -557,6 +557,10 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
  * its first body; subsequent nested/service exits always use FULL instead. */
 static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 {
+	/* Retained requests first use FULL output for exact CALL-result/packet
+	 * transfer. Legacy ABI2 roots keep their existing minimal fast path. */
+	if (frame->continuation)
+		return false;
 	if (frame->parent || frame->depth)
 		return false;
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))

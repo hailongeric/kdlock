@@ -28,6 +28,13 @@ def main():
         assert all(generator.digest(target / name) == expected for name, expected in outputs.items())
         assert 'void kd_mmap_downgrade_write(' in source
         assert 'kd_mmap_rwsem_spin_read' in source
+        assert 'kd_mmap_wait_link_locked' in source
+        assert 'kd_mmap_wait_set_state_locked' in source
+        common = target / 'kernel/locking/kd_mmap/kd_mmap_wait_queue.c'
+        assert common.is_file() and 'kd_mmap_wait_decide_locked' in common.read_text()
+        assert (target / 'include/linux/kd_mmap_wait_queue.h').is_file()
+        assert 'KD_MMAP_RWSEM_CONDITION_DELEGATE_WRITE' not in source
+        assert 'kernel_module/kd_wait_queue.c' in inputs and 'include/kd_wait_queue.h' in inputs
     print('PASS generated MM retains local unlock/downgrade and no public delegation dependency')
 
 

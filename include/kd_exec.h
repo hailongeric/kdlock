@@ -22,6 +22,7 @@ struct task_struct;
 struct kd_mutex;
 struct kd_native_request;
 struct kd_remote_request;
+struct kd_exec_continuation;
 
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
@@ -53,6 +54,8 @@ enum kd_exec_frame_state {
 	KD_EXEC_FRAME_RESUME,
 	KD_EXEC_FRAME_COMPLETE,
 	KD_EXEC_FRAME_ERROR,
+	/* Only retained continuation storage can own an unbound suspended frame. */
+	KD_EXEC_FRAME_SUSPENDED,
 };
 
 enum kd_exec_lock_kind {
@@ -164,6 +167,8 @@ struct kd_exec_frame {
 	 * A checked spin guard can retain both through original-waiter unlock. */
 	struct kd_spin_ref spin_origin;
 	const struct kd_jit_image *image;
+	/* Optional stable request anchor; absent on every legacy frame. */
+	struct kd_exec_continuation *continuation;
 };
 
 struct kd_exec_context {

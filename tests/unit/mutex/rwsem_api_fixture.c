@@ -8,6 +8,7 @@
 #include <string.h>
 
 typedef uint32_t u32;
+typedef uint64_t u64;
 typedef long atomic_long_t;
 typedef int atomic_t;
 typedef int raw_spinlock_t;
@@ -44,9 +45,9 @@ static long atomic_long_dec_return(long *p) { return --*p; }
 static void atomic_long_inc(long *p) { ++*p; }
 static bool kd_origin_mutex_owned(struct kd_mutex *lock, void *task)
 { return (unsigned long)lock->owner == (unsigned long)task; }
-static void kd_rwsem_wake(wait_queue_head_t *queue)
+static void kd_rwsem_wake(struct kd_rwsem *sem, struct kd_rwsem_condition *queue)
 {
-	assert(queue == &active->phase_wait && unlocks == releases + 1);
+	assert(sem == active && queue == &active->phase_wait && unlocks == releases + 1);
 	releases++;
 }
 void kd_mutex_local_unlock(struct kd_mutex *lock)

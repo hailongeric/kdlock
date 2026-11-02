@@ -8,6 +8,11 @@
 
 bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 {
+	/* A suspended request has retained acquisition records but no current
+	 * physical activation. Only its explicit owner service may act on them. */
+	if (frame && frame->continuation &&
+	    frame->continuation->state != KD_CONT_BOUND)
+		return false;
 	if (!kd_exec_frame_validate(frame) || frame->completion_seen ||
 	    kd_exec_frame_state(frame) == KD_EXEC_FRAME_ERROR ||
 	    frame->outer_lock_index >= frame->jit_lock_depth ||

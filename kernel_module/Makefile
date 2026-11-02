@@ -37,6 +37,7 @@ kdlock_km-objs := \
 	kd_source.o \
 	kd_spin_entry.o \
 	kd_mutex_tasks.o \
+	kd_wait_queue.o \
 	kd_mutex_local.o \
 	kd_mutex_osq.o \
 	kd_rwsem.o \

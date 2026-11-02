@@ -12,12 +12,17 @@
 #include <linux/atomic.h>
 #include <linux/bug.h>
 #include <linux/kernel.h>
+#include <linux/kallsyms.h>
 #include <linux/sched.h>
+#include <linux/sched/task.h>
+#include <linux/sched/task_stack.h>
 #include <linux/string.h>
 #include <linux/smp.h>
+#include <linux/uaccess.h>
 
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_exec_cont.h"
 #include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
@@ -30,6 +35,10 @@ module_param_named(hotlock_role_trace, kd_hotlock_role_trace, bool, 0444);
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_exec_context, kd_exec_context);
 static atomic64_t kd_exec_invariant_failures;
+/* The matching stack release is a core helper, not an exported module API.
+ * Missing support disables only new retained capture, never legacy startup. */
+static void (*kd_exec_task_stack_put)(struct task_struct *task);
+static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame);
 
 struct kd_native_request {
 	unsigned long lock_addr;
@@ -64,7 +73,8 @@ static bool kd_exec_frame_state_is_active(int state)
 	return state == KD_EXEC_FRAME_RUNNING ||
 	       state == KD_EXEC_FRAME_WAITING_LOCK ||
 	       state == KD_EXEC_FRAME_RESUME ||
-	       state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR;
+	       state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ||
+	       state == KD_EXEC_FRAME_SUSPENDED;
 }
 
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
@@ -74,8 +84,12 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 
 	if (!frame)
 		return false;
+	if (frame->continuation && !kd_exec_cont_frame_valid(frame))
+		return false;
 
 	state = kd_exec_frame_state(frame);
+	if (state == KD_EXEC_FRAME_SUSPENDED && !frame->continuation)
+		return false;
 	if (frame->spin_simple && !frame->complex_ready)
 		return frame->request_frame && !frame->parent && !frame->depth &&
 		       frame->gsbase && frame->logical_task && frame->outer_lock_addr &&
@@ -160,6 +174,7 @@ void kd_exec_context_init(void)
 {
 	int cpu;
 
+	kd_exec_task_stack_put = (void *)kallsyms_lookup_name("put_task_stack");
 	atomic64_set(&kd_exec_invariant_failures, 0);
 	atomic64_set(&kd_native_started, 0);
 	atomic64_set(&kd_native_completed, 0);
@@ -225,6 +240,7 @@ bool kd_exec_context_occupied(void)
  * copy the shared register packet. A pristine single-lock ledger is implicit
  * until the first service/control boundary requires an explicit owner record. */
 #include "execution/frame_lifecycle.inc"
+#include "execution/continuation.inc"
 
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct kd_regs *regs)

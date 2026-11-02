@@ -4,6 +4,12 @@
 #include <linux/osq_lock.h>
 #include <linux/percpu.h>
 #include "kd_mutex.h"
+#include "kd_wait_queue.h"
+
+static inline struct kd_wait_queue kd_mutex_wait_queue(struct kd_mutex *lock)
+{
+	return kd_wait_queue_view(&lock->wait_lock, &lock->wait_head);
+}
 
 #define KD_MUTEX_TAIL_IDX_OFFSET 2
 #define KD_MUTEX_TAIL_IDX_BITS 2
@@ -29,4 +35,9 @@ void kd_mutex_osq_unlock(struct optimistic_spin_queue *lock,
 			 struct kd_mutex_osq_node *node);
 /* Only an explicit delegation head may lend its already reserved slot. */
 void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node);
+/* Captured publication and physical admission share this exact membership. */
+struct kd_wait_node *kd_mutex_request_member(struct kd_mutex_node *node);
+bool kd_mutex_local_trylock_locked(struct kd_mutex *lock, bool handoff);
+/* Notify while the member and its exact selection are guarded and live. */
+void kd_mutex_wake_head_locked(struct kd_mutex *lock);
 #endif

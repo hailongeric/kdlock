@@ -3,7 +3,7 @@
  * KD physical exclusion. Ordinary non-RT mutex and OSQ algorithms derived from
  * captured Linux 6.1.159 kernel/locking/mutex.c; see mutex/linux-source.json.
  * This owns no Linux mutex and calls no Linux mutex API. Delegation admission
- * happens before this path; the legacy delegation queue is unchanged.
+ * shares the guarded request queue with local admission.
  *
  * WAITERS/HANDOFF/PICKUP serialize sleeping callers and prevent a designated
  * handoff from being stolen or cancelled without pickup. wait_lock orders
@@ -63,50 +63,9 @@ void kd_mutex_local_runtime_exit(void)
 	/* The shared preallocated node pool belongs to mutex lifecycle. */
 }
 
-struct kd_local_waiter {
-	struct list_head list;
-	struct task_struct *task;
-};
-
-/* wait_head names the first real waiter in a circular doubly linked ring.
- * Its prev link supplies the tail, so append and cancellation remain O(1)
- * without embedding a two-pointer sentinel in every mutex. All links and
- * head changes are protected by wait_lock. An unlocked reader may compare
- * wait_head with its own live waiter, but must never dereference that sample. */
-static bool kd_local_waiter_add(struct kd_mutex *lock,
-				struct kd_local_waiter *waiter)
-{
-	struct kd_local_waiter *head = lock->wait_head;
-
-	if (head) {
-		list_add_tail(&waiter->list, &head->list);
-		return false;
-	}
-	INIT_LIST_HEAD(&waiter->list);
-	WRITE_ONCE(lock->wait_head, waiter);
-	return true;
-}
-
-static void kd_local_waiter_remove(struct kd_mutex *lock,
-				   struct kd_local_waiter *waiter)
-{
-	struct kd_local_waiter *head = lock->wait_head;
-
-	BUG_ON(!head);
-	if (head == waiter) {
-		struct list_head *next = waiter->list.next;
-
-		/* Save the successor before list_del poisons the removed links.
-		 * A singleton is a nonempty ring until its head becomes NULL. */
-		head = next == &waiter->list ? NULL :
-			list_entry(next, struct kd_local_waiter, list);
-		list_del(&waiter->list);
-		WRITE_ONCE(lock->wait_head, head);
-	} else {
-		list_del(&waiter->list);
-	}
-}
-
+/* The queue node has no execution authority. Local storage stays on the
+ * submitter's stack until guarded unlink/ACK; captured storage is retained by
+ * its independently reserved slot. Both use the same mutex head and guard. */
 static struct task_struct *kd_owner(struct kd_mutex *lock)
 {
 	return (void *)(atomic_long_read(&lock->owner) & ~KD_FLAGS);
@@ -144,6 +103,32 @@ static __always_inline struct task_struct *kd_try_common(struct kd_mutex *lock, 
 		}
 	}
 	return (void *)(owner & ~KD_FLAGS);
+}
+
+bool kd_mutex_local_trylock_locked(struct kd_mutex *lock, bool handoff)
+{
+	return !kd_try_common(lock, handoff);
+}
+
+void kd_mutex_wake_head_locked(struct kd_mutex *lock)
+{
+	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
+	struct kd_wait_node *head = kd_wait_first_locked(&queue);
+	struct kd_wait_request *request;
+	struct kd_mutex_node *node;
+
+	if (!head || atomic_read(&lock->delegation_state) == KD_MUTEX_GATE_COMBINER)
+		return;
+	request = head->request;
+	if (!request->may_delegate || request->state != KD_WAIT_QUEUED)
+		return;
+	node = request->context;
+	BUG_ON(!node || node->lock != lock);
+	BUG_ON(!kd_wait_select_locked(&queue, request, &request->local_selection,
+				     request->physical_waiter));
+	/* The origin polls retained notification only. Selection prevents a
+	 * combiner from dispatching the same request while it acquires locally. */
+	smp_store_release(&node->locked, 0);
 }
 
 /* schedule_preempt_disabled and wake_q_add are not module exports. */
@@ -226,60 +211,108 @@ fail:
 	return false;
 }
 
-static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
-					 struct kd_mutex_node *borrowed)
-{
-	return kd_local_spin_common(lock, waiter, borrowed, false);
-}
-
 /* These are internal wait-list spinlocks. Use native raw-spin functions,
  * bypassing the captured kernel's public caller-clobber macro wrappers. */
+static bool kd_local_grant(struct kd_wait_request *request, void *argument)
+{
+	struct kd_mutex *lock = argument;
+
+	BUG_ON(request->physical_waiter != current);
+	return !kd_try_common(lock, lock->wait_head == request->acquisition);
+}
+
 static __always_inline int
 kd_local_lock_slow_common(struct kd_mutex *lock, unsigned int state,
-			  struct kd_mutex_node *node, bool stop_signals)
+			  struct kd_mutex_node *borrowed, bool stop_signals)
 {
-	struct kd_local_waiter waiter = { .task = current };
+	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
+	struct kd_wait_request local_request;
+	struct kd_wait_node local_member;
+	struct kd_wait_node *member = borrowed ?
+		kd_mutex_request_member(borrowed) : &local_member;
+	struct kd_wait_request *request;
+	unsigned long irq_flags;
 	int ret = 0;
 
 	preempt_disable();
-	if (!kd_try_common(lock, false) ||
-	    (stop_signals ? kd_local_spin_common(lock, false, node, true) :
-	     kd_local_spin(lock, false, node)))
-		goto out;
-	_raw_spin_lock(&lock->wait_lock);
-	if (!kd_try_common(lock, false))
-		goto unlock;
-	if (kd_local_waiter_add(lock, &waiter))
+	if (!borrowed) {
+		if (!kd_try_common(lock, false) ||
+		    kd_local_spin_common(lock, false, NULL, stop_signals))
+			goto out;
+		kd_wait_request_init(&local_request, NULL, 0, current,
+				     current, state, false, NULL);
+		kd_wait_node_init(member, &local_request, KD_WAIT_ACQUISITION);
+	}
+	request = member->request;
+	BUG_ON(request->physical_waiter != current);
+	irq_flags = _raw_spin_lock_irqsave(&lock->wait_lock);
+	if (!member->queue_head) {
+		kd_wait_publish_locked(&queue, member);
 		atomic_long_or(KD_WAITERS, &lock->owner);
-	set_current_state(state);
+	}
 	for (;;) {
-		bool first;
+		enum kd_wait_decision decision;
+		bool first = lock->wait_head == member;
 
-		/* A handoff must be picked up before inspecting pending signals. */
-		if (!kd_try_common(lock, false))
+		/* HANDOFF/PICKUP is an actual acquisition opportunity and wins
+		 * over a pending origin signal in the common election. */
+		decision = kd_wait_decide_locked(&queue, request,
+						request->generation, kd_local_grant, lock);
+		if (decision == KD_WAIT_GRANTED)
 			break;
-		if (signal_pending_state(state, current)) {
+		if (decision == KD_WAIT_CANCELED) {
 			ret = -EINTR;
 			break;
 		}
-		_raw_spin_unlock(&lock->wait_lock);
-		kd_local_schedule();
-		first = READ_ONCE(lock->wait_head) == &waiter;
-		set_current_state(state);
-		if (!kd_try_common(lock, first) ||
-		    (first && (stop_signals ? kd_local_spin_common(lock, true, NULL, true) :
-			   kd_local_spin(lock, true, NULL)))) {
-			_raw_spin_lock(&lock->wait_lock);
+		if (decision == KD_WAIT_CLEANUP_REQUIRED &&
+		    request->selection == &request->local_selection) {
+			/* Promotion owns no physical gate before this ready callback
+			 * wins. Retire its exact selection before acknowledging failure. */
+			kd_wait_selection_drop_locked(request, &request->local_selection);
+			BUG_ON(!kd_wait_cancel_ack_locked(request));
+			ret = -EINTR;
 			break;
 		}
-		_raw_spin_lock(&lock->wait_lock);
+		BUG_ON(decision != KD_WAIT_PENDING);
+		set_current_state(state);
+		_raw_spin_unlock_irqrestore(&lock->wait_lock, irq_flags);
+
+		/* A queued head may poll a running owner without entering another
+		 * queue. The actual grant always returns through the guard above. */
+		if (first && !need_resched() &&
+		    !(stop_signals && signal_pending(request->logical_origin))) {
+			struct task_struct *owner = kd_owner(lock);
+			unsigned int budget = 65536;
+
+			while (owner && kd_owner(lock) == owner && budget-- &&
+			       owner_on_cpu(owner) && !need_resched() &&
+			       !(stop_signals && signal_pending(request->logical_origin)))
+				cpu_relax();
+		}
+		/* Do not sleep after observing availability or a pickup for us. */
+		if (kd_owner(lock) && kd_owner(lock) != current)
+			kd_local_schedule();
+		__set_current_state(TASK_RUNNING);
+		irq_flags = _raw_spin_lock_irqsave(&lock->wait_lock);
 	}
 	__set_current_state(TASK_RUNNING);
-	kd_local_waiter_remove(lock, &waiter);
+	if (member->queue_head)
+		kd_wait_unlink_locked(&queue, member);
+	if (request->selection) {
+		BUG_ON(request->selection != &request->local_selection ||
+		       request->selection->executor != current);
+		kd_wait_selection_drop_locked(request, &request->local_selection);
+	}
+	if (!borrowed || ret)
+		kd_mutex_wake_head_locked(lock);
 	if (!lock->wait_head)
 		atomic_long_andnot(KD_FLAGS, &lock->owner);
-unlock:
-	_raw_spin_unlock(&lock->wait_lock);
+	if (!borrowed) {
+		if (!ret)
+			kd_wait_finish_local_locked(request);
+		kd_wait_set_state_locked(request, KD_WAIT_RETIRED);
+	}
+	_raw_spin_unlock_irqrestore(&lock->wait_lock, irq_flags);
 out:
 	preempt_enable();
 	return ret;
@@ -343,7 +376,10 @@ EXPORT_SYMBOL_GPL(kd_mutex_api_lock);
 void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
 	BUG_ON(node && (node->lock != lock || node->task_struct_ptr != current));
-	kd_local_lock_state(lock, TASK_UNINTERRUPTIBLE, node);
+	if (node)
+		kd_local_lock_slow_common(lock, TASK_UNINTERRUPTIBLE, node, false);
+	else
+		kd_local_lock_state(lock, TASK_UNINTERRUPTIBLE, NULL);
 }
 
 int kd_mutex_lock_interruptible(struct kd_mutex *lock)
@@ -441,8 +477,9 @@ static noinline void kd_local_unlock_slow(struct kd_mutex *lock)
 		}
 	}
 	_raw_spin_lock(&lock->wait_lock);
+	kd_mutex_wake_head_locked(lock);
 	if (lock->wait_head) {
-		next = lock->wait_head->task;
+		next = lock->wait_head->request->physical_waiter;
 		kd_local_wake_add(&wake_q, next);
 	}
 	/* Use the saved releasing owner: a new acquirer may already own the word. */

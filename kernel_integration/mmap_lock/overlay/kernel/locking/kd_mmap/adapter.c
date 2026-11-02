@@ -164,8 +164,8 @@ EXPORT_SYMBOL_GPL(kd_mmap_is_write_owner);
 bool kd_mmap_is_contended(struct kd_mmap_lock *lock)
 {
 	/* Observation only; neither queue presence nor absence grants ownership. */
-	return lock->use_kd ? waitqueue_active(&lock->kd.phase_wait) ||
-		waitqueue_active(&lock->kd.reader_drain) || READ_ONCE(lock->kd.gate.wait_head) :
+	return lock->use_kd ? kd_mmap_rwsem_condition_active(&lock->kd.phase_wait) ||
+		kd_mmap_rwsem_condition_active(&lock->kd.reader_drain) || READ_ONCE(lock->kd.gate.wait_head) :
 		rwsem_is_contended(&lock->native);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_contended);
