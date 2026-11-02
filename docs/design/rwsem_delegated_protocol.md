@@ -1,5 +1,126 @@
 # General delegated rwsem protocol
 
+## MM continuation implementation, November 3
+
+Branch `codex/unified-lock-queue-mm` starts at
+`11eb4250661c092e62f6bf9168e87b938041b274`; its tested Stage (c) implementation
+is `9370ae4e635bef487d16be475e37a5a1f9e27d7b`. This continuation is authorized
+to build/install a distinct Linux 7 image and run actual unchanged mmap1 through
+system calls. The older local-only MM policy below and in the captured branch
+instructions does not prohibit this explicitly requested general protocol work.
+Native MM bodies remain unchanged. This section precedes implementation; none
+of the following capabilities is established by the earlier generic fixture.
+
+The target sequence is delegated write, actual downgrade, delegated read tail,
+exact read release and then fresh admission for subsequent writer work. A
+downgrade is a continuing ownership interval, not completion or a scheduling
+request. A following same-object writer cannot run while its executor retains
+the prior read credit. Final release still ends that caller's captured root;
+worker reuse for another request is separate from lock ownership.
+
+### Returning primitive CALL service
+
+Translate the original MM/VMA/maple instructions and ordinary callees. Calls to
+primitive APIs whose allocator, task or CPU context belongs to origin O need a
+returning transaction. Never designate `do_mmap`, `mmap_region`, munmap teardown
+or another MM body as such a primitive to conceal the entire critical section.
+The service resumes the same executor E and immutable image at the exact CALL
+successor; it is not an original-task suffix or another public acquisition.
+
+An immutable descriptor names the exact target, up to six word arguments,
+scalar/void result and a balanced-origin context contract. Six arguments are
+an initial service ABI limit, not a new lock-API error. A reached unsupported
+signature remains explicit integration work; it cannot be guessed or silently
+passed different arguments. Stack-argument and pair-spanning IRQ/preempt/RCU or
+Native-lock operations require additional exact contracts. A merely matching
+function name cannot establish those contracts.
+
+Each retained root owns a preallocated transaction: root identity/generation,
+monotonic service sequence, exact target, source SP/CALL return word, context
+baseline and REQUESTED/RUNNING/DONE/CONSUMED phase. E suspends/unbinds and drops
+only engine-owned pins before transferring packet custody. O services only its
+own matching request. The source CALL word stays untouched on the source stack.
+
+Potentially sleeping Native calls cannot execute on O's independent shadow
+stack: it is not `task->stack`. A general assembly bridge saves the shadow
+activation and switches below the current source SP on O's retained Native
+task stack while E is suspended. Only there may it remove O's engine preempt
+pin and invoke the actual helper. It captures volatile return registers/flags
+before restoring that pin, then leaves the Native helper frames before
+publishing DONE. E validates transaction identity and context, regains packet
+custody, consumes the CALL once and resumes its exact immutable continuation.
+The first fixture must witness a sleeping primitive on O's own task stack and
+post-service body effects on the same E, with no root completion at the helper.
+
+Keep acquisition priority and killable cancellation unchanged. Before actual
+grant O's signal and real gate/phase/reader readiness arbitrate together. After
+grant a helper cannot turn committed body effects into failed acquisition.
+Nested general lock calls from a Native service must preserve their usual local
+task semantics and must not recursively capture the service infrastructure.
+
+### General per-object execution provider
+
+The current builtin MM pool and adapter have no capture/image entry. Add a
+versioned ordinary rwsem provider interface, with immutable per-object binding
+before publication. A provider-bound object routes every acquisition, release,
+try, downgrade, assertion and read operation to that provider's general core.
+Old/early objects continue on their builtin core; never exchange pools or owner
+records merely because two layouts have the same size. `kd_mmap=off` keeps its
+Native route. The MM layer contains only ordinary lock APIs and minimal binding,
+control-entry and lifetime glue, with no workload-specific selection or body.
+
+The provider reference belongs to the object until destruction. Registration
+controls new binding only; unregister cannot change live objects or discard
+their module references. A copied mm initializer must overwrite a copied
+provider pointer without dropping the source mm's reference, then take its own
+new binding reference. Verify the existing union, `use_kd` and new pointer
+offsets and overall layout at compile time. Setup serialization is not a new
+acquisition lock.
+
+Inline lock frontends expose the general SP/IP/BP clobber contract at the actual
+caller's frame. Integer success explicitly defines EAX zero; callable forms
+retain conventional C results. Register exact typed facade control identities
+so the runtime and translator agree on acquire/release/downgrade endpoints.
+Ownership assertions use exact retained object/request/phase identity: E may
+prove its physical ownership, and O may prove its logical ownership only while
+authorized to service that exact continuation. A locked/count hint is not an
+owner query.
+
+Bootstrap is a separate gate. Prepare immutable core lock-site images before
+enabling new provider bindings; keep translator/controller infrastructure on
+its existing object backends. No published delegated MM request may revert to
+local body execution for a cold image. A cold entry, translator dependency or
+unsupported reached operation must be identified and resolved explicitly before
+claiming default delegated mmap/munmap. Initial local eligibility is not proxy
+proof. Missing GS/per-CPU/context handling cannot be excused by trusted source.
+
+### Focused delivery and acceptance
+
+1. Implement the returning primitive transaction and its task-stack bridge;
+   build and run the affected generic killable/read-tail plus returning-helper
+   fixture in the VM. Preserve all failed attempts and transaction witnesses.
+2. Connect the versioned ordinary rwsem provider, typed entry metadata and
+   exact ownership query. Inventory reached mandatory GS/current/IRQ/preempt
+   operations and primitive CALLs from the actual compiled MM entries. Add
+   explicit returning services or faithful lowering, not a whole-body suffix.
+3. Prepare a distinct source/output-separated Linux 7 kernel and schema-2
+   identity. Preserve old builds, frozen source and recovery disks. Verify
+   unchanged Native MM body hashes and the Native `kd_mmap=off` API path.
+4. Run focused actual-MM correctness and unchanged `mmap1_threads` and
+   `mmap1_processes` with `kd_mmap=on`. Require origin/executor/request/object
+   binding, other-task write entry, downgrade/read-tail execution, returning
+   helper sequences, exact read release and returned completion. A returned
+   syscall alone cannot establish this. Keep observations separate from timing.
+5. Measure one round per selected point against a fresh matching Native arm
+   only after functional proof. No claimed gain or master promotion follows
+   from design, compilation, local execution or a partial returned prefix.
+
+The November 3 preflight independently confirms the ordinary kernel boot,
+idle guest, actual `kdlock-builddisk-clean-20261031` recovery snapshot, CPU
+placement/frequency and about 50.7 GiB free on the second build filesystem.
+Recheck the required 50 GiB preparation reserve before creating another build.
+These observations authorize proceeding; they are not MM delegation evidence.
+
 The current staged redesign is owned by
 [Unified lock queue: Stage (a)](unified_lock_queue.md). Its shared queue model,
 killable/nesting obligations and delivery gates supersede the earlier
