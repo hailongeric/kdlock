@@ -8,6 +8,7 @@ from unittest.mock import patch
 from source_text import ROOT
 
 sys.path.insert(0, str(ROOT / 'tests/kernel/jit_continuation'))
+sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 import helper_mode as helper
 import bench_session
 

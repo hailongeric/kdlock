@@ -5,6 +5,7 @@
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include
+asflags-y += -I$(src)/../include
 
 # Private-state kernel regressions are absent from normal builds.
 ifeq ($(KDLOCK_SELFTEST),1)
