@@ -297,3 +297,37 @@ read-tail and subsequent same-executor/object writer observations. Their new VM
 checks remain pending at this entry. No earlier receipt is relabeled for these
 changes. Actual mmap1 delegation length, critical-section ratio, complete
 per-invocation accounting and performance acceptance remain unestablished.
+
+
+## Exact indirect-CALL correction and next text-cache limit
+
+Candidate `3b018e27df7823ee3c31a315e320fb463d524685` passes all nine private-source
+cases and the production C entry fixture (9,177 checks, zero failures), including
+all 50 negative controls. Provider compilation, eight helper phases and eleven
+killable/nesting phases pass with normal drain, retirement and unload. The
+intermediate `8c8d5324b6b53ee9875e9854eda85a267a7f5320`,
+`78b492fa0d74ad25f2e4a3dc2d8e08389ab3ba10` and
+`291d181d33de5d1c7f4cb6c82e59c63edd9f71ee` attempts retain their fixture-only
+compilation/pattern failures; no live phase started in those attempts. Their
+production provider builds passed. No failed receipt is reused as a pass.
+
+The actual-application preparation now accepts the patched CALL encoding and
+reaches the 256 KiB text-cache bound. The first stopped sites are
+`setup_arg_pages` (`0xffffffff818e05bd`) and `vm_brk_flags`
+(`0xffffffff817f77e5`), required ELF startup sites among the 55 entries. This
+corrects the earlier informal label of the latter as a mmap entry. The audited
+application entries are `vm_mmap_pgoff` at `0xffffffff817b6da8` and
+`__vm_munmap` at `0xffffffff8181c57b`. Neither unchanged application model has
+run in this attempt. The factory remains inactive with zero object bindings.
+
+The cap measures fetched windows, including page-aligned lookahead, rather than
+just decoded instructions. The next docs-first design uses compact lookahead
+for general retained call closure and preserves cache/pass/image limits and all
+mandatory source bytes. Its fit and actual execution remain pending.
+
+The failed application receipt retains `drained=false`. Separate normal daemon
+closure lets translator `24655` finish with its source lease, then confirms zero
+frames/writers, RETIRE state `2`, and normal observer/provider unload. See
+[3b0-receipts.json](3b0-receipts.json). This cleanup is not an application pass.
+No actual mmap1 delegation, throughput improvement or performance acceptance is
+claimed.
