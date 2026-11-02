@@ -20,7 +20,9 @@ The ABI is in [payload/api.h](payload/api.h). The module exposes
 and a 1..1000 ms requested duration. An automatic work item then unregisters
 all probes. STOP can close the window earlier. Read is permitted only after
 STOP has frozen the snapshot; it never follows a recorded object or task pointer.
-Timestamps use `ktime_get_ns()` (CLOCK_MONOTONIC), not a nominal arm duration.
+Event/window timestamps use `ktime_get_ns()` (CLOCK_MONOTONIC), not a nominal
+arm duration. `task_start_boottime_ns` is a task-lifetime identifier in its own
+clock domain and is never subtracted from event timestamps.
 The capture cutoff closes entry admission. Already selected returns may drain
 for `drain_ms` (default 100, maximum 1000 ms), followed by normal probe
 unregistration. Cutoff and final stop timestamps are separate and may exceed

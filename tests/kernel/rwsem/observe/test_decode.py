@@ -80,6 +80,21 @@ class DecodeTests(unittest.TestCase):
         self.assertEqual(d['body_intervals'][0]['observed_duration_in_window_ns'], 80)
         self.assertTrue(d['api_pairs'][1]['crosses_cutoff'])
 
+    def test_acquire_success_after_cutoff_is_not_claimed_held_at_cutoff(self):
+        d = obs.decode(snapshot([event(1, 1, 1, 90), event(1, 1, 2, 110)]))
+        self.assertTrue(d['capture_complete'])
+        self.assertTrue(d['api_pairs'][0]['crosses_cutoff'])
+        self.assertEqual(d['body_censoring']['open_at_final_drain'], 1)
+        self.assertNotIn('open_at_cutoff', d['body_censoring'])
+        self.assertEqual(d['body_intervals'], [])
+
+    def test_body_entirely_after_cutoff_has_zero_observed_window_duration(self):
+        d = obs.decode(snapshot([event(1, 1, 1, 101), event(1, 1, 2, 105),
+                                 event(2, 10, 6, 110), event(2, 10, 7, 115)]))
+        self.assertTrue(d['capture_complete'])
+        self.assertEqual(d['body_intervals'][0]['observed_duration_in_window_ns'], 0)
+        self.assertTrue(d['body_intervals'][0]['censored_at_cutoff'])
+
     def test_cross_task_release_is_not_guessed_as_ownership_transfer(self):
         d = obs.decode(snapshot([event(1, 5, 1, 10), event(1, 5, 2, 20),
                                  event(2, 11, 6, 30, tid=11), event(2, 11, 7, 40, tid=11)]))
