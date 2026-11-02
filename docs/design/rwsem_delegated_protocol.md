@@ -38,9 +38,13 @@ and must not silently complete the remaining body on the original task.
 
 ### Implementation pass: executor returns to pending writer work
 
-Implementation proceeds on codex/rwsem-delegated-protocol-20261102 from the
-design/observation checkpoint bd7e198b1933a01d639723ceb621fbcc45b6a29c. The
+Implementation restarts on codex/rwsem-killable-continuation from
+69fca435cb41135a3676f66e54f413b3ee5c714e. The earlier design/observation
+checkpoint is bd7e198b1933a01d639723ceb621fbcc45b6a29c. The
 production source baseline remains 7231ddf0963ff2cc730590c09cc81e7f96f93095.
+The rejected noncancellable foundation is retained at
+64d4c3c049b82409d4765144e8422e31d20a4734 and
+codex/archive-rwsem-noncancellable-foundation. It was never built or run.
 The requested next transition is a sequence of distinct ownership intervals:
 
 ```text
@@ -57,32 +61,43 @@ acquisition that has not reached its body; fulfilling it does not insert another
 public API call. B may acquire again only when B's unchanged code calls an
 acquisition API. Never hide a blocking writer acquisition inside public up_read.
 
-The implementation order is:
+The required implementation order is:
 
-1. Separate queued writer/request accounting from selected writer admission.
+1. Complete the result-returning killable continuation capture together with
+   cancellable publication and commitment. Cancellation has an exact failure
+   continuation returning -EINTR; committed proxy entry explicitly defines
+   success EAX as zero. A canceled request must be unlinked and acknowledged
+   before its packet/stack can retire, without waiting for the holder to release.
+   A selected/draining request is not yet acquired. Successful gate/phase/drain
+   readiness takes priority over a pending signal; cancellation after commitment
+   cannot report failure or replay body effects. Use the origin's killable
+   predicate, never the executor's pending signals. Preserve the two-word wrapper
+   ABI and callable/cleanup contracts. Do not add a capture-only local wrapper
+   or publish a killable request through the current uncancellable mutex queue.
+2. Separate queued writer/request accounting from selected writer admission.
    Use exact request-owned writer/read records and a phase generation. No
    queued request has a reusable reader-drain result. Apply the selected-phase
    rules to ordinary, signalable, trylock and delegated writers; preserve the
    existing cancellation, rollback and success-before-signal ordering.
-2. Add general runtime controls for delegated downgrade and final read release.
+3. Add general runtime controls for delegated downgrade and final read release.
    Publish the read credit before releasing the physical gate, reopen admission
    only after its unlock acknowledgment, and continue the read tail on E.
    The physical gate ACK must not complete the read acquisition or pop its
    frame. Keep exact source, packet, stack, object and execution records live.
-3. Finish B's read release and returned completion before reusing its storage
+   Finish B's read release and returned completion before reusing its storage
    or blocking E on A/C. Route reacquisition through the full rwsem writer
    protocol, not the existing mutex-only early-release recovery helper.
    Preserve each request's own commitment state: an already committed A cannot
    become canceled merely because physical reacquisition is necessary. An
    uncommitted killable request retains its ordinary cancellation contract.
-4. Complete the result-returning killable entry and source/return contract.
-   A committed proxy success explicitly defines the returned zero; canceled
-   requests publish no body. Ordinary callable/cleanup behavior stays correct.
-5. Connect only complete general capabilities to the kernel's ordinary lock
+   Connect only complete general capabilities to the kernel's ordinary lock
    facade. The builtin executor/image startup dependency and reached helper
    context services remain mandatory; a module-only or local-only run cannot
    certify forced delegated MM execution. No workload-specific adapter or
    suppressed reached-operation check is an intermediate solution.
+4. Validate the killable path, selected admission and writer/read-tail protocol
+   together. An unbuilt or local-only foundation does not complete any delegated
+   mmap acceptance criterion.
 
 Directly affected VM checks must witness other-task write entry, downgrade,
 read-tail effects, exact read release/completion, and the same executor's fresh
@@ -98,6 +113,25 @@ This section authorizes an implementation sequence, not a claim that the
 capabilities are already present. Keep every build/test attempt and exact
 source/image identity. No source edits or synchronization occur while frozen
 inputs are executing, and no promotion follows from an incomplete candidate.
+
+The first required killable proof cancels a published uncommitted request and
+returns failure while the holder still owns the lock. Its body prefix stays
+zero, its successor survives and no packet/frame reference remains after exact
+retirement. A second controlled case commits acquisition against a pending
+fatal signal and executes exactly once with success. Cancellation while waiting
+for readers must undo only that request's phase/gate custody. The existing local
+cancellation probes do not establish any of these published-request cases.
+
+The capture ABI can be constructed independently, but a working delegated
+killable acquisition cannot use the current mutex queue unchanged. The baseline
+queue only polls locked (kernel_module/mutex/queue.inc:84); its waiter outcomes
+are native continuation, completed body or next head (mutex/waiter.inc:61).
+There is no cancel-versus-commit election or canceled-node unlink/retirement
+acknowledgment. Integer capture alone does not add those operations. Full MM
+execution separately needs executor-side resumable services: the ordinary CALL
+path at kernel_module/exe.c:704 currently runs the origin's remaining suffix,
+and the builtin generator at kernel_integration/mmap_lock/prepare.py:61 removes
+delegation machinery. These distinct gaps must not be concealed by local routing.
 
 ### Killable continuation capture and commit
 
