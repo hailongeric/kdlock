@@ -1,6 +1,7 @@
 """VM-only continuous-reader and actual run_point diagnostic joins."""
 from contextlib import ExitStack
 import errno
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,11 @@ import time
 import unittest
 from unittest.mock import patch
 
-from test_mmap1 import bench, output
+fixture_spec = importlib.util.spec_from_file_location(
+    'mmap1_kernel_log_fixture', Path(__file__).with_name('test_mmap1.py'))
+fixture = importlib.util.module_from_spec(fixture_spec)
+fixture_spec.loader.exec_module(fixture)
+bench, output = fixture.bench, fixture.output
 
 logs = bench.kernel_log
 

@@ -155,3 +155,21 @@ The latest isolated source adds a tests-only actual-application controller,
 complete diagnostic collection and exact session/transaction joins. These
 changes do not alter Native MM bodies or the upstream application. Candidate
 execution, both application models and performance acceptance remain pending.
+
+## First focused checks on the MM kernel
+
+Frozen `3017c8a5fea6dbc7f16e567e8abb05238bd0f36f` passes all seven guarded-read
+codegen/execution cases, including the original failing destination and the
+new BP case. The explicit session and delegated-controller site/trace checks
+also pass. Its provider compiles against the exact scope5 kernel. The
+continuous collector fixture fails before execution because the selected unit
+runner does not add the benchmark fixture directory to Python's import path.
+No live helper or killable phase starts. The correction makes this fixture load
+its sibling explicitly, as the existing benchmark fixtures already do; it
+does not change the production collector or lock code.
+
+This attempt uses the Native/off boot above, separately from the prior c51
+checks on the ordinary kernel. Its first host preflight fails when a QEMU
+auxiliary thread changes during observation; a second complete stable capture
+passes before the VM checks start. Both captures and the failed unit receipt
+remain retained.
