@@ -615,8 +615,12 @@ unsupported-operation return code.
 
 ## Validation matrix and staged delivery
 
-Every row below is planned and unrun for this redesign. Existing local receipts
-do not satisfy new published-request or nested-executor rows.
+The matrix remains the complete target, rather than a list of completed checks.
+The [Stage (b) infrastructure record](../../bench/results/10.176.26.71/tests/unified-queue-20261102/README.md)
+reports the focused queue/local checks and four returned-JIT smoke points now
+run, with each source version and failed attempt retained. Existing local
+receipts do not satisfy the new delegated killable, nested-executor, read-tail,
+capacity or MM rows. Those support/acceptance gates remain open.
 
 | ID | Case | Required oracle | First required stage |
 | --- | --- | --- | --- |
@@ -731,7 +735,9 @@ pointer to kd_exec_frame. On the supported x86-64 layout this changes the frame
 from 656 to 664 bytes and the 64-byte-aligned kd_spin_continuation from 704 to
 768 bytes. The pointer is unused by current capture, so that extra stride has
 no functional purpose. The source correction below preserves the original
-frame and spin-record sizes; its compilation and performance remain unmeasured.
+frame and spin-record sizes. The final VM build passed the exact size/offset
+assertions and all four returned-JIT functional points; performance remains
+unmeasured.
 
 The exact storage budget is:
 

@@ -1,0 +1,27 @@
+{
+  "local_archive": "bench/results/10.176.26.71/raw/tests/unified-queue-20261102/vm-evidence.tar.xz",
+  "raw_gitignored": true,
+  "vm": {
+    "archive": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-20261102-evidence.tar.xz",
+    "boot": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+    "final_idle": true,
+    "free": {
+      "/": 6462586880,
+      "/mnt/kdlock-builds": 29859647488,
+      "/mnt/kdlock-builds2": 54753562624
+    },
+    "names": [
+      "unified-queue-local-20261102-a",
+      "unified-queue-local-20261102-b",
+      "unified-queue-focused-20261102",
+      "unified-queue-unit-recheck-20261102",
+      "unified-queue-basic-20261102",
+      "unified-queue-basic-20261102-b",
+      "unified-queue-basic-20261102-c",
+      "unified-queue-basic-20261102-d"
+    ],
+    "release": "7.0.0-38-kdlock1",
+    "sha256": "bcdb70cc8561abb238ba0a98a015e7acccb5d095dd1ea1e4f839706350a4e355",
+    "size": 13257732
+  }
+}
