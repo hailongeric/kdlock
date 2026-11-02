@@ -50,6 +50,8 @@ KD_SERVICE_CONTEXT(__rcu_read_unlock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_R
  * callback preserves the remaining registers and arithmetic flags. */
 KD_SERVICE_CONTEXT(_paravirt_ident_64, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(paravirt_ret0, 0, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* arch/x86/kernel/alternative.c: the exact empty target behind paravirt_nop. */
+KD_SERVICE_CONTEXT(nop_func, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* arch/x86/include/asm/pgtable_64.h: void (entry pointer, one-word entry). */
 KD_SERVICE_CONTEXT(native_set_pte, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(native_set_pmd, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)

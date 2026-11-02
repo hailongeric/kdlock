@@ -72,7 +72,7 @@ check using the same module, publication and normal retirement machinery.
 The existing eleven `killable` phases keep their typed-only image requirement
 384. Helper mode has reachable declared primitive CALLs and requires 896
 (origin CALL, retained service queue and budget continuation), with capability
-v14/bit14 descriptor discovery. It does not run timing points or replace any
+v14-or-v15/bit14 descriptor discovery. It does not run timing points or replace any
 of the existing killable checks.
 
 The test module registers two six-word C primitives through

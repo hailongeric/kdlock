@@ -86,13 +86,68 @@ const struct kd_rwsem_site *kd_rwsem_provider_sites(unsigned int *count)
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_provider_sites);
 
+/* A completed instruction has no source CALL word. Its exact post-state
+ * supplies IP/SP and arithmetic flags after all cleanup, including module_put.
+ * Only builtin text executes after the callback's final module reference. */
+static __attribute__((noipa, noreturn)) noinline notrace void
+kd_rwsem_provider_resume_instruction(const struct kd_mmap_regs *packet)
+{
+	asm volatile("pushfq\n\t"
+		     "popq %%rax\n\t"
+		     "andq $%c[keep_flags], %%rax\n\t"
+		     "movq %c[flags](%%rdi), %%rcx\n\t"
+		     "andq $%c[arithmetic_flags], %%rcx\n\t"
+		     "orq %%rcx, %%rax\n\t"
+		     "movq %c[sp](%%rdi), %%rsp\n\t"
+		     "pushq %c[ip](%%rdi)\n\t"
+		     "pushq %%rax\n\t"
+		     "movq %c[r15](%%rdi), %%r15\n\t"
+		     "movq %c[r14](%%rdi), %%r14\n\t"
+		     "movq %c[r13](%%rdi), %%r13\n\t"
+		     "movq %c[r12](%%rdi), %%r12\n\t"
+		     "movq %c[bp](%%rdi), %%rbp\n\t"
+		     "movq %c[bx](%%rdi), %%rbx\n\t"
+		     "movq %c[r11](%%rdi), %%r11\n\t"
+		     "movq %c[r10](%%rdi), %%r10\n\t"
+		     "movq %c[r9](%%rdi), %%r9\n\t"
+		     "movq %c[r8](%%rdi), %%r8\n\t"
+		     "movq %c[ax](%%rdi), %%rax\n\t"
+		     "movq %c[cx](%%rdi), %%rcx\n\t"
+		     "movq %c[dx](%%rdi), %%rdx\n\t"
+		     "movq %c[si](%%rdi), %%rsi\n\t"
+		     "movq %c[di](%%rdi), %%rdi\n\t"
+		     "popfq\n\t"
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
+		     "jmp __x86_return_thunk\n\t"
+#else
+		     "retq\n\t"
+#endif
+		     : : "D"(packet), [ip] "i"(KD_MMAP_REG_IP),
+		       [sp] "i"(KD_MMAP_REG_SP), [flags] "i"(KD_MMAP_REG_FLAGS),
+		       [arithmetic_flags] "i"(KD_MMAP_REG_ARITHMETIC_FLAGS),
+		       [keep_flags] "i"(~KD_MMAP_REG_ARITHMETIC_FLAGS),
+		       [r15] "i"(KD_MMAP_REG_R15), [r14] "i"(KD_MMAP_REG_R14),
+		       [r13] "i"(KD_MMAP_REG_R13), [r12] "i"(KD_MMAP_REG_R12),
+		       [bp] "i"(KD_MMAP_REG_BP), [bx] "i"(KD_MMAP_REG_BX),
+		       [r11] "i"(KD_MMAP_REG_R11), [r10] "i"(KD_MMAP_REG_R10),
+		       [r9] "i"(KD_MMAP_REG_R9), [r8] "i"(KD_MMAP_REG_R8),
+		       [ax] "i"(KD_MMAP_REG_AX), [cx] "i"(KD_MMAP_REG_CX),
+		       [dx] "i"(KD_MMAP_REG_DX), [si] "i"(KD_MMAP_REG_SI),
+		       [di] "i"(KD_MMAP_REG_DI) : "memory", "cc");
+	__builtin_unreachable();
+}
+
 /* The module has retired its request/source/stack and moved the FULL packet
  * onto the Native caller's stack before entering this nonreturning builtin.
  * After module_put no module text or object/provider field is accessed. */
 __attribute__((noipa)) noinline notrace void __noreturn
 kd_rwsem_provider_resume(struct module *owner, const void *full_packet)
 {
+	const struct kd_mmap_regs *packet = full_packet;
+
 	module_put(owner);
+	if (packet->orig_ax == KD_MMAP_REG_ORIGIN_SUFFIX_TAG)
+		kd_rwsem_provider_resume_instruction(packet);
 	asm volatile("movq %c[r15](%%rdi), %%r15\n\t"
 		     "movq %c[r14](%%rdi), %%r14\n\t"
 		     "movq %c[r13](%%rdi), %%r13\n\t"

@@ -167,6 +167,9 @@ static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	cont->origin_call.sequence = 0;
 	cont->origin_call.phase = KD_ORIGIN_CALL_IDLE;
 	cont->origin_call.servicing = false;
+	cont->origin_memory.packet = packet;
+	cont->origin_memory.sequence = 0;
+	cont->origin_memory.phase = KD_ORIGIN_MEMORY_IDLE;
 	cont->pending_call.phase = KD_CALL_NONE;
 	cont->stack_base = stack_base;
 	cont->stack_put = stack ? lease->stack_put : NULL;
@@ -420,6 +423,8 @@ int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
 	    cont->origin_call.entry || cont->origin_call.servicing ||
 	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
 	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
+	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
+	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED) ||
 	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
 	    kd_exec_cont_call_word(cont, &return_ip))
 		return -EINVAL;
@@ -452,7 +457,9 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 	    cont->root->packet_owner != cont || frame->packet_state != KD_PACKET_FULL ||
 	    !frame->executed || !frame->image ||
 	    !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL) ||
-	    cont->service_call.api != KD_SERVICE_NONE)
+	    cont->service_call.api != KD_SERVICE_NONE ||
+	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
+	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED))
 		return -EINVAL;
 	call = &cont->origin_call;
 	if ((call->phase != KD_ORIGIN_CALL_IDLE && call->phase != KD_ORIGIN_CALL_CONSUMED) ||
@@ -845,7 +852,9 @@ int kd_exec_cont_return(struct kd_exec_continuation *cont, int result)
 		return ret;
 	if (cont->origin_call.entry || cont->origin_call.servicing ||
 	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
-	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED))
+	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
+	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
+	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED))
 		return ret;
 	acquired = smp_load_acquire(&cont->request->state);
 	if ((result == -EINTR && acquired != KD_WAIT_CANCEL_ACK) ||
@@ -923,6 +932,8 @@ int kd_exec_cont_retire(struct kd_exec_continuation *cont)
 	    cont->origin_call.entry || cont->origin_call.servicing ||
 	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
 	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
+	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
+	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED) ||
 	    !list_empty(&cont->storage_owners) ||
 	    READ_ONCE(cont->request->memberships) || READ_ONCE(cont->request->selection) ||
 	    READ_ONCE(cont->request->acquisition) ||

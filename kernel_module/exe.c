@@ -511,7 +511,13 @@ returned_wrapper:
 		 * an original-task suffix. Unsupported reached operations are reported
 		 * as an integration boundary with the committed packet unchanged. */
 		if (cont && cont->service_ops) {
-			if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL) {
+			if (args[0] == KD_EXE_ORIGIN_MEMORY) {
+				call_ret = fault_kind ? -EINVAL : kd_exec_cont_memory_prepare(frame);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_ORIGIN_MEMORY;
+					break;
+				}
+			} else if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL) {
 				call_ret = fault_kind ? -EINVAL : 0;
 				if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
 					unsigned int length;
@@ -796,6 +802,11 @@ returned_wrapper:
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
 							KD_EXE_RUN_NATIVE;
 			}
+		} else if (args[0] == KD_EXE_ORIGIN_MEMORY) {
+			kd_jit_log_hl_error("ORIGIN_MEMORY_REQUIRES_RETAINED_ROOT", frame, regs,
+				args[0], -EOPNOTSUPP, continuation_count, hostcall_count);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
 		} else if (args[0] == KD_EXE_ORIGIN_INSN) {
 			call_ret = fault_kind ? -EINVAL :
 				kd_jit_origin_instruction(exe, frame, regs, continuation_count + 1);
@@ -882,7 +893,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	    image->length < KD_IMAGE_HEADER_SIZE ||
 	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
 				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
-				      KD_IMAGE_REQUIRE_ORIGIN_CALL)) ||
+					      KD_IMAGE_REQUIRE_ORIGIN_CALL |
+					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;

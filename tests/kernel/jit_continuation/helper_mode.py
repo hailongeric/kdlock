@@ -205,7 +205,7 @@ def session_class(base):
             result = super().counts(label)
             if label == 'initial':
                 caps = self.record['capabilities']
-                rt.require(caps['version'] == 14 and caps['features'] & (1 << 14),
+                rt.require(caps['version'] in (14, 15) and caps['features'] & (1 << 14),
                            'declared returning primitive discovery unavailable', 'ENVIRONMENT')
                 state = helper_snapshot()
                 rt.require(state['registered'] == 1 and not state['errors'],

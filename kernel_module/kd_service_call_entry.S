@@ -5,6 +5,7 @@
 #include <asm/nospec-branch.h>
 #include <asm/unwind_hints.h>
 #include "kd_service_calls.h"
+#include "kd_origin_memory.h"
 #include "kd_regs.h"
 
 	.text
@@ -75,4 +76,37 @@ SYM_FUNC_START(kd_service_origin_bridge)
 	popq %rbp
 	RET
 SYM_FUNC_END(kd_service_origin_bridge)
+
+/* Instruction service has no source CALL word and no virtual GPR results.
+ * Its fixed helper stores only the exact arithmetic flags in cold metadata. */
+SYM_FUNC_START(kd_service_memory_bridge)
+	endbr64
+	pushq %rbp
+	pushq %rbx
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	movq %rdi, %r12
+	movq %rsp, KD_ORIGIN_MEMORY_SHADOW_SP(%r12)
+	movq %rbp, KD_ORIGIN_MEMORY_SHADOW_BP(%r12)
+	movq KD_ORIGIN_MEMORY_NATIVE_SP(%r12), %rsp
+	UNWIND_HINT_UNDEFINED
+	movq KD_ORIGIN_MEMORY_PACKET(%r12), %rbx
+	movq KD_REG_BP(%rbx), %rbp
+	call kd_service_memory_context_begin
+	movq %r12, %rdi
+	call kd_origin_memory_apply
+	movq %r12, %rdi
+	call kd_service_memory_context_end
+	movq KD_ORIGIN_MEMORY_SHADOW_SP(%r12), %rsp
+	UNWIND_HINT_UNDEFINED
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	popq %rbx
+	popq %rbp
+	RET
+SYM_FUNC_END(kd_service_memory_bridge)
 	.section .note.GNU-stack,"",@progbits

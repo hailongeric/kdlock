@@ -203,6 +203,12 @@ static unsigned int kd_service_native_depth(struct kd_service_root *root,
 	return count;
 }
 
+static unsigned int kd_service_native_pins(struct kd_service_root *root)
+{
+	return kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN) +
+		kd_service_native_depth(root, KD_NATIVE_OWNER_PREEMPT);
+}
+
 static struct kd_native_owner *kd_service_native_find(struct kd_service_root *root,
 	unsigned int kind, unsigned long object)
 {
@@ -210,7 +216,8 @@ static struct kd_native_owner *kd_service_native_find(struct kd_service_root *ro
 
 	list_for_each_entry(owner, &root->native_owners, link) {
 		if (!owner->held || owner->kind != kind ||
-		    (kind == KD_NATIVE_OWNER_SPIN && owner->object != object))
+		    ((kind == KD_NATIVE_OWNER_SPIN || kind == KD_NATIVE_OWNER_PREEMPT) &&
+		     owner->object != object))
 			continue;
 		BUG_ON(owner->origin != root->owner.request.logical_origin ||
 		    owner->identity != root->owner.request.identity ||
@@ -382,7 +389,7 @@ static void kd_service_origin_primitive(struct kd_service_root *root)
 	    call->call.stack > cont->stack_base + THREAD_SIZE - sizeof(return_ip) ||
 	    copy_from_kernel_nofault(&return_ip, (void *)call->call.stack, sizeof(return_ip)) ||
 	    return_ip != call->call.return_ip || irqs_disabled());
-	call->baseline_preempt = kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN);
+	call->baseline_preempt = kd_service_native_pins(root);
 	call->baseline_rcu = kd_service_native_depth(root, KD_NATIVE_OWNER_RCU);
 	BUG_ON(preempt_count() != call->baseline_preempt + 1 ||
 		kd_service_origin_rcu_depth() != call->baseline_rcu);
@@ -397,7 +404,7 @@ static void kd_service_origin_primitive(struct kd_service_root *root)
 	/* The Native helper and bridge frames have left the source task stack.
 	 * Only now can a resumed E overwrite that lower stack with JIT frames. */
 	BUG_ON(call->servicing || irqs_disabled() ||
-		preempt_count() != kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN) + 1 ||
+		preempt_count() != kd_service_native_pins(root) + 1 ||
 		kd_service_origin_rcu_depth() != kd_service_native_depth(root, KD_NATIVE_OWNER_RCU));
 	kd_service_primitive_trace("done", root);
 	smp_store_release(&call->phase, KD_ORIGIN_CALL_DONE);
@@ -629,6 +636,8 @@ static int kd_service_primitive_call(struct kd_service_root *root)
 	return kd_exe_resume_retained(&cont->frame);
 }
 
+#include "service_memory.inc"
+
 /* The child record remains on the executor's C stack until the entire root
  * finishes. Releases may occur in any order; list membership is not LIFO
  * ownership. A child needs no root slot or additional service worker. */
@@ -748,7 +757,7 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 
 				/* A sleeping KD acquisition is not a legal Native atomic
 				 * interval operation. Refuse before touching its object. */
-				BUG_ON(kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN) ||
+				BUG_ON(kd_service_native_pins(root) ||
 				       kd_service_native_depth(root, KD_NATIVE_OWNER_RCU));
 
 				list_for_each_entry(owner, &root->scope.owners, link)
@@ -766,7 +775,7 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 			continue;
 		}
 		if (status == KD_EXE_RUN_YIELD) {
-			if (!kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN)) {
+			if (!kd_service_native_pins(root)) {
 				kd_service_unpin(cont);
 				cond_resched();
 				kd_service_pin_resume(cont);
@@ -776,6 +785,10 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 		}
 		if (status == KD_EXE_RUN_ORIGIN_CALL) {
 			status = kd_service_primitive_call(root);
+			continue;
+		}
+		if (status == KD_EXE_RUN_ORIGIN_MEMORY) {
+			status = kd_service_memory_call(root);
 			continue;
 		}
 		/* No origin suffix is a valid completion of this retained protocol.
@@ -1005,6 +1018,7 @@ kd_service_shadow_wait(struct kd_service_root *root)
 	smp_store_release(&root->transport, KD_SERVICE_STACK_READY);
 	while (smp_load_acquire(&root->transport) != KD_SERVICE_RESULT) {
 		kd_service_origin_primitive(root);
+		kd_service_origin_memory(root);
 		cpu_relax();
 	}
 	BUG_ON(root->result);
@@ -1045,6 +1059,8 @@ kd_service_resume_packet(struct kd_service_root *root, const struct kd_regs *sav
 	migrate_enable();
 	if (completion.resume)
 		completion.resume(completion.owner, &packet);
+	if (packet.orig_ax == KD_REG_ORIGIN_SUFFIX_TAG)
+		jump_to_saved_regs_in_cs(&packet);
 	jump_to_saved_regs(&packet);
 	BUG();
 }
@@ -1314,6 +1330,10 @@ int kd_service_init(void)
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, native_sp) != KD_ORIGIN_CALL_NATIVE_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_sp) != KD_ORIGIN_CALL_SHADOW_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_bp) != KD_ORIGIN_CALL_SHADOW_BP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_memory, packet) != KD_ORIGIN_MEMORY_PACKET);
+	BUILD_BUG_ON(offsetof(struct kd_origin_memory, native_sp) != KD_ORIGIN_MEMORY_NATIVE_SP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_memory, shadow_sp) != KD_ORIGIN_MEMORY_SHADOW_SP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_memory, shadow_bp) != KD_ORIGIN_MEMORY_SHADOW_BP);
 	result = kd_service_calls_init();
 	if (result)
 		return result;

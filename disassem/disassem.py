@@ -28,6 +28,7 @@ import memread
 import normal
 import native_escape
 import origin_instructions
+import origin_memory
 import returning_calls
 import native_terminals
 import solve_bug
@@ -642,6 +643,11 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
     origin_sites = {ip:site for ip,site in origin_sites.items()
                     if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
+    memory_sites = (origin_memory.sites(block_dict)
+                    if lock_kind == "mutex" and abi == 2
+                    and memread.device_session.origin_memory() else {})
+    if memory_sites:
+        service_queue_required = True
     if service_queue_required and (has_escapes or root_escapes or origin_sites):
         return reject_translation("retained-service scope needs unsupported instruction services")
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
@@ -669,6 +675,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         address_guards=memory_guards,
         trusted_source=trusted_source,
         origin_sites=origin_sites,
+        memory_sites=memory_sites,
         budget_resume_enabled=budget_resume_enabled,
         returning_targets=returning_targets,
         returning_services=returning_services,
@@ -682,12 +689,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         requirements=((native_escape.REQUIREMENT if has_escapes else 0)
                       | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
                       | (origin_instructions.REQUIREMENT if origin_sites else 0)
+                      | (origin_memory.REQUIREMENT if memory_sites else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)
                       | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)
                       | (context_policy.SERVICE_QUEUE_REQUIREMENT
                          if service_queue_required else 0)
-                      | (returning_calls.REQUIREMENT if returning_targets else 0)))
+                      | (returning_calls.REQUIREMENT if returning_targets or memory_sites else 0)))
     return 0
 
 

@@ -64,6 +64,7 @@ def render(
     trusted_source=False,
     indirect_call_capable=False,
     origin_instruction_capable=False,
+    origin_memory_capable=False,
     returning_services=None,
     bound_controls=None,
 ):
@@ -100,6 +101,8 @@ def render(
                                         "indirect_call", return_value=indirect_call_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "origin_instruction", return_value=origin_instruction_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "origin_memory", return_value=origin_memory_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "service_calls", return_value=returning_services or {}))
         stack.enter_context(patch.object(translator.memread.device_session,

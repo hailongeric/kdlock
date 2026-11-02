@@ -335,3 +335,8 @@ native_entry_refused:
 #define KD_EMIT_ORIGIN_DIRECTORY 1
 #include "jit.S"
 #endif
+
+#if KD_GENERATED_REQUIREMENTS & 1024
+#define KD_EMIT_MEMORY_DIRECTORY 1
+#include "jit.S"
+#endif

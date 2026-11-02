@@ -43,6 +43,7 @@ enum kd_native_owner_kind {
 	KD_NATIVE_OWNER_FREE,
 	KD_NATIVE_OWNER_SPIN,
 	KD_NATIVE_OWNER_RCU,
+	KD_NATIVE_OWNER_PREEMPT,
 };
 
 /* Each live record is authority for one actual Native acquisition. Context

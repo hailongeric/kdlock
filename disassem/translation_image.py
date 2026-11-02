@@ -15,6 +15,7 @@ import solve_bug
 import special_inst
 import native_escape
 import origin_instructions
+import origin_memory
 import budget_resume
 import returning_calls
 from assist import make_inst
@@ -113,6 +114,7 @@ def emit_jit_assembly(
     native_calls=None,
     trusted_source=False,
     origin_sites=None,
+    memory_sites=None,
     budget_resume_enabled=False, returning_targets=None, returning_services=(),
 ):
     continuation_targets = find_resumable_call_continuations(
@@ -127,6 +129,11 @@ def emit_jit_assembly(
     )
     if origin_sites:
         continuation_targets.update(line.offset + line.l for line, _ in origin_sites.values())
+    if memory_sites:
+        continuation_targets.update(line.offset + line.l
+            for line, operation, _ in memory_sites.values() if operation)
+        returning_targets = set(returning_targets or ()) | {
+            line.offset + line.l for line, operation, _ in memory_sites.values() if operation}
     continuation_labels = continuation_targets - set(block_dict)
     emitted_continuation_labels = set()
     emitted_offsets = {line.offset for block in block_dict.values() for line in block.lines}
@@ -215,7 +222,13 @@ def emit_jit_assembly(
                       else None)
             if address_guards is not None:
                 f.write(address_guards.emit(line, reg_map))
-            if origin_sites and line.offset in origin_sites:
+            if memory_sites and line.offset in memory_sites:
+                diagnostics.warn("ORIGIN_MEMORY_SERVICE", "emit_original_cpu_instruction",
+                                 "retain the exact JIT successor after one GS memory instruction",
+                                 source_ip=hex(line.offset), instruction=line.name)
+                f.write(origin_memory.marker(line, reg_map))
+                reg_map = conflict.block_init()
+            elif origin_sites and line.offset in origin_sites:
                 diagnostics.warn("ORIGIN_INSTRUCTION_SERVICE", "emit_waiter_instruction",
                                  "retain the same immutable JIT successor after one original-task instruction",
                                  source_ip=hex(line.offset), instruction=line.name)
@@ -306,4 +319,10 @@ def emit_jit_assembly(
             raise ValueError("original-task instruction metadata cannot share another trailer")
         result = ("#ifndef KD_EMIT_ORIGIN_DIRECTORY\n" + result + "#else\n"
                   + origin_instructions.metadata(origin_sites) + "#endif\n")
+    if memory_sites:
+        if (origin_sites or native_calls is not None or
+                (address_guards is not None and address_guards.sites)):
+            raise ValueError("original-CPU memory metadata cannot share another trailer")
+        result = ("#ifndef KD_EMIT_MEMORY_DIRECTORY\n" + result + "#else\n"
+                  + origin_memory.metadata(memory_sites) + "#endif\n")
     return result

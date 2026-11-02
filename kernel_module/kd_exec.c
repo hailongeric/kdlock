@@ -258,6 +258,7 @@ bool kd_exec_context_occupied(void)
  * until the first service/control boundary requires an explicit owner record. */
 #include "execution/frame_lifecycle.inc"
 #include "execution/continuation.inc"
+#include "execution/origin_memory.inc"
 
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct kd_regs *regs)

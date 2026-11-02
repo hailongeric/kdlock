@@ -2,7 +2,7 @@
 /* Retained authority for ordinary Native spin/RCU APIs. O is the actual
  * Native owner. E receives permission only through the exact RPC ACK. */
 static struct kd_native_owner *kd_service_native_reserve(
-	struct kd_service_root *root, unsigned int kind, unsigned long object)
+	struct kd_service_root *root, unsigned int kind, unsigned long object, u64 sequence)
 {
 	struct kd_native_owner *owner;
 
@@ -12,7 +12,7 @@ static struct kd_native_owner *kd_service_native_reserve(
 		owner->origin = root->owner.request.logical_origin;
 		owner->identity = root->owner.request.identity;
 		owner->generation = root->owner.request.generation;
-		owner->sequence = root->continuation.origin_call.sequence;
+		owner->sequence = sequence;
 		owner->object = object;
 		owner->held = false;
 		owner->kind = kind;
@@ -26,7 +26,7 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 	struct kd_origin_call *call = &root->continuation.origin_call;
 	struct kd_native_owner *owner;
 	unsigned int free = 0, needed = 0;
-	unsigned int spins = kd_service_native_depth(root, KD_NATIVE_OWNER_SPIN);
+	unsigned int spins = kd_service_native_pins(root);
 	unsigned int rcu = kd_service_native_depth(root, KD_NATIVE_OWNER_RCU);
 
 	if (!(call->executor_irq_flags & X86_EFLAGS_IF) || preempt_count() != 1)
@@ -82,11 +82,12 @@ static int kd_service_native_prepare(struct kd_service_root *root)
 	    call->context_kind == KD_SERVICE_CALL_SPIN_LOCK ||
 	    call->context_kind == KD_SERVICE_CALL_SPIN_TRYLOCK)
 		call->spin_owner = kd_service_native_reserve(root,
-			KD_NATIVE_OWNER_SPIN, call->object);
+			KD_NATIVE_OWNER_SPIN, call->object, call->sequence);
 	if (call->context_kind == KD_SERVICE_CALL_PTE_LOCK ||
 	    call->context_kind == KD_SERVICE_CALL_PTE_RCU ||
 	    call->context_kind == KD_SERVICE_CALL_RCU_LOCK)
-		call->rcu_owner = kd_service_native_reserve(root, KD_NATIVE_OWNER_RCU, 0);
+		call->rcu_owner = kd_service_native_reserve(root,
+			KD_NATIVE_OWNER_RCU, 0, call->sequence);
 	return 0;
 }
 

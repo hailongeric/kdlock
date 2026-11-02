@@ -220,6 +220,19 @@ never silently route the entire mmap/munmap body to O or declare it a success.
 
 ### Focused delivery and acceptance
 
+The final ownership release can itself be an instruction, for example the
+last inline preemption decrement after an earlier outer unlock. Unlike a CALL,
+it has no source return word to consume. Completion must preserve the unchanged
+source SP, resume IP immediately after the completed instruction and its
+arithmetic flags. The existing validated post-instruction packet tag identifies
+that mode. Both module-local restoration and the builtin provider trampoline
+must implement it; this is general continuation glue, not a change to any MM
+body. Provider version 2 explicitly requires that completion mode. Version 1
+must refuse the new provider rather than misinterpret a post-instruction
+packet as a returning CALL. Final cleanup and the transferred module reference
+are retired before builtin code restores the packet. Ordinary CALL completion
+still consumes its original source return word exactly once.
+
 1. Implement the returning primitive transaction and its task-stack bridge;
    build and run the affected generic killable/read-tail plus returning-helper
    fixture in the VM. Preserve all failed attempts and transaction witnesses.
@@ -690,9 +703,27 @@ and restores the runtime pin before acknowledgment. Subsequent Native calls and
 root completion must validate both the retained Native-spin records and these
 source transitions. In particular, DEC's zero test includes x86's inverted
 need-reschedule bit; a count biased by the runtime pin cannot supply its result.
+Each source INC reserves one exact `KD_NATIVE_OWNER_PREEMPT` record before the
+instruction; its matching DEC retires the latest token for O's exact count
+address after actual execution. Expected Native preempt depth is the sum of
+live spin and source-pin records. E retains its CPU capacity while either kind
+is held, and a 64-bit or partial overlapping access to this 32-bit field is
+refused before execution. Ordinary per-CPU accounting updates create no pin
+record. The last matched DEC can complete a previously unlocked root through a
+flags-aware IP/SP restore; it cannot use the source-CALL RET completion mode.
 Other widths, LOCK/REP or address-size prefixes, non-GS segments and instructions
 without a decoded emitted successor remain explicit unsupported reached points.
 They must not execute through the remote ordinary RMW lowering.
+
+The same before-effects marker covers other explicit GS destination mutations:
+MOV and other stores, ADD/ADC/SUB/SBB, logical operations, NEG/NOT, shifts and
+rotates, modifying bit operations, SETcc, POP, XCHG/XADD and CMPXCHG families.
+Only the exact INC/DEC32/64 decoder authorizes execution. Other rows contain the
+exact source bytes with operation, width and successor offset zero; publication
+can retain those branches, while reaching one reports EOPNOTSUPP before effects.
+GS loads, compares, read-only bit tests, prefetches and memory input operands
+remain ordinary translations; this does not establish that every such read is
+equivalent for arbitrary CPU-local scheduler state.
 
 Focused validation will decode exact positive and negative byte forms, inspect
 generated FULL exit and arithmetic-flags reentry, then exercise source GPRs,

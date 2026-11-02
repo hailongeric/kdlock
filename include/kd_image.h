@@ -2,6 +2,7 @@
 #ifndef KD_IMAGE_H
 #define KD_IMAGE_H
 #include "exe_info.h"
+#include "kd_origin_memory.h"
 
 /* Construct privately, then publish once. Published descriptors and executable
  * blocks survive every frame/continuation until terminal session teardown. */
