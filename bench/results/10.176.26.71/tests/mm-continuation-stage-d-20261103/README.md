@@ -173,3 +173,34 @@ checks on the ordinary kernel. Its first host preflight fails when a QEMU
 auxiliary thread changes during observation; a second complete stable capture
 passes before the VM checks start. Both captures and the failed unit receipt
 remain retained.
+
+## Focused live continuation and cancellation checks
+
+Frozen `efd10ac8c5471b107145c367ba4401ad9dadfca3` passes the corrected continuous
+collector fixture and scope5 provider build. All six helper phases and all
+eleven killable/nesting phases pass with normal drain, source retirement and
+unload. Each final phase snapshot has zero errors/active requests, empty queues
+and an idle lock. See [efd-receipts.json](efd-receipts.json). This is a separate
+source/boot result; no failed predecessor receipt is relabeled.
+
+The helper phases cover six-word Native returns, a sleeping child, Native spin
+trylock and nine RCU records, final Native release after outer release, ordinary
+GS/preemption instructions and final instruction completion. Exact source
+instruction, request/image generations, O/E identities, flags, SP and returned
+values are joined. The cancellation phases include three queued cancellations,
+selected reader-drain cancellation, nested cancellation, mixed and early-release
+depth nine, 128 child reuses, and a nondelegable child control.
+
+In `executor-downgrade-and-fresh-writer`, origin `7729` enters, downgrades,
+releases its read share and returns on executor `7635`. The same executor then
+enters and completes origin `7730`'s new write request on the same lock. The
+fixture holds an additional reader and checks that this successor does not
+enter until that reader drains. This satisfies the controlled continuation
+criterion; it is not mmap1 execution or a throughput result.
+
+The later file-callback and Native inner-writer addition at design commit
+`41409fcfc1bc0f2334002834d1e7765484e7f9f8` remains a separate implementation
+candidate. Fresh ELF file-backed mappings require those callback contracts;
+file VMA insertion retains a Native `mapping->i_mmap_rwsem` write acquisition.
+The Native MM bodies stay unchanged. Actual mmap1 thread/process delegation
+and performance remain pending until those intervals pass their own checks.
