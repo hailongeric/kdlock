@@ -85,6 +85,11 @@ Ownership assertions use exact retained object/request/phase identity: E may
 prove its physical ownership, and O may prove its logical ownership only while
 authorized to service that exact continuation. A locked/count hint is not an
 owner query.
+The three ordinary/nested/killable MM acquisition API wrappers must remain
+`__always_inline`: an outlined wrapper would capture its own returning frame
+before the protected caller's body. Only these API declarations change;
+source preservation normalizes those declarations explicitly and compares
+their original instructions and all Native MM bodies separately.
 
 Provider activation and each immutable object binding also own a source
 residency lease. Acquire the object's lease inside the builtin registration
@@ -96,6 +101,17 @@ provider that can no longer admit their next ordinary acquisition. Deactivation
 stops new binding before releasing activation's lease. Lease counts describe
 exact matched factory/destructor references; they never authorize lock
 acquisition, ownership or approximate request retirement.
+
+Object retirement and continuation retirement are separate. The module core's
+`kd_mutex_waiters_idle` checks the exact `counted_lock` waiter marker; it does
+not treat a retained node's `lock` packet metadata as active object use. The
+captured service path sets `node->lock` but does not publish `counted_lock`.
+Therefore a released outer object's stale packet key cannot by itself veto its
+provider destructor while a different nested owner keeps the continuation
+alive. Keep the legacy counted-marker checks unchanged, and retain source,
+task-stack, packet and frame references through the root's actual return ACK.
+An object may retire only after its physical gate, phase, queues and final read
+credit have completed their existing exact final-access ordering.
 
 Bootstrap is a separate gate. Prepare immutable core lock-site images before
 enabling new provider bindings; keep translator/controller infrastructure on

@@ -28,9 +28,10 @@ import memread
 import normal
 import native_escape
 import origin_instructions
+import returning_calls
 import native_terminals
 import solve_bug
-from miasm.expression.expression import ExprId, ExprMem
+from miasm.expression.expression import ExprId, ExprMem, ExprLoc
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
@@ -158,6 +159,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     indirect_call_native = memread.device_session.indirect_call()
     hostcall_targets = set(resolved_hostcalls)
     terminal_targets = set(native_terminals.resolve(get_kernel_symbol))
+    returning_services = memread.device_session.service_calls() if abi == 2 else {}
+    bound_controls = memread.device_session.rwsem_controls() if abi == 2 else {}
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
@@ -201,15 +204,23 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                      *service_continue_names)
         if (address := get_kernel_symbol(name))
     }
+    service_symbols.update({address: control['symbol']
+                            for address, control in bound_controls.items()})
     service_acquires = {address for address, name in service_symbols.items()
                         if name in service_acquire_names}
+    service_acquires.update(address for address, control in bound_controls.items()
+                            if control['operation'] in (1, 2, 3))
     # Read release can end a downgraded tail, but may also release an unrelated
     # local read. Only the exact runtime record decides that endpoint; counting
     # it as a lexical writer unlock could cut the outer writer body early.
     service_releases = {address for address, name in service_symbols.items()
                         if name in service_release_names and name != "kd_up_read"}
+    service_releases.update(address for address, control in bound_controls.items()
+                            if control['operation'] == 5)
     service_clobbers = {address for address, name in service_symbols.items()
                         if name.endswith("_clobber_v1")}
+    service_clobbers.update(address for address, control in bound_controls.items()
+                            if control['flags'] & 1)
     rwsem_clobber_lock = get_kernel_symbol("kd_rwsem_down_write_clobber_v1")
     rwsem_clobber_unlock = get_kernel_symbol("kd_rwsem_up_write_clobber_v1")
     clobber_targets = ({clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}) | service_clobbers
@@ -243,7 +254,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     # their distinct admission modes are interpreted by the runtime.
     lock_symbols.update({address: ("mutex", name)
                          for address, name in service_symbols.items()})
-    keep_call_stack = set(lock_symbols) | hostcall_targets
+    keep_call_stack = set(lock_symbols) | hostcall_targets | set(returning_services)
     # Per-object bridges remain Native boundaries unless the exact terminal
     # outer-unlock metadata proves the selected KD object/class at runtime.
     api_unlock_name = {1: "kd_api_files_unlock_clobber", 2: "kd_api_pipe_unlock_clobber"}.get(abi)
@@ -308,6 +319,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
             return reject_translation(str(error))
+        # A provider can declare many primitives. Only a reached source CALL
+        # in this image requires the returning-service execution contract.
+        # Unrelated ordinary images keep their existing publication format.
+        if returning_services and any(
+                line.name == 'CALL' and isinstance(line.args[0], ExprLoc) and
+                db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services
+                for block in block_dict.values() for line in block.lines):
+            service_queue_required = True
         block_dict, boundary_error = context_policy.critical_section_blocks(
             block_dict,
             db_dict,
@@ -627,6 +646,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
                              and not has_escapes and not root_escapes
                              and not origin_sites)
+    returning_targets = {
+        line.offset + line.l
+        for block in block_dict.values() for line in block.lines
+        if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
+        and db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services
+        and line.offset + line.l in emitted_pcs
+    }
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
@@ -642,6 +668,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         trusted_source=trusted_source,
         origin_sites=origin_sites,
         budget_resume_enabled=budget_resume_enabled,
+        returning_targets=returning_targets,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -656,7 +683,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                          and memory_guards.sites else 0)
                       | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)
                       | (context_policy.SERVICE_QUEUE_REQUIREMENT
-                         if service_queue_required else 0)))
+                         if service_queue_required else 0)
+                      | (returning_calls.REQUIREMENT if returning_targets else 0)))
     return 0
 
 

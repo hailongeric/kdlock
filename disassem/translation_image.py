@@ -16,6 +16,7 @@ import special_inst
 import native_escape
 import origin_instructions
 import budget_resume
+import returning_calls
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
 from miasm.expression.expression import ExprId, ExprLoc, ExprMem
@@ -43,7 +44,7 @@ def wrapper_context_inputs(assembly):
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
     preserve_flags=True, root_only=False, origin_sites=None,
-    budget_targets=None,
+    budget_targets=None, returning_targets=None,
 ):
     dispatch_targets = {entry} if root_only else set(block_dict)
     if not root_only:
@@ -65,6 +66,10 @@ def write_entry_dispatch(
         if not preserve_flags or root_only:
             raise ValueError("original-task instruction dispatch requires a resumable flags contract")
         origin_instructions.entry_dispatch(f, origin_sites)
+    if returning_targets:
+        if not preserve_flags or root_only:
+            raise ValueError("returning CALL needs a FULL arithmetic-flags contract")
+        returning_calls.entry_dispatch(f, returning_targets)
     for offset in ordered_targets:
         f.write(f"CMP     R14, 0x{offset:x}\n")
         target = (f"kd_dispatch_{offset:x}" if preserve_flags else
@@ -92,6 +97,8 @@ def write_entry_dispatch(
         origin_instructions.continuation_dispatch(f, origin_sites)
     if budget_targets is not None:
         budget_resume.continuation_dispatch(f, budget_targets)
+    if returning_targets:
+        returning_calls.continuation_dispatch(f, returning_targets)
 
 
 def emit_jit_assembly(
@@ -106,7 +113,7 @@ def emit_jit_assembly(
     native_calls=None,
     trusted_source=False,
     origin_sites=None,
-    budget_resume_enabled=False,
+    budget_resume_enabled=False, returning_targets=None,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -138,6 +145,7 @@ def emit_jit_assembly(
         root_only=root_native_escape or native_calls is not None,
         origin_sites=origin_sites,
         budget_targets=budget_targets,
+        returning_targets=returning_targets,
     )
     budget_rips = []
 

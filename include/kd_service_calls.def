@@ -1,0 +1,14 @@
+/* Source-checked ordinary allocator primitives. These are returning C APIs,
+ * not Native MM/VMA bodies. Each operation balances its physical CPU state.
+ * Signatures: authenticated linux=7.0.0-38.38 mm/slub.c. */
+KD_SERVICE_CALL(kmem_cache_alloc_noprof, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_lru_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_node_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_bulk_noprof, 4, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_prefill_sheaf, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_refill_sheaf, 4, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_from_sheaf_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_return_sheaf, 3, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CALL(kmem_cache_free, 2, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CALL(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID)
+KD_SERVICE_CALL(kfree, 1, KD_SERVICE_CALL_VOID)

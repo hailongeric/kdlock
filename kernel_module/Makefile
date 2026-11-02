@@ -43,7 +43,12 @@ kdlock_km-objs := \
 	kd_mutex_osq.o \
 	kd_rwsem.o \
 	kd_rwsem_api.o \
-	kd_service_api.o
+	kd_rwsem_provider.o \
+	kd_service_api.o \
+	kd_service_calls.o \
+	kd_service_call_entry.o
+
+OBJECT_FILES_NON_STANDARD_kd_service_call_entry.o := y
 
 OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 

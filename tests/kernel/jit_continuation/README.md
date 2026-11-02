@@ -65,6 +65,56 @@ expiry records a failure before normal lock release. This mode reports no
 performance scores, does not run the original RDTSC phases, and does not claim
 MM execution. Source is unvalidated until matching VM receipts exist.
 
+## Returning original-task primitives
+
+`--mode helper --family rwsem --cpus 0-3` adds a separate two-phase functional
+check using the same module, publication and normal retirement machinery.
+The existing eleven `killable` phases keep their typed-only image requirement
+384. Helper mode has reachable declared primitive CALLs and requires 896
+(origin CALL, retained service queue and budget continuation), with capability
+v14/bit14 descriptor discovery. It does not run timing points or replace any
+of the existing killable checks.
+
+The test module registers two six-word C primitives through
+`kd_service_calls.h`. The first checks six distinct arguments and returns the
+full word `0x993f730e40218045`. The second acquires a conventional local child
+mutex on the original task and sleeps while holding it. The controller sends
+the original task a fatal signal after the parent acquisition has committed,
+then permits the primitive to release its child and return. The successful
+parent still finishes with result zero; its eventual user process `SIGKILL`
+exit is retained separately. Existing queued/draining cancellation checks stay
+in killable mode.
+
+Both primitives record actual current task ID, a local stack address inside
+the task-stack interval saved before capture, IRQ/preemption state, arguments
+and result. The translated post-CALL body records the received full AX word
+and increments one marker. Exact request/enter/done/resume trace events must
+bind one source return PC, transaction sequence, root identity/generation and
+immutable image generation. Their actual tasks must be E, O, O, E, followed
+by the parent's returned completion on the same E. The parent prefix and
+post-helper marker must each occur once.
+
+A registration pin keeps the fixture loaded. Unregister while source admission
+is open must return `-EBUSY` and preserve that pin. After callers, transactions,
+frames and images retire through the ordinary source RETIRE operation, the
+runner's optional `after_source_retire` hook issues the explicit unregister
+ioctl and drops the pin before normal `rmmod`. Descriptors belonging to other
+owners must remain unchanged. An incomplete operation retains its pin and
+evidence; no forced unload is used.
+
+For example, with the same verified platform and recovery arguments:
+
+```sh
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
+  --mode helper --family rwsem --cpus 0-3 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/returning-primitives-NEW
+```
+
+The directly affected observation/lifecycle unit is
+`infrastructure/test_helper_continuation.py`. These sources remain unvalidated
+until their VM builds, checks and complete live receipts exist. This mechanism
+probe does not establish delegated MM execution.
+
 The active family is named `jit_continuation`. Its runner lives at
 `tests/kernel/jit_continuation/run.py`, its module is `jit_continuation_test.ko`,
 and its device is `/dev/kd_jit_continuation_test`. The payload's build controls

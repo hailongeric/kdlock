@@ -40,7 +40,12 @@ RECOVERY_RELEASE = "7.0.0-38-kdscope4"
 RECOVERY_SOURCE_ROOT = Path("/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/source")
 RECOVERY_BUILD_ROOT = RECOVERY_SOURCE_ROOT.parent / "build"
 RECOVERY_VARIANTS = ("kdscope4-native", "kdscope4-kd")
-SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd", *SCOPE2_VARIANTS, *RECOVERY_VARIANTS)
+CONTINUATION_RELEASE = "7.0.0-38-kdscope5"
+CONTINUATION_SOURCE_ROOT = Path("/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source")
+CONTINUATION_BUILD_ROOT = CONTINUATION_SOURCE_ROOT.parent / "build"
+CONTINUATION_VARIANTS = ("kdscope5-native", "kdscope5-kd")
+SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd", *SCOPE2_VARIANTS, *RECOVERY_VARIANTS,
+                  *CONTINUATION_VARIANTS)
 VARIANTS = ("kdlock1", "kdmm1-native", "kdmm1-kd", *SCOPE_VARIANTS)
 SOURCE_SCOPE = "named core/MM inputs; not a complete source-tree audit"
 COMPOSED_SCOPE = "named core/MM/API inputs with exact composition; not a complete source-tree audit"
@@ -90,6 +95,11 @@ def variant_settings(variant="kdlock1"):
         return dict(release=RECOVERY_RELEASE, source=RECOVERY_SOURCE_ROOT, build=RECOVERY_BUILD_ROOT,
                     bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261101"),
                     mmap_mode="off" if variant == "kdscope4-native" else "on", mmap_config="y")
+    if variant in CONTINUATION_VARIANTS:
+        return dict(release=CONTINUATION_RELEASE, source=CONTINUATION_SOURCE_ROOT,
+                    build=CONTINUATION_BUILD_ROOT,
+                    bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261103"),
+                    mmap_mode="off" if variant == "kdscope5-native" else "on", mmap_config="y")
     if variant in SCOPE_VARIANTS:
         return dict(release=SCOPE_RELEASE, source=SCOPE_SOURCE_ROOT, build=SCOPE_BUILD_ROOT,
                     bundle=Path("/root/kdlock-kernel-baselines/linux70-" + variant + "-20261030"),

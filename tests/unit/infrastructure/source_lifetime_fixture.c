@@ -22,6 +22,8 @@ int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_api_control.h"
 
 typedef long long s64;
+typedef unsigned long long u64;
+#define U64_MAX ULLONG_MAX
 typedef _Atomic long long atomic64_t;
 #define ATOMIC64_INIT(v) ATOMIC_VAR_INIT(v)
 #define atomic64_read(p) atomic_load(p)
@@ -278,7 +280,7 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0) |
 				(direct_pool_available ? KD_JIT_CAP_DIRECT_STRINGS : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
@@ -602,6 +604,29 @@ static void concurrent_frame_close(void)
         CHECK(!retire());
 }
 
+static void immutable_bindings(void)
+{
+	reset();
+	CHECK(!kd_source_binding_count());
+	CHECK(kd_source_binding_get());
+	CHECK(kd_source_binding_get());
+	CHECK(kd_source_binding_count() == 2);
+	CHECK(kd_source_begin_retire() == -EBUSY);
+	CHECK(status().state == KD_SOURCE_OPEN);
+	CHECK(kd_source_frame_get());
+	kd_source_frame_put();
+	kd_source_binding_put();
+	CHECK(kd_source_binding_count() == 1);
+	CHECK(kd_source_begin_retire() == -EBUSY);
+	CHECK(status().state == KD_SOURCE_OPEN);
+	kd_source_binding_put();
+	CHECK(!kd_source_binding_count());
+	CHECK(!kd_source_begin_retire());
+	CHECK(status().state == KD_SOURCE_DRAINING);
+	CHECK(!kd_source_binding_get());
+	CHECK(!retire());
+}
+
 int main(void)
 {
 	_Static_assert(sizeof(struct kd_source_info) == 16, "info ABI");
@@ -611,14 +636,14 @@ int main(void)
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 13 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 14 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2 &&
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&
 			       KD_JIT_CAP_STRING_SERVICES == 128 && KD_JIT_CAP_STRING_WRITE == 256 &&
 			       KD_JIT_CAP_AUDITED_STRINGS == 512 && KD_JIT_CAP_DIRECT_STRINGS == 1024 &&
 			       KD_JIT_CAP_ROOT_NATIVE_ESCAPE == 2048 && KD_JIT_CAP_INDIRECT_CALL == 4096 &&
-			       KD_JIT_CAP_ORIGIN_INSTRUCTION == 8192,
+			       KD_JIT_CAP_ORIGIN_INSTRUCTION == 8192 && KD_JIT_CAP_ORIGIN_CALL == 16384,
 		       "Python capability semantics");
 	_Static_assert(KD_JIT_PERCPU_MODULE_BYTES == 8192 &&
 			       KD_JIT_PERCPU_ALIGNMENT == 4,
@@ -636,6 +661,7 @@ int main(void)
 	concurrent_pins();
 	atomic_frame_admission();
 	concurrent_frame_close();
+	immutable_bindings();
 	check_api_forwarding();
 	printf("production source lifetime: %u checks, 0 failures; cap=%u\n",
 	       atomic_load(&checks), KD_SOURCE_MAX_MODULES);

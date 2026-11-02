@@ -84,6 +84,15 @@ def generated_sources(target):
         rt.require(not dest.exists(), 'generated source already exists: ' + str(dest))
         dest.write_text(rename(text))
         outputs[str(dest.relative_to(target))] = digest(dest)
+    # The execution-provider ABI is shared verbatim with the module. Its opaque
+    # object methods must not acquire a second, namespace-renamed definition.
+    source = ROOT / 'include/kd_rwsem_provider.h'
+    dest = target / 'include/linux/kd_rwsem_provider.h'
+    rt.require(not dest.exists(), 'generated provider header already exists: ' + str(dest))
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, dest)
+    inputs[str(source.relative_to(ROOT))] = digest(source)
+    outputs[str(dest.relative_to(target))] = digest(dest)
     for source in (HERE / 'overlay').rglob('*'):
         if not source.is_file():
             continue

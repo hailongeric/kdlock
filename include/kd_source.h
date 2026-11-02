@@ -22,6 +22,11 @@ int kd_source_init(void);
 void kd_source_exit(void);
 bool kd_source_writer_get(void);
 void kd_source_writer_put(void);
+/* Immutable bound objects may make future calls after an individual root
+ * retires. Their matched leases prevent source closure, not just text free. */
+bool kd_source_binding_get(void);
+void kd_source_binding_put(void);
+u64 kd_source_binding_count(void);
 bool kd_source_frame_get(void);
 void kd_source_frame_put(void);
 int kd_source_pin_root(unsigned long address);

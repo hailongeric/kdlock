@@ -12,11 +12,18 @@ static struct kd_mutex killable_depth_mutex[4];
 static struct jit_killable_slot killable_slots[JIT_KILLABLE_SLOTS];
 static u64 killable_release;
 static atomic64_t killable_holders = ATOMIC64_INIT(0);
+#ifdef JIT_CONTINUATION_HELPER
+#include "helper.inc"
+#endif
 
 static bool killable_idle(void)
 {
 	unsigned int i;
 
+#ifdef JIT_CONTINUATION_HELPER
+	if (!kd_mutex_is_idle(&helper_child))
+		return false;
+#endif
 	for (i = 0; i < 4; ++i)
 		if (!kd_rwsem_is_idle(&killable_depth_sem[i]) ||
 		    !kd_mutex_is_idle(&killable_depth_mutex[i]))
@@ -51,6 +58,23 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 		atomic_inc(&failures);
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
 	WRITE_ONCE(slot->prefix, READ_ONCE(slot->prefix) + 1);
+#ifdef JIT_CONTINUATION_HELPER
+	if (flags & (JIT_KILLABLE_HELPER | JIT_KILLABLE_HELPER_WAIT)) {
+		unsigned long index = slot - killable_slots;
+		unsigned long value;
+
+		if (flags & JIT_KILLABLE_HELPER_WAIT)
+			value = jit_test_call_wait(index, JIT_HELPER_A1, JIT_HELPER_A2,
+				JIT_HELPER_A3, JIT_HELPER_A4, JIT_HELPER_A5);
+		else
+			value = jit_test_call_scalar(index, JIT_HELPER_A1, JIT_HELPER_A2,
+				JIT_HELPER_A3, JIT_HELPER_A4, JIT_HELPER_A5);
+		WRITE_ONCE(helper_slots[index].body_result, value);
+		if (value != JIT_HELPER_RESULT(index))
+			atomic_inc(&failures);
+		WRITE_ONCE(helper_slots[index].body_after, READ_ONCE(helper_slots[index].body_after) + 1);
+	}
+#endif
 	if (flags & JIT_KILLABLE_NESTED) {
 		/* A conventional nested entry remains on this executor while its
 		 * killable predicate refers to the retained logical origin. */
@@ -196,6 +220,17 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	u64 release;
 	int result;
 
+#ifdef JIT_CONTINUATION_HELPER
+	if (cmd == JIT_HELPER_SNAPSHOT)
+		return helper_snapshot(user);
+	if (cmd == JIT_HELPER_UNREGISTER) {
+		if (!killable_idle() || atomic_cmpxchg(&control, 0, -1))
+			return -EBUSY;
+		result = helper_unregister();
+		atomic_set_release(&control, 0);
+		return result;
+	}
+#endif
 	if (cmd == JIT_KILLABLE_SNAPSHOT) {
 		state.lock_address = (unsigned long)&test_lock.gate;
 		state.inner_address = (unsigned long)&killable_inner.gate;
@@ -227,9 +262,14 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 		return copy_to_user(user, &state, sizeof(state)) ? -EFAULT : 0;
 	}
 	if (cmd == JIT_KILLABLE_RELEASE) {
+		u64 allowed = 15;
+
+#ifdef JIT_CONTINUATION_HELPER
+		allowed |= JIT_KILLABLE_RELEASE_HELPER;
+#endif
 		if (copy_from_user(&release, user, sizeof(release)))
 			return -EFAULT;
-		if (release & ~15ULL)
+		if (release & ~allowed)
 			return -EINVAL;
 		WRITE_ONCE(killable_release, READ_ONCE(killable_release) | release);
 		return 0;
@@ -242,6 +282,9 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 				(unsigned long)jit_continuation_entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 		else {
 			memset(killable_slots, 0, sizeof(killable_slots));
+#ifdef JIT_CONTINUATION_HELPER
+			memset(helper_slots, 0, sizeof(helper_slots));
+#endif
 			WRITE_ONCE(killable_release, 0);
 			WRITE_ONCE(hot, 0);
 			result = 0;
@@ -256,7 +299,11 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	if (run.operation > JIT_KILLABLE_INNER_HOLDER || run.slot >= JIT_KILLABLE_SLOTS ||
 	    (run.flags != 0 && run.flags != JIT_KILLABLE_NESTED && run.flags != JIT_KILLABLE_DOWNGRADE &&
 	     run.flags != JIT_KILLABLE_DEPTH && run.flags != (JIT_KILLABLE_DEPTH | JIT_KILLABLE_EARLY) &&
-	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE) || run.reserved ||
+	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE
+#ifdef JIT_CONTINUATION_HELPER
+	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
+#endif
+	    ) || run.reserved ||
 	    (run.operation != JIT_KILLABLE_ROOT && run.flags))
 		return -EINVAL;
 	if (!atomic_add_unless(&control, 1, -1))
@@ -267,6 +314,9 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	}
 	before_preempt = preempt_count();
 	before_irqs = irqs_disabled();
+#ifdef JIT_CONTINUATION_HELPER
+	WRITE_ONCE(helper_slots[run.slot].origin_stack, (unsigned long)task_stack_page(current));
+#endif
 	if (run.operation == JIT_KILLABLE_ROOT)
 		result = killable_body(&killable_slots[run.slot], run.flags);
 	else {

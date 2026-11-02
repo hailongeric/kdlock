@@ -9,6 +9,7 @@
 #include <linux/errno.h>
 #include <linux/kallsyms.h>
 #include <linux/kernel.h>
+#include <linux/limits.h>
 #include <linux/module.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
@@ -26,6 +27,7 @@ struct kd_source_info kd_sources;
  * and dependency registration are cold paths protected by kd_source_lock. */
 #define KD_SOURCE_FRAME_CLOSED (1ULL << 32)
 static atomic64_t kd_source_frame_gate = ATOMIC64_INIT(0);
+static u64 kd_source_bindings;
 
 static unsigned int kd_source_frame_count(void)
 {
@@ -71,6 +73,40 @@ void kd_source_writer_put(void)
 	BUG_ON(!kd_sources.writers);
 	kd_sources.writers--;
 	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+}
+
+bool kd_source_binding_get(void)
+{
+	unsigned long flags;
+	bool acquired;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	acquired = kd_sources.state == KD_SOURCE_OPEN && kd_source_bindings != U64_MAX;
+	if (acquired)
+		++kd_source_bindings;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return acquired;
+}
+
+void kd_source_binding_put(void)
+{
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	BUG_ON(!kd_source_bindings);
+	--kd_source_bindings;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+}
+
+u64 kd_source_binding_count(void)
+{
+	unsigned long flags;
+	u64 bindings;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	bindings = kd_source_bindings;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return bindings;
 }
 
 /* Register one frame pin and hold a module ref for the translated frame lifetime. */
@@ -206,12 +242,17 @@ void kd_source_info(struct kd_source_info *info)
 
 int kd_source_begin_retire(void)
 {
-	/* Close admission atomically before testing drain. A successful racing get
-	 * is counted; every later get fails. EBUSY leaves admission closed. */
+	/* Live bound objects still need future frame admission. Their factory
+	 * leases arbitrate with closure here; returning busy must leave them open.
+	 * With no bindings, close before testing transient frame/writer drain. */
 	unsigned long flags;
 	int ret = 0;
 
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	if (kd_source_bindings) {
+		raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+		return -EBUSY;
+	}
 	atomic64_fetch_or(KD_SOURCE_FRAME_CLOSED, &kd_source_frame_gate);
 	if (kd_sources.state != KD_SOURCE_RETIRED)
 		WRITE_ONCE(kd_sources.state, KD_SOURCE_DRAINING);
@@ -231,7 +272,7 @@ void kd_source_finish_retire(void)
 	 * hold this source lock while waiting for that gate or dropping modules. */
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
 	BUG_ON(kd_sources.state == KD_SOURCE_OPEN || kd_source_frame_count() ||
-	       kd_sources.writers);
+	       kd_sources.writers || kd_source_bindings);
 	count = kd_sources.modules;
 	memcpy(modules, kd_source_modules, count * sizeof(modules[0]));
 	memset(kd_source_modules, 0, sizeof(kd_source_modules));
@@ -260,6 +301,7 @@ int kd_source_init(void)
 		return -EOPNOTSUPP;
 	memset(&kd_sources, 0, sizeof(kd_sources));
 	atomic64_set(&kd_source_frame_gate, 0);
+	kd_source_bindings = 0;
 	memset(kd_source_modules, 0, sizeof(kd_source_modules));
 	return 0;
 }

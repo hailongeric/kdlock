@@ -749,7 +749,7 @@ diff --git a/init/Kconfig b/init/Kconfig
 diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
 --- a/include/asm-generic/vmlinux.lds.h
 +++ b/include/asm-generic/vmlinux.lds.h
-@@ -479,6 +479,10 @@
+@@ -479,6 +479,14 @@
  	. = ALIGN((align));						\
  	.rodata           : AT(ADDR(.rodata) - LOAD_OFFSET) {		\
  		__start_rodata = .;					\
@@ -757,6 +757,10 @@ diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds
 +		__kd_api_sites_start = .;				\
 +		KEEP(*(.kd_api_sites))					\
 +		__kd_api_sites_end = .;					\
++		. = ALIGN(8);						\
++		__kd_rwsem_sites_start = .;				\
++		KEEP(*(.kd_rwsem_sites))					\
++		__kd_rwsem_sites_end = .;					\
  		*(.rodata) *(.rodata.*) *(.data.rel.ro*)		\
  		SCHED_DATA						\
  		RO_AFTER_INIT_DATA	/* Read only after init */	\

@@ -197,13 +197,13 @@ class ContinuationSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13) and features & (1 << 5),
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
-        self.record["origin_capable"] = version == 13 and bool(features & (1 << 13))
+        self.record["origin_capable"] = version >= 13 and bool(features & (1 << 13))
         self.record["origin_service"] = (self.record["origin_capable"] and
             self.record["entry_abi"] == 2 and not self.record["mixed_spin"])
         if (self.record["origin_capable"] and self.record["entry_abi"] == 2 and
-                self.record.get("mode", "continuation") != "killable"):
+                self.record.get("mode", "continuation") == "continuation"):
             self.record["image_requirements"] |= 64
         rt.require(not self.record.get("origin_instructions") or self.record["origin_service"],
                    "four-instruction probe requires v13/bit13 sole-outer mutex service")
@@ -211,7 +211,7 @@ class ContinuationSession(Session):
             rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() == "N",
                        "forced suffix diagnostic unexpectedly enabled at load")
         if self.record["lock_kind"] in ("spin", "rwlock"):
-            rt.require(version in (12, 13) and features & (1 << 11),
+            rt.require(version in (12, 13, 14) and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
@@ -461,7 +461,7 @@ def main():
         return 0
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--mode", choices=("continuation", "killable"), default="continuation")
+    parser.add_argument("--mode", choices=("continuation", "killable", "helper"), default="continuation")
     parser.add_argument("--cpus", type=rt.cpu_list, default=list(range(16)))
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
@@ -485,10 +485,10 @@ def main():
                "verified recovery guest and recorded snapshot tag required")
     rt.require(4 <= len(args.cpus) <= 60 and len(set(args.cpus)) == len(args.cpus) and
                set(args.cpus) <= os.sched_getaffinity(0), "select 4..60 distinct available worker CPUs")
-    rt.require(args.mode != "killable" or
+    rt.require(args.mode not in ("killable", "helper") or
                (args.family == "rwsem" and not args.origin_instructions and not args.mixed_spin),
-               "killable mode requires rwsem without instruction or mixed-spin variants")
-    shared = args.family in ("rwlock", "rwsem") and args.mode != "killable"
+               "killable/helper modes require rwsem without instruction or mixed-spin variants")
+    shared = args.family in ("rwlock", "rwsem") and args.mode not in ("killable", "helper")
     reader_count = args.reader_count if args.reader_count is not None else int(shared)
     rt.require((shared and 1 <= reader_count <= len(args.cpus) - 4) or
                (not shared and reader_count == 0),
@@ -572,7 +572,7 @@ def main():
                        (args.family != "rwlock" or "kd_rwlock_fast_write_unlock" in names) and
                        not any(name.startswith(("kd_mutex_", "mutex", "__mutex")) for name in names),
                        "spin/rwlock marker caller imports another lock family")
-        elif args.family == "rwsem" and args.mode == "killable":
+        elif args.family == "rwsem" and args.mode in ("killable", "helper"):
             names = set(imported.split())
             rt.require({"kd_rwsem_down_write_killable_clobber_v1", "kd_rwsem_up_write_clobber_v1",
                         "kd_down_write_killable", "kd_rwsem_prepare"} <= names,
@@ -632,7 +632,7 @@ def main():
 
         verify()
         idle()
-        if args.mode == "killable":
+        if args.mode in ("killable", "helper"):
             shell, cookie = "rwsem_killable_clobber", "canonical_retained_request"
         elif args.family == "mutex":
             shell = "mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie"
@@ -644,7 +644,7 @@ def main():
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=(384 if args.mode == "killable" else
+                    image_requirements=(896 if args.mode == "helper" else 384 if args.mode == "killable" else
                                         1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,
@@ -657,6 +657,9 @@ def main():
         selected_session = ContinuationSession
         if args.mode == "killable":
             from killable_mode import session_class
+            selected_session = session_class(ContinuationSession)
+        elif args.mode == "helper":
+            from helper_mode import session_class
             selected_session = session_class(ContinuationSession)
         session = selected_session(out, spec, binaries, verify)
         session.execute()
@@ -676,6 +679,9 @@ def main():
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
         if args.mode == "killable":
             print("PASS: actual other-task killable roots, queued/draining cancellation and nested parent effects")
+            return 0
+        if args.mode == "helper":
+            print("PASS: six-word original-task primitives return to the same executor/image without replay")
             return 0
         print("PASS: cold paths and reached original-task instructions retain exact effects and tested flags; "
               + ("same-image JIT reentry verified; " if session.record["origin_service"] else "native suffix verified; ")

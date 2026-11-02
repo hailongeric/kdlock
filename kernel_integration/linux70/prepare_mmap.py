@@ -53,6 +53,22 @@ def prepare(source, output):
             ["patch", "--batch", "--fuzz=0", "-p1", "-i", str(patch)],
             cwd=tree, text=True, capture_output=True, timeout=60, check=True)
         (output / "patch.log").write_text(completed.stdout + completed.stderr)
+        # The clobber entry must belong to the protected caller's frame, not
+        # an outlined acquisition wrapper which returns before its body starts.
+        # These are lock API declarations only; their native bodies stay exact.
+        header = tree / 'include/linux/mmap_lock.h'
+        text = header.read_text()
+        inline_declarations = (
+            'static inline void mmap_write_lock(',
+            'static inline void mmap_write_lock_nested(',
+            'static inline int __must_check mmap_write_lock_killable(',
+        )
+        for declaration in inline_declarations:
+            if text.count(declaration) != 1:
+                raise ValueError('writer wrapper declaration changed: ' + declaration)
+            text = text.replace(declaration, declaration.replace('inline', '__always_inline', 1))
+        header.write_text(text)
+        result['capture_inline_declarations'] = list(inline_declarations)
         generator = ROOT / "kernel_integration/mmap_lock/prepare.py"
         # Only the shared source generator is reused; the retired 6.1 entry
         # point, archive reconstruction and kernel configuration are not run.

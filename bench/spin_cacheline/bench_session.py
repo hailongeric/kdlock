@@ -230,6 +230,11 @@ class Session:
             require(self.record["retired"] == dict(state=2, modules=0, frames=0, writers=0),
                     "retirement incomplete", "UNDRAINED")
         if self.loaded_source:
+            # A fixture may retain a registration pin until image/frame
+            # retirement; release it before ordinary source-module unload.
+            after_retire = getattr(self, 'after_source_retire', None)
+            if after_retire is not None:
+                after_retire()
             self.run(["rmmod", self.workload_module.stem], "unload-source.log")
             self.loaded_source = False
         if self.loaded_kd:

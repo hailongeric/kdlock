@@ -15,7 +15,8 @@ INTEGRATION = ROOT / "kernel_integration/linux70"
 WRAPPER_OBJECTS = ("mm/mmap_lock.o", "kernel/fork.o", "kernel/bpf/task_iter.o",
                    "kernel/bpf/stackmap.o", "mm/init-mm.o")
 LOCK_OBJECTS = tuple("kernel/locking/kd_mmap/" + name for name in
-                     ("adapter.o", "pool.o", "kd_mmap_mutex_local.o",
+                     ("adapter.o", "pool.o", "provider.o", "kd_mmap_wait_queue.o",
+                      "kd_mmap_admission.o", "kd_mmap_mutex_local.o",
                       "kd_mmap_mutex_osq.o", "kd_mmap_rwsem.o"))
 
 
@@ -57,6 +58,13 @@ def check_sources(pristine, tree, receipt):
     end = suffix.index("static inline void mmap_assert_locked(", start)
     suffix = suffix[:start] + suffix[end:]
     suffix = suffix.replace("__mmap_sem_", "")
+    for declaration in receipt.get('capture_inline_declarations', []):
+        require(declaration in (
+            'static inline void mmap_write_lock(',
+            'static inline void mmap_write_lock_nested(',
+            'static inline int __must_check mmap_write_lock_killable(',
+        ), 'unexpected lock-wrapper inline declaration')
+        suffix = suffix.replace(declaration.replace('inline', '__always_inline', 1), declaration)
     require(suffix == native[native.index("DECLARE_TRACEPOINT("):],
             "native mmap/per-VMA wrapper semantics changed")
     require("mmap_write_trylock(" not in header, "retired mmap API reintroduced")

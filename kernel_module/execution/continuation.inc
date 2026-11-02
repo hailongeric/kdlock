@@ -162,6 +162,11 @@ static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	cont->service_scope = NULL;
 	cont->service_ops = NULL;
 	cont->service_call.api = KD_SERVICE_NONE;
+	cont->origin_call.packet = packet;
+	cont->origin_call.entry = NULL;
+	cont->origin_call.sequence = 0;
+	cont->origin_call.phase = KD_ORIGIN_CALL_IDLE;
+	cont->origin_call.servicing = false;
 	cont->pending_call.phase = KD_CALL_NONE;
 	cont->stack_base = stack_base;
 	cont->stack_put = stack ? lease->stack_put : NULL;
@@ -412,6 +417,9 @@ int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
 	    api == KD_SERVICE_NONE || cont->state != KD_CONT_BOUND ||
 	    cont->executor != current || cont->root->packet_owner != cont ||
 	    cont->service_call.api != KD_SERVICE_NONE ||
+	    cont->origin_call.entry || cont->origin_call.servicing ||
+	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
+	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
 	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
 	    kd_exec_cont_call_word(cont, &return_ip))
 		return -EINVAL;
@@ -428,6 +436,92 @@ int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
 		return -EINVAL;
 	cont->service_call = pending;
 	frame->control_call = pending.call;
+	return 0;
+}
+
+int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	struct kd_origin_call *call;
+	struct kd_service_call_entry *entry;
+	unsigned long return_ip;
+	int result;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
+	    cont->state != KD_CONT_BOUND || cont->executor != current ||
+	    cont->root->packet_owner != cont || frame->packet_state != KD_PACKET_FULL ||
+	    !frame->executed || !frame->image ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL) ||
+	    cont->service_call.api != KD_SERVICE_NONE)
+		return -EINVAL;
+	call = &cont->origin_call;
+	if ((call->phase != KD_ORIGIN_CALL_IDLE && call->phase != KD_ORIGIN_CALL_CONSUMED) ||
+	    call->entry || call->servicing || call->sequence == U64_MAX ||
+	    kd_exec_cont_call_word(cont, &return_ip))
+		return -EINVAL;
+	entry = kd_service_call_get(cont->packet->ip);
+	if (!entry)
+		return -ENOENT;
+	result = kd_call_begin(&call->call, cont->packet->ip, cont->packet->sp, return_ip);
+	if (result) {
+		kd_service_call_put(entry);
+		return result;
+	}
+	call->entry = entry;
+	call->packet = cont->packet;
+	call->target = call->call.target;
+	call->native_sp = 0;
+	call->shadow_sp = 0;
+	call->shadow_bp = 0;
+	call->origin = cont->request->logical_origin;
+	call->executor = current;
+	call->identity = cont->request->identity;
+	call->generation = cont->generation;
+	++call->sequence;
+	call->servicing = false;
+	cont->frame.control_call = call->call;
+	/* O must not observe REQUESTED until E has unbound the active frame and
+	 * stopped using both the packet and the source task stack. */
+	WRITE_ONCE(call->phase, KD_ORIGIN_CALL_PREPARED);
+	return 0;
+}
+
+int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence)
+{
+	struct kd_origin_call *call;
+	struct kd_service_call_entry *entry;
+	unsigned long return_ip;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
+	    cont->state != KD_CONT_BOUND || cont->executor != current ||
+	    kd_exec_current_frame() != &cont->frame ||
+	    cont->root->packet_owner != cont ||
+	    !cont->service_ops->validate(cont->service_scope, cont))
+		return -EINVAL;
+	call = &cont->origin_call;
+	if (smp_load_acquire(&call->phase) != KD_ORIGIN_CALL_DONE ||
+	    call->sequence != sequence || call->executor != current ||
+	    call->origin != cont->request->logical_origin ||
+	    call->identity != cont->request->identity || call->generation != cont->generation ||
+	    call->packet != cont->packet || call->servicing ||
+	    !kd_service_call_matches(call->entry, call->target) ||
+	    call->call.phase != KD_CALL_PENDING ||
+	    cont->packet->ip != call->call.target || cont->packet->sp != call->call.stack ||
+	    kd_exec_cont_call_word(cont, &return_ip) || return_ip != call->call.return_ip)
+		return -EINVAL;
+	entry = call->entry;
+	/* This is one C CALL result, never root completion or another acquisition.
+	 * Its volatile outputs and arithmetic flags were captured by the bridge. */
+	cont->packet->sp += sizeof(unsigned long);
+	cont->packet->ip = return_ip;
+	cont->packet->orig_ax = KD_REG_SERVICE_REENTRY_TAG;
+	cont->frame.control_call = call->call;
+	cont->frame.control_call.phase = KD_CALL_COMPLETE;
+	cont->frame.continuation_ip = cont->packet->ip;
+	cont->frame.continuation_sp = cont->packet->sp;
+	call->entry = NULL;
+	smp_store_release(&call->phase, KD_ORIGIN_CALL_CONSUMED);
+	kd_service_call_put(entry);
 	return 0;
 }
 
@@ -730,6 +824,10 @@ int kd_exec_cont_return(struct kd_exec_continuation *cont, int result)
 
 	if (!kd_exec_cont_valid(cont))
 		return ret;
+	if (cont->origin_call.entry || cont->origin_call.servicing ||
+	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
+	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED))
+		return ret;
 	acquired = smp_load_acquire(&cont->request->state);
 	if ((result == -EINTR && acquired != KD_WAIT_CANCEL_ACK) ||
 	    (result != -EINTR && (result ||
@@ -803,6 +901,9 @@ int kd_exec_cont_retire(struct kd_exec_continuation *cont)
 	     !(cont->state == KD_CONT_READY && acquired == KD_WAIT_PRIVATE)) ||
 	    cont->executor || !list_empty(&cont->children) || !list_empty(&cont->owners) ||
 	    cont->resume_executor || cont->service_call.api != KD_SERVICE_NONE ||
+	    cont->origin_call.entry || cont->origin_call.servicing ||
+	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
+	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
 	    !list_empty(&cont->storage_owners) ||
 	    READ_ONCE(cont->request->memberships) || READ_ONCE(cont->request->selection) ||
 	    READ_ONCE(cont->request->acquisition) ||

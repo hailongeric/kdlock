@@ -52,6 +52,7 @@
 #include "kd_spinlock.h"
 #include "kd_rwlock.h"
 #include "kd_rwsem_api.h"
+#include "kd_rwsem_provider.h"
 #include "kd_hostcall.h"
 #include "kd_api_provider.h"
 
@@ -516,6 +517,10 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_SERVICE;
 					break;
 				}
+				if (call_ret == KD_EXE_KNOWN_ORIGIN_CALL) {
+					ret_flag = KD_EXE_RUN_ORIGIN_CALL;
+					break;
+				}
 				if (!call_ret)
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
 			} else if (args[0] == KD_EXE_INST_LIMIT && !fault_kind &&
@@ -860,7 +865,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	    image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 	    image->length < KD_IMAGE_HEADER_SIZE ||
 	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
-				      KD_IMAGE_REQUIRE_SERVICE_QUEUE)) ||
+				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
+				      KD_IMAGE_REQUIRE_ORIGIN_CALL)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;

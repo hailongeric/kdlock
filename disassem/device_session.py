@@ -9,6 +9,8 @@ import errno
 import fcntl
 import json
 import os
+from pathlib import Path
+import re
 import stat
 import struct
 import sys
@@ -20,7 +22,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 13
+CAPS_VERSION = 14
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -34,6 +36,7 @@ CAP_DIRECT_STRINGS = 1024
 CAP_ROOT_NATIVE_ESCAPE = 2048
 CAP_INDIRECT_CALL = 4096
 CAP_ORIGIN_INSTRUCTION = 8192
+CAP_ORIGIN_CALL = 16384
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -53,6 +56,7 @@ _direct_strings = False
 _root_native_escape = False
 _indirect_call = False
 _origin_instruction = False
+_origin_call = False
 
 
 class SourceRefused(RuntimeError):
@@ -94,7 +98,7 @@ def query_capabilities(fd):
                 "string_services": False, "string_write": False,
                 "audited_strings": False, "direct_strings": False,
                 "root_native_escape": False, "indirect_call": False,
-                "origin_instruction": False}
+                "origin_instruction": False, "origin_call": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -132,6 +136,8 @@ def query_capabilities(fd):
             known |= CAP_ROOT_NATIVE_ESCAPE | CAP_INDIRECT_CALL
         if 13 <= version <= CAPS_VERSION:
             known |= CAP_ORIGIN_INSTRUCTION
+        if 14 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_CALL
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -143,6 +149,9 @@ def query_capabilities(fd):
                  or features & CAP_NATIVE_ESCAPE)
             and (not features & CAP_ORIGIN_INSTRUCTION
                  or features & CAP_NATIVE_ESCAPE)
+            and (not features & CAP_ORIGIN_CALL
+                 or features & (CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
+                    == CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
@@ -161,6 +170,7 @@ def query_capabilities(fd):
                 "root_native_escape": bool(features & CAP_ROOT_NATIVE_ESCAPE),
                 "indirect_call": bool(features & CAP_INDIRECT_CALL),
                 "origin_instruction": bool(features & CAP_ORIGIN_INSTRUCTION),
+                "origin_call": bool(features & CAP_ORIGIN_CALL),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -247,6 +257,63 @@ def origin_instruction():
     return _origin_instruction
 
 
+def parse_service_calls(text):
+    """Parse one bounded registry snapshot, without inventing call contracts."""
+    result, cookies = {}, set()
+    if not isinstance(text, str) or len(text) > 4096:
+        raise ValueError("invalid returning CALL registry snapshot")
+    for line in text.splitlines():
+        fields = line.split()
+        if (len(fields) != 6 or
+                not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.$]*", fields[-1])):
+            raise ValueError("invalid returning CALL registry row")
+        cookie, target = (int(value, 16) for value in fields[:2])
+        nargs, result_kind, context_kind = (int(value, 10) for value in fields[2:5])
+        if (not 0 < cookie < 1 << 64 or not 0 < target < 1 << 64 or
+                cookie in cookies or target in result or not 0 <= nargs <= 6 or
+                result_kind not in (1, 2) or context_kind != 1):
+            raise ValueError("inconsistent returning CALL registry row")
+        cookies.add(cookie)
+        result[target] = dict(cookie=cookie, nargs=nargs, result_kind=result_kind,
+                              context_kind=context_kind, symbol=fields[-1])
+    return result
+
+
+def service_calls():
+    """Read exact declarations from the provider pinned by this device lease."""
+    require()
+    if not _origin_call:
+        return {}
+    path = Path('/sys/module/kdlock_km/parameters/service_call_table')
+    return parse_service_calls(path.read_text(encoding='ascii'))
+
+
+def parse_rwsem_controls(text):
+    """The facade declares operation identities; runtime resolves its object."""
+    result = {}
+    if not isinstance(text, str) or len(text) > 4096:
+        raise ValueError('invalid rwsem control registry snapshot')
+    for line in text.splitlines():
+        fields = line.split()
+        if len(fields) != 4:
+            raise ValueError('invalid rwsem control registry row')
+        target, operation, flags = int(fields[0], 16), int(fields[1]), int(fields[2])
+        if (not 0 < target < 1 << 64 or target in result or
+                operation not in range(1, 14) or flags & ~3 or
+                not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.$]*', fields[3])):
+            raise ValueError('inconsistent rwsem control registry row')
+        result[target] = dict(operation=operation, flags=flags, symbol=fields[3])
+    return result
+
+
+def rwsem_controls():
+    require()
+    if not _origin_call:
+        return {}
+    path = Path('/sys/module/kdlock_km/parameters/rwsem_control_table')
+    return parse_rwsem_controls(path.read_text(encoding='ascii'))
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -262,7 +329,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -311,6 +378,7 @@ def session():
         _root_native_escape = caps["root_native_escape"]
         _indirect_call = caps["indirect_call"]
         _origin_instruction = caps["origin_instruction"]
+        _origin_call = caps["origin_call"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -321,7 +389,8 @@ def session():
             f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
             f"direct_strings={int(_direct_strings)} "
             f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)} "
-            f"origin_instruction={int(_origin_instruction)}"
+            f"origin_instruction={int(_origin_instruction)} "
+            f"origin_call={int(_origin_call)}"
         )
         yield fd
     finally:
@@ -337,6 +406,7 @@ def session():
         _root_native_escape = False
         _indirect_call = False
         _origin_instruction = False
+        _origin_call = False
         if fd is not None:
             os.close(fd)
 

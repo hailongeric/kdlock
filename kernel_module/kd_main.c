@@ -29,6 +29,7 @@
 #include "kd_spinlock.h"
 #include "kd_spin_entry.h"
 #include "kd_service_api.h"
+#include "kd_rwsem_provider.h"
 #include "sys.h"
 #include "utils.h"
 
@@ -88,6 +89,9 @@ static int __init kdlock_km_init(void)
 	ret = kd_service_init();
 	if (ret)
 		goto err_mutex_storage;
+	ret = kd_rwsem_provider_init();
+	if (ret)
+		goto err_mutex;
 
 #ifdef KDLOCK_SELFTEST
 	ret = kd_hotlock_lifetime_check();
@@ -116,6 +120,7 @@ static int __init kdlock_km_init(void)
 err_api:
 	kd_api_provider_exit();
 err_mutex:
+	kd_rwsem_provider_exit();
 	kd_service_exit();
 err_mutex_storage:
 	kd_mutex_exit();
@@ -137,6 +142,7 @@ err_source:
  * RCU alone does not protect outstanding direct calls or lock-object storage. */
 static void __exit kdlock_km_exit(void)
 {
+	kd_rwsem_provider_exit();
 	kd_sys_exit();
 	kd_api_provider_exit();
 	synchronize_rcu();

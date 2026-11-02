@@ -54,10 +54,13 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_EARLY 8U
 #define JIT_KILLABLE_REUSE 16U
 #define JIT_KILLABLE_TRUE 32U
+#define JIT_KILLABLE_HELPER 64U
+#define JIT_KILLABLE_HELPER_WAIT 128U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
 #define JIT_KILLABLE_RELEASE_TAIL 8ULL
+#define JIT_KILLABLE_RELEASE_HELPER 16ULL
 struct jit_killable_run {
 	__u32 operation, slot, flags, reserved;
 	__s64 result;
@@ -82,4 +85,17 @@ struct jit_killable_snapshot {
 #define JIT_KILLABLE_SNAPSHOT _IOR('E', 9, struct jit_killable_snapshot)
 #define JIT_KILLABLE_RELEASE _IOW('E', 10, __u64)
 #define JIT_KILLABLE_RESET _IO('E', 11)
+
+struct jit_helper_slot {
+	__u64 origin_stack, calls, pid, stack_address, stack_low, stack_high;
+	__u64 preempt_before, irqs_before, arguments[6], result, body_result, body_after;
+	__u64 sleep_calls, jiffies_delta, switches_delta;
+	__u64 child_acquired, child_released, signal_seen;
+};
+struct jit_helper_snapshot {
+	__u64 version, registered, errors;
+	struct jit_helper_slot slots[JIT_KILLABLE_SLOTS];
+};
+#define JIT_HELPER_SNAPSHOT _IOR('E', 12, struct jit_helper_snapshot)
+#define JIT_HELPER_UNREGISTER _IO('E', 13)
 #endif

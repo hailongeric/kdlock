@@ -8,13 +8,16 @@ obj-m := jit_continuation_test.o
 jit_continuation_test-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -I$(KDLOCK_INCLUDE)
-ifeq ($(JIT_CONTINUATION_MODE),killable)
+ifneq ($(filter $(JIT_CONTINUATION_MODE),killable helper),)
 ifneq ($(JIT_CONTINUATION_FAMILY),rwsem)
 $(error killable continuation mode requires JIT_CONTINUATION_FAMILY=rwsem)
 endif
 ccflags-y += -DJIT_CONTINUATION_KILLABLE
+ifeq ($(JIT_CONTINUATION_MODE),helper)
+ccflags-y += -DJIT_CONTINUATION_HELPER
+endif
 else ifneq ($(JIT_CONTINUATION_MODE),continuation)
-$(error JIT_CONTINUATION_MODE must be continuation or killable)
+$(error JIT_CONTINUATION_MODE must be continuation, killable or helper)
 endif
 ifeq ($(JIT_CONTINUATION_ORIGIN_INSTRUCTIONS),1)
 ifneq ($(JIT_CONTINUATION_FAMILY):$(JIT_CONTINUATION_MIXED_SPIN),mutex:0)

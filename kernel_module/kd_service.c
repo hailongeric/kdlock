@@ -54,6 +54,7 @@ struct kd_service_root {
 	struct kd_service_scope scope;
 	struct kd_exec_continuation continuation;
 	struct kd_exec_outer_unlock hook;
+	struct kd_service_completion completion;
 	struct kd_exe_info *exe;
 	const struct kd_jit_image *image;
 	struct cpumask *worker_allowed;
@@ -170,6 +171,155 @@ static const struct kd_exec_service_ops kd_service_scope_ops = {
 	.has_nested = kd_service_scope_nested,
 	.depth = kd_service_scope_depth,
 };
+
+/* O can enter ordinary local lock APIs from a returning Native primitive.
+ * This token is valid only while E is suspended and the exact transaction
+ * owns the packet; it never changes the parent's physical lock owner. */
+static struct kd_service_root *kd_service_origin_scope(void)
+{
+	struct kd_service_root *root, *found = NULL;
+	unsigned long flags = _raw_spin_lock_irqsave(&kd_service_dispatch_guard);
+
+	list_for_each_entry(root, &kd_service_active, active_link) {
+		struct kd_origin_call *call = &root->continuation.origin_call;
+
+		if (root->owner.request.logical_origin == current &&
+		    READ_ONCE(call->phase) == KD_ORIGIN_CALL_RUNNING &&
+		    READ_ONCE(call->servicing) && call->origin == current &&
+		    call->identity == root->owner.request.identity &&
+		    call->generation == root->owner.request.generation &&
+		    root->continuation.state == KD_CONT_SUSPENDED) {
+			found = root;
+			break;
+		}
+	}
+	_raw_spin_unlock_irqrestore(&kd_service_dispatch_guard, flags);
+	return found;
+}
+
+bool kd_service_write_owned(void *object, struct task_struct *task)
+{
+	struct kd_exec_frame *frame;
+	struct kd_exec_continuation *cont;
+	struct kd_service_root *root = NULL;
+	struct kd_service_owner *owner;
+	bool owned = false;
+
+	if (!object || task != current)
+		return false;
+	preempt_disable();
+	frame = kd_exec_current_frame();
+	cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	if (cont && cont->service_ops == &kd_service_scope_ops &&
+	    cont->executor == current && cont->state == KD_CONT_BOUND)
+		root = container_of(cont, struct kd_service_root, continuation);
+	else
+		root = kd_service_origin_scope();
+	if (!root)
+		goto out;
+	cont = &root->continuation;
+	if (cont->request != &root->owner.request || cont->generation != cont->request->generation ||
+	    READ_ONCE(cont->request->state) != KD_WAIT_EXECUTING)
+		goto out;
+	/* On E these records are task-private. During O service E is suspended,
+	 * so O's exact transaction token also excludes owner-list mutation. */
+	list_for_each_entry(owner, &root->scope.owners, link) {
+		struct kd_admission *a = &owner->admission;
+		unsigned long physical;
+
+		if (a->object != object || owner->released || !a->committed || !a->gate_held ||
+		    a->pickup_pending || !a->physical_owner)
+			continue;
+		physical = atomic_long_read(&a->gate->owner);
+		if ((physical & 4UL) || (physical & ~7UL) != (unsigned long)a->physical_owner)
+			break;
+		if (a->sem && (!a->phase_held || a->sem->selected_kind != a->phase_kind ||
+		    a->sem->selected_owner != a->phase_owner ||
+		    a->sem->selected_identity != a->phase_identity ||
+		    a->sem->phase_generation != a->phase_generation ||
+		    atomic_long_read(&a->sem->admission) != -1))
+			break;
+		owned = true;
+		break;
+	}
+out:
+	preempt_enable();
+	return owned;
+}
+
+static void kd_service_primitive_trace(const char *stage, struct kd_service_root *root)
+{
+	struct kd_origin_call *call = &root->continuation.origin_call;
+	bool output = !strcmp(stage, "done") || !strcmp(stage, "resume");
+
+	if (unlikely(READ_ONCE(kd_service_trace)))
+		pr_info("kd_service primitive: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu target=%lx return=%lx image_generation=%lu ax=%lx flags=%lx\n",
+			stage, call->origin->pid, call->executor->pid, current->pid,
+			call->identity, (unsigned long long)call->generation,
+			(unsigned long long)call->sequence, call->target, call->call.return_ip,
+			root->image->generation, output ? call->packet->ax : 0,
+			output ? call->packet->flags : 0);
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_service_origin_context_begin(struct kd_origin_call *call)
+{
+	struct kd_exec_continuation *cont = container_of(call, struct kd_exec_continuation, origin_call);
+	struct kd_service_root *root = container_of(cont, struct kd_service_root, continuation);
+	unsigned long stack_here;
+
+	asm volatile("movq %%rsp, %0" : "=r"(stack_here));
+	BUG_ON(current != call->origin || !call->servicing ||
+	    READ_ONCE(call->phase) != KD_ORIGIN_CALL_RUNNING ||
+	    stack_here < cont->stack_base || stack_here >= call->call.stack ||
+	    preempt_count() != call->baseline_preempt + 1 || irqs_disabled());
+	kd_service_primitive_trace("enter", root);
+	/* This change can schedule. The assembly already moved onto task->stack. */
+	preempt_enable();
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_service_origin_context_end(struct kd_origin_call *call)
+{
+	BUG_ON(current != call->origin || !call->servicing ||
+	    READ_ONCE(call->phase) != KD_ORIGIN_CALL_RUNNING ||
+	    preempt_count() != call->baseline_preempt || irqs_disabled());
+	/* The bridge saved Native volatile outputs/flags before entering here. */
+	preempt_disable();
+	WRITE_ONCE(call->servicing, false);
+}
+
+static void kd_service_origin_primitive(struct kd_service_root *root)
+{
+	struct kd_exec_continuation *cont = &root->continuation;
+	struct kd_origin_call *call = &cont->origin_call;
+	unsigned long return_ip;
+
+	if (smp_load_acquire(&call->phase) != KD_ORIGIN_CALL_REQUESTED)
+		return;
+	BUG_ON(current != root->owner.request.logical_origin || call->origin != current ||
+	    call->executor != root->worker || call->identity != root->owner.request.identity ||
+	    call->generation != root->owner.request.generation ||
+	    cont->state != KD_CONT_SUSPENDED || cont->resume_executor != call->executor ||
+	    call->packet != cont->packet || call->packet->sp != call->call.stack ||
+	    call->packet->ip != call->target || !kd_service_call_matches(call->entry, call->target) ||
+	    call->call.stack < cont->stack_base + 512 ||
+	    call->call.stack > cont->stack_base + THREAD_SIZE - sizeof(return_ip) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)call->call.stack, sizeof(return_ip)) ||
+	    return_ip != call->call.return_ip || preempt_count() != 1 || irqs_disabled());
+	call->baseline_preempt = 0;
+	local_save_flags(call->irq_flags);
+	call->native_sp = round_down(call->call.stack - sizeof(unsigned long), 16UL);
+	BUG_ON(call->native_sp < cont->stack_base + 512);
+	WRITE_ONCE(call->servicing, true);
+	smp_store_release(&call->phase, KD_ORIGIN_CALL_RUNNING);
+	kd_service_origin_bridge(call);
+	/* The Native helper and bridge frames have left the source task stack.
+	 * Only now can a resumed E overwrite that lower stack with JIT frames. */
+	BUG_ON(call->servicing || preempt_count() != 1 || irqs_disabled());
+	kd_service_primitive_trace("done", root);
+	smp_store_release(&call->phase, KD_ORIGIN_CALL_DONE);
+}
 
 static void kd_service_dispatch_remove(struct kd_service_root *root)
 {
@@ -331,6 +481,30 @@ static void kd_service_pin_resume(struct kd_exec_continuation *cont)
 	BUG_ON(!kd_exec_cont_resume(cont));
 }
 
+static int kd_service_primitive_call(struct kd_service_root *root)
+{
+	struct kd_exec_continuation *cont = &root->continuation;
+	struct kd_origin_call *call = &cont->origin_call;
+	u64 sequence = call->sequence;
+
+	BUG_ON(call->phase != KD_ORIGIN_CALL_PREPARED || call->executor != current ||
+	       !call->entry || cont->service_call.api != KD_SERVICE_NONE);
+	kd_service_primitive_trace("request", root);
+	kd_service_unpin(cont);
+	smp_store_release(&call->phase, KD_ORIGIN_CALL_REQUESTED);
+	/* Physical E stays available to the scheduler. O may block on an ordinary
+	 * Native helper, but no active CPU frame or source-stack user survives here. */
+	while (smp_load_acquire(&call->phase) != KD_ORIGIN_CALL_DONE) {
+		cpu_relax();
+		if (need_resched())
+			cond_resched();
+	}
+	kd_service_pin_resume(cont);
+	BUG_ON(kd_exec_cont_native_complete(cont, sequence));
+	kd_service_primitive_trace("resume", root);
+	return kd_exe_resume_retained(&cont->frame);
+}
+
 static int kd_service_run_scope(struct kd_service_root *root, int status);
 
 /* The child record remains on the executor's C stack until the entire root
@@ -469,6 +643,10 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 			cond_resched();
 			kd_service_pin_resume(cont);
 			status = kd_exe_resume_retained(&cont->frame);
+			continue;
+		}
+		if (status == KD_EXE_RUN_ORIGIN_CALL) {
+			status = kd_service_primitive_call(root);
 			continue;
 		}
 		/* No origin suffix is a valid completion of this retained protocol.
@@ -696,8 +874,10 @@ kd_service_shadow_wait(struct kd_service_root *root)
 	/* This function is entered on independent storage before source execution
 	 * can overwrite any Native capture-helper frame. It never returns there. */
 	smp_store_release(&root->transport, KD_SERVICE_STACK_READY);
-	while (smp_load_acquire(&root->transport) != KD_SERVICE_RESULT)
+	while (smp_load_acquire(&root->transport) != KD_SERVICE_RESULT) {
+		kd_service_origin_primitive(root);
 		cpu_relax();
+	}
 	BUG_ON(root->result);
 	/* Reuse the Native helper's established stack depth when the source has
 	 * already unwound above it. Do not invent an extra 512-byte gap below
@@ -729,10 +909,13 @@ static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_service_resume_packet(struct kd_service_root *root, const struct kd_regs *saved)
 {
 	struct kd_regs packet = *saved;
+	struct kd_service_completion completion = root->completion;
 
 	preempt_enable();
 	kd_service_free(root);
 	migrate_enable();
+	if (completion.resume)
+		completion.resume(completion.owner, &packet);
 	jump_to_saved_regs(&packet);
 	BUG();
 }
@@ -747,8 +930,9 @@ static int kd_service_local_acquire(void *object, enum kd_admission_kind kind,
 		((kd_down_write)(object), 0);
 }
 
-int kd_service_capture(void *object, enum kd_admission_kind kind,
-	unsigned int state, unsigned long sp, unsigned long ip, unsigned long bp)
+static int kd_service_capture_internal(void *object, enum kd_admission_kind kind,
+	unsigned int state, unsigned long sp, unsigned long ip, unsigned long bp,
+	const struct kd_service_completion *completion, bool bound)
 {
 	struct kd_service_root *root;
 	struct kd_wait_queue dispatch = kd_service_dispatch_queue();
@@ -764,15 +948,22 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 	int result;
 
 	might_sleep();
+	/* A Native primitive owns only this helper's conventional task execution.
+	 * Its nested lock calls must not recursively capture the service machinery. */
+	if (kd_service_origin_scope())
+		return kd_service_local_acquire(object, kind, state);
 	/* Closed source admission and ordinary nonselected callers retain the
 	 * conventional API. No already published or committed body uses this. */
 	if (!kd_source_is_open() || kd_service_worker_count < 2 ||
-	    !kd_comm_matches(&kd_spin_target, current->comm)) {
+	    (!bound && !kd_comm_matches(&kd_spin_target, current->comm))) {
+		BUG_ON(bound);
 		return kd_service_local_acquire(object, kind, state);
 	}
 	result = kd_exec_capture_lease_get(&pending_lease, current);
-	if (result)
+	if (result) {
+		BUG_ON(bound);
 		return kd_service_local_acquire(object, kind, state);
+	}
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	exe = kd_exe_find_ready(0, ip);
 	image = kd_exe_capture_image(exe, ip);
@@ -784,6 +975,7 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 			pr_info("kd_service event=local_image origin=%d entry=%lx\n",
 				current->pid, ip);
 		kd_exec_capture_lease_put(&pending_lease);
+		BUG_ON(bound);
 		return kd_service_local_acquire(object, kind, state);
 	}
 	migrate_disable();
@@ -809,6 +1001,7 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 	raw_spin_lock_init(&root->lifecycle_guard);
 	root->origin_cpu = raw_smp_processor_id();
 	root->worker = NULL;
+	root->completion = completion ? *completion : (struct kd_service_completion){ };
 	root->exe = exe;
 	root->image = image;
 	root->actor = KD_SERVICE_ORIGIN_BUSY;
@@ -948,6 +1141,20 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 	return result;
 }
 
+int kd_service_capture(void *object, enum kd_admission_kind kind,
+	unsigned int state, unsigned long sp, unsigned long ip, unsigned long bp)
+{
+	return kd_service_capture_internal(object, kind, state, sp, ip, bp, NULL, false);
+}
+
+int kd_service_capture_bound(void *object, enum kd_admission_kind kind,
+	unsigned int state, unsigned long sp, unsigned long ip, unsigned long bp,
+	const struct kd_service_completion *completion)
+{
+	BUG_ON(!completion || !completion->owner || !completion->resume);
+	return kd_service_capture_internal(object, kind, state, sp, ip, bp, completion, true);
+}
+
 bool kd_service_idle(void)
 {
 	unsigned long flags = _raw_spin_lock_irqsave(&kd_service_dispatch_guard);
@@ -961,6 +1168,16 @@ int kd_service_init(void)
 {
 	int cpu, slot;
 	unsigned int i;
+	int result;
+
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, packet) != KD_ORIGIN_CALL_PACKET);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, target) != KD_ORIGIN_CALL_TARGET);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, native_sp) != KD_ORIGIN_CALL_NATIVE_SP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_sp) != KD_ORIGIN_CALL_SHADOW_SP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_bp) != KD_ORIGIN_CALL_SHADOW_BP);
+	result = kd_service_calls_init();
+	if (result)
+		return result;
 
 	for_each_possible_cpu(cpu)
 		for (slot = 0; slot < KD_MUTEX_MAX_NODES; slot++) {
@@ -1013,4 +1230,5 @@ void kd_service_exit(void)
 			record->service = NULL;
 		}
 	kd_service_worker_count = 0;
+	kd_service_calls_exit();
 }

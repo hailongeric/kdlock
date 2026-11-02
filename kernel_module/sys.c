@@ -24,6 +24,7 @@
 #include "kd_lock.h"
 #include "kd_mutex.h"
 #include "kd_source.h"
+#include "kd_service_calls.h"
 #include "kd_spin_entry.h"
 #include "sys.h"
 #include "utils.h"
@@ -78,7 +79,7 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 			KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |
 			KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |
 			KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |
-			KD_JIT_CAP_ORIGIN_INSTRUCTION,
+			KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -327,6 +328,14 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			ret = kd_image_relocate_direct(upload->image);
 			if (ret)
 				return ret;
+			/* An immutable body may reach a registered helper after its
+			 * producer closes. Retain that exact source before publication,
+			 * not only when a later transaction tries to call it. */
+			if (head.requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL) {
+				ret = kd_service_calls_pin();
+				if (ret)
+					return ret;
+			}
 			ret = kd_image_publish(entry, upload->image, head.base_generation);
 			if (ret)
 				return ret;

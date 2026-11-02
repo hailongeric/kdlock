@@ -544,6 +544,9 @@ static struct miscdevice continuation_device = {
 };
 static int __init continuation_init(void)
 {
+#ifdef JIT_CONTINUATION_HELPER
+	int result;
+#endif
 	BUILD_BUG_ON(sizeof(struct jit_continuation_run) != 32);
 	BUILD_BUG_ON(sizeof(struct jit_continuation_snapshot) != 80);
 	BUILD_BUG_ON(sizeof(struct jit_origin_snapshot) != 64);
@@ -552,18 +555,40 @@ static int __init continuation_init(void)
 	BUILD_BUG_ON(sizeof(struct jit_killable_snapshot) != 872);
 	killable_init();
 #endif
+#ifdef JIT_CONTINUATION_HELPER
+	BUILD_BUG_ON(sizeof(struct jit_helper_snapshot) != 1496);
+#endif
 #if defined(JIT_CONTINUATION_SPINNING) || defined(JIT_CONTINUATION_ORIGIN_INSTRUCTIONS)
 	if (!boot_cpu_has(X86_FEATURE_RDTSCP))
 		return -EOPNOTSUPP;
 #endif
+#ifdef JIT_CONTINUATION_HELPER
+	result = misc_register(&continuation_device);
+	if (result)
+		return result;
+	result = helper_register();
+	if (result)
+		misc_deregister(&continuation_device);
+	return result;
+#else
 	return misc_register(&continuation_device);
+#endif
 }
-static void __exit continuation_exit(void) { misc_deregister(&continuation_device); }
+static void __exit continuation_exit(void)
+{
+#ifdef JIT_CONTINUATION_HELPER
+	/* The registration pin permits unload only after explicit unregister. */
+	WARN_ON(READ_ONCE(helper_registered));
+#endif
+	misc_deregister(&continuation_device);
+}
 module_init(continuation_init);
 module_exit(continuation_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("JIT continuation and exact original-task instruction service");
-#ifdef JIT_CONTINUATION_KILLABLE
+#ifdef JIT_CONTINUATION_HELPER
+MODULE_INFO(kd_continuation_mode, "helper");
+#elif defined(JIT_CONTINUATION_KILLABLE)
 MODULE_INFO(kd_continuation_mode, "killable");
 #else
 MODULE_INFO(kd_continuation_mode, "continuation");

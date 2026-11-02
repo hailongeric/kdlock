@@ -4,6 +4,7 @@
 
 #include "kd_exec.h"
 #include "kd_wait_queue.h"
+#include "kd_service_calls.h"
 
 enum kd_exec_cont_state {
 	KD_CONT_UNUSED,
@@ -121,6 +122,7 @@ struct kd_exec_continuation {
 	void *service_scope;
 	const struct kd_exec_service_ops *service_ops;
 	struct kd_exec_service_call service_call;
+	struct kd_origin_call origin_call;
 	struct kd_call_state pending_call;
 	unsigned long stack_base;
 	void (*stack_put)(struct task_struct *task);
