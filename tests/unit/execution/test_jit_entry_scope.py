@@ -229,12 +229,12 @@ def main(executor=None, benchmark=False):
             "call->complete = !clobber;",
         ),
         "dispatch-rehashes-entry": (
-            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
-            "if (!kd_exe_is_ready(0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_is_ready(0, entry_ip))",
         ),
         "dispatch-reuses-old-ready-result": (
-            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
-            "if (!exe)",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !exe)",
         ),
         "ready-ignores-closing": (
             "if (!exe || !ip || !kd_source_is_open())",
