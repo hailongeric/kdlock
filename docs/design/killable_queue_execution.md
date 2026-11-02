@@ -93,12 +93,14 @@ release and result handoff, then considers another request through fresh
 admission. It never manufactures a public grant to retain combining authority.
 
 Before selection, a captured caller reserves stable cold request storage and
-remains preemptible. The preallocated CPU/slot sidecar is the ordinary case;
-private spill storage is obtained before publication when those slots are busy.
-Allocation failure is retried before publication rather than returned as a new
-public API error or made dependent on an ancestor releasing its slot. This
-spill policy needs allocation-pressure validation beyond this stage's focused
-checks. Service notification membership is distinct from object
+remains preemptible. The preallocated CPU/slot sidecar is the ordinary case.
+When those slots are busy, a native-stack canonical request first arbitrates
+real readiness and cancellation. Only after success does it obtain private
+spill storage and transfer that exact acquired UID/generation and owner lease
+into the destination. The destination is not published/elected again. Pending
+cancellation never waits for allocation or an ancestor's slot. Allocation
+pressure after committed acquisition remains a progress validation boundary.
+Service notification membership is distinct from object
 acquisition order: it schedules work and holds no hidden acquisition grant.
 Dispatcher preview uses identity/generation only; no queued node or packet
 pointer survives across a foreign body. Cancellation removes this notification
@@ -196,3 +198,42 @@ completion proof. Any unsupported reached context/helper is enumerated with
 source evidence and keeps broader integration unaccepted. No context-sensitive
 MM helper, builtin image startup or syscall-specific adapter is concealed by
 this lock-protocol implementation; those remain explicit integration work.
+
+## Initial implementation boundaries
+
+A source/image lease is retained before publication. The exact immutable image
+is selected at that point and cannot be revoked by later source closure or a
+new registry status. An entry whose image is not yet ready is explicitly
+nondelegable for that invocation, uses the conventional C adapter and its
+`may_delegate=false` request, and can emit `event=local_image` in the focused
+trace. No already published delegated invocation has an origin suffix route.
+This initial eligibility distinction is not proof that a reached unsupported
+operation is serviced by the new retained runtime.
+
+A worker probes an uncommitted root once and returns it to dispatch when it is
+not ready. Tentative physical custody is transferred back with exact PICKUP
+and acknowledgment before actor handback. It never occupies a worker waiting
+for an unrelated holder to unlock. Nested LOCAL admission may block its already
+committed parent's worker, just as the corresponding Native acquisition may.
+
+Before requesting origin pinning, an executor reserves a CPU with no captured
+origin needing to run there. The active-root list supplies exact origin CPU
+reservations; the predicate is rechecked after migration/preemption pinning.
+This prevents reciprocal executor/origin pin waits. Executor scheduling and
+nested resume release their activation first and freshly select a suitable CPU.
+The existing nonoversubscribed scope must leave at least one executor CPU;
+all-CPU/oversubscribed operation and allocation pressure remain unvalidated.
+
+Released nested record storage is reused only after its exact acquisition,
+release and returned-CALL obligations finish. Parent UID/generation and depth
+are snapshots, rather than references to a recycled parent's record. New C
+storage is needed only when all existing records still own live acquisitions;
+a repeated acquire/release loop does not grow storage per operation.
+
+The controlled initial runtime supports the typed mutex/rwsem writer controls,
+writer downgrade and matching read release. Read acquisition, try/non-owner
+controls and context-dependent Native helpers reached inside retained code are
+not yet connected to this service driver. See `execution/service_control.inc`,
+`kd_native_terminals.def` and the retained status handling in `kd_service.c`.
+Their presence must not be described as general MM or arbitrary-caller support.
+The candidate remains unaccepted outside the demonstrated supported slice.
