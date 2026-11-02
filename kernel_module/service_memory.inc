@@ -8,14 +8,18 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx\n",
+		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u\n",
 			stage, operation->origin->pid, operation->executor->pid, current->pid,
 			operation->identity, (unsigned long long)operation->generation,
 			(unsigned long long)operation->sequence, operation->image->generation,
 			operation->site->ip, operation->site->next_ip, operation->source_sp,
 			operation->effective_offset, operation->site->width,
 			operation->site->operation, operation->preempt_operand,
-			operation->input_flags, output ? operation->result_flags : 0);
+			operation->input_flags, output ? operation->result_flags : 0,
+			operation->preempt_owner ? (unsigned long long)operation->preempt_owner->sequence : 0,
+			operation->preempt_owner ? operation->preempt_owner->object : 0,
+			operation->destination, output ? operation->result_value : 0,
+			!!(operation->site->flags & KD_ORIGIN_MEMORY_READ));
 }
 
 static int kd_service_memory_prepare(struct kd_service_root *root)
@@ -27,6 +31,7 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 		root->origin_cpu);
 	unsigned int bytes = operation->site->width / 8;
 	bool available = false;
+	bool reading = operation->site->flags & KD_ORIGIN_MEMORY_READ;
 
 	operation->preempt_owner = NULL;
 	operation->preempt_operand = false;
@@ -35,13 +40,15 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 	    address > ~0UL - bytes)
 		return -EOPNOTSUPP;
 	if (address < count_address + sizeof(int) && address + bytes > count_address) {
-		if (address != count_address || operation->site->width != 32)
+		if (!reading && (address != count_address || operation->site->width != 32))
 			return -EOPNOTSUPP;
 		operation->preempt_operand = true;
 	}
+	if (reading && !operation->preempt_operand)
+		return -EINVAL;
 	operation->executor_pinned = kd_service_native_pins(root) ||
 		operation->preempt_operand;
-	if (!operation->preempt_operand)
+	if (!operation->preempt_operand || reading)
 		return 0;
 	if (operation->site->operation == KD_ORIGIN_MEMORY_DEC) {
 		operation->preempt_owner = kd_service_native_find(root,
@@ -87,7 +94,7 @@ kd_service_memory_context_end(struct kd_origin_memory *operation)
 
 	BUG_ON(current != operation->origin || !operation->servicing ||
 		READ_ONCE(operation->phase) != KD_ORIGIN_MEMORY_RUNNING);
-	if (operation->preempt_operand) {
+	if (operation->preempt_operand && operation->site->operation <= KD_ORIGIN_MEMORY_DEC) {
 		BUG_ON(!owner || owner->origin != current ||
 		    owner->identity != operation->identity ||
 		    owner->generation != operation->generation ||
@@ -201,7 +208,9 @@ static int kd_service_memory_call(struct kd_service_root *root)
 		kd_service_pin_resume(cont);
 	result = kd_exec_cont_memory_complete(cont, sequence);
 	BUG_ON(result != 0 && result != KD_EXE_RUN_TO_UNLOCK);
-	operation->preempt_owner = NULL;
 	kd_service_memory_trace(result ? "complete" : "resume", root);
+	/* The exact context release is already committed. Retained owner storage
+	 * remains alive through this final receipt, before a spill frame can retire. */
+	operation->preempt_owner = NULL;
 	return result ? result : kd_exe_resume_retained(&cont->frame);
 }

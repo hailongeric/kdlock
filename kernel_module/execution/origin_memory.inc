@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* The two decoders share a deliberately small x86-64 encoding contract:
- * GS, optional REX, FF /0 or /1, ordinary 64-bit memory addressing. */
+/* The two decoders share exact GS scalar opcodes and 64-bit addressing. */
 struct kd_memory_operand {
-	u8 base, index, shift, width, operation;
+	u8 base, index, shift, width, operation, destination;
 	s32 displacement;
+	u32 immediate;
 };
 
 #define KD_MEMORY_RIP 16U
@@ -13,27 +13,58 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 	struct kd_memory_operand *operand)
 {
 	const u8 *bytes = site->opcode;
-	unsigned int cursor = 1, rex = 0, modrm, mod, rm, sib, disp = 0, i;
+	unsigned int cursor = 0, rex = 0, modrm, mod, rm, sib, disp = 0, i;
+	unsigned int opcode, extension, immediate = 0;
+	bool gs = false, word = false;
 
-	if (site->reserved || site->length < 3 || site->length > 15 ||
-	    bytes[0] != 0x65 || !site->ip || site->ip > ~0UL - site->length ||
+	if ((site->flags & ~KD_ORIGIN_MEMORY_READ) || site->length < 3 || site->length > 15 ||
+	    !site->ip || site->ip > ~0UL - site->length ||
 	    site->next_ip != site->ip + site->length)
 		return -EPROTO;
-	if (bytes[cursor] >= 0x40 && bytes[cursor] <= 0x4f)
+	while (cursor < site->length && (bytes[cursor] == 0x65 || bytes[cursor] == 0x66)) {
+		if (bytes[cursor] == 0x65) {
+			if (gs)
+				return -EPROTO;
+			gs = true;
+		} else {
+			if (word)
+				return -EPROTO;
+			word = true;
+		}
+		++cursor;
+	}
+	if (cursor < site->length && bytes[cursor] >= 0x40 && bytes[cursor] <= 0x4f)
 		rex = bytes[cursor++];
-	if (cursor + 2 > site->length || bytes[cursor++] != 0xff)
+	if (!gs || cursor + 2 > site->length)
 		return -EPROTO;
+	opcode = bytes[cursor++];
 	modrm = bytes[cursor++];
 	mod = modrm >> 6;
 	rm = modrm & 7;
-	operand->operation = ((modrm >> 3) & 7) + 1;
-	operand->width = rex & 8 ? 64 : 32;
+	extension = (modrm >> 3) & 7;
+	operand->width = rex & 8 ? 64 : word ? 16 : 32;
+	operand->destination = KD_MEMORY_NO_REG;
+	operand->immediate = 0;
+	if (opcode == 0xff && extension <= 1 && !word) {
+		operand->operation = extension + 1;
+	} else if (opcode == 0x8b && !word) {
+		operand->operation = KD_ORIGIN_MEMORY_LOAD;
+		operand->destination = extension | ((rex & 4) << 1);
+		if (operand->destination == 4)
+			return -EPROTO;
+	} else if (opcode == 0xf7 && extension == 0 && operand->width != 64) {
+		operand->operation = KD_ORIGIN_MEMORY_TEST;
+		immediate = operand->width / 8;
+	} else {
+		return -EPROTO;
+	}
 	operand->base = KD_MEMORY_NO_REG;
 	operand->index = KD_MEMORY_NO_REG;
 	operand->shift = 0;
 	operand->displacement = 0;
-	if (mod == 3 || operand->operation > KD_ORIGIN_MEMORY_DEC ||
-	    operand->operation != site->operation || operand->width != site->width)
+	if (mod == 3 || operand->operation != site->operation || operand->width != site->width ||
+	    !!(site->flags & KD_ORIGIN_MEMORY_READ) !=
+		(operand->operation >= KD_ORIGIN_MEMORY_LOAD))
 		return -EPROTO;
 	if (rm == 4) {
 		if (cursor >= site->length)
@@ -54,7 +85,7 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 	}
 	if (mod)
 		disp = mod == 1 ? 1 : 4;
-	if (cursor + disp != site->length)
+	if (cursor + disp + immediate != site->length)
 		return -EPROTO;
 	if (disp == 1)
 		operand->displacement = (s8)bytes[cursor];
@@ -62,6 +93,9 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 		operand->displacement = (s32)((u32)bytes[cursor] |
 			((u32)bytes[cursor + 1] << 8) | ((u32)bytes[cursor + 2] << 16) |
 			((u32)bytes[cursor + 3] << 24));
+	cursor += disp;
+	for (i = 0; i < immediate; ++i)
+		operand->immediate |= (u32)bytes[cursor + i] << (8 * i);
 	for (i = site->length; i < sizeof(site->opcode); ++i)
 		if (bytes[i])
 			return -EPROTO;
@@ -74,7 +108,8 @@ static bool kd_memory_refusal_site(const struct kd_origin_memory_site *site)
 {
 	unsigned int i;
 
-	if (site->operation || site->width || site->reserved || site->continuation_offset ||
+	if (site->operation || site->width || (site->flags & ~KD_ORIGIN_MEMORY_READ) ||
+	    site->continuation_offset ||
 	    !site->length || site->length > 15 || !site->ip ||
 	    site->ip > ~0UL - site->length || site->next_ip != site->ip + site->length)
 		return false;
@@ -132,20 +167,39 @@ const struct kd_origin_memory_site *kd_image_memory_sites(
 	const struct kd_jit_image *image, unsigned int *count)
 {
 	const struct kd_origin_memory_footer *footer;
+	const struct kd_origin_memory_read_footer *read_footer;
 	const unsigned char *code;
+	unsigned long trailer;
+	unsigned int offset, entries;
 
 	if (!image || !image->code || !(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_MEMORY) ||
 	    image->length < KD_IMAGE_SERVICE_HEADER_SIZE + sizeof(*footer))
 		return NULL;
 	code = image->code;
-	footer = (const void *)(code + image->length - sizeof(*footer));
-	if (memcmp(footer->magic, "KDOM0001", 8) || !footer->count ||
-	    footer->count > KD_ORIGIN_MEMORY_MAX || footer->offset < KD_IMAGE_SERVICE_HEADER_SIZE ||
-	    (unsigned long)footer->offset + footer->count * sizeof(struct kd_origin_memory_site) !=
-		image->length - sizeof(*footer))
+	if (image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ) {
+		if (image->length < KD_IMAGE_SERVICE_HEADER_SIZE + sizeof(*read_footer))
+			return NULL;
+		read_footer = (const void *)(code + image->length - sizeof(*read_footer));
+		if (memcmp(read_footer->magic, "KDOM0002", 8) ||
+		    read_footer->preempt_symbol != (unsigned long)&__preempt_count)
+			return NULL;
+		offset = read_footer->offset;
+		entries = read_footer->count;
+		trailer = sizeof(*read_footer);
+	} else {
+		footer = (const void *)(code + image->length - sizeof(*footer));
+		if (memcmp(footer->magic, "KDOM0001", 8))
+			return NULL;
+		offset = footer->offset;
+		entries = footer->count;
+		trailer = sizeof(*footer);
+	}
+	if (!entries || entries > KD_ORIGIN_MEMORY_MAX || offset < KD_IMAGE_SERVICE_HEADER_SIZE ||
+	    (unsigned long)offset + entries * sizeof(struct kd_origin_memory_site) !=
+		image->length - trailer)
 		return NULL;
-	*count = footer->count;
-	return (const void *)(code + footer->offset);
+	*count = entries;
+	return (const void *)(code + offset);
 }
 
 int kd_image_validate_memory_sites(const struct kd_jit_image *image)
@@ -161,6 +215,9 @@ int kd_image_validate_memory_sites(const struct kd_jit_image *image)
 	if (!sites || image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return -EPROTO;
 	for (i = 0; i < count; ++i) {
+		if ((sites[i].flags & KD_ORIGIN_MEMORY_READ) &&
+		    !(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ))
+			return -EPROTO;
 		if (!kd_memory_refusal_site(&sites[i]) &&
 		    (kd_origin_memory_decode(&sites[i], NULL, NULL) ||
 		    sites[i].continuation_offset < KD_IMAGE_SERVICE_HEADER_SIZE ||
@@ -190,6 +247,7 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 	struct kd_origin_memory *operation;
 	const struct kd_origin_memory_site *sites, *site = NULL;
 	unsigned long offset;
+	struct kd_memory_operand decoded;
 	unsigned int count, i;
 	u8 bytes[16];
 
@@ -223,7 +281,8 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 		return -EPROTO;
 	if (kd_memory_refusal_site(site))
 		return -EOPNOTSUPP;
-	if (kd_origin_memory_decode(site, cont->packet, &offset))
+	if (kd_origin_memory_decode(site, cont->packet, &offset) ||
+	    kd_memory_operand_decode(site, &decoded))
 		return -EPROTO;
 	operation->packet = cont->packet;
 	operation->image = frame->image;
@@ -238,10 +297,38 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 	operation->source_sp = cont->packet->sp;
 	operation->input_flags = cont->packet->flags;
 	operation->result_flags = 0;
+	operation->result_value = 0;
+	operation->destination = decoded.destination;
+	operation->immediate = decoded.immediate;
 	operation->result = 0;
 	local_save_flags(operation->executor_irq_flags);
 	WRITE_ONCE(operation->phase, KD_ORIGIN_MEMORY_PREPARED);
 	return 0;
+}
+
+static void kd_memory_write_register(struct kd_regs *regs, unsigned int destination,
+	unsigned int width, unsigned long value)
+{
+	if (width == 32)
+		value = (u32)value;
+	switch (destination) {
+	case 0: regs->ax = value; break;
+	case 1: regs->cx = value; break;
+	case 2: regs->dx = value; break;
+	case 3: regs->bx = value; break;
+	case 5: regs->bp = value; break;
+	case 6: regs->si = value; break;
+	case 7: regs->di = value; break;
+	case 8: regs->r8 = value; break;
+	case 9: regs->r9 = value; break;
+	case 10: regs->r10 = value; break;
+	case 11: regs->r11 = value; break;
+	case 12: regs->r12 = value; break;
+	case 13: regs->r13 = value; break;
+	case 14: regs->r14 = value; break;
+	case 15: regs->r15 = value; break;
+	default: BUG();
+	}
 }
 
 int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence)
@@ -262,9 +349,18 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 	    operation->generation != cont->generation || operation->packet != cont->packet ||
 	    operation->image != cont->frame.image || !operation->site ||
 	    cont->packet->sp != operation->source_sp ||
-	    cont->packet->ip != operation->site->ip || !(operation->result_flags & 2) ||
-	    ((operation->result_flags ^ operation->input_flags) & 1))
+	    cont->packet->ip != operation->site->ip || !(operation->result_flags & 2))
 		return -EPROTO;
+	if ((operation->site->operation <= KD_ORIGIN_MEMORY_DEC &&
+	     ((operation->result_flags ^ operation->input_flags) & 1)) ||
+	    (operation->site->operation == KD_ORIGIN_MEMORY_LOAD &&
+	     ((operation->result_flags ^ operation->input_flags) & KD_REG_ARITHMETIC_FLAGS)) ||
+	    (operation->site->operation == KD_ORIGIN_MEMORY_TEST &&
+	     (operation->result_flags & (1UL | (1UL << 11)))))
+		return -EPROTO;
+	if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD)
+		kd_memory_write_register(cont->packet, operation->destination,
+			operation->site->width, operation->result_value);
 	cont->packet->flags = (operation->input_flags & ~KD_REG_ARITHMETIC_FLAGS) |
 		(operation->result_flags & KD_REG_ARITHMETIC_FLAGS);
 	cont->packet->ip = operation->site->next_ip;
@@ -286,7 +382,7 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 
 void kd_origin_memory_apply(struct kd_origin_memory *operation)
 {
-	unsigned long flags, input;
+	unsigned long flags, input, value;
 	unsigned long offset = operation->effective_offset;
 
 	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
@@ -301,11 +397,33 @@ void kd_origin_memory_apply(struct kd_origin_memory *operation)
 			KD_MEMORY_APPLY("incl");
 		else
 			KD_MEMORY_APPLY("incq");
-	} else {
+	} else if (operation->site->operation == KD_ORIGIN_MEMORY_DEC) {
 		if (operation->site->width == 32)
 			KD_MEMORY_APPLY("decl");
 		else
 			KD_MEMORY_APPLY("decq");
+	} else if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD) {
+		if (operation->site->width == 32)
+			asm volatile("pushq %[input]; popfq; movl %%gs:(%[offset]), %k[value]; "
+				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "=r"(value)
+				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
+		else
+			asm volatile("pushq %[input]; popfq; movq %%gs:(%[offset]), %[value]; "
+				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "=r"(value)
+				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
+		operation->result_value = value;
+	} else {
+		value = operation->immediate;
+		if (operation->site->width == 16)
+			asm volatile("pushq %[input]; popfq; testw %w[value], %%gs:(%[offset]); "
+				"pushfq; popq %[output]" : [output] "=r"(flags)
+				: [input] "r"(input), [offset] "r"(offset), [value] "r"(value)
+				: "cc", "memory");
+		else
+			asm volatile("pushq %[input]; popfq; testl %k[value], %%gs:(%[offset]); "
+				"pushfq; popq %[output]" : [output] "=r"(flags)
+				: [input] "r"(input), [offset] "r"(offset), [value] "r"(value)
+				: "cc", "memory");
 	}
 #undef KD_MEMORY_APPLY
 	operation->result_flags = flags;

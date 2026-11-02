@@ -894,7 +894,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
 				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
 					      KD_IMAGE_REQUIRE_ORIGIN_CALL |
-					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY)) ||
+					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY |
+					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;

@@ -20,6 +20,9 @@ struct kd_native_owner;
 #define KD_ORIGIN_MEMORY_MAX 1024U
 #define KD_ORIGIN_MEMORY_INC 1U
 #define KD_ORIGIN_MEMORY_DEC 2U
+#define KD_ORIGIN_MEMORY_LOAD 3U
+#define KD_ORIGIN_MEMORY_TEST 4U
+#define KD_ORIGIN_MEMORY_READ 1U
 
 struct kd_origin_memory_site {
 	unsigned long ip;
@@ -28,7 +31,7 @@ struct kd_origin_memory_site {
 	u8 length;
 	u8 operation;
 	u8 width;
-	u8 reserved;
+	u8 flags;
 	u8 opcode[16];
 } __attribute__((packed));
 /* operation=width=continuation_offset=0 records an exact reached refusal.
@@ -38,6 +41,13 @@ struct kd_origin_memory_footer {
 	u8 magic[8];
 	u32 offset;
 	u32 count;
+} __attribute__((packed));
+
+struct kd_origin_memory_read_footer {
+	u8 magic[8];
+	u32 offset;
+	u32 count;
+	unsigned long preempt_symbol;
 } __attribute__((packed));
 
 enum kd_origin_memory_phase {
@@ -78,6 +88,9 @@ struct kd_origin_memory {
 	unsigned int baseline_preempt;
 	unsigned int baseline_rcu;
 	bool servicing;
+	unsigned long result_value;
+	u32 immediate;
+	u8 destination;
 };
 
 const struct kd_origin_memory_site *kd_image_memory_sites(
@@ -87,8 +100,8 @@ int kd_origin_memory_decode(const struct kd_origin_memory_site *site,
 	const struct kd_regs *regs, unsigned long *effective_offset);
 int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame);
 int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence);
-/* Runs on O with its Native context already normalized. This changes only
- * the memory operand and retained output flags, never virtual source GPRs. */
+/* Runs on O with its Native context already normalized. This writes only
+ * retained outputs; complete applies a decoded MOV destination after ACK. */
 void kd_origin_memory_apply(struct kd_origin_memory *operation);
 void kd_service_memory_bridge(struct kd_origin_memory *operation);
 void kd_service_memory_context_begin(struct kd_origin_memory *operation);

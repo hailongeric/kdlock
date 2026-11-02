@@ -22,7 +22,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 15
+CAPS_VERSION = 16
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -38,6 +38,7 @@ CAP_INDIRECT_CALL = 4096
 CAP_ORIGIN_INSTRUCTION = 8192
 CAP_ORIGIN_CALL = 16384
 CAP_ORIGIN_MEMORY = 32768
+CAP_ORIGIN_CONTEXT_READ = 65536
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -59,6 +60,7 @@ _indirect_call = False
 _origin_instruction = False
 _origin_call = False
 _origin_memory = False
+_origin_context_read = False
 
 
 class SourceRefused(RuntimeError):
@@ -101,7 +103,7 @@ def query_capabilities(fd):
                 "audited_strings": False, "direct_strings": False,
                 "root_native_escape": False, "indirect_call": False,
                 "origin_instruction": False, "origin_call": False,
-                "origin_memory": False}
+                "origin_memory": False, "origin_context_read": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -143,6 +145,8 @@ def query_capabilities(fd):
             known |= CAP_ORIGIN_CALL
         if 15 <= version <= CAPS_VERSION:
             known |= CAP_ORIGIN_MEMORY
+        if 16 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_CONTEXT_READ
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -159,6 +163,8 @@ def query_capabilities(fd):
                     == CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
             and (not features & CAP_ORIGIN_MEMORY
                  or features & CAP_ORIGIN_CALL)
+            and (not features & CAP_ORIGIN_CONTEXT_READ
+                 or features & CAP_ORIGIN_MEMORY)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
@@ -179,6 +185,7 @@ def query_capabilities(fd):
                 "origin_instruction": bool(features & CAP_ORIGIN_INSTRUCTION),
                 "origin_call": bool(features & CAP_ORIGIN_CALL),
                 "origin_memory": bool(features & CAP_ORIGIN_MEMORY),
+                "origin_context_read": bool(features & CAP_ORIGIN_CONTEXT_READ),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -271,6 +278,12 @@ def origin_memory():
     return _origin_memory
 
 
+def origin_context_read():
+    """Guard exact origin preempt-count aliases before ordinary GS reads."""
+    require()
+    return _origin_context_read
+
+
 def parse_service_calls(text):
     """Parse one bounded registry snapshot, without inventing call contracts."""
     result, cookies = {}, set()
@@ -343,7 +356,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -394,6 +407,7 @@ def session():
         _origin_instruction = caps["origin_instruction"]
         _origin_call = caps["origin_call"]
         _origin_memory = caps["origin_memory"]
+        _origin_context_read = caps["origin_context_read"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -405,7 +419,8 @@ def session():
             f"direct_strings={int(_direct_strings)} "
             f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)} "
             f"origin_instruction={int(_origin_instruction)} "
-            f"origin_call={int(_origin_call)} origin_memory={int(_origin_memory)}"
+            f"origin_call={int(_origin_call)} origin_memory={int(_origin_memory)} "
+            f"origin_context_read={int(_origin_context_read)}"
         )
         yield fd
     finally:
@@ -423,6 +438,7 @@ def session():
         _origin_instruction = False
         _origin_call = False
         _origin_memory = False
+        _origin_context_read = False
         if fd is not None:
             os.close(fd)
 

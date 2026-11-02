@@ -197,7 +197,7 @@ class ContinuationSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15) and features & (1 << 5),
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
         self.record["origin_capable"] = version >= 13 and bool(features & (1 << 13))
         self.record["origin_service"] = (self.record["origin_capable"] and
@@ -211,7 +211,7 @@ class ContinuationSession(Session):
             rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() == "N",
                        "forced suffix diagnostic unexpectedly enabled at load")
         if self.record["lock_kind"] in ("spin", "rwlock"):
-            rt.require(version in (12, 13, 14, 15) and features & (1 << 11),
+            rt.require(version in (12, 13, 14, 15, 16) and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
@@ -644,7 +644,7 @@ def main():
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=(896 if args.mode == "helper" else 384 if args.mode == "killable" else
+                    image_requirements=(3968 if args.mode == "helper" else 384 if args.mode == "killable" else
                                         1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,

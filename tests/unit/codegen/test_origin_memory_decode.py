@@ -12,6 +12,9 @@ def main():
     source = (ROOT / "kernel_module/execution/origin_memory.inc").read_text()
     code = source[source.index("struct kd_memory_operand {"):
                   source.index("int kd_exec_cont_memory_prepare(")]
+    code += source[source.index("static void kd_memory_write_register("):
+                   source.index("int kd_exec_cont_memory_complete(")]
+    code += source[source.index("void kd_origin_memory_apply("):]
     mutations = {
         "production": None,
         "source-rip-shifted": ("case KD_MEMORY_RIP: return next_ip;",

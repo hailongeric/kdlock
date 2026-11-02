@@ -20,6 +20,7 @@ DECLARATIONS = {
     'jit_test_native_spin_lock': (1, 2, 4), 'jit_test_native_spin_try': (1, 1, 5),
     'jit_test_native_spin_unlock': (1, 2, 6), 'jit_test_native_rcu_lock': (0, 2, 7),
     'jit_test_native_rcu_unlock': (0, 2, 8),
+    'jit_test_memory_observe': (1, 2, 2),
 }
 SYMBOLS = tuple(DECLARATIONS)
 NATIVE_SNAPSHOT = 0x87B8450E
@@ -205,8 +206,10 @@ def session_class(base):
             result = super().counts(label)
             if label == 'initial':
                 caps = self.record['capabilities']
-                rt.require(caps['version'] in (14, 15) and caps['features'] & (1 << 14),
-                           'declared returning primitive discovery unavailable', 'ENVIRONMENT')
+                rt.require(caps['version'] == 16 and
+                           caps['features'] & ((1 << 14) | (1 << 15) | (1 << 16)) ==
+                           ((1 << 14) | (1 << 15) | (1 << 16)),
+                           'returning primitive/GS instruction service unavailable', 'ENVIRONMENT')
                 state = helper_snapshot()
                 rt.require(state['registered'] == 1 and not state['errors'],
                            'primitive fixture registration failed', 'DATA_ERROR')
@@ -303,6 +306,8 @@ def session_class(base):
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE'
                 self.save()
+            from memory_mode import run_memory_checks
+            run_memory_checks(self)
             trace.write_text('0\n')
             rt.require(trace.read_text().strip() == 'N', 'service trace final readback differs')
             self.record.update(accepted=True, jit_status='RETURNING_ORIGINAL_TASK_PRIMITIVES',

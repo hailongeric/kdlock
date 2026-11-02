@@ -115,6 +115,7 @@ def emit_jit_assembly(
     trusted_source=False,
     origin_sites=None,
     memory_sites=None,
+    memory_preempt_symbol=None,
     budget_resume_enabled=False, returning_targets=None, returning_services=(),
 ):
     continuation_targets = find_resumable_call_continuations(
@@ -222,7 +223,11 @@ def emit_jit_assembly(
                       else None)
             if address_guards is not None:
                 f.write(address_guards.emit(line, reg_map))
-            if memory_sites and line.offset in memory_sites:
+            if (memory_sites and line.offset in memory_sites and
+                    origin_memory.read_operands(line)):
+                f.write(origin_memory.read_guard(line, reg_map, memory_preempt_symbol))
+            if (memory_sites and line.offset in memory_sites and
+                    origin_memory.is_gs_mutation(line)):
                 diagnostics.warn("ORIGIN_MEMORY_SERVICE", "emit_original_cpu_instruction",
                                  "retain the exact JIT successor after one GS memory instruction",
                                  source_ip=hex(line.offset), instruction=line.name)
@@ -324,5 +329,5 @@ def emit_jit_assembly(
                 (address_guards is not None and address_guards.sites)):
             raise ValueError("original-CPU memory metadata cannot share another trailer")
         result = ("#ifndef KD_EMIT_MEMORY_DIRECTORY\n" + result + "#else\n"
-                  + origin_memory.metadata(memory_sites) + "#endif\n")
+                  + origin_memory.metadata(memory_sites, memory_preempt_symbol) + "#endif\n")
     return result

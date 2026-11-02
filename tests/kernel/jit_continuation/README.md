@@ -67,12 +67,14 @@ MM execution. Source is unvalidated until matching VM receipts exist.
 
 ## Returning original-task primitives
 
-`--mode helper --family rwsem --cpus 0-3` adds a separate four-phase functional
+`--mode helper --family rwsem --cpus 0-3` adds a separate six-phase functional
 check using the same module, publication and normal retirement machinery.
 The existing eleven `killable` phases keep their typed-only image requirement
-384. Helper mode has reachable declared primitive CALLs and requires 896
-(origin CALL, retained service queue and budget continuation), with capability
-v14-or-v15/bit14 descriptor discovery. It does not run timing points or replace any
+384. Helper mode has reachable declared primitive CALLs, inline GS updates and
+a normalized preemption-count read. It requires exactly 3968 (origin CALL,
+retained service queue, budget continuation, original-task memory instructions
+and original-context reads), with capability v16/bits14–16. The earlier
+896/1920 images remain separate historical inputs. It does not run timing points or replace any
 of the existing killable checks.
 
 The test module registers two six-word C primitives through
@@ -107,6 +109,27 @@ phase releases the outer KD writer while a Native spinlock remains held, runs
 one scalar marker, then releases that final Native lock. That last transaction
 must report `complete` on E, and normal request/frame/source retirement must
 still finish. These are generic lock mechanism checks, not MM execution.
+
+The final two phases execute actual inline GS INC/DEC instructions in the
+translated body. They update a per-CPU 64-bit counter and create/retire an
+inline 32-bit Native preemption interval. Both phases then execute an actual
+inline GS MOV32 of `__preempt_count`: the returned word must be zero-extended
+and its low 31 bits must equal one, excluding the runtime's pin while preserving
+Native's inverted need-resched bit. This read creates no additional ownership
+record. An observation-only primitive reads
+O's own counter, task stack and physical context before/between/after the
+instructions; it does not execute the critical-section body. Each instruction
+must preserve source CF, R10/R11 witnesses and SP. Exact memory RPC traces bind
+O's apply and the same E/image successor to the root identity/generation.
+The normal phase has five instruction transactions and the early-release
+phase has three. The MOV transaction must report `read=1`, no preemption-owner
+identity, an unchanged arithmetic-flags word and the exact observed result.
+Its separate 312-byte snapshot records the read result and one successful
+source-side check; the earlier observation interfaces keep their layouts.
+The last phase releases the outer KD writer while the inline preemption token
+remains live, then uses the last DEC as an instruction completion endpoint.
+It must report `complete`, preserve SP without consuming a CALL word, and pass
+the Native post-DEC CF/register checks after flags-aware restoration.
 
 A registration pin keeps the fixture loaded. Unregister while source admission
 is open must return `-EBUSY` and preserve that pin. After callers, transactions,

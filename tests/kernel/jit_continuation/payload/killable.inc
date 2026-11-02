@@ -59,6 +59,33 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
 	WRITE_ONCE(slot->prefix, READ_ONCE(slot->prefix) + 1);
 #ifdef JIT_CONTINUATION_HELPER
+	if (flags & (JIT_KILLABLE_MEMORY | JIT_KILLABLE_MEMORY_EARLY)) {
+		jit_test_memory_observe(0);
+		if (flags & JIT_KILLABLE_MEMORY_EARLY) {
+			JIT_MEMORY_INSTRUCTION("incl", __preempt_count);
+			JIT_MEMORY_PREEMPT_READ();
+			jit_test_memory_observe(1);
+			WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+			if (atomic_dec_return(&writers))
+				atomic_inc(&failures);
+			kd_up_write(&test_lock);
+			WRITE_ONCE(helper_memory_body_after, READ_ONCE(helper_memory_body_after) + 1);
+			JIT_MEMORY_INSTRUCTION("decl", __preempt_count);
+			/* Final instruction restoration continues here on O with the
+			 * original source SP/flags, outside every retained lock. */
+			jit_test_memory_observe(2);
+			return 0;
+		}
+		JIT_MEMORY_INSTRUCTION("incq", helper_memory_counter);
+		jit_test_memory_observe(1);
+		JIT_MEMORY_INSTRUCTION("incl", __preempt_count);
+		JIT_MEMORY_PREEMPT_READ();
+		jit_test_memory_observe(2);
+		JIT_MEMORY_INSTRUCTION("decl", __preempt_count);
+		JIT_MEMORY_INSTRUCTION("decq", helper_memory_counter);
+		jit_test_memory_observe(3);
+		WRITE_ONCE(helper_memory_body_after, READ_ONCE(helper_memory_body_after) + 1);
+	}
 	if (flags & (JIT_KILLABLE_NATIVE_PAIRS | JIT_KILLABLE_NATIVE_EARLY)) {
 		jit_test_native_spin_lock(&helper_native_lock);
 		if (flags & JIT_KILLABLE_NATIVE_EARLY) {
@@ -251,6 +278,8 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 		return helper_snapshot(user);
 	if (cmd == JIT_NATIVE_SNAPSHOT)
 		return helper_native_snapshot(user);
+	if (cmd == JIT_MEMORY_SNAPSHOT)
+		return helper_memory_snapshot(user);
 	if (cmd == JIT_HELPER_UNREGISTER) {
 		if (!killable_idle() || atomic_cmpxchg(&control, 0, -1))
 			return -EBUSY;
@@ -315,6 +344,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 			memset(helper_native_events, 0, sizeof(helper_native_events));
 			WRITE_ONCE(helper_native_count, 0);
 			WRITE_ONCE(helper_native_body_after, 0);
+			helper_memory_reset();
 #endif
 			WRITE_ONCE(killable_release, 0);
 			WRITE_ONCE(hot, 0);
@@ -334,6 +364,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 #ifdef JIT_CONTINUATION_HELPER
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
 	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
+	     && run.flags != JIT_KILLABLE_MEMORY && run.flags != JIT_KILLABLE_MEMORY_EARLY
 #endif
 	    ) || run.reserved ||
 	    (run.operation != JIT_KILLABLE_ROOT && run.flags))

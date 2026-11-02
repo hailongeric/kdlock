@@ -58,6 +58,8 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_HELPER_WAIT 128U
 #define JIT_KILLABLE_NATIVE_PAIRS 256U
 #define JIT_KILLABLE_NATIVE_EARLY 512U
+#define JIT_KILLABLE_MEMORY 1024U
+#define JIT_KILLABLE_MEMORY_EARLY 2048U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
@@ -119,4 +121,16 @@ struct jit_native_snapshot {
 	struct jit_native_event events[JIT_NATIVE_EVENTS];
 };
 #define JIT_NATIVE_SNAPSHOT _IOR('E', 14, struct jit_native_snapshot)
+
+#define JIT_MEMORY_EVENTS 4
+struct jit_memory_observation {
+	__u64 stage, pid, cpu, stack_address, preempt, irqs, counter;
+};
+struct jit_memory_snapshot {
+	__u64 version, errors, count, origin_stack, origin_stack_high;
+	__u64 body_after, cf_checks, reg_checks, sp_checks;
+	__u64 read_value, read_checks;
+	struct jit_memory_observation events[JIT_MEMORY_EVENTS];
+};
+#define JIT_MEMORY_SNAPSHOT _IOR('E', 15, struct jit_memory_snapshot)
 #endif

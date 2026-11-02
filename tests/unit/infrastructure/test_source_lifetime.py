@@ -100,7 +100,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_MEMORY,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ,",
             ".features = 0,",
         ),
         "wrong-module-arena": (
@@ -148,8 +148,12 @@ def main():
             "KD_JIT_CAP_ORIGIN_INSTRUCTION |",
         ),
         "missing-origin-memory-feature": (
-            "KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_MEMORY,",
-            "KD_JIT_CAP_ORIGIN_CALL,",
+            "KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ,",
+            "KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_CONTEXT_READ,",
+        ),
+        "missing-origin-context-read-feature": (
+            "KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ,",
+            "KD_JIT_CAP_ORIGIN_MEMORY,",
         ),
         "bound-objects-close-admission": (
             "if (kd_source_bindings) {", "if (false) {",
