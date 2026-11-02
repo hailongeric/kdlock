@@ -36,6 +36,69 @@ and must not silently complete the remaining body on the original task.
 
 ## Required general changes
 
+### Implementation pass: executor returns to pending writer work
+
+Implementation proceeds on codex/rwsem-delegated-protocol-20261102 from the
+design/observation checkpoint bd7e198b1933a01d639723ceb621fbcc45b6a29c. The
+production source baseline remains 7231ddf0963ff2cc730590c09cc81e7f96f93095.
+The requested next transition is a sequence of distinct ownership intervals:
+
+```text
+origin B: selected writer -> delegated downgrade -> delegated read tail
+          -> exact read release -> returned completion/retirement
+executor E: select its pending A (or another queued request C)
+            -> physical gate -> selected exclusive phase
+            -> fresh active-reader drain -> that request's writer body
+```
+
+The same physical executor may perform both intervals. It does not inherit B's
+write ownership after read release. The pending A may be E's original public
+acquisition that has not reached its body; fulfilling it does not insert another
+public API call. B may acquire again only when B's unchanged code calls an
+acquisition API. Never hide a blocking writer acquisition inside public up_read.
+
+The implementation order is:
+
+1. Separate queued writer/request accounting from selected writer admission.
+   Use exact request-owned writer/read records and a phase generation. No
+   queued request has a reusable reader-drain result. Apply the selected-phase
+   rules to ordinary, signalable, trylock and delegated writers; preserve the
+   existing cancellation, rollback and success-before-signal ordering.
+2. Add general runtime controls for delegated downgrade and final read release.
+   Publish the read credit before releasing the physical gate, reopen admission
+   only after its unlock acknowledgment, and continue the read tail on E.
+   The physical gate ACK must not complete the read acquisition or pop its
+   frame. Keep exact source, packet, stack, object and execution records live.
+3. Finish B's read release and returned completion before reusing its storage
+   or blocking E on A/C. Route reacquisition through the full rwsem writer
+   protocol, not the existing mutex-only early-release recovery helper.
+   Preserve each request's own commitment state: an already committed A cannot
+   become canceled merely because physical reacquisition is necessary. An
+   uncommitted killable request retains its ordinary cancellation contract.
+4. Complete the result-returning killable entry and source/return contract.
+   A committed proxy success explicitly defines the returned zero; canceled
+   requests publish no body. Ordinary callable/cleanup behavior stays correct.
+5. Connect only complete general capabilities to the kernel's ordinary lock
+   facade. The builtin executor/image startup dependency and reached helper
+   context services remain mandatory; a module-only or local-only run cannot
+   certify forced delegated MM execution. No workload-specific adapter or
+   suppressed reached-operation check is an intermediate solution.
+
+Directly affected VM checks must witness other-task write entry, downgrade,
+read-tail effects, exact read release/completion, and the same executor's fresh
+writer acquisition. Include an intervening live ordinary reader so reacquiring
+only the gate cannot pass. Check cancellation with a queued successor, rollback,
+trylock nonblocking behavior, ordinary local downgrade and atomic read release.
+After coherent changes, build and run unchanged mmap1_threads and
+mmap1_processes in the enabled-MM VM, keeping proxy evidence separate from
+application completion. A failed/unsupported point is retained, diagnosed and
+reported; local execution is never counted as the requested delegated result.
+
+This section authorizes an implementation sequence, not a claim that the
+capabilities are already present. Keep every build/test attempt and exact
+source/image identity. No source edits or synchronization occur while frozen
+inputs are executing, and no promotion follows from an incomplete candidate.
+
 ### Killable continuation capture and commit
 
 Provide a result-returning continuation capture at the ordinary killable writer
