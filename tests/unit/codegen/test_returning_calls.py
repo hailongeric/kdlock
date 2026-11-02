@@ -80,9 +80,11 @@ class ReturningCallTests(unittest.TestCase):
         raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')
         raw.extend(b'\x90' * (0x20 - len(raw)))
         raw.extend(b'\xe9' + struct.pack('<i', 0x5500 - 0x1025))
+        raw.extend(b'\x90' * 16)
         options = {}
         assembly, log, status = render(
-            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            raw.hex(),
+            lock_kind='mutex', abi=2, trusted_source=True,
             native_escape_capable=True,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
                             'kd_mutex_direct_unlock_clobber_v1': 0x7100,

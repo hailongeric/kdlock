@@ -235,6 +235,16 @@ Registered tail jumps use the caller's actual retained return word and resume
 its source CALL successor. They do not manufacture another CALL word. Other
 images retain the earlier scope rule.
 
+Retained images also need the ordinary direct-callee closure before execution.
+The legacy decoder deliberately does not follow CALLs, and learning a missing
+callee after handing the rest of a body to O cannot implement this protocol.
+For trusted ABI2 returning-service images, seed and fetch ordinary direct CALL
+targets through the existing complete-source lease/window expansion. Exact
+declared primitives and lock controls stay resumable boundaries. A decoded
+callee's tail jump to a declared primitive inherits the source caller's real
+return word. Existing source-size/expansion limits remain explicit resource
+limits; this does not assert that every MM callback or source graph is ready.
+
 The final ownership release can itself be an instruction, for example the
 last inline preemption decrement after an earlier outer unlock. Unlike a CALL,
 it has no source return word to consume. Completion must preserve the unchanged
@@ -755,6 +765,34 @@ included instruction metadata required scalar typedefs before that include.
 These are retained failed fixture attempts, not execution passes. The focused
 correction supplies the established fake lock symbols and fixes only typedef
 ordering; it adds no read-normalization protocol or new runtime claim.
+
+### Normalized source preemption reads
+
+Source GS reads of __preempt_count cannot simply read the original CPU's word
+and subtract one. While E runs, O may be handling an interrupt, so the sampled
+word can also contain physical interrupt nesting that the source instruction
+would not observe while executing on O. Partial-width tests of higher bytes are
+subject to the same issue. A following isolated slice therefore guards every
+explicit GS memory read by its decoded effective address. The predicate uses
+the canonical __preempt_count symbol and the operand's actual width, including
+overlap aliases; it does not depend on a caller name or a static address guess.
+The exact symbol is carried by a versioned immutable directory and compared
+with the provider's own symbol at publication. Nonoverlapping reads keep their
+ordinary lowering. A matching read transfers the one instruction to O's Native
+task stack, where only the runtime pin is removed and the actual source context
+is present. There is no raw partial-read normalization claim.
+
+The initial returning read operations are MOV memory-to-GPR32/64 and TEST
+memory16/32 with an immediate. MOV writes only its decoded destination and
+zero-extends a 32-bit result; TEST supplies the actual arithmetic flags. Neither
+operation changes source SP or creates/consumes a PREEMPT record. MOV to SP and
+other overlapping read forms remain exact before-effects refusal rows. Every
+guard preserves source GPRs and flags before either the ordinary read or the
+instruction transaction. This adds capability version 16 and a distinct read
+feature/requirement; version-15 mutation directories remain supported. Focused
+checks must cover dynamic aliases, operand boundaries, nonoverlap behavior,
+zero extension, TEST zero/carry flags and exact same-executor reentry before
+this slice supplies any execution or MM claim.
 
 ## Instrumentation checkpoint, November 2
 

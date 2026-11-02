@@ -298,6 +298,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     entry_guards = None
     memory_guards = None
     service_queue_required = False
+    direct_call_closure = (trusted_source and abi == 2 and lock_kind == "mutex"
+                           and bool(returning_services))
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
@@ -306,6 +308,12 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         db_dict = {block: db_dict[block] for block in block_dict.values()}
         if escape_capable:
             native_escape.normalize_decoded(block_dict)
+        ordinary_call_targets = {
+            db_dict[block].get_location_offset(line.args[0].loc_key)
+            for block in block_dict.values() for line in block.lines
+            if direct_call_closure and line.name == 'CALL' and line.args
+            and isinstance(line.args[0], ExprLoc)
+        } - excluded_targets
         try:
             # Admission and emission must use the same executable scope. A
             # native-only suffix is not a service run on the combiner's context.
@@ -313,7 +321,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 block_dict,
                 db_dict,
                 {entry},
-                keep_call_stack,
+                keep_call_stack | ordinary_call_targets,
                 indirect_history=jump_table,
                 indirect_call_native=indirect_call_native,
                 returning_indirect=bool(returning_services),
@@ -413,9 +421,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(f"{reason} at 0x{offset:x}")
 
         code_ranges = [(start, start + len(data)) for data, start, _ in rets]
+        ordinary_call_targets = {
+            db_dict[block].get_location_offset(line.args[0].loc_key)
+            for block in block_dict.values() for line in block.lines
+            if direct_call_closure and line.name == 'CALL' and line.args
+            and isinstance(line.args[0], ExprLoc)
+        } - excluded_targets
         empty_blocks = {
             offset for offset, block in block_dict.items() if not block.lines
         }
+        empty_blocks.update(ordinary_call_targets - block_dict.keys())
         seeded_regions = []
         added_roots = set()
         for data, start, roots in rets:
@@ -430,6 +445,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             added_roots.update(additions)
             seeded_regions.append((data, start, sorted(set(roots) | additions)))
         if added_roots:
+            discovered_targets.update(added_roots)
             diagnostics.set_instruction(
                 min(added_roots), "<covered undecoded CFG block>"
             )
@@ -579,6 +595,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         )
         try:
             rets = memread.extend_regions(rets, missing)
+            discovered_targets.update(missing)
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             return reject_translation(str(error))
 
@@ -646,9 +663,15 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
     origin_sites = {ip:site for ip,site in origin_sites.items()
                     if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
-    memory_sites = (origin_memory.sites(block_dict)
+    memory_sites = (origin_memory.sites(block_dict,
+                    reads=memread.device_session.origin_context_read())
                     if lock_kind == "mutex" and abi == 2
                     and memread.device_session.origin_memory() else {})
+    memory_preempt_symbol = None
+    if any(origin_memory.read_operands(line) for line, _, _ in memory_sites.values()):
+        memory_preempt_symbol = get_kernel_symbol("__preempt_count")
+        if not memory_preempt_symbol:
+            raise RuntimeError("source preemption symbol unavailable for GS read guards")
     if memory_sites:
         service_queue_required = True
     if service_queue_required and (has_escapes or root_escapes or origin_sites):
@@ -683,6 +706,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         trusted_source=trusted_source,
         origin_sites=origin_sites,
         memory_sites=memory_sites,
+        memory_preempt_symbol=memory_preempt_symbol,
         budget_resume_enabled=budget_resume_enabled,
         returning_targets=returning_targets,
         returning_services=returning_services,
@@ -697,6 +721,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
                       | (origin_instructions.REQUIREMENT if origin_sites else 0)
                       | (origin_memory.REQUIREMENT if memory_sites else 0)
+                      | (origin_memory.READ_REQUIREMENT if memory_preempt_symbol is not None else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)
                       | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)
