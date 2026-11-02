@@ -56,13 +56,11 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());
 
-	next_node = kd_mutex_queue_first(lock);
+	next_node = kd_mutex_queue_start_batch(lock);
 	if (!next_node)
 		goto release;
 
 	/* --- combiner path --- */
-	kd_mutex_gate_set(lock, KD_MUTEX_GATE_COMBINER);
-
 	kd_mutex_run_combiner(lock, next_node);
 
 	BUG_ON(kd_mutex_gate_read(lock) != KD_MUTEX_GATE_HELD);

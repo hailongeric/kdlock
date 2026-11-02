@@ -83,6 +83,25 @@ kd_mutex_queue_first(struct kd_mutex *lock)
 	return node;
 }
 
+static struct kd_mutex_node *kd_mutex_queue_start_batch(struct kd_mutex *lock)
+{
+	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
+	struct kd_wait_node *member;
+	struct kd_mutex_node *node = NULL;
+	unsigned long flags = _raw_spin_lock_irqsave(&lock->wait_lock);
+
+	member = kd_wait_first_locked(&queue);
+	if (member && member->request->may_delegate &&
+	    member->request->state == KD_WAIT_QUEUED) {
+		/* Publication uses this guard to promote a head for local pickup.
+		 * Close that route before retaining any proxy candidate pointer. */
+		kd_mutex_gate_set(lock, KD_MUTEX_GATE_COMBINER);
+		node = member->request->context;
+	}
+	_raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
+	return node;
+}
+
 static struct kd_mutex_node *
 kd_mutex_queue_successor(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
