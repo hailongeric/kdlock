@@ -421,6 +421,7 @@ int kd_exec_cont_service_prepare(struct kd_exec_frame *frame,
 	pending.may_delegate = may_delegate;
 	pending.returns_integer = returns_integer;
 	pending.child = NULL;
+	pending.child_identity = NULL;
 	pending.child_generation = 0;
 	if (kd_call_begin(&pending.call, cont->packet->ip, cont->packet->sp, return_ip))
 		return -EINVAL;
@@ -440,6 +441,7 @@ int kd_exec_cont_service_child(struct kd_exec_continuation *cont,
 	    child->physical_waiter != current || READ_ONCE(child->state) != KD_WAIT_PRIVATE)
 		return -EINVAL;
 	cont->service_call.child = child;
+	cont->service_call.child_identity = child->identity;
 	cont->service_call.child_generation = child->generation;
 	return 0;
 }
@@ -468,6 +470,7 @@ int kd_exec_cont_service_complete(struct kd_exec_continuation *cont,
 		enum kd_wait_state state;
 
 		if (!child || child != pending->child ||
+		    child->identity != pending->child_identity ||
 		    child->generation != pending->child_generation ||
 		    child->logical_origin != cont->request->logical_origin ||
 		    child->physical_waiter != current)

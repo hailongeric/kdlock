@@ -1,0 +1,290 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/* Generic prepared killable acquisition. These test ioctls are mechanism
+ * evidence; no application body or real-world API workload is substituted. */
+#include <linux/jiffies.h>
+#include <linux/sched/signal.h>
+#include <linux/string.h>
+#include "kd_mutex_api.h"
+
+static DEFINE_KD_RWSEM(killable_inner);
+static struct kd_rwsem killable_depth_sem[4];
+static struct kd_mutex killable_depth_mutex[4];
+static struct jit_killable_slot killable_slots[JIT_KILLABLE_SLOTS];
+static u64 killable_release;
+static atomic64_t killable_holders = ATOMIC64_INIT(0);
+
+static bool killable_idle(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < 4; ++i)
+		if (!kd_rwsem_is_idle(&killable_depth_sem[i]) ||
+		    !kd_mutex_is_idle(&killable_depth_mutex[i]))
+			return false;
+	return !atomic_read(&control) && continuation_idle() &&
+		kd_rwsem_is_idle(&killable_inner) && !atomic64_read(&killable_holders);
+}
+
+static void killable_init(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < 4; ++i) {
+		kd_rwsem_init(&killable_depth_sem[i]);
+		kd_mutex_init(&killable_depth_mutex[i]);
+	}
+}
+
+static __attribute__((noipa)) int
+killable_body(struct jit_killable_slot *slot, unsigned int flags)
+{
+	bool outer_released = false;
+	unsigned int i, sem_held = 0, mutex_held = 0;
+	int result = kd_down_write_killable(&test_lock);
+
+	asm volatile(".globl jit_continuation_entry\n.set jit_continuation_entry, 1b\n\t"
+		     ".pushsection .discard.noendbr\n\t"
+		     _ASM_PTR " jit_continuation_entry\n\t.popsection\n\t" : : : "memory");
+	if (result)
+		return result;
+	if (atomic_inc_return(&writers) != 1)
+		atomic_inc(&failures);
+	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
+	WRITE_ONCE(slot->prefix, READ_ONCE(slot->prefix) + 1);
+	if (flags & JIT_KILLABLE_NESTED) {
+		/* A conventional nested entry remains on this executor while its
+		 * killable predicate refers to the retained logical origin. */
+		result = (kd_down_write_killable)(&killable_inner);
+		WRITE_ONCE(slot->child_result, result);
+		if (!result) {
+			WRITE_ONCE(slot->child_prefix, READ_ONCE(slot->child_prefix) + 1);
+			(kd_up_write)(&killable_inner);
+		} else if (result != -EINTR) {
+			atomic_inc(&failures);
+		}
+		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
+	}
+	if (flags & JIT_KILLABLE_DEPTH) {
+		/* Eight real distinct-object children plus the outer make depth9.
+		 * Conventional calls are false requests on this executor; no helper
+		 * hides the nesting from the translated source or owner protocol. */
+		for (i = 0; i < 4; ++i) {
+			result = (kd_down_write_killable)(&killable_depth_sem[i]);
+			if (result)
+				goto depth_cleanup;
+			++sem_held;
+			WRITE_ONCE(slot->child_prefix, READ_ONCE(slot->child_prefix) + 1);
+			result = (kd_mutex_lock_killable)(&killable_depth_mutex[i]);
+			if (result)
+				goto depth_cleanup;
+			++mutex_held;
+			WRITE_ONCE(slot->child_prefix, READ_ONCE(slot->child_prefix) + 1);
+		}
+		WRITE_ONCE(slot->tail_ready, 9);
+		if (flags & JIT_KILLABLE_EARLY) {
+			WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+			if (atomic_dec_return(&writers))
+				atomic_inc(&failures);
+			kd_up_write(&test_lock);
+			outer_released = true;
+		}
+depth_cleanup:
+		WRITE_ONCE(slot->child_result, result);
+		if (result)
+			atomic_inc(&failures);
+		/* Release in acquisition order, while later children remain held. */
+		for (i = 0; i < sem_held; ++i)
+			(kd_up_write)(&killable_depth_sem[i]);
+		for (i = 0; i < mutex_held; ++i)
+			(kd_mutex_unlock)(&killable_depth_mutex[i]);
+		WRITE_ONCE(slot->tail_done, sem_held + mutex_held);
+	}
+	if (flags & (JIT_KILLABLE_REUSE | JIT_KILLABLE_TRUE)) {
+		unsigned int count = flags & JIT_KILLABLE_REUSE ? 128 : 1;
+
+		for (i = 0; i < count; ++i) {
+			if ((flags & JIT_KILLABLE_TRUE) || (i & 1))
+				result = kd_mutex_lock_killable(&killable_depth_mutex[0]);
+			else
+				result = (kd_mutex_lock_killable)(&killable_depth_mutex[0]);
+			WRITE_ONCE(slot->child_result, result);
+			if (result) {
+				atomic_inc(&failures);
+				break;
+			}
+			WRITE_ONCE(slot->child_prefix, READ_ONCE(slot->child_prefix) + 1);
+			kd_mutex_unlock(&killable_depth_mutex[0]);
+		}
+	}
+	if (outer_released)
+		return 0;
+	WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+	if (atomic_dec_return(&writers))
+		atomic_inc(&failures);
+	if (flags & JIT_KILLABLE_DOWNGRADE) {
+		unsigned long budget = 1UL << 28;
+
+		kd_downgrade_write(&test_lock);
+		WRITE_ONCE(slot->tail_ready, 1);
+		/* A bounded scalar tail remains on the executor. PAUSE must execute
+		 * on every iteration; no original-task continuation is used. */
+		while (!(READ_ONCE(killable_release) & JIT_KILLABLE_RELEASE_TAIL) && --budget)
+			cpu_relax();
+		if (!budget)
+			atomic_inc(&failures);
+		WRITE_ONCE(slot->tail_done, 0x1234);
+		kd_up_read(&test_lock);
+		return 0;
+	}
+	kd_up_write(&test_lock);
+	return 0;
+}
+
+static void killable_hold(struct kd_rwsem *sem, u64 bit, bool read)
+{
+	unsigned long deadline = jiffies + 30 * HZ;
+
+	if (read)
+		kd_down_read(sem);
+	else
+		(kd_down_write)(sem);
+	atomic64_or(bit, &killable_holders);
+	while (!(READ_ONCE(killable_release) & bit)) {
+		if (time_after(jiffies, deadline)) {
+			atomic_inc(&failures);
+			break;
+		}
+		schedule_timeout_uninterruptible(1);
+	}
+	atomic64_andnot(bit, &killable_holders);
+	if (read)
+		kd_up_read(sem);
+	else
+		(kd_up_write)(sem);
+}
+
+static void killable_queue_snapshot(struct kd_mutex *gate, u64 *pids,
+				    u64 *states, u64 *count)
+{
+	struct kd_wait_node *node;
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&gate->wait_lock, flags);
+	node = gate->wait_head;
+	if (node) {
+		do {
+			if (*count == JIT_KILLABLE_SLOTS) {
+				atomic_inc(&failures);
+				break;
+			}
+			pids[*count] = node->request->logical_origin->pid;
+			states[*count] = node->request->state;
+			++*count;
+			node = node->next;
+		} while (node != gate->wait_head);
+	}
+	raw_spin_unlock_irqrestore(&gate->wait_lock, flags);
+}
+
+static long killable_ioctl(unsigned int cmd, void __user *user)
+{
+	struct jit_killable_snapshot state = { .version = 1 };
+	struct jit_killable_run run;
+	unsigned int i;
+	unsigned int before_preempt;
+	bool before_irqs;
+	u64 release;
+	int result;
+
+	if (cmd == JIT_KILLABLE_SNAPSHOT) {
+		state.lock_address = (unsigned long)&test_lock.gate;
+		state.inner_address = (unsigned long)&killable_inner.gate;
+		state.entry = (unsigned long)jit_continuation_entry;
+		state.active = atomic_read(&control);
+		state.holder_mask = atomic64_read(&killable_holders);
+		state.release_mask = READ_ONCE(killable_release);
+		state.phase = atomic_long_read(&test_lock.admission);
+		state.readers = atomic_long_read(&test_lock.readers);
+		killable_queue_snapshot(&test_lock.gate, state.queue_pid,
+			state.queue_state, &state.queue_count);
+		killable_queue_snapshot(&killable_inner.gate, state.inner_queue_pid,
+			state.inner_queue_state, &state.inner_queue_count);
+		for (i = 0; i < JIT_KILLABLE_SLOTS; ++i) {
+			struct jit_killable_slot *from = &killable_slots[i];
+			struct jit_killable_slot *to = &state.slots[i];
+
+			to->returned = smp_load_acquire(&from->returned);
+			to->pid = READ_ONCE(from->pid);
+			to->prefix = READ_ONCE(from->prefix);
+			to->child_prefix = READ_ONCE(from->child_prefix);
+			to->child_result = READ_ONCE(from->child_result);
+			to->result = READ_ONCE(from->result);
+			to->tail_ready = READ_ONCE(from->tail_ready);
+			to->tail_done = READ_ONCE(from->tail_done);
+		}
+		state.errors = atomic_read(&failures);
+		state.idle = killable_idle();
+		return copy_to_user(user, &state, sizeof(state)) ? -EFAULT : 0;
+	}
+	if (cmd == JIT_KILLABLE_RELEASE) {
+		if (copy_from_user(&release, user, sizeof(release)))
+			return -EFAULT;
+		if (release & ~15ULL)
+			return -EINVAL;
+		WRITE_ONCE(killable_release, READ_ONCE(killable_release) | release);
+		return 0;
+	}
+	if (cmd == JIT_KILLABLE_RESET || cmd == JIT_CONTINUATION_PREPARE) {
+		if (!killable_idle() || atomic_cmpxchg(&control, 0, -1))
+			return -EBUSY;
+		if (cmd == JIT_CONTINUATION_PREPARE)
+			result = kd_rwsem_prepare(&test_lock,
+				(unsigned long)jit_continuation_entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+		else {
+			memset(killable_slots, 0, sizeof(killable_slots));
+			WRITE_ONCE(killable_release, 0);
+			WRITE_ONCE(hot, 0);
+			result = 0;
+		}
+		atomic_set_release(&control, 0);
+		return result;
+	}
+	if (cmd != JIT_KILLABLE_RUN)
+		return -ENOTTY;
+	if (copy_from_user(&run, user, sizeof(run)))
+		return -EFAULT;
+	if (run.operation > JIT_KILLABLE_INNER_HOLDER || run.slot >= JIT_KILLABLE_SLOTS ||
+	    (run.flags != 0 && run.flags != JIT_KILLABLE_NESTED && run.flags != JIT_KILLABLE_DOWNGRADE &&
+	     run.flags != JIT_KILLABLE_DEPTH && run.flags != (JIT_KILLABLE_DEPTH | JIT_KILLABLE_EARLY) &&
+	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE) || run.reserved ||
+	    (run.operation != JIT_KILLABLE_ROOT && run.flags))
+		return -EINVAL;
+	if (!atomic_add_unless(&control, 1, -1))
+		return -EBUSY;
+	if (cmpxchg(&killable_slots[run.slot].pid, 0, (u64)current->pid)) {
+		atomic_dec(&control);
+		return -EBUSY;
+	}
+	before_preempt = preempt_count();
+	before_irqs = irqs_disabled();
+	if (run.operation == JIT_KILLABLE_ROOT)
+		result = killable_body(&killable_slots[run.slot], run.flags);
+	else {
+		bool read = run.operation == JIT_KILLABLE_READ_HOLDER;
+		u64 bit = run.operation == JIT_KILLABLE_INNER_HOLDER ?
+			JIT_KILLABLE_RELEASE_INNER : read ?
+			JIT_KILLABLE_RELEASE_READ : JIT_KILLABLE_RELEASE_WRITE;
+
+		killable_hold(run.operation == JIT_KILLABLE_INNER_HOLDER ?
+			&killable_inner : &test_lock, bit, read);
+		result = 0;
+	}
+	if (preempt_count() != before_preempt || irqs_disabled() != before_irqs)
+		atomic_inc(&failures);
+	WRITE_ONCE(killable_slots[run.slot].result, result);
+	smp_store_release(&killable_slots[run.slot].returned, 1);
+	atomic_dec(&control);
+	run.result = result;
+	run.returned = 1;
+	return copy_to_user(user, &run, sizeof(run)) ? -EFAULT : 0;
+}

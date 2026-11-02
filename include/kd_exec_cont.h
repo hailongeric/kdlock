@@ -46,6 +46,7 @@ struct kd_exec_service_call {
 	bool returns_integer;
 	struct kd_call_state call;
 	const struct kd_wait_request *child;
+	void *child_identity;
 	u64 child_generation;
 };
 

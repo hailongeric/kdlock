@@ -26,6 +26,7 @@ from miasm_compat import expr_args, expr_op, expr_ptr
 
 NATIVE_ONLY_EXIT = 2
 MAX_LOCK_DEPTH = 8
+SERVICE_QUEUE_REQUIREMENT = 1 << 8
 IMPLICIT_SOURCE_MEMORY = {
     "MOVSB",
     "MOVSW",
@@ -496,7 +497,8 @@ def instruction_rejection(
 
 
 def critical_section_blocks(
-    blocks, databases, entry, locks, unlocks, extra_targets, *, native_exits=()
+    blocks, databases, entry, locks, unlocks, extra_targets, *, native_exits=(),
+    runtime_delimited=False, retained_candidate=False,
 ):
     """Exclude the caller's post-unlock code, but scan discovered callees in full.
 
@@ -504,7 +506,11 @@ def critical_section_blocks(
     Callees and dynamically learned targets have unknown entry depth and cannot
     use an unlock to cut off their admission scan. Runtime still validates locks.
     """
-    pending = deque([(entry, 1)])
+    # A retained-service image does not infer exact ownership from lexical
+    # depth. Follow its finite decoded CFG and leave final release to the
+    # executor's exact acquisition records. Legacy/checked callers retain
+    # the original boundary and its fixed-resource refusal below.
+    pending = deque([(entry, None if runtime_delimited else 1)])
     pending.extend((target, None) for target in extra_targets if target != entry)
     visited = set()
     lengths = {}
@@ -528,6 +534,12 @@ def critical_section_blocks(
                     stopped = True
                     break
                 target = static_address(line.args[0], db, next_ip)
+                if (retained_candidate and not runtime_delimited and depth is None
+                        and target in locks | unlocks):
+                    # The caller's count does not include locks returned from
+                    # an ordinary callee. Do not trim the caller at its outer
+                    # release before exact runtime records can delimit it.
+                    return blocks, (offset, "callee lock scope needs retained ownership records")
                 if target in locks and depth is not None:
                     depth += 1
                     if depth > MAX_LOCK_DEPTH:

@@ -123,6 +123,7 @@ struct kd_recv_pkt {
 };
 
 #define KD_IMAGE_PROTOCOL 2U
+#define KD_IMAGE_PROTOCOL_SERVICE_QUEUE 3U
 #define KD_IMAGE_REQUIRE_NATIVE_ESCAPE (1U << 0)
 #define KD_IMAGE_REQUIRE_ADDRESS_GUARD (1U << 1)
 #define KD_IMAGE_REQUIRE_STRING_SERVICES (1U << 2)
@@ -133,12 +134,16 @@ struct kd_recv_pkt {
 #define KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE (1U << 5)
 #define KD_IMAGE_REQUIRE_ORIGIN_INSN (1U << 6)
 #define KD_IMAGE_REQUIRE_BUDGET_RESUME (1U << 7)
-#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ORIGIN_INSN | KD_IMAGE_REQUIRE_BUDGET_RESUME)
+#define KD_IMAGE_REQUIRE_SERVICE_QUEUE (1U << 8)
+#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ORIGIN_INSN | KD_IMAGE_REQUIRE_BUDGET_RESUME | KD_IMAGE_REQUIRE_SERVICE_QUEUE)
 
 static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 					     unsigned int requirements)
 {
 	return !(requirements & ~KD_IMAGE_REQUIREMENTS) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE) ||
+		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+		 !(requirements & ~(KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_BUDGET_RESUME)))) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_BUDGET_RESUME) ||
 		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
 		 !(requirements & (KD_IMAGE_REQUIRE_NATIVE_ESCAPE |
@@ -167,7 +172,49 @@ static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 		 (requirements & (KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE))));
 }
 #define KD_IMAGE_HEADER_SIZE 48U
+#define KD_IMAGE_SERVICE_HEADER_SIZE 64U
 #define KD_IMAGE_VERSION_OFFSET 46U
 #define KD_IMAGE_REQUIREMENTS_OFFSET 47U
+#define KD_IMAGE_FULL_REQUIREMENTS_OFFSET 48U
+
+static inline unsigned int kd_image_protocol(unsigned int requirements)
+{
+	return requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE ?
+		KD_IMAGE_PROTOCOL_SERVICE_QUEUE : KD_IMAGE_PROTOCOL;
+}
+
+static inline int kd_image_protocol_valid(unsigned int version,
+					unsigned int requirements)
+{
+	return version == kd_image_protocol(requirements) &&
+		(version != KD_IMAGE_PROTOCOL || requirements <= 0xffU);
+}
+
+/* Shared by daemon and provider. The fixed ABI directory remains in the first
+ * 48 bytes; only retained-service images append a full requirement word. */
+static inline int kd_image_header_requirements(const unsigned char *header,
+	unsigned long length, unsigned int *requirements)
+{
+	unsigned int value;
+
+	if (!header || !requirements || length < KD_IMAGE_HEADER_SIZE)
+		return 0;
+	value = header[KD_IMAGE_REQUIREMENTS_OFFSET];
+	if (header[KD_IMAGE_VERSION_OFFSET] == KD_IMAGE_PROTOCOL_SERVICE_QUEUE) {
+		const unsigned char *word;
+
+		if (length < KD_IMAGE_SERVICE_HEADER_SIZE)
+			return 0;
+		word = header + KD_IMAGE_FULL_REQUIREMENTS_OFFSET;
+		value = (unsigned int)word[0] | ((unsigned int)word[1] << 8) |
+			((unsigned int)word[2] << 16) | ((unsigned int)word[3] << 24);
+		if (header[KD_IMAGE_REQUIREMENTS_OFFSET] != (value & 0xffU))
+			return 0;
+	}
+	if (!kd_image_protocol_valid(header[KD_IMAGE_VERSION_OFFSET], value))
+		return 0;
+	*requirements = value;
+	return 1;
+}
 
 #endif

@@ -6,6 +6,65 @@ including private `.inc` implementation files, and builds the provider, daemon,
 allocator guard and [kernel payload](payload/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
 
+## General killable admission mode
+
+The selected-phase candidate adds a separate functional mode:
+
+```sh
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
+  --mode killable --family rwsem --cpus 0-3 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/killable-continuation-NEW
+```
+
+It reuses this runner's source freeze, module, allocator guard, daemon,
+immutable-image audit and normal drain. The integer entry audit checks the
+Native return jump over the captured `XOR EAX,EAX` success label. Its image
+requires the explicit budget-resume and retained service-queue contracts
+(requirements 384, image protocol 3). Existing
+continuation modes retain their original bodies and phase sequence.
+
+Eight preallocated diagnostic slots record original task IDs, API results and
+body effects. Snapshots inspect canonical queue order/state under the object's
+guard. Each queued cancellation runs with a callable writer still acquired;
+head, middle and tail positions are controlled separately. A selected writer
+also cancels while an ordinary reader retains its credit. Failure must return
+`-EINTR`, unlink and finish rollback before the controller releases the holder.
+The canceled user's `SIGKILL` exit is expected and retained alongside the
+in-kernel API result and zero body prefix; it is not a successful user return.
+
+A nested conventional killable call must observe the logical origin's signal
+while remaining on the parent executor. Its canceled child has no prefix, its
+parent retains its earlier effects and completes its successful acquisition,
+and the inner holder remains acquired until that evidence is saved. A final
+case downgrades on the executor, runs a bounded scalar read tail containing
+`PAUSE`, and requires a fresh subsequent writer to drain that read credit.
+Additional bounded cases acquire four distinct rwsem and four distinct mutex
+children under the outer rwsem (total depth 9), release them outside reverse
+acquisition order, release the outer while all eight children remain acquired,
+and acquire/release one mutex child 128 times under a single outer. That last
+case alternates conventional false and public clobber true requests; a separate
+true-only case retains its own receipt. These permission controls still execute
+on the same actual parent executor and do not claim migration to another child
+executor.
+
+Optional `service_trace` is enabled only for these short checks. Every positive
+root needs matching `enter` and `returned` events with an exact nonzero request
+identity/generation and an actual executor different from its original task.
+Nested cancellation and downgrade/read-release events must name that executor
+and the corresponding exact records. Child grant/release events retain distinct
+invocation generations, requested delegation permission and actual depth. The
+early-outer case requires all eight grants before outer release and every child
+release afterwards. API timing or a published image cannot
+substitute for these events. The generic API observer remains
+`proxy_proof = false` and is not used to infer delegation.
+
+All observations, including failed phases, remain in the output directory.
+The controller never forces module removal or releases holders to turn a
+failed cancellation into a pass. Diagnostic holders have a 30-second bound;
+expiry records a failure before normal lock release. This mode reports no
+performance scores, does not run the original RDTSC phases, and does not claim
+MM execution. Source is unvalidated until matching VM receipts exist.
+
 The active family is named `jit_continuation`. Its runner lives at
 `tests/kernel/jit_continuation/run.py`, its module is `jit_continuation_test.ko`,
 and its device is `/dev/kd_jit_continuation_test`. The payload's build controls

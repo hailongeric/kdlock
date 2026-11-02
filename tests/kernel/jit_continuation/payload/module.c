@@ -135,6 +135,9 @@ static bool continuation_idle(void)
 #endif
 }
 
+#ifdef JIT_CONTINUATION_KILLABLE
+#include "killable.inc"
+#else
 static __attribute__((noipa)) void continuation_body(struct continuation_result *result)
 {
 	struct continuation_result observed = { 0 };
@@ -344,9 +347,14 @@ static __attribute__((noipa)) bool reader_body(void)
 	return bad;
 }
 #endif
+#endif /* JIT_CONTINUATION_KILLABLE */
 
 static long continuation_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+#ifdef JIT_CONTINUATION_KILLABLE
+	(void)file;
+	return killable_ioctl(cmd, (void __user *)arg);
+#else
 	void __user *user = (void __user *)arg;
 	struct jit_continuation_snapshot snapshot = { 0 };
 	struct jit_continuation_run run;
@@ -521,6 +529,7 @@ static long continuation_ioctl(struct file *file, unsigned int cmd, unsigned lon
 	}
 	atomic_set_release(&control, 0);
 	return ret;
+#endif
 }
 
 static const struct file_operations continuation_fops = {
@@ -538,6 +547,11 @@ static int __init continuation_init(void)
 	BUILD_BUG_ON(sizeof(struct jit_continuation_run) != 32);
 	BUILD_BUG_ON(sizeof(struct jit_continuation_snapshot) != 80);
 	BUILD_BUG_ON(sizeof(struct jit_origin_snapshot) != 64);
+#ifdef JIT_CONTINUATION_KILLABLE
+	BUILD_BUG_ON(sizeof(struct jit_killable_run) != 32);
+	BUILD_BUG_ON(sizeof(struct jit_killable_snapshot) != 872);
+	killable_init();
+#endif
 #if defined(JIT_CONTINUATION_SPINNING) || defined(JIT_CONTINUATION_ORIGIN_INSTRUCTIONS)
 	if (!boot_cpu_has(X86_FEATURE_RDTSCP))
 		return -EOPNOTSUPP;
@@ -549,6 +563,11 @@ module_init(continuation_init);
 module_exit(continuation_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("JIT continuation and exact original-task instruction service");
+#ifdef JIT_CONTINUATION_KILLABLE
+MODULE_INFO(kd_continuation_mode, "killable");
+#else
+MODULE_INFO(kd_continuation_mode, "continuation");
+#endif
 #ifdef JIT_CONTINUATION_ORIGIN_INSTRUCTIONS
 MODULE_INFO(kd_origin_instructions, "4");
 #else

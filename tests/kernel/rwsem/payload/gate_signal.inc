@@ -1,12 +1,15 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Real unprepared gate/OSQ calls with a runnable holder on another CPU.
- * No provider hooks or images are installed. Observing an OSQ tail proves that
- * the scoped entry queued; a scheduler exit may race a signal, so exact branch
- * selection belongs to the deterministic primitive fixture, not this witness. */
+/* Real unprepared canonical admission with a runnable holder on another CPU.
+ * No provider hooks or images are installed. Guarded identity/state snapshots
+ * prove the exact pending local request; this writer path never joins OSQ. */
+#include "kd_admission.h"
+
 struct gate_signal_result {
-	u64 errors, cases, osq_observed, scoped_retired;
+	u64 errors, cases, queue_observed, scoped_retired;
 	u64 nonfatal_wait, fatal_cancel, interruptible_cancel, idle;
 };
+static_assert(sizeof(struct gate_signal_result) == 8 * sizeof(u64));
+static_assert(offsetof(struct gate_signal_result, queue_observed) == 2 * sizeof(u64));
 #define RUN_GATE_SIGNAL _IOR('S', 2, struct gate_signal_result)
 static DEFINE_KD_RWSEM(signal_sem);
 struct gate_signal_case {
@@ -14,6 +17,9 @@ struct gate_signal_case {
 	struct task_struct *holder, *waiter;
 	bool release, expired, killable;
 	int waiter_result;
+	void *wait_identity;
+	u64 wait_generation;
+	pid_t wait_pid;
 };
 
 static int gate_holder(void *data)
@@ -59,7 +65,70 @@ static bool gate_holder_owns(struct gate_signal_case *c)
 	return !READ_ONCE(c->expired) && !completion_done(&c->holder_done) &&
 		(atomic_long_read(&signal_sem.gate.owner) & ~KD_MUTEX_OWNER_FLAGS) ==
 		(unsigned long)c->holder &&
-		atomic_long_read(&signal_sem.admission) == -1;
+		atomic_long_read(&signal_sem.admission) == -1 &&
+		READ_ONCE(signal_sem.selected_kind) == KD_RWSEM_PHASE_LOCAL &&
+		READ_ONCE(signal_sem.selected_owner) == c->holder;
+}
+
+static bool gate_signal_pending(struct gate_signal_case *c, bool remember)
+{
+	struct kd_wait_node *member;
+	struct kd_wait_request *request;
+	struct kd_admission *admission;
+	unsigned long flags;
+	bool pending = false;
+
+	flags = _raw_spin_lock_irqsave(&signal_sem.gate.wait_lock);
+	member = signal_sem.gate.wait_head;
+	if (!member)
+		goto out;
+	request = member->request;
+	admission = request->admission;
+	if (member->kind != KD_WAIT_ACQUISITION || !request->identity ||
+	    !request->generation || member->generation != request->generation ||
+	    request->logical_origin != c->waiter || request->physical_waiter != c->waiter ||
+	    request->logical_origin->pid != c->waiter->pid || request->may_delegate ||
+	    request->wait_state != (c->killable ? TASK_KILLABLE : TASK_INTERRUPTIBLE) ||
+	    request->state != KD_WAIT_SELECTED_DRAINING ||
+	    request->guard != &signal_sem.gate.wait_lock || request->acquisition != member ||
+	    !admission || admission->request != request || &admission->member != member ||
+	    admission->request_generation != request->generation ||
+	    admission->kind != KD_ADMISSION_RWSEM_WRITE || admission->sem != &signal_sem ||
+	    admission->gate != &signal_sem.gate || admission->gate_held ||
+	    admission->phase_held || admission->committed || request->cleanup ||
+	    request->selection != &admission->selection ||
+	    admission->selection.request != request ||
+	    admission->selection.generation != request->generation ||
+	    admission->selection.executor != c->waiter ||
+	    atomic_read(&signal_sem.gate.osq.tail) || !gate_holder_owns(c))
+		goto out;
+	if (remember) {
+		c->wait_identity = request->identity;
+		c->wait_generation = request->generation;
+		c->wait_pid = request->logical_origin->pid;
+	}
+	pending = c->wait_identity == request->identity &&
+		c->wait_generation == request->generation &&
+		c->wait_pid == request->logical_origin->pid;
+out:
+	_raw_spin_unlock_irqrestore(&signal_sem.gate.wait_lock, flags);
+	return pending;
+}
+
+static bool gate_signal_retired(struct gate_signal_case *c)
+{
+	unsigned long flags = _raw_spin_lock_irqsave(&signal_sem.gate.wait_lock);
+	bool retired;
+
+	/* The successful join notification follows API return. Its old stack
+	 * request is gone. An empty guarded acquisition ring excludes its recorded
+	 * identity/generation without dereferencing that retired stack storage. */
+	retired = c->wait_identity && c->wait_generation && !signal_sem.gate.wait_head &&
+		!atomic_read(&signal_sem.gate.osq.tail) &&
+		!kd_rwsem_condition_active(&signal_sem.phase_wait) &&
+		!kd_rwsem_condition_active(&signal_sem.reader_drain);
+	_raw_spin_unlock_irqrestore(&signal_sem.gate.wait_lock, flags);
+	return retired;
 }
 
 static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
@@ -101,11 +170,11 @@ static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
 		check(false);
 		goto join;
 	}
-	/* Read only the queue tail value; never dereference an OSQ node sampled
-	 * without its lifetime. A missed window is a failed observation. */
+	/* Capture only while the object's guard retains the stack membership.
+	 * A missed exact request/state window is a failed observation. */
 	deadline = jiffies + HZ / 2;
 	do {
-		if (atomic_read(&signal_sem.gate.osq.tail) && gate_holder_owns(&c)) {
+		if (gate_signal_pending(&c, true)) {
 			observed = true;
 			break;
 		}
@@ -114,7 +183,8 @@ static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
 	check(observed);
 	if (!observed)
 		goto join;
-	r->osq_observed++;
+	r->queue_observed++;
+	check(!atomic_read(&signal_sem.gate.osq.tail));
 	check(!READ_ONCE(signal_sem.prepared_writes));
 	check(!kd_rwsem_condition_active(&signal_sem.phase_wait));
 	check(!kd_rwsem_condition_active(&signal_sem.reader_drain));
@@ -124,8 +194,7 @@ static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
 	if (killable && nonfatal_first) {
 		deadline = jiffies + HZ / 2;
 		do {
-			queued = !atomic_read(&signal_sem.gate.osq.tail) &&
-				READ_ONCE(signal_sem.gate.wait_head) &&
+			queued = gate_signal_pending(&c, false) &&
 				(READ_ONCE(c.waiter->__state) == TASK_KILLABLE) &&
 				!READ_ONCE(c.waiter->on_cpu);
 			if (queued)
@@ -142,9 +211,9 @@ static int gate_signal_case_run(struct gate_signal_result *r, bool killable,
 	check(c.waiter_result == -EINTR && gate_holder_owns(&c));
 	check(!atomic_read(&signal_sem.gate.osq.tail));
 	check(!READ_ONCE(signal_sem.gate.wait_head));
+	check(gate_signal_retired(&c));
 	if (completion_done(&c.waiter_done) && c.waiter_result == -EINTR &&
-	    gate_holder_owns(&c) && !atomic_read(&signal_sem.gate.osq.tail) &&
-	    !READ_ONCE(signal_sem.gate.wait_head)) {
+	    gate_holder_owns(&c) && gate_signal_retired(&c)) {
 		r->scoped_retired++;
 		if (killable)
 			r->fatal_cancel++;

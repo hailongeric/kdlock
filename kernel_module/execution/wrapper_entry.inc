@@ -499,6 +499,9 @@ static const struct kd_jit_image *kd_jit_select_image(const struct kd_exe_info *
 	image = frame->image ? frame->image : kd_image_current(exe);
 	if (!image || image->entry != exe ||
 	    image->entry_abi != frame->entry_abi ||
+	    ((image->requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE) &&
+	     (!kd_exec_frame_continuation(frame) ||
+	      !kd_exec_frame_continuation(frame)->service_ops)) ||
 	    ((image->requirements & KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE) &&
 	     !image->immutable) ||
 	    !kd_image_requirements_valid(frame->mutex_backend ? KD_EXE_LOCK_MUTEX :

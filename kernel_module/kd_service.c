@@ -88,10 +88,11 @@ static void kd_service_trace_event(const char *event,
 	struct kd_service_root *root, const struct kd_service_owner *owner)
 {
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service event=%s origin=%d executor=%d identity=%px generation=%llu object=%px depth=%u entry=%lx\n",
+		pr_info("kd_service event=%s origin=%d executor=%d identity=%px generation=%llu object=%px depth=%u entry=%lx may_delegate=%u\n",
 			event, owner->request.logical_origin->pid, current->pid,
 			owner->request.identity, (unsigned long long)owner->request.generation,
-			owner->admission.object, owner->depth, root->node->saved_ret_addr);
+			owner->admission.object, owner->depth, root->node->saved_ret_addr,
+			owner->request.may_delegate);
 }
 
 static struct kd_wait_queue kd_service_dispatch_queue(void)
@@ -427,6 +428,7 @@ static int kd_service_release_call(struct kd_service_root *root)
 	case KD_SERVICE_RWSEM_UP_WRITE:
 		owner->released = true;
 		kd_admission_release(&owner->admission);
+		kd_service_trace_event("release", root, owner);
 		break;
 	default:
 		BUG();
@@ -584,6 +586,7 @@ static struct kd_service_root *kd_service_claim(void)
 		struct kd_service_root *candidate = member->request->context;
 
 		if (candidate->actor == KD_SERVICE_ORIGIN &&
+		    candidate->owner.admission.committed &&
 		    candidate->origin_cpu != raw_smp_processor_id()) {
 			root = candidate;
 			root->worker = current;
@@ -606,7 +609,10 @@ static int kd_service_worker(void *unused)
 	if (!alloc_cpumask_var(&allowed, GFP_KERNEL | __GFP_NOFAIL))
 		return -ENOMEM;
 	while (!kthread_should_stop()) {
-		struct kd_service_root *root = kd_service_claim();
+		struct kd_service_root *root;
+
+		sequence = atomic64_read(&kd_service_work_sequence);
+		root = kd_service_claim();
 
 		if (root) {
 			root->worker_allowed = allowed;
@@ -618,9 +624,8 @@ static int kd_service_worker(void *unused)
 			kd_service_execute(root);
 			set_cpus_allowed_ptr(current, cpu_online_mask);
 		} else {
-			sequence = atomic64_read(&kd_service_work_sequence);
-			wait_event_timeout(kd_service_work, kthread_should_stop() ||
-				atomic64_read(&kd_service_work_sequence) != sequence, 1);
+			wait_event(kd_service_work, kthread_should_stop() ||
+				atomic64_read(&kd_service_work_sequence) != sequence);
 		}
 	}
 	free_cpumask_var(allowed);
@@ -865,7 +870,18 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 		kd_admission_publish_locked(a);
 	_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
 	for (;;) {
-		if (READ_ONCE(root->actor) != KD_SERVICE_EXECUTOR) {
+		bool arbitrate;
+
+		/* Claim on every iteration: an executor may hand custody back
+		 * between the previous poll and this one. A notification read alone
+		 * never authorizes caching the object's old guard. */
+		flags = _raw_spin_lock_irqsave(dispatch.guard);
+		arbitrate = root->actor == KD_SERVICE_ORIGIN ||
+			root->actor == KD_SERVICE_ORIGIN_BUSY;
+		if (arbitrate)
+			root->actor = KD_SERVICE_ORIGIN_BUSY;
+		_raw_spin_unlock_irqrestore(dispatch.guard, flags);
+		if (arbitrate) {
 			decision = kd_service_admission_step(root);
 			if (decision == KD_WAIT_CANCELED) {
 				BUG_ON(kd_exec_cont_return(&root->continuation, -EINTR));
@@ -904,10 +920,6 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 		}
 		cond_resched();
 		cpu_relax();
-		flags = _raw_spin_lock_irqsave(dispatch.guard);
-		if (root->actor == KD_SERVICE_ORIGIN)
-			root->actor = KD_SERVICE_ORIGIN_BUSY;
-		_raw_spin_unlock_irqrestore(dispatch.guard, flags);
 	}
 	BUG_ON(kd_exec_cont_retire(&root->continuation));
 	flags = _raw_spin_lock_irqsave(&root->lifecycle_guard);

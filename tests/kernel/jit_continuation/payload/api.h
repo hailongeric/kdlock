@@ -40,4 +40,46 @@ struct jit_origin_snapshot {
 /* Change only the next idle phase; existing RUN/SNAPSHOT layouts stay fixed. */
 #define JIT_CONTINUATION_COLD _IO('E', 6)
 #define JIT_CONTINUATION_ORIGIN_SNAPSHOT _IOR('E', 7, struct jit_origin_snapshot)
+
+#define JIT_KILLABLE_SLOTS 8
+enum jit_killable_operation {
+	JIT_KILLABLE_ROOT,
+	JIT_KILLABLE_WRITE_HOLDER,
+	JIT_KILLABLE_READ_HOLDER,
+	JIT_KILLABLE_INNER_HOLDER,
+};
+#define JIT_KILLABLE_NESTED 1U
+#define JIT_KILLABLE_DOWNGRADE 2U
+#define JIT_KILLABLE_DEPTH 4U
+#define JIT_KILLABLE_EARLY 8U
+#define JIT_KILLABLE_REUSE 16U
+#define JIT_KILLABLE_TRUE 32U
+#define JIT_KILLABLE_RELEASE_WRITE 1ULL
+#define JIT_KILLABLE_RELEASE_READ 2ULL
+#define JIT_KILLABLE_RELEASE_INNER 4ULL
+#define JIT_KILLABLE_RELEASE_TAIL 8ULL
+struct jit_killable_run {
+	__u32 operation, slot, flags, reserved;
+	__s64 result;
+	__u64 returned;
+};
+struct jit_killable_slot {
+	__u64 pid, prefix, child_prefix;
+	__s64 child_result;
+	__u64 returned;
+	__s64 result;
+	__u64 tail_ready, tail_done;
+};
+struct jit_killable_snapshot {
+	__u64 version, lock_address, inner_address, entry, active, holder_mask, release_mask;
+	__s64 phase;
+	__u64 readers, queue_count, inner_queue_count, errors, idle;
+	__u64 queue_pid[JIT_KILLABLE_SLOTS], queue_state[JIT_KILLABLE_SLOTS];
+	__u64 inner_queue_pid[JIT_KILLABLE_SLOTS], inner_queue_state[JIT_KILLABLE_SLOTS];
+	struct jit_killable_slot slots[JIT_KILLABLE_SLOTS];
+};
+#define JIT_KILLABLE_RUN _IOWR('E', 8, struct jit_killable_run)
+#define JIT_KILLABLE_SNAPSHOT _IOR('E', 9, struct jit_killable_snapshot)
+#define JIT_KILLABLE_RELEASE _IOW('E', 10, __u64)
+#define JIT_KILLABLE_RESET _IO('E', 11)
 #endif

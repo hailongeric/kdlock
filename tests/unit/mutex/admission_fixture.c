@@ -309,7 +309,8 @@ static void test_local_child_and_early_parent_release(void)
 	init_invocation(&child, &child_lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, false);
 	current = &holder;
 	assert(publish_step(&child) == KD_WAIT_PENDING);
-	assert(child.request.state == KD_WAIT_QUEUED && !child.request.selection && !child_lock.owner);
+	assert(child.request.state == KD_WAIT_QUEUED && !child.request.selection);
+	assert(!(child_lock.owner & ~KD_FLAGS) && (child_lock.owner & KD_WAITERS));
 	current = &executor; origin.fatal = true;
 	assert(!kd_admission_wait(&child.admission, NULL, NULL)); retain_execution(&child);
 	finish_execution(&parent);

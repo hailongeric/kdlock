@@ -285,6 +285,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     discovered_targets = {target for _, _, targets in rets for target in targets}
     entry_guards = None
     memory_guards = None
+    service_queue_required = False
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
@@ -315,7 +316,24 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock} | service_releases,
             discovered_targets & block_dict.keys(),
             native_exits=native_exits,
+            runtime_delimited=service_queue_required,
+            retained_candidate=trusted_source and abi == 2 and lock_kind == "mutex",
         )
+        if boundary_error and trusted_source and abi == 2 and lock_kind == "mutex":
+            # The historical counter is only a lexical boundary. Deep or
+            # changing/unknown-depth control flow uses retained owner records,
+            # under a contract that the legacy fixed ledger cannot execute.
+            service_queue_required = True
+            block_dict, boundary_error = context_policy.critical_section_blocks(
+                block_dict, db_dict, entry,
+                {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock,
+                 clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock,
+                 outer_mutex_lock} | service_acquires,
+                {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock,
+                 clobber_mutex_unlock, direct_mutex_unlock} | service_releases,
+                discovered_targets & block_dict.keys(), native_exits=native_exits,
+                runtime_delimited=True,
+            )
         if boundary_error:
             offset, reason = boundary_error
             diagnostics.set_instruction(offset, "<critical-section boundary>")
@@ -604,6 +622,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     emitted_pcs = {line.offset for block in block_dict.values() for line in block.lines}
     origin_sites = {ip:site for ip,site in origin_sites.items()
                     if ip in emitted_pcs and ip + site[0].l in emitted_pcs}
+    if service_queue_required and (has_escapes or root_escapes or origin_sites):
+        return reject_translation("retained-service scope needs unsupported instruction services")
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
                              and not has_escapes and not root_escapes
                              and not origin_sites)
@@ -634,7 +654,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       | (origin_instructions.REQUIREMENT if origin_sites else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)
-                      | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)))
+                      | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)
+                      | (context_policy.SERVICE_QUEUE_REQUIREMENT
+                         if service_queue_required else 0)))
     return 0
 
 

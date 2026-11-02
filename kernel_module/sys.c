@@ -213,7 +213,7 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		return -EINVAL;
 	if (copy_from_user(&head, buf, sizeof(head)))
 		return -EFAULT;
-	if (head.version != KD_IMAGE_PROTOCOL || head.reserved ||
+	if (!kd_image_protocol_valid(head.version, head.requirements) || head.reserved ||
 	    (head.requirements & ~KD_IMAGE_REQUIREMENTS))
 		return -EPROTO;
 
@@ -247,7 +247,9 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		}
 		return count;
 	}
-	if (!len || !head.upload_id || head.image_length < KD_IMAGE_HEADER_SIZE ||
+	if (!len || !head.upload_id ||
+	    head.image_length < (head.version == KD_IMAGE_PROTOCOL_SERVICE_QUEUE ?
+		KD_IMAGE_SERVICE_HEADER_SIZE : KD_IMAGE_HEADER_SIZE) ||
 	    head.image_length > KD_CODE_BLOCK_SIZE || head.offset > head.image_length ||
 	    len > head.image_length - head.offset ||
 	    (head.status_code != KD_EXE_UNINIT &&
@@ -270,6 +272,7 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 				return -ENOSPC;
 		}
 	} else if (head.pid != upload->identity.pid || head.RIP != upload->identity.RIP ||
+		   head.version != upload->identity.version ||
 		   head.upload_id != upload->identity.upload_id ||
 		   head.base_generation != upload->identity.base_generation ||
 		   head.image_length != upload->identity.image_length ||
@@ -297,6 +300,7 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 	/* Keep the prior miss state recoverable until the full image is present. */
 	if (head.status_code == KD_EXE_NORMAL) {
 		const unsigned char *bytes = code;
+		unsigned int requirements;
 		bool directory = !memcmp(bytes + 9, "KDWB002", 7) &&
 		                 !memcmp(bytes + 25, "KDWC002", 7) &&
 		                 !memcmp(bytes + 41, "KDAB", 4);
@@ -306,7 +310,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		 * never be published NORMAL for this provider's rearranged packet. */
 		if (!directory || bytes[45] != entry->entry_abi ||
 		    bytes[KD_IMAGE_VERSION_OFFSET] != head.version ||
-		    bytes[KD_IMAGE_REQUIREMENTS_OFFSET] != head.requirements) {
+		    !kd_image_header_requirements(bytes, head.image_length, &requirements) ||
+		    requirements != head.requirements) {
 			return -EPROTO;
 		}
 		if (upload->image) {

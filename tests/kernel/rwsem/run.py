@@ -68,11 +68,11 @@ def main():
         buffer = bytearray(64)
         with open('/dev/kd_rwsem_probe', 'rb', buffering=0) as device:
             fcntl.ioctl(device, 0x80405302, buffer, True)
-        row = dict(zip(('errors', 'cases', 'osq_observed', 'scoped_retired',
+        row = dict(zip(('errors', 'cases', 'queue_observed', 'scoped_retired',
                         'nonfatal_wait', 'fatal_cancel', 'interruptible_cancel', 'idle'),
                        struct.unpack('=8Q', buffer)))
         print(json.dumps(row))
-        return 0 if row == dict(errors=0, cases=3, osq_observed=3, scoped_retired=3,
+        return 0 if row == dict(errors=0, cases=3, queue_observed=3, scoped_retired=3,
                                nonfatal_wait=1, fatal_cancel=2, interruptible_cancel=1, idle=1) else 1
     if args.client:
         buffer = bytearray(96)

@@ -845,6 +845,7 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 {
 	const struct kd_jit_image *image;
 	const unsigned char *code;
+	unsigned int requirements;
 
 	if (!kd_exe_entry_is_ready(exe, 0, entry_ip) ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
@@ -854,7 +855,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	if (!image || !image->immutable || image->entry != exe ||
 	    image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 	    image->length < KD_IMAGE_HEADER_SIZE ||
-	    (image->requirements & ~KD_IMAGE_REQUIRE_BUDGET_RESUME) ||
+	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
+				      KD_IMAGE_REQUIRE_SERVICE_QUEUE)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;
@@ -862,7 +864,9 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	if (!code || get_unaligned_le32(code + 25) != 0x4357444bU ||
 	    get_unaligned_le32(code + 28) != 0x32303043U ||
 	    get_unaligned_le32(code + 41) != 0x4241444bU ||
-	    code[KD_JIT_ABI_OFFSET] != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+	    code[KD_JIT_ABI_OFFSET] != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !kd_image_header_requirements(code, image->length, &requirements) ||
+	    requirements != image->requirements)
 		return NULL;
 	return image;
 }

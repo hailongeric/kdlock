@@ -82,7 +82,7 @@ def main():
             assembly, log, status = render('', regions=[(raw, start, [entry])], entry=entry,
                 kernel_symbols=controls, abi=2, lock_kind='mutex', mutex_stack_bytes=256,
                 return_status=True, trusted_source=True)
-            assert status == 0 and b'clobber_complete' in assembly, log
+            assert status == 0, (body, status, log)
             for target in controls.values():
                 label = f'loc_{target:x}:'.encode()
                 if label in assembly:
@@ -94,9 +94,24 @@ def main():
                                     for line in stub.splitlines() if line.strip()]
                     assert instructions == [f'MOVABS R14, 0x{target:x}',
                                             'MOV Stack_IJ, 0x1', 'JMP exit'], instructions
-            assert b'kd_terminal_full_' in assembly
-            if body != 'write_body':
+            if body == 'write_body':
+                assert b'clobber_complete' in assembly and b'kd_terminal_full_' in assembly, assembly
+            else:
                 assert text[entry-base:entry-base+2] == b'\x31\xc0'
+                # GCC can share the acquisition-failure RET block with the
+                # success unlock continuation. That reachable source PC must
+                # use the exact FULL CALL, not terminal-clobber optimization.
+                listing = subprocess.check_output(
+                    ['objdump', '-d', '--disassemble=' + body, binary], text=True)
+                calls = re.findall(r'^\s*([0-9a-f]+):\s+e8(?:\s+[0-9a-f]{2}){4}\s+call\s+'
+                                   r'[0-9a-f]+\s+<kd_rwsem_up_write_clobber_v1>', listing, re.M)
+                assert len(calls) == 1, listing
+                return_pc = int(calls[0], 16) + 5
+                emitted = assembly.decode()
+                assert f'loc_{return_pc:x}:' in emitted, (listing, emitted)
+                assert re.search(rf'MOVABS\s+R\d+,\s*0x{return_pc:x}\b', emitted, re.I), emitted
+                target = controls['kd_rwsem_up_write_clobber_v1']
+                assert re.search(rf'JMP\s+loc_{target:x}\b', emitted), emitted
         print('PASS public rwsem: compiled ordinary/integer capture, exact typed release, downgrade and ABI2 endpoints')
 
 

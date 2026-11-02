@@ -38,8 +38,14 @@ clobber_entry_v1:
 	.long clobber_body - . - 4
 	.ascii "KDAB"
 	.byte KD_GENERATED_ENTRY_ABI
+#if KD_GENERATED_REQUIREMENTS & 256
+	.byte 3 /* retained-service publication protocol */
+	.byte KD_GENERATED_REQUIREMENTS & 255
+	.long KD_GENERATED_REQUIREMENTS
+#else
 	.byte 2 /* publication protocol */
 	.byte KD_GENERATED_REQUIREMENTS
+#endif
 	.balign 16
 batch_body:
 #if KD_GENERATED_REQUIREMENTS & (16 | 32)

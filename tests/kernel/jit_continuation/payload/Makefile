@@ -2,11 +2,20 @@ JIT_CONTINUATION_MUTEX_API ?= outer
 JIT_CONTINUATION_FAMILY ?= mutex
 JIT_CONTINUATION_MIXED_SPIN ?= 0
 JIT_CONTINUATION_ORIGIN_INSTRUCTIONS ?= 0
+JIT_CONTINUATION_MODE ?= continuation
 ifneq ($(KERNELRELEASE),)
 obj-m := jit_continuation_test.o
 jit_continuation_test-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -I$(KDLOCK_INCLUDE)
+ifeq ($(JIT_CONTINUATION_MODE),killable)
+ifneq ($(JIT_CONTINUATION_FAMILY),rwsem)
+$(error killable continuation mode requires JIT_CONTINUATION_FAMILY=rwsem)
+endif
+ccflags-y += -DJIT_CONTINUATION_KILLABLE
+else ifneq ($(JIT_CONTINUATION_MODE),continuation)
+$(error JIT_CONTINUATION_MODE must be continuation or killable)
+endif
 ifeq ($(JIT_CONTINUATION_ORIGIN_INSTRUCTIONS),1)
 ifneq ($(JIT_CONTINUATION_FAMILY):$(JIT_CONTINUATION_MIXED_SPIN),mutex:0)
 $(error origin instruction probe requires a mutex with no nested spin)

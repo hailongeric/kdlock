@@ -1,11 +1,12 @@
 # Sleeping rwsem public API and prepared-writer admission checks
 
-The reader/writer semaphore (rwsem) waiting implementation in `c21345b` remains
-the foundation for exact phases and sleeping waits. Ordinary read contention
-now queues optimistic admission attempts, and new writer phases yield while
-those readers remain queued. Admission means permission for a reader or writer
-to enter. A prepared ordinary writer may delegate its work
-to another lock holder. JIT means just-in-time compiled code for that delegated
+The reader/writer semaphore (rwsem) waiting implementation in `c21345b` is a
+historical foundation. The current canonical admission driver gives each
+selected writer an exact exclusive phase; queued writers hold no phase or
+reusable reader-drain result. Ordinary readers queue optimistic admission
+attempts and execute locally. Admission means permission for a reader or writer
+to enter. A prepared writer may delegate its work to an independent executor.
+JIT means just-in-time compiled code for that delegated
 execution; a returned body must reach its matching unlock and finish the return
 protocol. See the [terminology guide](../../../docs/TERMINOLOGY.md) for other
 implementation and result labels.
@@ -44,33 +45,35 @@ The probe checks:
   writer that sleeps waiting for both; a late reader blocked behind that writer;
   and a writer that sleeps inside its body. All four workers share CPU 0, so
   correctness depends on blocked participants allowing their holders to resume.
-- The same four-worker scenario using an outer writer: the writer reserves its
-  phase but sleeps before entering the pinned mutex protocol. Exact queue tail
-  and waiter counts stay zero while the two sleeping readers still hold their
-  counts; both readers can resume and release on CPU 0. The late reader stays
-  blocked until the outer writer returns and releases its reservation.
+- The same four-worker scenario using a prepared ordinary writer: its local
+  canonical request obtains the physical gate and selected phase, then sleeps
+  waiting for the two active read credits. The delegation state/tail and counted
+  proxy waiters remain zero. Both readers can resume and release on CPU 0. The
+  late reader stays blocked until the writer completes its selected phase.
 - An ordinary writer with a waiting outer caller, then writer-to-reader
-  downgrade. The caller remains unpublished both before the downgrade and while
-  the downgraded reader remains live. It enters only after that reader releases.
+  downgrade. The caller queues behind the physical gate, then freshly selects
+  and drains the downgraded read credit. No proxy request is published, and its
+  protected body enters only after that reader releases.
 - Ten cancellation cases: interruptible and killable read/write acquisition
   waiting for an ordinary writer phase; ordinary write acquisition waiting for
   admitted readers after acquiring its phase and gate; and ordinary read/write
   acquisition waiting for an outer writer reservation. Killable
   waits first receive a nonfatal signal and must remain blocked, then cancel on
   `SIGKILL`. A cancelled drain waiter must reopen reader admission immediately.
-  Unprepared writers behind another writer inspect the physical gate wait list;
-  prepared writers and readers inspect `phase_wait`. Writers that already own
-  their reservation and wait for readers inspect `reader_drain`. Unrelated
+  Writers behind another writer inspect the canonical physical gate queue;
+  blocked readers inspect `phase_wait`. Writers that own their selected phase
+  and wait for active readers inspect `reader_drain`. Unrelated
   queues remain empty at each controlled cancellation point.
 - Three additional unprepared gate-signal cases use a runnable writer holder,
   a contender and the controller on three distinct online CPUs. The controller
-  observes a real gate OSQ tail before sending a signal. Interruptible nonfatal
-  and killable fatal cancellation must retire the OSQ and wait list while the
-  holder still owns the lock. A nonfatal killable signal must instead leave the
-  contender asleep on the gate wait list until a subsequent fatal signal. A
-  missing queue observation fails this check. A rescheduling request may race
-  the signal, so these live observations do not isolate which stop predicate
-  retired the queue; the deterministic OSQ fixture checks that distinction.
+  observes the exact canonical request under the object guard before sending a
+  signal: identity/generation, logical-origin PID and physical waiter, selected
+  draining state, `may_delegate=false`, and no tentative physical gate or phase.
+  The holder must still own its selected phase, and the writer OSQ must remain
+  empty. Interruptible nonfatal and killable fatal cancellation must remove the
+  canonical membership and return `-EINTR` before the holder releases. A nonfatal
+  killable signal must retain the same request asleep in `TASK_KILLABLE` until a
+  subsequent fatal signal. A missing exact queue observation fails this check.
   The holder has a two-second busy interval after acquisition. Release precedes
   every join; a failed or stuck join retains the module and task state.
 - Exact zero error result, expected sleeping transitions, all worker joins, zero
@@ -87,22 +90,22 @@ executes or the caller enters its sleeping fallback. Slot exhaustion and OSQ
 abort also fall back to the existing waitqueue path. The queue does not publish
 a delegation request or acquire the writer gate.
 
-An ordinary writer or new outer-writer cohort defers when admission is zero and
-the reader OSQ is nonempty. Existing positive outer cohorts still accept exact
-reservations. A failed reservation CAS rechecks the queue if the phase becomes
-zero. Queue presence is only a waiting-policy hint; the count/phase barriers,
-reader drain, mutex ownership and origin ACK/release remain authoritative.
+Every writer entry uses the same canonical gate/selected-phase protocol.
+Preparation changes continuation capability, and does not select a second
+admission encoding. The physical gate precedes closing admission to readers;
+each selected writer freshly drains active read credits. Writer fairness policy
+remains deferred. Queue presence cannot replace the count/phase barriers,
+physical ownership or exact release acknowledgment.
 
 After OSQ retirement, slot release and preemption enable, an empty tail triggers
 a full barrier before the `phase_wait` check and wake. This pairs the release-only
-tail update with sleeping writers' enrolment/recheck, including unsuccessful
-reader acquisition paths. New writer phases can therefore resume when the queue
-empties without waiting for another phase change. This preference does not
-guarantee starvation freedom or bounded waiting.
+tail update with condition-channel enrolment/recheck, including unsuccessful
+reader acquisition paths. Notifications remain hints; only a fresh successful
+phase/read-credit predicate admits a caller.
 
-Writer polling remains before publication with preemption enabled. The sleeping
-and same-CPU cases exercise scheduling fallback. Interruptible and killable
-acquisitions retain their original cancellation paths, and atomic read trylock
+Canonical writer publication and bounded admission polling remain preemptible.
+The sleeping and same-CPU cases exercise scheduling fallback. Interruptible and
+killable acquisitions use the actual-readiness-before-signal election, and atomic read trylock
 does not enter OSQ. Every reader acquires and executes on its own task; only
 eligible writes may delegate.
 
@@ -116,9 +119,9 @@ the existing mutex OSQ fixtures and this live probe cover those separately.
 Expected result: `api_checks=17`, `cancellation_checks=10`, `readers_slept=2`,
 `writer_slept=1`, `late_reader_slept=1`, `outer_readers_slept=2`,
 `outer_writer_slept=1`, `downgrade_checks=1`, `publication_checks=3`,
-`colocated=1`, `errors=0`, `idle=1`. Prepared ordinary macro acquisition has no cancellation or
-downgrade contract; these cases exercise the supported ordinary operations mixed
-with outer callers. Returned JIT bodies are explicitly zero. See the
+`colocated=1`, `errors=0`, `idle=1`. This probe supplies no translated body, so its
+prepared acquisitions use the local C adapter while preserving cancellation and
+downgrade behavior. Returned JIT bodies are explicitly zero. See the
 [optimization validation receipt](../../../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
 for recorded outcomes and source identities, and the separate
 [benchmark report](../../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
@@ -140,13 +143,22 @@ coverage. RT/debug/lockdep configurations are explicitly refused; fairness and
 arbitrary kernel replacement remain unvalidated.
 
 The additional `gate_signal` result preserves the original twelve-field ioctl
-record and uses a separate eight-field record: `cases=3`, `osq_observed=3`,
+record and uses a separate eight-field record: `cases=3`, `queue_observed=3`,
 `scoped_retired=3`, `nonfatal_wait=1`, `fatal_cancel=2`,
 `interruptible_cancel=1`, `errors=0`, `idle=1`. These are functional
 observations, not throughput or delegation measurements. The focused
 [writer queue fixture](../../unit/mutex/test_rwsem_writer_queue.py) extracts the
-production phase/gate/poll/drain functions and checks exact local reservation
+production admission/phase/gate functions and checks exact local acquisition
 and rollback effects with deterministic primitives.
+
+The canonical-queue fixture migration renames `osq_observed` to
+`queue_observed` at the same position in the unchanged eight-`u64` ioctl record.
+Current JSON uses the new field. Historical receipts retain their original
+`osq_observed` field and OSQ witness; they do not validate this replacement
+witness. All three signal scenarios, their early cancellation/retirement checks,
+holder ownership, worker joins and final drain checks remain required. The new
+witness also requires an empty writer OSQ throughout. This source migration
+requires a fresh VM result.
 
 The first writer-queue candidate `7fa989c1` passed its focused unit checks and
 the original live API record (`api_checks=17`, `cancellation_checks=10`), but its

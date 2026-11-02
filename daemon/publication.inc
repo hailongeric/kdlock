@@ -82,10 +82,14 @@ static int write_sys(const struct daemon_config *cfg,
 		return -1;
 	}
 	{
-		unsigned char header[KD_IMAGE_HEADER_SIZE];
+		unsigned char header[KD_IMAGE_SERVICE_HEADER_SIZE];
+		size_t header_size = (unsigned long)image_size < sizeof(header) ?
+			(size_t)image_size : sizeof(header);
+		unsigned int requirements;
 		bool directory;
 
-		if (fread(header, 1, sizeof(header), fp) != sizeof(header)) {
+		if (fread(header, 1, header_size, fp) != header_size ||
+		    header_size < KD_IMAGE_HEADER_SIZE) {
 			fclose(fp);
 			return -1;
 		}
@@ -94,15 +98,16 @@ static int write_sys(const struct daemon_config *cfg,
 		            !memcmp(header + 41, "KDAB", 4);
 		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
 		    !directory || header[45] != exe->entry_abi ||
-		    header[KD_IMAGE_VERSION_OFFSET] != KD_IMAGE_PROTOCOL ||
+		    !kd_image_header_requirements(header, header_size, &requirements) ||
 		    !kd_image_requirements_valid(exe->lock_kind, exe->entry_abi,
-					header[KD_IMAGE_REQUIREMENTS_OFFSET]) ||
+					requirements) ||
 		    fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);
 			return -1;
 		}
-		pkt.requirements = header[KD_IMAGE_REQUIREMENTS_OFFSET];
+		pkt.requirements = requirements;
+		pkt.version = header[KD_IMAGE_VERSION_OFFSET];
 	}
 	remaining = (size_t)image_size;
 	pkt.image_length = remaining;
