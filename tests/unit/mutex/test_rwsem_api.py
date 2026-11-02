@@ -84,7 +84,17 @@ def main():
                 return_status=True, trusted_source=True)
             assert status == 0 and b'clobber_complete' in assembly, log
             for target in controls.values():
-                assert f'loc_{target:x}:'.encode() not in assembly
+                label = f'loc_{target:x}:'.encode()
+                if label in assembly:
+                    # A retained typed CALL can have a callee-table exit
+                    # label. It must contain only the exact control exit,
+                    # never decoded physical acquisition/release helper code.
+                    stub = assembly.split(label, 1)[1].split(b'\n\n', 1)[0]
+                    instructions = [' '.join(line.decode().split())
+                                    for line in stub.splitlines() if line.strip()]
+                    assert instructions == [f'MOVABS R14, 0x{target:x}',
+                                            'MOV Stack_IJ, 0x1', 'JMP exit'], instructions
+            assert b'kd_terminal_full_' in assembly
             if body != 'write_body':
                 assert text[entry-base:entry-base+2] == b'\x31\xc0'
         print('PASS public rwsem: compiled ordinary/integer capture, exact typed release, downgrade and ABI2 endpoints')

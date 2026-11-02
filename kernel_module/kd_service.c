@@ -7,6 +7,9 @@
 #include <linux/sched/signal.h>
 #include "kd_rwsem.h"
 #include "kd_exec_cont.h"
+#include "kd_comm.h"
+
+extern struct kd_comm_key kd_spin_target;
 
 enum kd_service_actor {
 	KD_SERVICE_ORIGIN,
@@ -683,7 +686,7 @@ static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_service_shadow_wait(struct kd_service_root *root)
 {
 	struct kd_regs packet;
-	unsigned long flags;
+	unsigned long flags, restore_sp;
 
 	/* This function is entered on independent storage before source execution
 	 * can overwrite any Native capture-helper frame. It never returns there. */
@@ -692,6 +695,12 @@ kd_service_shadow_wait(struct kd_service_root *root)
 		cpu_relax();
 	BUG_ON(root->result);
 	packet = root->node->regs;
+	/* Reuse the Native helper's established stack depth when the source has
+	 * already unwound above it. Do not invent an extra 512-byte gap below
+	 * the live source SP. The return CALL word at packet.sp remains intact. */
+	restore_sp = min_t(unsigned long, root->node->rsp, packet.sp);
+	BUG_ON(restore_sp < root->continuation.stack_base + 512 ||
+	       restore_sp > root->continuation.stack_base + THREAD_SIZE);
 	flags = _raw_spin_lock_irqsave(&root->lifecycle_guard);
 	kd_wait_set_state_locked(&root->owner.request, KD_WAIT_RETURN_ACK);
 	_raw_spin_unlock_irqrestore(&root->lifecycle_guard, flags);
@@ -704,12 +713,10 @@ kd_service_shadow_wait(struct kd_service_root *root)
 	 * trampoline below moves to the captured stack before root retirement. */
 	asm volatile("movq %[stack], %%rsp\n\t"
 		     "andq $-16, %%rsp\n\t"
-		     "movq %[root], %%rdi\n\t"
-		     "movq %[packet], %%rsi\n\t"
 		     "callq %P[resume]\n\t"
 		     "ud2\n\t"
-		     : : [stack] "r"(packet.sp - 512), [root] "r"(root),
-			 [packet] "r"(&packet), [resume] "i"(kd_service_resume_packet)
+		     : : [stack] "r"(restore_sp), "D"(root), "S"(&packet),
+			 [resume] "i"(kd_service_resume_packet)
 		     : "memory");
 	__builtin_unreachable();
 }
@@ -881,13 +888,16 @@ int kd_service_capture(void *object, enum kd_admission_kind kind,
 		}
 		if (smp_load_acquire(&root->transport) == KD_SERVICE_PIN) {
 			preempt_disable();
-			asm volatile("movq %[stack], %%rsp\n\t"
+			asm volatile("movq %%rsp, %c[saved](%[node])\n\t"
+				     "movq %[stack], %%rsp\n\t"
 				     "andq $-16, %%rsp\n\t"
 				     "movq %[root], %%rdi\n\t"
 				     "xorq %%rbp, %%rbp\n\t"
 				     "callq %P[wait]\n\t"
 				     "ud2\n\t"
 				     : : [stack] "r"(root->node->shadow_stack_ptr),
+					 [node] "r"(root->node),
+					 [saved] "i"(offsetof(struct kd_mutex_node, rsp)),
 					 [root] "r"(root), [wait] "i"(kd_service_shadow_wait)
 				     : "memory");
 			__builtin_unreachable();

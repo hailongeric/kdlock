@@ -382,6 +382,13 @@ int kd_admission_wait(struct kd_admission *a,
 		_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
 		if (service)
 			service(argument);
+		/* A service can publish the origin's fatal signal. Re-enter the
+		 * actual-ready-first election before any scheduler delay. */
+		if (signal_pending_state(request->wait_state, request->logical_origin)) {
+			__set_current_state(TASK_RUNNING);
+			flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
+			continue;
+		}
 		if (budget && !need_resched() &&
 		    !signal_pending(request->logical_origin)) {
 			--budget;
