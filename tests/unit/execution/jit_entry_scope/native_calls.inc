@@ -25,6 +25,21 @@ static void check_terminal_and_indirect_calls(void)
 		{{0xff, 0x14, 0x24}, 3}, {{0xff, 0x15, 1, 2, 3, 4}, 6},
 		{{0xff, 0x94, 0x24, 1, 2, 3, 4}, 7},
 		{{0x41, 0xff, 0x94, 0x24, 1, 2, 3, 4}, 8},
+		{{0x2e, 0xff, 0xd0}, 3}, {{0x2e, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0x2e, 0x2e, 0xff, 0xd0}, 5},
+		{{0x2e, 0x41, 0xff, 0xd0}, 4},
+		{{0x2e, 0x2e, 0x41, 0xff, 0xd0}, 5},
+		{{0x2e, 0x2e, 0x2e, 0x41, 0xff, 0xd0}, 6},
+	};
+	static const struct { unsigned char bytes[8]; unsigned int length; } malformed[] = {
+		{{0x2e, 0x2e, 0x2e, 0x2e, 0xff, 0xd0}, 6},
+		{{0x2e, 0x66, 0xff, 0xd0}, 4}, {{0x66, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0xf3, 0xff, 0xd0}, 4},
+		{{0x2e, 0xff, 0xe0}, 3}, {{0x2e, 0xff, 0xd8}, 3},
+		{{0x2e, 0xff, 0x14, 0x24}, 4},
+		{{0x2e, 0x41, 0xff, 0x14, 0x24}, 5},
+		{{0x41, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0x41, 0x41, 0xff, 0xd0}, 5},
 	};
 	for (unsigned int terminal = 0; terminal < 2; terminal++) {
 		native_call_packet(&call, false, terminal);
@@ -53,6 +68,35 @@ static void check_terminal_and_indirect_calls(void)
 			CHECK(stack[9] == ESCAPE_IP + calls[i].length &&
 			      active.continuation_sp == (unsigned long)&stack[9] &&
 			      active.continuation_ip == 0xb000);
+		}
+		/* The source CALL word names the decoded instruction's exact end,
+		 * not an alternatives patch-window length or following padding. */
+		native_call_packet(&call, true, false);
+		kd_exec_frame_own_regs(&active);
+		memcpy(escape_text, calls[i].bytes, sizeof(calls[i].bytes));
+		stack[9] = ESCAPE_IP + calls[i].length + 1;
+		CHECK(kd_jit_indirect_call_native(entry, &active, &active.regs) < 0);
+		CHECK(stack[9] == ESCAPE_IP + calls[i].length + 1);
+	}
+	for (unsigned int i = 0; i < ARRAY_SIZE(malformed); i++) {
+		unsigned int length = ~0U;
+
+		reset();
+		memcpy(escape_text, malformed[i].bytes, malformed[i].length);
+		CHECK(kd_jit_indirect_call_length(ESCAPE_IP, &length) < 0);
+		CHECK(length == ~0U);
+	}
+	/* Bound every read by the live source extent. Truncating any accepted
+	 * form must fail even when the missing byte is a prefix's next opcode. */
+	for (unsigned int i = 0; i < ARRAY_SIZE(calls); i++) {
+		for (unsigned int available = 1; available < calls[i].length; available++) {
+			unsigned int length = ~0U;
+			unsigned int offset = sizeof(escape_text) - available;
+
+			reset();
+			memcpy(escape_text + offset, calls[i].bytes, available);
+			CHECK(kd_jit_indirect_call_length(ESCAPE_IP + offset, &length) == -EFAULT);
+			CHECK(length == ~0U);
 		}
 	}
 	for (unsigned int bad = 0; bad < 22; bad++) {

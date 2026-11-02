@@ -45,21 +45,30 @@ class NativeCallBoundariesTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     native_terminals.load_specs(path)
 
-    def test_exact_near_call_encodings_and_no_jmp_ret_or_legacy_prefix(self):
+    def test_exact_near_call_encodings_and_only_alternatives_cs_register_prefixes(self):
         for raw in ("ffd0", "41ffd0", "ff1424", "ff1501020304",
-                    "ff942401020304", "41ff942401020304"):
+                    "ff942401020304", "41ff942401020304",
+                    "2effd0", "2e2effd0", "2e2e2effd0",
+                    "2e41ffd0", "2e2e41ffd0", "2e2e2e41ffd0"):
             with self.subTest(raw=raw):
                 instruction = decode(raw)
                 self.assertEqual(instruction.name, "CALL")
                 self.assertEqual(native_terminals.indirect_call_length(instruction.b),
                                  instruction.l)
         for raw in ("ffe0", "ffd8", "c3", "66ffd0", "f3ffd0", "67ff1424",
-                    "e800000000", "ff", "ff94", "41ff9424010203"):
+                    "e800000000", "ff", "ff94", "41ff9424010203",
+                    "2e2e2e2effd0", "2e66ffd0", "662effd0", "2ef3ffd0",
+                    "2effe0", "2effd8", "2eff1424", "2e41ff1424",
+                    "412effd0", "2e4141ffd0", "2e", "2e2e2e41ff",
+                    "2e2e2effd090"):
             self.assertIsNone(native_terminals.indirect_call_length(bytes.fromhex(raw)), raw)
 
     def test_fresh_call_exports_pre_push_target_once_with_actual_return_word(self):
         # Include RSP and [RSP]: evaluating either after the virtual push is wrong.
         for raw, target_kind in (("ffd0c3", "rax"), ("41ffd0c3", "r8"),
+                                 ("2effd0c3", "rax"), ("2e2e2effd0c3", "rax"),
+                                 ("2e2e41ffd0c3", "r8"),
+                                 ("2e2e2e41ffd0c3", "r8"),
                                  ("ffd4c3", "rsp"), ("ff1424c3", "stack")):
             for capable in (False, True):
                 with self.subTest(raw=raw, capable=capable):

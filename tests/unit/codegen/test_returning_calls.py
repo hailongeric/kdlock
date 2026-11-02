@@ -49,21 +49,29 @@ class ReturningCallTests(unittest.TestCase):
         for context in range(1, 11):
             row = f'1 ffffffff81001000 1 1 {context} primitive_call\n'
             self.assertEqual(parse(row)[0xffffffff81001000]['context_kind'], context)
-        options = {}
-        assembly, log, status = render(
-            'ffd0480534120000e8f3500000c3', lock_kind='mutex', abi=2,
-            trusted_source=True, native_escape_capable=True,
-            indirect_call_capable=True,
-            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
-                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
-                            'kd_rwsem_up_write_clobber_v1': 0x6100},
-            returning_services={0x5500: dict(cookie=1, nargs=1, result_kind=1,
-                                             context_kind=2, symbol='primitive_call')},
-            build_options=options, return_status=True)
-        self.assertEqual(status, 0, log)
-        self.assertEqual(options['requirements'], 896)
-        self.assertIn(b'kd_service_dispatch_1002:', assembly)
-        self.assertIn(b'PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]', assembly)
+        for call in ('ffd0', '2effd0', '2e2effd0', '2e2e2effd0',
+                     '2e41ffd0', '2e2e41ffd0', '2e2e2e41ffd0'):
+            with self.subTest(call=call):
+                raw = bytes.fromhex(call)
+                successor = 0x1000 + len(raw)
+                raw += bytes.fromhex('480534120000')
+                raw += b'\xe8' + struct.pack('<i', 0x6100 - (0x1000 + len(raw)) - 5) + b'\xc3'
+                options = {}
+                assembly, log, status = render(
+                    raw.hex(), lock_kind='mutex', abi=2,
+                    trusted_source=True, native_escape_capable=True,
+                    indirect_call_capable=True,
+                    kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                                    'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                                    'kd_rwsem_up_write_clobber_v1': 0x6100},
+                    returning_services={0x5500: dict(cookie=1, nargs=1, result_kind=1,
+                                                     context_kind=2, symbol='primitive_call')},
+                    build_options=options, return_status=True)
+                self.assertEqual(status, 0, log)
+                self.assertEqual(options['requirements'], 896)
+                self.assertIn(f'kd_service_dispatch_{successor:x}:'.encode(), assembly)
+                self.assertIn(f'loc_{successor:x}:'.encode(), assembly)
+                self.assertIn(b'PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]', assembly)
 
     def test_registry_refuses_partial_duplicate_and_unknown_contracts(self):
         parse = translator.memread.device_session.parse_service_calls

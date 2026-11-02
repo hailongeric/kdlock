@@ -137,6 +137,13 @@ def main(executor=None, benchmark=False):
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "indirect-cs-accepts-four-prefixes": (
+            "if (offset == 3)", "if (false)",
+        ),
+        "indirect-cs-accepts-memory-operand": (
+            "if (cs_prefixes && mode != 3)",
+            "if (false && cs_prefixes && mode != 3)",
+        ),
         "indirect-accepts-jump-opcode": (
             "((modrm >> 3) & 7) != 2",
             "(((modrm >> 3) & 7) != 2 && ((modrm >> 3) & 7) != 4)",

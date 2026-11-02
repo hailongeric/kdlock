@@ -106,18 +106,28 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 					 "CALL_LIMIT_NATIVE");
 }
 
-/* Canonical near indirect CALL only: optional single REX, FF /2, then the
- * actual ModRM/SIB displacement. No guessed backward scan, far CALL, legacy
- * prefix or RET/JMP can supply this provenance. Read only required bytes. */
+/* Near indirect CALL: optional single REX, FF /2, then actual ModRM/SIB
+ * displacement. Linux alternatives also emit 1..3 CS prefixes on register
+ * CALLs. Those prefixes count toward the source return PC; padding following
+ * the instruction does not. No other legacy prefix, far CALL or RET/JMP can
+ * supply this provenance. Read only required bytes. */
 static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 {
 	u8 bytes[8], modrm, mode, rm, base = 0xff;
-	unsigned int offset = 0, count;
+	unsigned int offset = 0, count, cs_prefixes;
 
 	if (!site || site > ~0UL - sizeof(bytes) ||
 	    copy_from_kernel_nofault(bytes, (void *)site, 1))
 		return -EFAULT;
-	if (bytes[0] >= 0x40 && bytes[0] <= 0x4f)
+	while (bytes[offset] == 0x2e) {
+		if (offset == 3)
+			return -EILSEQ;
+		offset++;
+		if (copy_from_kernel_nofault(bytes, (void *)site, offset + 1))
+			return -EFAULT;
+	}
+	cs_prefixes = offset;
+	if (bytes[offset] >= 0x40 && bytes[offset] <= 0x4f)
 		offset++;
 	if (copy_from_kernel_nofault(bytes, (void *)site, offset + 2))
 		return -EFAULT;
@@ -127,6 +137,8 @@ static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 	count = offset + 2;
 	mode = modrm >> 6;
 	rm = modrm & 7;
+	if (cs_prefixes && mode != 3)
+		return -EILSEQ;
 	if (mode != 3 && rm == 4) {
 		if (copy_from_kernel_nofault(bytes, (void *)site, ++count))
 			return -EFAULT;
