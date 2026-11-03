@@ -278,3 +278,30 @@ once on the frozen candidate. All 55 entry images must still be ready before
 activation. Preserve any further resource or instruction failure as a distinct
 result; do not infer returned-body, throughput or performance acceptance from a
 larger preparation allowance.
+
+### Separate retained CFG work bounds
+
+The actual `3a0171f33516b9c914f4f33da1c7f0c415473ba0` attempt then reaches
+32 transitions with 754,720 cached bytes and 329,812 decoded instruction bytes
+(85,252 instructions, 20,783 blocks). It has used 22 covered-root rebuilds and
+10 source-window extensions. Five new covered seeds are reported at refusal;
+they are not the full remaining frontier: 215 blocks are incomplete. Neither
+mmap1 model starts. The original failed result SHA256 is
+`44bdc084f6136ca5d0aa58c25bcdbafc5d295a99efae41fe82672a4a97019c4f`.
+
+For the next isolated retained candidate, separate these two finite work
+allowances: at most 32 covered-root rebuilds and 32 source extensions, followed
+by the final completion decode (at most 65 decode passes). Ordinary translation
+keeps its original shared 32-transition/33-pass limit. Preserve the exact
+seed-first, source-read and complete-analysis ordering; do not batch early
+reads before the existing covered-seed rebuild. Earlier reads could change
+which source refusal is encountered before the rebuilt graph removes edges.
+
+Each accepted transition must still add the same exact roots or leased source
+windows. Record both counters and their limits, refuse the specific exhausted
+work class, and never publish a partial CFG or return table. Keep all previous
+source, per-read, image and return-flow bounds unchanged. This increases bounded
+preparation work; it is not an observed speedup or proof that closure will fit.
+Focused tests must cover each independent boundary, the total pass ceiling,
+unchanged ordinary behavior and refusal before image publication, followed by
+the same VM build/continuation and actual two-model mmap1 checks.
