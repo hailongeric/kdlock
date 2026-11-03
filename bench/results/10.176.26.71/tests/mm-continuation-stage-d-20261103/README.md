@@ -452,3 +452,140 @@ The separately reviewed v3 controller is now running from normal boot
 inventory before applying only the two producer C files and shared header.
 A completed v3 build, installation, new boot and actual mmap1 proof remain
 separate pending stages at this entry.
+
+
+## V3 build, installation and both mode captures
+
+The subsequent v3 amendment completes on the normal boot recorded above. It
+applies only `arch/x86/kernel/alternative.c`, `kernel/module/main.c` and
+`include/linux/kd_generated_text.h` from kernel recipe
+`1ab7124abb6140752c1f0bb6e862144d426a3875`. Both affected objects and the full
+`bzImage modules` build pass with `W=1`; the final receipt records drained,
+idle state and unchanged Native MM body hashes. The resulting
+`7.0.0-38-kdscope5` v3 Build ID is
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`, distinct from the preserved v2
+image despite sharing its release name.
+
+The exact amendment result SHA256 is
+`1437648901d99f473903f0e72832c591e8f643d8f91f2a501258967b7e1ea054`;
+its fetched envelope is
+`/tmp/kdlock-mm-scope5-v3-modules-stage-launch-20261103/amendment.json`.
+The 511,824,768-byte `vmlinux` has SHA256
+`75f511e8eecdc1cd06e480ea1d4b465def3697d8ab5ad5dd64a55013b45f934d`.
+Module staging verifies 6,901 modules (676,818,883 stripped-tree bytes), then
+installation and initrd-content verification pass. Their distinct receipts are:
+
+| Completed stage | Actual receipt SHA256 | Retained source-host reference |
+| --- | --- | --- |
+| Module staging | `2ff73ff886cbcff9dc89c6dbf6850d008b664e1973ddfd6aeba53f239ded2a37` | `/tmp/kdlock-mm-scope5-v3-modules-stage-launch-20261103/progress-final-or-running.json` records the guest result path and hash. |
+| Installation | `598c1c9e172a26ed554bc7f9c7d5231856c695b9de814dd0c9de8009338ed257` | `/tmp/kdlock-mm-scope5-v3-install-stage-launch-20261103/progress-final-or-running.json` records `INSTALLED_NOT_ARMED`. |
+| Initrd-content check | `baee556a52b547cbb7329206e935197be39e103edbfb04fa49f72ebf268cf104` | `/tmp/kdlock-mm-scope5-v3-initrd-check-20261103/result.json` binds the installed module manifest and exact initrd. |
+
+The existing one-shot entries preserve the ordinary default. Independent
+reconnect and maintained bundle verification establish both v3 boots:
+
+| Mode | Observed boot UUID | Capture receipt SHA256 | Bundle manifest SHA256 |
+| --- | --- | --- | --- |
+| Native, `kd_mmap=off` | `60b94472-0ccd-4eec-8661-4e733dfc8fa2` | `de3072a81bb4cdf42d1dc4a0da1299c6900b522779e8c7fd0e5cb07f533ac5fc` | `85949b47f94cd67894cb86f96126b523708ecc899a446756fb68454c7e4091a0` |
+| KD, `kd_mmap=on` | `22c0a1d3-64b3-4de3-867c-e0521c6ba8c3` | `b96bd938b63862ca81b91d1b36efe94ae46e3155ae66cf6ff53ab4042d554938` | `5a67837a36698a6292513e0ce9ff386f7ce03068ef7feb8f98e9a62c5e72ba5f` |
+
+The captures are retained as `capture.json` under
+`/tmp/kdlock-mm-scope5-v3-native-boot-capture-20261103/` and
+`/tmp/kdlock-mm-scope5-v3-kd-boot-capture-20261103/`. Each verifies the running
+Build ID, 12 build files, 70 source files, four installed files, 59 bundle files
+and the declared mode with `full (lazy)` preemption. The first KD arm attempt
+stops on the amendment-controller file check; the second stops on an existing
+host-capture byte mismatch. Their original empty replies and error logs remain
+in the first and second arm-launch directories. The third arm attempt precedes
+the independently observed KD boot. Neither a launch receipt nor a reboot
+request alone is treated as a boot pass.
+
+## Runtime 79b prerequisites and actual prewarm failure
+
+Runtime source `79b6a7683e0fa93b152c0543a0e6bf18e947856c` remains separate
+from the composed kernel recipe. Its initial VM checks pass nine syscall-pair,
+one argument-representation and four application-continuation unit cases, plus
+observer module compilation. Receipt
+`/tmp/kdlock-mm-79b-units-20261103/reply.json` has SHA256
+`ae26646fc9bcc808e78f2e33839020601a54da75578412be32292b4f6b8b71b7`;
+these checks run on the ordinary kernel and do not claim live MM execution.
+
+On the v3 KD boot, nine private-source cases and all nine helper phases pass.
+The first outer wrapper then fails while reading a nonexistent `returncode`
+field from launch-only build metadata. Its empty reply and `KeyError` remain in
+`/tmp/kdlock-mm-79b-v3-first-20261103/`. The second prerequisite receipt binds
+the actual completed helper result and build log without repeating the helper,
+then runs all eleven killable/nesting phases successfully. It records
+`passed=true`, `drained=true`, `final_idle=true`, `scored=false` and
+`accepted=false`. This receipt is
+`/tmp/kdlock-mm-79b-v3-prerequisite-second-20261103/reply.json`, SHA256
+`54198c72bb1d361358b42ec4e4e6849b77c867cfe068de4b2f0f0a113b12d15f`.
+The original helper result remains separately bound at SHA256
+`6ba9e1c79550e67f865dcaa1f35d2aa48953057fb1e26c46f9ef2f0c0e0fe50a`.
+
+The actual application attempt builds and loads the provider and observer, but
+stops during required-site prewarming with
+`prewarm site failed or became Native-only`. Both **`mmap1_threads`: NOT STARTED**
+and **`mmap1_processes`: NOT STARTED** apply to this `79b` attempt. The retained
+provider parameters are `rwsem_provider_active=N` and
+`rwsem_provider_bindings=0`. Its original result remains `FAILED`,
+`passed=false`, `drained=false`, `accepted=false` and `scored=false`; no
+application invocation, completed syscall pair, delegated MM body or throughput
+sample is established by the prewarm attempt.
+
+The exact failed result is
+`/tmp/kdlock-mm-79b-v3-failure-first-20261103/0-result.json`, SHA256
+`82fada902adb5980cdc8e2ef116f51323fe76c6fb09e81029c21587c110e5e59`.
+The retained `2-daemon.log` in the same directory has SHA256
+`f389e6bd777bbbb260e2036b5f0afd7fe527fd03a2de328225b35c0438c0cb4e`.
+It contains decoded-instruction and proposed-cache evidence; the immediate
+blocker is the 262,144-byte text-cache bound, not evidence of a completed CFG:
+
+| Entry's containing function | Cached bytes | Selected decoded instruction bytes | Proposed merged bytes at refusal |
+| --- | ---: | ---: | ---: |
+| `__do_sys_brk`, `0xffffffff817f7413` | 205,232 | 93,709 | 304,544 |
+| `userfaultfd_unregister`, `0xffffffff81961fae` | 241,872 | 98,680 | 324,384 |
+| `do_mbind`, `0xffffffff818724ea` | 226,528 | 85,635 | 311,776 |
+| `__do_sys_remap_file_pages`, `0xffffffff817f845e` | 232,240 | 80,750 | 365,648 |
+
+The source-host arithmetic record
+`/tmp/kdlock-mm-79b-window-observations-20261103.json`, SHA256
+`9bcab166aa5483a9cf6ad4fa673fb957b8cecb3d04cb33c289469577e284999c`,
+binds the log and exact v3 ELF. Proposed bytes are not fetched bytes; cached
+bytes outside the selected instructions are not proof that those bytes can all
+be discarded or that subsequent callee closure will fit.
+
+Normal retirement is recorded separately. The first retirement helper stops
+at its expected daemon-working-directory check before sending a signal. The
+second binds the actual daemon start identity and `workspace/daemon` directory,
+closes it with normal SIGTERM, observes stable STOP, reaches source state
+`2/0/0/0`, unloads observer and provider normally, and verifies final idle.
+Its receipt is
+`/tmp/kdlock-mm-79b-v3-normal-retirement-second-20261103/reply.json`, SHA256
+`827e328690174b1e55cd3785d43d55a511cef6f793be7e195b723902fcd6b8e2`.
+It records `drain_unknown=false` and the unchanged original failed-result hash.
+This is daemon/module retirement on the KD boot, not a return to the ordinary
+kernel and not a rewrite of the failed application result.
+
+## Bounded lookahead follow-up: focused checks pass, actual validation pending
+
+Runtime `0b33995c5aa8c6f8bab046900b6b3fb00c449719` adds a retained-service-only
+planning retry when optional lookahead exceeds the existing text-cache bound:
+1,024, 512, 256, 128, 64, then 15 bytes. It preserves all existing cached bytes
+and roots, each mandatory 15-byte prefix, source lease acquisition before reads,
+complete CFG construction, 32 expansion passes and the 640 KiB image bound.
+The ordinary 8,192-byte policy remains unchanged. A smaller next plan fitting
+is not proof that full reachable callee closure fits or lowers successfully.
+
+Fresh v3-focused validation passes nine private-source, 66 text-region and 16
+returning-call cases, the required provider build, nine helper phases and eleven
+killable/nesting phases. Both live results explicitly pass and drain under the
+same v3 Build ID. The actual receipt is
+`/tmp/kdlock-mm-0b3-v3-first-20261103/reply.json`, SHA256
+`b8075331f9cc8f4293afc81008c0d46e072419777b26129674c396d329f3f8b4`.
+These are fresh results, not relabeled `79b` checks. Actual two-model validation
+is newly launched and remains **pending at this entry**. No actual mmap1
+returned-body, delegation, throughput, performance acceptance or promotion is
+claimed. Generated-text ownership, a published image and controlled helper
+returns do not by themselves establish complete actual MM callee closure or
+per-syscall original-task completion.
