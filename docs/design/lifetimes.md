@@ -216,3 +216,8 @@ minimum-plan overflow and source refusal after a plan is selected. These cases
 and actual MM preparation still require VM validation. Reducing this immediate
 storage overhead does not prove complete callee closure, application execution
 or performance acceptance.
+
+The [explicit Native argument mapping](native_call_arguments.md) design extends
+retained returning calls without changing their source CALL identity, context
+checks or exact completion lifetime. Its initial allocation mappings preserve
+the original caller input while resuming on the same executor.
