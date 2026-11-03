@@ -514,3 +514,24 @@ retirement, report the delegated critical sections, observed episode counts
 and enter-to-return duration definition, plus every remaining unsupported
 point. Performance comparisons require separately identified Native and KD
 runs; no gain follows from a diagnostic count.
+
+The first actual activation at `c7e10b24` reached
+`ffffffff817f66da` in `find_vma_intersection` (`mm/mmap.c:886`) on the verified
+scope5 kernel. Its complete bytes are `65 4c 8b 25 26 49 c1 02`: a GS-relative
+64-bit load into R12. The general decoder already recognizes that operation;
+the runtime rejected it because its read policy allowed only preempt-count
+operands. E stopped and O remained live. No application completion or clean
+retirement is claimed for that attempt.
+
+Extend the returning instruction service to ordinary resident GS loads/tests,
+retaining the same origin CPU/GS base, IRQ, Native ownership, source-frame and
+artifact ACK checks. Only actual preempt-count operands receive count
+normalization; an ordinary GS read creates no preempt owner. The reached
+callee's normal epilogue at `ffffffff817f6708` contains
+`65 48 2b 15 f8 48 c1 02`, a GS-source subtraction into RDX. Implement the
+general register-destination GS SUB operation with exact source-width result
+and arithmetic flags. This is supplementation of the encountered function's
+bounded return neighborhood, not a whole-CFG admission step or a named helper
+for its canary predicate. Keep faulting or unsupported forms explicit, preserve
+the failed attempt, and validate both the instruction effects and returning
+service before another actual MM activation.
