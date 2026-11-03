@@ -1100,3 +1100,24 @@ refusal and budget exhaustion. Then repeat complete 55-site preparation and
 the two unchanged application models. A remaining cache/pass/image limit is
 a retained failure, not a delegation result; general image fragments would
 need a separate continuation/lifetime design if compact lookahead is insufficient.
+
+### Decoder seeds and actual callee scope
+
+The compact-window candidate's eight new coverage cases pass, as do its
+returning-CALL, indirect boundary and diagnostic cases. The full text-region
+fixture additionally exposes an earlier scope regression: newly fetched branch
+addresses were added to the independent-callee analysis roots. A branch then
+receives both its inherited lock depth and an invented unknown entry depth,
+so the checker scans caller instructions after the actual outer release.
+Those decoder roots locate text; they do not establish another invocation.
+
+Keep source discovery and semantic entry classification separate. A fetched
+ordinary CALL target may retain independent callee scope; a branch/fallthrough
+seed keeps the caller's inherited scope. Do not remove reached branches,
+truncate an actual callee at a nested release, weaken context checks or change
+runtime ownership. Validate the existing post-release branch fixture together
+with the cases that reject unsupported instructions inside a real callee.
+The fixture's older capability dictionaries also need the three currently
+published false fields for versions 1–3; retain their exact dictionary checks.
+These are separate corrections. The failed 91652127 fixture receipt remains
+failed, and no live helper or application run started from that receipt.
