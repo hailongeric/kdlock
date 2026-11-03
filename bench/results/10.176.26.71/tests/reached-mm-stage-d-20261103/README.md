@@ -276,3 +276,31 @@ before effects; a read failure leaves the packet and budget unchanged. The
 bitmap primitive stays delegated rather than becoming a Native API service.
 Native register/memory, zero-input, alias and failure fixtures require fresh
 VM validation before the next actual-MM attempt.
+
+## Seventh candidate: `6b4a8983`
+
+Exact source: `6b4a898397daae157254387691543f7efa953f52`. Provider and resident
+fixture builds passed; 63,165 assertions included 864 Native bit-scan tuples,
+zero-input/width behavior and exact reached-alias/failure checks. Seven MM
+proof and nine private-source cases passed. See [units](seventh-units.json).
+
+On boot `ec3eeb9c-0223-4379-a99c-2f8cd6eda18b`, execution reached read-only
+memory BT in `__next_zones_zonelist`, `ffffffff817b7c44`, bytes `48 0f a3 02`.
+Two generation-3 roots stopped at this same operation within the one failed
+activation: O/E `4848`/`4837` and `4853`/`4832`, entry `ffffffff818e077d`.
+The signed node index comes from a preceding MOVSLQ in the captured code.
+[Resident trace](seventh-resident-kernel.log),
+[complete live bytes](seventh-live-site.json) and
+[raw retention](seventh-retention.json) remain separate from completed-worker
+proof, which is still absent. Recovery boot is
+`91c2a715-19d4-4f19-b210-65e10cdb2864`.
+
+## Read-only memory-bit correction
+
+The design was committed first as `4a9701fb`. Memory BT16/32/64 computes the
+containing word with a signed operand-width register index; imm8 uses only
+within-word bits. Exactly one qualified word is read. Native memory-form BT
+then operates on that private retained value for its flags, with no source
+data/GPR write. Source failure has no packet/budget effect. Memory BTS/BTR/BTC
+and LOCK forms remain explicit unsupported operations. Native signed/immediate
+and no-effect fixtures require the next VM validation.

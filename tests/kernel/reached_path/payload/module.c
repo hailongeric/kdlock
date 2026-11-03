@@ -654,7 +654,7 @@ static int bit_test(struct fixture *f)
 		 * flags are undefined; the implementation exports actual Native flags. */
 		CHECK(!((f->regs.flags ^ flags) & 0x41));
 	}
-	for (operation = 0; operation < 4; ++operation) {
+	for (operation = 1; operation < 4; ++operation) {
 		code[0] = 0x48; code[1] = 0x0f; code[2] = 0xba;
 		code[3] = 0x20 | (operation << 3); code[4] = 63; /* memory(RAX) */
 		prepare(f, code, 5);
@@ -1158,6 +1158,119 @@ static int scan_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_MEMORY_BT(suffix, part) \
+	asm volatile("pushq %[flags]; popfq; bt" suffix " %" part "[index],(%[base]); pushfq; popq %[output]" \
+		: [output] "=r"(output) : [base] "r"(base), [index] "r"(index), [flags] "r"(flags) \
+		: "cc", "memory")
+#define ORACLE_MEMORY_BT_IMMEDIATE_WIDTH(number, prefix) \
+	asm volatile("pushq %[flags]; popfq; .byte " prefix "0x0f,0xba,0x27," #number "; pushfq; popq %[output]" \
+		: [output] "=r"(output) : [base] "D"(base), [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_MEMORY_BT_IMMEDIATE(number) do { \
+	switch (width) { \
+	case 2: ORACLE_MEMORY_BT_IMMEDIATE_WIDTH(number, "0x66,"); break; \
+	case 4: ORACLE_MEMORY_BT_IMMEDIATE_WIDTH(number, ""); break; \
+	default: ORACLE_MEMORY_BT_IMMEDIATE_WIDTH(number, "0x48,"); break; \
+	} \
+} while (0)
+
+static unsigned long native_memory_bt(unsigned int width, bool immediate,
+	unsigned long base, u64 index, unsigned long input_flags)
+{
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	if (immediate) {
+		switch (index) {
+		case 0: ORACLE_MEMORY_BT_IMMEDIATE(0); break;
+		case 7: ORACLE_MEMORY_BT_IMMEDIATE(7); break;
+		case 15: ORACLE_MEMORY_BT_IMMEDIATE(15); break;
+		case 16: ORACLE_MEMORY_BT_IMMEDIATE(16); break;
+		case 31: ORACLE_MEMORY_BT_IMMEDIATE(31); break;
+		case 32: ORACLE_MEMORY_BT_IMMEDIATE(32); break;
+		case 63: ORACLE_MEMORY_BT_IMMEDIATE(63); break;
+		case 64: ORACLE_MEMORY_BT_IMMEDIATE(64); break;
+		case 127: ORACLE_MEMORY_BT_IMMEDIATE(127); break;
+		default: ORACLE_MEMORY_BT_IMMEDIATE(255); break;
+		}
+	} else {
+		switch (width) {
+		case 2: ORACLE_MEMORY_BT("w", "w"); break;
+		case 4: ORACLE_MEMORY_BT("l", "k"); break;
+		default: ORACLE_MEMORY_BT("q", ""); break;
+		}
+	}
+	return output;
+}
+
+static int memory_bit_test(struct fixture *f)
+{
+	static const s64 indices[] = { -127, -65, -64, -33, -32, -17, -16, -1,
+		0, 1, 7, 15, 16, 31, 32, 63, 64, 127 };
+	static const u8 immediates[] = { 0, 7, 15, 16, 31, 32, 63, 64, 127, 255 };
+	struct kd_regs expected;
+	u64 memory[ARRAY_SIZE(f->memory)];
+	u64 index;
+	unsigned long flags;
+	unsigned int width, form, pattern, i, j, length, count;
+	u8 code[5];
+
+	/* Exact reached zone-node test, including RAX index and RDX base. */
+	prepare(f, (u8[]){ 0x48, 0x0f, 0xa3, 0x02 }, 4);
+	f->regs.ax = 65; f->regs.dx = DATA + 128; f->memory[17] = 2;
+	flags = native_memory_bt(8, false, f->regs.dx, f->regs.ax, f->regs.flags);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK((f->regs.flags & 1) && !((f->regs.flags ^ flags) & KD_REG_ARITHMETIC_FLAGS));
+	CHECK(f->regs.ax == 65 && f->regs.dx == DATA + 128 && f->reads == 1 && !f->writes);
+	for (width = 2; width <= 8; width *= 2)
+	for (form = 0; form < 2; ++form)
+	for (pattern = 0; pattern < 3; ++pattern) {
+		count = form ? ARRAY_SIZE(immediates) : ARRAY_SIZE(indices);
+		for (i = 0; i < count; ++i) {
+			length = 0;
+			if (width == 2) code[length++] = 0x66;
+			if (width == 8) code[length++] = 0x48;
+			code[length++] = 0x0f;
+			code[length++] = form ? 0xba : 0xa3;
+			code[length++] = form ? 0x27 : 0x0f; /* memory(DI), imm8 or indexCX */
+			if (form) code[length++] = immediates[i];
+			prepare(f, code, length);
+			for (j = 0; j < sizeof(f->memory); ++j)
+				((u8 *)f->memory)[j] = pattern == 0 ? 0 : pattern == 1 ? 0xff : j * 37 + 11;
+			memcpy(memory, f->memory, sizeof(memory));
+			index = form ? immediates[i] : (u64)indices[i];
+			f->regs.di = DATA + 128; f->regs.cx = index;
+			f->regs.flags |= (i & 1) ? KD_REG_ARITHMETIC_FLAGS : 0;
+			expected = f->regs;
+			flags = native_memory_bt(width, form, f->regs.di, index, f->regs.flags);
+			expected.flags = (expected.flags & ~KD_REG_ARITHMETIC_FLAGS) |
+				(flags & KD_REG_ARITHMETIC_FLAGS);
+			expected.ip += length;
+			CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+			CHECK(!memcmp(&expected, &f->regs, sizeof(expected)));
+			CHECK(f->reads == 1 && !f->writes && !f->atomics);
+			CHECK(!memcmp(memory, f->memory, sizeof(memory)));
+			CHECK(f->fetches == length && f->state.budget == 99);
+		}
+	}
+	prepare(f, (u8[]){ 0x48, 0x0f, 0xa3, 0x0f }, 4);
+	f->regs.di = DATA + 128; f->regs.cx = 1ULL << 63;
+	expected = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !f->reads && !f->writes && f->state.budget == 100);
+	prepare(f, (u8[]){ 0x48, 0x0f, 0xa3, 0x0f }, 4);
+	f->regs.di = DATA + 128; f->regs.cx = -1; f->fail_read = true;
+	expected = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !f->reads && !f->writes && f->state.budget == 100);
+	prepare(f, (u8[]){ 0xf0, 0x48, 0x0f, 0xa3, 0x0f }, 5);
+	f->regs.di = DATA + 128;
+	expected = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !f->reads && !f->writes);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -1182,6 +1295,7 @@ static int worker(void *argument)
 	if (!result) result = movs_test(f);
 	if (!result) result = cs_padding_test(f);
 	if (!result) result = scan_test(f);
+	if (!result) result = memory_bit_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

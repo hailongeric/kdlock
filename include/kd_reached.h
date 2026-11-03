@@ -56,6 +56,7 @@ enum kd_reached_scalar_op {
 	KD_REACHED_SCALAR_BSR,
 	KD_REACHED_SCALAR_TZCNT,
 	KD_REACHED_SCALAR_LZCNT,
+	KD_REACHED_SCALAR_BT_MEMORY,
 };
 
 struct kd_reached_event {

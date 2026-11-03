@@ -680,10 +680,27 @@ static enum kd_reached_result execute(struct decoded *d)
 		*reg_slot(r, d->dst.reg) = value;
 		break;
 	case OP_BIT:
-		/* Memory bit strings use a signed register offset to select another
-		 * source word. They need their complete address/lifetime contract;
-		 * never apply the register mask to a memory operand. */
-		if (d->dst.memory) return KD_REACHED_UNSUPPORTED;
+		if (d->dst.memory) {
+			unsigned long word_address = address(d, &d->dst);
+			unsigned int shift = d->dst.width == 8 ? 6 : d->dst.width == 4 ? 5 : 4;
+			s64 word_offset;
+
+			/* Only read-only BT has this contract. Modifying bit strings need
+			 * a separate exact Native RMW, never this load/scalar operation. */
+			if (d->condition) return KD_REACHED_UNSUPPORTED;
+			if (read_operand(d, &d->src, &b)) return KD_REACHED_MEMORY;
+			/* Register bit strings use a signed operand-width index. An imm8
+			 * selects inside the encoded word instead; it never shifts its EA. */
+			if (!d->src.literal) {
+				word_offset = sign_value(b, d->dst.width) >> shift;
+				word_address += (unsigned long)(word_offset * d->dst.width);
+			}
+			if (s->ops->read(s->context, word_address, &a, d->dst.width))
+				return KD_REACHED_MEMORY;
+			if (kd_reached_scalar_apply(d->dst.width, KD_REACHED_SCALAR_BT_MEMORY,
+				a, b, flags, &value, &flags)) return KD_REACHED_UNSUPPORTED;
+			break;
+		}
 		if (read_operand(d, &d->dst, &a) || read_operand(d, &d->src, &b))
 			return KD_REACHED_MEMORY;
 		if (kd_reached_scalar_apply(d->dst.width,

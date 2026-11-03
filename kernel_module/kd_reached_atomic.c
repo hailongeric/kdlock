@@ -84,6 +84,11 @@ fault:
 		"pushfq; popq %[output]" \
 		: [value] "+r"(value), [output] "=r"(output) \
 		: [right] "r"(right), [flags] "r"(flags) : "cc", "memory")
+#define KD_SCALAR_MEMORY_BT(suffix, part, type) \
+	asm volatile("pushq %[flags]; popfq; bt" suffix " %" part "[right],%[word]; " \
+		"pushfq; popq %[output]" : [output] "=r"(output) \
+		: [word] "m"(*(type *)&value), [right] "r"(right), [flags] "r"(flags) \
+		: "cc", "memory")
 #define KD_BIT_WIDTH(suffix, part) do { \
 	switch (operation) { \
 	case KD_REACHED_SCALAR_BT: KD_SCALAR_BIT("bt", suffix, part); break; \
@@ -129,6 +134,16 @@ int kd_reached_scalar_apply(unsigned int width, enum kd_reached_scalar_op operat
 		case 2: KD_BIT_WIDTH("w", "w"); break;
 		case 4: KD_BIT_WIDTH("l", "k"); break;
 		case 8: KD_BIT_WIDTH("q", ""); break;
+		default: return -EOPNOTSUPP;
+		}
+	} else if (operation == KD_REACHED_SCALAR_BT_MEMORY) {
+		/* The caller has loaded one qualified source word. Mask before the
+		 * Native memory-form BT so it reads only this private retained word. */
+		right &= width * 8 - 1;
+		switch (width) {
+		case 2: KD_SCALAR_MEMORY_BT("w", "w", u16); break;
+		case 4: KD_SCALAR_MEMORY_BT("l", "k", u32); break;
+		case 8: KD_SCALAR_MEMORY_BT("q", "", u64); break;
 		default: return -EOPNOTSUPP;
 		}
 	} else if (operation >= KD_REACHED_SCALAR_BSF && operation <= KD_REACHED_SCALAR_LZCNT) {
