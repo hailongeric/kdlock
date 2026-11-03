@@ -82,7 +82,8 @@ not a current translation requirement. Active call-depth policy and configured
 near-text-pool restrictions remain in the [Linux 7 port guide](../../kernel_integration/linux70/README.md).
 
 The registry has 511 slots and a shared maximum of 64 image descriptors. The
-ordinary pool provides up to 64 blocks of 640 KiB. Optional legacy near-text
+ordinary pool provides up to 64 blocks of the shared `KD_CODE_BLOCK_SIZE`
+(4 MiB in the retained preparation candidate below). Optional legacy near-text
 storage does not increase the shared descriptor limit. Descriptor exhaustion is
 a real preparation failure; an available block alone does not grant publication.
 
@@ -205,7 +206,7 @@ do not report a rejected preferred plan as the fetched byte count.
 
 This changes optional fetch planning, not the source-lease boundary or executable
 scope. Keep pin-before-read, complete CFG decoding, the shared 32-expansion
-limit, the 640 KiB image limit and all CALL/RET/owner checks. Ordinary translations
+limit, the shared image capacity and all CALL/RET/owner checks. Ordinary translations
 retain their 8,192-byte page-aligned policy without these retries. A source
 refusal does not trigger budget retries or permit discarding previously fetched
 bytes. The existing mandatory-prefix source-refusal handling remains separate.

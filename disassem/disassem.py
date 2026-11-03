@@ -319,6 +319,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     # Ordinary translation paths retain their established page-aligned window.
     text_policy = (memread.RETAINED_WINDOW_POLICY if direct_call_closure else
                    memread.DEFAULT_WINDOW_POLICY)
+    return_flow_work = (entry_abi.RETAINED_RETURN_FLOW_WORK if direct_call_closure
+                        else entry_abi.RETURN_FLOW_WORK)
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
@@ -670,9 +672,15 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
 
     # Final emission must also refuse an incomplete return graph when the
     # unconditional admission path did not need a scoped-call comparison.
+    diagnostics.warn(
+        "RETURN_FLOW_WORK_PROFILE", "check_complete_return_graph",
+        "finite retained graph headroom preserves the complete return proof",
+        retained_profile=direct_call_closure, work_limit=return_flow_work,
+    )
     try:
         missing_callees = indirect_jump.find(block_dict, db_dict, jump_table,
-                                            terminal_targets=excluded_targets)
+                                            terminal_targets=excluded_targets,
+                                            max_visits=return_flow_work)
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
@@ -707,7 +715,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       for source, targets in jump_table.items() if source in live_offsets}
         try:
             missing_callees = indirect_jump.find(block_dict, db_dict, jump_table,
-                                                terminal_targets=excluded_targets)
+                                                terminal_targets=excluded_targets,
+                                                max_visits=return_flow_work)
         except indirect_jump.ReturnFlowError as error:
             diagnostics.set_instruction(error.offset, "<native escape return dispatch>")
             return reject_translation(str(error))

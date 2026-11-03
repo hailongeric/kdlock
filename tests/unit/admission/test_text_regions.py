@@ -5,6 +5,7 @@ import errno
 import io
 import os
 from pathlib import Path
+import re
 import struct
 import tempfile
 import unittest
@@ -988,7 +989,7 @@ class CompactTextWindowTests(unittest.TestCase):
                 symbol="primitive_call")},
         )
 
-    def test_compact_multi_root_closure_fits_without_raising_cache_limit(self):
+    def test_compact_multi_root_closure_preserves_complete_decoding(self):
         targets = [BASE + 0x100 + index * 0x3000 for index in range(34)]
         entry = targets[0]
         body = bytearray()
@@ -1004,6 +1005,7 @@ class CompactTextWindowTests(unittest.TestCase):
         self.assertEqual(self.reads, [])
         regions = self.extend([], targets)
         self.assertEqual(sum(len(data) for data, _, _ in regions), 34 * 1024)
+        self.assertLess(34 * 1024, memread.MAX_TEXT_BYTES)
         self.assertEqual({root for _, _, roots in regions for root in roots}, set(targets))
         self.assertTrue(all(size == 1024 for _, size in self.reads))
         assembly, log, status = self.render_retained(entry, regions)
@@ -1015,7 +1017,7 @@ class CompactTextWindowTests(unittest.TestCase):
         targets = {BASE + 0x100, BASE + 0x3100}
         log = io.StringIO()
         memread.diagnostics.begin(0, min(targets))
-        with (patch.object(memread, "MAX_TEXT_BYTES", 1024),
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 1024),
               contextlib.redirect_stderr(log)):
             regions = self.extend([], targets)
         self.assertEqual(self.reads, [(BASE + 0x100, 512), (BASE + 0x3100, 512)])
@@ -1035,7 +1037,7 @@ class CompactTextWindowTests(unittest.TestCase):
         self.put(BASE + 0x100, bytes(range(80)))
         data = bytes(self.text[0x100:0x150])
         initial = [[data, BASE + 0x100, [old]]]
-        with patch.object(memread, "MAX_TEXT_BYTES", 400):
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 400):
             regions = self.extend(initial, {overlap, separate})
         self.assertEqual(self.reads, [(BASE + 0x100, 192), (BASE + 0x3100, 128)])
         self.assertEqual(regions[0][0][:len(data)], data)
@@ -1049,7 +1051,7 @@ class CompactTextWindowTests(unittest.TestCase):
         raw += branch(entry + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
         self.put(entry, raw)
         self.put(callee, bytes.fromhex("b82a000000c3"))
-        with patch.object(memread, "MAX_TEXT_BYTES", 1536):
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 1536):
             initial = self.extend([], {entry})
             self.reads.clear()
             assembly, log, status = self.render_retained(entry, initial)
@@ -1065,7 +1067,7 @@ class CompactTextWindowTests(unittest.TestCase):
         raw = bytes.fromhex("666666666666660f1f840000000000")
         self.assertEqual(len(raw), 15)
         self.put(entry, raw)
-        with patch.object(memread, "MAX_TEXT_BYTES", 45):
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 45):
             regions = self.extend([], {entry, other})
         self.assertEqual(self.reads, [(BASE + 0x100, 30), (other, 15)])
         self.assertEqual(regions[0][0][15:], raw)
@@ -1075,7 +1077,7 @@ class CompactTextWindowTests(unittest.TestCase):
         old, target = BASE + 0x103, BASE + 0x310F
         data = bytes(self.text[0x100:0x140])
         initial = [[data, BASE + 0x100, [old]]]
-        with (patch.object(memread, "MAX_TEXT_BYTES", 93),
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 93),
               patch.object(memread, "read_kernel_addr_data") as reader,
               self.assertRaisesRegex(memread.TextReadLimit, "93 bytes")):
             memread.extend_regions(initial, {target}, policy=self.policy)
@@ -1094,7 +1096,7 @@ class CompactTextWindowTests(unittest.TestCase):
 
     def test_source_refusal_does_not_restart_budget_planning(self):
         for error in (errno.EPERM, errno.ESTALE):
-            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 64),
+            with (self.subTest(error=error), patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 64),
                   patch.object(memread.diagnostics, "warn") as warn,
                   patch.object(memread, "read_kernel_addr_data", side_effect=
                                device_session.SourceRefused("mandatory source unavailable", errno=error)) as reader,
@@ -1195,12 +1197,163 @@ class CompactTextWindowTests(unittest.TestCase):
     def test_compact_mandatory_budget_failure_happens_before_any_source_read(self):
         targets = {BASE + 0x100, BASE + 0x3100}
         for error in (errno.EPERM, errno.ESTALE):
-            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 29),
+            with (self.subTest(error=error), patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 29),
                   patch.object(memread, "read_kernel_addr_data", side_effect=
                                device_session.SourceRefused("unavailable lookahead", errno=error)) as reader,
                   self.assertRaisesRegex(memread.TextReadLimit, "29 bytes")):
                 memread.extend_regions([], targets, policy=self.policy)
             reader.assert_not_called()
+
+
+class ChunkedTextReadTests(unittest.TestCase):
+    """Production I/O ordering with substituted leases and a complete ELF span."""
+
+    def setUp(self):
+        self.limit = memread.MAX_SOURCE_READ
+        self.data = b"A" * self.limit + b"B" * self.limit + b"C" * 17
+        self.policy = memread.RETAINED_WINDOW_POLICY
+
+    @contextlib.contextmanager
+    def kcore(self, *, refuse_at=None, error=errno.ESTALE):
+        events, pins, reads = [], [], []
+        fixture = self
+
+        def pin(address, size):
+            pins.append((address, size))
+            events.append(("pin", address, size))
+            if len(pins) == refuse_at:
+                raise device_session.SourceRefused("piece lease refused", errno=error)
+
+        class File(io.BytesIO):
+            def read(self, size=-1):
+                reads.append((self.tell(), size))
+                events.append(("read", self.tell(), size))
+                return super().read(size)
+
+        def opened(path, mode):
+            fixture.assertEqual((path, mode), ("/proc/kcore", "rb"))
+            events.append(("open",))
+            return File(b"padding!" + fixture.data)
+
+        segment = {"p_type": "PT_LOAD", "p_vaddr": BASE,
+                   "p_memsz": len(self.data), "p_offset": 8}
+        with (patch.object(device_session, "pin_range", side_effect=pin),
+              patch("builtins.open", side_effect=opened),
+              patch.object(memread, "ELFFile") as elf):
+            elf.return_value.iter_segments.return_value = [segment]
+            yield events, pins, reads
+
+    def test_request_limit_matches_provider_and_refuses_oversize_before_pin(self):
+        header = (Path(__file__).resolve().parents[3] / "include/kd_source_api.h").read_text()
+        match = re.search(r"#define KD_SOURCE_MAX_READ \((\d+) \* (\d+)\)", header)
+        self.assertIsNotNone(match)
+        self.assertEqual(self.limit, int(match[1]) * int(match[2]))
+        self.assertEqual(self.limit, 262144)
+        for size in (0, -1, self.limit + 1):
+            with (self.subTest(size=size), patch.object(device_session, "pin_range") as pin,
+                  patch("builtins.open") as opened, self.assertRaises(ValueError)):
+                memread.read_kernel_addr_data(BASE, size)
+            pin.assert_not_called()
+            opened.assert_not_called()
+
+    def test_every_piece_is_leased_before_read_and_concatenated_without_gaps(self):
+        roots = [BASE + 1, BASE + self.limit + 2]
+        initial = [[self.data, BASE, roots.copy()]]
+        with self.kcore() as (events, pins, reads):
+            result = memread.extend_regions(initial, {roots[-1]}, policy=self.policy)
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, self.limit),
+                                (BASE + 2 * self.limit, 17)])
+        self.assertEqual(reads, [(8, self.limit), (8 + self.limit, self.limit),
+                                 (8 + 2 * self.limit, 17)])
+        expected = []
+        for (address, size), (offset, _) in zip(pins, reads):
+            expected.extend((("pin", address, size), ("open",), ("read", offset, size)))
+        self.assertEqual(events, expected)
+        self.assertEqual(initial, [[self.data, BASE, roots]])
+
+    def test_exact_provider_boundary_remains_one_ordinary_request(self):
+        self.data = self.data[:self.limit]
+        initial = [[self.data, BASE, [BASE + 1]]]
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, set())
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE, self.limit)])
+
+    def test_retained_aggregate_boundary_fits_four_requests_then_refuses_one_byte(self):
+        self.assertEqual(memread.RETAINED_MAX_TEXT_BYTES, 1048576)
+        self.data = b"Q" * memread.RETAINED_MAX_TEXT_BYTES
+        initial = [[self.data, BASE, [BASE + 1]]]
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, set(), policy=self.policy)
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE + i * self.limit, self.limit) for i in range(4)])
+        with (patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "1048576 bytes")):
+            memread.extend_regions([[self.data + b"X", BASE, [BASE + 1]]], set(), policy=self.policy)
+        reader.assert_not_called()
+        self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_ordinary_and_custom_nonretained_policies_keep_aggregate_limit(self):
+        self.assertEqual(memread.MAX_TEXT_BYTES, 262144)
+        initial = [[self.data[:self.limit + 1], BASE, [BASE + 1]]]
+        for policy in (memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(1024, 16)):
+            with (self.subTest(policy=policy), patch.object(memread, "read_kernel_addr_data") as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
+                memread.extend_regions(initial, set(), policy=policy)
+            reader.assert_not_called()
+
+    def test_later_lease_refusal_never_reads_that_piece_or_returns_old_prefix(self):
+        initial = [[self.data, BASE, [BASE + 1]]]
+        for position in (2, 3):
+            for error in (errno.EPERM, errno.ESTALE, errno.ENOSPC, errno.EINVAL):
+                with (self.subTest(position=position, error=error),
+                      self.kcore(refuse_at=position, error=error) as (events, pins, reads),
+                      self.assertRaises(device_session.SourceRefused) as caught):
+                    memread.extend_regions(initial, set(), policy=self.policy)
+                self.assertEqual(caught.exception.errno, error)
+                self.assertEqual(len(pins), position)
+                self.assertEqual(len(reads), position - 1)
+                self.assertEqual(events[-1][0], "pin")
+                self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_later_missing_short_or_failed_read_never_returns_a_partial_region(self):
+        initial = [[self.data, BASE, [BASE + 1]]]
+        for failure in (None, b"B" * (self.limit - 1), OSError(errno.EIO, "read failed")):
+            with (self.subTest(failure=type(failure).__name__),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=[
+                      self.data[:self.limit], failure]) as reader,
+                  self.assertRaises((RuntimeError, OSError))):
+                memread.extend_regions(initial, set(), policy=self.policy)
+            self.assertEqual([call.args for call in reader.call_args_list],
+                             [(BASE, self.limit), (BASE + self.limit, self.limit)])
+            self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_optional_tail_refusal_keeps_chunked_mandatory_prefix_and_roots(self):
+        old, target = BASE + 1, BASE + self.limit + 0xFE1
+        initial = [[self.data[:self.limit + 0xFE0], BASE, [old]]]
+        requests = []
+        def reader(address, size):
+            requests.append((address, size))
+            if address + size > BASE + self.limit + 0x1000:
+                raise device_session.SourceRefused("optional tail unavailable", errno=errno.ESTALE)
+            return self.data[address - BASE:address - BASE + size]
+        with patch.object(memread, "read_kernel_addr_data", side_effect=reader):
+            result = memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertEqual(requests, [(BASE, self.limit), (BASE + self.limit, 0x13E0),
+                                    (BASE, self.limit), (BASE + self.limit, 0x1000)])
+        self.assertEqual(result, [[self.data[:self.limit + 0x1000], BASE, [old, target]]])
+        self.assertEqual(initial, [[self.data[:self.limit + 0xFE0], BASE, [old]]])
+
+    def test_full_mandatory_instruction_can_cross_a_provider_request_boundary(self):
+        target = BASE + self.limit - 1
+        initial = [[self.data[:self.limit - 5], BASE, [BASE + 1]]]
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", self.limit + 14),
+              self.kcore() as (_, pins, _)):
+            result = memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, 14)])
+        self.assertEqual(result, [[self.data[:self.limit + 14], BASE, [BASE + 1, target]]])
+        self.assertEqual(result[0][0][self.limit - 1:], self.data[self.limit - 1:self.limit + 14])
 
 
 if __name__ == "__main__":

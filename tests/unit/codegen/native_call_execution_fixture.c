@@ -17,6 +17,7 @@
 
 #include "kd_regs.h"
 #include "kd_jit_batch.h"
+#include "exe_info.h"
 
 extern unsigned char kd_native_wrapper[], kd_native_image_end[];
 extern void fixture_invoke_clobber(struct kd_jit_batch_call *);
@@ -107,7 +108,7 @@ static void relocate(void)
 	 * subscripts are valid C. Bound the byte span, then derive every read from
 	 * the image's start rather than reading before the end-symbol object. */
 	CHECK(image_end > image_start && image_end - image_start >= 64 &&
-	      image_end - image_start <= 640 * 1024);
+	      image_end - image_start <= KD_CODE_BLOCK_SIZE);
 	if (failures)
 		exit(1);
 	size = image_end - image_start;

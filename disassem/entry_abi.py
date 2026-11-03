@@ -17,6 +17,11 @@ GPRS = {"RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RBP", "RSP"} | {f"R{i}" for i
 PRESERVED = {"RBX", "RBP", "RSP", "R12", "R13", "R14", "R15"}
 MASK = (1 << 64) - 1
 
+# Retained preparation follows complete ordinary CALL/RET closures. Its larger
+# finite graph allowance changes neither the proof nor the ordinary default.
+RETURN_FLOW_WORK = 65536
+RETAINED_RETURN_FLOW_WORK = 262144
+
 
 def merge(left, right):
     return {key: left.get(key, 0) | right.get(key, 0) for key in left.keys() | right.keys()}

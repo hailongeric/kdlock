@@ -181,7 +181,7 @@ int kd_exe_init(void)
 	}
 	/* module_alloc supplies the x86 module address region for direct rel32
 	 * calls. Keep the established vmalloc/mutex pool intact. At most another
-	 * 64 * 640 KiB = 40 MiB is reserved; shared descriptors still cap all live
+	 * 64 * KD_CODE_BLOCK_SIZE is reserved; shared descriptors still cap all live
 	 * image generations at 64. A missing pool disables only this capability.
 	 * Call-depth instrumentation requires a different generated prologue. */
 	kd_near_block_free = 0;

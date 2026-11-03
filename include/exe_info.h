@@ -2,7 +2,7 @@
 #define EXE_INFO_H
 
 #define KD_MAX_EXE 511
-#define KD_CODE_BLOCK_SIZE (4096UL * 160)
+#define KD_CODE_BLOCK_SIZE (4096UL * 1024)
 
 /*
  * kd_exe_info — per-critical-section translation entry.

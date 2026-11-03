@@ -15,7 +15,7 @@ from summarize import write_json
 from bench_runtime import (
     ROOT, HERE, WORKLOAD, PROVIDER, Failure, require, command, digest,
     status, parameters, registry, children, validate_measurement, classify_bodies,
-    info, RETIRE, FAULT,
+    info, RETIRE, FAULT, image_capacity,
 )
 
 
@@ -150,7 +150,7 @@ class Session:
         folder = (self.path / "workspace/daemon" / hex(entry["entry"]) /
                   str(entry["tgid"]) / "asm")
         image, assembly, disassembly = folder / "jit.bin", folder / "jit.S", folder / "bin.txt"
-        require(image.exists() and 0 < image.stat().st_size <= 640 * 1024 and
+        require(image.exists() and 0 < image.stat().st_size <= image_capacity() and
                 assembly.exists() and disassembly.is_file() and disassembly.stat().st_size > 0,
                 "invalid/missing generated image or disassembly")
         text = assembly.read_text()

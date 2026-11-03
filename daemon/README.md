@@ -109,7 +109,8 @@ issue semantic source-safety verdicts. Missing backend support is not supplied b
 source trust, and an infrastructure failure is never a successful translation. MINIMAL entry for ABI1/ABI2/ABI3 requires
 the matching versioned entry. A legacy image cannot be relabelled as clobber code.
 
-Images must fit 640 KiB and include the 48-byte protocol/ABI directory. Uploads
+Images must fit the shared `KD_CODE_BLOCK_SIZE` capacity (4 MiB in the retained
+preparation candidate) and include the 48-byte protocol/ABI directory. Uploads
 use chunks of at most 4,000 bytes with a common upload ID, image length and base
 generation. Complete contiguous coverage and matching directory metadata are
 required before NORMAL publication; NORMAL alone does not prove execution.

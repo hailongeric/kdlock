@@ -11,6 +11,10 @@ from elftools.elf.elffile import ELFFile
 PAGE_SIZE = 0x1000
 WINDOW_SIZE = 2 * PAGE_SIZE
 MAX_TEXT_BYTES = 256 * 1024
+RETAINED_MAX_TEXT_BYTES = 1024 * 1024
+# Match KD_SOURCE_MAX_READ in include/kd_source_api.h. Aggregate capacity
+# never changes the provider's limit for one lease and its following read.
+MAX_SOURCE_READ = 256 * 1024
 
 
 class TextWindowPolicy(NamedTuple):
@@ -30,6 +34,8 @@ class TextReadLimit(RuntimeError):
 def read_kernel_addr_data(addr, size):
     # Fixtures may substitute this I/O boundary; real reads must retain the
     # same provider throughout decode/emission, including cold extensions.
+    if not 0 < size <= MAX_SOURCE_READ:
+        raise ValueError("kernel text request exceeds provider read limit")
     device_session.pin_range(addr, size)
     with open("/proc/kcore", "rb") as f:
         elf = ELFFile(f)
@@ -47,6 +53,20 @@ def read_kernel_addr_data(addr, size):
                     f.seek(offset)
                     return f.read(size)
     return None
+
+
+def _read_complete_region(start, end):
+    """Retain each consecutive piece before reading; never return a prefix."""
+    chunks = []
+    address = start
+    while address < end:
+        size = min(end - address, MAX_SOURCE_READ)
+        chunk = read_kernel_addr_data(address, size)
+        if chunk is None or len(chunk) != size:
+            raise RuntimeError(f"incomplete kernel text read at {address:#x}")
+        chunks.append(chunk)
+        address += size
+    return b"".join(chunks)
 
 
 def union_bytes(ranges):
@@ -97,6 +117,9 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
                 for data, start, roots in regions]
     previous_bytes = union_bytes((start, end) for start, end, _, _ in existing)
     targets = sorted(set(targets))
+    # The explicit retained-service policy owns the larger aggregate budget.
+    # Ordinary callers, including custom non-retained windows, keep 256 KiB.
+    budget = RETAINED_MAX_TEXT_BYTES if policy.budget_fallback else MAX_TEXT_BYTES
     lookaheads = ((1024, 512, 256, 128, 64, 15) if policy.budget_fallback
                  else (policy.lookahead,))
     # Retry only an oversized plan, before any lease request or source read.
@@ -106,7 +129,7 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
     for lookahead in lookaheads:
         merged, requested_bytes = _plan_regions(existing, targets, lookahead, policy.alignment)
         planned_bytes = sum(end - start for start, end, _, _ in merged)
-        fits = planned_bytes <= MAX_TEXT_BYTES
+        fits = planned_bytes <= budget
         plans.append(dict(lookahead_bytes=lookahead, requested_bytes=requested_bytes,
                           planned_bytes=planned_bytes, regions=len(merged), within_budget=fits))
         if fits:
@@ -119,15 +142,16 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
         preferred_lookahead_bytes=policy.lookahead, attempted_plans=plans,
         previous_bytes=previous_bytes, requested_bytes=requested_bytes,
         planned_bytes=planned_bytes, additional_bytes=planned_bytes - previous_bytes,
-        regions=len(merged), targets=len(targets), budget_bytes=MAX_TEXT_BYTES,
+        regions=len(merged), targets=len(targets), budget_bytes=budget,
+        max_request_bytes=MAX_SOURCE_READ,
         within_budget=fits, selected=fits,
     )
     if not fits:
-        raise TextReadLimit(f"reachable text exceeds {MAX_TEXT_BYTES} bytes")
+        raise TextReadLimit(f"reachable text exceeds {budget} bytes")
     result = []
     for start, end, roots, required_end in merged:
         try:
-            chunk = read_kernel_addr_data(start, end - start)
+            chunk = _read_complete_region(start, end)
         except device_session.SourceRefused as error:
             required_end = (required_end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)
             if error.errno not in {errno.EPERM, errno.ESTALE} or required_end >= end:
@@ -142,9 +166,7 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
                 required_bytes=required_end - start, errno=error.errno,
             )
             end = required_end
-            chunk = read_kernel_addr_data(start, end - start)
-        if chunk is None or len(chunk) != end - start:
-            raise RuntimeError(f"incomplete kernel text read at {start:#x}")
+            chunk = _read_complete_region(start, end)
         result.append([chunk, start, sorted(roots)])
     return result
 

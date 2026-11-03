@@ -89,6 +89,55 @@ class ReturningCallTests(unittest.TestCase):
         self.assertEqual(status, 0, log)
         self.assertEqual(policies, [translator.memread.DEFAULT_WINDOW_POLICY])
 
+    def test_return_flow_work_profile_is_explicit_and_retained_only(self):
+        original = translator.indirect_jump.find
+        with patch.object(translator.indirect_jump, 'find', wraps=original) as find:
+            self.emit()
+        self.assertGreater(len(find.call_args_list), 0)
+        self.assertTrue(all(call.kwargs['max_visits'] == 262144
+                            for call in find.call_args_list))
+        with patch.object(translator.indirect_jump, 'find', wraps=original) as find:
+            _, log, status = render('90c3', return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertGreater(len(find.call_args_list), 0)
+        self.assertTrue(all(call.kwargs.get('max_visits', 65536) == 65536
+                            for call in find.call_args_list))
+        self.assertIn('work_limit=65536', log)
+
+    def test_retained_return_flow_exhaustion_still_refuses_emission(self):
+        original = translator.indirect_jump.find
+
+        def limited(blocks, databases, table, **kwargs):
+            self.assertEqual(kwargs['max_visits'], 262144)
+            return original(blocks, databases, table,
+                            terminal_targets=kwargs['terminal_targets'], max_visits=1)
+
+        with patch.object(translator.indirect_jump, 'find', limited):
+            assembly, log, status = render(
+                self.body(), lock_kind='mutex', abi=2,
+                trusted_source=True, native_escape_capable=True,
+                kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                                'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                                'kd_rwsem_up_write_clobber_v1': 0x6100},
+                returning_services={0x5500: dict(cookie=1, nargs=6, result_kind=1,
+                    context_kind=1, symbol='primitive_call')},
+                return_status=True)
+        self.assertEqual((assembly, status), (b'', 2))
+        self.assertIn('return dispatch exceeds its work budget', log)
+
+    def test_return_flow_budget_boundary_keeps_original_history_on_refusal(self):
+        # One actual decoded RET spends exactly one unit. Larger retained
+        # headroom changes the ceiling, not proof completion or publication.
+        blocks, databases = translator.decode_regions(
+            [(b'\xc3', 0x1000, [0x1000])], 0, set())
+        table = {0x4444: [0x5555]}
+        with self.assertRaises(translator.indirect_jump.ReturnFlowError):
+            translator.indirect_jump.find(blocks, databases, table, max_visits=0)
+        self.assertEqual(table, {0x4444: [0x5555]})
+        self.assertEqual(translator.indirect_jump.find(
+            blocks, databases, table, max_visits=1), [])
+        self.assertEqual(table, {0x4444: [0x5555], 0x1001: []})
+
     def test_native_context_values_and_indirect_successor(self):
         parse = translator.memread.device_session.parse_service_calls
         for context in range(1, 11):
