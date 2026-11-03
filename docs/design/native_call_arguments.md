@@ -85,6 +85,15 @@ The first production mappings are:
 | `__kmalloc_noprof(size, flags)` | `__kmalloc_node_track_caller_noprof` | source0, zero, source1, minus one, source return IP |
 | `__kmalloc_node_noprof(size, buckets, flags, node)` | `__kmalloc_node_track_caller_noprof` | source0, source1, source2, source3, source return IP |
 
+The measured v3 build enables `CONFIG_SLAB_BUCKETS`. `slab.h:847-858` omits
+the bucket parameter when that option is disabled. Select exact descriptors
+at compilation: without buckets, the first source API remains two arguments
+and maps to four Native arguments (source0, source1, minus one, return IP);
+the node API has three source arguments and maps to four (source0, source1,
+source2, return IP). The generic six-word machinery is unchanged. Check both
+rosters in the focused production-definition fixture; only the enabled-bucket
+configuration has the identified kernel build/live evidence.
+
 Only use a mapping when both exact symbols exist. A present logical symbol
 without its required execution counterpart must stop registration explicitly.
 
