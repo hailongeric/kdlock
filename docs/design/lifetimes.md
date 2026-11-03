@@ -109,3 +109,75 @@ rules; see [MM identity and lifetime](../../kernel_integration/linux70/MMAP.md).
 
 General hot reload, concurrent source versions, arbitrary allocation reuse,
 whole-kernel replacement and broad oversubscription remain unvalidated.
+
+## Kernel-generated instruction source extents
+
+The isolated `codex/unified-lock-queue-mm` candidate starts this extension from
+`b6a3db19ab8326d320b21d3e2690a09181f7f952`. Its build, 58 text-region cases and
+19 live continuation/cancellation phases pass on scope5 v2, Build ID
+`d3b5cf1b208028495b5fa9be2a3750b0831a2ec3`. Actual mmap1 preparation still
+refuses the unclassified `0xffffffffc0002...` source region before activation.
+Compact lookahead reached 71,552/105,968 cached bytes and 35,161/50,936 selected
+decoded bytes in the first two stopped startup entries. These are preparation
+observations, not execution or performance results.
+
+The exact Linux 7 producer in `arch/x86/kernel/alternative.c` allocates ITS
+instruction pages separately from static text and module memory regions. Core
+pages remain resident, but `its_fini_core()` frees their pointer inventory.
+`__retpoline_sites` also lies inside the exact image's freed init range.
+Neither dangling metadata, an offline input table, executable-address status
+nor matching instruction bytes proves ownership of a live output allocation.
+The failing addresses are consistent with this producer; classify them through
+an exact owner query before reading them or claiming that identification.
+
+Add a minimal general producer/lifetime interface in the composed kernel:
+
+- Transfer the existing core page inventory to permanent immutable metadata
+  before freeing init state. Retain the executable bytes and existing runtime
+  behavior unchanged. Do not copy protected bodies or add an allocation on a
+  lock path.
+- Expose one versioned generated-text extent query. A successful reply names
+  exact start/end, source kind and owner. Permanent core extents require no
+  releasable owner reference. Module extents require a live module reference
+  acquired before returning; enumerate only producer-owned module page lists.
+  Do not admit arbitrary executable allocations.
+- The module query must be usable from the existing source guard: bounded
+  metadata reads, no sleeping/allocation. Module-list inspection uses its
+  existing RCU lifetime and live-state/refcount rules. A positive module reply
+  transfers one reference to the source provider, which deduplicates or drops
+  it exactly and retains accepted owners until normal source retirement.
+- `kd_source_piece` keeps its current static-core and module-region paths and
+  accepts this additional class only through that exact query. Query absence,
+  invalid bounds/ABI, an unknown producer, unavailable owner or exhausted
+  storage remains an explicit source failure. Complete text and pin-before-read
+  remain required. Existing kernel/module-source sessions keep their protocol.
+
+Generated register-jump thunks are source instructions, not arbitrary Native
+helper bodies. Preserve the actual source CALL word, then translate their
+owned JMP instruction normally. A retained indirect tail transfer to a
+registered primitive needs its own FULL/flags-preserving exit and exact source
+JMP provenance. It may run only the declared returning Native API on O, then
+resume the same E/image at the real saved caller successor. It does not push a
+second return word, run an O suffix, or treat RET/Jcc as an indirect CALL. Add an
+explicit optional capability/image requirement so an older runtime cannot
+receive that new exit. Unknown dynamic targets remain an enumerated integration
+boundary; source ownership alone never supplies their API signature.
+
+The existing identity observer instruments a function entry that can occur in
+translated MM call graphs. Move that observation to the actual x86-64 mmap
+syscall wrapper entry, preserving the unchanged application's argument filter,
+exact task/mm/backend records, retained mm references and stable STOP/drain.
+Decode the wrapper's `pt_regs` argument according to the captured Linux 7 ABI.
+This changes observation placement only, not MM bodies or lock routing. The
+instrumentation remains unscored; full per-syscall return joins remain pending.
+
+Delivery order is producer/query and source-provider support, explicit returning
+tail support and focused fixtures, then a preserved v2-to-v3 kernel amendment.
+Record the new producer files/header separately in composition/capture; do not
+change older profiles' source coverage retroactively. Preserve the complete v2
+source/output, installed modules/boot files, bundles and receipts before any
+replacement. Actual inventory/free-space gates decide whether bounded reuse
+fits; the 50 GiB fresh-preparation gate remains intact. Use a separate measured
+source/Build ID/boot boundary, re-audit writer entry addresses, validate the
+query and ownership, then retry both unchanged mmap1 models. Do not claim proxy
+execution, throughput or promotion from a build or published image alone.
