@@ -808,3 +808,32 @@ it as an observation failure as well as retaining the execution stop. The next
 frozen diagnostic launcher drains its cursor every 10 ms rather than every
 second; it still fails on any lost records. No execution or retirement check
 is relaxed, and prior logs are never relabeled as a complete run.
+
+## Page release and locked logical updates
+
+On `e37977dd`, reached execution advanced to munmap entry `ffffffff8181c73b`,
+generation87. A CPU-local page-release path stopped inside private
+`__free_frozen_pages`; a separate root reached a locked byte AND in
+`copy_page_range`. Preserve both failed roots and the log-cursor overrun.
+
+Add exact Native LOCK AND/OR/XOR at widths8/16/32/64 through the existing
+one-instruction RMW callback, retaining register and sign-extended immediate
+inputs, arithmetic flags, unchanged GPRs and failure-before-commit ordering.
+Keep unlocked arithmetic behavior unchanged and validate against Native.
+
+General allocator release APIs run their original Native bodies on O and
+return to the same E continuation: `__free_pages`, `free_pages`,
+`free_pages_nolock`, `free_pages_exact`, `free_frozen_pages`, and
+`free_frozen_pages_nolock` are all two-argument void operations with the
+existing atomic-compatible context. Scope5 `include/linux/gfp.h`,
+`mm/internal.h:898-916`, and `mm/page_alloc.c:2972-3029,5375-5407,5489-5499`
+define these general allocator boundaries. Preserve page/order/address/size,
+reference counting, FPI policy and balanced CPU/IRQ intervals. Do not register
+the private static three-argument helper or any MM algorithm body.
+
+Shorter polling did not prevent the observer overrun. For the next functional
+run, use a separate one-time scope5 boot entry with `log_buf_len=16M`, leaving
+the ordinary boot entry and kernel unchanged. Record its exact command line
+and boot identity; do not combine its observations with prior runs or timing.
+Missing records still fail the diagnostic. The selected thread/process checks
+remain separate and unscored, with exact body return and final drain required.
