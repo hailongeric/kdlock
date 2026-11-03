@@ -86,6 +86,10 @@ KD_SERVICE_CALL(security_mmap_addr, 1, KD_SERVICE_CALL_WORD)
  * These enqueue callbacks; no read-side ownership survives the return. */
 KD_SERVICE_CONTEXT(call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(call_rcu_hurry, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/slab_common.c:1941-2015 and include/linux/rcupdate.h: void (head, ptr).
+ * A NULL head may wait for a grace period; an embedded head permits atomic
+ * callers. The Native API owns its internal IRQ/per-CPU/slab intervals. */
+KD_SERVICE_CONTEXT(kvfree_call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC)
 /* mm/pgtable-generic.c: conditional pointer result; ptlp is argument four.
  * Ordinary Native APIs retain separate spin and RCU records after return. */
 KD_SERVICE_CONTEXT(pte_offset_map_lock, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_LOCK)

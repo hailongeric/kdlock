@@ -172,11 +172,39 @@ class ReturningCallTests(unittest.TestCase):
         row = '1 ffffffff81001000 6 1 1 primitive_call\n'
         self.assertEqual(len(parse(row)), 1)
         for text in (row + row, row.replace('6 1 1', '7 1 1'),
-                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 14'),
+                     row.replace('6 1 1', '6 3 1'), row.replace('6 1 1', '6 1 15'),
                      row.replace('1 ffffffff', '0 ffffffff'), '1 ffffffff81001000',
                      'x' * 4097):
             with self.subTest(text=text[:100]), self.assertRaises(ValueError):
                 parse(text)
+
+    def test_argument_dependent_context_requires_captured_first_argument(self):
+        parse = translator.memread.device_session.parse_service_calls
+        for nargs in range(1, 7):
+            for result in (1, 2):
+                row = f'1 ffffffff81001000 {nargs} {result} 14 scalar_api\n'
+                parsed = parse(row)[0xffffffff81001000]
+                self.assertEqual((parsed['nargs'], parsed['result_kind'], parsed['context_kind']),
+                                 (nargs, result, 14))
+        row = '1 ffffffff81001000 2 2 14 kvfree_call_rcu\n'
+        self.assertEqual(parse(row)[0xffffffff81001000]['symbol'], 'kvfree_call_rcu')
+        for text in (row.replace('2 2 14', '0 2 14'), row.replace('2 2 14', '7 2 14'),
+                     row.replace('2 2 14', '2 3 14'), row.replace('2 2 14', '2 2 15')):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                parse(text)
+        options = {}
+        assembly, log, status = render(
+            self.body(), lock_kind='mutex', abi=2, trusted_source=True,
+            native_escape_capable=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                            'kd_rwsem_up_write_clobber_v1': 0x6100},
+            returning_services=parse('1 5500 2 2 14 kvfree_call_rcu\n'),
+            build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(options['requirements'], 896)
+        self.assertIn(b'kd_service_dispatch_1005:', assembly)
+        self.assertIn(b'loc_1005:', assembly)
 
     def test_native_writer_pair_requires_one_argument_and_void_result(self):
         parse = translator.memread.device_session.parse_service_calls

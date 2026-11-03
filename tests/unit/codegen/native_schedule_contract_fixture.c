@@ -1,12 +1,54 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* VM-only policy fixture. It does not execute a kernel scheduling entry. */
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define IS_ENABLED(option) (option)
 /* Match the current live kernel; map roster variants have their own fixture. */
 #define CONFIG_SLAB_BUCKETS 1
+typedef uint64_t u64;
+typedef unsigned int atomic_t;
+struct module;
+#define atomic_read(pointer) (*(pointer))
+#define BUG_ON(condition) do { if (condition) abort(); } while (0)
+#define X86_EFLAGS_IF 0x200UL
+static unsigned int native_preempt = 1;
+#define preempt_count() native_preempt
+static unsigned long kallsyms_lookup_name(const char *name)
+{ return !strcmp(name, "__stack_chk_fail") ? 0x9000UL : 0; }
+
+/* The exact production admission body observes these counted owner/context
+ * substitutes. No Native acquisition or target body executes in this fixture. */
+struct kd_native_owner { unsigned int kind; struct kd_native_owner *next; };
+struct owner_list { struct kd_native_owner *head; };
+struct kd_origin_call {
+	struct kd_native_owner *rwsem_owner, *spin_owner, *rcu_owner;
+	unsigned long executor_irq_flags, object, object_out;
+	u64 sequence;
+	unsigned int context_kind;
+	bool executor_pinned;
+};
+struct kd_service_root {
+	struct { struct kd_origin_call origin_call; } continuation;
+	struct owner_list native_owners;
+	unsigned int pins, rcu, finds, reservations;
+};
+#define list_for_each_entry(owner, list, member) \
+	for ((owner) = (list)->head; (owner); (owner) = (owner)->next)
+static unsigned int kd_service_native_pins(struct kd_service_root *root)
+{ return root->pins; }
+static unsigned int kd_service_native_depth(struct kd_service_root *root, unsigned int kind)
+{ (void)kind; return root->rcu; }
+static struct kd_native_owner *kd_service_native_find(struct kd_service_root *root,
+	unsigned int kind, unsigned long object)
+{ (void)kind; (void)object; ++root->finds; return NULL; }
+static struct kd_native_owner *kd_service_native_reserve(struct kd_service_root *root,
+	unsigned int kind, unsigned long object, u64 sequence)
+{ (void)kind; (void)object; (void)sequence; ++root->reservations; return NULL; }
 #include "production.h"
 
 #define CHECK(condition) do { \
@@ -37,6 +79,7 @@ int main(void)
 		.context_kind = KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 	};
 	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0, allocators = 0;
+	unsigned int conditional = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -49,7 +92,7 @@ int main(void)
 	desc.result_kind = KD_SERVICE_CALL_WORD;
 	CHECK(!kd_service_call_context_valid(&desc));
 	desc.result_kind = KD_SERVICE_CALL_VOID;
-	desc.context_kind = KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK + 1;
+	desc.context_kind = KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC + 1;
 	CHECK(!kd_service_call_context_valid(&desc));
 	for (context = KD_SERVICE_CALL_RWSEM_WRITE_LOCK;
 	     context <= KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK; ++context) {
@@ -82,6 +125,85 @@ int main(void)
 		CHECK(kd_service_call_requires_preempt_rcu(context) == owner_context);
 		CHECK(kd_service_native_executor_pinned(context, 0) == owner_context);
 		CHECK(kd_service_native_executor_pinned(context, 1));
+	}
+	/* Resolution consumes the captured argument value, never its pointee.
+	 * The complete immutable entry and every fixed context remain unchanged. */
+	{
+		static const unsigned long arguments[] = { 0, 1, 0x8000000000000000UL, ~0UL };
+		struct kd_service_call_entry entry = { .users = 1,
+			.context_kind = KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC, .nargs = 2 };
+		struct kd_service_call_entry saved;
+		struct kd_service_call_mapped_desc mapped = {
+			.source = { .symbol = "conditional_fixture", .target = 0x1000,
+				.nargs = 2, .result_kind = KD_SERVICE_CALL_VOID,
+				.context_kind = KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC },
+			.execution_target = 0x2000, .version = KD_SERVICE_CALL_MAP_V1,
+		};
+		struct kd_service_root root;
+		struct kd_native_owner held = { .kind = KD_NATIVE_OWNER_SPIN };
+		struct kd_native_owner free_owner = { .kind = KD_NATIVE_OWNER_FREE, .next = &held };
+		unsigned int argument, resolved;
+
+		memcpy(&saved, &entry, sizeof(saved));
+		CHECK(KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC == 14);
+		CHECK(kd_service_call_context_valid(&mapped.source));
+		CHECK(!kd_service_call_mapped_valid(&mapped));
+		mapped.source.context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN;
+		CHECK(kd_service_call_mapped_valid(&mapped));
+		mapped.source.context_kind = KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC;
+		for (argument = 0; argument <= 7; ++argument) {
+			mapped.source.nargs = argument;
+			CHECK(kd_service_call_context_valid(&mapped.source) == (argument >= 1 && argument <= 6));
+		}
+		for (argument = 0; argument < sizeof(arguments) / sizeof(arguments[0]); ++argument) {
+			resolved = arguments[argument] ? KD_SERVICE_CALL_ATOMIC_ORIGIN :
+				KD_SERVICE_CALL_BALANCED_ORIGIN;
+			CHECK(kd_service_call_invocation_context(&entry, arguments[argument]) == resolved);
+			CHECK(!memcmp(&entry, &saved, sizeof(entry)) && entry.users == 1);
+			for (pins = 0; pins < 3; ++pins)
+			for (rcu = 0; rcu < 3; ++rcu) {
+				memset(&root, 0, sizeof(root));
+				root.pins = pins; root.rcu = rcu;
+				root.native_owners.head = &free_owner;
+				root.continuation.origin_call.context_kind = resolved;
+				root.continuation.origin_call.executor_irq_flags = X86_EFLAGS_IF;
+				CHECK(kd_service_native_prepare(&root) ==
+					(!arguments[argument] && (pins || rcu) ? -EOPNOTSUPP : 0));
+				CHECK(root.pins == pins && root.rcu == rcu &&
+					root.native_owners.head == &free_owner && free_owner.next == &held &&
+					free_owner.kind == KD_NATIVE_OWNER_FREE && held.kind == KD_NATIVE_OWNER_SPIN &&
+					!root.finds && !root.reservations);
+				CHECK(root.continuation.origin_call.context_kind == resolved);
+				if (arguments[argument] || (!pins && !rcu))
+					CHECK(root.continuation.origin_call.executor_pinned == (pins != 0));
+			}
+		}
+		for (context = KD_SERVICE_CALL_BALANCED_ORIGIN;
+		     context < KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC; ++context) {
+			entry.context_kind = context;
+			memcpy(&saved, &entry, sizeof(saved));
+			for (argument = 0; argument < sizeof(arguments) / sizeof(arguments[0]); ++argument) {
+				CHECK(kd_service_call_invocation_context(&entry, arguments[argument]) == context);
+				CHECK(!memcmp(&entry, &saved, sizeof(entry)) && entry.users == 1);
+			}
+		}
+		/* Runtime admission must receive a resolved context; its existing
+		 * IRQ/preempt checks are retained for both selected contexts. */
+		memset(&root, 0, sizeof(root));
+		root.continuation.origin_call.executor_irq_flags = X86_EFLAGS_IF;
+		root.continuation.origin_call.context_kind = KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC;
+		CHECK(kd_service_native_prepare(&root) == -EOPNOTSUPP);
+		for (context = KD_SERVICE_CALL_BALANCED_ORIGIN;
+		     context <= KD_SERVICE_CALL_ATOMIC_ORIGIN; ++context) {
+			root.continuation.origin_call.context_kind = context;
+			root.continuation.origin_call.executor_irq_flags = 0;
+			CHECK(kd_service_native_prepare(&root) == -EOPNOTSUPP);
+			root.continuation.origin_call.executor_irq_flags = X86_EFLAGS_IF;
+			native_preempt = 2;
+			CHECK(kd_service_native_prepare(&root) == -EOPNOTSUPP);
+			native_preempt = 1;
+			CHECK(!kd_service_native_prepare(&root) && !root.finds && !root.reservations);
+		}
 	}
 	for (i = 0; i < sizeof(primitives) / sizeof(primitives[0]); ++i) {
 		const struct kd_service_call_desc *primitive = &primitives[i];
@@ -134,10 +256,16 @@ int main(void)
 				primitive->context_kind == (!strcmp(primitive->symbol, "down_write") ?
 				KD_SERVICE_CALL_RWSEM_WRITE_LOCK : KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK));
 		}
+		if (!strcmp(primitive->symbol, "kvfree_call_rcu")) {
+			++conditional;
+			CHECK(primitive->nargs == 2 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
+				primitive->context_kind == KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC);
+		}
 	}
 	CHECK(schedules == 8);
 	CHECK(policies == 2);
 	CHECK(callbacks == 8 && writers == 2 && allocators == 2);
+	CHECK(conditional == 1);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

@@ -197,3 +197,46 @@ unchanged. Zero count accesses neither address, and failed source reads or
 destination stores retain the exact earlier prefix. Native overlap behavior
 and bounded resumption have focused fixtures; fresh VM validation is pending.
 There is no origin memcpy service or caller-specific path.
+
+## Fifth candidate: `b8b915e9`
+
+Exact source: `b8b915e93a8ff6a3897c15063c609179c9170278`. The provider and
+resident fixture passed, with 57,972 assertions including 480 Native MOVS
+tuples and overlap/read-failure/store-failure/resumption checks. Seven MM proof
+and nine private-source cases passed. See [the exact reply](fifth-units.json).
+
+On boot `f194aa8c-fad2-49c2-962f-5fe22024eae7`, the actual retry passed the
+copy and reached `kvfree_call_rcu+0x237`, `ffffffff817ca6b7`, bytes
+`65 39 15 02 71 c5 02`: compare EDX against the origin CPU's NUMA field.
+O `4821`, E `4782`, generation 3, entry `ffffffff818e077d` stopped there.
+[The full live read](fifth-live-site.json),
+[resident log](fifth-resident-kernel.log) and [raw retention](fifth-retention.json)
+preserve the undrained attempt. No mmap1 worker completion or process-model run
+is claimed. Recovery returned to scope5 boot
+`10ea8f17-afa2-41b1-b449-2522fc6c4294`.
+
+## General deferred-free API service
+
+The design was committed first as `cf39c552`, after reading the exact scope5
+source. [Source hashes and locations](deferred-free-source.json) bind
+`mm/slab_common.c`, `include/linux/rcupdate.h`, `mm/slub.c` and related files.
+`kvfree_call_rcu(head, ptr)` is an unchanged public deferred-free API. A NULL
+head requires a sleepable context and can reach `synchronize_rcu()`/`kvfree()`;
+an embedded head supports atomic callers. Its own Native implementation must
+own its temporary local IRQ/slab intervals.
+
+The immutable descriptor now declares a general argument-zero-dependent
+context policy, appended as value 14. Each invocation captures argument zero
+and resolves its private context before publication: NULL selects balanced,
+non-NULL selects atomic-compatible. Existing context checks and exact CALL,
+owner, frame and ACK machinery remain unchanged. Fixed policies retain their
+values and behavior; mapped descriptors do not admit the new policy. The
+public two-argument void API is registered once for all callers, without MM
+caller flags or a body adapter.
+
+This new candidate executes the API once on O from its entry and returns to
+the same E continuation. It does not restart the already interpreted prefix
+of the failed attempt. Ordinary memcpy/memset still execute on E through the
+backend. Optional trace fields retain the selected private context and argument
+zero through all four Native stages; policy 14 must never reach execution.
+Focused selector/context and actual-MM validation are pending for this revision.

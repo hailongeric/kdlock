@@ -357,7 +357,7 @@ static void kd_service_primitive_trace(const char *stage, struct kd_service_root
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service primitive: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu target=%lx return=%lx image_generation=%lu ax=%lx flags=%lx execution_target=%lx family_generation=%llu artifact_sequence=%llu\n",
+		pr_info("kd_service primitive: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu target=%lx return=%lx image_generation=%lu ax=%lx flags=%lx execution_target=%lx family_generation=%llu artifact_sequence=%llu context_kind=%u argument0=%lx\n",
 			stage, call->origin->pid, call->executor->pid, current->pid,
 			call->identity, (unsigned long long)call->generation,
 			(unsigned long long)call->sequence, call->target, call->call.return_ip,
@@ -365,7 +365,7 @@ static void kd_service_primitive_trace(const char *stage, struct kd_service_root
 			output ? call->packet->flags : 0,
 			call->execution_target ? call->execution_target : call->target,
 			root->continuation.reached_active ? root->continuation.generation : 0,
-			call->artifact_sequence);
+			call->artifact_sequence, call->context_kind, call->object);
 }
 
 #include "service_native.inc"

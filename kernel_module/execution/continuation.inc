@@ -494,8 +494,8 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 	call->entry = entry;
 	call->packet = cont->packet;
 	call->target = call->call.target;
-	call->context_kind = kd_service_call_context(entry);
 	call->object = cont->packet->di;
+	call->context_kind = kd_service_call_invocation_context(entry, call->object);
 	call->object_out = call->context_kind == KD_SERVICE_CALL_PTE_LOCK ?
 		cont->packet->cx : 0;
 	call->spin_owner = NULL;

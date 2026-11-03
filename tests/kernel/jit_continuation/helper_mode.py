@@ -111,6 +111,10 @@ def primitive_events(messages):
             row[key] = int(fields[key], 16 if key in ('identity', 'target', 'return', 'ax', 'flags') else 10)
         if 'execution_target' in fields:
             row['execution_target'] = int(fields['execution_target'], 16)
+        if 'context_kind' in fields:
+            row['context_kind'] = int(fields['context_kind'])
+        if 'argument0' in fields:
+            row['argument0'] = int(fields['argument0'], 16)
         for key in ('family_generation', 'artifact_sequence'):
             if key in fields:
                 row[key] = int(fields[key])
@@ -149,6 +153,11 @@ def validate_transaction(events, root, pid, target, image_generation, result, se
                rows[2]['ax'] == rows[3]['ax'] and (result is None or rows[2]['ax'] == result) and
                rows[2]['flags'] == rows[3]['flags'],
                'primitive actual task or full AX return differs', 'DATA_ERROR')
+    if any('context_kind' in row or 'argument0' in row for row in rows):
+        context, argument = rows[0].get('context_kind'), rows[0].get('argument0')
+        rt.require(context in range(1, 14) and type(argument) is int and 0 <= argument < 1 << 64 and
+                   all(row.get('context_kind') == context and row.get('argument0') == argument for row in rows),
+                   'primitive resolved context or captured first argument differs', 'DATA_ERROR')
     return rows
 
 

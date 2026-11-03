@@ -44,6 +44,8 @@ static bool kd_service_call_context_valid(const struct kd_service_call_desc *des
 	case KD_SERVICE_CALL_BALANCED_ORIGIN:
 	case KD_SERVICE_CALL_ATOMIC_ORIGIN:
 		return true;
+	case KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC:
+		return desc->nargs >= 1 && desc->nargs <= 6;
 	case KD_SERVICE_CALL_SCHEDULE_ORIGIN:
 		return !desc->nargs && desc->result_kind == KD_SERVICE_CALL_VOID;
 	case KD_SERVICE_CALL_NONRETURNING_ORIGIN:
@@ -443,6 +445,18 @@ unsigned int kd_service_call_context(const struct kd_service_call_entry *entry)
 {
 	BUG_ON(!entry || !atomic_read(&entry->users));
 	return entry->context_kind;
+}
+
+unsigned int kd_service_call_invocation_context(const struct kd_service_call_entry *entry,
+	unsigned long argument0)
+{
+	unsigned int context = kd_service_call_context(entry);
+
+	/* The retained slot describes every call to this API. Only the private
+	 * transaction selects its actual context after capturing source arg0. */
+	if (context == KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC)
+		return argument0 ? KD_SERVICE_CALL_ATOMIC_ORIGIN : KD_SERVICE_CALL_BALANCED_ORIGIN;
+	return context;
 }
 
 int kd_service_calls_pin(void)

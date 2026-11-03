@@ -27,16 +27,23 @@ def definition(source, name):
 def production_code():
     header = (ROOT / "include/kd_service_calls.h").read_text()
     enums = header[header.index("enum kd_service_call_result {"):
-                   header.index("enum kd_native_owner_kind {")]
+                   header.index("/* Each live record is authority")]
     desc = header[header.index("struct kd_service_call_desc {"):
                   header.index("enum kd_origin_call_phase {")]
     registry = (ROOT / "kernel_module/kd_service_calls.c").read_text()
     native = (ROOT / "kernel_module/service_native.inc").read_text()
-    return enums + desc + "\n".join((
+    entry = registry[registry.index("#define KD_SERVICE_CALL_MAX"):
+                     registry.index("static struct kd_service_call_entry kd_service_call_entries")]
+    return enums + desc + entry + "\n".join((
         definition(registry, "kd_service_call_requires_preempt_rcu"),
         definition(registry, "kd_service_call_context_valid"),
+        definition(registry, "kd_service_call_valid"),
+        definition(registry, "kd_service_call_mapped_valid"),
+        definition(registry, "kd_service_call_context"),
+        definition(registry, "kd_service_call_invocation_context"),
         definition(native, "kd_service_schedule_origin_allowed"),
         definition(native, "kd_service_native_executor_pinned"),
+        definition(native, "kd_service_native_prepare"),
     ))
 
 
@@ -58,6 +65,16 @@ def main():
             "return context >= KD_SERVICE_CALL_PTE_LOCK &&\n"
             "\t\tcontext <= KD_SERVICE_CALL_PTE_RCU;",
             "return context >= KD_SERVICE_CALL_PTE_LOCK;"), (0,)),
+        ("conditional-null-becomes-atomic", (
+            "return argument0 ? KD_SERVICE_CALL_ATOMIC_ORIGIN : KD_SERVICE_CALL_BALANCED_ORIGIN;",
+            "return argument0 ? KD_SERVICE_CALL_ATOMIC_ORIGIN : KD_SERVICE_CALL_ATOMIC_ORIGIN;"), (1,)),
+        ("conditional-nonnull-becomes-balanced", (
+            "return argument0 ? KD_SERVICE_CALL_ATOMIC_ORIGIN : KD_SERVICE_CALL_BALANCED_ORIGIN;",
+            "return argument0 ? KD_SERVICE_CALL_BALANCED_ORIGIN : KD_SERVICE_CALL_BALANCED_ORIGIN;"), (1,)),
+        ("conditional-mapped-admitted", (
+            "desc->source.context_kind != KD_SERVICE_CALL_BALANCED_ORIGIN ||",
+            "(desc->source.context_kind != KD_SERVICE_CALL_BALANCED_ORIGIN && "
+            "desc->source.context_kind != KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC) ||"), (1,)),
     )
     with tempfile.TemporaryDirectory(prefix="kd-native-schedule-contract-") as name:
         directory = Path(name)

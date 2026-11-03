@@ -45,6 +45,10 @@ enum kd_service_call_context {
 	KD_SERVICE_CALL_NONRETURNING_ORIGIN,
 	KD_SERVICE_CALL_RWSEM_WRITE_LOCK,
 	KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK,
+	/* Reusable declaration: a NULL source argument zero needs a sleepable
+	 * balanced context; non-NULL permits the ordinary atomic context. Each
+	 * invocation resolves this into its private call record, never the entry. */
+	KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC,
 };
 
 enum kd_native_owner_kind {
@@ -169,6 +173,8 @@ int kd_service_call_arguments(const struct kd_service_call_entry *entry,
 	const struct kd_regs *packet, unsigned long return_ip,
 	unsigned long *execution_target, unsigned long arguments[6]);
 unsigned int kd_service_call_context(const struct kd_service_call_entry *entry);
+unsigned int kd_service_call_invocation_context(const struct kd_service_call_entry *entry,
+	unsigned long argument0);
 
 int kd_exec_cont_native_prepare(struct kd_exec_frame *frame);
 int kd_exec_cont_native_complete(struct kd_exec_continuation *continuation,

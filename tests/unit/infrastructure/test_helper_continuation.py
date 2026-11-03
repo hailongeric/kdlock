@@ -15,14 +15,19 @@ import bench_session
 
 
 class HelperObservations(unittest.TestCase):
-    def events(self):
+    def events(self, context_kind=None, argument0=None):
         value = helper.expected_result(1)
         lines = []
         for stage, task, ax in (('request', 20, 0), ('enter', 10, 0),
                                 ('done', 10, value), ('resume', 20, value)):
-            lines.append(f'kd_service primitive: stage={stage} origin=10 executor=20 task={task} '
+            line = (f'kd_service primitive: stage={stage} origin=10 executor=20 task={task} '
                          f'identity=100 generation=7 sequence=3 target=200 return=400 '
                          f'image_generation=44 ax={ax:x} flags=202')
+            if context_kind is not None:
+                line += f' context_kind={context_kind}'
+            if argument0 is not None:
+                line += f' argument0={argument0:x}'
+            lines.append(line)
         return helper.primitive_events('\n'.join(lines))
 
     def validate(self, rows):
@@ -42,6 +47,33 @@ class HelperObservations(unittest.TestCase):
                 self.validate(rows)
         with self.assertRaises(helper.rt.Failure):
             self.validate(self.events()[:-1])
+
+    def test_optional_resolved_context_and_argument_are_exact_across_ack(self):
+        for context in range(1, 14):
+            for argument in (0, 0xffffffffffffffff):
+                rows = self.events(context, argument)
+                self.assertEqual(rows[0]['context_kind'], context)
+                self.assertEqual(rows[0]['argument0'], argument)
+                self.assertEqual(len(self.validate(rows)), 4)
+        for context in (0, 14, 15):
+            with self.subTest(context=context), self.assertRaises(helper.rt.Failure):
+                self.validate(self.events(context, 0))
+        for argument in (-1, 1 << 64):
+            with self.subTest(argument=argument), self.assertRaises(helper.rt.Failure):
+                self.validate(self.events(1, argument))
+        for index, field in ((0, 'context_kind'), (1, 'argument0'), (3, 'context_kind'), (3, 'argument0')):
+            rows = self.events(1, 0xdead)
+            rows[index].pop(field)
+            with self.subTest(index=index, field=field), self.assertRaises(helper.rt.Failure):
+                self.validate(rows)
+        for field, value in (('context_kind', 2), ('argument0', 0xbeef)):
+            rows = self.events(1, 0xdead)
+            rows[2][field] = value
+            with self.subTest(field=field), self.assertRaises(helper.rt.Failure):
+                self.validate(rows)
+        for rows in (self.events(1), self.events(argument0=0)):
+            with self.assertRaises(helper.rt.Failure):
+                self.validate(rows)
 
     def test_registration_arity_and_unique_target(self):
         table = ''.join(f'{10 + index:x} {(index + 1) * 0x1000:x} {arity} {result} {context} {name}\n'
