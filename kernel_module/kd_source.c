@@ -10,11 +10,13 @@
 #include <linux/kallsyms.h>
 #include <linux/kernel.h>
 #include <linux/limits.h>
+#include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
 
 #include "kd_source.h"
+#include "kd_generated_text.h"
 
 /* Session-wide dependencies avoid per-image reclamation while C3 is deferred.
  * A reverse source/provider dependency is broken by explicit retirement before
@@ -41,6 +43,8 @@ static void kd_source_frame_release(void)
 }
 static struct module *kd_source_modules[KD_SOURCE_MAX_MODULES];
 static struct module *(*kd_module_address)(unsigned long address);
+static int (*kd_generated_lookup)(unsigned long address,
+				  struct kd_generated_text_extent *extent);
 static unsigned long kd_core_start, kd_core_text_end, kd_core_end;
 static unsigned long kd_init_start, kd_init_end;
 
@@ -134,6 +138,59 @@ void kd_source_frame_put(void)
 	module_put(THIS_MODULE);
 }
 
+/* Only the producer can classify separately allocated instruction pages. Its
+ * successful module reply already owns a reference, unlike __module_address.
+ * Keep that reference once per source session and drop every temporary reply
+ * reference on rejection or reuse of an existing retained owner. */
+static int kd_source_generated_piece(unsigned long address, unsigned long *end)
+{
+	struct kd_generated_text_extent extent = { 0 };
+	unsigned int owner_index;
+	int ret;
+
+	if (!kd_generated_lookup)
+		return -ESTALE;
+	ret = kd_generated_lookup(address, &extent);
+	if (ret)
+		return ret == -ENOENT ? -ESTALE : ret;
+	ret = -EPROTO;
+	if (extent.abi != KD_GENERATED_TEXT_ABI_VERSION ||
+	    (extent.kind != KD_GENERATED_TEXT_CORE_ITS &&
+	     extent.kind != KD_GENERATED_TEXT_MODULE_ITS) ||
+	    !extent.start || (extent.start & (PAGE_SIZE - 1)) ||
+	    extent.end <= extent.start ||
+	    extent.end - extent.start != PAGE_SIZE ||
+	    address < extent.start || address >= extent.end ||
+	    (extent.kind == KD_GENERATED_TEXT_CORE_ITS && extent.owner) ||
+	    (extent.kind == KD_GENERATED_TEXT_MODULE_ITS && !extent.owner))
+		goto drop_reply;
+	if (!extent.owner) {
+		*end = extent.end;
+		return 0;
+	}
+	ret = -ESTALE;
+	if (READ_ONCE(extent.owner->state) != MODULE_STATE_LIVE)
+		goto drop_reply;
+	for (owner_index = 0; owner_index < kd_sources.modules; owner_index++) {
+		if (kd_source_modules[owner_index] == extent.owner) {
+			*end = extent.end;
+			ret = 0;
+			goto drop_reply;
+		}
+	}
+	ret = -ENOSPC;
+	if (kd_sources.modules >= KD_SOURCE_MAX_MODULES)
+		goto drop_reply;
+	kd_source_modules[kd_sources.modules++] = extent.owner;
+	*end = extent.end;
+	return 0;
+
+drop_reply:
+	if (extent.owner)
+		module_put(extent.owner);
+	return ret;
+}
+
 /* The raw lock keeps preemption disabled through lookup and try_module_get.
  * Read windows may include core rodata; roots/continuations require text. */
 static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
@@ -151,7 +208,9 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 		return 0;
 	}
 	module = kd_module_address(address);
-	if (!module || READ_ONCE(module->state) != MODULE_STATE_LIVE)
+	if (!module)
+		return kd_source_generated_piece(address, end);
+	if (READ_ONCE(module->state) != MODULE_STATE_LIVE)
 		return -ESTALE;
 	/* Module regions are separate allocations. Never bridge a hole or an init
 	 * region by treating them as one interval; executable targets need MOD_TEXT.
@@ -294,10 +353,17 @@ int kd_source_init(void)
 	kd_core_end = kallsyms_lookup_name("_end");
 	kd_init_start = kallsyms_lookup_name("__init_begin");
 	kd_init_end = kallsyms_lookup_name("__init_end");
+	kd_generated_lookup = (void *)kallsyms_lookup_name("kd_generated_text_lookup");
 	if (!kd_module_address || !kd_core_start ||
 	    kd_core_start >= kd_core_text_end ||
 	    kd_core_text_end > kd_init_start || kd_init_start >= kd_init_end ||
 	    kd_init_end > kd_core_end)
+		return -EOPNOTSUPP;
+	/* This optional callback belongs to the built-in producer and cannot outlive
+	 * its own code. Older kernels keep the existing explicit source refusal. */
+	if (kd_generated_lookup &&
+	    ((unsigned long)kd_generated_lookup < kd_core_start ||
+	     (unsigned long)kd_generated_lookup >= kd_core_text_end))
 		return -EOPNOTSUPP;
 	memset(&kd_sources, 0, sizeof(kd_sources));
 	atomic64_set(&kd_source_frame_gate, 0);

@@ -16,12 +16,14 @@ typedef unsigned long long u64;
 #include "exe_info.h"
 #include "kd_image.h"
 #define GFP_KERNEL 0
+#define PAGE_SIZE 4096UL
 #define kzalloc(n,f) calloc(1,n)
 #define kfree(p) free(p)
 void kd_image_discard(struct kd_jit_image *image) { if (image) abort(); }
 static bool direct_pool_available;
 int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_source_api.h"
+#include "kd_generated_text.h"
 #include "kd_api_control.h"
 
 typedef long long s64;
