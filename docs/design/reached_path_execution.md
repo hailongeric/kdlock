@@ -395,3 +395,12 @@ executor downgrade followed by fresh writer admission. Retain the image-mode
 checks and all earlier failures. Record reached-mode roots/completions and
 unsupported events separately; no Nano or mmap1 performance claim follows from
 these functional checks.
+
+The first Stage (c) VM unit attempt, `bf3cb1fc`, passed the new 14-case ledger
+driver, the 172-assertion GS decoder plus its three negative variants, the
+144-assertion adapter and the existing continuation/helper/memory/mapped/Native
+write validator drivers. Its family fixture did not compile: the same
+`pthread_t` address was supplied as a restrict-qualified output and as the
+thread argument. Use separate identity storage for the argument, preserving
+`-Werror` and every reference/concurrency check. No provider build or live
+capture was launched in that attempt.

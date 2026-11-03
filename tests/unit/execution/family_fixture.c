@@ -250,11 +250,12 @@ static void *publisher(void *argument)
 static void simultaneous_publication(void)
 {
 	pthread_t workers[THREADS];
+	char identities[THREADS];
 	unsigned int index;
 
 	start(6);
 	for (index = 0; index < THREADS; ++index)
-		CHECK(!pthread_create(&workers[index], NULL, publisher, &workers[index]));
+		CHECK(!pthread_create(&workers[index], NULL, publisher, &identities[index]));
 	/* Retained parent authority keeps derived work valid during drainage. */
 	CHECK(!kd_family_begin_retire(&family, &owner, 6));
 	CHECK(kd_family_finish_retire(&family, &owner, 6) == -EBUSY);
