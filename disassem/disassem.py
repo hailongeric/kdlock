@@ -478,7 +478,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             added_roots.update(additions)
             seeded_regions.append((data, start, sorted(set(roots) | additions)))
         if added_roots:
-            discovered_targets.update(added_roots)
+            # Decoder seeds can be ordinary branches with the caller's lock
+            # depth. Only actual CALL entries add independent callee scans;
+            # preserve the conservative policy of the initial history roots.
+            discovered_targets.update(added_roots & ordinary_call_targets)
             diagnostics.set_instruction(
                 min(added_roots), "<covered undecoded CFG block>"
             )
@@ -633,7 +636,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         )
         try:
             rets = memread.extend_regions(rets, missing, policy=text_policy)
-            discovered_targets.update(missing)
+            discovered_targets.update(missing & ordinary_call_targets)
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             report_text_coverage(rets, block_dict, expansion=expansion,
                                  pending_targets=len(missing))

@@ -229,7 +229,8 @@ class DeviceSessionTests(unittest.TestCase):
                         'string_services': False, 'string_write': False,
                         'audited_strings': False, 'direct_strings': False,
                         'root_native_escape': False, 'indirect_call': False,
-                        'origin_instruction': False})
+                        'origin_instruction': False, 'origin_call': False,
+                        'origin_memory': False, 'origin_context_read': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -666,7 +667,31 @@ class TextRegionTests(unittest.TestCase):
         )
         self.assertEqual(status, 0, log)
         self.assertTrue(assembly)
+        self.assertIn("reason=TEXT_RANGE_EXTEND", log)
+        self.assertIn(f"loc_{self.body:x}:".encode(), assembly)
         self.assertNotIn(b"FS:[", assembly)
+
+    def test_known_callee_keeps_full_scan_after_its_nested_unlock(self):
+        lock, unlock = BASE + 0x8000, BASE + 0x9000
+        # The root holds an outer lock and acquires a nested lock before this
+        # actual callee releases it. That release cannot end the callee's scan
+        # or hide the instruction before the root's outer release.
+        root = branch(self.entry, lock, b"\xe8")
+        root += branch(self.entry + len(root), self.body, b"\xe8")
+        root += branch(self.entry + len(root), unlock, b"\xe8") + b"\xc3"
+        self.put(self.entry, root)
+        self.put(self.body, branch(self.body, unlock, b"\xe8") +
+                 bytes.fromhex("64488b042528000000c3"))
+        regions = [[bytes(self.text[0x1000:0x2000]), BASE + 0x1000, [self.body]],
+                   self.initial()[0]]
+        assembly, log, status = render(
+            "", entry=self.entry, regions=regions, memory_reader=self.read_memory,
+            kernel_symbols={"_raw_spin_lock": lock, "_raw_spin_unlock": unlock},
+            return_status=True)
+        self.assertEqual(status, 2, log)
+        self.assertEqual(assembly, b"")
+        self.assertIn("FS-prefixed memory access is unsupported", log)
+        self.assertIn(f'rip="{self.body + 5:#x}"', log)
 
     def test_real_block_wins_over_cross_region_bad_placeholder_in_both_orders(self):
         previous = [bytes(self.text[0x1000:0x2000]), BASE + 0x1000, [self.body]]
