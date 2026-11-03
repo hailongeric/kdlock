@@ -151,6 +151,9 @@ Add a minimal general producer/lifetime interface in the composed kernel:
   invalid bounds/ABI, an unknown producer, unavailable owner or exhausted
   storage remains an explicit source failure. Complete text and pin-before-read
   remain required. Existing kernel/module-source sessions keep their protocol.
+  The range iterator starts each reply endpoint at its current cursor and
+  refuses a successful reply that does not advance it; no unset endpoint may
+  enter the next iteration.
 
 Generated register-jump thunks are source instructions, not arbitrary Native
 helper bodies. Preserve the actual source CALL word, then translate their

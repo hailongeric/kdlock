@@ -159,7 +159,8 @@ def main(executor=None, benchmark=False):
             "if (offset >= 3)", "if (false)",
         ),
         "tail-accepts-cs-memory-operand": (
-            "if (cs_prefixes && mode < 3)", "if (false)",
+            "if (cs_prefixes && mode < 3)",
+            "if (false && cs_prefixes && mode < 3)",
         ),
         "tail-skips-image-requirement": (
             "!(frame->image->requirements & KD_IMAGE_REQUIRE_INDIRECT_TAIL)",

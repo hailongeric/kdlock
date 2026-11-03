@@ -260,11 +260,15 @@ static int kd_source_pin(unsigned long address, unsigned long size, bool text,
 		goto out;
 	}
 	while (cursor < limit) {
-		unsigned long end;
+		unsigned long end = cursor;
 
 		ret = kd_source_piece(cursor, text, &end);
 		if (ret)
 			break;
+		if (end <= cursor) {
+			ret = -EPROTO;
+			break;
+		}
 		cursor = min(end, limit);
 	}
 out:

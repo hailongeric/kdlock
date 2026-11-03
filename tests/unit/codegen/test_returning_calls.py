@@ -209,9 +209,16 @@ class ReturningCallTests(unittest.TestCase):
         if local:
             raw += b'\x90' * (0x40 - len(raw))
             raw += bytes.fromhex('b82a000000c3')
+        # Supply the decoded text roots that the real source reader returns
+        # for ordinary callees and learned targets. Keep a full instruction
+        # lookahead at the last root so closure never invents a device read
+        # outside this synthetic text window.
+        raw += b'\x90' * 15
+        roots = [0x1000, 0x1020] + ([0x1040] if local else [])
         options = {}
         assembly, log, status = render(
             raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            regions=[(bytes(raw), 0x1000, roots)],
             native_escape_capable=True, indirect_tail_capable=capable,
             indirect_history=history,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
@@ -295,6 +302,7 @@ class ReturningCallTests(unittest.TestCase):
     def test_known_local_tail_keeps_normal_dispatch_and_real_return(self):
         assembly, options = self.indirect_tail_image(
             'ffe0', history={0x1022: [0x1040], 0x1046: [0x100a]}, local=True)
+        self.assertIn(b'loc_1040:', assembly)
         before = []
 
         def initialize(regs, stack):
