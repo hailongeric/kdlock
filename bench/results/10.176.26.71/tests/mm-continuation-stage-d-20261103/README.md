@@ -331,3 +331,92 @@ frames/writers, RETIRE state `2`, and normal observer/provider unload. See
 [3b0-receipts.json](3b0-receipts.json). This cleanup is not an application pass.
 No actual mmap1 delegation, throughput improvement or performance acceptance is
 claimed.
+
+## Compact text closure and the generated-source boundary
+
+Frozen `b6a3db19ab8326d320b21d3e2690a09181f7f952` passes five focused unit
+drivers, provider compilation, eight helper phases and eleven killable/nesting
+phases on the same scope5 v2 KD/on boot. Both live suites report normal drain;
+every final phase has zero errors, active requests, readers and queued requests,
+and an idle lock. The text-region driver includes 58 cases.
+
+The subsequent actual-application preparation remains failed. Compact lookahead
+reaches 71,552 cached / 35,161 selected decoded bytes for `setup_arg_pages` and
+105,968 / 50,936 bytes for `vm_brk_flags`, below the unchanged 256 KiB cache cap.
+It then refuses source ranges `0xffffffffc0002330` (1,088 bytes) and
+`0xffffffffc0002370` (1,024 bytes) with `ESTALE`. Captured Linux 7 producer
+source shows separately allocated ITS instruction pages whose core pointer
+inventory is freed during initialization. These addresses are consistent with
+that producer; a live owner query is still required to establish ownership.
+Executable-address status, matching bytes and discarded init tables cannot
+replace that ownership record.
+
+The factory remains inactive with zero object bindings. Neither mmap1 model
+starts. The original application result retains `passed=false`, `drained=false`,
+`accepted=false` and `scored=false`. Separate normal daemon closure and source
+retirement reach state `2` with zero modules, frames and writers; observer and
+provider unload normally. This cleanup does not change the failed result.
+
+## Generated-source and returning-tail attempts
+
+The exact source, receipt hashes, unit outcomes and phase summaries are in
+[generated-source-attempts.json](generated-source-attempts.json). Original full
+logs remain in the referenced source-host and VM evidence directories.
+
+| Attempt | Exact source | Observed outcome |
+| --- | --- | --- |
+| `mm-eb5-first` | `eb535d5722a165356a7ded2a03d3420fb26e9b03` | Provider module compilation passes. Four of eight unit drivers pass; four fail. No live fixture starts. This does not build or validate the composed-kernel producer. |
+| `mm-824-first` | `824f7c15ee55e42e562b3d697e061bb018eee87f` | All six selected unit drivers and provider compilation pass. Helper startup fails at the common runner's version check, before its body; the killable suite does not start. Normal retirement completes. |
+| `mm-433-first` | `4336d4373f5d4c00c9a4f5619f9d72b4eef2791e` | Fresh provider compilation, nine helper phases and eleven killable/nesting phases pass and drain. The receipt has `units=[]`; no unit pass is relabeled from `824`. |
+
+The four `eb5` failures are retained individually: the extracted source-range
+loop fails compilation because `end` may be uninitialized; the mmap argument
+fixture expects a former one-line function signature; returning-call fixtures
+omit synthetic decoded roots/lookahead (12 subtest errors and a failed
+`4160 != 42` assertion); and a CS-memory negative control erases its variable's
+only use and fails compilation under `-Werror`. The production entry component's
+9,324 checks and five preceding detected mutations do not make that incomplete
+driver pass.
+
+At `824`, the generated-source component passes 2,707 checks and all three
+negative controls; the entry component passes 9,324 checks and 57 mutations.
+The other selected drivers pass 15 scope-identity, one mmap argument, 16
+returning-call and 12 Native-call-boundary cases. Its startup receipt records
+capability version `17`, but the common runner accepts only versions through
+`16`. The original `PREPARATION_FAILED` result remains, with normal RETIRE
+`2/0/0/0` and no project modules in the subsequent observation.
+
+The source-host comparison of all 6,777 private manifest entries and exact Git
+delta shows only `tests/kernel/jit_continuation/run.py` and its README change
+between `824` and `433`: the runner admits declared version `17` while retaining
+the feature-bit checks. Production and unit sources are unchanged. This scope
+proof explains the focused rerun; it is not another unit execution.
+
+The new `433` indirect-tail phase calls an unregistered register-JMP callee,
+then runs the declared scalar primitive on origin `38684` and resumes executor
+`38629` in image generation `1`. The trace joins request, enter, done and resume
+at the same real caller successor; the saved caller word is reused. The helper
+and post-helper body each execute once, returning `0x993f730e40218045`. All
+twenty final phase snapshots have zero errors and active requests, empty queues
+and an idle lock. These controlled observations do not establish complete
+actual MM callee closure or application completion.
+
+## Separate producer-kernel preparation
+
+Kernel recipe `1ab7124abb6140752c1f0bb6e862144d426a3875` is distinct from
+runtime `4336d437`. It carries the generation-specific generated-text producer
+and composition inputs; the live checks above still use scope5 v2 Build ID
+`d3b5cf1b208028495b5fa9be2a3750b0831a2ec3`. The producer requires exact page
+extents, retained core metadata and an acquired live-module reference for each
+successful module reply, with a bounded 4,096-unit query scan. The extracted
+consumer fixture does not validate those producer inventories in a booted
+kernel.
+
+The subsequent return to ordinary `7.0.0-38-kdlock1` is observed at boot
+`eef8aa5d-cd97-4a7e-8a4b-692d0e374ea9`. V2 preservation precedes any v3 amendment;
+no v3 build or boot pass is recorded here. Full callee closure still requires
+complete leased instruction bytes and supported lowering. A known source owner
+does not supply the signature of an unknown dynamic target. Live generated-page
+ownership/retirement, both unchanged mmap1 models and per-syscall returned-body
+joins remain pending. No mmap1 throughput, performance acceptance or promotion
+is claimed.
