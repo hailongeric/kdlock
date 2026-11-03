@@ -702,3 +702,26 @@ The next diagnostic reserves collector CPUs from executor placement and
 increases the explicitly bounded collection allowance. Executor/collector
 CPU overlap and log volume are observed configuration facts; their role in
 the shutdown failure remains a hypothesis until a complete trace exists.
+
+
+A subsequent read-only analysis of the full preserved console found later
+watchdog and blocked-task records, beyond the initial incomplete cursor
+subset. [Wait locations](twentythird-console-waits.json) include
+`kd_service_shadow_wait`, cross-CPU calls and CPU-stopper paths; rsyslog
+waited in `migrate_swap` during NUMA fault migration. Some later application
+roots returned and retired. These observations do not prove application
+shutdown, nor do they establish which wait first prevented progress. The
+initial missing task-trace request is separate from these ordinary watchdog
+records. Do not describe this run as free of watchdog reports.
+
+Diagnostic candidate `6f99fa27bb86a844356f59a740ef9ea25ea93945` implements
+the documented executor pool and explicit bounded log allowance. The changed
+Python sources parsed and the diff check passed on380G10. It has not built or
+run in the VM: source transfer stopped before creating the new private tree
+because root free space was0 bytes. Build disk2 retained21,923,479,552 bytes.
+The two current ordinary logs were about1.9GiB each. Automatic approval review
+rejected the proposed verified-copy/live-log rotation because changing those
+contents and briefly stopping rsyslog needed explicit approval. That action
+did not run; no logs or services were changed. Approval is pending. Earlier
+rotations, frozen inputs, recovery data and all application evidence remain
+intact. The placement change is not a claimed lock-protocol correction.
