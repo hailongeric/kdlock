@@ -743,3 +743,19 @@ retaining production registration/retirement checks and adding an explicit
 source-pin failure witness where needed. These corrections do not change the
 capacity design or any lock acquisition/cancellation/ownership behavior. A new
 frozen source identity must pass the affected checks before live validation.
+
+
+The next source, `f012053213f35709c3f429e233b5be9641fccbad`, passes private
+nine, text-region 75, image-capacity four, returning-call 19 and Native-call
+15,663 checks; the registry fixture compiles and detects all sixteen required
+negative controls. Its unchanged receipt is
+[capacity-second-checks.json](capacity-second-checks.json), SHA256
+`f850e2e60262accd2911cc0ec5270a45e25bb3c7189f145e6dea82f203c0cf76`.
+Two of the seven Native-image observation cases still error because their
+existing global `Path.read_text` mock returns synthetic kallsyms for the newly
+added shared-header read as well. The other five observation cases pass.
+Restrict that external-I/O substitution to `/proc/kallsyms`, allowing every
+other path to use the original reader. Preserve all receipt hashes, relocation
+checks and negative cases. This is a fixture correction; no production behavior
+changes. The parent still records `live_started=false`, with no build, module
+load, helper/cancellation phase or mmap1 attempt from this identity.

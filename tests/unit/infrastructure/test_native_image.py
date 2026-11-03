@@ -104,14 +104,21 @@ class NativeImageTests(unittest.TestCase):
         path.write_bytes(uploaded)
         expected, _ = native_image.relocate(uploaded, BASE, SYMBOLS)
         symbols = '\n'.join(f'{address:016x} T {name}' for name, address in SYMBOLS.items())
-        # Path.read_text is used only for kallsyms during capture; evidence
-        # bytes still go through real temporary files and exact hashes.
+        # Substitute only the external symbol table. Capacity headers and
+        # evidence files retain their actual bytes and readers.
+        read_text = Path.read_text
+
+        def captured_read_text(path, *args, **kwargs):
+            if path == Path('/proc/kallsyms'):
+                return symbols
+            return read_text(path, *args, **kwargs)
+
         with contextlib.ExitStack() as stack:
             opened = stack.enter_context(patch.object(native_image.os, 'open', return_value=77))
             closed = stack.enter_context(patch.object(native_image.os, 'close'))
             stack.enter_context(patch.object(native_image, 'registry', side_effect=registries or [[entry()], [entry()]]))
             reader = stack.enter_context(patch.object(native_image, 'read_image', return_value=expected if loaded is None else loaded))
-            stack.enter_context(patch.object(Path, 'read_text', return_value=symbols))
+            stack.enter_context(patch.object(Path, 'read_text', new=captured_read_text))
             yield path, opened, closed, reader
 
     def test_capture_reads_only_loaded_image_and_keeps_reproducible_receipt(self):
