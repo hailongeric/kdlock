@@ -305,3 +305,12 @@ preparation work; it is not an observed speedup or proof that closure will fit.
 Focused tests must cover each independent boundary, the total pass ceiling,
 unchanged ordinary behavior and refusal before image publication, followed by
 the same VM build/continuation and actual two-model mmap1 checks.
+
+## Production direction after the November 3 clarification
+
+The [reached-path execution model](reached_path_execution.md) supersedes full
+CFG closure and all-site image prewarming as production admission requirements.
+The bounded-CFG designs and their retained receipts above describe the earlier
+candidate and the explicit checked regression path, not the new demand model.
+Source leases, immutable published bytes, exact owners and final retirement
+remain mandatory in the new model.
