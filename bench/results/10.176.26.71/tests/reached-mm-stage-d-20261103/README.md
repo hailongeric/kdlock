@@ -587,3 +587,21 @@ uses explicit checked comparison types, and updates mapped publication to
 require the complete80-row registration plus an unchanged128-slot capacity
 rejection. It preserves every old ownership/context check and adds page
 completeness coverage. Fresh focused VM checks remain required.
+
+
+## Eighteenth candidate: `14b00a56`
+
+Exact source: `14b00a56aeda7c40c9a9c2046bad19b18bff818b`. All seven
+focused drivers and67,608 resident checks passed ([checks](eighteenth-checks.json));
+provider and observer builds and loads passed. Preparation stopped because
+the generic parameter snapshot still read the legacy oversized table, which
+returned EOVERFLOW. The [traceback](eighteenth-controller.json) identifies
+that exact reader. No factory activation or application run followed.
+
+The inactive provider had zero bindings, frames and writers. It was retired
+through the ordinary source retirement operation, reached exact zero modules/
+frames/writers, and unloaded normally; [receipt](eighteenth-retire.json).
+This is successful configuration cleanup, not completed mmap1 execution.
+Design `6b24d82d` updates that known table read to use validated pages and
+retains errors from every other parameter. A focused old/new snapshot fixture
+is added; fresh VM checks and both actual application models remain required.

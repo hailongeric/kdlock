@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT / "tests/protocols"))
 sys.path.insert(0, str(ROOT / "disassem"))
 from native_only_protocol import entries
 from cpu_placement import capture_topology
-from device_session import info, RETIRE
+from device_session import info, RETIRE, read_service_call_table
 
 FAULT = re.compile(r"BUG:|\bWARNING:|kernel panic|double fault|soft lockup|"
                    r"hard LOCKUP|unable to handle|general protection fault|"
@@ -171,8 +171,14 @@ def status():
 
 
 def parameters():
-    return {p.name: p.read_text().strip()
-            for p in Path("/sys/module/kdlock_km/parameters").iterdir()}
+    directory = Path("/sys/module/kdlock_km/parameters")
+    result = {}
+    for path in directory.iterdir():
+        if path.name == "service_call_table" and (directory / "service_call_table_state").exists():
+            result[path.name] = read_service_call_table(directory).strip()
+        else:
+            result[path.name] = path.read_text().strip()
+    return result
 
 
 def registry():
