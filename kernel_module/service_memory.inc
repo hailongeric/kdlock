@@ -8,7 +8,7 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u family_generation=%llu artifact_sequence=%llu\n",
+		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u family_generation=%llu artifact_sequence=%llu source_value=%lx\n",
 			stage, operation->origin->pid, operation->executor->pid, current->pid,
 			operation->identity, (unsigned long long)operation->generation,
 			(unsigned long long)operation->sequence,
@@ -22,7 +22,8 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 			operation->destination, output ? operation->result_value : 0,
 			!!(operation->site->flags & KD_ORIGIN_MEMORY_READ),
 			(unsigned long long)root->continuation.root_generation,
-			(unsigned long long)operation->artifact_sequence);
+			(unsigned long long)operation->artifact_sequence,
+			operation->source_value);
 }
 
 static int kd_service_memory_prepare(struct kd_service_root *root)
@@ -47,8 +48,9 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 			return -EOPNOTSUPP;
 		operation->preempt_operand = true;
 	}
-	if (reading && !operation->preempt_operand)
-		return -EINVAL;
+	/* Other ordinary GS reads run on the same origin CPU with its actual
+	 * source context. Only the preempt-count operand needs the special
+	 * runtime-pin normalization/ownership classification above. */
 	operation->executor_pinned = kd_service_native_pins(root) ||
 		operation->preempt_operand;
 	if (!operation->preempt_operand || reading)

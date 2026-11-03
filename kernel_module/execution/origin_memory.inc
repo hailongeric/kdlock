@@ -47,8 +47,8 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 	operand->immediate = 0;
 	if (opcode == 0xff && extension <= 1 && !word) {
 		operand->operation = extension + 1;
-	} else if (opcode == 0x8b && !word) {
-		operand->operation = KD_ORIGIN_MEMORY_LOAD;
+	} else if ((opcode == 0x8b || opcode == 0x2b) && !word) {
+		operand->operation = opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
 		operand->destination = extension | ((rex & 4) << 1);
 		if (operand->destination == 4)
 			return -EPROTO;
@@ -220,7 +220,7 @@ int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
 	opcode = next;
 	if (error)
 		return error;
-	if (opcode != 0xff && opcode != 0x8b && opcode != 0xf7)
+	if (opcode != 0xff && opcode != 0x8b && opcode != 0xf7 && opcode != 0x2b)
 		return -EOPNOTSUPP;
 	modrm = kd_memory_reached_byte(site, reader, context, &error);
 	if (error)
@@ -233,8 +233,8 @@ int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
 		return -EOPNOTSUPP;
 	if (opcode == 0xff && extension <= 1 && !word) {
 		site->operation = extension + 1;
-	} else if (opcode == 0x8b && !word) {
-		site->operation = KD_ORIGIN_MEMORY_LOAD;
+	} else if ((opcode == 0x8b || opcode == 0x2b) && !word) {
+		site->operation = opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
 		site->flags = KD_ORIGIN_MEMORY_READ;
 	} else if (opcode == 0xf7 && extension == 0 && site->width != 64) {
 		site->operation = KD_ORIGIN_MEMORY_TEST;
@@ -397,6 +397,8 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 	operation->result_flags = 0;
 	operation->result_value = 0;
 	operation->destination = decoded.destination;
+	operation->source_value = site->operation == KD_ORIGIN_MEMORY_SUB ?
+		kd_memory_register(cont->packet, decoded.destination, site->next_ip) : 0;
 	operation->immediate = decoded.immediate;
 	operation->result = 0;
 	local_save_flags(operation->executor_irq_flags);
@@ -459,6 +461,8 @@ int kd_exec_cont_memory_prepare_reached(struct kd_exec_frame *frame)
 	operation->result_flags = 0;
 	operation->result_value = 0;
 	operation->destination = decoded.destination;
+	operation->source_value = operation->site->operation == KD_ORIGIN_MEMORY_SUB ?
+		kd_memory_register(cont->packet, decoded.destination, operation->site->next_ip) : 0;
 	operation->immediate = decoded.immediate;
 	operation->result = 0;
 	local_save_flags(operation->executor_irq_flags);
@@ -521,7 +525,8 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 	    (operation->site->operation == KD_ORIGIN_MEMORY_TEST &&
 	     (operation->result_flags & (1UL | (1UL << 11)))))
 		return -EPROTO;
-	if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD)
+	if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD ||
+	    operation->site->operation == KD_ORIGIN_MEMORY_SUB)
 		kd_memory_write_register(cont->packet, operation->destination,
 			operation->site->width, operation->result_value);
 	cont->packet->flags = (operation->input_flags & ~KD_REG_ARITHMETIC_FLAGS) |
@@ -573,6 +578,17 @@ void kd_origin_memory_apply(struct kd_origin_memory *operation)
 		else
 			asm volatile("pushq %[input]; popfq; movq %%gs:(%[offset]), %[value]; "
 				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "=r"(value)
+				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
+		operation->result_value = value;
+	} else if (operation->site->operation == KD_ORIGIN_MEMORY_SUB) {
+		value = operation->source_value;
+		if (operation->site->width == 32)
+			asm volatile("pushq %[input]; popfq; subl %%gs:(%[offset]), %k[value]; "
+				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "+r"(value)
+				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
+		else
+			asm volatile("pushq %[input]; popfq; subq %%gs:(%[offset]), %[value]; "
+				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "+r"(value)
 				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
 		operation->result_value = value;
 	} else {

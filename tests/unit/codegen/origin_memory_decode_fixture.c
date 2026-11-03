@@ -58,17 +58,19 @@ struct reached_source {
 	const u8 *bytes;
 	unsigned int length;
 	unsigned int calls;
+	unsigned long base;
 };
 
 static int reached_read(void *context, unsigned long address, void *out,
 	unsigned int size)
 {
 	struct reached_source *source = context;
+	unsigned long base = source->base ? source->base : 0x1000;
 
 	++source->calls;
-	if (size != 1 || address < 0x1000 || address - 0x1000 >= source->length)
+	if (size != 1 || address < base || address - base >= source->length)
 		return -ENODATA;
-	*(u8 *)out = source->bytes[address - 0x1000];
+	*(u8 *)out = source->bytes[address - base];
 	return 0;
 }
 
@@ -104,6 +106,8 @@ int main(void)
 		{ "6566f74001ffff", 4, 16, 0x1001 },
 		{ "65f700ffffffff", 4, 32, 0x1000 },
 		{ "654f8b64a5f0", 3, 64, 0x4ff8 },
+		{ "65482b10", 5, 64, 0x1000 },
+		{ "652b10", 5, 32, 0x1000 },
 	};
 	const char *rejected[] = { "64ff00", "f06548ff00", "656748ff00", "6566ff00",
 		"65ff10", "65ffff", "65ff04", "65ff05000000" };
@@ -153,6 +157,31 @@ int main(void)
 		input = site(rejected[i], 1, 32);
 		CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
 	}
+	{
+		/* Exact instructions in the first reached MM callee and its bounded
+		 * normal-return tail. The policy is general, independent of this symbol. */
+		const struct { const char *hex; u8 op; unsigned long ip; } actual[] = {
+			{ "654c8b252649c102", KD_ORIGIN_MEMORY_LOAD, 0xffffffff817f66daUL },
+			{ "65482b15f848c102", KD_ORIGIN_MEMORY_SUB, 0xffffffff817f6708UL },
+		};
+		unsigned int item;
+		for (item = 0; item < sizeof(actual) / sizeof(actual[0]); ++item) {
+			struct kd_origin_memory_site reached;
+			struct reached_source source;
+			struct kd_memory_operand decoded;
+			input = site(actual[item].hex, actual[item].op, 64);
+			input.ip = actual[item].ip;
+			input.next_ip = input.ip + input.length;
+			source = (struct reached_source){ .bytes = input.opcode,
+				.length = input.length, .base = input.ip };
+			CHECK(!kd_origin_memory_reached_decode(&reached, input.ip, reached_read, &source));
+			CHECK(source.calls == 8 && !memcmp(&input, &reached, sizeof(input)));
+			CHECK(!kd_origin_memory_decode(&reached, &regs, &address));
+			CHECK(address == 0xffffffff8440b008UL);
+			CHECK(!kd_memory_operand_decode(&reached, &decoded) &&
+				decoded.destination == (item ? 2 : 12));
+		}
+	}
 	input = site("65ff00", 1, 32);
 	input.flags = 1;
 	CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
@@ -167,6 +196,10 @@ int main(void)
 	input = site("65668b00", 3, 16);
 	CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
 	input = site("658500", 4, 32);
+	CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
+	input = site("65662b10", 5, 16);
+	CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
+	input = site("65482b20", 5, 64);
 	CHECK(kd_origin_memory_decode(&input, &regs, &address) == -EPROTO);
 
 	*directory = site("6548ff00", 1, 64);
@@ -239,6 +272,35 @@ int main(void)
 	operation.immediate = 1;
 	kd_origin_memory_apply(&operation);
 	CHECK((operation.result_flags & 0x841) == 0x40);
+	{
+		const unsigned long values[] = { 0, 1, 0x7fffffff, 0x80000000,
+			0xffffffff, 0x8000000000000000UL, ~0UL };
+		unsigned int width, left, right;
+		unsigned long expected, native_flags, source_value;
+		for (width = 32; width <= 64; width *= 2)
+		for (left = 0; left < sizeof(values) / sizeof(values[0]); ++left)
+		for (right = 0; right < sizeof(values) / sizeof(values[0]); ++right) {
+			input = site(width == 32 ? "652b10" : "65482b10", KD_ORIGIN_MEMORY_SUB, width);
+			cpu_data[0] = source_value = values[right];
+			expected = operation.source_value = values[left];
+			operation.effective_offset = 0;
+			operation.input_flags = 0x897;
+			if (width == 32)
+				asm volatile("subl %k[right],%k[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+			else
+				asm volatile("subq %[right],%[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+			kd_origin_memory_apply(&operation);
+			CHECK(operation.result_value == expected && cpu_data[0] == source_value);
+			CHECK(!((operation.result_flags ^ native_flags) & KD_REG_ARITHMETIC_FLAGS));
+			regs.dx = ~0UL;
+			kd_memory_write_register(&regs, 2, width, operation.result_value);
+			CHECK(regs.dx == expected);
+		}
+	}
 	CHECK(!syscall(SYS_arch_prctl, ARCH_SET_GS, saved_gs));
 	printf("production GS memory decoder: %u checks passed\n", checks);
 	return 0;

@@ -1,0 +1,298 @@
+6,4992,5760945667,-;kd_reached event=family origin=18533 executor=0 identity=ff11000633db8fa8 generation=1 family_generation=1 entry=ffffffff8181cc7d abi=2
+6,4993,5760945808,-;kd_service event=enter origin=18533 executor=18513 identity=ff11000633db8fa8 generation=1 object=ff11000354a97040 depth=0 entry=ffffffff8181cc7d may_delegate=1 family_generation=1
+6,4994,5760945904,-;kd_reached event=service origin=18533 executor=18513 identity=ff11000633db8fa8 generation=1 family_generation=1 artifact_sequence=82 kind=memory ip=ffffffff817f66da target=ffffffff817f66da sp=ffa000000a3c3c28
+3,4995,5760945913,-;kd_service memory context: origin=18533 executor=18513 ip=ffffffff817f66da result=-22
+4,4996,5760946014,-;------------[ cut here ]------------
+2,4997,5760946017,-;kernel BUG at service_memory.inc:199!
+4,4998,5760946055,-;Oops: invalid opcode: 0000 [#1] SMP NOPTI
+4,4999,5760951309,-;CPU: 0 UID: 0 PID: 18513 Comm: kd_service/50 Tainted: G           OE       7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5000,5760953401,-;Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+4,5001,5760954440,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5002,5760956612,-;RIP: 0010:kd_service_memory_call+0x2e4/0x3d0 [kdlock_km]
+4,5003,5760957898,-;Code: 41 b8 ea ff ff ff 48 8b 83 28 08 00 00 41 8b 94 24 f0 0a 00 00 48 c7 c7 78 e4 ca c0 49 8b 0e 8b b0 f0 0a 00 00 e8 4c 1f 40 c0 <0f> 0b 48 89 df e8 22 a2 fe ff 85 c0 74 0e c6 83 a0 08 00 00 01 e9
+4,5004,5760961423,-;RSP: 0018:ffa000000776fde8 EFLAGS: 00010246
+4,5005,5760962441,-;RAX: 0000000000000055 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5006,5760963813,-;RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+4,5007,5760965173,-;RBP: ffa000000776fe18 R08: 0000000000000000 R09: 0000000000000000
+4,5008,5760966539,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff1100010bd13140
+4,5009,5760967904,-;R13: 0000000000000001 R14: ff110003a876a8d8 R15: ff11000633d98030
+4,5010,5760969268,-;FS:  0000000000000000(0000) GS:ff110003aea0d000(0000) knlGS:0000000000000000
+4,5011,5760970816,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5012,5760971922,-;CR2: 00007921b0000020 CR3: 0000000003a44001 CR4: 0000000000773ef0
+4,5013,5760973286,-;PKRU: 55555554
+4,5014,5760973831,-;Call Trace:
+4,5015,5760974329,-; <TASK>
+4,5016,5760974763,-; kd_service_run_scope.isra.0+0x4a/0x390 [kdlock_km]
+4,5017,5760975927,-; kd_service_worker+0x3c2/0x730 [kdlock_km]
+4,5018,5760976939,-; ? __pfx_autoremove_wake_function+0x10/0x10
+4,5019,5760977960,-; ? __pfx_kd_service_worker+0x10/0x10 [kdlock_km]
+4,5020,5760979070,-; kthread+0xf7/0x130
+4,5021,5760979707,-; ? __pfx_kthread+0x10/0x10
+4,5022,5760980448,-; ret_from_fork+0x2d6/0x3a0
+4,5023,5760981187,-; ? __pfx_kthread+0x10/0x10
+4,5024,5760981928,-; ? __pfx_kthread+0x10/0x10
+4,5025,5760982665,-; ret_from_fork_asm+0x1a/0x30
+4,5026,5760983447,-; </TASK>
+4,5027,5760983870,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5028,5760994398,-;---[ end trace 0000000000000000 ]---
+4,5029,5760995282,-;RIP: 0010:kd_service_memory_call+0x2e4/0x3d0 [kdlock_km]
+4,5030,5760995321,-;Code: 41 b8 ea ff ff ff 48 8b 83 28 08 00 00 41 8b 94 24 f0 0a 00 00 48 c7 c7 78 e4 ca c0 49 8b 0e 8b b0 f0 0a 00 00 e8 4c 1f 40 c0 <0f> 0b 48 89 df e8 22 a2 fe ff 85 c0 74 0e c6 83 a0 08 00 00 01 e9
+4,5031,5760995370,-;RSP: 0018:ffa000000776fde8 EFLAGS: 00010246
+4,5032,5760995390,-;RAX: 0000000000000055 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5033,5760995410,-;RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+4,5034,5760995430,-;RBP: ffa000000776fe18 R08: 0000000000000000 R09: 0000000000000000
+4,5035,5760995450,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff1100010bd13140
+4,5036,5760995469,-;R13: 0000000000000001 R14: ff110003a876a8d8 R15: ff11000633d98030
+4,5037,5760995877,-;FS:  0000000000000000(0000) GS:ff110003aea0d000(0000) knlGS:0000000000000000
+4,5038,5760996186,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5039,5760996477,-;CR2: 00007921b0000020 CR3: 0000000003a44001 CR4: 0000000000773ef0
+4,5040,5760996758,-;PKRU: 55555554
+6,5041,5760997108,-;note: kd_service/50[18513] exited with preempt_count 1
+0,5042,5788787975,-;watchdog: BUG: soft lockup - CPU#63 stuck for 26s! [python3:18533]
+4,5043,5788787983,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5044,5788788040,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OE       7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5045,5788788045,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+4,5046,5788788046,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5047,5788788054,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5048,5788788093,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5049,5788788095,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5050,5788788099,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5051,5788788100,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5052,5788788102,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5053,5788788103,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5054,5788788104,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5055,5788788106,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5056,5788788108,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5057,5788788110,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5058,5788788115,-;PKRU: 55555554
+4,5059,5788788116,-;Call Trace:
+0,5060,5812788364,-;watchdog: BUG: soft lockup - CPU#63 stuck for 48s! [python3:18533]
+4,5061,5812788370,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5062,5812788419,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5063,5812788424,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5064,5812788426,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5065,5812788428,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5066,5812788462,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5067,5812788464,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5068,5812788467,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5069,5812788469,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5070,5812788471,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5071,5812788472,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5072,5812788473,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5073,5812788475,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5074,5812788477,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5075,5812788479,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5076,5812788484,-;PKRU: 55555554
+4,5077,5812788485,-;Call Trace:
+3,5078,5820996806,-;rcu: INFO: rcu_preempt self-detected stall on CPU
+3,5079,5820998311,-;rcu: 	63-....: (59971 ticks this GP) idle=7c84/1/0x4000000000000000 softirq=7983/7983 fqs=14997
+3,5080,5821000487,-;rcu: 	         hardirqs   softirqs   csw/system
+3,5081,5821001880,-;rcu: 	 number:    30175        199            0
+3,5082,5821003282,-;rcu: 	cputime:        0          0        29980   ==> 30004(ms)
+3,5083,5821004923,-;rcu: 	(t=60005 jiffies g=80953 q=398 ncpus=64)
+4,5084,5821006314,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5085,5821008308,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5086,5821009714,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5087,5821011861,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5088,5821013089,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5089,5821016568,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5090,5821017563,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5091,5821018909,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5092,5821020256,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5093,5821021598,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5094,5821022945,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5095,5821024292,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5096,5821025807,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5097,5821026899,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5098,5821028247,-;PKRU: 55555554
+4,5099,5821028777,-;Call Trace:
+0,5100,5848788985,-;watchdog: BUG: soft lockup - CPU#63 stuck for 82s! [python3:18533]
+4,5101,5848788991,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5102,5848789034,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5103,5848789039,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5104,5848789040,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5105,5848789042,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5106,5848789071,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5107,5848789074,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5108,5848789076,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5109,5848789078,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5110,5848789079,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5111,5848789080,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5112,5848789082,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5113,5848789083,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5114,5848789085,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5115,5848789087,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5116,5848789092,-;PKRU: 55555554
+4,5117,5848789093,-;Call Trace:
+0,5118,5872789416,-;watchdog: BUG: soft lockup - CPU#63 stuck for 104s! [python3:18533]
+4,5119,5872789422,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5120,5872789476,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5121,5872789485,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5122,5872789486,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5123,5872789488,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5124,5872789518,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5125,5872789520,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5126,5872789523,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5127,5872789525,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5128,5872789526,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5129,5872789527,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5130,5872789528,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5131,5872789530,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5132,5872789532,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5133,5872789533,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5134,5872789539,-;PKRU: 55555554
+4,5135,5872789540,-;Call Trace:
+0,5136,5896789859,-;watchdog: BUG: soft lockup - CPU#63 stuck for 126s! [python3:18533]
+4,5137,5896789865,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5138,5896789916,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5139,5896789921,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5140,5896789922,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5141,5896789924,-;RIP: 0010:kd_service_shadow_wait+0x32c/0x740 [kdlock_km]
+4,5142,5896789954,-;Code: 8b 00 01 d1 49 39 c0 75 e5 39 ce 0f 85 0b 04 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 ee 7c ff ff c7 83 f4 07 00 00 04 00 00 00 <8b> 83 98 08 00 00 83 f8 02 0f 85 d1 02 00 00 65 4c 8b 25 65 cf 5f
+4,5143,5896789956,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000293
+4,5144,5896789959,-;RAX: 0000000000000000 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5145,5896789960,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5146,5896789962,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5147,5896789963,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5148,5896789964,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5149,5896789966,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5150,5896789968,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5151,5896789969,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5152,5896789974,-;PKRU: 55555554
+4,5153,5896789976,-;Call Trace:
+0,5154,5920790313,-;watchdog: BUG: soft lockup - CPU#63 stuck for 149s! [python3:18533]
+4,5155,5920790321,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5156,5920790367,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5157,5920790383,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5158,5920790384,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5159,5920790386,-;RIP: 0010:kd_service_shadow_wait+0x3c/0x740 [kdlock_km]
+4,5160,5920790418,-;Code: 8b 2f 65 48 8b 1d 7c d2 5f c3 48 89 5d d0 48 89 fb c7 87 2c 11 00 00 02 00 00 00 8b 87 2c 11 00 00 83 f8 03 0f 84 e1 05 00 00 <48> c7 45 c8 00 00 00 00 8b 83 f4 07 00 00 83 f8 02 0f 85 d9 02 00
+4,5161,5920790420,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5162,5920790423,-;RAX: 0000000000000002 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5163,5920790425,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5164,5920790426,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5165,5920790428,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5166,5920790429,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5167,5920790431,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5168,5920790432,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5169,5920790434,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5170,5920790439,-;PKRU: 55555554
+4,5171,5920790441,-;Call Trace:
+0,5172,5944790779,-;watchdog: BUG: soft lockup - CPU#63 stuck for 171s! [python3:18533]
+4,5173,5944790785,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5174,5944790838,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5175,5944790843,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5176,5944790844,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5177,5944790846,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5178,5944790877,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5179,5944790879,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5180,5944790881,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5181,5944790883,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5182,5944790884,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5183,5944790886,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5184,5944790887,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5185,5944790888,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5186,5944790890,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5187,5944790892,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5188,5944790897,-;PKRU: 55555554
+4,5189,5944790898,-;Call Trace:
+0,5190,5968791255,-;watchdog: BUG: soft lockup - CPU#63 stuck for 193s! [python3:18533]
+4,5191,5968791261,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5192,5968791304,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5193,5968791309,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5194,5968791319,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5195,5968791321,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5196,5968791352,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5197,5968791354,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5198,5968791357,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5199,5968791358,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5200,5968791360,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5201,5968791361,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5202,5968791362,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5203,5968791364,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5204,5968791366,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5205,5968791367,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5206,5968791372,-;PKRU: 55555554
+4,5207,5968791374,-;Call Trace:
+0,5208,5992791741,-;watchdog: BUG: soft lockup - CPU#63 stuck for 216s! [python3:18533]
+4,5209,5992791746,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5210,5992791798,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5211,5992791803,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5212,5992791804,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5213,5992791806,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5214,5992791836,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5215,5992791838,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5216,5992791840,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5217,5992791842,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5218,5992791844,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5219,5992791845,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5220,5992791846,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5221,5992791848,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5222,5992791850,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5223,5992791851,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5224,5992791856,-;PKRU: 55555554
+4,5225,5992791857,-;Call Trace:
+3,5226,6001033213,-;rcu: INFO: rcu_preempt self-detected stall on CPU
+3,5227,6001034729,-;rcu: 	63-....: (239897 ticks this GP) idle=7c84/1/0x4000000000000000 softirq=7983/7983 fqs=59954
+3,5228,6001036931,-;rcu: 	         hardirqs   softirqs   csw/system
+3,5229,6001038335,-;rcu: 	 number:   210635       1397            0
+3,5230,6001039757,-;rcu: 	cputime:        0          0       209869   ==> 210037(ms)
+3,5231,6001041428,-;rcu: 	(t=240038 jiffies g=80953 q=546 ncpus=64)
+4,5232,6001042838,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5233,6001044844,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5234,6001046259,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5235,6001048411,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5236,6001049642,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5237,6001053142,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5238,6001054141,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5239,6001055493,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5240,6001056848,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5241,6001058173,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5242,6001059464,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5243,6001060755,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5244,6001062204,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5245,6001063251,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5246,6001064540,-;PKRU: 55555554
+4,5247,6001065048,-;Call Trace:
+0,5248,6028792488,-;watchdog: BUG: soft lockup - CPU#63 stuck for 249s! [python3:18533]
+4,5249,6028792494,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5250,6028792545,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5251,6028792550,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5252,6028792551,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5253,6028792552,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5254,6028792582,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5255,6028792584,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5256,6028792587,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5257,6028792589,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5258,6028792590,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5259,6028792591,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5260,6028792593,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5261,6028792594,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5262,6028792596,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5263,6028792598,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5264,6028792603,-;PKRU: 55555554
+4,5265,6028792605,-;Call Trace:
+0,5266,6052792997,-;watchdog: BUG: soft lockup - CPU#63 stuck for 272s! [python3:18533]
+4,5267,6052793013,-;Modules linked in: kd_mmap1_identity(OE) kdlock_km(OE) nfnetlink cfg80211 binfmt_misc nls_iso8859_1 intel_rapl_msr intel_rapl_common intel_uncore_frequency_common skx_edac_common nfit kvm_intel ppdev kvm irqbypass rapl joydev input_leds i2c_piix4 parport_pc mac_hid parport i2c_smbus sch_fq_codel efi_pstore dm_multipath dmi_sysfs qemu_fw_cfg virtiofs vmw_vsock_virtio_transport vmw_vsock_virtio_transport_common vsock autofs4 btrfs libblake2b raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 raid0 linear psmouse serio_raw vga16fb floppy ghash_clmulni_intel pata_acpi bochs vgastate aesni_intel [last unloaded: kdlock_km(OE)]
+4,5268,6052793054,-;CPU: 63 UID: 0 PID: 18533 Comm: python3 Tainted: G      D    OEL      7.0.0-38-kdscope5 #3 PREEMPT(lazy) 
+4,5269,6052793059,-;Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+4,5270,6052793060,-;Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+4,5271,6052793062,-;RIP: 0010:kd_service_shadow_wait+0x60e/0x740 [kdlock_km]
+4,5272,6052793093,-;Code: 01 d1 49 39 c0 75 e5 39 ce 0f 85 31 01 00 00 48 89 de 48 c7 c7 c0 b7 ca c0 e8 be 7a ff ff c7 83 98 08 00 00 04 00 00 00 f3 90 <8b> 83 2c 11 00 00 83 f8 03 0f 85 1f fa ff ff 83 bb 38 11 00 00 00
+4,5273,6052793096,-;RSP: 0018:ffa00000054c2fa0 EFLAGS: 00000297
+4,5274,6052793098,-;RAX: 0000000000000001 RBX: ff110003a876a000 RCX: 0000000000000000
+4,5275,6052793100,-;RDX: ffa00000054c2ff8 RSI: 0000000000000000 RDI: ff110003a876a000
+4,5276,6052793101,-;RBP: ffa00000054c2fe0 R08: 0000000000000000 R09: 0000000000000000
+4,5277,6052793102,-;R10: 0000000000000000 R11: 0000000000000000 R12: ff110003a876a000
+4,5278,6052793104,-;R13: ff11000633db7340 R14: ff110003a876a180 R15: 0000000000000246
+4,5279,6052793105,-;FS:  00007bf24d071200(0000) GS:ff110006af98d000(0000) knlGS:0000000000000000
+4,5280,6052793107,-;CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+4,5281,6052793109,-;CR2: 000000003b9a6f94 CR3: 0000000348603004 CR4: 0000000000773ef0
+4,5282,6052793114,-;PKRU: 55555554
+4,5283,6052793115,-;Call Trace:
+4,5284,6070617327,-;clocksource: timekeeping watchdog on CPU43: Marking clocksource 'tsc' as unstable because the skew is too large:
+4,5285,6070617742,-;clocksource:                       'kvm-clock' wd_nsec: 567621784 wd_now: 5e4db0bb4f044 wd_last: 5e4dae9dfb7ac mask: ffffffffffffffff
+4,5286,6070618090,-;clocksource:                       'tsc' cs_nsec: 569727688 cs_now: b0c547f01bb cs_last: b0c10944c2b mask: ffffffffffffffff
+4,5287,6070618438,-;clocksource:                       Clocksource 'tsc' skewed 2105904 ns (2 ms) over watchdog 'kvm-clock' interval of 567621784 ns (567 ms)
+4,5288,6070618792,-;clocksource:                       'kvm-clock' (not 'tsc') is current clocksource.
+6,5289,6070619135,-;tsc: Marking TSC unstable due to clocksource watchdog

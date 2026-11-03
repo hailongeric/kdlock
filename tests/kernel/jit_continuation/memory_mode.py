@@ -49,6 +49,8 @@ def memory_events(messages):
         for key in ('family_generation', 'artifact_sequence'):
             if key in fields:
                 row[key] = int(fields[key])
+        if 'source_value' in fields:
+            row['source_value'] = int(fields['source_value'], 16)
         rows.append(row)
     return rows
 
