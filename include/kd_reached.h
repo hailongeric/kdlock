@@ -37,6 +37,12 @@ enum kd_reached_atomic_op {
 	KD_REACHED_ATOMIC_XADD,
 	KD_REACHED_ATOMIC_XCHG,
 	KD_REACHED_ATOMIC_CMPXCHG,
+	KD_REACHED_ATOMIC_BTS_UNLOCKED,
+	KD_REACHED_ATOMIC_BTR_UNLOCKED,
+	KD_REACHED_ATOMIC_BTC_UNLOCKED,
+	KD_REACHED_ATOMIC_BTS_LOCKED,
+	KD_REACHED_ATOMIC_BTR_LOCKED,
+	KD_REACHED_ATOMIC_BTC_LOCKED,
 };
 
 enum kd_reached_scalar_op {
@@ -87,7 +93,9 @@ struct kd_reached_ops {
 	int (*fetch)(void *context, unsigned long address, void *out, unsigned int size);
 	int (*read)(void *context, unsigned long address, void *out, unsigned int size);
 	int (*write)(void *context, unsigned long address, const void *in, unsigned int size);
-	/* Optional exact Native-width RMW. NULL refuses before any data access. */
+	/* Optional exact Native-width RMW. Bit operations distinguish unlocked and
+	 * LOCK forms; their address already selects the word and input its bit.
+	 * NULL refuses before any data access. */
 	int (*atomic)(void *context, unsigned long address, unsigned int width,
 		enum kd_reached_atomic_op operation, u64 input, u64 accumulator,
 		unsigned long input_flags, u64 *old, unsigned long *output_flags);

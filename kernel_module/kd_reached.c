@@ -486,6 +486,21 @@ static unsigned long address(struct decoded *d, const struct operand *o)
 	return value;
 }
 
+static unsigned long bit_word_address(struct decoded *d, u64 index)
+{
+	unsigned long word_address = address(d, &d->dst);
+	unsigned int shift = d->dst.width == 8 ? 6 : d->dst.width == 4 ? 5 : 4;
+	s64 word_offset;
+
+	/* Register bit strings use a signed operand-width index. An imm8 selects
+	 * inside the encoded word and never shifts its effective address. */
+	if (!d->src.literal) {
+		word_offset = sign_value(index, d->dst.width) >> shift;
+		word_address += (unsigned long)(word_offset * d->dst.width);
+	}
+	return word_address;
+}
+
 static int read_operand(struct decoded *d, const struct operand *o, u64 *out)
 {
 	u64 value = 0;
@@ -605,6 +620,22 @@ static enum kd_reached_result execute(struct decoded *d)
 	u8 edge = KD_REACHED_FALLTHROUGH;
 	bool write = false;
 
+	if (d->operation == OP_BIT && d->dst.memory && d->condition) {
+		enum kd_reached_atomic_op operation = (d->locked ? KD_REACHED_ATOMIC_BTS_LOCKED :
+			KD_REACHED_ATOMIC_BTS_UNLOCKED) + d->condition - 1;
+		int result;
+
+		/* Unlocked source RMW remains unlocked. Both forms execute once on
+		 * the qualified source word; neither permits a load/store expansion. */
+		if (!s->ops->atomic) return KD_REACHED_UNSUPPORTED;
+		if (read_operand(d, &d->src, &b)) return KD_REACHED_MEMORY;
+		result = s->ops->atomic(s->context, bit_word_address(d, b), d->dst.width,
+			operation, b & (d->dst.width * 8 - 1), r->ax, flags, &word, &flags);
+		if (result)
+			return result == -EOPNOTSUPP ? KD_REACHED_UNSUPPORTED : KD_REACHED_MEMORY;
+		goto commit;
+	}
+
 	if (d->locked || d->operation == OP_XCHG ||
 	    d->operation == OP_XADD || d->operation == OP_CMPXCHG) {
 		enum kd_reached_atomic_op operation;
@@ -686,21 +717,8 @@ static enum kd_reached_result execute(struct decoded *d)
 		break;
 	case OP_BIT:
 		if (d->dst.memory) {
-			unsigned long word_address = address(d, &d->dst);
-			unsigned int shift = d->dst.width == 8 ? 6 : d->dst.width == 4 ? 5 : 4;
-			s64 word_offset;
-
-			/* Only read-only BT has this contract. Modifying bit strings need
-			 * a separate exact Native RMW, never this load/scalar operation. */
-			if (d->condition) return KD_REACHED_UNSUPPORTED;
 			if (read_operand(d, &d->src, &b)) return KD_REACHED_MEMORY;
-			/* Register bit strings use a signed operand-width index. An imm8
-			 * selects inside the encoded word instead; it never shifts its EA. */
-			if (!d->src.literal) {
-				word_offset = sign_value(b, d->dst.width) >> shift;
-				word_address += (unsigned long)(word_offset * d->dst.width);
-			}
-			if (s->ops->read(s->context, word_address, &a, d->dst.width))
+			if (s->ops->read(s->context, bit_word_address(d, b), &a, d->dst.width))
 				return KD_REACHED_MEMORY;
 			if (kd_reached_scalar_apply(d->dst.width, KD_REACHED_SCALAR_BT_MEMORY,
 				a, b, flags, &value, &flags)) return KD_REACHED_UNSUPPORTED;

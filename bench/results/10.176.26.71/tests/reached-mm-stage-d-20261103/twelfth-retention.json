@@ -1,0 +1,14 @@
+{
+  "raw_host_directory": "/tmp/kdlock-reached-mm-twelfth-preserved-ring3-20261103",
+  "raw_archive_local": "/tmp/kdlock-reached-mm-twelfth-host-capture3-20261103/preserved.tar.gz",
+  "raw_archive_sha256": "c45aa57932a584ee4b755baf392deca90dbfcb1843772390427a30256be8e826",
+  "raw_archive_bytes": 3220231,
+  "guest_persisted_evidence": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twelfth-20261103",
+  "post_reset_copy": "/tmp/kdlock-reached-mm-twelfth-after-reset-20261103",
+  "failed_source": "4fd4d4d5c11ad6dcc659580c3de44960801ef931",
+  "failed_boot": "16530f92-2961-4dc4-a1fa-49858d3d3408",
+  "drained": false,
+  "worker_delegation_proved": false,
+  "resident_monitor_cpu": 62,
+  "recovered_boot": "a30dc9fd-a378-435c-9b2f-5b42d85472e1"
+}

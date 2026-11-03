@@ -421,3 +421,32 @@ explicitly unsupported. Source truncation retains its source-failure status.
 The address-selection algorithm continues on E; no MM body is added to the
 Native API service catalog. Fresh differential/edge checks, build and actual
 MM retry are required.
+
+
+## Twelfth candidate: `4fd4d4d5`
+
+Exact source: `4fd4d4d5c11ad6dcc659580c3de44960801ef931`. Provider and resident
+fixture builds passed, with 64,552 assertions. The new padded CALL/JMP cases
+are virtual control-flow/edge checks, not a Native branch differential oracle;
+prior scalar/string Native comparisons remain included. Seven MM-proof and
+nine private-source cases also passed; see [units](twelfth-units.json).
+
+On boot `16530f92-2961-4dc4-a1fa-49858d3d3408`, the application retry
+reached `vma_link_file+0x4e`, `ffffffff81816e6e`, live bytes
+`48 0f ba 6d e0 03` (BTSQ immediate3 on a source-stack flag word); the
+next source instruction sets bit5. O `4855`, E `4795`, generation5, captured
+entry `ffffffff817b6f68` are retained in the [resident log](twelfth-resident-kernel.log).
+[Live bytes](twelfth-live-site.json) and [raw retention](twelfth-retention.json)
+preserve the undrained activation. No completed worker mmap/munmap or process
+model is claimed. Recovery boot is `a30dc9fd-a378-435c-9b2f-5b42d85472e1`.
+
+## Exact memory bit-update correction
+
+Design was committed first as `978f9e92`. General memory BTS/BTR/BTC now use
+one actual Native source-word RMW through the existing qualified callback,
+with distinct unlocked/LOCK operations. Signed register bit-string addressing,
+imm8 masking, widths16/32/64, exact flags and no source GPR write are preserved.
+No split load/store or retry is introduced. Read-only BT keeps its existing
+path; LOCK BT remains unsupported. No callback or a failed callback leaves
+packet and budget uncommitted. The VMA algorithm continues on E. Fresh Native
+differential checks, build and actual-MM retry remain required.

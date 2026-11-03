@@ -25,6 +25,8 @@ struct fixture {
 	unsigned int reads;
 	unsigned int writes;
 	unsigned int atomics;
+	unsigned int atomic_attempts, atomic_operation;
+	u64 atomic_input;
 	unsigned long max_fetch;
 	bool fail_read;
 	bool fail_write;
@@ -83,6 +85,9 @@ static int source_atomic(void *context, unsigned long address, unsigned int widt
 	struct fixture *f = context;
 	int status;
 
+	++f->atomic_attempts;
+	f->atomic_operation = operation;
+	f->atomic_input = input;
 	if (f->fail_atomic || address < DATA || address - DATA > sizeof(f->memory) ||
 	    width > sizeof(f->memory) - (address - DATA)) return -EFAULT;
 	status = kd_reached_atomic_apply((void *)address, width, operation, input,
@@ -1380,6 +1385,168 @@ static int memory_bit_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_MEMORY_BIT_REG(insn, suffix, part) do { \
+	if (locked) \
+		asm volatile("pushq %[flags]; popfq; lock " insn suffix " %" part "[index],(%[base]); pushfq; popq %[output]" \
+			: [output] "=r"(output) : [base] "r"(base), [index] "r"(index), [flags] "r"(flags) : "cc", "memory"); \
+	else \
+		asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[index],(%[base]); pushfq; popq %[output]" \
+			: [output] "=r"(output) : [base] "r"(base), [index] "r"(index), [flags] "r"(flags) : "cc", "memory"); \
+} while (0)
+#define ORACLE_MEMORY_BIT_REG_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case 0: ORACLE_MEMORY_BIT_REG("bts", suffix, part); break; \
+	case 1: ORACLE_MEMORY_BIT_REG("btr", suffix, part); break; \
+	default: ORACLE_MEMORY_BIT_REG("btc", suffix, part); break; \
+	} \
+} while (0)
+/* Raw immediate bytes prevent an assembler from moving high bit-index bits
+ * into a displacement. The oracle must match the actual source encoding. */
+#define ORACLE_MEMORY_BIT_IMM_BYTES(number, prefix, modrm) do { \
+	if (locked) \
+		asm volatile("pushq %[flags]; popfq; .byte 0xf0," prefix "0x0f,0xba," modrm "," #number "; pushfq; popq %[output]" \
+			: [output] "=r"(output) : [base] "D"(base), [flags] "r"(flags) : "cc", "memory"); \
+	else \
+		asm volatile("pushq %[flags]; popfq; .byte " prefix "0x0f,0xba," modrm "," #number "; pushfq; popq %[output]" \
+			: [output] "=r"(output) : [base] "D"(base), [flags] "r"(flags) : "cc", "memory"); \
+} while (0)
+#define ORACLE_MEMORY_BIT_IMM_OP(number, prefix) do { \
+	switch (operation) { \
+	case 0: ORACLE_MEMORY_BIT_IMM_BYTES(number, prefix, "0x2f"); break; \
+	case 1: ORACLE_MEMORY_BIT_IMM_BYTES(number, prefix, "0x37"); break; \
+	default: ORACLE_MEMORY_BIT_IMM_BYTES(number, prefix, "0x3f"); break; \
+	} \
+} while (0)
+#define ORACLE_MEMORY_BIT_IMM(number) do { \
+	switch (width) { \
+	case 2: ORACLE_MEMORY_BIT_IMM_OP(number, "0x66,"); break; \
+	case 4: ORACLE_MEMORY_BIT_IMM_OP(number, ""); break; \
+	default: ORACLE_MEMORY_BIT_IMM_OP(number, "0x48,"); break; \
+	} \
+} while (0)
+
+static unsigned long native_memory_bit_update(unsigned int width, unsigned int operation,
+	bool locked, bool immediate, unsigned long base, u64 index, unsigned long input_flags)
+{
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	if (immediate) {
+		switch (index) {
+		case 0: ORACLE_MEMORY_BIT_IMM(0); break;
+		case 3: ORACLE_MEMORY_BIT_IMM(3); break;
+		case 5: ORACLE_MEMORY_BIT_IMM(5); break;
+		case 15: ORACLE_MEMORY_BIT_IMM(15); break;
+		case 16: ORACLE_MEMORY_BIT_IMM(16); break;
+		case 31: ORACLE_MEMORY_BIT_IMM(31); break;
+		case 32: ORACLE_MEMORY_BIT_IMM(32); break;
+		case 63: ORACLE_MEMORY_BIT_IMM(63); break;
+		case 64: ORACLE_MEMORY_BIT_IMM(64); break;
+		default: ORACLE_MEMORY_BIT_IMM(255); break;
+		}
+	} else {
+		switch (width) {
+		case 2: ORACLE_MEMORY_BIT_REG_WIDTH("w", "w"); break;
+		case 4: ORACLE_MEMORY_BIT_REG_WIDTH("l", "k"); break;
+		default: ORACLE_MEMORY_BIT_REG_WIDTH("q", ""); break;
+		}
+	}
+	return output;
+}
+
+static int memory_bit_update_test(struct fixture *f)
+{
+	struct kd_regs expected;
+	u64 memory[ARRAY_SIZE(f->memory)], index;
+	unsigned long flags;
+	s32 displacement;
+	unsigned int operation, width, locked, immediate, sample, pattern, length, i;
+	u8 code[6];
+	u8 alias_code[] = { 0x66, 0x0f, 0xab, 0xbf, 0, 0, 0, 0 };
+
+	/* Bounded grid: signed register offsets cross both word boundaries;
+	 * immediate encodings remain inside the original word, including 255. */
+	for (operation = 0; operation < 3; ++operation)
+	for (width = 2; width <= 8; width *= 2)
+	for (locked = 0; locked < 2; ++locked)
+	for (immediate = 0; immediate < 2; ++immediate)
+	for (sample = 0; sample < 4; ++sample)
+	for (pattern = 0; pattern < 2; ++pattern) {
+		index = immediate ? (sample == 0 ? 0 : sample == 1 ? width * 8 - 1 :
+			sample == 2 ? width * 8 : 255) :
+			(sample == 0 ? -(s64)(width * 8 + 1) : sample == 1 ? -1LL :
+			 sample == 2 ? (s64)(width * 8 - 1) : (s64)(width * 8));
+		length = 0;
+		if (locked) code[length++] = 0xf0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = 0x0f;
+		code[length++] = immediate ? 0xba : 0xab + operation * 8;
+		code[length++] = immediate ? 0x2f + operation * 8 : 0x0f;
+		if (immediate) code[length++] = index;
+		prepare(f, code, length);
+		f->state.ops = &atomic_operations;
+		memset(f->memory, pattern ? 0xff : 0, sizeof(f->memory));
+		memcpy(memory, f->memory, sizeof(memory));
+		f->regs.di = DATA + 128; f->regs.cx = index;
+		f->regs.ax = 0x123456789abcdef0ULL;
+		if (pattern) f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		expected = f->regs;
+		flags = native_memory_bit_update(width, operation, locked, immediate,
+			(unsigned long)memory + 128, index, f->regs.flags);
+		expected.flags = (expected.flags & ~KD_REG_ARITHMETIC_FLAGS) |
+			(flags & KD_REG_ARITHMETIC_FLAGS);
+		expected.ip += length;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(!memcmp(&expected, &f->regs, sizeof(expected)));
+		CHECK(!memcmp(memory, f->memory, sizeof(memory)));
+		CHECK(f->atomic_attempts == 1 && f->atomics == 1 && !f->reads && !f->writes &&
+			f->atomic_operation == KD_REACHED_ATOMIC_BTS_UNLOCKED + operation + locked * 3 &&
+			f->atomic_input == (index & (width * 8 - 1)));
+		CHECK(f->fetches == length && f->state.budget == 99);
+	}
+	/* RDI is both the address base and the signed 16-bit index. Its exact
+	 * pre-instruction value selects the word; no index GPR is rewritten. */
+	displacement = -(((s16)(DATA + 128) >> 4) * 2);
+	for (i = 0; i < 4; ++i) alias_code[4 + i] = (u32)displacement >> (8 * i);
+	prepare(f, alias_code, sizeof(alias_code));
+	f->state.ops = &atomic_operations;
+	f->regs.di = DATA + 128;
+	memcpy(memory, f->memory, sizeof(memory)); expected = f->regs;
+	flags = native_memory_bit_update(2, 0, false, false,
+		(unsigned long)memory + 128 + displacement, f->regs.di, f->regs.flags);
+	expected.flags = (expected.flags & ~KD_REG_ARITHMETIC_FLAGS) | (flags & KD_REG_ARITHMETIC_FLAGS);
+	expected.ip += sizeof(alias_code);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !memcmp(memory, f->memory, sizeof(memory)));
+	CHECK(f->atomic_attempts == 1 && f->atomics == 1 && !f->reads && !f->writes && f->state.budget == 99);
+	/* Exact two consecutive reached stack-flag updates commit once each. */
+	prepare(f, (u8[]){ 0x48, 0x0f, 0xba, 0x6d, 0xe0, 3,
+		0x48, 0x0f, 0xba, 0x6d, 0xe0, 5 }, 12);
+	f->state.ops = &atomic_operations;
+	for (i = 0; i < 2; ++i) {
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->memory[16] == (i ? 0x28 : 8) && f->regs.ip == CODE + 6 * (i + 1) &&
+			f->atomic_attempts == i + 1 && f->atomics == i + 1 && !f->reads && !f->writes);
+	}
+	/* Missing callback, failed RMW and refused address cannot commit data,
+	 * GPRs, flags or a budget unit. No ordinary load/store substitutes. */
+	for (sample = 0; sample < 3; ++sample) {
+		prepare(f, (u8[]){ 0x48, 0x0f, 0xba, 0x6d, 0xe0, 3 }, 6);
+		if (sample) f->state.ops = &atomic_operations;
+		f->fail_atomic = sample == 1;
+		if (sample == 2) f->regs.bp = DATA + sizeof(f->memory) + 32;
+		f->memory[16] = 0x123456789abcdef0ULL;
+		memcpy(memory, f->memory, sizeof(memory)); expected = f->regs;
+		CHECK(kd_reached_step(&f->state) == (sample ? KD_REACHED_MEMORY : KD_REACHED_UNSUPPORTED));
+		CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) &&
+			!memcmp(memory, f->memory, sizeof(memory)) && f->state.budget == 100);
+		CHECK(f->atomic_attempts == !!sample && !f->atomics && !f->reads && !f->writes);
+	}
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -1406,6 +1573,7 @@ static int worker(void *argument)
 	if (!result) result = cs_branch_test(f);
 	if (!result) result = scan_test(f);
 	if (!result) result = memory_bit_test(f);
+	if (!result) result = memory_bit_update_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

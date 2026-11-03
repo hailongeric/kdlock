@@ -31,6 +31,22 @@ static unsigned long kd_reached_input_flags(unsigned long source)
 		"pushfq; popq %[output]\n\t" _ASM_EXTABLE(1b, %l[fault]) \
 		: [memory] "+m"(*(type *)address), [accumulator] "+a"(accumulator), [output] "=r"(output) \
 		: [value] "r"(value), [flags] "r"(flags) : "cc", "memory" : fault)
+#define KD_ATOMIC_BIT(insn, suffix, part, type) \
+	asm_goto_output("pushq %[flags]; popfq\n\t1: " insn suffix " %" part "[value], %[memory]\n\t" \
+		"pushfq; popq %[output]\n\t" _ASM_EXTABLE(1b, %l[fault]) \
+		: [memory] "+m"(*(type *)address), [output] "=r"(output) \
+		: [value] "r"(value), [flags] "r"(flags) : "cc", "memory" : fault)
+#define KD_ATOMIC_BIT_WIDTH(suffix, part, type) do { \
+	switch (operation) { \
+	case KD_REACHED_ATOMIC_BTS_UNLOCKED: KD_ATOMIC_BIT("bts", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_BTR_UNLOCKED: KD_ATOMIC_BIT("btr", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_BTC_UNLOCKED: KD_ATOMIC_BIT("btc", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_BTS_LOCKED: KD_ATOMIC_BIT("lock bts", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_BTR_LOCKED: KD_ATOMIC_BIT("lock btr", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_BTC_LOCKED: KD_ATOMIC_BIT("lock btc", suffix, part, type); break; \
+	default: return -EOPNOTSUPP; \
+	} \
+} while (0)
 
 #define KD_ATOMIC_WIDTH(suffix, part, type) do { \
 	switch (operation) { \
@@ -54,12 +70,23 @@ int kd_reached_atomic_apply(void *address, unsigned int width,
 
 	if (!address || !old || !output_flags)
 		return -EINVAL;
-	switch (width) {
-	case 1: KD_ATOMIC_WIDTH("b", "b", u8); break;
-	case 2: KD_ATOMIC_WIDTH("w", "w", u16); break;
-	case 4: KD_ATOMIC_WIDTH("l", "k", u32); break;
-	case 8: KD_ATOMIC_WIDTH("q", "", u64); break;
-	default: return -EINVAL;
+	if (operation >= KD_REACHED_ATOMIC_BTS_UNLOCKED && operation <= KD_REACHED_ATOMIC_BTC_LOCKED) {
+		/* The qualified callback address already selects the complete word. */
+		value &= width * 8 - 1;
+		switch (width) {
+		case 2: KD_ATOMIC_BIT_WIDTH("w", "w", u16); break;
+		case 4: KD_ATOMIC_BIT_WIDTH("l", "k", u32); break;
+		case 8: KD_ATOMIC_BIT_WIDTH("q", "", u64); break;
+		default: return -EOPNOTSUPP;
+		}
+	} else {
+		switch (width) {
+		case 1: KD_ATOMIC_WIDTH("b", "b", u8); break;
+		case 2: KD_ATOMIC_WIDTH("w", "w", u16); break;
+		case 4: KD_ATOMIC_WIDTH("l", "k", u32); break;
+		case 8: KD_ATOMIC_WIDTH("q", "", u64); break;
+		default: return -EINVAL;
+		}
 	}
 	*old = operation == KD_REACHED_ATOMIC_CMPXCHG ? accumulator : value;
 	*output_flags = (input_flags & ~KD_REG_ARITHMETIC_FLAGS) |
