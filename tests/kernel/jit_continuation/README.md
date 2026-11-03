@@ -67,15 +67,23 @@ MM execution. Source is unvalidated until matching VM receipts exist.
 
 ## Returning original-task primitives
 
-`--mode helper --family rwsem --cpus 0-3` adds a separate six-phase functional
+`--mode helper --family rwsem --cpus 0-3` adds a separate nine-phase functional
 check using the same module, publication and normal retirement machinery.
 The existing eleven `killable` phases keep their typed-only image requirement
 384. Helper mode has reachable declared primitive CALLs, inline GS updates and
-a normalized preemption-count read. It requires exactly 3968 (origin CALL,
+a normalized preemption-count read and an ordinary register-JMP callee. It
+requires exactly 8064 (origin CALL,
 retained service queue, budget continuation, original-task memory instructions
-and original-context reads), with capability v16/bits14–16. The earlier
-896/1920 images remain separate historical inputs. It does not run timing points or replace any
+original-context reads and indirect tails), with capability v17/bits14–17. The earlier
+896/1920/3968 images remain separate historical inputs. It does not run timing points or replace any
 of the existing killable checks.
+
+The indirect-tail phase calls an ordinary, unregistered assembly callee that
+loads the scalar primitive address and executes a near register JMP. The
+caller word remains on the source stack. Only the declared scalar primitive
+runs on O; its result and subsequent body effect are observed on the same E
+and immutable image. The ordinary callee has no primitive descriptor, so this
+phase cannot replace it with a whole-body original-task continuation.
 
 The test module registers two six-word C primitives through
 `kd_service_calls.h`. The first checks six distinct arguments and returns the
@@ -431,7 +439,7 @@ runs a scalar continuation effect on E, and ends through the final Native
 up_write completion. Exact origin/executor/root/generation, Native object and
 acquisition-sequence records must match, with balanced CPU state and complete
 retirement. No Native writer is described as a balanced acquire-and-release
-helper. The existing six helper and eleven killable phases remain unchanged.
+helper. The other helper and eleven killable phases retain their checks.
 
 A separate version1 952-byte observation ioctl records up to eight Native
 writer events and their exact objects, actual task/CPU/stack, CPU state and

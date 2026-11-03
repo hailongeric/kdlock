@@ -644,7 +644,7 @@ def main():
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=(3968 if args.mode == "helper" else 384 if args.mode == "killable" else
+                    image_requirements=(8064 if args.mode == "helper" else 384 if args.mode == "killable" else
                                         1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,

@@ -525,6 +525,7 @@ int main(void)
 	check_native_escape();
 	check_origin_instruction();
 	check_terminal_and_indirect_calls();
+	check_retained_indirect_tails();
 	check_root_native_escape();
 	check_address_guard();
 	check_string_services();

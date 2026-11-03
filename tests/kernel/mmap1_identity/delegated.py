@@ -390,7 +390,7 @@ class Controller:
             with open('/dev/kd_dev', 'rb', buffering=0) as device:
                 record['capabilities'] = query_capabilities(device.fileno())
             rt.require(all(record['capabilities'].get(name) for name in
-                           ('origin_call', 'origin_memory', 'origin_context_read')), 'required retained MM context service unavailable')
+                           ('origin_call', 'origin_memory', 'origin_context_read', 'indirect_tail')), 'required retained MM context service unavailable')
             daemon = Daemon(self.model, self.source, self.binaries['daemon'])
             daemon.start()
             record['daemon_pid'] = daemon.daemon.pid

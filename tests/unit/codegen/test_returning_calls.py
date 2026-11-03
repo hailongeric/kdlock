@@ -1,9 +1,11 @@
 """Focused returning-CALL registry and emitted continuation checks."""
+import ctypes
 import struct
 import unittest
 from unittest.mock import patch
 
 from test_jit_diagnostics import render, translator
+from test_jit_body_witness import run_image
 
 
 class ReturningCallTests(unittest.TestCase):
@@ -193,6 +195,118 @@ class ReturningCallTests(unittest.TestCase):
         self.assertEqual(options['requirements'], 896)
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_5500:', assembly)
+
+    def indirect_tail_image(self, tail, *, capable=True, history=None, local=False):
+        # The source CALL is real: the thunk inherits its word, rather than
+        # manufacturing a JMP-specific continuation. Arithmetic precedes CALL
+        # so target staging and the tail miss must preserve its flags too.
+        raw = bytearray.fromhex('b27f80c201')  # MOV DL,127; ADD DL,1.
+        raw += b'\xe8' + struct.pack('<i', 0x1020 - (0x1000 + len(raw)) - 5)
+        raw += bytes.fromhex('0f90c10f98c20f94c3')  # SETO CL; SETS DL; SETZ BL.
+        raw += b'\xe8' + struct.pack('<i', 0x6100 - (0x1000 + len(raw)) - 5) + b'\xc3'
+        raw += b'\x90' * (0x20 - len(raw))
+        raw += bytes.fromhex(tail)
+        if local:
+            raw += b'\x90' * (0x40 - len(raw))
+            raw += bytes.fromhex('b82a000000c3')
+        options = {}
+        assembly, log, status = render(
+            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            native_escape_capable=True, indirect_tail_capable=capable,
+            indirect_history=history,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100,
+                            'kd_rwsem_up_write_clobber_v1': 0x6100},
+            returning_services={0x5500: dict(cookie=1, nargs=1, result_kind=1,
+                                             context_kind=2, symbol='primitive_call')},
+            body_witness=True, build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        return assembly, options
+
+    def test_indirect_tail_exports_full_packet_without_another_call_push(self):
+        for tail in ('ffe0', '41ffe0', '2e2e2effe0', '2e2e2e41ffe0',
+                     'ff20', '41ff20'):
+            with self.subTest(tail=tail):
+                assembly, options = self.indirect_tail_image(tail)
+                self.assertEqual(options['requirements'], 4992)
+                self.assertIn(b'kd_service_dispatch_100a:', assembly)
+                before = []
+                pointer = ctypes.c_ulong(0x5500)
+
+                def initialize(regs, stack):
+                    regs[12] = regs[11] = (ctypes.addressof(pointer)
+                        if tail in ('ff20', '41ff20') else 0x5500)
+                    before.append((regs[1], stack))
+
+                regs, args = run_image(assembly, [0x1000], initialize=initialize,
+                                       abi=2, requirements=options['requirements'])[0]
+                source_sp, stack = before[0]
+                self.assertEqual(args, [14, 1])
+                self.assertEqual((regs[0], regs[17]), (0x5500, 0x1020))
+                self.assertEqual(regs[1], source_sp - 8)
+                self.assertEqual((stack[7], stack[8]), (0x100a, 0x4444))
+                self.assertEqual(regs[19] & 0x8d5, 0x890)
+
+    def test_indirect_tail_service_returns_once_to_same_image_caller(self):
+        assembly, options = self.indirect_tail_image('ffe0')
+        before, exits = [], []
+        answer = 0xfedcba9876543210
+
+        def initialize(regs, stack):
+            regs[12] = 0x5500
+            before.append(regs[1])
+
+        def service(regs, args, stack):
+            exits.append(list(args))
+            if len(exits) != 1:
+                return False
+            self.assertEqual(list(args), [14, 1])
+            self.assertEqual((regs[0], regs[17], regs[1]),
+                             (0x5500, 0x1020, before[0] - 8))
+            self.assertEqual((stack[7], stack[8]), (0x100a, 0x4444))
+            # Substitute only the declared Native primitive's return: runtime
+            # consumes its retained CALL word once and rejoins the same bytes.
+            regs[0], regs[1], regs[12] = stack[7], regs[1] + 8, answer
+            regs[19] = 0x202 | 0x880
+            regs[17] = 0x4b44535643524545
+            return True
+
+        regs, args = run_image(assembly, [0x1000], initialize=initialize, resume=service,
+                               abi=2, requirements=options['requirements'])[0]
+        self.assertEqual(exits, [[14, 1], [1, 1]])
+        self.assertEqual((regs[0], regs[1]), (0x6100, before[0] - 8))
+        self.assertEqual(regs[12], answer)
+        self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255), (1, 1, 0))
+
+    def test_old_provider_jump_and_return_do_not_get_tail_provenance(self):
+        for raw in ('ffe0', 'c3', '85c07500ffe0'):
+            with self.subTest(raw=raw):
+                assembly, options = self.indirect_tail_image(raw, capable=False)
+                self.assertFalse(options['requirements'] & 4096)
+                self.assertNotIn(b'Stack_IJ, 14', assembly)
+
+    def test_returns_and_conditional_branches_never_get_tail_provenance(self):
+        for raw in ('c3', '85c07500c3'):
+            with self.subTest(raw=raw):
+                assembly, options = self.indirect_tail_image(raw)
+                self.assertFalse(options['requirements'] & 4096)
+                self.assertNotIn(b'Stack_IJ, 14', assembly)
+
+    def test_known_local_tail_keeps_normal_dispatch_and_real_return(self):
+        assembly, options = self.indirect_tail_image(
+            'ffe0', history={0x1022: [0x1040], 0x1046: [0x100a]}, local=True)
+        before = []
+
+        def initialize(regs, stack):
+            regs[12] = 0x1040
+            before.append((regs[1], stack))
+
+        regs, args = run_image(assembly, [0x1000], initialize=initialize,
+                               abi=2, requirements=options['requirements'])[0]
+        self.assertEqual(args, [1, 1])
+        self.assertEqual((regs[0], regs[1]), (0x6100, before[0][0] - 8))
+        self.assertEqual(regs[12], 42)
+        self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255), (1, 1, 0))
 
     def test_conditional_native_tail_keeps_both_source_paths(self):
         raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')

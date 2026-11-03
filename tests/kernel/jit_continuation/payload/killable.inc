@@ -130,12 +130,15 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 			atomic_inc(&failures);
 		WRITE_ONCE(helper_native_body_after, READ_ONCE(helper_native_body_after) + 1);
 	}
-	if (flags & (JIT_KILLABLE_HELPER | JIT_KILLABLE_HELPER_WAIT)) {
+	if (flags & (JIT_KILLABLE_HELPER | JIT_KILLABLE_HELPER_WAIT | JIT_KILLABLE_HELPER_TAIL)) {
 		unsigned long index = slot - killable_slots;
 		unsigned long value;
 
 		if (flags & JIT_KILLABLE_HELPER_WAIT)
 			value = jit_test_call_wait(index, JIT_HELPER_A1, JIT_HELPER_A2,
+				JIT_HELPER_A3, JIT_HELPER_A4, JIT_HELPER_A5);
+		else if (flags & JIT_KILLABLE_HELPER_TAIL)
+			value = jit_test_call_tail(index, JIT_HELPER_A1, JIT_HELPER_A2,
 				JIT_HELPER_A3, JIT_HELPER_A4, JIT_HELPER_A5);
 		else
 			value = jit_test_call_scalar(index, JIT_HELPER_A1, JIT_HELPER_A2,
@@ -388,6 +391,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	     run.flags != JIT_KILLABLE_REUSE && run.flags != JIT_KILLABLE_TRUE
 #ifdef JIT_CONTINUATION_HELPER
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
+	     && run.flags != JIT_KILLABLE_HELPER_TAIL
 	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
 	     && run.flags != JIT_KILLABLE_MEMORY && run.flags != JIT_KILLABLE_MEMORY_EARLY
 	     && run.flags != JIT_KILLABLE_NATIVE_WRITE && run.flags != JIT_KILLABLE_NATIVE_WRITE_EARLY

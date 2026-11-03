@@ -34,7 +34,7 @@ struct kd_source_info {
  * per-CPU arena. It starts after ALIGN(core_static_size, 4) on each possible
  * CPU. Its address extent survives module unload; object validity does not.
  * This excludes dynamic chunks and the first unit's possibly freed tail. */
-#define KD_JIT_CAPS_VERSION 16
+#define KD_JIT_CAPS_VERSION 17
 #define KD_JIT_CAP_MUTEX_STACK (1U << 0)
 #define KD_JIT_CAP_PERCPU_MODULE (1U << 1)
 #define KD_JIT_CAP_MUTEX_IMAGES (1U << 3)
@@ -61,6 +61,8 @@ struct kd_source_info {
 #define KD_JIT_CAP_ORIGIN_MEMORY (1U << 15)
 /* Exact origin preempt-count read aliases use returning instruction service. */
 #define KD_JIT_CAP_ORIGIN_CONTEXT_READ (1U << 16)
+/* Owned indirect JMP keeps the caller's existing source CALL word. */
+#define KD_JIT_CAP_INDIRECT_TAIL (1U << 17)
 #define KD_JIT_MUTEX_STACK_BYTES 256
 #define KD_JIT_PERCPU_MODULE_BYTES (8 * 1024)
 #define KD_JIT_PERCPU_ALIGNMENT 4

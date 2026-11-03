@@ -2,6 +2,7 @@
 /* Declared C primitives return to the retained executor; the body continues
  * there after this original-task transaction has finished. */
 #include <linux/sched/task_stack.h>
+#include <asm/nospec-branch.h>
 #include "kd_service_calls.h"
 
 #define JIT_HELPER_A1 0x1122334455667788UL
@@ -65,6 +66,23 @@ jit_test_call_scalar(unsigned long index, unsigned long a1, unsigned long a2,
 	WRITE_ONCE(slot->result, result);
 	return result;
 }
+
+/* This ordinary callee is translated, not registered as a Native primitive.
+ * Its register JMP retains the caller's existing CALL word. Only the scalar
+ * target below is serviced on the original task. */
+unsigned long jit_test_call_tail(unsigned long index, unsigned long a1,
+	unsigned long a2, unsigned long a3, unsigned long a4, unsigned long a5);
+asm(".pushsection .text\n"
+    ".balign 16\n"
+    ".globl jit_test_call_tail\n"
+    ".type jit_test_call_tail,@function\n"
+    "jit_test_call_tail:\n"
+    ".byte 0xf3,0x0f,0x1e,0xfa\n"
+    "lea jit_test_call_scalar(%rip),%rax\n"
+    ANNOTATE_RETPOLINE_SAFE "\n"
+    "jmp *%rax\n"
+    ".size jit_test_call_tail,.-jit_test_call_tail\n"
+    ".popsection\n");
 
 static __attribute__((noipa)) noinline notrace unsigned long
 jit_test_call_wait(unsigned long index, unsigned long a1, unsigned long a2,

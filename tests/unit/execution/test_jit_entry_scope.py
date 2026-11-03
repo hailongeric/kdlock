@@ -67,6 +67,8 @@ def main(executor=None, benchmark=False):
             "static int kd_jit_pending_call_native(struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
             "static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)",
+            "static int kd_jit_indirect_tail_length(unsigned long site, unsigned int *length)",
+            "static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_indirect_call_native(struct kd_exe_info *exe,",
             "static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,",
             "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
@@ -140,6 +142,29 @@ def main(executor=None, benchmark=False):
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "tail-skips-source-site-lease": (
+            "result = kd_source_pin_target(site);", "result = 0;",
+        ),
+        "tail-skips-source-end-lease": (
+            "result = kd_source_pin_target(site + length - 1);", "result = 0;",
+        ),
+        "tail-skips-caller-return-lease": (
+            "return kd_source_pin_target(return_ip);", "return 0;",
+        ),
+        "tail-accepts-call-opcode": (
+            "((modrm >> 3) & 7) != 4",
+            "(((modrm >> 3) & 7) != 4 && ((modrm >> 3) & 7) != 2)",
+        ),
+        "tail-accepts-four-cs-prefixes": (
+            "if (offset >= 3)", "if (false)",
+        ),
+        "tail-accepts-cs-memory-operand": (
+            "if (cs_prefixes && mode < 3)", "if (false)",
+        ),
+        "tail-skips-image-requirement": (
+            "!(frame->image->requirements & KD_IMAGE_REQUIRE_INDIRECT_TAIL)",
+            "false",
+        ),
         "indirect-cs-accepts-four-prefixes": (
             "if (offset == 3)", "if (false)",
         ),

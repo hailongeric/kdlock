@@ -6,6 +6,8 @@ from collections import defaultdict
 from assist import make_inst
 from miasm.expression.expression import ExprLoc
 
+RETAINED_TAIL_REQUIREMENT = 1 << 12
+
 
 class ReturnFlowError(ValueError):
     """An incomplete/budgeted return graph cannot authorize generated dispatch."""
@@ -108,9 +110,11 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
     return sorted(missing_callees)
 
 
-def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
+def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None,
+                    indirect_tails=None):
     ret_str = ""
     indirect_calls = indirect_calls or {}
+    indirect_tails = indirect_tails or {}
     for offset, psb_targets in sorted(jump_table.items()):
         ret_str += "ij_" + hex(offset)[2:] + ":\n"
         if preserve_flags:
@@ -125,14 +129,15 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
                                        if preserve_flags else f"loc_{psb_tgt:x}"])
         if preserve_flags:
             ret_str += "POPFQ\n"
-        if offset in indirect_calls:
-            # Only an actual source CALL reaches this stub, after target
-            # evaluation and the virtual push. orig_ax is provenance scratch
-            # for the distinct FULL exit, never a native FLAGS-restore tag.
+        if offset in indirect_calls or offset in indirect_tails:
+            # CALL already pushed its word; a tail JMP keeps its caller's
+            # existing word. Both save flags and source provenance, while the
+            # distinct FULL exits prevent a JMP from claiming a CALL push.
             ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
-            ret_str += make_inst("MOVABS", ["R15", hex(indirect_calls[offset])])
+            source = (indirect_calls if offset in indirect_calls else indirect_tails)[offset]
+            ret_str += make_inst("MOVABS", ["R15", hex(source)])
             ret_str += make_inst("MOV", ["QWORD PTR[REG_BANK + KD_REG_ORIG_AX]", "R15"])
-            ret_str += make_inst("MOV", ["Stack_IJ", "11"])
+            ret_str += make_inst("MOV", ["Stack_IJ", "11" if offset in indirect_calls else "14"])
             ret_str += make_inst("JMP", ["full_exit"])
         else:
             ret_str += make_inst("MOVABS", ["R15", hex(offset)])

@@ -181,6 +181,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             "source leases, lowering, return routing and lock ownership remain")
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     indirect_call_native = memread.device_session.indirect_call()
+    indirect_tail_capable = (abi == 2 and lock_kind == "mutex" and
+                             memread.device_session.indirect_tail())
     hostcall_targets = set(resolved_hostcalls)
     terminal_targets = set(native_terminals.resolve(get_kernel_symbol))
     returning_services = memread.device_session.service_calls() if abi == 2 else {}
@@ -368,6 +370,12 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
                  isinstance(line.args[0], ExprLoc) and
                  db_dict[block].get_location_offset(line.args[0].loc_key) in returning_services)
+                for block in block_dict.values() for line in block.lines):
+            service_queue_required = True
+        if indirect_tail_capable and returning_services and any(
+                line.name == 'JMP' and line.args and
+                isinstance(line.args[0], (ExprId, ExprMem)) and
+                native_terminals.indirect_tail_length(line.b) == line.l
                 for block in block_dict.values() for line in block.lines):
             service_queue_required = True
         block_dict, boundary_error = context_policy.critical_section_blocks(
@@ -723,7 +731,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
                              and not has_escapes and not root_escapes
                              and not origin_sites)
-    has_returning_call = bool(returning_services) and any(
+    indirect_tails = {
+        line.offset + line.l: line.offset
+        for block in block_dict.values() for line in block.lines
+        if indirect_tail_capable and returning_services and line.name == 'JMP' and
+        line.args and isinstance(line.args[0], (ExprId, ExprMem)) and
+        native_terminals.indirect_tail_length(line.b) == line.l
+    }
+    has_returning_call = bool(indirect_tails) or bool(returning_services) and any(
         (line.name == 'CALL' or line.name.startswith('J')) and
         ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
          isinstance(line.args[0], ExprLoc) and
@@ -757,6 +772,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         returning_targets=returning_targets,
         returning_services=returning_services,
         nonreturning_targets=nonreturning_targets,
+        indirect_tails=indirect_tails,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -774,7 +790,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       | (budget_resume.REQUIREMENT if budget_resume_enabled else 0)
                       | (context_policy.SERVICE_QUEUE_REQUIREMENT
                          if service_queue_required else 0)
-                      | (returning_calls.REQUIREMENT if returning_targets or memory_sites else 0)))
+                      | (returning_calls.REQUIREMENT
+                         if returning_targets or memory_sites or indirect_tails else 0)
+                      | (indirect_jump.RETAINED_TAIL_REQUIREMENT if indirect_tails else 0)))
     return 0
 
 

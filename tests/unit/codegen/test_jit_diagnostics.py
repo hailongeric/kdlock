@@ -66,6 +66,7 @@ def render(
     origin_instruction_capable=False,
     origin_memory_capable=False,
     origin_context_read_capable=False,
+    indirect_tail_capable=False,
     returning_services=None,
     bound_controls=None,
     read_policies=None,
@@ -103,6 +104,8 @@ def render(
                                         "native_escape", return_value=native_escape_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "indirect_call", return_value=indirect_call_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "indirect_tail", return_value=indirect_tail_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "origin_instruction", return_value=origin_instruction_capable))
         stack.enter_context(patch.object(translator.memread.device_session,

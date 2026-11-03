@@ -153,6 +153,83 @@ static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 	return 0;
 }
 
+/* The near JMP shares the bounded addressing grammar, but never a CALL push
+ * or RET pop. A distinct decoder keeps those source operations separate. */
+static int kd_jit_indirect_tail_length(unsigned long site, unsigned int *length)
+{
+	u8 bytes[8], modrm, mode, rm, base = 0xff;
+	unsigned int offset = 0, count, cs_prefixes;
+
+	if (!site || site > ~0UL - sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, 1))
+		return -EFAULT;
+	while (bytes[offset] == 0x2e) {
+		if (offset >= 3)
+			return -EILSEQ;
+		offset++;
+		if (copy_from_kernel_nofault(bytes, (void *)site, offset + 1))
+			return -EFAULT;
+	}
+	cs_prefixes = offset;
+	if (bytes[offset] >= 0x40 && bytes[offset] <= 0x4f)
+		offset++;
+	if (copy_from_kernel_nofault(bytes, (void *)site, offset + 2))
+		return -EFAULT;
+	modrm = bytes[offset + 1];
+	if (bytes[offset] != 0xff || ((modrm >> 3) & 7) != 4)
+		return -EILSEQ;
+	count = offset + 2;
+	mode = modrm >> 6;
+	rm = modrm & 7;
+	if (cs_prefixes && mode < 3)
+		return -EILSEQ;
+	if (mode != 3 && rm == 4) {
+		if (copy_from_kernel_nofault(bytes, (void *)site, ++count))
+			return -EFAULT;
+		base = bytes[count - 1] & 7;
+	}
+	count += mode == 1 ? 1 : mode == 2 ||
+		 (mode == 0 && (rm == 5 || base == 5)) ? 4 : 0;
+	if (count > sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, count))
+		return -EFAULT;
+	*length = count;
+	return 0;
+}
+
+static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	unsigned long site, base, return_ip;
+	unsigned int length;
+	int result;
+
+	if (!frame || !regs || !frame->mutex_backend ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
+	    regs != kd_exec_frame_regs(frame) || !frame->logical_task ||
+	    frame->logical_task == current || !frame->image ||
+	    !frame->image->immutable ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_INDIRECT_TAIL))
+		return -EINVAL;
+	site = regs->orig_ax;
+	result = kd_source_pin_target(site);
+	if (!result)
+		result = kd_jit_indirect_tail_length(site, &length);
+	if (!result)
+		result = kd_source_pin_target(site + length - 1);
+	if (result)
+		return result;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE || regs->sp < base ||
+	    regs->sp > base + THREAD_SIZE - sizeof(return_ip) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp, sizeof(return_ip)) ||
+	    !return_ip)
+		return -EINVAL;
+	/* The original caller's word stays untouched. Its source remains leased
+	 * through the typed service, whose completion consumes it exactly once. */
+	return kd_source_pin_target(return_ip);
+}
+
 static int kd_jit_indirect_call_native(struct kd_exe_info *exe,
 				      struct kd_exec_frame *frame,
 				      struct kd_regs *regs)

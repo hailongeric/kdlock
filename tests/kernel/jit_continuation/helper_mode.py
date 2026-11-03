@@ -207,7 +207,7 @@ def session_class(base):
             result = super().counts(label)
             if label == 'initial':
                 caps = self.record['capabilities']
-                rt.require(caps['version'] == 16 and
+                rt.require(caps['version'] == 17 and caps['features'] & (1 << 17) and
                            caps['features'] & ((1 << 14) | (1 << 15) | (1 << 16)) ==
                            ((1 << 14) | (1 << 15) | (1 << 16)),
                            'returning primitive/GS instruction service unavailable', 'ENVIRONMENT')
@@ -252,8 +252,11 @@ def session_class(base):
             trace.write_text('1\n')
             rt.require(trace.read_text().strip() == 'Y', 'service trace readback differs')
             self.record['service_trace_during_checks'] = True
-            for sleeping, symbol, flags in ((False, SYMBOLS[0], 64), (True, SYMBOLS[1], 128)):
-                result = self.phase_begin('primitive-sleeping-child' if sleeping else 'primitive-six-word-scalar')
+            for name, sleeping, symbol, flags in (
+                    ('primitive-six-word-scalar', False, SYMBOLS[0], 64),
+                    ('primitive-sleeping-child', True, SYMBOLS[1], 128),
+                    ('primitive-indirect-tail', False, SYMBOLS[0], 16384)):
+                result = self.phase_begin(name)
                 client = self.start(result['name'] + '-root', 0, 1, flags)
                 pid = client[2]['pid']
                 if sleeping:
@@ -289,6 +292,13 @@ def session_class(base):
                     self.helper_descriptors[symbol]['target'], self.record['image_registry'][0]['generation'], value)
                 result.update(helper_observation=state, primitive_transaction=transactions,
                               execution='ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN')
+                if flags == 16384:
+                    rt.require(self.record['image_registry'][0]['requirements'] & 4096,
+                               'indirect tail image contract missing', 'NO_JIT')
+                    result['indirect_tail'] = dict(source='ordinary CALL to unregistered register-JMP callee',
+                        target=symbol, original_task=pid, executor=root['executor'],
+                        same_image_generation=self.record['image_registry'][0]['generation'],
+                        saved_caller_word_reused=True)
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN'
                 self.save()

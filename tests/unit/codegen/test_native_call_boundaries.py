@@ -88,6 +88,28 @@ class NativeCallBoundariesTests(unittest.TestCase):
                     self.assertEqual(args, [11 if capable else 0x1000 + length, 1])
                     self.assertEqual(regs[17], 0x1000 if capable else 0)
 
+    def test_exact_near_tail_encodings_are_separate_from_calls_and_returns(self):
+        for raw in ("ffe0", "41ffe0", "ff2424", "ff2501020304",
+                    "ffa42401020304", "41ffa42401020304", "2effe0",
+                    "2e2effe0", "2e2e2effe0", "2e41ffe0",
+                    "2e2e41ffe0", "2e2e2e41ffe0"):
+            with self.subTest(raw=raw):
+                instruction = decode(raw)
+                self.assertEqual(instruction.name, "JMP")
+                self.assertEqual(native_terminals.indirect_tail_length(instruction.b),
+                                 instruction.l)
+                self.assertIsNone(native_terminals.indirect_call_length(instruction.b))
+                for size in range(len(instruction.b)):
+                    self.assertIsNone(native_terminals.indirect_tail_length(
+                        instruction.b[:size]))
+        for raw in ("ffd0", "ffe8", "c3", "7500", "66ffe0", "f3ffe0",
+                    "67ff2424", "e900000000", "ff", "ffa4",
+                    "41ffa424010203", "2e2e2e2effe0", "2e66ffe0",
+                    "662effe0", "2ef3ffe0", "2effd0", "2effe8",
+                    "2eff2424", "2e41ff2424", "412effe0", "2e4141ffe0",
+                    "2e", "2e2e2e41ff", "2e2e2effe090"):
+            self.assertIsNone(native_terminals.indirect_tail_length(bytes.fromhex(raw)), raw)
+
     def test_unknown_ret_and_jump_never_get_call_exit(self):
         for raw in ("c3", "ffe0"):
             assembly = self.generated(raw, indirect_call_capable=True)

@@ -517,8 +517,11 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ORIGIN_MEMORY;
 					break;
 				}
-			} else if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL) {
+			} else if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL ||
+				   args[0] == KD_EXE_INDIRECT_TAIL) {
 				call_ret = fault_kind ? -EINVAL : 0;
+				if (!call_ret && args[0] == KD_EXE_INDIRECT_TAIL)
+					call_ret = kd_jit_retained_tail(frame, regs);
 				if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
 					unsigned int length;
 					unsigned long return_ip, site = regs->orig_ax;
@@ -543,7 +546,7 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ORIGIN_CALL;
 					break;
 				}
-				if (!call_ret)
+				if (!call_ret && args[0] != KD_EXE_INDIRECT_TAIL)
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
 			} else if (args[0] == KD_EXE_INST_LIMIT && !fault_kind &&
 				   (frame->image->requirements & KD_IMAGE_REQUIRE_BUDGET_RESUME) &&
@@ -560,6 +563,12 @@ returned_wrapper:
 			kd_jit_log_hl_error("RETAINED_OPERATION_UNIMPLEMENTED", frame,
 				regs, args[0], call_ret ? call_ret : -EOPNOTSUPP,
 				continuation_count, hostcall_count);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+		if (args[0] == KD_EXE_INDIRECT_TAIL) {
+			kd_jit_log_hl_error("INDIRECT_TAIL_REQUIRES_RETAINED_ROOT", frame,
+				regs, args[0], -EOPNOTSUPP, continuation_count, hostcall_count);
 			ret_flag = KD_EXE_RUN_ERROR;
 			break;
 		}
@@ -895,7 +904,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
 					      KD_IMAGE_REQUIRE_ORIGIN_CALL |
 					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY |
-					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ)) ||
+					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ |
+					      KD_IMAGE_REQUIRE_INDIRECT_TAIL)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;
