@@ -63,6 +63,11 @@ struct kd_reached_state {
 	struct kd_regs *regs;
 	const struct kd_reached_ops *ops;
 	void *context;
+	/* The frame adapter binds these to the exact queue request generation.
+	 * Pointer equality alone cannot authorize a state after slot reuse. The
+	 * scalar component initializes them but never grants custody with them. */
+	const void *owner_identity;
+	u64 owner_generation;
 	u64 budget;
 	u64 sequence;
 	unsigned int packet_state;

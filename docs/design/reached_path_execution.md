@@ -281,6 +281,12 @@ to public API success, error or downgrade behavior. The standalone engine
 fixture supplies ordinary private RAM and all-or-none store callbacks; its
 checks do not prove the still-unactivated frame adapter or arbitrary MM stores.
 
+Adapter state also records the exact request identity and generation. A reused
+frame and packet can have the same addresses; an old scalar state must fail
+before fetching or executing in that new request. Focused adapter fixtures
+exercise this distinction and committed-prefix preservation separately from
+the cold engine's instruction effects.
+
 ### First focused validation attempt
 
 The first VM unit attempt used

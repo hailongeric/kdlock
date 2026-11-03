@@ -111,6 +111,8 @@ int kd_exe_reached_begin(struct kd_exec_frame *frame,
 		return ret;
 	state->context = frame;
 	state->ops = &kd_reached_frame_ops;
+	state->owner_identity = cont->request->identity;
+	state->owner_generation = cont->generation;
 	frame->packet_state = KD_PACKET_FULL;
 	return 0;
 }
@@ -124,6 +126,8 @@ enum kd_reached_result kd_exe_reached_run(struct kd_exec_frame *frame,
 	if (!kd_reached_frame_ready(frame) || !state ||
 	    state->context != frame || state->ops != &kd_reached_frame_ops ||
 	    state->regs != kd_exec_frame_regs(frame) ||
+	    state->owner_identity != kd_exec_frame_continuation(frame)->request->identity ||
+	    state->owner_generation != kd_exec_frame_continuation(frame)->generation ||
 	    frame->packet_state != KD_PACKET_FULL || !instruction_limit ||
 	    instruction_limit > 64)
 		return KD_REACHED_PACKET;

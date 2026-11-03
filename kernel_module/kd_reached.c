@@ -667,6 +667,8 @@ int kd_reached_begin(struct kd_reached_state *s, struct kd_regs *r,
 		r->orig_ax = 0; r->cs = 0; r->flags = 2; r->ss = 0;
 	}
 	s->regs = r;
+	s->owner_identity = NULL;
+	s->owner_generation = 0;
 	s->packet_state = KD_PACKET_FULL;
 	s->budget = budget;
 	s->sequence = 0;
