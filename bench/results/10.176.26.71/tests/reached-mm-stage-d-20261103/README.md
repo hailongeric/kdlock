@@ -653,3 +653,26 @@ The source-only review of `4b7b0b97` found the new call-context fixture was
 not yet in the worker sequence. No checks or application run used that
 frozen candidate. The next commit adds the missing invocation before fresh
 VM validation; existing frozen inputs remain unchanged.
+
+
+## Twenty-second candidate: `dc717333`
+
+Exact source: `dc717333450fddf53fdeb65abd60539f8e4996cb`. Provider and
+resident builds passed with67,643 assertions, including the new bounded
+call-context fixture. Seven MM-proof and nine private-source cases passed
+([checks](twentysecond-checks.json)). Actual execution again reached the IRQ
+operation in `exit_mmap`, O5027/E4961, generation1, and failed before that
+operation. [Reached call context](twentysecond-call-context.log) identifies
+`free_pages_and_swap_cache` → `folios_put_refs` → private page-cache release
+→ LRU IRQ acquisition. This resolves the enclosing interval from executed
+source, without an upfront graph or a whole-MM local continuation. The run
+remains failed/undrained, and process validation is unrun. Ordinary logs were
+preserved before recovery to idle boot `5c11c49a-fbf5-43a8-84bf-058fb6472fc7`.
+
+Design `6c3e2648` adds four general Native folio/reference-release APIs with
+exact original arguments, encoded pointer bits and batch/refcount semantics.
+Their balanced LRU/IRQ work executes on O and returns to the same E MM body.
+[Source inventory](folio-release-source.json) binds the declarations and
+implementations. No private LRU helper or MM algorithm body is registered.
+The broader IRQ-held-body case remains unsupported; fresh context checks and
+actual thread/process validation remain required.

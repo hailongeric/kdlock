@@ -58,6 +58,12 @@ KD_SERVICE_CONTEXT(free_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_A
 KD_SERVICE_CONTEXT(free_pages_exact, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(free_frozen_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(free_frozen_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/swap.c and mm/swap_state.c: Native reference/batch release keeps its
+ * balanced LRU/IRQ interval and original pointer/count/ref-array words. */
+KD_SERVICE_CONTEXT(__folio_put, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(folios_put_refs, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(release_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_and_swap_cache, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
 KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* include/linux/vmstat.h:281-287: ordinary public node/zone accounting.
