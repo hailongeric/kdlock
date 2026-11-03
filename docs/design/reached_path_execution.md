@@ -872,3 +872,11 @@ records, freezing and request retirement are unchanged.
 Validate page boundaries, empty pages, duplicate/misplaced cookies, state
 changes, legacy overflow and registration/cancellation before another actual
 thread/process attempt. Discovery allocations remain outside lock execution.
+
+On `14b00a56`, all seven focused drivers and67,608 resident checks passed,
+and the provider loaded successfully. Preparation then found the common
+benchmark parameter snapshot still reading the legacy full-table attribute;
+it correctly returned EOVERFLOW. Update that known table read to use the same
+validated paged reader. Preserve failures from all other attributes and retain
+the complete table in the snapshot. No application body was activated by this
+attempt. Add a focused old/new provider snapshot check before retrying.
