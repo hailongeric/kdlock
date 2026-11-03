@@ -82,6 +82,17 @@ static LIST_HEAD(kd_service_active);
 static DECLARE_WAIT_QUEUE_HEAD(kd_service_work);
 static struct task_struct **kd_service_workers;
 static unsigned int kd_service_worker_count;
+static char kd_service_cpus[128];
+static cpumask_t kd_service_cpu_pool;
+module_param_string(service_cpus, kd_service_cpus, sizeof(kd_service_cpus), 0444);
+MODULE_PARM_DESC(service_cpus, "Executor CPU list; empty uses online CPUs");
+static void kd_service_online_pool(struct cpumask *allowed)
+{
+	if (kd_service_cpus[0])
+		cpumask_and(allowed, &kd_service_cpu_pool, cpu_online_mask);
+	else
+		cpumask_copy(allowed, cpu_online_mask);
+}
 static atomic64_t kd_service_work_sequence = ATOMIC64_INIT(0);
 module_param_named(service_trace, kd_service_trace, bool, 0644);
 MODULE_PARM_DESC(service_trace, "Focused request, executor and returned completion records");
@@ -607,7 +618,7 @@ static void kd_service_pin_cpu(struct kd_service_root *root)
 		bool valid = true;
 
 		flags = _raw_spin_lock_irqsave(&kd_service_dispatch_guard);
-		cpumask_copy(root->worker_allowed, cpu_online_mask);
+		kd_service_online_pool(root->worker_allowed);
 		list_for_each_entry(origin, &kd_service_active, active_link)
 			cpumask_clear_cpu(origin->origin_cpu, root->worker_allowed);
 		_raw_spin_unlock_irqrestore(&kd_service_dispatch_guard, flags);
@@ -1015,13 +1026,14 @@ static int kd_service_worker(void *unused)
 
 		if (root) {
 			root->worker_allowed = allowed;
-			cpumask_copy(allowed, cpu_online_mask);
+			kd_service_online_pool(allowed);
 			cpumask_clear_cpu(root->origin_cpu, allowed);
 			BUG_ON(cpumask_empty(allowed));
 			/* Exclude origin before publishing PIN, while it can schedule. */
 			BUG_ON(set_cpus_allowed_ptr(current, allowed));
 			kd_service_execute(root);
-			set_cpus_allowed_ptr(current, cpu_online_mask);
+			set_cpus_allowed_ptr(current, kd_service_cpus[0] ?
+				&kd_service_cpu_pool : cpu_online_mask);
 		} else {
 			wait_event(kd_service_work, kthread_should_stop() ||
 				atomic64_read(&kd_service_work_sequence) != sequence);
@@ -1465,6 +1477,17 @@ int kd_service_init(void)
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, native_sp) != KD_ORIGIN_MEMORY_NATIVE_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, shadow_sp) != KD_ORIGIN_MEMORY_SHADOW_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, shadow_bp) != KD_ORIGIN_MEMORY_SHADOW_BP);
+	if (kd_service_cpus[0]) {
+		result = cpulist_parse(kd_service_cpus, &kd_service_cpu_pool);
+		if (result)
+			return result;
+		cpumask_and(&kd_service_cpu_pool, &kd_service_cpu_pool, cpu_online_mask);
+		/* A captured origin cannot also supply its executor's CPU. */
+		if (cpumask_weight(&kd_service_cpu_pool) < 2)
+			return -EINVAL;
+	} else {
+		cpumask_copy(&kd_service_cpu_pool, cpu_online_mask);
+	}
 	result = kd_service_calls_init();
 	if (result)
 		return result;
@@ -1479,7 +1502,7 @@ int kd_service_init(void)
 			if (!record->service)
 				goto fail;
 		}
-	kd_service_worker_count = num_online_cpus();
+	kd_service_worker_count = cpumask_weight(&kd_service_cpu_pool);
 	kd_service_workers = kcalloc(kd_service_worker_count,
 		sizeof(*kd_service_workers), GFP_KERNEL);
 	if (!kd_service_workers)

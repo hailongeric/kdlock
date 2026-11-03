@@ -153,12 +153,14 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                         with self.assertRaises(bench.rt.Failure):
                             bench.run_point(*args, diagnostic=True)
                     else:
-                        bench.run_point(*args, diagnostic=True)
+                        bench.run_point(*args, diagnostic=True, diagnostic_log_bytes=512 * 1024**2)
                     result = json.loads((out / 'result.json').read_text())
                     self.assertEqual(result['passed'], not fault)
                     self.assertTrue(result['drained'])
                     self.assertFalse(result['scored'])
                     self.assertTrue(result['kernel_log_collection']['complete'])
+                    self.assertEqual(result['kernel_log_collection']['max_bytes'],
+                                     logs.MAX_BYTES if fault else 512 * 1024**2)
                     self.assertEqual(result['kernel_log_collection']['fault_detected'], fault)
                     self.assertEqual((out / 'kernel.log').read_bytes(), data)
             finally:

@@ -282,7 +282,7 @@ class Controller:
                    'prewarmed source ledger is not quiescent')
         parameters = rt.parameters()
         selected = {name: parameters[name] for name in ('rwsem_provider_active', 'rwsem_provider_mode',
-                                                       'jit_timing', 'service_trace', 'bench_quiet', 'bench_complete_probe')}
+                                                       'jit_timing', 'service_trace', 'service_cpus', 'bench_quiet', 'bench_complete_probe')}
         value = dict(schema=1, boot_id=self.args.boot_id, provider=dict(path=str(self.binaries['provider']),
             sha256=rt.digest(self.binaries['provider']), note_sha256=execution.module_note_sha256(self.binaries['provider'])),
             daemon=actual_daemon, preparer=preparer, parameters=selected, registry=rows,
@@ -301,7 +301,7 @@ class Controller:
                    'image-free source must have no images, frames or writers')
         parameters = rt.parameters()
         selected = {name: parameters[name] for name in ('rwsem_provider_active', 'rwsem_provider_mode',
-                    'service_reached', 'jit_timing', 'service_trace', 'bench_quiet', 'bench_complete_probe')}
+                    'service_reached', 'jit_timing', 'service_trace', 'service_cpus', 'bench_quiet', 'bench_complete_probe')}
         value = dict(schema=2, execution_mode='reached', boot_id=self.args.boot_id,
             provider=dict(path=str(self.binaries['provider']), sha256=rt.digest(self.binaries['provider']),
                           note_sha256=execution.module_note_sha256(self.binaries['provider'])),
@@ -462,14 +462,21 @@ class Controller:
         logdir.mkdir()
         self.log_fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
         os.lseek(self.log_fd, 0, os.SEEK_END)
-        self.collector = bench.kernel_log.DiagnosticKernelLog(self.log_fd, logdir, rt.FAULT)
+        self.collector = bench.kernel_log.DiagnosticKernelLog(self.log_fd, logdir, rt.FAULT,
+            max_bytes=self.args.diagnostic_log_mib * 1024**2)
         try:
             self.collector.start()
             provider_args = ['insmod', self.binaries['provider'], 'bench_quiet=1',
                 'bench_complete_probe=0', 'jit_timing=0', 'hotlock_stats=0']
             if self.reached:
                 provider_args.append('service_reached=1')
+            if self.args.executor_cpus:
+                provider_args.append('service_cpus=' + self.args.executor_cpus)
             self.run('load-provider', provider_args)
+            rt.require((PARAMETERS / 'service_cpus').read_text().strip() == self.args.executor_cpus,
+                       'executor placement differs from the requested CPU list')
+            record.update(executor_cpus=self.args.executor_cpus,
+                          diagnostic_log_mib=self.args.diagnostic_log_mib)
             record['provider_loaded'] = True
             rt.require((PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
                        (PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0', 'factory was not initially inactive')
@@ -510,7 +517,8 @@ class Controller:
             record.update(state='APPLICATION', execution_session=exact_session.identity())
             self.save()
             session = bench.run_point(self.model / 'application', dict(model=model, workers=2, round=0, nominal_seconds=2),
-                inputs, self.verify, diagnostic=True, execution_session=exact_session)
+                inputs, self.verify, diagnostic=True, execution_session=exact_session,
+                diagnostic_log_bytes=self.args.diagnostic_log_mib * 1024**2)
             snapshot = self.stop_observer()
             symbols = [int(line.split()[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                        if len(line.split()) == 4 and line.split()[2:] == ['kd_rwsem_ops', '[kdlock_km]']]
@@ -600,10 +608,16 @@ def main():
                         help='reached: resident image-free execution without translator/prewarming')
     parser.add_argument('--prewarm-timeout', type=int, default=600,
                         help='bounded writer-image preparation seconds per model (1..3600)')
+    parser.add_argument('--executor-cpus', default='',
+                        help='load-time executor CPU list; empty retains the ordinary policy')
+    parser.add_argument('--diagnostic-log-mib', type=int, default=256,
+                        help='bounded allowance per lifecycle/application log (256..1024 MiB)')
     bench.arguments(parser)
     args = parser.parse_args()
     if not 1 <= args.prewarm_timeout <= 3600:
         parser.error('--prewarm-timeout must be between 1 and 3600 seconds')
+    if not 256 <= args.diagnostic_log_mib <= 1024:
+        parser.error('--diagnostic-log-mib must be between 256 and 1024 MiB')
     rt.require(args.mode == 'kd' and args.kernel_variant in ('kdscope5-kd', 'kdscope5-log16-kd'), 'explicit kdscope5 delegated mode required')
     bench.guest(args)
     rt.require(os.geteuid() == 0 and sys.executable == PYTHON and str(ROOT).startswith('/root/'),
@@ -617,7 +631,7 @@ def main():
     rt.require(not args.output.exists() and args.output.is_relative_to(Path('/mnt/kdlock-builds2')) and
                not args.output.is_relative_to(ROOT) and not ROOT.is_relative_to(args.output), 'fresh independent DATA2 output required')
     bench.idle()
-    rt.require(shutil.disk_usage(args.output.parent).free > 3 * GIB + 2 * bench.kernel_log.MAX_BYTES,
+    rt.require(shutil.disk_usage(args.output.parent).free > 4 * GIB + 4 * args.diagnostic_log_mib * 1024**2,
                'provider build and bounded diagnostic collection headroom unavailable')
     rows = source_manifest(args)
     inputs = checked(args.inputs, args.inputs_sha256)

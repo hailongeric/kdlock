@@ -280,7 +280,8 @@ def task_gone(row):
         return True
 
 
-def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None):
+def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
+              diagnostic_log_bytes=None):
     """One normal upstream lifetime; observations end during its own warmup."""
     if execution_session is None:
         idle(allow_identity_probe=diagnostic)
@@ -310,7 +311,8 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
     try:
         if traced:
-            collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT)
+            collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT,
+                max_bytes=kernel_log.MAX_BYTES if diagnostic_log_bytes is None else diagnostic_log_bytes)
             collector.start()
             started = time.monotonic_ns()
             before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
