@@ -61,6 +61,12 @@ KD_SERVICE_CONTEXT(inc_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL
 KD_SERVICE_CONTEXT(inc_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(dec_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(dec_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* Public memcg/lruvec accounting: mm/memcontrol.c:693-835. Native APIs retain
+ * their balanced CPU-local/RCU intervals and consume the original int delta. */
+KD_SERVICE_CONTEXT(mod_memcg_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_lruvec_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(lruvec_stat_mod_folio, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_lruvec_kmem_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).
  * The temporary reader-exclusion wait finishes before either API returns. */
 KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)

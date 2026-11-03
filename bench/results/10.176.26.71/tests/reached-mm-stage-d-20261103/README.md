@@ -369,3 +369,29 @@ CPU-local differential retry and atomic overflow accounting on O. Their
 private helpers and MM callers are unchanged and unregistered. The same E
 continues afterward. Context and exact CALL/ACK/lifetime guards are unchanged;
 fresh roster checks and actual syscall validation remain required.
+
+
+## Tenth candidate: `918cd561`
+
+Exact source: `918cd561026a61156b81511597c4737402551d5f`. The five focused
+context, returning-call, trace, MM-proof and private-source drivers passed
+([units](tenth-units.json)); provider and observation module builds passed.
+On boot `2beefbc5-196a-4620-8859-e38b83768b9b`, the next stop was
+`ffffffff818a863b` in private `mod_memcg_lruvec_state`, bytes
+`65 48 01 5c c2 18` (GS ADD RBX to a CPU-local accounting word).
+O `4112`, E `4049`, generation 3, entry `ffffffff818e077d` remain in the
+[resident log](tenth-resident-kernel.log). [Live bytes](tenth-live-site.json)
+and [raw retention](tenth-retention.json) preserve the undrained activation.
+No worker mmap/munmap completion is proved; the process model remains unrun.
+Recovery boot is `b777ab81-d2f8-4afc-9c7e-f9708d0d120e`.
+
+## General memcg/lruvec accounting service
+
+Design was committed first as `c2ebc9a5`, based on the
+[exact source inventory](memcg-accounting-source.json). Four public accounting
+APIs now retain their Native per-CPU, RCU, node/cgroup/lruvec transaction on O
+and return to the same E continuation: `mod_memcg_state`, `mod_lruvec_state`,
+`lruvec_stat_mod_folio` and `mod_lruvec_kmem_state`. Each is three arguments,
+void, atomic-compatible, with original int delta semantics. No private helper
+or MM body adapter is registered, and existing context/owner/ACK checks stay
+intact. Fresh focused checks and actual-MM validation are pending.
