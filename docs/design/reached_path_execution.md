@@ -666,3 +666,30 @@ register-form BT. No source GPR or source data is written, and failure precedes
 packet effects. Memory BTS/BTR/BTC and LOCK forms remain explicit unsupported
 operations in this slice. Validate signed offsets, immediate masking, flags,
 one-read/no-write behavior and source failure against Native before retrying MM.
+
+The memory-BT candidate `07189e3c` passed 64,432 resident assertions, then its
+MM retry reached GS ADD of `this_cpu_off` at `ffffffff81828ca9` in private
+`get_page_from_freelist`, immediately after source preemption was disabled.
+This is CPU-local page-allocation machinery. Audit the enclosing public API;
+do not register that private allocator body or restart its failed prefix.
+
+Captured scope5 `include/linux/gfp.h`, `mm/page_alloc.c`, `mm/mempolicy.c` and
+`include/linux/sched/mm.h` establish the exact general page/folio allocation
+boundaries. Register `__alloc_pages_noprof`/`__folio_alloc_noprof` (four args),
+`alloc_pages_noprof`/`folio_alloc_noprof`/`get_free_pages_noprof` (two), and
+`get_zeroed_page_noprof` (one), each with its Native word result and unchanged
+arguments. Execute the selected exact public API on O, preserving source GFP,
+NUMA policy, PF_MEMALLOC/NOIO/NOFS/PIN scope, result/refcount and failure rules.
+No mapping to a different allocator, caller flag or MM body adapter is added.
+
+Use the existing atomic-compatible context (2) with the explicit clarification
+in `rwsem_delegated_protocol.md`: it permits inherited atomic custody, rather
+than forcing every invocation to be non-sleeping. The actual Native API retains
+its own argument/task-dependent blocking preconditions. O's sole runtime pin
+is removed; if no Native pins remain, O can schedule normally and E can unbind.
+Keep IRQ/preempt/RCU/owner/stack/ACK checks unchanged. A bare GFP-bit selector
+on E would incorrectly ignore Native task scopes and is not introduced.
+Validate the public roster/prototypes and existing context gates, then require
+actual API return and continued E execution in the next MM attempt. IRQ-off
+entry and arbitrary allocator internals outside these API intervals remain
+unvalidated.

@@ -197,13 +197,16 @@ Native context after removing only the engine-owned pin. Preserve actual
 Native signals, conditional results and all enclosing KD ownership records.
 
 The module descriptor context values distinguish balanced task calls (1),
-balanced nonblocking calls (2), conditional PTE spin-plus-RCU grant (3), ordinary
+atomic-compatible calls (2), conditional PTE spin-plus-RCU grant (3), ordinary
 spin acquire/try/release (4/5/6), RCU acquire/release (7/8), and conditional PTE
 RCU-only grant (9). The sysfs row shape is unchanged. Eight cold records per
 root are a storage fast path, not an API limit: a further acquisition retains
 one executor C-stack spill record before invoking the Native API, and released
 records are reused. Kernel-stack pressure is an explicit unvalidated boundary.
-The frontend accepts only those nine declared context values. A source
+Later extensions add Native scheduling (10), the declared terminal (11),
+Native rwsem write acquire/release (12/13), and argument-zero-dependent
+balanced/atomic declaration (14). The frontend accepts these declared values;
+policy 14 resolves to a private context 1 or 2 before publication. A source
 indirect CALL keeps its exact successor in the immutable image when returning
 services are available; the runtime must still match the evaluated target to
 an exact registered descriptor before authorizing that continuation. Merely
@@ -219,7 +222,15 @@ ordinary Native spin record contributes one Native preempt disable, while each
 RCU record contributes one task read-side nesting reference. The engine pin is
 accounted separately and is the only pin temporarily removed by the bridge.
 Balanced potentially sleeping calls are refused while either Native kind is
-live. A nonblocking context call may preserve that surrounding interval.
+live. Context 2 permits preserving that surrounding interval; it does not
+manufacture an atomic execution state or prohibit all scheduling. This is a
+deliberate clarification of the earlier nonblocking-only description. For a
+reviewed Native API with conditional blocking, valid arguments and O's actual
+GFP/task scope determine whether that invocation may sleep. The bridge removes
+only its runtime pin; with no Native pins, O remains sleepable and E may unbind.
+With Native custody, the original API's atomic-call preconditions still apply.
+Do not alter arguments, invent a GFP policy on E, or relax the exact context
+balance/ownership/ACK checks. IRQ-off entry remains outside this contract.
 
 Releasing the outer KD owner does not complete a root that still holds Native
 records. The final Native release can instead be its completion endpoint. That
