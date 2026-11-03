@@ -712,3 +712,22 @@ origin migration, return and exact ACK checks remain unchanged. No private
 `mod_node_state`/`mod_zone_state` or caller-specific function is registered.
 After focused roster/context checks, build and retry actual MM under a new
 immutable candidate. The stopped attempt is undrained evidence, not success.
+
+Candidate `918cd561` then reached `ffffffff818a863b`, bytes
+`65 48 01 5c c2 18`, a GS ADD in private `mod_memcg_lruvec_state`. Captured
+scope5 `mm/memcontrol.c:693-835`, `include/linux/memcontrol.h:931-961` and
+`include/linux/vmstat.h:519-523` define the public accounting boundaries.
+`mod_lruvec_state` updates node, cgroup and lruvec counters; its private helper
+uses `get_cpu`/`put_cpu`, per-CPU additions and rstat accounting. Preserve this
+complete public transaction on O, then resume E. Do not register its private
+helper or repeat the already executed prefix in the stopped activation.
+
+Add four general three-argument void API descriptors: `mod_memcg_state`,
+`mod_lruvec_state`, `lruvec_stat_mod_folio` and `mod_lruvec_kmem_state`.
+Their public delta is int, passed unchanged as the source argument word and
+consumed by Native code. All use the existing atomic-compatible context;
+Native API bodies retain their own balanced preemption/RCU intervals and
+untracked-object branches. Inherited source RCU/pins, object lifetime and
+exact return/ACK records remain required. No MM integration change or private
+body service is introduced. Require focused roster/context checks and a new
+actual-MM attempt, preserving the preceding failure separately.
