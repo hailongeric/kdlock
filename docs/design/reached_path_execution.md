@@ -535,3 +535,28 @@ bounded return neighborhood, not a whole-CFG admission step or a named helper
 for its canary predicate. Keep faulting or unsupported forms explicit, preserve
 the failed attempt, and validate both the instruction effects and returning
 service before another actual MM activation.
+
+The GS-corrected `0ac46e80` passed 500 decoder/Native-effect assertions,
+64 production read-policy checks and the affected service/MM validators. Its
+actual MM retry passed the first GS service and reached `f3 48 ab` at
+`ffffffff826bbc0f` in `mt_find`: REP STOSQ emitted for local initialization.
+The source root was still exec's `create_init_stack_vma`; no mmap1 worker
+completion is claimed. Preserve this second undrained attempt separately.
+
+Supplement general STOS byte/word/dword/qword execution on E, with or without
+REP. Each cold step performs at most one source-width store. After a successful
+element, advance RDI according to the saved DF and decrement RCX only for REP;
+retain the same source PC until the count reaches zero. A zero REP count
+performs no memory access. Preserve all source flags and unrelated registers.
+If a later element cannot execute, retain the committed elements and current
+RDI/RCX/PC without replay. The existing qualified, all-or-none element-store
+contract remains required; arbitrary fault/fixup semantics are not invented.
+
+The 64-step local cap and persistent scheduling window count these element
+steps, preventing a large REP count from hiding an unbounded internal loop.
+The existing `instructions` observation therefore counts resident execution
+steps, including repeated string elements, rather than unique retired x86
+instructions. This distinction must accompany later metrics. Validate Native
+memory effects, count/address updates, zero count, both DF values, all widths
+and bounded stop/resume before the next actual MM retry. Do not replace this
+source instruction with a caller-specific service or an origin memset model.
