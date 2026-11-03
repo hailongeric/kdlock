@@ -26,7 +26,7 @@ VM on `10.176.26.71`. Follow [development rules](../../AGENTS.md).
 | Stock Linux 7 recovery headers | `/usr/src/linux-headers-7.0.0-38-generic` |
 | Legacy recovery tree / bundle | `/root/linux-6.1.159-kdclobber2`; `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | Data disk | `/mnt/kdlock-builds`, 132 GiB virtual capacity |
-| Second build disk | `/mnt/kdlock-builds2`, 160 GiB virtual capacity |
+| Second build disk | `/mnt/kdlock-builds2`, 168 GiB virtual capacity |
 | Live evidence | `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<new-run>` |
 
 The VM has 64 vCPUs and 24 GiB RAM: node 0 uses CPUs 0–31 and 12 GiB; node 1

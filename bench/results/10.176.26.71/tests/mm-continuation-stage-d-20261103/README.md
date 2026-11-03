@@ -420,3 +420,35 @@ does not supply the signature of an unknown dynamic target. Live generated-page
 ownership/retirement, both unchanged mmap1 models and per-syscall returned-body
 joins remain pending. No mmap1 throughput, performance acceptance or promotion
 is claimed.
+
+## V2 preservation and build headroom
+
+The v2 preservation inventory passes after two retained controller-preparation
+failures: an intermediate install-receipt hash differs from the final receipt,
+and the older ordinary-kernel bundle omits `variant`. The revised controller
+uses the maintained verifier's absent-variant default while preserving the
+exact normal release, manifest hash and running notes checks. Neither failed
+attempt applies a kernel change.
+
+The passed inventory reports 16,955,797,504 available bytes on DATA2, below the
+unchanged 17,179,869,184-byte incremental reserve. The existing disk-expansion
+authorization is used to grow only the second build disk from 160 to 168 GiB.
+The initial 192 GiB proposal stops at its physical-host space check before any
+monitor action; the bounded 8 GiB increase passes. The whole-device ext4 grows
+online and reports 25,410,990,080 bytes free. All old builds and results remain.
+
+The completed 7,492,842,002-byte v2 archive has SHA256
+`e55b4b7d223582b29e01baf5539b09ee2c65bba739b9b85746ee76af2f524965`.
+All 218,953 member contents, metadata, links and exact preserved roots pass the
+read-only 380G10 check. Its receipt SHA256 is
+`0e19fa99479d393d04218376ca0aef365a8efd59794c1665547c0d1bacd7e696`,
+retained at `/tmp/kdlock-mm-scope5-v2-archive-check-20261103/verification.json`.
+The archive stays at
+`/mnt/kdlock-builds/kdlock-retained/mm-scope5-v2-20261103/linux-7.0.0-38-kdscope5-v2.tar.zst`.
+
+The separately reviewed v3 controller is now running from normal boot
+`eef8aa5d-cd97-4a7e-8a4b-692d0e374ea9`, with frozen kernel recipe
+`1ab7124abb6140752c1f0bb6e862144d426a3875`. It rechecks the complete preserved
+inventory before applying only the two producer C files and shared header.
+A completed v3 build, installation, new boot and actual mmap1 proof remain
+separate pending stages at this entry.
