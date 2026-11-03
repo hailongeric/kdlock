@@ -35,9 +35,12 @@ def capture(args):
         identity.require(output == selected["bundle"], "MM capture requires its canonical mode bundle")
         identity.require(args.mmap_prepare is not None, "MM capture requires preparation provenance")
     api_prepare, composition_path = getattr(args, "api_prepare", None), getattr(args, "composition", None)
+    generated_prepare = getattr(args, "generated_text_prepare", None)
     identity.require((api_prepare is not None and composition_path is not None) if scoped else
                      (api_prepare is None and composition_path is None),
                      "API/composition inputs require both receipts and the explicit scope variant")
+    identity.require(generated_prepare is None or scoped,
+                     "generated-text preparation requires an explicit scope composition")
     identity.require(not output.exists(), "capture output already exists")
     identity.check_digest(args.acquisition, identity.ACQUISITION_SHA256)
     identity.check_files(args.source_archives, identity.SOURCE_ARCHIVES)
@@ -69,6 +72,9 @@ def capture(args):
     mmap = None
     api = None
     composition = json.loads(composition_path.read_text()) if scoped else None
+    identity.require((generated_prepare is not None) ==
+                     (composition is not None and composition.get("generated_text") is not None),
+                     "generated-text capture must match the composed component")
     if args.mmap_prepare is not None:
         receipt = json.loads(args.mmap_prepare.read_text())
         preserve(args.mmap_prepare, "mmap-prepare.json")
@@ -105,6 +111,18 @@ def capture(args):
                 identity.require(path.resolve().is_relative_to(ROOT.resolve()), "scope input escapes project")
                 identity.check_digest(path, expected)
                 preserve(path, prefix + name)
+        if generated_prepare is not None:
+            generated = json.loads(generated_prepare.read_text())
+            composer.generated_recipe().validate(generated)
+            identity.check_digest(generated_prepare, composition["generated_text"]["prepare_sha256"])
+            preserve(generated_prepare, "generated-text-prepare.json")
+            for name, expected in generated["inputs"].items():
+                identity.relative_path(name)
+                path = ROOT / name
+                identity.require(path.resolve().is_relative_to(ROOT.resolve()),
+                                 "generated-text input escapes project")
+                identity.check_digest(path, expected)
+                preserve(path, "generated-text-inputs/" + name)
         for name, expected in composition["artifacts"].items():
             identity.relative_path(name)
             path = composition_path.parent / name
@@ -139,6 +157,8 @@ def capture(args):
                     installed_links=installed_links)
     if scoped:
         manifest["api"] = api
+        if generated_prepare is not None:
+            manifest["generated_text"] = composition["generated_text"]
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return identity.verify(output, build, running=True, variant=variant)
 
@@ -157,6 +177,8 @@ def main():
                         help="required if the development source includes the MM overlay, even when disabled")
     parser.add_argument("--api-prepare", type=Path, help="scope profiles only: independent pristine API preparation")
     parser.add_argument("--composition", type=Path, help="scope profiles only: exact core/MM/API composition receipt")
+    parser.add_argument("--generated-text-prepare", type=Path,
+                        help="required exactly when composition includes the separate ITS producer")
     parser.add_argument("--preempt", choices=("lazy", "voluntary"), default="lazy")
     args = parser.parse_args()
     print(json.dumps(capture(args), sort_keys=True))
