@@ -650,3 +650,19 @@ zero extension and 16-bit partial-register effects. Memory sources retain the
 qualified source-width read contract and fail before register effects.
 Validate zero/boundary inputs, nonzero old destinations, flags, widths, source
 failure and exact reached alias bytes before another actual MM attempt.
+
+The scan candidate `6b4a8983` passed 63,165 resident assertions. Actual MM
+execution then reached read-only memory BT at `ffffffff817b7c44`,
+`48 0f a3 02`, in `__next_zones_zonelist`. Preserve both stopped roots in
+that one failed activation. The pure bitmap selection remains on E.
+
+Implement read-only BT memory operands for widths 16/32/64. A register index is
+signed at the source operand width: use its arithmetic word quotient to adjust
+the base address and its low bits to select within the loaded word. An imm8
+index masks within the encoded word without a word-address adjustment. Read
+one qualified source-width word; execute a Native memory-form BT on the retained
+private word to obtain flags. Do not assume undefined flag effects match a
+register-form BT. No source GPR or source data is written, and failure precedes
+packet effects. Memory BTS/BTR/BTC and LOCK forms remain explicit unsupported
+operations in this slice. Validate signed offsets, immediate masking, flags,
+one-read/no-write behavior and source failure against Native before retrying MM.
