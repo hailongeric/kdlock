@@ -633,3 +633,20 @@ arity, unchanged fixed contexts, mapped-descriptor refusal, retained spin/RCU
 gates and Native context balance. Actual MM proof must join the public API's
 request/enter/done/resume and artifact to the same E body. Ordinary source
 strings continue through the backend; no origin memcpy/memset model is added.
+
+The API-service candidate `a8325ab5` passed the selected descriptor, Native
+context, discovery/emission and trace checks. Its actual MM retry reached
+`_find_first_bit+0x25`, `ffffffff81cc7195`, bytes `f3 48 0f bc c9` (TZCNT
+RCX to RCX). This general bitmap operation stays on E; it is not a Native API
+service. Preserve the failed prefix and verify the earlier API transaction
+separately from whole-workload completion.
+
+Add general BSF/BSR and their F3 TZCNT/LZCNT forms for widths 16/32/64. Use
+the actual Native instruction with the source arithmetic flags and full old
+destination as inputs; import its full destination GPR and arithmetic flags.
+Do not guess zero-input BSF/BSR behavior or erase the CPU's actual undefined
+result through a generic width write. Native asm supplies the normal 32-bit
+zero extension and 16-bit partial-register effects. Memory sources retain the
+qualified source-width read contract and fail before register effects.
+Validate zero/boundary inputs, nonzero old destinations, flags, widths, source
+failure and exact reached alias bytes before another actual MM attempt.
