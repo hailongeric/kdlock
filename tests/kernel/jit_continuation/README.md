@@ -6,6 +6,45 @@ including private `.inc` implementation files, and builds the provider, daemon,
 allocator guard and [kernel payload](payload/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
 
+## Reached execution mode
+
+The isolated family/cache candidate adds an explicit `--execution-mode reached`
+for `--mode killable` or `--mode helper` with `--family rwsem`. The default
+`--execution-mode image` retains the existing complete-image checks below.
+For example, in the verified VM:
+
+```sh
+python3 tests/kernel/jit_continuation/run.py \
+  --mode killable --family rwsem --execution-mode reached --cpus 0-3 \
+  --kernel-variant kdscope5-kd \
+  --kernel-source /mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build \
+  --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103 \
+  --output /mnt/kdlock-builds2/kdlock-evidence/reached-killable-NEW
+```
+
+This mode loads `service_reached=1`, prepares only source/lock metadata and
+starts no translator or prewarming pass. It does not build the daemon. The
+registry must contain no published image, and source frames plus active
+families must be drained at every phase boundary. Every successful root must
+execute on another task and name its exact request family. Every reached
+service requires matching service/resume records with a unique artifact
+sequence, unchanged family and exact source coordinates through the ACK.
+Returning Native/GS transactions keep `image_generation=0` and independently
+carry that same family/artifact identity; zero alone cannot pass the checks.
+
+The existing body effects, cancellation-before-holder-release, nested request
+identities, downgrade/read-credit ordering, API returns and normal retirement
+checks still run. Additional observations require one cold root/completion per
+successful request, positive instruction/cache-miss evidence, exact service
+counts matching the artifact ledger, no unfinished operation and no active
+family at the end. These totals observe execution and do not replace ownership
+or retirement records. No original-task suffix is accepted.
+
+Use helper mode separately to exercise its eleven returning-service phases.
+These are focused mechanism checks; they do not run mmap1 or timing points and
+do not establish general instruction coverage. Failures and unresolved
+lifetimes remain in the output and are not force-unloaded.
+
 ## General killable admission mode
 
 The selected-phase candidate adds a separate functional mode:

@@ -46,6 +46,9 @@ def memory_events(messages):
         row = dict(stage=fields['stage'])
         row.update((key, int(fields[key], 16 if key in hexadecimal else 10))
                    for key in required - {'stage'})
+        for key in ('family_generation', 'artifact_sequence'):
+            if key in fields:
+                row[key] = int(fields[key])
         rows.append(row)
     return rows
 
@@ -73,6 +76,7 @@ def validate_memory_observation(state, pid, cpu, early=False):
 
 
 def validate_memory_trace(messages, root, pid, image_generation, observation, cpu, early=False):
+    from helper_mode import validate_execution_identity
     validate_memory_observation(observation, pid, cpu, early)
     rows = [row for row in memory_events(messages) if row['origin'] == pid]
     plan = memory_plan(early)
@@ -86,6 +90,7 @@ def validate_memory_trace(messages, root, pid, image_generation, observation, cp
                    ['request', 'enter', 'done', 'complete' if final else 'resume'],
                    'GS transaction missing, repeated or out of order', 'DATA_ERROR')
         first = group[0]
+        validate_execution_identity(group, root, image_generation)
         acquired = 1 if early else 2
         reading = operation == 3
         if preempt_operand and not reading:
@@ -97,7 +102,7 @@ def validate_memory_trace(messages, root, pid, image_generation, observation, cp
                    observation['origin_stack'] <= first['sp'] < observation['origin_stack_high'] and
                    all(row['identity'] == root['identity'] and row['generation'] == root['generation'] and
                        row['executor'] == root['executor'] and row['sequence'] == sequence and
-                       row['image_generation'] == image_generation and row['operation'] == operation and
+                       row['operation'] == operation and
                        row['width'] == width and row['preempt_operand'] == preempt_operand and
                        row['read'] == int(reading) and
                        (row['ip'], row['next'], row['sp'], row['offset'], row['input_flags'],
@@ -139,7 +144,7 @@ def run_memory_checks(session):
         messages = session.messages[session.trace_start:]
         roots = [row for row in trace_events(messages) if row['event'] == 'enter' and row['origin'] == pid]
         rt.require(len(roots) == 1, 'GS root actual executor record missing', 'NO_JIT')
-        image = session.record['image_registry'][0]['generation']
+        image = session.service_generation()
         result['memory'] = validate_memory_trace(messages, roots[0], pid, image,
                                                 memory_snapshot(), cpu, early)
         primitives = primitive_events(messages)

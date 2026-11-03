@@ -163,6 +163,103 @@ int kd_origin_memory_decode(const struct kd_origin_memory_site *site,
 	return 0;
 }
 
+static u8 kd_memory_reached_byte(struct kd_origin_memory_site *site,
+	kd_origin_memory_reader reader, void *context, int *error)
+{
+	u8 value = 0;
+
+	if (*error)
+		return 0;
+	if (site->length == 15 || site->ip > ~0UL - site->length - 1) {
+		*error = -EOPNOTSUPP;
+		return 0;
+	}
+	*error = reader(context, site->ip + site->length, &value, 1);
+	if (!*error)
+		site->opcode[site->length++] = value;
+	return value;
+}
+
+/* Decode only the reached GS instruction. The final strict decoder remains
+ * the authority for the supported addressing and operation contract. No byte
+ * from a successor is needed to recognize a complete supported instruction. */
+int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
+	unsigned long ip, kd_origin_memory_reader reader, void *context)
+{
+	struct kd_memory_operand decoded;
+	unsigned int rex = 0, opcode, modrm, mod, rm, extension, sib = 0;
+	unsigned int displacement = 0, immediate = 0, i;
+	bool gs = false, word = false;
+	int error = 0;
+	u8 next;
+
+	if (!site || !ip || !reader)
+		return -EINVAL;
+	*site = (struct kd_origin_memory_site){ .ip = ip };
+	next = kd_memory_reached_byte(site, reader, context, &error);
+	while (!error && (next == 0x65 || next == 0x66)) {
+		if (next == 0x65) {
+			if (gs)
+				return -EOPNOTSUPP;
+			gs = true;
+		} else {
+			if (word)
+				return -EOPNOTSUPP;
+			word = true;
+		}
+		next = kd_memory_reached_byte(site, reader, context, &error);
+	}
+	if (error)
+		return error;
+	if (!gs)
+		return -EOPNOTSUPP;
+	if (next >= 0x40 && next <= 0x4f) {
+		rex = next;
+		next = kd_memory_reached_byte(site, reader, context, &error);
+	}
+	opcode = next;
+	if (error)
+		return error;
+	if (opcode != 0xff && opcode != 0x8b && opcode != 0xf7)
+		return -EOPNOTSUPP;
+	modrm = kd_memory_reached_byte(site, reader, context, &error);
+	if (error)
+		return error;
+	mod = modrm >> 6;
+	rm = modrm & 7;
+	extension = (modrm >> 3) & 7;
+	site->width = rex & 8 ? 64 : word ? 16 : 32;
+	if (mod == 3)
+		return -EOPNOTSUPP;
+	if (opcode == 0xff && extension <= 1 && !word) {
+		site->operation = extension + 1;
+	} else if (opcode == 0x8b && !word) {
+		site->operation = KD_ORIGIN_MEMORY_LOAD;
+		site->flags = KD_ORIGIN_MEMORY_READ;
+	} else if (opcode == 0xf7 && extension == 0 && site->width != 64) {
+		site->operation = KD_ORIGIN_MEMORY_TEST;
+		site->flags = KD_ORIGIN_MEMORY_READ;
+		immediate = site->width / 8;
+	} else {
+		return -EOPNOTSUPP;
+	}
+	if (rm == 4) {
+		sib = kd_memory_reached_byte(site, reader, context, &error);
+		if (!mod && (sib & 7) == 5)
+			displacement = 4;
+	} else if (!mod && rm == 5) {
+		displacement = 4;
+	}
+	if (mod)
+		displacement = mod == 1 ? 1 : 4;
+	for (i = 0; i < displacement + immediate && !error; ++i)
+		kd_memory_reached_byte(site, reader, context, &error);
+	if (error)
+		return error;
+	site->next_ip = ip + site->length;
+	return kd_memory_operand_decode(site, &decoded) ? -EOPNOTSUPP : 0;
+}
+
 const struct kd_origin_memory_site *kd_image_memory_sites(
 	const struct kd_jit_image *image, unsigned int *count)
 {
@@ -286,7 +383,70 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 		return -EPROTO;
 	operation->packet = cont->packet;
 	operation->image = frame->image;
+	operation->artifact_sequence = 0;
 	operation->site = site;
+	operation->origin = cont->request->logical_origin;
+	operation->executor = current;
+	operation->identity = cont->request->identity;
+	operation->generation = cont->generation;
+	++operation->sequence;
+	operation->gsbase = frame->gsbase;
+	operation->effective_offset = offset;
+	operation->source_sp = cont->packet->sp;
+	operation->input_flags = cont->packet->flags;
+	operation->result_flags = 0;
+	operation->result_value = 0;
+	operation->destination = decoded.destination;
+	operation->immediate = decoded.immediate;
+	operation->result = 0;
+	local_save_flags(operation->executor_irq_flags);
+	WRITE_ONCE(operation->phase, KD_ORIGIN_MEMORY_PREPARED);
+	return 0;
+}
+
+static int kd_memory_reached_read(void *context, unsigned long address,
+	void *out, unsigned int size)
+{
+	int ret;
+
+	(void)context;
+	ret = kd_source_pin_text_range(address, size);
+	return ret ? ret : copy_from_kernel_nofault(out, (void *)address, size);
+}
+
+int kd_exec_cont_memory_prepare_reached(struct kd_exec_frame *frame)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	struct kd_origin_memory *operation;
+	struct kd_memory_operand decoded;
+	unsigned long offset;
+	int result;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops || !cont->reached_active ||
+	    !cont->reached_artifact_sequence || cont->state != KD_CONT_BOUND ||
+	    cont->executor != current || cont->root->packet_owner != cont ||
+	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
+	    cont->service_call.api != KD_SERVICE_NONE || cont->origin_call.entry ||
+	    cont->origin_call.servicing || (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
+	    cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED))
+		return -EINVAL;
+	operation = &cont->origin_memory;
+	if ((operation->phase != KD_ORIGIN_MEMORY_IDLE &&
+	     operation->phase != KD_ORIGIN_MEMORY_CONSUMED) || operation->sequence == U64_MAX ||
+	    !(cont->packet->flags & 2) || cont->packet->sp < cont->stack_base + 512 ||
+	    cont->packet->sp > cont->stack_base + THREAD_SIZE)
+		return -EINVAL;
+	result = kd_origin_memory_reached_decode(&operation->reached_site,
+		cont->packet->ip, kd_memory_reached_read, cont);
+	if (result)
+		return result;
+	if (kd_origin_memory_decode(&operation->reached_site, cont->packet, &offset) ||
+	    kd_memory_operand_decode(&operation->reached_site, &decoded))
+		return -EPROTO;
+	operation->packet = cont->packet;
+	operation->image = NULL;
+	operation->site = &operation->reached_site;
+	operation->artifact_sequence = cont->reached_artifact_sequence;
 	operation->origin = cont->request->logical_origin;
 	operation->executor = current;
 	operation->identity = cont->request->identity;
@@ -347,7 +507,10 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 	    operation->origin != cont->request->logical_origin ||
 	    operation->executor != current || operation->identity != cont->request->identity ||
 	    operation->generation != cont->generation || operation->packet != cont->packet ||
-	    operation->image != cont->frame.image || !operation->site ||
+	    (operation->artifact_sequence ?
+	     (!cont->reached_active || operation->artifact_sequence != cont->reached_artifact_sequence ||
+	      operation->image || operation->site != &operation->reached_site) :
+	     (cont->reached_active || operation->image != cont->frame.image)) || !operation->site ||
 	    cont->packet->sp != operation->source_sp ||
 	    cont->packet->ip != operation->site->ip || !(operation->result_flags & 2))
 		return -EPROTO;

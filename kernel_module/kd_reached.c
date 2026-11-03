@@ -25,6 +25,8 @@ enum operation {
 	OP_TEST, OP_INC, OP_DEC, OP_NOT, OP_NEG,
 	OP_PUSH, OP_POP, OP_LEAVE, OP_JCC, OP_CALL, OP_JMP, OP_RET,
 	OP_CMOV, OP_SET, OP_PAUSE, OP_LFENCE, OP_MFENCE, OP_SFENCE,
+	OP_SHIFT, OP_IMUL, OP_XADD, OP_XCHG, OP_CMPXCHG,
+	OP_CLC, OP_STC, OP_CMC, OP_LAHF, OP_SAHF, OP_SIGN_PAIR,
 };
 
 struct operand {
@@ -38,10 +40,11 @@ struct operand {
 struct decoded {
 	struct kd_reached_state *state;
 	struct operand dst, src;
+	u64 multiplier;
 	u8 bytes[KD_REACHED_MAX_BYTES];
 	u8 length, rex, width, operation, condition;
 	u16 adjustment;
-	bool rex_seen, op16, rep;
+	bool rex_seen, op16, rep, locked, multiply_immediate;
 	int error;
 };
 
@@ -191,7 +194,10 @@ static void decode(struct decoded *d)
 			d->op16 = true; d->rex = 0; d->rex_seen = false; break;
 		case 0xf3:
 			d->rep = true; d->rex = 0; d->rex_seen = false; break;
-		case 0xf0: case 0xf2: case 0x64: case 0x65:
+		case 0xf0:
+			if (d->locked) d->error = -EOPNOTSUPP;
+			d->locked = true; d->rex = 0; d->rex_seen = false; break;
+		case 0xf2: case 0x64: case 0x65:
 		case 0x67: case 0x26: case 0x2e: case 0x36: case 0x3e:
 			/* Atomic, repeated, segmented and address-size contracts are
 			 * not ordinary scalar operations. No data effects precede this. */
@@ -260,6 +266,13 @@ static void decode(struct decoded *d)
 		return;
 	}
 	switch (op) {
+	case 0x69: case 0x6b:
+		modrm(d, d->width, &d->src, &d->dst, &group);
+		d->operation = OP_IMUL;
+		d->multiply_immediate = true;
+		width = op == 0x6b ? 1 : d->width == 2 ? 2 : 4;
+		d->multiplier = sign_value(immediate(d, width), width);
+		break;
 	case 0x63:
 		modrm(d, 4, &d->src, &d->dst, &group);
 		if (!(d->rex & 8)) { d->error = -EOPNOTSUPP; return; }
@@ -283,6 +296,10 @@ static void decode(struct decoded *d)
 		modrm(d, op == 0x84 ? 1 : d->width, &d->dst, &d->src, &group);
 		d->operation = OP_TEST;
 		break;
+	case 0x86: case 0x87:
+		modrm(d, op == 0x86 ? 1 : d->width, &d->dst, &d->src, &group);
+		d->operation = OP_XCHG;
+		break;
 	case 0x88: case 0x89: case 0x8a: case 0x8b:
 		modrm(d, (op & 1) ? d->width : 1, &rm, &reg, &group);
 		d->dst = (op & 2) ? reg : rm;
@@ -294,6 +311,18 @@ static void decode(struct decoded *d)
 		d->operation = OP_LEA;
 		if (!d->src.memory) d->error = -EOPNOTSUPP;
 		break;
+	case 0x98:
+		d->dst = reg_operand(d, 0, d->width);
+		d->src = reg_operand(d, 0, d->width / 2);
+		d->operation = OP_SX;
+		break;
+	case 0x99:
+		d->dst = reg_operand(d, 2, d->width);
+		d->src = reg_operand(d, 0, d->width);
+		d->operation = OP_SIGN_PAIR;
+		break;
+	case 0x9e: d->operation = OP_SAHF; break;
+	case 0x9f: d->operation = OP_LAHF; break;
 	case 0xa8: case 0xa9:
 		width = op == 0xa8 ? 1 : d->width;
 		d->operation = OP_TEST;
@@ -308,6 +337,13 @@ static void decode(struct decoded *d)
 		d->operation = OP_MOV;
 		d->src = literal(sign_value(immediate(d, width == 8 ? 4 : width),
 					 width == 8 ? 4 : width), width);
+		break;
+	case 0xc0: case 0xc1: case 0xd0: case 0xd1: case 0xd2: case 0xd3:
+		modrm(d, (op & 1) ? d->width : 1, &d->dst, &reg, &group);
+		d->operation = OP_SHIFT;
+		d->condition = group;
+		d->src = op == 0xc0 || op == 0xc1 ? literal(immediate(d, 1), 1) :
+			op == 0xd0 || op == 0xd1 ? literal(1, 1) : reg_operand(d, 1, 1);
 		break;
 	case 0xc3: case 0xc2:
 		if (d->op16) { d->error = -EOPNOTSUPP; return; }
@@ -336,6 +372,9 @@ static void decode(struct decoded *d)
 			d->operation = group == 2 ? OP_NOT : OP_NEG;
 		} else d->error = -EOPNOTSUPP;
 		break;
+	case 0xf8: d->operation = OP_CLC; break;
+	case 0xf9: d->operation = OP_STC; break;
+	case 0xf5: d->operation = OP_CMC; break;
 	case 0xfe: case 0xff:
 		modrm(d, op == 0xfe ? 1 : d->width, &d->dst, &reg, &group);
 		if (group < 2) d->operation = group ? OP_DEC : OP_INC;
@@ -357,6 +396,12 @@ static void decode(struct decoded *d)
 			d->operation = OP_JCC;
 			d->condition = second & 15;
 			d->src = literal(sign_value(immediate(d, 4), 4), 8);
+		} else if (second == 0xaf) {
+			modrm(d, d->width, &d->src, &d->dst, &group);
+			d->operation = OP_IMUL;
+		} else if (second == 0xc0 || second == 0xc1 || second == 0xb0 || second == 0xb1) {
+			modrm(d, (second & 1) ? d->width : 1, &d->dst, &d->src, &group);
+			d->operation = second >= 0xc0 ? OP_XADD : OP_CMPXCHG;
 		} else if (second >= 0x40 && second <= 0x4f) {
 			modrm(d, d->width, &d->src, &d->dst, &group);
 			d->condition = second & 15;
@@ -516,12 +561,76 @@ static enum kd_reached_result execute(struct decoded *d)
 	u8 edge = KD_REACHED_FALLTHROUGH;
 	bool write = false;
 
+	if (d->locked || d->operation == OP_XCHG ||
+	    d->operation == OP_XADD || d->operation == OP_CMPXCHG) {
+		enum kd_reached_atomic_op operation;
+		int result;
+
+		if (!d->dst.memory || !s->ops->atomic ||
+		    ((d->operation == OP_XADD || d->operation == OP_CMPXCHG) && !d->locked))
+			return KD_REACHED_UNSUPPORTED;
+		switch (d->operation) {
+		case OP_ADD: operation = KD_REACHED_ATOMIC_ADD; break;
+		case OP_SUB: operation = KD_REACHED_ATOMIC_SUB; break;
+		case OP_INC: operation = KD_REACHED_ATOMIC_INC; break;
+		case OP_DEC: operation = KD_REACHED_ATOMIC_DEC; break;
+		case OP_XADD: operation = KD_REACHED_ATOMIC_XADD; break;
+		case OP_XCHG: operation = KD_REACHED_ATOMIC_XCHG; break;
+		case OP_CMPXCHG: operation = KD_REACHED_ATOMIC_CMPXCHG; break;
+		default: return KD_REACHED_UNSUPPORTED;
+		}
+		if (d->operation != OP_INC && d->operation != OP_DEC &&
+		    read_operand(d, &d->src, &value))
+			return KD_REACHED_MEMORY;
+		result = s->ops->atomic(s->context, address(d, &d->dst), d->dst.width,
+			operation, value, r->ax, flags, &word, &flags);
+		if (result)
+			return result == -EOPNOTSUPP ? KD_REACHED_UNSUPPORTED : KD_REACHED_MEMORY;
+		if (d->operation == OP_XADD || d->operation == OP_XCHG)
+			write_operand(d, &d->src, word);
+		if (d->operation == OP_CMPXCHG)
+			r->ax = word;
+		goto commit;
+	}
+
 	switch (d->operation) {
 	case OP_NONE: break;
 	case OP_PAUSE: cpu_relax(); break;
 	case OP_LFENCE: asm volatile("lfence" ::: "memory"); break;
 	case OP_MFENCE: asm volatile("mfence" ::: "memory"); break;
 	case OP_SFENCE: asm volatile("sfence" ::: "memory"); break;
+	case OP_CLC: flags &= ~F_CF; break;
+	case OP_STC: flags |= F_CF; break;
+	case OP_CMC: flags ^= F_CF; break;
+	case OP_LAHF: r->ax = (r->ax & ~0xff00UL) | (((flags & 0xd5) | 2) << 8); break;
+	case OP_SAHF: flags = (flags & ~0xd5UL) | ((r->ax >> 8) & 0xd5); break;
+	case OP_SIGN_PAIR:
+		if (read_operand(d, &d->src, &value)) return KD_REACHED_MEMORY;
+		value = sign_value(value, d->src.width) < 0 ? ~0ULL : 0;
+		write = true;
+		break;
+	case OP_SHIFT:
+		if (read_operand(d, &d->dst, &a) || read_operand(d, &d->src, &b))
+			return KD_REACHED_MEMORY;
+		{
+			static const enum kd_reached_scalar_op operations[] = {
+				KD_REACHED_SCALAR_ROL, KD_REACHED_SCALAR_ROR, KD_REACHED_SCALAR_RCL,
+				KD_REACHED_SCALAR_RCR, KD_REACHED_SCALAR_SHL, KD_REACHED_SCALAR_SHR,
+				KD_REACHED_SCALAR_SHL, KD_REACHED_SCALAR_SAR,
+			};
+			if (kd_reached_scalar_apply(d->dst.width, operations[d->condition],
+				a, b, flags, &value, &flags)) return KD_REACHED_UNSUPPORTED;
+		}
+		write = true;
+		break;
+	case OP_IMUL:
+		if (read_operand(d, &d->src, &b)) return KD_REACHED_MEMORY;
+		if (d->multiply_immediate) { a = b; b = d->multiplier; }
+		else if (read_operand(d, &d->dst, &a)) return KD_REACHED_MEMORY;
+		if (kd_reached_scalar_apply(d->dst.width, KD_REACHED_SCALAR_IMUL,
+			a, b, flags, &value, &flags)) return KD_REACHED_UNSUPPORTED;
+		write = true;
+		break;
 	case OP_LEA: value = address(d, &d->src); write = true; break;
 	case OP_MOV: case OP_ZX: case OP_SX: case OP_CMOV:
 		if (read_operand(d, &d->src, &value)) return KD_REACHED_MEMORY;
@@ -584,6 +693,7 @@ static enum kd_reached_result execute(struct decoded *d)
 		write = d->operation != OP_CMP && d->operation != OP_TEST;
 	}
 	if (write && write_operand(d, &d->dst, value)) return KD_REACHED_MEMORY;
+commit:
 	r->flags = flags;
 	r->ip = target;
 	s->event.next_ip = next;

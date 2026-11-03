@@ -179,6 +179,9 @@ static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	cont->source_lease = source;
 	cont->stack_lease = stack;
 	cont->body_reported = false;
+	cont->reached_active = false;
+	cont->reached_artifact_sequence = 0;
+	cont->reached = NULL;
 	if (source)
 		lease->held = false;
 
@@ -455,20 +458,26 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
 	    cont->state != KD_CONT_BOUND || cont->executor != current ||
 	    cont->root->packet_owner != cont || frame->packet_state != KD_PACKET_FULL ||
-	    !frame->executed || !frame->image ||
-	    !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL) ||
+	    !frame->executed ||
+	    (cont->reached_active ? !cont->reached_artifact_sequence :
+	     (!frame->image || !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL))) ||
 	    cont->service_call.api != KD_SERVICE_NONE ||
 	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
 	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED))
 		return -EINVAL;
 	call = &cont->origin_call;
 	if ((call->phase != KD_ORIGIN_CALL_IDLE && call->phase != KD_ORIGIN_CALL_CONSUMED) ||
-	    call->entry || call->servicing || call->sequence == U64_MAX ||
-	    kd_exec_cont_call_word(cont, &return_ip))
+	    call->entry || call->servicing || call->sequence == U64_MAX)
 		return -EINVAL;
 	entry = kd_service_call_get(cont->packet->ip);
 	if (!entry)
 		return -ENOENT;
+	/* Ordinary reached JMPs have no new CALL word. Only a declared service
+	 * target can require the inherited pending CALL at source SP. */
+	if (kd_exec_cont_call_word(cont, &return_ip)) {
+		kd_service_call_put(entry);
+		return -EINVAL;
+	}
 	result = kd_call_begin(&call->call, cont->packet->ip, cont->packet->sp, return_ip);
 	if (result) {
 		kd_service_call_put(entry);
@@ -501,6 +510,7 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 	call->executor = current;
 	call->identity = cont->request->identity;
 	call->generation = cont->generation;
+	call->artifact_sequence = cont->reached_active ? cont->reached_artifact_sequence : 0;
 	++call->sequence;
 	call->servicing = false;
 	cont->frame.control_call = call->call;
@@ -526,6 +536,9 @@ int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence
 	call = &cont->origin_call;
 	if (smp_load_acquire(&call->phase) != KD_ORIGIN_CALL_DONE ||
 	    call->sequence != sequence || call->executor != current ||
+	    (call->artifact_sequence ?
+	     (!cont->reached_active || call->artifact_sequence != cont->reached_artifact_sequence) :
+	     cont->reached_active) ||
 	    call->origin != cont->request->logical_origin ||
 	    call->identity != cont->request->identity || call->generation != cont->generation ||
 	    call->packet != cont->packet || call->servicing ||

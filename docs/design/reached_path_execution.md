@@ -327,3 +327,71 @@ protocol fixtures; it does not activate image-free public capture. Family/cache
 and cold service-artifact joins are still required before actual MM execution.
 No mmap1 run, delegation metric, Nano score or performance claim follows from
 these functional results.
+
+## Stage (c): image-free family, cache and service joins
+
+Continue on `codex/reached-path-translation` from
+`961550afdc1429cfd86cff138046d3f6eebacdf8`. Add an explicit provider option
+`service_reached=1`; selected captures use resident execution without requiring
+or allocating a complete application image. The ordinary image option remains
+separate for compatibility checks. Reached-mode misses must never select a
+local body or an original-task suffix. Public acquisition/cancellation and
+owner transfer remain in the existing unified admission engine.
+
+Each captured root embeds a stable family keyed by its exact request identity,
+generation, entry ABI and source lease epoch. Its request generation also names
+the family generation for this first slice. The family owns exact caller-held
+reference records and a bounded, append-only cache of complete reached
+instruction bytes. Cache hits revalidate actual source bytes before execution;
+cache exhaustion uses the resident cold path. This first cache is decoded-source
+storage, not native compiled code. It consumes no whole 4 MiB image descriptor.
+No shared global family-capacity wait or per-instruction allocation is added.
+Native region compilation remains optional later optimization.
+
+An active service retains a separate exact family reference, source PC, bytes
+and event sequence until its completion ACK. No instruction/cache switch or
+packet reuse is permitted while that reference is live. Native CALL and GS
+instruction services accept either their existing immutable image authority or
+this retained cold artifact, never a null image treated as implicit authority.
+Their post-service canonical packet returns to the family resolver; it does
+not need a successor label in the old image. An ordinary unregistered callee is
+decoded on E after the real source CALL word is pushed once. A known control
+CALL preserves its current exact retirement and downgrade behavior.
+
+Keep the instruction budget in continuation storage across yielding, nested
+admission and returning services. A local segment remains bounded at 64
+instructions, with a 16-instruction family cache in this slice. Small later CFG
+extensions may optimize the reached neighborhood; neither large transitive
+callee expansion nor complete MM prewarming is an admission condition.
+
+The persistent budget is a 16-million-instruction scheduling window, not a
+public lock error or a hard lifetime cutoff. Only exhaustion returns to the
+runtime for a new window. If Native pins permit it, unbind and honor scheduling
+there; held Native pins prohibit scheduling but do not terminate the source
+body. The event sequence and total instruction observation do not reset.
+
+The first joined fixtures require real locked RMWs before their first service.
+Support ADD/SUB/INC/DEC/XADD/CMPXCHG and implicit memory XCHG with one actual
+source-width CPU operation and captured arithmetic flags, including exact
+accumulator behavior. No C load/store decomposition or unbounded CAS retry is
+used. Source shifts/rotates and signed multiply also use exact Native-width
+instruction effects. Ordinary data stores outside the retained task stack stay
+within one page and use typed nofault stores. Cross-page data faults and other
+context operations still need separate complete contracts.
+
+Qualified scalar data stores use source-width operations on resident ordinary
+kernel memory. A potentially partial copy is not a source instruction. Reached
+atomic/context operations still require exact support; unsupported operations
+remain explicit diagnostic boundaries, not successful lock results. Do not
+activate the MM factory until its reached coverage and returning-service
+contracts are actually validated. Preserve source text freshness limitations,
+ordinary local readers, delegated downgraded tails, killable acquisition
+priority, origin-signal arbitration and exact nested/non-LIFO retirement.
+
+Focused validation must positively prove daemon-free roots, family/transaction
+identity, same-artifact service ACK/resume, cache hits and full-cache cold
+progress, cancellation while a holder remains locked, nested blocking and
+executor downgrade followed by fresh writer admission. Retain the image-mode
+checks and all earlier failures. Record reached-mode roots/completions and
+unsupported events separately; no Nano or mmap1 performance claim follows from
+these functional checks.

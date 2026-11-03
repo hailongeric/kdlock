@@ -8,10 +8,11 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u\n",
+		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u family_generation=%llu artifact_sequence=%llu\n",
 			stage, operation->origin->pid, operation->executor->pid, current->pid,
 			operation->identity, (unsigned long long)operation->generation,
-			(unsigned long long)operation->sequence, operation->image->generation,
+			(unsigned long long)operation->sequence,
+			operation->image ? operation->image->generation : 0,
 			operation->site->ip, operation->site->next_ip, operation->source_sp,
 			operation->effective_offset, operation->site->width,
 			operation->site->operation, operation->preempt_operand,
@@ -19,7 +20,9 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 			operation->preempt_owner ? (unsigned long long)operation->preempt_owner->sequence : 0,
 			operation->preempt_owner ? operation->preempt_owner->object : 0,
 			operation->destination, output ? operation->result_value : 0,
-			!!(operation->site->flags & KD_ORIGIN_MEMORY_READ));
+			!!(operation->site->flags & KD_ORIGIN_MEMORY_READ),
+			(unsigned long long)root->continuation.root_generation,
+			(unsigned long long)operation->artifact_sequence);
 }
 
 static int kd_service_memory_prepare(struct kd_service_root *root)
@@ -130,7 +133,11 @@ static void kd_service_origin_memory(struct kd_service_root *root)
 	    operation->origin != current || operation->executor != root->worker ||
 	    operation->identity != root->owner.request.identity ||
 	    operation->generation != root->owner.request.generation ||
-	    operation->image != root->image || cont->state != KD_CONT_SUSPENDED ||
+	    (operation->artifact_sequence ?
+	     (!cont->reached_active || operation->artifact_sequence != cont->reached_artifact_sequence ||
+	      operation->image || operation->site != &operation->reached_site) :
+	     (cont->reached_active || !operation->image || operation->image != root->image)) ||
+	    cont->state != KD_CONT_SUSPENDED ||
 	    cont->resume_executor != operation->executor || operation->packet != cont->packet ||
 	    operation->packet->sp != operation->source_sp ||
 	    operation->packet->ip != operation->site->ip ||

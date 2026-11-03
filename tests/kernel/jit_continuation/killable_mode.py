@@ -73,10 +73,19 @@ def trace_events(messages):
     pattern = re.compile(
         r'kd_service event=(\w+) origin=(\d+) executor=(\d+) identity=(?:0x)?([0-9a-fA-F]+) '
         r'generation=(\d+) object=(?:0x)?([0-9a-fA-F]+) depth=(\d+) entry=([0-9a-fA-F]+) may_delegate=([01])')
-    return [dict(event=m[1], origin=int(m[2]), executor=int(m[3]), identity=int(m[4], 16),
-                 generation=int(m[5]), object=int(m[6], 16), depth=int(m[7]), entry=int(m[8], 16),
-                 may_delegate=bool(int(m[9])))
-            for m in pattern.finditer(messages)]
+    rows = []
+    for line in messages.splitlines():
+        m = pattern.search(line)
+        if m is None:
+            continue
+        row = dict(event=m[1], origin=int(m[2]), executor=int(m[3]), identity=int(m[4], 16),
+                   generation=int(m[5]), object=int(m[6], 16), depth=int(m[7]), entry=int(m[8], 16),
+                   may_delegate=bool(int(m[9])))
+        family = re.search(r'\bfamily_generation=(\d+)', line)
+        if family is not None:
+            row['family_generation'] = int(family[1])
+        rows.append(row)
+    return rows
 
 
 def session_class(base):

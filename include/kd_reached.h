@@ -29,6 +29,27 @@ enum kd_reached_edge {
 	KD_REACHED_RETURN,
 };
 
+enum kd_reached_atomic_op {
+	KD_REACHED_ATOMIC_ADD,
+	KD_REACHED_ATOMIC_SUB,
+	KD_REACHED_ATOMIC_INC,
+	KD_REACHED_ATOMIC_DEC,
+	KD_REACHED_ATOMIC_XADD,
+	KD_REACHED_ATOMIC_XCHG,
+	KD_REACHED_ATOMIC_CMPXCHG,
+};
+
+enum kd_reached_scalar_op {
+	KD_REACHED_SCALAR_ROL,
+	KD_REACHED_SCALAR_ROR,
+	KD_REACHED_SCALAR_RCL,
+	KD_REACHED_SCALAR_RCR,
+	KD_REACHED_SCALAR_SHL,
+	KD_REACHED_SCALAR_SHR,
+	KD_REACHED_SCALAR_SAR,
+	KD_REACHED_SCALAR_IMUL,
+};
+
 struct kd_reached_event {
 	unsigned long source_ip;
 	unsigned long next_ip;
@@ -57,6 +78,10 @@ struct kd_reached_ops {
 	int (*fetch)(void *context, unsigned long address, void *out, unsigned int size);
 	int (*read)(void *context, unsigned long address, void *out, unsigned int size);
 	int (*write)(void *context, unsigned long address, const void *in, unsigned int size);
+	/* Optional exact Native-width RMW. NULL refuses before any data access. */
+	int (*atomic)(void *context, unsigned long address, unsigned int width,
+		enum kd_reached_atomic_op operation, u64 input, u64 accumulator,
+		unsigned long input_flags, u64 *old, unsigned long *output_flags);
 };
 
 struct kd_reached_state {
@@ -84,5 +109,11 @@ enum kd_reached_result kd_reached_run(struct kd_reached_state *state,
 				    unsigned int instruction_limit);
 int kd_reached_begin(struct kd_reached_state *state, struct kd_regs *regs,
 		     unsigned int packet_state, u64 budget);
+int kd_reached_atomic_apply(void *address, unsigned int width,
+	enum kd_reached_atomic_op operation, u64 input, u64 accumulator,
+	unsigned long input_flags, u64 *old, unsigned long *output_flags);
+int kd_reached_scalar_apply(unsigned int width, enum kd_reached_scalar_op operation,
+	u64 left, u64 right, unsigned long input_flags, u64 *result,
+	unsigned long *output_flags);
 
 #endif

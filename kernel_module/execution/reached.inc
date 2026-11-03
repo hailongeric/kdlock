@@ -41,15 +41,18 @@ static int kd_reached_frame_read(void *context, unsigned long address,
 		return -EFAULT;
 	/* One source-width read, rather than a byte-copy lowering that could
 	 * introduce tearing. Reached faults remain explicit runtime events. */
+	pagefault_disable();
 	switch (size) {
 	case 1: __get_kernel_nofault(out, (void *)address, u8, fault); break;
 	case 2: __get_kernel_nofault(out, (void *)address, u16, fault); break;
 	case 4: __get_kernel_nofault(out, (void *)address, u32, fault); break;
 	case 8: __get_kernel_nofault(out, (void *)address, u64, fault); break;
-	default: return -EINVAL;
+	default: pagefault_enable(); return -EINVAL;
 	}
+	pagefault_enable();
 	return 0;
 fault:
+	pagefault_enable();
 	return -EFAULT;
 }
 
@@ -59,32 +62,59 @@ static int kd_reached_frame_write(void *context, unsigned long address,
 	struct kd_exec_frame *frame = context;
 	struct kd_exec_continuation *cont;
 	unsigned long base;
+	bool source_stack;
 
 	if (!kd_reached_frame_ready(frame))
 		return -EINVAL;
 	cont = kd_exec_frame_continuation(frame);
 	base = cont->root->stack_base;
-	/* This slice proves retained source-stack stores. Arbitrary data stores
-	 * need a separate fault/lifetime contract; never use a potentially partial
-	 * copy as an all-or-none source instruction. The whole retained task stack
-	 * is mapped for this frame's lease, including a store across its pages. */
-	if (!base || base > ~0UL - THREAD_SIZE || !size ||
-	    size > 8 || address < base || address > base + THREAD_SIZE - size)
+	if (!base || base > ~0UL - THREAD_SIZE || !size || size > 8 ||
+	    address < TASK_SIZE_MAX || address > ~0UL - size)
 		return -EOPNOTSUPP;
+	source_stack = address >= base && address <= base + THREAD_SIZE - size;
+	/* The source caller owns ordinary RAM object lifetimes under its locks.
+	 * Retained stack pages are stable. Other stores stay within one page;
+	 * cross-page fault/fixup execution needs its own instruction contract. */
+	if (!source_stack && offset_in_page(address) + size > PAGE_SIZE)
+		return -EOPNOTSUPP;
+	pagefault_disable();
 	switch (size) {
-	case 1: put_unaligned(*(const u8 *)in, (u8 *)address); break;
-	case 2: put_unaligned(*(const u16 *)in, (u16 *)address); break;
-	case 4: put_unaligned(*(const u32 *)in, (u32 *)address); break;
-	case 8: put_unaligned(*(const u64 *)in, (u64 *)address); break;
-	default: return -EINVAL;
+	case 1: __put_kernel_nofault((void *)address, in, u8, fault); break;
+	case 2: __put_kernel_nofault((void *)address, in, u16, fault); break;
+	case 4: __put_kernel_nofault((void *)address, in, u32, fault); break;
+	case 8: __put_kernel_nofault((void *)address, in, u64, fault); break;
+	default: pagefault_enable(); return -EINVAL;
 	}
+	pagefault_enable();
 	return 0;
+fault:
+	pagefault_enable();
+	return -EFAULT;
+}
+
+static int kd_reached_frame_atomic(void *context, unsigned long address,
+	unsigned int width, enum kd_reached_atomic_op operation, u64 input,
+	u64 accumulator, unsigned long input_flags, u64 *old,
+	unsigned long *output_flags)
+{
+	int result;
+
+	if (!kd_reached_frame_ready(context) || address < TASK_SIZE_MAX ||
+	    (width != 1 && width != 2 && width != 4 && width != 8) ||
+	    address > ~0UL - width || offset_in_page(address) + width > PAGE_SIZE)
+		return -EOPNOTSUPP;
+	pagefault_disable();
+	result = kd_reached_atomic_apply((void *)address, width, operation,
+		input, accumulator, input_flags, old, output_flags);
+	pagefault_enable();
+	return result;
 }
 
 static const struct kd_reached_ops kd_reached_frame_ops = {
 	.fetch = kd_reached_frame_fetch,
 	.read = kd_reached_frame_read,
 	.write = kd_reached_frame_write,
+	.atomic = kd_reached_frame_atomic,
 };
 
 int kd_exe_reached_begin(struct kd_exec_frame *frame,

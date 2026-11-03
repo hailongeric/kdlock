@@ -23,8 +23,10 @@ struct fixture {
 	unsigned int fetches;
 	unsigned int reads;
 	unsigned int writes;
+	unsigned int atomics;
 	unsigned long max_fetch;
 	bool fail_write;
+	bool fail_atomic;
 };
 
 static DECLARE_COMPLETION(finished);
@@ -70,6 +72,26 @@ static int source_write(void *context, unsigned long address, const void *in, un
 
 static const struct kd_reached_ops operations = {
 	.fetch = source_fetch, .read = source_read, .write = source_write,
+};
+
+static int source_atomic(void *context, unsigned long address, unsigned int width,
+	enum kd_reached_atomic_op operation, u64 input, u64 accumulator,
+	unsigned long input_flags, u64 *old, unsigned long *output_flags)
+{
+	struct fixture *f = context;
+	int status;
+
+	if (f->fail_atomic || address < DATA || address - DATA > sizeof(f->memory) ||
+	    width > sizeof(f->memory) - (address - DATA)) return -EFAULT;
+	status = kd_reached_atomic_apply((void *)address, width, operation, input,
+		accumulator, input_flags, old, output_flags);
+	if (!status) ++f->atomics;
+	return status;
+}
+
+static const struct kd_reached_ops atomic_operations = {
+	.fetch = source_fetch, .read = source_read, .write = source_write,
+	.atomic = source_atomic,
 };
 
 static void prepare(struct fixture *f, const u8 *code, unsigned int length)
@@ -360,6 +382,201 @@ static int supplementation_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_ATOMIC_BINARY(insn, suffix, part) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[source],%[memory]; pushfq; popq %[output]" \
+		: [source] "+r"(source), [memory] "+m"(*memory), [output] "=r"(output) \
+		: [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_ATOMIC_UNARY(insn, suffix) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %[memory]; pushfq; popq %[output]" \
+		: [memory] "+m"(*memory), [output] "=r"(output) \
+		: [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_ATOMIC_CMP(suffix, part) \
+	asm volatile("pushq %[flags]; popfq; lock cmpxchg" suffix " %" part "[source],%[memory]; pushfq; popq %[output]" \
+		: [accumulator] "+a"(accumulator), [memory] "+m"(*memory), [output] "=r"(output) \
+		: [source] "r"(source), [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_ATOMIC_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case KD_REACHED_ATOMIC_ADD: ORACLE_ATOMIC_BINARY("lock add", suffix, part); break; \
+	case KD_REACHED_ATOMIC_SUB: ORACLE_ATOMIC_BINARY("lock sub", suffix, part); break; \
+	case KD_REACHED_ATOMIC_INC: ORACLE_ATOMIC_UNARY("lock inc", suffix); break; \
+	case KD_REACHED_ATOMIC_DEC: ORACLE_ATOMIC_UNARY("lock dec", suffix); break; \
+	case KD_REACHED_ATOMIC_XADD: ORACLE_ATOMIC_BINARY("lock xadd", suffix, part); break; \
+	case KD_REACHED_ATOMIC_XCHG: ORACLE_ATOMIC_BINARY("xchg", suffix, part); break; \
+	default: ORACLE_ATOMIC_CMP(suffix, part); break; \
+	} \
+} while (0)
+
+static void native_atomic(unsigned int width, enum kd_reached_atomic_op operation,
+	u64 *memory, u64 *source_value, u64 *accumulator_value,
+	unsigned long input_flags, unsigned long *result_flags)
+{
+	u64 source = *source_value, accumulator = *accumulator_value;
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	switch (width) {
+	case 1: ORACLE_ATOMIC_WIDTH("b", "b"); break;
+	case 2: ORACLE_ATOMIC_WIDTH("w", "w"); break;
+	case 4: ORACLE_ATOMIC_WIDTH("l", "k"); break;
+	default: ORACLE_ATOMIC_WIDTH("q", ""); break;
+	}
+	*source_value = source;
+	*accumulator_value = accumulator;
+	*result_flags = output;
+}
+
+static int atomic_test(struct fixture *f)
+{
+	static const u64 values[] = { 0, 1, 0x80, 0x80000000, ~0ULL };
+	unsigned int width, operation, i, j, match, length;
+	u8 code[6];
+	u64 memory, source, accumulator;
+	unsigned long flags, mask;
+	struct kd_regs before;
+
+	for (width = 1; width <= 8; width *= 2)
+	for (operation = KD_REACHED_ATOMIC_ADD; operation <= KD_REACHED_ATOMIC_CMPXCHG; ++operation)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(values); ++j)
+	for (match = 0; match < 2; ++match) {
+		length = 0;
+		if (operation != KD_REACHED_ATOMIC_XCHG) code[length++] = 0xf0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		if (operation == KD_REACHED_ATOMIC_XADD || operation == KD_REACHED_ATOMIC_CMPXCHG) {
+			code[length++] = 0x0f;
+			code[length++] = (operation == KD_REACHED_ATOMIC_XADD ? 0xc0 : 0xb0) + (width != 1);
+		} else if (operation == KD_REACHED_ATOMIC_INC || operation == KD_REACHED_ATOMIC_DEC) {
+			code[length++] = width == 1 ? 0xfe : 0xff;
+		} else if (operation == KD_REACHED_ATOMIC_XCHG) {
+			code[length++] = width == 1 ? 0x86 : 0x87;
+		} else {
+			code[length++] = (operation == KD_REACHED_ATOMIC_SUB ? 0x28 : 0) + (width != 1);
+		}
+		code[length++] = operation == KD_REACHED_ATOMIC_INC ? 0x07 :
+			operation == KD_REACHED_ATOMIC_DEC ? 0x0f : 0x1f; /* (RDI), source BX */
+		prepare(f, code, length);
+		f->state.ops = &atomic_operations;
+		f->regs.di = DATA;
+		f->regs.bx = source = values[j];
+		f->memory[0] = memory = values[i];
+		mask = width == 8 ? ~0UL : (1UL << (width * 8)) - 1;
+		f->regs.ax = accumulator = (values[i] & mask) ^ (match ? 0 : 1);
+		if (width < 8) f->regs.ax = accumulator |= 0xabcdefff00000000ULL & ~mask;
+		f->regs.flags = 0x202 | (match ? KD_REG_ARITHMETIC_FLAGS : 0);
+		native_atomic(width, operation, &memory, &source, &accumulator, f->regs.flags, &flags);
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->memory[0] == memory && f->regs.ax == accumulator && f->regs.bx == source);
+		CHECK(!((f->regs.flags ^ flags) & KD_REG_ARITHMETIC_FLAGS));
+		CHECK(f->atomics == 1 && !f->reads && !f->writes);
+	}
+	/* Failed callback is an unexecuted RMW, with the whole packet intact. */
+	prepare(f, (u8[]){ 0xf0, 0x0f, 0xc1, 0x1f }, 4);
+	f->state.ops = &atomic_operations;
+	f->regs.di = DATA;
+	f->fail_atomic = true;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->atomics && f->state.budget == 100);
+	return 0;
+}
+
+#define ORACLE_SHIFT(insn, suffix, part) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %%cl,%" part "[value]; pushfq; popq %[output]" \
+		: [value] "+r"(value), [output] "=r"(output) \
+		: "c"(count), [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_SHIFT_WIDTH(suffix, part) do { \
+	switch (group) { \
+	case 0: ORACLE_SHIFT("rol", suffix, part); break; \
+	case 1: ORACLE_SHIFT("ror", suffix, part); break; \
+	case 2: ORACLE_SHIFT("rcl", suffix, part); break; \
+	case 3: ORACLE_SHIFT("rcr", suffix, part); break; \
+	case 4: ORACLE_SHIFT("shl", suffix, part); break; \
+	case 5: ORACLE_SHIFT("shr", suffix, part); break; \
+	default: ORACLE_SHIFT("sar", suffix, part); break; \
+	} \
+} while (0)
+
+static u64 native_shift(unsigned int width, unsigned int group, u64 value,
+	unsigned int count, unsigned long input_flags, unsigned long *result_flags)
+{
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	switch (width) {
+	case 1: ORACLE_SHIFT_WIDTH("b", "b"); break;
+	case 2: ORACLE_SHIFT_WIDTH("w", "w"); break;
+	case 4: ORACLE_SHIFT_WIDTH("l", "k"); break;
+	default: ORACLE_SHIFT_WIDTH("q", ""); break;
+	}
+	*result_flags = output;
+	return value;
+}
+
+static int shift_multiply_test(struct fixture *f)
+{
+	static const u64 values[] = { 0, 1, 0x80, 0x80000000, ~0ULL };
+	static const unsigned int counts[] = { 0, 1, 7, 8, 16, 31, 32, 63, 64, 65 };
+	u8 code[5];
+	unsigned int width, group, i, j, length;
+	u64 expected, right;
+	unsigned long flags;
+
+	for (width = 1; width <= 8; width *= 2)
+	for (group = 0; group < 8; ++group)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(counts); ++j) {
+		if (group == 6) continue;
+		length = 0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = width == 1 ? 0xd2 : 0xd3;
+		code[length++] = 0xc3 | (group << 3); /* source countCL, destinationBX */
+		prepare(f, code, length);
+		f->regs.bx = values[i];
+		f->regs.cx = counts[j];
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		expected = native_shift(width, group, values[i], counts[j], f->regs.flags, &flags);
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->regs.bx == expected);
+		CHECK(!((f->regs.flags ^ flags) & KD_REG_ARITHMETIC_FLAGS));
+	}
+	for (width = 2; width <= 8; width *= 2)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(values); ++j) {
+		length = 0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = 0x0f; code[length++] = 0xaf; code[length++] = 0xd8;
+		prepare(f, code, length);
+		f->regs.bx = expected = values[i];
+		f->regs.ax = right = values[j];
+		if (width == 2)
+			asm volatile("imulw %w[right],%w[value]; pushfq; popq %[flags]"
+				: [value] "+r"(expected), [flags] "=r"(flags) : [right] "r"(right) : "cc", "memory");
+		else if (width == 4)
+			asm volatile("imull %k[right],%k[value]; pushfq; popq %[flags]"
+				: [value] "+r"(expected), [flags] "=r"(flags) : [right] "r"(right) : "cc", "memory");
+		else
+			asm volatile("imulq %[right],%[value]; pushfq; popq %[flags]"
+				: [value] "+r"(expected), [flags] "=r"(flags) : [right] "r"(right) : "cc", "memory");
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && f->regs.bx == expected);
+		CHECK(!((f->regs.flags ^ flags) & 0x801));
+	}
+	prepare(f, (u8[]){0x48, 0x6b, 0xc3, 0xf9}, 4);
+	f->regs.bx = 9;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && f->regs.ax == (u64)-63);
+	prepare(f, (u8[]){0xf9, 0x9f, 0xf5, 0x9e, 0xf8}, 5);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && (f->regs.flags & 1));
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && ((f->regs.ax >> 8) & 0xff) == 3);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && !(f->regs.flags & 1));
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && (f->regs.flags & 1));
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT && !(f->regs.flags & 1));
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -377,6 +594,8 @@ static int worker(void *argument)
 	if (!result) result = scalar_test(f);
 	if (!result) result = stop_test(f);
 	if (!result) result = supplementation_test(f);
+	if (!result) result = atomic_test(f);
+	if (!result) result = shift_multiply_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

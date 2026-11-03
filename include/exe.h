@@ -74,6 +74,8 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long outer_lock_addr);
 /* Resume the already bound immutable generation; no fresh source admission. */
 int kd_exe_resume_retained(struct kd_exec_frame *frame);
+int kd_exe_on_reached_entry(struct kd_exec_frame *frame);
+void kd_exe_reached_ack(struct kd_exec_frame *frame);
 
 /* Candidate scalar engine entry, separate from public acquisition/admission.
  * The caller owns stable state storage for this exact retained frame. No new

@@ -159,7 +159,7 @@ def run_native_write_checks(session):
         roots = [event for event in trace_events(messages) if event['event'] == 'enter' and event['origin'] == pid]
         rt.require(len(roots) == 1, 'Native writer root record missing/duplicated', 'NO_JIT')
         result['native_write'] = validate(messages, roots[0], pid, cpu, session.helper_descriptors,
-            session.record['image_registry'][0]['generation'], native_write_snapshot(), early)
+            session.service_generation(), native_write_snapshot(), early)
         session.phase_end(result, successful=[pid])
         result['execution'] = 'NATIVE_ORIGIN_WRITERS_SAME_EXECUTOR_IMAGE_FINAL_RELEASE' if early else \
                               'NATIVE_ORIGIN_WRITERS_BLOCKED_ACQUIRE_EXECUTOR_SCHEDULE_NONLIFO'

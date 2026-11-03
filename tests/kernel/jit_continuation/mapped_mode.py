@@ -75,7 +75,7 @@ def run_mapped_checks(session):
         root, state = roots[0], snapshot()
         events = primitive_events(messages)
         events = [row for row in events if row['origin'] == pid]
-        generation = session.record['image_registry'][0]['generation']
+        generation = session.service_generation()
         if allocation:
             validate_allocation(state)
             rt.require(len(events) == 8, 'allocation/release transaction count differs', 'DATA_ERROR')

@@ -99,7 +99,8 @@ static int kd_jit_service_control(struct kd_exec_frame *frame, struct kd_regs *r
 		api = KD_SERVICE_RWSEM_UP_READ;
 	}
 	if (api == KD_SERVICE_NONE) {
-		if (!frame->image || !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL))
+		if (!cont->reached_active &&
+		    (!frame->image || !(frame->image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CALL)))
 			return 0;
 		ret = kd_exec_cont_native_prepare(frame);
 		return ret == -ENOENT ? 0 : ret ? ret : KD_EXE_KNOWN_ORIGIN_CALL;

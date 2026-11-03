@@ -54,6 +54,24 @@ static struct kd_origin_memory_site site(const char *hex, u8 op, u8 width)
 	return result;
 }
 
+struct reached_source {
+	const u8 *bytes;
+	unsigned int length;
+	unsigned int calls;
+};
+
+static int reached_read(void *context, unsigned long address, void *out,
+	unsigned int size)
+{
+	struct reached_source *source = context;
+
+	++source->calls;
+	if (size != 1 || address < 0x1000 || address - 0x1000 >= source->length)
+		return -ENODATA;
+	*(u8 *)out = source->bytes[address - 0x1000];
+	return 0;
+}
+
 int main(void)
 {
 	struct kd_regs regs = { .ax = 0x1000, .cx = 3, .r12 = 2, .r13 = 0x5000, .sp = 0x6000 };
@@ -91,9 +109,45 @@ int main(void)
 		"65ff10", "65ffff", "65ff04", "65ff05000000" };
 
 	for (i = 0; i < sizeof(accepted) / sizeof(accepted[0]); ++i) {
+		struct kd_origin_memory_site reached;
+		struct reached_source source;
+
 		input = site(accepted[i].hex, accepted[i].op, accepted[i].width);
 		CHECK(!kd_origin_memory_decode(&input, &regs, &address));
 		CHECK(address == accepted[i].expected);
+		source = (struct reached_source){ .bytes = input.opcode, .length = input.length };
+		CHECK(!kd_origin_memory_reached_decode(&reached, input.ip, reached_read, &source));
+		CHECK(!memcmp(&input, &reached, sizeof(input)));
+		CHECK(source.calls == input.length);
+		CHECK(!kd_origin_memory_decode(&reached, &regs, &address));
+		CHECK(address == accepted[i].expected);
+		/* A missing final byte cannot publish a service. Supplement only that
+		 * reached instruction; no successor or whole-image directory is read. */
+		source.length = input.length - 1;
+		source.calls = 0;
+		CHECK(kd_origin_memory_reached_decode(&reached, input.ip, reached_read, &source) == -ENODATA);
+		CHECK(source.calls == input.length);
+		source.length = input.length;
+		source.calls = 0;
+		CHECK(!kd_origin_memory_reached_decode(&reached, input.ip, reached_read, &source));
+		CHECK(source.calls == input.length && !memcmp(&input, &reached, sizeof(input)));
+	}
+	{
+		static const u8 ordinary[] = { 0x90, 0x65, 0xff, 0 };
+		static const u8 atomic[] = { 0x65, 0xf0, 0xff, 0 };
+		static const u8 duplicate[] = { 0x65, 0x65, 0xff, 0 };
+		struct reached_source source = { .bytes = ordinary, .length = sizeof(ordinary) };
+		CHECK(kd_origin_memory_reached_decode(&input, 0x1000, reached_read, &source) == -EOPNOTSUPP);
+		CHECK(source.calls == 1);
+		source = (struct reached_source){ .bytes = atomic, .length = sizeof(atomic) };
+		CHECK(kd_origin_memory_reached_decode(&input, 0x1000, reached_read, &source) == -EOPNOTSUPP);
+		CHECK(source.calls == 2);
+		source = (struct reached_source){ .bytes = duplicate, .length = sizeof(duplicate) };
+		CHECK(kd_origin_memory_reached_decode(&input, 0x1000, reached_read, &source) == -EOPNOTSUPP);
+		CHECK(source.calls == 2);
+		source.calls = 0;
+		CHECK(kd_origin_memory_reached_decode(&input, ~0UL, reached_read, &source) == -EOPNOTSUPP);
+		CHECK(!source.calls);
 	}
 	for (i = 0; i < sizeof(rejected) / sizeof(rejected[0]); ++i) {
 		input = site(rejected[i], 1, 32);

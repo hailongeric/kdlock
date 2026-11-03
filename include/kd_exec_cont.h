@@ -24,6 +24,7 @@ enum kd_exec_cont_wait {
 };
 
 struct kd_exec_continuation;
+struct kd_reached_session;
 
 enum kd_exec_service_api {
 	KD_SERVICE_NONE,
@@ -134,6 +135,10 @@ struct kd_exec_continuation {
 	bool source_lease;
 	bool stack_lease;
 	bool body_reported;
+	/* Selected before publication; never switch a committed root to a suffix. */
+	bool reached_active;
+	u64 reached_artifact_sequence;
+	struct kd_reached_session *reached;
 };
 
 int kd_exec_capture_lease_get(struct kd_exec_capture_lease *lease,

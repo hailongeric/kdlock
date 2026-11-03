@@ -151,8 +151,15 @@ class ContinuationSession(Session):
     def __init__(self, out, spec, binaries, verify):
         super().__init__(out, spec, workload_module=binaries["workload"])
         self.binaries, self.verify = binaries, verify
-        self.daemon_binary = binaries["daemon"]
+        self.daemon_binary = binaries.get("daemon")
         self.translation_source = out / "source"
+
+    def service_generation(self):
+        """Immutable image generation for the original image execution mode."""
+        return self.record["image_registry"][0]["generation"]
+
+    def registry_rows(self):
+        return image_registry()
 
     def counts(self, label):
         row = snapshot()
@@ -185,10 +192,13 @@ class ContinuationSession(Session):
         self.verify()
         self.run(["insmod", self.binaries["guard"]], "load-allocator-guard.log")
         self.run(["rmmod", "tc_allocator_guard"], "unload-allocator-guard.log")
-        self.run(["insmod", self.binaries["provider"], "bench_quiet=1",
+        provider_args = ["insmod", self.binaries["provider"], "bench_quiet=1",
                   "bench_complete_probe=1", "jit_timing=0",
                   f"hotlock_stats={int(self.record['hotlock_stats'])}",
-                  f"target_process={WORKER_COMM}"], "load-provider.log")
+                  f"target_process={WORKER_COMM}"]
+        if self.record.get("execution_mode", "image") == "reached":
+            provider_args.append("service_reached=1")
+        self.run(provider_args, "load-provider.log")
         self.loaded_kd = True
         caps = bytearray(16)
         with open("/dev/kd_dev", "rb", buffering=0) as device:
@@ -229,6 +239,9 @@ class ContinuationSession(Session):
         (PARAMETERS / "bench_lock_addr").write_text(str(layout["lock_address"]))
         with open(DEVICE, "rb", buffering=0) as device:
             fcntl.ioctl(device, PREPARE)
+        if self.record.get("execution_mode", "image") == "reached":
+            self.prepare_reached()
+            return
         self.start_daemon()
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
@@ -462,6 +475,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=("continuation", "killable", "helper"), default="continuation")
+    parser.add_argument("--execution-mode", choices=("image", "reached"), default="image",
+                        help="reached: image-free retained roots with no translator/prewarming")
     parser.add_argument("--cpus", type=rt.cpu_list, default=list(range(16)))
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
@@ -488,6 +503,8 @@ def main():
     rt.require(args.mode not in ("killable", "helper") or
                (args.family == "rwsem" and not args.origin_instructions and not args.mixed_spin),
                "killable/helper modes require rwsem without instruction or mixed-spin variants")
+    rt.require(args.execution_mode != "reached" or args.mode in ("killable", "helper"),
+               "reached execution requires the retained killable/helper rwsem fixtures")
     shared = args.family in ("rwlock", "rwsem") and args.mode not in ("killable", "helper")
     reader_count = args.reader_count if args.reader_count is not None else int(shared)
     rt.require((shared and 1 <= reader_count <= len(args.cpus) - 4) or
@@ -609,10 +626,11 @@ def main():
                        "public marker caller imports another call shell")
             rt.write_json(out / "public-entry-audit.json",
                           audit_public_entries(workload, {"jit_continuation_entry": "continuation_body"}))
-        rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
-                   out / "build-daemon.log", timeout=120)
-        binaries = dict(provider=provider, workload=workload, daemon=source / "daemon/daemon",
-                        guard=guard_dir / "tc_allocator_guard.ko")
+        binaries = dict(provider=provider, workload=workload, guard=guard_dir / "tc_allocator_guard.ko")
+        if args.execution_mode == "image":
+            rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
+                       out / "build-daemon.log", timeout=120)
+            binaries["daemon"] = source / "daemon/daemon"
         binary_hashes = {str(path): rt.digest(path) for path in binaries.values()}
         rt.write_json(out / "binary-sha256.json", binary_hashes)
         # Capture exact generated C/.inc/assembly inputs as well as production.
@@ -642,9 +660,11 @@ def main():
         else:
             shell, cookie = args.family + "_direct", "provider_cpu_heat"
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
+                    execution_mode=args.execution_mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=(8064 if args.mode == "helper" else 384 if args.mode == "killable" else
+                    image_requirements=(0 if args.execution_mode == "reached" else
+                                        8064 if args.mode == "helper" else 384 if args.mode == "killable" else
                                         1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,
@@ -661,12 +681,16 @@ def main():
         elif args.mode == "helper":
             from helper_mode import session_class
             selected_session = session_class(ContinuationSession)
+        if args.execution_mode == "reached":
+            from reached_mode import session_class
+            selected_session = session_class(selected_session)
         session = selected_session(out, spec, binaries, verify)
         session.execute()
         verify()
         idle()
         rt.write_json(out / "result.json", dict(passed=True, drained=True, phases=session.record["phases"],
-            family=args.family, mode=args.mode, entry_abi=session.record["entry_abi"],
+            family=args.family, mode=args.mode, execution_mode=args.execution_mode,
+            reached=session.record.get("reached"), entry_abi=session.record["entry_abi"],
             image_requirements=session.record["image_requirements"],
             worker_roles=session.record["worker_roles"],
             mixed_spin=session.record["mixed_spin"],
@@ -681,7 +705,10 @@ def main():
             print("PASS: actual other-task killable roots, queued/draining cancellation and nested parent effects")
             return 0
         if args.mode == "helper":
-            print("PASS: identity and mapped original-task primitives return to the same executor/image without replay")
+            if args.execution_mode == "reached":
+                print("PASS: reached primitives retain exact family/artifact custody and return to the same executor without replay")
+            else:
+                print("PASS: identity and mapped original-task primitives return to the same executor/image without replay")
             return 0
         print("PASS: cold paths and reached original-task instructions retain exact effects and tested flags; "
               + ("same-image JIT reentry verified; " if session.record["origin_service"] else "native suffix verified; ")

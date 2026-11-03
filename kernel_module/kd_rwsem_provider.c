@@ -295,6 +295,12 @@ int kd_rwsem_provider_activate(void)
 	for (index = 0; index < count; ++index) {
 		struct kd_exe_info *exe = kd_exe_find_ready(0, sites[index].entry);
 
+		if (kd_service_reached_enabled()) {
+			result = kd_source_pin_root(sites[index].entry);
+			if (result)
+				goto out;
+			continue;
+		}
 		if (!kd_exe_capture_image(exe, sites[index].entry)) {
 			result = -EAGAIN;
 			goto out;

@@ -111,8 +111,26 @@ def primitive_events(messages):
             row[key] = int(fields[key], 16 if key in ('identity', 'target', 'return', 'ax', 'flags') else 10)
         if 'execution_target' in fields:
             row['execution_target'] = int(fields['execution_target'], 16)
+        for key in ('family_generation', 'artifact_sequence'):
+            if key in fields:
+                row[key] = int(fields[key])
         rows.append(row)
     return rows
+
+
+def validate_execution_identity(rows, root, image_generation):
+    """A cold service has exact family/transaction authority and no image."""
+    if root.get('family_generation'):
+        artifact = rows[0].get('artifact_sequence', 0)
+        rt.require(root['family_generation'] == root['generation'] > 0 and artifact > 0 and
+                   image_generation == 0 and all(
+                       row['image_generation'] == 0 and
+                       row.get('family_generation') == root['family_generation'] and
+                       row.get('artifact_sequence') == artifact for row in rows),
+                   'cold service changed family, artifact sequence or used an image', 'DATA_ERROR')
+    else:
+        rt.require(image_generation > 0 and all(row['image_generation'] == image_generation for row in rows),
+                   'primitive immutable image generation differs', 'DATA_ERROR')
 
 
 def validate_transaction(events, root, pid, target, image_generation, result, sequence=None, final=False):
@@ -120,11 +138,11 @@ def validate_transaction(events, root, pid, target, image_generation, result, se
             (sequence is None or row['sequence'] == sequence)]
     rt.require([row['stage'] for row in rows] == ['request', 'enter', 'done', 'complete' if final else 'resume'],
                'primitive transaction missing, repeated or out of order', 'DATA_ERROR')
+    validate_execution_identity(rows, root, image_generation)
     rt.require(rows[0]['sequence'] > 0 and rows[0]['return'] > 0 and all(
         row['identity'] == root['identity'] and row['generation'] == root['generation'] and
         row['executor'] == root['executor'] and row['origin'] == pid and row['target'] == target and
-        row['sequence'] == rows[0]['sequence'] and row['return'] == rows[0]['return'] and
-        row['image_generation'] == image_generation for row in rows),
+        row['sequence'] == rows[0]['sequence'] and row['return'] == rows[0]['return'] for row in rows),
         'primitive transaction changed root, executor, target, sequence or image', 'DATA_ERROR')
     rt.require(root['executor'] != pid and
                [row['task'] for row in rows] == [root['executor'], pid, pid, root['executor']] and
@@ -303,16 +321,20 @@ def session_class(base):
                 rt.require(len(roots) == 1, 'primitive root actual executor record missing', 'NO_JIT')
                 root = roots[0]
                 transactions = validate_transaction(primitive_events(self.messages[self.trace_start:]), root, pid,
-                    self.helper_descriptors[symbol]['target'], self.record['image_registry'][0]['generation'], value)
+                    self.helper_descriptors[symbol]['target'], self.service_generation(), value)
                 result.update(helper_observation=state, primitive_transaction=transactions,
                               execution='ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN')
                 if flags == 16384:
-                    rt.require(self.record['image_registry'][0]['requirements'] & 4096,
+                    rt.require(self.record.get('execution_mode', 'image') == 'reached' or
+                               self.record['image_registry'][0]['requirements'] & 4096,
                                'indirect tail image contract missing', 'NO_JIT')
                     result['indirect_tail'] = dict(source='ordinary CALL to unregistered register-JMP callee',
                         target=symbol, original_task=pid, executor=root['executor'],
-                        same_image_generation=self.record['image_registry'][0]['generation'],
+                        same_image_generation=self.service_generation(),
                         saved_caller_word_reused=True)
+                    if self.record.get('execution_mode', 'image') == 'reached':
+                        result['indirect_tail'].pop('same_image_generation')
+                        result['indirect_tail']['same_family_generation'] = root['family_generation']
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN'
                 self.save()
@@ -327,7 +349,7 @@ def session_class(base):
                 roots = [row for row in trace_events(messages) if row['event'] == 'enter' and row['origin'] == pid]
                 rt.require(len(roots) == 1, 'Native root actual executor record missing', 'NO_JIT')
                 result['native_pairs'] = validate_native_trace(messages, roots[0], pid, self.helper_descriptors,
-                    self.record['image_registry'][0]['generation'], native_snapshot(), early)
+                    self.service_generation(), native_snapshot(), early)
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE'
                 self.save()

@@ -91,6 +91,10 @@ struct kd_origin_memory {
 	unsigned long result_value;
 	u32 immediate;
 	u8 destination;
+	/* These cold fields follow every assembly-consumed prefix word. A reached
+	 * descriptor remains immutable until DONE is acknowledged on E. */
+	u64 artifact_sequence;
+	struct kd_origin_memory_site reached_site;
 };
 
 const struct kd_origin_memory_site *kd_image_memory_sites(
@@ -98,7 +102,12 @@ const struct kd_origin_memory_site *kd_image_memory_sites(
 int kd_image_validate_memory_sites(const struct kd_jit_image *image);
 int kd_origin_memory_decode(const struct kd_origin_memory_site *site,
 	const struct kd_regs *regs, unsigned long *effective_offset);
+typedef int (*kd_origin_memory_reader)(void *context, unsigned long address,
+	void *out, unsigned int size);
+int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
+	unsigned long ip, kd_origin_memory_reader reader, void *context);
 int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame);
+int kd_exec_cont_memory_prepare_reached(struct kd_exec_frame *frame);
 int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence);
 /* Runs on O with its Native context already normalized. This writes only
  * retained outputs; complete applies a decoded MOV destination after ACK. */

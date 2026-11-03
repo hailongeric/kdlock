@@ -142,6 +142,9 @@ struct kd_origin_call {
 	bool executor_pinned;
 	/* Cold Native writer custody; assembly consumes only the scalar prefix. */
 	struct kd_native_owner *rwsem_owner;
+	/* A cold CALL retains its exact reached artifact through O's final ACK.
+	 * Zero selects the existing immutable-image transaction. */
+	u64 artifact_sequence;
 };
 
 /* Descriptors are copied into provider-owned immutable slots. Configuration
