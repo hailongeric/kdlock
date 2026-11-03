@@ -280,3 +280,20 @@ nofault primitive. These are explicit candidate coverage limits, not a change
 to public API success, error or downgrade behavior. The standalone engine
 fixture supplies ordinary private RAM and all-or-none store callbacks; its
 checks do not prove the still-unactivated frame adapter or arbitrary MM stores.
+
+### First focused validation attempt
+
+The first VM unit attempt used
+`d25b210352aea98a1d13b2ab79c5e1baf4c20166`. Reached-path decoding passed all 19
+cases, and private-source admission passed all nine cases. The affected source
+lifetime fixture failed to compile: its capability assertion still expected
+version 16 although the baseline already advertises version 17 and
+`KD_JIT_CAP_INDIRECT_TAIL`. Its expected feature set and mutation anchors also
+needed that existing capability. Keep every prior probe and add a direct probe
+that removing the indirect-tail capability is detected; production capability
+values remain unchanged. This is a fixture correction, not a passed rerun.
+
+The exact reply remains at
+`/tmp/kdlock-reached-d25b-checks-first-20261102/reply.json`, SHA256
+`b02d448f25137b356874b4e3159434820ba6b842c4c6e1bedd33aef7835a482c`.
+No provider build or live fixture was launched by that failed attempt.
