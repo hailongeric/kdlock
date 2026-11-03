@@ -287,6 +287,13 @@ before fetching or executing in that new request. Focused adapter fixtures
 exercise this distinction and committed-prefix preservation separately from
 the cold engine's instruction effects.
 
+For a successful scalar step or edge, event length is the complete decoded
+instruction length. A SOURCE or UNSUPPORTED event can contain only the prefix
+bytes encountered so far. Its source PC remains authoritative; do not publish
+those partial bytes as a complete immutable instruction artifact. Supplement
+and retry that unexecuted instruction while retaining the already committed
+prefix and persistent budget.
+
 ### First focused validation attempt
 
 The first VM unit attempt used
@@ -303,3 +310,20 @@ The exact reply remains at
 `/tmp/kdlock-reached-d25b-checks-first-20261102/reply.json`, SHA256
 `b02d448f25137b356874b4e3159434820ba6b842c4c6e1bedd33aef7835a482c`.
 No provider build or live fixture was launched by that failed attempt.
+
+### Stage (b) measured functional endpoint
+
+The bounded scalar implementation and focused checks are recorded at
+[`reached-path-stage-b-20261102`](../../bench/results/10.176.26.71/tests/reached-path-stage-b-20261102/README.md).
+The tested source is `4122b53ebc590da82679ffcbb23d4719b7db376a`: normal
+provider build, 144 adapter assertions, 19 decoder cases, source-lifetime and
+private-source checks, 37,700 resident scalar assertions and the existing 11
+helper plus 11 killable/nesting phases passed. All live fixtures drained, with
+unchanged frozen inputs and a final idle guest. The earlier failed fixture
+compilation remains separately recorded.
+
+This validates the bounded Stage (b) component and preserves the existing
+protocol fixtures; it does not activate image-free public capture. Family/cache
+and cold service-artifact joins are still required before actual MM execution.
+No mmap1 run, delegation metric, Nano score or performance claim follows from
+these functional results.

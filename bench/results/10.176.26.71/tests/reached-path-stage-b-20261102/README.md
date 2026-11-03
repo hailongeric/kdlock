@@ -127,3 +127,70 @@ addresses can be reused, so address equality cannot authorize old execution
 state. Add the exact request identity/generation and a focused adapter fixture
 before final Stage (b) delivery. Its validation is a new source revision; the
 passes above remain attached only to `55231559`.
+
+## Guarded candidate: `4122b53e`
+
+Tested implementation:
+`4122b53ebc590da82679ffcbb23d4719b7db376a`. The new adapter fixture checks
+the exact production entry/run functions with substituted readiness and scalar
+core calls. It proves request-generation checks and packet bookkeeping; it
+does not substitute for live lock/context integration.
+
+| Check | Result |
+| --- | --- |
+| Reached frame adapter | 144 assertions, zero failures |
+| Reached decoder | 19 cases passed |
+| Source lifetime | 49,916 assertions, zero failures; all 35 negative variants detected |
+| Private-source admission | Nine cases passed |
+| Ordinary provider and cold fixture builds | Passed |
+| Resident cold engine | 37,700 assertions passed; 12,544 Native arithmetic tuples |
+| Returning helpers | All 11 phases passed and drained |
+| Killable/nesting/downgrade | All 11 phases passed and drained |
+| Final state | Idle; provider and both fixtures absent; all 6,815 frozen files unchanged |
+| mmap1 / Nano / timing | Not run |
+
+The cold executor was task 36103; O was task 36102. The source read count was
+31,534 bytes, fetched incrementally only at reached instructions. The fixture
+proved positive supplementation of a selected missing target after a committed
+INC/JMP prefix, then execution of the new MOV/RET on E without replaying that
+prefix. It also proved retry of a truncated current instruction and a bounded
+64-instruction run with preemption disabled. PAUSE/fences execute directly on E.
+
+The adapter fixture rejects an old state after either identity or generation
+changes at the same frame/packet addresses, without invoking the core. A
+segment that commits instructions and then stops at SOURCE, UNSUPPORTED or
+MEMORY retains its actual packet, executed marker and continuation. A stop
+without progress leaves those execution fields untouched. Neither result is
+treated as public lock completion or an origin suffix.
+
+The helper/killable phase names and scope are the same 11 plus 11 listed for
+the previous revision; all were freshly run on this commit. Cancellation,
+nested blocking and non-LIFO release, executor downgrade/read-tail completion
+and subsequent fresh writer acquisition passed in that existing protocol.
+They continue to use the separate complete-image path. No claim is made that
+the cold engine already executes those control or Native service intervals.
+
+| Retained receipt | SHA256 |
+| --- | --- |
+| [Focused reply](4122-focused-checks.json) | `621ae610556e9ad20a0f6b4a11a4e6650bc923453c34a4b5ab284094d32f0486` |
+| [Physical host](4122-host.json) | `1c53fdfd09e4986d5f29a8c4a731bbe1b2f42f75496e947ea4f098fded90447e` |
+| [Frozen source transfer](4122-source-transfer.json) | `3c552c52d71ca66b4ea49dc85fea02fc05b355f83454ee2ffb4401932c3471ab` |
+| [Final state and log hashes](4122-final-state.json) | `f04742d4682fe3823b017fcd6b179eea83ab7df53c5d358740de77edc641a580` |
+
+Full VM build/test/log outputs remain at
+`/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-4122-checks-first-20261102`.
+The immutable input is
+`/root/kdlock-inputs/reached-4122-4122b53e-20261102`, source manifest SHA256
+`305d4e54736c6868fdf478d7157698ad14959e8bc18fb6b930f4a3a67e611a67` and
+state SHA256
+`bcaa6bc146298a1d0e3c7021979e78a2d0c99a4b727afed3d1180f468f9c4a21`.
+The compiler/objtool warning scope is unchanged from the previous inventory;
+the new scalar component has no reported build warning.
+
+Stage (b)'s bounded scalar and supplementation slice is implemented and
+validated. The next implementation stage must join family/artifact authority,
+source epochs, pending services, cache publication and persistent continuation
+state before enabling image-free public capture. Arbitrary data stores,
+atomic operations, task-dependent memory and fault/context contracts remain
+explicit unfinished coverage. The tests do not establish mmap1 delegation or
+performance acceptance.
