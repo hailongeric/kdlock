@@ -589,3 +589,40 @@ returned-body, delegation, throughput, performance acceptance or promotion is
 claimed. Generated-text ownership, a published image and controlled helper
 returns do not by themselves establish complete actual MM callee closure or
 per-syscall original-task completion.
+
+
+## Bounded lookahead: actual retry still stops before either model
+
+The subsequent actual diagnostic on runtime `0b33995c` also stops during the
+all-site prewarm. The failed original result SHA256 is
+`fed833fdea0e0f37e85ef9b42663d7d0bc348b047c636a35ca8a7282c1c42efe`;
+[the retained attempt](lookahead-attempt.json) preserves that result separately
+from successful normal retirement and the focused prerequisite receipt.
+The factory remains `N`, bindings and body/completion counters are zero, and
+both `mmap1_threads` and `mmap1_processes` are **NOT STARTED**.
+
+The new planner successfully admits two smaller plans for the brk entry,
+first 238,720 bytes with 256-byte optional lookahead, then 261,088 with 128.
+The next mandatory 15-byte-prefix plan needs 265,777 bytes and fails the
+unchanged 262,144-byte cap. The userfaultfd entry similarly reaches 259,712
+bytes before its minimum plan needs 263,680. Thus optional trimming makes
+observable preparation progress but does not establish complete callee closure.
+The point-in-time daemon snapshot SHA256 is
+`49b743fb86a43e4872a037459a029a6779273d4c5555ab8ff792c823a676c912`.
+It contains a later entry beginning preparation, not a completed result for
+that entry; do not infer all later sites have the same failure.
+
+Normal retirement binds the daemon PID/start identity, sends ordinary SIGTERM,
+waits for zero source writers, obtains repeated identical observer STOP,
+reaches exact source retirement `2/0/0/0`, unloads both modules normally and
+verifies final idle. The independent source-host retirement receipt SHA256 is
+`23f97e46104387cdbb099fc6269ee9cf62a523053a96f6f083ef9375dc57211e`.
+It confirms the failed result bytes remain unchanged. This is no application
+return, delegated MM completion, throughput score or performance acceptance.
+
+The next bounded general change is documented in
+[explicit Native argument mapping](../../../../../docs/design/native_call_arguments.md):
+use Linux's existing explicit-caller allocation API for a single returning
+Native interval while retaining the logical source CALL identity and resuming
+the same image on E. It does not increase cache/image bounds or change an MM
+body. Implementation and subsequent actual mmap1 proof remain separate gates.
