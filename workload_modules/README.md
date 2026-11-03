@@ -29,7 +29,7 @@ measurement terms are defined in the [terminology guide](../docs/TERMINOLOGY.md)
 
 This directory contains benchmark kernel payloads and payloads shared by
 benchmarks and correctness checks. Correctness-only modules live beside their
-runners under [tests/kernel](../tests/kernel/README.md), in `payload/` subdirectories.
+runners under [tests/kernel](../tests/kernel/README.md), in `fixture/` subdirectories.
 Userspace clients, timing and reports live under
 [bench/tclock_compare](../bench/tclock_compare/README.md) and
 [bench/rwlock_compare](../bench/rwlock_compare/README.md). Provider-specific

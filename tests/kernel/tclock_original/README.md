@@ -35,7 +35,7 @@ export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
 PORT_WORK=/root/tclock-original-NEW
 mkdir -p "$PORT_WORK/backend" "$PORT_WORK/probe"
 cp -a tclock_backend/. "$PORT_WORK/backend/"
-cp tests/kernel/tclock_original/payload/* "$PORT_WORK/probe/"
+cp tests/kernel/tclock_original/fixture/* "$PORT_WORK/probe/"
 make -C "$PORT_WORK/backend" KDIR=/root/linux-6.1.159-kdclobber2 \
     TCLOCK_RWSEM=1 TCLOCK_NUMA=1
 make -C "$PORT_WORK/probe" KDIR=/root/linux-6.1.159-kdclobber2 TEST_KIND=4 \

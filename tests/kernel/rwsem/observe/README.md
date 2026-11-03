@@ -69,7 +69,7 @@ TID lifetimes, boot, workload and normal application completion separately.
 
 ```sh
 make -C tests/kernel/rwsem/observe/payload KDIR=<verified-build> W=1
-insmod tests/kernel/rwsem/observe/payload/kd_rwsem_observe.ko capacity=16384
+insmod tests/kernel/rwsem/observe/fixture/kd_rwsem_observe.ko capacity=16384
 python3 tests/kernel/rwsem/observe/collect.py arm --tids <tid1> <tid2> \
   --duration-ms 10 --output <new-output-directory>
 ```

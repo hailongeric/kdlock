@@ -418,7 +418,7 @@ the reached instruction by running a whole body on O or disabling the fixture.
 
 The frozen ELF identifies the complete instruction as `48 0f ba f2 1f`,
 `btr $0x1f,%rdx`, implementing the preemption-count predicate in
-`tests/kernel/jit_continuation/payload/helper_memory.inc:80`. Seven earlier
+`tests/kernel/jit_continuation/fixture/helper_memory.inc:80`. Seven earlier
 helper phases completed, including sleeping, Native spin/RCU, an indirect
 tail and mapped allocation. The failing GS phase had completed three memory
 transactions, including a normalized read of `80000001`. Register bit-operation
@@ -771,3 +771,14 @@ policies. Check exact one-RMW/no separate read or write, source alias/failure,
 unchanged unrelated words/registers and explicit unsupported forms. Build and
 retry actual MM only after these directly affected checks pass; preserve the
 preceding failed activation separately.
+
+
+## Correctness module directory naming
+
+Use `fixture/` for maintained correctness module source directories and their
+runner/build references. Apply this as a mechanical naming change across the
+existing kernel checks; preserve module names, public interfaces, module source
+contents and lock behavior. Historical run records retain their captured paths
+and hashes. New frozen candidates must use the renamed tree consistently.
+Check current references statically, then build the directly affected resident
+and MM modules and run the focused VM checks.

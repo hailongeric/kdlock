@@ -15,7 +15,7 @@ labels used below.
 This runner compares Linux native rwlocks, the
 [TCLock rwlock port](../../tclock_backend/README.md) and
 [KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
-Use the separate [correctness test](../../tests/kernel/rwlock/payload/README.md) for
+Use the separate [correctness test](../../tests/kernel/rwlock/fixture/README.md) for
 instrumented checks of reader overlap and writer exclusion.
 The same runner also supports sleeping rwsems and extracted proc spin
 snapshots. These modes keep distinct lock, caller and execution identities.

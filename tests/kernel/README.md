@@ -6,18 +6,18 @@ Passing a module-object probe does not establish kernel-wide API coverage, and
 passing an MM correctness case does not establish mmap1 throughput or parity.
 
 Organize tests by lock family or execution feature. A test directory owns its
-runner and guide; a correctness-only loadable module belongs in its `payload/`
+runner and guide; a correctness-only loadable module belongs in its `fixture/`
 subdirectory. Keep the module Makefile, C source and ioctl header together so
 source freezing includes the complete build input. Existing provider probes
 may keep their small module directly in their test directory.
 
-| Test | Runner | Kernel payload |
+| Test | Runner | Kernel fixture |
 | --- | --- | --- |
-| Conditional instruction exit (mutex, spin, rwlock, rwsem) | [jit_continuation](jit_continuation/README.md) | [payload](jit_continuation/payload/README.md) |
-| Reached scalar execution and source supplementation | [reached_path](reached_path/README.md) | [payload](reached_path/payload/module.c) |
-| Checked spin pointer-load continuation | [spin/address_guard](spin/address_guard/README.md) | [payload](spin/address_guard/payload/module.c) |
-| Original kernel strcmp delegation | [spin/string_service](spin/string_service/README.md) | [payload](spin/string_service/payload/module.c) |
-| Reader/writer exclusion and delegation | [rwlock](rwlock/README.md) | [payload](rwlock/payload/README.md) |
+| Conditional instruction exit (mutex, spin, rwlock, rwsem) | [jit_continuation](jit_continuation/README.md) | [fixture](jit_continuation/fixture/README.md) |
+| Reached scalar execution and source supplementation | [reached_path](reached_path/README.md) | [fixture](reached_path/fixture/module.c) |
+| Checked spin pointer-load continuation | [spin/address_guard](spin/address_guard/README.md) | [fixture](spin/address_guard/fixture/module.c) |
+| Original kernel strcmp delegation | [spin/string_service](spin/string_service/README.md) | [fixture](spin/string_service/fixture/module.c) |
+| Reader/writer exclusion and delegation | [rwlock](rwlock/README.md) | [fixture](rwlock/fixture/README.md) |
 
 Other family and provider probes remain in their existing subdirectories; see
 the [test index](../README.md) for coverage and affected-check selection.
@@ -26,7 +26,7 @@ Benchmark modules and modules shared with timing runners remain under
 and writer workloads. Benchmark runners live under `bench/`.
 
 Build and execute only in the verified VM under [VM operations](../../docs/operations/VM.md).
-Source snapshots must include nested `payload/` files and private `.inc` files.
-Moving a payload does not change its module name, device, ioctl ABI or ownership
+Source snapshots must include nested `fixture/` files and private `.inc` files.
+Moving a fixture does not change its module name, device, ioctl ABI or ownership
 and retirement requirements. Historical evidence retains the original paths and
 source hashes; use its frozen source when reproducing those records.

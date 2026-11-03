@@ -103,9 +103,9 @@ validate whole-kernel replacement.
 8. Synchronize only while idle and never edit frozen running inputs. Confirm a
    real recovery snapshot before live module/JIT work. Bound remote commands.
    A timeout does not prove drain. Never force unload or clear `/root/host_fs`.
-9. Keep benchmark and shared payloads in `workload_modules/` and benchmark runners
-   in `bench/`. Keep correctness-only code in `tests/`, with kernel payloads in
-   a `payload/` subdirectory beside their `tests/kernel/` runner. Provider probes
+9. Keep benchmark and shared fixtures in `workload_modules/` and benchmark runners
+   in `bench/`. Keep correctness-only code in `tests/`, with kernel fixtures in
+   a `fixture/` subdirectory beside their `tests/kernel/` runner. Provider probes
    remain in `tests/kernel/`. Include private `.inc` files in snapshots.
 10. Keep one guide per responsibility. Current instructions belong in maintained
     docs; historical protocols/results belong in history or fixed Git evidence.
