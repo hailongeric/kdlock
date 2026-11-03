@@ -340,3 +340,32 @@ decides whether its original GFP and task context permit blocking. No new
 argument selector, weakened context check, or replay of the interpreted prefix
 is introduced. Ordinary delegated instructions still execute on E. The new
 roster/context fixtures and actual syscall retry require fresh VM validation.
+
+
+## Ninth candidate: `9b0da70c`
+
+Exact source: `9b0da70c7a8b8a0c32c4b3e624688da7fbb4d731`. Five focused unit
+drivers passed: the public allocator/context contract, 20 returning-call cases,
+seven helper traces, seven MM proof cases and nine private-source cases.
+[Unit receipt](ninth-units.json) retains the context checks and eight expected
+negative cases. Provider and observation module builds passed.
+
+On boot `a2887015-5808-4947-ae2f-f3d7d3416a98`, the next reached operation
+was `mod_node_page_state+0x33`, `ffffffff817b9883`, bytes `65 0f b6 07`: a
+byte GS load in the CPU-local accounting transaction. O `4173`, E `4151`,
+generation 3, entry `ffffffff818e077d` are retained in the
+[resident log](ninth-resident-kernel.log). [Live bytes](ninth-live-site.json)
+and [raw retention](ninth-retention.json) preserve the failed activation.
+It remains undrained, with worker mmap/munmap completion unproved and the
+process model unrun. Recovery boot is `2beefbc5-196a-4620-8859-e38b83768b9b`.
+
+## General Native VM-accounting service
+
+The source-backed design was committed first as `73c246ab`.
+[Source inventory](vm-accounting-source.json) binds scope5 `mm/vmstat.c` and
+`include/linux/vmstat.h`. Six ordinary public node/zone mod/inc/dec APIs now
+use returning Native API service, retaining exact public arguments/results,
+CPU-local differential retry and atomic overflow accounting on O. Their
+private helpers and MM callers are unchanged and unregistered. The same E
+continues afterward. Context and exact CALL/ACK/lifetime guards are unchanged;
+fresh roster checks and actual syscall validation remain required.

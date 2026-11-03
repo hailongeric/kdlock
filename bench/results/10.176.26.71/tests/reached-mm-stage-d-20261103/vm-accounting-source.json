@@ -1,0 +1,20 @@
+{
+  "kernel_source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source",
+  "release": "7.0.0-38-kdscope5",
+  "boot_id": "2beefbc5-196a-4620-8859-e38b83768b9b",
+  "idle": true,
+  "files": {
+    "mm/vmstat.c": {
+      "sha256": "90a9ac53ea9ac8de86f454e103f7e99ca1faf2c0e226a2e56e9785d8f0a02255",
+      "bytes": 65781
+    },
+    "include/linux/vmstat.h": {
+      "sha256": "a71d9cbd4b2257167f30d7d1adff7fca15d9e3cce74bd00398f6e33ac6c4aa78",
+      "bytes": 15483
+    },
+    "include/linux/mmzone.h": {
+      "sha256": "ff83b02062970e6bf398c1bea9429f8f71ccaa4ec671faab3fd75d6910f11f5a",
+      "bytes": 74101
+    }
+  }
+}

@@ -79,7 +79,7 @@ int main(void)
 		.context_kind = KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 	};
 	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0, allocators = 0;
-	unsigned int conditional = 0, page_allocators = 0;
+	unsigned int conditional = 0, page_allocators = 0, page_accounting = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -270,6 +270,26 @@ int main(void)
 						kd_service_native_executor_pinned(primitive->context_kind, 1));
 				}
 		}
+		{
+			static const struct { const char *name; unsigned int nargs; } accounting_calls[] = {
+				{ "mod_node_page_state", 3 }, { "mod_zone_page_state", 3 },
+				{ "inc_node_page_state", 2 }, { "inc_zone_page_state", 2 },
+				{ "dec_node_page_state", 2 }, { "dec_zone_page_state", 2 },
+			};
+			size_t accounting;
+
+			for (accounting = 0; accounting < sizeof(accounting_calls) / sizeof(accounting_calls[0]); ++accounting)
+				if (!strcmp(primitive->symbol, accounting_calls[accounting].name)) {
+					CHECK(!(page_accounting & (1U << accounting)));
+					page_accounting |= 1U << accounting;
+					CHECK(primitive->nargs == accounting_calls[accounting].nargs &&
+						primitive->result_kind == KD_SERVICE_CALL_VOID &&
+						primitive->context_kind == KD_SERVICE_CALL_ATOMIC_ORIGIN);
+					CHECK(!kd_service_call_requires_preempt_rcu(primitive->context_kind) &&
+						!kd_service_native_executor_pinned(primitive->context_kind, 0) &&
+						kd_service_native_executor_pinned(primitive->context_kind, 1));
+				}
+		}
 		if (!strcmp(primitive->symbol, "down_write") || !strcmp(primitive->symbol, "up_write")) {
 			++writers;
 			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
@@ -287,6 +307,7 @@ int main(void)
 	CHECK(callbacks == 8 && writers == 2 && allocators == 2);
 	CHECK(conditional == 1);
 	CHECK(page_allocators == 0x3f);
+	CHECK(page_accounting == 0x3f);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

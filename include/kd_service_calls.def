@@ -52,6 +52,15 @@ KD_SERVICE_CONTEXT(get_free_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CA
 KD_SERVICE_CONTEXT(get_zeroed_page_noprof, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
 KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* include/linux/vmstat.h:281-287: ordinary public node/zone accounting.
+ * Preserve each complete Native CPU-local update, including its retry and
+ * overflow accounting, on the origin. Public mod delta is a long word. */
+KD_SERVICE_CONTEXT(mod_node_page_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_zone_page_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(inc_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(inc_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(dec_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(dec_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).
  * The temporary reader-exclusion wait finishes before either API returns. */
 KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)
