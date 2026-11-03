@@ -466,3 +466,48 @@ instruction/context limits at
 [`reached-family-stage-c-20261102`](../../bench/results/10.176.26.71/tests/reached-family-stage-c-20261102/README.md).
 The MM factory has not been activated with reached mode, and no actual mmap1,
 Nano or throughput run is claimed. The candidate remains isolated.
+
+## Stage (d): actual MM reached execution
+
+Continue on `codex/reached-path-translation` from
+`1fec704bbeb19b3391066c49a5cb1e303528d2e9`. Activate the existing general
+rwsem provider with `service_reached=1` and exercise unchanged mmap1 through
+its actual mmap/munmap syscalls. No application-specific branch, MM body
+rewrite or entry-specific Native helper is permitted. The kernel's existing
+writer-site table identifies generic ABI2 capture entries; retain the exact
+ELF audit without requiring those entries to have compiled images.
+
+Add an explicit reached execution-session contract alongside the existing
+image contract. Bind the same frozen module, controller, source manifest,
+kernel/boot identity and provider parameters. Require no translator or device
+writer and no published image in reached mode. Source modules can grow only
+as actual reached text is retained; final source retirement must still prove
+modules/frames/writers zero. Do not relax the image contract to achieve this.
+
+First run one diagnostic lifetime with two workers for each of the thread and
+process models, keeping their results separate and unscored. Start the bounded
+continuous kernel collector before activating the factory. Observe the real
+syscall arguments and returns, the actual worker/MM/backing/provider identity,
+distinct origin and executor tasks, completed root generations, exact family
+and service ACK/resume ledgers, delegated downgrade/read-release events and
+later fresh writer admission. Positive entry alone is not a returned body or
+an origin-side syscall return. Cache counters are supplementary observations,
+not proof of any individual request's completion.
+
+If execution reaches an unsupported instruction or context interval, retain
+its exact PC, bytes, source identity and committed prefix. Supplement that
+general operation with its complete Native effects and a focused differential
+check, then build and retry under a new immutable source identity. Do not skip
+the instruction, weaken ownership checks or route a complete suffix to origin.
+Keep unsupported operations explicit until implemented. A failed/undrained
+attempt remains a failure; preserve logs before recovery and do not combine
+its counts with later attempts. Kernel/VM changes and recovery are authorized
+by the current user instructions; default build inputs and historical evidence
+remain preserved.
+
+The initial validation is bounded functional execution, not the complete
+Nano/MM performance gate. After both application models return with exact
+retirement, report the delegated critical sections, observed episode counts
+and enter-to-return duration definition, plus every remaining unsupported
+point. Performance comparisons require separately identified Native and KD
+runs; no gain follows from a diagnostic count.
