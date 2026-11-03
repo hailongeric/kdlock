@@ -476,6 +476,9 @@ its actual mmap/munmap syscalls. No application-specific branch, MM body
 rewrite or entry-specific Native helper is permitted. The kernel's existing
 writer-site table identifies generic ABI2 capture entries; retain the exact
 ELF audit without requiring those entries to have compiled images.
+In reached mode, general provider preparation validates each site's operation,
+reserved word and entry, then retains its root text without allocating an image
+registry slot. Activation retains the existing binding/registration protocol.
 
 Add an explicit reached execution-session contract alongside the existing
 image contract. Bind the same frozen module, controller, source manifest,
