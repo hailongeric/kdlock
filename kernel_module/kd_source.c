@@ -204,7 +204,10 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 		if ((address >= kd_init_start && address < kd_init_end) ||
 		    (text && address >= kd_core_text_end))
 			return -EPERM;
-		*end = address < kd_init_start ? kd_init_start : kd_core_end;
+		/* Text windows must stop at _etext, even when adjacent core data is
+		 * resident. A reached instruction may not borrow data residency. */
+		*end = text ? kd_core_text_end :
+			address < kd_init_start ? kd_init_start : kd_core_end;
 		return 0;
 	}
 	module = kd_module_address(address);
@@ -290,7 +293,12 @@ int kd_source_pin_range(unsigned long address, unsigned long size)
 
 int kd_source_pin_target(unsigned long address)
 {
-	return kd_source_pin(address, 1, true, KD_SOURCE_FRAME);
+	return kd_source_pin_text_range(address, 1);
+}
+
+int kd_source_pin_text_range(unsigned long address, unsigned long size)
+{
+	return kd_source_pin(address, size, true, KD_SOURCE_FRAME);
 }
 
 void kd_source_info(struct kd_source_info *info)

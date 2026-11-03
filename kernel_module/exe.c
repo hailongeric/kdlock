@@ -180,6 +180,7 @@ static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/control_calls.inc"
 #include "execution/service_control.inc"
+#include "execution/reached.inc"
 
 #include "execution/registry_publish.inc"
 

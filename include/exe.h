@@ -6,6 +6,7 @@
  * in exe_info.h; backends must preserve that distinction when handing off. */
 #include "exe_info.h"
 #include "kd_regs.h"
+#include "kd_reached.h"
 
 void kd_exe_add(int pid, unsigned long RIP, enum kd_exe_lock_kind kind);
 void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
@@ -73,6 +74,14 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long outer_lock_addr);
 /* Resume the already bound immutable generation; no fresh source admission. */
 int kd_exe_resume_retained(struct kd_exec_frame *frame);
+
+/* Candidate scalar engine entry, separate from public acquisition/admission.
+ * The caller owns stable state storage for this exact retained frame. No new
+ * capture mode is activated until artifact/service joins are complete. */
+int kd_exe_reached_begin(struct kd_exec_frame *frame,
+	struct kd_reached_state *state, u64 budget);
+enum kd_reached_result kd_exe_reached_run(struct kd_exec_frame *frame,
+	struct kd_reached_state *state, unsigned int instruction_limit);
 
 struct kd_exec_frame;
 struct kd_jit_batch_call;

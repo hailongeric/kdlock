@@ -349,6 +349,7 @@ static void residency(void)
 	reset();
 	CHECK(kd_source_pin_range(SOURCE, 4) == -ESHUTDOWN);
 	CHECK(kd_source_pin_target(SOURCE) == -ESHUTDOWN);
+	CHECK(kd_source_pin_text_range(CORE, 15) == -ESHUTDOWN);
 	CHECK(kd_source_writer_get());
 	CHECK(!kd_source_pin_root(CORE));
 	CHECK(kd_source_pin_root(CORE + 0x2100) == -EPERM);
@@ -395,6 +396,11 @@ static void module_regions(void)
 	reset();
 	CHECK(kd_source_writer_get());
 	CHECK(kd_source_frame_get());
+	CHECK(!kd_source_pin_text_range(CORE + 0x1ff1, 15));
+	CHECK(kd_source_pin_text_range(CORE + 0x1ff2, 15) == -EPERM);
+	CHECK(kd_source_pin_text_range(CORE + 0x2100, 1) == -EPERM);
+	CHECK(!kd_source_pin_text_range(SOURCE + 0x1ff1, 15));
+	CHECK(kd_source_pin_text_range(SOURCE + 0x1ff2, 15) == -EPERM);
 	for (enum mod_mem_type type = MOD_TEXT; type < MOD_MEM_NUM_TYPES; type++) {
 		unsigned long base = (unsigned long)modules[0].mem[type].base;
 		int text_result = type == MOD_TEXT ? 0 : -EPERM;
@@ -471,9 +477,11 @@ static void draining(void)
 	check_caps(&control);
 	CHECK(!kd_source_writer_get() && !kd_source_frame_get());
 	CHECK(!kd_source_pin_target(SOURCE + 0x10000));
+	CHECK(!kd_source_pin_text_range(SOURCE + 0x10000, 15));
 	CHECK(!kd_source_pin_range(SOURCE + 0x20000, 4));
 	CHECK(status().modules == 3 && table[0].status_code == KD_EXE_NORMAL);
 	kd_source_frame_put();
+	CHECK(kd_source_pin_text_range(SOURCE + 0x10000, 15) == -ESHUTDOWN);
 	CHECK(!status().frames && !provider.refs && retire() == -EBUSY);
 	CHECK(!kd_dev_release(NULL, &writer));
 	CHECK(!kd_dev_release(NULL, &control));

@@ -240,5 +240,43 @@ Unchanged applications still enter through actual mmap/munmap syscalls.
    downgraded tails, fresh writer acquisition and final retirement. Then measure
    Nano and application performance separately, preserving all regressions.
 
-Only stage 1 is specified by this document. It establishes no reached-path
-build, returned MM body, delegation length, throughput or performance acceptance.
+## Stage (b) implementation boundary
+
+The next implementation slice is the resident scalar engine and its local
+decoder, not MM activation. It exposes exact reached events to the existing
+runtime without introducing a second acquisition or cancellation authority.
+The initial MINIMAL packet contains only IP/SP/BP. The ordinary clobber wrappers
+declare the remaining GPRs and condition codes as outputs/clobbers; initialize
+each absent scratch register explicitly instead of reading old slot contents.
+`KD_LOCK_DIRECT_RESULT_CALL` captures label 1 before its source `xorl %eax,%eax`;
+the conventional failed C return jumps to label 2. A committed cold entry must
+execute the success entry, and must never synthesize a post-commit signal error.
+FULL events retain all actual source GPRs and arithmetic flags.
+
+Source fetch retains only bytes requested by the current instruction through a
+frame-authorized text-range pin. The current frame-scope source pin already
+permits descendants during DRAINING; no unrelated root is admitted. Each cold
+step uses fixed local storage and returns the actual reached successor. A
+bounded segment run preserves its instruction budget across successive calls.
+An unsupported instruction is an explicit unexecuted event; it is neither a
+public lock result nor authorization to run a suffix on O. LOCK-prefixed or
+implicitly atomic operations require an atomic implementation before execution.
+
+The focused validation compares selected scalar effects against Native x86
+execution, checks branch-directed fetching, source CALL/RET words, MINIMAL entry,
+PAUSE/fences, and unsupported instructions without effects. The kernel fixture
+must execute on a distinct E task and keep source stack storage alive. Existing
+helper and killable/nesting phases separately verify the unchanged lock protocol;
+they do not establish cold MM coverage. The family/artifact, Native service and
+MM activation joins remain the following stages. No Stage (b) result alone
+establishes returned mmap1 execution, throughput or performance acceptance.
+
+The internal frame adapter accepts only the currently bound packet owner with
+no pending KD/Native/memory transaction. It does not reject an early outer
+release while another exact owner remains live. Its first memory-store slice
+is limited to the retained source task stack: ordinary data stores still need
+a complete fault/lifetime contract. Source-width reads use the kernel's typed
+nofault primitive. These are explicit candidate coverage limits, not a change
+to public API success, error or downgrade behavior. The standalone engine
+fixture supplies ordinary private RAM and all-or-none store callbacks; its
+checks do not prove the still-unactivated frame adapter or arbitrary MM stores.

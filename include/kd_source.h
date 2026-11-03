@@ -32,6 +32,9 @@ void kd_source_frame_put(void);
 int kd_source_pin_root(unsigned long address);
 int kd_source_pin_range(unsigned long address, unsigned long size);
 int kd_source_pin_target(unsigned long address);
+/* Reached decoding needs every fetched instruction byte retained as text.
+ * Existing frame admission remains valid while source admission is draining. */
+int kd_source_pin_text_range(unsigned long address, unsigned long size);
 void kd_source_info(struct kd_source_info *info);
 int kd_source_begin_retire(void);
 void kd_source_finish_retire(void);
