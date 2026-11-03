@@ -560,3 +560,22 @@ instructions. This distinction must accompany later metrics. Validate Native
 memory effects, count/address updates, zero count, both DF values, all widths
 and bounded stop/resume before the next actual MM retry. Do not replace this
 source instruction with a caller-specific service or an origin memset model.
+
+The STOS-corrected `afe1ba21` passed 53,553 resident assertions. Its next MM
+attempt advanced to generation 3 and stopped on prefix `2e` at
+`ffffffff817fd1d7` in `change_protection`. The built ELF contains a CALL to
+`__SCT__might_resched` there; it is not the authority for runtime patched bytes.
+A read from the recovered scope5 boot with the same full/lazy policy contains
+`2e 2e 2e 31 c0`, the return-zero static-call form defined by
+`arch/x86/kernel/static_call.c`. This recovered-boot read is separate evidence
+from the failing run's one-byte prefix, not a claimed pre-reset full capture.
+
+Support repeated CS prefixes for the narrow ordinary NOP family and
+register-register XOR, using the existing exact XOR width/result/flags lowering.
+The observed form must clear EAX and set its actual arithmetic flags; treating
+it as a NOP would lose effects. Decode and retain the entire current instruction,
+including prefixes, under the normal fifteen-byte bound. Do not admit other
+CS-prefixed operations through this change. Validate full source fetch, flags,
+zero extension, untouched registers, invalid forms and both supported classes
+against Native effects, then retry actual MM execution. Record future failed
+instructions' complete live bytes before recovery where available.
