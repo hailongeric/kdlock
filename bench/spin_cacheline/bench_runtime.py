@@ -48,7 +48,7 @@ def require(ok, message, status="PREPARATION_FAILED"):
 
 def image_capacity():
     """Use the same bounded image capacity as the compiled daemon/provider."""
-    header = (ROOT / "include/exe_info.h").read_text(encoding="ascii")
+    header = (ROOT / "include/exe_info.h").read_text(encoding="utf-8")
     match = re.search(
         r"(?m)^#define KD_CODE_BLOCK_SIZE \(([0-9]+)UL \* ([0-9]+)\)$", header)
     require(match is not None, "unrecognized shared image capacity", "DATA_ERROR")

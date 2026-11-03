@@ -124,6 +124,10 @@ def main():
             "head.image_length > KD_CODE_BLOCK_SIZE",
             "head.image_length > KD_CODE_BLOCK_SIZE + 1",
         ),
+        "service-source-pin-error-ignored": (
+            "ret = kd_service_calls_pin();",
+            "ret = (kd_service_calls_pin(), 0);",
+        ),
         "repeat-enters-registration-gate": (
             "if (kd_exe_registered(pid, rip, kind, abi))",
             "if (kd_exe_registered(pid, rip, kind, abi) && false)",

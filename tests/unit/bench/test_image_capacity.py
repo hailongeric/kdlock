@@ -56,6 +56,16 @@ class ImageCapacityTests(unittest.TestCase):
                         with self.assertRaises(bench_runtime.Failure):
                             bench_runtime.image_capacity()
 
+    def test_utf8_comments_preserve_the_exact_shared_capacity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            (path / 'include').mkdir()
+            (path / 'include/exe_info.h').write_text(
+                '/* Per-image capacity — comments do not change the bound. */\n'
+                '#define KD_CODE_BLOCK_SIZE (4096UL * 1024)\n', encoding='utf-8')
+            with patch.object(bench_runtime, 'ROOT', path):
+                self.assertEqual(bench_runtime.image_capacity(), 4 * 1024 * 1024)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

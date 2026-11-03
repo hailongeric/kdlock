@@ -10,10 +10,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <stdint.h>
+
+/* Kernel-private fixed-width names are needed by the actual image header;
+ * userspace linux/types.h intentionally exposes only its public names. */
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef unsigned long long u64;
 
 #include "exe_info.h"
 #include "kd_image.h"
-#include <stdint.h>
 #include <assert.h>
 #define BUG_ON(x) assert(!(x))
 #define local_irq_save(f) ((f)=0)
@@ -32,7 +38,6 @@ typedef struct {
 } atomic_t;
 typedef long long atomic64_t;
 typedef long long s64;
-typedef unsigned long long u64;
 #define S64_MAX LLONG_MAX
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
@@ -49,6 +54,8 @@ static struct task_struct task = { .tgid = 42, .pid = 43 };
 static struct task_struct *current = &task;
 static int checks, failures, errors, warnings, timing_rows;
 static int gate_attempts, source_pin_calls;
+static int service_pin_calls, service_pin_error;
+static struct kd_exe_info *service_pin_entry;
 
 /* Publish between lookup's UNUSED observation and the registration check's
  * acquire reload. This deterministic interleaving tests full-key validation;
@@ -264,6 +271,28 @@ static int kd_source_pin_root(unsigned long address)
 	return kd_source_is_open() ? source_root_error : -ESHUTDOWN;
 }
 
+/* Exact helper-source pinning is covered by the service registry fixture.
+ * Here its result must still gate actual immutable image publication. */
+static int kd_service_calls_pin(void)
+{
+	service_pin_calls++;
+	if (service_pin_entry) {
+		CHECK(service_pin_entry->status_code == KD_EXE_UNINIT);
+		CHECK(service_pin_entry->generation == 0);
+		CHECK(kd_image_current(service_pin_entry) == NULL);
+	}
+	return service_pin_error;
+}
+
+/* This registry fixture supplies no GS-memory image. The dedicated memory
+ * fixture executes the real descriptor validation; accidental scope growth
+ * here must fail rather than manufacture a successful memory validation. */
+int kd_image_validate_memory_sites(const struct kd_jit_image *image)
+{
+	CHECK(!(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_MEMORY));
+	return image->requirements & KD_IMAGE_REQUIRE_ORIGIN_MEMORY ? -EPROTO : 0;
+}
+
 /* Match Kbuild's mixed-sign comparison policy only for unmodified production
  * functions; keep strict warnings on this fixture and its assertions. */
 #pragma GCC diagnostic push
@@ -282,6 +311,8 @@ static void reset(enum allocation_mode mode)
 	allocation_count = block_attempts = exec_attempts = 0;
 	errors = warnings = copy_calls = fail_copy = 0;
 	gate_attempts = source_pin_calls = 0;
+	service_pin_calls = service_pin_error = 0;
+	service_pin_entry = NULL;
 	publish_after_lookup = NULL;
 	allocation_mode = mode;
 	source_open = true;
@@ -543,6 +574,55 @@ static void check_packet_directory(void)
     }
 }
 
+static void check_service_source_publication(void)
+{
+	struct {
+		struct kd_recv_pkt head;
+		unsigned char data[KD_IMAGE_SERVICE_HEADER_SIZE];
+	} packet = {0};
+	struct kd_exe_info *entry;
+	unsigned int requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE |
+		KD_IMAGE_REQUIRE_ORIGIN_CALL | KD_IMAGE_REQUIRE_BUDGET_RESUME;
+	size_t bytes = sizeof(packet.head) + sizeof(packet.data);
+	int blocks;
+
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	kd_exe_add_abi(0, key(0), KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	entry = kd_get_exe(0, key(0));
+	service_pin_entry = entry;
+	packet.head = (struct kd_recv_pkt){
+		.status_code = KD_EXE_NORMAL, .RIP = key(0),
+		.version = KD_IMAGE_PROTOCOL_SERVICE_QUEUE,
+		.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
+		.requirements = requirements, .image_length = sizeof(packet.data),
+		.upload_id = 1,
+	};
+	memcpy(packet.data + 9, "KDWB002", 7);
+	memcpy(packet.data + 25, "KDWC002", 7);
+	memcpy(packet.data + 41, "KDAB", 4);
+	packet.data[45] = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	packet.data[46] = KD_IMAGE_PROTOCOL_SERVICE_QUEUE;
+	packet.data[47] = requirements & 0xffU;
+	memcpy(packet.data + KD_IMAGE_FULL_REQUIREMENTS_OFFSET,
+	       &requirements, sizeof(requirements));
+	blocks = kd_code_block_free;
+	service_pin_error = -ESTALE;
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) == -ESTALE);
+	CHECK(service_pin_calls == 1 && !kd_exe_is_ready(0, key(0)));
+	CHECK(entry->status_code == KD_EXE_UNINIT && entry->generation == 0);
+	CHECK(entry->code_block == NULL && kd_image_current(entry) == NULL);
+	CHECK(upload.image && !upload.image->entry && upload.covered == sizeof(packet.data));
+	CHECK(kd_code_block_free == blocks - 1);
+	service_pin_error = 0;
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) == (ssize_t)bytes);
+	CHECK(service_pin_calls == 2 && kd_exe_is_ready(0, key(0)));
+	CHECK(entry->generation == 1 && entry->requirements == requirements);
+	CHECK(kd_image_current(entry)->entry == entry && upload.image == NULL);
+	CHECK(kd_code_block_free == blocks - 1);
+	kd_exe_exit();
+}
+
 static void check_registration_reads(void)
 {
 	const int states[] = { KD_EXE_UNINIT, KD_EXE_NORMAL, KD_EXE_CALL_MISS,
@@ -708,6 +788,7 @@ int main(void)
 	check_full_table();
 	check_device();
 	check_packet_directory();
+	check_service_source_publication();
 	check_registration_reads();
 	check_lookup_publication();
 	check_concurrent_registration();
