@@ -1670,6 +1670,24 @@ static int locked_logic_test(struct fixture *f)
 	return 0;
 }
 
+static int call_context_test(struct fixture *f)
+{
+	unsigned int i;
+	prepare(f, (u8[]){ 0xe8, 0xfb, 0xff, 0xff, 0xff }, 5);
+	CHECK(!f->state.call_count && !f->state.call_next);
+	for (i = 0; i < 10; ++i) {
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+		CHECK(f->state.call_count == (i < 8 ? i + 1 : 8) && f->state.call_next == ((i + 1) & 7));
+		CHECK(f->state.calls[i & 7].ip == CODE && f->state.calls[i & 7].target == CODE);
+	}
+	f->fail_write = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(f->state.call_count == 8 && f->state.call_next == 2);
+	CHECK(!kd_reached_begin(&f->state, &f->regs, KD_PACKET_FULL, 100));
+	CHECK(!f->state.call_count && !f->state.call_next);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;

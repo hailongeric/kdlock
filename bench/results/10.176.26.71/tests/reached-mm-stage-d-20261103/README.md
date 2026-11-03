@@ -626,3 +626,24 @@ binds the original CPU comparison, notification and balanced preemption body.
 O executes that API; E continues the retained MM algorithm afterward. The
 caller-owned task reference and exact ACK remain required. Fresh context
 checks and actual thread/process validation are pending.
+
+
+## Twentieth candidate: `06952039`
+
+Exact source: `06952039f142b35af66e4fba0d99f9c9c966721e`. Eight focused
+drivers and67,608 resident checks passed ([checks](twentieth-checks.json));
+provider/observer builds and preparation passed. The actual run reached
+`exit_mmap`, entry `ffffffff817f9283`, O5431/E5345, generation1, and stopped
+at the runtime-patched PUSHFQ inside `_raw_spin_lock_irqsave`,
+`ffffffff8270235f`. IRQ-preserving Native acquisition is not implemented by
+this result. The independent monitor also reported an overrun; its record
+and partial log are retained. This remains failed/undrained execution;
+process-model validation was not run. Ordinary serial records were preserved
+and recovery returned to an idle diagnostic boot.
+
+Design `594bf379` adds only eight completed reached CALL edges to the
+preallocated cold state, printed at an unsupported point. It makes no IRQ
+transition, Native return rewrite or whole-body local continuation. A focused
+fixture checks root reset, bounded rotation and failed-CALL non-commit. This
+will identify the actually reached enclosing interval before choosing its
+required general context support. Fresh build and VM checks are pending.

@@ -158,6 +158,15 @@ unsupported:
 			(unsigned long long)cont->generation, cont->packet->ip,
 			cont->packet->sp, result, status, event->length,
 			event->length, event->bytes);
+		{
+			unsigned int call;
+			for (call = 0; call < state->call_count; ++call) {
+				unsigned int slot = (state->call_next + 8 - state->call_count + call) & 7;
+				pr_err("kd_reached call: origin=%d generation=%llu source=%lx target=%lx\n",
+					cont->request->logical_origin->pid, (unsigned long long)cont->generation,
+					state->calls[slot].ip, state->calls[slot].target);
+			}
+		}
 		return KD_EXE_RUN_ERROR;
 	}
 	return KD_EXE_RUN_YIELD;

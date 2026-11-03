@@ -117,6 +117,9 @@ struct kd_reached_state {
 	u64 sequence;
 	unsigned int packet_state;
 	struct kd_reached_event event;
+	/* Diagnostic source edges only; never owner or return-routing records. */
+	struct { unsigned long ip, target; } calls[8];
+	unsigned int call_next, call_count;
 };
 
 /* FULL is mandatory. REP STOS/MOVS consumes one step/budget unit per stored

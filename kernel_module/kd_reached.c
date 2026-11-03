@@ -823,6 +823,12 @@ static enum kd_reached_result execute(struct decoded *d)
 	}
 	if (write && write_operand(d, &d->dst, value)) return KD_REACHED_MEMORY;
 commit:
+	if (edge == KD_REACHED_CALL) {
+		s->calls[s->call_next].ip = s->event.source_ip;
+		s->calls[s->call_next].target = target;
+		s->call_next = (s->call_next + 1) & 7;
+		if (s->call_count < 8) ++s->call_count;
+	}
 	r->flags = flags;
 	r->ip = target;
 	s->event.next_ip = next;
@@ -911,5 +917,6 @@ int kd_reached_begin(struct kd_reached_state *s, struct kd_regs *r,
 	s->packet_state = KD_PACKET_FULL;
 	s->budget = budget;
 	s->sequence = 0;
+	s->call_next = s->call_count = 0;
 	return 0;
 }
