@@ -693,3 +693,22 @@ Validate the public roster/prototypes and existing context gates, then require
 actual API return and continued E execution in the next MM attempt. IRQ-off
 entry and arbitrary allocator internals outside these API intervals remain
 unvalidated.
+
+The next actual attempt (`9b0da70c`) reached `mod_node_page_state+0x33`,
+`ffffffff817b9883`, bytes `65 0f b6 07`. Scope5 `mm/vmstat.c:552-685` and
+`include/linux/vmstat.h:281-287` identify the general public node/zone accounting
+family. Its byte-sized CPU-local differential update uses GS MOVZX/MOVSX and
+CMPXCHG, followed by atomic overflow accounting; the alternative Native body
+balances its own local IRQ save/restore. Preserve the entire unchanged public
+accounting transaction on O instead of splitting a CPU-local retry loop across
+tasks. This is a returning API interval, not an MM-body continuation.
+
+Register the six ordinary public APIs `mod_{node,zone}_page_state` (three
+arguments) and `inc_{node,zone}_page_state`/`dec_{node,zone}_page_state` (two),
+all void and atomic-compatible. Preserve the original object, enum and long
+delta words exactly; in particular, the public node API's long delta is not
+replaced by its private helper's int prototype. Existing inherited-pin, IRQ,
+origin migration, return and exact ACK checks remain unchanged. No private
+`mod_node_state`/`mod_zone_state` or caller-specific function is registered.
+After focused roster/context checks, build and retry actual MM under a new
+immutable candidate. The stopped attempt is undrained evidence, not success.
