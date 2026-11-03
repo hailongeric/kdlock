@@ -848,3 +848,27 @@ this profile. Preserve the original bundle and all existing profile checks.
 The new bundle retains identical source/build/installed/configuration records;
 only its explicit variant and exact observed runtime policy change. Verify
 both identities and retain the derivation before running any module.
+
+## Bounded Native API discovery pages
+
+Candidate `9dc0fbf3` passed four unit drivers and67,608 resident checks, then
+its actual provider load returned ENOSPC before activation. The general API
+roster exceeded the single-page text discovery limit in
+`kd_service_call_configuration_size`, not the128-slot registry or guest disk.
+Retain this failed load; neither application model started.
+
+Keep the128 immutable registration slots and exact cookies. Add eight
+read-only discovery pages,16 slots per page, plus an exact generation/count
+state. Registration and actual deactivation advance the generation under the
+existing configuration mutex; inactive slots are never reused. Each bounded
+page formats complete rows, including the existing operation context. The
+reader accepts a snapshot only when its before/after states match and every
+cookie belongs to its declared page with no duplicates. A changed state or
+missing page fails; no partial registry is accepted. The legacy single-table
+attribute keeps its complete-snapshot behavior and reports overflow rather
+than truncating a large roster. Runtime lookup, source references, owner
+records, freezing and request retirement are unchanged.
+
+Validate page boundaries, empty pages, duplicate/misplaced cookies, state
+changes, legacy overflow and registration/cancellation before another actual
+thread/process attempt. Discovery allocations remain outside lock execution.
