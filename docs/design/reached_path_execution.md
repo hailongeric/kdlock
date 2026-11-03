@@ -599,3 +599,37 @@ convert the operation into an origin memcpy call. Validate Native overlap
 effects in both directions, all widths, zero count, bounded continuation and
 read/store failures before the next actual MM retry. Scheduling and step
 accounting follow the same element bounds as STOS.
+
+The MOVS candidate `b8b915e9` passed 57,972 resident assertions and reached
+`kvfree_call_rcu` at `ffffffff817ca6b7`: `65 39 15 02 71 c5 02`, a comparison
+against the origin CPU's NUMA field. The public API is
+`void kvfree_call_rcu(struct rcu_head *head, void *ptr)`, not an MM body.
+Captured scope5 `mm/slab_common.c:1941-2015` and
+`include/linux/rcupdate.h:1089-1132` distinguish non-NULL embedded heads from
+NULL-head calls: the former permit atomic callers; the latter require a
+sleepable context and can fall back to `synchronize_rcu()` followed by `kvfree()`.
+Its CPU-local slab/IRQ internals belong in an origin Native API transaction.
+
+Add a reusable immutable descriptor policy
+`KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC`, appended after all existing context
+values. Resolve it per transaction from the captured argument zero, before
+PREPARED publication: NULL selects `BALANCED_ORIGIN`, non-NULL selects
+`ATOMIC_ORIGIN`. Do not mutate the registered descriptor, change existing
+fixed-context behavior, admit the policy to mapped descriptors, or relax the
+Native spin/RCU/IRQ/stack/ACK checks. Registration requires a real first
+argument. Native discovery must recognize the policy value while runtime
+execution receives only a resolved context.
+
+Register the unchanged public `kvfree_call_rcu` API with its two arguments,
+void result and this policy. The exact source CALL and one Native return remain
+on O; E resumes the same retained MM family afterwards. This is the same
+general returning-API mechanism as the existing `call_rcu` services, not a
+caller-specific helper or a restart of a previously executed API prefix. A new
+candidate intercepts the API at its entry before any effects. Preserve the
+failed interpreted-prefix attempt independently.
+
+Focused validation must cover NULL/non-NULL selection, descriptor immutability,
+arity, unchanged fixed contexts, mapped-descriptor refusal, retained spin/RCU
+gates and Native context balance. Actual MM proof must join the public API's
+request/enter/done/resume and artifact to the same E body. Ordinary source
+strings continue through the backend; no origin memcpy/memset model is added.
