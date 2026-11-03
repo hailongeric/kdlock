@@ -895,3 +895,22 @@ task reference, CPU identity and notification semantics; then resume E.
 Use the existing atomic-compatible context and exact CALL/ACK records.
 No MM body or private scheduler helper is registered. Preserve the failed
 attempt and validate the descriptor/context plus actual thread/process runs.
+
+
+## Reached caller context for the next IRQ interval
+
+Candidate `06952039` passed its focused checks, then reached
+`_raw_spin_lock_irqsave` during `exit_mmap`, entry `ffffffff817f9283`.
+Its runtime-patched PUSHFQ at `ffffffff8270235f` is unsupported; no IRQ
+transition is claimed. The independent log cursor also overran. Preserve
+both failures and the original IRQ compatibility limit. Do not service the
+whole MM teardown or turn an IRQ operation into a no-op.
+
+Before choosing the required general API/context work, retain the last eight
+actually completed source CALL edges in the preallocated reached state and
+print them only on an unsupported event. Reset only their indices at root
+entry, and record an edge only after the source CALL word commits. This is
+passive reached-path context; it does not rewrite returns, track Native call
+depth, analyze an upfront graph, or authorize ownership. Failed calls leave
+the history unchanged. Use this to identify the enclosing API/interval and
+then implement its exact context requirements.
