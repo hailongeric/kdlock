@@ -1,0 +1,28 @@
+{
+  "kernel_source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source",
+  "release": "7.0.0-38-kdscope5",
+  "boot_id": "a2887015-5808-4947-ae2f-f3d7d3416a98",
+  "idle": true,
+  "files": {
+    "mm/page_alloc.c": {
+      "sha256": "829ff79c37c72f7e0fd334e3c68d0503cf8b4d3729790bbdd98e43b445958384",
+      "bytes": 225276
+    },
+    "include/linux/gfp.h": {
+      "sha256": "da1ef37a8219f447497e2f1201b3bbb739457eb8c1d11ee4e2c56250d63840f5",
+      "bytes": 16732
+    },
+    "include/linux/gfp_types.h": {
+      "sha256": "59fe199d0a38bf3818c6a4662051e4c7c1cd0dbccc287a823e04b0bcb45b9249",
+      "bytes": 17187
+    },
+    "mm/mempolicy.c": {
+      "sha256": "e744cd9fc5eb7532093b9f7aea43169b47a01e943b63f7378866de49e622183b",
+      "bytes": 102747
+    },
+    "include/linux/sched/mm.h": {
+      "sha256": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+      "bytes": 17771
+    }
+  }
+}

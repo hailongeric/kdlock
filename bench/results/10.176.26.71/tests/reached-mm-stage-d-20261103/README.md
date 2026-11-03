@@ -304,3 +304,39 @@ then operates on that private retained value for its flags, with no source
 data/GPR write. Source failure has no packet/budget effect. Memory BTS/BTR/BTC
 and LOCK forms remain explicit unsupported operations. Native signed/immediate
 and no-effect fixtures require the next VM validation.
+
+
+## Eighth candidate: `07189e3c`
+
+Exact source: `07189e3c2f618c0b96993542e1d6bcbf63e108be`. Provider and resident
+fixture builds passed, with 64,432 assertions including 252 Native signed and
+immediate memory-BT tuples. Seven MM proof and nine private-source cases passed;
+see [units](eighth-units.json).
+
+On boot `91c2a715-19d4-4f19-b210-65e10cdb2864`, the body advanced into
+`get_page_from_freelist+0x2c9` and stopped at `ffffffff81828ca9`, bytes
+`65 48 03 1d 77 23 be 02` (GS ADD deriving a CPU-local page-allocation address).
+The preceding code increments the Native preempt count; the following code
+tries a raw spinlock. O `4837`, E `4812`, generation 3, entry
+`ffffffff818e077d` are retained in the [resident log](eighth-resident-kernel.log).
+[Live bytes](eighth-live-site.json) and [raw retention](eighth-retention.json)
+record this undrained attempt. Worker mmap/munmap completion and the process
+model remain unproved and unrun respectively. Recovery returned to scope5
+boot `a2887015-5808-4947-ae2f-f3d7d3416a98`.
+
+## General public page-allocation API service
+
+Design was committed first as `18f87893`. The [exact source inventory](page-allocation-source.json)
+binds page allocation, GFP, task-scope and NUMA-policy definitions. Six public
+page/folio allocation APIs now use the general returning Native API service,
+with exact original arguments and results. Their Native bodies run on O,
+retaining task GFP scopes, NUMA policy and internal CPU/IRQ/refcount ordering;
+the same E then continues the MM algorithm. No private allocator body or MM
+caller-specific adapter is registered.
+
+Context 2 means atomic-compatible: inherited source pins remain exact, while
+a sleepable origin is not artificially made atomic. The Native allocator
+decides whether its original GFP and task context permit blocking. No new
+argument selector, weakened context check, or replay of the interpreted prefix
+is introduced. Ordinary delegated instructions still execute on E. The new
+roster/context fixtures and actual syscall retry require fresh VM validation.

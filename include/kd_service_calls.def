@@ -39,6 +39,17 @@ KD_SERVICE_CALL(__kmalloc_cache_node_noprof, 4, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CONTEXT(kmem_cache_free, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(kfree, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* include/linux/gfp.h and mm/{page_alloc,mempolicy}.c: exact public APIs.
+ * Native code receives unchanged GFP/order/node/mask inputs and executes on
+ * the origin, preserving task/NUMA policy, conditional waits and refcounts.
+ * Atomic-compatible context preserves valid nonblocking callers too; it does
+ * not classify every allocation as non-sleeping or manufacture source pins. */
+KD_SERVICE_CONTEXT(__alloc_pages_noprof, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(__folio_alloc_noprof, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(alloc_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(folio_alloc_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(get_free_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(get_zeroed_page_noprof, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
 KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).

@@ -31,6 +31,9 @@ enum kd_service_call_result {
 
 enum kd_service_call_context {
 	KD_SERVICE_CALL_BALANCED_ORIGIN = 1,
+	/* Atomic-compatible Native API: retain the origin's actual pins/RCU.
+	 * This does not force atomic execution or forbid sleeping when the API's
+	 * arguments/task context permit it and no source pin prevents it. */
 	KD_SERVICE_CALL_ATOMIC_ORIGIN,
 	KD_SERVICE_CALL_PTE_LOCK,
 	KD_SERVICE_CALL_SPIN_LOCK,
