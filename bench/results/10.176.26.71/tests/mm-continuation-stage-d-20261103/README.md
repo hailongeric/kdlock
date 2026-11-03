@@ -626,3 +626,95 @@ use Linux's existing explicit-caller allocation API for a single returning
 Native interval while retaining the logical source CALL identity and resuming
 the same image on E. It does not increase cache/image bounds or change an MM
 body. Implementation and subsequent actual mmap1 proof remain separate gates.
+
+## Explicit Native argument mapping: implementation and focused checks
+
+Runtime `8f12f82000ea73d28526f938cc21b87bcfa1c744` implements the separately
+registered argument map. The logical source target, declared source arity and
+real CALL successor remain distinct from the Native execution target and its
+arguments. Both executable targets are retained before image publication; the original
+source CALL word is consumed once when execution resumes on the same executor
+and image. Existing identity descriptors keep their ABI and discovery format.
+The allocation rows use Linux's explicit-caller APIs, including the exact
+`CONFIG_SLAB_BUCKETS` arity variants; the two cache API rows retain their Native
+identity signatures. This does not change Native MM bodies or enlarge the
+text-cache, expansion-pass or image bounds.
+
+Fresh focused checks pass on the v3 KD kernel, boot
+`22c0a1d3-64b3-4de3-867c-e0521c6ba8c3`, Build ID
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`, with `kd_mmap=on` and
+`full (lazy)` preemption. The kernel recipe remains the distinct
+`1ab7124abb6140752c1f0bb6e862144d426a3875`. The 6,787-file private runtime
+snapshot, exact source/kernel identities and selected live observations are
+bound in [mapped-call-checks.json](mapped-call-checks.json). Its original focused
+reply is `/tmp/kdlock-mm-8f12-v3-first-20261103/reply.json`, SHA256
+`6afe6a95dd502899b26535d38169f42870f90ff2d0528cbb8394203ad5aed69e`.
+
+| Fresh focused check | Observed result |
+| --- | --- |
+| Production mapping validation, marshaling and lifetimes | 1,756 checks with slab buckets enabled; 1,752 disabled; seven negative controls detected. |
+| Native scheduling contract | 156 checks in each preempt-RCU configuration; five negative controls detected. |
+| Returning-call lowering | 16 cases pass. |
+| Private source provenance | Nine cases pass. |
+| Helper / mapped observation validators | Six / four cases pass. |
+| Continuation runner lifetime checks | Seven cases pass. |
+| Live helper / killable and nesting phases | 11 / 11 complete, pass and drain; all original phases remain. |
+
+The helper run includes its required successful provider build. The build
+command metadata records launch details; the focused wrapper derives completion
+from the successful helper run and does not claim a duplicate standalone build.
+All final phase observations have zero errors, active users, holders and queue
+counts. Retained release-control bits are preserved in the JSON.
+
+The new two-to-five phase observes original task `14633` on its own Native
+stack, with zero preemption count and enabled IRQs. The five Native arguments
+are source0, zero, source1, minus one and the exact source CALL successor.
+There is one Native execution, one post-call body effect and no execution of
+the logical Native body. The same executor `14565`, root identity and image
+generation `1` resume with identical full AX and flags in the done/resume
+records. Five source `SETcc` observations independently match CF/PF/ZF/SF/OF;
+they do not independently observe AF.
+
+The additional allocation phase returns one actual 53-byte production
+allocation. All 53 bytes are initially zero, then written and checked; the
+same pointer is released exactly once through `kfree`, with one body
+completion. This is bounded allocator mechanism evidence. It is not a separate
+live cache-allocation test, unchanged-application result or performance sample.
+
+The subsequent two-worker threads/processes diagnostic has been launched from
+this exact runtime and remains **pending at this entry**. Launch metadata does
+not prove that either model started or completed. No nano result, actual mmap1
+returned-body or delegation proof, throughput, performance acceptance or
+promotion is claimed. Full callee closure, actual MM source/owner lifetimes and
+per-syscall original-task completion remain separate obligations.
+
+
+## Mapped allocation: actual retry still exceeds source capacity
+
+The subsequent actual `8f12f820` preparation fails before either application
+starts. The original result SHA256 is
+`df8e45587cd8465c8d34ec9b24e129856dcb057459ab4d17f1465b909c405b75`.
+[The retained actual attempt](mapped-call-attempt.json) keeps this original
+FAILED/drained-false result distinct from later successful normal retirement.
+The factory stays inactive with zero bindings and zero body/completion counters;
+`mmap1_threads` and `mmap1_processes` are both **NOT STARTED**.
+
+At brk entry `0xffffffff817f7413`, expansion 19 holds 262,032 cached bytes,
+131,000 selected instruction bytes and 33,443 instructions across 8,075 blocks.
+There are still 212 incomplete blocks and 214 pending targets. The smallest
+next plan needs 265,401 bytes, above the unchanged 262,144-byte bound. The
+point-in-time daemon log SHA256 is
+`dcb982381245b673cd204639b0bc966f45c7c8244e4d5195510b1dc592d7c662`.
+It begins a later entry after this failure; that entry's final outcome is not
+established by the captured snapshot. Neither full graph nor emitted brk-image
+size has been measured. The passed mapped allocation fixture remains valid
+mechanism evidence, without establishing actual MM completion.
+
+The separate cleanup verifies the exact daemon start identity, normal SIGTERM,
+zero source writers/frames, stable repeated observer STOP, source retirement
+`2/0/0/0`, normal observer/provider unload and final idle. It confirms the failed
+result bytes remain unchanged. Its source-host receipt is
+`/tmp/kdlock-mm-8f12-v3-normal-retirement-first-20261103/reply.json`; its exact
+hash is retained in the JSON. Master remains unchanged. No Nano, application
+throughput, delegation-length result, performance acceptance or promotion is
+claimed for this attempt.
