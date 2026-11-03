@@ -718,3 +718,28 @@ result bytes remain unchanged. Its source-host receipt is
 hash is retained in the JSON. Master remains unchanged. No Nano, application
 throughput, delegation-length result, performance acceptance or promotion is
 claimed for this attempt.
+
+
+## Capacity candidate: focused checks stop before any build/live phase
+
+Runtime `759dcf3aa8122b2f3e26843268ba6fabeaa2d558` implements the bounded
+retained-capacity design. Its first focused VM receipt is retained unchanged as
+[capacity-first-checks.json](capacity-first-checks.json), SHA256
+`d1219746ed566ab4e794c9a167e55272b27698f99492916f238d488c449ba177`.
+Private-source nine cases, text-region 75 cases, returning-call 19 cases and
+15,663 executable Native-call wrapper checks pass. The three image-capacity
+cases and seven existing Native-image cases fail because the new shared-header
+reader requests ASCII while the existing C header contains UTF-8 comments.
+The registry fixture also fails compilation: its userspace kernel-interface
+model lacks the integer aliases required by the already included origin-memory
+header and the current returning-call source-pin entry. This is not a successful
+compile, skip or Native registry execution.
+
+The wrapper records `live_started=false`; no provider build, module load, helper
+phase, killable phase or mmap1 attempt runs from this source identity. Correct
+header decoding to UTF-8 without rewriting established header comments. Update
+the fixture's exact-width kernel aliases and source-pin interface model while
+retaining production registration/retirement checks and adding an explicit
+source-pin failure witness where needed. These corrections do not change the
+capacity design or any lock acquisition/cancellation/ownership behavior. A new
+frozen source identity must pass the affected checks before live validation.
