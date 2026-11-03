@@ -79,6 +79,20 @@ fault:
 		"pushfq; popq %[output]" \
 		: [value] "+r"(value), [output] "=r"(output) \
 		: [right] "r"(right), [flags] "r"(flags) : "cc", "memory")
+#define KD_SCALAR_BIT(insn, suffix, part) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[right],%" part "[value]; " \
+		"pushfq; popq %[output]" \
+		: [value] "+r"(value), [output] "=r"(output) \
+		: [right] "r"(right), [flags] "r"(flags) : "cc", "memory")
+#define KD_BIT_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case KD_REACHED_SCALAR_BT: KD_SCALAR_BIT("bt", suffix, part); break; \
+	case KD_REACHED_SCALAR_BTS: KD_SCALAR_BIT("bts", suffix, part); break; \
+	case KD_REACHED_SCALAR_BTR: KD_SCALAR_BIT("btr", suffix, part); break; \
+	case KD_REACHED_SCALAR_BTC: KD_SCALAR_BIT("btc", suffix, part); break; \
+	default: return -EOPNOTSUPP; \
+	} \
+} while (0)
 #define KD_SCALAR_WIDTH(suffix, part) do { \
 	switch (operation) { \
 	case KD_REACHED_SCALAR_ROL: KD_SCALAR_SHIFT("rol", suffix, part); break; \
@@ -101,7 +115,14 @@ int kd_reached_scalar_apply(unsigned int width, enum kd_reached_scalar_op operat
 
 	if (!result || !output_flags)
 		return -EINVAL;
-	if (operation == KD_REACHED_SCALAR_IMUL) {
+	if (operation >= KD_REACHED_SCALAR_BT && operation <= KD_REACHED_SCALAR_BTC) {
+		switch (width) {
+		case 2: KD_BIT_WIDTH("w", "w"); break;
+		case 4: KD_BIT_WIDTH("l", "k"); break;
+		case 8: KD_BIT_WIDTH("q", ""); break;
+		default: return -EOPNOTSUPP;
+		}
+	} else if (operation == KD_REACHED_SCALAR_IMUL) {
 		switch (width) {
 		case 2: KD_SCALAR_MUL("w", "w"); break;
 		case 4: KD_SCALAR_MUL("l", "k"); break;

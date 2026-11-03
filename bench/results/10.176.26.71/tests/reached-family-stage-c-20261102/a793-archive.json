@@ -1,0 +1,66 @@
+{
+  "release": "7.0.0-38-kdlock1",
+  "boot": "976f9778-e31c-4258-bcae-e2c6ef6c13ca",
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+  "modules": [],
+  "grub": [
+    "  menuentry_id_option=\"--id\"",
+    "  menuentry_id_option=\"\"",
+    "menuentry 'Ubuntu' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "submenu 'Advanced options for Ubuntu' $menuentry_id_option 'gnulinux-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 7.0.0-38-kdlock1' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-7.0.0-38-kdlock1-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 7.0.0-38-kdlock1 (recovery mode)' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-7.0.0-38-kdlock1-recovery-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 7.0.0-38-generic' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-7.0.0-38-generic-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 7.0.0-38-generic (recovery mode)' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-7.0.0-38-generic-recovery-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 6.1.159-kdclobber2' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-6.1.159-kdclobber2-advanced-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\tmenuentry 'Ubuntu, with Linux 6.1.159-kdclobber2 (recovery mode)' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-6.1.159-kdclobber2-recovery-aa0bde06-47f6-4049-aaaf-13d052e53961' {",
+    "\t\tmenuentry 'UEFI Firmware Settings' $menuentry_id_option 'uefi-firmware' {"
+  ],
+  "files": [
+    {
+      "path": "result.json",
+      "bytes": 12713,
+      "sha256": "e44eda02bd7bf73601d6a83d561faae2d9af4451195d9a01ccf0fe8c6b0ef3f5"
+    },
+    {
+      "path": "helper-runner.log",
+      "bytes": 50,
+      "sha256": "c7493fbfe50a8f559985e8f6d384461b14b4670da7b967b451ad2b00300b4850"
+    },
+    {
+      "path": "helper/session/session.json",
+      "bytes": 200878,
+      "sha256": "5e1b8b3967d92ca2a20b2b8a0c8a17991e3d20018b502f4690517507a68a2f9d"
+    },
+    {
+      "path": "helper/session/kernel.log",
+      "bytes": 78732,
+      "sha256": "20c75204b0e75654b04c7f1ebd7555f92801c2177eb96b12288ed8444de58bb4"
+    },
+    {
+      "path": "helper/workload-disassembly.txt",
+      "bytes": 217520,
+      "sha256": "37d82ca7fa14a265a3800bc562a6d8abd41a93cec7d21f43eb13fe9b2b62cd0d"
+    },
+    {
+      "path": "helper/workload-imports.txt",
+      "bytes": 1957,
+      "sha256": "1fb7f68e134bd1ce2c88d12b2a5ba5a94f2667868b7723c114fa39deba7e2e74"
+    },
+    {
+      "path": "helper/source-sha256.json",
+      "bytes": 28524,
+      "sha256": "0f719b592cd4b48bbe1d89148e439145592ad90f2e9e4b0ed15889da8dba3700"
+    },
+    {
+      "path": "helper/build-provider.log",
+      "bytes": 2912,
+      "sha256": "a866b236a5d22c19eb1f9015f1da587caa01a70decdb776989228017c1dbaaeb"
+    },
+    {
+      "path": "helper/build-workload.log",
+      "bytes": 2044,
+      "sha256": "9cf30274365f3a6e1e5f427411d77bcc60b405e37e90d547e6e17621caf5c519"
+    }
+  ]
+}

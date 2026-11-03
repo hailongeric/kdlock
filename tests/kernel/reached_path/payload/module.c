@@ -577,6 +577,97 @@ static int shift_multiply_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_BIT(insn, suffix, part) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[index],%" part "[value]; pushfq; popq %[output]" \
+		: [value] "+r"(value), [output] "=r"(output) \
+		: [index] "r"(index), [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_BIT_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case 0: ORACLE_BIT("bt", suffix, part); break; \
+	case 1: ORACLE_BIT("bts", suffix, part); break; \
+	case 2: ORACLE_BIT("btr", suffix, part); break; \
+	default: ORACLE_BIT("btc", suffix, part); break; \
+	} \
+} while (0)
+
+static u64 native_bit(unsigned int width, unsigned int operation, u64 value,
+	u64 index, unsigned long input_flags, unsigned long *result_flags)
+{
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	switch (width) {
+	case 2: ORACLE_BIT_WIDTH("w", "w"); break;
+	case 4: ORACLE_BIT_WIDTH("l", "k"); break;
+	default: ORACLE_BIT_WIDTH("q", ""); break;
+	}
+	*result_flags = output;
+	return value;
+}
+
+static int bit_test(struct fixture *f)
+{
+	static const u64 values[] = { 0, 1, 0x80, 0x80000000, 1ULL << 63, ~0ULL };
+	static const u64 indices[] = { 0, 1, 7, 15, 16, 31, 32, 63, 64, 127, 255, ~0ULL };
+	unsigned int width, operation, i, j, form, length;
+	u8 code[6];
+	u64 expected, index;
+	unsigned long flags;
+	struct kd_regs before;
+
+	/* Exact reached instruction from the inline preemption-count fixture:
+	 * BTR $31,RDX clears its sampled need-resched bit before comparison. */
+	prepare(f, (u8[]){ 0x48, 0x0f, 0xba, 0xf2, 0x1f }, 5);
+	f->regs.dx = 0x80000001;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(f->regs.dx == 1 && (f->regs.flags & 1) && f->regs.ip == CODE + 5);
+
+	for (width = 2; width <= 8; width *= 2)
+	for (operation = 0; operation < 4; ++operation)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(indices); ++j)
+	for (form = 0; form < 2; ++form) {
+		length = 0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = 0x0f;
+		if (form) {
+			code[length++] = 0xba;
+			code[length++] = 0xe3 | (operation << 3); /* destinationBX, /4..7 */
+			code[length++] = (u8)indices[j];
+		} else {
+			code[length++] = 0xa3 + (operation << 3);
+			code[length++] = 0xcb; /* indexCX, destinationBX */
+		}
+		prepare(f, code, length);
+		f->regs.bx = values[i];
+		f->regs.cx = indices[j];
+		f->regs.flags |= (j & 1) ? KD_REG_ARITHMETIC_FLAGS : 0;
+		index = form ? (u8)indices[j] : indices[j];
+		expected = native_bit(width, operation, values[i], index, f->regs.flags, &flags);
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->regs.bx == expected && f->regs.cx == indices[j]);
+		/* CF is the selected old bit and ZF is unchanged. Other arithmetic
+		 * flags are undefined; the implementation exports actual Native flags. */
+		CHECK(!((f->regs.flags ^ flags) & 0x41));
+	}
+	for (operation = 0; operation < 4; ++operation) {
+		code[0] = 0x48; code[1] = 0x0f; code[2] = 0xba;
+		code[3] = 0x20 | (operation << 3); code[4] = 63; /* memory(RAX) */
+		prepare(f, code, 5);
+		f->regs.ax = DATA;
+		before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	}
+	prepare(f, (u8[]){ 0xf0, 0x48, 0x0f, 0xba, 0xeb, 63 }, 6);
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -596,6 +687,7 @@ static int worker(void *argument)
 	if (!result) result = supplementation_test(f);
 	if (!result) result = atomic_test(f);
 	if (!result) result = shift_multiply_test(f);
+	if (!result) result = bit_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

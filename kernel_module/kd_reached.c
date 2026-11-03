@@ -27,6 +27,7 @@ enum operation {
 	OP_CMOV, OP_SET, OP_PAUSE, OP_LFENCE, OP_MFENCE, OP_SFENCE,
 	OP_SHIFT, OP_IMUL, OP_XADD, OP_XCHG, OP_CMPXCHG,
 	OP_CLC, OP_STC, OP_CMC, OP_LAHF, OP_SAHF, OP_SIGN_PAIR,
+	OP_BIT,
 };
 
 struct operand {
@@ -396,6 +397,16 @@ static void decode(struct decoded *d)
 			d->operation = OP_JCC;
 			d->condition = second & 15;
 			d->src = literal(sign_value(immediate(d, 4), 4), 8);
+		} else if (second == 0xba) {
+			modrm(d, d->width, &d->dst, &reg, &group);
+			if (group < 4) { d->error = -EOPNOTSUPP; return; }
+			d->operation = OP_BIT;
+			d->condition = group - 4;
+			d->src = literal(immediate(d, 1), 1);
+		} else if (second == 0xa3 || second == 0xab || second == 0xb3 || second == 0xbb) {
+			modrm(d, d->width, &d->dst, &d->src, &group);
+			d->operation = OP_BIT;
+			d->condition = (second >> 3) & 3;
 		} else if (second == 0xaf) {
 			modrm(d, d->width, &d->src, &d->dst, &group);
 			d->operation = OP_IMUL;
@@ -608,6 +619,20 @@ static enum kd_reached_result execute(struct decoded *d)
 		if (read_operand(d, &d->src, &value)) return KD_REACHED_MEMORY;
 		value = sign_value(value, d->src.width) < 0 ? ~0ULL : 0;
 		write = true;
+		break;
+	case OP_BIT:
+		/* Memory bit strings use a signed register offset to select another
+		 * source word. They need their complete address/lifetime contract;
+		 * never apply the register mask to a memory operand. */
+		if (d->dst.memory) return KD_REACHED_UNSUPPORTED;
+		if (read_operand(d, &d->dst, &a) || read_operand(d, &d->src, &b))
+			return KD_REACHED_MEMORY;
+		if (kd_reached_scalar_apply(d->dst.width,
+			KD_REACHED_SCALAR_BT + d->condition, a, b, flags, &value, &flags))
+			return KD_REACHED_UNSUPPORTED;
+		/* BT never writes its destination, including the upper half of a
+		 * 64-bit register named by a 32-bit BT. The modifying forms do. */
+		write = d->condition != 0;
 		break;
 	case OP_SHIFT:
 		if (read_operand(d, &d->dst, &a) || read_operand(d, &d->src, &b))

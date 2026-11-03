@@ -404,3 +404,31 @@ write validator drivers. Its family fixture did not compile: the same
 thread argument. Use separate identity storage for the argument, preserving
 `-Werror` and every reference/concurrency check. No provider build or live
 capture was launched in that attempt.
+
+The fixture-only correction `a7935391` passed all selected unit drivers, the
+ordinary provider build and 47,658 resident engine assertions. Its first
+image-free helper run reached opcode prefix `48 0f ba` at
+`ffffffffc09edee5` (entry `ffffffffc09ed944`, request generation 15). The
+unsupported bit-operation instruction was reported explicitly; the executor
+then stopped and its origin remained waiting. No successful completion or
+drain is claimed. Preserve the serial trace and failed outputs before recovery.
+Add exact register BT/BTS/BTR/BTC semantics and Native differential coverage;
+memory bit-string addressing requires its own complete contract. Do not avoid
+the reached instruction by running a whole body on O or disabling the fixture.
+
+The frozen ELF identifies the complete instruction as `48 0f ba f2 1f`,
+`btr $0x1f,%rdx`, implementing the preemption-count predicate in
+`tests/kernel/jit_continuation/payload/helper_memory.inc:80`. Seven earlier
+helper phases completed, including sleeping, Native spin/RCU, an indirect
+tail and mapped allocation. The failing GS phase had completed three memory
+transactions, including a normalized read of `80000001`. Register bit-operation
+coverage now includes that exact instruction and 1,728 Native comparisons.
+Memory bit strings remain explicitly unsupported before effects.
+
+That partial run also recorded zero instruction-cache hits: its first sixteen
+slots filled before later loops, then cold execution continued. Keep the
+observed zero-hit/full-cache behavior explicit; the cache is not a demonstrated
+performance optimization. The failed VM was reset after serial and disk
+evidence preservation, then booted through the existing one-time scope5 KD
+entry. Reset is recovery, not successful retirement; no results are pooled
+across the old and new boot identities.
