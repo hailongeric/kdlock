@@ -197,7 +197,7 @@ class ContinuationSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16) and features & (1 << 5),
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
         self.record["origin_capable"] = version >= 13 and bool(features & (1 << 13))
         self.record["origin_service"] = (self.record["origin_capable"] and
@@ -211,7 +211,7 @@ class ContinuationSession(Session):
             rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() == "N",
                        "forced suffix diagnostic unexpectedly enabled at load")
         if self.record["lock_kind"] in ("spin", "rwlock"):
-            rt.require(version in (12, 13, 14, 15, 16) and features & (1 << 11),
+            rt.require(version in (12, 13, 14, 15, 16, 17) and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True

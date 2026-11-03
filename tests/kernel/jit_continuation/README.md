@@ -358,8 +358,10 @@ the current invocation's entire suffix; the v13 bounded instruction service
 returns eligible ABI2 writer invocations to the same image. Independent
 entry bans remain sticky and are covered separately by the image/registry tests.
 
-The mutex/rwsem controls accept capability versions 6 through 13 only when feature
-bit 5 (native instruction exit) is present. Spin/rwlock require the additional
+The common continuation gate accepts capability versions 6 through 17 only
+when feature bit 5 (native instruction exit) is present. The indirect-tail
+helper phase additionally requires version 17 and its distinct feature bit;
+accepting the common gate alone does not establish that phase contract. Spin/rwlock require the additional
 contract described above; the version alone does not establish support.
 The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
