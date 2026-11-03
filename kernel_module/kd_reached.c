@@ -223,7 +223,8 @@ static void decode(struct decoded *d)
 	 * branches. NOP also accepts its full address-expression encoding. Each
 	 * family below retains its own operand contract and the 15-byte bound. */
 	if (d->cs_prefix && (d->rep || d->locked ||
-		(op != 0x90 && op != 0x0f && op != 0x31 && op != 0x33 && op != 0xff))) {
+		(op != 0x90 && op != 0x0f && op != 0x31 && op != 0x33 && op != 0xff &&
+		 op != 0xe8 && op != 0xe9 && op != 0xeb))) {
 		d->error = -EOPNOTSUPP;
 		return;
 	}
@@ -375,6 +376,7 @@ static void decode(struct decoded *d)
 		d->operation = OP_LEAVE;
 		break;
 	case 0xe8: case 0xe9: case 0xeb:
+		if (d->cs_prefix && d->op16) { d->error = -EOPNOTSUPP; return; }
 		d->operation = op == 0xe8 ? OP_CALL : OP_JMP;
 		d->src = literal(sign_value(immediate(d, op == 0xeb ? 1 : 4),
 					   op == 0xeb ? 1 : 4), 8);

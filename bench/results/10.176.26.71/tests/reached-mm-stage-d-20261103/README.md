@@ -450,3 +450,43 @@ No split load/store or retry is introduced. Read-only BT keeps its existing
 path; LOCK BT remains unsupported. No callback or a failed callback leaves
 packet and budget uncommitted. The VMA algorithm continues on E. Fresh Native
 differential checks, build and actual-MM retry remain required.
+
+
+## Thirteenth candidate: `c2ee2298`
+
+Exact source: `c2ee2298d138e036cc8803038c464798ce89842d`. Provider and resident
+fixture builds passed, with66,008 assertions including288 Native memory
+bit-update tuples. Seven MM-proof and nine private-source cases passed
+([units](thirteenth-units.json)). The actual retry reached generation11
+at mmap entry `ffffffff817b6f68`, O4837/E4808, then stopped on a CS-relative
+CALL in `__rb_insert_augmented`, `ffffffff826cd5cb`. A separate PID1 root
+reached the same encoding at `ffffffff826cd699`. Preserve these as separate
+roots in one failed activation; no worker completion is inferred.
+
+The additional monitor also reported a lost kernel-log cursor. Its
+[exact result](thirteenth-monitor-result.json) and partial
+[resident log](thirteenth-resident-kernel.log) remain observation-failure
+evidence. The failed controller files are retained separately. The VM was
+recovered and verified idle on boot `8fc802a7-cf87-4db6-be29-0f059fefb751`.
+This is recovery, not successful request retirement. The process model was
+not run. Existing local and host archives of this activation remain intact.
+
+## Fixture naming and relative-call completion
+
+The naming design was committed as `ce5ad76a`/`fca2e50b`, and the mechanical
+rename as `d127adc2315938b3d0fd2fc0bbcd394012696144`:20 correctness-module
+directories now use `fixture/`, and five shared body headers use `body`.
+Current build/runner/include paths were updated. Moved module contents were
+verified unchanged except for one updated relative include;755 maintained
+Python files parsed, and renamed includes resolve with their existing include
+directories. These are static checks, not VM test passes. Historical records
+and explicit old-baseline artifact lookups remain unchanged.
+
+Relative-branch design was committed first as `c389ddeb`. The general resident
+decoder now admits CS-prefixed E8/E9/EB near CALL/JMP with full-prefix next IP,
+signed displacement, exact CALL word, flags and unchanged failure behavior.
+Rotation callbacks stay on E; no MM body service is added. New component
+checks cover complete CALL/RET, forward/backward limits, prefix order, jumps,
+truncation and failed stack writes. The new launcher drains its independent
+log cursor every10ms and still fails on missing records. Fresh VM builds and
+separate actual threads/processes validation remain required.

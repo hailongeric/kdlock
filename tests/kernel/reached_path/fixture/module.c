@@ -1000,7 +1000,6 @@ static int cs_padding_test(struct fixture *f)
 		{ 4, { 0x2e, 0x48, 0x31, 0x18 } }, /* XOR to memory */
 		{ 4, { 0x2e, 0x48, 0x33, 0x18 } }, /* XOR from memory */
 		{ 4, { 0x2e, 0x48, 0x01, 0xd8 } }, /* ADD registers */
-		{ 6, { 0x2e, 0xe8, 0, 0, 0, 0 } },
 		{ 3, { 0x2e, 0xf3, 0x90 } },
 		{ 4, { 0x2e, 0x0f, 0x1f, 0x08 } }, /* invalid NOP group */
 		{ 4, { 0x2e, 0x0f, 0x1e, 0xfa } },
@@ -1177,6 +1176,78 @@ static int cs_branch_test(struct fixture *f)
 		CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
 		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes &&
 			f->fetches == truncated[i].length && f->state.budget == 100);
+	}
+	return 0;
+}
+
+
+static int cs_relative_test(struct fixture *f)
+{
+	static const struct { u8 length, bytes[9]; bool call; } forms[] = {
+		{ 6, { 0x2e, 0xe8, 26, 0, 0, 0 }, true },
+		{ 8, { 0x2e, 0x2e, 0x2e, 0xe8, 24, 0, 0, 0 }, true },
+		{ 7, { 0x48, 0x2e, 0xe8, 25, 0, 0, 0 }, true },
+		{ 7, { 0x2e, 0x48, 0xe8, 25, 0, 0, 0 }, true },
+		{ 6, { 0x2e, 0xe9, 26, 0, 0, 0 }, false },
+		{ 3, { 0x2e, 0xeb, 29 }, false },
+	}, bad[] = {
+		{ 7, { 0x2e, 0x66, 0xe8, 0, 0, 0, 0 }, true },
+		{ 7, { 0x2e, 0xf0, 0xe8, 0, 0, 0, 0 }, true },
+		{ 7, { 0xf3, 0x2e, 0xe9, 0, 0, 0, 0 }, false },
+	};
+	struct kd_regs before, expected;
+	unsigned int i, length;
+	long offsets[] = { -1, -2147483647L - 1, 2147483647L };
+	u8 code[] = { 0x2e, 0xe8, 0, 0, 0, 0 };
+
+	/* Virtual source control-flow checks include the exact prefixed CALL
+	 * word and a complete return. These are separate from Native arithmetic
+	 * comparisons elsewhere in the same fixture. */
+	for (i = 0; i < ARRAY_SIZE(forms); ++i) {
+		prepare(f, forms[i].bytes, forms[i].length);
+		f->code[32] = 0xc3; f->code_size = 33;
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		before = expected = f->regs;
+		expected.ip = CODE + 32;
+		if (forms[i].call) expected.sp -= 8;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+		CHECK(!memcmp(&expected, &f->regs, sizeof(expected)));
+		CHECK(f->state.event.next_ip == CODE + forms[i].length &&
+			f->state.event.edge == (forms[i].call ? KD_REACHED_CALL : KD_REACHED_JUMP));
+		CHECK(f->fetches == forms[i].length && !f->reads &&
+			f->writes == forms[i].call && f->state.budget == 99);
+		if (forms[i].call) {
+			CHECK(f->memory[15] == CODE + forms[i].length);
+			CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+			before.ip += forms[i].length;
+			CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->reads == 1);
+		} else CHECK(!f->memory[15]);
+	}
+	for (i = 0; i < ARRAY_SIZE(offsets); ++i) {
+		u32 displacement = offsets[i];
+		for (length = 0; length < 4; ++length) code[2 + length] = displacement >> (8 * length);
+		prepare(f, code, sizeof(code));
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+		CHECK(f->regs.ip == CODE + sizeof(code) + offsets[i] &&
+			f->memory[15] == CODE + sizeof(code));
+	}
+	prepare(f, (u8[]){ 0x2e, 0xeb, 0xfd }, 3);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE && f->regs.ip == CODE && !f->writes);
+	for (length = 1; length < sizeof(code); ++length) {
+		prepare(f, code, length); before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes &&
+			f->state.budget == 100);
+	}
+	prepare(f, forms[0].bytes, forms[0].length);
+	f->fail_write = true; before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->writes && f->state.budget == 100);
+	for (i = 0; i < ARRAY_SIZE(bad); ++i) {
+		prepare(f, bad[i].bytes, bad[i].length); before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->writes && !f->reads &&
+			f->state.budget == 100);
 	}
 	return 0;
 }
@@ -1571,6 +1642,7 @@ static int worker(void *argument)
 	if (!result) result = movs_test(f);
 	if (!result) result = cs_padding_test(f);
 	if (!result) result = cs_branch_test(f);
+	if (!result) result = cs_relative_test(f);
 	if (!result) result = scan_test(f);
 	if (!result) result = memory_bit_test(f);
 	if (!result) result = memory_bit_update_test(f);
