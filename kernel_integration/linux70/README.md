@@ -92,6 +92,49 @@ current module-memory and executable-allocation adaptations belong in the
 provider. This patch adds no `execmem` exports and makes no near-JIT allocation
 capability claim.
 
+## Optional generated instruction inventory
+
+`generated_text.patch` is a separate, unvalidated producer component for the
+current generated-source lifetime candidate. It changes only
+`arch/x86/kernel/alternative.c` and `kernel/module/main.c`; preparation copies
+the shared `include/kd_generated_text.h` into the kernel as
+`include/linux/kd_generated_text.h`. The original five-file core patch and the
+independent MM/API preparations keep their existing scope.
+
+The producer retains the already allocated core ITS page inventory when core
+construction finishes. Its published descriptor is immutable after init. The
+only new export, `kd_generated_text_lookup`, returns one exact aligned page
+from this inventory or from a live module's ITS inventory. The module query
+takes a reference before reading architecture metadata because RCU alone does
+not retain that metadata during teardown. A successful module reply transfers
+one reference to its caller. The query does not allocate, sleep, inspect target
+instructions or change native MM bodies. Module LIVE publication uses release
+ordering paired with the inventory reader's acquire load.
+
+Each query shares a 4,096-unit scan budget across core pages, module list nodes
+and module pages. Exhaustion returns `-ENOSPC` without transferring an owner;
+any module reference held for that scan is released before returning. This
+explicit limit bounds inventory work while the caller holds its raw source
+guard. It does not turn an unexamined address into a positive membership result.
+
+On the designated VM, prepare the component from the same pristine Ubuntu
+source used by the two other preparations:
+
+```sh
+python3 kernel_integration/linux70/prepare_generated_text.py \
+  --source "$PRISTINE_SOURCE" --output "$NEW_GENERATED_PREPARATION"
+```
+
+Pass `--generated-text-prepare "$NEW_GENERATED_PREPARATION/prepare.json"` to
+both `compose_scope.py` and the later `capture.py` invocation. The component is
+explicitly optional: new bundles include its exact three named outputs,
+preparation receipt and four project inputs. Existing bundles without the
+component retain their previous source scope. An amendment of an existing
+scoped tree must preserve its old generation first and reproduce this same
+component identity in a new composition receipt; preparation does not authorize
+relabeling a previously built image. Build, linked-symbol verification, boot
+and live source-reference checks remain pending for this candidate.
+
 ## Configuration and validation boundary
 
 The installed Ubuntu configuration already has `CONFIG_FRAME_POINTER=y` and
@@ -170,3 +213,10 @@ MM overlay and the scoped file-table/pipe API binding in a new source/output
 pair. Its two explicit schema-2 profiles preserve the existing development and
 MM profiles. API objects default to Native in both MM boot modes; per-object
 selection and actual syscall evidence remain required.
+
+The generated-text kernel recipe is isolated from runtime development. Its
+parent is `9fd17324fb9b864c53a5c39e005512f2d705a819`; it retains the exact MM
+and syscall preparation inputs from that component and adds only the optional
+generated-text producer inputs plus composition/capture support. The runtime
+candidate has a separate commit and immutable VM input directory. This avoids
+relabeling an older preparation with newer runtime source bytes.
