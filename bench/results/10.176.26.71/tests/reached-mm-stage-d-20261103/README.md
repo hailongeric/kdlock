@@ -240,3 +240,39 @@ of the failed attempt. Ordinary memcpy/memset still execute on E through the
 backend. Optional trace fields retain the selected private context and argument
 zero through all four Native stages; policy 14 must never reach execution.
 Focused selector/context and actual-MM validation are pending for this revision.
+
+## Sixth candidate: `a8325ab5`
+
+Exact source: `a8325ab58769d5addaeee82b46c1670d8555a3aa`. The focused Native
+context fixture passed 426 checks with PREEMPT_RCU=0 and 426 with
+PREEMPT_RCU=1; all eight expected negative variants were detected. Returning
+CALL discovery/emission passed 20 cases, helper trace validation seven, MM proof
+seven and private-source admission nine. See [units](sixth-units.json).
+Provider and observation module builds passed.
+
+On boot `10ea8f17-afa2-41b1-b449-2522fc6c4294`, the
+[resident log](sixth-resident-kernel.log) positively records one
+`kvfree_call_rcu` request/enter/done/resume: O `4199`, E `4182`, generation 3,
+sequence 15, artifact 3407, context 2 and non-NULL argument zero
+`ff11000343638908`. The same E resumed the same retained root. NULL-head
+execution is unit/context evidence only in this attempt, not an observed MM
+call. This API return does not establish complete worker syscall execution.
+
+The body then stopped at `_find_first_bit+0x25`, `ffffffff81cc7195`, bytes
+`f3 48 0f bc c9` (TZCNT RCX to RCX). The captured entry remained
+`ffffffff818e077d`. [Complete live bytes](sixth-live-site.json),
+[retention](sixth-retention.json) and the undrained controller state are kept.
+No process-model run or returned worker mmap/munmap is claimed. Recovery boot
+is `ec3eeb9c-0223-4379-a99c-2f8cd6eda18b`.
+
+## General bit-scan correction
+
+The design was committed first as `2dcc22bf`. BSF/BSR/TZCNT/LZCNT16/32/64
+execute one actual Native scalar instruction on E. They retain the full old
+destination and source flags as inputs, then import the full captured GPR and
+arithmetic flags. This preserves the CPU's actual zero-input undefined BSF/BSR
+result and 16/32-bit upper-register behavior. Qualified memory sources read
+before effects; a read failure leaves the packet and budget unchanged. The
+bitmap primitive stays delegated rather than becoming a Native API service.
+Native register/memory, zero-input, alias and failure fixtures require fresh
+VM validation before the next actual-MM attempt.

@@ -28,7 +28,7 @@ enum operation {
 	OP_CMOV, OP_SET, OP_PAUSE, OP_LFENCE, OP_MFENCE, OP_SFENCE,
 	OP_SHIFT, OP_IMUL, OP_XADD, OP_XCHG, OP_CMPXCHG,
 	OP_CLC, OP_STC, OP_CMC, OP_LAHF, OP_SAHF, OP_SIGN_PAIR,
-	OP_BIT, OP_STOS, OP_MOVS,
+	OP_BIT, OP_STOS, OP_MOVS, OP_SCAN,
 };
 
 struct operand {
@@ -412,12 +412,16 @@ static void decode(struct decoded *d)
 			d->error = -EOPNOTSUPP;
 			return;
 		}
-		if (d->rep) {
+		if (d->rep && second != 0xbc && second != 0xbd) {
 			if (second == 0x1e && byte(d) == 0xfa) d->operation = OP_NONE;
 			else d->error = -EOPNOTSUPP;
 			return;
 		}
-		if (second >= 0x80 && second <= 0x8f) {
+		if (second == 0xbc || second == 0xbd) {
+			modrm(d, d->width, &d->src, &d->dst, &group);
+			d->operation = OP_SCAN;
+			d->condition = (second == 0xbd) + (d->rep ? 2 : 0);
+		} else if (second >= 0x80 && second <= 0x8f) {
 			d->operation = OP_JCC;
 			d->condition = second & 15;
 			d->src = literal(sign_value(immediate(d, 4), 4), 8);
@@ -663,6 +667,17 @@ static enum kd_reached_result execute(struct decoded *d)
 		if (read_operand(d, &d->src, &value)) return KD_REACHED_MEMORY;
 		value = sign_value(value, d->src.width) < 0 ? ~0ULL : 0;
 		write = true;
+		break;
+	case OP_SCAN:
+		if (read_operand(d, &d->src, &b)) return KD_REACHED_MEMORY;
+		/* Native zero-input BSF/BSR leave the destination undefined. Seed
+		 * the complete old GPR and retain its exact hardware result, including
+		 * 16-bit partial writes and actual 32-bit upper-half behavior. */
+		a = *reg_slot(r, d->dst.reg);
+		if (kd_reached_scalar_apply(d->dst.width,
+			KD_REACHED_SCALAR_BSF + d->condition, a, b, flags, &value, &flags))
+			return KD_REACHED_UNSUPPORTED;
+		*reg_slot(r, d->dst.reg) = value;
 		break;
 	case OP_BIT:
 		/* Memory bit strings use a signed register offset to select another

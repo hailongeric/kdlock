@@ -1067,6 +1067,97 @@ static int cs_padding_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_SCAN(insn, suffix, part) \
+	asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[source],%" part "[value]; pushfq; popq %[output]" \
+		: [value] "+r"(value), [output] "=r"(output) \
+		: [source] "r"(source), [flags] "r"(flags) : "cc", "memory")
+#define ORACLE_SCAN_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case 0: ORACLE_SCAN("bsf", suffix, part); break; \
+	case 1: ORACLE_SCAN("bsr", suffix, part); break; \
+	case 2: ORACLE_SCAN("tzcnt", suffix, part); break; \
+	default: ORACLE_SCAN("lzcnt", suffix, part); break; \
+	} \
+} while (0)
+
+static u64 native_scan(unsigned int width, unsigned int operation, u64 value,
+	u64 source, unsigned long input_flags, unsigned long *result_flags)
+{
+	unsigned long flags, output;
+
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~KD_REG_ARITHMETIC_FLAGS) | (input_flags & KD_REG_ARITHMETIC_FLAGS);
+	switch (width) {
+	case 2: ORACLE_SCAN_WIDTH("w", "w"); break;
+	case 4: ORACLE_SCAN_WIDTH("l", "k"); break;
+	default: ORACLE_SCAN_WIDTH("q", ""); break;
+	}
+	*result_flags = output;
+	return value;
+}
+
+static int scan_test(struct fixture *f)
+{
+	static const u64 sources[] = { 0, 1, 2, 0x8000, 0x10000, 0x80000000,
+		0x100000000ULL, 1ULL << 63, ~0ULL };
+	static const u64 seeds[] = { 0, ~0ULL, 0xabcdefff00000000ULL, 0x1234567890abcdefULL };
+	struct kd_regs before;
+	unsigned int width, operation, form, i, j, length;
+	unsigned long flags;
+	u64 value;
+	u8 code[5];
+
+	/* Exact reached bitmap instruction; the already tested nonzero branch
+	 * supplies RCX as both source and destination on the executor. */
+	prepare(f, (u8[]){ 0xf3, 0x48, 0x0f, 0xbc, 0xc9 }, 5);
+	f->regs.cx = 0x100000000ULL;
+	value = native_scan(8, 2, f->regs.cx, f->regs.cx, f->regs.flags, &flags);
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(f->regs.cx == value && f->regs.ip == CODE + 5 && f->fetches == 5);
+	CHECK(!((f->regs.flags ^ flags) & KD_REG_ARITHMETIC_FLAGS));
+	for (width = 2; width <= 8; width *= 2)
+	for (operation = 0; operation < 4; ++operation)
+	for (form = 0; form < 2; ++form)
+	for (i = 0; i < ARRAY_SIZE(sources); ++i)
+	for (j = 0; j < ARRAY_SIZE(seeds); ++j) {
+		length = 0;
+		if (operation >= 2) code[length++] = 0xf3;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = 0x0f;
+		code[length++] = 0xbc + (operation & 1);
+		code[length++] = form ? 0x1f : 0xd8; /* source (DI)/AX, destination BX */
+		prepare(f, code, length);
+		f->regs.ax = f->memory[0] = sources[i];
+		f->regs.bx = seeds[j]; f->regs.di = DATA;
+		f->regs.flags |= (i & 1) ? KD_REG_ARITHMETIC_FLAGS : 0;
+		value = native_scan(width, operation, seeds[j], sources[i], f->regs.flags, &flags);
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->regs.bx == value && f->regs.ax == sources[i]);
+		/* Include actual Native undefined flags and zero-source destinations.
+		 * A generic width4 write would incorrectly impose an extra truncation. */
+		CHECK(!((f->regs.flags ^ flags) & KD_REG_ARITHMETIC_FLAGS));
+		CHECK((f->regs.flags & ~KD_REG_ARITHMETIC_FLAGS) == 0x202);
+		CHECK(f->regs.ip == CODE + length && f->fetches == length && f->state.budget == 99);
+		CHECK(f->reads == form && !f->writes && !f->atomics && f->memory[0] == sources[i]);
+	}
+	prepare(f, (u8[]){ 0xf3, 0x48, 0x0f, 0xbc, 0x1f }, 5);
+	f->regs.di = DATA; f->regs.bx = ~0UL; f->fail_read = true;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes && f->state.budget == 100);
+	prepare(f, (u8[]){ 0xf0, 0xf3, 0x48, 0x0f, 0xbc, 0x1f }, 6);
+	f->regs.di = DATA;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	prepare(f, (u8[]){ 0xf3, 0x48, 0x0f, 0xbc }, 4);
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->fetches == 4 && !f->reads && !f->writes);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -1090,6 +1181,7 @@ static int worker(void *argument)
 	if (!result) result = stos_test(f);
 	if (!result) result = movs_test(f);
 	if (!result) result = cs_padding_test(f);
+	if (!result) result = scan_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

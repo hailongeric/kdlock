@@ -93,6 +93,15 @@ fault:
 	default: return -EOPNOTSUPP; \
 	} \
 } while (0)
+#define KD_SCAN_WIDTH(suffix, part) do { \
+	switch (operation) { \
+	case KD_REACHED_SCALAR_BSF: KD_SCALAR_BIT("bsf", suffix, part); break; \
+	case KD_REACHED_SCALAR_BSR: KD_SCALAR_BIT("bsr", suffix, part); break; \
+	case KD_REACHED_SCALAR_TZCNT: KD_SCALAR_BIT("tzcnt", suffix, part); break; \
+	case KD_REACHED_SCALAR_LZCNT: KD_SCALAR_BIT("lzcnt", suffix, part); break; \
+	default: return -EOPNOTSUPP; \
+	} \
+} while (0)
 #define KD_SCALAR_WIDTH(suffix, part) do { \
 	switch (operation) { \
 	case KD_REACHED_SCALAR_ROL: KD_SCALAR_SHIFT("rol", suffix, part); break; \
@@ -120,6 +129,13 @@ int kd_reached_scalar_apply(unsigned int width, enum kd_reached_scalar_op operat
 		case 2: KD_BIT_WIDTH("w", "w"); break;
 		case 4: KD_BIT_WIDTH("l", "k"); break;
 		case 8: KD_BIT_WIDTH("q", ""); break;
+		default: return -EOPNOTSUPP;
+		}
+	} else if (operation >= KD_REACHED_SCALAR_BSF && operation <= KD_REACHED_SCALAR_LZCNT) {
+		switch (width) {
+		case 2: KD_SCAN_WIDTH("w", "w"); break;
+		case 4: KD_SCAN_WIDTH("l", "k"); break;
+		case 8: KD_SCAN_WIDTH("q", ""); break;
 		default: return -EOPNOTSUPP;
 		}
 	} else if (operation == KD_REACHED_SCALAR_IMUL) {
