@@ -108,6 +108,13 @@ def api_recipe():
     return recipe
 
 
+def generated_recipe():
+    spec = importlib.util.spec_from_file_location("scope_generated_recipe", HERE / "prepare_generated_text.py")
+    recipe = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(recipe)
+    return recipe
+
+
 def api_bodies(pristine_root, composed_root, expected):
     """Compare only the reviewed lock-call substitutions, not arbitrary rewrites."""
     recipe = api_recipe()
@@ -184,6 +191,35 @@ def check_bundle(identity, bundle, manifest, source, mm):
     require(sha(pristine) == base["files"][SHARED], "pristine Makefile differs")
     outputs = composed_outputs(mm, api, pristine, (artifacts / "mmap" / SHARED).read_bytes(),
                                (artifacts / "api" / SHARED).read_bytes())
+    component = composition.get("generated_text")
+    if component is not None:
+        recipe = generated_recipe()
+        receipt_name = "generated-text-prepare.json"
+        require(receipt_name in files, "generated-text preparation omitted")
+        generated = json.loads((bundle / receipt_name).read_text())
+        recipe.validate(generated)
+        expected = dict(abi=1, kind=recipe.KIND, lookup_work_units=recipe.LOOKUP_WORK_UNITS,
+                        prepare_sha256=files[receipt_name])
+        require(component == expected and manifest.get("generated_text") == expected,
+                "generated-text component identity differs")
+        require(generated["source"] == composition["source"], "generated-text source binding differs")
+        for name, expected in generated["inputs"].items():
+            require(files.get("generated-text-inputs/" + name) == expected,
+                    "generated-text captured input differs: " + name)
+        base_name = "generated-text-inputs/kernel_integration/linux70/generated-text-base-sha256.json"
+        generated_base = json.loads((bundle / base_name).read_text())
+        require(generated["source_files"] == generated_base["files"],
+                "generated-text pristine identity differs")
+        patch_name = "generated-text-inputs/kernel_integration/linux70/generated_text.patch"
+        paths = re.findall(r"^\+\+\+ b/(.+)$", (bundle / patch_name).read_text(), re.M)
+        require(len(paths) == len(recipe.PATCH_PATHS) and set(paths) == recipe.PATCH_PATHS,
+                "generated-text patch scope differs")
+        require(not (set(outputs) | identity.CORE_PATHS) & recipe.OUTPUTS,
+                "generated-text output overlaps an existing component")
+        outputs.update(generated["outputs"])
+    else:
+        require(manifest.get("generated_text") is None and "generated-text-prepare.json" not in files,
+                "generated-text component was not composed")
     final = composition["final_source_files"]
     require(final == manifest["source_files"], "composition final manifest differs")
     expected_names = identity.CORE_PATHS | set(identity.BASE_SOURCE) | set(outputs) | set(mm["native_body_sha256"])
@@ -199,7 +235,7 @@ def check_bundle(identity, bundle, manifest, source, mm):
     api_bodies(artifacts / "pristine-api", source, api["native_body_sha256"])
 
 
-def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
+def compose(source, output, mmap_prepare, api_prepare, acquisition, archives, generated_text_prepare=None):
     # Authentication constants and existing primitives are code from the
     # synchronized project, never Python loaded out of a captured bundle.
     spec = importlib.util.spec_from_file_location("scope_identity", HERE / "verify.py")
@@ -222,7 +258,17 @@ def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
         require(not (source / name).exists(), "new core file already exists: " + name)
     mm = json.loads(mmap_prepare.read_text())
     api = json.loads(api_prepare.read_text())
-    for receipt, kind in ((mm, "MM"), (api, "API")):
+    generated = None
+    receipts = [(mm, "MM"), (api, "API")]
+    if generated_text_prepare is not None:
+        recipe = generated_recipe()
+        generated = json.loads(generated_text_prepare.read_text())
+        recipe.validate(generated)
+        for name, expected in generated["source_files"].items():
+            require(digest(source / name) == expected, "generated-text pristine input differs: " + name)
+        require(not (source / recipe.HEADER).exists(), "generated-text header already exists")
+        receipts.append((generated, "generated text"))
+    for receipt, kind in receipts:
         preparation(receipt, kind)
         require(Path(receipt["source"]).resolve() == source, kind + " uses another pristine tree")
         for name, expected in receipt["inputs"].items():
@@ -243,6 +289,9 @@ def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
     mm_file = (Path(mm["overlay"]) / SHARED).read_bytes()
     api_file = (Path(api["overlay"]) / SHARED).read_bytes()
     overlay_outputs = composed_outputs(mm, api, pristine, mm_file, api_file)
+    if generated is not None:
+        require(not set(overlay_outputs) & set(generated["outputs"]), "generated-text overlay collision")
+        overlay_outputs.update(generated["outputs"])
     patch = HERE / "kernel.patch"
     core = re.findall(r"^\+\+\+ b/(.+)$", patch.read_text(), re.M)
     require(set(core) == identity.CORE_PATHS and len(core) == len(set(core)), "core patch scope differs")
@@ -255,6 +304,10 @@ def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
                   acquisition_sha256=digest(acquisition), source_archives=identity.SOURCE_ARCHIVES,
                   scope_base_sha256=BASE_SHA256, core_patch_sha256=digest(patch),
                   mmap_prepare_sha256=digest(mmap_prepare), api_prepare_sha256=digest(api_prepare))
+    if generated is not None:
+        result["generated_text"] = dict(abi=1, kind=recipe.KIND,
+                                        lookup_work_units=recipe.LOOKUP_WORK_UNITS,
+                                        prepare_sha256=digest(generated_text_prepare))
     try:
         shutil.copytree(source, tree, symlinks=True)
         for name in set(core) | set(overlay_outputs):
@@ -263,7 +316,7 @@ def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
         proc = subprocess.run(command, cwd=tree, capture_output=True, text=True, timeout=60)
         (output / "core-patch.log").write_text(proc.stdout + proc.stderr)
         require(proc.returncode == 0, "core patch failed")
-        for receipt in (mm, api):
+        for receipt, _kind in receipts:
             for name in receipt["outputs"]:
                 if name == SHARED:
                     continue
@@ -291,7 +344,10 @@ def compose(source, output, mmap_prepare, api_prepare, acquisition, archives):
             artifacts[name] = sha(data)
         for name, expected in base["files"].items():
             require(digest(source / name) == expected, "pristine input changed: " + name)
-        for receipt in (mm, api):
+        if generated is not None:
+            for name, expected in generated["source_files"].items():
+                require(digest(source / name) == expected, "generated-text pristine input changed: " + name)
+        for receipt, _kind in receipts:
             for name, expected in receipt["outputs"].items():
                 require(digest(Path(receipt["overlay"]) / name) == expected, "staging overlay changed: " + name)
         result.update(passed=True, source_unchanged=True, overlays_unchanged=True,
@@ -312,10 +368,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("source", "output", "mmap-prepare", "api-prepare", "acquisition", "source-archives"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--generated-text-prepare", type=Path,
+                        help="optional separate ITS inventory producer preparation")
     args = parser.parse_args()
     require(os.geteuid() == 0 and os.uname().release.startswith("7.0."), "designated Linux 7 VM only")
     result = compose(args.source, args.output, args.mmap_prepare, args.api_prepare,
-                     args.acquisition, args.source_archives)
+                     args.acquisition, args.source_archives, args.generated_text_prepare)
     print(json.dumps({key:result[key] for key in ("passed", "composed_source", "kernel_built")}))
 
 

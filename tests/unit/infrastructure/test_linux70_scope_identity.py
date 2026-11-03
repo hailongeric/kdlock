@@ -157,6 +157,80 @@ class ScopeIdentityTests(unittest.TestCase):
         self.assertNotEqual(self.mm["outputs"][scope.SHARED], self.manifest["source_files"][scope.SHARED])
         self.assertNotEqual(self.api["outputs"][scope.SHARED], self.manifest["source_files"][scope.SHARED])
 
+    def generated_component(self):
+        recipe = scope.generated_recipe()
+        base = json.loads((recipe.HERE / "generated-text-base-sha256.json").read_text())
+        inputs = {name: sha((ROOT / name).read_bytes()) for name in recipe.INPUTS}
+        outputs = {}
+        for name in recipe.OUTPUTS:
+            data = ((ROOT / "include/kd_generated_text.h").read_bytes()
+                    if name == recipe.HEADER else b"generated producer fixture")
+            self.write(self.source / name, data)
+            outputs[name] = sha(data)
+        generated = dict(schema=1, kind=recipe.KIND, abi=1, passed=True,
+            lookup_work_units=recipe.LOOKUP_WORK_UNITS,
+            source_package=identity.PACKAGE, source=self.mm["source"],
+            source_unchanged=True, config_modified=False, kernel_built=False,
+            installed=False, booted=False, inputs=inputs, outputs=outputs,
+            source_files=base["files"])
+        self.put_json("generated-text-prepare.json", generated)
+        for name in inputs:
+            self.put("generated-text-inputs/" + name, (ROOT / name).read_bytes())
+        component = dict(abi=1, kind=recipe.KIND,
+                         lookup_work_units=recipe.LOOKUP_WORK_UNITS,
+                         prepare_sha256=self.files["generated-text-prepare.json"])
+        self.composition["generated_text"] = component
+        self.composition["final_source_files"].update(outputs)
+        self.manifest["generated_text"] = component
+        self.put_json("composition.json", self.composition)
+        return generated
+
+    def test_generated_component_is_explicit_and_preserves_original_core_scope(self):
+        original_core = set(identity.CORE_PATHS)
+        self.generated_component()
+        self.check()
+        self.assertEqual(identity.CORE_PATHS, original_core)
+        del self.composition["generated_text"]
+        self.put_json("composition.json", self.composition)
+        with self.assertRaisesRegex(ValueError, "was not composed"):
+            self.check()
+
+    def test_generated_component_rejects_coherent_abi_header_and_scope_changes(self):
+        original = self.generated_component()
+        for field, value in (("abi", 2), ("lookup_work_units", 4097),
+                             ("source", "/other/pristine"),
+                             ("outputs", original["outputs"] | {"kernel/other.c": sha(b"extra")}),
+                             ("outputs", original["outputs"] |
+                              {"include/linux/kd_generated_text.h": sha(b"different header")})):
+            with self.subTest(field=field, value=value):
+                generated = copy.deepcopy(original)
+                generated[field] = value
+                self.put_json("generated-text-prepare.json", generated)
+                # Rebind the enclosing receipt hashes, preserving the mismatch
+                # the semantic component check must still reject.
+                self.composition["generated_text"]["prepare_sha256"] = self.files["generated-text-prepare.json"]
+                self.put_json("composition.json", self.composition)
+                with self.assertRaises(ValueError):
+                    self.check()
+
+    def test_generated_component_requires_its_captured_header_input(self):
+        self.generated_component()
+        del self.files["generated-text-inputs/include/kd_generated_text.h"]
+        with self.assertRaisesRegex(ValueError, "captured input differs"):
+            self.check()
+
+    def test_generated_component_rejects_a_coherently_replaced_patch(self):
+        generated = self.generated_component()
+        name = "kernel_integration/linux70/generated_text.patch"
+        data = (ROOT / name).read_bytes() + b"\n# different producer\n"
+        self.put("generated-text-inputs/" + name, data)
+        generated["inputs"][name] = sha(data)
+        self.put_json("generated-text-prepare.json", generated)
+        self.composition["generated_text"]["prepare_sha256"] = self.files["generated-text-prepare.json"]
+        self.put_json("composition.json", self.composition)
+        with self.assertRaisesRegex(ValueError, "patch identity differs"):
+            self.check()
+
     def test_mutated_receipt_claims_rejected_even_with_updated_bundle_hash(self):
         for field, bad in (("rule", "overwrite-last"), ("passed", False),
                            ("source_unchanged", False), ("overlays_unchanged", False),

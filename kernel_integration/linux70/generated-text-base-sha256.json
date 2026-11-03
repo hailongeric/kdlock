@@ -1,0 +1,10 @@
+{
+  "source_package": "linux=7.0.0-38.38",
+  "files": {
+    "arch/x86/kernel/alternative.c": "efbb4aafee235eed7eb4ba775a869649747105eba882e24e5dcc0f45e02cfb47",
+    "kernel/module/main.c": "0965264a64e059444360576f97e09116cd40b8fc4339701d99a7f53a9814c718"
+  },
+  "new_files": [
+    "include/linux/kd_generated_text.h"
+  ]
+}
