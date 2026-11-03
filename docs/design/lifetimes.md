@@ -221,3 +221,59 @@ The [explicit Native argument mapping](native_call_arguments.md) design extends
 retained returning calls without changing their source CALL identity, context
 checks or exact completion lifetime. Its initial allocation mappings preserve
 the original caller input while resuming on the same executor.
+
+## Bounded retained preparation capacity
+
+The next isolated iteration starts from runtime
+`8f12f82000ea73d28526f938cc21b87bcfa1c744`. Its actual MM preparation still
+stops before either application starts: the brk root has 262,032 cached bytes,
+131,000 selected instruction bytes, 33,443 instructions and 8,075 CFG blocks
+at expansion 19. Its next minimum plan requires 265,401 bytes, exceeding the
+262,144-byte aggregate cap. This is measured resource exhaustion, not evidence
+that the reached source operations cannot execute correctly. A complete graph
+or returned MM body remains unproved.
+
+Use a larger, still bounded retained preparation profile to measure complete
+coverage and emitted size. Ordinary source-window and return-flow defaults stay
+unchanged; no lock API, Native MM body or unsupported-operation policy changes.
+
+| Resource | Earlier bound | Candidate bound |
+| --- | ---: | ---: |
+| Retained aggregate cached source bytes | 256 KiB | 1 MiB |
+| Ordinary aggregate cached source bytes | 256 KiB | 256 KiB |
+| One provider source pin/read request | 256 KiB | 256 KiB |
+| Retained return-flow analysis work | 65,536 steps | 262,144 steps |
+| Ordinary return-flow analysis work | 65,536 steps | 65,536 steps |
+| One emitted image / code block | 640 KiB | 4 MiB |
+| CFG expansion passes | 32 | 32 |
+
+The 64 ordinary blocks and up to 64 near-text blocks are eagerly allocated by
+`kernel_module/exe.c`. Raising the shared block size in `include/exe_info.h`
+reserves at most 512 MiB of payload instead of 80 MiB, plus allocation/page-table
+overhead. The pool still shares 64 live image descriptors, not 128. Record the
+actual allocation result on the 24 GiB VM. This is a candidate capacity choice,
+not a Nano performance claim; master and historical receipts remain unchanged.
+
+An aggregate merged window may exceed one provider request. Split its I/O into
+consecutive pieces no larger than `KD_SOURCE_MAX_READ`; each piece must acquire
+its existing source lease before its own complete read. Concatenate only exact,
+gap-free returned bytes. Retain all roots, existing cached bytes and leases;
+optional-lookahead retry cannot discard source or bypass a refusal. A partial
+read/refusal still prevents CFG completion and image publication. Kernel source
+request limits and source/module/frame retirement remain unchanged.
+
+The retained-only work limit must be passed explicitly to the existing
+return-flow analysis. Budget exhaustion still refuses an incomplete result;
+ordinary callers retain the existing default. Keep runtime execution ticks,
+CALL/RET words, opcode/context checks, exact owners and the image upload bound.
+All daemon/provider consumers of the image capacity must agree through their
+shared header or checked equivalent. Do not accept oversized image bytes.
+
+Focused checks cover per-request splitting and refusal before completion,
+retained/ordinary aggregate boundaries, the selected return-flow work limit,
+and image-size boundary agreement. Build and run the existing helper/cancellation
+phases on the VM, then attempt the same unchanged two-model mmap1 diagnostic
+once on the frozen candidate. All 55 entry images must still be ready before
+activation. Preserve any further resource or instruction failure as a distinct
+result; do not infer returned-body, throughput or performance acceptance from a
+larger preparation allowance.
