@@ -32,9 +32,10 @@ observer = bench.common.module('mmap1_delegated_observer', ROOT / 'tests/kernel/
 sys.path.insert(0, str(ROOT / 'tests/kernel/jit_continuation'))
 primitives = bench.common.module('mmap1_delegated_primitives', ROOT / 'tests/kernel/jit_continuation/helper_mode.py')
 memory = bench.common.module('mmap1_delegated_memory', ROOT / 'tests/kernel/jit_continuation/memory_mode.py')
+pairs = bench.common.module('mmap1_syscall_pairs', ROOT / 'tests/kernel/mmap1_identity/syscall_pairs.py')
 PARAMETERS = Path('/sys/module/kdlock_km/parameters')
-KERNEL_COMPONENT = '9fd17324fb9b864c53a5c39e005512f2d705a819'
-KERNEL_BUILD_ID = 'd3b5cf1b208028495b5fa9be2a3750b0831a2ec3'
+KERNEL_COMPONENT = '1ab7124abb6140752c1f0bb6e862144d426a3875'
+KERNEL_BUILD_ID = '5f2fce72a33480f6e79a79b374b21a0db377ecd1'
 PYTHON = '/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3'
 GIB = 1024 ** 3
 
@@ -112,7 +113,7 @@ def site_audit(args, binding):
                audit['vmlinux']['build_id'] == binding['build_id'] == KERNEL_BUILD_ID and
                audit['vmlinux']['sha256'] == binding['build_files']['vmlinux'] and
                audit['vmlinux']['bytes'] == (args.kernel_source / 'vmlinux').stat().st_size and
-               re.fullmatch('[0-9a-f]{64}', audit['section']['sha256']), 'exact 380G10 v2 site audit required')
+               re.fullmatch('[0-9a-f]{64}', audit['section']['sha256']), 'exact 380G10 producer-kernel site audit required')
     rows = audit['records']
     rt.require(rows and len({row['entry'] for row in rows}) == len(rows) and all(
         type(row['entry']) is int and row['entry'] > 0 and row['operation'] in (1, 3) and
@@ -394,7 +395,7 @@ class Controller:
             daemon = Daemon(self.model, self.source, self.binaries['daemon'])
             daemon.start()
             record['daemon_pid'] = daemon.daemon.pid
-            self.run('load-observer', ['insmod', self.binaries['probe'], 'target=mmap1_' + model])
+            self.run('load-observer', ['insmod', self.binaries['probe'], 'target=mmap1_' + model, 'pair_limit=8'])
             record['observer_loaded'] = True
             (PARAMETERS / 'rwsem_provider_mode').write_text('prepare\n')
             rows = self.wait('all builtin writer sites ready', lambda: self.ready(daemon), timeout=600)
@@ -427,6 +428,11 @@ class Controller:
             proof = observer.validate_delegated(snapshot, session, os.sysconf('SC_CLK_TCK'), messages,
                                                 self.audit['entry_sites'], symbols[0])
             proof['service_transactions'] = self.validate_services(proof, rows, messages, snapshot)
+            lifecycle = logdir / 'kernel.log'
+            self.wait('syscall pair STOP summary', lambda:
+                'kd_mm_pair: event=stop ' in lifecycle.read_text(), timeout=2)
+            proof['syscall_pairs'] = pairs.validate(lifecycle.read_text(), snapshot, proof,
+                                                   self.audit['entry_sites'], 8)
             rt.write_json(self.model / 'delegated-proof.json', proof)
             record.update(proof=reference(self.model / 'delegated-proof.json'), application=reference(self.model / 'application/result.json'),
                 snapshot=reference(self.model / 'snapshot.json'), completed_requests=proof['completed_request_count'],

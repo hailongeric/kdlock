@@ -109,3 +109,38 @@ unsupported continuation, log loss, unmatched root or failed lifetime check
 retains the current state; it never authorizes forced unload or task exit.
 The second model gets a fresh provider/source session. Scored comparisons
 still require their existing separate correctness and host endpoint receipts.
+
+## Bounded syscall-return pairing
+
+The optional `pair_limit` observation defaults to zero, preserving the ordinary
+entry-only observer and its ABI2 snapshot. A nonzero value, at most eight,
+observes that many complete 128MiB mmap/munmap pairs per recorded task lifetime.
+Two external kretprobes surround `__x64_sys_mmap` and `__x64_sys_munmap`, outside
+the translated MM call graph. They retain the original six mmap arguments,
+actual originating task/start/MM/backing identity, per-task invocation sequence,
+returned address and matching munmap result. Auxiliary state is preallocated;
+the native MM bodies, application and production provider remain unchanged.
+
+Bounded entry/return markers share the continuously collected kmsg stream with
+the existing executor trace. The parser assigns each audited root identity and
+generation to the unique open syscall for that origin lifetime, requiring its
+other-task enter/release-or-read-tail/returned sequence before the origin's
+matching wrapper return. This distinguishes executor completion from actual
+origin-side syscall-function return. A successful mmap address must be the
+same address passed to successful munmap. The original application must still
+exit normally with valid positive progress counters.
+At least one sampled munmap invocation must contain the exact delegated
+downgrade/read-release/returned sequence before its origin wrapper returns.
+An unrelated read tail elsewhere in the lifetime cannot satisfy this sample.
+The existing subsequent-same-executor writer criterion remains separate and
+does not imply an independently observed reader-drain experiment.
+
+STOP closes admission and unregisters every probe before dropping the existing
+exact MM references. Its one-time summary records both kretprobe instance misses
+and underlying kprobe misses, unfinished invocations and completed pair counts.
+Any miss, unfinished pair, identity change or incomplete marker stream fails
+pair coverage. Repeated STOP keeps the existing equal ABI2 buffers. Sampling
+limits remain explicit; these observations do not account for every application
+invocation or directly inspect VMA/page-table effects. No probe handler walks
+VMAs, takes a blocking mmap lock, allocates or sleeps. These are unscored
+diagnostics requiring their own frozen source and VM fixture results.
