@@ -103,9 +103,10 @@ struct kd_reached_state {
 	struct kd_reached_event event;
 };
 
-/* FULL is mandatory. REP STOS consumes one step/budget unit per stored element;
- * a zero-count REP consumes one step without a memory access. DI/CX and source
- * IP retain completed progress, so a later element failure cannot replay it.
+/* FULL is mandatory. REP STOS/MOVS consumes one step/budget unit per stored
+ * element; a zero-count REP consumes one step without a memory access. SI/DI/CX
+ * and source IP retain completed progress, so an element failure cannot replay
+ * its completed prefix. A failed MOVS store also leaves SI/DI/CX unchanged.
  * In particular, this never reads unspecified MINIMAL GPRs
  * or resets the persistent instruction budget at an edge or service return.
  * Unsupported instructions are reported before packet or data effects; that

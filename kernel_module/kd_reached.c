@@ -28,7 +28,7 @@ enum operation {
 	OP_CMOV, OP_SET, OP_PAUSE, OP_LFENCE, OP_MFENCE, OP_SFENCE,
 	OP_SHIFT, OP_IMUL, OP_XADD, OP_XCHG, OP_CMPXCHG,
 	OP_CLC, OP_STC, OP_CMC, OP_LAHF, OP_SAHF, OP_SIGN_PAIR,
-	OP_BIT, OP_STOS,
+	OP_BIT, OP_STOS, OP_MOVS,
 };
 
 struct operand {
@@ -227,7 +227,8 @@ static void decode(struct decoded *d)
 		d->error = -EOPNOTSUPP;
 		return;
 	}
-	if (d->rep && op != 0x90 && op != 0x0f && op != 0xaa && op != 0xab) {
+	if (d->rep && op != 0x90 && op != 0x0f &&
+	    op != 0xaa && op != 0xab && op != 0xa4 && op != 0xa5) {
 		d->error = -EOPNOTSUPP;
 		return;
 	}
@@ -337,9 +338,10 @@ static void decode(struct decoded *d)
 		break;
 	case 0x9e: d->operation = OP_SAHF; break;
 	case 0x9f: d->operation = OP_LAHF; break;
+	case 0xa4: case 0xa5:
 	case 0xaa: case 0xab:
-		d->operation = OP_STOS;
-		d->width = op == 0xaa ? 1 : d->width;
+		d->operation = op < 0xaa ? OP_MOVS : OP_STOS;
+		d->width = (op & 1) ? d->width : 1;
 		break;
 	case 0xa8: case 0xa9:
 		width = op == 0xa8 ? 1 : d->width;
@@ -637,15 +639,23 @@ static enum kd_reached_result execute(struct decoded *d)
 	case OP_CMC: flags ^= F_CF; break;
 	case OP_LAHF: r->ax = (r->ax & ~0xff00UL) | (((flags & 0xd5) | 2) << 8); break;
 	case OP_SAHF: flags = (flags & ~0xd5UL) | ((r->ax >> 8) & 0xd5); break;
-	case OP_STOS:
+	case OP_MOVS: case OP_STOS:
 		/* Each successful store is one bounded step. DI/CX and the source
 		 * IP retain the exact completed prefix across a segment or fault;
 		 * a failed element leaves them intact, without replaying that prefix.
 		 * DF is virtual packet state, never installed on the executor CPU. */
 		if (d->rep && !r->cx) break;
 		value = r->ax & width_mask(d->width);
+		/* MOVS reads and writes one ordinary-RAM element in source order,
+		 * including overlaps. A later failed store commits no source GPRs;
+		 * its successful read does not authorize retiring that element. */
+		if (d->operation == OP_MOVS &&
+		    s->ops->read(s->context, r->si, &value, d->width))
+			return KD_REACHED_MEMORY;
 		if (s->ops->write(s->context, r->di, &value, d->width))
 			return KD_REACHED_MEMORY;
+		if (d->operation == OP_MOVS)
+			r->si += (flags & F_DF) ? -(unsigned long)d->width : d->width;
 		r->di += (flags & F_DF) ? -(unsigned long)d->width : d->width;
 		if (d->rep && --r->cx) target = r->ip;
 		break;

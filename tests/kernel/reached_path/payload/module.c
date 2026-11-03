@@ -26,6 +26,7 @@ struct fixture {
 	unsigned int writes;
 	unsigned int atomics;
 	unsigned long max_fetch;
+	bool fail_read;
 	bool fail_write;
 	bool fail_atomic;
 };
@@ -53,7 +54,7 @@ static int source_read(void *context, unsigned long address, void *out, unsigned
 {
 	struct fixture *f = context;
 
-	if (address < DATA || address - DATA > sizeof(f->memory) ||
+	if (f->fail_read || address < DATA || address - DATA > sizeof(f->memory) ||
 	    size > sizeof(f->memory) - (address - DATA)) return -EFAULT;
 	++f->reads;
 	memcpy(out, (u8 *)f->memory + address - DATA, size);
@@ -796,6 +797,160 @@ static int stos_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_MOVS(insn) do { \
+	if (repeated) \
+		asm volatile("pushq %[flags]; popfq; rep " insn "; pushfq; popq %[output]; cld" \
+			: "+S"(source), "+D"(destination), "+c"(count), [output] "=r"(output) \
+			: [flags] "r"(flags) : "cc", "memory"); \
+	else \
+		asm volatile("pushq %[flags]; popfq; " insn "; pushfq; popq %[output]; cld" \
+			: "+S"(source), "+D"(destination), "+c"(count), [output] "=r"(output) \
+			: [flags] "r"(flags) : "cc", "memory"); \
+} while (0)
+
+static void native_movs(unsigned int width, bool repeated, unsigned long *source_io,
+	unsigned long *destination_io, unsigned long *count_io,
+	unsigned long input_flags, unsigned long *result_flags)
+{
+	unsigned long source = *source_io, destination = *destination_io, count = *count_io;
+	unsigned long flags, output, irq_flags;
+
+	/* As in the STOS oracle, DF is present only inside one asm block with
+	 * ordinary interrupts disabled, and CLD precedes every return to C. */
+	local_irq_save(irq_flags);
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~(KD_REG_ARITHMETIC_FLAGS | 0x400UL)) |
+		(input_flags & (KD_REG_ARITHMETIC_FLAGS | 0x400UL));
+	switch (width) {
+	case 1: ORACLE_MOVS("movsb"); break;
+	case 2: ORACLE_MOVS("movsw"); break;
+	case 4: ORACLE_MOVS("movsl"); break;
+	default: ORACLE_MOVS("movsq"); break;
+	}
+	local_irq_restore(irq_flags);
+	*source_io = source;
+	*destination_io = destination;
+	*count_io = count;
+	*result_flags = output;
+}
+
+static int movs_test(struct fixture *f)
+{
+	static const unsigned int counts[] = { 0, 1, 2, 5, 8 };
+	static const u64 accumulator = 0xfedcba9876543210ULL;
+	u64 expected[ARRAY_SIZE(f->memory)];
+	struct kd_regs before;
+	unsigned int width, repeated, direction, layout, i, j, length, elements, steps;
+	unsigned int source_offset, destination_offset, tail;
+	unsigned long source, destination, count, flags, input_flags;
+	u8 code[4];
+
+	for (width = 1; width <= 8; width *= 2)
+	for (repeated = 0; repeated < 2; ++repeated)
+	for (direction = 0; direction < 2; ++direction)
+	for (layout = 0; layout < 6; ++layout)
+	for (i = 0; i < ARRAY_SIZE(counts); ++i) {
+		length = 0;
+		if (repeated) code[length++] = 0xf3;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = width == 1 ? 0xa4 : 0xa5;
+		prepare(f, code, length);
+		for (j = 0; j < sizeof(f->memory); ++j)
+			((u8 *)f->memory)[j] = ((u8 *)expected)[j] = j * 37 + 11;
+		source_offset = layout ? 64 : 0;
+		switch (layout) {
+		case 0: destination_offset = 128; break; /* disjoint */
+		case 1: destination_offset = 64; break; /* identical */
+		case 2: destination_offset = 65; break; /* overlap by bytes */
+		case 3: destination_offset = 63; break;
+		case 4: destination_offset = 64 + width; break; /* overlap by elements */
+		default: destination_offset = 64 - width; break;
+		}
+		elements = repeated ? counts[i] : 1;
+		steps = elements ? elements : 1;
+		tail = direction && elements ? (elements - 1) * width : 0;
+		f->regs.si = DATA + source_offset + tail;
+		f->regs.di = DATA + destination_offset + tail;
+		f->regs.cx = counts[i]; f->regs.ax = accumulator;
+		f->regs.flags = input_flags = 0x202 | KD_REG_ARITHMETIC_FLAGS |
+			(direction ? 0x400UL : 0);
+		source = (unsigned long)expected + source_offset + tail;
+		destination = (unsigned long)expected + destination_offset + tail;
+		count = counts[i];
+		native_movs(width, repeated, &source, &destination, &count, input_flags, &flags);
+		CHECK(kd_reached_run(&f->state, steps) == KD_REACHED_EDGE);
+		CHECK(f->regs.ip == CODE + length && f->state.budget == 100 - steps);
+		CHECK(!memcmp(f->memory, expected, sizeof(expected)));
+		CHECK(f->regs.si - DATA == source - (unsigned long)expected &&
+			f->regs.di - DATA == destination - (unsigned long)expected);
+		CHECK(f->regs.cx == count && f->regs.ax == accumulator);
+		CHECK(f->regs.flags == input_flags &&
+			!((f->regs.flags ^ flags) & (KD_REG_ARITHMETIC_FLAGS | 0x400UL)));
+		CHECK(f->reads == elements && f->writes == elements && !f->atomics);
+	}
+	/* A zero-count copy cannot access either invalid source address. */
+	prepare(f, (u8[]){ 0xf3, 0xa4 }, 2);
+	f->regs.si = ~0UL; f->regs.di = ~0UL;
+	f->fail_read = true; f->fail_write = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(f->regs.si == ~0UL && f->regs.di == ~0UL && !f->regs.cx &&
+		!f->reads && !f->writes && f->regs.ip == CODE + 2);
+	/* The segment limit counts elements, not just decoded string opcodes. */
+	prepare(f, (u8[]){ 0xf3, 0xa4 }, 2);
+	for (i = 0; i < 80; ++i) ((u8 *)f->memory)[i] = i + 1;
+	f->regs.si = DATA; f->regs.di = DATA + 128; f->regs.cx = 80;
+	CHECK(kd_reached_run(&f->state, ~0U) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE && f->regs.si == DATA + 64 &&
+		f->regs.di == DATA + 192 && f->regs.cx == 16);
+	CHECK(f->reads == 64 && f->writes == 64 && f->state.budget == 36);
+	((u8 *)f->memory)[128] = 0x6b;
+	CHECK(kd_reached_run(&f->state, 16) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE + 2 && f->regs.si == DATA + 80 &&
+		f->regs.di == DATA + 208 && !f->regs.cx);
+	CHECK(f->reads == 80 && f->writes == 80 && f->state.budget == 20 &&
+		((u8 *)f->memory)[128] == 0x6b);
+	for (i = 1; i < 80; ++i) CHECK(((u8 *)f->memory)[128 + i] == i + 1);
+	/* A source-read failure and a later store failure retire no element.
+	 * In particular, the store failure must not advance SI after its read. */
+	prepare(f, (u8[]){ 0xf3, 0x48, 0xa5 }, 3);
+	for (i = 0; i < 8; ++i) f->memory[i] = 0x1111000000000000ULL + i;
+	f->regs.si = DATA; f->regs.di = DATA + 128; f->regs.cx = 8;
+	CHECK(kd_reached_run(&f->state, 3) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE && f->regs.si == DATA + 24 &&
+		f->regs.di == DATA + 152 && f->regs.cx == 5);
+	f->memory[16] = 0x76543210;
+	before = f->regs;
+	f->fail_read = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->reads == 3 &&
+		f->writes == 3 && f->state.budget == 97);
+	f->fail_read = false; f->fail_write = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->reads == 4 &&
+		f->writes == 3 && f->state.budget == 97);
+	CHECK(f->memory[16] == 0x76543210 && f->memory[17] == f->memory[1] &&
+		f->memory[18] == f->memory[2]);
+	f->fail_write = false;
+	CHECK(kd_reached_run(&f->state, 5) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE + 3 && f->regs.si == DATA + 64 &&
+		f->regs.di == DATA + 192 && !f->regs.cx);
+	CHECK(f->reads == 9 && f->writes == 8 && f->state.budget == 92 &&
+		f->memory[16] == 0x76543210);
+	for (i = 1; i < 8; ++i) CHECK(f->memory[16 + i] == f->memory[i]);
+	prepare(f, (u8[]){ 0xf0, 0xf3, 0xa4 }, 3);
+	f->regs.si = DATA; f->regs.di = DATA + 128; f->regs.cx = 2;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	prepare(f, (u8[]){ 0x67, 0xf3, 0xa4 }, 3);
+	f->regs.si = DATA; f->regs.di = DATA + 128; f->regs.cx = 2;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	return 0;
+}
+
 #define ORACLE_CS_XOR(bytes) \
 	asm volatile(".byte " bytes "; pushfq; popq %[flags]" \
 		: "+a"(value), [flags] "=r"(flags) : "b"(source) : "cc", "memory")
@@ -933,6 +1088,7 @@ static int worker(void *argument)
 	if (!result) result = shift_multiply_test(f);
 	if (!result) result = bit_test(f);
 	if (!result) result = stos_test(f);
+	if (!result) result = movs_test(f);
 	if (!result) result = cs_padding_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())

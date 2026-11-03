@@ -164,3 +164,36 @@ it is never skipped as a NOP. Prefix/REX ordering, full instruction fetch and
 the fifteen-byte limit remain enforced. Other CS-prefixed operations remain
 explicitly unsupported. Native differential and bounded-fetch fixtures require
 a fresh VM run before the next actual MM attempt.
+
+## Fourth candidate: `140ca7e5`
+
+Exact source: `140ca7e52a121d2ab449f9ed860de3bab0e47d91`. The provider build
+and resident fixture passed 54,504 assertions, including 150 Native padded-XOR
+tuples and complete NOP fetch/no-access checks. Seven MM proof and nine
+private-source cases passed. See [the exact reply](fourth-units.json).
+
+On boot `e3bdd1fb-4f25-4b25-a137-5fd460c31758`, actual MM execution passed the
+patched scheduling site, then two generation-3 roots stopped at
+`ffffffff826f0568`, `__memcpy+8`, bytes `f3 a4` (REP MOVSB). The origins/executors
+were `4987`/`4980` and `4990`/`4947`. Both occurred within this one failed
+activation; they are not two benchmark points. Their captured entries were
+`ffffffff818e077d`. No returned worker mmap/munmap or normal application exit
+is claimed. The [resident log](fourth-resident-kernel.log) retains both stops.
+
+The [complete live-byte read](fourth-live-site.json) was taken before reset,
+alongside the serial and kernel-ring capture. The ELF identifies the selected
+fast-string helper; its RCX comes from RDX and its returned destination is in
+RAX. See [retention](fourth-retention.json) for original raw files and hashes.
+Recovery used the armed KD entry; the new boot is
+`f194aa8c-fad2-49c2-962f-5fe22024eae7`.
+
+## Bounded MOVS correction
+
+The design was committed first as `10de7f6b`. General MOVS widths 1/2/4/8,
+with and without REP, read one qualified source element and store one
+destination element per step on E. Only successful storage advances RSI/RDI,
+decrements REP's RCX and advances the PC when complete. Flags and RAX remain
+unchanged. Zero count accesses neither address, and failed source reads or
+destination stores retain the exact earlier prefix. Native overlap behavior
+and bounded resumption have focused fixtures; fresh VM validation is pending.
+There is no origin memcpy service or caller-specific path.
