@@ -579,3 +579,23 @@ CS-prefixed operations through this change. Validate full source fetch, flags,
 zero extension, untouched registers, invalid forms and both supported classes
 against Native effects, then retry actual MM execution. Record future failed
 instructions' complete live bytes before recovery where available.
+
+The padded-instruction candidate `140ca7e5` passed 54,504 resident assertions,
+then its MM attempt reached `f3 a4` at `ffffffff826f0568`, `__memcpy+8`.
+This is the selected live fast-string path, after setting RCX from RDX. Two
+roots in that same failed attempt stopped at this operation; neither is a
+separate scored point or a returned mmap1 worker. Preserve both failures and
+the full live-byte read before recovery.
+
+Supplement general MOVS byte/word/dword/qword execution on E, with and without
+REP. Each bounded step reads one qualified source element and writes one
+destination element. Only after successful storage may RSI/RDI move according
+to virtual DF and REP's RCX decrease. Zero count accesses neither address;
+flags, RAX and unrelated registers stay unchanged. If reading or writing an
+element fails, retain earlier elements and exact current RSI/RDI/RCX/PC so
+resumption cannot replay the committed prefix. Source reads and destination
+stores must retain the existing ordinary-RAM/access-width contracts. Do not
+convert the operation into an origin memcpy call. Validate Native overlap
+effects in both directions, all widths, zero count, bounded continuation and
+read/store failures before the next actual MM retry. Scheduling and step
+accounting follow the same element bounds as STOS.
