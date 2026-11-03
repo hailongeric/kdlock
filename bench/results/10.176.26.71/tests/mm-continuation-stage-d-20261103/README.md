@@ -759,3 +759,59 @@ other path to use the original reader. Preserve all receipt hashes, relocation
 checks and negative cases. This is a fixture correction; no production behavior
 changes. The parent still records `live_started=false`, with no build, module
 load, helper/cancellation phase or mmap1 attempt from this identity.
+
+## Bounded capacity: corrected focused checks and fresh live prerequisites
+
+Runtime `3a0171f33516b9c914f4f33da1c7f0c415473ba0` completes the focused
+validation chain after the two retained fixture failures above. The implemented
+retained profile permits 1 MiB of aggregate cached source and 262,144 return-flow
+analysis steps. Ordinary translation retains 256 KiB and 65,536 steps. The
+shared daemon/provider/Python image capacity is 4 MiB; CFG expansion remains
+bounded to 32 passes. Larger merged source windows use consecutive reads of at
+most 256 KiB, each leased before its own read. Missing, short or refused
+mandatory pieces prevent completion; old bytes, roots and each required
+15-byte instruction prefix remain retained. The optional-lookahead retry does
+not remove existing source or permit incomplete graph publication.
+
+The exact `f0120532` to `3a0171f3` delta contains the Native-image test mock and
+two report files only. All production bytes remain unchanged. The historical
+passing `f012` checks therefore remain recorded under their actual source,
+while the corrected observation driver and live prerequisites run freshly on
+`3a01`. [capacity-checks.json](capacity-checks.json) binds both original replies,
+the exact three-path Git/source-map delta, current private snapshot and selected
+live observations. It does not relabel the earlier unit executions.
+
+| Source and executed scope | Observed result |
+| --- | --- |
+| `f012`: text regions / shared capacity / returning calls | 75 / four / 19 cases pass. |
+| `f012`: production registry fixture | 32,174 checks pass; all 16 negative controls detected. |
+| `f012`: executable Native-call wrapper | 15,663 checks pass; userspace lowering fixture only. |
+| `f012`: Native-image observations | Two errors among seven cases remain preserved; no build/live phase starts. |
+| `3a01`: freshly rerun private source / Native-image observations | Nine / seven cases pass. |
+| `3a01`: required provider build and live helper / killable phases | Build succeeds; 11 / 11 phases complete, pass and drain. |
+
+The fresh reply is `/tmp/kdlock-mm-3a01-v3-first-20261103/reply.json`, SHA256
+`bd6bd6c3ed5dcbb2dac465dbabee54675c1b947e6666ba5de99ffdda83b8b945`.
+It binds runtime `3a01` on the same scope5 v3 KD boot
+`22c0a1d3-64b3-4de3-867c-e0521c6ba8c3`, Build ID
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`. The composed kernel recipe remains
+`1ab7124abb6140752c1f0bb6e862144d426a3875`. The successful helper establishes
+completion of its required build; launch-only build metadata is kept distinct.
+Both new mapped-call phases pass again, including the original-task return and
+one 53-byte allocation/write/check/free sequence. Every phase records zero
+errors and final idle state; retained release-control bits remain unchanged.
+
+The compact record also binds nine exact decoder and kernel trace source
+captures, including Miasm's core and x86 subclass. Source inspection does not
+establish a numeric limit for an instantiated decoder or substitute for complete
+CFG coverage. Those observations remain separate from the project's explicit
+source, return-flow and image bounds. The captured v3 configuration selects
+`CONFIG_FRAME_POINTER=y` and `CONFIG_UNWINDER_FRAME_POINTER=y`, with ORC disabled;
+the config bytes and capture receipt are separately bound in the JSON.
+
+The subsequent unchanged two-model diagnostic is **pending at this entry**.
+Neither launch nor site prewarming proves that an application model has started
+or returned. No actual mmap1 completion, delegated MM body, Nano result,
+throughput, performance acceptance or promotion is claimed. Larger preparation
+capacity and controlled helper returns do not establish complete actual-MM
+callee closure or exact per-syscall ownership/retirement.
