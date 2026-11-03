@@ -138,20 +138,28 @@ static void references(void)
 static void cache(void)
 {
 	const struct kd_family_instruction *first, *second;
+	struct kd_family_instruction saved;
 	u8 bytes[] = { 0x48, 0x31, 0xc0 };
 	u8 changed[] = { 0x48, 0x31, 0xc3 };
 	struct kd_family_ref old;
 	unsigned int index;
 
 	start(2);
+	CHECK(!kd_family_cache_candidate(NULL, 0x1000));
+	CHECK(!kd_family_cache_candidate(&root, 0));
+	CHECK(!kd_family_cache_candidate(&root, 0x1000));
+	CHECK(!family.cache_hits && !family.cache_misses && !family.cached);
 	++root.family_generation;
 	CHECK(!kd_family_ref_valid(&root));
+	CHECK(!kd_family_cache_candidate(&root, 0x1000));
 	CHECK(!kd_family_cache_find(&root, 0x1000, bytes, sizeof(bytes)));
 	--root.family_generation;
 	CHECK(kd_family_ref_valid(&root));
 	CHECK(!kd_family_cache_find(&root, 0x1000, bytes, sizeof(bytes)));
 	first = kd_family_cache_publish(&root, 0x1000, bytes, sizeof(bytes));
 	CHECK(first && first->generation == 1 && first->length == sizeof(bytes));
+	CHECK(kd_family_cache_candidate(&root, 0x1000) == first);
+	CHECK(!kd_family_cache_candidate(&root, 0x1001));
 	CHECK(!memcmp(first->bytes, bytes, sizeof(bytes)) && family.cached == 1);
 	CHECK(kd_family_cache_find(&root, 0x1000, bytes, sizeof(bytes)) == first);
 	CHECK(kd_family_cache_publish(&root, 0x1000, bytes, sizeof(bytes)) == first);
@@ -159,6 +167,12 @@ static void cache(void)
 	CHECK(!kd_family_cache_find(&root, 0x1000, changed, sizeof(changed)));
 	second = kd_family_cache_publish(&root, 0x1000, changed, sizeof(changed));
 	CHECK(second && second != first && second->generation == 2);
+	saved = *second;
+	CHECK(kd_family_cache_candidate(&root, 0x1000) == second);
+	CHECK(second->source_ip == saved.source_ip &&
+		second->generation == saved.generation && second->length == saved.length);
+	CHECK(!memcmp(second->bytes, saved.bytes, saved.length) && family.cached == 2);
+	CHECK(family.cache_hits == 1 && family.cache_misses == 2);
 	CHECK(!memcmp(first->bytes, bytes, sizeof(bytes)));
 	for (index = family.cached; index < KD_FAMILY_CACHE_ENTRIES; ++index)
 		CHECK(kd_family_cache_publish(&root, 0x1000 + index * 16,
@@ -172,8 +186,12 @@ static void cache(void)
 	old = root;
 	finish(2);
 	CHECK(!kd_family_ref_valid(&old));
+	CHECK(!kd_family_cache_candidate(&root, 0x1000));
+	CHECK(!kd_family_cache_candidate(&old, 0x1000));
 	start(3);
 	CHECK(!family.cached && family.source_epoch == 3);
+	CHECK(!kd_family_cache_candidate(&old, 0x1000));
+	CHECK(!kd_family_cache_candidate(&root, 0x1000));
 	CHECK(!kd_family_cache_find(&old, 0x1000, bytes, sizeof(bytes)));
 	CHECK(!kd_family_cache_find(&root, 0x1000, bytes, sizeof(bytes)));
 	finish(3);

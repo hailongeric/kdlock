@@ -432,3 +432,16 @@ performance optimization. The failed VM was reset after serial and disk
 evidence preservation, then booted through the existing one-time scope5 KD
 entry. Reset is recovery, not successful retirement; no results are pooled
 across the old and new boot identities.
+
+The BTR-corrected `96d58adb` passed all 11 image-free helper and all 11 killable
+phases. Both sessions still recorded zero cache hits: one-time entry code
+occupied all sixteen immutable records before later loops. Correct that bounded
+cache policy by admitting an instruction only after its PC is encountered
+again within a 32-PC recent window. This mutable recent-PC history is only a
+cache hint, never execution/ownership authority. Cached source bytes must still
+be retained and freshly compared before the engine can fetch from them. A
+cache candidate is an immutable record with a live family reference; no cache
+entry is reused or evicted. A failed freshness check or full cache runs cold.
+Keep each local run at 64 instructions and retain the exact service artifacts
+independently of this optional cache. Validate observed cache hits and uncached
+progress separately from throughput; no performance gain is presumed.

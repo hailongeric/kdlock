@@ -98,6 +98,11 @@ unsigned int kd_family_live_refs(struct kd_family *family);
 const struct kd_family_instruction *kd_family_cache_find(
 	const struct kd_family_ref *authority, unsigned long source_ip,
 	const u8 *observed, unsigned int length);
+/* A PC-only candidate is not a hit or execution authority. The caller must
+ * retain/read and compare every candidate byte before using it for a step.
+ * The newest immutable record for that PC wins; no record is changed/evicted. */
+const struct kd_family_instruction *kd_family_cache_candidate(
+	const struct kd_family_ref *authority, unsigned long source_ip);
 const struct kd_family_instruction *kd_family_cache_publish(
 	const struct kd_family_ref *authority, unsigned long source_ip,
 	const u8 *observed, unsigned int length);

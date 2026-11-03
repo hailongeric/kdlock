@@ -24,11 +24,38 @@ static bool kd_reached_frame_ready(struct kd_exec_frame *frame)
 static int kd_reached_frame_fetch(void *context, unsigned long address,
 	void *out, unsigned int size)
 {
+	struct kd_exec_frame *frame = context;
+	struct kd_exec_continuation *cont;
 	int ret;
 
 	if (!kd_reached_frame_ready(context) || !size ||
 	    size > KD_REACHED_MAX_BYTES || address > ~0UL - size)
 		return -EINVAL;
+	cont = kd_exec_frame_continuation(frame);
+	if (cont->reached_active && cont->reached->initialized) {
+		struct kd_reached_session *session = cont->reached;
+		const struct kd_family_instruction *instruction;
+
+		if (address == cont->packet->ip) {
+			u8 observed[KD_REACHED_MAX_BYTES];
+
+			session->fetch_instruction = NULL;
+			instruction = kd_family_cache_candidate(&session->authority, address);
+			/* An immutable cache record is a candidate, not source authority.
+			 * Retain and compare its complete actual text before serving bytes. */
+			if (instruction && !kd_source_pin_text_range(address, instruction->length) &&
+			    !copy_from_kernel_nofault(observed, (void *)address, instruction->length) &&
+			    !memcmp(observed, instruction->bytes, instruction->length))
+				session->fetch_instruction = instruction;
+		}
+		instruction = session->fetch_instruction;
+		if (instruction && address >= instruction->source_ip &&
+		    address - instruction->source_ip < instruction->length &&
+		    size <= instruction->length - (address - instruction->source_ip)) {
+			memcpy(out, instruction->bytes + address - instruction->source_ip, size);
+			return 0;
+		}
+	}
 	ret = kd_source_pin_text_range(address, size);
 	return ret ? ret : copy_from_kernel_nofault(out, (void *)address, size);
 }

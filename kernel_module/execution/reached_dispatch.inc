@@ -68,12 +68,28 @@ static void kd_reached_cache_note(struct kd_exec_continuation *cont,
 	unsigned long ip, const u8 *bytes, unsigned int length)
 {
 	struct kd_reached_session *session = cont->reached;
+	unsigned int index;
+	bool repeated = false;
 
 	if (kd_family_cache_find(&session->authority, ip, bytes, length))
 		atomic64_inc(&kd_reached_cache_hits);
 	else {
 		atomic64_inc(&kd_reached_cache_misses);
-		if (!kd_family_cache_publish(&session->authority, ip, bytes, length))
+		for (index = 0; index < session->recent_count; ++index)
+			if (session->recent_pc[index] == ip) {
+				repeated = true;
+				break;
+			}
+		/* Mutable history is only an admission hint for optional immutable
+		 * cache storage. It never grants source or packet custody. */
+		if (!repeated) {
+			session->recent_pc[session->recent_cursor] = ip;
+			session->recent_cursor = (session->recent_cursor + 1) %
+				ARRAY_SIZE(session->recent_pc);
+			if (session->recent_count < ARRAY_SIZE(session->recent_pc))
+				++session->recent_count;
+		}
+		if (repeated && !kd_family_cache_publish(&session->authority, ip, bytes, length))
 			atomic64_inc(&kd_reached_cache_full);
 	}
 }

@@ -247,6 +247,34 @@ const struct kd_family_instruction *kd_family_cache_find(
 	return instruction;
 }
 
+const struct kd_family_instruction *kd_family_cache_candidate(
+	const struct kd_family_ref *authority, unsigned long source_ip)
+{
+	const struct kd_family_instruction *instruction = NULL;
+	struct kd_family *family;
+	unsigned long flags;
+	unsigned int index;
+
+	if (!authority || !READ_ONCE(authority->held) || !source_ip)
+		return NULL;
+	family = authority->family;
+	if (!family)
+		return NULL;
+	raw_spin_lock_irqsave(&family->guard, flags);
+	if (!family_reference_locked(family, authority))
+		goto out;
+	/* Records remain append-only. Prefer the latest observation while the
+	 * caller separately proves that its full bytes are still current. */
+	for (index = family->cached; index > 0; --index)
+		if (family->instructions[index - 1].source_ip == source_ip) {
+			instruction = &family->instructions[index - 1];
+			break;
+		}
+out:
+	raw_spin_unlock_irqrestore(&family->guard, flags);
+	return instruction;
+}
+
 const struct kd_family_instruction *kd_family_cache_publish(
 	const struct kd_family_ref *authority, unsigned long source_ip,
 	const u8 *observed, unsigned int length)
