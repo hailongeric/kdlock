@@ -815,3 +815,35 @@ or returned. No actual mmap1 completion, delegated MM body, Nano result,
 throughput, performance acceptance or promotion is claimed. Larger preparation
 capacity and controlled helper returns do not establish complete actual-MM
 callee closure or exact per-syscall ownership/retirement.
+
+
+## Larger source capacity: actual attempt reaches the CFG work boundary
+
+The next actual `3a01` diagnostic again stops before either application starts.
+The original failed result SHA256 is
+`44bdc084f6136ca5d0aa58c25bcdbafc5d295a99efae41fe82672a4a97019c4f`.
+[capacity-attempt.json](capacity-attempt.json) preserves that failed result,
+the captured source profile and separate successful normal retirement. The
+factory is inactive, bindings/body/completion counters are zero, and both
+`mmap1_threads` and `mmap1_processes` remain **NOT STARTED**.
+
+The brk entry gets beyond the old 256 KiB bound. At decode pass 32 it has
+754,720 cached bytes, 329,812 selected instruction bytes, 85,252 instructions
+and 20,783 blocks. The shared transition allowance has been spent on 22
+covered-root rebuilds and ten source-window extensions. Five pending targets
+in this particular refusal record mean new covered seeds only, rather than
+all remaining edges: 215 blocks are incomplete and the complete missing-text
+frontier is not reported. It stops with `reachable text exceeds 32 CFG
+expansions`; full graph, return-flow completion and brk emitted-image size
+remain unmeasured. The point-in-time daemon snapshot SHA256 is
+`aacac599b14b1b8095a843a55bfccb81b6e7572edcc99c9d276acdf440c4125c`.
+No unsupported-opcode conclusion follows from this resource refusal.
+
+Normal cleanup binds the daemon PID/start pair, uses ordinary SIGTERM, observes
+zero source writers and frames, repeated stable STOP, source retirement
+`2/0/0/0`, both normal module unloads and final idle. The original failed result
+bytes remain unchanged; its independent cleanup receipt/hash is retained in
+the JSON. No performance sample, delegation episode or application completion
+is inferred. The next design separates covered-root and source work bounds
+while preserving their existing order; it is an additional bounded allowance,
+not a demonstrated preparation-speed or throughput gain.
