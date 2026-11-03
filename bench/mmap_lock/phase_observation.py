@@ -120,7 +120,7 @@ def prepare(a):
         verifier=plain.common.module('phase_baseline',ROOT/'kernel_baseline/verify.py')
         rt.write_json(out/'candidate-before.json',verifier.verify(plain.BUNDLE,plain.SOURCE,build=True,running=False))
         source=out/'source'
-        for directory in ('workload_modules/mmap_phase_observer','tests/kernel/mmap_lock/payload',
+        for directory in ('workload_modules/mmap_phase_observer','tests/kernel/mmap_lock/fixture',
                           'tests/kernel/mmap_lock/phase',
                           'tests/unit','include','daemon'):
             for path in (ROOT/directory).rglob('*'):
@@ -141,8 +141,8 @@ def prepare(a):
         binaries={}
         for label,relative,name in (
             ('observer','workload_modules/mmap_phase_observer','kd_mmap_phase_observer.ko'),
-            ('baseline','tests/kernel/mmap_lock/payload','kd_mmap_probe.ko'),
-            ('fixture','tests/kernel/mmap_lock/phase/payload','kd_mmap_phase_probe.ko')):
+            ('baseline','tests/kernel/mmap_lock/fixture','kd_mmap_probe.ko'),
+            ('fixture','tests/kernel/mmap_lock/phase/fixture','kd_mmap_phase_probe.ko')):
             rt.command(['make','-C',source/relative,'KDIR='+str(plain.SOURCE),'W=1','UBSAN_SANITIZE=n'],
                        out/(label+'-build.log'),timeout=180)
             binary=source/relative/name;binaries[label]=str(binary)

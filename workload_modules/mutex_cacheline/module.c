@@ -89,5 +89,5 @@ static int sc_workers_drain(void)
 	return 0;
 #endif
 }
-#include "payload.h"
+#include "body.h"
 #include "runner.inc"

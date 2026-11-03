@@ -2,7 +2,7 @@
 
 `module.c` supplies separate Native/TCLock/KD ordinary mutex functions and
 produces `mutex_cacheline.ko` with `/dev/mutex_cacheline`. It includes shared
-payload/ioctl/timing helpers from `../spin_cacheline`; operation bodies do not
+fixture/ioctl/timing helpers from `../spin_cacheline`; operation bodies do not
 branch on a runtime lock-kind flag. The runner selects cacheline or RCUHT at
 build time, using the same payload source for all three arms.
 

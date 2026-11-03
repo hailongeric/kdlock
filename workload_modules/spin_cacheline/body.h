@@ -23,7 +23,7 @@ static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #include "scenario.h"
 
 #ifdef SC_HASH_PAYLOAD
-#include "hash_payload.h"
+#include "hash_body.h"
 #else
 #define SC_TOUCH(i) WRITE_ONCE(sc_data[i].value, READ_ONCE(sc_data[i].value) + 1)
 #define SC_TOUCH_1 SC_TOUCH(0);

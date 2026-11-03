@@ -18,7 +18,7 @@
 #include <linux/sched/task.h>
 #include <linux/uaccess.h>
 #include "api.h"
-#include "../../payload/backend_trylock.h"
+#include "../../fixture/backend_trylock.h"
 #include "../../../../../workload_modules/mmap_phase_observer/api.h"
 
 #ifndef CONFIG_KDLOCK_MMAP

@@ -15,7 +15,7 @@ measured cases. Five candidate boots plus return to recovery form the proposed
 six-boot cycle. The authorized October 25 attempt
 [stopped at first admission](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67, before any boot or payload load. Private
-reconstruction and a compatible payload/client build are preparation evidence;
+reconstruction and a compatible fixture/client build are preparation evidence;
 that attempt started no timing and established no performance gain.
 
 Current commands, source bindings, validation prerequisites and the fixed boot
@@ -126,7 +126,7 @@ The stage's final-health SHA-256
 exact 73-module set and preserved recovery. The six-group archive manifest is
 `3733a6e7f3ec2b3f02474cad22d408360e36137771f017941c5f6e110582c69e`.
 These receipts establish selected prior scope; every new boot needs fresh
-mode/identity readiness, and new payload/client binaries need focused validation.
+mode/identity readiness, and new fixture/client binaries need focused validation.
 
 ## Task 1: actual shared-mm mmap/munmap
 
@@ -145,7 +145,7 @@ The prior two mapping source manifests match at
 independent payload builds differ: Native
 `cdd16eb0eaf99457b5363334d8c779f487e5bad433fb2046fba214d51f14a060`, KD
 `b2f310a3f4a4e41d0927d38cf091378cd164e53bbc37c11902dd8004155cde3b`.
-Freeze one new payload/client pair and validate those exact binaries in both
+Freeze one new fixture/client pair and validate those exact binaries in both
 modes, retaining the mode-specific writer-chain proof in
 [mapping.py](../../tests/kernel/mmap_lock/mapping.py) and
 [writer_sites.json](../../tests/kernel/mmap_lock/writer_sites.json).

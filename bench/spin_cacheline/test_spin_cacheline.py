@@ -1,4 +1,4 @@
-"""Directed guest tests: real payload/client, accounting and scan classification."""
+"""Directed guest tests: real fixture/client, accounting and scan classification."""
 import argparse
 import copy
 import contextlib

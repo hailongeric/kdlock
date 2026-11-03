@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build only the shared-mm payload/clients against a restored candidate tree."""
+"""Build only the shared-mm fixture/clients against a restored candidate tree."""
 import argparse
 import hashlib
 import json
@@ -100,7 +100,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--kernel-source', type=Path)
     p.add_argument('--reuse-payload', type=Path)
-    p.add_argument('--fixed-client-only', action='store_true', help='reuse payload/timed binary; rebuild fixed userspace only')
+    p.add_argument('--fixed-client-only', action='store_true', help='reuse fixture/timed binary; rebuild fixed userspace only')
     p.add_argument('--prior-source', type=Path, help='frozen original sources for fixed-client-only reconstruction')
     p.add_argument('--source-manifest', required=True, type=Path)
     p.add_argument('--output', required=True, type=Path)

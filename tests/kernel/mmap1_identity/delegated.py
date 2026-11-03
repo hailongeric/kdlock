@@ -246,7 +246,7 @@ class Controller:
             self.run('build-daemon', ['make', '-C', self.source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'])
         probe = self.out / 'build/probe'
         probe.mkdir()
-        for path in (self.source / 'tests/kernel/mmap1_identity/payload').iterdir():
+        for path in (self.source / 'tests/kernel/mmap1_identity/fixture').iterdir():
             if path.name == 'Makefile' or path.suffix in ('.c', '.h', '.inc') and not path.name.endswith('.mod.c'):
                 shutil.copyfile(path, probe / path.name)
         self.run('build-probe', ['make', '-C', probe, 'KDIR=' + str(self.args.kernel_source), 'W=1', 'UBSAN_SANITIZE=n'])

@@ -12,7 +12,7 @@ from test_spin_shadow import definition
 
 class MmapSyscallArguments(unittest.TestCase):
     def test_wrapper_pointer_six_arguments_and_fd_representation(self):
-        module = (ROOT / 'tests/kernel/mmap1_identity/payload/module.c').read_text()
+        module = (ROOT / 'tests/kernel/mmap1_identity/fixture/module.c').read_text()
         decoder = definition(module, 'static bool mmap1_arguments(const struct pt_regs *entry)')
         program = r'''
 #include <stdbool.h>

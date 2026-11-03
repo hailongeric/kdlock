@@ -546,7 +546,7 @@ unlock:
 	return ret;
 }
 
-#include "payload/gate_signal.inc"
+#include "fixture/gate_signal.inc"
 
 static long probe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {

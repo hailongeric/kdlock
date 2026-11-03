@@ -11,7 +11,7 @@
 #include <linux/uaccess.h>
 #include "api.h"
 #include "direct.h"
-#include "payload.h"
+#include "body.h"
 
 /* -1 reserves configuration/snapshot; otherwise count admitted ioctls. */
 static atomic_t rb_control __aligned(64) = ATOMIC_INIT(0);

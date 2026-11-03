@@ -227,7 +227,7 @@ def main():
         source = out/'source'
         source.mkdir()
         source_hashes = {}
-        for original in sorted((ROOT/'tests/kernel/mmap1_identity/payload').iterdir()):
+        for original in sorted((ROOT/'tests/kernel/mmap1_identity/fixture').iterdir()):
             # Kbuild regenerates .mod.c; it is a build product, never a source input.
             if original.name.endswith('.mod.c') or (
                     original.name != 'Makefile' and original.suffix not in ('.c', '.h', '.inc')):

@@ -15,7 +15,7 @@ recovery-snapshot and source-freeze checks. No source-host build/test is allowed
 Keep the observer separate from scored runs. Instrumentation can perturb short
 API intervals and scheduler/queue behavior.
 
-The ABI is in [payload/api.h](payload/api.h). The module exposes
+The ABI is in [fixture/api.h](fixture/api.h). The module exposes
 `/dev/kd_rwsem_observe`. One ARM starts one observation with 1..64 explicit TIDs
 and a 1..1000 ms requested duration. An automatic work item then unregisters
 all probes. STOP can close the window earlier. Read is permitted only after

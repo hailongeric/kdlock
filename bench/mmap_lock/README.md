@@ -507,7 +507,7 @@ new source/configuration identities and validated KD/MM interfaces; old source-o
 identity bundles cannot supply a compatible external-module build tree.
 
 The source manifest is `{ "commit": "...", "files": { "relative/path": "sha256", ... } }`
-for the six payload/client source files, including `control.h`. Preparation retains it and
+for the six fixture/client source files, including `control.h`. Preparation retains it and
 all copied bytes. Freeze the collector source after its focused tests; readiness
 binds its Python/C/header/`.inc`/JSON inputs before any measurements.
 The existing `/usr/bin/pahole` 1.25 parses both the base ELF and split module

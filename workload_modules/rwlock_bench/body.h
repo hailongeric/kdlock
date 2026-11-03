@@ -5,9 +5,9 @@
 /* Explicitly configured register-only post-work, matching the spin suite. */
 #include "post_work.h"
 #ifdef RB_SNAPSHOT_PAYLOAD
-#include "snapshot_payload.h"
+#include "snapshot_body.h"
 #elif defined(RB_NANO)
-#include "nano_payload.h"
+#include "nano_body.h"
 #elif defined(RB_HASH)
 /* Reuse the existing TCLock RCUHT move body and full structural oracle. Only
  * its locking shell changes; keys, linked-list stores and outcome accounting
@@ -20,7 +20,7 @@
 #define SC_UNLOCK() RB_WRITE_UNLOCK()
 #define sc_counts rw_bench_snapshot
 #define sc_body_0 rb_write
-#include "hash_payload.h"
+#include "hash_body.h"
 #undef sc_counts
 #undef sc_body_0
 

@@ -111,7 +111,7 @@ def replace_text(path, text):
 
 
 class AssemblyArchive:
-    """One copy per payload/content pair, independent of threads and repeats.
+    """One copy per fixture/content pair, independent of threads and repeats.
 
     Each invocation has its own directory so separate frozen runs stay distinct.
     Content hashes avoid hiding a changed translation behind its symbol.

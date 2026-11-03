@@ -78,9 +78,9 @@ measurement policy.
 
 | Payload | Implementation | Module shells |
 | --- | --- | --- |
-| Cacheline updates (1 or 8 lines) | [spin payload](spin_cacheline/payload.h), [reader/writer payload](rwlock_bench/payload.h) | `spin_cacheline`, `mutex_cacheline`, `rwlock_bench` |
-| Nano counter updates (1 or 16 lines, post256) | [Reader/writer payload](rwlock_bench/payload.h) | `rwlock_bench` with mutex, rwlock or rwsem shell |
-| RCUHT hash operations | [hash_payload.h](spin_cacheline/hash_payload.h) | All three shells; reader/writer variants add read lookups |
+| Cacheline updates (1 or 8 lines) | [spin payload](spin_cacheline/body.h), [reader/writer payload](rwlock_bench/body.h) | `spin_cacheline`, `mutex_cacheline`, `rwlock_bench` |
+| Nano counter updates (1 or 16 lines, post256) | [Reader/writer payload](rwlock_bench/body.h) | `rwlock_bench` with mutex, rwlock or rwsem shell |
+| RCUHT hash operations | [hash_body.h](spin_cacheline/hash_body.h) | All three shells; reader/writer variants add read lookups |
 
 The active catalog selects micro cacheline/RCUHT bodies for spin, rwlock and
 rwsem. Mutex micro c01/c08/RCUHT bodies remain available to historical probes;

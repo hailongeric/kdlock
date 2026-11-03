@@ -479,7 +479,7 @@ def main():
         guard_dir = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard_dir)
         rt.command(["make", "-C", guard_dir, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        workload = source / "tests/kernel/jit_native_call/payload/jit_native_call_test.ko"
+        workload = source / "tests/kernel/jit_native_call/fixture/jit_native_call_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}", f"NATIVE_CALL_MODE={args.call_mode}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)

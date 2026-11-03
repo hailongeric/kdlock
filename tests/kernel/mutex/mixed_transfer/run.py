@@ -462,7 +462,7 @@ def main():
         guard = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard)
         rt.command(["make", "-C", guard, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        payload = source / "tests/kernel/mutex/mixed_transfer/payload/kd_mutex_mixed_transfer.ko"
+        payload = source / "tests/kernel/mutex/mixed_transfer/fixture/kd_mutex_mixed_transfer.ko"
         rt.command(["make", "-C", payload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}", f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"],
                    out / "build-payload.log", timeout=180)

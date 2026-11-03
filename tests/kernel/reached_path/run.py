@@ -136,7 +136,7 @@ def main():
                     "KDLOCK_MUTEX_NUMA_BOUNDARY=1024", "UBSAN_SANITIZE=n"],
                    out / "build-provider.log", timeout=300)
         result["provider_build_passed"] = True
-        fixture = source / f"tests/kernel/reached_path/payload/{MODULE}.ko"
+        fixture = source / f"tests/kernel/reached_path/fixture/{MODULE}.ko"
         rt.command(["make", "-C", fixture.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
                     f"KDLOCK_REACHED_SOURCE={source / 'kernel_module/kd_reached.c'}"],

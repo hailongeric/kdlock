@@ -11,7 +11,7 @@
 #include <sys/statfs.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include "payload/api.h"
+#include "fixture/api.h"
 #define PAGES 64
 #define CHECK(c) do { if (!(c)) { perror(#c); fprintf(stderr, "line %d\n", __LINE__); exit(1); } } while (0)
 int main(int argc, char **argv)

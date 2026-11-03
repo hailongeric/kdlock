@@ -550,7 +550,7 @@ def main():
         guard_dir = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard_dir)
         rt.command(["make", "-C", guard_dir, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        workload = source / "tests/kernel/jit_continuation/payload/jit_continuation_test.ko"
+        workload = source / "tests/kernel/jit_continuation/fixture/jit_continuation_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
                     f"JIT_CONTINUATION_FAMILY={args.family}",

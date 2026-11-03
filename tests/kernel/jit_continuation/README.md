@@ -3,7 +3,7 @@
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). The runner freezes the source,
 including private `.inc` implementation files, and builds the provider, daemon,
-allocator guard and [kernel payload](payload/README.md)
+allocator guard and [kernel payload](fixture/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
 
 ## Reached execution mode

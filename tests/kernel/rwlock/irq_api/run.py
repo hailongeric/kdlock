@@ -86,7 +86,7 @@ def main():
             shutil.copyfile(ROOT / relative, target)
         rt.write_json(out / 'source-sha256.json', hashes)
         provider = source / 'kernel_module/kdlock_km.ko'
-        probe = source / ('tests/kernel/rwlock/irq_api/payload/' + MODULE + '.ko')
+        probe = source / ('tests/kernel/rwlock/irq_api/fixture/' + MODULE + '.ko')
         rt.command(['make', '-C', provider.parent, f'KDIR={args.kernel_source}',
                     'W=1', 'KDLOCK_SELFTEST=0', 'UBSAN_SANITIZE=n'], out / 'build-provider.log', timeout=180)
         rt.command(['make', '-C', probe.parent, f'KDIR={args.kernel_source}',
