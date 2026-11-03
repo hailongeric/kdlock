@@ -880,3 +880,18 @@ it correctly returned EOVERFLOW. Update that known table read to use the same
 validated paged reader. Preserve failures from all other attributes and retain
 the complete table in the snapshot. No application body was activated by this
 attempt. Add a focused old/new provider snapshot check before retrying.
+
+
+## Returning CPU notification
+
+The `00af410a` run activated the provider and reached munmap generation87,
+then stopped at `kick_process+0x18`, `ffffffff8148f9f8`, a GS CPU-number
+comparison. Exact scope5 `include/linux/sched.h:2000` and
+`kernel/sched/core.c:3404-3424` define the general one-task-pointer void API.
+Its Native body disables preemption, compares the caller CPU to the target
+task CPU, conditionally sends a reschedule notification, and balances its
+preemption state. Execute this declared API once on O, preserving the source
+task reference, CPU identity and notification semantics; then resume E.
+Use the existing atomic-compatible context and exact CALL/ACK records.
+No MM body or private scheduler helper is registered. Preserve the failed
+attempt and validate the descriptor/context plus actual thread/process runs.
