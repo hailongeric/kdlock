@@ -786,3 +786,25 @@ and MM modules and run the focused VM checks.
 Shared benchmark body headers use `body` in their filenames. Update their
 include paths and private include markers together. Saved source inventories
 and prior baseline lookup paths continue to identify the original artifacts.
+
+## Reached relative branch completion
+
+The `c2ee2298` attempt passed the stack bit updates and reached generation 11
+at mmap entry `ffffffff817b6f68`. It stopped on CS-prefixed relative CALL in
+`__rb_insert_augmented`, `ffffffff826cd5cb`; another root reached the same
+form at `ffffffff826cd699`. Decode the complete reached E8 instruction and
+its actual signed displacement. Keep rotation callbacks on E through the
+ordinary call/return path; do not add a Native MM-body service.
+
+Admit CS-prefixed near E8/E9/EB CALL/JMP with the existing 15-byte limit,
+full-prefix next IP and signed displacement. CALL writes that exact next IP
+once; JMP writes no stack word. Preserve flags, source failures and failed
+stack-write behavior. Operand-size override, LOCK and REP for this slice stay
+unsupported before effects. Validate forward/backward targets, repeated CS,
+prefix order, complete CALL/RET, truncation and failure before the next run.
+
+The separate resident log cursor reported an overrun in that attempt. Retain
+it as an observation failure as well as retaining the execution stop. The next
+frozen diagnostic launcher drains its cursor every 10 ms rather than every
+second; it still fails on any lost records. No execution or retirement check
+is relaxed, and prior logs are never relabeled as a complete run.
