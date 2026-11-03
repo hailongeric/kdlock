@@ -605,3 +605,24 @@ This is successful configuration cleanup, not completed mmap1 execution.
 Design `6b24d82d` updates that known table read to use validated pages and
 retains errors from every other parameter. A focused old/new snapshot fixture
 is added; fresh VM checks and both actual application models remain required.
+
+
+## Nineteenth candidate: `00af410a`
+
+Exact source: `00af410a1e2a895a1d2c6c7c3c3a165f993b4884`. All eight
+focused drivers and67,608 resident checks passed ([checks](nineteenth-checks.json)).
+Provider/observer builds, loads and preparation passed, and actual MM
+delegation activated. On boot `5a5f1b26-143e-4130-9932-b2e8714684cd`,
+munmap generation87, O11917/E11858, entry `ffffffff8181c73b`, stopped on
+GS CMP at `ffffffff8148f9f8` in `kick_process`. The complete available
+[resident log](nineteenth-resident-kernel.log) and controller state are kept.
+This remains undrained application failure, with no completed worker proof;
+the process model was not run. Normal serial records were preserved before
+recovery to idle boot `7de8564f-fdcc-4d2e-941e-3a97b98a96dc`.
+
+Design `e6be1d7c` adds the one-argument void public CPU-notification API to
+the existing returning Native service. Its [exact source inventory](cpu-notification-source.json)
+binds the original CPU comparison, notification and balanced preemption body.
+O executes that API; E continues the retained MM algorithm afterward. The
+caller-owned task reference and exact ACK remain required. Fresh context
+checks and actual thread/process validation are pending.

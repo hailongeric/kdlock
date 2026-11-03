@@ -80,7 +80,7 @@ int main(void)
 	};
 	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0, allocators = 0;
 	unsigned int conditional = 0, page_allocators = 0, page_accounting = 0;
-	unsigned int memcg_accounting = 0, page_release = 0;
+	unsigned int memcg_accounting = 0, page_release = 0, cpu_notifications = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -323,6 +323,13 @@ int main(void)
 						kd_service_native_executor_pinned(primitive->context_kind, 1));
 				}
 		}
+		if (!strcmp(primitive->symbol, "kick_process")) {
+			++cpu_notifications;
+			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
+				primitive->context_kind == KD_SERVICE_CALL_ATOMIC_ORIGIN);
+			CHECK(!kd_service_native_executor_pinned(primitive->context_kind, 0) &&
+				kd_service_native_executor_pinned(primitive->context_kind, 1));
+		}
 		if (!strcmp(primitive->symbol, "down_write") || !strcmp(primitive->symbol, "up_write")) {
 			++writers;
 			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
@@ -343,6 +350,7 @@ int main(void)
 	CHECK(page_accounting == 0x3f);
 	CHECK(memcg_accounting == 0xf);
 	CHECK(page_release == 0x3f);
+	CHECK(cpu_notifications == 1);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

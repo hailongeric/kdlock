@@ -101,6 +101,9 @@ KD_SERVICE_CALL(__SCT__cond_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(__SCT__might_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(dynamic_cond_resched, 0, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(dynamic_might_resched, 0, KD_SERVICE_CALL_WORD)
+/* kernel/sched/core.c: void (task *); retain the caller CPU and task
+ * lifetime across the complete returning notification on the origin. */
+KD_SERVICE_CONTEXT(kick_process, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* Native preemption entries are void (void). Keep exact thunks/static-call
  * targets so the running kernel still selects whether to reschedule. They
  * permit preemptible RCU, but never a retained spin or preempt-count pin. */
