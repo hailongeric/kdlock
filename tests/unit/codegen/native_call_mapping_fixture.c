@@ -202,8 +202,10 @@ int main(void)
 		snprintf(names[i], 5, "%04u", i); names[i][4] = 'q';
 		batch[i] = good; batch[i].source.symbol = names[i]; batch[i].source.target += i * 16;
 	}
-	CHECK(kd_service_call_register_mapped(batch, 80, &owner) == -ENOSPC && !kd_service_call_count);
-	for (i = 0; i < KD_SERVICE_CALL_MAX; ++i) CHECK(!kd_service_call_entries[i].active);
+	CHECK(!kd_service_call_register_mapped(batch, 80, &owner) && kd_service_call_count == 80);
+	for (i = 0; i < KD_SERVICE_CALL_MAX; ++i) CHECK(kd_service_call_entries[i].active == (i < 80));
+	CHECK(kd_service_call_register_mapped(batch, 49, &owner) == -ENOSPC && kd_service_call_count == 80);
+	for (i = 0; i < KD_SERVICE_CALL_MAX; ++i) CHECK(kd_service_call_entries[i].active == (i < 80));
 	printf("Native argument mapping: %u checks, 0 failures\n", checks);
 	return 0;
 }

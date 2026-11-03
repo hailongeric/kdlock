@@ -170,8 +170,8 @@ int main(void)
 			unsigned int j, lines = 0;
 			parameter.arg = (void *)(unsigned long)page;
 			used = kd_service_call_page_get(snapshot, &parameter);
-			CHECK(used > 0 && used < PAGE_SIZE && snapshot[used] == 0);
-			for (j = 0; j < used; ++j) lines += snapshot[j] == '\n';
+			CHECK(used > 0 && used < (int)PAGE_SIZE && snapshot[used] == 0);
+			for (j = 0; j < (unsigned int)used; ++j) lines += snapshot[j] == '\n';
 			CHECK(lines == 16); rows += lines;
 		}
 		CHECK(rows == 128);

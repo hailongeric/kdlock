@@ -17,7 +17,6 @@
 #define KD_SERVICE_CALL_MAX 128U
 #define KD_SERVICE_CALL_NAME 96U
 #define KD_SERVICE_CALL_ROWS_PER_PAGE 16U
-_Static_assert(KD_SERVICE_CALL_ROWS_PER_PAGE * 160U < PAGE_SIZE, "discovery rows fit one page");
 struct kd_service_call_entry {
 	unsigned long target;
 	struct module *owner;
@@ -534,6 +533,7 @@ static int kd_service_call_state_get(char *buffer, const struct kernel_param *pa
 
 static int kd_service_call_page_get(char *buffer, const struct kernel_param *parameter)
 {
+	_Static_assert(KD_SERVICE_CALL_ROWS_PER_PAGE * 160U < PAGE_SIZE, "discovery rows fit one page");
 	unsigned long page = (unsigned long)parameter->arg;
 	unsigned int i, end;
 	int used = 0;

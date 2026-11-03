@@ -571,3 +571,19 @@ Registration slots, cookies, Native context, source references and request
 retirement remain unchanged. Unit coverage is updated for the expanded
 publication contract, including legacy overflow, full registry capacity,
 missing/changed/misplaced rows and empty pages. Fresh VM validation is pending.
+
+
+## Seventeenth candidate: `d9a9e529`
+
+Exact source: `d9a9e5295ea22ce09ca67df295e1da89abd764f3`. The focused
+VM checks found fixture compilation issues: two signed comparisons and a
+page-size assertion included in a context-only fixture. The mapped-registry
+fixture also still expected the former single-page capacity rejection.
+These were failures, and the resident/module/application stages did not run;
+[all check results](seventeenth-checks.json) are retained.
+
+The correction keeps the compile-time page bound in the actual page getter,
+uses explicit checked comparison types, and updates mapped publication to
+require the complete80-row registration plus an unchanged128-slot capacity
+rejection. It preserves every old ownership/context check and adds page
+completeness coverage. Fresh focused VM checks remain required.
