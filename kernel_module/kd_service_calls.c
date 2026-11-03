@@ -16,6 +16,8 @@
 
 #define KD_SERVICE_CALL_MAX 128U
 #define KD_SERVICE_CALL_NAME 96U
+#define KD_SERVICE_CALL_ROWS_PER_PAGE 16U
+_Static_assert(KD_SERVICE_CALL_ROWS_PER_PAGE * 160U < PAGE_SIZE, "discovery rows fit one page");
 struct kd_service_call_entry {
 	unsigned long target;
 	struct module *owner;
@@ -29,6 +31,7 @@ struct kd_service_call_entry {
 };
 static struct kd_service_call_entry kd_service_call_entries[KD_SERVICE_CALL_MAX];
 static unsigned int kd_service_call_count;
+static u64 kd_service_call_generation;
 static bool kd_service_call_frozen;
 static DEFINE_MUTEX(kd_service_call_configuration);
 
@@ -125,8 +128,9 @@ static int kd_service_call_format(char *buffer, size_t size, u64 cookie,
 		(unsigned long long)cookie, target, nargs, result_kind, context_kind, symbol);
 }
 
-/* Validate the exact exported snapshot before publishing any of this batch.
- * Internal slot capacity and one-page discovery capacity are separate bounds. */
+/* Validate complete bounded rows before publishing any of this batch.
+ * Discovery exports16 immutable slots per page; the old full-table reader
+ * still reports overflow when its complete snapshot exceeds one page. */
 static int kd_service_call_configuration_size(const struct kd_service_call_desc *descs,
 	unsigned int count)
 {
@@ -156,7 +160,7 @@ static int kd_service_call_configuration_size(const struct kd_service_call_desc 
 		bytes += length;
 	}
 	/* snprintf's final NUL occupies one byte in the fixed PAGE_SIZE buffer. */
-	return bytes < PAGE_SIZE ? 0 : -ENOSPC;
+	return bytes < KD_SERVICE_CALL_MAX * sizeof(row) ? 0 : -ENOSPC;
 }
 
 int kd_service_call_register(const struct kd_service_call_desc *descs,
@@ -216,6 +220,7 @@ int kd_service_call_register(const struct kd_service_call_desc *descs,
 		/* A reader can only inspect fully initialized immutable entries. */
 		smp_store_release(&kd_service_call_count, kd_service_call_count + 1);
 	}
+	++kd_service_call_generation;
 out:
 	mutex_unlock(&kd_service_call_configuration);
 	return result;
@@ -252,7 +257,7 @@ static int kd_service_call_mapped_configuration_size(
 			return -EOVERFLOW;
 		bytes += length;
 	}
-	return bytes < PAGE_SIZE ? 0 : -ENOSPC;
+	return bytes < KD_SERVICE_CALL_MAX * sizeof(row) ? 0 : -ENOSPC;
 }
 
 int kd_service_call_register_mapped(const struct kd_service_call_mapped_desc *descs,
@@ -313,6 +318,7 @@ int kd_service_call_register_mapped(const struct kd_service_call_mapped_desc *de
 		smp_store_release(&entry->active, true);
 		smp_store_release(&kd_service_call_count, kd_service_call_count + 1);
 	}
+	++kd_service_call_generation;
 out:
 	mutex_unlock(&kd_service_call_configuration);
 	return result;
@@ -342,8 +348,10 @@ int kd_service_call_unregister(struct module *owner)
 			goto out;
 		}
 	for (i = 0; i < kd_service_call_count; ++i)
-		if (kd_service_call_entries[i].owner == owner)
+		if (kd_service_call_entries[i].owner == owner && kd_service_call_entries[i].active) {
 			smp_store_release(&kd_service_call_entries[i].active, false);
+			++kd_service_call_generation;
+		}
 out:
 	mutex_unlock(&kd_service_call_configuration);
 	return result;
@@ -510,6 +518,59 @@ static int kd_service_call_table_get(char *buffer, const struct kernel_param *pa
 	mutex_unlock(&kd_service_call_configuration);
 	return used;
 }
+static int kd_service_call_state_get(char *buffer, const struct kernel_param *parameter)
+{
+	int used;
+	unsigned int i, active = 0;
+
+	(void)parameter;
+	mutex_lock(&kd_service_call_configuration);
+	for (i = 0; i < kd_service_call_count; ++i) active += kd_service_call_entries[i].active;
+	used = snprintf(buffer, PAGE_SIZE, "%llu %u %u\n",
+		(unsigned long long)kd_service_call_generation, kd_service_call_count, active);
+	mutex_unlock(&kd_service_call_configuration);
+	return used;
+}
+
+static int kd_service_call_page_get(char *buffer, const struct kernel_param *parameter)
+{
+	unsigned long page = (unsigned long)parameter->arg;
+	unsigned int i, end;
+	int used = 0;
+
+	if (page >= KD_SERVICE_CALL_MAX / KD_SERVICE_CALL_ROWS_PER_PAGE)
+		return -EINVAL;
+	mutex_lock(&kd_service_call_configuration);
+	end = (page + 1) * KD_SERVICE_CALL_ROWS_PER_PAGE;
+	for (i = page * KD_SERVICE_CALL_ROWS_PER_PAGE; i < end && i < kd_service_call_count; ++i) {
+		const struct kd_service_call_entry *entry = &kd_service_call_entries[i];
+		int length;
+
+		if (!entry->active) continue;
+		length = kd_service_call_format(buffer + used, PAGE_SIZE - used,
+			entry->cookie, entry->target, entry->nargs, entry->result_kind,
+			entry->context_kind, entry->symbol);
+		if (length < 0 || (size_t)length >= PAGE_SIZE - used) {
+			used = -EOVERFLOW; break;
+		}
+		used += length;
+	}
+	mutex_unlock(&kd_service_call_configuration);
+	return used;
+}
+
+static const struct kernel_param_ops kd_service_call_state_ops = { .get = kd_service_call_state_get };
+static const struct kernel_param_ops kd_service_call_page_ops = { .get = kd_service_call_page_get };
+module_param_cb(service_call_table_state, &kd_service_call_state_ops, NULL, 0444);
+module_param_cb(service_call_page_0, &kd_service_call_page_ops, (void *)0UL, 0444);
+module_param_cb(service_call_page_1, &kd_service_call_page_ops, (void *)1UL, 0444);
+module_param_cb(service_call_page_2, &kd_service_call_page_ops, (void *)2UL, 0444);
+module_param_cb(service_call_page_3, &kd_service_call_page_ops, (void *)3UL, 0444);
+module_param_cb(service_call_page_4, &kd_service_call_page_ops, (void *)4UL, 0444);
+module_param_cb(service_call_page_5, &kd_service_call_page_ops, (void *)5UL, 0444);
+module_param_cb(service_call_page_6, &kd_service_call_page_ops, (void *)6UL, 0444);
+module_param_cb(service_call_page_7, &kd_service_call_page_ops, (void *)7UL, 0444);
+
 static const struct kernel_param_ops kd_service_call_table_ops = {
 	.get = kd_service_call_table_get,
 };

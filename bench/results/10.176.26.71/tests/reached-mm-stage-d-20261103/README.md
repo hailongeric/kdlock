@@ -545,3 +545,29 @@ own canonical bundle. Original profile identities remain unchanged. Both
 module runners and the actual MM controller use the same explicit label; the
 new runtime profile requires exactly the16MiB log argument. Fresh bundle
 verification, focused checks and the two application runs remain required.
+
+
+## Sixteenth candidate: `9dc0fbf3`
+
+Exact source: `9dc0fbf310134840e9198c632c87702ded6f9935`. The separate
+diagnostic bundle passed full source/build/installed/runtime verification;
+only explicit variant and runtime policy differ from its preserved base.
+The log-buffer syscall reported16,777,216 bytes on boot
+`5a5f1b26-143e-4130-9932-b2e8714684cd`; see [boot](log16-boot.json) and
+[bundle derivation](log16-bundle.json). Four focused unit drivers and67,608
+resident checks passed ([checks](sixteenth-checks.json)).
+
+Actual provider load returned ENOSPC before factory activation.
+[Ordinary load/lifecycle logs](sixteenth-load.json) retain the failure;
+subsequent idle checks confirmed no remaining project module. No actual
+thread or process run started. Source inspection identified the one-page
+Native descriptor discovery bound; the128-slot registry is retained.
+
+Design `9da1622b` now publishes eight bounded16-slot pages and an exact
+generation/slot/active state. New readers require unchanged before/after state,
+correct cookie/page membership and the complete active count. Existing
+single-table readers receive overflow for an oversized complete table.
+Registration slots, cookies, Native context, source references and request
+retirement remain unchanged. Unit coverage is updated for the expanded
+publication contract, including legacy overflow, full registry capacity,
+missing/changed/misplaced rows and empty pages. Fresh VM validation is pending.

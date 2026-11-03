@@ -23,7 +23,8 @@ def production_code():
     return enums + desc + storage + '\n'.join(definition(source, name) for name in (
         'kd_service_call_context_valid', 'kd_service_call_valid',
         'kd_service_call_format', 'kd_service_call_configuration_size',
-        'kd_service_call_register', 'kd_service_call_table_get')) + '\n'.join(
+        'kd_service_call_register', 'kd_service_call_table_get',
+        'kd_service_call_state_get', 'kd_service_call_page_get')) + '\n'.join(
             definition(native, name) for name in ('kd_service_schedule_origin_allowed',
                 'kd_service_native_executor_pinned', 'kd_service_native_prepare'))
 
@@ -37,10 +38,9 @@ def main():
         ('terminal-wrong-name', (
             'desc->symbol && !strcmp(desc->symbol, "__stack_chk_fail")', 'desc->symbol != NULL')),
         ('registry-64-slots', ('#define KD_SERVICE_CALL_MAX 128U', '#define KD_SERVICE_CALL_MAX 64U')),
-        ('page-nul-overrun', ('return bytes < PAGE_SIZE ? 0 : -ENOSPC;',
-                              'return bytes <= PAGE_SIZE ? 0 : -ENOSPC;')),
-        ('missing-page-check', ('result = kd_service_call_configuration_size(descs, count);',
-                                'result = kd_service_call_configuration_size(descs, 0);')),
+        ('page-window-shifted', ('i = page * KD_SERVICE_CALL_ROWS_PER_PAGE;',
+                                  'i = page * KD_SERVICE_CALL_ROWS_PER_PAGE + 1;')),
+        ('generation-not-advanced', ('++kd_service_call_generation;', '(void)0;')),
         ('terminal-not-admitted', (
             'case KD_SERVICE_CALL_NONRETURNING_ORIGIN:\n\t\t/* The Native terminal',
             'case 999:\n\t\t/* The Native terminal')),

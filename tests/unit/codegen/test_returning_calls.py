@@ -33,6 +33,43 @@ class ReturningCallTests(unittest.TestCase):
         self.assertEqual(status, 0, log)
         return assembly, options
 
+    def test_paged_registry_is_complete_and_exact(self):
+        read = translator.memread.device_session.read_service_call_table
+        from pathlib import Path
+        import tempfile
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name)
+            rows = [f'{i:x} {0xffffffff81000000+i:x} 1 1 2 api_{i}\n' for i in range(1, 129)]
+            state = directory / 'service_call_table_state'
+            state.write_text('128 128 128\n')
+            for page in range(8):
+                (directory / f'service_call_page_{page}').write_text(''.join(rows[page*16:(page+1)*16]))
+            self.assertEqual(read(directory), ''.join(rows))
+            (directory / 'service_call_page_7').unlink()
+            with self.assertRaises(FileNotFoundError): read(directory)
+            (directory / 'service_call_page_7').write_text(''.join(rows[112:]))
+            (directory / 'service_call_page_0').write_text(''.join(rows[1:16]))
+            with self.assertRaises(ValueError): read(directory)
+            (directory / 'service_call_page_0').write_text(''.join(rows[:16]))
+            (directory / 'service_call_page_1').write_text(rows[0]+''.join(rows[17:32]))
+            with self.assertRaises(ValueError): read(directory)
+            (directory / 'service_call_page_1').write_text(''.join(rows[16:32]))
+            original = Path.read_text
+            calls = []
+            def changing(path, *args, **kwargs):
+                if path == state:
+                    calls.append(1)
+                    if len(calls) == 2: return '129 128 128\n'
+                return original(path, *args, **kwargs)
+            with patch.object(Path, 'read_text', changing):
+                with self.assertRaises(ValueError): read(directory)
+            state.write_text('1 1 1\n')
+            for page in range(8): (directory / f'service_call_page_{page}').write_text(rows[0] if page==0 else '')
+            self.assertEqual(read(directory), rows[0])
+            state.unlink()
+            (directory / 'service_call_table').write_text(rows[0])
+            self.assertEqual(read(directory), rows[0])
+
     def test_declared_call_keeps_body_and_exact_flags_successor(self):
         assembly, options = self.emit()
         self.assertEqual(options['requirements'], 896)

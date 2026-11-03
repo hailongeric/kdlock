@@ -6,6 +6,16 @@ import re
 import signal
 import struct
 
+def read_service_call_table(directory):
+    import importlib.util
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[3] / 'disassem/device_session.py'
+    spec = importlib.util.spec_from_file_location('kd_helper_discovery', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.read_service_call_table(directory)
+
+
 import bench_runtime as rt
 from killable_mode import DEVICE, PARAMETERS, RELEASE, control, snapshot, trace_events, session_class as killable_session
 
@@ -247,7 +257,7 @@ def session_class(base):
                 rt.require(state['registered'] == 1 and not state['errors'],
                            'primitive fixture registration failed', 'DATA_ERROR')
                 self.helper_descriptors, self.helper_table_before = call_table(
-                    (PARAMETERS / 'service_call_table').read_text())
+                    read_service_call_table(PARAMETERS))
                 try:
                     control(UNREGISTER)
                 except OSError as error:
@@ -380,7 +390,7 @@ def session_class(base):
             state = helper_snapshot()
             rt.require(state['registered'] == 0 and not state['errors'],
                        'primitive registration did not retire after source closure', 'UNDRAINED')
-            lines = (PARAMETERS / 'service_call_table').read_text().splitlines()
+            lines = read_service_call_table(PARAMETERS).splitlines()
             rt.require(not any(line.split()[-1] in SYMBOLS for line in lines if line.split()),
                        'primitive declarations remain after unregister', 'UNDRAINED')
             expected = [row for row in self.helper_table_before if row['symbol'] not in SYMBOLS]

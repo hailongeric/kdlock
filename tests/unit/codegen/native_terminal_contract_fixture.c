@@ -10,7 +10,7 @@
 typedef uint64_t u64;
 typedef int atomic_t;
 struct module;
-struct kernel_param { int unused; };
+struct kernel_param { void *arg; };
 #define PAGE_SIZE 4096U
 #define CONFIG_PREEMPT_RCU 1
 #define IS_ENABLED(option) (option)
@@ -97,9 +97,9 @@ int main(void)
 		.context_kind = KD_SERVICE_CALL_NONRETURNING_ORIGIN,
 	};
 	struct kd_service_call_desc descs[64], candidate;
-	char names[64][96], snapshot[PAGE_SIZE], before[PAGE_SIZE], row[160];
-	unsigned int checks = 0, i, count;
-	int used, length, minimum, desired;
+	char names[64][96], snapshot[PAGE_SIZE], before[PAGE_SIZE];
+	unsigned int checks = 0, i;
+	int used;
 	struct kd_native_owner owners[] = {
 		{ .object = 0x1100, .kind = KD_NATIVE_OWNER_SPIN, .held = true },
 		{ .object = 0x1200, .kind = KD_NATIVE_OWNER_PREEMPT, .held = true },
@@ -158,56 +158,30 @@ int main(void)
 		names[i][95] = 0;
 		descs[i].target += 0x100000;
 	}
-	CHECK(kd_service_call_register(descs, 63, NULL) == -ENOSPC);
-	CHECK(kd_service_call_count == 65);
-	CHECK(kd_service_call_table_get(snapshot, NULL) == used);
-	CHECK(!memcmp(before, snapshot, used + 1));
-	for (i = 65; i < KD_SERVICE_CALL_MAX; ++i)
-		CHECK(!kd_service_call_entries[i].active);
-
-	/* Fill with actual registered rows, then test exactly PAGE_SIZE bytes
-	 * versus PAGE_SIZE-1 bytes. The first batch must remain unpublished. */
-	memset(kd_service_call_entries, 0, sizeof(kd_service_call_entries));
-	kd_service_call_count = 0;
-	used = 0;
-	for (i = 0; i < 64; ++i) {
-		memset(names[0], 'q', 95);
-		snprintf(names[0], 9, "row_%04u", i);
-		names[0][8] = 'q';
-		names[0][95] = 0;
-		candidate = (struct kd_service_call_desc) {
-			.symbol = names[0], .target = 0xffffffff83000000UL + i,
-			.result_kind = KD_SERVICE_CALL_VOID,
-			.context_kind = KD_SERVICE_CALL_ATOMIC_ORIGIN,
-		};
-		length = kd_service_call_format(row, sizeof(row), i + 1, candidate.target,
-			0, candidate.result_kind, candidate.context_kind, candidate.symbol);
-		minimum = length - 95 + 9;
-		desired = PAGE_SIZE - used;
-		if (desired <= length) {
-			CHECK(desired > minimum);
-			names[0][95 - (length - desired)] = 0;
-			count = kd_service_call_count;
-			CHECK(kd_service_call_register(&candidate, 1, NULL) == -ENOSPC);
-			CHECK(kd_service_call_count == count);
-			CHECK(!kd_service_call_entries[count].active);
-			names[0][strlen(names[0]) - 1] = 0;
-			CHECK(!kd_service_call_register(&candidate, 1, NULL));
-			CHECK(kd_service_call_table_get(snapshot, NULL) == PAGE_SIZE - 1);
-			CHECK(snapshot[PAGE_SIZE - 1] == 0);
-			break;
+	/* A larger roster publishes completely through bounded pages; an old
+	 * one-page reader reports overflow rather than returning a prefix. */
+	CHECK(!kd_service_call_register(descs, 63, NULL));
+	CHECK(kd_service_call_count == 128 && kd_service_call_generation == 3);
+	CHECK(kd_service_call_table_get(snapshot, NULL) == -EOVERFLOW);
+	{
+		unsigned int page, rows = 0;
+		struct kernel_param parameter;
+		for (page = 0; page < 8; ++page) {
+			unsigned int j, lines = 0;
+			parameter.arg = (void *)(unsigned long)page;
+			used = kd_service_call_page_get(snapshot, &parameter);
+			CHECK(used > 0 && used < PAGE_SIZE && snapshot[used] == 0);
+			for (j = 0; j < used; ++j) lines += snapshot[j] == '\n';
+			CHECK(lines == 16); rows += lines;
 		}
-		/* Leave enough bytes for a distinct final row at the exact boundary. */
-		if (desired - length <= minimum) {
-			int shortening = minimum + 1 - (desired - length);
-
-			names[0][95 - shortening] = 0;
-			length -= shortening;
-		}
-		CHECK(!kd_service_call_register(&candidate, 1, NULL));
-		used += length;
+		CHECK(rows == 128);
+		parameter.arg = (void *)8UL;
+		CHECK(kd_service_call_page_get(snapshot, &parameter) == -EINVAL);
+		CHECK(kd_service_call_state_get(snapshot, NULL) > 0 && !strcmp(snapshot, "3 128 128\n"));
 	}
-	CHECK(i < 64);
-	printf("Native terminal and exact one-page registry: checks=%u\n", checks);
+	candidate = terminal; candidate.symbol = "extra_call"; candidate.target += 0x10000000;
+	CHECK(kd_service_call_register(&candidate, 1, NULL) == -ENOSPC);
+	CHECK(kd_service_call_count == 128 && kd_service_call_generation == 3);
+	printf("Native terminal and bounded registry pages: checks=%u\n", checks);
 	return 0;
 }

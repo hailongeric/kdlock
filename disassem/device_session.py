@@ -298,10 +298,10 @@ def origin_context_read():
     return _origin_context_read
 
 
-def parse_service_calls(text):
+def parse_service_calls(text, *, max_bytes=4096):
     """Parse one bounded registry snapshot, without inventing call contracts."""
     result, cookies = {}, set()
-    if not isinstance(text, str) or len(text) > 4096:
+    if not isinstance(text, str) or len(text) > max_bytes or max_bytes > 32768:
         raise ValueError("invalid returning CALL registry snapshot")
     for line in text.splitlines():
         fields = line.split()
@@ -324,13 +324,48 @@ def parse_service_calls(text):
     return result
 
 
+def read_service_call_table(directory=None):
+    """Read one exact bounded registry, with an old-provider alternative."""
+    directory = Path(directory) if directory is not None else Path('/sys/module/kdlock_km/parameters')
+    state_path = directory / 'service_call_table_state'
+    try:
+        before = state_path.read_text(encoding='ascii')
+    except FileNotFoundError:
+        text = (directory / 'service_call_table').read_text(encoding='ascii')
+        parse_service_calls(text)
+        return text
+    fields = before.split()
+    if len(fields) != 3 or not all(re.fullmatch(r'[0-9]+', value) for value in fields):
+        raise ValueError('invalid Native discovery state')
+    generation, slots, active = map(int, fields)
+    if not 0 <= active <= slots <= 128 or not 0 <= generation <= 256:
+        raise ValueError('Native discovery state exceeds its bounds')
+    texts, cookies, targets, symbols = [], set(), set(), set()
+    for page in range(8):
+        text = (directory / f'service_call_page_{page}').read_text(encoding='ascii')
+        rows = parse_service_calls(text)
+        for target, row in rows.items():
+            cookie = row['cookie']
+            if (not page * 16 < cookie <= min(slots, (page + 1) * 16) or
+                    cookie in cookies or target in targets or row['symbol'] in symbols):
+                raise ValueError('Native discovery page membership differs')
+            cookies.add(cookie); targets.add(target); symbols.add(row['symbol'])
+        texts.append(text)
+    if state_path.read_text(encoding='ascii') != before:
+        raise ValueError('Native discovery changed while being read')
+    if len(cookies) != active:
+        raise ValueError('Native discovery active count differs')
+    text = ''.join(texts)
+    parse_service_calls(text, max_bytes=32768)
+    return text
+
+
 def service_calls():
     """Read exact declarations from the provider pinned by this device lease."""
     require()
     if not _origin_call:
         return {}
-    path = Path('/sys/module/kdlock_km/parameters/service_call_table')
-    return parse_service_calls(path.read_text(encoding='ascii'))
+    return parse_service_calls(read_service_call_table(), max_bytes=32768)
 
 
 def parse_rwsem_controls(text):
