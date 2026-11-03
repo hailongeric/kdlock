@@ -1,4 +1,4 @@
-"""Explicit prewarmed execution environment for an unchanged application run.
+"""Explicit execution environment for an unchanged application run.
 
 The controller owns load/prepare/activate/deactivate and normal retirement.
 This verifier admits only its frozen module/daemon/registry, and does not prove
@@ -9,6 +9,7 @@ import hashlib
 import os
 from pathlib import Path
 import stat
+import sys
 
 import bench_runtime as rt
 
@@ -16,6 +17,14 @@ PARAMETERS = Path('/sys/module/kdlock_km/parameters')
 NOTE = Path('/sys/module/kdlock_km/notes/.note.gnu.build-id')
 PROC = Path('/proc')
 DEVICE = Path('/dev/kd_dev')
+
+
+def reached_observations():
+    directory = Path(__file__).resolve().parents[2] / 'tests/kernel/jit_continuation'
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
+    from reached_mode import parse_stats
+    return parse_stats((PARAMETERS / 'reached_stats').read_text())
 
 
 def module_note_sha256(path):
@@ -82,6 +91,11 @@ class ExecutionSession:
         rt.require(rt.digest(self.path) == sha256, 'execution-session receipt bytes differ', 'DATA_ERROR')
         self.expected = json.loads(self.path.read_text())
         expected = self.expected
+        self.execution_mode = expected.get('execution_mode', 'image')
+        if self.execution_mode == 'reached':
+            self._init_reached()
+            return
+        rt.require(self.execution_mode == 'image', 'unknown execution-session mode', 'DATA_ERROR')
         rt.require(expected.get('schema') == 1 and expected.get('boot_id') and
                    expected.get('source', {}).get('state') == 0 and
                    set(expected['source']) == {'state', 'modules', 'writers'} and
@@ -117,6 +131,11 @@ class ExecutionSession:
                    'exact daemon writable-device descriptor required', 'DATA_ERROR')
 
     def identity(self):
+        if self.execution_mode == 'reached':
+            return dict(path=str(self.path), sha256=self.sha256, execution_mode='reached',
+                        provider_sha256=self.expected['provider']['sha256'],
+                        preparer_pid=self.expected['preparer']['pid'], daemon_pid=None,
+                        device_writers=[], delegated_execution_proved=False)
         return dict(path=str(self.path), sha256=self.sha256,
                     provider_sha256=self.expected['provider']['sha256'],
                     daemon_pid=self.expected['daemon']['pid'],
@@ -126,6 +145,8 @@ class ExecutionSession:
                     delegated_execution_proved=False)
 
     def verify(self, *, allow_identity_probe=False):
+        if self.execution_mode == 'reached':
+            return self._verify_reached(allow_identity_probe=allow_identity_probe)
         expected = self.expected
         rt.require(rt.digest(self.path) == self.sha256 and json.loads(self.path.read_text()) == expected and
                    Path('/proc/sys/kernel/random/boot_id').read_text().strip() == expected['boot_id'],
@@ -183,4 +204,87 @@ class ExecutionSession:
         bindings = int((PARAMETERS / 'rwsem_provider_bindings').read_text())
         rt.require(bindings >= 1, 'active factory has no source binding lease', 'UNDRAINED')
         return dict(source=source, bindings=bindings,
+                    binding_drain_proved=False, application_delegation_proved=False)
+
+    def _init_reached(self):
+        expected = self.expected
+        source, values = expected.get('source', {}), expected.get('parameters', {})
+        rt.require(expected.get('schema') == 2 and expected.get('boot_id') and
+                   set(source) == {'state', 'modules', 'writers'} and source.get('state') == 0 and
+                   type(source.get('modules')) is int and source['modules'] >= 0 and
+                   type(source.get('writers')) is int and source['writers'] == 0 and
+                   expected.get('registry') == [] and expected.get('device_writers') == [] and
+                   'daemon' not in expected,
+                   'image-free execution-session source/writer/image contract differs', 'DATA_ERROR')
+        rt.require(values.get('service_reached') == 'Y' and values.get('rwsem_provider_active') == 'Y' and
+                   values.get('rwsem_provider_mode') == 'active' and values.get('jit_timing') == 'N' and
+                   values.get('service_trace') in ('Y', 'N'),
+                   'explicit active reached provider required', 'DATA_ERROR')
+        preparer, provider, files = expected.get('preparer', {}), expected.get('provider', {}), expected.get('files', {})
+        rt.require(type(preparer.get('pid')) is int and preparer['pid'] > 0 and
+                   type(preparer.get('start_ticks')) is int and preparer['start_ticks'] > 0 and preparer.get('argv') and
+                   files and files.get(provider.get('path')) == provider.get('sha256') and
+                   files.get(preparer.get('executable')) == preparer.get('executable_sha256'),
+                   'exact reached controller/module input identity required', 'DATA_ERROR')
+        audit = expected.get('writer_sites', {})
+        rt.require(set(audit) == {'path', 'sha256', 'entries'} and files.get(audit['path']) == audit['sha256'] and
+                   audit['entries'] and all(type(value) is int and value > 0 for value in audit['entries']) and
+                   audit['entries'] == sorted(set(audit['entries'])),
+                   'exact builtin writer-site audit required', 'DATA_ERROR')
+        rt.require(rt.digest(Path(audit['path'])) == audit['sha256'] and
+                   sorted(row['entry'] for row in json.loads(Path(audit['path']).read_text())['records']) == audit['entries'],
+                   'writer-site metadata differs from its bound audit', 'DATA_ERROR')
+        self._last_reached_modules = source['modules']
+        self._last_reached_stats = None
+
+    def _verify_reached(self, *, allow_identity_probe=False):
+        expected = self.expected
+        rt.require(rt.digest(self.path) == self.sha256 and json.loads(self.path.read_text()) == expected and
+                   Path('/proc/sys/kernel/random/boot_id').read_text().strip() == expected['boot_id'],
+                   'reached execution-session receipt or boot changed', 'DATA_ERROR')
+        for name, wanted in expected['files'].items():
+            path = Path(name)
+            rt.require(path.is_absolute() and path.is_file() and rt.digest(path) == wanted,
+                       'reached execution-session input changed: ' + name, 'DATA_ERROR')
+        rt.require(NOTE.is_file() and rt.digest(NOTE) == expected['provider']['note_sha256'] and
+                   module_note_sha256(expected['provider']['path']) == expected['provider']['note_sha256'],
+                   'loaded reached provider Build ID note differs', 'DATA_ERROR')
+        preparer = expected['preparer']
+        preparing_task = task_identity(preparer['pid'])
+        rt.require(all(preparing_task[key] == preparer[key] for key in
+                       ('pid', 'start_ticks', 'executable', 'cwd', 'argv')) and not device_writers(),
+                   'reached controller changed or an unrecorded device writer remains', 'UNDRAINED')
+        for name, wanted in expected['parameters'].items():
+            rt.require((PARAMETERS / name).read_text().strip() == wanted,
+                       'reached execution-session parameter changed: ' + name, 'DATA_ERROR')
+        source, observations = rt.status(), reached_observations()
+        rt.require(source['state'] == source['frames'] == source['writers'] == 0 and
+                   source['modules'] >= self._last_reached_modules and
+                   observations['active'] == observations['unsupported'] == 0 and
+                   observations['roots'] == observations['completions'] and not rt.registry(),
+                   'reached source/family/registry state is not drained', 'UNDRAINED')
+        if self._last_reached_stats is not None:
+            rt.require(all(observations[key] >= self._last_reached_stats[key] for key in observations if key != 'active'),
+                       'reached execution observations moved backwards', 'DATA_ERROR')
+        allowed = {'kdlock_km'} | ({'kd_mmap1_identity'} if allow_identity_probe else set())
+        other_modules = {'real_api', 'rwlock_bench', 'rwlock_test', 'rwsem_probe',
+                         'spin_cacheline', 'mutex_cacheline', 'klock_module'}
+        for module in Path('/sys/module').iterdir():
+            rt.require(module.name in allowed or
+                       (module.name not in other_modules and
+                        not module.name.startswith(('kd_', 'jit_', 'tclock_', 'tc_'))),
+                       'another experimental module remains: ' + module.name, 'UNDRAINED')
+        forbidden = {'mmap1_threads', 'mmap1_processes', 'sc_worker', 'rb_worker', 'klock_test', 'kd_test', 'daemon'}
+        for task in Path('/proc').glob('[0-9]*/task/[0-9]*/comm'):
+            try:
+                rt.require(task.read_text().strip() not in forbidden,
+                           'another workload/translator remains: ' + str(task), 'UNDRAINED')
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+        rt.require(task_identity(preparer['pid']) == preparing_task and rt.status() == source and
+                   not device_writers(), 'reached source/controller/writer ledger changed across observation', 'UNDRAINED')
+        bindings = int((PARAMETERS / 'rwsem_provider_bindings').read_text())
+        rt.require(bindings >= 1, 'active reached factory has no source binding lease', 'UNDRAINED')
+        self._last_reached_modules, self._last_reached_stats = source['modules'], observations
+        return dict(source=source, bindings=bindings, reached=observations,
                     binding_drain_proved=False, application_delegation_proved=False)

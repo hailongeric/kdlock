@@ -54,6 +54,24 @@ class Sites(unittest.TestCase):
 
 
 class Readiness(unittest.TestCase):
+    def test_reached_readiness_needs_no_image_or_writer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            item = controller.Controller.__new__(controller.Controller)
+            item.args = SimpleNamespace(execution_mode='reached')
+            item.model = Path(directory)
+            values = dict(service_reached='Y', reached_stats=' '.join(f'{key}=0' for key in controller.reached.STATS))
+            with patch.object(controller.rt, 'parameters', return_value=values), \
+                 patch.object(controller.rt, 'registry', return_value=[]), \
+                 patch.object(controller.rt, 'status', return_value=dict(state=0, frames=0, writers=0)), \
+                 patch.object(controller.bench.execution, 'device_writers', return_value=[]):
+                self.assertEqual(item.ready_reached(), [])
+                with patch.object(controller.rt, 'registry', return_value=[dict(status=0)]), self.assertRaises(controller.rt.Failure):
+                    item.ready_reached()
+                with patch.object(controller.bench.execution, 'device_writers', return_value=[dict(pid=700)]), self.assertRaises(controller.rt.Failure):
+                    item.ready_reached()
+                with patch.object(controller.rt, 'status', return_value=dict(state=0, frames=1, writers=0)), self.assertRaises(controller.rt.Failure):
+                    item.ready_reached()
+
     def test_all_sites_actual_preparer_and_complete_publication_before_activation(self):
         with tempfile.TemporaryDirectory() as directory:
             item = controller.Controller.__new__(controller.Controller)
@@ -83,6 +101,36 @@ class Readiness(unittest.TestCase):
 
 
 class Services(unittest.TestCase):
+    def test_reached_many_roots_on_one_worker_keep_separate_family_ledgers(self):
+        item = controller.Controller.__new__(controller.Controller)
+        item.args = SimpleNamespace(execution_mode='reached')
+        item.audit = dict(records=[dict(entry=0xa000), dict(entry=0xb000)])
+        proof = dict(completed_requests=[dict(origin=101, executor=200, identity=0x1001, generation=1, entry=0xa000)])
+        snapshot = dict(records=[dict(tid=101, backing=0x1100)])
+        lines = []
+        for generation, identity, entry in ((1, 0x1001, 0xa000), (2, 0x1002, 0xb000)):
+            common = f'origin=101 executor=200 identity={identity:x} generation={generation}'
+            family = f'family_generation={generation}'
+            lines += [f'kd_reached event=family {common} {family} entry={entry:x}',
+                      f'kd_service event=enter {common} object=1100 depth=0 entry={entry:x} may_delegate=1 {family}',
+                      f'kd_reached event=service {common} {family} artifact_sequence=2 kind=primitive ip={entry+2:x} target=dead sp=7000']
+            for stage, task in zip(('request', 'enter', 'done', 'resume'), (200, 101, 101, 200)):
+                lines.append(f'kd_service primitive: stage={stage} {common} task={task} sequence=1 target=dead return=beef '
+                             f'image_generation=0 ax=55 flags=202 {family} artifact_sequence=2')
+            lines += [f'kd_reached event=resume {common} {family} artifact_sequence=2 kind=primitive ip={entry+2:x} target=dead sp=7000',
+                      f'kd_service event=release {common} object=1100 depth=0 entry={entry:x} may_delegate=1 {family}',
+                      f'kd_service event=returned {common} object=1100 depth=0 entry={entry:x} may_delegate=1 {family}',
+                      f'kd_reached event=retire {common} {family} entry={entry:x}']
+        messages = '\n'.join(lines)
+        result = item.validate_services(proof, [], messages, snapshot)
+        self.assertEqual((result['captured_worker_roots'], result['other_worker_roots'], result['primitive_transactions']), (2, 1, 2))
+        self.assertEqual(len(result['family_artifact_ledger']), 2)
+        for changed in (messages.replace('family_generation=2 artifact_sequence=2', 'family_generation=1 artifact_sequence=2', 1),
+                        '\n'.join(line for line in lines if not ('event=retire' in line and 'generation=2' in line)),
+                        messages.replace('image_generation=0', 'image_generation=7', 1)):
+            with self.assertRaises(controller.rt.Failure):
+                item.validate_services(proof, [], changed, snapshot)
+
     def test_complete_call_and_gs_test_pairs_with_sequence_and_root_controls(self):
         item = controller.Controller.__new__(controller.Controller)
         root = dict(origin=101, executor=200, identity=0x1001, generation=1, entry=0xA000)

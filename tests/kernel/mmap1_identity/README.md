@@ -110,6 +110,19 @@ retains the current state; it never authorizes forced unload or task exit.
 The second model gets a fresh provider/source session. Scored comparisons
 still require their existing separate correctness and host endpoint receipts.
 
+Use `--execution-mode reached` for resident execution without images or a
+translator. This explicitly selects `service_reached=1`; general provider
+preparation validates and pins all audited writer entries without allocating
+image slots. Its schema-2 execution-session receipt binds the exact module,
+controller and site audit, requires an empty image registry and no writable
+device descriptor, and retains the final source/family retirement checks.
+Each returned worker root must have a matching family, complete service/ACK
+ledger and exact retirement. The syscall-return and delegated downgrade-tail
+criteria remain the same. The default `image` mode preserves its separate
+schema-1 daemon and complete-image contract. Selecting either mode is not
+proof that mmap1 has returned from delegated execution; the runtime joins
+must pass in that specific run.
+
 ## Bounded syscall-return pairing
 
 The optional `pair_limit` observation defaults to zero, preserving the ordinary

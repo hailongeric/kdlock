@@ -441,6 +441,79 @@ class ExecutionContract(unittest.TestCase):
             idle.assert_not_called()
 
 
+class ReachedExecutionContract(unittest.TestCase):
+    def expected(self, root):
+        row = ExecutionContract().expected(root)
+        daemon = row.pop('daemon')
+        row['files'].pop(daemon['executable'])
+        row.update(schema=2, execution_mode='reached', registry=[], device_writers=[])
+        row['source']['writers'] = 0
+        row['parameters']['service_reached'] = 'Y'
+        audit = root/'sites.json'
+        audit.write_text(json.dumps(dict(records=[dict(entry=0x1000), dict(entry=0x2000)])))
+        digest = bench.rt.digest(audit)
+        row['files'][str(audit)] = digest
+        row['writer_sites'] = dict(path=str(audit), sha256=digest, entries=[0x1000, 0x2000])
+        return row
+
+    def test_schema_two_has_no_daemon_writer_or_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);row=self.expected(root);path=root/'session.json'
+            def save(value):
+                path.write_text(json.dumps(value))
+                return bench.execution.ExecutionSession(path,bench.rt.digest(path))
+            session=save(row)
+            self.assertEqual(session.identity()['execution_mode'],'reached')
+            self.assertIsNone(session.identity()['daemon_pid'])
+            changes=(lambda x:x.update(schema=1),lambda x:x.update(daemon={}),
+                     lambda x:x['source'].update(writers=1),lambda x:x.update(registry=[dict(status=0)]),
+                     lambda x:x.update(device_writers=[dict(pid=700)]),
+                     lambda x:x['parameters'].update(service_reached='N'),
+                     lambda x:x['writer_sites'].update(entries=[0x1000]))
+            for change in changes:
+                bad=copy.deepcopy(row);change(bad)
+                with self.assertRaises(bench.rt.Failure):save(bad)
+
+    def test_live_reached_contract_keeps_exact_controller_and_final_drain(self):
+        for case in ('pass','writer','frame','family','unfinished','image','preparer'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as directory,ExitStack() as stack:
+                root=Path(directory);row=self.expected(root);note=root/'note';note.write_text('module note')
+                row['provider']['note_sha256']=bench.rt.digest(note)
+                params=root/'parameters';params.mkdir()
+                for name,value in dict(row['parameters'],rwsem_provider_bindings='1').items():(params/name).write_text(value)
+                receipt=root/'session.json';receipt.write_text(json.dumps(row))
+                session=bench.execution.ExecutionSession(receipt,bench.rt.digest(receipt))
+                source=dict(row['source'],frames=0)
+                if case=='frame':source['frames']=1
+                observations=dict.fromkeys(('roots','completions','instructions','controls','primitives','memory','cache_hits','cache_misses','cache_full','unsupported','active'),0)
+                if case=='family':observations['active']=1
+                if case=='unfinished':observations['roots']=1
+                preparer={key:row['preparer'][key] for key in ('pid','start_ticks','executable','cwd','argv')}
+                if case=='preparer':preparer['start_ticks']+=1
+                original=Path.read_text
+                def read(path,*args,**kwargs):
+                    return 'boot' if str(path)=='/proc/sys/kernel/random/boot_id' else original(path,*args,**kwargs)
+                stack.enter_context(patch.object(bench.execution,'NOTE',note))
+                stack.enter_context(patch.object(bench.execution,'PARAMETERS',params))
+                stack.enter_context(patch.object(bench.execution,'module_note_sha256',return_value=bench.rt.digest(note)))
+                stack.enter_context(patch.object(bench.execution,'task_identity',return_value=preparer))
+                stack.enter_context(patch.object(bench.execution,'device_writers',return_value=[dict(pid=700)] if case=='writer' else []))
+                stack.enter_context(patch.object(bench.execution,'reached_observations',return_value=observations))
+                stack.enter_context(patch.object(bench.rt,'status',return_value=source))
+                stack.enter_context(patch.object(bench.rt,'registry',return_value=[dict(status=0)] if case=='image' else []))
+                stack.enter_context(patch.object(Path,'read_text',read))
+                stack.enter_context(patch.object(Path,'iterdir',return_value=[]))
+                stack.enter_context(patch.object(Path,'glob',return_value=[]))
+                if case=='pass':
+                    self.assertEqual(session.verify()['source'],source)
+                    source['modules']=2
+                    self.assertEqual(session.verify()['source']['modules'],2)
+                    source['modules']=1
+                    with self.assertRaises(bench.rt.Failure):session.verify()
+                else:
+                    with self.assertRaises(bench.rt.Failure):session.verify()
+
+
 class LaunchLifetime(unittest.TestCase):
     def test_timeout_or_survivor_never_becomes_drain_or_cleanup(self):
         for behavior in ('pass','timeout','orphan','kernel_fault'):

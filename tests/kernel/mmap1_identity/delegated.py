@@ -32,6 +32,7 @@ observer = bench.common.module('mmap1_delegated_observer', ROOT / 'tests/kernel/
 sys.path.insert(0, str(ROOT / 'tests/kernel/jit_continuation'))
 primitives = bench.common.module('mmap1_delegated_primitives', ROOT / 'tests/kernel/jit_continuation/helper_mode.py')
 memory = bench.common.module('mmap1_delegated_memory', ROOT / 'tests/kernel/jit_continuation/memory_mode.py')
+reached = bench.common.module('mmap1_delegated_reached', ROOT / 'tests/kernel/jit_continuation/reached_mode.py')
 pairs = bench.common.module('mmap1_syscall_pairs', ROOT / 'tests/kernel/mmap1_identity/syscall_pairs.py')
 PARAMETERS = Path('/sys/module/kdlock_km/parameters')
 KERNEL_COMPONENT = '1ab7124abb6140752c1f0bb6e862144d426a3875'
@@ -168,6 +169,10 @@ class Daemon:
 
 
 class Controller:
+    @property
+    def reached(self):
+        return getattr(getattr(self, 'args', None), 'execution_mode', 'image') == 'reached'
+
     def __init__(self, args, out, files, source, audit, binaries):
         self.args, self.out, self.files, self.source, self.audit, self.binaries = args, out, files, source, audit, binaries
         self.result = dict(schema=1, passed=False, drained=False, accepted=False, scored=False,
@@ -237,15 +242,17 @@ class Controller:
         self.run('build-provider', ['make', '-C', provider_dir / 'kernel_module',
             'KDIR=' + str(self.args.kernel_source), 'W=1', 'KDLOCK_SELFTEST=0', 'KDLOCK_NUMA=1',
             'KDLOCK_SPIN_BATCH=1024', 'UBSAN_SANITIZE=n'])
-        self.run('build-daemon', ['make', '-C', self.source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'])
+        if not self.reached:
+            self.run('build-daemon', ['make', '-C', self.source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'])
         probe = self.out / 'build/probe'
         probe.mkdir()
         for path in (self.source / 'tests/kernel/mmap1_identity/payload').iterdir():
             if path.name == 'Makefile' or path.suffix in ('.c', '.h', '.inc') and not path.name.endswith('.mod.c'):
                 shutil.copyfile(path, probe / path.name)
         self.run('build-probe', ['make', '-C', probe, 'KDIR=' + str(self.args.kernel_source), 'W=1', 'UBSAN_SANITIZE=n'])
-        self.binaries.update(provider=provider_dir / 'kernel_module/kdlock_km.ko',
-                             daemon=self.source / 'daemon/daemon', probe=probe / 'kd_mmap1_identity.ko')
+        self.binaries.update(provider=provider_dir / 'kernel_module/kdlock_km.ko', probe=probe / 'kd_mmap1_identity.ko')
+        if not self.reached:
+            self.binaries['daemon'] = self.source / 'daemon/daemon'
         for name in ('provider', 'probe'):
             module = self.binaries[name]
             text = self.run(name + '-vermagic', ['modinfo', '-F', 'vermagic', module], 30)
@@ -258,6 +265,8 @@ class Controller:
         rt.write_json(self.out / 'binary-sha256.json', {name: reference(path) for name, path in self.binaries.items()})
 
     def session_receipt(self, daemon, rows):
+        if self.reached:
+            return self.reached_receipt(rows)
         execution = bench.execution
         actual_daemon = execution.task_identity(daemon.daemon.pid)
         preparer = execution.task_identity(os.getpid())
@@ -281,6 +290,39 @@ class Controller:
         path = self.model / 'execution-session.json'
         rt.write_json(path, value)
         return execution.ExecutionSession(path, rt.digest(path))
+
+    def reached_receipt(self, rows):
+        execution = bench.execution
+        preparer = execution.task_identity(os.getpid())
+        preparer['executable_sha256'] = rt.digest(Path(preparer['executable']))
+        self.files[preparer['executable']] = preparer['executable_sha256']
+        source, writers = rt.status(), execution.device_writers()
+        rt.require(not rows and not rt.registry() and not writers and source['state'] == source['frames'] == source['writers'] == 0,
+                   'image-free source must have no images, frames or writers')
+        parameters = rt.parameters()
+        selected = {name: parameters[name] for name in ('rwsem_provider_active', 'rwsem_provider_mode',
+                    'service_reached', 'jit_timing', 'service_trace', 'bench_quiet', 'bench_complete_probe')}
+        value = dict(schema=2, execution_mode='reached', boot_id=self.args.boot_id,
+            provider=dict(path=str(self.binaries['provider']), sha256=rt.digest(self.binaries['provider']),
+                          note_sha256=execution.module_note_sha256(self.binaries['provider'])),
+            preparer=preparer, parameters=selected, registry=[], device_writers=[],
+            writer_sites=dict(path=str(self.args.sites), sha256=rt.digest(self.args.sites),
+                              entries=sorted(row['entry'] for row in self.audit['records'])),
+            source={name: source[name] for name in ('state', 'modules', 'writers')}, files=dict(self.files))
+        path = self.model / 'execution-session.json'
+        rt.write_json(path, value)
+        return execution.ExecutionSession(path, rt.digest(path))
+
+    def ready_reached(self):
+        values, source = rt.parameters(), rt.status()
+        stats = reached.parse_stats(values['reached_stats'])
+        rows = rt.registry()
+        rt.write_json(self.model / 'registry-progress.json', rows)
+        rt.require(values['service_reached'] == 'Y' and not rows and
+                   source['state'] == source['frames'] == source['writers'] == 0 and
+                   not bench.execution.device_writers() and stats['active'] == stats['unsupported'] == 0,
+                   'image-free preparation has an image, writer or live family')
+        return rows
 
     def ready(self, daemon):
         rows = rt.registry()
@@ -306,7 +348,8 @@ class Controller:
         return snapshot
 
     def validate_services(self, proof, rows, messages, snapshot):
-        generations = {row['entry']: row['generation'] for row in rows}
+        generations = ({row['entry']: 0 for row in self.audit['records']} if self.reached else
+                       {row['entry']: row['generation'] for row in rows})
         workers = {row['tid']: row for row in snapshot['records']}
         key = lambda row: tuple(row[name] for name in ('origin', 'identity', 'generation'))
         roots = {}
@@ -350,6 +393,7 @@ class Controller:
                             generations[root['entry']], None, sequence=sequence, final=part[-1]['stage'] == 'complete')
                     else:
                         first = part[0]
+                        primitives.validate_execution_identity(part, root, generations[root['entry']])
                         fields = ('origin', 'executor', 'identity', 'generation', 'sequence', 'image_generation',
                                   'ip', 'next', 'sp', 'offset', 'width', 'operation', 'preempt_operand',
                                   'preempt_seq', 'preempt_object', 'input_flags', 'destination', 'read')
@@ -366,6 +410,33 @@ class Controller:
                             'GS transaction instruction/context/result identity differs')
                     transactions += 1
             counts[family + '_transactions'] = transactions
+        if self.reached:
+            ledger = []
+            grouped, retirements = {}, {}
+            for line in messages.splitlines():
+                fields = dict(re.findall(r'(\w+)=([^\s]+)', line))
+                if not {'origin', 'identity', 'generation'} <= fields.keys():
+                    continue
+                try:
+                    candidate = (int(fields['origin']), int(fields['identity'], 16), int(fields['generation']))
+                except ValueError:
+                    continue
+                if candidate in complete:
+                    grouped.setdefault(candidate, []).append(line)
+            for event in reached.reached_events(messages):
+                if event['event'] == 'retire':
+                    retirements.setdefault(key(event), []).append(event)
+            for identity, root in complete.items():
+                # Select one exact root before invoking the shared validator.
+                # Group once, rather than rescanning the entire MM trace for
+                # every request in an application lifetime.
+                checked = reached.validate_ledger('\n'.join(grouped.get(identity, [])), [root['origin']])
+                retired = retirements.get(identity, [])
+                rt.require(len(retired) == 1 and retired[0]['entry'] == root['entry'] and
+                           retired[0]['family_generation'] == root['generation'],
+                           'completed worker MM family lacks exact retirement')
+                ledger.append(dict(identity=list(identity), checked=checked, retirement=retired[0]))
+            counts['family_artifact_ledger'] = ledger
         return dict(counts, captured_worker_roots=len(complete), other_worker_roots=len(complete.keys() - audited),
                     scope='complete captured worker MM roots; no expected source transaction count inferred')
 
@@ -374,7 +445,8 @@ class Controller:
         self.model = self.out / model
         self.model.mkdir()
         record = dict(state='PREPARING', passed=False, drained=False, scored=False, model=model,
-                      prewarm_timeout_seconds=self.args.prewarm_timeout)
+                      execution_mode=getattr(self.args, 'execution_mode', 'image'),
+                      prewarm_timeout_seconds=self.args.prewarm_timeout if not self.reached else None)
         self.result['models'][model] = record
         self.save()
         logdir = self.model / 'lifecycle-log'
@@ -384,8 +456,11 @@ class Controller:
         self.collector = bench.kernel_log.DiagnosticKernelLog(self.log_fd, logdir, rt.FAULT)
         try:
             self.collector.start()
-            self.run('load-provider', ['insmod', self.binaries['provider'], 'bench_quiet=1',
-                'bench_complete_probe=0', 'jit_timing=0', 'hotlock_stats=0'])
+            provider_args = ['insmod', self.binaries['provider'], 'bench_quiet=1',
+                'bench_complete_probe=0', 'jit_timing=0', 'hotlock_stats=0']
+            if self.reached:
+                provider_args.append('service_reached=1')
+            self.run('load-provider', provider_args)
             record['provider_loaded'] = True
             rt.require((PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
                        (PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0', 'factory was not initially inactive')
@@ -393,14 +468,19 @@ class Controller:
                 record['capabilities'] = query_capabilities(device.fileno())
             rt.require(all(record['capabilities'].get(name) for name in
                            ('origin_call', 'origin_memory', 'origin_context_read', 'indirect_tail')), 'required retained MM context service unavailable')
-            daemon = Daemon(self.model, self.source, self.binaries['daemon'])
-            daemon.start()
-            record['daemon_pid'] = daemon.daemon.pid
+            daemon = None
+            if not self.reached:
+                daemon = Daemon(self.model, self.source, self.binaries['daemon'])
+                daemon.start()
+                record['daemon_pid'] = daemon.daemon.pid
+            else:
+                record['translator_started'] = False
             self.run('load-observer', ['insmod', self.binaries['probe'], 'target=mmap1_' + model, 'pair_limit=8'])
             record['observer_loaded'] = True
             (PARAMETERS / 'rwsem_provider_mode').write_text('prepare\n')
-            rows = self.wait('all builtin writer sites ready', lambda: self.ready(daemon),
-                             timeout=self.args.prewarm_timeout)
+            rows = (self.ready_reached() if self.reached else
+                    self.wait('all builtin writer sites ready', lambda: self.ready(daemon),
+                              timeout=self.args.prewarm_timeout))
             image_files = {}
             for row in rows:
                 folder = self.model / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
@@ -416,6 +496,8 @@ class Controller:
             record['factory_active'] = True
             exact_session = self.session_receipt(daemon, rows)
             exact_session.verify(allow_identity_probe=True)
+            if self.reached:
+                record['reached_before'] = bench.execution.reached_observations()
             record.update(state='APPLICATION', execution_session=exact_session.identity())
             self.save()
             session = bench.run_point(self.model / 'application', dict(model=model, workers=2, round=0, nominal_seconds=2),
@@ -430,6 +512,16 @@ class Controller:
             proof = observer.validate_delegated(snapshot, session, os.sysconf('SC_CLK_TCK'), messages,
                                                 self.audit['entry_sites'], symbols[0])
             proof['service_transactions'] = self.validate_services(proof, rows, messages, snapshot)
+            if self.reached:
+                final_stats = bench.execution.reached_observations()
+                before_stats = record['reached_before']
+                rt.require(final_stats['active'] == final_stats['unsupported'] == 0 and
+                           final_stats['roots'] == final_stats['completions'] and
+                           final_stats['instructions'] > before_stats['instructions'] and
+                           final_stats['cache_misses'] > before_stats['cache_misses'] and
+                           final_stats['roots'] > before_stats['roots'],
+                           'MM run lacks cold progress or final family drain')
+                record['reached_after'] = final_stats
             lifecycle = logdir / 'kernel.log'
             self.wait('syscall pair STOP summary', lambda:
                 'kd_mm_pair: event=stop ' in lifecycle.read_text(), timeout=2)
@@ -450,9 +542,13 @@ class Controller:
                 (PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0' and
                 rt.status()['frames'] == 0, timeout=30)
             record['binding_drain'] = dict(bindings=0, source=rt.status())
-            daemon.stop()
-            record['daemon_closed'] = True
-            self.wait('daemon writer drain', lambda: rt.status()['writers'] == 0, timeout=10)
+            if daemon is not None:
+                daemon.stop()
+                record['daemon_closed'] = True
+                self.wait('daemon writer drain', lambda: rt.status()['writers'] == 0, timeout=10)
+            else:
+                rt.require(rt.status()['writers'] == 0 and not bench.execution.device_writers(),
+                           'image-free execution acquired an unexpected writer')
             with open('/dev/kd_dev', 'rb', buffering=0) as device:
                 fcntl.ioctl(device, rt.RETIRE)
                 retired = rt.info(device.fileno())
@@ -491,6 +587,8 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
         parser.add_argument('--' + name + '-sha256', required=True)
     parser.add_argument('--source-commit', required=True)
+    parser.add_argument('--execution-mode', choices=('image', 'reached'), default='image',
+                        help='reached: resident image-free execution without translator/prewarming')
     parser.add_argument('--prewarm-timeout', type=int, default=600,
                         help='bounded writer-image preparation seconds per model (1..3600)')
     bench.arguments(parser)
