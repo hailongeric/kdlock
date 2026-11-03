@@ -731,3 +731,20 @@ untracked-object branches. Inherited source RCU/pins, object lifetime and
 exact return/ACK records remain required. No MM integration change or private
 body service is introduced. Require focused roster/context checks and a new
 actual-MM attempt, preserving the preceding failure separately.
+
+The `eb21e334` MM attempt passed that accounting point and reached generation
+5, entry `ffffffff817b6f68`. It stopped at `__get_unmapped_area+0x6b`,
+`ffffffff817f716b`: live bytes `2e 2e 2e ff d0` are a CS-padded indirect
+CALL RAX. The ELF's corresponding branch through an indirect-call thunk is
+patched at runtime. Keep address selection delegated; this pure control-flow
+encoding is not a reason to service `__get_unmapped_area` on O.
+
+Extend only CS-padded FF /2 and /4 register near CALL/JMP, using the existing
+64-bit target capture, exact full-length source return word, one stack push
+for CALL, unchanged flags and ordinary reached-edge dispatch. Prefix order
+must retain its actual REX meaning. Memory targets, far transfers, PUSH/INC/DEC,
+operand-size override, LOCK and REP in this CS branch slice remain refused
+before effects. Source truncation must stay a source failure. Validate the
+patched byte sequence, extended GPR targets, CALL/RET and JMP behavior, stack
+failure with no committed effect, source-length/flags and refused forms; build
+the candidate and retry actual mmap1 under a new frozen identity.
