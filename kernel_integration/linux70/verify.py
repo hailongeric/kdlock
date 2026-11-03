@@ -43,7 +43,7 @@ RECOVERY_VARIANTS = ("kdscope4-native", "kdscope4-kd")
 CONTINUATION_RELEASE = "7.0.0-38-kdscope5"
 CONTINUATION_SOURCE_ROOT = Path("/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source")
 CONTINUATION_BUILD_ROOT = CONTINUATION_SOURCE_ROOT.parent / "build"
-CONTINUATION_VARIANTS = ("kdscope5-native", "kdscope5-kd")
+CONTINUATION_VARIANTS = ("kdscope5-native", "kdscope5-kd", "kdscope5-log16-kd")
 SCOPE_VARIANTS = ("kdscope1-native", "kdscope1-kd", *SCOPE2_VARIANTS, *RECOVERY_VARIANTS,
                   *CONTINUATION_VARIANTS)
 VARIANTS = ("kdlock1", "kdmm1-native", "kdmm1-kd", *SCOPE_VARIANTS)
@@ -196,6 +196,9 @@ def runtime_policy(cmdline, preempt_text, *, variant="kdlock1"):
     require(not requested or requested == selected, "preempt= differs from active policy")
     require("kd_mmap" not in tokens, "kd_mmap requires an explicit mode")
     modes = [token.split("=", 1)[1] for token in tokens if token.startswith("kd_mmap=")]
+    if variant == "kdscope5-log16-kd":
+        require([token for token in tokens if token.startswith("log_buf_len=")] ==
+                ["log_buf_len=16M"], "diagnostic profile requires its exact log buffer")
     result = dict(cmdline=cmdline, preempt=selected[0], preempt_control=preempt_text.strip())
     if settings["mmap_mode"] is None:
         require(not modes, "kdlock1 requires the disabled mmap backend without kd_mmap=")

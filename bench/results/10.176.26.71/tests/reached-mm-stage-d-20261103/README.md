@@ -528,3 +528,20 @@ log buffer; it preserves the ordinary default and all old entries. It must
 retain its new boot/command-line identity and still fail on lost records.
 No timing result is inferred or combined across these settings. Fresh checks
 and actual thread/process execution remain required for the new candidate.
+
+
+## Fifteenth candidate: `73b8da74`
+
+Exact source: `73b8da745535ac8098a66a329b294c2796b8872b`. Four unit drivers
+passed, including the Native release/context roster,20 returning-call cases,
+seven MM-proof cases and nine private-source cases. The resident runner
+stopped at the exact identity check before its build: the new log16 command
+line differed from the original scope5 bundle. This is a failed prerequisite,
+not a module or application pass; see [receipt](fifteenth-checks.json). Neither
+actual application model was started on this candidate.
+
+Design `47151226` adds separate explicit profile `kdscope5-log16-kd` and its
+own canonical bundle. Original profile identities remain unchanged. Both
+module runners and the actual MM controller use the same explicit label; the
+new runtime profile requires exactly the16MiB log argument. Fresh bundle
+verification, focused checks and the two application runs remain required.

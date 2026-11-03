@@ -604,7 +604,7 @@ def main():
     args = parser.parse_args()
     if not 1 <= args.prewarm_timeout <= 3600:
         parser.error('--prewarm-timeout must be between 1 and 3600 seconds')
-    rt.require(args.mode == 'kd' and args.kernel_variant == 'kdscope5-kd', 'explicit kdscope5 delegated mode required')
+    rt.require(args.mode == 'kd' and args.kernel_variant in ('kdscope5-kd', 'kdscope5-log16-kd'), 'explicit kdscope5 delegated mode required')
     bench.guest(args)
     rt.require(os.geteuid() == 0 and sys.executable == PYTHON and str(ROOT).startswith('/root/'),
                'guest root/pinned Python/private frozen input required')

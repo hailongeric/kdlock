@@ -16,7 +16,7 @@ sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
 VARIANTS = ('kdlock1', 'kdmm1-native', 'kdmm1-kd', 'kdscope1-native', 'kdscope1-kd',
             'kdscope3-native', 'kdscope3-kd', 'kdscope4-native', 'kdscope4-kd',
-            'kdscope5-native', 'kdscope5-kd')
+            'kdscope5-native', 'kdscope5-kd', 'kdscope5-log16-kd')
 BENCHMARK_PROFILES = {
     'kdlock1': dict(release='7.0.0-38-kdlock1',
                    build=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
@@ -36,7 +36,7 @@ BENCHMARK_PROFILES = {
     **{variant: dict(release='7.0.0-38-kdscope5',
                     build=Path('/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'),
                     bundle=Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-20261103'))
-       for variant in ('kdscope5-native', 'kdscope5-kd')},
+       for variant in ('kdscope5-native', 'kdscope5-kd', 'kdscope5-log16-kd')},
 }
 
 
