@@ -748,3 +748,26 @@ before effects. Source truncation must stay a source failure. Validate the
 patched byte sequence, extended GPR targets, CALL/RET and JMP behavior, stack
 failure with no committed effect, source-length/flags and refused forms; build
 the candidate and retry actual mmap1 under a new frozen identity.
+
+Candidate `4fd4d4d5` next reached `vma_link_file+0x4e`, `ffffffff81816e6e`,
+bytes `48 0f ba 6d e0 03`: unlocked BTSQ immediate 3 on a retained source
+stack flag word. The next source instruction sets bit 5 in that same word.
+Keep the VMA linking algorithm on E and implement the missing general memory
+bit RMW. Do not service an MM body or split the RMW into source load/store.
+
+Append distinct unlocked and LOCK BTS/BTR/BTC operations to the existing exact
+Native RMW callback. Reuse BT's signed register-index containing-word address
+and imm8 within-word mask; pass only the masked bit to one actual Native
+memory-form instruction at the qualified source word. Preserve source width
+16/32/64, actual LOCK presence and captured arithmetic flags. No source GPR is
+written. Read-only BT retains its separate one-read path and LOCK BT remains
+unsupported. Existing callback RAM/page/owner checks and extable handling stay
+required; no callback, address refusal or failed operation commits packet,
+flags or budget. No retry/replay loop is added.
+
+Validate against Native memory-form BTS/BTR/BTC for immediate/register indices,
+signed containing-word offsets, all widths, existing/set bits and both LOCK
+policies. Check exact one-RMW/no separate read or write, source alias/failure,
+unchanged unrelated words/registers and explicit unsupported forms. Build and
+retry actual MM only after these directly affected checks pass; preserve the
+preceding failed activation separately.
