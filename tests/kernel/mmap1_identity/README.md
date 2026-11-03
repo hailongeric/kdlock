@@ -1,8 +1,8 @@
 # mmap1 object identity observation
 
 This unscored probe observes the unchanged pinned will-it-scale executable at
-`vm_mmap_pgoff` entry. It accepts only the testcase's anonymous 128 MiB,
-read/write, private mapping arguments and the selected upstream task name. It
+`__x64_sys_mmap` entry, using its pointer to the syscall register frame. It
+accepts only the testcase's anonymous 128 MiB, read/write, private mapping arguments and the selected upstream task name. It
 records the actual current PID/TID and task start time, `current->mm`,
 `&mm->mmap_lock`, selected physical backend address, backend field and CPU.
 The field types come from the exact verified running kernel build headers.

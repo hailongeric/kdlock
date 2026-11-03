@@ -15,7 +15,7 @@
 #include "api.h"
 
 #ifndef CONFIG_X86_64
-#error "The captured vm_mmap_pgoff argument contract is x86-64 only"
+#error "The captured mmap syscall-wrapper argument contract is x86-64 only"
 #endif
 
 static char target[TASK_COMM_LEN];
@@ -25,6 +25,19 @@ static DEFINE_RAW_SPINLOCK(records_lock);
 static struct kd_mmap1_identity_snapshot snapshot;
 static struct mm_struct *held_mm[KD_MMAP1_IDENTITY_CAPACITY];
 static bool registered;
+
+/* __x64_sys_mmap receives one pointer to the userspace syscall register
+ * frame. The fifth argument is a C int at the unchanged application's call
+ * boundary, so either upper-half representation of fd=-1 is accepted. */
+static bool mmap1_arguments(const struct pt_regs *entry)
+{
+	const struct pt_regs *args = (const void *)entry->di;
+
+	return args && !args->di && args->si == 128UL * 1024 * 1024 &&
+	       args->dx == (PROT_READ | PROT_WRITE) &&
+	       args->r10 == (MAP_PRIVATE | MAP_ANONYMOUS) &&
+	       (u32)args->r8 == (u32)-1 && !args->r9;
+}
 
 static int observe(struct kprobe *probe, struct pt_regs *regs)
 {
@@ -40,12 +53,10 @@ static int observe(struct kprobe *probe, struct pt_regs *regs)
 	u64 route = 0;
 
 	(void)probe;
-	/* vm_mmap_pgoff(file, addr, len, prot, flags, pgoff), native C ABI.
-	 * Exclude loader/harness mappings: only the unchanged mmap1 testcase
-	 * has this exact anonymous 128 MiB argument tuple. */
-	if (strncmp(current->comm, target, TASK_COMM_LEN) || regs->di || regs->si ||
-	    regs->dx != 128UL * 1024 * 1024 || regs->cx != (PROT_READ | PROT_WRITE) ||
-	    regs->r8 != (MAP_PRIVATE | MAP_ANONYMOUS) || regs->r9)
+	/* Observe the real syscall before its MM helper is entered. Keep this
+	 * instrumentation outside the translated MM call graph and exclude
+	 * loader/harness mappings with the unchanged application's exact tuple. */
+	if (strncmp(current->comm, target, TASK_COMM_LEN) || !mmap1_arguments(regs))
 		return 0;
 	mm = current->mm;
 	if (!mm)
@@ -99,7 +110,7 @@ out:
 }
 
 static struct kprobe mapping_probe = {
-	.symbol_name = "vm_mmap_pgoff",
+	.symbol_name = "__x64_sys_mmap",
 	.pre_handler = observe,
 };
 
