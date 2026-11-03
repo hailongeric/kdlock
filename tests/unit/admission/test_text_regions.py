@@ -975,7 +975,7 @@ class CompactTextWindowTests(unittest.TestCase):
         with patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory):
             return memread.extend_regions(regions, targets, policy=self.policy, **kwargs)
 
-    def render_retained(self, entry, regions):
+    def render_retained(self, entry, regions, **kwargs):
         return render(
             "", entry=entry, regions=regions, memory_reader=self.read_memory,
             lock_kind="mutex", abi=2, trusted_source=True, return_status=True,
@@ -987,7 +987,152 @@ class CompactTextWindowTests(unittest.TestCase):
             returning_services={BASE + 0x85000: dict(
                 cookie=1, nargs=1, result_kind=1, context_kind=1,
                 symbol="primitive_call")},
+            **kwargs,
         )
+
+    def cfg_terminal(self, address):
+        self.put(address, bytes.fromhex('b82a000000') +
+                 branch(address + 5, BASE + 0x84000, b'\xe8') + b'\xc3')
+
+    def cfg_source_chain(self, extensions):
+        nodes = [BASE + 0x10000 + i * 0x3000 for i in range(extensions + 1)]
+        for source, target in zip(nodes, nodes[1:]):
+            self.put(source, branch(source, target))
+        self.cfg_terminal(nodes[-1])
+        start = nodes[0]
+        offset = start - BASE
+        return start, [(bytes(self.text[offset:offset + 1024]), start, [start])], nodes[-1]
+
+    def cfg_seed_chain(self, rebuilds):
+        hot, cold = BASE + 0x2000, BASE + 0x7000
+        nodes = [(hot if i % 2 == 0 else cold) + i // 2 * 0x20
+                 for i in range(rebuilds + 2)]
+        for source, target in zip(nodes, nodes[1:]):
+            self.put(source, branch(source, target))
+        self.cfg_terminal(nodes[-1])
+        regions = [(bytes(self.text[start - BASE:start - BASE + 4096]), start, [start])
+                   for start in (hot, cold)]
+        return hot, regions, nodes[-1]
+
+    def cfg_mixed_chain(self, extensions):
+        # Each new cold window reveals one unseeded entry in the existing hot
+        # window. The real decoder alternates one read and one seed rebuild.
+        hot = BASE + 0x2000
+        for index in range(extensions):
+            cold = BASE + 0x10000 + index * 0x3000
+            self.put(hot + index * 0x20, branch(hot + index * 0x20, cold))
+            self.put(cold, branch(cold, hot + (index + 1) * 0x20))
+        terminal = hot + extensions * 0x20
+        self.cfg_terminal(terminal)
+        return hot, [(bytes(self.text[0x2000:0x3000]), hot, [hot])], terminal
+
+    def test_retained_source_extensions_have_their_own_complete_boundary(self):
+        for extensions in (32, 33):
+            with self.subTest(extensions=extensions):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_source_chain(extensions)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
+                self.assertIn('source_extensions=32', log)
+                self.assertIn('covered_rebuilds=0', log)
+                if extensions == 32:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="source"', log)
+                    self.assertIn('pending_targets_kind="source"', log)
+                    # No33rd source transition or late image construction.
+                    self.assertTrue(all(address < terminal for address, _ in self.reads))
+
+    def test_retained_covered_rebuilds_have_their_own_complete_boundary(self):
+        for rebuilds in (32, 33):
+            with self.subTest(rebuilds=rebuilds):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_seed_chain(rebuilds)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
+                self.assertEqual(self.reads, [])
+                self.assertIn('covered_rebuilds=32', log)
+                self.assertIn('source_extensions=0', log)
+                if rebuilds == 32:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="covered"', log)
+                    self.assertIn('pending_targets_kind="covered"', log)
+
+    def test_retained_mixed_frontier_completes_on_the65th_decode(self):
+        entry, regions, terminal = self.cfg_mixed_chain(32)
+        with patch.object(translator, 'decode_regions',
+                          wraps=translator.decode_regions) as decode:
+            assembly, log, status = self.render_retained(entry, regions)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(decode.call_count, 65)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
+        self.assertIn('decode_pass=65', log)
+        self.assertIn('covered_rebuilds=32 source_extensions=32', log)
+        self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+        self.assertNotIn('reason=CFG_WORK_LIMIT', log)
+
+    def test_retained_total_ceiling_refuses_before_a66th_decode_or_read(self):
+        entry, regions, terminal = self.cfg_mixed_chain(33)
+        options = {}
+        with patch.object(translator, 'decode_regions',
+                          wraps=translator.decode_regions) as decode:
+            assembly, log, status = self.render_retained(
+                entry, regions, build_options=options)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(decode.call_count, 65)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
+        self.assertIn('exhausted_budget="source"', log)
+        self.assertIn('covered_rebuilds=32 source_extensions=32', log)
+        pending_source = BASE + 0x10000 + 32 * 0x3000
+        self.assertTrue(all(address < pending_source for address, _ in self.reads))
+        self.assertNotIn(f'loc_{terminal:x}:'.encode(), assembly)
+
+    def test_ordinary_mixed_frontier_keeps_32_combined_transitions(self):
+        entry, regions, _ = self.cfg_mixed_chain(32)
+        options = {}
+        with patch.object(translator, 'decode_regions',
+                          wraps=translator.decode_regions) as decode:
+            assembly, log, status = render(
+                '', entry=entry, regions=regions, memory_reader=self.read_memory,
+                build_options=options, return_status=True)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(decode.call_count, 33)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+        self.assertIn('32 CFG expansions', log)
+        self.assertIn('exhausted_budget="combined"', log)
+        self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+
+    def test_retained_seeded_undecodable_block_is_not_a_complete_fixed_point(self):
+        entry = BASE + 0x2000
+        self.put(entry, bytes.fromhex('0f04') + b'\xc3' * 30)
+        options = {}
+        assembly, log, status = self.render_retained(
+            entry, [(bytes(self.text[0x2000:0x2020]), entry, [entry])],
+            build_options=options)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(self.reads, [])
+        self.assertIn('reachable CFG contains an undecodable block', log)
+        self.assertIn('pending_targets_kind="decode"', log)
 
     def test_compact_multi_root_closure_preserves_complete_decoding(self):
         targets = [BASE + 0x100 + index * 0x3000 for index in range(34)]

@@ -68,7 +68,8 @@ def reject_translation(detail):
     return context_policy.NATIVE_ONLY_EXIT
 
 
-def report_text_coverage(regions, blocks, *, expansion, pending_targets):
+def report_text_coverage(regions, blocks, *, expansion, pending_targets,
+                         cfg_work=None, pending_kind="none"):
     """Separate source-cache storage from the selected decoded byte union."""
     ranges = [(start, start + len(data)) for data, start, _ in regions]
     instructions = {
@@ -83,11 +84,12 @@ def report_text_coverage(regions, blocks, *, expansion, pending_targets):
     diagnostics.warn(
         "DECODED_TEXT_COVERAGE", "record_text_bytes",
         "decoded instruction coverage is not the source-cache budget",
-        expansion=expansion, cached_bytes=cached,
+        expansion=expansion, decode_pass=expansion + 1, cached_bytes=cached,
         decoded_instruction_bytes=decoded, decoded_instructions=len(instructions),
         cache_outside_selected_instructions=cached - decoded,
         blocks=len(blocks), incomplete_blocks=sum(not block.lines for block in blocks.values()),
-        pending_targets=pending_targets,
+        pending_targets=pending_targets, pending_targets_kind=pending_kind,
+        **(cfg_work or {}),
     )
 
 
@@ -334,8 +336,46 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     entry_guards = None
     memory_guards = None
     service_queue_required = False
+    covered_rebuilds = source_extensions = 0
+    decode_pass_limit = 65 if direct_call_closure else 33
+
+    def cfg_work():
+        return dict(
+            retained_profile=direct_call_closure,
+            covered_rebuilds=covered_rebuilds,
+            source_extensions=source_extensions,
+            covered_rebuild_limit=32, source_extension_limit=32,
+            total_transition_limit=64 if direct_call_closure else 32,
+            decode_pass_limit=decode_pass_limit,
+        )
+
+    def cfg_work_exhausted(kind):
+        if not direct_call_closure:
+            return covered_rebuilds + source_extensions >= 32
+        return (covered_rebuilds if kind == "covered" else source_extensions) >= 32
+
+    def refuse_cfg_work(kind, pending):
+        # A covered seed count is not the full missing-source frontier. Keep
+        # the work class explicit rather than reporting it as all pending CFG.
+        report_text_coverage(rets, block_dict, expansion=expansion,
+                             pending_targets=pending, pending_kind=kind,
+                             cfg_work=cfg_work())
+        diagnostics.warn(
+            "CFG_WORK_LIMIT", "reject_incomplete_cfg",
+            "bounded CFG work ended before complete source coverage",
+            work_kind=kind,
+            exhausted_budget=kind if direct_call_closure else "combined",
+            decode_pass=expansion + 1, **cfg_work(),
+        )
+        detail = ("reachable text exceeds 32 CFG expansions"
+                  if not direct_call_closure else
+                  "reachable text exceeds 32 covered-root CFG rebuilds"
+                  if kind == "covered" else
+                  "reachable text exceeds 32 source-window CFG extensions")
+        return reject_translation(detail)
+
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
-    for expansion in range(33):
+    for expansion in range(decode_pass_limit):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
         block_dict = {start: block for start, block in block_dict.items()
                       if start not in excluded_targets}
@@ -495,17 +535,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             diagnostics.set_instruction(
                 min(added_roots), "<covered undecoded CFG block>"
             )
-            if expansion == 32:
-                report_text_coverage(rets, block_dict, expansion=expansion,
-                                     pending_targets=len(added_roots))
-                return reject_translation("reachable text exceeds 32 CFG expansions")
+            if cfg_work_exhausted("covered"):
+                return refuse_cfg_work("covered", len(added_roots))
             diagnostics.warn(
                 "CFG_ROOT_EXTEND",
                 "decode_cfg",
                 "decode newly reachable targets in existing text windows",
                 targets=[hex(target) for target in sorted(added_roots)],
+                decode_pass=expansion + 1, next_covered_rebuild=covered_rebuilds + 1,
+                **cfg_work(),
             )
             rets = seeded_regions
+            covered_rebuilds += 1
             continue
         # A truncated instruction at a read boundary also needs another window.
         missing = {
@@ -631,26 +672,39 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             detail = f"{reason} at 0x{offset:x}" if offset else reason
             return reject_translation(detail)
         if not missing:
-            report_text_coverage(rets, block_dict, expansion=expansion, pending_targets=0)
+            if empty_blocks:
+                diagnostics.set_instruction(min(empty_blocks), "<undecodable CFG block>")
+                report_text_coverage(rets, block_dict, expansion=expansion,
+                                     pending_targets=len(empty_blocks), pending_kind="decode",
+                                     cfg_work=cfg_work())
+                return reject_translation("reachable CFG contains an undecodable block")
+            report_text_coverage(rets, block_dict, expansion=expansion, pending_targets=0,
+                                 cfg_work=cfg_work())
             break
         diagnostics.set_instruction(min(missing), "<missing reachable CFG block>")
-        if expansion == 32:
-            report_text_coverage(rets, block_dict, expansion=expansion,
-                                 pending_targets=len(missing))
-            return reject_translation("reachable text exceeds 32 CFG expansions")
+        if cfg_work_exhausted("source"):
+            return refuse_cfg_work("source", len(missing))
         diagnostics.warn(
             "TEXT_RANGE_EXTEND",
             "read_cfg",
             "fetch reachable branch text",
             targets=[hex(target) for target in sorted(missing)],
+            decode_pass=expansion + 1, next_source_extension=source_extensions + 1,
+            **cfg_work(),
         )
         try:
             rets = memread.extend_regions(rets, missing, policy=text_policy)
             discovered_targets.update(missing & ordinary_call_targets)
+            source_extensions += 1
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             report_text_coverage(rets, block_dict, expansion=expansion,
-                                 pending_targets=len(missing))
+                                 pending_targets=len(missing), pending_kind="source",
+                                 cfg_work=cfg_work())
             return reject_translation(str(error))
+    else:
+        # No incomplete graph can reach emission even if progress accounting
+        # changes later. Successful closure must take the explicit break above.
+        return reject_translation("reachable text exceeds bounded CFG decode passes")
 
     has_escapes = escape_capable and any(
         native_escape.descriptor(line)
