@@ -373,7 +373,8 @@ class Controller:
         bench.idle()
         self.model = self.out / model
         self.model.mkdir()
-        record = dict(state='PREPARING', passed=False, drained=False, scored=False, model=model)
+        record = dict(state='PREPARING', passed=False, drained=False, scored=False, model=model,
+                      prewarm_timeout_seconds=self.args.prewarm_timeout)
         self.result['models'][model] = record
         self.save()
         logdir = self.model / 'lifecycle-log'
@@ -398,7 +399,8 @@ class Controller:
             self.run('load-observer', ['insmod', self.binaries['probe'], 'target=mmap1_' + model, 'pair_limit=8'])
             record['observer_loaded'] = True
             (PARAMETERS / 'rwsem_provider_mode').write_text('prepare\n')
-            rows = self.wait('all builtin writer sites ready', lambda: self.ready(daemon), timeout=600)
+            rows = self.wait('all builtin writer sites ready', lambda: self.ready(daemon),
+                             timeout=self.args.prewarm_timeout)
             image_files = {}
             for row in rows:
                 folder = self.model / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
@@ -489,8 +491,12 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
         parser.add_argument('--' + name + '-sha256', required=True)
     parser.add_argument('--source-commit', required=True)
+    parser.add_argument('--prewarm-timeout', type=int, default=600,
+                        help='bounded writer-image preparation seconds per model (1..3600)')
     bench.arguments(parser)
     args = parser.parse_args()
+    if not 1 <= args.prewarm_timeout <= 3600:
+        parser.error('--prewarm-timeout must be between 1 and 3600 seconds')
     rt.require(args.mode == 'kd' and args.kernel_variant == 'kdscope5-kd', 'explicit kdscope5 delegated mode required')
     bench.guest(args)
     rt.require(os.geteuid() == 0 and sys.executable == PYTHON and str(ROOT).startswith('/root/'),

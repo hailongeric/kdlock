@@ -144,3 +144,14 @@ limits remain explicit; these observations do not account for every application
 invocation or directly inspect VMA/page-table effects. No probe handler walks
 VMAs, takes a blocking mmap lock, allocates or sleeps. These are unscored
 diagnostics requiring their own frozen source and VM fixture results.
+
+
+The delegated diagnostic accepts `--prewarm-timeout` in seconds, default 600
+and bounded to 1..3600. The selected value is recorded in each model receipt.
+A retained 65-decode preparation experiment may explicitly select 1800 seconds
+because the earlier 33-decode attempt needed roughly seven minutes before
+refusing. This is a bounded test preparation allowance, not a claim that full
+closure will complete or that application performance improves. All 55 images
+must still become ready before activation, and the workload duration and single
+round are unchanged. The external parent deadline must cover both models plus
+build/retirement; a timeout retains the failed result and exact live state.
