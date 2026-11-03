@@ -914,3 +914,27 @@ passive reached-path context; it does not rewrite returns, track Native call
 depth, analyze an upfront graph, or authorize ownership. Failed calls leave
 the history unchanged. Use this to identify the enclosing API/interval and
 then implement its exact context requirements.
+
+
+## Returning folio reference release
+
+The `dc717333` diagnostic identified the actually reached chain:
+`free_pages_and_swap_cache` → `folios_put_refs` → private
+`__page_cache_release.part.0` → `folio_lruvec_lock_irqsave` →
+`_raw_spin_lock_irqsave`. This is a balanced reference-release interval, not
+a reason to move the surrounding MM teardown to O. Exact scope5
+`mm/swap.c:87-115,937-1045`, `mm/swap_state.c:407-427`,
+`include/linux/mm.h:1642,1840-1876` and `include/linux/swap.h:436` define
+the general interfaces and the matching IRQ restoration.
+
+Register `__folio_put` (one pointer), `folios_put_refs` (batch/refs pointers),
+`release_pages` (array/count) and `free_pages_and_swap_cache` (encoded array/
+count), each void with the existing atomic-compatible context. The first
+`release_pages` argument is a one-word transparent union of pointer types in
+this x86-64 ABI; preserve its source word without conversion. Keep encoded
+page bits, per-folio reference counts, NULL-ref semantics, batch compaction/
+empty return, swap-cache behavior and internal LRU/IRQ ordering Native on O.
+Retain caller-owned arrays and frames through the exact return ACK. E resumes
+the MM algorithm afterward. No private LRU-lock helper or MM body is added.
+General IRQ-held delegated bodies remain unsupported outside such balanced
+returning API intervals; this change does not claim that broader support.
