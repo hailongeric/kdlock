@@ -782,3 +782,7 @@ contents and lock behavior. Historical run records retain their captured paths
 and hashes. New frozen candidates must use the renamed tree consistently.
 Check current references statically, then build the directly affected resident
 and MM modules and run the focused VM checks.
+
+Shared benchmark body headers use `body` in their filenames. Update their
+include paths and private include markers together. Saved source inventories
+and prior baseline lookup paths continue to identify the original artifacts.
