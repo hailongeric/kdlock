@@ -88,6 +88,28 @@ The first production mappings are:
 Only use a mapping when both exact symbols exist. A present logical symbol
 without its required execution counterpart must stop registration explicitly.
 
+### Related cache-allocation identity intervals
+
+Source and exact-v3 configuration review also qualify two ordinary identity
+descriptors: `__kmalloc_cache_noprof(cache, gfp, size)` with three arguments,
+and `__kmalloc_cache_node_noprof(cache, gfp, node, size)` with four, both WORD
+results and `BALANCED_ORIGIN`. Unlike the generic kmalloc frontend, these APIs
+already receive their selected cache. Their implicit caller reaches allocation
+trace/debug attribution, rather than cache/node/retry/failure decisions.
+`slub.c:4840`, `4454` and `4375` pass it to `set_track` at `4449`; wrapper traces
+at `5385` and `5397` also retain that attribution distinction. Use the exact
+APIs and original size/GFP/cache/node inputs: ordinary cache allocation loses
+requested-size handling, while `___slab_alloc` omits required pre/post hooks.
+
+The configuration receipt at
+`/tmp/kdlock-mm-v3-config-read-20261103/reply.json` binds the actual build config
+SHA256 `7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa`.
+It includes SLUB debug metadata and initialization on allocation; the reviewed
+source still limits this caller-address difference to trace/debug attribution.
+Retain that documented limit instead of claiming identical physical traces.
+These identity descriptors use the existing registry/bridge path and preserve
+all existing context checks; they require no mapping-specific execution mode.
+
 ## Transaction, ownership and lifetime
 
 The immutable registry entry retains both targets and the fixed map. Freeze and
