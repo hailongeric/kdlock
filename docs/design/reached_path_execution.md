@@ -837,3 +837,14 @@ the ordinary boot entry and kernel unchanged. Record its exact command line
 and boot identity; do not combine its observations with prior runs or timing.
 Missing records still fail the diagnostic. The selected thread/process checks
 remain separate and unscored, with exact body return and final drain required.
+
+The first log16 check at `73b8da74` passed its four unit drivers, then the
+exact kernel identity check stopped before the resident build because the
+old bundle correctly requires its original command line. Keep that failed
+attempt. Add explicit diagnostic profile `kdscope5-log16-kd`, sharing the
+unchanged scope5 source/build but using its own canonical bundle
+`linux70-kdscope5-log16-kd-20261103`. Require exactly `log_buf_len=16M` for
+this profile. Preserve the original bundle and all existing profile checks.
+The new bundle retains identical source/build/installed/configuration records;
+only its explicit variant and exact observed runtime policy change. Verify
+both identities and retain the derivation before running any module.
