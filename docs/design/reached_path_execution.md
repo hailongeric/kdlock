@@ -938,3 +938,41 @@ Retain caller-owned arrays and frames through the exact return ACK. E resumes
 the MM algorithm afterward. No private LRU-lock helper or MM body is added.
 General IRQ-held delegated bodies remain unsupported outside such balanced
 returning API intervals; this change does not claim that broader support.
+
+
+## Executor placement and complete shutdown observations
+
+Continue on `codex/reached-path-translation` from
+`02990b62e55f7c2c9b5d6f0d9d6c5b1dd486151e`. Its actual thread application
+printed measurement output, but shutdown timed out and both log cursors
+lost records. A later status read also timed out. No unsupported reached
+instruction was reported in the retained subset; absence from that subset
+is not proof that the shutdown protocol completed.
+
+Add a general, load-time-only `service_cpus` list to the sleeping-lock
+executor pool. Empty preserves the existing online-CPU policy. A selected
+pool is parsed before service initialization, intersects online CPUs and
+must contain at least two online CPUs. Every initial placement, repin and
+post-root affinity restoration uses this same pool, with the existing
+captured-origin exclusion and context recheck retained. It changes execution
+placement only: admission, origin signals, ownership, nested nodes,
+downgrade and exact return/retirement remain unchanged. Requests never move
+their body to O because of this setting. A pool temporarily occupied by
+origins waits through the existing scheduling path; oversubscription is
+outside this focused diagnostic.
+
+For the next two-worker thread/process check, choose `service_cpus=0-61`,
+leaving CPUs62/63 for the ordinary collectors. Record and verify this
+parameter in the immutable execution receipt. Expose the selection only
+through the diagnostic controller, with the ordinary default unchanged.
+Raise the per-log diagnostic allowance explicitly to1024MiB for this run;
+retain the existing256MiB default for other callers. Admit disk headroom for
+both models' lifecycle and application logs, plus the separate monitor.
+Every cursor loss, byte limit or incomplete drain remains a failed check.
+Do not drop ownership records, skip probes or change the upstream workload.
+
+Build the provider/resident fixture and run directly affected collector,
+MM-proof and source-identity checks in the VM. Then run one ordinary upstream
+lifetime per model. Inspect complete shutdown evidence before changing lock
+semantics. This is observation work, not a performance claim or a diagnosed
+fix for the outstanding shutdown failure.

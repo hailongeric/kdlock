@@ -676,3 +676,29 @@ Their balanced LRU/IRQ work executes on O and returns to the same E MM body.
 implementations. No private LRU helper or MM algorithm body is registered.
 The broader IRQ-held-body case remains unsupported; fresh context checks and
 actual thread/process validation remain required.
+
+
+## Twenty-third candidate: `02990b62`
+
+Exact source `02990b62e55f7c2c9b5d6f0d9d6c5b1dd486151e` passed four
+focused unit drivers and67,643 resident assertions, including the folio API
+roster ([checks](twentythird-checks.json)). The first host placement
+preflight failed before transfer or application launch; its separate retry
+used unchanged inputs. The thread application printed all six warmups and
+both measurement samples, then failed to finish within30 seconds. This is
+an unscored diagnostic, not a throughput result or shutdown pass.
+
+Both kernel-log cursors overran. The controller retained5,333 roots and5,332
+completions with unsupported=0, but these counters include other active
+processes and cannot prove application completion or a valid final drain.
+No process-model run started. A later ordinary guest status read timed out;
+no task trace was obtained. Preserve this failed/undrained run and its
+[receipts](twentythird-attempt.json). Ordinary console logs were retained
+before restart; the recovered boot is
+`923c6745-e2f0-4bf7-9c81-34f8e146716e` and the idle gate passed. Restart is
+recovery, not retirement.
+
+The next diagnostic reserves collector CPUs from executor placement and
+increases the explicitly bounded collection allowance. Executor/collector
+CPU overlap and log volume are observed configuration facts; their role in
+the shutdown failure remains a hypothesis until a complete trace exists.
