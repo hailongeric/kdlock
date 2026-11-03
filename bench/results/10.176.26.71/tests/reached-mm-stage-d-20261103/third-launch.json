@@ -1,0 +1,35 @@
+{
+  "candidate": "afe1ba2118f150478340b5a87bda40443be41b69",
+  "root": "/root/kdlock-inputs/reached-mm-third-afe1ba21-20261103",
+  "state_sha256": "f03e723b50563fc4e2546ad6e26c24126a8c57ce0af75167f5af77cf8f56b243",
+  "manifest_sha256": "d826c55349afd4c1472addf1ac9e7963842e674374eb5ee00aa82efe5b3c3658",
+  "boot": "cc27a778-7ad3-4ce9-be5e-f4a0c69a5ce4",
+  "build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1",
+  "python": "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+  "kdir": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+  "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103",
+  "inputs": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+  "inputs_sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+  "sites_sha256": "bcc3b8b23fc332904e26929e7e43961416d11db705480ed63e301dca07e1a7a1",
+  "host_sha256": "0cede4794bd9d7358bb7e8067703655c54c49e526b3e6960e94b801c41f537cb",
+  "snapshot": "kdlock-builddisk-clean-20261031",
+  "launch": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-third-launch-20261103",
+  "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-third-20261103",
+  "prerequisite": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-third-units-20261103/result.json",
+  "artifacts": {
+    "sites.json": "bcc3b8b23fc332904e26929e7e43961416d11db705480ed63e301dca07e1a7a1",
+    "host-before.json": "0cede4794bd9d7358bb7e8067703655c54c49e526b3e6960e94b801c41f537cb",
+    "host-reference.json": "0cede4794bd9d7358bb7e8067703655c54c49e526b3e6960e94b801c41f537cb",
+    "monitor.py": "f53185888ece2e73b1462b19c1010474bcbf8efc3a9b5670c41724d5a10a49f5",
+    "launcher.py": "d0351c677ecc418dd95c0b935825bfe43bed34459fc001e96b1124780e6f200f"
+  },
+  "reference_selection": "same fresh verified capture bytes explicitly selected as reference and before",
+  "scored": false,
+  "accepted": false,
+  "workers": 2,
+  "models": [
+    "threads",
+    "processes"
+  ],
+  "rounds_per_point": 1
+}

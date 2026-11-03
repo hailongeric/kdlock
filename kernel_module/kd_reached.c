@@ -46,7 +46,7 @@ struct decoded {
 	u8 bytes[KD_REACHED_MAX_BYTES];
 	u8 length, rex, width, operation, condition;
 	u16 adjustment;
-	bool rex_seen, op16, rep, locked, multiply_immediate;
+	bool rex_seen, op16, rep, locked, multiply_immediate, cs_prefix;
 	int error;
 };
 
@@ -199,8 +199,10 @@ static void decode(struct decoded *d)
 		case 0xf0:
 			if (d->locked) d->error = -EOPNOTSUPP;
 			d->locked = true; d->rex = 0; d->rex_seen = false; break;
+		case 0x2e:
+			d->cs_prefix = true; d->rex = 0; d->rex_seen = false; break;
 		case 0xf2: case 0x64: case 0x65:
-		case 0x67: case 0x26: case 0x2e: case 0x36: case 0x3e:
+		case 0x67: case 0x26: case 0x36: case 0x3e:
 			/* These remaining repeat, segment and address-size contracts
 			 * are not implemented. No data effects precede this. */
 			d->error = -EOPNOTSUPP;
@@ -217,6 +219,14 @@ static void decode(struct decoded *d)
 	if (d->error)
 		return;
 	d->width = (d->rex & 8) ? 8 : d->op16 ? 2 : 4;
+	/* Runtime static-call sites use CS padding on register XOR. CS is also
+	 * valid padding for NOP, including its full address-expression encoding.
+	 * No other CS-prefixed operation acquires a memory/context contract here. */
+	if (d->cs_prefix && (d->rep || d->locked ||
+		(op != 0x90 && op != 0x0f && op != 0x31 && op != 0x33))) {
+		d->error = -EOPNOTSUPP;
+		return;
+	}
 	if (d->rep && op != 0x90 && op != 0x0f && op != 0xaa && op != 0xab) {
 		d->error = -EOPNOTSUPP;
 		return;
@@ -260,6 +270,8 @@ static void decode(struct decoded *d)
 			modrm(d, width, &rm, &reg, &group);
 			d->dst = (op & 2) ? reg : rm;
 			d->src = (op & 2) ? rm : reg;
+			if (d->cs_prefix && (d->dst.memory || d->src.memory))
+				d->error = -EOPNOTSUPP;
 		} else {
 			d->dst = reg_operand(d, 0, width);
 			d->src = literal(sign_value(immediate(d, width == 8 ? 4 : width),
@@ -393,6 +405,11 @@ static void decode(struct decoded *d)
 		break;
 	case 0x0f:
 		second = byte(d);
+		if (d->error) return;
+		if (d->cs_prefix && second != 0x1f) {
+			d->error = -EOPNOTSUPP;
+			return;
+		}
 		if (d->rep) {
 			if (second == 0x1e && byte(d) == 0xfa) d->operation = OP_NONE;
 			else d->error = -EOPNOTSUPP;

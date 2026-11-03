@@ -796,6 +796,122 @@ static int stos_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_CS_XOR(bytes) \
+	asm volatile(".byte " bytes "; pushfq; popq %[flags]" \
+		: "+a"(value), [flags] "=r"(flags) : "b"(source) : "cc", "memory")
+
+static u64 native_cs_xor(unsigned int form, u64 value, u64 source,
+	unsigned long *output_flags)
+{
+	unsigned long flags;
+
+	switch (form) {
+	case 0: ORACLE_CS_XOR("0x66,0x2e,0x2e,0x31,0xd8"); break;
+	case 1: ORACLE_CS_XOR("0x2e,0x2e,0x2e,0x31,0xd8"); break;
+	case 2: ORACLE_CS_XOR("0x2e,0x2e,0x48,0x31,0xd8"); break;
+	case 3: ORACLE_CS_XOR("0x48,0x2e,0x31,0xd8"); break;
+	case 4: ORACLE_CS_XOR("0x2e,0x48,0x66,0x31,0xd8"); break;
+	default: ORACLE_CS_XOR("0x2e,0x48,0x33,0xc3"); break;
+	}
+	*output_flags = flags;
+	return value;
+}
+
+static int cs_padding_test(struct fixture *f)
+{
+	static const u64 values[] = { 0, 1, 0x80000000, 0xfedcba9876543210ULL, ~0ULL };
+	static const struct {
+		u8 length, bytes[10];
+	} xors[] = {
+		{ 5, { 0x66, 0x2e, 0x2e, 0x31, 0xd8 } },
+		{ 5, { 0x2e, 0x2e, 0x2e, 0x31, 0xd8 } },
+		{ 5, { 0x2e, 0x2e, 0x48, 0x31, 0xd8 } },
+		/* A legacy prefix after REX cancels that earlier REX. */
+		{ 4, { 0x48, 0x2e, 0x31, 0xd8 } },
+		{ 5, { 0x2e, 0x48, 0x66, 0x31, 0xd8 } },
+		{ 4, { 0x2e, 0x48, 0x33, 0xc3 } },
+	}, nops[] = {
+		{ 2, { 0x2e, 0x90 } },
+		{ 5, { 0x2e, 0x2e, 0x2e, 0x2e, 0x90 } },
+		{ 4, { 0x2e, 0x0f, 0x1f, 0x00 } },
+		{ 6, { 0x2e, 0x0f, 0x1f, 0x44, 0x00, 0x00 } },
+		{ 10, { 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0, 0, 0, 0 } },
+	}, unsupported[] = {
+		{ 4, { 0x2e, 0x48, 0x31, 0x18 } }, /* XOR to memory */
+		{ 4, { 0x2e, 0x48, 0x33, 0x18 } }, /* XOR from memory */
+		{ 4, { 0x2e, 0x48, 0x01, 0xd8 } }, /* ADD registers */
+		{ 6, { 0x2e, 0xe8, 0, 0, 0, 0 } },
+		{ 3, { 0x2e, 0xf3, 0x90 } },
+		{ 4, { 0x2e, 0x0f, 0x1f, 0x08 } }, /* invalid NOP group */
+		{ 4, { 0x2e, 0x0f, 0x1e, 0xfa } },
+		{ 4, { 0x2e, 0xf0, 0x31, 0xd8 } },
+		{ 3, { 0x2e, 0x41, 0x90 } }, /* XCHG AX,R8 */
+	};
+	struct kd_regs before;
+	unsigned long flags, native_value;
+	unsigned int form, i, j;
+	u64 value;
+
+	/* Exact live static-call return-zero instruction; this clears all of AX,
+	 * including its high half, rather than silently treating CS as a NOP. */
+	prepare(f, (u8[]){ 0x2e, 0x2e, 0x2e, 0x31, 0xc0 }, 5);
+	f->regs.ax = ~0UL;
+	native_value = ~0UL;
+	asm volatile(".byte 0x2e,0x2e,0x2e,0x31,0xc0; pushfq; popq %1"
+		: "+a"(native_value), "=r"(flags) : : "cc", "memory");
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(f->regs.ax == native_value && !f->regs.ax && f->regs.ip == CODE + 5);
+	CHECK(!((f->regs.flags ^ flags) & (KD_REG_ARITHMETIC_FLAGS & ~0x10UL)));
+	CHECK(f->fetches == 5 && !f->reads && !f->writes);
+	for (form = 0; form < ARRAY_SIZE(xors); ++form)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(values); ++j) {
+		prepare(f, xors[form].bytes, xors[form].length);
+		f->regs.ax = values[i]; f->regs.bx = values[j];
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		value = native_cs_xor(form, values[i], values[j], &flags);
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->regs.ax == value && f->regs.bx == values[j]);
+		CHECK(!((f->regs.flags ^ flags) & (KD_REG_ARITHMETIC_FLAGS & ~0x10UL)));
+		CHECK((f->regs.flags & ~KD_REG_ARITHMETIC_FLAGS) == 0x202);
+		CHECK(f->fetches == xors[form].length && f->regs.ip == CODE + xors[form].length);
+		CHECK(!f->reads && !f->writes && !f->atomics);
+	}
+	for (i = 0; i < ARRAY_SIZE(nops); ++i) {
+		prepare(f, nops[i].bytes, nops[i].length);
+		f->regs.ax = ~0UL; f->regs.di = ~0UL;
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(f->regs.ip == CODE + nops[i].length && f->fetches == nops[i].length);
+		before.ip = f->regs.ip;
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes);
+	}
+	/* Native long NOP accesses no data, even with a noncanonical encoded
+	 * effective address (AX + AX here, under either 48- or 57-bit VA). */
+	native_value = 0x4000000000000001UL;
+	asm volatile("pushfq; popq %[before]; .byte 0x66,0x2e,0x0f,0x1f,0x84,0x00,0,0,0,0; pushfq; popq %[after]"
+		: [before] "=&r"(value), [after] "=r"(flags) : "a"(native_value) : "memory");
+	CHECK(value == flags);
+	for (i = 0; i < ARRAY_SIZE(unsupported); ++i) {
+		prepare(f, unsupported[i].bytes, unsupported[i].length);
+		f->regs.ax = DATA; f->regs.bx = DATA;
+		before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes && !f->atomics);
+		CHECK(f->state.budget == 100);
+	}
+	prepare(f, (u8[]){ 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00 }, 6);
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->fetches == 6 && !f->reads && !f->writes);
+	prepare(f, (u8[]){ 0x2e, 0x0f }, 2);
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->fetches == 2 && !f->reads && !f->writes);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -817,6 +933,7 @@ static int worker(void *argument)
 	if (!result) result = shift_multiply_test(f);
 	if (!result) result = bit_test(f);
 	if (!result) result = stos_test(f);
+	if (!result) result = cs_padding_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);

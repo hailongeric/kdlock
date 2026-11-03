@@ -128,3 +128,39 @@ fault/fixup behavior. No origin memset model or caller-specific path is added.
 Returned mmap1 delegation, throughput and a Nano gate remain unproved. Remaining
 unsupported operations must be supplemented when reached; no entire suffix is
 run on O.
+
+## Third candidate: `afe1ba21`
+
+Exact source: `afe1ba2118f150478340b5a87bda40443be41b69`. The provider build
+and resident fixture passed, with 53,553 assertions including 96 Native STOS
+tuples. Seven MM proof cases and nine private-source cases also passed. The
+fixture drained normally; it remains component evidence, separate from MM.
+See [the exact reply](third-units.json).
+
+The actual retry used boot `cc27a778-7ad3-4ce9-be5e-f4a0c69a5ce4`. O `4837`
+and E `4810` completed generation 1's `create_init_stack_vma` root, including
+its release and returned events. This is positive other-task execution of an
+exec MM writer, not proof of mmap1 worker mmap/munmap completion. Generation 3
+then stopped at `ffffffff817fd1d7` in `change_protection`, within entry
+`ffffffff818e077d`, on the source prefix `2e`. No successful application exit
+or process-model run is claimed. The [resident log](third-resident-kernel.log),
+[controller state](third-controller-state.json) and
+[raw retention record](third-retention.json) preserve this distinction.
+
+The ELF at that PC contains a CALL to `__SCT__might_resched`; a static-call
+patch changes its live bytes. After recovery to boot
+`e3bdd1fb-4f25-4b25-a137-5fd460c31758` with the same declared kernel/policy,
+a [live read](recovered-staticcall-bytes.json) contains
+`2e 2e 2e 31 c0`, the padded return-zero XOR form. This is explicitly a
+recovered-boot read, not a full-byte pre-reset capture of the failed instruction.
+The source implementation's `xor5rax` form independently explains the prefix.
+
+## Padded static-call correction
+
+The design was committed first as `03eec69c`. The reached decoder accepts
+repeated CS prefixes only for NOP and register-register XOR16/32/64. The live
+form clears EAX and sets XOR's arithmetic flags through the existing lowering;
+it is never skipped as a NOP. Prefix/REX ordering, full instruction fetch and
+the fifteen-byte limit remain enforced. Other CS-prefixed operations remain
+explicitly unsupported. Native differential and bounded-fetch fixtures require
+a fresh VM run before the next actual MM attempt.
