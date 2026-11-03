@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Reached scalar execution is a continuation operation, never an admission
- * decision. This adapter does not activate image-free public capture yet. */
+ * decision. The service dispatcher selects image-free capture explicitly. */
 static bool kd_reached_frame_ready(struct kd_exec_frame *frame)
 {
 	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;

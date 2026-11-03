@@ -445,3 +445,24 @@ entry is reused or evicted. A failed freshness check or full cache runs cold.
 Keep each local run at 64 instructions and retain the exact service artifacts
 independently of this optional cache. Validate observed cache hits and uncached
 progress separately from throughput; no performance gain is presumed.
+
+### Stage (c) focused functional endpoint
+
+Tested implementation `b75d82ab7cc066763a659d3fe9f2b6811b98f664` joins
+image-free capture, exact family/artifact references and returning KD, Native
+and GS services. Ten affected unit drivers, 52,854 resident engine assertions,
+all 11 reached helper phases and all 11 reached killable/nesting/downgrade
+phases passed on the VM. The same source also passed the separate image-mode
+11 plus 11 compatibility phases. Every final session drained; all 6,841 frozen
+input files were unchanged, and the final guest was idle with no project module
+loaded. The earlier compilation and BTR failures remain distinct evidence.
+
+The reached helper session recorded 826 cache hits in 2,360 lookups; the
+killable session recorded 426,594 hits in 428,764 lookups. Full-cache cold
+progress also passed. These are functional observations, not timing results;
+the downgrade fixture's polling duration changes its instruction total.
+The report retains exact source, boot, mode, build warnings and remaining
+instruction/context limits at
+[`reached-family-stage-c-20261102`](../../bench/results/10.176.26.71/tests/reached-family-stage-c-20261102/README.md).
+The MM factory has not been activated with reached mode, and no actual mmap1,
+Nano or throughput run is claimed. The candidate remains isolated.
