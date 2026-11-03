@@ -52,6 +52,9 @@ static unsigned long kd_reached_input_flags(unsigned long source)
 	switch (operation) { \
 	case KD_REACHED_ATOMIC_ADD: KD_ATOMIC_BINARY("lock add", suffix, part, type); break; \
 	case KD_REACHED_ATOMIC_SUB: KD_ATOMIC_BINARY("lock sub", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_AND: KD_ATOMIC_BINARY("lock and", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_OR: KD_ATOMIC_BINARY("lock or", suffix, part, type); break; \
+	case KD_REACHED_ATOMIC_XOR: KD_ATOMIC_BINARY("lock xor", suffix, part, type); break; \
 	case KD_REACHED_ATOMIC_INC: KD_ATOMIC_UNARY("lock inc", suffix, type); break; \
 	case KD_REACHED_ATOMIC_DEC: KD_ATOMIC_UNARY("lock dec", suffix, type); break; \
 	case KD_REACHED_ATOMIC_XADD: KD_ATOMIC_BINARY("lock xadd", suffix, part, type); break; \

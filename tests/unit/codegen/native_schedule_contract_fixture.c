@@ -80,7 +80,7 @@ int main(void)
 	};
 	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0, allocators = 0;
 	unsigned int conditional = 0, page_allocators = 0, page_accounting = 0;
-	unsigned int memcg_accounting = 0;
+	unsigned int memcg_accounting = 0, page_release = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -309,6 +309,20 @@ int main(void)
 						kd_service_native_executor_pinned(primitive->context_kind, 1));
 				}
 		}
+
+		{
+			static const char *const release_calls[] = { "__free_pages", "free_pages",
+				"free_pages_nolock", "free_pages_exact", "free_frozen_pages", "free_frozen_pages_nolock" };
+			size_t entry;
+			for (entry = 0; entry < sizeof(release_calls) / sizeof(release_calls[0]); ++entry)
+				if (!strcmp(primitive->symbol, release_calls[entry])) {
+					CHECK(!(page_release & (1U << entry))); page_release |= 1U << entry;
+					CHECK(primitive->nargs == 2 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
+						primitive->context_kind == KD_SERVICE_CALL_ATOMIC_ORIGIN);
+					CHECK(!kd_service_native_executor_pinned(primitive->context_kind, 0) &&
+						kd_service_native_executor_pinned(primitive->context_kind, 1));
+				}
+		}
 		if (!strcmp(primitive->symbol, "down_write") || !strcmp(primitive->symbol, "up_write")) {
 			++writers;
 			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
@@ -328,6 +342,7 @@ int main(void)
 	CHECK(page_allocators == 0x3f);
 	CHECK(page_accounting == 0x3f);
 	CHECK(memcg_accounting == 0xf);
+	CHECK(page_release == 0x3f);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

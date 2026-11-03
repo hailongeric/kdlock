@@ -490,3 +490,41 @@ checks cover complete CALL/RET, forward/backward limits, prefix order, jumps,
 truncation and failed stack writes. The new launcher drains its independent
 log cursor every10ms and still fails on missing records. Fresh VM builds and
 separate actual threads/processes validation remain required.
+
+
+## Fourteenth candidate: `e37977dd`
+
+Exact source: `e37977dd29183a0271f77200a54af0cc8fcc1602`. The renamed
+resident fixture and provider built successfully and passed66,068 assertions;
+seven MM-proof and nine private-source cases passed ([units](fourteenth-units.json)).
+The actual MM probe also built successfully from `fixture/`. The reference
+scan found no remaining active directory references, apart from the explicit
+old-baseline artifact adapters retained unchanged.
+
+On boot `8fc802a7-cf87-4db6-be29-0f059fefb751`, the actual run advanced
+to munmap entry `ffffffff8181c73b`, generation87, O5023/E4962. It stopped at
+`ffffffff81822009`, GS ADD inside private `__free_frozen_pages`. Separately,
+a PID1 root O1/E4965 reached locked byte AND at `ffffffff817eced8` in
+`copy_page_range`. Both remain explicit failed roots; repeated ordinary
+acquisitions do not by themselves prove complete mmap1 worker syscalls.
+The observer again reported an overrun, despite shorter polling
+([monitor](fourteenth-monitor-result.json)); its log is partial. The process
+model was not run. Ordinary serial and controller records were retained, and
+recovery returned to idle boot `ae1caaa8-6b41-4a13-9e56-920db362d739`.
+
+## Release APIs, logical RMW and diagnostic buffer
+
+Design was committed first as `08b7bd3d`. General page release now uses
+Native returning services for the six declared allocator APIs, preserving
+exact original inputs, refcounts, FPI policy and balanced CPU/IRQ context.
+The private static helper and MM bodies are unchanged. The
+[exact source inventory](page-release-source.json) binds the declarations.
+LOCK AND/OR/XOR now execute one exact Native RMW at widths8/16/32/64;
+register and immediate forms have focused Native differential checks.
+Ownership, cancellation, downgrade and retirement code is unchanged.
+
+The next diagnostic uses a separate one-time scope5 boot entry with a16MiB
+log buffer; it preserves the ordinary default and all old entries. It must
+retain its new boot/command-line identity and still fail on lost records.
+No timing result is inferred or combined across these settings. Fresh checks
+and actual thread/process execution remain required for the new candidate.

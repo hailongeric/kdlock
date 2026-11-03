@@ -50,6 +50,14 @@ KD_SERVICE_CONTEXT(alloc_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_
 KD_SERVICE_CONTEXT(folio_alloc_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(get_free_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(get_zeroed_page_noprof, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* General page-release APIs retain Native refcounts, FPI policy and balanced
+ * CPU/IRQ intervals. gfp.h and mm/internal.h declare exact two-word inputs. */
+KD_SERVICE_CONTEXT(__free_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_exact, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_frozen_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_frozen_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
 KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 /* include/linux/vmstat.h:281-287: ordinary public node/zone accounting.

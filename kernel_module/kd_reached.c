@@ -649,6 +649,9 @@ static enum kd_reached_result execute(struct decoded *d)
 		switch (d->operation) {
 		case OP_ADD: operation = KD_REACHED_ATOMIC_ADD; break;
 		case OP_SUB: operation = KD_REACHED_ATOMIC_SUB; break;
+		case OP_AND: operation = KD_REACHED_ATOMIC_AND; break;
+		case OP_OR: operation = KD_REACHED_ATOMIC_OR; break;
+		case OP_XOR: operation = KD_REACHED_ATOMIC_XOR; break;
 		case OP_INC: operation = KD_REACHED_ATOMIC_INC; break;
 		case OP_DEC: operation = KD_REACHED_ATOMIC_DEC; break;
 		case OP_XADD: operation = KD_REACHED_ATOMIC_XADD; break;

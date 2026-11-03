@@ -405,6 +405,9 @@ static int supplementation_test(struct fixture *f)
 	switch (operation) { \
 	case KD_REACHED_ATOMIC_ADD: ORACLE_ATOMIC_BINARY("lock add", suffix, part); break; \
 	case KD_REACHED_ATOMIC_SUB: ORACLE_ATOMIC_BINARY("lock sub", suffix, part); break; \
+	case KD_REACHED_ATOMIC_AND: ORACLE_ATOMIC_BINARY("lock and", suffix, part); break; \
+	case KD_REACHED_ATOMIC_OR: ORACLE_ATOMIC_BINARY("lock or", suffix, part); break; \
+	case KD_REACHED_ATOMIC_XOR: ORACLE_ATOMIC_BINARY("lock xor", suffix, part); break; \
 	case KD_REACHED_ATOMIC_INC: ORACLE_ATOMIC_UNARY("lock inc", suffix); break; \
 	case KD_REACHED_ATOMIC_DEC: ORACLE_ATOMIC_UNARY("lock dec", suffix); break; \
 	case KD_REACHED_ATOMIC_XADD: ORACLE_ATOMIC_BINARY("lock xadd", suffix, part); break; \
@@ -1618,6 +1621,55 @@ static int memory_bit_update_test(struct fixture *f)
 	return 0;
 }
 
+
+static int locked_logic_test(struct fixture *f)
+{
+	static const u64 values[] = { 0, 0x55, 0x8080, ~0ULL };
+	static const u8 immediates[] = { 0, 1, 0x80, 0xf7 };
+	static const u8 opcodes[] = { 0x20, 0x08, 0x30 }, groups[] = { 4, 1, 6 };
+	struct kd_regs expected;
+	u64 memory, source, accumulator;
+	unsigned long flags;
+	unsigned int op, width, i, j, imm, length;
+	u8 code[7];
+
+	for (op = 0; op < 3; ++op)
+	for (width = 1; width <= 8; width *= 2)
+	for (i = 0; i < ARRAY_SIZE(values); ++i)
+	for (j = 0; j < ARRAY_SIZE(values); ++j)
+	for (imm = 0; imm < 2; ++imm) {
+		length = 0; code[length++] = 0xf0;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = imm ? (width == 1 ? 0x80 : 0x83) : opcodes[op] + (width != 1);
+		code[length++] = imm ? (groups[op] << 3) | 7 : 0x0f;
+		if (imm) code[length++] = immediates[j];
+		prepare(f, code, length); f->state.ops = &atomic_operations;
+		f->regs.di = DATA; f->regs.cx = values[j];
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		memory = f->memory[0] = values[i]; f->memory[1] = 0x123456789abcdef0ULL;
+		source = imm ? (u64)(s64)(s8)immediates[j] : values[j]; accumulator = 0;
+		expected = f->regs;
+		native_atomic(width, KD_REACHED_ATOMIC_AND + op, &memory, &source,
+			&accumulator, f->regs.flags, &flags);
+		expected.flags = (expected.flags & ~KD_REG_ARITHMETIC_FLAGS) | (flags & KD_REG_ARITHMETIC_FLAGS);
+		expected.ip += length;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+		CHECK(!memcmp(&expected, &f->regs, sizeof(expected)));
+		CHECK(f->memory[0] == memory && f->memory[1] == 0x123456789abcdef0ULL);
+		CHECK(f->atomics == 1 && f->atomic_attempts == 1 && !f->reads && !f->writes &&
+			f->atomic_operation == KD_REACHED_ATOMIC_AND + op && f->state.budget == 99);
+	}
+	prepare(f, (u8[]){ 0xf0, 0x80, 0x27, 0xf7 }, 4);
+	f->regs.di = DATA; expected = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !f->reads && !f->writes);
+	f->state.ops = &atomic_operations; f->fail_atomic = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&expected, &f->regs, sizeof(expected)) && !f->atomics && f->state.budget == 100);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -1636,6 +1688,7 @@ static int worker(void *argument)
 	if (!result) result = stop_test(f);
 	if (!result) result = supplementation_test(f);
 	if (!result) result = atomic_test(f);
+	if (!result) result = locked_logic_test(f);
 	if (!result) result = shift_multiply_test(f);
 	if (!result) result = bit_test(f);
 	if (!result) result = stos_test(f);
