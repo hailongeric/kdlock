@@ -16,10 +16,11 @@ MAX_TEXT_BYTES = 256 * 1024
 class TextWindowPolicy(NamedTuple):
     lookahead: int
     alignment: int
+    budget_fallback: bool = False
 
 
 DEFAULT_WINDOW_POLICY = TextWindowPolicy(WINDOW_SIZE, PAGE_SIZE)
-RETAINED_WINDOW_POLICY = TextWindowPolicy(1024, 16)
+RETAINED_WINDOW_POLICY = TextWindowPolicy(1024, 16, True)
 
 
 class TextReadLimit(RuntimeError):
@@ -61,21 +62,13 @@ def union_bytes(ranges):
     return total
 
 
-def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
-    """Merge overlapping windows before decoding, including backward CFG edges."""
-    if (not isinstance(policy, TextWindowPolicy) or policy.lookahead < 15 or
-            policy.alignment <= 0 or policy.alignment & (policy.alignment - 1)):
-        raise ValueError("invalid text window policy")
-    # Existing bytes remain mandatory. A new root needs the full maximum x86
-    # instruction length; only new lookahead follows the translation's policy.
-    windows = [(start, start + len(data), set(roots), start + len(data))
-               for data, start, roots in regions]
-    previous_bytes = union_bytes((start, end) for start, end, _, _ in windows)
+def _plan_regions(existing, targets, lookahead, alignment):
+    """Plan only metadata; old extents and each new instruction remain required."""
+    windows = list(existing)
     requested_bytes = 0
-    targets = sorted(set(targets))
     for target in targets:
-        start = target & ~(policy.alignment - 1)
-        end = max(start + policy.lookahead, target + 15)
+        start = target & ~(alignment - 1)
+        end = max(start + lookahead, target + 15)
         if not 0xFFFFFFFF80000000 < start < end < 0xFFFFFFFFFFFFFFFF:
             raise RuntimeError(f"JMP/CALL target {target:#x} is outside kernel space")
         requested_bytes += end - start
@@ -88,16 +81,48 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
             merged[-1][3] = max(required_end, merged[-1][3])
         else:
             merged.append([start, end, set(roots), required_end])
-    planned_bytes = sum(end - start for start, end, _, _ in merged)
+    return merged, requested_bytes
+
+
+def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
+    """Merge overlapping windows before decoding, including backward CFG edges."""
+    if (not isinstance(policy, TextWindowPolicy) or policy.lookahead < 15 or
+            policy.alignment <= 0 or policy.alignment & (policy.alignment - 1) or
+            type(policy.budget_fallback) is not bool or
+            policy.budget_fallback and (policy.lookahead, policy.alignment) != (1024, 16)):
+        raise ValueError("invalid text window policy")
+    # Existing bytes remain mandatory. A new root needs the full maximum x86
+    # instruction length; only new lookahead follows the translation's policy.
+    existing = [(start, start + len(data), set(roots), start + len(data))
+                for data, start, roots in regions]
+    previous_bytes = union_bytes((start, end) for start, end, _, _ in existing)
+    targets = sorted(set(targets))
+    lookaheads = ((1024, 512, 256, 128, 64, 15) if policy.budget_fallback
+                 else (policy.lookahead,))
+    # Retry only an oversized plan, before any lease request or source read.
+    # Rebuild from the original cache each time: failed optional tails never
+    # become mandatory, and no old bytes or roots can be lost to make it fit.
+    plans = []
+    for lookahead in lookaheads:
+        merged, requested_bytes = _plan_regions(existing, targets, lookahead, policy.alignment)
+        planned_bytes = sum(end - start for start, end, _, _ in merged)
+        fits = planned_bytes <= MAX_TEXT_BYTES
+        plans.append(dict(lookahead_bytes=lookahead, requested_bytes=requested_bytes,
+                          planned_bytes=planned_bytes, regions=len(merged), within_budget=fits))
+        if fits:
+            break
+    # Diagnostics coalesce by source site. One record therefore carries every
+    # rejected plan as well as the selected plan, before its first source read.
     diagnostics.warn(
         "TEXT_CACHE_PLAN", "plan_leased_text", "cached windows include lookahead",
-        lookahead_bytes=policy.lookahead, alignment_bytes=policy.alignment,
+        lookahead_bytes=lookahead, alignment_bytes=policy.alignment,
+        preferred_lookahead_bytes=policy.lookahead, attempted_plans=plans,
         previous_bytes=previous_bytes, requested_bytes=requested_bytes,
         planned_bytes=planned_bytes, additional_bytes=planned_bytes - previous_bytes,
         regions=len(merged), targets=len(targets), budget_bytes=MAX_TEXT_BYTES,
-        within_budget=planned_bytes <= MAX_TEXT_BYTES,
+        within_budget=fits, selected=fits,
     )
-    if planned_bytes > MAX_TEXT_BYTES:
+    if not fits:
         raise TextReadLimit(f"reachable text exceeds {MAX_TEXT_BYTES} bytes")
     result = []
     for start, end, roots, required_end in merged:

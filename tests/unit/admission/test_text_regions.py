@@ -1011,6 +1011,100 @@ class CompactTextWindowTests(unittest.TestCase):
         for target in targets:
             self.assertIn(f"loc_{target:x}:".encode(), assembly)
 
+    def test_budget_plan_selects_largest_fit_before_any_source_read(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        log = io.StringIO()
+        memread.diagnostics.begin(0, min(targets))
+        with (patch.object(memread, "MAX_TEXT_BYTES", 1024),
+              contextlib.redirect_stderr(log)):
+            regions = self.extend([], targets)
+        self.assertEqual(self.reads, [(BASE + 0x100, 512), (BASE + 0x3100, 512)])
+        self.assertEqual(sum(len(data) for data, _, _ in regions), 1024)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, targets)
+        # One diagnostic survives the per-site coalescing and includes both
+        # the rejected preferred plan and the selected, actually read plan.
+        self.assertEqual(log.getvalue().count("reason=TEXT_CACHE_PLAN"), 1)
+        self.assertIn("lookahead_bytes=512 ", log.getvalue())
+        self.assertIn('"lookahead_bytes": 1024', log.getvalue())
+        self.assertIn('"planned_bytes": 2048', log.getvalue())
+        self.assertIn('"within_budget": false', log.getvalue())
+        self.assertIn("selected=true", log.getvalue())
+
+    def test_budget_retry_merges_roots_without_shrinking_old_bytes(self):
+        old, overlap, separate = BASE + 0x103, BASE + 0x14F, BASE + 0x310F
+        self.put(BASE + 0x100, bytes(range(80)))
+        data = bytes(self.text[0x100:0x150])
+        initial = [[data, BASE + 0x100, [old]]]
+        with patch.object(memread, "MAX_TEXT_BYTES", 400):
+            regions = self.extend(initial, {overlap, separate})
+        self.assertEqual(self.reads, [(BASE + 0x100, 192), (BASE + 0x3100, 128)])
+        self.assertEqual(regions[0][0][:len(data)], data)
+        self.assertEqual(regions[0][2], [old, overlap])
+        self.assertEqual(regions[1][2], [separate])
+        self.assertEqual(initial, [[data, BASE + 0x100, [old]]])
+
+    def test_budget_retry_completes_reached_callee_before_emission(self):
+        entry, callee = BASE + 0x100, BASE + 0x3100
+        raw = branch(entry, callee, b"\xe8")
+        raw += branch(entry + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(entry, raw)
+        self.put(callee, bytes.fromhex("b82a000000c3"))
+        with patch.object(memread, "MAX_TEXT_BYTES", 1536):
+            initial = self.extend([], {entry})
+            self.reads.clear()
+            assembly, log, status = self.render_retained(entry, initial)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(self.reads, [(entry, 1024), (callee, 512)])
+        self.assertIn(f"loc_{entry:x}:".encode(), assembly)
+        self.assertIn(f"loc_{callee:x}:".encode(), assembly)
+        self.assertIn("lookahead_bytes=512 ", log)
+        self.assertIn("pending_targets=0", log)
+
+    def test_budget_minimum_keeps_full_instruction_across_alignment(self):
+        entry, other = BASE + 0x10F, BASE + 0x3100
+        raw = bytes.fromhex("666666666666660f1f840000000000")
+        self.assertEqual(len(raw), 15)
+        self.put(entry, raw)
+        with patch.object(memread, "MAX_TEXT_BYTES", 45):
+            regions = self.extend([], {entry, other})
+        self.assertEqual(self.reads, [(BASE + 0x100, 30), (other, 15)])
+        self.assertEqual(regions[0][0][15:], raw)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, {entry, other})
+
+    def test_budget_retry_cannot_evict_old_bytes_to_fit_new_prefix(self):
+        old, target = BASE + 0x103, BASE + 0x310F
+        data = bytes(self.text[0x100:0x140])
+        initial = [[data, BASE + 0x100, [old]]]
+        with (patch.object(memread, "MAX_TEXT_BYTES", 93),
+              patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "93 bytes")):
+            memread.extend_regions(initial, {target}, policy=self.policy)
+        reader.assert_not_called()
+        self.assertEqual(initial, [[data, BASE + 0x100, [old]]])
+
+    def test_budget_fallback_requires_explicit_retained_policy(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        for policy in (memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(1024, 16)):
+            with (self.subTest(policy=policy),
+                  patch.object(memread, "MAX_TEXT_BYTES", 1024),
+                  patch.object(memread, "read_kernel_addr_data") as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "1024 bytes")):
+                memread.extend_regions([], targets, policy=policy)
+            reader.assert_not_called()
+
+    def test_source_refusal_does_not_restart_budget_planning(self):
+        for error in (errno.EPERM, errno.ESTALE):
+            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 64),
+                  patch.object(memread.diagnostics, "warn") as warn,
+                  patch.object(memread, "read_kernel_addr_data", side_effect=
+                               device_session.SourceRefused("mandatory source unavailable", errno=error)) as reader,
+                  self.assertRaises(device_session.SourceRefused)):
+                memread.extend_regions([], {BASE + 0x100}, policy=self.policy)
+            reader.assert_called_once_with(BASE + 0x100, 64)
+            warn.assert_called_once()
+            self.assertEqual(warn.call_args.kwargs["lookahead_bytes"], 64)
+            self.assertTrue(warn.call_args.kwargs["selected"])
+
     def test_full_fifteen_byte_prefix_crosses_the_policy_alignment(self):
         entry = BASE + 0xFFF
         raw = bytes.fromhex("666666666666660f1f840000000000")
@@ -1098,13 +1192,13 @@ class CompactTextWindowTests(unittest.TestCase):
             memread.extend_regions([], {entry}, policy=self.policy)
         self.assertEqual(self.reads, [(BASE + 0xFF0, 1024)])
 
-    def test_compact_budget_failure_happens_before_any_source_read(self):
+    def test_compact_mandatory_budget_failure_happens_before_any_source_read(self):
         targets = {BASE + 0x100, BASE + 0x3100}
         for error in (errno.EPERM, errno.ESTALE):
-            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 1024),
+            with (self.subTest(error=error), patch.object(memread, "MAX_TEXT_BYTES", 29),
                   patch.object(memread, "read_kernel_addr_data", side_effect=
                                device_session.SourceRefused("unavailable lookahead", errno=error)) as reader,
-                  self.assertRaisesRegex(memread.TextReadLimit, "1024 bytes")):
+                  self.assertRaisesRegex(memread.TextReadLimit, "29 bytes")):
                 memread.extend_regions([], targets, policy=self.policy)
             reader.assert_not_called()
 

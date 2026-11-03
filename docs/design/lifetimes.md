@@ -184,3 +184,35 @@ fits; the 50 GiB fresh-preparation gate remains intact. Use a separate measured
 source/Build ID/boot boundary, re-audit writer entry addresses, validate the
 query and ownership, then retry both unchanged mmap1 models. Do not claim proxy
 execution, throughput or promotion from a build or published image alone.
+
+## Retained text-window budget planning
+
+The `79b6a768` attempt on scope5 v3 stops before factory activation or mmap1
+execution. For `__do_sys_brk`, the retained cache holds 205,232 bytes, including
+93,709 selected decoded bytes; the next 1,024-byte lookahead batch would require
+304,544 bytes and exceeds the unchanged 262,144-byte cap. Three other entries
+stop at the same cap with incomplete CFGs. Selected decoded coverage is not a
+bound on the eventual complete call closure.
+
+For the retained-service policy only, plan optional new lookahead in the fixed
+order 1,024, 512, 256, 128, 64, then the mandatory 15-byte instruction prefix.
+Use the largest batch whose merged cache fits. Every existing byte and root,
+the aligned new window start and all new roots through `target + 15` remain
+required. Planning retries perform no source read. If the minimum merged plan
+still exceeds the cap, preserve the explicit budget failure before any read.
+Record each attempted plan, its actual lookahead and whether it was selected;
+do not report a rejected preferred plan as the fetched byte count.
+
+This changes optional fetch planning, not the source-lease boundary or executable
+scope. Keep pin-before-read, complete CFG decoding, the shared 32-expansion
+limit, the 640 KiB image limit and all CALL/RET/owner checks. Ordinary translations
+retain their 8,192-byte page-aligned policy without these retries. A source
+refusal does not trigger budget retries or permit discarding previously fetched
+bytes. The existing mandatory-prefix source-refusal handling remains separate.
+
+Focused cases must cover the largest fitting batch, unchanged preferred/default
+plans, merged roots and old bytes, the full 15-byte prefix across alignment,
+minimum-plan overflow and source refusal after a plan is selected. These cases
+and actual MM preparation still require VM validation. Reducing this immediate
+storage overhead does not prove complete callee closure, application execution
+or performance acceptance.
