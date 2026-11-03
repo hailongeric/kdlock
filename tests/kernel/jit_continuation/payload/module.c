@@ -557,6 +557,7 @@ static int __init continuation_init(void)
 #endif
 #ifdef JIT_CONTINUATION_HELPER
 	BUILD_BUG_ON(sizeof(struct jit_helper_snapshot) != 1496);
+	BUILD_BUG_ON(sizeof(struct jit_mapped_snapshot) != 240);
 	BUILD_BUG_ON(sizeof(struct jit_native_snapshot) != 1976);
 	BUILD_BUG_ON(sizeof(struct jit_memory_snapshot) != 312);
 	BUILD_BUG_ON(sizeof(struct jit_native_write_snapshot) != 952);

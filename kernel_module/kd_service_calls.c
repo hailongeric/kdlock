@@ -12,6 +12,7 @@
 #include <linux/string.h>
 #include "kd_service_calls.h"
 #include "kd_source.h"
+#include "kd_regs.h"
 
 #define KD_SERVICE_CALL_MAX 128U
 #define KD_SERVICE_CALL_NAME 96U
@@ -21,6 +22,8 @@ struct kd_service_call_entry {
 	u64 cookie;
 	atomic_t users;
 	unsigned char nargs, result_kind, context_kind;
+	unsigned long execution_target;
+	unsigned char execution_nargs, arguments[6];
 	bool active;
 	char symbol[KD_SERVICE_CALL_NAME];
 };
@@ -82,6 +85,34 @@ static bool kd_service_call_valid(const struct kd_service_call_desc *desc)
 		 desc->target == kallsyms_lookup_name("__stack_chk_fail")) &&
 		strnlen(desc->symbol, KD_SERVICE_CALL_NAME) < KD_SERVICE_CALL_NAME &&
 		!strpbrk(desc->symbol, " \t\r\n");
+}
+
+static bool kd_service_call_mapped_valid(const struct kd_service_call_mapped_desc *desc)
+{
+	unsigned int i;
+
+	if (!kd_service_call_valid(&desc->source) ||
+	    desc->source.context_kind != KD_SERVICE_CALL_BALANCED_ORIGIN ||
+	    desc->version != KD_SERVICE_CALL_MAP_V1 || !desc->execution_target ||
+	    desc->execution_nargs > 6 || desc->reserved)
+		return false;
+	for (i = 0; i < 6; i++) {
+		unsigned int argument = desc->arguments[i];
+
+		if (i >= desc->execution_nargs) {
+			if (argument != KD_SERVICE_ARG_UNUSED)
+				return false;
+			continue;
+		}
+		if (argument >= KD_SERVICE_ARG_SOURCE0 && argument <= KD_SERVICE_ARG_SOURCE5) {
+			if (argument - KD_SERVICE_ARG_SOURCE0 >= desc->source.nargs)
+				return false;
+		} else if (argument != KD_SERVICE_ARG_ZERO && argument != KD_SERVICE_ARG_MINUS_ONE &&
+			   argument != KD_SERVICE_ARG_RETURN_IP) {
+			return false;
+		}
+	}
+	return true;
 }
 
 static int kd_service_call_format(char *buffer, size_t size, u64 cookie,
@@ -175,6 +206,8 @@ int kd_service_call_register(const struct kd_service_call_desc *descs,
 		entry->nargs = descs[i].nargs;
 		entry->result_kind = descs[i].result_kind;
 		entry->context_kind = descs[i].context_kind;
+		entry->execution_target = 0;
+		entry->execution_nargs = 0;
 		strscpy(entry->symbol, descs[i].symbol, sizeof(entry->symbol));
 		atomic_set(&entry->users, 0);
 		smp_store_release(&entry->active, true);
@@ -186,6 +219,103 @@ out:
 	return result;
 }
 EXPORT_SYMBOL_GPL(kd_service_call_register);
+
+/* The mapped array has a different stride. Count its logical discovery rows
+ * directly, without constructing an unbounded temporary descriptor array. */
+static int kd_service_call_mapped_configuration_size(
+	const struct kd_service_call_mapped_desc *descs, unsigned int count)
+{
+	char row[160];
+	size_t bytes = 0;
+	unsigned int i;
+	int length;
+
+	for (i = 0; i < kd_service_call_count; i++) {
+		const struct kd_service_call_entry *entry = &kd_service_call_entries[i];
+
+		if (!entry->active)
+			continue;
+		length = kd_service_call_format(row, sizeof(row), entry->cookie, entry->target,
+			entry->nargs, entry->result_kind, entry->context_kind, entry->symbol);
+		if (length < 0 || (size_t)length >= sizeof(row))
+			return -EOVERFLOW;
+		bytes += length;
+	}
+	for (i = 0; i < count; i++) {
+		const struct kd_service_call_desc *source = &descs[i].source;
+
+		length = kd_service_call_format(row, sizeof(row), kd_service_call_count + i + 1,
+			source->target, source->nargs, source->result_kind, source->context_kind, source->symbol);
+		if (length < 0 || (size_t)length >= sizeof(row))
+			return -EOVERFLOW;
+		bytes += length;
+	}
+	return bytes < PAGE_SIZE ? 0 : -ENOSPC;
+}
+
+int kd_service_call_register_mapped(const struct kd_service_call_mapped_desc *descs,
+	unsigned int count, struct module *owner)
+{
+	unsigned int i, j;
+	int result = 0;
+
+	if (!descs || !count || count > KD_SERVICE_CALL_MAX)
+		return -EINVAL;
+	mutex_lock(&kd_service_call_configuration);
+	if (kd_service_call_frozen) {
+		result = -EBUSY;
+		goto out;
+	}
+	if (count > KD_SERVICE_CALL_MAX - kd_service_call_count) {
+		result = -ENOSPC;
+		goto out;
+	}
+	for (i = 0; i < count; i++) {
+		if (!kd_service_call_mapped_valid(&descs[i])) {
+			result = -EINVAL;
+			goto out;
+		}
+		for (j = 0; j < kd_service_call_count; j++)
+			if (kd_service_call_entries[j].active &&
+			    (kd_service_call_entries[j].target == descs[i].source.target ||
+			     !strcmp(kd_service_call_entries[j].symbol, descs[i].source.symbol))) {
+				result = -EEXIST;
+				goto out;
+			}
+		for (j = 0; j < i; j++)
+			if (descs[j].source.target == descs[i].source.target ||
+			    !strcmp(descs[j].source.symbol, descs[i].source.symbol)) {
+				result = -EEXIST;
+				goto out;
+			}
+	}
+	result = kd_service_call_mapped_configuration_size(descs, count);
+	if (result)
+		goto out;
+	for (i = 0; i < count; i++) {
+		const struct kd_service_call_desc *source = &descs[i].source;
+		struct kd_service_call_entry *entry = &kd_service_call_entries[kd_service_call_count];
+
+		entry->target = source->target;
+		entry->owner = owner;
+		entry->cookie = kd_service_call_count + 1;
+		entry->nargs = source->nargs;
+		entry->result_kind = source->result_kind;
+		entry->context_kind = source->context_kind;
+		entry->execution_target = descs[i].execution_target;
+		entry->execution_nargs = descs[i].execution_nargs;
+		for (j = 0; j < 6; j++)
+			entry->arguments[j] = descs[i].arguments[j];
+		strscpy(entry->symbol, source->symbol, sizeof(entry->symbol));
+		atomic_set(&entry->users, 0);
+		smp_store_release(&entry->active, true);
+		smp_store_release(&kd_service_call_count, kd_service_call_count + 1);
+	}
+out:
+	mutex_unlock(&kd_service_call_configuration);
+	return result;
+}
+EXPORT_SYMBOL_GPL(kd_service_call_register_mapped);
 
 int kd_service_call_unregister(struct module *owner)
 {
@@ -257,6 +387,58 @@ bool kd_service_call_matches(const struct kd_service_call_entry *entry,
 		smp_load_acquire(&entry->active);
 }
 
+bool kd_service_call_invocation_matches(const struct kd_service_call_entry *entry,
+	unsigned long source_target, unsigned long execution_target)
+{
+	return kd_service_call_matches(entry, source_target) &&
+		entry->execution_target == execution_target;
+}
+
+int kd_service_call_arguments(const struct kd_service_call_entry *entry,
+	const struct kd_regs *packet, unsigned long return_ip,
+	unsigned long *execution_target, unsigned long arguments[6])
+{
+	unsigned int i;
+
+	if (!packet || !execution_target || !arguments || !return_ip ||
+	    !kd_service_call_matches(entry, packet->ip))
+		return -EINVAL;
+	*execution_target = entry->execution_target;
+	if (!entry->execution_target)
+		return 0;
+	/* Preserve otherwise unspecified input registers too. Every slot is
+	 * initialized from the same untouched packet before map substitution. */
+	arguments[0] = packet->di;
+	arguments[1] = packet->si;
+	arguments[2] = packet->dx;
+	arguments[3] = packet->cx;
+	arguments[4] = packet->r8;
+	arguments[5] = packet->r9;
+	for (i = 0; i < entry->execution_nargs; i++) {
+		unsigned int argument = entry->arguments[i];
+
+		if (argument >= KD_SERVICE_ARG_SOURCE0 && argument <= KD_SERVICE_ARG_SOURCE5) {
+			switch (argument - KD_SERVICE_ARG_SOURCE0) {
+			case 0: arguments[i] = packet->di; break;
+			case 1: arguments[i] = packet->si; break;
+			case 2: arguments[i] = packet->dx; break;
+			case 3: arguments[i] = packet->cx; break;
+			case 4: arguments[i] = packet->r8; break;
+			case 5: arguments[i] = packet->r9; break;
+			}
+		} else if (argument == KD_SERVICE_ARG_ZERO) {
+			arguments[i] = 0;
+		} else if (argument == KD_SERVICE_ARG_MINUS_ONE) {
+			arguments[i] = ~0UL;
+		} else if (argument == KD_SERVICE_ARG_RETURN_IP) {
+			arguments[i] = return_ip;
+		} else {
+			return -EINVAL;
+		}
+	}
+	return 0;
+}
+
 unsigned int kd_service_call_context(const struct kd_service_call_entry *entry)
 {
 	BUG_ON(!entry || !atomic_read(&entry->users));
@@ -278,6 +460,11 @@ int kd_service_calls_pin(void)
 		result = kd_source_pin_root(kd_service_call_entries[i].target);
 		if (result)
 			break;
+		if (kd_service_call_entries[i].execution_target) {
+			result = kd_source_pin_root(kd_service_call_entries[i].execution_target);
+			if (result)
+				break;
+		}
 	}
 	mutex_unlock(&kd_service_call_configuration);
 	return result;
@@ -318,6 +505,7 @@ MODULE_PARM_DESC(service_call_table, "Exact returning primitive descriptors for 
 int kd_service_calls_init(void)
 {
 	struct kd_service_call_desc desc;
+	struct kd_service_call_mapped_desc mapped;
 	int result;
 
 #define KD_SERVICE_CONTEXT(name, args, result_type, context) do { \
@@ -334,7 +522,22 @@ int kd_service_calls_init(void)
 } while (0);
 #define KD_SERVICE_CALL(name, args, result_type) \
 	KD_SERVICE_CONTEXT(name, args, result_type, KD_SERVICE_CALL_BALANCED_ORIGIN)
+#define KD_SERVICE_MAPPED_CALL(name, args, native_name, native_args, a0, a1, a2, a3, a4, a5) do { \
+	mapped = (struct kd_service_call_mapped_desc){ \
+		.source = { .symbol = #name, .target = kallsyms_lookup_name(#name), \
+			.nargs = args, .result_kind = KD_SERVICE_CALL_WORD, \
+			.context_kind = KD_SERVICE_CALL_BALANCED_ORIGIN }, \
+		.execution_target = kallsyms_lookup_name(#native_name), \
+		.version = KD_SERVICE_CALL_MAP_V1, .execution_nargs = native_args, \
+		.arguments = { a0, a1, a2, a3, a4, a5 } }; \
+	if (mapped.source.target) { \
+		if (!mapped.execution_target) return -ENOENT; \
+		result = kd_service_call_register_mapped(&mapped, 1, NULL); \
+		if (result) return result; \
+	} \
+} while (0);
 #include "kd_service_calls.def"
+#undef KD_SERVICE_MAPPED_CALL
 #undef KD_SERVICE_CALL
 #undef KD_SERVICE_CONTEXT
 	return 0;

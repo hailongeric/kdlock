@@ -5,6 +5,8 @@
 #include <string.h>
 
 #define IS_ENABLED(option) (option)
+/* Match the current live kernel; map roster variants have their own fixture. */
+#define CONFIG_SLAB_BUCKETS 1
 #include "production.h"
 
 #define CHECK(condition) do { \
@@ -19,9 +21,12 @@
 	{ .symbol = #name, .nargs = args, .result_kind = result_type, .context_kind = context },
 #define KD_SERVICE_CALL(name, args, result_type) \
 	KD_SERVICE_CONTEXT(name, args, result_type, KD_SERVICE_CALL_BALANCED_ORIGIN)
+#define KD_SERVICE_MAPPED_CALL(name, arity, execution, native_arity, a0, a1, a2, a3, a4, a5) \
+	KD_SERVICE_CALL(name, arity, KD_SERVICE_CALL_WORD)
 static const struct kd_service_call_desc primitives[] = {
 #include "kd_service_calls.def"
 };
+#undef KD_SERVICE_MAPPED_CALL
 #undef KD_SERVICE_CALL
 #undef KD_SERVICE_CONTEXT
 
@@ -31,7 +36,7 @@ int main(void)
 		.nargs = 0, .result_kind = KD_SERVICE_CALL_VOID,
 		.context_kind = KD_SERVICE_CALL_SCHEDULE_ORIGIN,
 	};
-	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0;
+	unsigned int checks = 0, schedules = 0, policies = 0, callbacks = 0, writers = 0, allocators = 0;
 	unsigned int context, pins, rcu;
 	size_t i;
 
@@ -116,6 +121,13 @@ int main(void)
 						primitive->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN);
 				}
 		}
+		if (!strcmp(primitive->symbol, "__kmalloc_cache_noprof") ||
+		    !strcmp(primitive->symbol, "__kmalloc_cache_node_noprof")) {
+			++allocators;
+			CHECK(primitive->nargs == (!strcmp(primitive->symbol, "__kmalloc_cache_noprof") ? 3 : 4) &&
+				primitive->result_kind == KD_SERVICE_CALL_WORD &&
+				primitive->context_kind == KD_SERVICE_CALL_BALANCED_ORIGIN);
+		}
 		if (!strcmp(primitive->symbol, "down_write") || !strcmp(primitive->symbol, "up_write")) {
 			++writers;
 			CHECK(primitive->nargs == 1 && primitive->result_kind == KD_SERVICE_CALL_VOID &&
@@ -125,7 +137,7 @@ int main(void)
 	}
 	CHECK(schedules == 8);
 	CHECK(policies == 2);
-	CHECK(callbacks == 8 && writers == 2);
+	CHECK(callbacks == 8 && writers == 2 && allocators == 2);
 	printf("Native schedule context: checks=%u PREEMPT_RCU=%u\n", checks,
 		(unsigned int)CONFIG_PREEMPT_RCU);
 	return 0;

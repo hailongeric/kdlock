@@ -120,6 +120,7 @@ jit_test_call_wait(unsigned long index, unsigned long a1, unsigned long a2,
 	return result;
 }
 
+#include "helper_mapped.inc"
 #include "helper_native.inc"
 #include "helper_native_write.inc"
 #include "helper_memory.inc"
@@ -166,6 +167,7 @@ static int helper_unregister(void)
 	result = kd_service_call_unregister(THIS_MODULE);
 	if (!result) {
 		WRITE_ONCE(helper_registered, false);
+		WRITE_ONCE(helper_mapped_registered, false);
 		module_put(THIS_MODULE);
 	}
 	return result;

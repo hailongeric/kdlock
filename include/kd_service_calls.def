@@ -15,6 +15,27 @@ KD_SERVICE_CALL(kmem_cache_prefill_sheaf, 3, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_refill_sheaf, 4, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_alloc_from_sheaf_noprof, 3, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CALL(kmem_cache_return_sheaf, 3, KD_SERVICE_CALL_VOID)
+/* Caller-dependent cache choice uses the original source return word through
+ * the reviewed explicit-caller Native entry, preserving GFP/bucket/node. */
+#ifdef CONFIG_SLAB_BUCKETS
+KD_SERVICE_MAPPED_CALL(__kmalloc_noprof, 2, __kmalloc_node_track_caller_noprof, 5,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_ZERO, KD_SERVICE_ARG_SOURCE1,
+	KD_SERVICE_ARG_MINUS_ONE, KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED)
+KD_SERVICE_MAPPED_CALL(__kmalloc_node_noprof, 4, __kmalloc_node_track_caller_noprof, 5,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_SOURCE2,
+	KD_SERVICE_ARG_SOURCE3, KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED)
+#else
+KD_SERVICE_MAPPED_CALL(__kmalloc_noprof, 2, __kmalloc_node_track_caller_noprof, 4,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_MINUS_ONE,
+	KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED, KD_SERVICE_ARG_UNUSED)
+KD_SERVICE_MAPPED_CALL(__kmalloc_node_noprof, 3, __kmalloc_node_track_caller_noprof, 4,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_SOURCE2,
+	KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED, KD_SERVICE_ARG_UNUSED)
+#endif
+/* The caller already selected the cache. Keep exact size/node APIs; their
+ * physical caller contributes only trace/debug attribution in this source. */
+KD_SERVICE_CALL(__kmalloc_cache_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__kmalloc_cache_node_noprof, 4, KD_SERVICE_CALL_WORD)
 KD_SERVICE_CONTEXT(kmem_cache_free, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
 KD_SERVICE_CONTEXT(kfree, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)

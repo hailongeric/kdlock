@@ -474,6 +474,14 @@ int kd_exec_cont_native_prepare(struct kd_exec_frame *frame)
 		kd_service_call_put(entry);
 		return result;
 	}
+	result = kd_service_call_arguments(entry, cont->packet, return_ip,
+		&call->execution_target, call->execution_arguments);
+	if (result) {
+		call->call.phase = KD_CALL_NONE;
+		call->execution_target = 0;
+		kd_service_call_put(entry);
+		return result;
+	}
 	call->entry = entry;
 	call->packet = cont->packet;
 	call->target = call->call.target;
@@ -521,7 +529,7 @@ int kd_exec_cont_native_complete(struct kd_exec_continuation *cont, u64 sequence
 	    call->origin != cont->request->logical_origin ||
 	    call->identity != cont->request->identity || call->generation != cont->generation ||
 	    call->packet != cont->packet || call->servicing ||
-	    !kd_service_call_matches(call->entry, call->target) ||
+	    !kd_service_call_invocation_matches(call->entry, call->target, call->execution_target) ||
 	    call->call.phase != KD_CALL_PENDING ||
 	    cont->packet->ip != call->call.target || cont->packet->sp != call->call.stack ||
 	    kd_exec_cont_call_word(cont, &return_ip) || return_ip != call->call.return_ip)

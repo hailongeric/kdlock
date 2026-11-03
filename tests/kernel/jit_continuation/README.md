@@ -67,7 +67,7 @@ MM execution. Source is unvalidated until matching VM receipts exist.
 
 ## Returning original-task primitives
 
-`--mode helper --family rwsem --cpus 0-3` adds a separate nine-phase functional
+`--mode helper --family rwsem --cpus 0-3` adds a separate eleven-phase functional
 check using the same module, publication and normal retirement machinery.
 The existing eleven `killable` phases keep their typed-only image requirement
 384. Helper mode has reachable declared primitive CALLs, inline GS updates and
@@ -449,3 +449,34 @@ context-switch totals. The 1496-, 1976- and 312-byte observation ABIs retain
 their layouts. Holder release is explicit and bounded; timeout retains the
 callers/modules and never authorizes forced task exit or unload. These are
 mechanism checks, not an MM workload or performance result.
+
+## Explicit Native argument mapping fixture
+
+The mapped-call follow-up retains all nine helper phases and all eleven
+killable/nesting phases. The two additional helper phases are prospective checks:
+`primitive-mapped-two-to-five` uses a two-argument logical function and a distinct
+five-argument Native function; `primitive-mapped-allocation` calls the production
+`__kmalloc_noprof` mapping once and releases that exact allocation once.
+
+The general fixture registers its map through a separate post-load ioctl before
+source freezing. Thus a rejected mapped registration leaves the existing loaded
+module available for normal source retirement, rather than returning module-init
+failure after partial registration. It verifies source0, zero, source1, minus
+one and the real source CALL successor, original task/stack and context, and
+same-executor/image AX/flags continuation without replay. Supported `SETcc`
+instructions observe CF/PF/ZF/SF/OF immediately after the source CALL; the
+transaction trace also requires complete done/resume flags equality. A separate observation
+ioctl preserves all older fixture packet layouts. The bounded allocation check
+uses 53 zero-initialized bytes, checks and writes each byte, then observes its
+exact `kfree` transaction. This is allocator mechanism evidence, not an unchanged
+application workload or allocation-policy equivalence proof. Sources are not
+validated until the directly affected VM checks and live phases complete.
+
+The focused unit additions are `codegen/test_native_call_mapping.py` (production
+registry/map/pinning bodies under both `CONFIG_SLAB_BUCKETS` rosters, plus seven
+detected-mutation requirements under the actual enabled roster) and
+`infrastructure/test_mapped_continuation.py` (four runner observation cases with
+negative variants). The existing scheduling-contract fixture now reads mapped
+logical descriptors and checks the two exact cache API arities. The new mapped
+snapshot is version 1, 240 bytes; prior observation packets are unchanged.
+Actual compilation, negative-control detection and live outcomes remain pending.

@@ -65,6 +65,8 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_NATIVE_WRITE 4096U
 #define JIT_KILLABLE_NATIVE_WRITE_EARLY 8192U
 #define JIT_KILLABLE_HELPER_TAIL 16384U
+#define JIT_KILLABLE_HELPER_MAPPED 32768U
+#define JIT_KILLABLE_HELPER_ALLOC 65536U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
@@ -152,4 +154,13 @@ struct jit_native_write_snapshot {
 	struct jit_native_write_event events[JIT_NATIVE_WRITE_EVENTS];
 };
 #define JIT_NATIVE_WRITE_SNAPSHOT _IOR('E', 16, struct jit_native_write_snapshot)
+struct jit_mapped_snapshot {
+	__u64 version, errors, registered, source_target, execution_target;
+	__u64 logical_calls, calls, pid, stack_address, stack_low, stack_high, preempt, irqs;
+	__u64 arguments[5], result, body_result, body_after, body_flags, source_return;
+	__u64 allocation_size, allocation_flags, allocation_pointer, allocation_zero_bytes;
+	__u64 allocation_written_bytes, allocation_freed, allocation_body_after;
+};
+#define JIT_MAPPED_SNAPSHOT _IOR('E', 17, struct jit_mapped_snapshot)
+#define JIT_MAPPED_REGISTER _IO('E', 18)
 #endif

@@ -22,6 +22,7 @@ DECLARATIONS = {
     'jit_test_native_rcu_unlock': (0, 2, 8),
     'jit_test_memory_observe': (1, 2, 2),
     'jit_test_native_write_lock': (1, 2, 12), 'jit_test_native_write_unlock': (1, 2, 13),
+    'jit_test_call_mapped': (2, 1, 1),
 }
 SYMBOLS = tuple(DECLARATIONS)
 NATIVE_SNAPSHOT = 0x87B8450E
@@ -108,6 +109,8 @@ def primitive_events(messages):
         row = dict(stage=fields['stage'])
         for key in required - {'stage'}:
             row[key] = int(fields[key], 16 if key in ('identity', 'target', 'return', 'ax', 'flags') else 10)
+        if 'execution_target' in fields:
+            row['execution_target'] = int(fields['execution_target'], 16)
         rows.append(row)
     return rows
 
@@ -211,6 +214,8 @@ def session_class(base):
                            caps['features'] & ((1 << 14) | (1 << 15) | (1 << 16)) ==
                            ((1 << 14) | (1 << 15) | (1 << 16)),
                            'returning primitive/GS instruction service unavailable', 'ENVIRONMENT')
+                from mapped_mode import REGISTER
+                control(REGISTER)
                 state = helper_snapshot()
                 rt.require(state['registered'] == 1 and not state['errors'],
                            'primitive fixture registration failed', 'DATA_ERROR')
@@ -224,7 +229,16 @@ def session_class(base):
                     raise rt.Failure('DATA_ERROR', 'registered primitives removed before source closure')
                 rt.require(helper_snapshot()['registered'] == 1,
                            'failed unregister dropped registration pin', 'DATA_ERROR')
-                self.record.update(helper_descriptors=self.helper_descriptors,
+                expected_alloc = {'__kmalloc_noprof': (2, 1, 1), 'kfree': (1, 2, 2)}
+                self.allocation_descriptors = {}
+                for name, expected in expected_alloc.items():
+                    rows = [row for row in self.helper_table_before if row['symbol'] == name]
+                    rt.require(len(rows) == 1 and rows[0]['target'] > 0 and rows[0]['cookie'] > 0 and
+                               tuple(rows[0][key] for key in ('nargs', 'result', 'context')) == expected,
+                               'production allocation descriptor differs', 'DATA_ERROR')
+                    self.allocation_descriptors[name] = rows[0]
+                self.record.update(allocation_descriptors=self.allocation_descriptors,
+                                   helper_descriptors=self.helper_descriptors,
                                    open_source_unregister='EBUSY; registration retained')
                 self.save()
             return result
@@ -317,10 +331,13 @@ def session_class(base):
                 self.phase_end(result, successful=[pid])
                 result['execution'] = 'NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE'
                 self.save()
+            from mapped_mode import run_mapped_checks
+            run_mapped_checks(self)
             from memory_mode import run_memory_checks
             run_memory_checks(self)
             from native_write_mode import run_native_write_checks
             run_native_write_checks(self)
+            rt.require(len(self.record['phases']) == 11, 'helper phase coverage differs', 'DATA_ERROR')
             trace.write_text('0\n')
             rt.require(trace.read_text().strip() == 'N', 'service trace final readback differs')
             self.record.update(accepted=True, jit_status='RETURNING_ORIGINAL_TASK_PRIMITIVES',

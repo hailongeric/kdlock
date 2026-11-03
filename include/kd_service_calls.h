@@ -9,6 +9,8 @@
 #define KD_ORIGIN_CALL_NATIVE_SP 16
 #define KD_ORIGIN_CALL_SHADOW_SP 24
 #define KD_ORIGIN_CALL_SHADOW_BP 32
+#define KD_ORIGIN_CALL_EXECUTION_TARGET 40
+#define KD_ORIGIN_CALL_ARGUMENTS 48
 
 #ifndef __ASSEMBLER__
 #include <linux/list.h>
@@ -75,6 +77,32 @@ struct kd_service_call_desc {
 	unsigned char reserved;
 };
 
+#define KD_SERVICE_CALL_MAP_V1 1U
+enum kd_service_call_argument {
+	KD_SERVICE_ARG_UNUSED,
+	KD_SERVICE_ARG_SOURCE0,
+	KD_SERVICE_ARG_SOURCE1,
+	KD_SERVICE_ARG_SOURCE2,
+	KD_SERVICE_ARG_SOURCE3,
+	KD_SERVICE_ARG_SOURCE4,
+	KD_SERVICE_ARG_SOURCE5,
+	KD_SERVICE_ARG_ZERO,
+	KD_SERVICE_ARG_MINUS_ONE,
+	KD_SERVICE_ARG_RETURN_IP,
+};
+
+/* Separate registration preserves the ordinary descriptor's compiled stride.
+ * Unused selectors and reserved fields must be zero. Both targets are retained
+ * before publication; discovery continues to describe only the source API. */
+struct kd_service_call_mapped_desc {
+	struct kd_service_call_desc source;
+	unsigned long execution_target;
+	unsigned int version;
+	unsigned char execution_nargs;
+	unsigned char arguments[6];
+	unsigned char reserved;
+};
+
 enum kd_origin_call_phase {
 	KD_ORIGIN_CALL_IDLE,
 	KD_ORIGIN_CALL_PREPARED,
@@ -90,6 +118,9 @@ struct kd_origin_call {
 	unsigned long native_sp;
 	unsigned long shadow_sp;
 	unsigned long shadow_bp;
+	/* Zero execution target selects the unchanged identity bridge path. */
+	unsigned long execution_target;
+	unsigned long execution_arguments[6];
 	struct kd_service_call_entry *entry;
 	struct task_struct *origin;
 	struct task_struct *executor;
@@ -119,6 +150,8 @@ struct kd_origin_call {
  * Unregister requires closed source admission and exact execution drain. */
 int kd_service_call_register(const struct kd_service_call_desc *descs,
 	unsigned int count, struct module *owner);
+int kd_service_call_register_mapped(const struct kd_service_call_mapped_desc *descs,
+	unsigned int count, struct module *owner);
 int kd_service_call_unregister(struct module *owner);
 int kd_service_calls_init(void);
 void kd_service_calls_exit(void);
@@ -127,6 +160,11 @@ struct kd_service_call_entry *kd_service_call_get(unsigned long target);
 void kd_service_call_put(struct kd_service_call_entry *entry);
 bool kd_service_call_matches(const struct kd_service_call_entry *entry,
 	unsigned long target);
+bool kd_service_call_invocation_matches(const struct kd_service_call_entry *entry,
+	unsigned long source_target, unsigned long execution_target);
+int kd_service_call_arguments(const struct kd_service_call_entry *entry,
+	const struct kd_regs *packet, unsigned long return_ip,
+	unsigned long *execution_target, unsigned long arguments[6]);
 unsigned int kd_service_call_context(const struct kd_service_call_entry *entry);
 
 int kd_exec_cont_native_prepare(struct kd_exec_frame *frame);

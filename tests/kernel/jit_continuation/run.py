@@ -681,7 +681,7 @@ def main():
             print("PASS: actual other-task killable roots, queued/draining cancellation and nested parent effects")
             return 0
         if args.mode == "helper":
-            print("PASS: six-word original-task primitives return to the same executor/image without replay")
+            print("PASS: identity and mapped original-task primitives return to the same executor/image without replay")
             return 0
         print("PASS: cold paths and reached original-task instructions retain exact effects and tested flags; "
               + ("same-image JIT reentry verified; " if session.record["origin_service"] else "native suffix verified; ")

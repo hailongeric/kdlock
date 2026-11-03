@@ -28,15 +28,29 @@ SYM_FUNC_START(kd_service_origin_bridge)
 	movq KD_REG_BP(%rbx), %rbp
 	movq %r12, %rdi
 	call kd_service_origin_context_begin
+	cmpq $0, KD_ORIGIN_CALL_EXECUTION_TARGET(%r12)
+	jne .Lorigin_mapped_arguments
 	movq KD_REG_DI(%rbx), %rdi
 	movq KD_REG_SI(%rbx), %rsi
 	movq KD_REG_DX(%rbx), %rdx
 	movq KD_REG_CX(%rbx), %rcx
 	movq KD_REG_R8(%rbx), %r8
 	movq KD_REG_R9(%rbx), %r9
+	movq KD_ORIGIN_CALL_TARGET(%r12), %r13
+	jmp .Lorigin_arguments_ready
+.Lorigin_mapped_arguments:
+	/* Mapping changes Native C inputs only. The logical packet, source target
+	 * and inherited source CALL word remain authoritative for completion. */
+	movq KD_ORIGIN_CALL_ARGUMENTS+0(%r12), %rdi
+	movq KD_ORIGIN_CALL_ARGUMENTS+8(%r12), %rsi
+	movq KD_ORIGIN_CALL_ARGUMENTS+16(%r12), %rdx
+	movq KD_ORIGIN_CALL_ARGUMENTS+24(%r12), %rcx
+	movq KD_ORIGIN_CALL_ARGUMENTS+32(%r12), %r8
+	movq KD_ORIGIN_CALL_ARGUMENTS+40(%r12), %r9
+	movq KD_ORIGIN_CALL_EXECUTION_TARGET(%r12), %r13
+.Lorigin_arguments_ready:
 	/* Some declared callbacks preserve ordinary volatile registers. Import
 	 * every source value before the call; keep the target in our saved R13. */
-	movq KD_ORIGIN_CALL_TARGET(%r12), %r13
 	movq KD_REG_AX(%rbx), %rax
 	movq KD_REG_R10(%rbx), %r10
 	movq KD_REG_R11(%rbx), %r11

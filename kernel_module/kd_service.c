@@ -329,12 +329,13 @@ static void kd_service_primitive_trace(const char *stage, struct kd_service_root
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service primitive: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu target=%lx return=%lx image_generation=%lu ax=%lx flags=%lx\n",
+		pr_info("kd_service primitive: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu target=%lx return=%lx image_generation=%lu ax=%lx flags=%lx execution_target=%lx\n",
 			stage, call->origin->pid, call->executor->pid, current->pid,
 			call->identity, (unsigned long long)call->generation,
 			(unsigned long long)call->sequence, call->target, call->call.return_ip,
 			root->image->generation, output ? call->packet->ax : 0,
-			output ? call->packet->flags : 0);
+			output ? call->packet->flags : 0,
+			call->execution_target ? call->execution_target : call->target);
 }
 
 #include "service_native.inc"
@@ -376,7 +377,7 @@ kd_service_origin_terminal_restore(struct kd_origin_call *call)
 	    call->phase != KD_ORIGIN_CALL_RUNNING ||
 	    cont->state != KD_CONT_SUSPENDED || call->executor != root->worker ||
 	    call->packet->sp != call->call.stack || call->packet->ip != call->target ||
-	    !kd_service_call_matches(call->entry, call->target) ||
+	    !kd_service_call_invocation_matches(call->entry, call->target, call->execution_target) ||
 	    copy_from_kernel_nofault(&return_ip, (void *)call->call.stack, sizeof(return_ip)) ||
 	    return_ip != call->call.return_ip ||
 	    preempt_count() != call->baseline_preempt ||
@@ -416,7 +417,8 @@ static void kd_service_origin_primitive(struct kd_service_root *root)
 	    call->generation != root->owner.request.generation ||
 	    cont->state != KD_CONT_SUSPENDED || cont->resume_executor != call->executor ||
 	    call->packet != cont->packet || call->packet->sp != call->call.stack ||
-	    call->packet->ip != call->target || !kd_service_call_matches(call->entry, call->target) ||
+	    call->packet->ip != call->target ||
+	    !kd_service_call_invocation_matches(call->entry, call->target, call->execution_target) ||
 	    call->call.stack < cont->stack_base + 512 ||
 	    call->call.stack > cont->stack_base + THREAD_SIZE - sizeof(return_ip) ||
 	    copy_from_kernel_nofault(&return_ip, (void *)call->call.stack, sizeof(return_ip)) ||
@@ -1364,6 +1366,8 @@ int kd_service_init(void)
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, native_sp) != KD_ORIGIN_CALL_NATIVE_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_sp) != KD_ORIGIN_CALL_SHADOW_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_call, shadow_bp) != KD_ORIGIN_CALL_SHADOW_BP);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, execution_target) != KD_ORIGIN_CALL_EXECUTION_TARGET);
+	BUILD_BUG_ON(offsetof(struct kd_origin_call, execution_arguments) != KD_ORIGIN_CALL_ARGUMENTS);
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, packet) != KD_ORIGIN_MEMORY_PACKET);
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, native_sp) != KD_ORIGIN_MEMORY_NATIVE_SP);
 	BUILD_BUG_ON(offsetof(struct kd_origin_memory, shadow_sp) != KD_ORIGIN_MEMORY_SHADOW_SP);

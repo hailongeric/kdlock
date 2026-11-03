@@ -130,6 +130,10 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 			atomic_inc(&failures);
 		WRITE_ONCE(helper_native_body_after, READ_ONCE(helper_native_body_after) + 1);
 	}
+	if (flags & JIT_KILLABLE_HELPER_MAPPED)
+		helper_mapped_body();
+	if (flags & JIT_KILLABLE_HELPER_ALLOC)
+		helper_allocation_body();
 	if (flags & (JIT_KILLABLE_HELPER | JIT_KILLABLE_HELPER_WAIT | JIT_KILLABLE_HELPER_TAIL)) {
 		unsigned long index = slot - killable_slots;
 		unsigned long value;
@@ -296,6 +300,13 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	int result;
 
 #ifdef JIT_CONTINUATION_HELPER
+	if (cmd == JIT_MAPPED_SNAPSHOT)
+		return helper_mapped_snapshot(user);
+	if (cmd == JIT_MAPPED_REGISTER) {
+		if (!killable_idle())
+			return -EBUSY;
+		return helper_mapped_register();
+	}
 	if (cmd == JIT_HELPER_SNAPSHOT)
 		return helper_snapshot(user);
 	if (cmd == JIT_NATIVE_SNAPSHOT)
@@ -365,6 +376,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 			memset(killable_slots, 0, sizeof(killable_slots));
 #ifdef JIT_CONTINUATION_HELPER
 			memset(helper_slots, 0, sizeof(helper_slots));
+			memset(&helper_mapped, 0, sizeof(helper_mapped));
 			memset(helper_native_events, 0, sizeof(helper_native_events));
 			WRITE_ONCE(helper_native_count, 0);
 			WRITE_ONCE(helper_native_body_after, 0);
@@ -392,6 +404,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 #ifdef JIT_CONTINUATION_HELPER
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
 	     && run.flags != JIT_KILLABLE_HELPER_TAIL
+	     && run.flags != JIT_KILLABLE_HELPER_MAPPED && run.flags != JIT_KILLABLE_HELPER_ALLOC
 	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
 	     && run.flags != JIT_KILLABLE_MEMORY && run.flags != JIT_KILLABLE_MEMORY_EARLY
 	     && run.flags != JIT_KILLABLE_NATIVE_WRITE && run.flags != JIT_KILLABLE_NATIVE_WRITE_EARLY

@@ -71,3 +71,14 @@ is no runtime switch that skips checks, retries failed effects, or substitutes
 an unsafe privileged instruction. This workload supplies correctness evidence;
 it is not a performance benchmark or proof that arbitrary instructions can be
 delegated safely.
+
+Helper mode also has a distinct two-to-five argument mapping phase and one
+53-byte zeroed allocation/free phase. The former records both logical and Native
+targets, the compiler-issued source CALL end, five actual Native arguments and
+original-task stack/context. Post-CALL CF/PF/ZF/SF/OF are captured with `SETcc`
+before a flag-changing instruction; the transaction trace separately compares
+the complete done/resume flags. A new version-1 240-byte snapshot leaves the existing
+observation ABIs unchanged. Mapped registration occurs through an idle-only
+post-load command before publication; normal owner unregistration removes both
+identity and mapped descriptors after source retirement. These are mechanism
+checks and do not substitute for an actual application workload.
