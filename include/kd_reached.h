@@ -6,7 +6,7 @@
 #include "kd_regs.h"
 #include "exe_info.h"
 
-/* A scalar instruction is decoded only at the canonical source IP. There is
+/* A source instruction is decoded only at the canonical source IP. There is
  * no graph, code cache or original-task continuation in this component. */
 #define KD_REACHED_MAX_BYTES 15
 #define KD_REACHED_SEGMENT_MAX 64U
@@ -103,7 +103,10 @@ struct kd_reached_state {
 	struct kd_reached_event event;
 };
 
-/* FULL is mandatory. In particular, this never reads unspecified MINIMAL GPRs
+/* FULL is mandatory. REP STOS consumes one step/budget unit per stored element;
+ * a zero-count REP consumes one step without a memory access. DI/CX and source
+ * IP retain completed progress, so a later element failure cannot replay it.
+ * In particular, this never reads unspecified MINIMAL GPRs
  * or resets the persistent instruction budget at an edge or service return.
  * Unsupported instructions are reported before packet or data effects; that
  * result is not successful public lock completion or permission to run on O.

@@ -75,7 +75,56 @@ service/ACK stages. There is no named canary or caller-specific execution path.
 This bounded inspection of the reached callee's return neighborhood does not
 require an upfront CFG closure.
 
-The correction still requires a fresh VM build and actual mmap1 retry. It does
-not establish general faulting GS access, all context instructions, returned
-mmap1 delegation, throughput or a Nano gate. Remaining unsupported operations
-must be supplemented explicitly when reached; no entire suffix is run on O.
+## Second candidate: `0ac46e80`
+
+Exact source: `0ac46e80fac5ceebe7ddd429cae0feb0315a16da`. The seven selected
+drivers passed: 500 decoder/Native-effect assertions including 98 Native SUB
+tuples, 64 production read-policy checks, six memory-service validator cases,
+21 MM session cases, seven delegated-proof cases, nine syscall-pair cases and
+nine private-source cases. Provider and observation module builds passed.
+See [units](second-units.json) and
+[the persisted controller state](second-controller-state.json).
+
+The retry used boot `4574d413-0717-40ea-ae1c-eb04726ce829` on the same verified
+scope5 kernel. A prestarted additional resident collector ran on CPU 62,
+independently of the ordinary CPU-63 collectors and the application. This is
+an unscored diagnostic configuration, not a comparable timing point. Exact
+module inputs, source hashes and boot identity remain in
+[the launch receipt](second-launch.json).
+
+Two ordinary GS LOAD64 transactions completed on O `3964` and resumed on E
+`3956`, with generation 1 and exact artifact sequences 82 and 104. They created
+no preempt owner. The [continuous resident log](second-resident-kernel.log)
+then records the stop at `ffffffff826bbc0f`, bytes `f3 48 ab`, REP STOSQ in
+`mt_find`. The root remained exec's `create_init_stack_vma`. Its normal local
+initialization uses eight qword stores according to the captured ELF prefix;
+the source `MA_STATE` correspondence is inferred from the matching Linux 7
+source, not a runtime count measurement.
+
+No root returned, and no mmap1 worker syscall completion or process-model run
+is claimed. Actual SUB service was not reached before this stop; its passing
+evidence is the separate Native differential fixture. The failed attempt was
+preserved and reset using the armed one-time scope5 entry. See
+[raw capture identities](second-ring-capture.json),
+[retention locations](second-retention.json) and [reset](second-reset.json).
+The recovered boot is `cc27a778-7ad3-4ce9-be5e-f4a0c69a5ce4`.
+
+## Bounded STOS correction
+
+The design was committed first as `1d9a20f1`. General byte/word/dword/qword
+STOS, with or without REP, executes at most one source-width store per cold
+step on E. Zero count performs no memory access. Only a completed store advances
+RDI according to virtual DF and decrements REP's RCX; the source PC remains
+at the instruction until count zero. A later failed element retains the exact
+prefix and does not replay earlier stores. Source flags remain unchanged.
+The normal local cap and persistent scheduling window count element steps.
+The `instructions` observation is resident steps, including string elements,
+not unique retired x86 instructions after this change.
+
+Native effects, zero count, both directions, all widths, bounded resumption and
+failure-prefix conservation require the fresh VM fixture before another actual
+MM retry. The general qualified-store contract still excludes arbitrary
+fault/fixup behavior. No origin memset model or caller-specific path is added.
+Returned mmap1 delegation, throughput and a Nano gate remain unproved. Remaining
+unsupported operations must be supplemented when reached; no entire suffix is
+run on O.

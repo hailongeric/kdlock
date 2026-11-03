@@ -16,6 +16,7 @@
 #define F_AF 0x010UL
 #define F_ZF 0x040UL
 #define F_SF 0x080UL
+#define F_DF 0x400UL
 #define F_OF 0x800UL
 #define F_ARITH (F_CF | F_PF | F_AF | F_ZF | F_SF | F_OF)
 
@@ -27,7 +28,7 @@ enum operation {
 	OP_CMOV, OP_SET, OP_PAUSE, OP_LFENCE, OP_MFENCE, OP_SFENCE,
 	OP_SHIFT, OP_IMUL, OP_XADD, OP_XCHG, OP_CMPXCHG,
 	OP_CLC, OP_STC, OP_CMC, OP_LAHF, OP_SAHF, OP_SIGN_PAIR,
-	OP_BIT,
+	OP_BIT, OP_STOS,
 };
 
 struct operand {
@@ -200,8 +201,8 @@ static void decode(struct decoded *d)
 			d->locked = true; d->rex = 0; d->rex_seen = false; break;
 		case 0xf2: case 0x64: case 0x65:
 		case 0x67: case 0x26: case 0x2e: case 0x36: case 0x3e:
-			/* Atomic, repeated, segmented and address-size contracts are
-			 * not ordinary scalar operations. No data effects precede this. */
+			/* These remaining repeat, segment and address-size contracts
+			 * are not implemented. No data effects precede this. */
 			d->error = -EOPNOTSUPP;
 			break;
 		default:
@@ -216,7 +217,7 @@ static void decode(struct decoded *d)
 	if (d->error)
 		return;
 	d->width = (d->rex & 8) ? 8 : d->op16 ? 2 : 4;
-	if (d->rep && op != 0x90 && op != 0x0f) {
+	if (d->rep && op != 0x90 && op != 0x0f && op != 0xaa && op != 0xab) {
 		d->error = -EOPNOTSUPP;
 		return;
 	}
@@ -324,6 +325,10 @@ static void decode(struct decoded *d)
 		break;
 	case 0x9e: d->operation = OP_SAHF; break;
 	case 0x9f: d->operation = OP_LAHF; break;
+	case 0xaa: case 0xab:
+		d->operation = OP_STOS;
+		d->width = op == 0xaa ? 1 : d->width;
+		break;
 	case 0xa8: case 0xa9:
 		width = op == 0xa8 ? 1 : d->width;
 		d->operation = OP_TEST;
@@ -615,6 +620,18 @@ static enum kd_reached_result execute(struct decoded *d)
 	case OP_CMC: flags ^= F_CF; break;
 	case OP_LAHF: r->ax = (r->ax & ~0xff00UL) | (((flags & 0xd5) | 2) << 8); break;
 	case OP_SAHF: flags = (flags & ~0xd5UL) | ((r->ax >> 8) & 0xd5); break;
+	case OP_STOS:
+		/* Each successful store is one bounded step. DI/CX and the source
+		 * IP retain the exact completed prefix across a segment or fault;
+		 * a failed element leaves them intact, without replaying that prefix.
+		 * DF is virtual packet state, never installed on the executor CPU. */
+		if (d->rep && !r->cx) break;
+		value = r->ax & width_mask(d->width);
+		if (s->ops->write(s->context, r->di, &value, d->width))
+			return KD_REACHED_MEMORY;
+		r->di += (flags & F_DF) ? -(unsigned long)d->width : d->width;
+		if (d->rep && --r->cx) target = r->ip;
+		break;
 	case OP_SIGN_PAIR:
 		if (read_operand(d, &d->src, &value)) return KD_REACHED_MEMORY;
 		value = sign_value(value, d->src.width) < 0 ? ~0ULL : 0;

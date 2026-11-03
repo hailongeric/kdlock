@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/completion.h>
 #include <linux/errno.h>
+#include <linux/irqflags.h>
 #include <linux/jiffies.h>
 #include <linux/kthread.h>
 #include <linux/module.h>
@@ -668,6 +669,133 @@ static int bit_test(struct fixture *f)
 	return 0;
 }
 
+#define ORACLE_STOS(insn) do { \
+	if (repeated) \
+		asm volatile("pushq %[flags]; popfq; rep " insn "; pushfq; popq %[output]; cld" \
+			: "+D"(destination), "+c"(count), [output] "=r"(output) \
+			: "a"(value), [flags] "r"(flags) : "cc", "memory"); \
+	else \
+		asm volatile("pushq %[flags]; popfq; " insn "; pushfq; popq %[output]; cld" \
+			: "+D"(destination), "+c"(count), [output] "=r"(output) \
+			: "a"(value), [flags] "r"(flags) : "cc", "memory"); \
+} while (0)
+
+static void native_stos(unsigned int width, bool repeated,
+	unsigned long *destination_io, unsigned long *count_io, u64 value,
+	unsigned long input_flags, unsigned long *result_flags)
+{
+	unsigned long destination = *destination_io, count = *count_io;
+	unsigned long flags, output, irq_flags;
+
+	/* The oracle installs DF only inside the single asm block. No C or
+	 * ordinary interrupt handler runs before its final CLD. Source IF and
+	 * other execution state are never copied onto the executor CPU. */
+	local_irq_save(irq_flags);
+	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
+	flags = (flags & ~(KD_REG_ARITHMETIC_FLAGS | 0x400UL)) |
+		(input_flags & (KD_REG_ARITHMETIC_FLAGS | 0x400UL));
+	switch (width) {
+	case 1: ORACLE_STOS("stosb"); break;
+	case 2: ORACLE_STOS("stosw"); break;
+	case 4: ORACLE_STOS("stosl"); break;
+	default: ORACLE_STOS("stosq"); break;
+	}
+	local_irq_restore(irq_flags);
+	*destination_io = destination;
+	*count_io = count;
+	*result_flags = output;
+}
+
+static int stos_test(struct fixture *f)
+{
+	static const unsigned int counts[] = { 0, 1, 2, 5, 8, 31 };
+	static const u64 value = 0xfedcba9876543210ULL;
+	u64 expected[ARRAY_SIZE(f->memory)];
+	struct kd_regs before;
+	unsigned int width, repeated, direction, i, length, stores, offset, steps;
+	unsigned long destination, count, flags, input_flags;
+	u8 code[4];
+
+	for (width = 1; width <= 8; width *= 2)
+	for (repeated = 0; repeated < 2; ++repeated)
+	for (direction = 0; direction < 2; ++direction)
+	for (i = 0; i < ARRAY_SIZE(counts); ++i) {
+		length = 0;
+		if (repeated) code[length++] = 0xf3;
+		if (width == 2) code[length++] = 0x66;
+		if (width == 8) code[length++] = 0x48;
+		code[length++] = width == 1 ? 0xaa : 0xab;
+		prepare(f, code, length);
+		memset(f->memory, 0xa5, sizeof(f->memory));
+		memset(expected, 0xa5, sizeof(expected));
+		stores = repeated ? counts[i] : 1;
+		steps = stores ? stores : 1;
+		offset = direction && stores ? (stores - 1) * width : 0;
+		f->regs.di = DATA + offset;
+		f->regs.cx = counts[i];
+		f->regs.ax = value;
+		f->regs.flags = input_flags = 0x202 | KD_REG_ARITHMETIC_FLAGS |
+			(direction ? 0x400UL : 0);
+		destination = (unsigned long)expected + offset;
+		count = counts[i];
+		native_stos(width, repeated, &destination, &count, value, input_flags, &flags);
+		CHECK(kd_reached_run(&f->state, steps) == KD_REACHED_EDGE);
+		CHECK(f->regs.ip == CODE + length && f->state.budget == 100 - steps);
+		CHECK(!memcmp(f->memory, expected, sizeof(expected)));
+		CHECK(f->regs.di - DATA == destination - (unsigned long)expected);
+		CHECK(f->regs.cx == count && f->regs.ax == value);
+		CHECK(f->regs.flags == input_flags &&
+			!((f->regs.flags ^ flags) & (KD_REG_ARITHMETIC_FLAGS | 0x400UL)));
+		CHECK(f->writes == stores && !f->reads && !f->atomics);
+	}
+	/* An empty REP never consults even an invalid destination. */
+	prepare(f, (u8[]){ 0xf3, 0x48, 0xab }, 3);
+	f->regs.di = ~0UL;
+	f->fail_write = true;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_NEXT);
+	CHECK(f->regs.di == ~0UL && !f->regs.cx && !f->writes && f->regs.ip == CODE + 3);
+	/* A large count cannot extend the 64-step segment. Resumption starts at
+	 * exactly the first unexecuted element and consumes the remaining count. */
+	prepare(f, (u8[]){ 0xf3, 0xaa }, 2);
+	f->regs.di = DATA; f->regs.cx = 80; f->regs.ax = value;
+	CHECK(kd_reached_run(&f->state, ~0U) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE && f->regs.di == DATA + 64 && f->regs.cx == 16);
+	CHECK(f->writes == 64 && f->state.budget == 36);
+	((u8 *)f->memory)[0] = 0x6b;
+	CHECK(kd_reached_run(&f->state, 16) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE + 2 && f->regs.di == DATA + 80 && !f->regs.cx);
+	CHECK(f->writes == 80 && f->state.budget == 20 && ((u8 *)f->memory)[0] == 0x6b);
+	/* A later store failure retains the earlier prefix. Neither callback
+	 * failure nor the retry may replay already completed source stores. */
+	prepare(f, (u8[]){ 0xf3, 0x48, 0xab }, 3);
+	f->regs.di = DATA; f->regs.cx = 8; f->regs.ax = value;
+	CHECK(kd_reached_run(&f->state, 3) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE && f->regs.di == DATA + 24 && f->regs.cx == 5);
+	f->memory[0] = 0x76543210;
+	f->fail_write = true;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->writes == 3 && f->state.budget == 97);
+	CHECK(f->memory[0] == 0x76543210 && f->memory[1] == value && f->memory[2] == value);
+	f->fail_write = false;
+	CHECK(kd_reached_run(&f->state, 5) == KD_REACHED_EDGE);
+	CHECK(f->regs.ip == CODE + 3 && f->regs.di == DATA + 64 && !f->regs.cx);
+	CHECK(f->writes == 8 && f->state.budget == 92 && f->memory[0] == 0x76543210);
+	for (i = 1; i < 8; ++i) CHECK(f->memory[i] == value);
+	/* LOCK and address-size string variants retain explicit no-effect refusal. */
+	prepare(f, (u8[]){ 0xf0, 0xf3, 0x48, 0xab }, 4);
+	f->regs.di = DATA; f->regs.cx = 2;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->writes);
+	prepare(f, (u8[]){ 0x67, 0xf3, 0x48, 0xab }, 4);
+	f->regs.di = DATA; f->regs.cx = 2;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->writes);
+	return 0;
+}
+
 static int worker(void *argument)
 {
 	struct fixture *f = argument;
@@ -688,6 +816,7 @@ static int worker(void *argument)
 	if (!result) result = atomic_test(f);
 	if (!result) result = shift_multiply_test(f);
 	if (!result) result = bit_test(f);
+	if (!result) result = stos_test(f);
 	complete(&finished);
 	while (!kthread_should_stop())
 		schedule_timeout_interruptible(HZ);
