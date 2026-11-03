@@ -395,3 +395,29 @@ and return to the same E continuation: `mod_memcg_state`, `mod_lruvec_state`,
 void, atomic-compatible, with original int delta semantics. No private helper
 or MM body adapter is registered, and existing context/owner/ACK checks stay
 intact. Fresh focused checks and actual-MM validation are pending.
+
+
+## Eleventh candidate: `eb21e334`
+
+Exact source: `eb21e33446de2a519f1299f02b9d567591dbc2b7`. All five focused
+drivers passed ([units](eleventh-units.json)); provider and observation builds
+passed. On boot `b777ab81-d2f8-4afc-9c7e-f9708d0d120e`, execution advanced
+to generation 5, entry `ffffffff817b6f68`. The next stop was
+`__get_unmapped_area+0x6b`, `ffffffff817f716b`, live bytes
+`2e 2e 2e ff d0` (CS-padded CALL RAX), O `4072`, E `4046`. The ELF
+originally calls an indirect thunk at this site; its live patched bytes must
+be decoded faithfully. [Resident log](eleventh-resident-kernel.log),
+[live instruction](eleventh-live-site.json) and [raw retention](eleventh-retention.json)
+remain failed/undrained evidence, with no completed worker proof or process
+model run. Recovery boot is `16530f92-2961-4dc4-a1fa-49858d3d3408`.
+
+## Reached padded register-branch correction
+
+Design was committed first as `a8d562a6`. The resident decoder now admits
+CS-padded register FF /2 and /4 near CALL/JMP, preserving REX prefix order,
+64-bit targets, full source CALL word and normal edge/return dispatch. Memory,
+far, other FF groups, operand-size override, LOCK and REP in this slice stay
+explicitly unsupported. Source truncation retains its source-failure status.
+The address-selection algorithm continues on E; no MM body is added to the
+Native API service catalog. Fresh differential/edge checks, build and actual
+MM retry are required.

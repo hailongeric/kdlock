@@ -1067,6 +1067,115 @@ static int cs_padding_test(struct fixture *f)
 	return 0;
 }
 
+static int cs_branch_test(struct fixture *f)
+{
+	static const struct { u8 length, bytes[15], target; } branches[] = {
+		{ 5, { 0x2e, 0x2e, 0x2e, 0xff, 0xd0 }, 0 }, /* exact CALL AX */
+		{ 4, { 0x2e, 0x41, 0xff, 0xd0 }, 1 }, /* R8 */
+		{ 4, { 0x41, 0x2e, 0xff, 0xd0 }, 0 }, /* CS cancels REX */
+		{ 5, { 0x41, 0x2e, 0x41, 0xff, 0xd0 }, 1 },
+		{ 3, { 0x2e, 0xff, 0xd4 }, 2 }, /* source RSP before push */
+		{ 4, { 0x2e, 0x41, 0xff, 0xd4 }, 3 }, /* R12 */
+		{ 15, { 0 }, 0 }, /* thirteen CS prefixes, bounded by source length */
+	}, refused[] = {
+		{ 3, { 0x2e, 0xff, 0x10 }, 0 }, /* memory CALL */
+		{ 3, { 0x2e, 0xff, 0x20 }, 0 }, /* memory JMP */
+		{ 3, { 0x2e, 0xff, 0xc0 }, 0 }, /* INC */
+		{ 3, { 0x2e, 0xff, 0xc8 }, 0 }, /* DEC */
+		{ 3, { 0x2e, 0xff, 0x18 }, 0 }, /* far CALL */
+		{ 3, { 0x2e, 0xff, 0x28 }, 0 }, /* far JMP */
+		{ 3, { 0x2e, 0xff, 0xf0 }, 0 }, /* PUSH */
+		{ 3, { 0x2e, 0xff, 0xf8 }, 0 }, /* undefined FF group */
+		{ 4, { 0x66, 0x2e, 0xff, 0xd0 }, 0 },
+		{ 4, { 0x2e, 0x66, 0xff, 0xe0 }, 0 },
+		{ 4, { 0x2e, 0xf0, 0xff, 0xd0 }, 0 },
+		{ 4, { 0xf3, 0x2e, 0xff, 0xe0 }, 0 },
+		{ 4, { 0x2e, 0xf2, 0xff, 0xd0 }, 0 },
+	}, truncated[] = {
+		{ 1, { 0x2e }, 0 }, { 2, { 0x2e, 0xff }, 0 },
+		{ 3, { 0x2e, 0x41, 0xff }, 0 },
+	};
+	struct kd_regs before, expected;
+	u64 memory[ARRAY_SIZE(f->memory)];
+	unsigned long target;
+	unsigned int form, jump, length, i;
+	u8 code[15];
+
+	/* Component control-flow checks use virtual source addresses; they do
+	 * not execute a Native indirect branch or claim target text eligibility. */
+	for (form = 0; form < ARRAY_SIZE(branches); ++form)
+	for (jump = 0; jump < 2; ++jump) {
+		length = branches[form].length;
+		memcpy(code, branches[form].bytes, length);
+		if (length == 15) {
+			memset(code, 0x2e, 13); code[13] = 0xff; code[14] = 0xd0;
+		}
+		if (jump) code[length - 1] += 0x10;
+		prepare(f, code, length);
+		f->regs.ax = CODE + 32; f->regs.r8 = CODE + 40; f->regs.r12 = CODE + 48;
+		f->regs.flags |= KD_REG_ARITHMETIC_FLAGS;
+		f->code[32] = f->code[40] = f->code[48] = 0xc3;
+		f->code_size = 49;
+		f->memory[15] = 0x123456789abcdef0ULL;
+		memcpy(memory, f->memory, sizeof(memory));
+		target = branches[form].target == 1 ? f->regs.r8 :
+			branches[form].target == 2 ? f->regs.sp :
+			branches[form].target == 3 ? f->regs.r12 : f->regs.ax;
+		before = expected = f->regs;
+		expected.ip = target;
+		if (!jump) { expected.sp -= 8; memory[15] = CODE + length; }
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+		CHECK(!memcmp(&expected, &f->regs, sizeof(expected)));
+		CHECK(!memcmp(memory, f->memory, sizeof(memory)));
+		CHECK(f->state.event.source_ip == CODE && f->state.event.next_ip == CODE + length &&
+			f->state.event.target == target && f->state.event.length == length &&
+			f->state.event.edge == (jump ? KD_REACHED_JUMP : KD_REACHED_CALL));
+		CHECK(!memcmp(f->state.event.bytes, code, length) && f->fetches == length &&
+			f->max_fetch == CODE + length - 1 && !f->reads && f->writes == !jump &&
+			!f->atomics && f->state.budget == 99);
+		/* RSP supplies its pre-push value even though this fixture does not
+		 * supply instruction text at that virtual stack address. */
+		if (!jump && branches[form].target != 2) {
+			CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+			before.ip = CODE + length;
+			CHECK(!memcmp(&before, &f->regs, sizeof(before)) && f->reads == 1 &&
+				f->writes == 1 && f->state.budget == 98);
+		}
+	}
+	/* A near register target is a full 64-bit value even without REX.W.
+	 * Stop at the edge; these artificial addresses are not source text. */
+	for (form = 0; form < 2; ++form) {
+		prepare(f, branches[form].bytes, branches[form].length);
+		target = 0xffffffff81234567UL;
+		f->regs.ax = f->regs.r8 = target;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_EDGE);
+		CHECK(f->regs.ip == target && f->memory[15] == CODE + branches[form].length &&
+			f->regs.sp == DATA + 120 && !f->reads && f->writes == 1);
+	}
+	prepare(f, branches[0].bytes, branches[0].length);
+	f->regs.ax = CODE + 32; f->fail_write = true;
+	f->memory[15] = 0x123456789abcdef0ULL;
+	before = f->regs;
+	CHECK(kd_reached_step(&f->state) == KD_REACHED_MEMORY);
+	CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes &&
+		f->memory[15] == 0x123456789abcdef0ULL && f->state.budget == 100);
+	for (i = 0; i < ARRAY_SIZE(refused); ++i) {
+		prepare(f, refused[i].bytes, refused[i].length);
+		f->regs.ax = DATA; before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_UNSUPPORTED);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes &&
+			!f->atomics && f->state.budget == 100);
+	}
+	for (i = 0; i < ARRAY_SIZE(truncated); ++i) {
+		prepare(f, truncated[i].bytes, truncated[i].length);
+		before = f->regs;
+		CHECK(kd_reached_step(&f->state) == KD_REACHED_SOURCE);
+		CHECK(!memcmp(&before, &f->regs, sizeof(before)) && !f->reads && !f->writes &&
+			f->fetches == truncated[i].length && f->state.budget == 100);
+	}
+	return 0;
+}
+
 #define ORACLE_SCAN(insn, suffix, part) \
 	asm volatile("pushq %[flags]; popfq; " insn suffix " %" part "[source],%" part "[value]; pushfq; popq %[output]" \
 		: [value] "+r"(value), [output] "=r"(output) \
@@ -1294,6 +1403,7 @@ static int worker(void *argument)
 	if (!result) result = stos_test(f);
 	if (!result) result = movs_test(f);
 	if (!result) result = cs_padding_test(f);
+	if (!result) result = cs_branch_test(f);
 	if (!result) result = scan_test(f);
 	if (!result) result = memory_bit_test(f);
 	complete(&finished);

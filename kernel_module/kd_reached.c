@@ -219,11 +219,11 @@ static void decode(struct decoded *d)
 	if (d->error)
 		return;
 	d->width = (d->rex & 8) ? 8 : d->op16 ? 2 : 4;
-	/* Runtime static-call sites use CS padding on register XOR. CS is also
-	 * valid padding for NOP, including its full address-expression encoding.
-	 * No other CS-prefixed operation acquires a memory/context contract here. */
+	/* Runtime-patched sites use CS padding on register XOR and near register
+	 * branches. NOP also accepts its full address-expression encoding. Each
+	 * family below retains its own operand contract and the 15-byte bound. */
 	if (d->cs_prefix && (d->rep || d->locked ||
-		(op != 0x90 && op != 0x0f && op != 0x31 && op != 0x33))) {
+		(op != 0x90 && op != 0x0f && op != 0x31 && op != 0x33 && op != 0xff))) {
 		d->error = -EOPNOTSUPP;
 		return;
 	}
@@ -397,6 +397,11 @@ static void decode(struct decoded *d)
 	case 0xf5: d->operation = OP_CMC; break;
 	case 0xfe: case 0xff:
 		modrm(d, op == 0xfe ? 1 : d->width, &d->dst, &reg, &group);
+		if (d->error) return;
+		if (d->cs_prefix && (d->op16 || d->dst.memory || (group != 2 && group != 4))) {
+			d->error = -EOPNOTSUPP;
+			return;
+		}
 		if (group < 2) d->operation = group ? OP_DEC : OP_INC;
 		else if (op == 0xff && (group == 2 || group == 4 || group == 6)) {
 			if (d->op16) { d->error = -EOPNOTSUPP; return; }
