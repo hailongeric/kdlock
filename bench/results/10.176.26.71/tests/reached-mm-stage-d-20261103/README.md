@@ -647,3 +647,9 @@ transition, Native return rewrite or whole-body local continuation. A focused
 fixture checks root reset, bounded rotation and failed-CALL non-commit. This
 will identify the actually reached enclosing interval before choosing its
 required general context support. Fresh build and VM checks are pending.
+
+
+The source-only review of `4b7b0b97` found the new call-context fixture was
+not yet in the worker sequence. No checks or application run used that
+frozen candidate. The next commit adds the missing invocation before fresh
+VM validation; existing frozen inputs remain unchanged.

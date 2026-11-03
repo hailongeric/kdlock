@@ -1700,6 +1700,7 @@ static int worker(void *argument)
 		result = -EINVAL;
 		failure_line = __LINE__;
 	} else result = entry_test(f);
+	if (!result) result = call_context_test(f);
 	if (!result) result = arithmetic_test(f);
 	if (!result) result = edge_test(f);
 	if (!result) result = scalar_test(f);
