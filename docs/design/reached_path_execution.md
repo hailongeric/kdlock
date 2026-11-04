@@ -1135,3 +1135,30 @@ without treating an undrained thread run as reusable live state. Each model
 still needs its own ordinary application lifetime, complete ledger, exact
 retirement and idle boundary. Kernel API code has no application/model branch;
 this option only selects the order of independent benchmark checks.
+
+
+## Bounded collector text scans
+
+The `283b70c24bd664e5c2614723b80d63ffd357ff04` process diagnostic exited
+normally, but complete trace capture failed. An idle-VM profile of the exact
+retained8MiB prefix measured about2.01seconds for per-record regex scanning
+and0.12seconds for batching plus a keyword prefilter. Fix that measured
+collector cost before changing queue ordering on an unproved hypothesis.
+
+Keep every raw record and every cursor-loss/error receipt. Decode each record
+as before, accumulate at most64KiB plus the last record, then scan the joined
+text with the existing256-character boundary tail. Flush the pending scan
+on would-block, cursor loss and every exit, including a deadline or write
+error. The match expressions are unanchored bounded literals shorter than
+the retained tail. Batching must not change fault detection or acceptance.
+
+Provide an optional exact fault-check callback. The shared benchmark helper
+first computes lowercase once for ASCII text and checks a superset of the
+existing regex alternatives' keywords. If none is present, the regex cannot
+match. Otherwise use the unchanged authoritative expression. Non-ASCII text
+always uses that expression, preserving Unicode case and word-boundary rules.
+Other patterns keep their normal search method. Validate all alternatives,
+case variants, Unicode, split records and batch boundaries on the VM, retaining
+the real pipe and loss/storage tests. The next application attempt still
+requires both models, complete per-request proof and normal retirement.
+No kernel/API behavior, trace emission or public lock semantics change here.

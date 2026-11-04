@@ -833,3 +833,33 @@ counter every operation; older256-operation publication notes concern a
 different harness and are not applicable here. A bounded status read did not
 complete. Ordinary records were retained before recovery to idle boot
 `26cd5e75-bd3c-4df2-b2e6-35301aa5f751`.
+
+
+## Twenty-eighth candidate: `283b70c2`
+
+Exact source `283b70c24bd664e5c2614723b80d63ffd357ff04` passed562 Native
+instruction checks,21 affected unit cases and67,643 resident assertions, with
+provider build and final fixture drain ([checks](twentyeighth-checks.json)).
+This diagnostic ran processes first. The unchanged two-process application
+returned0 in9,280,665,574ns, and both observed workers disappeared. The
+retained runtime snapshot reached2,488 roots and2,488 completions with no
+active request. These are application and aggregate execution observations;
+the complete per-request proof and final provider/source retirement did not
+pass. Its collector lost77,737 ranges and the independent monitor lost93,465
+ranges; neither file budget was exhausted. The application printed average155,
+which is an unscored diagnostic value, not accepted throughput or a gain.
+Threads were not started after that failed trace gate. The [attempt](twentyeighth-attempt.json)
+retains those distinctions and recovery to ordinary idle boot
+`02f54e27-1594-40f4-ac34-29d4033948dd`. Recovery does not prove prior drain.
+
+The user authorized clearing exactly the two current standard log files. The
+[receipt](current-log-clear-20261104.json) records their retained paths/inodes
+and restored headroom. Earlier compressed copies, rotations and all benchmark
+records remain. No log routing or service configuration changed.
+
+An idle-VM [text-scan profile](text-scan-profile-20261104.json) used the same
+8,388,428-byte,24,375-record prefix once for each method. The current per-record
+regular-expression scan consumed2,009,745,959ns wall time; the batch plus
+keyword prefilter prototype consumed121,982,997ns. Neither detected a fault
+in this prefix. The exact input hash is retained. This measures collector
+text work only, not application performance or full trace acceptance.
