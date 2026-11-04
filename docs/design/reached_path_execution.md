@@ -58,6 +58,12 @@ that attempt. Actual continuation and MM checks additionally require one
 generated-code witness per successful root, matching executor/request identity,
 positive entry/retirement counts and zero interpreted steps.
 
+Candidate `de58ea6c` passed26378 generated-code differential checks covering85
+instruction forms. The next proof-parser check correctly refused an older
+synthetic multi-root record lacking the new JIT witness. Update that synthetic
+record; keep the runtime requirement. No kernel provider build or live MM pass
+is inferred from these first generated-code checks.
+
 Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
