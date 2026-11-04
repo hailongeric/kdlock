@@ -1025,3 +1025,16 @@ the affected collector/MM-proof/source checks and build the provider/resident
 fixture. Then run one actual lifetime for each application model after a
 fresh explicit diagnostic boot and sufficient log headroom. Retain all
 failed, incomplete and unrun outcomes separately.
+
+
+For one further focused attempt, the temporary log-routing decision is not
+needed if the ordinary paths retain the restored headroom: select512MiB per
+child log and a1GiB auxiliary limit, keep all cursor-loss gates, and check root
+headroom in the already-running monitor. Below1GiB marks the diagnostic failed
+and leaves exact process/source state intact for ordinary recovery; it is not
+a successful retirement. Retain console records and recover promptly after
+an undrained failure. This bounded normal-path attempt makes no routing change
+while that separate request is pending. Both successful models still require
+normal upstream exit, complete traces, exact ownership and source retirement.
+The task-register read remains a synchronous service whenever its source
+query is reached; no cached task-state authority or speedup is claimed.
