@@ -120,11 +120,26 @@ def main():
             owner = controller.Controller.__new__(controller.Controller)
             owner.args, owner.model, owner.files, owner.audit = args, out, files, audit
             owner.binaries = dict(provider=provider)
-            exact = owner.reached_receipt([])
+            class QuiescentSession(bench.execution.ExecutionSession):
+                def verify(self, *, allow_identity_probe=False):
+                    deadline = time.monotonic() + 5
+                    while True:
+                        try:
+                            return super().verify(allow_identity_probe=allow_identity_probe)
+                        except rt.Failure as error:
+                            # Setup may overlap a finishing background request.
+                            # Retry this exact boundary, retaining every check.
+                            if (str(error) != 'reached source/family/registry state is not drained' or
+                                    bench.execution.reached_observations()['unsupported'] or
+                                    time.monotonic() >= deadline):
+                                raise
+                            time.sleep(0.005)
+            prepared = owner.reached_receipt([])
+            exact = QuiescentSession(prepared.path, prepared.sha256)
             exact.verify()
             result['reached_before'] = bench.execution.reached_observations()
             result['execution_session'] = exact.identity()
-            result['full_delegation_proof'] = c['delegation_proof']
+            result['prior_delegation_proof'] = c['delegation_proof']
         def verify():
             bench.verify_boot(args)
             bench.verified_files(files)

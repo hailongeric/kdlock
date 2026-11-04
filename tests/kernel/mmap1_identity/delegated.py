@@ -408,7 +408,7 @@ class Controller:
                             first['executor'] == root['executor'] and first['ip'] > 0 and
                             first['next'] > first['ip'] and first['sp'] > 0 and
                             first['operation'] in operations and first['width'] in (16, 32, 64) and
-                            (first['operation'] != 5 or (first['width'] in (32, 64) and
+                            (first['operation'] not in (5, 8) or (first['width'] in (32, 64) and
                              first['destination'] in range(16) and first['destination'] != 4)) and
                             first['read'] == int(first['operation'] >= 3) and
                             all(all(event[name] == first[name] for name in fields) for event in part) and
