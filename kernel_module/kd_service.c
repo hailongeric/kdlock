@@ -8,6 +8,7 @@
 #include "kd_rwsem.h"
 #include "kd_exec_cont.h"
 #include "kd_comm.h"
+#include "kd_reached_jit.h"
 
 extern struct kd_comm_key kd_spin_target;
 
@@ -104,6 +105,18 @@ static int kd_reached_jit_stats_get(char *buffer, const struct kernel_param *kp)
 }
 static const struct kernel_param_ops kd_reached_jit_stats_ops = { .get = kd_reached_jit_stats_get };
 module_param_cb(reached_jit_stats, &kd_reached_jit_stats_ops, NULL, 0444);
+static int kd_reached_jit_cache_get(char *buffer, const struct kernel_param *kp)
+{
+	u64 hits, misses;
+	unsigned int slots;
+
+	(void)kp;
+	kd_reached_jit_cache_counts(&hits, &misses, &slots);
+	return scnprintf(buffer, PAGE_SIZE, "hits=%llu misses=%llu slots=%u\n",
+		(unsigned long long)hits, (unsigned long long)misses, slots);
+}
+static const struct kernel_param_ops kd_reached_jit_cache_ops = { .get = kd_reached_jit_cache_get };
+module_param_cb(reached_jit_cache, &kd_reached_jit_cache_ops, NULL, 0444);
 module_param_named(service_trace, kd_service_trace, bool, 0644);
 MODULE_PARM_DESC(service_trace, "Focused request, executor and returned completion records");
 static bool kd_service_reached;

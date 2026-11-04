@@ -211,12 +211,15 @@ int kd_exe_init(void)
 	KD_PR_INFO("JIT direct-call pool ready: %d/%d; shared image limit=%d\n",
 		   kd_near_block_free, KD_CODE_BLOCK_POOL, KD_CODE_BLOCK_POOL);
 	if (kd_service_reached_enabled()) {
-		void *arena = kd_near_block_free ? kd_near_block_pool[--kd_near_block_free] :
-			kd_code_block_free ? kd_code_block_pool[--kd_code_block_free] : NULL;
+		void *arenas[KD_REACHED_JIT_ARENAS];
+		unsigned int count = min_t(unsigned int, KD_REACHED_JIT_ARENAS, kd_code_block_free);
+		unsigned int arena;
 		unsigned long selected = kallsyms_lookup_name("x86_return_thunk");
 		unsigned long target = selected ? READ_ONCE(*(unsigned long *)selected) :
 			kallsyms_lookup_name("__x86_return_thunk");
-		ret = arena ? kd_reached_jit_start(arena, KD_CODE_BLOCK_SIZE, target) : -ENOMEM;
+		for (arena = 0; arena < count; ++arena)
+			arenas[arena] = kd_code_block_pool[--kd_code_block_free];
+		ret = count ? kd_reached_jit_start(arenas, count, KD_CODE_BLOCK_SIZE, target) : -ENOMEM;
 		if (ret) { kd_exe_exit(); return ret; }
 	}
 

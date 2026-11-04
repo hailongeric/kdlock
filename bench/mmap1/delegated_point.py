@@ -167,6 +167,7 @@ def main():
             exact.verify()
             result['reached_before'] = bench.execution.reached_observations()
             result['jit_before'] = jit_observations(parameters)
+            result['jit_cache_before'] = (parameters / 'reached_jit_cache').read_text().strip()
             result['execution_session'] = exact.identity()
             result['prior_delegation_proof'] = c['delegation_proof']
         def verify():
@@ -198,6 +199,7 @@ def main():
             assert after['roots'] > result['reached_before']['roots']
             result['reached_after'] = after
             result['jit_after'] = jit_observations(controller.PARAMETERS)
+            result['jit_cache_after'] = (controller.PARAMETERS / 'reached_jit_cache').read_text().strip()
             result['jit_delta'] = {name: result['jit_after'][name] - result['jit_before'][name]
                                    for name in result['jit_after']}
             assert result['jit_delta']['entries'] >= result['jit_delta']['retired'] > 0
