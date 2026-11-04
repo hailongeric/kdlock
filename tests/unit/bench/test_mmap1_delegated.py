@@ -229,10 +229,16 @@ class Services(unittest.TestCase):
                       f'kd_service event=release {common} object=1100 depth=0 entry={entry:x} may_delegate=1 {family}',
                       f'kd_service event=returned {common} object=1100 depth=0 entry={entry:x} may_delegate=1 {family}',
                       f'kd_reached event=retire {common} {family} entry={entry:x}']
+            lines.append(f'kd_reached event=jit {common} entries=2 retired=2 interpreted=0 code=c000')
         messages = '\n'.join(lines)
         result = item.validate_services(proof, [], messages, snapshot)
         self.assertEqual((result['captured_worker_roots'], result['other_worker_roots'], result['primitive_transactions']), (2, 1, 2))
         self.assertEqual(len(result['family_artifact_ledger']), 2)
+        for changed in (messages.replace('interpreted=0', 'interpreted=1', 1),
+                        messages.replace('retired=2 interpreted', 'retired=0 interpreted', 1),
+                        '\n'.join(line for line in lines if not ('event=jit' in line and 'generation=2' in line))):
+            with self.assertRaises(controller.rt.Failure):
+                item.validate_services(proof, [], changed, snapshot)
         for changed in (messages.replace('family_generation=2 artifact_sequence=2', 'family_generation=1 artifact_sequence=2', 1),
                         '\n'.join(line for line in lines if not ('event=retire' in line and 'generation=2' in line)),
                         messages.replace('image_generation=0', 'image_generation=7', 1)):
