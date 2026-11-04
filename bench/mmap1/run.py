@@ -280,6 +280,43 @@ def task_gone(row):
         return True
 
 
+def timeout_tasks(parent):
+    """Best-effort observations of an owned, unreaped application on timeout."""
+    base = Path('/proc') / str(parent) / 'task'
+    result = dict(parent=parent, observed_ns=time.monotonic_ns(), diagnostic=True, tasks={})
+    try:
+        tids = sorted(base.iterdir(), key=lambda path: int(path.name))
+    except OSError as error:
+        return dict(result, error=repr(error))
+    result.update(total=len(tids), shown=min(len(tids), 8))
+    status_fields = {'Name', 'State', 'Tgid', 'Pid', 'PPid', 'SigPnd', 'ShdPnd',
+                     'SigBlk', 'SigIgn', 'SigCgt', 'voluntary_ctxt_switches',
+                     'nonvoluntary_ctxt_switches'}
+    for path in tids[:8]:
+        row = {}
+        for name in ('stat', 'status', 'wchan', 'syscall'):
+            try:
+                text = (path / name).read_text()[:16384]
+                if name == 'status':
+                    row[name] = {}
+                    for line in text.splitlines():
+                        key, separator, value = line.partition(':')
+                        if separator and key in status_fields:
+                            row[name][key] = value.strip()
+                else:
+                    row[name] = text
+            except OSError as error:
+                row[name] = dict(error=repr(error))
+        state = row.get('status', {}).get('State', '')
+        if state[:1] in ('S', 'D', 'I'):
+            try:
+                row['stack'] = (path / 'stack').read_text()[:16384]
+            except OSError as error:
+                row['stack'] = dict(error=repr(error))
+        result['tasks'][path.name] = row
+    return result
+
+
 def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
               diagnostic_log_bytes=None):
     """One normal upstream lifetime; observations end during its own warmup."""
@@ -348,6 +385,12 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
             try:
                 code = child.wait(timeout=max(1, 30-(time.monotonic_ns()-started)/1e9))
             except subprocess.TimeoutExpired as error:
+                if diagnostic:
+                    try:
+                        result['timeout_tasks'] = timeout_tasks(child.pid)
+                        rt.write_json(out / 'timeout-tasks.json', result['timeout_tasks'])
+                    except Exception as observation_error:
+                        result['timeout_observation_error'] = repr(observation_error)
                 raise rt.Failure('TIMEOUT', 'mmap1 lifetime unknown; no cleanup attempted', unsafe=True) from error
         after_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
         result.update(returncode=code, process_elapsed_ns=time.monotonic_ns()-started,
