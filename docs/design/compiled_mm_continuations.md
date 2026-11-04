@@ -357,3 +357,58 @@ The writer route, packet acceptance and distinct terminal state are required
 implementation details of this selected option. Full flags/SIMD and IRQ/NMI
 conflict handling remain deferred. Tests follow the completed implementation;
 no intermediate VM run is part of this sequence.
+
+## Additional pooled-storage decision: awaiting confirmation
+
+The existing pooled release updates this CPU's slot mask and reserved-node
+count. E deliberately executes away from O's reservation CPU. After permanent
+Native restoration O may migrate, and its final write-release ACK also precedes
+recursive E-stack unwind. Neither E freeing the slot directly nor O freeing it
+at that early ACK is valid. No remote release helper currently exists.
+
+The proposed deferred cleanup would be independent of the lock-admission and
+service queues. It is not implemented and is not authorized by the read-custody
+decision alone. The approval request is pending; do not run the unfinished
+handoff path before its pooled retirement is resolved.
+
+* E first finishes every retained writer release, packet acknowledgment and
+  nested stack anchor. A small preallocated work item in the existing root then
+  carries final storage retirement. E returns to its service pool without
+  waiting for that work; O never waits for storage cleanup after release ACK.
+* Use a dedicated kernel cleanup workqueue so pending home-CPU work does not
+  consume the finite E pool or another subsystem's workqueue activation slots.
+  This is new cleanup metadata, not another lock-request queue or heap copy.
+* The cleanup dispatcher holds `cpus_read_lock` while choosing and completing
+  the CPU-specific operation. If the home CPU is online, execute the existing
+  release logic there in task context with preemption disabled. Its local slot
+  updates remain serialized with ordinary producers. A merely queued CPU work
+  item, without this hotplug exclusion, is insufficient.
+* If the home CPU is already offline, there is no executing local producer.
+  Under the same hotplug read exclusion, an explicit cold helper may update
+  that CPU's per-CPU metadata after checking the node pointer and recorded CPU.
+  Factor shared node validation/field retirement; preserve the ordinary local
+  release's CPU-local counter operations. This cold helper is an additional
+  part of the proposal, not an existing routine to call unchanged.
+* Initialize the pooled work item once, not on each slot reuse. Its callback
+  saves module-reference values locally, removes the active-list observation
+  route, retires continuation/source/task/stack references, and only then makes
+  the home slot reusable. After that point it never dereferences the old root.
+  Keep source/task references until active-list removal so a diagnostic reader
+  cannot follow a stale origin pointer. A finished root must not exclude a CPU
+  as though its origin were still waiting for proxy entry.
+* Hold the original capture and worker module references through the callback's
+  last access. Reject a duplicate queue operation rather than freeing storage
+  early. Holding hotplug exclusion handles an online-to-offline transition;
+  the offline branch handles the already-offline case. Both permit cleanup
+  without waiting for the CPU to be brought online again.
+* Module teardown must flush/destroy this cleanup workqueue before freeing any
+  pooled root or its code. The normal idleness test continues to see pending
+  roots; a scheduled callback is not a completed retirement. Failure to create
+  the cleanup workqueue must fail setup before publication.
+
+Reusing E's affinity directly is smaller but would keep a service worker waiting
+for the home CPU. That must not introduce a dependency on Native execution
+which itself needs a free service worker. The deferred alternative avoids that
+pool dependency at the cost of a work item, a kernel cleanup workqueue and a
+proved offline metadata path. These are the concrete choices to confirm before
+implementation; the approved reader-count behavior remains unchanged either way.
