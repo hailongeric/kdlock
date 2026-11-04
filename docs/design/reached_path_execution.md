@@ -1107,3 +1107,31 @@ A parent waiting in a reader path, signal setup, a join or another operation
 requires different fixes. The new observation is intended to identify that
 actual wait. Native cancellation, downgrade, read concurrency, queued writer
 ordering and atomic-compatible read unlock remain unchanged in this step.
+
+
+## Reuse collector input storage and select diagnostic model order
+
+The current collector requests a new1MiB Python bytes object for every kmsg
+record. Keep the existing maximum read size and record/error coverage, but
+allocate one mutable1MiB input buffer per collector and use `os.readv` into
+that same storage. Convert only the returned bytes to a record before the
+next read. No caller retains a view of mutable input. Buffer both output
+streams in bounded64KiB blocks and close them before reporting drain. Every
+cursor loss, file limit, fault and incomplete join remains a failed capture.
+This removes repeated large input allocation by construction; its effect on
+the observed collection losses and application timing is not yet measured.
+
+The four focused reader fixtures must still retain bytes after a lost cursor,
+reject a storage limit, detect split fault text and drain a real nonblocking
+pipe. Update their mocked syscall boundary to the real readv contract. Check
+readv support on the VM's actual kmsg descriptor before activating a provider.
+Keep the normal benchmark workload, its binaries and its output contract
+unchanged.
+
+Expose `--model-order` only on the diagnostic controller, preserving the
+ordinary thread-first default. The next distinct diagnostic selects processes
+first, then threads. This gives the previously unrun process model coverage
+without treating an undrained thread run as reusable live state. Each model
+still needs its own ordinary application lifetime, complete ledger, exact
+retirement and idle boundary. Kernel API code has no application/model branch;
+this option only selects the order of independent benchmark checks.
