@@ -1,5 +1,55 @@
 # Reached-path execution
 
+## JIT correction: current implementation plan
+
+The November4 direction requires JIT execution for delegated bodies. The new
+branch is `codex/mmap-reached-jit`, baseline
+`1ece229c36d44336acba7b32054b1bbd4e1275e8`. The interpreter measurements below
+remain historical intermediate evidence, not completion of that requirement.
+No user instruction prohibited JIT; execution-driven discovery does not require
+permanent interpretation.
+
+1. Share the existing reached decoder with a resident x86-64 emitter. Decode
+   only an encountered instruction initially; compile and execute generated
+   code on first use and reuse it after fresh source-byte validation. This first
+   compiler unit is one source instruction, not an upfront whole CFG. Later
+   blocks can combine units without changing the ownership protocol.
+2. Emit actual Native arithmetic, register transfers, condition evaluation,
+   address calculation, PAUSE and fences. The generated function operates on
+   the existing canonical packet, with virtual source SP/BP and the executor's
+   ordinary runtime stack. It must not call `kd_reached_step()` or the generic
+   interpreted instruction dispatcher. Qualified memory/atomic helpers retain
+   the current access width, no-fault behavior and exact Native RMW operation.
+   Known context-dependent instructions still stop before effects and use the
+   existing retained runtime service, then return to JIT execution on E.
+3. Reserve one existing near-text code block at provider initialization only
+   when reached mode is selected. Partition it into CPU-owned slots and
+   preallocate metadata. No allocation, process creation, userspace compiler
+   wait or whole-image allocation occurs at an active instruction. A slot can
+   be rewritten only after its generated function has returned. Compile and
+   call with preemption disabled; serialize local instruction fetch after
+   writing code. Use the normal kernel return thunk. Cache exhaustion replaces
+   an inactive slot, never runs a body on O or selects interpretation.
+4. Keep queue grant/cancellation, origin signals, exact retirement, child
+   ownership and downgrade/read-tail transitions unchanged. Every generated
+   function returns a complete packet before runtime nesting or service work.
+   A failed memory operation must leave packet progress uncommitted. Source
+   CALL words, RET targets, arithmetic flags and persistent budgets retain their
+   existing contracts. A new unsupported lowering is an explicit failed
+   candidate point, not an implicit interpreter or original-body path.
+5. Add generated-code entry/retirement witnesses and interpreted-step counts.
+   Publication alone is insufficient: actual VM checks must observe generated
+   code executing, zero interpreted steps in the selected path, other-task body
+   return, delegated read tails and later writers. Keep the existing interpreter
+   as a reference fixture only. Run focused Native-effect and cancellation/
+   nesting/downgrade checks, then unchanged mmap1 threads/processes. Keep builds,
+   timing and live execution on the VM, and each failed attempt separately.
+
+This changes the instruction backend, not the public lock API or MM bodies.
+The ordinary image backend remains separate. No performance gain is assumed
+from the first compiler unit; all timings must identify the JIT candidate and
+must not be pooled with the previous interpreter measurements.
+
 Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
