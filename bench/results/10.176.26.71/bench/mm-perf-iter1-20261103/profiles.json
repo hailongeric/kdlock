@@ -1,0 +1,113 @@
+[
+  {
+    "arm": "baseline",
+    "source_commit": "d8d21f08c652df3f01f9c8ef2b1698ce9e9aa11d",
+    "profiler": {
+      "argv": [
+        "taskset",
+        "-c",
+        "62",
+        "perf",
+        "record",
+        "-a",
+        "-e",
+        "cycles:k",
+        "-F",
+        "199",
+        "--clockid",
+        "mono",
+        "-o",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-perf-iter1/base-flat-profile-threads-n02/run/perf.data",
+        "--",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-c",
+        "import time;print('PROFILE_READY',flush=True);time.sleep(20)"
+      ],
+      "data_sha256": "11ec9883f9d88882e72561c812f72b04899f6b71a7adc03d3b8ff918c2e60930",
+      "pid": 3909,
+      "ready_ns": 274237574913,
+      "returncode": 0,
+      "started_ns": 273543040781
+    },
+    "application_started_ns": 275916794021,
+    "application_elapsed_ns": 8331457509,
+    "raw_report_sha256": "f8117625a6ed343e8742ac92c8cbab803bcace83a7316d4c7f6af52dd8e9c833",
+    "normalized_report_sha256": "8ac647f2fd184f156992d772bed7be9d073806ade64d604f02a9a28a9ed486aa",
+    "normalization": "strip trailing whitespace only",
+    "source": "base-flat-profile-threads-n02"
+  },
+  {
+    "arm": "dispatch",
+    "source_commit": "c9a46aa5600c44d81c18c632ba387475c3b1bda5",
+    "profiler": {
+      "argv": [
+        "taskset",
+        "-c",
+        "62",
+        "perf",
+        "record",
+        "-a",
+        "-e",
+        "cycles:k",
+        "-F",
+        "199",
+        "--clockid",
+        "mono",
+        "-o",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-perf-iter1/dispatch-profile-threads-n02/run/perf.data",
+        "--",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-c",
+        "import time;print('PROFILE_READY',flush=True);time.sleep(20)"
+      ],
+      "data_sha256": "53ce1c0e0a9d1dc424a73d4edb18ea0117de1cd89058b2994d95608dcf55efc9",
+      "pid": 10321,
+      "ready_ns": 1648608578648,
+      "returncode": 0,
+      "started_ns": 1648052866186
+    },
+    "application_started_ns": 1650239933621,
+    "application_elapsed_ns": 8393311355,
+    "raw_report_sha256": "eef414af3417ddefe42c68eca412c242620914db7aea73647d9ff8b906236e50",
+    "normalized_report_sha256": "da540c5235b7c7704f81ce9ebaec2e64a7cde1f0d2b994b746497c7fccaea4f6",
+    "normalization": "strip trailing whitespace only",
+    "source": "dispatch-profile-threads-n02"
+  },
+  {
+    "arm": "fetch",
+    "source_commit": "0997fd7d550aafde9446d419b3b77e5fd90321cf",
+    "profiler": {
+      "argv": [
+        "taskset",
+        "-c",
+        "62",
+        "perf",
+        "record",
+        "-a",
+        "-e",
+        "cycles:k",
+        "-F",
+        "199",
+        "--clockid",
+        "mono",
+        "-o",
+        "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-perf-iter1/fetch-profile-threads-n02/run/perf.data",
+        "--",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-c",
+        "import time;print('PROFILE_READY',flush=True);time.sleep(20)"
+      ],
+      "data_sha256": "67780db4b295aed5328df65dd60a92b50effd56f83b157b6e55a409532764281",
+      "pid": 14321,
+      "ready_ns": 2298500729188,
+      "returncode": 0,
+      "started_ns": 2297942587975
+    },
+    "application_started_ns": 2300138657755,
+    "application_elapsed_ns": 8343167789,
+    "raw_report_sha256": "64e760426fdc873fb76d9e5ff2a7429a17eafbb1fd4dfb084fcd66627f520099",
+    "normalized_report_sha256": "128b47d4b1534e5e3b8ede26b4fa1a82c9b833b5f314842e522ce6913a5ef6c9",
+    "normalization": "strip trailing whitespace only",
+    "source": "fetch-profile-threads-n02"
+  }
+]

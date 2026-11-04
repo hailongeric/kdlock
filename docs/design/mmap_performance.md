@@ -261,3 +261,16 @@ monitor/helper hashes separately from the immutable provider inputs; do not
 change a running source snapshot or put this activity inside an application
 timing window. This prevents known cleanup delays from obscuring proof while
 preserving a failure if normal lifetimes do not actually drain.
+
+Both detailed models completed their original checks and normal unload. The
+thread run joined 1528 returned other-task sections, 764 read tails and 758 later
+same-executor/object writer observations; processes joined 3156, 1577 and 1515.
+Each also individually joined 16 syscall pairs. These observations do not account
+for every invocation or directly establish reader drainage or physical batch
+length. Fresh reader drainage is covered by the separate actual continuation
+fixture. The current timed and detailed provider code/data sections match, with
+artifact and instrumentation identities retained separately.
+
+The fixed [iteration report](../../bench/results/10.176.26.71/bench/mm-perf-iter1-20261103/README.md)
+records all measured gains/losses, builds, failed setups and remaining limits.
+The current interpreted candidate remains unaccepted and separate from master.
