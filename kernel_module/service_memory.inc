@@ -51,7 +51,8 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 			!(u32)operation->packet->cx ? 0 : -EOPNOTSUPP;
 	}
 	if (address < count_address + sizeof(int) && address + bytes > count_address) {
-		if (!reading && (address != count_address || operation->site->width != 32))
+		if (!reading && (address != count_address || operation->site->width != 32 ||
+		    operation->site->operation > KD_ORIGIN_MEMORY_DEC))
 			return -EOPNOTSUPP;
 		operation->preempt_operand = true;
 	}

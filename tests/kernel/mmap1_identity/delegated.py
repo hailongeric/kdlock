@@ -401,26 +401,30 @@ class Controller:
                         fields = ('origin', 'executor', 'identity', 'generation', 'sequence', 'image_generation',
                                   'ip', 'next', 'sp', 'offset', 'width', 'operation', 'preempt_operand',
                                   'preempt_seq', 'preempt_object', 'input_flags', 'destination', 'read')
-                        operations = (1, 2, 3, 4, 5, 6, 7, 8) if self.reached else (1, 2, 3, 4)
+                        operations = tuple(range(1, 11)) if self.reached else (1, 2, 3, 4)
                         rt.require([event['stage'] for event in part] in (['request', 'enter', 'done', 'resume'],
                                    ['request', 'enter', 'done', 'complete']) and
                             first['image_generation'] == generations[root['entry']] and
                             first['executor'] == root['executor'] and first['ip'] > 0 and
                             first['next'] > first['ip'] and first['sp'] > 0 and
                             first['operation'] in operations and first['width'] in (16, 32, 64) and
-                            (first['operation'] not in (5, 8) or (first['width'] in (32, 64) and
+                            (first['operation'] not in (5, 8, 9, 10) or (first['width'] in (32, 64) and
                              first['destination'] in range(16) and first['destination'] != 4)) and
-                            first['read'] == int(first['operation'] >= 3) and
+                            first['read'] == int(first['operation'] >= 3 and first['operation'] != 9) and
                             all(all(event[name] == first[name] for name in fields) for event in part) and
                             [event['task'] for event in part] == [root['executor'], root['origin'], root['origin'], root['executor']] and
                             part[2]['output_flags'] == part[3]['output_flags'] and part[2]['value'] == part[3]['value'],
                             'GS transaction instruction/context/result identity differs')
-                        if first['operation'] in (5, 8):
+                        if first['operation'] in (5, 8, 9, 10):
                             rt.require(all('source_value' in event and
                                        event['source_value'] == first.get('source_value') for event in part) and
                                        all(event['value'] == 0 for event in part[:2]) and
                                        (first['width'] != 32 or part[2]['value'] <= 0xffffffff),
-                                       'GS subtraction source operand or result width differs')
+                                       'GS arithmetic source operand or result width differs')
+                        if first['operation'] in (9, 10):
+                            rt.require(all(event['value'] == event.get('aux_value') == 0 for event in part) and
+                                       (first['operation'] != 9 or not first['preempt_operand']),
+                                       'GS accounting operation changed a register or preempt ownership')
                         if first['operation'] == 6:
                             rt.require(first['width'] == 32 and first['destination'] == 0 and
                                        first['offset'] == first['preempt_operand'] == 0 and

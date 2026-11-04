@@ -41,7 +41,8 @@ static unsigned int checks;
 static struct kd_origin_memory_site site(const char *hex, u8 op, u8 width)
 {
 	struct kd_origin_memory_site result = { .ip = 0x1000, .operation = op, .width = width,
-		.flags = op >= KD_ORIGIN_MEMORY_LOAD ? KD_ORIGIN_MEMORY_READ : 0 };
+		.flags = op >= KD_ORIGIN_MEMORY_LOAD && op != KD_ORIGIN_MEMORY_ADD_MEMORY ?
+			KD_ORIGIN_MEMORY_READ : 0 };
 	unsigned int byte;
 
 	while (*hex) {
@@ -110,6 +111,10 @@ int main(void)
 		{ "652b10", 5, 32, 0x1000 },
 		{ "65486300", 7, 64, 0x1000 },
 		{ "654f6364a5f0", 7, 64, 0x4ff8 },
+		{ "650110", 9, 32, 0x1000 },
+		{ "65480104d5600e4284", 9, 64, 0xffffffff84420e60UL },
+		{ "653b10", 10, 32, 0x1000 },
+		{ "654f3b64a5f0", 10, 64, 0x4ff8 },
 	};
 	const char *rejected[] = { "64ff00", "f06548ff00", "656748ff00", "6566ff00",
 		"65ff10", "65ffff", "65ff04", "65ff05000000", "656300", "6566486300" };
@@ -377,6 +382,47 @@ int main(void)
 			regs.dx = ~0UL;
 			kd_memory_write_register(&regs, 2, width, operation.result_value);
 			CHECK(regs.dx == expected);
+		}
+	}
+	{
+		const unsigned long values[] = { 0, 1, 0x7fffffff, 0x80000000,
+			0xffffffff, 0x8000000000000000UL, ~0UL };
+		unsigned int width, left, right, arithmetic;
+		struct kd_regs before = regs;
+		for (arithmetic = 0; arithmetic < 2; ++arithmetic)
+		for (width = 32; width <= 64; width *= 2)
+		for (left = 0; left < sizeof(values) / sizeof(values[0]); ++left)
+		for (right = 0; right < sizeof(values) / sizeof(values[0]); ++right) {
+			unsigned long expected = values[left], source_value = values[right], native_flags;
+			input = site(arithmetic ? (width == 32 ? "653b10" : "65483b10") :
+				(width == 32 ? "650110" : "65480110"),
+				arithmetic ? KD_ORIGIN_MEMORY_COMPARE : KD_ORIGIN_MEMORY_ADD_MEMORY, width);
+			cpu_data[0] = values[left];
+			operation.source_value = source_value;
+			operation.effective_offset = operation.result_value = operation.result_aux = 0;
+			operation.input_flags = 0x897;
+			if (arithmetic && width == 32)
+				asm volatile("cmpl %k[right],%k[left]; pushfq; popq %[flags]"
+					: [flags] "=r"(native_flags)
+					: [left] "r"(source_value), [right] "r"(expected) : "cc", "memory");
+			else if (arithmetic)
+				asm volatile("cmpq %[right],%[left]; pushfq; popq %[flags]"
+					: [flags] "=r"(native_flags)
+					: [left] "r"(source_value), [right] "r"(expected) : "cc", "memory");
+			else if (width == 32) {
+				asm volatile("addl %k[right],%k[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+				expected |= values[left] & ~0xffffffffUL;
+			} else
+				asm volatile("addq %[right],%[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+			kd_origin_memory_apply(&operation);
+			CHECK(cpu_data[0] == expected && operation.source_value == source_value);
+			CHECK(!((operation.result_flags ^ native_flags) & KD_REG_ARITHMETIC_FLAGS));
+			CHECK(!operation.result_value && !operation.result_aux &&
+				!memcmp(&before, &regs, sizeof(regs)));
 		}
 	}
 	CHECK(!syscall(SYS_arch_prctl, ARCH_SET_GS, saved_gs));

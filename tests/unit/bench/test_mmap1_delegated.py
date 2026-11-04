@@ -186,6 +186,20 @@ class Services(unittest.TestCase):
                         signed.replace('output_flags=203', 'output_flags=202')):
             with self.assertRaises(controller.rt.Failure):
                 item.validate_services(proof, [], changed, snapshot)
+        for operation in (8, 9, 10):
+            messages = trace(64).replace('operation=5', f'operation={operation}')
+            if operation in (9, 10):
+                messages = messages.replace('value=123 read=1', 'value=0 read=1')
+                messages = messages.replace('source_value=ffffffff80000123',
+                                            'source_value=ffffffff80000123 aux_value=0')
+            if operation == 9:
+                messages = messages.replace('read=1', 'read=0')
+            self.assertEqual(item.validate_services(proof, [], messages, snapshot)['memory_transactions'], 1)
+            for changed in (messages.replace('source_value=ffffffff80000123', 'source_value=1', 1),
+                            messages.replace('read=0' if operation == 9 else 'read=1',
+                                             'read=1' if operation == 9 else 'read=0')):
+                with self.assertRaises(controller.rt.Failure):
+                    item.validate_services(proof, [], changed, snapshot)
         with self.assertRaises(controller.rt.Failure):
             item.validate_services(proof, [], trace(32).replace('value=123', 'value=100000123'), snapshot)
         item.args.execution_mode = 'image'
