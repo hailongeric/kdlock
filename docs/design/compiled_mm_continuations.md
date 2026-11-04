@@ -158,6 +158,11 @@ executed mmap1 result for the corrected backend.
 
 ## Retained handback joins
 
+Status: proposal only, awaiting the user's decision before dependent code
+changes. Commit `6648a732` records a design, not approved implementation. No
+reader-layout, paired-atomic, routing or retained-handoff production changes
+have been made under this proposal.
+
 Reuse the existing native-frame registry for permanent current-position
 handoff. Suspend before registration. Its typed service callbacks resolve the
 full retained owner list; ordinary mutex unlock and rwsem write release or
@@ -201,3 +206,35 @@ progress validation item, separate from read exclusion. Ordinary fully
 translated tails do not attach a cohort and retain their existing completion.
 The capture callback reference is dropped only after E's final retirement;
 module exit still stops service workers before freeing their storage.
+
+### Review before implementation
+
+The cohort-zero proposal above is not acceptable merely with a progress caveat.
+The service pool is finite and each worker executes a root synchronously. If
+every worker retains a handed-back cohort, an unrelated reader can wait for an
+independent prepared acquisition before dropping its read share. That new
+request needs a worker, but the workers wait for those shares. This adds a
+worker-pool cycle without an application lock cycle. This is a source-derived
+counterexample, not an observed VM result. Storage spill does not add workers.
+
+| Choice | Existing state reused | Additional state or operations | Retirement and limits |
+| --- | --- | --- | --- |
+| Retain writer records and reuse ordinary Native routing | Executor stack-local owner/request anchors, native-frame registry, existing transfer/pickup and suspended continuation | Typed callbacks over the full owner list; no separate task registry | Keep owner anchors through actual release callbacks and final packet/access ACK. Read release cannot use the guarded Native registry. |
+| Explicit Native read custody | Existing read credit, object/provider binding, original task/source stack, packet and final acknowledgment | A distinct custody state; no reader decrement, new reader identity or object-layout change | Retire translated custody only after E has no further packet/route access. O and non-owner callers retain the ordinary object lifetime. Bound objects retain provider/source; unbound users require their existing Native source-lifetime contract. This is a proposal, not a proof of universal replacement. |
+| Cohort zero from `6648a732` | Retained owner metadata and reader count | Adjacent pointer, 128-bit operation, CPU capability and passive-record/progress machinery | Waiting in E is insufficient because of the cycle above. Additional detachment would be a larger redesign and is not authorized by this document. |
+
+The minimal recommended direction is stack-local writer/request state with
+existing Native routing, plus explicit Native read-custody transfer where its
+lifetime contract is established. A read-custody transfer is not `up_read`, a
+returned JIT body, or an outer-unlock event. Its exact packet/access ACK must be
+distinct from full-body completion. The builtin completion trampoline cannot
+drop the capture module reference while E still depends on it. The ordering of
+frame/route retirement, final stack-local ACK and builtin restoration remains
+part of the decision to review before implementation.
+
+Relevant source evidence is `kd_service.c`'s stack-local child owner records and
+synchronous worker loop; `execution/native.inc`'s guarded frame registry and
+last-access stack acknowledgment; builtin `provider.c` binding get/put; adapter
+object initialization/destruction; and `kd_source_begin_retire`'s refusal while
+bound objects remain. None proves that a translated frame can simply disappear
+while another actor still has one of its pointers.
