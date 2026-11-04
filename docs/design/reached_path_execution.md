@@ -1276,3 +1276,42 @@ immutable candidate. Preserve the initial failed verdict; report the later
 proof and normal retirement as a separate artifact. Do not rerun or score
 the application while validating saved records. A thread-model run remains
 a distinct application lifetime with independent evidence.
+
+
+## Queued-reader progress at writer phase reopening
+
+The thirty-third task snapshot places the mmap1 parent in the general killable
+reader wait while both writer workers keep returning and have no cancellation
+signal pending. `kd_admission_ready()` closes0 to-1 without considering
+sleeping local readers. `kd_rwsem_wait_condition()` otherwise uses an untimed
+schedule. The wake collection also precedes the final phase-opening RMW, so
+a reader that links between those operations can miss that notification.
+Repeated writer phases therefore provide neither a persistent reader handoff
+nor a guaranteed predicate retry. This is a progress gap, not a reason to
+move the read body to an executor or change the application.
+
+Maintain an exact guarded count of local reader condition memberships in the
+existing phase condition footprint. Increment with link and decrement with
+unlink, including cancellation. Each explicit request/generation remains
+the membership and lifetime record; this count only delays closing a new
+writer phase and never grants a lock or replaces ownership. A selected writer
+with no phase keeps admission open while that existing cohort is queued.
+Readers acquire through the unchanged actual reader predicate, retire their
+condition membership, and then run locally. New readers seeing open admission
+use that same predicate and do not enlarge the queued cohort. Once the queued
+cohort has acquired or canceled, the selected writer closes its own new phase
+and freshly drains the real reader credits. Apply the same eligibility to
+write trylock. Keep the public object size and all field offsets unchanged.
+
+Bound sleeping reader predicate retries to one scheduler tick, so a reader
+that missed the pre-reopen wake still observes the retained open phase.
+Preserve actual successful acquisition before signal checks; cancellation
+unlinks/counts under the existing object guard before returning the same error.
+Keep ordinary read entry, read trylock, atomic-compatible up_read, downgrade
+credit creation/release and writer cleanup/cancellation unchanged. This is a
+bounded queued-reader progress correction, not a broader fairness policy.
+
+Validate queued-reader/writer competition and cancellation using production
+queue/admission fixtures, then rerun the focused actual thread/process checks.
+The candidate remains isolated and unaccepted pending correctness and Nano
+measurements. No throughput gain or Nano parity is inferred from this design.

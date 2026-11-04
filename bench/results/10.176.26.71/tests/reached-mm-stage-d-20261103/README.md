@@ -963,3 +963,26 @@ performance. Fresh reader drainage was not directly observed; physical batch
 length and all-application invocation accounting remain explicitly unmeasured.
 The next distinct application check uses threads first on the same frozen
 source and boot, with independent outputs.
+
+
+## Thirty-third attempt: same `bfdc35e2`, threads first
+
+The independent thread-first attempt used the same frozen runtime candidate
+and boot after normal process-case retirement. Its headroom guard stopped
+the auxiliary reader, then the application exceeded its lifetime limit.
+[Task observations](thirtythird-attempt.json) identify the parent asleep in
+`kd_rwsem_wait_condition` through `kd_down_read_killable`, `kd_mmap_read_lock_killable`
+and a Native user page fault. Both workers remained running and neither
+had a pending cancellation signal. Returned writer generations continued
+advancing. This establishes queued-reader progress as a concrete defect;
+it does not establish a stuck delegated body or cancellation delivery failure.
+The application capture subsequently exhausted/stopped and its final checkpoint
+failed, so no full thread proof is claimed. Ordinary records were retained
+before recovery; the two approved current logs were cleared only after idle.
+
+The source-host launcher should have refreshed root headroom before this
+independent thread point; the earlier transfer gate covered a previous run.
+Require fresh root headroom before each new launch and retain this failed
+attempt. Subsequent reader-progress work must keep Native successful-grant
+priority, cancellation, local reads, delegated downgrade tails and final atomic
+read release unchanged.
