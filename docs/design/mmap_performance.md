@@ -23,7 +23,7 @@ instruction-byte cache. Actual compiled-region performance is not established.
    explicit MM backend mode. Do not pool the log16 correctness profile into
    these throughput series.
 2. Profile the baseline thread workload at two workers using kernel cycle
-   samples and call chains, retaining the raw recording and application time
+   samples, retaining the raw recording and application time
    window. Hardware cycle availability has been checked on the VM. This
    diagnostic is a separate instrumented run. Then measure one unprofiled
    upstream lifetime per model with detailed service tracing disabled.
@@ -124,11 +124,12 @@ throughput class and does not alter any production MM path.
 
 ## Reached accounting arithmetic
 
-The next application attempt reached `ffffffff81828d5f` in
+The next diagnostic connection reached `ffffffff81828d5f` in
 `get_page_from_freelist`: `65 48 01 04 d5 60 0e 42 84`, an indexed GS-memory
 ADD using RAX. The current decoder supports register-destination ADD only.
-The worker stopped and the run failed its kernel-diagnostic requirement; its
-timing is not a performance result. Recovery preserves the recording and logs.
+The worker stopped. This occurred after the application had already returned;
+it is not the cause of the application's earlier diagnostic failure. Recovery
+preserves the recording and logs.
 
 Extend the general retained instruction channel with memory-destination ADD
 (operation9) and its read-only compare form (operation10). Both accept ordinary
@@ -145,3 +146,13 @@ upfront control-flow expansion. Validate indexed and RIP-relative addressing,
 missing final bytes, source-register preservation, upper32-bit memory
 preservation and arithmetic flags against actual Native ADD/CMP. The application
 must return normally and retire before any throughput or profile is accepted.
+
+The recovered application record shows normal exit,2142 completed roots and
+130 pairs/s, but it failed the unchanged kernel-diagnostic check. Its actual
+failure is perf's stack-frame-pointer warning during call-chain collection.
+That rate remains an excluded diagnostic, not an accepted baseline. Use flat
+cycle samples for the next profile: requesting stack unwinding across the
+retained instruction bridge is not validated. Keep the diagnostic check intact;
+this changes only the requested profiler data. Call-chain support is a separate
+remaining limitation, and no call-path attribution may be inferred from flat
+samples alone.
