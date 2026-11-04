@@ -1,5 +1,18 @@
 # Reached-path execution
 
+Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
+passes focused actual-thread/process delegation proofs and normal retirement
+using a separate finalization process. The original observing controller
+retains its own MM binding until exit, so its binding-drain timeout is kept
+as a failed receipt. The general queued-reader correction restores the
+observed thread application's termination progress. Reads remain local except
+for an explicitly downgraded delegated writer tail. The live engine is the
+resident reached interpreter with an instruction-byte cache. Native MM bodies
+and unchanged application executables remain in place. Nano/performance
+acceptance and automatic controller/finalizer process orchestration remain
+open; master is unchanged. Exact evidence is in the
+[MM activation record](../../bench/results/10.176.26.71/tests/reached-mm-stage-d-20261103/README.md).
+
 ## Direction and baseline
 
 The November 3 direction replaces production whole-CFG preparation with

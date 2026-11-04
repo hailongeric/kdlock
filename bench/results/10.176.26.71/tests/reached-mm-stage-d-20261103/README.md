@@ -6,6 +6,31 @@ layer and the pinned will-it-scale executables are unchanged. This campaign
 activates the general reached-mode rwsem provider; it adds no mmap1-specific
 production helper or origin suffix.
 
+## Current verified checkpoint: November 4
+
+Runtime source `111170d533fa4ac37bbcc1f641c364a694f9f7e6` has completed
+other-task mmap/munmap and delegated downgrade-tail evidence for unchanged
+`mmap1_threads` and `mmap1_processes`, two workers and one upstream lifetime
+per model. Both applications returned0, their observed workers disappeared,
+and complete service/family/syscall proofs passed. Exact source retirement
+and ordinary unload passed in a fresh process after both observing processes
+released their own address-space bindings. The original controller binding
+timeouts remain failed receipts; no single-process controller pass is claimed.
+
+| Model | Returned audited requests | Delegated read tails | Later same-executor writers | Sampled syscall pairs |
+| --- | ---: | ---: | ---: | ---: |
+| Threads | 1,317 | 659 | 626 | 16 |
+| Processes | 2,516 | 1,257 | 1,239 | 16 |
+
+[Thread proof/retirement](thirtyfourth-verified.json),
+[process proof/retirement](thirtyfifth-verified.json),
+[focused checks/build](thirtyfourth-checks.json), and
+[final idle](final-idle-20261104.json) bind the exact source, module, boot and
+records. Full proof files remain on the build disk, with hashes and sizes
+in these receipts. This is resident reached-interpreter execution with a byte
+cache, not compiled-region or throughput evidence. Nano acceptance and a
+Native performance comparison remain open; master is unchanged.
+
 ## First candidate: `c7e10b24`
 
 Exact source: `c7e10b24d80f6d710f12791a5159c23f1e9573a7`. The new session
@@ -986,3 +1011,52 @@ Require fresh root headroom before each new launch and retain this failed
 attempt. Subsequent reader-progress work must keep Native successful-grant
 priority, cancellation, local reads, delegated downgrade tails and final atomic
 read release unchanged.
+
+
+## Thirty-fourth and thirty-fifth attempts: queued-reader correction
+
+The general correction records exact local-reader condition membership in
+the existing rwsem footprint. A fresh writer leaves admission open until the
+queued cohort acquires or cancels, then freshly drains actual read credits.
+Readers retry their real predicate each tick to cover the reopening notification
+interval. Ordinary fast read entry, read trylock, atomic-compatible up_read,
+downgrade credits, writer cancellation and the public object layout are
+unchanged. No MM integration body or application source was changed.
+
+The [current-source checks](thirtyfourth-checks.json) passed562 instruction
+checks,24 bench cases,13 production queue/admission/reader/cancellation/nesting
+cases and four admission mutations, plus67,643 resident assertions and provider
+build/normal fixture drain. Both current application windows, lifecycle logs
+and independent captures were complete with zero losses and no detected fault.
+The thread application now returns normally, whereas the earlier snapshot
+showed its parent waiting in killable read admission while writers advanced.
+This establishes functional recovery in the observed case, not a throughput
+gain. [Thread output](thirtyfourth-upstream.log) and
+[process output](thirtyfifth-upstream.log) retain all unscored upstream values.
+
+The same observing-process residency boundary remains in the original driver.
+The separate finalizers require the exact same boot/module/source and complete
+captures, then verify Native services, instruction results, family/artifact
+retirement, actual task/MM/provider identity and16 syscall pairs per model.
+Only after zero bindings, frames and writers do they issue ordinary source
+retirement and unload. [The retained recipe and configurations](finalization-inputs-20261104.json)
+make this continuation reviewable. Original failed results are unchanged.
+Automating this process-lifetime split in the ordinary driver remains open.
+
+Request durations in the proof summaries delimit runtime enter to returned
+using monotonic kmsg timestamps; they include Native service waits and a
+downgraded read tail where present. They exclude preceding queue admission
+and are not a physical batch length or a pure lock-held interval. Their
+means are4.880ms mmap/7.285ms munmap for threads and5.574ms/6.935ms for
+processes. These heavily instrumented resident-path figures are not comparable
+to uninstrumented throughput. Fresh reader drainage was checked in production
+fixtures, not directly observed by the MM trace; the proof keeps that flag
+false. Physical batch length and all-invocation accounting remain unmeasured.
+
+Final idle holds on boot `30fd67ef-fe8b-4c4b-9a45-43a3af6abf2f`, kernel
+`7.0.0-38-kdscope5`, with about3.0GB root and14.1GB build-disk headroom.
+A final boot-selection cleanup found a zero-byte GRUB environment. Its exact
+bytes were preserved; the standard utility created a new empty1,024-byte
+block, atomically installed with the original mode/owner. The [repair receipt](grub-environment-repair-20261104.json)
+records hashes. The normal default configuration stayed unchanged and no
+reboot occurred. The temporary next-boot selection is cleared.
