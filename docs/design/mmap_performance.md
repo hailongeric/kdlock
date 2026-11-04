@@ -244,3 +244,20 @@ Test changed text on repeated IPs, partial ranges/copies, shorter valid
 instructions at range ends, out-of-window reads, ordinary non-reached fetching
 and source readiness failures. Run the focused actual continuation fixtures
 and remeasure both models once as a distinct candidate.
+
+The source-window candidate returned161.5/274.5 pairs/s, versus170/229.5 for
+dispatch alone. Retain the measured5.0% thread loss as well as the19.6% process
+gain; one round does not establish a noise bound. Both remain above the starting
+KD point. Native plain mode returned257231.5/671651.5 pairs/s on the same image
+and placement. The current interpreted path remains far below Native and is
+unaccepted. Nano and larger-worker qualification remain unrun in this iteration.
+
+Use the same bounded postrun CPU-progress method for the detailed correctness
+monitor. It acts only after the observer is stopped, the controller reports
+DRAINING, the factory is inactive and exact frame/reached counters show no live
+execution. The frozen correctness controller still performs all its original
+zero-binding, source retirement, trace joins and normal unload checks. Keep the
+monitor/helper hashes separately from the immutable provider inputs; do not
+change a running source snapshot or put this activity inside an application
+timing window. This prevents known cleanup delays from obscuring proof while
+preserving a failure if normal lifetimes do not actually drain.
