@@ -22,9 +22,9 @@ permanent interpretation.
    the current access width, no-fault behavior and exact Native RMW operation.
    Known context-dependent instructions still stop before effects and use the
    existing retained runtime service, then return to JIT execution on E.
-3. Reserve one existing near-text code block at provider initialization only
-   when reached mode is selected. Partition it into CPU-owned slots and
-   preallocate metadata. No allocation, process creation, userspace compiler
+3. Reserve up to16 existing ordinary code blocks at provider initialization
+   only when reached mode is selected. Partition them into CPU-owned indexed
+   slots and preallocate metadata. No allocation, process creation, userspace compiler
    wait or whole-image allocation occurs at an active instruction. A slot can
    be rewritten only after its generated function has returned. Compile and
    call with preemption disabled; serialize local instruction fetch after
@@ -136,6 +136,31 @@ and unchanged application executables remain in place. Nano/performance
 acceptance and automatic controller/finalizer process orchestration remain
 open; master is unchanged. Exact evidence is in the
 [MM activation record](../../bench/results/10.176.26.71/tests/reached-mm-stage-d-20261103/README.md).
+
+## Current JIT checkpoint
+
+Provider `626bd9fb78d1b2876534dce77df8aa213cfabbb9` is the tested indexed
+JIT candidate on `codex/mmap-reached-jit`. It passes the VM build,52756
+Native-effect checks, eight proof-parser checks, all11 killable/nesting/
+downgrade phases and both actual mmap1 application models. The detailed traces
+contain989/2213 audited returned JIT roots,495/1106 read tails,480/1049 later
+same-executor writer records, and zero interpreted steps. All recorded source,
+owner, frame and provider lifetimes retire normally. This remains focused
+evidence; it does not prove every application invocation or broader lock use.
+
+One untraced two-worker round per model yields88.0/187.0pairs/s. Relative to the
+first JIT's82.0/173.5 on the same boot/configuration, the observed differences
+are+7.32%/+7.78%. Relative to the historical interpreter's161.5/274.5 on the same
+plain image/topology but a different boot, losses remain45.51%/31.88%. Cache hit
+rates are34.41%/36.54% over the observed application lifetime. Performance
+acceptance fails; Nano was not run; master remains unchanged. Keep JIT selected.
+The next direction is reached straight-line blocks with less packet traffic,
+retaining explicit context-service boundaries. That next compiler is not
+implemented or measured by this checkpoint.
+
+Exact records and proof limitations:
+[initial JIT](../../bench/results/10.176.26.71/tests/reached-mm-jit-20261104/README.md),
+[indexed JIT](../../bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md).
 
 ## Direction and baseline
 

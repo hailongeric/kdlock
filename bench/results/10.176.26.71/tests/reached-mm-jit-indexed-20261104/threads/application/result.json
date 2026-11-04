@@ -1,0 +1,133 @@
+{
+  "application_lock_identity": "not-observed-in-this-process",
+  "argv": [
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+    "-t",
+    "2",
+    "-s",
+    "2",
+    "-m"
+  ],
+  "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+  "drained": true,
+  "executable_sha256": "e6a8102ff408e0a3909248fef301a41b0b0bd07861662002e4e13833534f59c6",
+  "execution_session": {
+    "daemon_pid": null,
+    "delegated_execution_proved": false,
+    "device_writers": [],
+    "execution_mode": "reached",
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/execution-session.json",
+    "preparer_pid": 2413,
+    "provider_sha256": "c107d14beff4d33887398000c9bd63b20a196e4a848e2eb5efd38f6d7d143522",
+    "sha256": "7728b2609c48fc8b40e2dd19c66d68475013a3532461bff64583e6f0953c9a79"
+  },
+  "execution_session_after": {
+    "application_delegation_proved": false,
+    "binding_drain_proved": false,
+    "bindings": 2,
+    "reached": {
+      "active": 0,
+      "cache_full": 1520813,
+      "cache_hits": 281172,
+      "cache_misses": 6364815,
+      "completions": 1056,
+      "controls": 1554,
+      "instructions": 6645987,
+      "memory": 38432,
+      "primitives": 21290,
+      "roots": 1056,
+      "unsupported": 0
+    },
+    "source": {
+      "frames": 0,
+      "modules": 0,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "instrumentation": "identity-kprobe",
+  "kernel_log_collection": {
+    "bytes": 130780331,
+    "collector_cpu": 63,
+    "collector_running": true,
+    "complete": true,
+    "drained": false,
+    "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/lifecycle-log/kernel-log-errors.jsonl",
+    "errors": 0,
+    "fault_detected": false,
+    "first_error": null,
+    "last_error": null,
+    "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/application/kernel.log",
+    "max_bytes": 536870912,
+    "mode": "continuous-diagnostic-window",
+    "records": 372686,
+    "sha256": "3d5ff092880871350b4dcee973fe85b567300e5daa66776d1b1dd8e6024c8662",
+    "source_begin": {
+      "active": true,
+      "errors": 0,
+      "exhausted": false,
+      "fault_detected": false,
+      "first_error": null,
+      "last_error": null,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/lifecycle-log/kernel.log",
+      "monotonic_ns": 121865346288,
+      "raw_offset": 1099,
+      "records": 16
+    },
+    "source_end": {
+      "active": true,
+      "errors": 0,
+      "exhausted": false,
+      "fault_detected": false,
+      "first_error": null,
+      "last_error": null,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/lifecycle-log/kernel.log",
+      "monotonic_ns": 132293560921,
+      "raw_offset": 130781430,
+      "records": 372702
+    },
+    "source_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/lifecycle-log/kernel.log",
+    "window_finished": true
+  },
+  "model": "threads",
+  "nominal_seconds": 2,
+  "observation_finished_ns": 122636245924,
+  "output": {
+    "measured_samples": 2,
+    "output_valid": true
+  },
+  "passed": true,
+  "pid": 3433,
+  "process_elapsed_ns": 9119097400,
+  "returncode": 0,
+  "round": 0,
+  "schema": 1,
+  "scored": false,
+  "started_ns": 121865503491,
+  "state": "COMPLETE",
+  "system_cpu_seconds": 17.34057,
+  "user_cpu_seconds": 0.005009999999998627,
+  "workers": 2,
+  "workers_observed": [
+    {
+      "cpus": [
+        0
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+      "ppid": 2413,
+      "start_ticks": 12255,
+      "tgid": 3433,
+      "tid": 3438
+    },
+    {
+      "cpus": [
+        1
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+      "ppid": 2413,
+      "start_ticks": 12261,
+      "tgid": 3433,
+      "tid": 3439
+    }
+  ]
+}

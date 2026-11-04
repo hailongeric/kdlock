@@ -1,0 +1,1 @@
+{"idle": true, "return_to_normal_default": true, "cleared_previously_authorized_current_logs": [{"path": "/var/log/kern.log", "previous_bytes": 771508169, "remaining_bytes": 0}, {"path": "/var/log/syslog", "previous_bytes": 772055727, "remaining_bytes": 0}], "experiment_logs_retained": true}
