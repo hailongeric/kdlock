@@ -98,7 +98,7 @@ def main():
         if c['profile']:
             profile_log = (out / 'perf-record.log').open('w')
             command = ['taskset', '-c', '62', 'perf', 'record', '-a', '-e', 'cycles:k', '-F', '199',
-                '-g', '--clockid', 'mono', '-o', str(out / 'perf.data'), '--', controller.PYTHON,
+                '--clockid', 'mono', '-o', str(out / 'perf.data'), '--', controller.PYTHON,
                 '-c', "import time;print('PROFILE_READY',flush=True);time.sleep(20)"]
             profiler = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=profile_log,
                                         start_new_session=True)
