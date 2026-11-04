@@ -23,6 +23,7 @@ struct kd_native_owner;
 #define KD_ORIGIN_MEMORY_LOAD 3U
 #define KD_ORIGIN_MEMORY_TEST 4U
 #define KD_ORIGIN_MEMORY_SUB 5U
+#define KD_ORIGIN_MEMORY_TASK_READ 6U
 #define KD_ORIGIN_MEMORY_READ 1U
 
 struct kd_origin_memory_site {
@@ -99,6 +100,8 @@ struct kd_origin_memory {
 	/* Source register input for a GS-source arithmetic instruction. The
 	 * Native bridge uses its own GPRs; only this exact operand is imported. */
 	unsigned long source_value;
+	/* Second scalar result of a reached task-register instruction. */
+	unsigned long result_aux;
 };
 
 const struct kd_origin_memory_site *kd_image_memory_sites(

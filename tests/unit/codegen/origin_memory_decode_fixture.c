@@ -250,6 +250,54 @@ int main(void)
 	CHECK(regs.ax == 0x89abcdef && regs.sp == 0x6000);
 	kd_memory_write_register(&regs, 15, 64, 0xfedcba9876543210UL);
 	CHECK(regs.r15 == 0xfedcba9876543210UL && regs.sp == 0x6000);
+	{
+		struct kd_origin_memory_site task = site("0f01ee", KD_ORIGIN_MEMORY_TASK_READ, 32);
+		struct kd_origin_memory_site decoded, invalid;
+		static const u8 bytes[] = { 0x0f, 0x01, 0xee, 0x90 };
+		struct reached_source source = { .bytes = bytes, .length = sizeof(bytes) };
+		struct kd_regs before;
+		u32 ax, bx, cx, dx, expected;
+		const unsigned long patterns[] = { 2, 0x203, 0x897, 0xad7 };
+
+		regs.cx = 1UL << 32;
+		CHECK(!kd_origin_memory_reached_decode(&decoded, task.ip, reached_read, &source));
+		CHECK(source.calls == 3 && !memcmp(&decoded, &task, sizeof(task)));
+		CHECK(!kd_origin_memory_decode(&decoded, &regs, &address) && !address);
+		regs.cx = 1;
+		CHECK(kd_origin_memory_decode(&decoded, &regs, &address) == -EOPNOTSUPP);
+		regs.cx = 1UL << 32;
+		for (i = 0; i < 3; ++i) {
+			source.length = i; source.calls = 0;
+			CHECK(kd_origin_memory_reached_decode(&decoded, task.ip, reached_read, &source) == -ENODATA);
+			CHECK(source.calls == i + 1);
+		}
+		invalid = task; invalid.width = 64;
+		CHECK(kd_origin_memory_decode(&invalid, &regs, &address) == -EPROTO);
+		invalid = task; invalid.flags = 0;
+		CHECK(kd_origin_memory_decode(&invalid, &regs, &address) == -EPROTO);
+		invalid = task; invalid.opcode[3] = 0x90;
+		CHECK(kd_origin_memory_decode(&invalid, &regs, &address) == -EPROTO);
+		invalid = task; invalid.opcode[2] = 0xef;
+		CHECK(kd_origin_memory_decode(&invalid, &regs, &address) == -EPROTO);
+		asm volatile("cpuid" : "=a"(ax), "=b"(bx), "=c"(cx), "=d"(dx)
+			: "0"(7U), "2"(0U) : "memory");
+		CHECK(cx & (1U << 4));
+		asm volatile(".byte 0x0f, 0x01, 0xee" : "=a"(expected), "=d"(dx) : "c"(0U) : "memory");
+		CHECK(dx == 0);
+		before = regs;
+		operation.site = &task;
+		operation.packet = &regs;
+		operation.source_value = 0;
+		for (i = 0; i < sizeof(patterns) / sizeof(patterns[0]); ++i) {
+			operation.input_flags = patterns[i];
+			operation.result_value = operation.result_aux = ~0UL;
+			kd_origin_memory_apply(&operation);
+			CHECK(operation.result_value == expected && operation.result_aux == 0);
+			CHECK(!memcmp(&before, &regs, sizeof(regs)));
+			CHECK((operation.result_flags & KD_REG_ARITHMETIC_FLAGS) ==
+				(patterns[i] & KD_REG_ARITHMETIC_FLAGS));
+		}
+	}
 	CHECK(!syscall(SYS_arch_prctl, ARCH_GET_GS, &saved_gs));
 	CHECK(!syscall(SYS_arch_prctl, ARCH_SET_GS, cpu_data));
 	input = site("658b00", 3, 32);

@@ -51,6 +51,8 @@ def memory_events(messages):
                 row[key] = int(fields[key])
         if 'source_value' in fields:
             row['source_value'] = int(fields['source_value'], 16)
+        if 'aux_value' in fields:
+            row['aux_value'] = int(fields['aux_value'], 16)
         rows.append(row)
     return rows
 

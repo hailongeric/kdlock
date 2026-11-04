@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* The two decoders share exact GS scalar opcodes and 64-bit addressing. */
+/* Exact GS scalar addressing and the reached task register read share one
+ * retained instruction channel, without changing the public lock API. */
 struct kd_memory_operand {
 	u8 base, index, shift, width, operation, destination;
 	s32 displacement;
@@ -21,6 +22,21 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 	    !site->ip || site->ip > ~0UL - site->length ||
 	    site->next_ip != site->ip + site->length)
 		return -EPROTO;
+	if (site->operation == KD_ORIGIN_MEMORY_TASK_READ) {
+		if (site->length != 3 || site->width != 32 ||
+		    site->flags != KD_ORIGIN_MEMORY_READ ||
+		    bytes[0] != 0x0f || bytes[1] != 0x01 || bytes[2] != 0xee)
+			return -EPROTO;
+		for (i = 3; i < sizeof(site->opcode); ++i)
+			if (bytes[i])
+				return -EPROTO;
+		*operand = (struct kd_memory_operand) {
+			.base = KD_MEMORY_NO_REG, .index = KD_MEMORY_NO_REG,
+			.width = 32, .operation = KD_ORIGIN_MEMORY_TASK_READ,
+			.destination = 0,
+		};
+		return 0;
+	}
 	while (cursor < site->length && (bytes[cursor] == 0x65 || bytes[cursor] == 0x66)) {
 		if (bytes[cursor] == 0x65) {
 			if (gs)
@@ -157,6 +173,8 @@ int kd_origin_memory_decode(const struct kd_origin_memory_site *site,
 		return result;
 	if (!regs)
 		return -EINVAL;
+	if (site->operation == KD_ORIGIN_MEMORY_TASK_READ && (u32)regs->cx)
+		return -EOPNOTSUPP;
 	*effective_offset = kd_memory_register(regs, operand.base, site->next_ip) +
 		(kd_memory_register(regs, operand.index, site->next_ip) << operand.shift) +
 		(long)operand.displacement;
@@ -180,7 +198,7 @@ static u8 kd_memory_reached_byte(struct kd_origin_memory_site *site,
 	return value;
 }
 
-/* Decode only the reached GS instruction. The final strict decoder remains
+/* Decode only the reached context instruction. The final strict decoder remains
  * the authority for the supported addressing and operation contract. No byte
  * from a successor is needed to recognize a complete supported instruction. */
 int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
@@ -197,6 +215,23 @@ int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
 		return -EINVAL;
 	*site = (struct kd_origin_memory_site){ .ip = ip };
 	next = kd_memory_reached_byte(site, reader, context, &error);
+	if (!error && next == 0x0f) {
+		next = kd_memory_reached_byte(site, reader, context, &error);
+		if (error)
+			return error;
+		if (next != 0x01)
+			return -EOPNOTSUPP;
+		next = kd_memory_reached_byte(site, reader, context, &error);
+		if (error)
+			return error;
+		if (next != 0xee)
+			return -EOPNOTSUPP;
+		site->operation = KD_ORIGIN_MEMORY_TASK_READ;
+		site->width = 32;
+		site->flags = KD_ORIGIN_MEMORY_READ;
+		site->next_ip = ip + site->length;
+		return kd_memory_operand_decode(site, &decoded);
+	}
 	while (!error && (next == 0x65 || next == 0x66)) {
 		if (next == 0x65) {
 			if (gs)
@@ -312,6 +347,9 @@ int kd_image_validate_memory_sites(const struct kd_jit_image *image)
 	if (!sites || image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return -EPROTO;
 	for (i = 0; i < count; ++i) {
+		/* Task-register service is currently a reached-path capability. */
+		if (sites[i].operation == KD_ORIGIN_MEMORY_TASK_READ)
+			return -EOPNOTSUPP;
 		if ((sites[i].flags & KD_ORIGIN_MEMORY_READ) &&
 		    !(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ))
 			return -EPROTO;
@@ -396,6 +434,7 @@ int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
 	operation->input_flags = cont->packet->flags;
 	operation->result_flags = 0;
 	operation->result_value = 0;
+	operation->result_aux = 0;
 	operation->destination = decoded.destination;
 	operation->source_value = site->operation == KD_ORIGIN_MEMORY_SUB ?
 		kd_memory_register(cont->packet, decoded.destination, site->next_ip) : 0;
@@ -460,8 +499,10 @@ int kd_exec_cont_memory_prepare_reached(struct kd_exec_frame *frame)
 	operation->input_flags = cont->packet->flags;
 	operation->result_flags = 0;
 	operation->result_value = 0;
+	operation->result_aux = 0;
 	operation->destination = decoded.destination;
-	operation->source_value = operation->site->operation == KD_ORIGIN_MEMORY_SUB ?
+	operation->source_value = operation->site->operation == KD_ORIGIN_MEMORY_TASK_READ ?
+		(u32)cont->packet->cx : operation->site->operation == KD_ORIGIN_MEMORY_SUB ?
 		kd_memory_register(cont->packet, decoded.destination, operation->site->next_ip) : 0;
 	operation->immediate = decoded.immediate;
 	operation->result = 0;
@@ -525,6 +566,14 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 	    (operation->site->operation == KD_ORIGIN_MEMORY_TEST &&
 	     (operation->result_flags & (1UL | (1UL << 11)))))
 		return -EPROTO;
+	if (operation->site->operation == KD_ORIGIN_MEMORY_TASK_READ) {
+		if (operation->result_aux || (u32)cont->packet->cx || operation->source_value ||
+		    operation->result_value != (u32)operation->result_value ||
+		    ((operation->result_flags ^ operation->input_flags) & KD_REG_ARITHMETIC_FLAGS))
+			return -EPROTO;
+		kd_memory_write_register(cont->packet, 0, 32, operation->result_value);
+		kd_memory_write_register(cont->packet, 2, 32, operation->result_aux);
+	}
 	if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD ||
 	    operation->site->operation == KD_ORIGIN_MEMORY_SUB)
 		kd_memory_write_register(cont->packet, operation->destination,
@@ -556,6 +605,17 @@ void kd_origin_memory_apply(struct kd_origin_memory *operation)
 	asm volatile("pushfq; popq %0" : "=r"(flags) : : "memory");
 	input = (flags & ~KD_REG_ARITHMETIC_FLAGS) |
 		(operation->input_flags & KD_REG_ARITHMETIC_FLAGS);
+	if (operation->site->operation == KD_ORIGIN_MEMORY_TASK_READ) {
+		u32 ax, dx;
+
+		asm volatile("pushq %[input]; popfq; .byte 0x0f, 0x01, 0xee; "
+			"pushfq; popq %[output]" : "=a"(ax), "=d"(dx), [output] "=r"(flags)
+			: [input] "r"(input), "c"((u32)operation->source_value) : "cc", "memory");
+		operation->result_value = ax;
+		operation->result_aux = dx;
+		operation->result_flags = flags;
+		return;
+	}
 #define KD_MEMORY_APPLY(instruction) \
 	asm volatile("pushq %[input]; popfq; " instruction " %%gs:(%[offset]); " \
 		"pushfq; popq %[output]" : [output] "=r"(flags) \

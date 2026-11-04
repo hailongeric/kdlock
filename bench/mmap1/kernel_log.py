@@ -67,7 +67,7 @@ class DiagnosticKernelLog:
 
     def _run(self):
         try:
-            with (self.directory / 'kernel.log').open('xb', buffering=0) as output, \
+            with (self.directory / 'kernel.log').open('xb', buffering=64 * 1024) as output, \
                  (self.directory / 'kernel-log-errors.jsonl').open('xb', buffering=0) as errors:
                 if self.cpu is not None:
                     os.sched_setaffinity(0, {self.cpu})
@@ -91,7 +91,6 @@ class DiagnosticKernelLog:
                             break
                         # kmsg advances past a lost range on EPIPE. Retain the
                         # loss and all subsequent available records, but fail.
-                        time.sleep(0.005)
                         continue
                     if not raw:
                         break

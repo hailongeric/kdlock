@@ -397,7 +397,7 @@ class Controller:
                         fields = ('origin', 'executor', 'identity', 'generation', 'sequence', 'image_generation',
                                   'ip', 'next', 'sp', 'offset', 'width', 'operation', 'preempt_operand',
                                   'preempt_seq', 'preempt_object', 'input_flags', 'destination', 'read')
-                        operations = (1, 2, 3, 4, 5) if self.reached else (1, 2, 3, 4)
+                        operations = (1, 2, 3, 4, 5, 6) if self.reached else (1, 2, 3, 4)
                         rt.require([event['stage'] for event in part] in (['request', 'enter', 'done', 'resume'],
                                    ['request', 'enter', 'done', 'complete']) and
                             first['image_generation'] == generations[root['entry']] and
@@ -417,6 +417,16 @@ class Controller:
                                        all(event['value'] == 0 for event in part[:2]) and
                                        (first['width'] != 32 or part[2]['value'] <= 0xffffffff),
                                        'GS subtraction source operand or result width differs')
+                        if first['operation'] == 6:
+                            rt.require(first['width'] == 32 and first['destination'] == 0 and
+                                       first['offset'] == first['preempt_operand'] == 0 and
+                                       first['next'] == first['ip'] + 3 and
+                                       all(event.get('source_value') == event.get('aux_value') == 0
+                                           for event in part) and
+                                       all(event['value'] == 0 for event in part[:2]) and
+                                       0 <= part[2]['value'] <= 0xffffffff and
+                                       part[2]['output_flags'] & 0x8d5 == first['input_flags'] & 0x8d5,
+                                       'task-register instruction operands or result differ')
                     transactions += 1
             counts[family + '_transactions'] = transactions
         if self.reached:

@@ -101,6 +101,40 @@ class Readiness(unittest.TestCase):
 
 
 class Services(unittest.TestCase):
+    def test_reached_task_read_requires_both_results_and_exact_instruction_ack(self):
+        item = controller.Controller.__new__(controller.Controller)
+        item.args = SimpleNamespace(execution_mode='reached')
+        item.audit = dict(records=[dict(entry=0xa000)])
+        root = dict(origin=101, executor=200, identity=0x1001, generation=1, entry=0xa000)
+        proof = dict(completed_requests=[root])
+        snapshot = dict(records=[dict(tid=101, backing=0x1100)])
+        common = 'origin=101 executor=200 identity=1001 generation=1 family_generation=1'
+        lines = [f'kd_reached event=family {common} entry=a000',
+                 f'kd_service event=enter {common} object=1100 depth=0 entry=a000 may_delegate=1',
+                 f'kd_reached event=service {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000']
+        for stage, task in zip(('request', 'enter', 'done', 'resume'), (200, 101, 101, 200)):
+            output = stage in ('done', 'resume')
+            lines.append(f'kd_service memory: stage={stage} {common} task={task} sequence=1 '
+                f'image_generation=0 ip=8000 next=8003 sp=7000 offset=0 width=32 operation=6 '
+                f'preempt_operand=0 input_flags=203 output_flags={"203" if output else "0"} '
+                f'preempt_seq=0 preempt_object=0 destination=0 value={"123" if output else "0"} '
+                f'read=1 artifact_sequence=2 source_value=0 aux_value=0')
+        lines += [f'kd_reached event=resume {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000',
+                  f'kd_service event=release {common} object=1100 depth=0 entry=a000 may_delegate=1',
+                  f'kd_service event=returned {common} object=1100 depth=0 entry=a000 may_delegate=1',
+                  f'kd_reached event=retire {common} entry=a000']
+        messages = '\n'.join(lines)
+        self.assertEqual(item.validate_services(proof, [], messages, snapshot)['memory_transactions'], 1)
+        for changed in (messages.replace('next=8003', 'next=8002'),
+                        messages.replace('source_value=0', 'source_value=1', 1),
+                        messages.replace('aux_value=0', 'aux_value=1', 1),
+                        messages.replace(' aux_value=0', '', 1),
+                        messages.replace('value=123', 'value=100000123'),
+                        messages.replace('output_flags=203', 'output_flags=202'),
+                        messages.replace('destination=0', 'destination=1')):
+            with self.assertRaises(controller.rt.Failure):
+                item.validate_services(proof, [], changed, snapshot)
+
     def test_reached_gs_subtraction_retains_instruction_and_result_ack(self):
         item = controller.Controller.__new__(controller.Controller)
         item.args = SimpleNamespace(execution_mode='reached')

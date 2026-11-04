@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* One exact GS instruction on O, with the source packet/stack held by its
+/* One exact context instruction on O, with the source packet/stack held by its
  * retained transaction until the original task's actual completion ACK. */
+#include <asm/cpufeature.h>
 static void kd_service_memory_trace(const char *stage, struct kd_service_root *root)
 {
 	struct kd_origin_memory *operation = &root->continuation.origin_memory;
@@ -8,7 +9,7 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 		!strcmp(stage, "complete");
 
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u family_generation=%llu artifact_sequence=%llu source_value=%lx\n",
+		pr_info("kd_service memory: stage=%s origin=%d executor=%d task=%d identity=%px generation=%llu sequence=%llu image_generation=%lu ip=%lx next=%lx sp=%lx offset=%lx width=%u operation=%u preempt_operand=%u input_flags=%lx output_flags=%lx preempt_seq=%llu preempt_object=%lx destination=%u value=%lx read=%u family_generation=%llu artifact_sequence=%llu source_value=%lx aux_value=%lx\n",
 			stage, operation->origin->pid, operation->executor->pid, current->pid,
 			operation->identity, (unsigned long long)operation->generation,
 			(unsigned long long)operation->sequence,
@@ -23,7 +24,7 @@ static void kd_service_memory_trace(const char *stage, struct kd_service_root *r
 			!!(operation->site->flags & KD_ORIGIN_MEMORY_READ),
 			(unsigned long long)root->continuation.root_generation,
 			(unsigned long long)operation->artifact_sequence,
-			operation->source_value);
+			operation->source_value, output ? operation->result_aux : 0);
 }
 
 static int kd_service_memory_prepare(struct kd_service_root *root)
@@ -43,6 +44,11 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 	if (!(operation->executor_irq_flags & X86_EFLAGS_IF) || preempt_count() != 1 ||
 	    address > ~0UL - bytes)
 		return -EOPNOTSUPP;
+	if (operation->site->operation == KD_ORIGIN_MEMORY_TASK_READ) {
+		operation->executor_pinned = !!kd_service_native_pins(root);
+		return boot_cpu_has(X86_FEATURE_OSPKE) && !operation->source_value &&
+			!(u32)operation->packet->cx ? 0 : -EOPNOTSUPP;
+	}
 	if (address < count_address + sizeof(int) && address + bytes > count_address) {
 		if (!reading && (address != count_address || operation->site->width != 32))
 			return -EOPNOTSUPP;
