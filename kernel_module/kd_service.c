@@ -1074,8 +1074,17 @@ static int kd_service_worker(void *unused)
 			set_cpus_allowed_ptr(current, kd_service_cpus[0] ?
 				&kd_service_cpu_pool : cpu_online_mask);
 		} else {
-			wait_event_exclusive(kd_service_work, kthread_should_stop() ||
-				atomic64_read(&kd_service_work_sequence) != sequence);
+			DEFINE_WAIT(wait);
+
+			for (;;) {
+				prepare_to_wait_exclusive(&kd_service_work, &wait,
+					TASK_UNINTERRUPTIBLE);
+				if (kthread_should_stop() ||
+				    atomic64_read(&kd_service_work_sequence) != sequence)
+					break;
+				schedule();
+			}
+			finish_wait(&kd_service_work, &wait);
 		}
 	}
 	free_cpumask_var(allowed);
