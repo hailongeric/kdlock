@@ -882,3 +882,24 @@ prove an MM protocol defect. Threads were unrun after the failed gate. A
 bounded ordinary receipt read timed out. Recovery retained console records
 and returned to idle enabled boot `60842b20-b98e-4cb1-95a2-0d8bf62df094`;
 it does not prove prior provider/frame drain. All raw records remain retained.
+
+
+## Thirtieth candidate: `c373d273`
+
+`c373d273797405833aff42b297d4a45d7f3a0ccb` passed562 instruction checks,
+24 affected unit cases and67,643 resident assertions, with provider build and
+fixture drain ([checks](thirtieth-checks.json)). Sharing the model reader
+removed both child losses: the retained application window and full lifecycle
+capture are complete with zero errors and no detected fault. The independent
+reader also retained240,872,402 bytes without loss. The two-process application
+returned0 and its workers disappeared. Reached observations ended at2,434
+roots and2,434 completions with zero active/unsupported requests.
+
+The [attempt](thirtieth-attempt.json) reached stable observer STOP with balanced
+task/MM references, then timed out waiting for the short final syscall summary
+in the buffered lifecycle file. The runtime per-root/service validations had
+returned before that gate, but the final proof file and normal binding/source/
+provider retirement were not completed. Do not report this as a full pass.
+Threads were not started. The buffered-summary observation fix requires an
+explicit collector checkpoint after STOP. Preserve all raw records and the
+failed verdict. No throughput comparison or gain is claimed.

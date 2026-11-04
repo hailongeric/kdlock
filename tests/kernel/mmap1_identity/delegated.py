@@ -346,6 +346,7 @@ class Controller:
         (self.model / 'snapshot.bin').write_bytes(first)
         snapshot = dict(observer.decode(first), repeat_equal=True)
         rt.write_json(self.model / 'snapshot.json', snapshot)
+        self.collector.checkpoint()
         return snapshot
 
     def validate_services(self, proof, rows, messages, snapshot):
