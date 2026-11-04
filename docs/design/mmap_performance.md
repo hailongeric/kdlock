@@ -110,3 +110,14 @@ own MM was an inference from exit timing, not verified ownership. Retain the
 observations and correct that attribution: the fresh retirement step is valid
 only because it actually observes zero bindings/frames/writers, irrespective
 of which ordinary object lifetime delayed the count.
+
+
+The VM's installed perf recorder reported `Thread and evlist pollfd index
+mismatch` when using its control-ack interface. That setup stopped before
+provider load or application execution. Retain this tool failure separately.
+Use the recorder's ordinary workload-start ordering instead: its small Native
+helper prints a readiness line after setup, then waits for20seconds. Activate
+the provider only after receiving that line. The unchanged mmap1 executable
+is still launched directly by the benchmark runner. Record only its actual
+application time interval in the profile report; the helper is outside the
+throughput class and does not alter any production MM path.
