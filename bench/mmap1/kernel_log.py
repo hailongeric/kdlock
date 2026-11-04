@@ -21,6 +21,9 @@ class DiagnosticKernelLog:
         self.exhausted = False
         self.started = False
         self.tail = ''
+        self.record_buffer = bytearray(1 << 20)
+        self.record_view = memoryview(self.record_buffer)
+        self.read_buffers = [self.record_buffer]
         self.stop = threading.Event()
         self.ready = threading.Event()
         self.stop_deadline = None
@@ -68,7 +71,7 @@ class DiagnosticKernelLog:
     def _run(self):
         try:
             with (self.directory / 'kernel.log').open('xb', buffering=64 * 1024) as output, \
-                 (self.directory / 'kernel-log-errors.jsonl').open('xb', buffering=0) as errors:
+                 (self.directory / 'kernel-log-errors.jsonl').open('xb', buffering=64 * 1024) as errors:
                 if self.cpu is not None:
                     os.sched_setaffinity(0, {self.cpu})
                 self.ready.set()
@@ -77,7 +80,7 @@ class DiagnosticKernelLog:
                         self._error(TimeoutError('diagnostic final drain exceeded its deadline'), errors)
                         break
                     try:
-                        raw = os.read(self.fd, 1 << 20)
+                        count = os.readv(self.fd, self.read_buffers)
                     except BlockingIOError:
                         if self.stop.is_set():
                             break
@@ -92,8 +95,9 @@ class DiagnosticKernelLog:
                         # kmsg advances past a lost range on EPIPE. Retain the
                         # loss and all subsequent available records, but fail.
                         continue
-                    if not raw:
+                    if not count:
                         break
+                    raw = bytes(self.record_view[:count])
                     self._write(output, raw)
                     self.records += 1
                     text = self.tail + raw.decode(errors='replace')

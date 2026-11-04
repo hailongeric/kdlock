@@ -177,7 +177,8 @@ class Controller:
         self.args, self.out, self.files, self.source, self.audit, self.binaries = args, out, files, source, audit, binaries
         self.result = dict(schema=1, passed=False, drained=False, accepted=False, scored=False,
             state='STARTING', runtime_source_commit=args.source_commit, kernel_component_source_commit=KERNEL_COMPONENT,
-            boot_id=args.boot_id, models={}, commands=[], host_endpoint='PENDING', workload_modified=False)
+            boot_id=args.boot_id, models={}, commands=[], host_endpoint='PENDING', workload_modified=False,
+            model_order=args.model_order)
         self.collector = self.log_fd = None
         self.model = None
         self.save()
@@ -625,6 +626,8 @@ def main():
                         help='reached: resident image-free execution without translator/prewarming')
     parser.add_argument('--prewarm-timeout', type=int, default=600,
                         help='bounded writer-image preparation seconds per model (1..3600)')
+    parser.add_argument('--model-order', choices=('threads-first', 'processes-first'), default='threads-first',
+                        help='order of the two independent diagnostic application lifetimes')
     parser.add_argument('--executor-cpus', default='',
                         help='load-time executor CPU list; empty retains the ordinary policy')
     parser.add_argument('--diagnostic-log-mib', type=int, default=256,
@@ -672,7 +675,8 @@ def main():
                       source_manifest=reference(args.source_manifest), sites=reference(args.sites), controller=reference(Path(__file__)))
         controller.save()
         controller.prepare()
-        for model in bench.MODELS:
+        models = bench.MODELS if args.model_order == 'threads-first' else reversed(bench.MODELS)
+        for model in models:
             controller.model_run(model, inputs)
             controller.model = None
         source_manifest(args)

@@ -40,6 +40,14 @@ def wait_records(collector, count):
 
 
 class DiagnosticKernelLogTests(unittest.TestCase):
+    @staticmethod
+    def readv_fixture(reader):
+        def readv(fd, buffers):
+            data = reader(fd, len(buffers[0]))
+            buffers[0][:len(data)] = data
+            return len(data)
+        return readv
+
     def test_own_fd_is_drained_before_final_collection_without_losing_bytes(self):
         read_fd, write_fd = os.pipe2(os.O_NONBLOCK)
         data = b'6,1,1,-;diagnostic sequence\n' * 32768
@@ -67,7 +75,8 @@ class DiagnosticKernelLogTests(unittest.TestCase):
             if calls == 2:
                 return b'6,2,2,-;retained after loss\n'
             raise BlockingIOError()
-        with tempfile.TemporaryDirectory() as name, patch.object(logs.os, 'read', side_effect=read):
+        with tempfile.TemporaryDirectory() as name, patch.object(
+                logs.os, 'readv', side_effect=self.readv_fixture(read)):
             collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT, cpu=None)
             try:
                 collector.start()
@@ -94,7 +103,7 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                     return raw
                 raise BlockingIOError()
             with self.subTest(budget=budget), tempfile.TemporaryDirectory() as name, \
-                 patch.object(logs.os, 'read', side_effect=read):
+                 patch.object(logs.os, 'readv', side_effect=self.readv_fixture(read)):
                 collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT,
                                                       max_bytes=budget, cpu=None)
                 # The budget case can fail in the reader immediately after
