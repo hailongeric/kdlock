@@ -5,12 +5,17 @@ This guide follows ordinary requests. Family-specific acquisition belongs in
 [rwlock](design/rwlock_implementation.md) and [rwsem](design/rwsem_implementation.md).
 [Translation policy](design/admission.md) defines trusted source; the
 [register ABI](JIT_REGISTER_ABI.md) defines machine-state capture and exits.
+The selected [lock replacement contract](design/kdlock_lock_replacement_contract.md)
+adds required general current-position handback. Its retained-worker integration
+is pending; the existing ordinary paths below do not prove that integration.
 
 ## Preparation and entry
 
 1. Register the continuation and matching backend/ABI after its source is live.
    Unified direct mutex calls may register their internal numeric continuation.
-2. Decode leased text and publish a complete image. Kernel/module source is
+2. Decode leased text within the original bounded selected graph and publish a
+   complete image for that scope. A complete kernel CFG, eager ordinary-callee
+   closure and all-site MM prewarming are not required. Kernel/module source is
    trusted; semantic context, loop/value and entry-input proofs are not run.
    Ordinary string callees use generated CALL/RET without named helper routes.
 3. Attempt the family-specific physical acquisition. A hot caller may still
@@ -50,10 +55,51 @@ retains its existing eligibility for later invocations. The optional ABI2
 original-task instruction service instead retains node/frame/owner through an
 intermediate ACK and resumes the same image after exact RDTSC/RDTSCP/CPUID.
 Its source, flags and remaining-budget contract is separate from a native suffix.
-Generic faults, missing targets and budget
-errors are not arbitrary recovery boundaries. Optional address guards and old
+Generic faults, the legacy untyped IJ-error path and budget errors are not
+arbitrary recovery boundaries. The negotiated current-position miss path below
+has its own packet and ownership requirements. Optional address guards and old
 string-service/direct-call routes belong to checked/historical compatibility,
 not current trusted-source emission.
+
+## Current-position handback and implementation status
+
+The required correction uses exactly the original translator, original GS
+lowering, wrapper and daemon. O is the origin and E is the physical executor.
+On untranslated code, O resumes at the first
+source instruction E has not executed, with current IP/GPR/SP/BP. Preserve
+completed stores and all ownership obligations. A CALL that already pushed its
+source return word resumes at its target without another push. A RET that
+already popped its source word resumes at the resulting target without another
+pop or adjustment. An unexecuted source instruction resumes at that instruction.
+No progressed body restarts from entry.
+
+Actual indirect CALL/JMP/RET edges use IJ miss learning with their source-site
+and target identities. Direct untranslated callees retain CALL miss learning.
+The daemon updates later replacement images; the current invocation neither
+waits for that image nor reenters it after ordinary native suffix execution.
+Bound immutable generations and source leases remain retained independently of
+publication and each owner's final unlock/ACK.
+
+Checkpoint `ebae17c1` adds the negotiated current-position packet for eligible
+cold ABI2 images and routes ordinary misses through existing native handback.
+The retained dispatcher can produce `KD_EXE_RUN_HANDOFF`, but the worker's full
+owner-transfer and origin-release routing remain pending. The later source
+checkpoint `10ef078a` removes the separate reached emitter/cache/dispatcher and
+routes execution through original images. It also corrects full-width header
+selection for the cold miss requirement. Stale reached-state fields remain;
+fresh build and execution validation of that checkpoint is pending.
+
+General flags/SIMD restoration and IRQ/NMI conflict handling are deferred and
+unsupported in this phase. Existing typed flags contracts remain distinct.
+`KD_EXE_RUN_ERROR` and executed-state BUG checks cannot be relabelled as a
+successful handback or removed to conceal a missing path. The owner's focused
+`ebae17c1` checks include passing packet/dispatcher fixtures, eight returning-call
+failures and a mutex-image fixture compile failure. The W=1 provider build
+returns zero with objtool warnings; the overall receipt fails and loads no
+module. The [validation record](design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
+separates these results from absent live retained-owner handback and timing
+evidence. Historical reached-emitter receipts apply only to their recorded
+source and backend.
 
 ## Unlock and validation
 

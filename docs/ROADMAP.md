@@ -16,8 +16,8 @@ an extracted critical section does not complete kernel replacement.
 | Stage | Required evidence | Current position |
 | --- | --- | --- |
 | 1. Lock mechanism | Correct local/delegated execution and repeatable gains in a declared favorable regime, with adverse cases reported | Functional coverage and favorable exploratory nano cases; repeated current confirmation remains open |
-| 2. Scoped MM | Actual mmap/fault correctness plus predeclared improvement or parity against Native | Linux 7 shared-MM checks and timings complete; Native faster at every measured count |
-| 3. Broader integration | Complete declared call-site replacement and unchanged-application comparison | Planned |
+| 2. Scoped MM | Actual mmap/fault correctness plus predeclared improvement or parity against Native | Historical shared-device-MM loss, later actual mmap1 comparisons and retained-JIT proofs; required repeated acceptance remains open |
+| 3. Broader integration | Complete declared call-site replacement and unchanged-application comparison | Scoped original-body syscall comparisons exist; broader declared groups remain planned |
 
 ## Current position
 
@@ -28,6 +28,14 @@ retain separate frozen identities. Private-MM and shared-MM kernels also remain
 separate. This closes selected one-round coverage, not a repeated baseline or
 a performance acceptance gate.
 
+The [November 1 comparison](../bench/results/10.176.26.71/bench/master-native-20261101/README.md)
+subsequently ran unchanged mmap1 threads/processes and selected original-body
+syscalls, one round per point, retaining both gains and losses. Later
+[indexed reached JIT proofs](../bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md)
+exercise actual mmap1 on a separate candidate whose performance acceptance fails
+and Nano was not run. These observations do not complete the stage gates or
+validate the active [original JIT correction](design/kdlock_lock_replacement_contract.md).
+
 Current KD mutex defaults are total cap 1024 and NUMA boundary 1024; KD spin
 retains its 1024-body limit. The user selected equal limits on October 28 to
 remove the earlier count-based local cutoff. The favorable nano bodies are one
@@ -36,10 +44,14 @@ or sixteen padded counters with 256 post-unlock rounds. Their recorded
 [Performance](PERFORMANCE.md) includes losses and local `NO_JIT` results as well
 as returned-body wins.
 
-The normal development kernel is `7.0.0-38-kdlock1`; its mmap backend is disabled.
-The separate `7.0.0-38-kdmm1` image runs the actual adapter in Native/KD modes.
-Native MM bodies remain unchanged and execute on their original task. Linux 6.1
-adaptation, operation-specific MM delegation and prepared teardown are retired.
+The ordinary development image is `7.0.0-38-kdlock1`, with the mmap backend
+disabled. Historical `7.0.0-38-kdmm1` comparisons use local Native/KD modes;
+later scoped/retained kernels have independent identities. Native MM bodies
+remain unchanged: local controls execute on the origin (O), while retained
+candidates may execute them on the executor (E) through the general lock layer.
+The selected correction restores the original JIT; retained-owner handback remains pending at its
+inspected checkpoint. Linux 6.1 adaptation, operation-specific MM algorithms
+and prepared teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
 
@@ -68,19 +80,22 @@ Use the [Linux 7 mmap adapter](../kernel_integration/linux70/MMAP.md) to change
 the lock backend and minimal API/lifetime wrappers. Every user of one mm follows
 its backend selected before publication. Preserve reader concurrency, killable
 acquisition, downgrade, exact asynchronous read-release references and teardown.
-Native mmap/munmap/advice/fault algorithms stay on the original task.
+Native mmap/munmap/advice/fault algorithms stay unchanged. The historical local
+adapter keeps execution on the original task. Retained candidates use the
+general lock and service contracts; the original JIT correction's required
+current-position handback and pending worker integration have separate scope.
 
-The adapter uses local KD readers and writers. Nano JIT batching therefore does
-not explain its current behavior. Profile actual phase admission, reader drain,
-writer handoff and wake/retry costs before selecting an optimization. Mmap's
-killable path bypasses the ordinary uninterruptible polling stage.
+The historical local adapter uses local KD readers and writers. Nano JIT batching
+therefore does not explain those local-MM measurements. Profile actual phase
+admission, reader drain, writer handoff and wake/retry costs before selecting an
+optimization. Mmap's killable path bypasses the ordinary uninterruptible polling stage.
 
 ### Workload matrix
 
 | Workload | Operation and topology | Status |
 | --- | --- | --- |
-| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | Exact maintained comparison runner still needed |
-| `mmap1_processes` | Same operation in independent processes/mms | Separate control still needed |
+| `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | November 1 original-application comparison and later retained-candidate proofs exist; selected original-JIT validation and repeated acceptance remain open |
+| `mmap1_processes` | Same operation in independent processes/mms | Separate November 1 process control and later retained-candidate proofs exist; new source requires its own confirmation |
 | Actual minor faults | Precisely declared access/reset method on actual Native/KD mmap backends, with backing implementation fixed | Generic throughput driver still needed |
 | Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | 42 Linux 7 points complete; KD below Native at all counts |
 | Existing private backing faults | Independent mms; reset PTE and read a checked preallocated page | Supporting experiment; actual mmap lock stays Native |
@@ -94,8 +109,9 @@ fault cycles must not be relabelled as `mmap1` or isolated fault latency.
 
 1. Freeze the benchmark revision, source/configuration, executable, backend mode,
    CPU/NUMA placement, counts, duration, repetitions and performance criterion.
-2. Prepare one unchanged `mmap1` executable for both modes, keeping thread and
-   process results separate and checking actual backend/mm identity.
+2. Use the recorded unchanged `mmap1` executable for both modes, freezing its
+   identity for each new candidate. Keep thread/process results separate and
+   check actual backend/mm identity.
 3. Run basic plus affected correctness/lifetime checks before timing. Validate
    cancellation, downgrade, fork/exit and required read-share transitions.
 4. Prepare one fault class with explicit setup/reset/touch costs and an exact
@@ -152,9 +168,9 @@ and chart at its completed boundary. A timeout does not establish drain.
 | Next deliverable | Remaining work |
 | --- | --- |
 | Stage 1 confirmation | Repeated favorable/adverse nano comparison with local controls |
-| Exact `mmap1` | Pinned thread/process runner on actual Native/KD backends |
+| Exact `mmap1` | Reconfirm the recorded unchanged thread/process executable on the selected original-JIT candidate and matched controls |
 | Actual fault throughput | Defined fault class, fixed backing implementation and exact accounting |
-| Scoped MM acceptance | Correctness plus declared improvement/parity; current loss remains unresolved |
+| Scoped MM acceptance | Correctness plus declared improvement/parity and repetitions; historical losses and current candidate limits remain separate |
 | Broader replacement | Per-object API/lifetime coverage and matched application evaluation |
 
 Operations follow the concrete task authorization and [VM rules](operations/VM.md).

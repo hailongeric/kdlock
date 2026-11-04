@@ -1,8 +1,49 @@
 # Reached-path execution
 
-## JIT correction: current implementation plan
+## Current kdlock lock replacement correction
 
-The November4 direction requires JIT execution for delegated bodies. The new
+The selected [lock replacement contract](kdlock_lock_replacement_contract.md)
+uses exactly the original JIT pipeline and its original saved-origin GS
+lowering. Bounded CFG exploration and actual CALL/IJ miss learning produce
+later replacement images. There is no requirement to compile the entire kernel
+CFG, prewarm all MM entries or wait for a new image in the current invocation.
+
+On untranslated code, O resumes at the first source instruction E has not
+executed, with current IP/GPR/SP/BP and all prior effects retained. An already
+pushed CALL word or popped RET word is not processed again. Declared returning
+services retain their own E-resumption contracts. General flags/SIMD restoration
+and IRQ/NMI conflict handling are deferred and unsupported in this phase.
+
+Checkpoint `ebae17c1b9c57eb6636a7016f5316e6a28ae01f8` restores bounded
+ordinary-callee behavior, adds a current-position miss requirement for eligible
+cold ABI2 images and keeps actual CALL versus IJ reports distinct. Ordinary
+frames can route the negotiated miss through existing native handback.
+Retained-worker owner routing remains pending. The later source checkpoint
+`10ef078ab76ba42447dcf58e608c3d3012b2c9be` removes the separate emitter/cache/
+dispatcher and selects original compiled images. It also corrects protocol-3
+header selection for the cold miss requirement; C reference code moves to
+fixtures and stale reached-state fields remain. Fresh build and execution
+validation for that source checkpoint is pending.
+Owner-run VM checks for the earlier `ebae17c1` have mixed results: the three miss-packet
+tests, segment codegen and entry-scope checks pass; returning-call tests have
+eight failures, the mutex-image fixture does not compile and the provider build
+returns zero with objtool warnings. The overall receipt fails, with no module
+load or reboot. The [contract's validation record](kdlock_lock_replacement_contract.md#validation-and-remaining-work)
+keeps these outcomes separate from absent live retained-handback and timing
+evidence. This documentation audit runs no tests.
+
+All sections below preserve the earlier reached interpreter and separate
+instruction-emitter plans, attempts and receipts. References to a current plan,
+new engine or next iteration in that historical record apply to its named
+checkpoint only. They do not select a second production backend or validate
+the restored original JIT. The indexed JIT's performance acceptance failure
+and unrun Nano coverage remain recorded.
+
+<a id="jit-correction-current-implementation-plan"></a>
+
+## Historical per-instruction JIT plan
+
+The earlier November4 candidate required JIT execution for delegated bodies. Its
 branch is `codex/mmap-reached-jit`, baseline
 `1ece229c36d44336acba7b32054b1bbd4e1275e8`. The interpreter measurements below
 remain historical intermediate evidence, not completion of that requirement.
@@ -137,7 +178,9 @@ acceptance and automatic controller/finalizer process orchestration remain
 open; master is unchanged. Exact evidence is in the
 [MM activation record](../../bench/results/10.176.26.71/tests/reached-mm-stage-d-20261103/README.md).
 
-## Current JIT checkpoint
+<a id="current-jit-checkpoint"></a>
+
+## Historical indexed JIT checkpoint
 
 Provider `626bd9fb78d1b2876534dce77df8aa213cfabbb9` is the tested indexed
 JIT candidate on `codex/mmap-reached-jit`. It passes the VM build,52756

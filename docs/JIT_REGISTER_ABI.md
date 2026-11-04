@@ -10,6 +10,14 @@ defines shared lock and lifetime terms. [kd_regs.h](../include/kd_regs.h),
 [kd_jit_batch.h](../include/kd_jit_batch.h) are the authoritative definitions.
 Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
 
+The selected [kdlock lock replacement contract](design/kdlock_lock_replacement_contract.md)
+requires original-JIT current-position handback with exact IP/GPR/SP and source
+CALL/RET effects. General flags/SIMD restoration and IRQ/NMI conflict handling
+are deferred for that phase. Existing limited flags contracts below do not
+establish broader restoration. Candidate details distinguish `ebae17c1` from
+the source correction at `10ef078a`; retained-worker ownership routing and
+fresh end-to-end validation remain pending.
+
 ## Entry identities and packet states
 
 | `entry_abi` | Identity | Captured input |
@@ -143,8 +151,25 @@ two-word ABI remain the same.
 | 32 | Clobber entry |
 | 41 | `KDAB` identity tag |
 | 45 | Generated `entry_abi` byte |
-| 46 | Image publication protocol version, currently 2 |
-| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 original read-only string API; bit 3 original string API with 64-byte writing effects; bit 4 historical direct original string calls; bit 5 root ABI1/3 instruction exits |
+| 46 | Image publication protocol: 2 for ordinary low-byte images; 3 for service-queue or retained-miss requirements at `10ef078a` |
+| 47 | Low requirement byte: bits 0-5 retain the contracts described below; bit 6 original-task instruction service; bit 7 budget resumption |
+| 48 | Protocol 3 only: full little-endian 32-bit requirement word, with a low byte matching offset 47 |
+
+[`exe_info.h`](../include/exe_info.h) defines the complete requirement mask.
+Bits 8-13 select the service queue, returning origin CALL, origin memory service,
+origin context read, indirect tail and retained current-position miss contracts
+respectively. The fixed directory remains in the first 48 bytes; protocol 3
+uses the extended header. This image metadata does not add wrapper arguments.
+
+There is a static discrepancy at `ebae17c1`: a cold ABI2 image can request bit 13
+without service-queue bit 8, but `wrapper.S` and `kd_image_protocol()` select the
+extended header only for bit 8. Protocol 2 accepts at most an eight-bit mask.
+Thus selecting the new requirement in the translator does not establish that
+such a cold image can encode and publish it correctly. This was reported to
+the implementation owner. Checkpoint `10ef078a` makes both the wrapper and
+`kd_image_protocol()` choose protocol 3 for bit 8 or bit 13 and adds a bit-13-only
+upload/bind fixture. This corrects the source discrepancy; fresh validation of
+the generated/uploaded-header round trip remains pending.
 
 Layout-1 images cannot be published NORMAL. Ordinary offset 0 preserves the C ABI.
 Offset 16's adapter preserves physical RBP; offset 32 preserves it in the wrapper.
@@ -306,11 +331,25 @@ separate obligations; materializing FULL releases neither admission nor the gate
 | 10 DIRECT_CALL_LIMIT | Direct helper allowance exhausted before that helper executes; preserve its pending CALL word and finish on the original waiter |
 | 11 INDIRECT_CALL | Negotiated near indirect CALL miss; IP holds the actual target, `orig_ax` temporarily holds the exact source CALL address, and SP points at its real source return word |
 | 12 ORIGIN_INSN | Negotiated exact RDTSC/RDTSCP/CPUID marker; IP is the unexecuted instruction, FLAGS holds arithmetic state, and SS holds remaining block budget |
+| 13 ORIGIN_MEMORY | Declared original-task memory-instruction service, with no new source CALL word; the exact retained transaction governs return |
+| 14 INDIRECT_TAIL | Negotiated near indirect JMP; FULL IP is the target, `orig_ax` names the source JMP and source SP is unchanged |
+| 15 RETAINED_MISS | Negotiated generic IJ/RET/JMP miss; FULL IP/SP describe the already selected target and post-transfer stack, and `orig_ax` is the source next-PC |
 
 Wrapper values in `exe_info.h` differ from C dispatcher results in `exe.h`.
 COMPLETE stores only IP/SP/BP; FULL stores current logical GPRs before C reads them.
-Entry refusal preserves MINIMAL. Generic fault, IJ-miss and budget errors are not
-arbitrary native-recovery boundaries.
+Entry refusal preserves MINIMAL. Legacy IJ miss dispatch may return the actual
+source next-PC in `args[0]`, rather than the registry's literal `KD_EXE_IJ_MISS`
+status value. The daemon receives the separate generation-scoped source/target
+report. C results include `KD_EXE_RUN_ERROR = 3`, `KD_EXE_RUN_TO_UNLOCK = 4`,
+`KD_EXE_RUN_NATIVE = 6` and the candidate `KD_EXE_RUN_HANDOFF = 16`. Numeric
+values from these domains are not interchangeable.
+
+Generic fault, legacy untyped IJ and budget errors are not arbitrary recovery
+boundaries. The negotiated current-position packet is a separate contract:
+CALL pushes and RET pops already performed by generated code remain committed.
+Ordinary frames can enter the existing native handback; the retained worker's
+full owner-transfer consumer remains pending at `10ef078a`. Generated-packet test
+passes do not validate that end-to-end custody transfer.
 
 Exit 11 is emitted only after evaluating an actual indirect CALL target before
 its virtual push. The provider verifies canonical optional-REX `FF /2` bytes,
@@ -318,9 +357,13 @@ the exact next IP/stack word, FULL packet/frame identity, pending phase and
 source leases before handing the suffix to the original waiter. `orig_ax` is
 cleared before restore. Exact listed Native/context targets do not request
 learning or disable the image; an unknown ordinary target records only the
-proved CALL edge for a future image. RET/JMP misses and noncanonical CALL
-encodings have no such recovery contract. The existing C-call flags convention
-is unchanged, and native execution does not return to JIT in this invocation.
+proved CALL edge for a future image. RET/JMP misses are outside this specific
+exit-11 contract; candidate exit 15 adds a distinct negotiated post-transfer
+packet for them. Noncanonical CALL encodings do not gain support from that
+distinction. The existing C-call flags convention is unchanged, and native
+suffix execution does not return to JIT in this invocation. Ordinary GS operands
+continue to use saved-origin lowering; exit 13 is limited to its declared
+instruction transaction, not every GS-prefixed instruction.
 
 Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their actual virtual return-slot

@@ -16,6 +16,16 @@ behavior. **Observed** means an existing named receipt, not a new run.
 execution evidence. No runtime changes, builds, tests or timing accompany this
 analysis. The normal kernel still has the mmap backend disabled.
 
+This is the October 30 source audit and its candidate-specific extensions.
+Descriptions of a current adapter or current code in that audit refer to the
+named baseline, not every later implementation. The
+[scoped syscall integration](../../kernel_integration/real_api/README.md) and
+[November 1 actual-body measurements](../../bench/results/10.176.26.71/bench/master-native-20261101/README.md)
+subsequently cover selected original setfd/pipe bodies through ordinary syscalls.
+Their object binding, other participants and lifecycle routing are distinct from
+the earlier copied-body mechanisms. They do not establish whole-kernel coverage
+or validate the active [original JIT correction](kdlock_lock_replacement_contract.md).
+
 ## Decision rule
 
 Replace a lock's API only after binding its entire object lifecycle and every
@@ -78,14 +88,15 @@ actual lock addresses still need attribution.
 Native paths/lines in this table refer to the captured Ubuntu source. Full
 participant lists and exact emitted call sites are in the fixed
 [real-API audit](../../bench/results/10.176.26.71/tests/kernel-cs-semantics-20261030/real-api.md).
-None of the seven existing adapters is an all-users conversion.
+None of the seven mechanism adapters in the October 30 audit was an all-users
+conversion. Later scoped integration has its own participant and lifetime record.
 
 | API and exact native lock | Protected interval and mandatory work | Delegation and replacement assessment |
 | --- | --- | --- |
 | OFD GETLK: `file_lock_context.flc_lock`, spinlock | `fs/locks.c:1026–1045`, `posix_test_lock`: owner/type/range/list checks and conflict-result copy. | **Candidate:** ordinary callback-free exclusive query can delegate. Expiry and owner callbacks are conditional; preserve a reached prefix and exact unlock/callback/retry path instead of rejecting every query. Current adapter uses the actual native spin storage with frozen OFD records and excludes callbacks. Conversion must also cover lock mutations, leases, teardown and observers on that object. |
-| F_SETFD: `files_struct.file_lock`, spinlock | `fs/file.c:1278–1283`, `set_close_on_exec`: current/files lookup before lock; bitmap set or test-and-clear inside. | **Candidate:** small task-context writer with no identified mandatory task/mm service in the body. Native object uses ordinary BTS/BT/BTR, not LOCK-prefixed instructions. Current adapter uses native spin storage but excludes close/dup/resize; those participants and initialization must use the same protocol in a real conversion. F_GETFD is a separate RCU lookup. |
-| FIONREAD: `pipe_inode_info.mutex`, mutex | `fs/pipe.c:626–635`, `pipe_ioctl`: ring head/tail, buffer lengths and sum; `put_user` is after unlock. | **Candidate:** exclusive query can delegate; no mandatory user fault, sleep or IRQ transition in this branch. The existing KD adapter uses a private mutex and copied loop. Convert pipe read/write/splice/open/close/fasync/resize participants too; their conditional fault/wait paths may stay local. |
-| F_GETPIPE_SZ: same pipe mutex | `fs/pipe.c:1436–1450`, `pipe_fcntl`: selected GET branch loads capacity and shifts by page size. | **Candidate:** protected GET branch can delegate. F_SETPIPE_SZ's accounting, allocation and IRQ-sensitive resize are conditional sibling work, not reasons to reject GET. Keep the original command switch and route reached difficult operations; current adapter specializes it away. |
+| F_SETFD: `files_struct.file_lock`, spinlock | `fs/file.c:1278–1283`, `set_close_on_exec`: current/files lookup before lock; bitmap set or test-and-clear inside. | **October 30 assessment:** small task-context writer with no identified mandatory task/mm service in the body. Native object uses ordinary BTS/BT/BTR, not LOCK-prefixed instructions. The historical mechanism used native spin storage but excluded close/dup/resize; it did not establish complete participation. Later scoped integration binds those object participants to one protocol. F_GETFD remains a separate RCU lookup. |
+| FIONREAD: `pipe_inode_info.mutex`, mutex | `fs/pipe.c:626–635`, `pipe_ioctl`: ring head/tail, buffer lengths and sum; `put_user` is after unlock. | **October 30 assessment:** exclusive query can delegate; no mandatory user fault, sleep or IRQ transition was identified in this branch. The historical mechanism used a private mutex and copied loop. Later scoped integration preserves the original body and binds pipe read/write/splice/open/close/fasync/resize participants through the same object protocol; conditional fault/wait paths retain their local contracts. |
+| F_GETPIPE_SZ: same pipe mutex | `fs/pipe.c:1436–1450`, `pipe_fcntl`: selected GET branch loads capacity and shifts by page size. | **October 30 assessment:** protected GET branch can delegate. F_SETPIPE_SZ's accounting, allocation and IRQ-sensitive resize are conditional sibling work, not reasons to reject GET. The historical adapter specialized away the original switch. Later scoped integration retains the switch and selects only the GET branch for the clobber shell. |
 | SEEK_SET/SEEK_END: `file.f_pos_lock`, mutex | Acquisition in `fdget_pos`, `fs/file.c:1262`; returns into `ksys_lseek`, `fs/read_write.c:395–409`; indirect tmpfs llseek, bounds/offset update; cleanup calls `__f_unlock_pos`, `fs/file.c:1269`. | **Candidate body, unvalidated continuation:** the selected arithmetic/store has no identified mandatory CPU/mm operation. The root RET across functions, indirect filesystem method and cleanup unlock need an exact supported graph. The copied locally paired adapter does not prove it. DATA/HOLE's inode rwsem and CUR's `f_lock` are conditional. All fd_pos users of this file must share the conversion. |
 | UTS: global `uts_sem`, **rwsem** | `kernel/sys.c:1370–1372` uname read; host/domain writers `1449–1455,1503–1509`: namespace lookup, copy/zero, **in-lock `uts_proc_notify()`** on every successful setter. | **Readers local. Candidate writer prefix:** copy/zero can potentially delegate, then notify and remaining suffix run on the waiter if needed. The current private KD rwlock, fixed-length body and notification-after-unlock adapter do **not** preserve the native lock type, global scope or ordering. A faithful conversion needs KD rwsem, every UTS/sysctl/namespace participant and unchanged notification placement. |
 | Xattr get: `simple_xattrs.lock`, **rwlock** | `fs/xattr.c:1289–1301`, `simple_xattr_get`: rb-tree search/strcmp, size/error or kernel-buffer copy. | **Local shared reads only**, as required; all 168 KD catalog points are local NO_JIT. Set/add writers (`1331–1405,1513–1518`) are separate candidate tree-update sections; allocation is before write lock. They were not measured. Current private-lock/frozen-tree binding does not convert concurrent setters/list/free. |
@@ -101,9 +112,10 @@ CALL is not a permanent guarantee that later learning will keep them local.
 The fixed [MM audit](../../bench/results/10.176.26.71/tests/kernel-cs-semantics-20261030/mm.md)
 maps the native sites and configuration. These rows distinguish API replacement
 with local execution from delegated execution; neither implies a performance
-gain. Rwsem read bodies never delegate.
+gain. Ordinary rwsem read acquisitions remain local; a delegated writer's
+downgraded read tail has its own later retained-candidate ownership contract.
 
-| Lock and exact native section | Type / native semantics | Current replacement and delegation verdict |
+| Lock and exact native section | Type / native semantics | Replacement and delegation verdict at the audited baseline |
 | --- | --- | --- |
 | `mm->mmap_lock`: `vm_mmap_pgoff`, `mm/util.c:579–583`, covering `do_mmap` and `mmap_region` | Rwsem **killable writer**. Address selection, VMA merge/allocation, maple/accounting updates. Population and userfault completion are after unlock. | Existing enabled adapter can replace the backend **locally**. No current delegated killable writer. Future delegation requires cancellation/phase commit and exact reached helper/context boundaries. File callbacks and populate branches are not mandatory anonymous mmap1 work. |
 | Same lock: `__vm_munmap`, `mm/vma.c:3266–3272`; `vms_complete_munmap_vmas:1311–1350` | Killable writer; successful mapped-range removal **downgrades to read** at1320, then teardown, then read-unlock1347. Error/empty-range releases differ. | Local KD adapter preserves the protocol. Prepared delegated writer's no-downgrade/lexical contract cannot cover this path. Need atomic transfer into a local read phase and exact callee release routing; never change killable to ordinary acquisition merely to enable JIT. |
@@ -177,7 +189,12 @@ provider's own polling loop loses PAUSE, nor explain any prior benchmark loss.
 
 ## IRQ, preemption and execution-context compatibility
 
-The user's saved-waiter-state comparison is a reasonable **proposed gate** for
+This section preserves the historical context proposal and audited limitations.
+The current original-JIT correction defers IRQ/NMI conflict handling and general
+flags/SIMD restoration; this proposal is not an additional completion gate for
+that phase. Existing supported context and ownership checks remain required.
+
+The saved-waiter-state comparison was a **proposed gate** for
 eligible shared-memory spin sections. Capture state before the API changes it,
 derive the state required while held, and compare it with the actual executor.
 At least task/softirq/hardirq/NMI class, IF, preemption/BH/migration nesting,
@@ -186,7 +203,7 @@ state exactly; do not copy a preempt count or saved flags into another CPU and
 call that equivalent. A failed comparison must use local ownership for that
 request within the same lock protocol.
 
-**Current code does not implement that complete gate.** Plain spin root admission
+**The October 30 audited baseline did not implement that complete gate.** Its plain spin root admission
 checks task/softirq/migration state and `preempt_count()==1`, but lacks a saved
 waiter/executor IF comparison (`kernel_module/spin/entry.inc:145–180`). Explicit
 IRQ/BH pairs execute locally (`include/kd_spin_direct.h:117–174`). Frames carry

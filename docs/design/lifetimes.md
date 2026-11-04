@@ -4,6 +4,9 @@ A completed body does not mean its request, lock allocation or code can be freed
 Physical owners, native executors, source pins, images and frames have separate
 retirement obligations. Start with [design](../DESIGN.md) and follow
 [ownership](locking.md) and [frames](frames.md) for exact unlock/ACK ordering.
+The active [lock replacement correction](kdlock_lock_replacement_contract.md)
+retains these obligations while restoring the original bounded JIT pipeline.
+Its required current-position handback is separate from completed retirement.
 
 ## Resource lifetimes
 
@@ -104,14 +107,21 @@ do not force unload or clear the guest source tree.
 The maintained provider installs no whole-kernel lock replacement. Legacy global
 hook experiments have separate reader/unload limitations and remain
 [historical evidence](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/lifetimes.md#preserved-kernel-hooks).
-A device reference alone cannot prove arbitrary hook-reader lifetime. Linux 7
-MM integration uses its separate built-in local adapter and mm-reference/token
-rules; see [MM identity and lifetime](../../kernel_integration/linux70/MMAP.md).
+A device reference alone cannot prove arbitrary hook-reader lifetime. Historical
+local MM integration uses its built-in adapter and mm-reference/token rules;
+see [MM identity and lifetime](../../kernel_integration/linux70/MMAP.md).
+Retained execution candidates additionally keep exact provider, source, task,
+stack and owner lifetimes through service completion and final handback.
 
 General hot reload, concurrent source versions, arbitrary allocation reuse,
 whole-kernel replacement and broad oversubscription remain unvalidated.
 
 ## Kernel-generated instruction source extents
+
+The preparation designs and measurements below belong to their named earlier
+candidates. Preserve their source hashes, failures and bounds as historical
+evidence. The current original JIT correction is specified at the end of this
+guide; these records do not establish its implementation or validation.
 
 The isolated `codex/unified-lock-queue-mm` candidate starts this extension from
 `b6a3db19ab8326d320b21d3e2690a09181f7f952`. Its build, 58 text-region cases and
@@ -306,11 +316,33 @@ Focused tests must cover each independent boundary, the total pass ceiling,
 unchanged ordinary behavior and refusal before image publication, followed by
 the same VM build/continuation and actual two-model mmap1 checks.
 
-## Production direction after the November 3 clarification
+<a id="production-direction-after-the-november-3-clarification"></a>
 
-The [reached-path execution model](reached_path_execution.md) supersedes full
-CFG closure and all-site image prewarming as production admission requirements.
-The bounded-CFG designs and their retained receipts above describe the earlier
-candidate and the explicit checked regression path, not the new demand model.
-Source leases, immutable published bytes, exact owners and final retirement
-remain mandatory in the new model.
+## Current original JIT correction
+
+The selected [kdlock lock replacement contract](kdlock_lock_replacement_contract.md)
+restores the original bounded translator, wrapper and daemon pipeline. It uses
+actual CALL/IJ history and later image replacement without eager ordinary-callee
+closure, a complete kernel CFG or all-site prewarming. The
+[reached-path record](reached_path_execution.md) preserves the superseded
+separate-emitter design and its receipts. It was still connected at `ebae17c1`;
+`10ef078a` removes it from production source and moves the C reference code to
+fixtures. Fresh validation of that source correction remains pending.
+
+Learning and handback have different lifetimes. A progressed invocation returns
+to O at its exact current source position, preserving GPR/IP/SP/BP and already
+completed CALL pushes or RET pops. It does not wait for a replacement image or
+replay its prefix. The bound image, source/task/stack references and all live
+physical acquisitions remain retained until their required owner transfer,
+unlock ACKs and final frame retirement finish. Old-generation reports cannot
+rewrite a newer generation's metadata. A new image serves later invocations.
+
+Checkpoint `ebae17c1` adds original-pipeline miss handling, but retained-worker
+handoff of the full owner list remains pending. Existing legacy native routing
+does not establish that transfer. General flags/SIMD restoration and IRQ/NMI
+conflict handling are deferred. No earlier preparation or separate-emitter
+receipt validates this correction. The owner's focused `ebae17c1` packet and
+dispatcher checks include both passes and failures; the
+[contract's validation record](kdlock_lock_replacement_contract.md#validation-and-remaining-work)
+retains them separately from the unverified `10ef078a` source changes. No
+loaded-provider or live retained-owner handback pass follows.

@@ -6,12 +6,17 @@ with prior effects retained. The [roadmap](ROADMAP.md) places this mechanism
 before scoped MM acceptance and broader kernel replacement. Provider loading
 does not replace unrelated Linux locks.
 
+The active [kdlock lock replacement contract](design/kdlock_lock_replacement_contract.md)
+on `codex/mmap-reached-jit` selects the original JIT pipeline and current-position
+waiter handback for untranslated code. Its source status and pending work are
+separate from master, ordinary family behavior and historical MM experiments.
+
 ## Terms used in these guides
 
 | Term | Meaning |
 | --- | --- |
-| Origin / waiter | The task that requested the operation |
-| Executor / combiner | The task holding the physical lock and serving queued requests |
+| Origin / waiter (O) | The task that requested the operation |
+| Executor / combiner (E) | The task holding the physical lock and serving queued requests |
 | Frame / packet | Exact request ownership and its logical machine state |
 | Source lease | A reference retaining source text through inspection and execution |
 | Unlock ACK | Confirmation that the physical owner handled a logical unlock |
@@ -37,8 +42,16 @@ daemon decodes leased source and publishes generated images. The wrapper execute
 that code through the unchanged two-word ABI: origin kernel GS base and logical
 task pointer. Hardware `current`, GS, IRQ state and the executor's stack do not
 become the origin's context. See the [code map](CODE_MAP.md).
+Ordinary GS operands retain the original saved-origin lowering; logical
+`current_task` uses the supplied task pointer. A GS prefix alone does not make
+an operation an original-task service. GS mutations and specific context
+operations still require their declared execution contracts.
 
 ## Lock and ownership boundaries
+
+The table describes ordinary family interfaces. Separately activated retained
+service capture on the isolated candidate has its own root and owner lifetimes,
+as recorded in the lock replacement contract.
 
 | Family | Physical protocol and execution |
 | --- | --- |
@@ -75,12 +88,25 @@ functions, including `strscpy_pad`, `strnlen`, `sized_strscpy`, `strcmp` and
 string models, services or direct native bridges. Optional
 `trusted_source=False` exists for checked regression fixtures.
 
-A missing ordinary callee may transfer the remaining invocation to the origin
-and be learned for a later image. Supported lock controls and scalar services
-have separate runtime contracts. A progressed body cannot restart: continuation
-retains its stores, acquisitions and unlock obligations. Generated dispatch,
-budget checks, RET lookup and synthetic LEA lowering preserve arithmetic flags;
-generic native recovery does not capture arbitrary processor state.
+The original translator explores a bounded selected CFG and learned CALL/IJ
+edges. It does not require a complete kernel CFG or eager ordinary-callee
+closure. A missing ordinary callee can transfer the remaining invocation to
+the origin and be learned for a later image. Declared lock controls and
+returning services retain their separate runtime contracts.
+
+The selected correction requires general untranslated-code handback at the first
+instruction E has not executed, using current IP/GPR/SP/BP and preserving prior
+stores, acquisitions, CALL pushes and RET pops. It cannot restart a progressed
+body. Checkpoint `ebae17c1` adds negotiated ordinary miss handback. The later
+`10ef078a` removes the separate instruction backend and corrects extended-header
+selection in source; fresh validation is pending. Full retained-worker owner
+transfer remains pending. Generic IJ errors are not evidence of successful
+handback.
+
+Generated dispatch, budget checks, RET lookup and synthetic LEA lowering have
+their existing arithmetic-flags contracts. General flags/SIMD restoration and
+IRQ/NMI conflict handling are deferred for this correction; limited existing
+flags paths do not establish arbitrary processor-state restoration.
 
 The packet states are MINIMAL (declared entry state), COMPLETE (finished return
 triple) and FULL (current logical GPRs materialized before generic recovery).
@@ -102,17 +128,24 @@ evidence, not proof that any generated body returned.
 
 ## MM integration and limits
 
-The ordinary `kdlock1` kernel disables the mmap backend. The separate Linux 7
-`kdmm1` image provides explicit Native/KD modes for the actual mmap-lock adapter.
-That integration changes only the lock backend and minimal API/lifetime wrappers.
-Native mmap, munmap, advice and fault bodies execute on their original task.
-Operation-specific MM delegation and prepared teardown are retired.
+The ordinary `kdlock1` image and historical local mmap-lock adapter are distinct
+from retained execution experiments. The local adapter changes only the lock
+backend and minimal API/lifetime wrappers; its native MM bodies execute on the
+original task. Later retained candidates execute unchanged native bodies on E
+through general lock/service routing. The selected original JIT correction is
+part of kdlock lock replacement, with retained-worker handback still pending.
+Operation-specific MM algorithms and prepared teardown remain retired.
 
-The [module-owned mapping experiment](design/mmap_fault.md) instead changes a
-private backing lock while the actual mmap lock stays Native. Its results are
-a different experiment. Current shared-MM timings lose to Native at all 21
-worker counts; exact `mmap1` and generic actual-backend fault throughput remain
-future work. See [performance](PERFORMANCE.md) and [validation](VALIDATION.md).
+The [module-owned mapping experiment](design/mmap_fault.md) changes a private
+backing lock while the actual mmap lock stays Native. It is a different
+experiment. The [November 1 comparison](../bench/results/10.176.26.71/bench/master-native-20261101/README.md)
+includes actual unchanged mmap1 and both positive and negative observations;
+older shared-device-MM losses do not describe every subsequent workload.
+The [indexed reached JIT record](../bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md)
+contains later focused MM execution proofs, failed performance acceptance and
+unrun Nano coverage for its separate emitter. Neither record validates the
+restored original JIT correction. Generic fault-throughput and broader coverage
+claims still require their own evidence.
 
 Whole-kernel replacement, ww_mutex, broad oversubscription, general native flags
 recovery and full mitigation coverage remain unvalidated. RT, debug mutexes,

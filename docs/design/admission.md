@@ -51,10 +51,28 @@ named memory model, string service, control-slot exception, string quota or
 direct native bridge. Historical provider capability bits cannot select those
 routes in current translation.
 
-Only the declared scalar services `ktime_get`, `ktime_get_ns` and `int_sqrt`
-remain selected hostcalls. They have explicit result/clobber contracts; they do
-not switch hardware task identity to the origin. Their source CALL word remains
+The selected scalar hostcalls are `ktime_get`, `ktime_get_ns` and `int_sqrt`.
+They have explicit result/clobber contracts; they do not switch hardware task
+identity to the origin. Their source CALL word remains
 part of the ordinary continuation protocol.
+
+Scalar hostcalls are distinct from the retained candidate's provider-registered
+returning services. `dis_assem` reads `device_session.service_calls()` for ABI2
+and uses those exact targets as declared intervals with their own argument,
+continuation, owner and lifetime contracts. The service-control path can return
+execution to the executor (E) after that interval. This does not make an
+untranslated ordinary callee a returning service, select the retired named string models or authorize
+arbitrary native reentry. Ordinary GS operands retain the original saved-origin
+lowering; only the precisely declared context operation selects an original-task
+service.
+
+The [lock replacement contract](kdlock_lock_replacement_contract.md) selects
+bounded original CFG exploration, actual miss learning and subsequent image
+replacement. Its current-position handback preserves IP/GPR/SP and completed
+CALL pushes/RET pops. Retained-worker integration is pending at `10ef078a`;
+general flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
+Existing limited flags and instruction contracts do not establish those broader
+features.
 
 An untranslated ordinary callee can transfer the remaining invocation to the
 original waiter. Later learning may extend the graph. It does not authorize
