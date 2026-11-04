@@ -210,6 +210,12 @@ int kd_exe_init(void)
 #endif
 	KD_PR_INFO("JIT direct-call pool ready: %d/%d; shared image limit=%d\n",
 		   kd_near_block_free, KD_CODE_BLOCK_POOL, KD_CODE_BLOCK_POOL);
+	if (kd_service_reached_enabled()) {
+		if (!kd_near_block_free) ret = -EOPNOTSUPP;
+		else ret = kd_reached_jit_start(kd_near_block_pool[--kd_near_block_free],
+			KD_CODE_BLOCK_SIZE, kallsyms_lookup_name("__x86_return_thunk"));
+		if (ret) { kd_exe_exit(); return ret; }
+	}
 
 	return 0;
 }
@@ -217,6 +223,7 @@ int kd_exe_init(void)
 void kd_exe_exit(void)
 {
 	int i;
+	kd_reached_jit_stop();
 
 	kd_jit_timing_report();
 	KD_PR_INFO(

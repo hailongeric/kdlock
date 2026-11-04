@@ -120,6 +120,12 @@ struct kd_reached_state {
 	/* Diagnostic source edges only; never owner or return-routing records. */
 	struct { unsigned long ip, target; } calls[8];
 	unsigned int call_next, call_count;
+	/* Generated code writes entry/retirement witnesses. The reference engine
+	 * alone increments interpreted_steps; selected JIT execution must keep it0. */
+	u64 jit_entries, jit_retired, interpreted_steps;
+	u64 jit_value;
+	unsigned long jit_flags;
+	unsigned long jit_code;
 };
 
 /* FULL is mandatory. REP STOS/MOVS consumes one step/budget unit per stored

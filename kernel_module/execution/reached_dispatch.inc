@@ -108,7 +108,7 @@ static int kd_exe_reached_dispatch(struct kd_exec_frame *frame)
 	    session->artifact.reference.held || cont->reached_artifact_sequence)
 		return KD_EXE_RUN_ERROR;
 	for (step = 0; step < KD_REACHED_SEGMENT_MAX; ++step) {
-		enum kd_reached_result result = kd_reached_step(state);
+		enum kd_reached_result result = kd_reached_jit_step(state);
 		struct kd_reached_event *event = &state->event;
 		int status;
 

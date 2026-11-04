@@ -25,6 +25,7 @@
 #include "kd_exec.h"
 #include "kd_exec_cont.h"
 #include "kd_reached_session.h"
+#include "kd_reached_jit.h"
 #include "kd_origin_service.h"
 #include "kd_source.h"
 #include "kd_jit_batch.h"
@@ -81,6 +82,9 @@ static atomic64_t kd_reached_cache_misses = ATOMIC64_INIT(0);
 static atomic64_t kd_reached_cache_full = ATOMIC64_INIT(0);
 static atomic64_t kd_reached_unsupported = ATOMIC64_INIT(0);
 static atomic64_t kd_reached_active = ATOMIC64_INIT(0);
+static atomic64_t kd_reached_jit_entries = ATOMIC64_INIT(0);
+static atomic64_t kd_reached_jit_retired = ATOMIC64_INIT(0);
+static atomic64_t kd_reached_interpreted_steps = ATOMIC64_INIT(0);
 
 /* One-shot high-level JIT fault injection for nested recovery tests. */
 static int kd_jit_hl_fault_after_known_call;

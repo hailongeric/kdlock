@@ -94,6 +94,16 @@ static void kd_service_online_pool(struct cpumask *allowed)
 		cpumask_copy(allowed, cpu_online_mask);
 }
 static atomic64_t kd_service_work_sequence = ATOMIC64_INIT(0);
+static int kd_reached_jit_stats_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "entries=%lld retired=%lld interpreted=%lld\n",
+		(long long)atomic64_read(&kd_reached_jit_entries),
+		(long long)atomic64_read(&kd_reached_jit_retired),
+		(long long)atomic64_read(&kd_reached_interpreted_steps));
+}
+static const struct kernel_param_ops kd_reached_jit_stats_ops = { .get = kd_reached_jit_stats_get };
+module_param_cb(reached_jit_stats, &kd_reached_jit_stats_ops, NULL, 0444);
 module_param_named(service_trace, kd_service_trace, bool, 0644);
 MODULE_PARM_DESC(service_trace, "Focused request, executor and returned completion records");
 static bool kd_service_reached;
@@ -1139,6 +1149,17 @@ static void kd_service_free(struct kd_service_root *root)
 	if (root->continuation.reached_active) {
 		struct kd_reached_session *session = &root->reached;
 		struct kd_wait_request *request = &root->owner.request;
+		atomic64_add(session->state.jit_entries, &kd_reached_jit_entries);
+		atomic64_add(session->state.jit_retired, &kd_reached_jit_retired);
+		atomic64_add(session->state.interpreted_steps, &kd_reached_interpreted_steps);
+		BUG_ON(session->state.interpreted_steps);
+		if (unlikely(READ_ONCE(kd_service_trace)))
+			pr_info("kd_reached event=jit origin=%d executor=%d identity=%px generation=%llu entries=%llu retired=%llu interpreted=%llu code=%lx\n",
+				request->logical_origin->pid, root->worker ? root->worker->pid : 0,
+				request->identity, (unsigned long long)request->generation,
+				(unsigned long long)session->state.jit_entries,
+				(unsigned long long)session->state.jit_retired,
+				(unsigned long long)session->state.interpreted_steps, session->state.jit_code);
 
 		BUG_ON(session->artifact.reference.held ||
 		       root->continuation.reached_artifact_sequence ||
