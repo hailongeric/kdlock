@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import select
 import subprocess
 import sys
 import time
@@ -47,6 +48,7 @@ def main():
         runner_sha256=rt.digest(Path(__file__)), mode=c['mode'], boot_id=c['boot_id'],
         model=c['model'], workers=c['workers'], profile=c['profile'])
     profiler = None
+    profile_fds = []
     try:
         assert os.geteuid() == 0 and sys.executable == controller.PYTHON
         assert c['mode'] in ('native', 'kd') and c['workers'] in bench.WORKERS
@@ -96,12 +98,22 @@ def main():
         exact = None
         if c['profile']:
             profile_log = (out / 'perf-record.log').open('w')
+            control_read, control_write = os.pipe()
+            ack_read, ack_write = os.pipe()
+            profile_fds = [control_write, ack_read]
             command = ['taskset', '-c', '62', 'perf', 'record', '-a', '-e', 'cycles:k', '-F', '199',
-                '-g', '--clockid', 'mono', '-o', str(out / 'perf.data'), '--', 'sleep', '20']
+                '-g', '--clockid', 'mono', '-D', '-1', '--control',
+                'fd:%d,%d' % (control_read, ack_write),
+                '-o', str(out / 'perf.data'), '--', 'sleep', '20']
             profiler = subprocess.Popen(command, stdout=profile_log, stderr=subprocess.STDOUT,
-                                        start_new_session=True)
+                                        start_new_session=True, pass_fds=(control_read, ack_write))
+            os.close(control_read)
+            os.close(ack_write)
             result['profiler'] = dict(argv=command, pid=profiler.pid, started_ns=time.monotonic_ns())
-            time.sleep(0.25)
+            os.write(control_write, b'enable\n')
+            assert select.select([ack_read], [], [], 10)[0], 'profiler readiness ACK timed out'
+            assert os.read(ack_read, 16) == b'ack\n', 'profiler readiness ACK differs'
+            result['profiler']['ready_ns'] = time.monotonic_ns()
             assert profiler.poll() is None, 'profiler exited before application'
         if c['mode'] == 'kd':
             provider = Path(c['provider'])
@@ -179,6 +191,8 @@ def main():
         result.update(state='FAILED', error=repr(error), traceback=traceback.format_exc())
         raise
     finally:
+        for fd in profile_fds:
+            os.close(fd)
         if out.exists():
             rt.write_json(result_path, result)
         print(json.dumps({key: result.get(key) for key in
