@@ -12,6 +12,9 @@ struct kd_reached_session {
 	struct kd_family_artifact artifact;
 	struct kd_reached_state state;
 	const struct kd_family_instruction *fetch_instruction;
+	unsigned long fetch_ip;
+	u8 fetch_length;
+	u8 fetch_bytes[KD_REACHED_MAX_BYTES];
 	unsigned long recent_pc[32];
 	unsigned int recent_count;
 	unsigned int recent_cursor;

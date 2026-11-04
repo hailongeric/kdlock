@@ -1378,6 +1378,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 			NULL, request->identity, request->generation, 0));
 		session->initialized = false;
 		session->fetch_instruction = NULL;
+		session->fetch_length = 0;
 		session->recent_count = 0;
 		session->recent_cursor = 0;
 		root->continuation.reached_active = true;

@@ -40,6 +40,19 @@ static int kd_reached_frame_fetch(void *context, unsigned long address,
 			u8 observed[KD_REACHED_MAX_BYTES];
 
 			session->fetch_instruction = NULL;
+			session->fetch_ip = address;
+			session->fetch_length = 0;
+			/* Optional lookahead only supplies the current decoder. A new
+			 * step always refreshes, even when it revisits the same IP. */
+			if (address <= ~0UL - KD_REACHED_MAX_BYTES &&
+			    !kd_source_pin_text_range(address, KD_REACHED_MAX_BYTES) &&
+			    !copy_from_kernel_nofault(session->fetch_bytes, (void *)address,
+				KD_REACHED_MAX_BYTES)) {
+				session->fetch_length = KD_REACHED_MAX_BYTES;
+				goto window;
+			}
+			/* A valid short instruction must survive unavailable trailing
+			 * bytes. Keep the original exact-length/byte fallback below. */
 			instruction = kd_family_cache_candidate(&session->authority, address);
 			/* An immutable cache record is a candidate, not source authority.
 			 * Retain and compare its complete actual text before serving bytes. */
@@ -47,6 +60,13 @@ static int kd_reached_frame_fetch(void *context, unsigned long address,
 			    !copy_from_kernel_nofault(observed, (void *)address, instruction->length) &&
 			    !memcmp(observed, instruction->bytes, instruction->length))
 				session->fetch_instruction = instruction;
+		}
+	window:
+		if (session->fetch_length && address >= session->fetch_ip &&
+		    address - session->fetch_ip < session->fetch_length &&
+		    size <= session->fetch_length - (address - session->fetch_ip)) {
+			memcpy(out, session->fetch_bytes + address - session->fetch_ip, size);
+			return 0;
 		}
 		instruction = session->fetch_instruction;
 		if (instruction && address >= instruction->source_ip &&
