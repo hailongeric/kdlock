@@ -214,3 +214,33 @@ scheduling and deferred MM lifetimes an opportunity to progress, without
 changing any MM reference or forcing retirement. It is outside the measured
 application window. Keep every exact final zero-state requirement and retain
 timeouts. This is measurement cleanup, not a lock or MM-body optimization.
+
+## Current-instruction fetch window
+
+The corrected dispatch point returned170/229.5 pairs/s (threads/processes)
+against132/183 before, one untraced lifetime per point. Its separate flat
+profile sampled worker-side queued-spin waiting at0.22%, versus22.24% before.
+The reports have different sampled event totals, so these are fractions of
+their own application windows, not absolute cycle savings. Origin waiting and
+IRQ-save locking remain prominent. The runtime still performs millions of
+instruction fetches; `kd_reached_frame_fetch()` takes source residency and
+no-fault copy paths for each decoder byte on most cache misses.
+
+Add one preallocated15-byte current-instruction window to the reached session.
+On the first fetch at the packet's current IP, invalidate the previous window,
+retain/read at most15 actual bytes once, and serve only that window's bounds.
+Always refresh on a new step, including a loop back to the same IP and service
+reentry. A failed optional full-window read cannot reject a valid shorter
+instruction: retain the existing exact cached-length and requested-byte paths
+as fallbacks. A failed copy never publishes a window. Check overflow before
+the optional range. No successor is decoded or executed, and no control-flow
+graph is built. The final instruction event still records its complete actual
+bytes and retains its normal source/frame/artifact lifetimes.
+
+Keep every existing frame/context check, ownership probe, service ACK and packet
+checkpoint. This change reduces repeated source lookups/copies; it does not
+batch retirement, relax publication, replace a packet or add a lock/allocation.
+Test changed text on repeated IPs, partial ranges/copies, shorter valid
+instructions at range ends, out-of-window reads, ordinary non-reached fetching
+and source readiness failures. Run the focused actual continuation fixtures
+and remeasure both models once as a distinct candidate.
