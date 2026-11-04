@@ -863,3 +863,22 @@ regular-expression scan consumed2,009,745,959ns wall time; the batch plus
 keyword prefilter prototype consumed121,982,997ns. Neither detected a fault
 in this prefix. The exact input hash is retained. This measures collector
 text work only, not application performance or full trace acceptance.
+
+
+## Twenty-ninth candidate: `06caaf07`
+
+`06caaf073543e3923f143014e6a15a4843ec28be` passed562 production instruction
+checks,23 affected unit cases and67,643 resident assertions, with provider
+build and fixture drain ([checks](twentyninth-checks.json)). The two-process
+application again returned0 and its workers disappeared, in9,170,630,144ns.
+Its printed average151 remains unscored. Aggregate reached observations were
+2,581 roots and2,581 completions with zero active/unsupported requests. The
+[attempt](twentyninth-attempt.json) failed complete capture: application reader
+3,090 lost ranges and lifecycle reader2,990. Both run in the same Python
+process on CPU63. The independent CPU62 reader retained249,270,496 bytes
+with zero losses and no detected fault. This supports reducing duplicate
+child collection; it does not validate the missing observer/proxy ledger or
+prove an MM protocol defect. Threads were unrun after the failed gate. A
+bounded ordinary receipt read timed out. Recovery retained console records
+and returned to idle enabled boot `60842b20-b98e-4cb1-95a2-0d8bf62df094`;
+it does not prove prior provider/frame drain. All raw records remain retained.

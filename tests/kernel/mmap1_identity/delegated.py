@@ -537,7 +537,8 @@ class Controller:
             self.save()
             session = bench.run_point(self.model / 'application', dict(model=model, workers=2, round=0, nominal_seconds=2),
                 inputs, self.verify, diagnostic=True, execution_session=exact_session,
-                diagnostic_log_bytes=self.args.diagnostic_log_mib * 1024**2)
+                diagnostic_log_bytes=self.args.diagnostic_log_mib * 1024**2,
+                diagnostic_collector=self.collector)
             snapshot = self.stop_observer()
             symbols = [int(line.split()[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                        if len(line.split()) == 4 and line.split()[2:] == ['kd_rwsem_ops', '[kdlock_km]']]

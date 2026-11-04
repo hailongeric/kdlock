@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import queue
 import re
 import tempfile
 import time
@@ -129,6 +130,38 @@ class DiagnosticKernelLogTests(unittest.TestCase):
             errors = [json.loads(row) for row in (Path(name) / 'kernel-log-errors.jsonl').read_text().splitlines()]
             self.assertEqual([row['errno'] for row in errors], [errno.EPIPE])
 
+    def test_shared_window_retains_loss_and_keeps_reader_running(self):
+        pending = queue.Queue()
+        def read(fd, size):
+            try:
+                value = pending.get_nowait()
+            except queue.Empty:
+                raise BlockingIOError()
+            if isinstance(value, OSError):
+                raise value
+            return value
+        with tempfile.TemporaryDirectory() as name, patch.object(
+                logs.os, 'readv', side_effect=self.readv_fixture(read)):
+            collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT, cpu=None,
+                                                  fault_check=bench.rt.kernel_fault)
+            collector.start()
+            begin = collector.checkpoint()
+            pending.put(OSError(errno.EPIPE, 'lost window fixture range'))
+            pending.put(b'6;retained window record\n')
+            wait_records(collector, 1)
+            window = Path(name) / 'application'
+            window.mkdir()
+            summary = collector.copy_window(begin, window)
+            self.assertFalse(summary['complete'])
+            self.assertFalse(summary['drained'])
+            self.assertTrue(summary['window_finished'])
+            self.assertTrue(summary['collector_running'])
+            self.assertEqual(summary['errors'], 1)
+            self.assertEqual((window / 'kernel.log').read_bytes(), b'6;retained window record\n')
+            self.assertFalse(collector.finish()['complete'])
+            with self.assertRaises(RuntimeError):
+                collector.checkpoint()
+
     def test_fault_and_storage_limit_cannot_become_an_accepted_capture(self):
         for budget, chunks in ((1024, [b'6;BU', b'G: fixture\n']), (32, [b'x' * 64])):
             position = 0
@@ -162,7 +195,7 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                     self.assertEqual(summary['first_error']['errno'], errno.ENOSPC)
 
     def test_real_run_point_collects_during_child_wait_and_rejects_fault(self):
-        for fault in (False, True):
+        for fault, shared in ((False, False), (True, False), (False, True), (True, True)):
             read_fd, write_fd = os.pipe2(os.O_NONBLOCK)
             data = b'6,1,1,-;delegated sequence\n' * 32768
             if fault:
@@ -180,8 +213,18 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                 kwargs['stdout'].flush()
                 return Child()
             try:
-                with self.subTest(fault=fault), tempfile.TemporaryDirectory() as name, ExitStack() as stack:
+                with self.subTest(fault=fault, shared=shared), tempfile.TemporaryDirectory() as name, ExitStack() as stack:
                     out = Path(name) / 'point'
+                    shared_collector = None
+                    if shared:
+                        capture = Path(name) / 'model'
+                        capture.mkdir()
+                        shared_collector = logs.DiagnosticKernelLog(read_fd, capture, bench.rt.FAULT,
+                            max_bytes=2 << 20, cpu=None, fault_check=bench.rt.kernel_fault)
+                        shared_collector.start()
+                        write_burst(write_fd, b'6;before application\n')
+                        wait_records(shared_collector, 1)
+                        shared_collector.checkpoint()
                     for target, attribute, options in (
                         (bench, 'idle', {}),
                         (bench, 'capture_workers', {'return_value': [dict(tid=701, start_ticks=99), dict(tid=702, start_ticks=100)]}),
@@ -196,11 +239,12 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                     inputs = dict(binaries={'threads': '/tmp/mmap1_threads'},
                                   binary_sha256={'threads': 'a' * 64})
                     args = (out, dict(model='threads', workers=2, round=0, nominal_seconds=2), inputs, lambda: None)
+                    options = dict(diagnostic=True, diagnostic_collector=shared_collector)
                     if fault:
                         with self.assertRaises(bench.rt.Failure):
-                            bench.run_point(*args, diagnostic=True)
+                            bench.run_point(*args, **options)
                     else:
-                        bench.run_point(*args, diagnostic=True, diagnostic_log_bytes=512 * 1024**2)
+                        bench.run_point(*args, **options, diagnostic_log_bytes=512 * 1024**2)
                     result = json.loads((out / 'result.json').read_text())
                     self.assertEqual(result['passed'], not fault)
                     self.assertTrue(result['drained'])
@@ -210,6 +254,19 @@ class DiagnosticKernelLogTests(unittest.TestCase):
                                      logs.MAX_BYTES if fault else 512 * 1024**2)
                     self.assertEqual(result['kernel_log_collection']['fault_detected'], fault)
                     self.assertEqual((out / 'kernel.log').read_bytes(), data)
+                    if shared:
+                        self.assertTrue(shared_collector.thread.is_alive())
+                        self.assertFalse(result['kernel_log_collection']['drained'])
+                        self.assertTrue(result['kernel_log_collection']['window_finished'])
+                        self.assertEqual(result['kernel_log_collection']['source_begin']['raw_offset'],
+                                         len(b'6;before application\n'))
+                        write_burst(write_fd, b'6;after application\n')
+                        shared_collector.checkpoint()
+                        summary = shared_collector.finish()
+                        self.assertTrue(summary['complete'])
+                        self.assertEqual((capture / 'kernel.log').read_bytes(),
+                                         b'6;before application\n' + data + b'6;after application\n')
+                        self.assertEqual((out / 'kernel.log').read_bytes(), data)
             finally:
                 os.close(write_fd)
                 try:

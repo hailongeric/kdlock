@@ -1195,3 +1195,9 @@ The ordinary standalone runner keeps its own collector. No kernel logging,
 lock state, API, application, signal ordering or acceptance check is removed.
 Validate exact window boundaries, incomplete/lost capture rejection, active
 reader retention and the real run_point join on the VM before a fresh attempt.
+
+Checkpoint acknowledgement additionally requires a nonblocking would-block
+observation, so all records already available before a completed application's
+final boundary have been consumed. A busy stream that prevents that boundary
+within the existing two-second limit fails explicitly; acknowledging only a
+previously written prefix could omit the application's final returned events.

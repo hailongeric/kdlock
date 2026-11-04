@@ -318,7 +318,7 @@ def timeout_tasks(parent):
 
 
 def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
-              diagnostic_log_bytes=None):
+              diagnostic_log_bytes=None, diagnostic_collector=None):
     """One normal upstream lifetime; observations end during its own warmup."""
     if execution_session is None:
         idle(allow_identity_probe=diagnostic)
@@ -339,19 +339,29 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     if execution_session is not None:
         result['execution_session'] = execution_session.identity()
     rt.write_json(out/'result.json', result)
-    fd = os.open('/dev/kmsg', os.O_RDONLY|os.O_NONBLOCK)
-    os.lseek(fd, 0, os.SEEK_END)
+    rt.require(diagnostic_collector is None or diagnostic, 'shared collector requires a diagnostic point')
+    fd = None
+    if diagnostic_collector is None:
+        fd = os.open('/dev/kmsg', os.O_RDONLY|os.O_NONBLOCK)
+        os.lseek(fd, 0, os.SEEK_END)
     messages = ''
     collector = None
+    window_begin = None
     child = None
     started = time.monotonic_ns()
     before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
     try:
         if traced:
-            collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT,
-                fault_check=rt.kernel_fault,
-                max_bytes=kernel_log.MAX_BYTES if diagnostic_log_bytes is None else diagnostic_log_bytes)
-            collector.start()
+            if diagnostic_collector is None:
+                collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT,
+                    fault_check=rt.kernel_fault,
+                    max_bytes=kernel_log.MAX_BYTES if diagnostic_log_bytes is None else diagnostic_log_bytes)
+                collector.start()
+            else:
+                window_begin = diagnostic_collector.checkpoint()
+                rt.require(window_begin['active'] and not window_begin['errors'] and
+                           not window_begin['fault_detected'] and not window_begin['exhausted'],
+                           'shared model capture incomplete before application launch')
             started = time.monotonic_ns()
             before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
         with (out/'upstream.log').open('w') as log:
@@ -415,13 +425,15 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         raise
     finally:
         try:
-            if collector is not None:
-                summary = collector.finish()
+            if collector is not None or window_begin is not None:
+                summary = (collector.finish() if collector is not None else
+                    diagnostic_collector.copy_window(window_begin, out,
+                        max_bytes=kernel_log.MAX_BYTES if diagnostic_log_bytes is None else diagnostic_log_bytes))
                 result['kernel_log_collection'] = summary
                 rt.write_json(out/'kernel-log-result.json', summary)
                 rt.require(summary['complete'], 'diagnostic kernel log incomplete')
                 rt.require(not summary['fault_detected'], 'kernel warning/fault')
-            else:
+            elif diagnostic_collector is None:
                 while True:
                     try:
                         messages += os.read(fd, 1<<20).decode(errors='replace')+'\n'
@@ -433,7 +445,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
             result.update(state='FAILED', passed=False, log_error=repr(error))
             raise
         finally:
-            if collector is None or not collector.thread.is_alive():
+            if fd is not None and (collector is None or not collector.thread.is_alive()):
                 os.close(fd)
             rt.write_json(out/'result.json', result)
     return result
