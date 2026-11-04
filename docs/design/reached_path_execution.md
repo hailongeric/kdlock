@@ -64,6 +64,16 @@ synthetic multi-root record lacking the new JIT witness. Update that synthetic
 record; keep the runtime requirement. No kernel provider build or live MM pass
 is inferred from these first generated-code checks.
 
+The `2deb9012` provider builds but initialization refuses the absent optional
+near-text pool: the VM reports64 ordinary code blocks and zero near blocks.
+Use one ordinary preallocated block when the near pool is unavailable. Emit
+relative helper calls when their distance fits, otherwise emit an absolute
+helper call. Generated return transfers use the running kernel's selected
+return target and preserve the private function ABI. Test both near and far
+code placement with actual generated execution; do not select interpretation
+because allocation placement differs. Ordinary image mode retains its pools
+unchanged. No live continuation phase passed the refused initialization.
+
 Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
