@@ -30,6 +30,19 @@ from device_session import info, RETIRE, read_service_call_table
 FAULT = re.compile(r"BUG:|\bWARNING:|kernel panic|double fault|soft lockup|"
                    r"hard LOCKUP|unable to handle|general protection fault|"
                    r"Oops:|\[ERROR\]|\[KD_JIT\]\[ERROR\]|invariant_failures=[1-9]", re.I)
+_FAULT_WORDS = ('bug', 'warning', 'panic', 'double', 'lockup', 'unable',
+                'general', 'oops', 'error', 'invariant_failures')
+
+
+def kernel_fault(text):
+    """Skip the regex only when none of its ASCII alternatives can match."""
+    if text.isascii():
+        lower = text.lower()
+        if not any(word in lower for word in _FAULT_WORDS):
+            return False
+    return bool(FAULT.search(text))
+
+
 PROVIDER = HERE / ".build/provider/kernel_module/kdlock_km.ko"
 BINARIES = (str(PROVIDER.relative_to(ROOT)), str((WORKLOAD / "spin_cacheline.ko").relative_to(ROOT)),
             "bench/spin_cacheline/client", "daemon/daemon")

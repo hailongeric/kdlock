@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 import time
 import unittest
@@ -40,6 +41,40 @@ def wait_records(collector, count):
 
 
 class DiagnosticKernelLogTests(unittest.TestCase):
+    def test_fast_fault_check_preserves_all_alternatives_and_unicode_rules(self):
+        examples = ('BUG:', 'WARNING:', 'kernel panic', 'double fault', 'soft lockup',
+                    'hard LOCKUP', 'unable to handle', 'general protection fault',
+                    'Oops:', '[ERROR]', '[KD_JIT][ERROR]', 'invariant_failures=1',
+                    'invariant_failures=9', 'invariant_failures=0', 'warnings=0',
+                    'notWARNING:', 'ordinary record', '\u0131nvariant_failures=1',
+                    '\u00e9WARNING:', '\u212aernel panic')
+        for example in examples:
+            for text in (example, example.lower(), example.upper(), '6; ' + example + '\n'):
+                with self.subTest(text=text):
+                    self.assertEqual(bench.rt.kernel_fault(text), bool(bench.rt.FAULT.search(text)))
+
+    def test_batch_boundary_and_final_partial_are_scanned(self):
+        chunks = [b'x' * (64 * 1024) + b'BU', b'G: final fixture\n']
+        for pattern, callback in ((bench.rt.FAULT, bench.rt.kernel_fault),
+                                  (re.compile('final fixture'), None)):
+            position = 0
+            def read(fd, size):
+                nonlocal position
+                if position == len(chunks):
+                    return b''
+                value = chunks[position]
+                position += 1
+                return value
+            with self.subTest(pattern=pattern), tempfile.TemporaryDirectory() as name, \
+                 patch.object(logs.os, 'readv', side_effect=self.readv_fixture(read)):
+                collector = logs.DiagnosticKernelLog(77, name, pattern, cpu=None,
+                                                      fault_check=callback)
+                collector.start()
+                summary = collector.finish()
+                self.assertTrue(summary['complete'], summary)
+                self.assertTrue(summary['fault_detected'])
+                self.assertEqual((Path(name) / 'kernel.log').read_bytes(), b''.join(chunks))
+
     @staticmethod
     def readv_fixture(reader):
         def readv(fd, buffers):
@@ -54,6 +89,7 @@ class DiagnosticKernelLogTests(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as name:
                 collector = logs.DiagnosticKernelLog(read_fd, name, bench.rt.FAULT,
+                                                      fault_check=bench.rt.kernel_fault,
                                                       max_bytes=2 << 20, cpu=None)
                 collector.start()
                 write_burst(write_fd, data)
@@ -77,7 +113,8 @@ class DiagnosticKernelLogTests(unittest.TestCase):
             raise BlockingIOError()
         with tempfile.TemporaryDirectory() as name, patch.object(
                 logs.os, 'readv', side_effect=self.readv_fixture(read)):
-            collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT, cpu=None)
+            collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT, cpu=None,
+                                                  fault_check=bench.rt.kernel_fault)
             try:
                 collector.start()
             except OSError:
@@ -105,6 +142,7 @@ class DiagnosticKernelLogTests(unittest.TestCase):
             with self.subTest(budget=budget), tempfile.TemporaryDirectory() as name, \
                  patch.object(logs.os, 'readv', side_effect=self.readv_fixture(read)):
                 collector = logs.DiagnosticKernelLog(77, name, bench.rt.FAULT,
+                                                      fault_check=bench.rt.kernel_fault,
                                                       max_bytes=budget, cpu=None)
                 # The budget case can fail in the reader immediately after
                 # readiness; both startup and final summaries must retain it.

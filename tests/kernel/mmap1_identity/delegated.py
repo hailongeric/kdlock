@@ -481,6 +481,7 @@ class Controller:
         self.log_fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
         os.lseek(self.log_fd, 0, os.SEEK_END)
         self.collector = bench.kernel_log.DiagnosticKernelLog(self.log_fd, logdir, rt.FAULT,
+            fault_check=rt.kernel_fault,
             max_bytes=self.args.diagnostic_log_mib * 1024**2)
         try:
             self.collector.start()

@@ -12,8 +12,10 @@ HEADROOM_BYTES = 64 * 1024 * 1024
 
 
 class DiagnosticKernelLog:
-    def __init__(self, fd, directory, fault_pattern, *, max_bytes=MAX_BYTES, cpu=63):
+    def __init__(self, fd, directory, fault_pattern, *, max_bytes=MAX_BYTES, cpu=63,
+                 fault_check=None):
         self.fd, self.directory, self.fault_pattern = fd, Path(directory), fault_pattern
+        self.fault_check = fault_check or fault_pattern.search
         self.max_bytes, self.cpu = max_bytes, cpu
         self.bytes = self.records = self.errors = 0
         self.first_error = self.last_error = None
@@ -21,6 +23,8 @@ class DiagnosticKernelLog:
         self.exhausted = False
         self.started = False
         self.tail = ''
+        self.scan_pending = []
+        self.scan_bytes = 0
         self.record_buffer = bytearray(1 << 20)
         self.record_view = memoryview(self.record_buffer)
         self.read_buffers = [self.record_buffer]
@@ -68,6 +72,15 @@ class DiagnosticKernelLog:
         if stream is not None:
             self._write(stream, (json.dumps(row, sort_keys=True) + '\n').encode())
 
+    def _scan(self):
+        if not self.scan_pending:
+            return
+        text = self.tail + ''.join(self.scan_pending)
+        self.fault |= bool(self.fault_check(text))
+        self.tail = text[-256:]
+        self.scan_pending.clear()
+        self.scan_bytes = 0
+
     def _run(self):
         try:
             with (self.directory / 'kernel.log').open('xb', buffering=64 * 1024) as output, \
@@ -82,6 +95,7 @@ class DiagnosticKernelLog:
                     try:
                         count = os.readv(self.fd, self.read_buffers)
                     except BlockingIOError:
+                        self._scan()
                         if self.stop.is_set():
                             break
                         self.stop.wait(0.005)
@@ -89,6 +103,7 @@ class DiagnosticKernelLog:
                     except InterruptedError:
                         continue
                     except OSError as error:
+                        self._scan()
                         self._error(error, errors)
                         if error.errno != errno.EPIPE:
                             break
@@ -100,12 +115,17 @@ class DiagnosticKernelLog:
                     raw = bytes(self.record_view[:count])
                     self._write(output, raw)
                     self.records += 1
-                    text = self.tail + raw.decode(errors='replace')
-                    self.fault |= bool(self.fault_pattern.search(text))
-                    self.tail = text[-256:]
+                    self.scan_pending.append(raw.decode(errors='replace'))
+                    self.scan_bytes += count
+                    if self.scan_bytes >= 64 * 1024:
+                        self._scan()
         except BaseException as error:
             self._error(error)
         finally:
+            try:
+                self._scan()
+            except BaseException as error:
+                self._error(error)
             self.ready.set()
 
     def finish(self, timeout=2):

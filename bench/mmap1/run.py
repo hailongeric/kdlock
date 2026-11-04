@@ -349,6 +349,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     try:
         if traced:
             collector = kernel_log.DiagnosticKernelLog(fd, out, rt.FAULT,
+                fault_check=rt.kernel_fault,
                 max_bytes=kernel_log.MAX_BYTES if diagnostic_log_bytes is None else diagnostic_log_bytes)
             collector.start()
             started = time.monotonic_ns()
