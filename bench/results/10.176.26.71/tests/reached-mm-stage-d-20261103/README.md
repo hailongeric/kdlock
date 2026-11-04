@@ -13,8 +13,8 @@ other-task mmap/munmap and delegated downgrade-tail evidence for unchanged
 `mmap1_threads` and `mmap1_processes`, two workers and one upstream lifetime
 per model. Both applications returned0, their observed workers disappeared,
 and complete service/family/syscall proofs passed. Exact source retirement
-and ordinary unload passed in a fresh process after both observing processes
-released their own address-space bindings. The original controller binding
+and ordinary unload passed in a fresh process after the observing processes
+exited and the binding count reached zero. The original controller binding
 timeouts remain failed receipts; no single-process controller pass is claimed.
 
 | Model | Returned audited requests | Delegated read tails | Later same-executor writers | Sampled syscall pairs |

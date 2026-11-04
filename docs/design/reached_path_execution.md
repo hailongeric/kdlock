@@ -3,7 +3,8 @@
 Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
-retains its own MM binding until exit, so its binding-drain timeout is kept
+records a residual binding-drain timeout before exit; the responsible MM
+objects were not individually identified. That timeout is kept
 as a failed receipt. The general queued-reader correction restores the
 observed thread application's termination progress. Reads remain local except
 for an explicitly downgraded delegated writer tail. The live engine is the

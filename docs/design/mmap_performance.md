@@ -62,8 +62,9 @@ counters are progress evidence, not a substitute for the separate full trace.
 After normal application completion, deactivate future binding and allow both
 the controller and profiler to exit. A fresh process then requires zero object
 bindings, frames and writers before ordinary source retirement and unload.
-This avoids waiting for the observing controller's own live MM object to be
-destroyed while that controller is still running. Emit an explicit pending
+This allows residual bound MM objects to finish their ordinary lifetimes.
+The binding count alone does not identify which task or deferred release
+retains an object. Emit an explicit pending
 retirement stage; only the subsequent exact cleanup completes the point. A
 failed application or unknown profiler lifetime leaves state for diagnosis.
 Never force an unload, detach a live object or relabel a timeout as drain.
@@ -73,3 +74,39 @@ Queue admission and interpreter/Native service costs are included naturally.
 Profiler samples and trace-enabled request durations are separate diagnostics.
 The workload maps/unmaps128MiB anonymous ranges without touching their data;
 these results cannot establish demand-page-fault throughput.
+
+
+## First setup failure and a reached arithmetic addition
+
+The first baseline profiling setup stopped at the unchanged source/family
+quiescence requirement before an application point was created. Its initial
+cause is not inferred from a later event. A subsequent ordinary diagnostic
+connection reached `get_page_from_freelist+0x2c9`, `ffffffff81828ca9`, under
+`lock_mm_and_find_vma` and reported GS prefix65 with status-95. The matching
+scope5 ELF identifies `65 48 03 1d 77 23 be 02`: ADD of the original CPU's
+`this_cpu_off` value into RBX. Static bytes identify the point; the reached
+decoder must freshly validate the full actual instruction before execution.
+
+Add reached-only `KD_ORIGIN_MEMORY_ADD` operation8, using the existing retained
+Native instruction channel. Support32/64-bit GS-source register ADD with the
+same decoded addressing as SUB; preserve the old destination register input,
+execute actual Native ADD on the origin, and commit result/arithmetic flags
+only after its exact ACK. Preserve source SP, the two-word wrapper and cold
+record layout. Image publication continues explicitly to refuse this new
+operation until its own backend supports it. Test addressing, result widths,
+carry/overflow and flags against actual Native ADD, plus the trace join.
+This supplements one reached instruction; it does not move an MM body back
+to the origin or bypass acquisition/cancellation.
+
+The runtime source correction precedes a fresh profiling attempt. The setup
+also needs a deterministic profiler-ready boundary or bounded exact quiescence
+retry; no successful profiler/application run is inferred from the failed
+setup. Preserve its raw recording, configuration, console and original error.
+
+Source review additionally shows that `kd_mmap_init()` binds the provider at
+object initialization and unregister affects only future objects. Earlier
+attribution of residual leases specifically to the observing controller's
+own MM was an inference from exit timing, not verified ownership. Retain the
+observations and correct that attribution: the fresh retirement step is valid
+only because it actually observes zero bindings/frames/writers, irrespective
+of which ordinary object lifetime delayed the count.
