@@ -160,10 +160,10 @@ executed mmap1 result for the corrected backend.
 
 ## Retained handback joins
 
-Status: proposal only, awaiting the user's decision before dependent code
-changes. Commit `6648a732` records a design, not approved implementation. No
-reader-layout, paired-atomic, routing or retained-handoff production changes
-have been made under this proposal.
+Status: the user selected option 2, explicit Native read custody. The approved
+sequence below supersedes the historical cohort proposal in this section.
+Commit `6648a732` records that unimplemented proposal. Do not add its reader
+layout, paired-atomic operation, CPU requirement or cohort-drain wait.
 
 Reuse the existing native-frame registry for permanent current-position
 handoff. Suspend before registration. Its typed service callbacks resolve the
@@ -307,3 +307,53 @@ The moved adapter/fetch fixtures exercise a standalone reference component.
 Their result labels must say reference, not production. Their existing checks
 remain intact. Prepare the controller-boundary fixture now, but do not run it
 or any intermediate checks until the overall functionality is complete.
+
+## Approved Native read-custody sequence
+
+Option 2 transfers the existing downgraded read obligation to ordinary Native
+execution without changing the reader count. The normal `up_read` or
+`up_read_non_owner` consumes it. This transfer is neither a physical unlock nor
+a returned JIT body. Other live mutex/writer gates remain physically owned by E
+and use exact existing Native release routing. No additional queue, reader
+metadata, task registry or allocation is needed for this join.
+
+1. A validated original-JIT miss exports the first unexecuted source position.
+   E suspends its CPU activation before publishing a Native frame route.
+2. Preserve E-stack nested records. Mark already downgraded read obligations as
+   Native custody without touching the semaphore. Native locks actually held by
+   O likewise transfer ledger custody; their physical state is unchanged.
+3. Register the retained frame in the existing Native registry, resolving typed
+   operations against the complete owner list instead of its compatibility
+   vector. The writer ownership query uses that exact route, not an aggregate
+   `is_locked` observation.
+4. O moves back to its source stack and copies the current packet and completion
+   fields into local storage. An existing-style O-stack Native request records
+   acceptance; its done ACK is E's final access to that request. O accesses no
+   root/frame field after acknowledgment and resumes the saved packet once.
+5. Retain the original capture callback reference for E's outstanding frame.
+   Bound restoration takes a separate temporary module reference and consumes
+   it only through the existing builtin restoration callback. This prevents
+   the initial restore from dropping E's reference. Keep the frame source lease
+   until all E-owned releases and packet/access acknowledgments finish.
+6. Subsequent O write-release or downgrade calls submit typed stack requests.
+   E checks the exact owner UID/generation, performs the real release, and
+   acknowledges it. A downgrade then transfers its new read credit to Native
+   custody without a second decrement. Ordinary read release and speculative
+   rollback remain unchanged.
+7. Remove routing before its final ACK. After every E-owned gate is actually
+   released and packet acceptance is acknowledged, unwind stack anchors and
+   retire the handed-back continuation through a distinct terminal state.
+   Do not manufacture `outer_unlock_seen` or increment full-JIT completion.
+
+Bound MM objects retain provider/source independently through object destruction
+and transferred non-owner references. Generic unbound callers retain their
+ordinary Native source/object-lifetime obligation; the source/module references
+for E's retained records must still be explicit. Unbound Native-only lifetime
+coverage must be reported separately from the bound mmap1 evidence, not assumed
+from an object of equal layout. Broader source-lifetime machinery, if needed,
+requires review before adding it.
+
+The writer route, packet acceptance and distinct terminal state are required
+implementation details of this selected option. Full flags/SIMD and IRQ/NMI
+conflict handling remain deferred. Tests follow the completed implementation;
+no intermediate VM run is part of this sequence.
