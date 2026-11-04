@@ -187,6 +187,18 @@ def main():
             assert after['roots'] > result['reached_before']['roots']
             result['reached_after'] = after
             (controller.PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
+            progress = dict(started_ns=time.monotonic_ns(),
+                bindings_before=int((controller.PARAMETERS / 'rwsem_provider_bindings').read_text()), cpus=[])
+            result['postrun_cpu_progress'] = progress
+            deadline = time.monotonic() + 5
+            for cpu in rt.cpu_list(Path('/sys/devices/system/cpu/online').read_text().strip()):
+                remaining = deadline - time.monotonic()
+                assert remaining > 0, 'postrun CPU progress exceeded its bound'
+                subprocess.run(['taskset', '-c', str(cpu), '/usr/bin/true'], check=True,
+                               timeout=remaining, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                progress['cpus'].append(cpu)
+            progress.update(finished_ns=time.monotonic_ns(),
+                bindings_after=int((controller.PARAMETERS / 'rwsem_provider_bindings').read_text()))
             result.update(state='MEASURED_RETIREMENT_PENDING', factory_active=False,
                           retirement='fresh process after controller exit required')
         else:
