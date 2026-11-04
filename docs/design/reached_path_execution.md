@@ -95,6 +95,34 @@ source. No traced value is scored or pooled with untraced timing. The original
 interpreter and Native results remain historical comparisons, with their exact
 source and boot identities.
 
+The first actual JIT application checks at `383e830f` pass both models with
+1076/2128 audited returned JIT roots,538/1064 delegated read tails and zero
+interpreted steps. Untraced two-worker throughput is82.0/173.5 map/unmap pairs/s,
+versus the historical `0997fd7d` interpreter161.5/274.5. These −49.23%/−36.79%
+losses fail performance acceptance and remain in the evidence record.
+
+A separate unscored VM profile maps sampled addresses using the exact measured
+module hash. Generated-code publication's `sync_core()` is1.45% of all sampled
+kernel cycles, and emitter helpers also appear; origin polling accounts for a
+large share and is not evidence that origin work should replace JIT. The first
+cache linearly searches32 slots per CPU, replacing them round-robin. Repeated
+compilation is a concrete optimization target; it is not asserted to explain
+all waiting or service cost. Preserve the profile's original failed post-run
+host capture and the later successful fresh capture separately.
+
+The next bounded optimization reserves up to16 already allocated ordinary code
+blocks at provider initialization in reached mode only. This provides512 slots
+per CPU on this64-CPU VM without allocating code during execution. Use an
+eight-way indexed cache, with power-of-two sets and per-set round-robin victims;
+lookup checks at most eight entries. Fresh source-byte validation remains
+mandatory before reuse, and a slot is rewritten only after its generated
+function has returned. Keep the2048-byte function capacity, generated lowering,
+source leases, canonical packet and all queue/cancel/nesting/read-tail semantics
+unchanged. Record CPU-local cache hit/miss counts as performance observations,
+not ownership records. Ordinary image mode retains its allocation behavior.
+Build and rerun focused correctness, both actual application models and exactly
+one separate timing round per model for the new source. Do not pool candidates.
+
 Historical interpreter checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
