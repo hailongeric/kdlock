@@ -199,3 +199,18 @@ the same wait with `DEFINE_WAIT`, `prepare_to_wait_exclusive()` in
 `TASK_UNINTERRUPTIBLE`, a stop/sequence recheck, `schedule()` and
 `finish_wait()`. Registration precedes the condition check, so neither a ready
 notification nor task stop can be lost between deciding to wait and scheduling.
+
+The corrected dispatch revision passed all11 actual killable/nesting/downgrade
+fixture phases. Its first untraced thread point returned170 pairs/s versus132
+before. One object binding remained through the five-second finalizer, with
+zero frames/writers and every root complete; a later observation was zero before
+an attempted CPU-progress diagnostic began. The cause of that delay remains
+unidentified; that diagnostic did not establish causality.
+
+For subsequent points, after the timed application has exited and the provider
+factory is inactive, allow one bounded pass of ordinary userspace activity on
+each online CPU. Record binding counts before and after. This gives ordinary
+scheduling and deferred MM lifetimes an opportunity to progress, without
+changing any MM reference or forcing retirement. It is outside the measured
+application window. Keep every exact final zero-state requirement and retain
+timeouts. This is measurement cleanup, not a lock or MM-body optimization.
