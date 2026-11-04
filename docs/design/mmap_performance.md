@@ -192,3 +192,10 @@ check observed nonzero bindings; a later exact retry observed zero and unloaded
 normally. Add a bounded five-second wait for those same exact zero conditions
 to the finalizer, recording observed counts. A timeout remains a failure;
 neither the application nor any timed interval is repeated for cleanup.
+
+The first dispatch build stopped because Linux7 has no
+`wait_event_exclusive()` helper. No application ran on that revision. Implement
+the same wait with `DEFINE_WAIT`, `prepare_to_wait_exclusive()` in
+`TASK_UNINTERRUPTIBLE`, a stop/sequence recheck, `schedule()` and
+`finish_wait()`. Registration precedes the condition check, so neither a ready
+notification nor task stop can be lost between deciding to wait and scheduling.
