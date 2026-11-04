@@ -315,8 +315,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     native_terminal_controls = (
         {get_kernel_symbol("kd_rwlock_fast_write_unlock")} - {0}
         if root_escape_capable and abi == 3 else set())
-    direct_call_closure = (trusted_source and abi == 2 and lock_kind == "mutex"
-                           and bool(returning_services))
+    # Original bounded images learn ordinary CALL/IJ targets from actual
+    # executions. Returning services do not require eager callee closure.
+    direct_call_closure = False
     # One immutable policy covers initial history roots and every cold edge.
     # Ordinary translation paths retain their established page-aligned window.
     text_policy = (memread.RETAINED_WINDOW_POLICY if direct_call_closure else
@@ -815,6 +816,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         and (not line.args or not isinstance(line.args[0], ExprLoc) or
              db_dict[block].get_location_offset(line.args[0].loc_key) not in nonreturning_targets)
     }
+    # ABI2 selects the flags-complete handback contract even for a cold image
+    # which stops at its first ordinary callee before any service is reached.
+    retained_misses = (abi == 2 and lock_kind == "mutex" and not has_escapes
+                       and not root_escapes and not origin_sites)
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
@@ -832,6 +837,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         memory_sites=memory_sites,
         memory_preempt_symbol=memory_preempt_symbol,
         budget_resume_enabled=budget_resume_enabled,
+        retained_misses=retained_misses,
         returning_targets=returning_targets,
         returning_services=returning_services,
         nonreturning_targets=nonreturning_targets,
@@ -855,7 +861,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                          if service_queue_required else 0)
                       | (returning_calls.REQUIREMENT
                          if returning_targets or memory_sites or indirect_tails else 0)
-                      | (indirect_jump.RETAINED_TAIL_REQUIREMENT if indirect_tails else 0)))
+                      | (indirect_jump.RETAINED_TAIL_REQUIREMENT if indirect_tails else 0)
+                      | (indirect_jump.RETAINED_MISS_REQUIREMENT
+                         if retained_misses else 0)))
     return 0
 
 

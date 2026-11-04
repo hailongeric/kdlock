@@ -568,8 +568,27 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ORIGIN_CALL;
 					break;
 				}
-				if (!call_ret && args[0] != KD_EXE_INDIRECT_TAIL)
+				if (!call_ret && (frame->image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) {
+					call_ret = kd_jit_retained_miss(exe, frame, regs, args[0]);
+					if (!call_ret) {
+						ret_flag = KD_EXE_RUN_HANDOFF;
+						break;
+					}
+				} else if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
+					unsigned int length;
+
+					if (!kd_jit_indirect_call_length(regs->orig_ax, &length))
+						kd_image_report(exe, frame->image, KD_EXE_IJ_MISS,
+							regs->ip, regs->orig_ax + length);
+				} else if (!call_ret && args[0] != KD_EXE_INDIRECT_TAIL) {
 					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
+				}
+			} else if (args[0] == KD_EXE_RETAINED_MISS && !fault_kind) {
+				call_ret = kd_jit_retained_miss(exe, frame, regs, args[0]);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_HANDOFF;
+					break;
+				}
 			} else if (args[0] == KD_EXE_INST_LIMIT && !fault_kind &&
 				   (frame->image->requirements & KD_IMAGE_REQUIRE_BUDGET_RESUME) &&
 				   regs->orig_ax == KD_REG_BUDGET_READY_TAG) {
@@ -586,6 +605,12 @@ returned_wrapper:
 				regs, args[0], call_ret ? call_ret : -EOPNOTSUPP,
 				continuation_count, hostcall_count);
 			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+		if (args[0] == KD_EXE_RETAINED_MISS) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_retained_miss(exe, frame, regs, args[0]);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 			break;
 		}
 		if (args[0] == KD_EXE_INDIRECT_TAIL) {
@@ -892,7 +917,8 @@ returned_wrapper:
 	 * them as an instruction-continuation tag when publishing a native suffix. */
 	if ((frame->mutex_backend || root_escape_image) &&
 	    ret_flag == KD_EXE_RUN_NATIVE &&
-	    args[0] != KD_EXE_NATIVE_ESCAPE && args[0] != KD_EXE_ORIGIN_INSN)
+	    args[0] != KD_EXE_NATIVE_ESCAPE && args[0] != KD_EXE_ORIGIN_INSN &&
+	    args[0] != KD_EXE_RETAINED_MISS)
 		regs->orig_ax = 0;
 
 	/* Completion/native/ACK releases and registry status CAS publish their
@@ -927,7 +953,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 					      KD_IMAGE_REQUIRE_ORIGIN_CALL |
 					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY |
 					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ |
-					      KD_IMAGE_REQUIRE_INDIRECT_TAIL)) ||
+					      KD_IMAGE_REQUIRE_INDIRECT_TAIL |
+					      KD_IMAGE_REQUIRE_RETAINED_MISS)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;

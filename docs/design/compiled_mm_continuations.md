@@ -1,4 +1,4 @@
-# Original compiled images for retained MM continuations
+# Original compiled images for kdlock lock replacement
 
 The sole implementation writer is this session on `codex/mmap-reached-jit`,
 starting at `fe06f8add830110e0dbd44bb63c8248257b3f57c`. Master and unrelated
@@ -27,7 +27,7 @@ leases, physical owner transfer, ACK and exact retirement remain unchanged.
 
 Legacy learning updates later immutable images. The original validated
 indirect CALL path may run a suffix on O; generic IJ/RET/JMP misses are errors.
-Neither policy completes the selected retained-MM requirement.
+Neither policy completes the selected retained-lock requirement.
 
 For retained compiled execution, generated misses export source arithmetic
 flags before wrapper cleanup and a typed FULL event. The packet names the
@@ -100,3 +100,29 @@ validation boundary, not permission for origin completion.
 
 Build/test results and unresolved contexts will be reported separately from
 this design. No old per-instruction JIT score proves the corrected backend.
+
+## Explicit cold-image contract
+
+ABI2 compiled images select the FULL current-position miss contract independently
+of whether a recognized service was discovered in their bounded graph. A cold
+ordinary CALL can therefore hand back with flags even before a service target
+is reached. The requirement is valid for ordinary ABI2 mutex frames too; those
+use the original owner/ACK handback chain. Retained roots use their exact owner
+list instead. Neither path is a new instruction backend.
+
+## Phase scope and original design
+
+The first unexecuted source instruction is the handback boundary. Completed
+CALL pushes and RET pops stay committed. Original design intent and later
+implementation limitations are distinct: complete caller tracing at `20fde062`
+finds progressed generic errors stopped by executed-body guards, while the
+RUN_NATIVE path restores the current packet. The correction wires the intended
+current-position behavior; it does not use later fail-stop code to justify a
+second JIT. UserspaceBypass provides a matching current-target/later-learning
+reference, not a kernel ownership implementation.
+
+General flags and SIMD restoration, and IRQ/NMI conflicts, are deferred for this
+phase. Existing supported arithmetic-flags packet handling may remain, but it
+is not a claim of general architectural equivalence or a reason to delay lock
+custody work. Exact IP/GPR/SP, source CALL/RET effects and owner/ACK lifetime
+remain required.

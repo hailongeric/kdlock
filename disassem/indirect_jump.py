@@ -7,6 +7,7 @@ from assist import make_inst
 from miasm.expression.expression import ExprLoc
 
 RETAINED_TAIL_REQUIREMENT = 1 << 12
+RETAINED_MISS_REQUIREMENT = 1 << 13
 
 
 class ReturnFlowError(ValueError):
@@ -111,7 +112,7 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
 
 
 def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None,
-                    indirect_tails=None):
+                    indirect_tails=None, retained_misses=False):
     ret_str = ""
     indirect_calls = indirect_calls or {}
     indirect_tails = indirect_tails or {}
@@ -139,6 +140,14 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None,
             ret_str += make_inst("MOV", ["QWORD PTR[REG_BANK + KD_REG_ORIG_AX]", "R15"])
             ret_str += make_inst("MOV", ["Stack_IJ", "11" if offset in indirect_calls else "14"])
             ret_str += make_inst("JMP", ["full_exit"])
+        elif retained_misses:
+            # The source RET pop/JMP target selection already happened. Export
+            # flags before wrapper cleanup; never perform that transfer twice.
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
+            ret_str += make_inst("MOVABS", ["R15", hex(offset)])
+            ret_str += "MOV QWORD PTR[REG_BANK + KD_REG_ORIG_AX], R15\n"
+            ret_str += make_inst("MOV", ["Stack_IJ", "15"])
+            ret_str += make_inst("JMP", ["full_exit"])
         else:
             ret_str += make_inst("MOVABS", ["R15", hex(offset)])
             ret_str += make_inst("JMP", ["ij_failed"])
@@ -150,7 +159,8 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None,
     return ret_str
 
 
-def make_callee_table(callee_list, hostcalls=None, *, returning_services=()):
+def make_callee_table(callee_list, hostcalls=None, *, returning_services=(),
+                      retained_misses=False):
     hostcalls = hostcalls or {}
     ret_str = ""
     for offset in sorted(callee_list):
@@ -160,7 +170,7 @@ def make_callee_table(callee_list, hostcalls=None, *, returning_services=()):
                 f"/* KD_HOSTCALL id={service.service_id} symbol={service.symbol} */\n"
             )
         ret_str += "loc_" + hex(offset)[2:] + ":\n"
-        if offset in returning_services:
+        if offset in returning_services or retained_misses:
             ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
         ret_str += make_inst("MOVABS", ["R14", hex(offset)])
         ret_str += make_inst("MOV", ["Stack_IJ", "0x5" if service else "0x1"])

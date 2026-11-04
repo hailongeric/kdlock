@@ -28,7 +28,8 @@ def main(executor=None, benchmark=False):
     types += definition(read_source(ROOT / "include/kd_origin_service.h"),
                         "enum kd_origin_instruction {").rstrip() + ";\n"
     continuation = read_source(ROOT / "include/kd_exec_cont.h")
-    for signature in ("enum kd_exec_cont_state {", "struct kd_exec_service_ops {"):
+    for signature in ("enum kd_exec_cont_state {", "enum kd_exec_service_api {",
+                      "struct kd_exec_service_ops {"):
         types += definition(continuation, signature).rstrip() + ";\n"
     types += '#include "kd_hostcall.h"\n'
     if executor is None:
@@ -70,6 +71,7 @@ def main(executor=None, benchmark=False):
             "static int kd_jit_indirect_tail_length(unsigned long site, unsigned int *length)",
             "static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_indirect_call_native(struct kd_exe_info *exe,",
+            "static int kd_jit_retained_miss(struct kd_exe_info *exe,",
             "static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,",
             "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
             "static int kd_jit_native_escape_opcode(unsigned long ip)",

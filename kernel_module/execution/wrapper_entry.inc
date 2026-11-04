@@ -265,6 +265,70 @@ static int kd_jit_indirect_call_native(struct kd_exe_info *exe,
 	return 0;
 }
 
+/* Original compiled images export a distinct FULL miss contract. Learning is
+ * for later invocations; this packet is handed back at its current target. */
+static int kd_jit_retained_miss(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_regs *regs, unsigned long exit)
+{
+	struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+	unsigned long from = 0, word, base;
+	unsigned int length;
+	int status = KD_EXE_CALL_MISS, ret;
+
+	if (!exe || !frame || !frame->executed || !frame->logical_task ||
+	    frame->logical_task == current ||
+	    (cont && cont->service_ops ? cont->service_call.api != KD_SERVICE_NONE :
+	     !kd_exec_frame_can_borrow_locks(frame)) ||
+	    frame->packet_state != KD_PACKET_FULL || regs != kd_exec_frame_regs(frame) ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request || frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) ||
+	    !(regs->flags & 2) || !regs->ip || !regs->sp)
+		return -EINVAL;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE ||
+	    regs->sp < base + 2 * sizeof(unsigned long) ||
+	    regs->sp > base + THREAD_SIZE - sizeof(word))
+		return -EFAULT;
+	if (exit == KD_EXE_INDIRECT_CALL || exit == KD_EXE_INDIRECT_TAIL) {
+		ret = exit == KD_EXE_INDIRECT_CALL ?
+			kd_jit_indirect_call_length(regs->orig_ax, &length) :
+			kd_jit_indirect_tail_length(regs->orig_ax, &length);
+		if (ret || regs->orig_ax > ~0UL - length)
+			return ret ? ret : -EINVAL;
+		from = regs->orig_ax + length;
+		status = KD_EXE_IJ_MISS;
+	} else if (exit == KD_EXE_RETAINED_MISS) {
+		from = regs->orig_ax;
+		if (!from)
+			return -EINVAL;
+		status = KD_EXE_IJ_MISS;
+	} else if (exit != KD_EXE_CALL_MISS) {
+		return -EINVAL;
+	}
+	if (exit == KD_EXE_CALL_MISS || exit == KD_EXE_INDIRECT_CALL) {
+		if (copy_from_kernel_nofault(&word, (void *)regs->sp, sizeof(word)) ||
+		    !word || (from && word != from))
+			return -EFAULT;
+		ret = kd_source_pin_target(word);
+		if (ret)
+			return ret;
+	}
+	ret = kd_source_pin_target(regs->ip);
+	if (!ret && from)
+		ret = kd_source_pin_target(from - 1);
+	if (ret)
+		return ret;
+	kd_image_report(exe, frame->image, status, regs->ip, from);
+	/* SP and all source effects stay exactly as exported by generated code. */
+	frame->control_call.phase = KD_CALL_NONE;
+	regs->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	return 0;
+}
+
 /* Keep the actual pending CALL word in place until the original C helper
  * returns. The caller supplies valid arguments, memory and lifetime exactly
  * as for a native call. Only KD ownership and continuation bookkeeping are

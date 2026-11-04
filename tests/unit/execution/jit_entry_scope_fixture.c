@@ -54,6 +54,7 @@ struct kd_exec_continuation {
 	const struct kd_exec_service_ops *service_ops;
 	void *service_scope;
 	bool body_reported;
+	struct { enum kd_exec_service_api api; } service_call;
 };
 
 static unsigned long stack[16];
@@ -526,6 +527,7 @@ int main(void)
 	check_origin_instruction();
 	check_terminal_and_indirect_calls();
 	check_retained_indirect_tails();
+	check_current_position_misses();
 	check_root_native_escape();
 	check_address_guard();
 	check_string_services();

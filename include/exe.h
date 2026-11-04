@@ -56,6 +56,7 @@ void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
 #define KD_EXE_KNOWN_ORIGIN_CALL 13
 #define KD_EXE_RUN_ORIGIN_CALL 14
 #define KD_EXE_RUN_ORIGIN_MEMORY 15
+#define KD_EXE_RUN_HANDOFF 16
 
 /* Kernel-only entry: pass the slot returned by find_ready and a validated
  * spin/mutex frame. Dispatch rechecks publication/admission after frame setup;

@@ -236,3 +236,40 @@ static void check_retained_indirect_tails(void)
 		CHECK(!memcmp(saved_stack, stack, sizeof(stack)));
 	}
 }
+
+/* Execute the complete dispatcher cleanup after a typed generic miss. */
+static void check_current_position_misses(void)
+{
+	struct kd_jit_batch_call call;
+	struct kd_regs before;
+	unsigned long words[ARRAY_SIZE(stack)];
+
+	for (unsigned int complete = 0; complete < 2; ++complete) {
+		native_call_packet(&call, false, false);
+		call.args[0] = KD_EXE_RETAINED_MISS;
+		((struct kd_jit_image *)active.image)->requirements = KD_IMAGE_REQUIRE_RETAINED_MISS;
+		active.regs.orig_ax = ESCAPE_IP + 2;
+		active.control_call.phase = complete ? KD_CALL_COMPLETE : KD_CALL_NONE;
+		before = active.regs;
+		memcpy(words, stack, sizeof(stack));
+		CHECK(kd_exe_mutex_batch_resume(entry, &call) == KD_EXE_RUN_NATIVE);
+		CHECK(entry->status_code == KD_EXE_IJ_MISS &&
+		      entry->jump_from == ESCAPE_IP + 2 && entry->tgt_addr == before.ip);
+		before.orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+		CHECK(!memcmp(&before, &active.regs, sizeof(before)));
+		CHECK(!memcmp(words, stack, sizeof(stack)));
+		CHECK(active.control_call.phase == KD_CALL_NONE &&
+		      active.continuation_ip == before.ip && active.continuation_sp == before.sp);
+	}
+	for (unsigned int bad = 0; bad < 2; ++bad) {
+		native_call_packet(&call, false, false);
+		call.args[0] = KD_EXE_RETAINED_MISS;
+		((struct kd_jit_image *)active.image)->requirements = KD_IMAGE_REQUIRE_RETAINED_MISS;
+		active.regs.orig_ax = ESCAPE_IP + 2;
+		if (bad) active.control_call.phase = KD_CALL_ACQUIRED;
+		else active.regs.sp = (unsigned long)stack + sizeof(unsigned long);
+		before = active.regs;
+		CHECK(kd_exe_mutex_batch_resume(entry, &call) == KD_EXE_RUN_ERROR);
+		CHECK(entry->status_code == KD_EXE_NORMAL && !memcmp(&before, &active.regs, sizeof(before)));
+	}
+}

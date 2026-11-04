@@ -72,7 +72,7 @@ class ReturningCallTests(unittest.TestCase):
 
     def test_declared_call_keeps_body_and_exact_flags_successor(self):
         assembly, options = self.emit()
-        self.assertEqual(options['requirements'], 896)
+        self.assertEqual(options['requirements'], 896 | (1 << 13))
         self.assertIn(b'KD_REG_SERVICE_REENTRY_TAG', assembly)
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_1005:', assembly)
@@ -81,10 +81,10 @@ class ReturningCallTests(unittest.TestCase):
 
     def test_unused_descriptor_keeps_ordinary_image_contract(self):
         assembly, options = self.emit(False)
-        self.assertEqual(options['requirements'], 128)
+        self.assertEqual(options['requirements'], 128 | (1 << 13))
         self.assertNotIn(b'KD_REG_SERVICE_REENTRY_TAG', assembly)
 
-    def test_retained_text_policy_covers_initial_read_and_callee_extension(self):
+    def test_ordinary_callee_is_learned_instead_of_eagerly_expanded(self):
         base = 0xffffffffc1000000
         callee, unlock = base + 0x4000, base + 0x5000
         raw = b'\xe8' + struct.pack('<i', callee - base - 5)
@@ -112,12 +112,10 @@ class ReturningCallTests(unittest.TestCase):
                     result_kind=1, context_kind=1, symbol='unused_primitive')},
                 return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertEqual(policies, [memread.RETAINED_WINDOW_POLICY])
-        self.assertEqual(reads, [(base, len(raw)), (callee, 1024)])
-        extend.assert_called_once()
-        self.assertIs(extend.call_args.kwargs['policy'], policies[0])
+        self.assertEqual(policies, [memread.DEFAULT_WINDOW_POLICY])
+        self.assertEqual(reads, [])
+        extend.assert_not_called()
         self.assertIn(f'loc_{callee:x}:'.encode(), assembly)
-        self.assertIn('reason=TEXT_CACHE_PLAN', log)
         self.assertIn('reason=DECODED_TEXT_COVERAGE', log)
 
     def test_ordinary_translation_keeps_default_text_policy(self):
@@ -131,7 +129,7 @@ class ReturningCallTests(unittest.TestCase):
         with patch.object(translator.indirect_jump, 'find', wraps=original) as find:
             self.emit()
         self.assertGreater(len(find.call_args_list), 0)
-        self.assertTrue(all(call.kwargs['max_visits'] == 262144
+        self.assertTrue(all(call.kwargs['max_visits'] == 65536
                             for call in find.call_args_list))
         with patch.object(translator.indirect_jump, 'find', wraps=original) as find:
             _, log, status = render('90c3', return_status=True)
@@ -145,7 +143,7 @@ class ReturningCallTests(unittest.TestCase):
         original = translator.indirect_jump.find
 
         def limited(blocks, databases, table, **kwargs):
-            self.assertEqual(kwargs['max_visits'], 262144)
+            self.assertEqual(kwargs['max_visits'], 65536)
             return original(blocks, databases, table,
                             terminal_targets=kwargs['terminal_targets'], max_visits=1)
 
@@ -199,7 +197,7 @@ class ReturningCallTests(unittest.TestCase):
                                                      context_kind=2, symbol='primitive_call')},
                     build_options=options, return_status=True)
                 self.assertEqual(status, 0, log)
-                self.assertEqual(options['requirements'], 896)
+                self.assertEqual(options['requirements'], 896 | (1 << 13))
                 self.assertIn(f'kd_service_dispatch_{successor:x}:'.encode(), assembly)
                 self.assertIn(f'loc_{successor:x}:'.encode(), assembly)
                 self.assertIn(b'PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]', assembly)
@@ -239,7 +237,7 @@ class ReturningCallTests(unittest.TestCase):
             returning_services=parse('1 5500 2 2 14 kvfree_call_rcu\n'),
             build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertEqual(options['requirements'], 896)
+        self.assertEqual(options['requirements'], 896 | (1 << 13))
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_1005:', assembly)
 
@@ -281,7 +279,7 @@ class ReturningCallTests(unittest.TestCase):
                                              context_kind=11, symbol='__stack_chk_fail')},
             build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertEqual(options['requirements'], 896)
+        self.assertEqual(options['requirements'], 896 | (1 << 13))
         self.assertIn(b'loc_1020:', assembly)
         self.assertIn(b'loc_5500:', assembly)
         self.assertIn(b'0x1234', assembly)
@@ -306,7 +304,7 @@ class ReturningCallTests(unittest.TestCase):
                                              context_kind=2, symbol='primitive_call')},
             build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertEqual(options['requirements'], 896)
+        self.assertEqual(options['requirements'], 896 | (1 << 13))
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_5500:', assembly)
 
@@ -446,7 +444,7 @@ class ReturningCallTests(unittest.TestCase):
                                              context_kind=2, symbol='primitive_call')},
             build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertEqual(options['requirements'], 896)
+        self.assertEqual(options['requirements'], 896 | (1 << 13))
         self.assertIn(b'kd_service_dispatch_1005:', assembly)
         self.assertIn(b'loc_5500:', assembly)
         self.assertIn(b'loc_1028:', assembly)
