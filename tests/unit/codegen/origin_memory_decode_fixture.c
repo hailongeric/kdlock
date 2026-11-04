@@ -108,9 +108,11 @@ int main(void)
 		{ "654f8b64a5f0", 3, 64, 0x4ff8 },
 		{ "65482b10", 5, 64, 0x1000 },
 		{ "652b10", 5, 32, 0x1000 },
+		{ "65486300", 7, 64, 0x1000 },
+		{ "654f6364a5f0", 7, 64, 0x4ff8 },
 	};
 	const char *rejected[] = { "64ff00", "f06548ff00", "656748ff00", "6566ff00",
-		"65ff10", "65ffff", "65ff04", "65ff05000000" };
+		"65ff10", "65ffff", "65ff04", "65ff05000000", "656300", "6566486300" };
 
 	for (i = 0; i < sizeof(accepted) / sizeof(accepted[0]); ++i) {
 		struct kd_origin_memory_site reached;
@@ -300,6 +302,21 @@ int main(void)
 	}
 	CHECK(!syscall(SYS_arch_prctl, ARCH_GET_GS, &saved_gs));
 	CHECK(!syscall(SYS_arch_prctl, ARCH_SET_GS, cpu_data));
+	{
+		const u32 values[] = { 0, 1, 0x7fffffff, 0x80000000, 0xffffffff };
+		input = site("65486300", KD_ORIGIN_MEMORY_LOAD_SIGNED, 64);
+		operation.site = &input;
+		operation.effective_offset = 0;
+		operation.input_flags = 0x897;
+		for (i = 0; i < sizeof(values) / sizeof(values[0]); ++i) {
+			cpu_data[0] = values[i];
+			kd_origin_memory_apply(&operation);
+			CHECK(operation.result_value == (unsigned long)(long)(s32)values[i]);
+			CHECK((operation.result_flags & KD_REG_ARITHMETIC_FLAGS) ==
+				(operation.input_flags & KD_REG_ARITHMETIC_FLAGS));
+		}
+		cpu_data[0] = 0x1234567880000000UL;
+	}
 	input = site("658b00", 3, 32);
 	operation.site = &input;
 	operation.input_flags = 0x897;

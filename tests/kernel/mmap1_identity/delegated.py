@@ -397,7 +397,7 @@ class Controller:
                         fields = ('origin', 'executor', 'identity', 'generation', 'sequence', 'image_generation',
                                   'ip', 'next', 'sp', 'offset', 'width', 'operation', 'preempt_operand',
                                   'preempt_seq', 'preempt_object', 'input_flags', 'destination', 'read')
-                        operations = (1, 2, 3, 4, 5, 6) if self.reached else (1, 2, 3, 4)
+                        operations = (1, 2, 3, 4, 5, 6, 7) if self.reached else (1, 2, 3, 4)
                         rt.require([event['stage'] for event in part] in (['request', 'enter', 'done', 'resume'],
                                    ['request', 'enter', 'done', 'complete']) and
                             first['image_generation'] == generations[root['entry']] and
@@ -427,6 +427,13 @@ class Controller:
                                        0 <= part[2]['value'] <= 0xffffffff and
                                        part[2]['output_flags'] & 0x8d5 == first['input_flags'] & 0x8d5,
                                        'task-register instruction operands or result differ')
+                        if first['operation'] == 7:
+                            rt.require(first['width'] == 64 and first['destination'] in range(16) and
+                                       first['destination'] != 4 and
+                                       (part[2]['output_flags'] ^ first['input_flags']) & 0x8d5 == 0 and
+                                       all(event.get('source_value') == event.get('aux_value') == 0
+                                           for event in part),
+                                       'signed GS load destination or flags differ')
                     transactions += 1
             counts[family + '_transactions'] = transactions
         if self.reached:

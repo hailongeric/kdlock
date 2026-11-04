@@ -63,8 +63,9 @@ static int kd_memory_operand_decode(const struct kd_origin_memory_site *site,
 	operand->immediate = 0;
 	if (opcode == 0xff && extension <= 1 && !word) {
 		operand->operation = extension + 1;
-	} else if ((opcode == 0x8b || opcode == 0x2b) && !word) {
-		operand->operation = opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
+	} else if ((opcode == 0x8b || opcode == 0x2b || (opcode == 0x63 && (rex & 8))) && !word) {
+		operand->operation = opcode == 0x63 ? KD_ORIGIN_MEMORY_LOAD_SIGNED :
+			opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
 		operand->destination = extension | ((rex & 4) << 1);
 		if (operand->destination == 4)
 			return -EPROTO;
@@ -255,7 +256,7 @@ int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
 	opcode = next;
 	if (error)
 		return error;
-	if (opcode != 0xff && opcode != 0x8b && opcode != 0xf7 && opcode != 0x2b)
+	if (opcode != 0xff && opcode != 0x8b && opcode != 0xf7 && opcode != 0x2b && opcode != 0x63)
 		return -EOPNOTSUPP;
 	modrm = kd_memory_reached_byte(site, reader, context, &error);
 	if (error)
@@ -268,8 +269,9 @@ int kd_origin_memory_reached_decode(struct kd_origin_memory_site *site,
 		return -EOPNOTSUPP;
 	if (opcode == 0xff && extension <= 1 && !word) {
 		site->operation = extension + 1;
-	} else if ((opcode == 0x8b || opcode == 0x2b) && !word) {
-		site->operation = opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
+	} else if ((opcode == 0x8b || opcode == 0x2b || (opcode == 0x63 && (rex & 8))) && !word) {
+		site->operation = opcode == 0x63 ? KD_ORIGIN_MEMORY_LOAD_SIGNED :
+			opcode == 0x8b ? KD_ORIGIN_MEMORY_LOAD : KD_ORIGIN_MEMORY_SUB;
 		site->flags = KD_ORIGIN_MEMORY_READ;
 	} else if (opcode == 0xf7 && extension == 0 && site->width != 64) {
 		site->operation = KD_ORIGIN_MEMORY_TEST;
@@ -348,7 +350,8 @@ int kd_image_validate_memory_sites(const struct kd_jit_image *image)
 		return -EPROTO;
 	for (i = 0; i < count; ++i) {
 		/* Task-register service is currently a reached-path capability. */
-		if (sites[i].operation == KD_ORIGIN_MEMORY_TASK_READ)
+		if (sites[i].operation == KD_ORIGIN_MEMORY_TASK_READ ||
+		    sites[i].operation == KD_ORIGIN_MEMORY_LOAD_SIGNED)
 			return -EOPNOTSUPP;
 		if ((sites[i].flags & KD_ORIGIN_MEMORY_READ) &&
 		    !(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ))
@@ -561,7 +564,8 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 		return -EPROTO;
 	if ((operation->site->operation <= KD_ORIGIN_MEMORY_DEC &&
 	     ((operation->result_flags ^ operation->input_flags) & 1)) ||
-	    (operation->site->operation == KD_ORIGIN_MEMORY_LOAD &&
+	    ((operation->site->operation == KD_ORIGIN_MEMORY_LOAD ||
+	      operation->site->operation == KD_ORIGIN_MEMORY_LOAD_SIGNED) &&
 	     ((operation->result_flags ^ operation->input_flags) & KD_REG_ARITHMETIC_FLAGS)) ||
 	    (operation->site->operation == KD_ORIGIN_MEMORY_TEST &&
 	     (operation->result_flags & (1UL | (1UL << 11)))))
@@ -575,6 +579,7 @@ int kd_exec_cont_memory_complete(struct kd_exec_continuation *cont, u64 sequence
 		kd_memory_write_register(cont->packet, 2, 32, operation->result_aux);
 	}
 	if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD ||
+	    operation->site->operation == KD_ORIGIN_MEMORY_LOAD_SIGNED ||
 	    operation->site->operation == KD_ORIGIN_MEMORY_SUB)
 		kd_memory_write_register(cont->packet, operation->destination,
 			operation->site->width, operation->result_value);
@@ -630,8 +635,13 @@ void kd_origin_memory_apply(struct kd_origin_memory *operation)
 			KD_MEMORY_APPLY("decl");
 		else
 			KD_MEMORY_APPLY("decq");
-	} else if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD) {
-		if (operation->site->width == 32)
+	} else if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD ||
+		   operation->site->operation == KD_ORIGIN_MEMORY_LOAD_SIGNED) {
+		if (operation->site->operation == KD_ORIGIN_MEMORY_LOAD_SIGNED)
+			asm volatile("pushq %[input]; popfq; movslq %%gs:(%[offset]), %[value]; "
+				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "=r"(value)
+				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");
+		else if (operation->site->width == 32)
 			asm volatile("pushq %[input]; popfq; movl %%gs:(%[offset]), %k[value]; "
 				"pushfq; popq %[output]" : [output] "=r"(flags), [value] "=r"(value)
 				: [input] "r"(input), [offset] "r"(offset) : "cc", "memory");

@@ -119,6 +119,45 @@ static int kd_reached_stats_get(char *buffer, const struct kernel_param *kp)
 static const struct kernel_param_ops kd_reached_stats_ops = { .get = kd_reached_stats_get };
 module_param_cb(reached_stats, &kd_reached_stats_ops, NULL, 0444);
 
+/* The dispatch guard retains root/worker storage. Execution fields can change
+ * concurrently; this view is diagnostic and never grants packet custody. */
+static int kd_service_progress_get(char *buffer, const struct kernel_param *kp)
+{
+	struct kd_service_root *root;
+	unsigned int total = 0, shown = 0;
+	unsigned long flags;
+	int used = 0;
+
+	(void)kp;
+	flags = _raw_spin_lock_irqsave(&kd_service_dispatch_guard);
+	list_for_each_entry(root, &kd_service_active, active_link) {
+		struct kd_exec_continuation *cont = &root->continuation;
+		struct kd_regs *packet = READ_ONCE(cont->packet);
+		struct task_struct *worker = root->worker;
+
+		++total;
+		if (shown == 8)
+			continue;
+		++shown;
+		used += scnprintf(buffer + used, PAGE_SIZE - used,
+			"origin=%d executor=%d origin_cpu=%d executor_cpu=%d identity=%px generation=%llu entry=%lx transport=%u state=%u ip=%lx call_phase=%u call_target=%lx instruction_phase=%u instruction=%u\n",
+			root->owner.request.logical_origin->pid, worker ? worker->pid : 0,
+			root->origin_cpu, worker ? task_cpu(worker) : -1,
+			root->owner.request.identity,
+			(unsigned long long)root->owner.request.generation,
+			root->node->saved_ret_addr, (unsigned int)READ_ONCE(root->transport),
+			(unsigned int)READ_ONCE(cont->state), packet ? (unsigned long)READ_ONCE(packet->ip) : 0,
+			(unsigned int)READ_ONCE(cont->origin_call.phase), READ_ONCE(cont->origin_call.target),
+			(unsigned int)READ_ONCE(cont->origin_memory.phase),
+			(unsigned int)READ_ONCE(cont->origin_memory.reached_site.operation));
+	}
+	_raw_spin_unlock_irqrestore(&kd_service_dispatch_guard, flags);
+	used += scnprintf(buffer + used, PAGE_SIZE - used, "total=%u shown=%u\n", total, shown);
+	return used;
+}
+static const struct kernel_param_ops kd_service_progress_ops = { .get = kd_service_progress_get };
+module_param_cb(service_progress, &kd_service_progress_ops, NULL, 0444);
+
 bool kd_service_reached_enabled(void)
 {
 	return READ_ONCE(kd_service_reached);

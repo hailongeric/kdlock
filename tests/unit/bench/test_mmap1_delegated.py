@@ -177,6 +177,15 @@ class Services(unittest.TestCase):
             for changed in failures:
                 with self.assertRaises(controller.rt.Failure):
                     item.validate_services(proof, [], changed, snapshot)
+        signed = trace(64).replace('operation=5', 'operation=7').replace('source_value=ffffffff80000123',
+            'source_value=0 aux_value=0').replace('output_flags=246', 'output_flags=203')
+        self.assertEqual(item.validate_services(proof, [], signed, snapshot)['memory_transactions'], 1)
+        for changed in (signed.replace('width=64', 'width=32'),
+                        signed.replace('destination=8', 'destination=4'),
+                        signed.replace('aux_value=0', 'aux_value=1'),
+                        signed.replace('output_flags=203', 'output_flags=202')):
+            with self.assertRaises(controller.rt.Failure):
+                item.validate_services(proof, [], changed, snapshot)
         with self.assertRaises(controller.rt.Failure):
             item.validate_services(proof, [], trace(32).replace('value=123', 'value=100000123'), snapshot)
         item.args.execution_mode = 'image'

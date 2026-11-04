@@ -34,7 +34,8 @@ static int kd_service_memory_prepare(struct kd_service_root *root)
 	unsigned long address = operation->gsbase + operation->effective_offset;
 	unsigned long count_address = (unsigned long)per_cpu_ptr(&__preempt_count,
 		root->origin_cpu);
-	unsigned int bytes = operation->site->width / 8;
+	unsigned int bytes = operation->site->operation == KD_ORIGIN_MEMORY_LOAD_SIGNED ?
+		4 : operation->site->width / 8;
 	bool available = false;
 	bool reading = operation->site->flags & KD_ORIGIN_MEMORY_READ;
 
