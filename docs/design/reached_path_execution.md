@@ -1079,3 +1079,31 @@ process after failure. It must not turn a timeout into a drain, or use these
 observations to grant, cancel, unlock or retire anything. Validate signed
 values, addressing, destination and flag behavior through the existing
 production decoder/Native fixture, then build and run focused MM checks.
+
+
+## Distinguish active execution from application termination waits
+
+The `cb5ee7a10591fd2e505a9b029a3bad9e7132b3f3` progress view worked and
+recorded continued returned MM roots beyond the nominal sampling interval.
+The unchanged upstream printed its complete average, then failed to exit.
+Its pinned `main.c` calls asynchronous pthread cancellation followed by joins;
+this is a separate Native task-progress obligation from acquisition returning
+successfully. Preserve those source hashes and the failed trace. Do not infer
+the cause from the average or from one sampled program counter.
+
+Before changing admission/reader ordering or signal handling, capture the
+already-owned upstream parent's and workers' ordinary task state on a timeout.
+Do this in the existing benchmark controller, before its collectors close;
+do not launch another inspection process. Limit the observation to eight
+TIDs, report total/shown counts, and retain stat/status/wchan plus a kernel
+stack only for an observed sleeping task. File disappearance or an unavailable
+stack is diagnostic metadata, not successful drain. The child remains
+unreaped/alive exactly as before; no signal, cancellation, unlock or retirement
+is initiated by the observation. Preserve the original timeout and every
+collection error. Kernel stack snapshots can race with scheduling and are
+only evidence for diagnosis, never ownership or readiness authority.
+
+A parent waiting in a reader path, signal setup, a join or another operation
+requires different fixes. The new observation is intended to identify that
+actual wait. Native cancellation, downgrade, read concurrency, queued writer
+ordering and atomic-compatible read unlock remain unchanged in this step.

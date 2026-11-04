@@ -1,0 +1,682 @@
+[
+  {
+    "elapsed_seconds": 40,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": null,
+        "passed": false,
+        "state": "PREPARING"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 40,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": null,
+        "passed": false,
+        "state": "PREPARING"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 43,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": null,
+        "passed": false,
+        "state": "PREPARING"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 43,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": null,
+        "passed": false,
+        "state": "PREPARING"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 44,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": null,
+        "passed": false,
+        "state": "PREPARING"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 44,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=0 completions=0 instructions=0 controls=0 primitives=0 memory=0 cache_hits=0 cache_misses=0 cache_full=0 unsupported=0 active=0\n",
+      "requests": "total=0 shown=0\n"
+    }
+  },
+  {
+    "elapsed_seconds": 46,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=51 completions=50 instructions=257818 controls=52 primitives=1272 memory=2093 cache_hits=7375 cache_misses=250443 cache_full=30801 unsupported=0 active=1\n",
+      "requests": "origin=5202 executor=5161 origin_cpu=63 executor_cpu=23 identity=ff1100062e9b8fa8 generation=101 entry=ffffffff817f7413 transport=2 state=3 ip=ffffffff8183d300 call_phase=3 call_target=ffffffff8183d300 instruction_phase=5 instruction=5\ntotal=1 shown=1\n"
+    }
+  },
+  {
+    "elapsed_seconds": 47,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=229 completions=228 instructions=1358037 controls=315 primitives=4674 memory=8435 cache_hits=51822 cache_misses=1306215 cache_full=286940 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5176 origin_cpu=1 executor_cpu=27 identity=ff11000332eb8fa8 generation=170 entry=ffffffff817b6f68 transport=2 state=3 ip=ffffffff81817b92 call_phase=5 call_target=ffffffff814f3630 instruction_phase=3 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=180 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 48,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=411 completions=410 instructions=2499180 controls=587 primitives=8204 memory=14962 cache_hits=99266 cache_misses=2399914 cache_full=555988 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5193 origin_cpu=1 executor_cpu=14 identity=ff11000332eb8fa8 generation=352 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b6197 call_phase=5 call_target=ffffffff814f4610 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=362 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 49,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=587 completions=586 instructions=3614189 controls=851 primitives=11662 memory=21323 cache_hits=146179 cache_misses=3468011 cache_full=818886 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5166 origin_cpu=1 executor_cpu=28 identity=ff11000332eb8fa8 generation=528 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826bae9d call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=538 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 50,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=764 completions=763 instructions=4735073 controls=1118 primitives=15111 memory=27696 cache_hits=192538 cache_misses=4542535 cache_full=1086506 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5170 origin_cpu=0 executor_cpu=8 identity=ff11000332e38fa8 generation=714 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e382b call_phase=5 call_target=ffffffff814f3630 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=706 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 51,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=941 completions=940 instructions=5849304 controls=1383 primitives=18555 memory=34059 cache_hits=238900 cache_misses=5610404 cache_full=1349862 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5145 origin_cpu=1 executor_cpu=31 identity=ff11000332eb8fa8 generation=882 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff81818e64 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=892 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 52,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=1118 completions=1117 instructions=6964226 controls=1648 primitives=22000 memory=40433 cache_hits=285256 cache_misses=6678970 cache_full=1612936 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5149 origin_cpu=0 executor_cpu=14 identity=ff11000332e38fa8 generation=1068 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff814f49a0 call_phase=1 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=1060 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 54,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=1295 completions=1294 instructions=8082579 controls=1914 primitives=25469 memory=46820 cache_hits=332235 cache_misses=7750343 cache_full=1876116 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5151 origin_cpu=1 executor_cpu=8 identity=ff11000332eb8fa8 generation=1236 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e57e7 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=1246 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 55,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=1464 completions=1463 instructions=9140659 controls=2164 primitives=28815 memory=52963 cache_hits=371265 cache_misses=8769394 cache_full=2130487 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5193 origin_cpu=1 executor_cpu=18 identity=ff11000332eb8fa8 generation=1400 entry=ffffffff8181c73b transport=2 state=3 ip=ffffffff817dea50 call_phase=3 call_target=ffffffff817dea50 instruction_phase=5 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=1410 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 56,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=1644 completions=1643 instructions=10237405 controls=2434 primitives=32343 memory=59467 cache_hits=383145 cache_misses=9854259 cache_full=2436589 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5170 origin_cpu=1 executor_cpu=2 identity=ff11000332eb8fa8 generation=1580 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b81f4 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=1590 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 57,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=1824 completions=1823 instructions=11331045 controls=2705 primitives=35854 memory=65956 cache_hits=395025 cache_misses=10936020 cache_full=2742144 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5168 origin_cpu=1 executor_cpu=3 identity=ff11000332eb8fa8 generation=1760 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e57e7 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=1770 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 58,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2004 completions=2003 instructions=12421628 controls=2974 primitives=39363 memory=72424 cache_hits=406905 cache_misses=12014723 cache_full=3047124 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5168 origin_cpu=1 executor_cpu=17 identity=ff11000332eb8fa8 generation=1940 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff818180cc call_phase=5 call_target=ffffffff814f3630 instruction_phase=5 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=1950 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 59,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2185 completions=2184 instructions=13521341 controls=3246 primitives=42884 memory=78933 cache_hits=418845 cache_misses=13102496 cache_full=3355297 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5184 origin_cpu=0 executor_cpu=11 identity=ff11000332e38fa8 generation=2130 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826f0568 call_phase=5 call_target=ffffffff818404b0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=2122 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 60,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2365 completions=2364 instructions=14613928 controls=3516 primitives=46395 memory=85414 cache_hits=430725 cache_misses=14183204 cache_full=3660645 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5185 origin_cpu=0 executor_cpu=31 identity=ff11000332e38fa8 generation=2310 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b48e4 call_phase=5 call_target=ffffffff817ca480 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=2302 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 61,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2544 completions=2543 instructions=15699929 controls=3784 primitives=49893 memory=91871 cache_hits=442545 cache_misses=15257385 cache_full=3963084 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5189 origin_cpu=1 executor_cpu=16 identity=ff11000332eb8fa8 generation=2480 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826c7569 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=2490 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 62,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2724 completions=2723 instructions=16791930 controls=4054 primitives=53403 memory=98349 cache_hits=454425 cache_misses=16337505 cache_full=4268280 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5166 origin_cpu=1 executor_cpu=3 identity=ff11000332eb8fa8 generation=2660 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b628a call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=2670 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 63,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=2906 completions=2905 instructions=17895204 controls=4328 primitives=56934 memory=104876 cache_hits=466370 cache_misses=17428835 cache_full=4578897 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5140 origin_cpu=1 executor_cpu=17 identity=ff11000332eb8fa8 generation=2842 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff8140feee call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=2852 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 64,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3087 completions=3086 instructions=18994196 controls=4599 primitives=60467 memory=111412 cache_hits=478389 cache_misses=18515808 cache_full=4884673 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5151 origin_cpu=0 executor_cpu=2 identity=ff11000332e38fa8 generation=3032 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff826be9b8 call_phase=5 call_target=ffffffff817dea50 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=3024 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 65,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3268 completions=3267 instructions=20090348 controls=4870 primitives=63997 memory=117917 cache_hits=490329 cache_misses=19600019 cache_full=5190450 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5152 origin_cpu=1 executor_cpu=23 identity=ff11000332eb8fa8 generation=3204 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff81817c9b call_phase=5 call_target=ffffffff814f3630 instruction_phase=1 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=3214 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 66,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3448 completions=3447 instructions=21186568 controls=5141 primitives=67522 memory=124420 cache_hits=502209 cache_misses=20684359 cache_full=5496321 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5188 origin_cpu=1 executor_cpu=26 identity=ff11000332eb8fa8 generation=3384 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e57da call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=3394 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 67,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3629 completions=3628 instructions=22284293 controls=5412 primitives=71042 memory=130917 cache_hits=514149 cache_misses=21770144 cache_full=5804115 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5135 origin_cpu=0 executor_cpu=23 identity=ff11000332e38fa8 generation=3574 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b4aca call_phase=5 call_target=ffffffff818404b0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=3566 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 68,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3808 completions=3807 instructions=23367751 controls=5680 primitives=74529 memory=137358 cache_hits=525969 cache_misses=22841782 cache_full=6106306 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5152 origin_cpu=1 executor_cpu=28 identity=ff11000332eb8fa8 generation=3744 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b6241 call_phase=5 call_target=ffffffff814f4610 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=3754 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 69,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=3988 completions=3987 instructions=24461006 controls=5950 primitives=78048 memory=143843 cache_hits=537849 cache_misses=23923156 cache_full=6411675 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5155 origin_cpu=1 executor_cpu=57 identity=ff11000332eb8fa8 generation=3924 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b4aec call_phase=5 call_target=ffffffff826fcf70 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=3934 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 70,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=4167 completions=4166 instructions=25545843 controls=6219 primitives=81519 memory=150275 cache_hits=549602 cache_misses=24996242 cache_full=6716147 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5163 origin_cpu=0 executor_cpu=19 identity=ff11000332e38fa8 generation=4112 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff8181c107 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=1 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=4104 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 71,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=4347 completions=4346 instructions=26639819 controls=6489 primitives=85031 memory=156765 cache_hits=561549 cache_misses=26078271 cache_full=7021590 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5182 origin_cpu=0 executor_cpu=15 identity=ff11000332e38fa8 generation=4292 entry=ffffffff817b6f68 transport=2 state=2 ip=ffffffff826bd582 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=1 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=4284 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 72,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=4526 completions=4525 instructions=27730295 controls=6758 primitives=88537 memory=163224 cache_hits=573357 cache_misses=27156938 cache_full=7326707 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5191 origin_cpu=1 executor_cpu=13 identity=ff11000332eb8fa8 generation=4462 entry=ffffffff817b6f68 transport=2 state=3 ip=ffffffff817f7f97 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=3 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=4472 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 73,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=4708 completions=4707 instructions=28829273 controls=7030 primitives=92077 memory=169756 cache_hits=585369 cache_misses=28243904 cache_full=7632688 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5144 origin_cpu=1 executor_cpu=7 identity=ff11000332eb8fa8 generation=4644 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826bb846 call_phase=5 call_target=ffffffff814f3630 instruction_phase=5 instruction=5\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=4654 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 74,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=4889 completions=4888 instructions=29931169 controls=7302 primitives=95612 memory=176277 cache_hits=597309 cache_misses=29333860 cache_full=7941255 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5177 origin_cpu=0 executor_cpu=9 identity=ff11000332e38fa8 generation=4834 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b4c0f call_phase=5 call_target=ffffffff818404b0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=4826 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 75,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5069 completions=5068 instructions=31024180 controls=7573 primitives=99124 memory=182765 cache_hits=609189 cache_misses=30414991 cache_full=8246645 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5179 origin_cpu=0 executor_cpu=21 identity=ff11000332e38fa8 generation=5014 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e4743 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=5006 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 76,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5251 completions=5250 instructions=32124978 controls=7845 primitives=102657 memory=189301 cache_hits=621213 cache_misses=31503766 cache_full=8554647 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5186 origin_cpu=0 executor_cpu=20 identity=ff11000332e38fa8 generation=5196 entry=ffffffff817b6f68 transport=2 state=3 ip=ffffffff826bb889 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=5188 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 77,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5432 completions=5431 instructions=33226090 controls=8116 primitives=106209 memory=195837 cache_hits=633153 cache_misses=32592937 cache_full=8861048 unsupported=0 active=2\n",
+      "requests": "origin=5208 executor=5196 origin_cpu=1 executor_cpu=2 identity=ff11000332eb8fa8 generation=5368 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff826b6266 call_phase=5 call_target=ffffffff814f49a0 instruction_phase=5 instruction=3\norigin=5206 executor=0 origin_cpu=0 executor_cpu=-1 identity=ff11000332e38fa8 generation=5378 entry=ffffffff8181c73b transport=0 state=1 ip=ffffffff8181c73b call_phase=0 call_target=ffffffff814f49a0 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 78,
+    "state": "STARTING",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": null,
+        "factory_active": true,
+        "passed": false,
+        "state": "APPLICATION"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5613 completions=5612 instructions=34323448 controls=8388 primitives=109729 memory=202333 cache_hits=645093 cache_misses=33678355 cache_full=9168860 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5142 origin_cpu=0 executor_cpu=15 identity=ff11000332e38fa8 generation=5558 entry=ffffffff8181c73b transport=2 state=3 ip=ffffffff817dea50 call_phase=3 call_target=ffffffff817dea50 instruction_phase=5 instruction=5\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=5550 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 79,
+    "state": "FAILED",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": "Failure('diagnostic kernel log incomplete')",
+        "factory_active": true,
+        "passed": false,
+        "state": "FAILED"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5613 completions=5612 instructions=34323448 controls=8388 primitives=109729 memory=202333 cache_hits=645093 cache_misses=33678355 cache_full=9168860 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5142 origin_cpu=0 executor_cpu=15 identity=ff11000332e38fa8 generation=5558 entry=ffffffff8181c73b transport=2 state=3 ip=ffffffff817dea50 call_phase=3 call_target=ffffffff817dea50 instruction_phase=5 instruction=5\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=5550 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  },
+  {
+    "elapsed_seconds": 79,
+    "state": "FAILED",
+    "models": {
+      "threads": {
+        "completed_requests": null,
+        "error": "Failure('diagnostic kernel log incomplete')",
+        "factory_active": true,
+        "passed": false,
+        "state": "FAILED"
+      }
+    },
+    "runtime": {
+      "reached": "roots=5793 completions=5792 instructions=35421217 controls=8659 primitives=113246 memory=208833 cache_hits=656973 cache_misses=34764245 cache_full=9476944 unsupported=0 active=2\n",
+      "requests": "origin=5206 executor=5159 origin_cpu=0 executor_cpu=29 identity=ff11000332e38fa8 generation=5738 entry=ffffffff8181c73b transport=2 state=2 ip=ffffffff817e39d3 call_phase=5 call_target=ffffffff814f3630 instruction_phase=5 instruction=3\norigin=5208 executor=0 origin_cpu=1 executor_cpu=-1 identity=ff11000332eb8fa8 generation=5730 entry=ffffffff817b6f68 transport=0 state=1 ip=ffffffff817b6f68 call_phase=0 call_target=ffffffff81db0150 instruction_phase=0 instruction=5\ntotal=2 shown=2\n"
+    }
+  }
+]

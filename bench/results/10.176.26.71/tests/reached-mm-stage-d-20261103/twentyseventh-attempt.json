@@ -1,0 +1,77 @@
+{
+  "source_commit": "cb5ee7a10591fd2e505a9b029a3bad9e7132b3f3",
+  "boot_id": "220dc789-0a1f-429f-a795-0e70af2b0f2d",
+  "passed": false,
+  "drained": false,
+  "application": {
+    "state": "FAILED",
+    "error": "Failure('mmap1 lifetime unknown; no cleanup attempted')",
+    "pid": 5202,
+    "drained": false,
+    "workers_observed": [
+      {
+        "cpus": [
+          0
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+        "ppid": 4189,
+        "start_ticks": 75643,
+        "tgid": 5202,
+        "tid": 5206
+      },
+      {
+        "cpus": [
+          1
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+        "ppid": 4189,
+        "start_ticks": 75649,
+        "tgid": 5202,
+        "tid": 5208
+      }
+    ],
+    "kernel_log_collection": {
+      "bytes": 68077174,
+      "collector_cpu": 63,
+      "complete": false,
+      "drained": true,
+      "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyseventh-20261103/threads/application/kernel-log-errors.jsonl",
+      "errors": 195064,
+      "fault_detected": false,
+      "first_error": {
+        "bytes": 1914332,
+        "errno": 32,
+        "error": "BrokenPipeError(32, 'Broken pipe')",
+        "monotonic_ns": 757021100997,
+        "records": 5540
+      },
+      "last_error": {
+        "bytes": 68077017,
+        "errno": null,
+        "error": "TimeoutError('diagnostic final drain exceeded its deadline')",
+        "monotonic_ns": 787533342841,
+        "records": 121579
+      },
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyseventh-20261103/threads/application/kernel.log",
+      "max_bytes": 536870912,
+      "mode": "continuous-diagnostic",
+      "records": 121579
+    }
+  },
+  "upstream": "testcase:Anonymous memory mmap/munmap of 128MB\nwarmup\nmin:41 max:42 total:83\nmin:42 max:43 total:85\nmin:43 max:43 total:86\nmin:42 max:43 total:85\nmin:42 max:43 total:85\nmin:42 max:42 total:84\nmeasurement\nmin:43 max:43 total:86\nmin:42 max:43 total:85\naverage:85\n",
+  "processes_run": false,
+  "archive": "/tmp/kdlock-reached-mm-twentyseventh-after-reset-20261104",
+  "recovery": {
+    "restarted": true,
+    "source_commit": "cb5ee7a10591fd2e505a9b029a3bad9e7132b3f3",
+    "serial_path": "/tmp/kdlock-mm-twentyseventh-serial.log",
+    "bytes": 130290181,
+    "sha256": "cad20e5354b11ee899ad2f47b50704f32431b4c2cdccf230f30fce4c8a026b77",
+    "drained": false
+  },
+  "recovered_boot": "26cd5e75-bd3c-4df2-b2e6-35301aa5f751",
+  "upstream_source": {
+    "main.c": "48d4640f151801fdfb5f3915c822cf280c713df3c1998068e16ce0c961cbf746",
+    "tests/mmap1.c": "a7e09c6a7a12524a2cd949e5d37cf8ec0ba2479868cbd04ebd8c83c4eaed9d06"
+  }
+}

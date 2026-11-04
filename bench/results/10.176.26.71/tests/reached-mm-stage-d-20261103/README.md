@@ -807,3 +807,29 @@ before recovery to idle diagnostic boot
 `220dc789-0a1f-429f-a795-0e70af2b0f2d`. The prior approved log preservation was
 repeated with full verification ([second receipt](log-headroom-second-20261104.json));
 no earlier records were removed. Temporary routing is still unperformed.
+
+
+## Twenty-seventh candidate: `cb5ee7a1`
+
+`cb5ee7a10591fd2e505a9b029a3bad9e7132b3f3` passed562 production instruction
+checks,21 affected unit cases and67,643 resident assertions, plus provider
+build and final fixture drain ([checks](twentyseventh-checks.json)). Its actual
+thread run again exceeded the lifetime limit and lost log records. The
+[progress series](twentyseventh-progress.json) shows source generations,
+instruction counts and completions advancing while the application remains
+alive; at78 seconds the retained count was5,613 roots and5,612 completions,
+with two active requests. Those samples cannot be described as a continuous
+lock stall. One origin was executing munmap while the other waited for writer
+admission; the roles/generations continued to change. The independent monitor
+retained213,623,789 bytes with333,893 losses. Process validation remains unrun.
+
+The [attempt](twentyseventh-attempt.json) retained all six warmups, both
+measurement samples and average85 in the unchanged upstream output. This is
+an instrumented failed diagnostic, not an accepted throughput result. Exact
+pinned `main.c` samples first, then calls `pthread_cancel` and `pthread_join`
+at termination (lines143-151,421-428). The application cannot be called drained
+because it printed its average. Its actual `tests/mmap1.c:20` increments the
+counter every operation; older256-operation publication notes concern a
+different harness and are not applicable here. A bounded status read did not
+complete. Ordinary records were retained before recovery to idle boot
+`26cd5e75-bd3c-4df2-b2e6-35301aa5f751`.
