@@ -108,21 +108,22 @@ class Services(unittest.TestCase):
         root = dict(origin=101, executor=200, identity=0x1001, generation=1, entry=0xa000)
         proof = dict(completed_requests=[root])
         snapshot = dict(records=[dict(tid=101, backing=0x1100)])
-        common = 'origin=101 executor=200 identity=1001 generation=1 family_generation=1'
-        lines = [f'kd_reached event=family {common} entry=a000',
-                 f'kd_service event=enter {common} object=1100 depth=0 entry=a000 may_delegate=1',
-                 f'kd_reached event=service {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000']
+        common = 'origin=101 executor=200 identity=1001 generation=1'
+        family = 'family_generation=1'
+        lines = [f'kd_reached event=family {common} entry=a000 {family}',
+                 f'kd_service event=enter {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
+                 f'kd_reached event=service {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000 {family}']
         for stage, task in zip(('request', 'enter', 'done', 'resume'), (200, 101, 101, 200)):
             output = stage in ('done', 'resume')
             lines.append(f'kd_service memory: stage={stage} {common} task={task} sequence=1 '
                 f'image_generation=0 ip=8000 next=8003 sp=7000 offset=0 width=32 operation=6 '
                 f'preempt_operand=0 input_flags=203 output_flags={"203" if output else "0"} '
                 f'preempt_seq=0 preempt_object=0 destination=0 value={"123" if output else "0"} '
-                f'read=1 artifact_sequence=2 source_value=0 aux_value=0')
-        lines += [f'kd_reached event=resume {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000',
-                  f'kd_service event=release {common} object=1100 depth=0 entry=a000 may_delegate=1',
-                  f'kd_service event=returned {common} object=1100 depth=0 entry=a000 may_delegate=1',
-                  f'kd_reached event=retire {common} entry=a000']
+                f'read=1 artifact_sequence=2 source_value=0 aux_value=0 {family}')
+        lines += [f'kd_reached event=resume {common} artifact_sequence=2 kind=memory ip=8000 target=0 sp=7000 {family}',
+                  f'kd_service event=release {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
+                  f'kd_service event=returned {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
+                  f'kd_reached event=retire {common} entry=a000 {family}']
         messages = '\n'.join(lines)
         self.assertEqual(item.validate_services(proof, [], messages, snapshot)['memory_transactions'], 1)
         for changed in (messages.replace('next=8003', 'next=8002'),

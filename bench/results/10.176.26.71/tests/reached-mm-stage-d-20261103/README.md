@@ -767,3 +767,18 @@ returned to the ordinary disabled-MM kernel, boot
 explicit diagnostic boot. Root filled again from the ordinary duplicate logs.
 The user has been asked about temporary routing that preserves complete logs
 on build disk2; no routing change has been made.
+
+
+## Twenty-fifth candidate component check: `74011ac1`
+
+`74011ac1598dd46dc33393231596aad358de5b6f` passed528 production decoder/
+Native scalar checks and the three decoder mutation checks. Collector and
+private-source checks passed. The new MM trace fixture failed because its
+synthetic root fields placed family generation between generation and object,
+which differs from the real trace grammar. The strict parser correctly
+rejected it. Correct only that fixture's field order; retain the
+[failed check](twentyfifth-checks.json). No provider build, resident run or
+actual application run followed this component failure. The source tree is
+frozen separately, and the runtime implementation is unchanged by the fixture
+correction. The next actual run still requires complete log headroom and the
+pending temporary-routing decision.
