@@ -436,6 +436,7 @@ class ReturningCallTests(unittest.TestCase):
         options = {}
         assembly, log, status = render(
             raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            regions=[(bytes(raw), 0x1000, [0x1000, 0x1020])],
             native_escape_capable=True,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
                             'kd_mutex_direct_unlock_clobber_v1': 0x7100,

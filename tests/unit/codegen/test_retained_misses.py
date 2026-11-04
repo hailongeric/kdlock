@@ -20,7 +20,10 @@ class RetainedMissTests(unittest.TestCase):
         from test_jit_diagnostics import render
         options = {}
         code, log, status = render('e8fb0f0000c3', lock_kind='mutex', abi=2,
-            trusted_source=True, body_witness=True, build_options=options, return_status=True)
+            trusted_source=True, body_witness=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+            build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
         self.assertTrue(options['requirements'] & (1 << 13))
         self.assertFalse(options['requirements'] & (1 << 8))

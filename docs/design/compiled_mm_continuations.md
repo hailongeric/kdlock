@@ -142,3 +142,16 @@ a delegated request. It records that boundary and takes ordinary C admission
 before continuing locally at that entry, preserving cancellation. A progressed
 miss must instead use exact current-position owner handback and final ACK; it
 must not return through the completed-body cleanup path.
+
+## Original-backend fixture follow-up
+
+The frozen `336009d3d76b946976382b610752d23e43d516e8` VM check built the
+provider and passed GS, entry-scope, immutable-image publication and the moved
+reference adapter/fetch checks. Two code-generation fixtures failed. The cold
+ABI2 fixture omitted the provider's clobber control symbols. The conditional
+callee fixture omitted its learned callee entry after bounded exploration was
+restored, so the service inside that callee was correctly absent from its image.
+Supply those fixture inputs explicitly; do not expand production exploration or
+change emitted requirements to make either fixture pass. Rerun only those two
+affected programs. These checks do not establish retained-owner handback or an
+executed mmap1 result for the corrected backend.
