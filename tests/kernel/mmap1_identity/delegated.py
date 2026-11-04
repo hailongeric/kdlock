@@ -541,6 +541,19 @@ class Controller:
                 diagnostic_log_bytes=self.args.diagnostic_log_mib * 1024**2,
                 diagnostic_collector=self.collector)
             snapshot = self.stop_observer()
+            exact_session.verify(allow_identity_probe=True)
+            record['state'] = 'DRAINING'
+            self.save()
+            (PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
+            record['factory_active'] = False
+            self.wait('provider bindings and execution frames drain', lambda:
+                (PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
+                (PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0' and
+                rt.status()['frames'] == 0, timeout=30)
+            record['binding_drain'] = dict(bindings=0, source=rt.status())
+            self.collector.checkpoint()
+            record['state'] = 'VERIFYING'
+            self.save()
             symbols = [int(line.split()[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                        if len(line.split()) == 4 and line.split()[2:] == ['kd_rwsem_ops', '[kdlock_km]']]
             rt.require(len(symbols) == 1 and symbols[0] > 0, 'exact live module provider symbol missing/ambiguous')
@@ -568,18 +581,10 @@ class Controller:
             rt.write_json(self.model / 'delegated-proof.json', proof)
             record.update(proof=reference(self.model / 'delegated-proof.json'), application=reference(self.model / 'application/result.json'),
                 snapshot=reference(self.model / 'snapshot.json'), completed_requests=proof['completed_request_count'],
-                downgraded_read_tails=proof['downgraded_read_tails'], state='DRAINING')
+                downgraded_read_tails=proof['downgraded_read_tails'])
             self.save()
             record['continuation_criterion'] = require_observed_continuation(proof)
             self.save()
-            exact_session.verify(allow_identity_probe=True)
-            (PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
-            record['factory_active'] = False
-            self.wait('provider bindings and execution frames drain', lambda:
-                (PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
-                (PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0' and
-                rt.status()['frames'] == 0, timeout=30)
-            record['binding_drain'] = dict(bindings=0, source=rt.status())
             if daemon is not None:
                 daemon.stop()
                 record['daemon_closed'] = True

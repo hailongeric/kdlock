@@ -903,3 +903,25 @@ provider retirement were not completed. Do not report this as a full pass.
 Threads were not started. The buffered-summary observation fix requires an
 explicit collector checkpoint after STOP. Preserve all raw records and the
 failed verdict. No throughput comparison or gain is claimed.
+
+
+## Thirty-first candidate: `583a875a`
+
+`583a875aef9e8977bfdbc99485df882b1123c9d7` passed562 instruction checks,
+24 affected unit cases and67,643 resident assertions, plus provider build and
+fixture drain ([checks](thirtyfirst-checks.json)). Its process application
+returned normally and its exact application window is complete. The explicit
+observer checkpoint resolved the summary visibility issue. Later CPU-intensive
+proof parsing shared the interpreter with the active lifecycle reader while
+background MM requests generated additional traces; that lifecycle capture
+lost records. The independent reader retained385,764,607 bytes without loss.
+The [failed attempt](thirtyfirst-attempt.json) retains both capture verdicts.
+No final provider/source retirement or thread-model result was obtained.
+
+The next revision moves the existing factory deactivation and zero bindings/
+frames drain to after normal application completion and before parsing. The
+application still runs fully delegated; this moves normal cleanup earlier
+in post-application validation. The failed transfer before this run stopped
+at the root-headroom gate and transferred nothing; the user-approved current
+log cleanup restored3,966,492,672 free bytes, then a separate retry succeeded.
+Earlier files and every failed outcome remain retained.
