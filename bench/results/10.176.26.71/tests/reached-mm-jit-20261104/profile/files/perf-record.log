@@ -1,0 +1,2 @@
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.518 MB /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-20261104/profile-threads-n02/run/perf.data (6342 samples) ]

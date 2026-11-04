@@ -1,0 +1,28 @@
+{
+  "boot_id": "ab2bb986-b894-480b-8a5d-a88b9ca97368",
+  "bundle": "/root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103",
+  "delegation_proof": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-jitfar-proof-20261104/threads/delegated-proof.json",
+    "sha256": "32d778dcf18be2c026668212a4b96e74beca412eb58af3bf19913308b80c1bfa"
+  },
+  "host_sha256": "bff8243c53897a6468026a63bd87be24f58ce8218157438e9e0982dec2ea6785",
+  "host_state": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-20261104/profile-threads-n02/inputs/host-before.json",
+  "inputs": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+  "inputs_sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+  "kdir": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+  "manifest_sha256": "9c90d2b1360cac0d7456a474a1221926adffc316105257d41c8efde7f4daa013",
+  "metadata": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-20261104/profile-threads-n02/inputs",
+  "mode": "kd",
+  "model": "threads",
+  "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-20261104/profile-threads-n02/run",
+  "profile": true,
+  "provider": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-jit-far-units-20261103/cold/build/provider/kernel_module/kdlock_km.ko",
+  "provider_sha256": "609bb7e8c12add5fd530c2cbbc0e09c2445a93cf71c5a1a784c269f2f802c9dc",
+  "root": "/root/kdlock-inputs/reached-mm-jit-far-383e830f-20261103",
+  "sites": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-20261104/profile-threads-n02/inputs/sites.json",
+  "sites_sha256": "bcc3b8b23fc332904e26929e7e43961416d11db705480ed63e301dca07e1a7a1",
+  "source_commit": "383e830f4c7ac01f8edf9cec05d6c5b91aee8d8f",
+  "state_sha256": "bae0db407d668c67465006ed550058169a9ce4dd099f06196cc5ac49f20b222b",
+  "variant": "kdscope5-kd",
+  "workers": 2
+}

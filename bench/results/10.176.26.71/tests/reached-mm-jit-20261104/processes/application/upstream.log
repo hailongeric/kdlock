@@ -1,0 +1,12 @@
+testcase:Anonymous memory mmap/munmap of 128MB
+warmup
+min:67 max:68 total:135
+min:65 max:65 total:130
+min:68 max:69 total:137
+min:66 max:67 total:133
+min:61 max:62 total:123
+min:69 max:69 total:138
+measurement
+min:67 max:67 total:134
+min:66 max:66 total:132
+average:133
