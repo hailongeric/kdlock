@@ -41,24 +41,35 @@ reports and stale-report rejection. Keep the existing capture image fixed;
 only an explicit execution-artifact join may select another immutable image.
 Ordinary frames continue to execute their original bound generation.
 
-A retained miss suspends the exact execution activation, not the public
-acquisition or logical request. When a compatible compiled artifact is ready,
-validate source/entry/ABI, FULL PC/SP, request generation, services and owners;
-then use an explicit flags-preserving reentry at that target. The old image is
-not edited or republished in place. No whole-body origin suffix, entry replay,
-implicit success or new public acquisition error is permitted.
+The updated user direction supersedes same-invocation image waiting/joining.
+A retained miss exports the exact current source position and hands execution
+to O without replay. The existing capture image remains fixed; learned edges
+are used for later invocations and replacement images only. The old flags-less
+generic IJ error is not a valid handback packet.
+
+The independent E service worker has no caller acquisition of its own. Transfer
+all live KD owners through exact owner transfer/pickup, route O's ordinary
+release/downgrade/read release to those retained records, and retain frame,
+source, task, stack and module lifetimes until final handback acknowledgment.
+E then returns to its service loop; do not invent a public writer acquisition.
+Native-context owner records require explicit custody transfer or an encountered
+unsupported boundary. Do not relabel them released while they remain held.
+
+The origin read-release route must be allocation/scheduling/guard-free and must
+not touch the object after its final decrement. Internal speculative rollback
+must remain separate from the public read-tail release. Existing legacy Native
+routing cannot substitute its one-entry vector for the full retained owner list.
 
 Returning Native helper/instruction services remain bounded intervals followed
-by E resumption. Resumption must use the artifact that owns that exact service,
-not whichever image was most recently published in the registry.
+by E resumption before any untranslated-code handback. A handled declared
+service is not automatically a suffix handback.
 
 ## Boundaries requiring explicit evidence
 
-A userspace compilation wait with live Native spin/preempt/RCU owners is not a
-sleepable wait. Existing runtime checks refuse sleeping nested acquisition in
-those intervals. Such a miss remains an explicit unsupported encountered point
-until a nonblocking progress contract is implemented and validated; do not drop
-its owners or silently run the protected remainder on O.
+A handback with live Native spin/preempt/RCU owners requires exact transfer of
+those records and matching origin context. Existing returning-service records
+cannot simply be dropped when O executes ordinary Native unlocks. Enumerate any
+unsupported encountered combination without weakening its ownership checks.
 
 Compiler/daemon progress also requires attention: their own MM operations must
 not recursively depend on the image being compiled. Provider activation and
@@ -75,7 +86,7 @@ validation boundary, not permission for origin completion.
 1. Commit this correction and dependency map.
 2. Add flags-preserving original-backend miss/reentry contracts and distinct
    CALL/IJ learning, preserving ordinary immutable bindings.
-3. Connect retained execution-artifact selection and general service joins;
+3. Connect current-position owner/lifetime handback and general API routing;
    replace the selected per-instruction emitter/cache path.
 4. Move unnecessary interpreter execution to fixtures only after checking
    `kd_reached_decode`, `kd_reached_begin`, `kd_exe_reached_run` and the existing
