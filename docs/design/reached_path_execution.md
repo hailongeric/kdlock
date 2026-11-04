@@ -1243,3 +1243,36 @@ This reorders existing post-application lifecycle operations. Native task/MM
 identity, every captured service transaction, read-tail execution and later
 writer observation are still checked. Final retirement and ordinary unload
 remain mandatory after proof.
+
+
+## Retire after the observing processes release their own MM bindings
+
+The `bfdc35e29d79d3db12dcfb071f2d1ad3438cc71e` application and its complete
+trace succeeded, but the controller timed out with two residency bindings
+and zero execution frames. A fresh ordinary observation after the controller
+and monitor exited found zero bindings, no active requests and the same
+completed counters. This is an observing-process lifetime boundary, not a
+reason to detach live MM objects. `kernel_integration/mmap_lock/overlay/kernel/
+locking/kd_mmap/provider.c` unregisters only future binding; its existing
+objects retain the exact provider until ordinary unbind. The source binding
+counter includes those object leases. Preserve that contract.
+
+Split observation/proof and final retirement into distinct process lifetimes.
+The application runs with delegation active through normal exit. STOP closes
+observation; deactivation closes future binding. Both observing processes then
+exit, releasing their ordinary address-space bindings. A fresh process, started
+only while the factory is inactive, verifies the same boot, committed inputs,
+provider bytes/note, complete captures, exact per-root/service and syscall
+proofs, and zero bindings/frames/writers. It can then issue the existing source
+retirement and ordinary module unload. No live binding is forcibly detached,
+no application work changes executor, and no original failure is rewritten.
+
+For the already-retained thirty-second attempt, allow a separately recorded
+continuation of validation only for its exact post-application binding-drain
+timeout, with normal application exit, complete error-free application and
+lifecycle logs, stable balanced STOP, same boot/module, inactive factory and
+zero current residency/frame counts. Use the unchanged validators from that
+immutable candidate. Preserve the initial failed verdict; report the later
+proof and normal retirement as a separate artifact. Do not rerun or score
+the application while validating saved records. A thread-model run remains
+a distinct application lifetime with independent evidence.
