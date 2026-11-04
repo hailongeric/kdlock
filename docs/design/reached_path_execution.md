@@ -1201,3 +1201,18 @@ observation, so all records already available before a completed application's
 final boundary have been consumed. A busy stream that prevents that boundary
 within the existing two-second limit fails explicitly; acknowledging only a
 previously written prefix could omit the application's final returned events.
+
+
+## Flush observer records before consuming the lifecycle file
+
+The `c373d273797405833aff42b297d4a45d7f3a0ccb` application passed the shared
+window and reached observer STOP and per-root/service validation. Its next
+gate timed out looking for `kd_mm_pair: event=stop` in the live lifecycle
+file. That summary is shorter than the collector's64KiB output buffer; the
+reader scans at would-block but does not implicitly flush without a checkpoint.
+The polling reader can therefore see an older file prefix even after the
+observer emitted the summary. Require the existing reader checkpoint after
+STOP and before any lifecycle summary parsing. Keep the same summary checks,
+timeouts, per-root proof and final full-model drain. This is a general buffered
+observation ordering fix, not a change to MM execution or lock semantics.
+Retain the failed attempt; it does not prove final source/provider retirement.
