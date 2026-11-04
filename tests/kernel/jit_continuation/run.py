@@ -475,8 +475,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=("continuation", "killable", "helper"), default="continuation")
-    parser.add_argument("--execution-mode", choices=("image", "reached"), default="image",
-                        help="reached: image-free retained roots with no translator/prewarming")
+    parser.add_argument("--execution-mode", choices=("image",), default="image",
+                        help="original bounded compiled-image backend")
     parser.add_argument("--cpus", type=rt.cpu_list, default=list(range(16)))
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)

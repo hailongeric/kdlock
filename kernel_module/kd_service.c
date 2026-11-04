@@ -8,7 +8,6 @@
 #include "kd_rwsem.h"
 #include "kd_exec_cont.h"
 #include "kd_comm.h"
-#include "kd_reached_jit.h"
 
 extern struct kd_comm_key kd_spin_target;
 
@@ -55,7 +54,6 @@ struct kd_service_root {
 	struct kd_service_owner owner;
 	struct kd_service_scope scope;
 	struct kd_exec_continuation continuation;
-	struct kd_reached_session reached;
 	struct kd_exec_outer_unlock hook;
 	struct kd_service_completion completion;
 	struct list_head native_owners;
@@ -95,52 +93,8 @@ static void kd_service_online_pool(struct cpumask *allowed)
 		cpumask_copy(allowed, cpu_online_mask);
 }
 static atomic64_t kd_service_work_sequence = ATOMIC64_INIT(0);
-static int kd_reached_jit_stats_get(char *buffer, const struct kernel_param *kp)
-{
-	(void)kp;
-	return scnprintf(buffer, PAGE_SIZE, "entries=%lld retired=%lld interpreted=%lld\n",
-		(long long)atomic64_read(&kd_reached_jit_entries),
-		(long long)atomic64_read(&kd_reached_jit_retired),
-		(long long)atomic64_read(&kd_reached_interpreted_steps));
-}
-static const struct kernel_param_ops kd_reached_jit_stats_ops = { .get = kd_reached_jit_stats_get };
-module_param_cb(reached_jit_stats, &kd_reached_jit_stats_ops, NULL, 0444);
-static int kd_reached_jit_cache_get(char *buffer, const struct kernel_param *kp)
-{
-	u64 hits, misses;
-	unsigned int slots;
-
-	(void)kp;
-	kd_reached_jit_cache_counts(&hits, &misses, &slots);
-	return scnprintf(buffer, PAGE_SIZE, "hits=%llu misses=%llu slots=%u\n",
-		(unsigned long long)hits, (unsigned long long)misses, slots);
-}
-static const struct kernel_param_ops kd_reached_jit_cache_ops = { .get = kd_reached_jit_cache_get };
-module_param_cb(reached_jit_cache, &kd_reached_jit_cache_ops, NULL, 0444);
 module_param_named(service_trace, kd_service_trace, bool, 0644);
 MODULE_PARM_DESC(service_trace, "Focused request, executor and returned completion records");
-static bool kd_service_reached;
-module_param_named(service_reached, kd_service_reached, bool, 0444);
-MODULE_PARM_DESC(service_reached, "Use resident reached-path execution for selected captures");
-static int kd_reached_stats_get(char *buffer, const struct kernel_param *kp)
-{
-	(void)kp;
-	return scnprintf(buffer, PAGE_SIZE,
-		"roots=%lld completions=%lld instructions=%lld controls=%lld primitives=%lld memory=%lld cache_hits=%lld cache_misses=%lld cache_full=%lld unsupported=%lld active=%lld\n",
-		(long long)atomic64_read(&kd_reached_roots),
-		(long long)atomic64_read(&kd_reached_completions),
-		(long long)atomic64_read(&kd_reached_instructions),
-		(long long)atomic64_read(&kd_reached_controls),
-		(long long)atomic64_read(&kd_reached_primitives),
-		(long long)atomic64_read(&kd_reached_memory),
-		(long long)atomic64_read(&kd_reached_cache_hits),
-		(long long)atomic64_read(&kd_reached_cache_misses),
-		(long long)atomic64_read(&kd_reached_cache_full),
-		(long long)atomic64_read(&kd_reached_unsupported),
-		(long long)atomic64_read(&kd_reached_active));
-}
-static const struct kernel_param_ops kd_reached_stats_ops = { .get = kd_reached_stats_get };
-module_param_cb(reached_stats, &kd_reached_stats_ops, NULL, 0444);
 
 /* The dispatch guard retains root/worker storage. Execution fields can change
  * concurrently; this view is diagnostic and never grants packet custody. */
@@ -181,10 +135,6 @@ static int kd_service_progress_get(char *buffer, const struct kernel_param *kp)
 static const struct kernel_param_ops kd_service_progress_ops = { .get = kd_service_progress_get };
 module_param_cb(service_progress, &kd_service_progress_ops, NULL, 0444);
 
-bool kd_service_reached_enabled(void)
-{
-	return READ_ONCE(kd_service_reached);
-}
 
 static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_service_resume_packet(struct kd_service_root *root, const struct kd_regs *saved);
@@ -925,8 +875,6 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 				cond_resched();
 				kd_service_pin_resume(cont);
 			}
-			if (cont->reached_active && !cont->reached->state.budget)
-				cont->reached->state.budget = 1UL << 24;
 			status = kd_exe_resume_retained(&cont->frame);
 			continue;
 		}
@@ -1026,14 +974,10 @@ static void kd_service_execute(struct kd_service_root *root)
 	flags = _raw_spin_lock_irqsave(&root->lifecycle_guard);
 	kd_wait_set_state_locked(&root->owner.request, KD_WAIT_EXECUTING);
 	_raw_spin_unlock_irqrestore(&root->lifecycle_guard, flags);
-	status = cont->reached_active ? kd_exe_on_reached_entry(&cont->frame) :
-		kd_exe_on_retained_entry(&cont->frame, root->exe, root->image);
+	BUG_ON(cont->reached_active);
+	status = kd_exe_on_retained_entry(&cont->frame, root->exe, root->image);
 	status = kd_service_run_scope(root, status);
 	BUG_ON(status != KD_EXE_RUN_TO_UNLOCK || !kd_service_scope_released(&root->scope));
-	if (cont->reached_active) {
-		kd_exe_reached_ack(&cont->frame);
-		atomic64_inc(&kd_reached_completions);
-	}
 	flags = _raw_spin_lock_irqsave(&root->lifecycle_guard);
 	kd_wait_set_state_locked(&root->owner.request, KD_WAIT_RELEASED);
 	_raw_spin_unlock_irqrestore(&root->lifecycle_guard, flags);
@@ -1159,35 +1103,6 @@ static void kd_service_free(struct kd_service_root *root)
 	BUG_ON(root->dispatch_member.queue_head);
 	list_del_init(&root->active_link);
 	_raw_spin_unlock_irqrestore(&kd_service_dispatch_guard, flags);
-	if (root->continuation.reached_active) {
-		struct kd_reached_session *session = &root->reached;
-		struct kd_wait_request *request = &root->owner.request;
-		atomic64_add(session->state.jit_entries, &kd_reached_jit_entries);
-		atomic64_add(session->state.jit_retired, &kd_reached_jit_retired);
-		atomic64_add(session->state.interpreted_steps, &kd_reached_interpreted_steps);
-		BUG_ON(session->state.interpreted_steps);
-		if (unlikely(READ_ONCE(kd_service_trace)))
-			pr_info("kd_reached event=jit origin=%d executor=%d identity=%px generation=%llu entries=%llu retired=%llu interpreted=%llu code=%lx\n",
-				request->logical_origin->pid, root->worker ? root->worker->pid : 0,
-				request->identity, (unsigned long long)request->generation,
-				(unsigned long long)session->state.jit_entries,
-				(unsigned long long)session->state.jit_retired,
-				(unsigned long long)session->state.interpreted_steps, session->state.jit_code);
-
-		BUG_ON(session->artifact.reference.held ||
-		       root->continuation.reached_artifact_sequence ||
-		       kd_family_begin_retire(&session->family, request->identity, request->generation) ||
-		       kd_family_ref_put(&session->authority) ||
-		       kd_family_finish_retire(&session->family, request->identity, request->generation));
-		if (unlikely(READ_ONCE(kd_service_trace)))
-			pr_info("kd_reached event=retire origin=%d executor=0 identity=%px generation=%llu family_generation=%llu entry=%lx\n",
-				request->logical_origin->pid, request->identity,
-				(unsigned long long)request->generation,
-				(unsigned long long)session->family.generation,
-				session->family.entry_ip);
-		session->initialized = false;
-		atomic64_dec(&kd_reached_active);
-	}
 	if (root->pooled) {
 		preempt_disable();
 		kd_mutex_release_node(root->node);
@@ -1279,7 +1194,6 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 	struct kd_exe_info *exe;
 	const struct kd_jit_image *image;
 	bool moved = false;
-	bool reached = READ_ONCE(kd_service_reached);
 	unsigned long flags;
 	enum kd_wait_decision decision;
 	int result;
@@ -1302,24 +1216,17 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 		BUG_ON(bound);
 		return kd_service_local_acquire(object, kind, state);
 	}
-	if (reached)
-		BUG_ON(kd_source_pin_text_range(ip, 1));
-	exe = NULL;
-	image = NULL;
-	if (!reached) {
-		kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-		exe = kd_exe_find_ready(0, ip);
-		image = kd_exe_capture_image(exe, ip);
-	}
-	if (!reached && !image) {
-		/* This invocation has not published a delegated request. Its local
-		 * C adapter records may_delegate=false and preserves Native results.
-		 * Published invocations never switch to an origin suffix. */
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	exe = kd_exe_find_ready(0, ip);
+	image = kd_exe_capture_image(exe, ip);
+	if (!image) {
+		/* No source instruction has executed and no delegated request was
+		 * published. Ordinary C admission keeps cancellation and returns to
+		 * this first untranslated source position; the daemon learns later. */
 		if (unlikely(READ_ONCE(kd_service_trace)))
-			pr_info("kd_service event=local_image origin=%d entry=%lx\n",
+			pr_info("kd_service event=untranslated_entry origin=%d entry=%lx\n",
 				current->pid, ip);
 		kd_exec_capture_lease_put(&pending_lease);
-		BUG_ON(bound);
 		return kd_service_local_acquire(object, kind, state);
 	}
 	migrate_disable();
@@ -1399,35 +1306,6 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 	/* Capture leases are a prepublication capability. A selected prepared
 	 * caller cannot proceed with a partial source/task-stack lifetime. */
 	BUG_ON(result);
-	if (reached) {
-		struct kd_reached_session *session = &root->reached;
-		struct kd_wait_request *request = &root->owner.request;
-
-		BUG_ON(kd_family_init(&session->family, request->identity,
-			request->generation, request->generation, ip,
-			KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
-		kd_family_ref_init(&session->authority);
-		kd_family_artifact_init(&session->artifact);
-		BUG_ON(kd_family_ref_get(&session->family, &session->authority,
-			NULL, request->identity, request->generation, 0));
-		session->initialized = false;
-		session->fetch_instruction = NULL;
-		session->fetch_length = 0;
-		session->state.jit_entries = session->state.jit_retired = 0;
-		session->state.interpreted_steps = 0;
-		session->state.jit_code = 0;
-		session->recent_count = 0;
-		session->recent_cursor = 0;
-		root->continuation.reached_active = true;
-		root->continuation.reached = session;
-		atomic64_inc(&kd_reached_active);
-		if (unlikely(READ_ONCE(kd_service_trace)))
-			pr_info("kd_reached event=family origin=%d executor=0 identity=%px generation=%llu family_generation=%llu entry=%lx abi=%u\n",
-				current->pid, request->identity,
-				(unsigned long long)request->generation,
-				(unsigned long long)session->family.generation,
-				ip, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	}
 	list_add_tail(&root->owner.link, &root->scope.owners);
 	BUG_ON(kd_exec_cont_set_service(&root->continuation, &root->scope,
 		&kd_service_scope_ops));

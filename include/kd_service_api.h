@@ -3,7 +3,6 @@
 #define KD_SERVICE_API_H
 
 #include "kd_admission.h"
-bool kd_service_reached_enabled(void);
 
 struct module;
 struct task_struct;

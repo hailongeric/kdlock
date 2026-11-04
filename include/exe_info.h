@@ -202,7 +202,7 @@ static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 
 static inline unsigned int kd_image_protocol(unsigned int requirements)
 {
-	return requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE ?
+	return requirements & (KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_RETAINED_MISS) ?
 		KD_IMAGE_PROTOCOL_SERVICE_QUEUE : KD_IMAGE_PROTOCOL;
 }
 

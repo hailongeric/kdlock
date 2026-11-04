@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Compile the exact provider component into this isolated fixture; no new
- * production exported symbol or alternate implementation is needed. */
+/* Standalone decoder/effect reference, never linked into the provider. */
 #include KDLOCK_REACHED_SOURCE
-#include "../../../../kernel_module/kd_reached_atomic.c"
+#include "atomic.inc"

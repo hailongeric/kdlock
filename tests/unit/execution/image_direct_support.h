@@ -15,3 +15,13 @@ static unsigned int get_unaligned_le32(const void *source) {
  memcpy(&result, source, sizeof(result));
  return result;
 }
+
+/* This fixture does not execute declared Native helpers. */
+static inline int kd_service_calls_pin(void) { return 0; }
+
+int kd_image_validate_memory_sites(const struct kd_jit_image *image)
+{
+ /* Memory-instruction tables have a separate production-validator fixture. */
+ assert(!(image->requirements & KD_IMAGE_REQUIRE_ORIGIN_MEMORY));
+ return 0;
+}

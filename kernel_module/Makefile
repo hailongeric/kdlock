@@ -36,9 +36,6 @@ kdlock_km-objs := \
 	sys.o \
 	kd_spin_runtime.o \
 	kd_source.o \
-	kd_reached.o \
-	kd_reached_jit.o \
-	kd_reached_atomic.o \
 	kd_family.o \
 	kd_spin_entry.o \
 	kd_mutex_tasks.o \

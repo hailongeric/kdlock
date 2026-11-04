@@ -270,7 +270,7 @@ class ReturningCallTests(unittest.TestCase):
         raw.extend(b'\xe8' + struct.pack('<i', 0x5700 - 0x102a) + b'\xc3')
         options = {}
         assembly, log, status = render(
-            raw.hex(), lock_kind='mutex', abi=2, trusted_source=True,
+            raw.hex(), regions=[(bytes(raw), 0x1000, [0x1000, 0x1020])], lock_kind='mutex', abi=2, trusted_source=True,
             native_escape_capable=True,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
                             'kd_mutex_direct_unlock_clobber_v1': 0x7100,
@@ -294,7 +294,7 @@ class ReturningCallTests(unittest.TestCase):
         raw.extend(b'\x90' * 16)
         options = {}
         assembly, log, status = render(
-            raw.hex(),
+            raw.hex(), regions=[(bytes(raw), 0x1000, [0x1000, 0x1020])],
             lock_kind='mutex', abi=2, trusted_source=True,
             native_escape_capable=True,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
@@ -347,7 +347,7 @@ class ReturningCallTests(unittest.TestCase):
                      'ff20', '41ff20'):
             with self.subTest(tail=tail):
                 assembly, options = self.indirect_tail_image(tail)
-                self.assertEqual(options['requirements'], 4992)
+                self.assertEqual(options['requirements'], 4992 | (1 << 13))
                 self.assertIn(b'kd_service_dispatch_100a:', assembly)
                 before = []
                 pointer = ctypes.c_ulong(0x5500)

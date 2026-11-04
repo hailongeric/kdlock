@@ -29,8 +29,9 @@ Legacy learning updates later immutable images. The original validated
 indirect CALL path may run a suffix on O; generic IJ/RET/JMP misses are errors.
 Neither policy completes the selected retained-lock requirement.
 
-For retained compiled execution, generated misses export source arithmetic
-flags before wrapper cleanup and a typed FULL event. The packet names the
+For current-position compiled execution, generated misses export a typed FULL
+event before wrapper cleanup. Existing optional arithmetic-flags handling is
+kept where available; general flags/SIMD restoration is deferred. The packet names the
 actual target and post-transfer source SP. An ordinary CALL already pushed its
 return word; RET already popped its word. Never repeat those effects.
 
@@ -84,7 +85,7 @@ validation boundary, not permission for origin completion.
 ## Delivery and focused checks
 
 1. Commit this correction and dependency map.
-2. Add flags-preserving original-backend miss/reentry contracts and distinct
+2. Add exact original-backend current-position miss contracts and distinct
    CALL/IJ learning, preserving ordinary immutable bindings.
 3. Connect current-position owner/lifetime handback and general API routing;
    replace the selected per-instruction emitter/cache path.
@@ -126,3 +127,18 @@ phase. Existing supported arithmetic-flags packet handling may remain, but it
 is not a claim of general architectural equivalence or a reason to delay lock
 custody work. Exact IP/GPR/SP, source CALL/RET effects and owner/ACK lifetime
 remain required.
+
+## One backend and reference dependencies
+
+Remove the per-instruction emitter, CPU code cache, module selector and runtime
+entry points. Preserve its fixed historical evidence at `fe06f8ad`; it is not an
+alternative execution mode. Move the C decoder/effect engine and adapter into
+standalone fixtures, and remove their objects from the provider link. Keep
+those fixture checks labeled as references, not original-JIT runtime validation.
+The original image backend is the only production JIT.
+
+An untranslated initial entry has executed no source body and has not published
+a delegated request. It records that boundary and takes ordinary C admission
+before continuing locally at that entry, preserving cancellation. A progressed
+miss must instead use exact current-position owner handback and final ACK; it
+must not return through the completed-body cleanup path.

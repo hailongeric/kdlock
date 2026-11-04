@@ -38,7 +38,7 @@ clobber_entry_v1:
 	.long clobber_body - . - 4
 	.ascii "KDAB"
 	.byte KD_GENERATED_ENTRY_ABI
-#if KD_GENERATED_REQUIREMENTS & 256
+#if KD_GENERATED_REQUIREMENTS & (256 | 8192)
 	.byte 3 /* retained-service publication protocol */
 	.byte KD_GENERATED_REQUIREMENTS & 255
 	.long KD_GENERATED_REQUIREMENTS

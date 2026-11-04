@@ -8,7 +8,7 @@ else
 KDIR ?= /lib/modules/$(shell uname -r)/build
 KDLOCK_ROOT ?= $(abspath ../../../..)
 KDLOCK_INCLUDE ?= $(KDLOCK_ROOT)/include
-KDLOCK_REACHED_SOURCE ?= $(KDLOCK_ROOT)/kernel_module/kd_reached.c
+KDLOCK_REACHED_SOURCE ?= $(KDLOCK_ROOT)/tests/kernel/reached_path/fixture/reference.inc
 .PHONY: all clean
 all:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) KDLOCK_INCLUDE=$(KDLOCK_INCLUDE) KDLOCK_REACHED_SOURCE=$(KDLOCK_REACHED_SOURCE) W=1 modules

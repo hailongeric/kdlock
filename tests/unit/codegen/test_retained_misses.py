@@ -16,6 +16,19 @@ class RetainedMissTests(unittest.TestCase):
             0x1000, blocks, databases, table, missing, {}, set(),
             body_witness=True, trusted_source=True, retained_misses=True).encode()
 
+    def test_cold_abi2_image_selects_full_contract_without_discovered_service(self):
+        from test_jit_diagnostics import render
+        options = {}
+        code, log, status = render('e8fb0f0000c3', lock_kind='mutex', abi=2,
+            trusted_source=True, body_witness=True, build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertTrue(options['requirements'] & (1 << 13))
+        self.assertFalse(options['requirements'] & (1 << 8))
+        regs, result = run_image(code, [0x1000], abi=2,
+            requirements=options['requirements'])[0]
+        self.assertEqual(result, [1, 1])
+        self.assertEqual(regs[0], 0x2000)
+
     def test_return_exports_post_pop_target_and_source_flags(self):
         # XOR sets ZF, STC sets CF; RET itself preserves both.
         code = self.emit('31c0f9c3')

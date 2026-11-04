@@ -139,7 +139,7 @@ def main():
         fixture = source / f"tests/kernel/reached_path/fixture/{MODULE}.ko"
         rt.command(["make", "-C", fixture.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
-                    f"KDLOCK_REACHED_SOURCE={source / 'kernel_module/kd_reached.c'}"],
+                    f"KDLOCK_REACHED_SOURCE={source / 'tests/kernel/reached_path/fixture/reference.inc'}"],
                    out / "build-fixture.log", timeout=180)
         binaries = {str(path): rt.digest(path) for path in (provider, fixture)}
         rt.write_json(out / "binary-sha256.json", binaries)

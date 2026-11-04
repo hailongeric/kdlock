@@ -1,4 +1,4 @@
-"""Guest-only checks of the production reached-frame entry/run adapter.
+"""Guest-only checks of the reference reached-frame entry/run adapter.
 
 The bounded scalar engine has a separate Native differential kernel fixture.
 Here only its begin/run calls and enclosing frame-readiness checks are replaced
@@ -15,7 +15,7 @@ from test_spin_shadow import definition
 
 
 def main():
-    source = read_source(ROOT / "kernel_module/execution/reached.inc")
+    source = read_source(ROOT / "tests/unit/execution/reached_reference_adapter.inc")
     production = "\n".join(definition(source, signature) for signature in (
         "int kd_exe_reached_begin(struct kd_exec_frame *frame,",
         "enum kd_reached_result kd_exe_reached_run(struct kd_exec_frame *frame,",

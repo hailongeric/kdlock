@@ -10,7 +10,7 @@ from test_spin_shadow import definition
 
 
 def main():
-    source = read_source(ROOT / 'kernel_module/execution/reached.inc')
+    source = read_source(ROOT / 'tests/unit/execution/reached_reference_adapter.inc')
     production = definition(source, 'static int kd_reached_frame_fetch(void *context, unsigned long address,')
     with tempfile.TemporaryDirectory(prefix='kd-reached-fetch-') as temporary:
         directory = Path(temporary)

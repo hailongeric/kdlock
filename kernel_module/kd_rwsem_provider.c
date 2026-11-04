@@ -243,14 +243,6 @@ int kd_rwsem_provider_prepare_entries(void)
 			result = -EINVAL;
 			goto out;
 		}
-		if (kd_service_reached_enabled()) {
-			/* Reached execution needs retained entry text and the same site
-			 * metadata, without reserving a whole executable image per site. */
-			result = kd_source_pin_root(sites[index].entry);
-			if (result)
-				goto out;
-			continue;
-		}
 		kd_exe_add_abi(0, sites[index].entry, KD_EXE_LOCK_MUTEX,
 			       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 		exe = kd_get_exe(0, sites[index].entry);
@@ -303,12 +295,6 @@ int kd_rwsem_provider_activate(void)
 	for (index = 0; index < count; ++index) {
 		struct kd_exe_info *exe = kd_exe_find_ready(0, sites[index].entry);
 
-		if (kd_service_reached_enabled()) {
-			result = kd_source_pin_root(sites[index].entry);
-			if (result)
-				goto out;
-			continue;
-		}
 		if (!kd_exe_capture_image(exe, sites[index].entry)) {
 			result = -EAGAIN;
 			goto out;

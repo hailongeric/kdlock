@@ -1,6 +1,10 @@
+This directory now retains a standalone decoder/effect reference. It is not a
+production interpreter or an alternative JIT. The provider uses the original
+compiled-image backend only. Historical receipts remain bound to their source.
+
 # Reached scalar execution check
 
-This focused check executes the exact `kernel_module/kd_reached.c` component in
+This focused check executes the exact `tests/kernel/reached_path/fixture/reference.inc` component in
 a separate kthread. Its canonical source RSP points into a retained fixture
 array on the waiting module-loading task's stack; the executor keeps its own
 kernel C stack. The payload records

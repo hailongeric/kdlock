@@ -25,7 +25,6 @@
 #include "kd_exec.h"
 #include "kd_exec_cont.h"
 #include "kd_reached_session.h"
-#include "kd_reached_jit.h"
 #include "kd_service_api.h"
 #include "kd_origin_service.h"
 #include "kd_source.h"
@@ -72,21 +71,6 @@
 
 /* Observation totals do not grant ownership or authorize retirement. */
 static bool kd_service_trace;
-static atomic64_t kd_reached_roots = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_completions = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_instructions = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_controls = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_primitives = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_memory = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_cache_hits = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_cache_misses = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_cache_full = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_unsupported = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_active = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_jit_entries = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_jit_retired = ATOMIC64_INIT(0);
-static atomic64_t kd_reached_interpreted_steps = ATOMIC64_INIT(0);
-
 /* One-shot high-level JIT fault injection for nested recovery tests. */
 static int kd_jit_hl_fault_after_known_call;
 module_param_named(jit_hl_fault_after_known_call,
@@ -200,8 +184,6 @@ static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/control_calls.inc"
 #include "execution/service_control.inc"
-#include "execution/reached.inc"
-#include "execution/reached_dispatch.inc"
 
 #include "execution/registry_publish.inc"
 
@@ -990,10 +972,6 @@ int kd_exe_resume_retained(struct kd_exec_frame *frame)
 	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
 	struct kd_regs *regs;
 
-	if (cont && cont->reached_active) {
-		kd_exe_reached_ack(frame);
-		return kd_exe_reached_dispatch(frame);
-	}
 
 	if (!cont || !cont->service_ops || cont->state != KD_CONT_BOUND ||
 	    cont->executor != current || kd_exec_current_frame() != frame ||
