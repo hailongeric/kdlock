@@ -155,3 +155,49 @@ Supply those fixture inputs explicitly; do not expand production exploration or
 change emitted requirements to make either fixture pass. Rerun only those two
 affected programs. These checks do not establish retained-owner handback or an
 executed mmap1 result for the corrected backend.
+
+## Retained handback joins
+
+Reuse the existing native-frame registry for permanent current-position
+handoff. Suspend before registration. Its typed service callbacks resolve the
+full retained owner list; ordinary mutex unlock and rwsem write release or
+downgrade route before local-only ownership checks. A stack request pins the
+frame across each callback outside the registry guard. Registry removal and
+the callback's final acknowledgment precede frame retirement. Initial restore
+does not call the completed-body helper or drop the capture callback reference.
+
+E transfers every live KD gate with the existing transfer/pickup operations.
+O picks up those gates on its independent waiting stack, copies the current
+packet onto its source stack, and publishes its final restore acknowledgment
+before continuing. Native locks already physically held by O transfer ledger
+custody, not physical exclusion: record this explicitly without claiming an
+unlock. E never resumes that source packet or acquires an invented writer.
+
+Anonymous read release needs an object-level join rather than a task lookup.
+Place a retained cohort pointer beside the real reader count in its existing
+cacheline padding. Attach a cohort only for a permanently handed-back read
+tail, while its actual read credit is still held. Extra local readers and
+non-owner releases remain anonymous Native-compatible credits. Cohort drainage
+is a conservative proof that every attached credit has gone; an unrelated
+first read release is not such a proof.
+
+For prepared objects every possibly final decrement, including speculative
+rollback, uses one x86 paired compare/exchange to change count one and its
+cohort pointer to zero and NULL together. A nonfinal count greater than one can
+use a count-only compare/exchange. Do not use a NULL-pointer check followed by
+an unconditional decrement: a delayed speculative rollback can overlap cohort
+publication. A removed pointer is not dereferenced until its successful paired
+operation. Its final acknowledgment touches retained metadata only, never the
+semaphore. The target Linux 7 header exposes `try_cmpxchg128`; provider setup
+must check the corresponding CPU capability before preparing objects. The
+ordinary unprepared local backend keeps its existing count operation.
+
+O continues directly after its own source release; it never waits for unrelated
+readers to drain. E retains the old cohort and owner anchors until drainage and
+all callback accesses finish, removes routing, then uses suspended completion
+and exact retirement. This can retain a worker longer than the source read
+tail; worker availability under long overlapping readers remains an explicit
+progress validation item, separate from read exclusion. Ordinary fully
+translated tails do not attach a cohort and retain their existing completion.
+The capture callback reference is dropped only after E's final retirement;
+module exit still stops service workers before freeing their storage.
