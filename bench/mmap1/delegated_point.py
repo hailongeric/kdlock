@@ -20,6 +20,14 @@ import traceback
 sys.dont_write_bytecode = True
 
 
+def jit_observations(parameters):
+    words = (parameters / 'reached_jit_stats').read_text().split()
+    values = {name: int(value) for name, value in (word.split('=') for word in words)}
+    assert set(values) == {'entries', 'retired', 'interpreted'}
+    assert values['entries'] >= values['retired'] >= 0 and values['interpreted'] == 0
+    return values
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, required=True)
@@ -83,6 +91,8 @@ def main():
             stats = bench.execution.reached_observations()
             assert stats['active'] == stats['unsupported'] == 0 and stats['roots'] == stats['completions']
             result['final_reached'] = stats
+            result['final_jit'] = jit_observations(parameters)
+            assert result['final_jit']['retired'] > original['jit_before']['retired']
             with open('/dev/kd_dev', 'rb', buffering=0) as device:
                 fcntl.ioctl(device, rt.RETIRE)
                 result['retired'] = rt.info(device.fileno())
@@ -156,6 +166,7 @@ def main():
             exact = QuiescentSession(prepared.path, prepared.sha256)
             exact.verify()
             result['reached_before'] = bench.execution.reached_observations()
+            result['jit_before'] = jit_observations(parameters)
             result['execution_session'] = exact.identity()
             result['prior_delegation_proof'] = c['delegation_proof']
         def verify():
@@ -186,6 +197,11 @@ def main():
             assert after['active'] == after['unsupported'] == 0 and after['roots'] == after['completions']
             assert after['roots'] > result['reached_before']['roots']
             result['reached_after'] = after
+            result['jit_after'] = jit_observations(controller.PARAMETERS)
+            result['jit_delta'] = {name: result['jit_after'][name] - result['jit_before'][name]
+                                   for name in result['jit_after']}
+            assert result['jit_delta']['entries'] >= result['jit_delta']['retired'] > 0
+            assert result['jit_delta']['interpreted'] == 0
             (controller.PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
             progress = dict(started_ns=time.monotonic_ns(),
                 bindings_before=int((controller.PARAMETERS / 'rwsem_provider_bindings').read_text()), cpus=[])
