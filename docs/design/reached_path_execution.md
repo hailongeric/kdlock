@@ -1162,3 +1162,36 @@ case variants, Unicode, split records and batch boundaries on the VM, retaining
 the real pipe and loss/storage tests. The next application attempt still
 requires both models, complete per-request proof and normal retirement.
 No kernel/API behavior, trace emission or public lock semantics change here.
+
+
+## Share one model collector with an exact application window
+
+The `06caaf073543e3923f143014e6a15a4843ec28be` diagnostic captured249,270,496
+auxiliary bytes with zero lost ranges after the text-scan change. Its child
+controller still failed the application capture. That controller runs two
+reader threads in one interpreter on CPU63: a whole-model lifecycle reader
+and a second reader for the application interval. They duplicate every active
+record and contend for the same interpreter. Treat that as the next measured
+collection problem; it is not evidence of an MM lock or signal defect.
+
+Use the already-running lifecycle collector for both obligations. A serialized
+checkpoint request is acknowledged only by its owning reader thread after
+scanning pending text and flushing raw output. The acknowledgement binds an
+exact raw-file offset, record count, errors and fault state. Keep raw offsets
+separate from the byte budget, which also includes error receipts. Checkpoint
+timeouts or a stopped reader fail; they never imply drain.
+
+Take checkpoints immediately before application launch and after its original
+verification interval. Copy exactly that immutable prefix interval to the
+application log, retaining source path and both offsets. Bound the copy by the
+existing application budget. Preserve all raw bytes and losses. The lifecycle
+reader remains active and owns its descriptor; run_point must not finish or
+close a borrowed collector. A completed window is not a drained lifecycle
+reader. The model still needs the existing final finish, complete full-model
+trace, exact source/frame retirement and normal unload; a later loss invalidates
+the model even when its earlier window was complete.
+
+The ordinary standalone runner keeps its own collector. No kernel logging,
+lock state, API, application, signal ordering or acceptance check is removed.
+Validate exact window boundaries, incomplete/lost capture rejection, active
+reader retention and the real run_point join on the VM before a fresh attempt.
