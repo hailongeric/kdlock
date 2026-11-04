@@ -976,3 +976,52 @@ MM-proof and source-identity checks in the VM. Then run one ordinary upstream
 lifetime per model. Inspect complete shutdown evidence before changing lock
 semantics. This is observation work, not a performance claim or a diagnosed
 fix for the outstanding shutdown failure.
+
+
+## Reached task-register instruction and bounded log writes
+
+Continue on `codex/reached-path-translation` with the implementation of
+`6f99fa27bb86a844356f59a740ef9ea25ea93945`. That candidate passed its
+component checks but the actual thread lifetime and complete log collection
+failed. A later ordinary page-fault path reached `0f 01 ee` at
+`ffffffff8140cb67`. Exact scope5 source has `__pkru_allows_pkey(u16, bool)`
+at `arch/x86/include/asm/pgtable.h:1604-1614`, calling the task-register read
+in `asm/pkru.h`/`asm/special_insns.h`. This is an inlined architecture helper,
+with possible separate compiler instances. Support the actual instruction
+rather than relying on one helper address or registering a private MM body.
+The source inventory is retained with the MM attempt.
+
+Extend the existing retained instruction channel with internal operation6,
+`KD_ORIGIN_MEMORY_TASK_READ`, for exactly the three reached bytes `0f 01 ee`.
+Keep the assembly-consumed prefix and two-word public wrapper ABI unchanged;
+append one scalar output field for the second result. Recognize no prefix,
+write instruction or adjacent source byte. Require width32, source ECX=0
+and the running CPU feature before publishing the service. Invalid inputs
+remain an explicit unsupported point before effects; do not pretend to
+reproduce a Native instruction exception or its fixups.
+
+O executes that one instruction on its real task stack, under the existing
+source-task/CPU, IRQ and preempt-count checks. Retain the packet, exact source
+bytes, family artifact, root generation and nested ownership through its ACK.
+E then commits zero-extended EAX and EDX, unchanged arithmetic flags and
+source SP, and the exact next IP. The ordinary MM branch and remaining body
+continue on E. No lock is reacquired, released, downgraded or canceled by this
+service; the held writer/read share and all nested records remain live.
+Killable acquisition still arbitrates before body entry and never reports a
+late cancellation after committed effects. Direct writes to this register,
+invalid ECX and unsupported instruction/context combinations stay explicit.
+
+The diagnostic also exposed per-record filesystem writes and a5ms pause
+after cursor loss. Use bounded64KiB file buffering and immediately resume
+reading after a lost cursor. Flush/close before reporting collection drain;
+retain every loss as a failed capture. No probe or record is removed. The
+auxiliary monitor can use the same bounded buffering and flush on a reported
+execution failure. These changes target collection cost; they are not proof
+that the earlier application timeout is fixed.
+
+VM validation: directly exercise the production decoder and Native scalar
+outputs/flags, malformed/truncated bytes and invalid descriptor fields; run
+the affected collector/MM-proof/source checks and build the provider/resident
+fixture. Then run one actual lifetime for each application model after a
+fresh explicit diagnostic boot and sufficient log headroom. Retain all
+failed, incomplete and unrun outcomes separately.

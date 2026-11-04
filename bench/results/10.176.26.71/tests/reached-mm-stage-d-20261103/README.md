@@ -725,3 +725,45 @@ contents and briefly stopping rsyslog needed explicit approval. That action
 did not run; no logs or services were changed. Approval is pending. Earlier
 rotations, frozen inputs, recovery data and all application evidence remain
 intact. The placement change is not a claimed lock-protocol correction.
+
+
+## Approved log preservation and twenty-fourth candidate
+
+After explicit user approval on November4, preserve complete verified
+compressed copies of the two current logs on build disk2. The first attempt
+stopped when rsyslog's still-active socket restarted its writer and the
+source stability check failed; neither live log was truncated. The retry
+paused the service and its activation socket together, verified both full
+copies before either truncation, and restarted normal logging afterward.
+[Receipt](log-headroom-20261104.json) retains original byte counts, hashes,
+archive paths and the unchanged earlier rotations. Root headroom returned
+to4,006,993,920 bytes; build disk2 had21,550,256,128 bytes free.
+
+Frozen candidate `6f99fa27bb86a844356f59a740ef9ea25ea93945` then transferred
+successfully to its own private input directory. All previous frozen bytes
+were verified unchanged. Three directly affected VM drivers passed20 unit
+cases, and the provider/resident builds passed67,643 assertions with normal
+fixture retirement and a final idle gate ([checks](twentyfourth-checks.json)).
+The actual diagnostic selects executor CPUs0–61, reserves62/63 for collectors
+and permits1024MiB per log; all loss/limit failures remain failures. The
+unchanged thread application exceeded its lifetime limit without captured
+upstream output; process validation was not started. Both primary log readers
+lost records. The independent monitor retained207,568,717 bytes but also
+reported325,804 cursor losses. No collection allowance was exhausted; this
+is a collection/progress failure, not a byte-limit failure. These component
+passes do not prove MM application completion or a performance gain.
+
+
+[Failed-attempt receipt](twentyfourth-attempt.json) preserves the exact
+configuration, counters, collector state and recovery. The later ordinary
+console reached `0f 01 ee` at `ffffffff8140cb67`, inside
+`__pkru_allows_pkey`, on a new status connection's page-fault path,
+`lock_mm_and_find_vma`, entry `ffffffff817dfd33`. This unsupported point
+occurred after the original application timeout and therefore does not by
+itself explain that timeout. The helper reads the origin task's CPU register;
+executing that read on E would use a different task's state. The recovery
+returned to the ordinary disabled-MM kernel, boot
+`52e91d8d-7cbe-4e38-8b13-335d48d503bb`; the next MM run requires a fresh
+explicit diagnostic boot. Root filled again from the ordinary duplicate logs.
+The user has been asked about temporary routing that preserves complete logs
+on build disk2; no routing change has been made.
