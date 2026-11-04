@@ -26,6 +26,7 @@
 #include "kd_exec_cont.h"
 #include "kd_reached_session.h"
 #include "kd_reached_jit.h"
+#include "kd_service_api.h"
 #include "kd_origin_service.h"
 #include "kd_source.h"
 #include "kd_jit_batch.h"
