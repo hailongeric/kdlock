@@ -156,3 +156,39 @@ retained instruction bridge is not validated. Keep the diagnostic check intact;
 this changes only the requested profiler data. Call-chain support is a separate
 remaining limitation, and no call-path attribution may be inferred from flat
 samples alone.
+
+## First profile and bounded dispatch iteration
+
+The flat two-thread profile completed with normal application return and exact
+normal retirement. It recorded no lost samples. Within its application window,
+22.24% of system-wide kernel cycles sampled worker-side queued-spin waiting;
+11.55% sampled the origin's IRQ-save locking. Origin instruction-service polling
+also occupied a substantial fraction. The first report did not resolve module
+addresses because recording began before module load; retain those raw values,
+and capture the actual module section addresses and symbol table before each
+subsequent profile. Do not attribute unresolved addresses solely from assumed
+module alignment. Flat samples identify cost locations, not complete callers.
+
+Source inspection identifies two avoidable dispatch costs in `kd_service.c`.
+Each ready-root notification calls `wake_up_all()` for the entire worker pool;
+every awakened worker takes the same dispatch guard even when only one root
+exists. Meanwhile, an origin whose custody is already on the executor repeatedly
+takes that guard to discover it cannot arbitrate. Keep all guard-protected
+selection, origin-signal cancellation, predecessor linking and retirement rules.
+Use an acquire-read solely as a negative hint to skip arbitration while actor
+custody says EXECUTOR; any attempt to arbitrate must still recheck under the
+guard. A custody change after the hint is handled on the next iteration and
+cannot authorize an origin action or cache an old object guard.
+
+Wake one exclusive worker for each ready-root notification. Workers read the
+work sequence before claiming and test it again when entering the wait, so a
+publication between claim and sleep is not lost. Every notification corresponds
+to one request, workers continue claiming queued work before sleeping, and
+shutdown retains its direct stop wake. This removes the all-worker competition
+without changing lock ordering, physical ownership or admission readiness.
+
+The untraced two-thread baseline returned132 pairs/s. Its first fresh retirement
+check observed nonzero bindings; a later exact retry observed zero and unloaded
+normally. Add a bounded five-second wait for those same exact zero conditions
+to the finalizer, recording observed counts. A timeout remains a failure;
+neither the application nor any timed interval is repeated for cleanup.
