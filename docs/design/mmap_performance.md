@@ -121,3 +121,27 @@ the provider only after receiving that line. The unchanged mmap1 executable
 is still launched directly by the benchmark runner. Record only its actual
 application time interval in the profile report; the helper is outside the
 throughput class and does not alter any production MM path.
+
+## Reached accounting arithmetic
+
+The next application attempt reached `ffffffff81828d5f` in
+`get_page_from_freelist`: `65 48 01 04 d5 60 0e 42 84`, an indexed GS-memory
+ADD using RAX. The current decoder supports register-destination ADD only.
+The worker stopped and the run failed its kernel-diagnostic requirement; its
+timing is not a performance result. Recovery preserves the recording and logs.
+
+Extend the general retained instruction channel with memory-destination ADD
+(operation9) and its read-only compare form (operation10). Both accept ordinary
+32/64-bit scalar addressing, import the exact register operand, execute the
+Native instruction on the original CPU and return arithmetic flags after ACK.
+ADD changes only the addressed memory; CMP changes no operand. Neither writes
+the captured source register. The read flag is explicit: operation9 is a write,
+irrespective of its numeric value. Reject ADD overlapping the preempt count:
+only the existing exact INC/DEC ownership protocol implements that transition.
+Image publication continues to refuse both reached-only operations.
+
+This is general scalar instruction support, with no symbol-specific branch or
+upfront control-flow expansion. Validate indexed and RIP-relative addressing,
+missing final bytes, source-register preservation, upper32-bit memory
+preservation and arithmetic flags against actual Native ADD/CMP. The application
+must return normally and retire before any throughput or profile is accepted.
