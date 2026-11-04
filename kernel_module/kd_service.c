@@ -981,7 +981,7 @@ static void kd_service_execute(struct kd_service_root *root)
 			smp_store_release(&root->actor, KD_SERVICE_ORIGIN);
 			_raw_spin_unlock_irqrestore(queue.guard, flags);
 			atomic64_inc(&kd_service_work_sequence);
-			wake_up_all(&kd_service_work);
+			wake_up(&kd_service_work);
 			return;
 		}
 		BUG_ON(decision != KD_WAIT_GRANTED);
@@ -1074,7 +1074,7 @@ static int kd_service_worker(void *unused)
 			set_cpus_allowed_ptr(current, kd_service_cpus[0] ?
 				&kd_service_cpu_pool : cpu_online_mask);
 		} else {
-			wait_event(kd_service_work, kthread_should_stop() ||
+			wait_event_exclusive(kd_service_work, kthread_should_stop() ||
 				atomic64_read(&kd_service_work_sequence) != sequence);
 		}
 	}
@@ -1398,29 +1398,30 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 		kd_admission_publish_locked(a);
 	_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
 	for (;;) {
-		bool arbitrate;
+		bool arbitrate = false;
 		bool notify = false;
 
-		/* Claim on every iteration: an executor may hand custody back
-		 * between the previous poll and this one. A notification read alone
-		 * never authorizes caching the object's old guard. */
-		flags = _raw_spin_lock_irqsave(dispatch.guard);
-		arbitrate = root->actor == KD_SERVICE_ORIGIN ||
-			root->actor == KD_SERVICE_ORIGIN_BUSY;
-		if (arbitrate && a->committed) {
-			/* Commitment ends origin arbitration. Keep this request
-			 * continuously dispatchable: retaking BUSY could make every
-			 * awakened worker miss the one ready notification. */
-			root->actor = KD_SERVICE_ORIGIN;
-			arbitrate = false;
-			if (!root->work_notified) {
-				root->work_notified = true;
-				notify = true;
+		/* Executor custody is only a negative hint. A return to origin
+		 * is reconsidered next iteration; every actual claim still uses
+		 * the dispatcher guard before touching admission or its guard. */
+		if (smp_load_acquire(&root->actor) != KD_SERVICE_EXECUTOR) {
+			flags = _raw_spin_lock_irqsave(dispatch.guard);
+			arbitrate = root->actor == KD_SERVICE_ORIGIN ||
+				root->actor == KD_SERVICE_ORIGIN_BUSY;
+			if (arbitrate && a->committed) {
+				/* Commitment ends arbitration. Keep the request ready
+				 * until a worker actually claims its custody. */
+				root->actor = KD_SERVICE_ORIGIN;
+				arbitrate = false;
+				if (!root->work_notified) {
+					root->work_notified = true;
+					notify = true;
+				}
+			} else if (arbitrate) {
+				root->actor = KD_SERVICE_ORIGIN_BUSY;
 			}
-		} else if (arbitrate) {
-			root->actor = KD_SERVICE_ORIGIN_BUSY;
+			_raw_spin_unlock_irqrestore(dispatch.guard, flags);
 		}
-		_raw_spin_unlock_irqrestore(dispatch.guard, flags);
 		if (arbitrate) {
 			decision = kd_service_admission_step(root);
 			if (decision == KD_WAIT_CANCELED) {
@@ -1440,7 +1441,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 		}
 		if (notify) {
 			atomic64_inc(&kd_service_work_sequence);
-			wake_up_all(&kd_service_work);
+			wake_up(&kd_service_work);
 		}
 		kd_service_origin_command(root);
 		if (smp_load_acquire(&root->transport) == KD_SERVICE_RESULT) {

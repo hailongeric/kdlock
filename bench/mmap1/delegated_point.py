@@ -65,8 +65,18 @@ def main():
             bench.verify_boot(args)
             parameters = controller.PARAMETERS
             assert (parameters / 'rwsem_provider_active').read_text().strip() == 'N'
-            assert (parameters / 'rwsem_provider_bindings').read_text().strip() == '0'
-            assert rt.status() == dict(state=0, modules=0, frames=0, writers=0)
+            deadline = time.monotonic() + 5
+            observed = []
+            while True:
+                state = dict(bindings=int((parameters / 'rwsem_provider_bindings').read_text()),
+                             source=rt.status())
+                if not observed or observed[-1]['state'] != state:
+                    observed.append(dict(at_ns=time.monotonic_ns(), state=state))
+                    result['retirement_observations'] = observed
+                if state == dict(bindings=0, source=dict(state=0, modules=0, frames=0, writers=0)):
+                    break
+                assert time.monotonic() < deadline, 'exact retirement state did not drain'
+                time.sleep(0.01)
             provider = Path(c['provider'])
             assert rt.digest(provider) == c['provider_sha256']
             assert rt.digest(bench.execution.NOTE) == bench.execution.module_note_sha256(provider)
@@ -117,6 +127,10 @@ def main():
             (out / 'load.log').write_text(r.stdout + r.stderr)
             assert r.returncode == 0, r.stderr
             parameters = controller.PARAMETERS
+            if c['profile']:
+                sections = Path('/sys/module/kdlock_km/sections')
+                result['provider_sections'] = {p.name: p.read_text().strip() for p in sections.iterdir()}
+                (out / 'kallsyms').write_bytes(Path('/proc/kallsyms').read_bytes())
             assert (parameters / 'service_trace').read_text().strip() == 'N'
             (parameters / 'rwsem_provider_mode').write_text('prepare\n')
             assert not rt.registry() and not bench.execution.device_writers()
