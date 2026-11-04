@@ -18,7 +18,7 @@ def main():
             (out / target).write_text(text)
         binary = out / 'jit-check'
         subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
-            '-std=gnu11', '-O2', '-no-pie', '-Wall', '-Wextra', '-Werror',
+            '-std=gnu11', '-O2', '-no-pie', '-fno-strict-aliasing', '-Wall', '-Wextra', '-Werror',
             '-I', str(ROOT / 'include'), '-I', str(ROOT / 'kernel_module'), '-I', str(out),
             str(ROOT / 'tests/unit/execution/jit_compile_fixture.c'), '-o', str(binary),
         ], check=True, timeout=45)

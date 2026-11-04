@@ -108,7 +108,8 @@ int main(void)
 		for (i=0;i<ARRAY_SIZE(f.memory);++i) f.memory[i]=(seed+1)*17+i;
 		f.regs=(struct kd_regs){.ip=0x1000,.sp=(unsigned long)&f.memory[20],.bp=(unsigned long)&f.memory[16],
 			.ax=(unsigned long)&f.memory[8],.bx=(unsigned long)&f.memory[0],.cx=seed&3,
-			.dx=~0UL,.si=(unsigned long)&f.memory[0],.di=(unsigned long)&f.memory[4],.flags=2|((seed&1)?0x8d5:0)};
+			.dx=~0UL,.si=(unsigned long)&f.memory[0],.di=(unsigned long)&f.memory[4],
+			.flags=2|((seed&1)?0x8d5:0)|((seed&4)?0x400:0)};
 		f.fail_read=mode==1;f.fail_write=mode==2;
 		before=f.regs;memcpy(old_memory,f.memory,sizeof(old_memory));
 		CHECK(!kd_reached_begin(&f.state,&f.regs,KD_PACKET_FULL,32));f.state.ops=&ops;f.state.context=&f;

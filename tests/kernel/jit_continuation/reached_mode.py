@@ -106,6 +106,30 @@ def validate_ledger(messages, successful, canceled=()):
     return result
 
 
+def validate_jit(messages, roots):
+    events = []
+    for line in messages.splitlines():
+        if 'kd_reached event=jit ' not in line:
+            continue
+        fields = dict(re.findall(r'(\w+)=([^\s]+)', line))
+        required = {'origin', 'executor', 'identity', 'generation', 'entries', 'retired', 'interpreted', 'code'}
+        rt.require(required <= fields.keys(), 'incomplete generated-code execution record', 'DATA_ERROR')
+        events.append({name: int(fields[name], 16 if name in ('identity', 'code') else 10)
+                       for name in required})
+    checked = []
+    for root in roots:
+        matches = [event for event in events if all(event[name] == root[name]
+                   for name in ('origin', 'identity', 'generation'))]
+        rt.require(len(matches) == 1, 'root lacks one exact generated-code completion record', 'DATA_ERROR')
+        event = matches[0]
+        rt.require(event['executor'] == root['executor'] != root['origin'] and
+                   event['entries'] >= event['retired'] > 0 and
+                   event['interpreted'] == 0 and event['code'] > 0,
+                   'root did not return from other-task JIT execution without interpretation', 'DATA_ERROR')
+        checked.append(event)
+    return checked
+
+
 def session_class(base):
     class ReachedSession(base):
         def service_generation(self):
@@ -163,6 +187,10 @@ def session_class(base):
 
         def phase_end(self, result, successful=(), canceled=(), **kwargs):
             super().phase_end(result, successful=successful, canceled=canceled, **kwargs)
+            messages = self.messages[self.trace_start:]
+            roots = [row for row in trace_events(messages) if row['event'] == 'enter' and
+                     row['origin'] in successful]
+            result['jit_execution'] = validate_jit(messages, roots)
             after = self.reached_stats()
             before = result['reached_before']
             rt.require(all(after[key] >= before[key] for key in STATS if key != 'active'),

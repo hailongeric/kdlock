@@ -124,6 +124,7 @@ class Services(unittest.TestCase):
                   f'kd_service event=release {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
                   f'kd_service event=returned {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
                   f'kd_reached event=retire {common} entry=a000 {family}']
+        lines.append(f'kd_reached event=jit {common} entries=2 retired=2 interpreted=0 code=c000')
         messages = '\n'.join(lines)
         self.assertEqual(item.validate_services(proof, [], messages, snapshot)['memory_transactions'], 1)
         for changed in (messages.replace('next=8003', 'next=8002'),
@@ -160,6 +161,7 @@ class Services(unittest.TestCase):
                       f'kd_service event=release {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
                       f'kd_service event=returned {common} object=1100 depth=0 entry=a000 may_delegate=1 {family}',
                       f'kd_reached event=retire {common} {family} entry=a000']
+            lines.append(f'kd_reached event=jit {common} entries=2 retired=2 interpreted=0 code=c000')
             return '\n'.join(lines)
         for width in (32, 64):
             messages = trace(width)

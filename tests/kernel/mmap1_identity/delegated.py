@@ -465,11 +465,12 @@ class Controller:
                 # Group once, rather than rescanning the entire MM trace for
                 # every request in an application lifetime.
                 checked = reached.validate_ledger('\n'.join(grouped.get(identity, [])), [root['origin']])
+                jit = reached.validate_jit('\n'.join(grouped.get(identity, [])), [root])
                 retired = retirements.get(identity, [])
                 rt.require(len(retired) == 1 and retired[0]['entry'] == root['entry'] and
                            retired[0]['family_generation'] == root['generation'],
                            'completed worker MM family lacks exact retirement')
-                ledger.append(dict(identity=list(identity), checked=checked, retirement=retired[0]))
+                ledger.append(dict(identity=list(identity), checked=checked, jit=jit, retirement=retired[0]))
             counts['family_artifact_ledger'] = ledger
         return dict(counts, captured_worker_roots=len(complete), other_worker_roots=len(complete.keys() - audited),
                     scope='complete captured worker MM roots; no expected source transaction count inferred')
