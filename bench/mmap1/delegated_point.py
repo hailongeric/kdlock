@@ -155,7 +155,9 @@ def main():
             assert profiler.returncode == 0
             result['profiler']['data_sha256'] = rt.digest(out / 'perf.data')
             command = ['perf', 'report', '--stdio', '--no-children', '--sort', 'comm,dso,symbol',
-                       '-i', str(out / 'perf.data'), '--percent-limit', '0.2']
+                       '-i', str(out / 'perf.data'), '--percent-limit', '0.2', '--time',
+                       '%.9f,%.9f' % (application['started_ns'] / 1e9,
+                           (application['started_ns'] + application['process_elapsed_ns']) / 1e9)]
             with (out / 'perf-report.txt').open('w') as report:
                 r = subprocess.run(command, stdout=report, stderr=subprocess.STDOUT, timeout=45)
             assert r.returncode == 0
