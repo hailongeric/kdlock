@@ -1216,3 +1216,30 @@ STOP and before any lifecycle summary parsing. Keep the same summary checks,
 timeouts, per-root proof and final full-model drain. This is a general buffered
 observation ordering fix, not a change to MM execution or lock semantics.
 Retain the failed attempt; it does not prove final source/provider retirement.
+
+
+## Drain after application exit and before CPU-intensive proof parsing
+
+The `583a875aef9e8977bfdbc99485df882b1123c9d7` summary checkpoint completed,
+but the full-model reader later lost records while proof parsing occupied
+the same interpreter. The workload had already returned and its roots had
+completed; background MM requests continued producing traces while the
+controller parsed hundreds of megabytes. The independent reader retained
+385,764,607 bytes without loss. Do not weaken the full-model loss gate.
+
+Move the existing normal factory deactivation and exact bindings/frames drain
+to immediately after successful application exit, stable observer STOP and
+verification of the still-active execution session. Then parse the retained
+application and lifecycle records. Keep the provider loaded and source open
+through all proof checks and the later explicit source retirement. Record
+DRAINING then VERIFYING states. The actual mmap1 lifetime runs entirely with
+the factory active; no application interval is moved to Native execution.
+Existing binding/ownership records must drain normally, with the same timeout
+and zero-count requirements, before CPU-intensive proof begins. A failed
+drain remains a failed run with live state retained.
+
+No kernel protocol, application, trace event or acceptance requirement changes.
+This reorders existing post-application lifecycle operations. Native task/MM
+identity, every captured service transaction, read-tail execution and later
+writer observation are still checked. Final retirement and ordinary unload
+remain mandatory after proof.
