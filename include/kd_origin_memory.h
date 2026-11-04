@@ -25,6 +25,7 @@ struct kd_native_owner;
 #define KD_ORIGIN_MEMORY_SUB 5U
 #define KD_ORIGIN_MEMORY_TASK_READ 6U
 #define KD_ORIGIN_MEMORY_LOAD_SIGNED 7U
+#define KD_ORIGIN_MEMORY_ADD 8U
 #define KD_ORIGIN_MEMORY_READ 1U
 
 struct kd_origin_memory_site {

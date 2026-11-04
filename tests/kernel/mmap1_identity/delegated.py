@@ -401,7 +401,7 @@ class Controller:
                         fields = ('origin', 'executor', 'identity', 'generation', 'sequence', 'image_generation',
                                   'ip', 'next', 'sp', 'offset', 'width', 'operation', 'preempt_operand',
                                   'preempt_seq', 'preempt_object', 'input_flags', 'destination', 'read')
-                        operations = (1, 2, 3, 4, 5, 6, 7) if self.reached else (1, 2, 3, 4)
+                        operations = (1, 2, 3, 4, 5, 6, 7, 8) if self.reached else (1, 2, 3, 4)
                         rt.require([event['stage'] for event in part] in (['request', 'enter', 'done', 'resume'],
                                    ['request', 'enter', 'done', 'complete']) and
                             first['image_generation'] == generations[root['entry']] and
@@ -415,7 +415,7 @@ class Controller:
                             [event['task'] for event in part] == [root['executor'], root['origin'], root['origin'], root['executor']] and
                             part[2]['output_flags'] == part[3]['output_flags'] and part[2]['value'] == part[3]['value'],
                             'GS transaction instruction/context/result identity differs')
-                        if first['operation'] == 5:
+                        if first['operation'] in (5, 8):
                             rt.require(all('source_value' in event and
                                        event['source_value'] == first.get('source_value') for event in part) and
                                        all(event['value'] == 0 for event in part[:2]) and

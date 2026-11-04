@@ -165,6 +165,7 @@ int main(void)
 		const struct { const char *hex; u8 op; unsigned long ip; } actual[] = {
 			{ "654c8b252649c102", KD_ORIGIN_MEMORY_LOAD, 0xffffffff817f66daUL },
 			{ "65482b15f848c102", KD_ORIGIN_MEMORY_SUB, 0xffffffff817f6708UL },
+			{ "6548031d7723be02", KD_ORIGIN_MEMORY_ADD, 0xffffffff81828ca9UL },
 		};
 		unsigned int item;
 		for (item = 0; item < sizeof(actual) / sizeof(actual[0]); ++item) {
@@ -179,9 +180,10 @@ int main(void)
 			CHECK(!kd_origin_memory_reached_decode(&reached, input.ip, reached_read, &source));
 			CHECK(source.calls == 8 && !memcmp(&input, &reached, sizeof(input)));
 			CHECK(!kd_origin_memory_decode(&reached, &regs, &address));
-			CHECK(address == 0xffffffff8440b008UL);
+			CHECK(address == (actual[item].op == KD_ORIGIN_MEMORY_ADD ?
+				0xffffffff8440b028UL : 0xffffffff8440b008UL));
 			CHECK(!kd_memory_operand_decode(&reached, &decoded) &&
-				decoded.destination == (item ? 2 : 12));
+				decoded.destination == (actual[item].op == KD_ORIGIN_MEMORY_ADD ? 3 : item ? 2 : 12));
 		}
 	}
 	input = site("65ff00", 1, 32);
@@ -340,17 +342,28 @@ int main(void)
 	{
 		const unsigned long values[] = { 0, 1, 0x7fffffff, 0x80000000,
 			0xffffffff, 0x8000000000000000UL, ~0UL };
-		unsigned int width, left, right;
+		unsigned int width, left, right, arithmetic;
 		unsigned long expected, native_flags, source_value;
+		for (arithmetic = 0; arithmetic < 2; ++arithmetic)
 		for (width = 32; width <= 64; width *= 2)
 		for (left = 0; left < sizeof(values) / sizeof(values[0]); ++left)
 		for (right = 0; right < sizeof(values) / sizeof(values[0]); ++right) {
-			input = site(width == 32 ? "652b10" : "65482b10", KD_ORIGIN_MEMORY_SUB, width);
+			input = site(arithmetic ? (width == 32 ? "650310" : "65480310") :
+				(width == 32 ? "652b10" : "65482b10"),
+				arithmetic ? KD_ORIGIN_MEMORY_ADD : KD_ORIGIN_MEMORY_SUB, width);
 			cpu_data[0] = source_value = values[right];
 			expected = operation.source_value = values[left];
 			operation.effective_offset = 0;
 			operation.input_flags = 0x897;
-			if (width == 32)
+			if (arithmetic && width == 32)
+				asm volatile("addl %k[right],%k[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+			else if (arithmetic)
+				asm volatile("addq %[right],%[left]; pushfq; popq %[flags]"
+					: [left] "+r"(expected), [flags] "=r"(native_flags)
+					: [right] "r"(source_value) : "cc", "memory");
+			else if (width == 32)
 				asm volatile("subl %k[right],%k[left]; pushfq; popq %[flags]"
 					: [left] "+r"(expected), [flags] "=r"(native_flags)
 					: [right] "r"(source_value) : "cc", "memory");
