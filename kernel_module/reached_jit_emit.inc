@@ -107,8 +107,8 @@ static void patch(struct jit_output *o, unsigned int position, unsigned int targ
 static void call(struct jit_output *o, unsigned long target)
 {
 	long distance = target - (unsigned long)(o->code + o->length + 5);
-	if ((long)(s32)distance != distance) o->error = -ERANGE;
-	j8(o, 0xe8); j32(o, distance);
+	if ((long)(s32)distance == distance) { j8(o, 0xe8); j32(o, distance); }
+	else { constant(o, R11, target); j8(o, 0x41); j8(o, 0xff); j8(o, 0xd3); }
 	/* Helpers return a precise event before packet commitment on failure. */
 	j8(o, 0x85); j8(o, 0xc0);
 	if (o->failure_count == ARRAY_SIZE(o->failures)) { o->error = -ENOSPC; return; }
@@ -398,8 +398,13 @@ commit:
 	for (i = T + 1; i-- > S;) { j8(o, 0x41); j8(o, 0x58 | (i & 7)); }
 	{
 		long distance = return_target - (unsigned long)(o->code + o->length + 5);
-		if ((long)(s32)distance != distance) o->error = -ERANGE;
-		j8(o, 0xe9); j32(o, distance);
+		if ((long)(s32)distance == distance) { j8(o, 0xe9); j32(o, distance); }
+		else {
+			constant(o, R11, return_target);
+			/* Direct-thunk semantics across a far address: the target need
+			 * not be an ordinary indirect function entry. */
+			j8(o, 0x3e); j8(o, 0x41); j8(o, 0xff); j8(o, 0xe3);
+		}
 	}
 	return o->error ? o->error : (int)o->length;
 }

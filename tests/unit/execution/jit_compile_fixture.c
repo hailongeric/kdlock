@@ -89,9 +89,10 @@ int main(void)
 		"48870b","f0480fc10b","f0480fb10b","f0480fba3301","480fba2301",
 	};
 	struct fixture f;
-	unsigned int test, seed, mode;
+	unsigned int test, seed, mode, placement;
+	for (placement=0;placement<2;++placement) {
 	u8 *code = mmap(NULL, KD_REACHED_JIT_SLOT_BYTES, PROT_READ|PROT_WRITE|PROT_EXEC,
-		MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0);
+		MAP_PRIVATE|MAP_ANONYMOUS|(placement ? 0 : MAP_32BIT), -1, 0);
 	CHECK(code != MAP_FAILED);
 	for (test=0;test<ARRAY_SIZE(cases);++test)
 	for (seed=0;seed<8;++seed)
@@ -136,6 +137,7 @@ int main(void)
 		CHECK(f.state.jit_code>=(unsigned long)code && f.state.jit_code<(unsigned long)code+length);
 	}
 	CHECK(!munmap(code,KD_REACHED_JIT_SLOT_BYTES));
+	}
 	printf("Native reached JIT: %u checks, %zu instruction forms, zero interpreted steps\n",checks,ARRAY_SIZE(cases));
 	return 0;
 }
