@@ -232,6 +232,8 @@ class Controller:
         raise rt.Failure('TIMEOUT', label + ' did not complete; live state retained', unsafe=True)
 
     def prepare(self):
+        rt.require(shutil.disk_usage('/').free >= 2 * GIB + GIB // 4,
+                   'fresh root diagnostic headroom below 2.25 GiB')
         self.env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', LC_ALL='C',
             PATH=str(Path(sys.executable).parent) + ':/usr/sbin:/usr/bin:/sbin:/bin', TMPDIR=str(self.out / 'tmp'))
         self.env.pop('KD_DEVICE_FD', None)

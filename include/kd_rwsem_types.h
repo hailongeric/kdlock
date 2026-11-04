@@ -10,7 +10,9 @@
  * is in progress; request generations come from the shared queue namespace. */
 struct kd_rwsem_condition {
 	struct kd_wait_node *head;
-	u64 reserved[2];
+	/* Guarded local reader memberships, never an acquisition/owner count. */
+	u64 readers_waiting;
+	u64 reserved;
 };
 
 static inline bool
@@ -53,8 +55,8 @@ struct kd_rwsem {
 	.selected_identity = NULL, .phase_generation = 0, \
 	.readers = ATOMIC_LONG_INIT(0), \
 	.admission = ATOMIC_LONG_INIT(0), \
-	.phase_wait = { .head = NULL, .reserved = { 0, 0 } }, \
-	.reader_drain = { .head = NULL, .reserved = { 0, 0 } }, \
+	.phase_wait = { .head = NULL, .readers_waiting = 0, .reserved = 0 }, \
+	.reader_drain = { .head = NULL, .readers_waiting = 0, .reserved = 0 }, \
 	.reader_osq = OSQ_LOCK_UNLOCKED, \
 }
 #define DECLARE_KD_RWSEM(name) \

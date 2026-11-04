@@ -46,11 +46,17 @@ def main():
         'executor_signal_instead_of_origin': lambda text: replace_once(text,
             'if (!signal_pending_state(request->wait_state, request->logical_origin))',
             'if (!signal_pending_state(request->wait_state, current))'),
+        'writer_bypasses_queued_readers': lambda text: replace_once(text,
+            'if (sem->phase_wait.readers_waiting ||\n\t\t\t    atomic_long_cmpxchg',
+            'if (atomic_long_cmpxchg'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-admission-') as directory:
         path = Path(directory)
         (path / 'admission_types.h').write_text(headers)
         (path / 'admission_physical.h').write_text(owner)
+        reader = read_source(ROOT / 'kernel_module/kd_rwsem.c')
+        (path / 'reader_wait_production.h').write_text(definition(
+            reader, 'static long kd_rwsem_wait_condition(struct kd_rwsem *sem,'))
         for name, mutate in [('production', None), *mutations.items()]:
             (path / 'admission_production.h').write_text(body if mutate is None else mutate(body))
             binary = path / name

@@ -83,6 +83,9 @@ static long kd_rwsem_wait_condition(struct kd_rwsem *sem,
 			     current, current, state, false, sem);
 	kd_wait_node_init(&node, &request, KD_WAIT_CONDITION);
 	kd_wait_link_locked(&queue, &node);
+	BUG_ON(condition != &sem->phase_wait ||
+	       condition->readers_waiting == U64_MAX);
+	++condition->readers_waiting;
 	for (;;) {
 		/* Publish the state before checking signals. A signal between the
 		 * predicate and schedule then either sets RUNNING or is observed here. */
@@ -101,10 +104,15 @@ static long kd_rwsem_wait_condition(struct kd_rwsem *sem,
 		if (timed)
 			remaining = schedule_timeout(remaining);
 		else
-			schedule();
+			/* Phase reopening is the final object RMW after wake collection.
+			 * A reader can link in that interval; retry its real predicate
+			 * on a timer even if it missed that earlier notification. */
+			schedule_timeout(1);
 		flags = _raw_spin_lock_irqsave(queue.guard);
 	}
 	__set_current_state(TASK_RUNNING);
+	BUG_ON(!condition->readers_waiting);
+	--condition->readers_waiting;
 	kd_wait_unlink_locked(&queue, &node);
 	BUG_ON(request.memberships || request.acquisition || request.selection);
 	kd_wait_set_state_locked(&request, KD_WAIT_RETIRED);
@@ -123,11 +131,11 @@ void kd_rwsem_init(struct kd_rwsem *sem)
 	atomic_long_set(&sem->readers, 0);
 	atomic_long_set(&sem->admission, 0);
 	sem->phase_wait.head = NULL;
-	sem->phase_wait.reserved[0] = 0;
-	sem->phase_wait.reserved[1] = 0;
+	sem->phase_wait.readers_waiting = 0;
+	sem->phase_wait.reserved = 0;
 	sem->reader_drain.head = NULL;
-	sem->reader_drain.reserved[0] = 0;
-	sem->reader_drain.reserved[1] = 0;
+	sem->reader_drain.readers_waiting = 0;
+	sem->reader_drain.reserved = 0;
 	osq_lock_init(&sem->reader_osq);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
@@ -353,7 +361,8 @@ int kd_down_write_trylock(struct kd_rwsem *sem)
 	local_irq_save(flags);
 	if (!_raw_spin_trylock(&sem->gate.wait_lock))
 		goto restore;
-	if (sem->gate.wait_head || atomic_long_read(&sem->admission))
+	if (sem->gate.wait_head || sem->phase_wait.readers_waiting ||
+	    atomic_long_read(&sem->admission))
 		goto unlock;
 	gate_held = kd_mutex_admission_trylock_locked(&sem->gate, &request);
 	if (!gate_held)

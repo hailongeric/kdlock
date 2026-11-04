@@ -142,7 +142,11 @@ static bool kd_admission_ready(struct kd_wait_request *request, void *argument)
 	       (atomic_long_read(&a->gate->owner) & KD_ADMISSION_PICKUP));
 	if (sem) {
 		if (!a->phase_held) {
-			if (atomic_long_cmpxchg(&sem->admission, 0, -1) != 0) {
+			/* Keep an existing local-reader cohort's admission open until
+			 * its exact condition memberships acquire or cancel. No credit
+			 * is granted here; a new phase still freshly drains real readers. */
+			if (sem->phase_wait.readers_waiting ||
+			    atomic_long_cmpxchg(&sem->admission, 0, -1) != 0) {
 				kd_admission_condition_locked(a);
 				return false;
 			}
