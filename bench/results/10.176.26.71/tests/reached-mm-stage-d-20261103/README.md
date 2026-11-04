@@ -782,3 +782,28 @@ actual application run followed this component failure. The source tree is
 frozen separately, and the runtime implementation is unchanged by the fixture
 correction. The next actual run still requires complete log headroom and the
 pending temporary-routing decision.
+
+
+## Twenty-sixth candidate: `b2e96afe`
+
+Exact source `b2e96afe229ac43c6ee05f186517615a48103385` passed528 Native
+instruction/decoder checks,21 affected unit cases and67,643 resident assertions,
+with provider build and final fixture drain ([checks](twentysixth-checks.json)).
+The actual thread attempt used the normal log paths,512MiB child allowances
+and a1GiB auxiliary allowance on boot `12de0f19-7bd8-4076-8a93-c0c82c63b49a`.
+It exceeded the application lifetime limit and lost trace records. The
+independent monitor retained168,240,232 bytes with233,332 losses. These
+instrumented attempts are not a comparable throughput series. Process-model
+validation remains unrun; no current MM success or speedup is claimed.
+
+The [attempt receipt](twentysixth-attempt.json) retains ordinary console and
+recovery identities. A later background `cron` page fault reached
+`get_vma_policy+0x82`, `ffffffff81870a52`, with runtime first byte65. The exact
+matching scope5 ELF has `65 48 63 05 66 0d bb 02`, a GS signed32-to64 load of
+`numa_node`. This point followed the initial timeout and does not independently
+explain it. A bounded ordinary status connection failed its banner exchange;
+no successful live task snapshot was obtained. Console records were preserved
+before recovery to idle diagnostic boot
+`220dc789-0a1f-429f-a795-0e70af2b0f2d`. The prior approved log preservation was
+repeated with full verification ([second receipt](log-headroom-second-20261104.json));
+no earlier records were removed. Temporary routing is still unperformed.

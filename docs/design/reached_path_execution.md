@@ -1038,3 +1038,44 @@ while that separate request is pending. Both successful models still require
 normal upstream exit, complete traces, exact ownership and source retirement.
 The task-register read remains a synchronous service whenever its source
 query is reached; no cached task-state authority or speedup is claimed.
+
+
+## Reached signed GS load and active request observations
+
+The `b2e96afe229ac43c6ee05f186517615a48103385` application diagnostic still
+failed its lifetime and complete-trace gates. Later ordinary console output
+reached `get_vma_policy+0x82`, `ffffffff81870a52`, on a background page-fault
+path. The runtime reported its first GS byte; the matching scope5 ELF has
+`65 48 63 05 66 0d bb 02`, loading the source CPU's signed32 NUMA-node value
+into a64-bit register. The reached decoder must validate all actual bytes
+before service; the static ELF is identification evidence, not a live-byte
+receipt. No private policy helper or MM algorithm body is moved to O.
+
+Add internal operation7, `KD_ORIGIN_MEMORY_LOAD_SIGNED`, for GS opcode63 with
+REX.W and the existing supported64-bit memory addressing. Width64 denotes
+the destination; the source access is four bytes. O executes one actual
+`movslq` with unchanged arithmetic flags. E commits the sign-extended result
+only after the existing exact ACK, preserving source SP and the next IP.
+Reject word/address-size forms and register SP destinations. Reached-only
+publication remains explicit. Classify preempt-count overlap using the
+four-byte source width; retain source-task/CPU, IRQ and ownership checks.
+This read is normally encountered on the default policy branch, so every
+reached occurrence currently costs a synchronous service. No cached CPU-value
+proof or performance gain is claimed. Public lock behavior, killable
+arbitration, nested records and downgrade/read-tail transitions are unchanged.
+
+Add read-only `service_progress` metadata for at most eight active roots.
+The existing dispatch guard protects root/worker lifetimes while formatting;
+report total/shown counts explicitly. Read only retained scalar identity,
+generation, phase, virtual PC and service-state fields. Never dereference an
+unlocked lock object, copy a packet, change request state or add a new global
+lock. Concurrent execution fields are diagnostic observations, not an atomic
+execution snapshot or ownership authority. The normal execution path does
+not update new counters or publish new notifications for this view.
+
+The prestarted monitor may read this view at a bounded rate and retain it
+before reporting a failed application. This avoids starting a new inspection
+process after failure. It must not turn a timeout into a drain, or use these
+observations to grant, cancel, unlock or retire anything. Validate signed
+values, addressing, destination and flag behavior through the existing
+production decoder/Native fixture, then build and run focused MM checks.
