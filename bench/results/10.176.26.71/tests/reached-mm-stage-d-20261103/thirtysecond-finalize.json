@@ -1,0 +1,99 @@
+{
+  "accepted": false,
+  "application": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103/processes/application/result.json",
+    "sha256": "ddd93be34e27e4b6c989c94599e87036eac9ab30df144dd4208185374d6cb814"
+  },
+  "before": {
+    "reached": {
+      "active": 0,
+      "cache_full": 3882942,
+      "cache_hits": 202660,
+      "cache_misses": 13427029,
+      "completions": 2536,
+      "controls": 3779,
+      "instructions": 13629689,
+      "memory": 78692,
+      "primitives": 31544,
+      "roots": 2536,
+      "unsupported": 0
+    },
+    "source": {
+      "frames": 0,
+      "modules": 0,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "before_retire": {
+    "reached": {
+      "active": 0,
+      "cache_full": 3882942,
+      "cache_hits": 202660,
+      "cache_misses": 13427029,
+      "completions": 2536,
+      "controls": 3779,
+      "instructions": 13629689,
+      "memory": 78692,
+      "primitives": 31544,
+      "roots": 2536,
+      "unsupported": 0
+    },
+    "source": {
+      "frames": 0,
+      "modules": 0,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "boot_id": "3a0fbe8f-b6f1-49d1-975b-033461f3e9ae",
+  "case": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103",
+  "completed_requests": 2476,
+  "continuation_criterion": {
+    "downgraded_read_tails": 1237,
+    "later_same_executor_writer_pairs": 1207,
+    "scope": "positive trace observations; fresh reader drainage is not inferred"
+  },
+  "downgraded_read_tails": 1237,
+  "drained": true,
+  "final_idle": true,
+  "kernel_log_collection": {
+    "bytes": 1117,
+    "collector_cpu": 63,
+    "complete": true,
+    "drained": true,
+    "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-finalize-20261104-retry2/kernel-log-errors.jsonl",
+    "errors": 0,
+    "fault_detected": false,
+    "first_error": null,
+    "last_error": null,
+    "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-finalize-20261104-retry2/kernel.log",
+    "max_bytes": 67108864,
+    "mode": "continuous-diagnostic",
+    "records": 12
+  },
+  "lifecycle": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103/processes/lifecycle-log/result.json",
+    "sha256": "904f5b6d5c892d9def5bf04253a901fba73c56d4bc60275dafecc853f6e19c86"
+  },
+  "model": "processes",
+  "original_failed_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103/result.json",
+    "sha256": "164b640f2b643d747ffaed93a9f77508bd5a7acdf7473ce5a736a636f42016c0"
+  },
+  "original_failure_preserved": true,
+  "passed": true,
+  "proof": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-finalize-20261104-retry2/delegated-proof.json",
+    "sha256": "899a68c516f76c7d0e7edcfbd9d0d04151cbfb29e2638e467995e7d2fc144cfb"
+  },
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "scored": false,
+  "source_commit": "bfdc35e29d79d3db12dcfb071f2d1ad3438cc71e",
+  "syscall_pairs": 16
+}

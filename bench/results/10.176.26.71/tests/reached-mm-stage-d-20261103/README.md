@@ -925,3 +925,41 @@ in post-application validation. The failed transfer before this run stopped
 at the root-headroom gate and transferred nothing; the user-approved current
 log cleanup restored3,966,492,672 free bytes, then a separate retry succeeded.
 Earlier files and every failed outcome remain retained.
+
+
+## Thirty-second candidate: `bfdc35e2`; separate process verification
+
+Exact source `bfdc35e29d79d3db12dcfb071f2d1ad3438cc71e` passed562 instruction
+checks,24 affected unit cases and67,643 resident assertions, with provider
+build and fixture drain ([checks](thirtysecond-checks.json)). Its first host
+preflight observed changing QEMU task identities and stopped before a guest
+test; a fresh read-only capture passed. The unchanged two-process application
+returned normally and both its window and full lifecycle capture are complete.
+The [original attempt](thirtysecond-attempt.json) then timed out at the binding
+drain gate with two object leases and zero frames. After the observing
+controller and monitor exited, a fresh ordinary read found zero bindings
+and the same completed counters. Existing MM objects correctly retain their
+provider through their lifetime; deactivation closes only future binding.
+
+The separately recorded [verification and normal retirement](thirtysecond-finalize.json)
+passed on the same boot/module with the immutable candidate's unchanged
+validators. It joined2,476 completed other-task mmap/munmap requests,1,237
+delegated downgraded read tails,1,207 later same-executor writer observations
+and16 sampled syscall pairs. All captured Native services and per-root family/
+artifact retirement records passed. The original failed controller result
+is unchanged. The fresh process required inactive factory and zero bindings,
+frames and writers before issuing the ordinary source-retirement ioctl. It
+obtained retired state2 with all counts zero, unloaded observer/provider
+normally, and passed final idle and error-free log collection.
+
+Two preliminary finalizer environment gates stopped before proof/retirement: a
+missing recovery-confirmation environment and then an unpinned python3 PATH.
+Both were corrected using the existing requirements and a real fresh host
+snapshot observation; neither gate was weakened. [Inputs and failed preflights](thirtysecond-finalize-inputs.json)
+retain all script/configuration hashes. This validates these captured process
+lifetimes and normal final retirement, not an automatic end-to-end pass of
+the original single-process controller, general configuration coverage or
+performance. Fresh reader drainage was not directly observed; physical batch
+length and all-application invocation accounting remain explicitly unmeasured.
+The next distinct application check uses threads first on the same frozen
+source and boot, with independent outputs.
