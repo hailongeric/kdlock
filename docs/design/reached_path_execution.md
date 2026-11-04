@@ -50,6 +50,14 @@ The ordinary image backend remains separate. No performance gain is assumed
 from the first compiler unit; all timings must identify the JIT candidate and
 must not be pooled with the previous interpreter measurements.
 
+The first VM fixture build at `e4980225` stopped before execution: the shared
+Native bit-operation helper assumes the kernel's `-fno-strict-aliasing` build
+contract. Apply that same flag to the standalone differential fixture while
+retaining warnings as errors. No generated-code or provider check passed in
+that attempt. Actual continuation and MM checks additionally require one
+generated-code witness per successful root, matching executor/request identity,
+positive entry/retirement counts and zero interpreted steps.
+
 Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
