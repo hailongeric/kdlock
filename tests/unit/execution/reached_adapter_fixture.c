@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Production begin/run adapter with observed scalar-core and readiness calls.
+/* Reference begin/run adapter with observed scalar-core and readiness calls.
  * This proves frame/packet bookkeeping, not actual lock or instruction effects. */
 #include <errno.h>
 #include <limits.h>
@@ -273,6 +273,6 @@ int main(void)
 	reused_frame_checks();
 	progress_checks();
 	routing_checks();
-	printf("production reached adapter: %u checks, 0 failures\n", checks);
+	printf("reference instruction adapter: %u checks, 0 failures\n", checks);
 	return 0;
 }

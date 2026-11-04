@@ -17,6 +17,23 @@ SPEC.loader.exec_module(controller)
 
 
 class Sites(unittest.TestCase):
+    def test_controller_requires_original_images_before_any_output(self):
+        for mode in (None, 'image', 'reached', 'other'):
+            with self.subTest(mode=mode), patch.object(controller.Controller, 'save') as save:
+                args = SimpleNamespace(source_commit='a' * 40, boot_id='boot',
+                                       model_order='threads-first')
+                if mode is not None:
+                    args.execution_mode = mode
+                if mode in (None, 'image'):
+                    item = controller.Controller(args, Path('/unused'), {}, None, {}, {})
+                    self.assertFalse(item.reached)
+                    save.assert_called_once_with()
+                else:
+                    with self.assertRaisesRegex(controller.rt.Failure,
+                                                'original JIT image execution required'):
+                        controller.Controller(args, Path('/unused'), {}, None, {}, {})
+                    save.assert_not_called()
+
     def test_merged_rodata_and_equal_bound_aliases_keep_exact_site_set(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

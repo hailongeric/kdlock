@@ -153,7 +153,9 @@ callee fixture omitted its learned callee entry after bounded exploration was
 restored, so the service inside that callee was correctly absent from its image.
 Supply those fixture inputs explicitly; do not expand production exploration or
 change emitted requirements to make either fixture pass. Rerun only those two
-affected programs. These checks do not establish retained-owner handback or an
+affected programs after the overall functionality is complete, following the
+later testing-order instruction. No intermediate rerun has been launched.
+These checks do not establish retained-owner handback or an
 executed mmap1 result for the corrected backend.
 
 ## Retained handback joins
@@ -238,3 +240,70 @@ last-access stack acknowledgment; builtin `provider.c` binding get/put; adapter
 object initialization/destruction; and `kd_source_begin_retire`'s refusal while
 bound objects remain. None proves that a translated frame can simply disappear
 while another actor still has one of its pointers.
+
+## Independent reuse inventory
+
+This inventory was checked against `bfcb0852`. It does not select or implement
+the pending read-credit alternative. O denotes the original task, E the service
+worker, and ACK an acknowledgment of the specified actor's final access.
+
+| Existing storage | Location and owner | Lifetime that must be preserved |
+| --- | --- | --- |
+| Root continuation, outer admission and packet | `kd_service_root`, preallocated service record and `node->regs`; a capacity spill is allocated only after real acquisition commits | Keep the UID/generation and source/task/stack lease until the exact retirement boundary. Storage allocation must not conceal killable cancellation. |
+| Nested KD owner and request | `kd_service_nested`'s E-stack `child`; linked through `scope.owners` | `kd_service_run_scope` retains its C activation. Do not unwind while any actor or route can still refer to the child. Non-LIFO release does not change storage lifetime. |
+| Additional Native owner | `kd_service_native_spill`'s E-stack `owner`, beyond the root's eight preallocated records | Keep the activation while its Native ownership record is live. A future custody transition must be explicit; it cannot merely clear `held`. |
+| Native release request | `kd_exec_native_unlock`'s O-stack `kd_native_request` | E clears its frame request and removes completed routing before its final store to `request.done`. O then reads only its own request, not a potentially retired frame. |
+| Current source packet | Original generated FULL export in the existing packet | A missing CALL has already pushed its source return word; a missing RET has already popped it. Restore the first unexecuted IP without rebuilding or replaying the entry packet. |
+| Final restore copy | Existing `kd_service_resume_packet`'s O-stack local packet | This is a completion helper, not an initial-handback helper. It frees the root and may drop the callback module reference; live owner records cannot be left behind. |
+
+### Function-level reuse and ordering
+
+| Function | Reusable behavior | Required boundary or adaptation |
+| --- | --- | --- |
+| `kd_jit_retained_miss` | Checks and exports exact current packet; reports the actual CALL/IJ edge for later generation | No pending source service or remote/Native request. It does not transfer ownership or retire a frame. |
+| `kd_exec_cont_suspend` / `kd_service_unpin` | Remove E's CPU activation and retain its continuation and task reference | Suspend before publishing a Native route. `kd_exec_cont_no_stack_service` refuses a live `native_link` or `native_request`. |
+| `kd_admission_owner_transfer_locked` | The real physical owner designates the next owner under the object's gate guard | Sets pickup pending; it does not release the lock or finish pickup. |
+| `kd_admission_owner_pickup_locked` | The designated task consumes the exact pickup and updates the rwsem phase owner | The selected phase remains ADMISSION; ordinary LOCAL-only release is not automatically valid afterward. |
+| `kd_service_origin_command` | Existing transfer/pickup/release command and ACK | Currently addresses only the outer admission before body execution. A retained multi-owner handback needs the complete owner list, not just this outer field. |
+| `kd_exec_native_begin` / `kd_exec_native_unlock` / `kd_exec_native_wait` | Existing frame registry, O-stack request publication and final-access ACK | Service scopes are intentionally refused by the old begin path: the compatibility vector is not their linked owner set. Any extension must use explicit typed operations over that set and invoke callbacks outside the registry guard. |
+| `kd_admission_release` / `kd_admission_downgrade` | Actual physical release and ordered downgrade credit | Keep their real release ordering; do not substitute a custody-state update or decrement the same read credit twice. |
+| `kd_admission_detach_local_locked` | Ordinary C admission transfers into object-local custody | Also retires its stack request immediately. It is not an unchanged retained-frame handback helper. |
+| `kd_exec_cont_return` | Already supports exact completed-body return from a suspended frame on its original E | Requires literal release/completion facts. A Native read-custody decision cannot be represented by manufacturing `outer_unlock_seen`. |
+| `kd_exec_cont_retire` | Drops stack/task/source references only after memberships, routes and dependent records finish | No E, resume task, service, child, selection or retained storage reference may remain. |
+| `kd_rwsem_provider_resume` | Builtin final module-reference drop and restoration from O-owned packet storage | Enter only after module-owned accesses retire; do not reuse its reference drop at an earlier handback stage without a separate proved reference. |
+
+The root's existing request, packet, linked owner records and native-frame
+registry are sufficient storage for preparing the writer-routing extension.
+This inventory adds no allocation, global registry, reader field, CPU
+requirement or protocol state. Whether translated read custody can retire
+earlier remains the user's pending choice.
+
+### Bound-object references and limits
+
+Builtin `provider.c`'s `kd_rwsem_bind_provider` takes both a module reference and
+the provider's binding reference. `adapter.c` retains them until object
+destruction; `kd_source_begin_retire` refuses closure while bindings remain.
+Individual API callbacks also hold a separate invocation reference. The
+clobber capture reference instead survives until completed restoration or a
+properly specified handback. These are different references, not substitutes
+for one another. The retained packet/route pointers still require their own
+last-access proof even while an object keeps source text resident.
+
+The in-tree non-owner path separately retains its mm/object reference. Generic
+unbound callers have their ordinary Native source/object-lifetime contract;
+the bound-object observation alone does not establish universal replacement.
+
+### Independent runner and fixture preparation
+
+The mmap1 diagnostic controller still exposed the removed execution mode even
+though its default image path already uses the original daemon and immutable
+registry. Restrict new controller construction and its CLI to `image`; retain
+historical trace validators for offline evidence rather than relabeling them
+as a current backend. The old one-point runner and schema-2 image-free receipts
+still require migration before they can measure this candidate; removing a
+module option alone would omit the required daemon/image lifecycle.
+
+The moved adapter/fetch fixtures exercise a standalone reference component.
+Their result labels must say reference, not production. Their existing checks
+remain intact. Prepare the controller-boundary fixture now, but do not run it
+or any intermediate checks until the overall functionality is complete.

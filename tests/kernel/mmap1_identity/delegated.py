@@ -174,6 +174,8 @@ class Controller:
         return getattr(getattr(self, 'args', None), 'execution_mode', 'image') == 'reached'
 
     def __init__(self, args, out, files, source, audit, binaries):
+        rt.require(getattr(args, 'execution_mode', 'image') == 'image',
+                   'original JIT image execution required', 'DATA_ERROR')
         self.args, self.out, self.files, self.source, self.audit, self.binaries = args, out, files, source, audit, binaries
         self.result = dict(schema=1, passed=False, drained=False, accepted=False, scored=False,
             state='STARTING', runtime_source_commit=args.source_commit, kernel_component_source_commit=KERNEL_COMPONENT,
@@ -637,8 +639,8 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
         parser.add_argument('--' + name + '-sha256', required=True)
     parser.add_argument('--source-commit', required=True)
-    parser.add_argument('--execution-mode', choices=('image', 'reached'), default='image',
-                        help='reached: resident image-free execution without translator/prewarming')
+    parser.add_argument('--execution-mode', choices=('image',), default='image',
+                        help='original JIT images with the ordinary translation daemon')
     parser.add_argument('--prewarm-timeout', type=int, default=600,
                         help='bounded writer-image preparation seconds per model (1..3600)')
     parser.add_argument('--model-order', choices=('threads-first', 'processes-first'), default='threads-first',

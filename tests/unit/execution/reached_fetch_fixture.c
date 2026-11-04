@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Exact production fetch; source residency and family refs are observed
+/* Reference fetch; source residency and family refs are observed
  * substitutes here. Separate component fixtures prove their own lifetimes. */
 #include <errno.h>
 #include <limits.h>
@@ -208,6 +208,6 @@ int main(void)
 	changed_between_steps();
 	unavailable_complete_candidate();
 	authority_and_bounds();
-	printf("production reached fetch: %u checks, 0 failures\n", checks);
+	printf("reference instruction fetch: %u checks, 0 failures\n", checks);
 	return 0;
 }

@@ -1,4 +1,4 @@
-"""Guest-only checks of exact reached-source fetch and cache validation."""
+"""Guest-only checks of the reference source-fetch and cache component."""
 import os
 from pathlib import Path
 import shlex
