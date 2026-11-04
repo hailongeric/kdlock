@@ -74,7 +74,28 @@ code placement with actual generated execution; do not select interpretation
 because allocation placement differs. Ordinary image mode retains its pools
 unchanged. No live continuation phase passed the refused initialization.
 
-Current checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
+Candidate `383e830f4c7ac01f8edf9cec05d6c5b91aee8d8f` passes the VM Native
+near/far fixture (52756 checks,85 instruction forms), eight proof-parser checks,
+W=1 provider build and all11 killable/nesting/read-tail phases. Fourteen
+successful root records contain generated-code entry and retirement witnesses,
+with E distinct from O and zero interpreted steps. Selected reader-drain
+cancellation correctly executes no body. The provider and fixtures retire
+normally. This is focused protocol evidence, not actual mmap1 completion or a
+performance gain. Full records are retained under the VM test directory
+`reached-mm-jit-far-units-20261103`.
+
+The next actual-application checks run unchanged mmap1 threads and processes,
+two workers, one round each. Detailed traces require a positive generated-code
+witness per returned root in addition to existing ownership, service, source,
+read-tail and retirement proofs. Separate untraced timing uses the existing
+plain kernel; collect `reached_jit_stats` before/after application execution and
+at final retirement. Require positive entry/retirement deltas and zero
+interpreted steps. Record runner identity separately from the frozen provider
+source. No traced value is scored or pooled with untraced timing. The original
+interpreter and Native results remain historical comparisons, with their exact
+source and boot identities.
+
+Historical interpreter checkpoint, November 4: `111170d533fa4ac37bbcc1f641c364a694f9f7e6`
 passes focused actual-thread/process delegation proofs and normal retirement
 using a separate finalization process. The original observing controller
 records a residual binding-drain timeout before exit; the responsible MM
