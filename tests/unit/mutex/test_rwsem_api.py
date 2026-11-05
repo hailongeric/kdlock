@@ -94,7 +94,9 @@ def main():
                     stub = assembly.split(label, 1)[1].split(b'\n\n', 1)[0]
                     instructions = [' '.join(line.decode().split())
                                     for line in stub.splitlines() if line.strip()]
-                    assert instructions == [f'MOVABS R14, 0x{target:x}',
+                    assert instructions == ['PUSHFQ',
+                                            'POP QWORD PTR[REG_BANK + KD_REG_FLAGS]',
+                                            f'MOVABS R14, 0x{target:x}',
                                             'MOV Stack_IJ, 0x1', 'JMP exit'], instructions
             if body == 'write_body':
                 assert b'clobber_complete' in assembly and b'kd_terminal_full_' in assembly, assembly

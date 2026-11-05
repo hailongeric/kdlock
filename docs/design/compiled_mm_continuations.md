@@ -952,3 +952,10 @@ that remains local. These states are not a two-entry JIT timing point. Before
 a scoped scored application starts, require exactly the selected entries and
 NORMAL images with nonzero code addresses and generations for both. This is
 image readiness only; it does not replace worker-attributed execution proof.
+
+The `19e591aa90f08da08be2162009db720ec2112f6c` repeat passed the public rwsem
+facade runtime assertions. Its emitted-control expectation then found the
+existing `PUSHFQ` / flags-bank store before the three control-transfer
+instructions. Require that complete five-instruction sequence instead of
+omitting the flag-save contract. This changes only the fixture expectation;
+no lock or code-generation implementation is changed.
