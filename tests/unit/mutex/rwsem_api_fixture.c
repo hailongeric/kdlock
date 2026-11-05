@@ -44,6 +44,16 @@ static int cancel_result;
 static unsigned int last_wait_state;
 static unsigned long captured_ip;
 static struct kd_rwsem *active;
+/* This local API fixture has no retained Native service registration. Keep
+ * the production route visible and check its exact object/operation inputs. */
+static bool kd_exec_native_service_unlock(unsigned long object,
+					 enum kd_exec_native_operation operation)
+{
+	assert(object == (unsigned long)active);
+	assert(operation == KD_NATIVE_OPERATION_RWSEM_UP_WRITE ||
+	       operation == KD_NATIVE_OPERATION_RWSEM_DOWNGRADE);
+	return false;
+}
 struct kd_wait_queue { raw_spinlock_t *guard; struct kd_wait_node **head; };
 struct wake_q_head { bool collected; };
 #define DEFINE_WAKE_Q(name) struct wake_q_head name = { false }

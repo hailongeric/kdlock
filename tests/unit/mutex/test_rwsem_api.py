@@ -27,6 +27,8 @@ def main():
     direct = stripped('include/kd_mutex_direct.h')
     direct = direct[direct.index('#define KD_MUTEX_DIRECT_CALL('):
                     direct.index('/* Explicit outer-only pair.')]
+    operations = re.search(r'enum kd_exec_native_operation\s*\{.*?\};',
+        read_source(ROOT / 'include/kd_exec.h'), re.S).group(0)
     api_source = read_source(ROOT / 'kernel_module/kd_rwsem_api.c')
     provider = definition(api_source, 'int kd_rwsem_prepare(struct kd_rwsem *sem, unsigned long ip, unsigned int abi)')
     for result, first_line in (
@@ -41,7 +43,7 @@ def main():
         path = Path(directory)
         for name, text in {
             'types.h': stripped('include/kd_mutex_types.h') + stripped('include/kd_rwsem_types.h'),
-            'decls.h': stripped('include/kd_rwsem.h'),
+            'decls.h': stripped('include/kd_rwsem.h') + '\n' + operations,
             'core.h': core,
             'api.h': direct + stripped('include/kd_rwsem_api.h'),
             'provider.h': provider,

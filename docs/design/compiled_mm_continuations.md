@@ -938,3 +938,11 @@ and a W=1 provider build in the VM. Live checks must retain Native API ordering
 and exact source/frame/binding retirement. A later fresh comparison retains its
 one scored round per point and existing learning bounds; selecting two entries
 does not guarantee stability or performance acceptance.
+
+The first scope preflight at `c66af150a83f8dd324003ef699dd03fc389846c3`
+passed the four affected benchmark/provider receipt groups, then stopped before
+the module build: the standalone rwsem API fixture lacked declarations for
+the existing `kd_exec_native_service_unlock` route and its operation enum.
+Update the fixture to import the production enum and explicitly model its
+local-only, unregistered route. Keep its ownership, release, downgrade, error,
+and emitted-ABI assertions; the failed attempt remains retained evidence.
