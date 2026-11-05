@@ -4,9 +4,9 @@ This map locates maintained source. [Design](DESIGN.md) explains the shared mode
 [lock APIs](LOCKS.md) and the four implementation guides own protocol details.
 Build outputs and frozen result snapshots are evidence, not another source tree.
 The [lock replacement contract](design/kdlock_lock_replacement_contract.md)
-separates the selected original JIT correction from its pending retained-worker
-integration and the historical reached backend. This map identifies source
-responsibility, not a build or runtime pass.
+separates the selected original JIT correction, its component evidence and
+pending live validation from the historical reached backend. This map identifies
+source responsibility, not a build or runtime pass.
 
 ## Provider and execution
 
@@ -27,8 +27,8 @@ responsibility, not a build or runtime pass.
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
 | [kd_admission.c](../kernel_module/kd_admission.c), [kd_wait_queue.c](../kernel_module/kd_wait_queue.c) | Exact acquisition predicates, shared request selection, cancellation and queue membership |
-| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and committed current-position worker handback at `a6fe0bb2`; final validation remains pending |
-| [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; central acceptance/final-ACK coverage is not yet reported |
+| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; production checkpoint `da55414f` has focused component results, with live proof pending |
+| [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; component join covers acceptance/final ACK with supplied task/physical primitives |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, uploads and retirement |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address tables and approximate heat policy; never ownership |
@@ -42,10 +42,13 @@ The subsequent selected query policy partitions operation IDs 14/15/16 in
 registration in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
 `kd_service_write_owned` retains the narrow `ATOMIC_ORIGIN` runtime proof.
 `kd_service.c` owns the selected synchronous home-CPU and serialized offline
-retirement path. This wiring is committed in `a6fe0bb2`. Its first provider build
-and seven component groups pass, but query-image and retirement checks fail;
-no module is loaded. Final rerun and central acceptance/final-ACK coverage are
-pending; see the [validation record](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2).
+retirement path. Production checkpoint `da55414f` has passing query-image,
+Native-service join and retirement components after the first failed attempts.
+Later fixture-only runs pass OSQ (26 scenarios, 14 mutations) and resources
+(19,164 checks, 27 mutations), with identical production trees. The
+[validation record](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
+preserves separate receipt verdicts and fixture limits. No module is loaded by
+these checks; matching live inputs and handback-aware runners remain pending.
 
 ## Linux 7 and MM integration
 
@@ -70,8 +73,9 @@ paths at that revision include `kernel_module/kd_reached_jit.c`,
 `kernel_module/execution/reached_dispatch.inc`. Checkpoint `10ef078a` removes
 those production paths and their selected emitter/cache/dispatcher, using
 original compiled images. The C reference engine/adapter moves into test
-fixtures. Stale reached-state fields remain, and fresh build/runtime validation
-is pending. Use `ebae17c1` when examining the deleted historical source paths.
+fixtures. Stale reached-state fields remain. Later source-specific builds and
+component results above do not establish live execution. Use `ebae17c1` when
+examining the deleted historical source paths.
 
 ## Translation and reference backends
 

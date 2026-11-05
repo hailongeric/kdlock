@@ -157,11 +157,17 @@ The user selected synchronous E-side cleanup, recorded at `c0bb9ccd`:
 No new asynchronous cleanup queue is selected. O keeps its existing packet and
 release ACK timing; waiter-side final-use ACK/pinning simplification and
 TCLock-style reclamation are optional later work. Synchrony does not establish
-bounded cleanup latency. Runtime `a6fe0bb2` commits the sequence and its provider
-build returns zero with objtool warnings. The first retirement component fixture
-fails compilation under signedness `-Werror`, so it supplies no retirement
-execution pass. Final rerun, central acceptance/final-ACK coverage and live
-hotplug/handback evidence remain pending.
+bounded cleanup latency. Runtime `a6fe0bb2` commits the sequence; at `da55414f`
+the provider builds with diagnostics, and retirement components pass online,
+offline, spill and concurrent offline-pair modes plus nine inconsistent-state
+rejections. The first signedness compile failure remains recorded separately.
+CPU/work/hotplug APIs are supplied. The single-root modes make storage
+inaccessible at final reuse; the offline pair separately checks serialized
+count-before-bitmap updates. A production service join covers acceptance/final
+ACK with supplied task/physical primitives and manually represented recursive
+unwind, retaining accessible root storage until thread joining. These components
+do not prove a real stack switch, live CPU hotplug or retained-owner handback;
+see the [exact fixture limits](kdlock_lock_replacement_contract.md#component-fixture-limits).
 
 ## Kernel-generated instruction source extents
 
@@ -374,8 +380,11 @@ closure, a complete kernel CFG or all-site prewarming. The
 [reached-path record](reached_path_execution.md) preserves the superseded
 separate-emitter design and its receipts. It was still connected at `ebae17c1`;
 `10ef078a` removes it from production source and moves the C reference code to
-fixtures. Later runtime `a6fe0bb2` wires retained handback and has a first frozen
-build/component receipt; its overall result fails, with no module load or reboot.
+fixtures. Runtime `a6fe0bb2` wires retained handback; its first frozen
+build/component receipt fails overall. Subsequent focused receipts resolve the
+observed component failures, with production checkpoint `da55414f` and identical
+production trees in the later fixture-only revisions. No module load, reboot or
+live result follows from those checks.
 
 Learning and handback have different lifetimes. A progressed invocation returns
 to O at its exact current source position, preserving GPR/IP/SP/BP and already
@@ -392,7 +401,12 @@ conflict handling are deferred. No earlier preparation or separate-emitter
 receipt validates this correction. The owner's focused `ebae17c1` packet and
 dispatcher checks include both passes and failures; the
 [contract's validation record](kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-retains them separately from the later `a6fe0bb2` receipt. Its component query,
-admission and Native writer-custody passes do not cover the central service
-acceptance/final-ACK chain. The two first-check failures and final frozen rerun
-remain open; no loaded-provider or live retained-owner handback pass follows.
+retains them separately from `a6fe0bb2` and subsequent source-specific receipts.
+Central acceptance/final ACK and retirement now have the limited component
+coverage above. OSQ passes 26 scenarios and 14 mutations at `615cdb0b`;
+resources pass 19,164 checks and 27 mutations at `2bfbb8dc`. These are not one
+combined run or live ownership proof. Installed scope5 verification and the
+unloaded provider identity do not match the recorded running `kdlock1` kernel;
+matching live inputs, recovery inventory and handback-aware runners remain
+pending preparation. No loaded-provider or live retained-owner handback pass is
+recorded here.

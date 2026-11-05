@@ -12,11 +12,13 @@ parity; then complete declared kernel replacements and compare applications.
 Favorable exploratory nano cases and scoped application measurements exist.
 Repeated performance acceptance and broader kernel replacement remain open.
 The isolated [original JIT correction](docs/design/kdlock_lock_replacement_contract.md)
-has runtime wiring committed at `a6fe0bb2`. Its first frozen checks include a
-successful provider build and seven passing component groups, but fail overall
-with two check failures under repair. Final validation and central service
-acceptance/final-ACK coverage remain pending; earlier measurements do not
-validate this implementation or promote it to master.
+has production source at `da55414f`. Subsequent frozen checks resolve the
+observed component failures, including service acceptance/final ACK and
+retirement fixtures. The [source-specific evidence](bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+preserves every failed attempt and the limits of supplied task/CPU primitives.
+Live inputs and handback-aware checks remain pending preparation; no live
+handback, application result or performance gain is established for this source.
+Earlier measurements do not promote it to master.
 
 ## Current platform and policy
 

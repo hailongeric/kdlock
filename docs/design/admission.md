@@ -69,8 +69,10 @@ service.
 The [lock replacement contract](kdlock_lock_replacement_contract.md) selects
 bounded original CFG exploration, actual miss learning and subsequent image
 replacement. Its current-position handback preserves IP/GPR/SP and completed
-CALL pushes/RET pops. Retained-worker wiring is committed at `a6fe0bb2`, while
-final validation and central service-acceptance/final-ACK coverage remain pending.
+CALL pushes/RET pops. Retained-worker wiring and its production component join
+are committed, with [source-specific results](kdlock_lock_replacement_contract.md#current-focused-component-results)
+and preserved failed attempts. Supplied task/physical primitives limit that
+coverage; actual live validation remains pending.
 General flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
 Existing limited flags and instruction contracts do not establish those broader
 features.
@@ -101,10 +103,12 @@ actual origin pins/RCU; the `BALANCED_ORIGIN` rejection of retained spin/RCU is
 not appropriate for this narrow interval. Other context preconditions still
 apply. Preparation rejection remains fail-stop and does not automatically
 select native handback. The partition and descriptor are committed at
-`a6fe0bb2`. Its writer-query component passes with supplied runtime observations,
-but its six-test query-image group has one failing assertion about a legal
-return-continuation label. Repair and a separately frozen rerun remain pending;
-these checks do not establish the actual O/E Native service or final-ACK path.
+`a6fe0bb2`. Its writer-query component passes with supplied runtime observations.
+All six query-image cases pass at `da55414f`, after fixing the legal
+return-continuation-label assertion; the failed first receipt remains recorded.
+These cases use synthetic source bodies and the actual original image backend.
+Separate production service-join coverage uses supplied task/physical primitives;
+neither establishes actual public helper execution or a live O/E service/ACK.
 
 An untranslated ordinary callee can transfer the remaining invocation to the
 original waiter. Later learning may extend the graph. It does not authorize

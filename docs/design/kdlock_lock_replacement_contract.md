@@ -7,20 +7,23 @@ the correction or that all kernel locks have been replaced. Native critical
 section bodies, surrounding algorithms and userspace syscall paths remain
 unchanged. This is a general lock replacement task, including its MM consumers.
 
-The runtime implementation checkpoint is
-`a6fe0bb269642cf2dd6f07c3430b6933f9c0557a`. It wires retained current-position
-handback, Native read custody, the selected original-JIT state queries and
-synchronous retirement. Earlier `ebae17c1` adds miss packets; `10ef078a` removes
-the separate instruction JIT and corrects image-header selection. Requirements,
-committed source and validation have distinct status: the first frozen `a6fe0bb2`
-checks fail overall, with seven passing groups and two failures under repair.
+The production implementation checkpoint is
+`da55414fa576a6e683f98364523cf9353b598c0e`, following the retained current-position
+handback, Native read custody, original-JIT query and synchronous-retirement
+wiring at `a6fe0bb2`. Earlier `ebae17c1` adds miss packets; `10ef078a` removes
+the separate instruction JIT and corrects image-header selection. The four
+component attempts below resolve their observed failures through separately
+identified runs. The [committed evidence](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+retains every failed attempt; this is not a single combined run or live proof.
 
 Subsequent selected designs are recorded in `ebf0aa4c` for Native read custody,
 `898b9d1c` for the three original-JIT state queries and `c0bb9ccd` for synchronous
 home-CPU retirement. Those are design/documentation checkpoints. Their runtime
-wiring is now committed in `a6fe0bb2`; final validation and central service
-acceptance/final-ACK coverage remain pending. No module load, live handback or
-new application result follows from the first build/component receipt.
+wiring is committed. Central service acceptance, typed release and final ACK
+now have component coverage, with the supplied primitives and lifetime limits
+described below. Matching live inputs and handback-aware runners remain pending
+preparation. No loaded-provider, live handback, application or timing result is
+established by these receipts.
 
 ## Required execution model
 
@@ -162,8 +165,9 @@ Retain source, frame, stack, task and provider lifetimes until the
 last required acknowledgment and retirement. E can then return to its service
 loop; it has no implicit public writer acquisition of its own. The legacy
 single-root native handback cannot substitute for an entire retained owner list.
-The retained worker route is wired at `a6fe0bb2`. Its central packet-acceptance
-and final-ACK behavior is not yet covered by the reported component checks.
+The retained worker route is wired at `a6fe0bb2`. The `da55414f` Native-service
+join exercises production packet acceptance, typed release and final-ACK code
+with supplied task/physical primitives; its limits are recorded below.
 
 The selected Native read-custody path transfers the existing downgraded read
 credit without decrementing it. O's normal `up_read` or `up_read_non_owner`
@@ -191,7 +195,7 @@ final-use ACK/pinning simplification is not required in this phase.
 
 ## Source audit and implementation status
 
-The following observations are static inspection of `a6fe0bb2` unless an
+The following observations are static inspection of `da55414f` unless an
 earlier checkpoint is named. The separate validation record below identifies
 the build/component checks and their limits.
 
@@ -204,9 +208,9 @@ the build/component checks and their limits.
 | [`daemon.c`](../../daemon/daemon.c) and [`workspace.inc`](../../daemon/workspace.inc), `make_callee_cmd`/`make_ij_cmd` | Separate actual CALL and IJ metadata drives subsequent compilation. This code is not a synchronous current-invocation image join. |
 | [`images.inc`](../../kernel_module/execution/images.inc), `kd_image_report`/`kd_image_publish` | Reports check the currently published image; immutable publication rejects a stale base generation and publishes the replacement separately. Existing frame bindings are not rewritten by learning. |
 | [`wrapper.S`](../../include/wrapper.S), image header; [`exe_info.h`](../../include/exe_info.h), `kd_image_protocol` | `ebae17c1` selected cold miss bit 13 without necessarily selecting the full-width header. `10ef078a` makes the wrapper and provider choose protocol 3 for bit 8 or bit 13 and adds a bit-13-only upload/bind fixture. This corrects the inspected source discrepancy; fresh fixture/publication validation remains pending. |
-| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_run_scope`/`kd_service_handoff`; [`native.inc`](../../kernel_module/execution/native.inc), `kd_exec_native_accept` and service wait | `a6fe0bb2` wires the retained owner route, Native read-custody transfer, packet acceptance and typed release/ACK handling. Routing is removed before the final request ACK. Central acceptance/final-ACK execution coverage and loaded-provider validation remain pending. |
-| [`device_session.py`](../../disassem/device_session.py), `runtime_rwsem_controls`; [`kd_rwsem_provider.c`](../../kernel_module/kd_rwsem_provider.c) | Committed operation-14/15/16 partition and narrow `ATOMIC_ORIGIN` custody proof preserve the original JIT and other service classifications. The first query-image group fails one assertion; the writer-query component fixture passes with supplied runtime observations. |
-| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_finish_handoff`/`kd_service_retire_handoff` | Synchronous hotplug-protected home-CPU cleanup and serialized offline slot release are committed. The provider builds, but the first retirement fixture fails compilation under signedness `-Werror`; no retirement fixture or live hotplug pass follows. |
+| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_run_scope`/`kd_service_handoff`; [`native.inc`](../../kernel_module/execution/native.inc), `kd_exec_native_accept` and service wait | Retained owner routing, Native read-custody transfer, packet acceptance and typed release/ACK handling are committed. Routing is removed before the final request ACK. Three Native-service join modes pass at `da55414f` with supplied task/physical primitives; real stack-switch and loaded-provider proof remain open. |
+| [`device_session.py`](../../disassem/device_session.py), `runtime_rwsem_controls`; [`kd_rwsem_provider.c`](../../kernel_module/kd_rwsem_provider.c) | Operation-14/15/16 partition and narrow `ATOMIC_ORIGIN` custody proof preserve the original JIT and other service classifications. All six synthetic query-image cases pass at `da55414f`; the earlier writer-query fixture passes with supplied runtime observations. Actual public helper execution remains a live requirement. |
+| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_finish_handoff`/`kd_service_retire_handoff` | Synchronous home-CPU cleanup, hotplug protection through the callback, serialized offline slot release and missing-reservation rejection are committed. Four positive retirement modes and nine inconsistent-state rejections pass at `da55414f` with supplied CPU/work APIs; real CPU hotplug remains unverified. |
 | [`spin/execute.inc`](../../kernel_module/spin/execute.inc), [`mutex/combiner.inc`](../../kernel_module/mutex/combiner.inc) and [`lock/mutex_calls.inc`](../../kernel_module/lock/mutex_calls.inc) | Executed-error and abort-cleanup checks still reject treating progressed execution as an unstarted retry. The committed negotiated handback path does not turn generic execution errors into native continuation. |
 
 The original ordinary path still has a generic IJ-error branch in `exe.c` that
@@ -225,34 +229,121 @@ alone is historical mechanism code, not proof of a working end-to-end path.
 The earlier working-tree query, custody and retirement changes are committed
 in `a6fe0bb2`. Source inspection confirms the worker handback consumer, origin
 packet copy/acceptance, exact Native owner registry routing and synchronous
-cleanup. The implementation owner is repairing the first two check failures
-and preparing focused central service-acceptance/final-ACK coverage. Those
-repairs and new coverage have no rerun result recorded here. Source wiring,
-component fixtures and an actual loaded-provider execution remain distinct.
+cleanup. Subsequent frozen checks exercise central acceptance, typed owner
+routing, read custody and terminal retirement. Resource and OSQ fixture repairs
+also pass in later runs with identical production trees. Source wiring,
+component fixtures and an actual loaded-provider execution remain distinct;
+the fixture limits below prevent treating the joins as whole-stack execution.
 The owner retains all code and `compiled_mm_continuations.md`.
 
 ## Documentation consistency audit
 
 | Document | Correction or remaining coordination |
 | --- | --- |
-| [Reached-path record](reached_path_execution.md) | Updated: separate emitter checkpoints are historical; `ebae17c1` miss handling, `10ef078a` source removal and `a6fe0bb2` runtime/partial-check evidence have distinct status. Failed and successful receipts remain intact. |
+| [Reached-path record](reached_path_execution.md) | Updated: separate emitter checkpoints are historical; miss handling, backend removal, runtime wiring and subsequent component results have distinct source identities. Failed and successful receipts remain intact. |
 | [Lifetimes](lifetimes.md) | Updated: original bounded translation remains selected; source/image/owner rules and dated preparation records are retained. |
-| [Design](../DESIGN.md) | Updated: historical local MM controls, retained candidates and the committed original JIT correction with pending validation have separate scope and evidence. |
-| [Execution](../JIT_EXECUTION.md) | Updated: ordinary recovery and committed retained-worker handback are distinguished from incomplete validation, services, errors and completion. |
+| [Design](../DESIGN.md) | Updated: historical local MM controls, retained candidates and the original JIT correction have separate scope; focused component results do not establish live validation. |
+| [Execution](../JIT_EXECUTION.md) | Updated: ordinary recovery and retained-worker handback are distinguished from services, errors, completion and the remaining live proof. |
 | [Implementation dependency map](compiled_mm_continuations.md) | Owned by the implementation writer. Contains the reuse inventory and selected Native read custody, original-JIT query and synchronous retirement designs; its earlier option discussions are historical, not unresolved choices. |
 | [Register ABI](../JIT_REGISTER_ABI.md) | Updated within reserved scope: current service/miss exits, exact status domains, extended header and the historical cold-mask discrepancy/source correction are explicit; the two-word ABI is unchanged. |
 | [Code map](../CODE_MAP.md) | Updated within reserved scope: retained service responsibilities, historical reached paths/revision and local versus retained MM execution are distinguished. |
 | [README](../../README.md), formerly lines 55-71 | Updated within reserved scope: local-MM and all-count shared-device-MM losses are dated; newer unchanged mmap1 and retained-candidate evidence remain separate, with no promotion claim. |
 | [Roadmap](../ROADMAP.md), formerly lines 19, 39-42 and 82-83 | Updated within reserved scope: subsequent actual thread/process application runs are acknowledged; original stage gates, repeated acceptance and new-candidate confirmation remain required. |
 | [Admission](admission.md), formerly lines 54-56 | Updated within reserved scope: the three scalar hostcalls are distinguished from provider-registered returning services read by `dis_assem`. |
-| [Kernel critical-section semantics](kernel_cs_semantics.md), formerly lines 86-88 | Updated within reserved scope: copied-body/excluded-participant descriptions are historical; later scoped original-body syscall integration and deferred IRQ/NMI scope are explicit. |
+| [Kernel critical-section semantics](kernel_cs_semantics.md), formerly lines 86-88 | Earlier audit update retained unchanged in this refresh: copied-body/excluded-participant descriptions are historical; later scoped original-body syscall integration and deferred IRQ/NMI scope are explicit. |
 
 ## Validation and remaining work
 
+### Current focused component results
+
+The [fixed evidence bundle](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+contains exact reply/freeze bytes, an [artifact manifest](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/artifacts.json)
+and [source identities](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/source-identity.json).
+These are the implementation owner's designated-VM results, reviewed offline
+here. This documentation audit runs no builds, unit tests or live checks.
+
+| Frozen source | Observed result and subsequent resolution |
+| --- | --- |
+| `a6fe0bb2` | W=1 build and seven drivers pass; query assertion fails and retirement fixture does not compile. Overall `passed=false`; exact first results remain below. |
+| `da55414f` | W=1 build passes with compiler-name and return/frame diagnostics. Query images: six cases pass; retirement: four positive modes and nine inconsistent states rejected; Native-service join: write/downgrade/read modes pass. Segment lowering, final reader access, saved-state restore and 12 CALL-boundary cases pass. Resource/OSQ drivers fail obsolete-helper extraction, so overall `passed=false`. |
+| `615cdb0b` | OSQ passes 26 scenarios and detects all 14 mutations. Repaired resource fixture compiles but fails its supplied ordinary-peer outcome. Overall `passed=false`; no new build. |
+| `2bfbb8dc` | Only repaired resources rerun: 19,164 checks, zero failures, all 27 mutations detected. Focused receipt `passed=true`; no new build. |
+
+The query repair accepts the legal continuation label and checks the actual
+inner target and source CALL words. The retirement fixture fixes its supplied
+CPU ID's signedness; production also rejects a missing reservation before
+dropping references. Resource/OSQ extraction follows the canonical request
+helpers, and the later resource repair supplies the ordinary peer through the
+real physical-wait helper without creating a delegation gate for it.
+
+All observed failures in these four attempts now have passing results, but the
+earlier overall failures remain failures. `kernel_module`, `include` and `disassem` trees at
+`615cdb0b` and `2bfbb8dc` equal `da55414f`; only on that recorded identity basis
+are these component results carried together. This is not a new combined run,
+full suite, warning-free build or performance result. Every attempt records
+final idle and unchanged frozen inputs, with no module load or reboot.
+
+### Component fixture limits
+
+The Native-service join extracts production registry, packet-acceptance, typed
+owner matching/release, final ACK and continuation handoff/retirement code.
+Its O/E threads use supplied task binding, physical admission/release,
+source-reference and preemption/IRQ primitives. Recursive E-stack unwind is
+represented manually by removing a child and a synthetic anchor before terminal
+handoff. Root storage remains accessible until `pthread_join`; it is not made
+inaccessible immediately after the final ACK. Its Native-owner list starts
+empty, so it does not exercise custody in a populated Native-owner list. Post-join root
+overwrite and ordinary non-owner read release check that transferred credit
+survives independently of the retired continuation.
+
+Separate retirement modes make storage inaccessible with `mprotect(PROT_NONE)`
+at final reuse and exercise production cleanup without later root access.
+The concurrent `offline_pair` uses two supplied threads/dispatch guard and
+checks count-before-bitmap reuse, with separate root storage. CPU/hotplug/work
+APIs are supplied; these are not real CPU-hotplug results. Query-image cases
+use synthetic source bodies with the actual original image backend. The
+saved-state restore fixture covers two tags, 64 arithmetic-flag combinations,
+GPR/SP and control flags using direct and configured-thunk substitutes; it
+does not close general flags/SIMD or IRQ/NMI coverage.
+
+No component group proves a real kernel/JIT stack switch, loaded retained MM
+ownership, actual public query bodies, application completion or throughput.
+
+### Installed identity and pending live proof
+
+The [identity receipt](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/live-identity-2bfbb8dc.json)
+freshly verifies installed `kdscope5-kd`: 59 bundle files, 70 named source
+files, 12 build files and four installed files, with `kd_mmap=on` and Build ID
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`. The unloaded provider has SHA256
+`0184c67b4cebcf7a8d0e1a25f12f77e364c593330c4ed66dd35a7542f089de1c`
+and targets `7.0.0-38-kdscope5`. The recorded running kernel is instead
+`7.0.0-38-kdlock1`, Build ID `b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`,
+boot UUID `0a2b2a34-caf7-4c63-9b38-d4f29a5a2d7d`. Installed verification is
+not running-scope5 or loaded-provider validation.
+
+Shared facade, layout and adapter bytes match the installed source. The
+provider header and builtin restoration source match the recorded kernel
+recipe and differ from this candidate only in comments; the generator's
+builtin-local definition is recorded separately in the
+[interface diff](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/kernel-interface-comparison.diff).
+This interface review does not make all kernel inputs the candidate's revision
+or establish general caller compatibility.
+
+The receipt leaves matching daemon/translator publication inputs, a refreshed
+real recovery inventory, handback-aware runners and selected running-scope5
+verification pending preparation. Existing returned-body/unchanged-registry
+validators cannot validate permanent handback followed by later image learning.
+The [minimum live sequence](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md#minimum-live-acceptance-preparation)
+requires once-only prefix/CALL effects and exact resume position; nested typed
+release, downgrade/read custody and cancellation joins; immutable old images
+and later learned generations; the three actual public query bodies; then
+focused real-syscall `mmap1_threads` and `mmap1_processes` checks. Fully returned
+JIT episodes and handed-back prefixes need distinct acceptance and retirement
+observations. No live or timing result is recorded here.
+
 ### First frozen runtime checks at a6fe0bb2
 
-The copied receipt is
-`/tmp/kdlock-handback-queries-a6fe0bb2-checks/reply.json`, with source
+The [copied receipt](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/a6fe0bb2-checks.json) has source
 `a6fe0bb269642cf2dd6f07c3430b6933f9c0557a` and frozen root
 `/root/kdlock-inputs/handback-queries-a6fe0bb2`. Its manifest SHA256 is
 `ba3ad40419eccc67348af2f907a873ee3e564871fda38bd6b71c2001dab5d9d6`;
@@ -263,7 +354,7 @@ the guest remains on `7.0.0-38-kdlock1`; no module load or reboot occurs.
 
 | Affected check | First frozen result |
 | --- | --- |
-| `codegen/test_rwsem_query_images.py` | Fail: six tests, one failure. The test rejects a legal return-continuation label as if it proved Native routing; repair and rerun remain pending. |
+| `codegen/test_rwsem_query_images.py` | Fail: six tests, one failure. The test rejects a legal return-continuation label as if it proved Native routing; its subsequent `da55414f` result is separate. |
 | `mutex/test_writer_query.py` | Pass: production query/registration component with supplied O/E runtime observations, not live task execution. |
 | `mutex/test_service_retirement.py` | Compile failure: signedness comparison under `-Werror=sign-compare`. No fixture execution pass. |
 | `mutex/test_admission.py` | Pass: 15 deterministic component cases for actual queue, phase, PICKUP and cancellation code. |
@@ -278,8 +369,8 @@ the guest remains on `7.0.0-38-kdlock1`; no module load or reboot occurs.
 These are component/synthetic/generated-packet results. They do not establish
 the central service packet-acceptance/final-ACK path, an executed online/offline
 retirement fixture, live JIT handback, current mmap1 behavior or performance.
-The first failures remain recorded while repairs are prepared. Final validation
-is pending a separately identified frozen rerun; no uncommitted repair is a pass.
+The first failures remain recorded. The subsequent runs above provide their
+separate results without changing this receipt's failed overall verdict.
 
 ### Earlier miss-handling and backend-removal checkpoints
 
@@ -327,13 +418,13 @@ one-time CALL push and RET pop, actual miss learning and later replacement,
 generation-specific bindings, ordinary and retained-owner handback, completed
 effects, exact unlock/ACK routing and final retirement. A newly published image,
 an entered body or a restored GPR packet alone cannot establish this chain.
-Run basic plus directly affected checks on the designated VM when authorized by
-the implementation owner; full suites require an explicit request. This audit
-does not run or authorize new VM work. The first `a6fe0bb2` checks cover the
-listed components. Repairs for the two failed groups and the prepared central
-service-acceptance/final-ACK checks need a separately identified frozen rerun.
-Online/offline retirement fixture execution and loaded-provider validation are
-not supplied by the successful provider build or query/custody components.
+Run basic plus directly affected checks on the designated VM under the existing
+execution rules; full suites require an explicit request. This audit
+does not run new VM work. Subsequent focused receipts above cover the repaired
+groups, central service join and supplied online/offline retirement components.
+The live sequence still needs actual execution, exact accepted/retired episodes
+and matching running inputs; a successful build or component join cannot supply
+those results.
 
 Flags/SIMD restoration and IRQ/NMI conflict remain deferred. Whole-kernel
 coverage, unsupported configurations and general performance acceptance remain

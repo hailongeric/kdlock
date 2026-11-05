@@ -7,8 +7,9 @@ This guide follows ordinary requests. Family-specific acquisition belongs in
 [register ABI](JIT_REGISTER_ABI.md) defines machine-state capture and exits.
 The selected [lock replacement contract](design/kdlock_lock_replacement_contract.md)
 defines general current-position handback. Its retained-worker runtime wiring
-is committed at `a6fe0bb2`; the first frozen checks fail overall, and central
-service-acceptance/final-ACK coverage and final rerun remain pending.
+is committed, with production checkpoint `da55414f` and subsequent focused
+component passes. Earlier failed receipts remain recorded; matching live inputs,
+handback-aware runners and actual live validation remain pending.
 
 ## Preparation and entry
 
@@ -87,9 +88,11 @@ The later source checkpoint `10ef078a` removes the separate reached emitter/
 cache/dispatcher and corrects the cold miss header. Runtime `a6fe0bb2` consumes
 `KD_EXE_RUN_HANDOFF` in the retained worker, registers exact Native owner routes,
 accepts the origin's copied packet and performs typed release/ACK handling
-before synchronous retirement. These are committed source paths, not a live
-handback pass. Final rerun and focused central acceptance/final-ACK checks are
-still pending.
+before synchronous retirement. At `da55414f`, production acceptance, typed
+release, final ACK and terminal retirement pass a three-mode component join.
+Task/physical primitives are supplied, recursive unwind is represented manually,
+and root storage remains accessible until thread joining. This is not a live
+kernel/JIT stack-switch result.
 
 General flags/SIMD restoration and IRQ/NMI conflict handling are deferred and
 unsupported in this phase. Existing typed flags contracts remain distinct.
@@ -104,8 +107,14 @@ evidence. Historical reached-emitter receipts apply only to their recorded
 source and backend. The first frozen `a6fe0bb2` receipt builds the provider and
 passes seven component groups, but the query-image assertion and retirement
 fixture compilation fail. It loads no module and reboots nothing. Its
-[current result table](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2)
-preserves those failures separately from the earlier receipt.
+[first result table](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2)
+preserves those failures separately from the earlier receipt. Subsequent
+[source-specific results](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
+resolve the observed failures: query images and retirement at `da55414f`, OSQ
+at `615cdb0b`, and resources at `2bfbb8dc`. The later fixture revisions have
+identical production trees; these are separate runs, with no new live or timing
+result. A narrow saved-state restore fixture pass does not close the deferred
+general flags/SIMD or IRQ/NMI coverage.
 
 ### Selected query and retirement boundaries
 
@@ -124,10 +133,21 @@ retirement. The selected cleanup is synchronous on E, using a hotplug-protected
 home-CPU callback or serialized explicit retirement for an already-offline CPU.
 No new asynchronous cleanup queue or required TCLock-style waiter reclamation
 is part of this phase. The [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement)
-is wired at `a6fe0bb2`. The first retirement fixture does not compile under
-signedness `-Werror`; it supplies no online/offline retirement execution pass.
-Passing query/custody components do not cover the central acceptance/final-ACK
-path or a loaded-provider handback.
+has four positive retirement modes and nine inconsistent-state rejections at
+`da55414f`, following the retained first compile failure. CPU/work/hotplug APIs
+are supplied. Separate slot-reuse fixtures make storage inaccessible after its
+final access; the concurrent offline pair checks serialized count/bitmap
+updates. Neither these components nor the service join prove real CPU hotplug,
+the actual public query bodies or a loaded-provider handback.
+
+The saved identity receipt verifies installed scope5 and an unloaded scope5
+provider while the guest runs `kdlock1`. Matching daemon/publication inputs,
+recovery inventory, handback-aware runners and running-scope5 verification
+remain pending preparation. Live acceptance must distinguish a fully returned
+JIT episode from a handed-back prefix and observe both handback acceptance and
+terminal retirement. Later image learning may change the registry; an unchanged
+registry/returned-only validator cannot establish this path. See the
+[live evidence boundary](design/kdlock_lock_replacement_contract.md#installed-identity-and-pending-live-proof).
 
 ## Unlock and validation
 

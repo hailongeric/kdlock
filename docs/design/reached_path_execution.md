@@ -27,9 +27,14 @@ validation was not supplied for that source checkpoint alone. Runtime
 `a6fe0bb269642cf2dd6f07c3430b6933f9c0557a` subsequently commits retained worker
 handback, Native read custody, packet acceptance, owner routing and synchronous
 retirement. Its first frozen provider build and seven component groups pass;
-the query-image assertion and retirement fixture compilation fail. No module
-load or reboot occurs, and central acceptance/final-ACK coverage and final
-rerun remain pending. See the [current result table](kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2).
+the query-image assertion and retirement fixture compilation fail. Subsequent
+`da55414f` checks pass query images, production service acceptance/typed
+release/final ACK and retirement components with supplied primitives. Later
+fixture-only revisions pass OSQ (26 scenarios, 14 mutations) and resources
+(19,164 checks, 27 mutations), with production trees identical to `da55414f`.
+These are source-specific runs; every failed attempt remains recorded. No module
+load, reboot or live result follows. See the
+[current result table and fixture limits](kdlock_lock_replacement_contract.md#current-focused-component-results).
 Owner-run VM checks for the earlier `ebae17c1` have mixed results: the three miss-packet
 tests, segment codegen and entry-scope checks pass; returning-call tests have
 eight failures, the mutex-image fixture does not compile and the provider build
@@ -41,8 +46,12 @@ evidence. This documentation audit runs no tests.
 The later selected designs keep the three mmap state-query bodies in the
 original JIT, with the narrow existing `ATOMIC_ORIGIN` runtime custody proof,
 and use synchronous E-side home-CPU retirement with serialized already-offline
-cleanup. Those choices are resolved and wired in `a6fe0bb2`; component checks,
-failed first checks and still-unverified live behavior remain distinct.
+cleanup. Those choices are resolved and committed; component passes, retained
+failed receipts and still-unverified live behavior remain distinct. The saved
+identity check verifies installed scope5 and an unloaded scope5 provider while
+the guest runs `kdlock1`. Matching live inputs, recovery inventory and
+handback-aware runners remain pending preparation. No current live handback,
+application completion or performance result is recorded here.
 The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime guide](lifetimes.md#selected-retained-handback-retirement) define
 their scope without requiring a second JIT or new asynchronous cleanup queue.

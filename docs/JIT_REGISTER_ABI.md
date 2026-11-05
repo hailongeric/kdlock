@@ -15,9 +15,11 @@ requires original-JIT current-position handback with exact IP/GPR/SP and source
 CALL/RET effects. General flags/SIMD restoration and IRQ/NMI conflict handling
 are deferred for that phase. Existing limited flags contracts below do not
 establish broader restoration. Candidate details distinguish `ebae17c1`, the
-source correction at `10ef078a` and runtime wiring at `a6fe0bb2`. Native owner
-routing and packet acceptance are implemented in source; final validation and
-central service-acceptance/final-ACK coverage remain pending.
+source correction at `10ef078a`, runtime wiring at `a6fe0bb2` and production
+checkpoint `da55414f`. Native owner routing, packet acceptance and final ACK have
+component coverage with supplied task/physical primitives. Failed attempts and
+[fixture limits](design/kdlock_lock_replacement_contract.md#component-fixture-limits)
+remain explicit; actual live validation is pending.
 
 ## Entry identities and packet states
 
@@ -383,8 +385,10 @@ query bodies remain ordinary JIT code under the
 [operation-based policy](design/admission.md#selected-rwsem-state-queries).
 This selection adds no wrapper argument or packet layout. `a6fe0bb2` commits
 the descriptor/registration and passes the writer-query component fixture with
-supplied runtime observations. The query-image group still fails one assertion;
-the actual O/E service/ACK path has no reported live test.
+supplied runtime observations. The query-image group passes six cases at
+`da55414f`, after repairing the legal continuation-label assertion. It uses
+synthetic source bodies with the original image backend; actual public query
+bodies and the O/E service/ACK path still require live execution.
 
 Current strings use ordinary decoded CALL/RET and actual virtual return words,
 without a named service, memory summary, quota or direct native bridge. The
@@ -418,8 +422,15 @@ ACK can precede E's recursive unwind. E's selected synchronous home-CPU cleanup
 therefore publishes pooled-slot reuse only after its own final references end;
 see [retirement ordering](design/lifetimes.md#selected-retained-handback-retirement).
 Waiter-side final-use ACK/pinning simplification remains later work. This
-sequence is wired at `a6fe0bb2`; focused central acceptance/final-ACK coverage
-is still being prepared, and the first retirement fixture does not compile.
+sequence is committed. The `da55414f` production service join passes three
+modes with supplied task/physical primitives and manually represented recursive
+unwind; root storage remains accessible until thread joining. Separate retirement
+components pass four positive modes and nine rejections with supplied CPU/work
+APIs. Saved-state restore also passes its limited arithmetic-flag/GPR/SP cases,
+including a configured-thunk substitute. None closes general flags/SIMD or
+IRQ/NMI coverage, real CPU hotplug or loaded-provider execution. The
+[current evidence](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
+preserves the first query failure and retirement compile failure separately.
 
 ### Checked instruction exit
 

@@ -100,9 +100,12 @@ stores, acquisitions, CALL pushes and RET pops. It cannot restart a progressed
 body. Checkpoint `ebae17c1` adds negotiated ordinary miss handback; `10ef078a`
 removes the separate instruction backend and corrects extended-header selection.
 Runtime checkpoint `a6fe0bb2` wires retained-worker handback, packet acceptance,
-Native owner routing and synchronous cleanup. Its first build/component receipt
-fails overall, and central acceptance/final-ACK coverage remains pending.
-Generic IJ errors are not evidence of successful handback.
+Native owner routing and synchronous cleanup. Production checkpoint `da55414f`
+has passing central acceptance/final-ACK and retirement components. Later
+fixture-only runs resolve resource/OSQ failures with identical production trees;
+all failed receipts remain recorded. These joins use supplied task/physical/CPU
+primitives and do not establish a live stack switch or MM result. Generic IJ
+errors are not evidence of successful handback.
 
 The selected follow-up keeps the three mmap state/assertion query bodies in the
 original JIT, preserving a narrow `ATOMIC_ORIGIN` Native service only for the
@@ -110,8 +113,9 @@ exact `kd_service_write_owned` custody proof. Other services and bounded callee
 learning retain their policies. Existing downgraded read credit transfers to
 Native custody without a decrement, and pooled slots retire through synchronous
 E-side home-CPU cleanup with an explicit serialized already-offline path. These
-are resolved designs with source wiring in `a6fe0bb2`; final validation remains
-incomplete. Component fixtures are distinct from loaded-provider execution; see
+are resolved designs with committed source and focused component evidence;
+matching live inputs and handback-aware runners remain pending preparation.
+Component fixtures are distinct from loaded-provider execution; see
 the [contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement).
 

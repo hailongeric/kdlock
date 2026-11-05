@@ -50,9 +50,12 @@ later scoped/retained kernels have independent identities. Native MM bodies
 remain unchanged: local controls execute on the origin (O), while retained
 candidates may execute them on the executor (E) through the general lock layer.
 The selected correction restores the original JIT and commits retained-owner
-handback wiring at `a6fe0bb2`. Its first frozen build/component checks fail
-overall; final rerun and central service-acceptance/final-ACK coverage remain
-pending. Linux 6.1 adaptation, operation-specific MM algorithms
+handback wiring at `a6fe0bb2`, with production checkpoint `da55414f` and
+[subsequent focused component results](design/kdlock_lock_replacement_contract.md#current-focused-component-results).
+The observed component failures are resolved across source-specific runs with
+identical production trees; earlier failed receipts remain intact. Matching
+live inputs and handback-aware runners remain pending preparation, and no live
+result is established. Linux 6.1 adaptation, operation-specific MM algorithms
 and prepared teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
@@ -84,9 +87,10 @@ its backend selected before publication. Preserve reader concurrency, killable
 acquisition, downgrade, exact asynchronous read-release references and teardown.
 Native mmap/munmap/advice/fault algorithms stay unchanged. The historical local
 adapter keeps execution on the original task. Retained candidates use the
-general lock and service contracts; the original JIT correction's required
-committed current-position worker handback and pending validation have separate
-scope. Build/component checks do not establish a live MM or application result.
+general lock and service contracts; the original JIT correction's committed
+current-position worker handback, component evidence and pending live validation
+have separate scope. Build/component checks do not establish a live MM or
+application result.
 
 The historical local adapter uses local KD readers and writers. Nano JIT batching
 therefore does not explain those local-MM measurements. Profile actual phase
