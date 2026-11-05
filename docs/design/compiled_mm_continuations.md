@@ -412,3 +412,56 @@ which itself needs a free service worker. The deferred alternative avoids that
 pool dependency at the cost of a work item, a kernel cleanup workqueue and a
 proved offline metadata path. These are the concrete choices to confirm before
 implementation; the approved reader-count behavior remains unchanged either way.
+
+## Selected state queries use the original JIT
+
+The user selected ordinary original-JIT execution for
+`kd_mmap_assert_held_write`, `kd_mmap_assert_held` and `kd_mmap_is_locked`.
+This is a targeted classification correction, not permission to expand an
+entire helper call chain before execution. The existing bounded CFG policy,
+actual CALL/IJ reports and later immutable-image learning remain unchanged.
+This section precedes the corresponding code changes.
+
+The exported facade-control rows use synthetic labels. Identify the three
+queries by `KD_RWSEM_OP_ASSERT_HELD` (14),
+`KD_RWSEM_OP_ASSERT_HELD_WRITE` (15) and `KD_RWSEM_OP_IS_LOCKED` (16), not by
+their display names. Keep their immutable control-table records for exact
+discovery, but exclude these records from the translator's runtime-control,
+lock-control and callee-exclusion sets. Do not register their targets as
+returning Native services. Consequently their reached CALLs use ordinary miss
+reporting, and their learned direct or indirect targets become decoded roots
+through the existing history mechanism. An inconsistent snapshot that still
+declares one of these targets as a Native service must fail translation rather
+than silently selecting that service. The other query operations,
+`KD_RWSEM_OP_IS_CONTENDED` (17) and `KD_RWSEM_OP_IS_WRITE_OWNER` (18), retain
+their current Native services. Acquisition, release and downgrade controls
+retain their current classifications.
+
+Keep the actual assertion bodies and provider callbacks unchanged. In
+particular, `kd_provider_write_owned` first checks the exact LOCAL phase and
+physical owner, then calls `kd_service_write_owned` for retained ownership.
+That inner runtime query depends on `kd_exec_current_frame` and the exact
+origin-service transaction. Its physical CPU/task interpretation cannot be
+replaced by an ordinary translated `current_task` read. Declare this existing
+two-argument Boolean function as a returning Native service using the existing
+atomic-compatible context and module-reference contract. O executes only that
+runtime query while E is suspended, then E resumes the same immutable JIT
+image. Preserve its request generation, physical gate owner, selected phase
+identity/generation and pending-pickup checks. A positive reader count or a
+generic locked observation cannot replace those checks. This uses the existing
+service protocol and adds no query-specific queue or new public API.
+
+Other downstream operations retain their individually declared Native services
+or ordinary bounded learning. Merely being called by one of the three queries
+does not force a helper into translation or turn it into a Native service.
+A cold downstream target still uses the documented first-unexecuted-position
+handback; it does not wait for a new image or replay completed instructions.
+The original JIT remains the sole production backend.
+
+Focused fixture preparation covers operation-based partitioning, inconsistent
+service declarations, cold and learned query CALLs, exact ownership predicates
+with different O/E tasks and stale identity/generation observations, and Native
+read custody retiring while its ordinary read credit remains live. These are
+prepared checks until executed on the VM after the overall functionality is
+complete. They do not establish an mmap1 result. The pooled-storage cleanup
+decision above remains pending and is not changed by this correction.
