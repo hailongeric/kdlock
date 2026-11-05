@@ -1,0 +1,388 @@
+{
+  "accepted": false,
+  "applications": [
+    {
+      "delegation_proved": false,
+      "drained": true,
+      "finished_ns": 468700474809,
+      "identity": {
+        "actual_mmap_lock_observed": true,
+        "delegated_execution_proved": false,
+        "immutable_provider_observed": true,
+        "passed": true,
+        "provider_routes": [
+          2
+        ],
+        "records": [
+          {
+            "backing": 18379471568311626816,
+            "cpu": 0,
+            "lock": 18379471568311626816,
+            "mm": 18379471568311626368,
+            "provider": 18446744072649094048,
+            "route": 2,
+            "start_boottime_ns": 460608668800,
+            "tgid": 2580,
+            "tid": 2581,
+            "use_kd": 1
+          },
+          {
+            "backing": 18379471568311626816,
+            "cpu": 1,
+            "lock": 18379471568311626816,
+            "mm": 18379471568311626368,
+            "provider": 18446744072649094048,
+            "route": 2,
+            "start_boottime_ns": 460609141376,
+            "tgid": 2580,
+            "tid": 2582,
+            "use_kd": 1
+          }
+        ],
+        "scope": "these diagnostic process lifetimes only",
+        "unique_mms": 1,
+        "workers": 2
+      },
+      "local_untranslated": true,
+      "model": "threads",
+      "output": {
+        "completed_pairs": 213554,
+        "elapsed_interval_seconds_observed": false,
+        "measurement": [
+          {
+            "max": 53401,
+            "min": 53371,
+            "total": 106772
+          },
+          {
+            "max": 53417,
+            "min": 53365,
+            "total": 106782
+          }
+        ],
+        "nominal_seconds": 2,
+        "pairs_per_nominal_second": 106777.0,
+        "upstream_average": 106777,
+        "upstream_average_divisor": 2,
+        "upstream_counter_boundary": "-s2: six pre-marker samples, two post-marker samples, integer average divides by2",
+        "warmup": [
+          {
+            "max": 53359,
+            "min": 53327,
+            "total": 106686
+          },
+          {
+            "max": 53431,
+            "min": 53362,
+            "total": 106793
+          },
+          {
+            "max": 53376,
+            "min": 53315,
+            "total": 106691
+          },
+          {
+            "max": 53404,
+            "min": 53355,
+            "total": 106759
+          },
+          {
+            "max": 53408,
+            "min": 53361,
+            "total": 106769
+          },
+          {
+            "max": 53395,
+            "min": 53335,
+            "total": 106730
+          }
+        ]
+      },
+      "passed": true,
+      "scored": false,
+      "started_ns": 460576914378
+    },
+    {
+      "delegation_proved": false,
+      "drained": true,
+      "finished_ns": 476787483152,
+      "identity": {
+        "actual_mmap_lock_observed": true,
+        "delegated_execution_proved": false,
+        "immutable_provider_observed": true,
+        "passed": true,
+        "provider_routes": [
+          2
+        ],
+        "records": [
+          {
+            "backing": 18379471559056300864,
+            "cpu": 0,
+            "lock": 18379471559056300864,
+            "mm": 18379471559056300416,
+            "provider": 18446744072649094048,
+            "route": 2,
+            "start_boottime_ns": 468737736370,
+            "tgid": 2588,
+            "tid": 2588,
+            "use_kd": 1
+          },
+          {
+            "backing": 18379471559030396608,
+            "cpu": 1,
+            "lock": 18379471559030396608,
+            "mm": 18379471559030396160,
+            "provider": 18446744072649094048,
+            "route": 2,
+            "start_boottime_ns": 468738435176,
+            "tgid": 2589,
+            "tid": 2589,
+            "use_kd": 1
+          }
+        ],
+        "scope": "these diagnostic process lifetimes only",
+        "unique_mms": 2,
+        "workers": 2
+      },
+      "local_untranslated": true,
+      "model": "processes",
+      "output": {
+        "completed_pairs": 665697,
+        "elapsed_interval_seconds_observed": false,
+        "measurement": [
+          {
+            "max": 166609,
+            "min": 166214,
+            "total": 332823
+          },
+          {
+            "max": 166626,
+            "min": 166248,
+            "total": 332874
+          }
+        ],
+        "nominal_seconds": 2,
+        "pairs_per_nominal_second": 332848.5,
+        "upstream_average": 332848,
+        "upstream_average_divisor": 2,
+        "upstream_counter_boundary": "-s2: six pre-marker samples, two post-marker samples, integer average divides by2",
+        "warmup": [
+          {
+            "max": 166559,
+            "min": 166074,
+            "total": 332633
+          },
+          {
+            "max": 166647,
+            "min": 166220,
+            "total": 332867
+          },
+          {
+            "max": 166554,
+            "min": 166098,
+            "total": 332652
+          },
+          {
+            "max": 166538,
+            "min": 166240,
+            "total": 332778
+          },
+          {
+            "max": 166545,
+            "min": 166315,
+            "total": 332860
+          },
+          {
+            "max": 166390,
+            "min": 166154,
+            "total": 332544
+          }
+        ]
+      },
+      "passed": true,
+      "scored": false,
+      "started_ns": 468717081951
+    }
+  ],
+  "boot_id": "592cb3aa-5bd9-45ab-8852-7ca4544b1779",
+  "cases": [
+    {
+      "expected_entries": [],
+      "name": "ready",
+      "passed": true,
+      "registry": []
+    },
+    {
+      "expected_entries": [],
+      "name": "anonymous64",
+      "passed": true,
+      "registry": []
+    },
+    {
+      "expected_entries": [],
+      "name": "file128",
+      "passed": true,
+      "registry": []
+    },
+    {
+      "expected_entries": [
+        18446744071587350331
+      ],
+      "name": "file128-unmapped",
+      "passed": true,
+      "registry": [
+        {
+          "code": 0,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": -1,
+          "tgid": 2578
+        }
+      ]
+    },
+    {
+      "expected_entries": [
+        18446744071586934632,
+        18446744071587350331
+      ],
+      "name": "anonymous128",
+      "passed": true,
+      "registry": [
+        {
+          "code": 0,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": -1,
+          "tgid": 2578
+        },
+        {
+          "code": 0,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": -1,
+          "tgid": 2578
+        }
+      ]
+    },
+    {
+      "expected_entries": [
+        18446744071586934632,
+        18446744071587350331
+      ],
+      "name": "anonymous128-unmapped",
+      "passed": true,
+      "registry": [
+        {
+          "code": 0,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": -1,
+          "tgid": 2578
+        },
+        {
+          "code": 0,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 0,
+          "status": -1,
+          "tgid": 2578
+        }
+      ]
+    }
+  ],
+  "checks_passed": true,
+  "default_policy": {
+    "enabled": false,
+    "version": 1
+  },
+  "default_retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "delegation_proved": false,
+  "drained": false,
+  "fixture_sha256": "18bac53acf3fce5b2e28e17503f7d09b2556cd727ccfe58075b61494e0fdec2f",
+  "kernel_collection": {
+    "bytes": 3244,
+    "collector_cpu": 63,
+    "complete": true,
+    "drained": true,
+    "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-functional-4506f6e4-r2/kernel-log/kernel-log-errors.jsonl",
+    "errors": 0,
+    "fault_detected": false,
+    "first_error": null,
+    "last_error": null,
+    "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-functional-4506f6e4-r2/kernel-log/kernel.log",
+    "max_bytes": 67108864,
+    "mode": "continuous-diagnostic",
+    "records": 44
+  },
+  "known_child_drain": true,
+  "passed": false,
+  "provider": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/provider/kernel_module/kdlock_km.ko",
+  "provider_sha256": "a9e121b1dfae464e3199b8d6cec07d7539f3aedac62d31a3affd680b1b629f65",
+  "retirement_snapshot": {
+    "bindings": 3,
+    "note_sha256": "629f604b2a726452fc60dca251f267a46d2cd5b6e22738b0b13b9869a1e986e8",
+    "registry": [
+      {
+        "code": 0,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 0,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 0,
+        "status": -1,
+        "tgid": 2578
+      },
+      {
+        "code": 0,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 0,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 0,
+        "status": -1,
+        "tgid": 2578
+      }
+    ],
+    "source": {
+      "frames": 0,
+      "modules": 0,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "schema": 1,
+  "scored": false,
+  "selected_policy": {
+    "enabled": true,
+    "version": 1
+  },
+  "source_commit": "4506f6e46394133e439f68a04d6fde38aea0885f",
+  "state": "FUNCTIONAL_RETIREMENT_PENDING",
+  "translator_started": false
+}

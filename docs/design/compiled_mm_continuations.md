@@ -1290,3 +1290,13 @@ Live checks must show excluded startup/file-backed mmap cannot register a new
 root, matching anonymous mmap/munmap remain eligible, local API results remain
 correct, and exact retirement/normal restoration complete. These are selection
 and API checks, not returned-JIT, throughput or full delegated-mmap acceptance.
+
+Implemented at `4506f6e46394133e439f68a04d6fde38aea0885f`. The VM build,
+55 Python cases, compiled rwsem API/ABI checks, six actual-syscall checkpoints
+and one unscored two-worker lifetime for each mmap1 model passed. The existing
+identity observer confirmed route 2, shared thread MM and distinct process
+MMs. No translator ran and both entries stayed UNINIT, so no delegated body or
+performance result is claimed. Exact retirement and normal restoration passed.
+The file-backed 128 MiB munmap was eligible, confirming the stated limit.
+Evidence is retained in
+`bench/results/10.176.26.71/tests/mmap1-syscall-shape-4506f6e4/README.md`.

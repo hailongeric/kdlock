@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "cc",
+    "-std=gnu11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "/root/kdlock-inputs/shape-4506f6e4/tests/kernel/mmap1_identity/argument_fixture.c",
+    "-o",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-functional-4506f6e4-r2/arg_shape"
+  ],
+  "cwd": "/root/kdlock-inputs/shape-4506f6e4",
+  "pid": 2442,
+  "started_ns": 459272540935,
+  "timeout_seconds": 30
+}

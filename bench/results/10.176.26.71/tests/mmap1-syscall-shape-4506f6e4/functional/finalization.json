@@ -1,0 +1,26 @@
+{
+  "accepted": false,
+  "before": {
+    "bindings": 0,
+    "source": {
+      "frames": 0,
+      "modules": 0,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "checks_passed": true,
+  "delegation_proved": false,
+  "drained": true,
+  "final_idle": true,
+  "original_result_sha256": "802ea9c2689ea4f0c45e39342bea0cd380a221ab158291671a60ca75c4423001",
+  "passed": true,
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "scored": false,
+  "source_commit": "4506f6e46394133e439f68a04d6fde38aea0885f"
+}

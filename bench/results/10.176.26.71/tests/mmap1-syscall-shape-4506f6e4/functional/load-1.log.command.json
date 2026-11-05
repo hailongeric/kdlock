@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "insmod",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/provider/kernel_module/kdlock_km.ko",
+    "bench_quiet=1",
+    "bench_complete_probe=0",
+    "jit_timing=0",
+    "hotlock_stats=0",
+    "service_cpus=0-61",
+    "rwsem_provider_demand=1",
+    "rwsem_provider_entries=0xffffffff817b6f68,0xffffffff8181c73b",
+    "rwsem_provider_syscall_shape=1"
+  ],
+  "cwd": "/root/kdlock-inputs/shape-4506f6e4",
+  "pid": 2515,
+  "started_ns": 460154524128,
+  "timeout_seconds": 30
+}

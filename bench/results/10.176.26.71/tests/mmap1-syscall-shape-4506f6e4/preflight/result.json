@@ -1,0 +1,138 @@
+{
+  "source_commit": "4506f6e46394133e439f68a04d6fde38aea0885f",
+  "root": "/root/kdlock-inputs/shape-4506f6e4",
+  "selected_image_capacity": 128,
+  "default_image_capacity": 64,
+  "units": [
+    {
+      "test": "bench/test_mmap1_demand.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "bench/test_mmap1_demand.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-0.log",
+      "tail": "...........\n----------------------------------------------------------------------\nRan 11 tests in 0.337s\n\nOK\n"
+    },
+    {
+      "test": "bench/test_mmap1.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "bench/test_mmap1.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-1.log",
+      "tail": "......................\n----------------------------------------------------------------------\nRan 22 tests in 0.151s\n\nOK\n"
+    },
+    {
+      "test": "bench/test_mmap1_delegated.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "bench/test_mmap1_delegated.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-2.log",
+      "tail": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.035s\n\nOK\n"
+    },
+    {
+      "test": "bench/test_mmap1_image_point.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "bench/test_mmap1_image_point.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-3.log",
+      "tail": "{\"state\": \"FAILED\", \"passed\": false, \"drained\": false, \"mode\": \"kd\", \"model\": \"threads\", \"workers\": 2, \"upstream\": null, \"error\": \"AssertionError()\"}\n{\"state\": \"FAILED\", \"passed\": false, \"drained\": false, \"mode\": \"kd\", \"model\": \"threads\", \"workers\": 2, \"upstream\": null, \"error\": \"AssertionError('exact image-session retirement did not drain')\"}\n{\"state\": \"COMPLETE\", \"passed\": true, \"drained\": true, \"mode\": \"kd\", \"model\": \"threads\", \"workers\": 2, \"upstream\": null, \"error\": null}\n{\"state\": \"FAILED\", \"passed\": false, \"drained\": false, \"mode\": \"kd\", \"model\": \"threads\", \"workers\": 2, \"upstream\": null, \"error\": \"AssertionError()\"}\n....\n----------------------------------------------------------------------\nRan 4 tests in 0.016s\n\nOK\n"
+    },
+    {
+      "test": "mutex/test_rwsem_api.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "mutex/test_rwsem_api.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-4.log",
+      "tail": "PASS public rwsem native facade and preparation routing\nPASS public rwsem: compiled ordinary/integer capture, exact typed release, downgrade and ABI2 endpoints\n"
+    },
+    {
+      "test": "bench/test_mmap1_campaign.py",
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/shape-4506f6e4/tests/unit/run.py",
+        "bench/test_mmap1_campaign.py"
+      ],
+      "returncode": 0,
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/unit-5.log",
+      "tail": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.023s\n\nOK\n"
+    }
+  ],
+  "no_module_load": true,
+  "no_reboot": true,
+  "no_timing": true,
+  "original_retention_unchanged": true,
+  "boot_id": "3da48c0e-7596-469a-bfea-45122dfd4d81",
+  "build": {
+    "argv": [
+      "taskset",
+      "-c",
+      "0-63",
+      "make",
+      "-C",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/provider/kernel_module",
+      "KDIR=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "W=1",
+      "-j8",
+      "KDLOCK_SELFTEST=0",
+      "KDLOCK_NUMA=1",
+      "KDLOCK_SPIN_BATCH=1024",
+      "KDLOCK_JIT_IMAGES=128",
+      "UBSAN_SANITIZE=n"
+    ],
+    "returncode": 0
+  },
+  "provider": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/provider/kernel_module/kdlock_km.ko",
+  "provider_sha256": "a9e121b1dfae464e3199b8d6cec07d7539f3aedac62d31a3affd680b1b629f65",
+  "preparation_kind": "spin_cacheline private provider",
+  "preparation_sha256": "00eed8cc95774a7279465820ffe138b3107e9fb95574254c067285ae290a92d7",
+  "required_parameters_present": true,
+  "daemon_build": {
+    "argv": [
+      "taskset",
+      "-c",
+      "63",
+      "make",
+      "-C",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/daemon-tree/daemon",
+      "CFLAGS=-O2 -Wall -Wextra -Werror"
+    ],
+    "returncode": 0
+  },
+  "daemon": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/shape-preflight-4506f6e4/daemon-tree/daemon/daemon",
+  "daemon_sha256": "9a80d79d1c43d7c1be8a27fdc2bd2cfd0c278ba76c855e581a85a0ad962bf413",
+  "passed": true,
+  "final_idle": true,
+  "frozen_inputs_unchanged": true
+}
