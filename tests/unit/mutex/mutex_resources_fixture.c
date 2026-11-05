@@ -530,6 +530,13 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
 	CHECK(memcmp(&node->regs, &entry, sizeof(entry)) == 0);
+	if (native_owner_wait) {
+		/* This peer owns only the physical lock. The actual wait helper
+		 * acquires it before publishing a new delegation-gate owner. */
+		CHECK(mode == 0 && kd_mutex_gate_read(lock) == KD_MUTEX_GATE_FREE);
+		kd_mutex_wait_and_lock_node(lock, node);
+		return 2;
+	}
 	if (mode == 2) {
 		release_peer(lock);
 		kd_mutex_wait_and_lock_node(lock, node);

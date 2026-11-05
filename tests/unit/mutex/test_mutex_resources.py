@@ -167,7 +167,7 @@ def main():
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
         "gate-without-native-lock": (
             "\tkd_mutex_local_lock_node(lock, node);",
-            "\t(void)node;",
+            "\t(void)kd_mutex_local_lock_node;\n\t(void)node;",
         ),
         "claim-publishes-held-before-physical": (
             "\tkd_mutex_local_lock_node(lock, node);",

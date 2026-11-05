@@ -524,3 +524,12 @@ checks, and require the Native unlock lookup even without a legacy task record.
 Only these repaired drivers need a new VM run; unchanged passing drivers keep
 their original source-specific receipts. This remains component evidence,
 separate from matching-kernel live continuation and mmap1 checks.
+
+The frozen `615cdb0b` rerun passed all 26 OSQ scenarios and detected all 14
+mutations. Its resource driver compiled, then rejected the supplied ordinary
+peer case because the old assembly substitute had no outcome for that case.
+Route it through the extracted physical-wait helper without pretending that
+the ordinary peer owns a delegation gate. Preserve a noncalling function
+reference in the omitted-physical-acquisition mutation so its result remains
+a runtime assertion, not an unused-function compile failure. Rerun only the
+resource driver; the OSQ receipt remains attached to its existing version.
