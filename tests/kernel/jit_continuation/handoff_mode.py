@@ -54,6 +54,13 @@ def decoded_source_blocks(assembly):
         assembly, re.S)}
 
 
+def decoded_ret_successors(source_blocks):
+    # A bare x86 RET is one byte. Use actual decoded single-instruction blocks,
+    # including the shared kernel return thunk, rather than guessing a callee PC.
+    return {start + 1 for start, text in source_blocks.items()
+            if [line.strip() for line in text.splitlines()[1:] if line.strip()] == ['RET']}
+
+
 def validate_root(events, pid, slot, observation, image, return_words):
     roots = [event for event in events if event['origin'] == pid and event['depth'] == 0]
     entered = [event for event in roots if event['event'] == 'enter']
@@ -78,9 +85,11 @@ def validate_root(events, pid, slot, observation, image, return_words):
                    roots.index(root) < roots.index(handbacks[0]) < roots.index(finished[0]),
                    'handback acceptance/terminal sequence differs', 'DATA_ERROR')
         point = handbacks[0]
+        at_entry = (point.get('ip') in (observation['wrapper'], observation['leaves'][slot]) and
+                    point.get('sp') == row['entry_sp'])
+        after_return = point.get('ip') == row['return_word'] and point.get('sp') == row['entry_sp'] + 8
         rt.require(point.get('image_generation') == image['generation'] and
-                   point.get('ip') in (observation['wrapper'], observation['leaves'][slot]) and
-                   point.get('sp') == row['entry_sp'],
+                   (at_entry or after_return),
                    'first unexecuted source IP/SP or capture image differs', 'DATA_ERROR')
         return root, point
     rt.require(len(returned) == 1 and not any(event['event'] == 'handoff_finished' for event in roots),
@@ -181,6 +190,7 @@ def session_class(base):
             coverage = {str(target): target in source_blocks
                         for target in (state['wrapper'], *state['leaves'], state['body'])}
             row = dict(label=label, entry=entry, files=files, coverage=coverage,
+                       ret_next_pcs=sorted(decoded_ret_successors(source_blocks)),
                        source=publication['source'], path=str(output))
             pending = getattr(self, 'pending_learning', None)
             if pending is not None:
@@ -270,40 +280,52 @@ def session_class(base):
                            any(event['event'] == 'native_read_custody' and event['origin'] == pid for event in events) and
                            body['tail_done'] == 0x1234 and final['slots'][3]['prefix'] == 1 and not final['readers'],
                            'Native read custody/release or fresh writer proof differs', 'DATA_ERROR')
-            pending = self.registry_rows()
-            immutable = ('pid', 'tgid', 'lock_kind', 'entry', 'code', 'entry_abi', 'requirements', 'generation')
-            expected_status = 1 if point['ip'] == observation['wrapper'] else 2
-            rt.require(len(pending) == 1 and all(pending[0][key] == image['entry'][key] for key in immutable) and
-                       pending[0]['status'] == expected_status and pending[0]['target'] == point['ip'] and
-                       pending[0]['jump_from'] == (0 if expected_status == 1 else self.jump_successor),
-                       'capture image changed or its actual learning report differs', 'DATA_ERROR')
-            self.pending_learning = pending[0]
+            pending = self.remember_report(image, point, observation)
             result.update(complete=True, origin=pid, observation=observation, at_callee=at_callee,
                           service_events=events, handback=point, pending_report=pending,
                           execution='EXACT_CURRENT_POSITION_HANDBACK')
             self.save()
             return point
 
-        def compiled_phase(self, image):
-            result = self.phase_begin('learned-compiled-return')
-            control(RELEASE, 16)
-            client = self.start(result['name'], 0, 0, FLAGS[0])
+        def remember_report(self, image, point, observation):
+            pending = self.registry_rows()
+            immutable = ('pid', 'tgid', 'lock_kind', 'entry', 'code', 'entry_abi', 'requirements', 'generation')
+            expected_status = 1 if point['ip'] == observation['wrapper'] else 2
+            valid_from = (pending and pending[0]['jump_from'] in image['ret_next_pcs']
+                          if point['ip'] in self.return_words else
+                          pending and pending[0]['jump_from'] == (0 if expected_status == 1 else self.jump_successor))
+            rt.require(len(pending) == 1 and all(pending[0][key] == image['entry'][key] for key in immutable) and
+                       pending[0]['status'] == expected_status and pending[0]['target'] == point['ip'] and valid_from,
+                       'capture image changed or its actual source CALL/IJ/RET report differs', 'DATA_ERROR')
+            self.pending_learning = pending[0]
+            return pending
+
+        def compiled_phase(self, image, index=0):
+            result = self.phase_begin('learned-return-' + str(index) + '-' + str(image['entry']['generation']))
+            control(RELEASE, 16 | (8 if index == 2 else 0))
+            client = self.start(result['name'], 0, index, FLAGS[index])
             self.join(client)
-            result['drain'] = self.drained('learned-compiled-return-drain')
+            result['drain'] = self.drained(result['name'] + '-drain')
             self.faults()
             observation = ordinary_snapshot()
             events = trace_events(self.messages[self.trace_start:])
-            root, point = validate_root(events, client[0].pid, 0, observation, image['entry'], self.return_words)
-            rt.require(point is None and image['coverage'][str(observation['wrapper'])] and
-                       image['coverage'][str(observation['leaves'][0])] and
+            root, point = validate_root(events, client[0].pid, index, observation, image['entry'], self.return_words)
+            rt.require(image['coverage'][str(observation['wrapper'])] and
+                       image['coverage'][str(observation['leaves'][index])] and
                        image['coverage'][str(observation['body'])],
                        'later image did not execute learned ordinary targets on E', 'NO_JIT')
-            final = snapshot()['slots'][0]
+            final = snapshot()['slots'][index]
             rt.require(final['prefix'] == final['returned'] == 1 and final['result'] == 0,
                        'learned prefix or API return differs', 'DATA_ERROR')
-            result.update(complete=True, service_events=events, observation=observation,
-                          execution='LEARNED_BODY_RETURNED_ON_EXECUTOR')
+            if point is not None:
+                rt.require(point['ip'] == observation['slots'][index]['return_word'],
+                           'decoded callee reached an unexpected frontier', 'DATA_ERROR')
+                result['pending_report'] = self.remember_report(image, point, observation)
+            result.update(complete=True, service_events=events, observation=observation, handback=point,
+                          execution='LEARNED_BODY_RETURNED_ON_EXECUTOR' if point is None else
+                                    'POST_RET_SOURCE_CONTINUATION_HANDBACK')
             self.save()
+            return point
 
         def cancellation_phase(self):
             result = self.phase_begin('killable-cancel-while-held')
@@ -385,11 +407,13 @@ def session_class(base):
                 image = self.archive_image('root-' + str(wave))
                 if (image['coverage'][str(ordinary['wrapper'])] and image['coverage'][str(ordinary['leaves'][0])] and
                         image['coverage'][str(ordinary['body'])]):
-                    rt.require(seen == {ordinary['wrapper'], ordinary['leaves'][0]},
+                    rt.require({ordinary['wrapper'], ordinary['leaves'][0]} <= seen,
                                'cold direct CALL and actual indirect edge were not both observed', 'NO_JIT')
-                    self.compiled_phase(image)
-                    break
-                point = self.ordinary_phase('root-cold-' + str(wave), 0, image)
+                    point = self.compiled_phase(image)
+                    if point is None:
+                        break
+                else:
+                    point = self.ordinary_phase('root-cold-' + str(wave), 0, image)
                 seen.add(point['ip'])
                 self.await_learning(image['entry'])
             else:
@@ -400,17 +424,28 @@ def session_class(base):
                            'required nested/read cold target was already in the image', 'DATA_ERROR')
                 self.ordinary_phase(name, index, image)
                 self.await_learning(image['entry'])
-            image = self.archive_image('learned-read-tail')
-            rt.require(image['coverage'][str(ordinary['leaves'][2])] and image['coverage'][str(ordinary['body'])],
-                       'read leaf/body was not learned before the compiled read-tail check', 'NO_JIT')
+            for wave in range(3):
+                image = self.archive_image('read-return-' + str(wave))
+                rt.require(image['coverage'][str(ordinary['leaves'][2])] and image['coverage'][str(ordinary['body'])],
+                           'read leaf/body was not learned before the compiled read-tail check', 'NO_JIT')
+                point = self.compiled_phase(image, index=2)
+                if point is None:
+                    break
+                self.await_learning(image['entry'])
+            else:
+                raise rt.Failure('NO_JIT', 'read return continuation exceeded bounded learning waves')
             self.compiled_read_phase(image)
             self.cancellation_phase()
             self.record.update(accepted=True, jit_status='COLD_HANDOFF_AND_LATER_COMPILED_RETURN')
             self.save()
 
-        def cleanup(self):
+        def stop_daemon(self):
             if self.daemon is not None and self.daemon.poll() is None:
-                os.kill(self.daemon.pid, signal.SIGCONT)
-            super().cleanup()
+                rt.require(not rt.children(self.daemon.pid), 'translator has not exited', 'UNDRAINED')
+                # A stopped daemon must see termination before it can compile
+                # a pending report. The parent keeps its same child/drain guard.
+                self.daemon.terminate()
+                self.daemon.send_signal(signal.SIGCONT)
+            super().stop_daemon()
 
     return HandoffSession

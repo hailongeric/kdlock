@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 sys.path.insert(0, str(ROOT / 'tests/kernel/jit_continuation'))
 import bench_runtime as rt
 from handoff_mode import (decode_snapshot, decoded_source_blocks, validate_root,
-                         source_call_return_offset)
+                         decoded_ret_successors, source_call_return_offset)
 from helper_mode import ARGUMENTS, expected_result
 
 
@@ -38,6 +38,16 @@ class HandoffProofTests(unittest.TestCase):
         root, point = validate_root(events, 11, 0, observation, image, {0x8015})
         self.assertEqual(root['executor'], 22)
         self.assertIsNone(point)
+
+    def test_RET_exports_the_source_return_word_after_one_pop(self):
+        events, observation, image = self.fixture()
+        events[1].update(ip=observation['slots'][0]['return_word'], sp=0x2008)
+        self.assertEqual(validate_root(events, 11, 0, observation, image, {0x8015})[1]['sp'], 0x2008)
+        events[1]['sp'] = 0x2010
+        with self.assertRaises(rt.Failure):
+            validate_root(events, 11, 0, observation, image, {0x8015})
+        self.assertEqual(decoded_ret_successors({0x3000: 'loc_3000\nRET        ',
+                                                0x4000: 'loc_4000\nMOV EAX, 1\nRET'}), {0x3001})
 
     def test_rejects_packet_identity_replay_and_incomplete_terminal(self):
         events, observation, image = self.fixture()

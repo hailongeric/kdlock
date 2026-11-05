@@ -600,3 +600,18 @@ checks on those actual CALLs and omit the absolute address reference from that
 set. The second attempt retired all frames, modules and writers, unregistered
 the helper pin, unloaded normally and left the VM idle. No body result is
 claimed from either stopped attempt.
+
+The third attempt passed cold CALL and indirect-target handback. Its later
+compiled callee reached an unlearned RET continuation: IP equals the audited
+source return word, SP equals leaf-entry SP plus eight, and all useful effects
+occurred once. The archived decoded return-thunk block contains one bare RET;
+its next-PC is the actual IJ history source. Accept only that exact post-pop
+case and learn it for a later image within the same bounded wave count. Entry
+coverage alone does not prove a complete translated return path.
+
+Failure cleanup also resumed the paused daemon too early, allowing a compiler
+child to start before the existing no-child stop check. Preserve that guard;
+at the actual stop boundary send termination before continuation. The exact
+retained daemon was later stopped after its child completed, source retirement
+reported modules/frames/writers zero, helper registration was released, and
+both modules unloaded normally. The VM is idle; no force unload occurred.
