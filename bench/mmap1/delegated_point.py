@@ -28,6 +28,95 @@ def jit_observations(parameters):
     return values
 
 
+def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
+    """Renew exact receipts only at quiescent learning boundaries."""
+    timeout = c.get('learning_timeout', 900)
+    assert type(timeout) is int and 1 <= timeout <= 3600
+    deadline = time.monotonic() + timeout
+    limit = c.get('learning_rounds', 3)
+    assert type(limit) is int and 1 <= limit <= 8
+    previous, epochs = None, []
+    sites = {row['entry'] for row in owner.audit['records']}
+    base_files = dict(owner.files)
+
+    def snapshot():
+        nonlocal previous
+        verify()
+        settled_since = None
+        while True:
+            assert time.monotonic() < deadline, 'demand learning did not reach a quiescent boundary'
+            assert daemon.daemon.poll() is None, 'translation daemon exited during learning'
+            source, rows = rt.status(), rt.registry()
+            stable = (not rt.children(daemon.daemon.pid) and source['state'] == source['frames'] == 0 and
+                      source['writers'] == 1 and all(row['status'] in (0, -3) for row in rows))
+            if not stable:
+                settled_since = None
+                time.sleep(0.05)
+                continue
+            bench.execution.demand_registry(rows, sites)
+            signature = (source, bench.execution.registry(rows))
+            now = time.monotonic()
+            if settled_since is None or settled_since[1] != signature:
+                settled_since = (now, signature)
+            if now - settled_since[0] < 1:
+                time.sleep(0.05)
+                continue
+            if previous is not None:
+                bench.execution.demand_transition(previous, rows, sites)
+            verify()
+            epoch = out / 'epochs' / ('epoch-%03d' % len(epochs))
+            epoch.mkdir(parents=True)
+            owner.model, owner.files = epoch, dict(base_files)
+            for row in rows:
+                if row['status'] != 0:
+                    continue
+                source_dir = out / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
+                destination = epoch / (hex(row['entry']) + '-g' + str(row['generation']))
+                destination.mkdir()
+                for name in ('jit.bin', 'jit.S', 'bin.txt'):
+                    target = destination / name
+                    __import__('shutil').copyfile(source_dir / name, target)
+                    owner.files[str(target)] = rt.digest(target)
+            try:
+                receipt = owner.session_receipt(daemon, rows)
+                receipt.verify()
+            except rt.Failure as error:
+                if error.status not in ('LEARNING_ADVANCED', 'UNDRAINED'):
+                    raise
+                epochs.append(dict(path=str(epoch), accepted=False, error=str(error)))
+                settled_since = None
+                continue
+            previous = rows
+            epochs.append(dict(path=str(epoch), accepted=True, registry=rows))
+            rt.write_json(out / 'learning-epochs.json', epochs)
+            return receipt
+
+    class LearningSession(bench.execution.ExecutionSession):
+        def __init__(self):
+            self.current = snapshot()
+            self.__dict__.update(self.current.__dict__)
+
+        def verify(self, *, allow_identity_probe=False):
+            current = snapshot()
+            self.current = current
+            self.__dict__.update(current.__dict__)
+            return current.verify(allow_identity_probe=allow_identity_probe)
+
+    learning = LearningSession()
+    observations = []
+    for number in range(limit):
+        before = bench.execution.registry(learning.expected['registry'])
+        application = bench.run_point(out / ('learning-%02d' % number), dict(
+            model=c['model'], workers=c['workers'], round=number, nominal_seconds=2),
+            inputs, verify, execution_session=learning, learning=True)
+        after = bench.execution.registry(learning.expected['registry'])
+        observations.append(dict(application=application, registry_before=before, registry_after=after))
+        rt.write_json(out / 'learning.json', observations)
+        if before == after:
+            return learning.current, observations
+    raise rt.Failure('LEARNING_ADVANCED', 'bounded application learning has not reached a stable timing epoch')
+
+
 def image_point(c, config_bytes, root, out, controller, finalize):
     """Use the ordinary immutable-image session without changing its checks."""
     bench, rt = controller.bench, controller.rt
@@ -35,7 +124,8 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         kernel_variant=c['variant'], kernel_source=Path(c['kdir']),
         kernel_baseline=Path(c['bundle']), host_state=Path(c['host_state']),
         host_reference=Path(c['host_state']), host_reference_sha256=c['host_sha256'],
-        execution_mode='image', sites=Path(c['sites']), sites_sha256=c['sites_sha256'],
+        execution_mode='image', demand=c.get('demand', False),
+        sites=Path(c['sites']), sites_sha256=c['sites_sha256'],
         source_commit=c['source_commit'], source_state=root / 'source-state.json',
         source_manifest=root / 'source-sha256.json',
         source_state_sha256=c['state_sha256'], source_manifest_sha256=c['manifest_sha256'])
@@ -49,6 +139,7 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         assert os.geteuid() == 0 and sys.executable == controller.PYTHON
         assert c['mode'] in ('native', 'kd') and c['model'] in bench.MODELS
         assert c['workers'] in bench.WORKERS and c['profile'] is False
+        assert type(args.demand) is bool
         controller.source_manifest(args)
         if finalize:
             original = bench.load(out / 'result.json')
@@ -94,13 +185,21 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         files = dict(inputs['files'])
         files[str(args.sites)] = c['sites_sha256']
         audit = controller.site_audit(args, result['environment']['kernel_binding'])
+        def verify():
+            bench.verify_boot(args)
+            bench.verified_files(files)
         exact = daemon = None
         if c['mode'] == 'kd':
             provider, binary = Path(c['provider']), Path(c['daemon'])
             assert rt.digest(provider) == c['provider_sha256'] and rt.digest(binary) == c['daemon_sha256']
             files.update({str(provider): c['provider_sha256'], str(binary): c['daemon_sha256']})
-            rt.command(['insmod', str(provider), 'bench_quiet=1', 'bench_complete_probe=0',
-                'jit_timing=0', 'hotlock_stats=0', 'service_cpus=0-61'], out / 'load.log', timeout=30)
+            load = ['insmod', str(provider), 'bench_quiet=1', 'bench_complete_probe=0',
+                'jit_timing=0', 'hotlock_stats=0', 'service_cpus=0-61']
+            if args.demand:
+                load.append('rwsem_provider_demand=1')
+            rt.command(load, out / 'load.log', timeout=30)
+            assert (controller.PARAMETERS / 'bench_quiet').read_text().strip() == 'Y'
+            assert (controller.PARAMETERS / 'bench_complete_probe').read_text().strip() == 'N'
             assert (controller.PARAMETERS / 'service_trace').read_text().strip() == 'N'
             assert (controller.PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N'
             assert (controller.PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0'
@@ -113,12 +212,14 @@ def image_point(c, config_bytes, root, out, controller, finalize):
             timeout = c.get('prewarm_timeout', 180)
             assert type(timeout) is int and 1 <= timeout <= 3600
             deadline = time.monotonic() + timeout
-            while True:
-                rows = owner.ready(daemon)
-                if rows:
-                    break
-                assert time.monotonic() < deadline, 'all-site image preparation did not complete'
-                time.sleep(0.05)
+            rows = []
+            if not args.demand:
+                while True:
+                    rows = owner.ready(daemon)
+                    if rows:
+                        break
+                    assert time.monotonic() < deadline, 'all-site image preparation did not complete'
+                    time.sleep(0.05)
             for row in rows:
                 folder = out / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
                 for name in ('jit.bin', 'jit.S', 'bin.txt'):
@@ -126,13 +227,13 @@ def image_point(c, config_bytes, root, out, controller, finalize):
                     assert path.is_file() and path.stat().st_size > 0
                     files[str(path)] = rt.digest(path)
             (controller.PARAMETERS / 'rwsem_provider_mode').write_text('activate\n')
-            exact = owner.session_receipt(daemon, rows)
+            if args.demand:
+                exact, result['learning'] = demand_learning(c, out, owner, daemon, bench, rt, inputs, verify)
+            else:
+                exact = owner.session_receipt(daemon, rows)
             exact.verify()
             result['execution_session'] = exact.identity()
             result['prior_delegation_proof'] = c.get('delegation_proof')
-        def verify():
-            bench.verify_boot(args)
-            bench.verified_files(files)
         rt.write_json(result_path, dict(result, state='RUNNING'))
         result['application'] = bench.run_point(out / 'application', dict(
             model=c['model'], workers=c['workers'], round=0, nominal_seconds=2),
@@ -150,7 +251,9 @@ def image_point(c, config_bytes, root, out, controller, finalize):
             result.update(state='COMPLETE', passed=True, drained=True, final_idle=True)
         controller.source_manifest(args)
     except BaseException as error:
-        result.update(state='FAILED', error=repr(error), traceback=traceback.format_exc())
+        result.update(state='LEARNING_ADVANCED' if isinstance(error, rt.Failure) and
+                      error.status == 'LEARNING_ADVANCED' else 'FAILED',
+                      error=repr(error), traceback=traceback.format_exc())
         raise
     finally:
         if out.exists():

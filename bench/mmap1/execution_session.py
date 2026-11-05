@@ -48,6 +48,40 @@ def registry(rows):
     return sorted(rows, key=lambda row: (row['pid'], row['tgid'], row['entry']))
 
 
+def demand_registry(rows, sites, *, settled=True):
+    """Kernel entry identity is independent of its first registrar's task."""
+    keys = {(row['pid'], row['entry']) for row in rows}
+    rt.require(len(keys) == len(rows), 'duplicate demand registry entry', 'DATA_ERROR')
+    for row in rows:
+        rt.require(row['pid'] == 0 and row['entry'] in sites and
+                   type(row['tgid']) is int and row['tgid'] > 0 and
+                   row['entry_abi'] == row['lock_kind'] == 2,
+                   'demand entry/site/ABI identity differs', 'DATA_ERROR')
+        normal = row['status'] == 0 and row['code'] > 0 and row['generation'] > 0
+        paired = (row['code'] == row['generation'] == 0 or
+                  row['code'] > 0 and row['generation'] > 0)
+        local = row['status'] == -3 and paired
+        pending = not settled and row['status'] in (-1, 1, 2, 3, 4) and paired
+        rt.require(normal or local or pending, 'demand publication is not in a valid state', 'UNDRAINED')
+    return registry(rows)
+
+
+def demand_transition(before, after, sites):
+    demand_registry(before, sites, settled=False)
+    demand_registry(after, sites, settled=False)
+    current = {(row['pid'], row['entry']): row for row in after}
+    for old in before:
+        new = current.get((old['pid'], old['entry']))
+        rt.require(new is not None and all(new[key] == old[key] for key in
+                   ('pid', 'entry', 'tgid', 'entry_abi', 'lock_kind')) and
+                   new['generation'] >= old['generation'] and
+                   (new == old if old['status'] == -3 else
+                    new['generation'] > old['generation'] or all(new[key] == old[key]
+                        for key in ('code', 'requirements'))),
+                   'demand entry lifetime or generation moved backwards', 'DATA_ERROR')
+    return registry(before) != registry(after)
+
+
 def device_writers():
     """Observe every writable descriptor for this exact live device.
 
@@ -91,12 +125,13 @@ class ExecutionSession:
         rt.require(rt.digest(self.path) == sha256, 'execution-session receipt bytes differ', 'DATA_ERROR')
         self.expected = json.loads(self.path.read_text())
         expected = self.expected
+        self.demand = expected.get('demand', False)
         self.execution_mode = expected.get('execution_mode', 'image')
         if self.execution_mode == 'reached':
             self._init_reached()
             return
         rt.require(self.execution_mode == 'image', 'unknown execution-session mode', 'DATA_ERROR')
-        rt.require(expected.get('schema') == 1 and expected.get('boot_id') and
+        rt.require(expected.get('schema') == (3 if self.demand else 1) and expected.get('boot_id') and
                    expected.get('source', {}).get('state') == 0 and
                    set(expected['source']) == {'state', 'modules', 'writers'} and
                    type(expected['source'].get('writers')) is int and expected['source']['writers'] == 1 and
@@ -112,7 +147,17 @@ class ExecutionSession:
                    type(preparer.get('start_ticks')) is int and preparer['start_ticks'] > 0 and
                    preparer.get('argv'), 'exact live preparation controller required', 'DATA_ERROR')
         rows = expected.get('registry', [])
-        rt.require(rows and len({(row['pid'], row['tgid'], row['entry']) for row in rows}) == len(rows) and
+        if self.demand:
+            table = expected['writer_sites']
+            rt.require(values.get('rwsem_provider_demand') == 'Y' and
+                       rt.digest(Path(table['path'])) == table['sha256'] and
+                       expected['files'].get(table['path']) == table['sha256'],
+                       'demand provider or site-table identity differs', 'DATA_ERROR')
+            self.site_entries = {row['entry'] for row in json.loads(Path(table['path']).read_text())['records']}
+            rt.require(self.site_entries, 'empty demand site table', 'DATA_ERROR')
+            demand_registry(rows, self.site_entries)
+        else:
+            rt.require(rows and len({(row['pid'], row['tgid'], row['entry']) for row in rows}) == len(rows) and
                    all(row['pid'] == row['status'] == 0 and row['tgid'] == preparer['pid'] and row['entry_abi'] == 2 and
                        row['lock_kind'] == 2 and row['entry'] > 0 and row['code'] > 0 and row['generation'] > 0
                        for row in rows), 'complete ready ABI2 image registry required', 'DATA_ERROR')
@@ -166,9 +211,13 @@ class ExecutionSession:
                    'exact preparation controller lifetime/workspace changed', 'UNDRAINED')
         actual = task_identity(daemon['pid'])
         rt.require(all(actual[key] == daemon[key] for key in
-                       ('pid', 'start_ticks', 'executable', 'cwd', 'argv')) and
-                   not rt.children(daemon['pid']),
-                   'exact daemon lifetime/workspace changed or translator remains active', 'UNDRAINED')
+                       ('pid', 'start_ticks', 'executable', 'cwd', 'argv')),
+                   'exact daemon lifetime/workspace changed', 'UNDRAINED')
+        children = rt.children(daemon['pid'])
+        if self.demand and children:
+            demand_transition(expected['registry'], rt.registry(), self.site_entries)
+            raise rt.Failure('LEARNING_ADVANCED', 'image learning continues beyond the timing receipt')
+        rt.require(not children, 'translator remains active', 'UNDRAINED')
         for name, wanted in expected['parameters'].items():
             rt.require((PARAMETERS / name).read_text().strip() == wanted,
                        'execution-session parameter changed: ' + name, 'DATA_ERROR')
@@ -176,7 +225,10 @@ class ExecutionSession:
         rt.require(source == dict(expected['source'], frames=0) and
                    device_writers() == [daemon['device_writer']],
                    'source must have zero frames and only its exact live daemon writer', 'UNDRAINED')
-        rt.require(registry(rt.registry()) == registry(expected['registry']),
+        actual_registry = rt.registry()
+        if self.demand and demand_transition(expected['registry'], actual_registry, self.site_entries):
+            raise rt.Failure('LEARNING_ADVANCED', 'image learning advanced beyond the timing receipt')
+        rt.require(registry(actual_registry) == registry(expected['registry']),
                    'immutable image registry changed', 'DATA_ERROR')
         allowed = {'kdlock_km'} | ({'kd_mmap1_identity'} if allow_identity_probe else set())
         other_modules = {'real_api', 'rwlock_bench', 'rwlock_test', 'rwsem_probe',

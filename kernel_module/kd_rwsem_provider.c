@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Ordinary rwsem object binding. Activation follows source/image preparation;
+/* Ordinary rwsem object binding. Activation follows source preparation;
  * module load alone never changes an existing or newly initialized object. */
 #include <linux/module.h>
 #include <linux/mutex.h>
@@ -16,6 +16,9 @@
 
 static bool kd_rwsem_provider_registered;
 static bool kd_rwsem_provider_initialized;
+static bool kd_rwsem_provider_demand;
+module_param_named(rwsem_provider_demand, kd_rwsem_provider_demand, bool, 0444);
+MODULE_PARM_DESC(rwsem_provider_demand, "Prepare images when their entries are encountered");
 #ifdef CONFIG_KDLOCK_MMAP
 static DEFINE_MUTEX(kd_rwsem_provider_state_lock);
 #endif
@@ -243,6 +246,10 @@ int kd_rwsem_provider_prepare_entries(void)
 			result = -EINVAL;
 			goto out;
 		}
+		/* Cold capture registers its entry and keeps acquisition local.
+		 * Delegated requests require a usable image before publication. */
+		if (kd_rwsem_provider_demand)
+			continue;
 		kd_exe_add_abi(0, sites[index].entry, KD_EXE_LOCK_MUTEX,
 			       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 		exe = kd_get_exe(0, sites[index].entry);
@@ -293,7 +300,19 @@ int kd_rwsem_provider_activate(void)
 		goto out;
 	}
 	for (index = 0; index < count; ++index) {
-		struct kd_exe_info *exe = kd_exe_find_ready(0, sites[index].entry);
+		struct kd_exe_info *exe;
+
+		if (!sites[index].entry || sites[index].reserved ||
+		    (sites[index].operation != KD_RWSEM_OP_DOWN_WRITE &&
+		     sites[index].operation != KD_RWSEM_OP_DOWN_WRITE_KILLABLE)) {
+			result = -EINVAL;
+			goto out;
+		}
+		/* Image readiness remains mandatory at capture. A missing image
+		 * takes ordinary local acquisition before any delegated effects. */
+		if (kd_rwsem_provider_demand)
+			continue;
+		exe = kd_exe_find_ready(0, sites[index].entry);
 
 		if (!kd_exe_capture_image(exe, sites[index].entry)) {
 			result = -EAGAIN;

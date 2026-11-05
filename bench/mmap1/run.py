@@ -318,7 +318,7 @@ def timeout_tasks(parent):
 
 
 def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
-              diagnostic_log_bytes=None, diagnostic_collector=None):
+              diagnostic_log_bytes=None, diagnostic_collector=None, learning=False):
     """One normal upstream lifetime; observations end during its own warmup."""
     if execution_session is None:
         idle(allow_identity_probe=diagnostic)
@@ -332,10 +332,11 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     command = argv(binary, spec['workers'])
     traced = diagnostic or (execution_session is not None and
                            execution_session.expected['parameters']['service_trace'] == 'Y')
-    result = dict(schema=1, **spec, passed=False, drained=False, scored=not traced,
+    result = dict(schema=1, **spec, passed=False, drained=False, scored=not traced and not learning,
                   state='RUNNING', argv=command, executable_sha256=inputs['binary_sha256'][spec['model']],
                   application_lock_identity='not-observed-in-this-process',
-                  instrumentation='identity-kprobe' if diagnostic else 'delegation-trace' if traced else 'none')
+                  instrumentation='identity-kprobe' if diagnostic else 'delegation-trace' if traced else 'none',
+                  image_learning=learning)
     if execution_session is not None:
         result['execution_session'] = execution_session.identity()
     rt.write_json(out/'result.json', result)

@@ -292,6 +292,10 @@ class Controller:
             sha256=rt.digest(self.binaries['provider']), note_sha256=execution.module_note_sha256(self.binaries['provider'])),
             daemon=actual_daemon, preparer=preparer, parameters=selected, registry=rows,
             source={name: source[name] for name in ('state', 'modules', 'writers')}, files=dict(self.files))
+        if getattr(self.args, 'demand', False):
+            value.update(schema=3, demand=True,
+                writer_sites=dict(path=str(self.args.sites), sha256=rt.digest(self.args.sites)))
+            value['parameters']['rwsem_provider_demand'] = parameters['rwsem_provider_demand']
         path = self.model / 'execution-session.json'
         rt.write_json(path, value)
         return execution.ExecutionSession(path, rt.digest(path))

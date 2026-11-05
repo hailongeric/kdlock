@@ -124,16 +124,26 @@ candidate, not performance evidence.
 
 ## Interfaces
 
-The current small throughput pilot selects `execution_mode: "image"` in the
-configuration for `delegated_point.py`. It reuses the ordinary daemon,
-all-site image preparation and `ExecutionSession`; the older reached-mode
-configuration remains historical. No lock implementation or MM body changes.
+The current small throughput pilot selects `execution_mode: "image"` and
+`demand: true` in the configuration for `delegated_point.py`. It reuses the
+ordinary daemon and image sessions; the older reached-mode
+configuration remains historical. This changes provider preparation and receipt
+handling; the acquisition/release code and MM bodies are unchanged.
 Each model uses one upstream `-t 2 -s 2 -m` lifetime, workers 0/1 and collector
 63. Tracing stays off for timing. Native and KD points retain separate receipts.
 
-The image registry, source/frame ledger, provider, daemon and input identities
-must match before and after the application. A learning update or unfinished
-compiler fails this pilot rather than weakening those checks. A failed point
+Demand activation validates the builtin site table without requiring images
+for all 55 entries. Missing images use local KD admission before any body
+instruction; reached misses keep the existing current-position continuation.
+First-registrar TGIDs identify metadata, not workload execution.
+
+Up to three unscored application lifetimes allow image learning, with a bounded
+900-second total learning window. The controller renews exact receipts only
+after compiler/frame drainage and retains per-generation image copies. Timing
+starts after one unchanged learning lifetime. The registry, source/frame ledger,
+provider, daemon and input identities must match across the scored application.
+Further learning leaves the point unaccepted rather than silently repeating it.
+A failed point
 retains its raw upstream output but supplies no accepted score. Deactivate
 before stopping the daemon, then use a fresh process to verify binding/frame/
 publisher drainage, retire the source and unload normally. All gates remain.
