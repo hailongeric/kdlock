@@ -1,0 +1,135 @@
+{
+  "application_lock_identity": "not-observed-in-this-process",
+  "argv": [
+    "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+    "-t",
+    "2",
+    "-s",
+    "2",
+    "-m"
+  ],
+  "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+  "drained": true,
+  "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+  "execution_session": {
+    "daemon_device_writer": {
+      "device": 7,
+      "fd": 3,
+      "flags": 557058,
+      "inode": 694,
+      "pid": 3595,
+      "rdev": 61440,
+      "start_ticks": 109904
+    },
+    "daemon_pid": 3595,
+    "daemon_start_ticks": 109904,
+    "delegated_execution_proved": false,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/epochs/epoch-005/execution-session.json",
+    "preparer_pid": 3525,
+    "provider_sha256": "1a682473d413ff09569114d62452eb2eeb5fa7064f56476f0ab97b252d7235d7",
+    "sha256": "498a5902a9a6bc3e3461a894a5d770f872107c2b5047b9383763592c7b14b4d0"
+  },
+  "execution_session_after": {
+    "application_delegation_proved": false,
+    "binding_drain_proved": false,
+    "bindings": 1,
+    "source": {
+      "frames": 0,
+      "modules": 1,
+      "state": 0,
+      "writers": 1
+    }
+  },
+  "image_learning": true,
+  "instrumentation": "none",
+  "model": "processes",
+  "nominal_seconds": 2,
+  "observation_finished_ns": 1620606280718,
+  "output": {
+    "completed_pairs": 662442,
+    "elapsed_interval_seconds_observed": false,
+    "measurement": [
+      {
+        "max": 166040,
+        "min": 165798,
+        "total": 331838
+      },
+      {
+        "max": 165315,
+        "min": 165289,
+        "total": 330604
+      }
+    ],
+    "nominal_seconds": 2,
+    "pairs_per_nominal_second": 331221.0,
+    "upstream_average": 331221,
+    "upstream_average_divisor": 2,
+    "upstream_counter_boundary": "-s2: six pre-marker samples, two post-marker samples, integer average divides by2",
+    "warmup": [
+      {
+        "max": 165105,
+        "min": 164812,
+        "total": 329917
+      },
+      {
+        "max": 165420,
+        "min": 165249,
+        "total": 330669
+      },
+      {
+        "max": 165422,
+        "min": 165391,
+        "total": 330813
+      },
+      {
+        "max": 165424,
+        "min": 165370,
+        "total": 330794
+      },
+      {
+        "max": 165606,
+        "min": 165562,
+        "total": 331168
+      },
+      {
+        "max": 165946,
+        "min": 165756,
+        "total": 331702
+      }
+    ]
+  },
+  "passed": true,
+  "pid": 3984,
+  "process_elapsed_ns": 8036730977,
+  "returncode": 0,
+  "round": 2,
+  "schema": 1,
+  "scored": false,
+  "started_ns": 1620554131814,
+  "state": "COMPLETE",
+  "system_cpu_seconds": 15.402389999999997,
+  "user_cpu_seconds": 0.6301080000000003,
+  "workers": 2,
+  "workers_observed": [
+    {
+      "cpus": [
+        0
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 3984,
+      "start_ticks": 162058,
+      "tgid": 3985,
+      "tid": 3985
+    },
+    {
+      "cpus": [
+        1
+      ],
+      "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "ppid": 3984,
+      "start_ticks": 162058,
+      "tgid": 3986,
+      "tid": 3986
+    }
+  ]
+}

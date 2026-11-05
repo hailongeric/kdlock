@@ -1,0 +1,38 @@
+6,958,280277150,-;install JIT chunk: pid=0 rip=ffffffff817f7413 status=-1 offset=0 bytes=4000
+
+6,959,280277169,-;install JIT chunk: pid=0 rip=ffffffff817f7413 status=0 offset=4000 bytes=2288
+
+6,960,293861977,-;install JIT chunk: pid=0 rip=ffffffff817b6f68 status=0 offset=0 bytes=3056
+
+6,961,306886123,-;install JIT chunk: pid=0 rip=ffffffff81344abb status=-1 offset=0 bytes=4000
+
+6,962,306886142,-;install JIT chunk: pid=0 rip=ffffffff81344abb status=0 offset=4000 bytes=2408
+
+6,963,320001296,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=0 bytes=4000
+
+6,964,320001315,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=4000 bytes=4000
+
+6,965,320001327,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=0 offset=8000 bytes=2768
+
+6,966,332918354,-;install JIT chunk: pid=0 rip=ffffffff8181cc7d status=0 offset=0 bytes=2126
+
+6,967,346079772,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=0 bytes=4000
+
+6,968,346079792,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=0 offset=4000 bytes=1368
+
+6,969,359317539,-;install JIT chunk: pid=0 rip=ffffffff818e077d status=0 offset=0 bytes=3912
+
+6,970,372509570,-;install JIT chunk: pid=0 rip=ffffffff817f79a5 status=0 offset=0 bytes=2728
+
+6,971,385905484,-;install JIT chunk: pid=0 rip=ffffffff819891c2 status=0 offset=0 bytes=2744
+
+6,972,399584291,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=0 bytes=4000
+
+6,973,399584321,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=4000 bytes=4000
+
+6,974,399584334,-;install JIT chunk: pid=0 rip=ffffffff818007de status=0 offset=8000 bytes=912
+
+6,975,412656174,-;install JIT chunk: pid=0 rip=ffffffff817f9b47 status=0 offset=0 bytes=1454
+
+6,976,425737283,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=0 offset=0 bytes=3184
+

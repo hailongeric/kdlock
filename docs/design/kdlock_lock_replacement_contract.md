@@ -135,13 +135,19 @@ The [admission policy](admission.md#selected-rwsem-state-queries) defines the ex
 partition. Ordinary cold CALL/IJ learning still applies; this selection does not
 force every downstream helper into translation or require eager callee closure.
 
-Preserve the narrow Native interval at the existing two-argument Boolean
-`kd_service_write_owned`. Its selected descriptor uses the existing
+The implemented narrow Native interval at `15f1c08a` uses the two-argument Boolean
+`kd_service_write_owned`. Its descriptor uses the existing
 `KD_SERVICE_CALL_ATOMIC_ORIGIN` context and word result. O executes that exact
 runtime proof while E is suspended, then E resumes the same immutable image.
 Keep the exact task, service token, request/phase generation, physical owner and
 pickup checks. A reader count, generic locked observation or translated logical
 task load cannot replace that proof.
+
+The user subsequently selected pure queries on E with exact retained ownership
+records, plus permanent O takeover and immediate requeue for operations requiring
+O. This is the approved follow-on target, not behavior implemented by the compiler
+correction at `15f1c08a`. See the
+[protocol and ordering plan](compiled_mm_continuations.md#approved-follow-on-permanent-takeover-and-executor-local-pure-queries).
 
 `BALANCED_ORIGIN` is not the selected class for this interval: it rejects retained
 spin/RCU state. `ATOMIC_ORIGIN` preserves the origin's actual pins/RCU under the

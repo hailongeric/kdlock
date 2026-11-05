@@ -726,3 +726,71 @@ pass. The read-directory fixture still expects requirements `3968`, omitting
 the existing retained-miss bit 13 selected by ABI2; its actual value is `12160`.
 Update that fixture expectation using the named requirement constant. The
 other seven read-codegen cases passed; retain the failed metadata check.
+
+The corrected checkpoint `15f1c08a3a52ed271fcf3fd81f5da68f1f524878` passes
+the four focused codegen drivers and provider build on the VM. All three
+learning lifetimes in each mmap1 model complete and drain. Both comparison
+attempts stop at `LEARNING_ADVANCED`; every pass still replaces image
+generations, so no scored KD point starts. Both sessions retire exactly and
+unload normally, followed by verified normal-kernel recovery. The
+[complete record](../../bench/results/10.176.26.71/tests/jit-scratch-recovery-15f1c08a-20261105/README.md)
+retains fixture failures, all six unscored rates and the open delegation and
+performance criteria. No promotion or performance gain is claimed.
+
+## Approved follow-on: permanent takeover and executor-local pure queries
+
+The user selected immediate physical ownership transfer to O and immediate
+requeue of a combiner's own pending request, with pure ownership/state queries
+remaining on E through exact retained records. This replaces the earlier
+one-operation O service followed by E resumption as the target for operations
+that actually require O. It is a general protocol design, not an MM caller
+adapter, and is not implemented by `15f1c08a`.
+
+1. Classify the encountered operation before publishing a returning service.
+   Preserve the first unexecuted source IP, current GPR/SP/BP, the existing
+   arithmetic-flag contract, actual CALL/RET word effects, image and source
+   references. General architectural flags/SIMD restoration remains deferred;
+   these records do not establish that broader equivalence. The current
+   `kd_exec_cont_native_prepare()` and `kd_exec_cont_memory_prepare()` create
+   PREPARED state; `kd_exec_cont_handoff()` refuses those outstanding records.
+   Transfer must precede preparation, or retire only an unissued preparation
+   exactly. Completion helpers cannot clear it: they advance source execution.
+2. Retain the full owner list, phase identities, nested parent/child records,
+   source task/stack and final release obligations in shared request storage.
+   Existing `kd_service_handoff()` retains E-owned gates and E-stack anchors;
+   it cannot make E available immediately. In particular, a live
+   `kd_service_native_spill()` record on E's stack blocks detachment until its
+   storage/lifetime is redesigned. Never mark a retained physical owner released
+   to make handback pass.
+3. Transfer physical gates and selected writer/read custody with their exact
+   owner and generation records before making O runnable. Publish a combiner's
+   actual pending acquisition back into the common queue without replaying its
+   body. An independent service worker has no own pending acquisition: it returns
+   to dispatch, with no fabricated writer request. Detachable final ACK handling
+   must retain old request storage until O's actual releases and retirement.
+4. Preserve committed-acquisition priority over signals. Internal requeue cannot
+   turn an already successful killable acquisition into `-EINTR`; an uncommitted
+   request still arbitrates its origin's signals against actual readiness under
+   the queue protocol, with exact cancellation/slot retirement. Nesting and
+   out-of-order child completion retain their existing identity obligations.
+5. A downgraded read tail may stay on E under the approved general protocol.
+   Release its read credit before E acquires any pending writer phase, which
+   freshly drains readers. If takeover transfers that read custody to O, E's
+   subsequent writer waits for O's actual read release. Keep atomic-compatible
+   `up_read` and positive reservation cohorts distinct from the selected phase.
+6. Keep pure queries on E using the bound continuation's logical O, committed
+   admission, exact physical owner and selected phase. The current
+   `kd_service_write_owned()` initially requires `task == current`; directly
+   calling it on E with logical O would falsely return false. Add the explicit
+   executor query route while preserving ordinary caller behavior. Keep the
+   three selected public query bodies in the original JIT and preserve their
+   existing operation identities. Neither counters nor a generic locked bit
+   replace the exact ownership proof.
+
+Focused follow-on checks must distinguish a true combiner's requeued request
+from an independent worker, cover committed/uncommitted killable and nested
+ownership, and establish physical transfer plus final ACK/slot reuse. Pure
+query checks need different O/E tasks and stale identity/phase observations.
+Mmap1 application completion remains separate from proof that E executes the
+read tail and subsequently acquires a fresh writer phase. Keep the separately
+blocked retained-continuation fixture out of this validation step.
