@@ -231,6 +231,18 @@ Neither is a peak-window execution count or lifetime/ownership proof.
 
 ## Executable image generations
 
+Before extracting `jit.bin`, inspect the assembled object's relocation sections.
+Raw `objcopy -O binary` does not apply ELF relocations. Any remaining REL/RELA
+entry targeting an allocated section with stored bytes is an incomplete image,
+whether its referenced symbol is defined or undefined. Stop the build and retain
+the object and assembly; do not publish it or classify it as a local-only entry.
+Relocations for unallocated debug sections do not affect the extracted image.
+Same-section label differences and the provider's literal call-patch metadata
+remain valid when the assembler resolves them without ELF relocations. Remove
+old raw output before rebuilding so a failed check cannot leave an earlier
+`jit.bin` looking current. This checks emitted bytes without adding semantic
+source analysis or changing the wrapper ABI.
+
 Mutex frames bind immutable generations through FULL/native continuations.
 Replacement does not overwrite their code or allow an old-generation miss to
 modify new metadata. Versions remain allocated until terminal session teardown.

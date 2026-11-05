@@ -271,6 +271,13 @@ including partial-register accesses. A logical R11..R15 value need not be in the
 same-named physical register. CALL/RET translation must also use the logical SP/BP
 and save or reload reserved-register values as required.
 
+A physical scratch slot with an empty logical mapping has no value to spill.
+In particular, a GS/RIP operand may temporarily borrow the physical SP register:
+save logical SP, materialize source next-IP, execute the operand, release IP,
+then reload logical SP. Releasing IP empties the mapping; stable recovery must
+not emit a store for that empty slot or overwrite the saved SP with temporary
+IP. Dirty virtual GPRs still require their ordinary packet stores.
+
 The wrapper keeps its existing 176-byte frame plus the incoming CALL word.
 A direct-call entry additionally rounds physical SP down to a 16-byte boundary
 once, before generated code. All named slots and restoration stay BP-relative:

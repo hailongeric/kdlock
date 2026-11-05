@@ -680,3 +680,38 @@ and normal unload. Focus validation on demand/default activation, cold local
 admission, receipt provenance and valid learning transitions, followed by the
 one-round thread/process pilot and verified normal-kernel recovery. The
 separate retained-continuation fixture is not rerun by this task.
+
+## Empty scratch mapping correction before the next pilot
+
+Baseline `8a7b8e73535b7dcfea326ff56f24422b5ad5ac73` on
+`codex/mmap-reached-jit` completed one unscored thread learning lifetime, then
+failed before a scored KD point. Preserve that result and the unrun process
+point. The failed boot was `ca0f4f0e-2309-438c-bef1-cf85fbebd27e` with kernel
+Build ID `5f2fce72a33480f6e79a79b374b21a0db377ecd1`.
+
+The retained `map_vdso` image at entry `0xffffffff81344abb`, generation 2,
+was published at `0xffa0000014bfa000`. Its instruction at offset `0xe9f` is
+`MOV Stack_R, R13`; the fault IP is exactly base plus that offset, and the
+destination is zero. The saved object SHA256 is
+`c68c91e6e3a00b1b5d8b6470597fc2f86fd205a0cb3d0b785332af0b7c9fff2c`.
+Its `.rela.text` contains `R_X86_64_32S` at `0xea3` referencing undefined
+`Stack_R`. This establishes the emitted-byte failure independently of earlier
+blocked-worker reports.
+
+Fix the general register mapper: `release_IP()` has already emptied a borrowed
+physical register when `recover_stable()` restores SP, so `spill_register()`
+must emit nothing for that empty mapping. Keep the saved SP and dirty-GPR
+protocol unchanged. Add the object completeness check described in
+[JIT execution](../JIT_EXECUTION.md#executable-image-generations) before raw
+extraction, including allocated data sections rather than only executable code.
+
+Validate GS/RIP loads that borrow the SP register through the real generated
+wrapper against owned guest userspace storage. Cover low and kernel-range
+source IPs, SP restoration and logical reserved-GPR results. Separately verify
+that incomplete emitted code/data is refused, resolved local expressions pass,
+debug-only relocations are ignored, and a failed rebuild leaves no stale raw
+image. Build the matching benchmark provider, then retry the focused two-worker
+thread/process pilot with the existing Native controls retained. Keep learning
+lifetimes unscored, record any failure and verify normal-kernel recovery. This
+compiler correction does not implement the separate permanent ownership transfer
+and immediate requeue protocol.
