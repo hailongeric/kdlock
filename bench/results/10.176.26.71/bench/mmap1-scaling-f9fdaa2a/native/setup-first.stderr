@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "<string>", line 31, in <module>
+    result['environment']=bench.admit(args,out);save()
+                          ~~~~~~~~~~~^^^^^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap1/run.py", line 113, in admit
+    guest(args)
+    ~~~~~^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap1/run.py", line 102, in guest
+    mm.platform.guest(args)
+    ~~~~~~~~~~~~~~~~~^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap_writer/shared_platform.py", line 76, in guest
+    common.mm_platform.guest(args.boot_id, release=selected['release'])
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap_fault/mm_platform.py", line 176, in guest
+    require(sys.executable == PYTHON and shutil.which('python3') == PYTHON,
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            'pinned Linux 7 translation Python required')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap_fault/mm_platform.py", line 28, in require
+    raise ValueError(message)
+ValueError: pinned Linux 7 translation Python required

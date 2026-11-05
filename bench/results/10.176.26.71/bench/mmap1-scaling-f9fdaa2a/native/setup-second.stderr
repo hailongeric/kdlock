@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<string>", line 32, in <module>
+    result['environment']=bench.admit(args,out);save()
+                          ~~~~~~~~~~~^^^^^^^^^^
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap1/run.py", line 114, in admit
+    host = common.host_check(args.host_state, out, True, args.boot_id,
+                             reference=args.host_reference,
+                             reference_sha256=args.host_reference_sha256)
+  File "/root/kdlock-inputs/scaling-14cc632d/bench/mmap_fault/timing.py", line 49, in host_check
+    host=load(path);shutil.copyfile(path,out/'host-before.json')
+                    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/shutil.py", line 293, in copyfile
+    raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+shutil.SameFileError: PosixPath('/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-14cc632d/native-r2/host-before.json') and PosixPath('/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-14cc632d/native-r2/host-before.json') are the same file

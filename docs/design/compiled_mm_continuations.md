@@ -1168,3 +1168,39 @@ stopped state. With the factory inactive, application drain known and no live
 frames, resume that exact daemon to reap its child before ordinary shutdown.
 A stopped parent cannot retire an unreaped child merely by waiting in the
 controller. Unknown application or frame lifetimes still retain live state.
+
+# Reached warning-path frontier after the bounded scaling run
+
+The `f9fdaa2aa6a71ca0b03dd3a859d63bf746c0983a` campaign completed 32 drained
+learning lifetimes but produced no quiet point or worker proof. Its mmap root
+reached generation 33. Munmap stopped at generation 19 and became Native-only
+when an expanded graph could not decode `0xffffffff81817f57` in `__split_vma`.
+There were 76 free image descriptors; neither the image pool nor the text-byte
+budget caused that refusal. The complete outcome is retained in
+`bench/results/10.176.26.71/bench/mmap1-scaling-f9fdaa2a/README.md`.
+
+The disk ELF has a CALL to `__SCT__WARN_trap` at that site; the live instruction
+bytes were not retained. Capture the exact bounded bytes through the existing
+source lease on the matched Build ID before choosing a decoder correction.
+A subsequent boot's capture is a reproduction, not proof of the old boot's
+bytes. No further cold benchmark or larger cap is justified by this result.
+
+If the exact form requires original-site execution, represent it as an
+explicit reached source frontier in the retained ABI2 backend. Decode its exact
+length and terminate only that generated branch. Reaching the frontier exports
+the first unexecuted original IP, unchanged source SP and current flags/GPRs;
+it must neither push nor consume a CALL/RET word. The existing owner handoff,
+source/frame retention and unlock ACK protocol then completes this invocation
+on the original task. Other branches remain eligible for JIT execution. Do not
+copy a warning instruction to another address: the original site identifies
+its kernel record.
+
+Keep this frontier separate from the legacy instruction-marker image class,
+which rejects retained-service combinations. Negotiate the added control in
+the existing image requirements/capabilities so an older runtime refuses an
+unsupported image before execution. Reuse the original JIT and retained
+handoff machinery; no instruction interpreter or caller-specific MM path is
+introduced. Killable admission, nested owner records, downgraded read credit
+and exact retirement remain unchanged. Validate branch-not-taken completion,
+branch-taken packet state and original-site identity before another focused
+mmap1 attempt. This paragraph is a design; the frontier is not implemented.

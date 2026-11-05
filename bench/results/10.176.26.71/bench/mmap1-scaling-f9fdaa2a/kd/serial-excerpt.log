@@ -1,0 +1,240 @@
+         Starting [0;1;39mmodprobe@dm_multipath.ser…[0m Load Kernel Module dm_multipath...
+[    4.499420] systemd[1]: modprobe@drm.service - Load Kernel Module drm skipped, unmet condition check ConditionKernelModuleLoaded=!drm
+[    4.500853] systemd[1]: Starting modprobe@efi_pstore.service - Load Kernel Module efi_pstore...
+         Starting [0;1;39mmodprobe@efi_pstore.servi…[0m - Load Kernel Module efi_pstore...
+[    4.506244] systemd[1]: modprobe@fuse.service - Load Kernel Module fuse skipped, unmet condition check ConditionKernelModuleLoaded=!fuse
+[    4.507865] systemd[1]: Mounting sys-fs-fuse-connections.mount - FUSE Control File System...
+         Mounting [0;1;39msys-fs-fuse-connections.mount[0m - FUSE Control File System...
+[    4.512474] systemd[1]: netplan-ovs-cleanup.service - OpenVSwitch configuration for cleanup skipped, unmet condition check ConditionFileIsExecutable=/usr/bin/ovs-vsctl
+[    4.513468] systemd[1]: systemd-fsck-root.service - File System Check on Root Device skipped, unmet condition check ConditionPathExists=!/run/initramfs/fsck-root
+[    4.514216] systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info skipped, unmet condition check ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67
+[    4.516892] systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules...
+         Starting [0;1;39msystemd-modules-load.service[0m - Load Kernel Modules...
+[    4.525009] systemd[1]: systemd-pcrmachine.service - TPM PCR Machine ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.526715] systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems...
+         Starting [0;1;39msystemd-remount-fs.servic…[0munt Root and Kernel File Systems...
+[    4.531442] systemd[1]: systemd-tpm2-setup-early.service - Early TPM SRK Setup skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.531827] systemd[1]: systemd-pcrnvdone.service - TPM PCR NvPCR Initialization Separator skipped, unmet condition check ConditionPathExists=/etc/initrd-release
+[    4.532604] systemd[1]: systemd-pcrproduct.service - TPM NvPCR Product ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki
+[    4.534197] systemd[1]: Starting systemd-udev-load-credentials.service - Load udev Rules from Credentials...
+         Starting [0;1;39msystemd-udev-load-credent…[0mLoad udev Rules from Credentials...
+[    4.544062] systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices...
+         Starting [0;1;39msystemd-udev-trigger.service[0m - Coldplug All udev Devices...
+[    4.550549] systemd[1]: Started systemd-journald.service - Journal Service.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-journald.service[0m - Journal Service.
+[    4.554202] EXT4-fs (sda1): re-mounted aa0bde06-47f6-4049-aaaf-13d052e53961 r/w.
+[[0;32m  OK  [0m] Mounted [0;1;39mdev-hugepages.mount[0m - Huge Pages File System.
+[[0;32m  OK  [0m] Mounted [0;1;39mdev-mqueue.mount[0m - POSIX Message Queue File System.
+[[0;32m  OK  [0m] Mounted [0;1;39msys-kernel-debug.mount[0m - Kernel Debug File System.
+[[0;32m  OK  [0m] Mounted [0;1;39msys-kernel-tracing.mount[0m - Kernel Trace File System.
+[[0;32m  OK  [0m] Mounted [0;1;39mtmp.mount[0m - Temporary Directory /tmp.
+[[0;32m  OK  [0m] Finished [0;1;39mkeyboard-setup.service[0m - Set the console keyboard layout.
+[[0;32m  OK  [0m] Finished [0;1;39mkmod-static-nodes.service[0m…Create List of Static Device Nodes.
+[[0;32m  OK  [0m] Finished [0;1;39mlvm2-monitor.service[0m - Mo…using dmeventd or progress polling.
+[[0;32m  OK  [0m] Mounted [0;1;39msys-kernel-config.mount[0m - Kernel Configuration File System.
+[[0;32m  OK  [0m] Finished [0;1;39mmodprobe@dm_multipath.ser…[0m - Load Kernel Module dm_multipath.
+[[0;32m  OK  [0m] Finished [0;1;39mmodprobe@efi_pstore.service[0m - Load Kernel Module efi_pstore.
+[[0;32m  OK  [0m] Mounted [0;1;39msys-fs-fuse-connections.mount[0m - FUSE Control File System.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-modules-load.service[0m - Load Kernel Modules.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-remount-fs.servic…[0mmount Root and Kernel File Systems.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-udev-load-credent…[0m- Load udev Rules from Credentials.
+         Starting [0;1;39mmultipathd.service[0m - Devi…pper Multipath Device Controller...
+         Starting [0;1;39msystemd-journal-flush.ser…[0msh Journal to Persistent Storage...
+         Starting [0;1;39msystemd-random-seed.service[0m - Load/Save OS Random Seed...
+[    4.623024] systemd-journald[950]: Received client request to flush runtime journal.
+         Starting [0;1;39msystemd-sysctl.service[0m - Apply Kernel Variables...
+         Starting [0;1;39msystemd-tmpfiles-setup-de…[0m Device Nodes in /dev gracefully...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-random-seed.service[0m - Load/Save OS Random Seed.
+[[0;32m  OK  [0m] Started [0;1;39mmultipathd.service[0m - Devic…Mapper Multipath Device Controller.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-tmpfiles-setup-de…[0mic Device Nodes in /dev gracefully.
+         Starting [0;1;39msystemd-timesyncd.service[0m - Network Time Synchronization...
+         Starting [0;1;39msystemd-tmpfiles-setup-de…[0meate Static Device Nodes in /dev...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-sysctl.service[0m - Apply Kernel Variables.
+         Starting [0;1;39msystemd-resolved.service[0m - Network Name Resolution...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-journal-flush.ser…[0mlush Journal to Persistent Storage.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-tmpfiles-setup-de…[0mCreate Static Device Nodes in /dev.
+[[0;32m  OK  [0m] Reached target [0;1;39mlocal-fs-pre.target[0m…Preparation for Local File Systems.
+         Starting [0;1;39msystemd-udevd.service[0m - R…ager for Device Events and Files...
+[[0;32m  OK  [0m] Started [0;1;39msystemd-timesyncd.service[0m - Network Time Synchronization.
+[[0;32m  OK  [0m] Reached target [0;1;39mtime-set.target[0m - System Time Set.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-resolved.service[0m - Network Name Resolution.
+[[0;32m  OK  [0m] Reached target [0;1;39mnss-lookup.target[0m - Host and Network Name Lookups.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-udev-trigger.service[0m - Coldplug All udev Devices.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-udevd.service[0m - Ru…anager for Device Events and Files.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-ask-password-conso…[0mequests to Console Directory Watch.
+[[0;32m  OK  [0m] Reached target [0;1;39mcryptsetup.target[0m - Local Encrypted Volumes.
+[[0;32m  OK  [0m] Found device [0;1;39mdev-ttyS0.device[0m - /dev/ttyS0.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-rfkill.socket[0m…ll Switch Status /dev/rfkill Watch.
+[[0;32m  OK  [0m] Found device [0;1;39mdev-disk-by\x2duuid-7…22fc5806da0.device[0m - QEMU_HARDDISK.
+[[0;32m  OK  [0m] Found device [0;1;39mdev-disk-by\x2duuid-c…ice[0m - QEMU_HARDDISK kdlock-builds2.
+[[0;32m  OK  [0m] Found device [0;1;39mdev-disk-by\x2dlabel-UEFI.device[0m - QEMU_HARDDISK UEFI.
+         Starting [0;1;39msystemd-fsck@dev-disk-by\…[0mCheck on /dev/disk/by-label/UEFI...
+         Starting [0;1;39msystemd-fsck@dev-disk-by\…[0m7ee5-fdee-4a4b-8db3-a22fc5806da0...
+         Starting [0;1;39msystemd-fsck@dev-disk-by\…[0m1672-7642-4d35-aae9-6b258b1f2733...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-fsck@dev-disk-by\…[0mfd7ee5-fdee-4a4b-8db3-a22fc5806da0.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-fsck@dev-disk-by\…[0m501672-7642-4d35-aae9-6b258b1f2733.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-fsck@dev-disk-by\…[0mm Check on /dev/disk/by-label/UEFI.
+         Mounting [0;1;39mboot-efi.mount[0m - /boot/efi...
+         Mounting [0;1;39mmnt-kdlock\x2dbuilds.mount[0m - /mnt/kdlock-builds...
+         Mounting [0;1;39mmnt-kdlock\x2dbuilds2.mount[0m - /mnt/kdlock-builds2...
+         Mounting [0;1;39msnap-core20-2922.mount[0m - …t unit for core20, revision 2922...
+         Mounting [0;1;39msnap-core22-2955.mount[0m - …t unit for core22, revision 2955...
+         Mounting [0;1;39msnap-core22-2987.mount[0m - …t unit for core22, revision 2987...
+         Mounting [0;1;39msnap-lxd-40911.mount[0m - Mount unit for lxd, revision 40911...
+         Mounting [0;1;39msnap-snapd-28254.mount[0m - …t unit for snapd, revision 28254...
+[[0;32m  OK  [0m] Mounted [0;1;39mboot-efi.mount[0m - /boot/efi.
+[[0;32m  OK  [0m] Mounted [0;1;39mmnt-kdlock\x2dbuilds.mount[0m - /mnt/kdlock-builds.
+[[0;32m  OK  [0m] Mounted [0;1;39msnap-core20-2922.mount[0m - Mount unit for core20, revision 2922.
+[[0;32m  OK  [0m] Mounted [0;1;39msnap-core22-2955.mount[0m - Mount unit for core22, revision 2955.
+[[0;32m  OK  [0m] Mounted [0;1;39mmnt-kdlock\x2dbuilds2.mount[0m - /mnt/kdlock-builds2.
+[[0;32m  OK  [0m] Mounted [0;1;39msnap-core22-2987.mount[0m - Mount unit for core22, revision 2987.
+[[0;32m  OK  [0m] Mounted [0;1;39msnap-lxd-40911.mount[0m - Mount unit for lxd, revision 40911.
+[[0;32m  OK  [0m] Mounted [0;1;39msnap-snapd-28254.mount[0m - Mount unit for snapd, revision 28254.
+[[0;32m  OK  [0m] Reached target [0;1;39msnapd.mounts.target[0m - Mounted snaps.
+[[0;32m  OK  [0m] Reached target [0;1;39mlocal-fs.target[0m - Local File Systems.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-sysext.socket[0m… System Extension Image Management.
+         Starting [0;1;39mapparmor.service[0m - Load AppArmor profiles...
+         Starting [0;1;39mconsole-setup.service[0m - Set console font and keymap...
+         Starting [0;1;39mfinalrd.service[0m - Create …time dir for shutdown pivot root...
+         Starting [0;1;39mnetplan-configure.service[0m - Netplan Backend Configuration...
+         Starting [0;1;39mplymouth-read-write.servi…[0mymouth To Write Out Runtime Data...
+         Starting [0;1;39msystemd-binfmt.service[0m - Set Up Additional Binary Formats...
+         Starting [0;1;39msystemd-tmpfiles-setup.se…[0mate System Files and Directories...
+         Starting [0;1;39mufw.service[0m - Uncomplicated firewall...
+[[0;32m  OK  [0m] Finished [0;1;39mconsole-setup.service[0m - Set console font and keymap.
+[[0;32m  OK  [0m] Finished [0;1;39mfinalrd.service[0m - Create …untime dir for shutdown pivot root.
+[[0;32m  OK  [0m] Finished [0;1;39mplymouth-read-write.servi…[0mPlymouth To Write Out Runtime Data.
+[[0;32m  OK  [0m] Finished [0;1;39mufw.service[0m - Uncomplicated firewall.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-tmpfiles-setup.se…[0mreate System Files and Directories.
+[[0;32m  OK  [0m] Finished [0;1;39mapparmor.service[0m - Load AppArmor profiles.
+         Starting [0;1;39msnapd.apparmor.service[0m - …iles managed internally by snapd...
+[[0;32m  OK  [0m] Finished [0;1;39mnetplan-configure.service[0m - Netplan Backend Configuration.
+[[0;32m  OK  [0m] Reached target [0;1;39mnetwork-pre.target[0m - Preparation for Network.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-networkd-reso…[0mork Management Resolve Hook Socket.
+         Starting [0;1;39msystemd-networkd.service[0m - Network Management...
+         Mounting [0;1;39mproc-sys-fs-binfmt_misc.m…[0mcutable File Formats File System...
+[[0;32m  OK  [0m] Mounted [0;1;39mproc-sys-fs-binfmt_misc.mo…[0mxecutable File Formats File System.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-binfmt.service[0m - Set Up Additional Binary Formats.
+[[0;32m  OK  [0m] Finished [0;1;39msnapd.apparmor.service[0m - …ofiles managed internally by snapd.
+[[0;32m  OK  [0m] Reached target [0;1;39msysinit.target[0m - System Initialization.
+[[0;32m  OK  [0m] Started [0;1;39mapt-daily.timer[0m - Daily apt download activities.
+[[0;32m  OK  [0m] Started [0;1;39mapt-daily-upgrade.timer[0m - …y apt upgrade and clean activities.
+[[0;32m  OK  [0m] Started [0;1;39mdpkg-db-backup.timer[0m - Daily dpkg database backup timer.
+[[0;32m  OK  [0m] Started [0;1;39me2scrub_all.timer[0m - Period…Metadata Check for All Filesystems.
+[[0;32m  OK  [0m] Started [0;1;39mfstrim.timer[0m - Discard unused filesystem blocks once a week.
+[[0;32m  OK  [0m] Started [0;1;39mlogrotate.timer[0m - Daily rotation of log files.
+[[0;32m  OK  [0m] Started [0;1;39mman-db.timer[0m - Daily man-db regeneration.
+[[0;32m  OK  [0m] Started [0;1;39mmotd-news.timer[0m - Message of the Day.
+[[0;32m  OK  [0m] Started [0;1;39msysstat-collect.timer[0m - Ru…y accounting tool every 10 minutes.
+[[0;32m  OK  [0m] Started [0;1;39msysstat-rotate.timer[0m - Rot…tem activity data file at midnight.
+[[0;32m  OK  [0m] Started [0;1;39msysstat-summary.timer[0m - Ge… of yesterday's process accounting.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-tmpfiles-clean.tim…[0my Cleanup of Temporary Directories.
+[[0;32m  OK  [0m] Reached target [0;1;39mboot-complete.target[0m - Boot Completion Check.
+[[0;32m  OK  [0m] Reached target [0;1;39mpaths.target[0m - Path Units.
+[[0;32m  OK  [0m] Listening on [0;1;39mdbus.socket[0m - D-Bus System Message Bus Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39miscsid.socket[0m - Open-iSCSI iscsid Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39mpolkit-agent-helper.s…[0mAuthorization Manager Agent Helper.
+[[0;32m  OK  [0m] Listening on [0;1;39msnap.lxd.daemon.unix.…[0mix for snap application lxd.daemon.
+[[0;32m  OK  [0m] Listening on [0;1;39msnap.lxd.user-daemon.…[0mr snap application lxd.user-daemon.
+         Starting [0;1;39msnapd.socket[0m - Socket activation for snappy daemon...
+[[0;32m  OK  [0m] Listening on [0;1;39mssh.socket[0m - OpenBSD Secure Shell server socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msshd-unix-local.socke…[0mtemd-ssh-generator, AF_UNIX Local).
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-hostnamed.socket[0m - Hostname Service Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msystemd-logind-varlin…[0mer Login Management Varlink Socket.
+[[0;32m  OK  [0m] Listening on [0;1;39muuidd.socket[0m - UUID daemon activation socket.
+[[0;32m  OK  [0m] Listening on [0;1;39msnapd.socket[0m - Socket activation for snappy daemon.
+[[0;32m  OK  [0m] Reached target [0;1;39msockets.target[0m - Socket Units.
+[[0;32m  OK  [0m] Reached target [0;1;39mbasic.target[0m - Basic System.
+         Starting [0;1;39mdbus.service[0m - D-Bus System Message Bus...
+[[0;32m  OK  [0m] Started [0;1;39mdmesg.service[0m - Save initial kernel messages after boot.
+         Starting [0;1;39me2scrub_reap.service[0m - Re…ne ext4 Metadata Check Snapshots...
+         Starting [0;1;39mgrub-common.service[0m - LSB: Record successful boot for GRUB...
+         Starting [0;1;39mgrub2-common.service[0m - Record successful boot for GRUB...
+         Starting [0;1;39mrsyslog.service[0m - System Logging Service...
+[[0;32m  OK  [0m] Reached target [0;1;39mgetty-pre.target[0m - Preparation for Logins.
+         Starting [0;1;39msnapd.seeded.service[0m - Wait until snapd is fully seeded...
+         Starting [0;1;39msnapd.service[0m - Snap Daemon...
+         Starting [0;1;39msysstat.service[0m - Resets System Activity Logs...
+         Starting [0;1;39msystemd-logind.service[0m - User Login Management...
+[[0;32m  OK  [0m] Finished [0;1;39me2scrub_reap.service[0m - Re…line ext4 Metadata Check Snapshots.
+[[0;32m  OK  [0m] Finished [0;1;39msysstat.service[0m - Resets System Activity Logs.
+[[0;32m  OK  [0m] Started [0;1;39mdbus.service[0m - D-Bus System Message Bus.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-logind.service[0m - User Login Management.
+[[0;32m  OK  [0m] Started [0;1;39mgrub-common.service[0m - LSB: Record successful boot for GRUB.
+[[0;32m  OK  [0m] Started [0;1;39msystemd-networkd.service[0m - Network Management.
+[[0;32m  OK  [0m] Reached target [0;1;39mnetwork.target[0m - Network.
+         Starting [0;1;39msnap.lxd.activate.service[0m…or snap application lxd.activate...
+         Starting [0;1;39msystemd-networkd-persiste…[0mtent Storage in systemd-networkd...
+         Starting [0;1;39msystemd-networkd-wait-onl…[0m - Wait for Network to be Online...
+[[0;32m  OK  [0m] Started [0;1;39munattended-upgrades.service[0m - Unattended Upgrades Shutdown.
+[[0;32m  OK  [0m] Finished [0;1;39mgrub2-common.service[0m - Record successful boot for GRUB.
+         Starting [0;1;39mgrub-initrd-fallback.service[0m - GRUB failed boot detection...
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-networkd-persiste…[0mistent Storage in systemd-networkd.
+[[0;32m  OK  [0m] Started [0;1;39mrsyslog.service[0m - System Logging Service.
+[[0;32m  OK  [0m] Finished [0;1;39mgrub-initrd-fallback.service[0m - GRUB failed boot detection.
+[[0;32m  OK  [0m] Started [0;1;39msnapd.service[0m - Snap Daemon.
+         Starting [0;1;39msystemd-timedated.service[0m - Time & Date Service...
+[[0;32m  OK  [0m] Started [0;1;39msystemd-timedated.service[0m - Time & Date Service.
+[[0;32m  OK  [0m] Finished [0;1;39msnapd.seeded.service[0m - Wait until snapd is fully seeded.
+[[0;32m  OK  [0m] Finished [0;1;39msnap.lxd.activate.service[0m… for snap application lxd.activate.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-networkd-wait-onl…ce[0m - Wait for Network to be Online.
+[[0;32m  OK  [0m] Reached target [0;1;39mnetwork-online.target[0m - Network is Online.
+[[0;32m  OK  [0m] Started [0;1;39mupdate-notifier-download.t…[0mhat failed at package install time.
+[[0;32m  OK  [0m] Started [0;1;39mupdate-notifier-motd.timer[0m… a new version of Ubuntu available.
+[[0;32m  OK  [0m] Reached target [0;1;39mtimers.target[0m - Timer Units.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-fs-pre.targe…[0mreparation for Remote File Systems.
+[[0;32m  OK  [0m] Reached target [0;1;39mremote-fs.target[0m - Remote File Systems.
+         Starting [0;1;39mapport.service[0m - automatic crash report generation...
+         Starting [0;1;39mblk-availability.service[0m - Availability of block devices...
+[[0;32m  OK  [0m] Started [0;1;39mcron.service[0m - Regular background program processing daemon.
+         Starting [0;1;39mmultipathd-queueing.servi…[0mnable queuing for multipath maps...
+         Starting [0;1;39msystemd-user-sessions.service[0m - Permit User Sessions...
+[[0;32m  OK  [0m] Finished [0;1;39mblk-availability.service[0m - Availability of block devices.
+[[0;32m  OK  [0m] Finished [0;1;39mmultipathd-queueing.servi…[0m Enable queuing for multipath maps.
+[[0;32m  OK  [0m] Finished [0;1;39msystemd-user-sessions.service[0m - Permit User Sessions.
+         Starting [0;1;39mplymouth-quit-wait.servic…[0md until boot process finishes up...
+         Starting [0;1;39mplymouth-quit.service[0m - Terminate Plymouth Boot Screen...
+[[0;32m  OK  [0m] Finished [0;1;39mplymouth-quit-wait.servic…[0mold until boot process finishes up.
+[[0;32m  OK  [0m] Started [0;1;39mserial-getty@ttyS0.service[0m - Serial Getty on ttyS0.
+         Starting [0;1;39msetvtrgb.service[0m - Set console scheme...
+[[0;32m  OK  [0m] Finished [0;1;39mplymouth-quit.service[0m - Terminate Plymouth Boot Screen.
+[[0;32m  OK  [0m] Finished [0;1;39msetvtrgb.service[0m - Set console scheme.
+[[0;32m  OK  [0m] Created slice [0;1;39msystem-getty.slice[0m - Slice /system/getty.
+[[0;32m  OK  [0m] Started [0;1;39mgetty@tty1.service[0m - Getty on tty1.
+[[0;32m  OK  [0m] Reached target [0;1;39mgetty.target[0m - Login Prompts.
+[[0;32m  OK  [0m] Finished [0;1;39mapport.service[0m - automatic crash report generation.
+[[0;32m  OK  [0m] Reached target [0;1;39mmulti-user.target[0m - Multi-User System.
+[[0;32m  OK  [0m] Reached target [0;1;39mgraphical.target[0m - Graphical Interface.
+[!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n[!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n]3008;start=f6050c82de514e3d95107b9b6e342acc;user=root;hostname=ubuntu;machineid=9f90ce3f96e04c75bc4267b9957dab19;bootid=76f63ec35a6640308d99f20631fcb7e7;pid=1882;pidfdid=40996;comm=(agetty);servicename=serial-getty@ttyS0.service;invocationid=b1e7be8cbc0842ffab6dd3f28bf02d2b;type=service\P+q6E616D65\
+Ubuntu 26.04.1 LTS ubuntu ttyS0
+
+ubuntu login: [  370.246425] INFO: task kd_service/0:2966 blocked for more than 122 seconds.
+[  370.246462]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.246481] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.246680] INFO: task kd_service/1:2967 blocked for more than 122 seconds.
+[  370.246692]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.246702] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.246801] INFO: task kd_service/2:2968 blocked for more than 122 seconds.
+[  370.246812]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.246827] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.246925] INFO: task kd_service/3:2969 blocked for more than 122 seconds.
+[  370.246935]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.246944] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247042] INFO: task kd_service/10:2976 blocked for more than 122 seconds.
+[  370.247052]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247065] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247196] INFO: task kd_service/11:2977 blocked for more than 122 seconds.
+[  370.247209]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247220] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247329] INFO: task kd_service/12:2978 blocked for more than 122 seconds.
+[  370.247339]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247348] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247449] INFO: task kd_service/13:2979 blocked for more than 122 seconds.
+[  370.247459]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247469] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247579] INFO: task kd_service/14:2980 blocked for more than 122 seconds.
+[  370.247590]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247600] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  370.247699] INFO: task kd_service/15:2981 blocked for more than 122 seconds.
+[  370.247714]       Tainted: G           OE       7.0.0-38-kdscope5 #3
+[  370.247724] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
