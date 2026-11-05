@@ -14,6 +14,7 @@ static u64 killable_release;
 static atomic64_t killable_holders = ATOMIC64_INIT(0);
 #ifdef JIT_CONTINUATION_HELPER
 #include "helper.inc"
+#include "helper_handoff.inc"
 #endif
 
 static bool killable_idle(void)
@@ -152,6 +153,23 @@ killable_body(struct jit_killable_slot *slot, unsigned int flags)
 			atomic_inc(&failures);
 		WRITE_ONCE(helper_slots[index].body_after, READ_ONCE(helper_slots[index].body_after) + 1);
 	}
+	if (flags == JIT_KILLABLE_HANDBACK_ROOT)
+		helper_handoff_call(slot - killable_slots);
+	if (flags == JIT_KILLABLE_HANDBACK_NESTED) {
+		result = (kd_down_write_killable)(&killable_inner);
+		WRITE_ONCE(slot->child_result, result);
+		if (!result) {
+			WRITE_ONCE(slot->child_prefix, 1);
+			helper_handoff_call(slot - killable_slots);
+			/* Keep the child live while the older outer writer releases. */
+			WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+			if (atomic_dec_return(&writers))
+				atomic_inc(&failures);
+			kd_up_write(&test_lock);
+			outer_released = true;
+			(kd_up_write)(&killable_inner);
+		}
+	}
 #endif
 	if (flags & JIT_KILLABLE_NESTED) {
 		/* A conventional nested entry remains on this executor while its
@@ -223,10 +241,14 @@ depth_cleanup:
 	WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
 	if (atomic_dec_return(&writers))
 		atomic_inc(&failures);
-	if (flags & JIT_KILLABLE_DOWNGRADE) {
+	if (flags & JIT_KILLABLE_DOWNGRADE || flags == JIT_KILLABLE_HANDBACK_READ) {
 		unsigned long budget = 1UL << 28;
 
 		kd_downgrade_write(&test_lock);
+#ifdef JIT_CONTINUATION_HELPER
+		if (flags == JIT_KILLABLE_HANDBACK_READ)
+			helper_handoff_call(slot - killable_slots);
+#endif
 		WRITE_ONCE(slot->tail_ready, 1);
 		/* A bounded scalar tail remains on the executor. PAUSE must execute
 		 * on every iteration; no original-task continuation is used. */
@@ -300,6 +322,8 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 	int result;
 
 #ifdef JIT_CONTINUATION_HELPER
+	if (cmd == JIT_HANDOFF_SNAPSHOT)
+		return helper_handoff_snapshot(user);
 	if (cmd == JIT_MAPPED_SNAPSHOT)
 		return helper_mapped_snapshot(user);
 	if (cmd == JIT_MAPPED_REGISTER) {
@@ -376,6 +400,7 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 			memset(killable_slots, 0, sizeof(killable_slots));
 #ifdef JIT_CONTINUATION_HELPER
 			memset(helper_slots, 0, sizeof(helper_slots));
+			helper_handoff_reset();
 			memset(&helper_mapped, 0, sizeof(helper_mapped));
 			memset(helper_native_events, 0, sizeof(helper_native_events));
 			WRITE_ONCE(helper_native_count, 0);
@@ -404,6 +429,9 @@ static long killable_ioctl(unsigned int cmd, void __user *user)
 #ifdef JIT_CONTINUATION_HELPER
 	     && run.flags != JIT_KILLABLE_HELPER && run.flags != JIT_KILLABLE_HELPER_WAIT
 	     && run.flags != JIT_KILLABLE_HELPER_TAIL
+	     && run.flags != JIT_KILLABLE_HANDBACK_ROOT
+	     && run.flags != JIT_KILLABLE_HANDBACK_NESTED
+	     && run.flags != JIT_KILLABLE_HANDBACK_READ
 	     && run.flags != JIT_KILLABLE_HELPER_MAPPED && run.flags != JIT_KILLABLE_HELPER_ALLOC
 	     && run.flags != JIT_KILLABLE_NATIVE_PAIRS && run.flags != JIT_KILLABLE_NATIVE_EARLY
 	     && run.flags != JIT_KILLABLE_MEMORY && run.flags != JIT_KILLABLE_MEMORY_EARLY

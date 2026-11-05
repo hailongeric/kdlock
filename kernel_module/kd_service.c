@@ -149,12 +149,15 @@ static void kd_service_trace_event(const char *event,
 	struct kd_service_root *root, const struct kd_service_owner *owner)
 {
 	if (unlikely(READ_ONCE(kd_service_trace)))
-		pr_info("kd_service event=%s origin=%d executor=%d identity=%px generation=%llu object=%px depth=%u entry=%lx may_delegate=%u family_generation=%llu\n",
+		pr_info("kd_service event=%s origin=%d executor=%d identity=%px generation=%llu object=%px depth=%u entry=%lx may_delegate=%u family_generation=%llu ip=%lx sp=%lx image_generation=%lu\n",
 			event, owner->request.logical_origin->pid, current->pid,
 			owner->request.identity, (unsigned long long)owner->request.generation,
 			owner->admission.object, owner->depth, root->node->saved_ret_addr,
 			owner->request.may_delegate,
-			root->continuation.reached_active ? root->continuation.generation : 0);
+			root->continuation.reached_active ? root->continuation.generation : 0,
+			(unsigned long)root->continuation.packet->ip,
+			(unsigned long)root->continuation.packet->sp,
+			root->image->generation);
 }
 
 static struct kd_wait_queue kd_service_dispatch_queue(void)

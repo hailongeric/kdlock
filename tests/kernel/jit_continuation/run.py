@@ -253,10 +253,17 @@ class ContinuationSession(Session):
             if rows[0]["status"] == 0 and not rt.children(self.daemon.pid):
                 self.record["publication"] = self.publication()
                 self.record["image_registry"] = self.registry("initial", 0)
-                rt.require(self.record["image_registry"][0]["requirements"] ==
-                           self.record["image_requirements"] and
-                           self.record["image_registry"][0]["generation"] > 0,
-                           "marker image lacks the required native-exit contract")
+                actual_requirements = self.record["image_registry"][0]["requirements"]
+                expected_requirements = self.record["image_requirements"]
+                if self.record.get("check_set") == "handback":
+                    rt.require(actual_requirements & expected_requirements == expected_requirements and
+                               self.record["image_registry"][0]["generation"] > 0,
+                               "cold image lacks the full current-position miss contract")
+                    self.record["initial_image_requirements"] = actual_requirements
+                else:
+                    rt.require(actual_requirements == expected_requirements and
+                               self.record["image_registry"][0]["generation"] > 0,
+                               "marker image lacks the required native-exit contract")
                 if self.record.get("origin_instructions"):
                     images = list((self.path/"workspace").rglob("jit.bin"))
                     rt.require(len(images) == 1, "exactly one immutable instruction image required")
@@ -475,6 +482,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=("continuation", "killable", "helper"), default="continuation")
+    parser.add_argument("--check-set", choices=("ordinary", "handback"), default="ordinary",
+                        help="opt-in cold/learned retained handback checks in helper mode")
     parser.add_argument("--execution-mode", choices=("image",), default="image",
                         help="original bounded compiled-image backend")
     parser.add_argument("--cpus", type=rt.cpu_list, default=list(range(16)))
@@ -503,6 +512,8 @@ def main():
     rt.require(args.mode not in ("killable", "helper") or
                (args.family == "rwsem" and not args.origin_instructions and not args.mixed_spin),
                "killable/helper modes require rwsem without instruction or mixed-spin variants")
+    rt.require(args.check_set != "handback" or (args.mode == "helper" and args.family == "rwsem"),
+               "handback checks require the generic rwsem helper fixture")
     rt.require(args.execution_mode != "reached" or args.mode in ("killable", "helper"),
                "reached execution requires the retained killable/helper rwsem fixtures")
     shared = args.family in ("rwlock", "rwsem") and args.mode not in ("killable", "helper")
@@ -660,10 +671,12 @@ def main():
         else:
             shell, cookie = args.family + "_direct", "provider_cpu_heat"
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
+                    check_set=args.check_set,
                     execution_mode=args.execution_mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=(0 if args.execution_mode == "reached" else
+                    image_requirements=(8192 if args.check_set == "handback" else
+                                        0 if args.execution_mode == "reached" else
                                         8064 if args.mode == "helper" else 384 if args.mode == "killable" else
                                         1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
@@ -680,6 +693,9 @@ def main():
             selected_session = session_class(ContinuationSession)
         elif args.mode == "helper":
             from helper_mode import session_class
+            selected_session = session_class(ContinuationSession)
+        if args.check_set == "handback":
+            from handoff_mode import session_class
             selected_session = session_class(ContinuationSession)
         if args.execution_mode == "reached":
             from reached_mode import session_class
@@ -703,6 +719,9 @@ def main():
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
         if args.mode == "killable":
             print("PASS: actual other-task killable roots, queued/draining cancellation and nested parent effects")
+            return 0
+        if args.check_set == "handback":
+            print("PASS: cold CALL/IJ handback, exact owner/read custody, later learned execution and drain")
             return 0
         if args.mode == "helper":
             if args.execution_mode == "reached":

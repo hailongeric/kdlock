@@ -67,6 +67,9 @@ enum jit_killable_operation {
 #define JIT_KILLABLE_HELPER_TAIL 16384U
 #define JIT_KILLABLE_HELPER_MAPPED 32768U
 #define JIT_KILLABLE_HELPER_ALLOC 65536U
+#define JIT_KILLABLE_HANDBACK_ROOT 131072U
+#define JIT_KILLABLE_HANDBACK_NESTED 262144U
+#define JIT_KILLABLE_HANDBACK_READ 524288U
 #define JIT_KILLABLE_RELEASE_WRITE 1ULL
 #define JIT_KILLABLE_RELEASE_READ 2ULL
 #define JIT_KILLABLE_RELEASE_INNER 4ULL
@@ -163,4 +166,14 @@ struct jit_mapped_snapshot {
 };
 #define JIT_MAPPED_SNAPSHOT _IOR('E', 17, struct jit_mapped_snapshot)
 #define JIT_MAPPED_REGISTER _IO('E', 18)
+
+struct jit_handoff_slot {
+	__u64 calls, pid, entry_sp, return_word;
+	__u64 arguments[6], result, after;
+};
+struct jit_handoff_snapshot {
+	__u64 version, wrapper, leaves[3], body, errors;
+	struct jit_handoff_slot slots[JIT_KILLABLE_SLOTS];
+};
+#define JIT_HANDOFF_SNAPSHOT _IOR('E', 19, struct jit_handoff_snapshot)
 #endif

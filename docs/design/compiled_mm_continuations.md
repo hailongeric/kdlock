@@ -560,3 +560,32 @@ all runs to matching kernel, provider, daemon and translator identities, and
 refresh the real recovery-snapshot inventory before module execution. Only
 then run the two focused real-syscall mmap1 models; no performance claim follows
 from the component results.
+
+## Opt-in cold and learned continuation probe
+
+Use the existing helper-mode kernel fixture and controller with a separate
+`--check-set handback` selection. Preserve old modes' exact full-return and
+unchanged-publication assertions. Add one unregistered ordinary register-JMP
+wrapper and three small source leaf entries for root, nested-owner and read-tail
+cases. The leaf captures source-entry SP and the real return word before its C
+body, then publishes a bounded scalar checkpoint. It is not a registered
+runtime service or an application adapter. The nested call occurs after child
+acquisition and before release; the read-tail call occurs after real downgrade.
+
+Pause/resume the same daemon between drained learning waves. Archive each
+immutable registry row, generated source/binary and learned CALL/IJ tables.
+Determine expected cold/warm behavior from that actual image's decoded-source
+coverage rather than assuming a fixed wave number. A cold ordinary CALL and
+actual indirect edge must each hand back once; a later image must execute the
+same useful body and return on E. Keep the source effect count one per request,
+check actual O/E identities, compare the handback IP/SP with the source entry,
+and validate the return word against the loaded module's actual CALL relocation.
+
+Append IP, SP and image generation to the existing opt-in service event record
+so a read-only handback can be observed even after E has retired its frame.
+These fields are diagnostic and do not authorize ownership or restoration;
+disabled tracing retains the same execution path. Native read custody does
+not emit an E-side read release. Observe its real credit and queued successor,
+release the O-side read tail, then require a fresh writer and complete source,
+service, reservation and module drain. A terminal handback event alone is not
+storage-retirement evidence.

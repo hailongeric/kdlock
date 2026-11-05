@@ -84,6 +84,10 @@ def trace_events(messages):
         family = re.search(r'\bfamily_generation=(\d+)', line)
         if family is not None:
             row['family_generation'] = int(family[1])
+        for field in ('ip', 'sp', 'image_generation'):
+            value = re.search(r'\b' + field + r'=([0-9a-fA-F]+)', line)
+            if value is not None:
+                row[field] = int(value[1], 10 if field == 'image_generation' else 16)
         rows.append(row)
     return rows
 
