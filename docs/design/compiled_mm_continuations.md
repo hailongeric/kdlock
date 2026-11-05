@@ -615,3 +615,59 @@ at the actual stop boundary send termination before continuation. The exact
 retained daemon was later stopped after its child completed, source retirement
 reported modules/frames/writers zero, helper registration was released, and
 both modules unloaded normally. The VM is idle; no force unload occurred.
+# Demand image preparation for the throughput pilot
+
+This design starts at `805e29f3d4c11f602740c066a7ac26c5689d2ef3` on
+`codex/mmap-reached-jit`. The VM has returned to the verified ordinary kernel
+before implementation. The earlier pilot attempts and Native rates remain
+separate evidence; none established current KD mmap1 throughput.
+
+The 55 audited entries are static MM writer sites. They are not 55 observed
+mmap1 paths. `kd_rwsem_provider_prepare_entries()` registers the full table,
+activation requires an image for every entry, and the daemon synchronously
+waits for each compiler child. These preparation policies are independent of
+the original JIT's bounded translation and later miss learning.
+
+Add the explicit, general provider option `rwsem_provider_demand=1`, keeping
+the existing default unchanged. In demand mode preparation validates the
+builtin site descriptors without registering every image. Activation retains
+initialization, open-source, CPU, provider registration and source-binding
+requirements; image availability is decided at each capture. No MM body,
+caller-specific branch, lock API, queue, cancellation or downgrade changes.
+
+The existing `kd_service_capture_internal()` already registers an encountered
+entry. When no image is available, it releases the pending capture lease and
+uses ordinary local KD acquisition before reserving/publishing a request or
+executing a source instruction. Killable success/cancellation ordering is
+therefore preserved by the existing local admission. This is distinct from a
+miss after JIT progress: that path retains current IP/SP/GPRs, actual CALL/RET
+effects, physical lock custody, source/frame references and exact final ACKs.
+It must neither restart the body nor report a handed-back prefix as a returned
+JIT body. The original immutable-image backend remains the only JIT backend.
+
+The benchmark separates learning from a stable timing epoch. Learning uses
+unchanged application lifetimes and records image additions/updates as normal
+progress. It waits outside the application interval for compiler, request and
+source drainage before taking a new receipt. A bounded learning deadline is
+not proof of drain. Stable timing retains exact provider/daemon/controller,
+source, inputs and image-generation checks; a new entry or generation during
+that interval leaves it unaccepted and records learning rather than claiming
+corruption or silently repeating the score.
+
+Demand registry identity is `(pid, entry)`, with kernel `pid == 0`, valid
+audited entry/ABI/lock kind and publication generation. First-registrar TGID
+is metadata: the provider binds new MM objects globally, so unrelated MM tasks
+can legitimately register an entry. It is not execution or ownership proof.
+The receipt must bind the reviewed static site table and actual provider/source
+identities independently. Workload delegation claims require worker/root/
+backing joins; global JIT counters alone do not establish them. Native-only
+and mixed local/JIT observations must be labelled accordingly.
+
+Use the existing private benchmark provider, whose declared parameters include
+`bench_quiet` and `bench_complete_probe`; a production module is not that
+variant. Check those parameters before preparation. Preserve source module
+pins until `RETIRE`, exact zero state afterward, fresh-process finalization
+and normal unload. Focus validation on demand/default activation, cold local
+admission, receipt provenance and valid learning transitions, followed by the
+one-round thread/process pilot and verified normal-kernel recovery. The
+separate retained-continuation fixture is not rerun by this task.
