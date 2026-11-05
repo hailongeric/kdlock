@@ -1,0 +1,51 @@
+{
+  "a6fe0bb2-freeze.json": {
+    "source_host_path": "/tmp/kdlock-handback-queries-a6fe0bb2-freeze/transfer.stdout",
+    "bytes": 457,
+    "sha256": "feb1a20335846ca4007d18e74520519c4892b02099dd926b96bd7631fc5f1008"
+  },
+  "a6fe0bb2-checks.json": {
+    "source_host_path": "/tmp/kdlock-handback-queries-a6fe0bb2-checks/reply.json",
+    "bytes": 20059,
+    "sha256": "5d03e6d5a28e63a0f060da200c5f8065890f335890881259eafa9f9de40853cd"
+  },
+  "da55414f-freeze.json": {
+    "source_host_path": "/tmp/kdlock-handback-queries-da55414f-freeze/transfer.stdout",
+    "bytes": 457,
+    "sha256": "7cb9e20aee8a8fafcb1aaf4c402deed0500b49b01549e0de2406c952d83c5721"
+  },
+  "da55414f-checks.json": {
+    "source_host_path": "/tmp/kdlock-handback-queries-da55414f-checks/reply.json",
+    "bytes": 13623,
+    "sha256": "b193f5b47b1b5efebca6e6576cfbce87062e1d83dd424ed495ede6310d455fd9"
+  },
+  "615cdb0b-freeze.json": {
+    "source_host_path": "/tmp/kdlock-mutex-fixtures-615cdb0b-freeze/transfer.stdout",
+    "bytes": 455,
+    "sha256": "b91a6c4eb08be95cb5b909cb2c925c44bb5ab0c86e9cb3f357cf494d7896a3ac"
+  },
+  "615cdb0b-checks.json": {
+    "source_host_path": "/tmp/kdlock-mutex-fixtures-615cdb0b-checks/reply.json",
+    "bytes": 2979,
+    "sha256": "7f2a73a6befb4c0f4f99736fbbcaced2aaf979c25d144283e687cd1d638a5aa5"
+  },
+  "2bfbb8dc-freeze.json": {
+    "source_host_path": "/tmp/kdlock-mutex-resources-2bfbb8dc-freeze/transfer.stdout",
+    "bytes": 456,
+    "sha256": "0524f83e1ae9c5618a81cf13f788049bacdf336c1166486153208f6239599623"
+  },
+  "2bfbb8dc-checks.json": {
+    "source_host_path": "/tmp/kdlock-mutex-resources-2bfbb8dc-checks/reply.json",
+    "bytes": 2689,
+    "sha256": "f6a4cf4feaf851ac52952baadb9e679d473511b670fd50a9d4a7314fe9c02565"
+  },
+  "live-identity-2bfbb8dc.json": {
+    "source_host_path": "/tmp/kdlock-mmap-live-identity-2bfbb8dc/reply.json",
+    "bytes": 8517,
+    "sha256": "edc6b8c59c0666d4023711ca975ca8bdae2b120eef50b9f211b482f968d6869f"
+  },
+  "kernel-interface-comparison.diff": {
+    "bytes": 1956,
+    "sha256": "24be56919a0ba53f82c12887a9966201c7c52dd97b0584b6ab2a29d96fb8033c"
+  }
+}

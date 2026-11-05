@@ -533,3 +533,30 @@ the ordinary peer owns a delegation gate. Preserve a noncalling function
 reference in the omitted-physical-acquisition mutation so its result remains
 a runtime assertion, not an unused-function compile failure. Rerun only the
 resource driver; the OSQ receipt remains attached to its existing version.
+
+## Completed fixture repair and next live boundary
+
+The frozen `2bfbb8dc992ce9cb8ef38521cbc2ca43c35e6f48` resource-only rerun passed
+19,164 checks with zero failures and detected all 27 mutations. OSQ remains
+26 scenarios and 14 detected mutations at `615cdb0b`. Their production
+`kernel_module`, `include` and `disassem` trees are byte-identical to
+`da55414fa576a6e683f98364523cf9353b598c0e`; no new provider build was needed
+for these fixture-only changes. The [fixed result record](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+retains every earlier failure, exact freeze/check reply and evidence limit.
+
+Fresh metadata verification passed the installed scope5 KD bundle, but the VM
+still runs normal `kdlock1` and the candidate provider is unloaded. The shared
+facade/layout/adapter match; provider-header/restoration differences are only
+comments. The exact kernel/provider identities and source comparison are in
+the same result record. This is preparation, not a running-MM pass.
+
+The next minimal live validator must distinguish cold permanent handback from
+returned JIT work, preserve prefix effects and actual IP/SP/CALL words, exercise
+nested release/downgrade/read custody and a subsequent writer, and observe a
+later learned immutable image. Use the existing generic continuation probes;
+do not add mmap1-specific API behavior. The actual three public query bodies
+also need live evidence beyond their synthetic code-generation fixture. Bind
+all runs to matching kernel, provider, daemon and translator identities, and
+refresh the real recovery-snapshot inventory before module execution. Only
+then run the two focused real-syscall mmap1 models; no performance claim follows
+from the component results.
