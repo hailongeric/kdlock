@@ -24,6 +24,7 @@ import diagnostics
 import entry_abi
 import hostcall
 import indirect_jump
+import kernel_symbols
 import memread
 import normal
 from object_image import require_complete_object
@@ -42,6 +43,20 @@ from translation_scope import (
 
 
 def get_kernel_symbol(name, default=0):
+    cache = kernel_symbols.current()
+    if cache is not None:
+        try:
+            memread.device_session.require()
+        except RuntimeError:
+            # Direct Python callers and substituted-text fixtures may have no
+            # validated lease. Keep their original lookup boundary unchanged.
+            pass
+        else:
+            return cache.lookup(name, default, opener=open, live=_get_kernel_symbol_live)
+    return _get_kernel_symbol_live(name, default)
+
+
+def _get_kernel_symbol_live(name, default=0):
     try:
         with open("/proc/kallsyms", "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
@@ -154,6 +169,7 @@ def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
 # Complete text/CFG expansion and both admission passes before emitting bytes.
 # One selected block set drives checking and codegen; waiter-only CALL suffixes
 # stay outside this episode, but any alternate live path remains in scope.
+@kernel_symbols.translation_scope()
 def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
               trusted_source=True):
     diagnostics.begin(pid, entry)
