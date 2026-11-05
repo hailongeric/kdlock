@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -147,6 +148,8 @@ class Daemon:
         self.path, self.translation_source, self.daemon_binary = path, source, binary
         self.record = {}
         self.daemon = self.daemon_log = None
+        self.translation_paused = False
+        self.translation_identity = None
 
     def save(self):
         rt.write_json(self.path / 'daemon-session.json', self.record)
@@ -164,7 +167,49 @@ class Daemon:
             else:
                 os.environ['PATH'] = previous
 
+    def translation_state(self):
+        rt.require(self.daemon is not None and self.daemon.poll() is None,
+                   'translation daemon is not live', 'UNDRAINED')
+        words = Path('/proc', str(self.daemon.pid), 'stat').read_text().rsplit(')', 1)[1].split()
+        identity = (self.daemon.pid, int(words[19]))
+        if self.translation_identity is None:
+            self.translation_identity = identity
+        rt.require(identity == self.translation_identity, 'translation daemon identity changed', 'UNDRAINED')
+        return words[0]
+
+    def translation_phase(self, paused):
+        rt.require((PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
+                   rt.status()['frames'] == 0 and
+                   (not paused or not rt.children(self.daemon.pid)),
+                   'translation phase requires an inactive quiescent factory', 'UNDRAINED')
+        self.translation_state()
+        if paused != self.translation_paused:
+            self.daemon.send_signal(signal.SIGSTOP if paused else signal.SIGCONT)
+        deadline = time.monotonic() + 2
+        while True:
+            self.translation_paused = self.translation_state() in ('T', 't')
+            if self.translation_paused == paused:
+                break
+            rt.require(time.monotonic() < deadline, 'translation phase did not settle', 'UNDRAINED')
+            time.sleep(.01)
+        if paused:
+            rt.require(not rt.children(self.daemon.pid), 'translation phase acquired a child', 'UNDRAINED')
+        self.translation_paused = paused
+        self.record.setdefault('translation_phases', []).append(dict(
+            paused=paused, at_ns=time.monotonic_ns(), identity=list(self.translation_identity)))
+        self.save()
+
     def stop(self):
+        if self.daemon is not None and self.daemon.poll() is None and self.translation_state() in ('T', 't'):
+            rt.require((PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N' and
+                       rt.status()['frames'] == 0 and not rt.children(self.daemon.pid),
+                       'paused daemon retirement is not quiescent', 'UNDRAINED')
+            self.translation_state()
+            # Deliver termination before continuation: no new translation job
+            # may start between resuming the process and requesting its exit.
+            self.daemon.terminate()
+            self.daemon.send_signal(signal.SIGCONT)
+            self.translation_paused = False
         Session.stop_daemon(self)
 
 

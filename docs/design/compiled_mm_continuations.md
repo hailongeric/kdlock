@@ -1098,3 +1098,67 @@ bounded live learning phase avoids that stale-instance issue without changing
 the lock implementation. Quiet timing and a separate worker-attributed proof
 remain distinct evidence. The current false proof field is not itself the
 learning failure, and it does not establish that no delegation occurred.
+
+# Persistent scaling and separate execution proof
+
+Use the representative initial grid `1,2,4,8,16,32,36,60`, one scored round per
+point, for threads and processes separately. This is a subset of the standard
+21-count grid. Workers retain CPUs `0..N-1`, collector 63 and the declared
+executor pool `0-61`. Count 36 is the first selected cross-node point. Native
+uses the same scope5 kernel Build ID with `kd_mmap=off`; the ordinary development
+kernel is a different build and is not its matched control.
+
+Keep one provider/daemon/source session across both KD models and all counts.
+Learning snapshots and quiet timing receipts are per count, while workspace,
+current images and append histories remain live. Track the actual 128-slot
+pool across the entire campaign and bound total learning wall time; a per-count
+round allowance must not imply unlimited cumulative generations. Keep every
+partial valid point and every stopped/unrun count explicit if capacity or the
+deadline prevents completion.
+
+Before quiet timing, compose the existing worker-identity diagnostic on two
+workers in the same image session. While the factory is inactive, load the
+existing `kd_mmap1_identity` observer and continuous bounded log collector.
+Enable `service_trace`, activate, take a new exact receipt, and run unchanged
+mmap1 with `diagnostic=True`. Preserve stable STOP snapshots and apply the
+existing delegated-root, instruction-service and syscall-pair validators,
+including the downgraded read tail and later same-executor writer evidence.
+Then deactivate, remove the observer in its documented order, disable trace,
+prove quiescence, and take a new quiet receipt. Do not reload the provider,
+restart the daemon, reuse stale image addresses or count diagnostic rates as
+timing data. A proof with different image generations needs revalidation.
+
+Record requester CPU time with its existing whole-lifetime scope. Optional
+exact executor task/start-time CPU snapshots and guest CPU counters can add a
+whole-lifetime view including executor work; they are not measurements of the
+two-second scored interval or critical-section ratio. Idle executors sleep on
+work-sequence changes, so their count alone does not establish spinning cost.
+The quiet observation build suppresses routine diagnostics; its parameter
+values do not establish that every instrumentation write is absent.
+
+The scaling controller uses an explicit translation phase barrier. At verified
+quiescence, stop the exact idle daemon and verify its stopped state before
+activating the factory and starting an application. After that application
+drains, deactivate the factory before continuing the daemon and settling image
+updates. This keeps compiler CPU outside application lifetimes and prevents
+compiler children from receiving new provider-bound MMs while learning.
+Keep the same daemon PID, device description and workspace throughout. Quiet
+timing also keeps translation stopped and still rejects every registry change.
+For cleanup, send termination before continuation so a stopped daemon cannot
+start another compiler child between resume and the existing stop check.
+
+Before each new application, require the declared 128-slot capacity, no private
+images and at least one free descriptor per selected root. Translation remains
+stopped throughout that application, so its reached-path reports cannot cause
+publication until all application frames have drained. Every quiet application
+still requires an unchanged exact registry. The learning deadline bounds entry
+to learning and proof attempts; ordinary bounded application and cleanup waits
+may finish after that deadline. This is not an asynchronous termination timer.
+
+Accept execution proof only after its application drains, the idempotent STOP
+snapshot and lifecycle STOP summary agree, all existing worker and continuation
+validators pass, and the complete collector reports no fault or collection
+loss. Preparation failures and unknown application lifetimes retain their exact
+stage and live state. A fresh process verifies the recorded registry and source
+ledger before ordinary retirement; partial results remain distinct from passed
+and drained campaign completion.

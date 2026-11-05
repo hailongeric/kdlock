@@ -4,13 +4,16 @@ import subprocess
 import time
 
 
-def progress(parameters, source_status, reached_status, timeout=5):
+def progress(parameters, source_status, reached_status=None, timeout=5):
     assert 0 < timeout <= 5
     assert (parameters / 'rwsem_provider_active').read_text().strip() == 'N'
     assert source_status()['frames'] == 0
-    stats = reached_status()
-    assert stats['active'] == stats['unsupported'] == 0
-    assert stats['roots'] == stats['completions']
+    if reached_status is None:
+        assert (parameters / 'service_progress').read_text().strip() == 'total=0 shown=0'
+    else:
+        stats = reached_status()
+        assert stats['active'] == stats['unsupported'] == 0
+        assert stats['roots'] == stats['completions']
     result = dict(started_ns=time.monotonic_ns(), cpus=[],
                   bindings_before=int((parameters / 'rwsem_provider_bindings').read_text()))
     deadline = time.monotonic() + timeout

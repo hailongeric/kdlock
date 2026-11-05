@@ -36,14 +36,18 @@ def learning_limits(c):
     return timeout, limit
 
 
-def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
+def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify, *,
+                    deadline=None, quiescent=None, before_application=None):
     """Renew exact receipts only at quiescent learning boundaries."""
     timeout, limit = learning_limits(c)
-    deadline = time.monotonic() + timeout
+    own_deadline = time.monotonic() + timeout
+    deadline = own_deadline if deadline is None else min(deadline, own_deadline)
     previous, epochs = None, []
     sites = bench.execution.selected_writer_entries(c.get('writer_entries', []),
         {row['entry'] for row in owner.audit['records']})
     base_files = dict(owner.files)
+    phase_barrier = c.get('pause_translation', False)
+    assert type(phase_barrier) is bool
 
     def snapshot():
         nonlocal previous
@@ -51,14 +55,19 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
         parameters = bench.execution.PARAMETERS
         active = parameters / 'rwsem_provider_active'
         mode = parameters / 'rwsem_provider_mode'
-        assert active.read_text().strip() == 'Y'
+        assert active.read_text().strip() in (('Y', 'N') if phase_barrier else ('Y',))
         mode.write_text('deactivate\n')
+        if phase_barrier:
+            daemon.translation_phase(False)
         settled_since = None
         while True:
             assert time.monotonic() < deadline, 'demand learning did not reach a quiescent boundary'
             assert daemon.daemon.poll() is None, 'translation daemon exited during learning'
             source, rows = rt.status(), rt.registry()
-            stable = (not rt.children(daemon.daemon.pid) and source['state'] == source['frames'] == 0 and
+            children = rt.children(daemon.daemon.pid)
+            if not children and source['frames'] == 0 and quiescent is not None:
+                quiescent(rows)
+            stable = (not children and source['state'] == source['frames'] == 0 and
                       source['writers'] == 1 and all(row['status'] in (0, -3) for row in rows))
             if not stable:
                 settled_since = None
@@ -81,13 +90,17 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
             for row in rows:
                 if row['status'] != 0:
                     continue
-                source_dir = out / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
+                source_dir = Path(daemon.path) / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
                 destination = epoch / (hex(row['entry']) + '-g' + str(row['generation']))
                 destination.mkdir()
                 for name in ('jit.bin', 'jit.S', 'bin.txt'):
                     target = destination / name
                     __import__('shutil').copyfile(source_dir / name, target)
                     owner.files[str(target)] = rt.digest(target)
+            if phase_barrier:
+                daemon.translation_phase(True)
+            if before_application is not None:
+                before_application(rows)
             mode.write_text('activate\n')
             try:
                 receipt = owner.session_receipt(daemon, rows)
@@ -97,6 +110,8 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
                     raise
                 epochs.append(dict(path=str(epoch), accepted=False, error=str(error)))
                 mode.write_text('deactivate\n')
+                if phase_barrier:
+                    daemon.translation_phase(False)
                 settled_since = None
                 continue
             previous = rows
