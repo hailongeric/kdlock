@@ -737,6 +737,44 @@ unload normally, followed by verified normal-kernel recovery. The
 retains fixture failures, all six unscored rates and the open delegation and
 performance criteria. No promotion or performance gain is claimed.
 
+## Bounded cold convergence follow-up
+
+The retained histories account for all completed jobs: threads have 12 initial
+compilations, 35 distinct per-root CALL records and one IJ edge; processes have
+13 initial compilations, 37 CALL records and one IJ edge. No root contains a
+duplicate learned record. The common roots learn the same sequences in both
+models. Assembly/binary hashes and decoded coverage grow across generations.
+The pre-application receipt agrees with each saved `registry_before`; the
+observed changes are not caused solely by comparing an earlier preparer state.
+These observations do not demonstrate a history, compiler or receipt defect.
+
+Use the unchanged tested runtime `15f1c08a3a52ed271fcf3fd81f5da68f1f524878`
+for a separately identified cold session. Daemon startup clears its workspace,
+so this does not resume the previous images or import old histories. Keep the
+existing Native controls, source/provider hashes, topology, original JIT,
+demand admission and syscall bodies unchanged. No new build is needed for this
+configuration-only continuation.
+
+Select the existing maximum of eight learning lifetimes with a 1,800-second
+learning deadline per model. The runner already stops at the first stable
+lifetime, so eight is a ceiling rather than a request to run eight regardless.
+The measured 13.2-second median compiler jobs and 12/13 active roots make the
+earlier three-wave ceiling inadequate to test deeper convergence. Roughly nine
+images per 13 roots at the observed job cost fit this finite deadline, including
+the initial image; it is a planning estimate, not a completeness guarantee.
+Bound the parent measurement command at 2,100 seconds and transport at 2,220,
+preserving the existing 300-second and 120-second outer margins.
+Do not increase these limits during a running session.
+
+Preserve the exact stable-lifetime check, fresh immutable execution receipt and
+unchanged-before/after check for the single scored application point. A further
+miss leaves that point unaccepted; no score retry, whole-CFG preparation or
+relaxed acceptance is added. Keep thread/process evidence separate and retain
+every unscored lifetime. After each session require exact retirement and normal
+unload, or preserve an unresolved state for ordinary recovery. Verify the normal
+`kdlock1` kernel afterward. Broader ownership transfer and pure-query changes
+remain separate from this convergence test.
+
 ## Approved follow-on: permanent takeover and executor-local pure queries
 
 The user selected immediate physical ownership transfer to O and immediate
