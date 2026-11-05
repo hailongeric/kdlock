@@ -14,6 +14,8 @@ struct task_struct;
 #define KD_RWSEM_PROVIDER_PACKET_LAYOUT 2U
 #define KD_RWSEM_CONTROL_CAPTURE (1U << 0)
 #define KD_RWSEM_CONTROL_INTEGER (1U << 1)
+/* Query discovery identity. The operation selects ordinary compiled execution
+ * or a returning Native service; this bit alone does not choose execution. */
 #define KD_RWSEM_CONTROL_PRIMITIVE (1U << 2)
 
 enum kd_rwsem_provider_operation {
@@ -72,8 +74,9 @@ struct kd_rwsem_provider {
 	void (*assert_held)(const void *object);
 	void (*assert_held_write)(const void *object);
 	/* The builtin caller transfers its transient callback module reference.
-	 * Cancellation returns to that caller. Successful proxy completion uses
-	 * kd_rwsem_provider_resume after all module-owned state has retired. */
+	 * Cancellation returns to that caller. Completed proxy work restores after
+	 * retirement. Native handback passes a separate restore reference while E
+	 * independently retains its original reference and owner/frame lifetimes. */
 	int (*capture)(void *object, unsigned int state, unsigned long sp,
 		       unsigned long ip, unsigned long bp);
 };

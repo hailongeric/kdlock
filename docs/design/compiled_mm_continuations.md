@@ -275,8 +275,9 @@ worker, and ACK an acknowledgment of the specified actor's final access.
 The root's existing request, packet, linked owner records and native-frame
 registry are sufficient storage for preparing the writer-routing extension.
 This inventory adds no allocation, global registry, reader field, CPU
-requirement or protocol state. Whether translated read custody can retire
-earlier remains the user's pending choice.
+requirement or protocol state. The earlier question about retiring translated
+read custody is resolved by the approved Native read-custody sequence below;
+the read credit itself remains live until its ordinary Native release.
 
 ### Bound-object references and limits
 
@@ -402,6 +403,11 @@ precedes the synchronous cleanup implementation.
 8. E never dereferences the root after the callback returns. Release only the
    previously saved module references. Existing worker-stop ordering includes
    synchronous cleanup completion before pool/code destruction.
+
+`kd_service_idle` can become true after active-list removal while the callback
+still has its final retirement work. It is not a standalone callback-completion
+barrier. Exact reservation bitmap/count state, frame/module references and
+synchronous worker joining retain the composite drain/teardown contract.
 
 O continues independently after its existing final packet or release ACK. E
 can wait for the home CPU's task-context callback, so this selection is not a

@@ -15,6 +15,8 @@ enum kd_exec_cont_state {
 	KD_CONT_RETURNED,
 	KD_CONT_RETIRED,
 	KD_CONT_FINISHING,
+	/* Native execution accepted the packet; no full JIT body is reported. */
+	KD_CONT_HANDED_OFF,
 };
 
 enum kd_exec_cont_wait {
@@ -53,14 +55,19 @@ struct kd_exec_service_call {
 	u64 child_generation;
 };
 
-/* These are read-only queries over root-owned retained acquisition records.
- * They must not acquire an object lock, schedule or touch a released object. */
+/* Queries inspect retained records without scheduling or taking object locks.
+ * native_release is the explicit exception: the actual E performs a typed
+ * physical operation outside the Native registry guard. */
 struct kd_exec_service_ops {
 	bool (*validate)(const void *scope, const struct kd_exec_continuation *cont);
 	bool (*all_released)(const void *scope);
 	bool (*outer_released)(const void *scope);
 	bool (*has_nested)(const void *scope);
 	unsigned int (*depth)(const void *scope);
+	bool (*native_match)(const void *scope, unsigned long object,
+		enum kd_exec_native_operation operation, struct kd_exec_native_route *route);
+	int (*native_release)(void *scope, const struct kd_exec_native_route *route);
+	bool (*native_finished)(const void *scope);
 };
 
 struct kd_exec_capture_lease {
@@ -135,6 +142,7 @@ struct kd_exec_continuation {
 	bool source_lease;
 	bool stack_lease;
 	bool body_reported;
+	bool native_accepted;
 	/* Selected before publication; never switch a committed root to a suffix. */
 	bool reached_active;
 	u64 reached_artifact_sequence;
@@ -189,6 +197,7 @@ int kd_exec_cont_owner_borrow(struct kd_exec_continuation *continuation,
 	struct kd_exec_owner_ref *reference, struct kd_exec_owner_ref *source);
 int kd_exec_cont_owner_put(struct kd_exec_owner_ref *reference);
 int kd_exec_cont_return(struct kd_exec_continuation *continuation, int result);
+int kd_exec_cont_handoff(struct kd_exec_continuation *continuation);
 int kd_exec_cont_retire(struct kd_exec_continuation *continuation);
 
 #endif /* KD_EXEC_CONT_H */

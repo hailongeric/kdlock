@@ -73,6 +73,7 @@ struct kd_native_owner {
 	u64 sequence;
 	unsigned int kind;
 	bool held;
+	bool native_custody;
 };
 
 struct kd_service_call_desc {

@@ -7,6 +7,9 @@
 #include "kd_lock.h"
 #include "kd_mutex_local.h"
 #include "kd_admission.h"
+#ifndef KD_RWSEM_LOCAL_BACKEND
+#include "kd_exec.h"
+#endif
 
 #define KD_RWSEM_LOCAL_WRITER (-1L)
 
@@ -394,6 +397,11 @@ EXPORT_SYMBOL_GPL(kd_down_write_trylock);
 
 void kd_up_write(struct kd_rwsem *sem)
 {
+#ifndef KD_RWSEM_LOCAL_BACKEND
+	if (kd_exec_native_service_unlock((unsigned long)sem,
+		KD_NATIVE_OPERATION_RWSEM_UP_WRITE))
+		return;
+#endif
 	BUG_ON(READ_ONCE(sem->selected_kind) != KD_RWSEM_PHASE_LOCAL ||
 	       READ_ONCE(sem->selected_owner) != current);
 	kd_mutex_api_unlock(&sem->gate);
@@ -403,6 +411,11 @@ EXPORT_SYMBOL_GPL(kd_up_write);
 
 void kd_downgrade_write(struct kd_rwsem *sem)
 {
+#ifndef KD_RWSEM_LOCAL_BACKEND
+	if (kd_exec_native_service_unlock((unsigned long)sem,
+		KD_NATIVE_OPERATION_RWSEM_DOWNGRADE))
+		return;
+#endif
 	BUG_ON(READ_ONCE(sem->selected_kind) != KD_RWSEM_PHASE_LOCAL ||
 	       READ_ONCE(sem->selected_owner) != current ||
 	       atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER ||

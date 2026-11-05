@@ -92,8 +92,10 @@ KD_MUTEX_STAT(kd_mutex_origin_acquires);
 KD_MUTEX_STAT(kd_mutex_origin_releases);
 KD_MUTEX_STAT(kd_mutex_nested_unlock_count);
 KD_MUTEX_STAT(kd_mutex_nested_abort_release_count);
-/* Each reservation/waiter enters and leaves on its migration-pinned origin CPU,
- * with preemption disabled at both updates. Unlike observational totals, drain
+/* Ordinary reservations enter and leave on their migration-pinned origin CPU,
+ * with preemption disabled at both updates. Permanent service handback uses a
+ * synchronous home-CPU release or an explicit serialized offline-CPU release.
+ * Unlike observational totals, drain
  * checks every exact balance separately; values on different CPUs cannot cancel.
  * Cross-CPU owner, acquisition refs, nested waits and ACKs keep their protocol. */
 static DEFINE_PER_CPU(int, kd_mutex_active_waiters);

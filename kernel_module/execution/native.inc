@@ -78,6 +78,190 @@ int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame)
 #include "../../tests/kernel/execution/exec_relay_exit_probe.c"
 #endif
 
+/* Retained scopes use this same registry and O-stack request storage. Their
+ * linked owner set is resolved by typed callbacks, not the legacy vector. */
+int kd_exec_native_service_begin(struct kd_exec_frame *frame)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	unsigned long flags;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops || !cont->service_ops->native_match ||
+	    !cont->service_ops->native_release || !cont->service_ops->native_finished ||
+	    cont->state != KD_CONT_SUSPENDED || cont->resume_executor != current ||
+	    cont->executor || !frame->executed || frame->completion_seen ||
+	    frame->logical_task == current || frame->packet_state != KD_PACKET_FULL ||
+	    !kd_exec_frame_regs(frame)->ip || !kd_exec_frame_regs(frame)->sp ||
+	    kd_exec_frame_regs(frame)->orig_ax != KD_REG_ORIGIN_SUFFIX_TAG ||
+	    !kd_exec_cont_no_stack_service(frame))
+		return -EINVAL;
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	cont->native_accepted = false;
+	list_add(&frame->native_link, &kd_native_frames);
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	atomic64_inc(&kd_native_started);
+	return 0;
+}
+
+static void kd_exec_native_service_request_wait(struct kd_native_request *request)
+{
+	while (!smp_load_acquire(&request->done)) {
+		cpu_relax();
+		if (!preempt_count() && !irqs_disabled() && need_resched())
+			cond_resched();
+	}
+	/* Only O-stack data remains valid after the final E acknowledgment. */
+	BUG_ON(request->result);
+}
+
+int kd_exec_native_accept(struct kd_exec_frame *frame)
+{
+	struct kd_native_request request = {
+		.route.operation = KD_NATIVE_OPERATION_ACCEPT,
+	};
+	struct kd_exec_continuation *cont;
+	unsigned long flags;
+
+	/* The initial READY transport retains this exact frame until acceptance.
+	 * The caller has already copied every packet/completion field it needs. */
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops || frame->logical_task != current ||
+	    list_empty(&frame->native_link) || frame->native_request ||
+	    cont->native_accepted || cont->state != KD_CONT_SUSPENDED) {
+		raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+		return -EINVAL;
+	}
+	smp_store_release(&frame->native_request, &request);
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	kd_exec_native_service_request_wait(&request);
+	/* Do not inspect frame: E may already have retired it. */
+	return 0;
+}
+
+bool kd_exec_native_service_active(struct task_struct *task)
+{
+	struct kd_exec_frame *frame;
+	unsigned long flags;
+	bool found = false;
+
+	if (list_empty(&kd_native_frames))
+		return false;
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_for_each_entry(frame, &kd_native_frames, native_link) {
+		struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+
+		if (frame->logical_task == task && cont && cont->service_ops) {
+			found = true;
+			break;
+		}
+	}
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	return found;
+}
+
+bool kd_exec_native_service_owned(unsigned long object)
+{
+	struct kd_exec_frame *frame;
+	struct kd_exec_native_route route;
+	unsigned long flags;
+	bool found = false;
+
+	if (list_empty(&kd_native_frames))
+		return false;
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_for_each_entry(frame, &kd_native_frames, native_link) {
+		struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+
+		if (frame->logical_task == current && cont && cont->service_ops &&
+		    cont->service_ops->native_match && cont->native_accepted &&
+		    cont->service_ops->native_match(cont->service_scope, object,
+			KD_NATIVE_OPERATION_WRITE_OWNED, &route)) {
+			found = true;
+			break;
+		}
+	}
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	return found;
+}
+
+bool kd_exec_native_service_unlock(unsigned long object,
+	enum kd_exec_native_operation operation)
+{
+	struct kd_native_request request = { .lock_addr = object };
+	struct kd_exec_frame *frame;
+	unsigned long flags;
+	bool found = false;
+
+	if (list_empty(&kd_native_frames))
+		return false;
+	BUG_ON(operation != KD_NATIVE_OPERATION_MUTEX_UNLOCK &&
+	       operation != KD_NATIVE_OPERATION_RWSEM_UP_WRITE &&
+	       operation != KD_NATIVE_OPERATION_RWSEM_DOWNGRADE);
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_for_each_entry(frame, &kd_native_frames, native_link) {
+		struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+
+		if (frame->logical_task != current || !cont || !cont->service_ops ||
+		    !cont->service_ops->native_match || !cont->native_accepted ||
+		    !cont->service_ops->native_match(cont->service_scope, object,
+			operation, &request.route))
+			continue;
+		BUG_ON(frame->native_request);
+		smp_store_release(&frame->native_request, &request);
+		found = true;
+		break;
+	}
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	if (found)
+		kd_exec_native_service_request_wait(&request);
+	return found;
+}
+
+static int kd_exec_native_service_wait(struct kd_exec_frame *frame)
+{
+	struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+
+	BUG_ON(!cont || !cont->service_ops || cont->state != KD_CONT_SUSPENDED ||
+	       cont->resume_executor != current);
+	for (;;) {
+		struct kd_native_request *request = smp_load_acquire(&frame->native_request);
+
+		if (request) {
+			unsigned long flags;
+			bool finished;
+			int ret;
+
+			if (request->route.operation == KD_NATIVE_OPERATION_ACCEPT) {
+				BUG_ON(cont->native_accepted);
+				cont->native_accepted = true;
+				ret = 0;
+			} else {
+				BUG_ON(!cont->native_accepted);
+				/* Actual owner operations never run under the registry guard. */
+				ret = cont->service_ops->native_release(cont->service_scope,
+					&request->route);
+				atomic64_inc(&kd_native_unlocks);
+			}
+			finished = cont->native_accepted &&
+				cont->service_ops->native_finished(cont->service_scope);
+			raw_spin_lock_irqsave(&kd_native_lock, flags);
+			BUG_ON(frame->native_request != request);
+			WRITE_ONCE(frame->native_request, NULL);
+			if (finished || ret)
+				list_del_init(&frame->native_link);
+			raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+			request->result = ret;
+			/* Last access: O may immediately discard its request/frame pointer. */
+			smp_store_release(&request->done, true);
+			if (finished || ret)
+				return ret;
+		}
+		cpu_relax();
+		if (need_resched())
+			cond_resched();
+	}
+}
+
 /* Publish routing only for a validated continuation packet. This function
  * neither transfers ownership nor jumps to source. A mutex batch may exchange
  * its physical owner afterwards, before publishing the native waiter wake. */
@@ -176,6 +360,9 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 	unsigned long flags;
 	bool found = false;
 
+	if (mutex && kd_exec_native_service_unlock(lock_addr,
+		KD_NATIVE_OPERATION_MUTEX_UNLOCK))
+		return true;
 	if (list_empty(&kd_native_frames))
 		return false;
 	raw_spin_lock_irqsave(&kd_native_lock, flags);
@@ -183,6 +370,10 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 		unsigned int i;
 
 		if (frame->logical_task != current)
+			continue;
+		/* Retained scopes are handled above through their full owner list. */
+		if (kd_exec_frame_continuation(frame) &&
+		    kd_exec_frame_continuation(frame)->service_ops)
 			continue;
 		/* Ancestors copied into a remote B frame still belong to A's
 		 * executor. Only route the locks owned by this particular frame. */
@@ -269,6 +460,9 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 	bool mutex = frame->mutex_backend;
 	int result;
 
+	if (kd_exec_frame_continuation(frame) &&
+	    kd_exec_frame_continuation(frame)->service_ops)
+		return kd_exec_native_service_wait(frame);
 	/* Publication precedes this entry: an already-running waiter prefix is
 	 * outside this interval. Include unlock/finish work and error returns;
 	 * nested relay waits overlap and must not be summed as wall time. */

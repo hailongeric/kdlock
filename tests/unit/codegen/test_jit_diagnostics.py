@@ -70,6 +70,7 @@ def render(
     returning_services=None,
     bound_controls=None,
     read_policies=None,
+    callee_exclusions=None,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -78,6 +79,8 @@ def render(
     def read_regions(entry, jump_table, excluded_callees, *, policy):
         if read_policies is not None:
             read_policies.append(policy)
+        if callee_exclusions is not None:
+            callee_exclusions.append(set(excluded_callees))
         # Reproduce learned dispatch metadata as well as bytes so tests cannot
         # accidentally validate a single-entry graph with its IJ history erased.
         jump_table.update(

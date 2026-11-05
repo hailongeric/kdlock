@@ -338,8 +338,15 @@ int kd_rwsem_provider_init(void)
 {
 #ifdef CONFIG_KDLOCK_MMAP
 	const struct kd_rwsem_control_binding *controls;
-	struct kd_service_call_desc descriptors[5];
-	char labels[5][32];
+	struct kd_service_call_desc descriptors[2];
+	char labels[2][32];
+	const struct kd_service_call_desc ownership_query = {
+		.symbol = "kd_service_write_owned",
+		.target = (unsigned long)kd_service_write_owned,
+		.nargs = 2,
+		.result_kind = KD_SERVICE_CALL_WORD,
+		.context_kind = KD_SERVICE_CALL_ATOMIC_ORIGIN,
+	};
 	unsigned int count, index, registered = 0;
 	int result;
 
@@ -353,9 +360,12 @@ int kd_rwsem_provider_init(void)
 		switch (binding->operation) {
 		case KD_RWSEM_OP_ASSERT_HELD:
 		case KD_RWSEM_OP_ASSERT_HELD_WRITE:
-			result_kind = KD_SERVICE_CALL_VOID;
-			break;
 		case KD_RWSEM_OP_IS_LOCKED:
+			/* These ordinary state-query bodies use original JIT lowering and
+			 * reached CALL learning. Their discovery rows remain unchanged. */
+			if (binding->flags != KD_RWSEM_CONTROL_PRIMITIVE)
+				return -EINVAL;
+			continue;
 		case KD_RWSEM_OP_IS_CONTENDED:
 		case KD_RWSEM_OP_IS_WRITE_OWNER:
 			result_kind = KD_SERVICE_CALL_WORD;
@@ -382,6 +392,13 @@ int kd_rwsem_provider_init(void)
 	/* These targets are builtin facades. Their callback pins and the exact
 	 * bound object retain the module independently of the returning CALL. */
 	result = kd_service_call_register(descriptors, registered, NULL);
+	if (result)
+		return result;
+	/* Only the inner runtime ledger query needs physical task/CPU context.
+	 * Its existing O transaction checks exact E ownership while E is
+	 * suspended. The query neither allocates nor changes held-lock context;
+	 * the descriptor pins this module through its returning service ACK. */
+	result = kd_service_call_register(&ownership_query, 1, THIS_MODULE);
 	if (result)
 		return result;
 #endif

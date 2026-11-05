@@ -19,6 +19,7 @@ struct kd_native_owner {
 	u64 generation, sequence;
 	unsigned int kind;
 	bool held;
+	bool native_custody;
 };
 struct kd_regs { unsigned long ax; };
 struct kd_origin_call {
@@ -187,6 +188,22 @@ int main(void)
 	for (i = 0; i < 10; ++i) {
 		CHECK(!prepare(&root, KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK, 0x4000 + 16 * i, 200 + i));
 		returned(&root);
+	}
+	CHECK(kd_service_scope_released(&scope));
+	/* The inner exact ownership query changes no Native ownership/context.
+	 * BALANCED rejects these retained intervals; ATOMIC preserves them. */
+	for (i = 0; i < 2; ++i) {
+		owners[0].kind = i ? KD_NATIVE_OWNER_RCU : KD_NATIVE_OWNER_SPIN;
+		owners[0].held = true;
+		memcpy(retained, owners, sizeof(owners));
+		CHECK(prepare(&root, KD_SERVICE_CALL_BALANCED_ORIGIN, objects[0], 300 + i) == -EOPNOTSUPP);
+		CHECK(!memcmp(retained, owners, sizeof(owners)));
+		CHECK(!prepare(&root, KD_SERVICE_CALL_ATOMIC_ORIGIN, objects[0], 310 + i));
+		CHECK(call->executor_pinned == !i);
+		returned(&root);
+		CHECK(!memcmp(retained, owners, sizeof(owners)));
+		owners[0].kind = KD_NATIVE_OWNER_FREE;
+		owners[0].held = false;
 	}
 	CHECK(kd_service_scope_released(&scope));
 	printf("Native writer exact custody: checks=%u, non-LIFO objects, ten records, no CPU pin\n", checks);

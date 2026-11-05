@@ -28,6 +28,8 @@ def main():
     for marker in (
         'static inline u32 kd_mutex_encode_tail(int cpu, int idx)',
         'static struct kd_mutex_node *kd_mutex_reserve_node(void)',
+        'static void kd_mutex_check_node_retirement(struct kd_mutex_node *node)',
+        'static void kd_mutex_clear_retired_node(struct kd_mutex_node *node)',
         'static void kd_mutex_release_node(struct kd_mutex_node *node)',
         'struct kd_mutex_osq_node *kd_mutex_osq_node_get(struct kd_mutex *lock)',
         'void kd_mutex_osq_node_put(struct kd_mutex_osq_node *osq)',

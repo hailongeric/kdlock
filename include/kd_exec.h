@@ -307,9 +307,31 @@ int kd_exec_frame_state(const struct kd_exec_frame *frame);
 
 /* Native continuation borrows the combiner's locks until the waiter unlocks.
  * Unlock requests are serviced on the executor that acquired each lock. */
+enum kd_exec_native_operation {
+	KD_NATIVE_OPERATION_ACCEPT = 1,
+	KD_NATIVE_OPERATION_MUTEX_UNLOCK,
+	KD_NATIVE_OPERATION_RWSEM_UP_WRITE,
+	KD_NATIVE_OPERATION_RWSEM_DOWNGRADE,
+	KD_NATIVE_OPERATION_WRITE_OWNED,
+};
+
+struct kd_exec_native_route {
+	void *owner;
+	void *identity;
+	u64 generation;
+	unsigned long object;
+	enum kd_exec_native_operation operation;
+};
+
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex);
 int kd_exec_native_wait(struct kd_exec_frame *frame);
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex);
+int kd_exec_native_service_begin(struct kd_exec_frame *frame);
+int kd_exec_native_accept(struct kd_exec_frame *frame);
+bool kd_exec_native_service_unlock(unsigned long object,
+	enum kd_exec_native_operation operation);
+bool kd_exec_native_service_owned(unsigned long object);
+bool kd_exec_native_service_active(struct task_struct *task);
 unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame);
 bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame);
 int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame);

@@ -57,6 +57,10 @@ def main():
         reader = read_source(ROOT / 'kernel_module/kd_rwsem.c')
         (path / 'reader_wait_production.h').write_text(definition(
             reader, 'static long kd_rwsem_wait_condition(struct kd_rwsem *sem,'))
+        (path / 'reader_release_production.h').write_text('\n'.join(
+            definition(reader, name) for name in (
+                'void kd_up_read(struct kd_rwsem *sem)',
+                'void kd_up_read_non_owner(struct kd_rwsem *sem)')))
         for name, mutate in [('production', None), *mutations.items()]:
             (path / 'admission_production.h').write_text(body if mutate is None else mutate(body))
             binary = path / name

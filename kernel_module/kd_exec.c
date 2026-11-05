@@ -39,9 +39,12 @@ static atomic64_t kd_exec_invariant_failures;
  * Missing support disables only new retained capture, never legacy startup. */
 static void (*kd_exec_task_stack_put)(struct task_struct *task);
 static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame);
+static bool kd_exec_cont_valid(const struct kd_exec_continuation *cont);
+static bool kd_exec_cont_no_stack_service(const struct kd_exec_frame *frame);
 
 struct kd_native_request {
 	unsigned long lock_addr;
+	struct kd_exec_native_route route;
 	struct kd_spin_ref spin_origin;
 	int result;
 	bool done;
@@ -55,6 +58,7 @@ static LIST_HEAD(kd_native_frames);
 static DEFINE_RAW_SPINLOCK(kd_native_lock);
 static atomic64_t kd_native_started;
 static atomic64_t kd_native_completed;
+static atomic64_t kd_native_handed_off;
 static atomic64_t kd_native_unlocks;
 
 #include "execution/remote.inc"
@@ -195,6 +199,7 @@ void kd_exec_context_init(void)
 	atomic64_set(&kd_exec_invariant_failures, 0);
 	atomic64_set(&kd_native_started, 0);
 	atomic64_set(&kd_native_completed, 0);
+	atomic64_set(&kd_native_handed_off, 0);
 	atomic64_set(&kd_native_unlocks, 0);
 	for_each_possible_cpu(cpu)
 		kd_exec_context_reset(per_cpu_ptr(&kd_exec_context, cpu));
@@ -205,10 +210,11 @@ void kd_exec_context_exit(void)
 	int cpu;
 
 	BUG_ON(!list_empty(&kd_native_frames));
-	pr_info("kd_native stats: started=%lld completed=%lld unlocks=%lld\n",
+	pr_info("kd_native stats: started=%lld completed=%lld unlocks=%lld handed_off=%lld\n",
 		(long long)atomic64_read(&kd_native_started),
 		(long long)atomic64_read(&kd_native_completed),
-		(long long)atomic64_read(&kd_native_unlocks));
+		(long long)atomic64_read(&kd_native_unlocks),
+		(long long)atomic64_read(&kd_native_handed_off));
 	for_each_possible_cpu(cpu) {
 		struct kd_exec_context *ctx =
 			per_cpu_ptr(&kd_exec_context, cpu);

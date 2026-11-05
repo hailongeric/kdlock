@@ -394,6 +394,25 @@ def rwsem_controls():
     return parse_rwsem_controls(path.read_text(encoding='ascii'))
 
 
+def runtime_rwsem_controls(controls, returning_services):
+    """Separate compiled state queries from ownership-changing controls.
+
+    The provider exports synthetic row labels. Operation identities, rather
+    than display names, keep these ordinary helpers out of every control and
+    callee-exclusion set. Their actual downstream calls keep their own policy.
+    """
+    result = {}
+    for target, control in controls.items():
+        if control['operation'] in (14, 15, 16):
+            if control['flags'] != 4:
+                raise ValueError('compiled rwsem state query has incompatible control flags')
+            if target in returning_services:
+                raise ValueError('compiled rwsem state query is registered as a Native service')
+            continue
+        result[target] = control
+    return result
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:

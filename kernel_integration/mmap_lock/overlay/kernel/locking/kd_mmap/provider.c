@@ -137,8 +137,9 @@ kd_rwsem_provider_resume_instruction(const struct kd_mmap_regs *packet)
 	__builtin_unreachable();
 }
 
-/* The module has retired its request/source/stack and moved the FULL packet
- * onto the Native caller's stack before entering this nonreturning builtin.
+/* FULL packet storage belongs to the Native caller's stack. Normal completion
+ * has retired module-owned state. Native handback supplies an independent
+ * restore reference; E retains its own references through its final accesses.
  * After module_put no module text or object/provider field is accessed. */
 __attribute__((noipa)) noinline notrace void __noreturn
 kd_rwsem_provider_resume(struct module *owner, const void *full_packet)

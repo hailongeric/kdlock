@@ -259,6 +259,24 @@ static struct kd_mutex_node *kd_mutex_reserve_node(void)
 	return NULL;
 }
 
+static void kd_mutex_check_node_retirement(struct kd_mutex_node *node)
+{
+	/* Preserve versioned observation, independent OSQ membership and the
+	 * canonical request's exact selection lifetime on every release path. */
+	BUG_ON(READ_ONCE(node->counted_lock) || (READ_ONCE(node->count_seq) & 1));
+	BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);
+	BUG_ON(kd_mutex_request_member(node)->queue_head ||
+	       kd_mutex_wait_record(node)->request.selection);
+}
+
+static void kd_mutex_clear_retired_node(struct kd_mutex_node *node)
+{
+	node->next = NULL;
+	node->lock = NULL;
+	node->task_struct_ptr = NULL;
+	node->gsbase = 0;
+}
+
 static void kd_mutex_release_node(struct kd_mutex_node *node)
 {
 	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);
@@ -273,11 +291,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 		goto invalid;
 	/* Count retirement precedes node reuse. Never reset its version: cold
 	 * observations must distinguish a later invocation in this same slot. */
-	BUG_ON(READ_ONCE(node->counted_lock) || (READ_ONCE(node->count_seq) & 1));
-	BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);
-
-	BUG_ON(kd_mutex_request_member(node)->queue_head ||
-	       kd_mutex_wait_record(node)->request.selection);
+	kd_mutex_check_node_retirement(node);
 	if (kd_mutex_wait_record(node)->request_live) {
 		struct kd_wait_request *request = &kd_mutex_wait_record(node)->request;
 		unsigned long flags = _raw_spin_lock_irqsave(request->guard);
@@ -291,10 +305,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 		_raw_spin_unlock_irqrestore(request->guard, flags);
 		kd_mutex_wait_record(node)->request_live = false;
 	}
-	node->next = NULL;
-	node->lock = NULL;
-	node->task_struct_ptr = NULL;
-	node->gsbase = 0;
+	kd_mutex_clear_retired_node(node);
 	WRITE_ONCE(shadow->node_slots, slots & ~bit);
 	if (unlikely(this_cpu_dec_return(kd_mutex_reserved_nodes) < 0))
 		goto invalid;

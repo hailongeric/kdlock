@@ -182,11 +182,12 @@ static noinline int kd_service_memory_spill(struct kd_service_root *root)
 
 	owner.kind = KD_NATIVE_OWNER_FREE;
 	owner.held = false;
+	owner.native_custody = false;
 	INIT_LIST_HEAD(&owner.link);
 	list_add_tail(&owner.link, &root->native_owners);
 	status = kd_service_memory_call(root);
 	status = kd_service_run_scope(root, status);
-	BUG_ON(owner.held || owner.kind != KD_NATIVE_OWNER_FREE);
+	BUG_ON((owner.held || owner.kind != KD_NATIVE_OWNER_FREE) && !owner.native_custody);
 	list_del_init(&owner.link);
 	return status;
 }

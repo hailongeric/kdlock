@@ -67,6 +67,7 @@ def generated_sources(target):
             old = 'kd_mutex_api_unlock(&sem->gate);'
             rt.require(text.count(old) == 2, 'local rwsem release boundaries changed')
             text = text.replace(old, 'kd_mutex_local_unlock(&sem->gate);')
+            text = '#define KD_RWSEM_LOCAL_BACKEND 1\n' + text
         if name.endswith('kd_admission.c'):
             # C writers share canonical admission/cleanup. Their builtin gate
             # has no scheduling-service ownership or loadable unlock router.

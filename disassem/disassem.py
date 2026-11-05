@@ -190,7 +190,11 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     returning_services = memread.device_session.service_calls() if abi == 2 else {}
     nonreturning_targets = {address for address, descriptor in returning_services.items()
                            if descriptor['context_kind'] == 11}
-    bound_controls = memread.device_session.rwsem_controls() if abi == 2 else {}
+    try:
+        bound_controls = memread.device_session.runtime_rwsem_controls(
+            memread.device_session.rwsem_controls(), returning_services) if abi == 2 else {}
+    except ValueError as error:
+        return reject_translation(str(error))
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.

@@ -52,6 +52,8 @@ def production():
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
+        "static void kd_mutex_check_node_retirement(struct kd_mutex_node *node)",
+        "static void kd_mutex_clear_retired_node(struct kd_mutex_node *node)",
         "static void kd_mutex_release_node(struct kd_mutex_node *node)",
     ):
         code += definition(mutex, marker)

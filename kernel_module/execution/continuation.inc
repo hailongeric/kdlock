@@ -179,6 +179,7 @@ static int kd_exec_cont_init_storage(struct kd_exec_continuation *cont,
 	cont->source_lease = source;
 	cont->stack_lease = stack;
 	cont->body_reported = false;
+	cont->native_accepted = false;
 	cont->reached_active = false;
 	cont->reached_artifact_sequence = 0;
 	cont->reached = NULL;
@@ -931,6 +932,47 @@ out:
 	return ret;
 }
 
+/* Native acceptance and actual E-owned releases retire execution custody.
+ * Transferred read custody is not an outer unlock or a returned JIT body. */
+int kd_exec_cont_handoff(struct kd_exec_continuation *cont)
+{
+	struct task_struct *resume;
+	unsigned long flags;
+	int ret = -EINVAL;
+
+	if (!kd_exec_cont_valid(cont) || !cont->service_ops ||
+	    !cont->service_ops->native_finished || !cont->native_accepted ||
+	    cont->state != KD_CONT_SUSPENDED || cont->resume_executor != current ||
+	    READ_ONCE(cont->request->state) != KD_WAIT_RETURN_ACK ||
+	    !cont->frame.executed || cont->frame.completion_seen ||
+	    !kd_exec_cont_no_stack_service(&cont->frame) ||
+	    cont->service_call.api != KD_SERVICE_NONE ||
+	    !cont->service_ops->native_finished(cont->service_scope) ||
+	    cont->origin_call.entry || cont->origin_call.servicing ||
+	    (cont->origin_call.phase != KD_ORIGIN_CALL_IDLE &&
+	     cont->origin_call.phase != KD_ORIGIN_CALL_CONSUMED) ||
+	    (cont->origin_memory.phase != KD_ORIGIN_MEMORY_IDLE &&
+	     cont->origin_memory.phase != KD_ORIGIN_MEMORY_CONSUMED))
+		return ret;
+	raw_spin_lock_irqsave(&cont->root->guard, flags);
+	if (cont->root->packet_owner != cont || !list_empty(&cont->children) ||
+	    !list_empty(&cont->owners) || !list_empty(&cont->storage_owners))
+		goto out;
+	resume = cont->resume_executor;
+	cont->resume_executor = NULL;
+	cont->state = KD_CONT_HANDED_OFF;
+	cont->wait = KD_CONT_WAIT_NONE;
+	cont->result = 0;
+	ret = 0;
+out:
+	raw_spin_unlock_irqrestore(&cont->root->guard, flags);
+	if (!ret) {
+		atomic64_inc(&kd_native_handed_off);
+		put_task_struct(resume);
+	}
+	return ret;
+}
+
 int kd_exec_cont_retire(struct kd_exec_continuation *cont)
 {
 	struct task_struct *origin;
@@ -948,7 +990,7 @@ int kd_exec_cont_retire(struct kd_exec_continuation *cont)
 	    acquired != KD_WAIT_RETIRED && acquired != KD_WAIT_PRIVATE)
 		return ret;
 	raw_spin_lock_irqsave(&root->guard, flags);
-	if ((cont->state != KD_CONT_RETURNED &&
+	if ((cont->state != KD_CONT_RETURNED && cont->state != KD_CONT_HANDED_OFF &&
 	     !(cont->state == KD_CONT_READY && acquired == KD_WAIT_PRIVATE)) ||
 	    cont->executor || !list_empty(&cont->children) || !list_empty(&cont->owners) ||
 	    cont->resume_executor || cont->service_call.api != KD_SERVICE_NONE ||

@@ -150,6 +150,12 @@ static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node
 }
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip);
 static bool kd_mutex_task_active(struct task_struct *task);
+static bool kd_exec_native_service_active(struct task_struct *task)
+{
+	(void)task;
+	/* This legacy slot fixture constructs no retained service frame. */
+	return false;
+}
 static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);

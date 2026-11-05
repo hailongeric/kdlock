@@ -501,3 +501,13 @@ void kd_admission_finish_read(struct kd_admission *a)
 	BUG_ON(atomic_long_dec_return(&sem->readers) < 0);
 	smp_store_release(&a->read_state, KD_ADMISSION_READ_RELEASED);
 }
+
+void kd_admission_read_to_native(struct kd_admission *a)
+{
+	BUG_ON(!a->sem || !a->committed || a->gate_held || a->phase_held ||
+	       a->request->generation != a->request_generation ||
+	       cmpxchg(&a->read_state, KD_ADMISSION_READ_LIVE,
+		       KD_ADMISSION_READ_NATIVE) != KD_ADMISSION_READ_LIVE);
+	/* No object access: O or a Native non-owner now consumes the existing
+	 * anonymous credit under its ordinary object-lifetime contract. */
+}

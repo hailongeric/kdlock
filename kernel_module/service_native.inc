@@ -15,6 +15,7 @@ static struct kd_native_owner *kd_service_native_reserve(
 		owner->sequence = sequence;
 		owner->object = object;
 		owner->held = false;
+		owner->native_custody = false;
 		owner->kind = kind;
 		return owner;
 	}

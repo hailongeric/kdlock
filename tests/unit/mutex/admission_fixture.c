@@ -100,6 +100,8 @@ static long atomic_long_inc_return(atomic_long_t *p)
 { return __atomic_add_fetch(p, 1, __ATOMIC_SEQ_CST); }
 static long atomic_long_dec_return(atomic_long_t *p)
 { return (long)__atomic_sub_fetch(p, 1, __ATOMIC_SEQ_CST); }
+static bool atomic_long_dec_and_test(atomic_long_t *p)
+{ return atomic_long_dec_return(p) == 0; }
 static void atomic_long_or(unsigned long bits, atomic_long_t *p) { *p |= bits; }
 static void atomic_long_andnot(unsigned long bits, atomic_long_t *p) { *p &= ~bits; }
 static bool atomic_long_try_cmpxchg_acquire(atomic_long_t *p, unsigned long *old, unsigned long next)
@@ -152,6 +154,7 @@ static bool kd_rwsem_condition_ready(struct kd_rwsem *sem,
 	return true;
 }
 #include "reader_wait_production.h"
+#include "reader_release_production.h"
 
 struct invocation { struct kd_wait_request request; struct kd_admission admission; };
 static u64 next_generation;
@@ -399,6 +402,84 @@ static void test_queued_reader_precedes_new_writer_phase(void)
 	retain_execution(&writer); finish_execution(&writer); ++cases;
 }
 
+static void test_native_read_custody_keeps_real_credit(void)
+{
+	struct kd_rwsem sem;
+	struct invocation item;
+	unsigned long flags;
+
+	reset_tasks(); init_sem(&sem);
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&item) == KD_WAIT_GRANTED);
+	retain_execution(&item);
+	kd_admission_downgrade(&item.admission);
+	assert(sem.readers == 1 && !sem.admission && !sem.gate.owner);
+	/* Extra anonymous credits must not be consumed by custody bookkeeping. */
+	atomic_long_inc_return(&sem.readers);
+	atomic_long_inc_return(&sem.readers);
+	kd_admission_read_to_native(&item.admission);
+	assert(sem.readers == 3 && item.admission.read_state == KD_ADMISSION_READ_NATIVE);
+	assert(item.request.state == KD_WAIT_EXECUTING && item.admission.committed);
+	assert(!item.admission.gate_held && !item.admission.phase_held);
+	/* Translated custody can retire while all three real credits remain live.
+	 * This is deterministic accounting evidence, not a concurrent token test. */
+	flags = _raw_spin_lock_irqsave(item.request.guard);
+	kd_wait_handoff_locked(&item.request);
+	kd_wait_set_state_locked(&item.request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(item.request.guard, flags);
+	assert(sem.readers == 3);
+	memset(&item, 0xa5, sizeof(item));
+	/* Execute the production APIs after the retired metadata is unavailable.
+	 * The ordinary non-owner release consumes one credit in atomic context. */
+	current = &other_origin;
+	irq_disabled = true; pins = 1;
+	kd_up_read_non_owner(&sem);
+	assert(sem.readers == 2 && irq_disabled && pins == 1 && !held_guards);
+	irq_disabled = false; pins = 0;
+	current = &origin;
+	kd_up_read(&sem);
+	assert(sem.readers == 1);
+	kd_up_read(&sem);
+	assert(!sem.readers && !schedules);
+	++cases;
+}
+
+static void test_native_read_custody_keeps_nested_writer_on_executor(void)
+{
+	struct kd_rwsem sem;
+	struct kd_mutex nested;
+	struct invocation outer, child;
+	unsigned long flags;
+
+	reset_tasks(); init_sem(&sem); init_mutex(&nested);
+	init_invocation(&outer, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&outer) == KD_WAIT_GRANTED);
+	retain_execution(&outer);
+	init_invocation(&child, &nested, KD_ADMISSION_MUTEX,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&child) == KD_WAIT_GRANTED);
+	retain_execution(&child);
+	kd_admission_downgrade(&outer.admission);
+	kd_admission_read_to_native(&outer.admission);
+	assert(sem.readers == 1 && child.admission.gate_held);
+	assert(child.admission.physical_owner == &executor);
+	assert((nested.owner & ~KD_FLAGS) == (unsigned long)&executor);
+	finish_execution(&child);
+	assert(!nested.owner && sem.readers == 1);
+	flags = _raw_spin_lock_irqsave(outer.request.guard);
+	kd_wait_handoff_locked(&outer.request);
+	kd_wait_set_state_locked(&outer.request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(outer.request.guard, flags);
+	assert(sem.readers == 1);
+	memset(&outer, 0xa5, sizeof(outer));
+	current = &origin;
+	kd_up_read_non_owner(&sem);
+	assert(!sem.readers && !schedules);
+	++cases;
+}
+
 int main(void)
 {
 	/* Subject mutations must first reach a bounded direct decision, rather
@@ -407,6 +488,8 @@ int main(void)
 	test_queued_return_before_holder(); test_reader_pickup_cancel_and_successor();
 	test_nested_identity_and_parent(); test_local_child_and_early_parent_release();
 	test_reader_retry_and_cancellation(); test_queued_reader_precedes_new_writer_phase();
+	test_native_read_custody_keeps_real_credit();
+	test_native_read_custody_keeps_nested_writer_on_executor();
 	assert(!held_guards && !pins && !irq_disabled && scheduler_state == TASK_RUNNING);
 	assert(origin.refs == 1 && other_origin.refs == 1 && executor.refs == 1 && holder.refs == 1);
 	printf("PASS production canonical admission: %u cases; actual queue, phase, PICKUP and cancellation paths; deterministic primitives only\n", cases);

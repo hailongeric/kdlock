@@ -17,6 +17,8 @@ enum kd_admission_read_state {
 	KD_ADMISSION_READ_LIVE,
 	KD_ADMISSION_READ_CONSUMING,
 	KD_ADMISSION_READ_RELEASED,
+	/* The real credit remains in readers; ordinary Native release owns it. */
+	KD_ADMISSION_READ_NATIVE,
 };
 
 /* One supplied canonical request spans physical admission and reader drainage.
@@ -97,5 +99,7 @@ void kd_admission_move_owned_locked(struct kd_admission *source,
 void kd_admission_release(struct kd_admission *admission);
 void kd_admission_downgrade(struct kd_admission *admission);
 void kd_admission_finish_read(struct kd_admission *admission);
+/* Metadata-only custody transfer, never an up_read or a reader-count change. */
+void kd_admission_read_to_native(struct kd_admission *admission);
 
 #endif /* KD_ADMISSION_H */
