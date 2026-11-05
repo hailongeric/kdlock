@@ -946,3 +946,9 @@ the existing `kd_exec_native_service_unlock` route and its operation enum.
 Update the fixture to import the production enum and explicitly model its
 local-only, unregistered route. Keep its ownership, release, downgrade, error,
 and emitted-ABI assertions; the failed attempt remains retained evidence.
+
+Cold learning may have no selected images yet, a partial registry, or an entry
+that remains local. These states are not a two-entry JIT timing point. Before
+a scoped scored application starts, require exactly the selected entries and
+NORMAL images with nonzero code addresses and generations for both. This is
+image readiness only; it does not replace worker-attributed execution proof.

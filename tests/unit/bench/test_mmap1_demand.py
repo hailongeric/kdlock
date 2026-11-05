@@ -21,6 +21,17 @@ def row(entry=0x100, tgid=99, generation=1, code=0x1000, status=0):
 
 
 class DemandRegistry(unittest.TestCase):
+    def test_scoring_requires_every_selected_image_ready(self):
+        entries = [0x100, 0x200]
+        ready = [row(), row(entry=0x200)]
+        images.ready_writer_entries(ready, entries)
+        images.ready_writer_entries([], [])
+        for values in ([], ready[:1], [ready[0], row(entry=0x200, status=-3)],
+                       [ready[0], row(entry=0x200, generation=0, code=0)],
+                       [ready[0], row(entry=0x300)]):
+            with self.subTest(values=values), self.assertRaises(bench.rt.Failure):
+                images.ready_writer_entries(values, entries)
+
     def test_writer_scope_and_parameter_identity(self):
         self.assertEqual(images.selected_writer_entries([], {0x100, 0x200}), {0x100, 0x200})
         self.assertEqual(images.selected_writer_entries([0x100], {0x100, 0x200}), {0x100})

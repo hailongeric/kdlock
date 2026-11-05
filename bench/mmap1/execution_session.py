@@ -65,6 +65,13 @@ def parse_writer_entries(value):
         raise rt.Failure('DATA_ERROR', 'invalid writer entry parameter') from error
 
 
+def ready_writer_entries(rows, entries):
+    if entries:
+        rt.require(len(rows) == len(entries) and {row['entry'] for row in rows} == set(entries) and
+                   all(row['status'] == 0 and row['code'] > 0 and row['generation'] > 0 for row in rows),
+                   'selected writer images are not all ready for scoring', 'NO_JIT')
+
+
 def demand_registry(rows, sites, *, settled=True):
     """Kernel entry identity is independent of its first registrar's task."""
     keys = {(row['pid'], row['entry']) for row in rows}

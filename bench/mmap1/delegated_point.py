@@ -252,6 +252,7 @@ def image_point(c, config_bytes, root, out, controller, finalize):
             exact.verify()
             result['execution_session'] = exact.identity()
             result['prior_delegation_proof'] = c.get('delegation_proof')
+            bench.execution.ready_writer_entries(exact.expected['registry'], args.writer_entries)
         rt.write_json(result_path, dict(result, state='RUNNING'))
         result['application'] = bench.run_point(out / 'application', dict(
             model=c['model'], workers=c['workers'], round=0, nominal_seconds=2),
