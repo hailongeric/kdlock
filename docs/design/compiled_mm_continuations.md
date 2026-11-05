@@ -816,6 +816,11 @@ plus a matching W=1 private-provider build on the VM. Check default 64 and the
 selected 128 override, including invalid bounds. The registry-extraction fixture
 must include the shared count header and run its production case at 128 as well
 as the default; extracting only defines from `exe.c` would omit the new count.
+The first VM preflight at `31710a60` passes the shared-capacity cases, then its
+default registry fixture stops at the stale zero-gate assertion. Initialization
+now takes the existing gate to enable resource observations; lookup remains
+gate/pin-free. Keep that failed attempt and compare lookup counters with their
+post-initialization baseline. No module build or live run began in that attempt.
 Continue with new cold
 thread/process sessions under the same eight-lifetime/1,800-second limits and
 unchanged acceptance. Resource observations occur outside application timing.

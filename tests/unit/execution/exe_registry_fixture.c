@@ -710,9 +710,12 @@ static void check_registration_reads(void)
 static void check_lookup_publication(void)
 {
 	struct kd_exe_info *slot;
+	int gate_before, pins_before;
 
 	reset(NORMAL);
 	CHECK(kd_exe_init() == 0);
+	gate_before = gate_attempts;
+	pins_before = source_pin_calls;
 	slot = kd_get_exe(0, key(0));
 	pending_publication = (struct kd_exe_info) {
 		.pid = 0, .RIP = key(0), .lock_kind = KD_EXE_LOCK_SPIN,
@@ -730,7 +733,7 @@ static void check_lookup_publication(void)
 		CHECK(kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_LEGACY) == (identity == 0));
 		CHECK(publish_after_lookup == NULL);
 	}
-	CHECK(gate_attempts == 0 && source_pin_calls == 0);
+	CHECK(gate_attempts == gate_before && source_pin_calls == pins_before);
 	kd_exe_exit();
 }
 
