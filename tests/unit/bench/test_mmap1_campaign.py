@@ -71,6 +71,7 @@ class CampaignBoundaries(unittest.TestCase):
                 value = campaign.Campaign.__new__(campaign.Campaign)
                 value.out, value.current_model = folder, 'threads'
                 value.c = dict(probe='/fixture/probe')
+                value.inputs = {}
                 value.args = SimpleNamespace(writer_entries=[1])
                 value.result = dict(proofs=[])
                 value.proof_key = None
