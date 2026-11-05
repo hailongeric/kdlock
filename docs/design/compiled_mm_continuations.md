@@ -1244,3 +1244,49 @@ Only that joined evidence can attribute a direct frontier to a specific region.
 Per-lock segments and child-region transitions remain the separately reviewed
 design above; neither a root-wide arbitrary cutoff nor pruning a cold branch
 implements them.
+
+# Opt-in syscall-argument selection for the bounded benchmark
+
+Keep the warning-frontier proposal above on hold. Independently narrow public
+capture with a default-off, immutable `rwsem_provider_syscall_shape` benchmark
+parameter. This is eligibility selection before capture/registration, not an
+MM backend switch or a change to the general lock protocol. It composes with
+`rwsem_provider_entries` and requires explicit entries plus demand preparation.
+The default remains unchanged. Publish a getter-only contract version `1` and
+bind the enabled policy, version and exact provider binary in execution receipts.
+
+At the original-task public `kd_provider_capture()` boundary, read the current
+task's saved userspace syscall frame. Refuse benchmark eligibility for kernel
+threads, missing user MM, non-user frames, compatibility syscalls and syscall
+numbers outside native64 mmap/munmap. Do not read the KD virtual packet or apply
+the predicate to internal nested-service admission. Rejected captures call the
+same local KD writer API already used for excluded entries; do not modify
+`use_kd`, provider binding, `prepared_writes`, queue ownership or read drainage.
+
+The version-1 argument envelope is:
+
+- mmap: native64 syscall, address hint zero, length 128 MiB, protection exactly
+  read/write, flags exactly private/anonymous, low 32 bits of fd equal to -1,
+  and zero offset. Both sign-extended and zero-extended fd representations
+  retain the Native argument interpretation.
+- munmap: native64 syscall, nonzero page-aligned address and length exactly
+  128 MiB. This is deliberately only an address/length test.
+
+The retained unchanged `tests/mmap1.c` uses this mmap tuple and unmaps its exact
+returned address. The stateless munmap predicate cannot prove that pairing,
+mapping type or file provenance; an unrelated file-backed 128 MiB munmap can
+still pass. Do not name or report this as exclusive worker/pair admission.
+Existing worker/MM identity and syscall-pair validation remain mandatory for
+delegation proof. No VMA walk, per-task pair tracker or new lock is introduced.
+This filter does not resolve the cold warning decode or implement per-lock
+image boundaries, and it does not justify another cold 32-run campaign.
+
+Delivery order is documentation, predicate/receipt implementation, production
+component checks and module build in the VM, then short actual-syscall checks.
+The focused matrix covers default-off behavior, exact and near-miss tuples,
+both fd representations, native64/compatibility/kernel contexts, local
+killable/interruptible returns and unchanged successful-acquisition priority.
+Live checks must show excluded startup/file-backed mmap cannot register a new
+root, matching anonymous mmap/munmap remain eligible, local API results remain
+correct, and exact retirement/normal restoration complete. These are selection
+and API checks, not returned-JIT, throughput or full delegated-mmap acceptance.
