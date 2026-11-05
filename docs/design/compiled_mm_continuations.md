@@ -1300,3 +1300,17 @@ performance result is claimed. Exact retirement and normal restoration passed.
 The file-backed 128 MiB munmap was eligible, confirming the stated limit.
 Evidence is retained in
 `bench/results/10.176.26.71/tests/mmap1-syscall-shape-4506f6e4/README.md`.
+
+# Resolver preparation cost, measured separately
+
+The normal-kernel resolver reproduction under
+`bench/results/10.176.26.71/tests/symbol-lookup-normal-a46ff2ec/README.md`
+measured 138 ordered symbol requests with the unchanged resolver and a
+helper-only first-match snapshot. All results matched. One original-first
+pair took 14.588 seconds versus 0.256 seconds, including snapshot construction;
+symbol-file opens fell from 138 to one. This is metadata lookup cost, not a
+complete compiler or mmap1 throughput measurement. Missing KD symbols on the
+normal unloaded kernel make retrospective attribution to the earlier enabled
+campaign invalid. No production resolver or JIT change was made. The warning
+frontier remains awaiting review, and child images remain initially scoped to
+selected KD acquisitions as specified above.
