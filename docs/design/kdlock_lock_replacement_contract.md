@@ -14,6 +14,12 @@ instruction JIT and corrects the image-header selection. Requirements below
 are authoritative direction; the source and validation sections distinguish
 implemented source, earlier mixed checks and still-unverified behavior.
 
+Subsequent selected designs are recorded in `ebf0aa4c` for Native read custody,
+`898b9d1c` for the three original-JIT state queries and `c0bb9ccd` for synchronous
+home-CPU retirement. Those are design/documentation checkpoints. The owner is
+integrating the corresponding code; neither approval nor dirty source establishes
+completed functionality or a new validation result.
+
 ## Required execution model
 
 Use exactly one instruction translation backend: the original
@@ -111,6 +117,30 @@ entry's current image. A bound immutable image and its source lease remain live
 through that invocation and its final retirement. Publication is not evidence
 that any generated body executed or returned.
 
+## Selected state-query execution
+
+`kd_mmap_assert_held_write`, `kd_mmap_assert_held` and `kd_mmap_is_locked` use the
+original JIT as ordinary decoded helpers. Their discovery records remain, but
+operation identities 14/15/16 exclude them from runtime controls and returning
+Native services. Synthetic display labels do not determine that classification.
+The [admission policy](admission.md#selected-rwsem-state-queries) defines the exact
+partition. Ordinary cold CALL/IJ learning still applies; this selection does not
+force every downstream helper into translation or require eager callee closure.
+
+Preserve the narrow Native interval at the existing two-argument Boolean
+`kd_service_write_owned`. Its selected descriptor uses the existing
+`KD_SERVICE_CALL_ATOMIC_ORIGIN` context and word result. O executes that exact
+runtime proof while E is suspended, then E resumes the same immutable image.
+Keep the exact task, service token, request/phase generation, physical owner and
+pickup checks. A reader count, generic locked observation or translated logical
+task load cannot replace that proof.
+
+`BALANCED_ORIGIN` is not the selected class for this interval: it rejects retained
+spin/RCU state. `ATOMIC_ORIGIN` preserves the origin's actual pins/RCU under the
+existing context contract; it does not remove preparation preconditions. A
+preparation rejection is fail-stop, not automatic native handback. Other query
+operations and Native services keep their existing classifications and behavior.
+
 ## Owners, services and retirement
 
 Returning instruction/API services and terminal handback serve different roles.
@@ -124,13 +154,20 @@ reference, pending service and release ACK retains its exact identity. A
 completion counter or queue notification cannot replace those records. All
 participants in an object keep the same backend protocol.
 
-For a retained worker request, the required handback transfers custody of all
-live owners and routes O's later unlock, downgrade and read release to those
-records. Retain source, frame, stack, task and provider lifetimes until the
+For a retained worker request, the required handback preserves custody of every
+live owner and routes O's later operations on E-owned gates to those records.
+Retain source, frame, stack, task and provider lifetimes until the
 last required acknowledgment and retirement. E can then return to its service
 loop; it has no implicit public writer acquisition of its own. The legacy
 single-root native handback cannot substitute for an entire retained owner list.
 This worker routing is pending at the inspected checkpoint.
+
+The selected Native read-custody path transfers the existing downgraded read
+credit without decrementing it. O's normal `up_read` or `up_read_non_owner`
+consumes that credit. Custody transfer is not physical unlock. A later routed
+downgrade transfers its newly created read credit under the same rule. E retains
+any other live owners and their exact release/ACK obligations. This decision is resolved;
+packet acceptance, routing and lifetime integration remain unverified.
 
 Ordinary readers remain local. The previously implemented delegated-writer
 downgrade/read-tail transition has its own exact read credit; preserve it
@@ -138,6 +175,15 @@ without relabelling all reads as delegatable. Read-tail final release must not
 add allocation, scheduling or post-release object access. Cancellation,
 successful-ready priority, nested acquisition, queue readiness and retirement
 remain governed by their existing protocols.
+
+Current pooled-slot retirement is also a resolved design: E finishes packet
+acceptance, all E-owned releases and recursive stack unwind, then performs
+synchronous cleanup. Hold CPU-hotplug protection across the online check and
+home-CPU callback; an already-offline home CPU uses serialized explicit per-CPU
+retirement. The [lifetime guide](lifetimes.md#selected-retained-handback-retirement)
+defines the ordering and final-access rules. No new asynchronous cleanup queue
+is selected. TCLock-style waiter reclamation is optional later work; waiter-side
+final-use ACK/pinning simplification is not required in this phase.
 
 ## Source audit and implementation status
 
@@ -167,6 +213,17 @@ calls `jump_to_saved_regs_in_cs`, labelled for `KD_EXE_IJ_MISS`. The examined
 producer for that old waiter notification was verified. The restoration routine
 alone is historical mechanism code, not proof of a working end-to-end path.
 
+### Subsequent working-tree observations
+
+After the design checkpoints above, static inspection finds uncommitted query
+filtering in `device_session.runtime_rwsem_controls` and `dis_assem`, and the
+two-argument `ATOMIC_ORIGIN` proof descriptor in `kd_rwsem_provider.c`.
+`kd_service.c` contains in-progress synchronous home-CPU cleanup and serialized
+offline slot release. These are partial source observations, not a frozen tested
+implementation. The implementation owner retains all code and
+`compiled_mm_continuations.md`; overall integration and fresh testing are still
+incomplete. Preserve the historical receipts below without extending their scope.
+
 ## Documentation consistency audit
 
 | Document | Correction or remaining coordination |
@@ -175,7 +232,7 @@ alone is historical mechanism code, not proof of a working end-to-end path.
 | [Lifetimes](lifetimes.md) | Updated: original bounded translation remains selected; source/image/owner rules and dated preparation records are retained. |
 | [Design](../DESIGN.md) | Updated: historical local MM controls, retained candidates and the pending original JIT correction have separate scope and evidence. |
 | [Execution](../JIT_EXECUTION.md) | Updated: ordinary limited recovery, required general handback and the pending retained-owner consumer remain distinct, along with services, errors and completion. |
-| [Implementation dependency map](compiled_mm_continuations.md) | Owned by the implementation writer. Reconcile old flags-required and same-invocation join wording with deferred flags/SIMD and future-invocation-only replacement. |
+| [Implementation dependency map](compiled_mm_continuations.md) | Owned by the implementation writer. Contains the reuse inventory and selected Native read custody, original-JIT query and synchronous retirement designs; its earlier option discussions are historical, not unresolved choices. |
 | [Register ABI](../JIT_REGISTER_ABI.md) | Updated within reserved scope: current service/miss exits, exact status domains, extended header and the historical cold-mask discrepancy/source correction are explicit; the two-word ABI is unchanged. |
 | [Code map](../CODE_MAP.md) | Updated within reserved scope: retained service responsibilities, historical reached paths/revision and local versus retained MM execution are distinguished. |
 | [README](../../README.md), formerly lines 55-71 | Updated within reserved scope: local-MM and all-count shared-device-MM losses are dated; newer unchanged mmap1 and retained-candidate evidence remain separate, with no promotion claim. |
@@ -230,7 +287,10 @@ effects, exact unlock/ACK routing and final retirement. A newly published image,
 an entered body or a restored GPR packet alone cannot establish this chain.
 Run basic plus directly affected checks on the designated VM when authorized by
 the implementation owner; full suites require an explicit request. This audit
-does not run or authorize new VM work.
+does not run or authorize new VM work. For the newly selected query and
+retirement changes, complete overall functionality before the owner's focused
+checks. Operation-based query classification, the narrow exact custody proof,
+online/offline retirement and final-use ordering have no new pass recorded here.
 
 Flags/SIMD restoration and IRQ/NMI conflict remain deferred. Whole-kernel
 coverage, unsupported configurations and general performance acceptance remain

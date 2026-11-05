@@ -369,6 +369,18 @@ Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their actual virtual return-slot
 write remains emitted. Optional checked mode also models it in alias analysis.
 
+The selected narrow `kd_service_write_owned(object, task)` proof uses the existing
+two-argument, word-result `KD_SERVICE_CALL_ATOMIC_ORIGIN` service descriptor.
+O executes only that runtime proof while E is suspended; E resumes its same
+immutable image after the exact service ACK. Task/token/owner and context checks
+remain required. `BALANCED_ORIGIN` is not selected for this interval because it
+rejects retained spin/RCU state. Preparation rejection is fail-stop rather than
+automatic native handback. Other service descriptors stay unchanged; the public
+query bodies remain ordinary JIT code under the
+[operation-based policy](design/admission.md#selected-rwsem-state-queries).
+This selection adds no wrapper argument or packet layout and is not yet a fresh
+integration/validation result.
+
 Current strings use ordinary decoded CALL/RET and actual virtual return words,
 without a named service, memory summary, quota or direct native bridge. The
 provider retains historical string capability/image fields for compatibility;
@@ -394,6 +406,14 @@ or continuation storage. Spin reads all fields before reclaiming its root and
 unpinning. Mutex FULL keeps an independent restore copy because the node can be
 reused after unpin; its ACK/task references must outlive the native suffix.
 [Frames](design/frames.md) and [locking](design/locking.md) define the exact order.
+
+For the selected retained-worker handback, O copies the packet and completion
+fields before its acceptance ACK and performs no later root/frame access. That
+ACK can precede E's recursive unwind. E's selected synchronous home-CPU cleanup
+therefore publishes pooled-slot reuse only after its own final references end;
+see [retirement ordering](design/lifetimes.md#selected-retained-handback-retirement).
+Waiter-side final-use ACK/pinning simplification remains later work. Approval of
+this sequence does not establish its implementation or validation.
 
 ### Checked instruction exit
 

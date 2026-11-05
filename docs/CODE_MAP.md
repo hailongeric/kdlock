@@ -37,6 +37,14 @@ responsibility, not a build or runtime pass.
 Private `.inc` files share their parent compilation unit and declaration order;
 include them in snapshots. They are not independent Kbuild objects.
 
+The subsequent selected query policy partitions operation IDs 14/15/16 in
+[`device_session.py`](../disassem/device_session.py), with provider service
+registration in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
+`kd_service_write_owned` retains the narrow `ATOMIC_ORIGIN` runtime proof.
+`kd_service.c` owns the selected synchronous home-CPU and serialized offline
+retirement path. These changes are in progress in dirty source, not a completed
+integration or test result; see the [selected contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution).
+
 ## Linux 7 and MM integration
 
 | Source | Responsibility |

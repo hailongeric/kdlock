@@ -32,6 +32,14 @@ load or reboot. The [contract's validation record](kdlock_lock_replacement_contr
 keeps these outcomes separate from absent live retained-handback and timing
 evidence. This documentation audit runs no tests.
 
+The later selected designs keep the three mmap state-query bodies in the
+original JIT, with the narrow existing `ATOMIC_ORIGIN` runtime custody proof,
+and use synchronous E-side home-CPU retirement with serialized already-offline
+cleanup. Those choices are resolved; implementation and fresh validation remain
+incomplete. The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
+and [lifetime guide](lifetimes.md#selected-retained-handback-retirement) define
+their scope without requiring a second JIT or new asynchronous cleanup queue.
+
 All sections below preserve the earlier reached interpreter and separate
 instruction-emitter plans, attempts and receipts. References to a current plan,
 new engine or next iteration in that historical record apply to its named

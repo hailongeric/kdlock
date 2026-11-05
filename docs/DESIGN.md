@@ -103,6 +103,16 @@ selection in source; fresh validation is pending. Full retained-worker owner
 transfer remains pending. Generic IJ errors are not evidence of successful
 handback.
 
+The selected follow-up keeps the three mmap state/assertion query bodies in the
+original JIT, preserving a narrow `ATOMIC_ORIGIN` Native service only for the
+exact `kd_service_write_owned` custody proof. Other services and bounded callee
+learning retain their policies. Existing downgraded read credit transfers to
+Native custody without a decrement, and pooled slots retire through synchronous
+E-side home-CPU cleanup with an explicit serialized already-offline path. These
+are resolved designs with integration and fresh testing still incomplete; see
+the [contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution)
+and [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement).
+
 Generated dispatch, budget checks, RET lookup and synthetic LEA lowering have
 their existing arithmetic-flags contracts. General flags/SIMD restoration and
 IRQ/NMI conflict handling are deferred for this correction; limited existing

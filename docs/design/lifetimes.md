@@ -116,6 +116,50 @@ stack and owner lifetimes through service completion and final handback.
 General hot reload, concurrent source versions, arbitrary allocation reuse,
 whole-kernel replacement and broad oversubscription remain unvalidated.
 
+## Selected retained handback retirement
+
+The selected design transfers an existing downgraded read credit to Native
+custody without decrementing it; O's normal read release consumes it. Retiring
+E's continuation is not that physical read release. Retain every other E-owned
+gate, source/task/stack reference and pending ACK until its actual final use.
+Bound-object provider/module and non-owner MM references retain their separate
+ordinary lifetimes. Broader unbound-source coverage is not inferred from them.
+
+Pooled roots belong to an exact home CPU and slot. E executes elsewhere, and O
+can migrate after native restoration. O's existing final release ACK can also
+precede E's recursive stack unwind. Therefore neither notification nor the
+current executing CPU identifies storage that may already be reused.
+
+The user selected synchronous E-side cleanup, recorded at `c0bb9ccd`:
+
+1. Finish packet acceptance, all E-owned release ACKs and recursive stack
+   anchors. E performs the distinct handed-back terminal transition, saves the
+   home CPU/storage and module-reference values, and marks the root FINISHED
+   under the existing dispatch guard.
+2. For pooled storage, hold `cpus_read_lock` from the online check through the
+   entire synchronous `work_on_cpu(home_cpu, cleanup, root)` callback. A callback
+   queued without hotplug protection through execution is insufficient.
+3. Remove active-list observation under the dispatch guard, drop that guard,
+   then retire continuation source/task/stack references and the request. The
+   online callback validates the exact CPU/slot/node/root, disables preemption
+   and uses the ordinary local node-release checks. Slot reuse is its final
+   root/node access; retain OSQ, queue-membership and request-live assertions.
+4. If the home CPU is already offline, use explicit CPU-indexed service-root
+   retirement under the same hotplug protection. Serialize bitmap/count updates
+   with the dispatch guard: a shared hotplug read lock alone does not serialize
+   simultaneous offline cleanups. Preserve the same identity/membership checks;
+   do not wait for the CPU to return online.
+5. Spill storage can retire synchronously on E in sleepable context. No dispatch
+   guard spans sleeping frees or continuation callbacks. After cleanup returns,
+   E accesses only previously saved module-reference values, never the root or
+   node. Worker shutdown must include synchronous cleanup completion.
+
+No new asynchronous cleanup queue is selected. O keeps its existing packet and
+release ACK timing; waiter-side final-use ACK/pinning simplification and
+TCLock-style reclamation are optional later work. Synchrony does not establish
+bounded cleanup latency. Source integration is in progress and fresh validation
+is pending; this approved sequence is not a build, hotplug or runtime pass.
+
 ## Kernel-generated instruction source extents
 
 The preparation designs and measurements below belong to their named earlier

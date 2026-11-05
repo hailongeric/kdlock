@@ -101,6 +101,25 @@ separates these results from absent live retained-owner handback and timing
 evidence. Historical reached-emitter receipts apply only to their recorded
 source and backend.
 
+### Selected query and retirement boundaries
+
+The selected state-query policy keeps `kd_mmap_assert_held_write`,
+`kd_mmap_assert_held` and `kd_mmap_is_locked` in the original JIT. It does not
+force their entire downstream chain. The exact runtime proof at
+`kd_service_write_owned` retains the selected existing `ATOMIC_ORIGIN` Native
+interval; other query/Native services stay unchanged. Its context checks still
+apply, and preparation rejection is fail-stop. See the
+[query partition](design/admission.md#selected-rwsem-state-queries).
+
+The approved Native read-custody path transfers the existing downgraded credit
+without decrementing it; O's normal read release consumes it. E still finishes
+packet acceptance, retained owner ACKs and recursive stack unwind before pooled
+retirement. The selected cleanup is synchronous on E, using a hotplug-protected
+home-CPU callback or serialized explicit retirement for an already-offline CPU.
+No new asynchronous cleanup queue or required TCLock-style waiter reclamation
+is part of this phase. The [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement)
+remains an integration requirement; no fresh execution pass is claimed.
+
 ## Unlock and validation
 
 Unlock follows the exact acquisition, not current heat or an approximate counter.
