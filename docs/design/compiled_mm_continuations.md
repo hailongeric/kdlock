@@ -654,6 +654,15 @@ source, inputs and image-generation checks; a new entry or generation during
 that interval leaves it unaccepted and records learning rather than claiming
 corruption or silently repeating the score.
 
+At each learning boundary, stop new object bindings while the daemon catches
+up, then reactivate before taking the next receipt and starting fresh workload
+tasks. Existing objects keep their immutable provider binding until destruction;
+source admission stays open. Compiler children started during this wait use the
+existing local backend, avoiding continued demand creation by the compiler's
+own new MM objects. A child that was already bound still completes through its
+original provider. This is experiment sequencing, not a caller-specific kernel
+rule, and scored timing never toggles object binding.
+
 Demand registry identity is `(pid, entry)`, with kernel `pid == 0`, valid
 audited entry/ABI/lock kind and publication generation. First-registrar TGID
 is metadata: the provider binds new MM objects globally, so unrelated MM tasks

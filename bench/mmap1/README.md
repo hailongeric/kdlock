@@ -139,7 +139,9 @@ First-registrar TGIDs identify metadata, not workload execution.
 
 Up to three unscored application lifetimes allow image learning, with a bounded
 900-second total learning window. The controller renews exact receipts only
-after compiler/frame drainage and retains per-generation image copies. Timing
+after compiler/frame drainage and retains per-generation image copies. New
+object binding is paused while learning catches up and reactivated before each
+fresh workload; existing objects retain their binding. Timing
 starts after one unchanged learning lifetime. The registry, source/frame ledger,
 provider, daemon and input identities must match across the scored application.
 Further learning leaves the point unaccepted rather than silently repeating it.

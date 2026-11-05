@@ -42,6 +42,11 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
     def snapshot():
         nonlocal previous
         verify()
+        parameters = bench.execution.PARAMETERS
+        active = parameters / 'rwsem_provider_active'
+        mode = parameters / 'rwsem_provider_mode'
+        assert active.read_text().strip() == 'Y'
+        mode.write_text('deactivate\n')
         settled_since = None
         while True:
             assert time.monotonic() < deadline, 'demand learning did not reach a quiescent boundary'
@@ -77,6 +82,7 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
                     target = destination / name
                     __import__('shutil').copyfile(source_dir / name, target)
                     owner.files[str(target)] = rt.digest(target)
+            mode.write_text('activate\n')
             try:
                 receipt = owner.session_receipt(daemon, rows)
                 receipt.verify()
@@ -84,6 +90,7 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
                 if error.status not in ('LEARNING_ADVANCED', 'UNDRAINED'):
                     raise
                 epochs.append(dict(path=str(epoch), accepted=False, error=str(error)))
+                mode.write_text('deactivate\n')
                 settled_since = None
                 continue
             previous = rows
