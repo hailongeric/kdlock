@@ -17,6 +17,7 @@ from test_spin_shadow import definition
 def main():
     types = definition(read_source(ROOT / 'include/kd_regs.h'),
                        'struct kd_regs {').rstrip() + ';\n'
+    types += without_includes(read_source(ROOT / 'include/kd_wait_queue.h'))
     types += without_includes(read_source(ROOT / 'include/kd_mutex_types.h'))
     types += without_includes(read_source(ROOT / 'include/kd_mutex.h'))
     local = read_source(ROOT / 'kernel_module/kd_mutex_local.h')
@@ -24,6 +25,7 @@ def main():
                    local.index('DECLARE_PER_CPU_SHARED_ALIGNED')]
     mutex = read_source(ROOT / 'kernel_module/kd_mutex.c')
     types += definition(mutex, 'struct kd_mutex_cpu_state {').rstrip() + ';\n'
+    types += definition(mutex, 'struct kd_mutex_wait_record {').rstrip() + ';\n'
     code = ''
     for marker in (
         'static inline u32 kd_mutex_encode_tail(int cpu, int idx)',
@@ -40,8 +42,6 @@ def main():
     common = definition(local_source,
                         'static __always_inline bool kd_local_spin_common(struct kd_mutex *lock, bool waiter,')
     code += common
-    code += definition(local_source,
-                       'static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,')
     mutations = {
         'decode-loses-slot': ('& KD_MUTEX_TAIL_IDX_MASK;', '& 0;'),
         'vcpu-decodes-encoded-slot': (

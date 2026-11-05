@@ -17,6 +17,7 @@ typedef struct { unsigned long counter; } atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct task_struct { int id; bool on_cpu; };
+struct wake_q_head;
 #include "mutex_osq_types.h"
 
 #define CPUS 4
@@ -46,6 +47,7 @@ static struct task_struct task = { 1, true }, peer = { 2, true };
 static struct task_struct *current = &task;
 static struct kd_mutex lock, other_lock;
 static struct kd_mutex_node kd_mutex_nodes[KD_MUTEX_MAX_NODES][CPUS];
+static struct kd_mutex_wait_record wait_records[KD_MUTEX_MAX_NODES][CPUS];
 static struct kd_mutex_cpu_state kd_mutex_shadows[CPUS];
 static int kd_mutex_reserved_nodes[CPUS];
 static unsigned long kd_mutex_multi_slot_count[CPUS], kd_mutex_frame_failure_count[CPUS];
@@ -115,12 +117,34 @@ static void kd_local_schedule(void)
 		CHECK(kd_mutex_nodes[slot][cpu].osq.locked == KD_MUTEX_OSQ_IDLE);
 	schedules++;
 }
+/* These cases reserve OSQ-only nodes, never canonical captured requests.
+ * Keep the real record shape and reject accidental request retirement. */
+static struct kd_mutex_wait_record *kd_mutex_wait_record(struct kd_mutex_node *node)
+{
+	for (unsigned int slot = 0; slot < KD_MUTEX_MAX_NODES; ++slot)
+		for (unsigned int id = 0; id < CPUS; ++id)
+			if (node == &kd_mutex_nodes[slot][id])
+				return &wait_records[slot][id];
+	CHECK(false);
+	return NULL;
+}
+static struct kd_wait_node *kd_mutex_request_member(struct kd_mutex_node *node)
+{ return &kd_mutex_wait_record(node)->member; }
+static unsigned long _raw_spin_lock_irqsave(raw_spinlock_t *guard)
+{ (void)guard; CHECK(false); return 0; }
+static void _raw_spin_unlock_irqrestore(raw_spinlock_t *guard, unsigned long flags)
+{ (void)guard; (void)flags; CHECK(false); }
+void kd_wait_finish_local_locked(struct kd_wait_request *request)
+{ (void)request; CHECK(false); }
+void kd_wait_set_state_locked(struct kd_wait_request *request, enum kd_wait_state state)
+{ (void)request; (void)state; CHECK(false); }
 #include "mutex_osq_actual.h"
 
 static struct kd_mutex_osq_node *a, *b, *c, *p;
 static void reset(void)
 {
 	memset(kd_mutex_nodes, 0, sizeof(kd_mutex_nodes));
+	memset(wait_records, 0, sizeof(wait_records));
 	memset(kd_mutex_shadows, 0, sizeof(kd_mutex_shadows));
 	memset(kd_mutex_reserved_nodes, 0, sizeof(kd_mutex_reserved_nodes));
 	memset(kd_mutex_multi_slot_count, 0, sizeof(kd_mutex_multi_slot_count));
@@ -356,7 +380,7 @@ static void shared_spin_lifetimes(void)
 				poll_hook = cancel_poll;
 				expected_schedule_slots = borrowed ? 1 : 0;
 			}
-			CHECK(kd_local_spin(&lock, false, origin) == !cancel);
+			CHECK(kd_local_spin_common(&lock, false, origin, false) == !cancel);
 			CHECK(kd_mutex_reserved_nodes[0] == borrowed);
 			CHECK(kd_mutex_shadows[0].node_slots == (unsigned long)borrowed);
 			CHECK(schedules == (unsigned int)cancel);
@@ -380,7 +404,7 @@ static void shared_spin_lifetimes(void)
 	anchor->counted_lock = &other_lock;
 	anchor->regs.ip = 0x1234;
 	struct kd_mutex_node saved = *anchor;
-	CHECK(kd_local_spin(&lock, false, NULL));
+	CHECK(kd_local_spin_common(&lock, false, NULL, false));
 	CHECK(kd_mutex_multi_slot_count[0] == 1 && kd_mutex_reserved_nodes[0] == 1);
 	CHECK(kd_mutex_shadows[0].node_slots == 1 && !memcmp(anchor, &saved, sizeof(saved)));
 	anchor->counted_lock = NULL;
@@ -391,7 +415,7 @@ static void shared_spin_lifetimes(void)
 		CHECK(kd_mutex_reserve_node());
 	struct kd_mutex_node full[KD_MUTEX_MAX_NODES][CPUS];
 	memcpy(full, kd_mutex_nodes, sizeof(full));
-	CHECK(!kd_local_spin(&lock, false, NULL));
+	CHECK(!kd_local_spin_common(&lock, false, NULL, false));
 	CHECK(kd_mutex_reserved_nodes[0] == KD_MUTEX_MAX_NODES && kd_mutex_shadows[0].node_slots == 15);
 	CHECK(!memcmp(full, kd_mutex_nodes, sizeof(full)) && !lock.osq.tail.counter && !schedules);
 	for (int slot = 0; slot < KD_MUTEX_MAX_NODES; slot++)
@@ -467,7 +491,7 @@ static void scoped_signal_gate(void)
 		CHECK(!lock.osq.tail.counter && !kd_mutex_reserved_nodes[0]); checks++;
 	}
 	reset(); pending_signal = true;
-	CHECK(kd_local_spin(&lock, false, NULL));
+	CHECK(kd_local_spin_common(&lock, false, NULL, false));
 	CHECK(!signal_checks && !schedules && !kd_mutex_reserved_nodes[0]); checks++;
 }
 int main(void)

@@ -504,3 +504,23 @@ retirement. Physical admission/release, task/CPU context and source-reference
 primitives remain supplied observations. Neither these fixtures nor a provider
 build establishes live kernel handback or mmap1 execution. Retain that boundary
 until separate focused kernel and unchanged application runs prove it.
+
+## Canonical-queue fixture adaptation
+
+The `da55414f` build and seven directly affected fixture drivers passed. The
+resource and OSQ drivers stopped during extraction because they still named
+helpers removed by the earlier canonical-queue migration. Preserve those
+failures and adapt the drivers to the current producers; do not restore the
+removed production functions or omit node-retirement checks.
+
+The OSQ-only fixture uses the real cold-record layout and common-spin helper.
+It never publishes a captured request, so any request-state retirement remains
+a failing supplied boundary. The resource fixture extracts the real request
+initializers, slot lookup, state transitions and release. Its substituted
+physical/assembly boundary supplies an acquired request with the exact record
+and generation; queue election itself remains covered by the admission fixture.
+Model physical acquisition before scheduling-gate pickup, retain all mutation
+checks, and require the Native unlock lookup even without a legacy task record.
+Only these repaired drivers need a new VM run; unchanged passing drivers keep
+their original source-specific receipts. This remains component evidence,
+separate from matching-kernel live continuation and mmap1 checks.

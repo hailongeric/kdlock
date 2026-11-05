@@ -30,6 +30,16 @@ def production():
     # only the per-CPU symbol so both unchanged paths can share one fixture.
     code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
     code += '\nstatic bool kd_comm_matches(const struct kd_comm_key *key, const char comm[TASK_COMM_LEN])\n{\n    comm_queries++;\n    if (trace_admission) CHECK(sampled_first);\n    return kd_comm_matches_real(key, comm);\n}\nstruct kd_comm_key kd_spin_target;\n'
+    wait = read_source(ROOT / "kernel_module/kd_wait_queue.c")
+    for marker in (
+        "static void kd_wait_assert_request(const struct kd_wait_request *request)",
+        "void kd_wait_request_init(struct kd_wait_request *request, void *identity,",
+        "void kd_wait_node_init(struct kd_wait_node *node, struct kd_wait_request *request,",
+        "void kd_wait_handoff_locked(struct kd_wait_request *request)",
+        "void kd_wait_finish_local_locked(struct kd_wait_request *request)",
+        "void kd_wait_set_state_locked(struct kd_wait_request *request,",
+    ):
+        code += definition(wait, marker)
     code += "#define kd_mutex_shadows cpu_shadows\n"
     local = read_source(ROOT / "kernel_module/kd_mutex_local.h")
     code += local[local.index("#define KD_MUTEX_TAIL_IDX_OFFSET"):local.index("DECLARE_PER_CPU_SHARED_ALIGNED")]
@@ -41,13 +51,15 @@ def production():
     # Include the actual decoder, not a second copy of its field arithmetic.
     # The fixture substitutes only per_cpu_ptr and verifies its node identity.
     code += definition(mutex, "static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)")
+    code += "static struct kd_mutex_wait_record *\n" + definition(
+        mutex, "kd_mutex_wait_record(struct kd_mutex_node *node)")
     code += definition(read_source(ROOT / "kernel_module/kd_mutex_local.c"),
                        "void kd_mutex_init(struct kd_mutex *lock)")
     for marker in (
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
+        "struct kd_wait_node *kd_mutex_request_member(struct kd_mutex_node *node)",
+        "static void kd_mutex_request_prepare(struct kd_mutex_node *node)",
         "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
@@ -84,6 +96,7 @@ def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     ptrace = (ROOT / "include/kd_regs.h").read_text()
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
+    types += without_includes(read_source(ROOT / "include/kd_wait_queue.h"))
     types += without_includes(read_source(ROOT / "include/kd_mutex_types.h"))
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
     code = production()
@@ -153,11 +166,11 @@ def main():
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
         "gate-without-native-lock": (
-            "\t\t\tkd_mutex_claim_origin_node(lock, node);\n\t\t\tpreempt_disable();",
-            "\t\t\t(void)node;\n\t\t\tpreempt_disable();",
+            "\tkd_mutex_local_lock_node(lock, node);",
+            "\t(void)node;",
         ),
         "claim-publishes-held-before-physical": (
-            "\tkd_mutex_local_lock_node(lock, node);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);",
+            "\tkd_mutex_local_lock_node(lock, node);",
             "\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_mutex_local_lock_node(lock, node);",
         ),
         "unlock-clears-before-physical": (
@@ -209,7 +222,9 @@ def main():
             candidate = code
             if mutation:
                 before, after = mutation
-                assert code.count(before) == (3 if name == "outer-native-result-routed" else 1), (name, code.count(before))
+                expected = 3 if name == "outer-native-result-routed" else (
+                    2 if name in ("tail-decodes-next-cpu", "tail-truncates-slot") else 1)
+                assert code.count(before) == expected, (name, code.count(before))
                 candidate = code.replace(before, after)
             (directory / "mutex_resource_code.h").write_text(candidate)
             binary = directory / name
