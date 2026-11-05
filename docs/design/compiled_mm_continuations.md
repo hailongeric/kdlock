@@ -715,3 +715,8 @@ thread/process pilot with the existing Native controls retained. Keep learning
 lifetimes unscored, record any failure and verify normal-kernel recovery. This
 compiler correction does not implement the separate permanent ownership transfer
 and immediate requeue protocol.
+
+The first focused VM run at `87430984` passed the six object-image cases, then
+stopped because the new GS/RIP fixture supplied no ABI2 lock symbol bindings.
+Keep that failed run; correct its fixture to use the existing synthetic symbol
+table before rerunning the focused checks. No module was loaded by this attempt.

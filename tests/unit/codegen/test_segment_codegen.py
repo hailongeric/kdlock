@@ -21,6 +21,7 @@ import normal
 
 import disassem as translator
 from test_jit_body_witness import render, run_image
+from test_instruction_policy import SYMBOLS
 
 CURRENT_TASK_OFFSET = 0x20B80
 GENERIC_GS_OFFSET = 0x23000
@@ -106,7 +107,8 @@ def check_rip_gs_execution():
                 options = {}
                 assembly, log, status = render(
                     raw.hex(), entry=entry, lock_kind=kind, abi=abi,
-                    trusted_source=True, return_status=True, build_options=options)
+                    kernel_symbols=SYMBOLS, trusted_source=True,
+                    return_status=True, build_options=options)
                 require(status == 0, log)
                 require(re.search(rb"\bStack_R\b", assembly) is None,
                         "released IP emitted an unnamed spill")
