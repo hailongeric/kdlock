@@ -28,6 +28,137 @@ def jit_observations(parameters):
     return values
 
 
+def image_point(c, config_bytes, root, out, controller, finalize):
+    """Use the ordinary immutable-image session without changing its checks."""
+    bench, rt = controller.bench, controller.rt
+    args = argparse.Namespace(mode=c['mode'], boot_id=c['boot_id'],
+        kernel_variant=c['variant'], kernel_source=Path(c['kdir']),
+        kernel_baseline=Path(c['bundle']), host_state=Path(c['host_state']),
+        host_reference=Path(c['host_state']), host_reference_sha256=c['host_sha256'],
+        execution_mode='image', sites=Path(c['sites']), sites_sha256=c['sites_sha256'],
+        source_commit=c['source_commit'], source_state=root / 'source-state.json',
+        source_manifest=root / 'source-sha256.json',
+        source_state_sha256=c['state_sha256'], source_manifest_sha256=c['manifest_sha256'])
+    result_path = out / ('finalization.json' if finalize else 'result.json')
+    result = dict(schema=1, passed=False, drained=False, accepted=False,
+        execution_mode='image', config_sha256=hashlib.sha256(config_bytes).hexdigest(),
+        source_commit=c['source_commit'], runner_sha256=rt.digest(Path(__file__)),
+        mode=c['mode'], model=c['model'], workers=c['workers'], boot_id=c['boot_id'],
+        delegation_proved=False, physical_batch_length_measured=False)
+    try:
+        assert os.geteuid() == 0 and sys.executable == controller.PYTHON
+        assert c['mode'] in ('native', 'kd') and c['model'] in bench.MODELS
+        assert c['workers'] in bench.WORKERS and c['profile'] is False
+        controller.source_manifest(args)
+        if finalize:
+            original = bench.load(out / 'result.json')
+            assert original['state'] == 'MEASURED_RETIREMENT_PENDING' and not original['passed']
+            assert original['config_sha256'] == result['config_sha256']
+            assert original['application']['passed'] and original['application']['drained']
+            args.captured_runtime_policy = original['environment']['kernel_identity']['runtime_policy']
+            bench.verify_boot(args)
+            expected = bench.load(Path(original['execution_session']['path']))
+            bench.verified_files(expected['files'])
+            assert rt.digest(Path(original['execution_session']['path'])) == original['execution_session']['sha256']
+            assert (controller.PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N'
+            deadline = time.monotonic() + 10
+            wanted = dict(expected['source'], writers=0, frames=0)
+            while True:
+                observed = dict(source=rt.status(), bindings=int(
+                    (controller.PARAMETERS / 'rwsem_provider_bindings').read_text()))
+                result['retirement_observation'] = observed
+                if observed == dict(source=wanted, bindings=0):
+                    break
+                assert time.monotonic() < deadline, 'exact image-session retirement did not drain'
+                time.sleep(0.01)
+            assert bench.execution.registry(rt.registry()) == bench.execution.registry(expected['registry'])
+            assert rt.digest(bench.execution.NOTE) == bench.execution.module_note_sha256(Path(c['provider']))
+            result['service_progress'] = (controller.PARAMETERS / 'service_progress').read_text()
+            assert result['service_progress'].strip() == 'total=0 shown=0'
+            with open('/dev/kd_dev', 'rb', buffering=0) as device:
+                fcntl.ioctl(device, rt.RETIRE)
+                result['retired'] = rt.info(device.fileno())
+            assert result['retired'] == dict(state=2, modules=0, frames=0, writers=0)
+            rt.command(['rmmod', 'kdlock_km'], out / 'unload.log', timeout=30)
+            bench.idle()
+            result.update(state='COMPLETE', passed=True, drained=True, final_idle=True,
+                measured_result=dict(path=str(out / 'result.json'), sha256=rt.digest(out / 'result.json')))
+            return
+
+        bench.idle()
+        assert __import__('shutil').disk_usage('/').free >= 2 * controller.GIB + controller.GIB // 4
+        out.mkdir(exist_ok=False)
+        result['environment'] = bench.admit(args, out)
+        assert rt.digest(Path(c['inputs'])) == c['inputs_sha256']
+        inputs = bench.inputs_from(Path(c['inputs']))
+        files = dict(inputs['files'])
+        files[str(args.sites)] = c['sites_sha256']
+        audit = controller.site_audit(args, result['environment']['kernel_binding'])
+        exact = daemon = None
+        if c['mode'] == 'kd':
+            provider, binary = Path(c['provider']), Path(c['daemon'])
+            assert rt.digest(provider) == c['provider_sha256'] and rt.digest(binary) == c['daemon_sha256']
+            files.update({str(provider): c['provider_sha256'], str(binary): c['daemon_sha256']})
+            rt.command(['insmod', str(provider), 'bench_quiet=1', 'bench_complete_probe=0',
+                'jit_timing=0', 'hotlock_stats=0', 'service_cpus=0-61'], out / 'load.log', timeout=30)
+            assert (controller.PARAMETERS / 'service_trace').read_text().strip() == 'N'
+            assert (controller.PARAMETERS / 'rwsem_provider_active').read_text().strip() == 'N'
+            assert (controller.PARAMETERS / 'rwsem_provider_bindings').read_text().strip() == '0'
+            daemon = controller.Daemon(out, root, binary)
+            daemon.start()
+            owner = controller.Controller.__new__(controller.Controller)
+            owner.args, owner.model, owner.files, owner.audit = args, out, files, audit
+            owner.binaries = dict(provider=provider)
+            (controller.PARAMETERS / 'rwsem_provider_mode').write_text('prepare\n')
+            timeout = c.get('prewarm_timeout', 180)
+            assert type(timeout) is int and 1 <= timeout <= 3600
+            deadline = time.monotonic() + timeout
+            while True:
+                rows = owner.ready(daemon)
+                if rows:
+                    break
+                assert time.monotonic() < deadline, 'all-site image preparation did not complete'
+                time.sleep(0.05)
+            for row in rows:
+                folder = out / 'workspace/daemon' / hex(row['entry']) / str(row['tgid']) / 'asm'
+                for name in ('jit.bin', 'jit.S', 'bin.txt'):
+                    path = folder / name
+                    assert path.is_file() and path.stat().st_size > 0
+                    files[str(path)] = rt.digest(path)
+            (controller.PARAMETERS / 'rwsem_provider_mode').write_text('activate\n')
+            exact = owner.session_receipt(daemon, rows)
+            exact.verify()
+            result['execution_session'] = exact.identity()
+            result['prior_delegation_proof'] = c.get('delegation_proof')
+        def verify():
+            bench.verify_boot(args)
+            bench.verified_files(files)
+        rt.write_json(result_path, dict(result, state='RUNNING'))
+        result['application'] = bench.run_point(out / 'application', dict(
+            model=c['model'], workers=c['workers'], round=0, nominal_seconds=2),
+            inputs, verify, execution_session=exact)
+        result['upstream'] = bench.parse_output((out / 'application/upstream.log').read_text(), c['workers'])
+        verify()
+        if exact is not None:
+            exact.verify()
+            (controller.PARAMETERS / 'rwsem_provider_mode').write_text('deactivate\n')
+            daemon.stop()
+            result.update(state='MEASURED_RETIREMENT_PENDING', factory_active=False,
+                retirement='fresh process after controller exit required')
+        else:
+            bench.idle()
+            result.update(state='COMPLETE', passed=True, drained=True, final_idle=True)
+        controller.source_manifest(args)
+    except BaseException as error:
+        result.update(state='FAILED', error=repr(error), traceback=traceback.format_exc())
+        raise
+    finally:
+        if out.exists():
+            rt.write_json(result_path, result)
+        print(json.dumps({key: result.get(key) for key in
+            ('state', 'passed', 'drained', 'mode', 'model', 'workers', 'upstream', 'error')}), flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, required=True)
@@ -41,6 +172,8 @@ def main():
         root / 'tests/kernel/mmap1_identity/delegated.py')
     controller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(controller)
+    if c.get('execution_mode') == 'image':
+        return image_point(c, config_bytes, root, out, controller, options.finalize)
     bench, rt = controller.bench, controller.rt
     args = argparse.Namespace(mode=c['mode'], boot_id=c['boot_id'],
         kernel_variant=c['variant'], kernel_source=Path(c['kdir']),

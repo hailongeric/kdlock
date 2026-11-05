@@ -124,6 +124,23 @@ candidate, not performance evidence.
 
 ## Interfaces
 
+The current small throughput pilot selects `execution_mode: "image"` in the
+configuration for `delegated_point.py`. It reuses the ordinary daemon,
+all-site image preparation and `ExecutionSession`; the older reached-mode
+configuration remains historical. No lock implementation or MM body changes.
+Each model uses one upstream `-t 2 -s 2 -m` lifetime, workers 0/1 and collector
+63. Tracing stays off for timing. Native and KD points retain separate receipts.
+
+The image registry, source/frame ledger, provider, daemon and input identities
+must match before and after the application. A learning update or unfinished
+compiler fails this pilot rather than weakening those checks. A failed point
+retains its raw upstream output but supplies no accepted score. Deactivate
+before stopping the daemon, then use a fresh process to verify binding/frame/
+publisher drainage, retire the source and unload normally. All gates remain.
+Throughput is completed mmap/munmap pairs per nominal second; delegation entry,
+fully returned JIT bodies and handed-back prefixes remain separate claims.
+The pilot does not establish those claims without a matching diagnostic proof.
+
 Use the existing pinned Python and a real confirmed recovery snapshot. Both
 commands require `--mode native|kd`, `--boot-id`, `--host-state`,
 `--host-reference`, `--host-reference-sha256`, `--kernel-variant`,
