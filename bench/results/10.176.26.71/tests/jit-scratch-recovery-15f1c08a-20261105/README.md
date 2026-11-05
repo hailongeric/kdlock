@@ -81,6 +81,15 @@ entry, then changed all 13 existing entries in subsequent passes. The equality
 check in `demand_learning()` therefore withheld timing instead of silently
 renewing a scored receipt or increasing the learning bounds.
 
+Read-only review confirms changed assembly/binary hashes across these
+generations and real completed compiler jobs. Existing-row registration in
+`execution/registry_publish.inc` is a no-op, and `daemon/daemon.c` skips NORMAL
+entries. The CALL/IJ miss path drives replacement; the ready lookup requires
+NORMAL, so further delegated coverage can require a later application lifetime.
+Exact runtime miss-history edges and joins from every kernel `pid=0` entry to
+a benchmark worker were not captured. These receipts cannot attribute every
+replacement to a particular mmap1 worker or critical section.
+
 ## Compilation, proof limits and retirement
 
 Threads completed 48 compiler jobs: total wall time 634.365 seconds, median

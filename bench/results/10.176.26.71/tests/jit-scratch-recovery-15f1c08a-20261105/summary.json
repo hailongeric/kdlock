@@ -4,6 +4,8 @@
   "branch": "codex/mmap-reached-jit",
   "daemon_sha256": "9a80d79d1c43d7c1be8a27fdc2bd2cfd0c278ba76c855e581a85a0ad962bf413",
   "delegation_proved": false,
+  "every_registered_root_joined_to_benchmark_worker": false,
+  "exact_miss_history_edges_captured": false,
   "experimental_boot_id": "95abf641-2398-4758-ba85-7937cc651622",
   "final_space_bytes": {
     "/": 3466293248,
@@ -56,6 +58,38 @@
       ],
       "daemon_log_sha256": "bc6488012b82339278d911bcdb2cebc626e500cdde8b7cf9ced74ae3f44a7c42",
       "delegation_proved": false,
+      "image_hash_changes_per_learning_lifetime": [
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          },
+          "jit.bin": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          },
+          "jit.bin": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          }
+        }
+      ],
       "learning": [
         {
           "descriptive_change_vs_native_percent": -50.82883819286393,
@@ -206,6 +240,38 @@
       ],
       "daemon_log_sha256": "0a6ae32241aeee445eda5f6114a185b49aed2a793b681be8e25ee709dd71e67c",
       "delegation_proved": false,
+      "image_hash_changes_per_learning_lifetime": [
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        }
+      ],
       "learning": [
         {
           "descriptive_change_vs_native_percent": -57.54192281182644,
