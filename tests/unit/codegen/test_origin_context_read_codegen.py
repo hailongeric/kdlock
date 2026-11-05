@@ -27,6 +27,44 @@ def compile_source(source):
 
 
 class OriginContextReadCodegenTests(unittest.TestCase):
+    def test_rip_read_restores_borrowed_sp_without_an_empty_spill(self):
+        for entry in (0x1000, 0xffffffff817f7110):
+            with self.subTest(entry=entry):
+                # The reached load's destination, GS and RIP borrow physical
+                # R13 after the ordinary-read branch restores canonical state.
+                options = {}
+                assembly, log, status = render(
+                    "654c8b25003fc102c3", entry=entry, lock_kind="mutex", abi=2,
+                    kernel_symbols=SYMBOLS | {"__preempt_count": PREEMPT},
+                    trusted_source=True, body_witness=True,
+                    origin_memory_capable=True, origin_context_read_capable=True,
+                    return_status=True, build_options=options)
+                self.assertEqual(status, 0, log)
+                storage = (ctypes.c_ulong * 2)(0x123456789abcdef, 0x987654321)
+                initial = []
+                calls = []
+
+                def initialize(regs, stack):
+                    regs[2] = 0x12340000
+                    initial.append(regs[1])
+
+                def service(regs, args, stack):
+                    if args[0] == 13:
+                        calls.append(regs[0])
+                    return False
+
+                gs = (ctypes.addressof(storage) - entry - 8 - 0x2c13f00) % (1 << 64)
+                regs, args = run_image(
+                    assembly, [entry], initialize=initialize, resume=service,
+                    context=(gs, 0xbeef), abi=2,
+                    requirements=options["requirements"])[0]
+                self.assertEqual(calls, [])
+                self.assertEqual(regs[6], storage[0])
+                self.assertEqual((regs[1], regs[2], regs[0]),
+                                 (initial[0] + 8, 0x12340000, 0x4444))
+                self.assertEqual(list(storage), [0x123456789abcdef, 0x987654321])
+                self.assertEqual(args[1], 1)
+
     def test_exact_read_opcodes_and_versioned_symbol(self):
         for encoded, expected in (("658b00", (3, 32)), ("654c8b38", (3, 64)),
                                   ("6566f74001ffff", (4, 16)),

@@ -65,6 +65,10 @@ def mark_writes(reg_map, name, args, conflict_regs):
 
 def spill_register(reg_map, physical):
     logical = reg_map[physical]
+    # A released IP may have borrowed SP's physical slot. Its empty mapping
+    # has no logical value to store before stable SP is reloaded.
+    if not logical:
+        return ""
     if logical in virtual_gprs and logical not in reg_map.dirty:
         return ""
     return make_inst("MOV", ["Stack_R" + logical, "R" + physical])

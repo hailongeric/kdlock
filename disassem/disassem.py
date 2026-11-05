@@ -26,6 +26,7 @@ import hostcall
 import indirect_jump
 import memread
 import normal
+from object_image import require_complete_object
 import native_escape
 import origin_instructions
 import origin_memory
@@ -103,6 +104,8 @@ def run_build_step(command, **kwargs):
 
 def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
     diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
+    for name in ("jit.bin", "bin.txt"):
+        Path("asm", name).unlink(missing_ok=True)
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
     )
@@ -127,6 +130,11 @@ def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
     run_build_step(
         ["objcopy", "--remove-section", ".note.gnu.property", "./asm/jit.o"],
     )
+    try:
+        require_complete_object("./asm/jit.o")
+    except ValueError as error:
+        diagnostics.error("IMAGE_RELOCATION_PENDING", "raise", str(error))
+        raise
     run_build_step(["objcopy", "-O", "binary", "./asm/jit.o", "./asm/jit.bin"])
     with open("./asm/bin.txt", "w", encoding="ascii") as output:
         run_build_step(
