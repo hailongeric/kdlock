@@ -775,6 +775,59 @@ unload, or preserve an unresolved state for ordinary recovery. Verify the normal
 `kdlock1` kernel afterward. Broader ownership transfer and pure-query changes
 remain separate from this convergence test.
 
+## Bounded image-capacity correction
+
+The eight-lifetime cold attempt at runtime `15f1c08a` reached the existing
+capacity limit. Its captured registry has 12 roots and a sum of 64 successful
+published generations; 72 compiler jobs returned zero, leaving eight compiled
+replacements unpublished. The daemon repeatedly reports `ENOSPC` from
+`/dev/kd_dev`. `sys.c` returns it when `kd_image_alloc()` cannot obtain a slot;
+`exe.c` fixes the shared descriptor count at 64. A replaced immutable image
+remains occupied by design. This is a publication resource limit, not evidence
+of duplicate history or failed source decoding.
+
+The controller exited on its own learning deadline before the separate stop
+attempt reached it; no signal was sent by that attempt. Exact subsequent
+retirement records zero bindings/frames, normal daemon close and zero writers,
+then terminal source retirement and normal unload. Normal kernel Build ID
+`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62` is verified idle at boot
+`f15229a2-222b-494a-93e7-6216cbecfc94`. No online image reclamation is allowed:
+zero frames and an inactive provider are not a general code-lifetime barrier.
+
+The user authorized more image capacity. Select an explicit candidate build
+with 128 descriptors, retaining the ordinary default of 64 and bounding the
+build option to 1–256. Keep the 4 MiB slot size and all existing allocation,
+publication, immutable generation and terminal retirement rules. There is no
+growth or reclamation during a running session and no new allocation in a lock
+hook. This is a general image-pool option, with no caller-specific behavior.
+
+The observed 12/13 roots with an initial image plus up to eight learning
+generations require at most 108/117 slots at that root count; 128 leaves some
+headroom without the 2 GiB upper reservation of a 256-slot build. Capacity 128
+uses up to 512 MiB ordinary and 512 MiB optional near storage, sharing 128
+descriptors. Its descriptor/pointer arrays are 10 KiB on x86-64. The recovered
+VM reported `MemAvailable=24265138176` bytes before this change. Record actual
+allocations through read-only `jit_image_usage` under the existing publication
+gate; do not treat this observation as owner or lifetime accounting.
+
+Document the count option in a shared header and Kbuild, add the resource
+observation, then run the existing image-capacity and immutable-image fixtures
+plus a matching W=1 private-provider build on the VM. Check default 64 and the
+selected 128 override, including invalid bounds. Continue with new cold
+thread/process sessions under the same eight-lifetime/1,800-second limits and
+unchanged acceptance. Resource observations occur outside application timing.
+Keep the failed 64-slot campaign separate and verify normal-kernel recovery
+after the new candidate. No broader ownership-transfer change is included.
+
+The captured current published mmap image at `0xffffffff817b6f68`, generation
+6, has 1,100 decoded source bytes, 295 static instructions and 62 blocks; its
+generated image is 11,352 bytes. The munmap image at `0xffffffff8181c73b`,
+generation 5, has 2,405 bytes, 604 instructions and 147 blocks, generating
+23,272 bytes. These complete selected graphs include learned callees but still
+cover only part of the logical critical section. Generated sizes include the
+wrapper, dispatch and metadata. They measure neither executed instruction count
+nor critical-section duration or time ratio.
+
 ## Approved follow-on: permanent takeover and executor-local pure queries
 
 The user selected immediate physical ownership transfer to O and immediate

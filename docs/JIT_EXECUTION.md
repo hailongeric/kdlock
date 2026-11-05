@@ -256,3 +256,19 @@ generations remain immutable even if their requirements shrink.
 Source pins, bound image descriptors, physical ownership and frame retirement
 remain distinct. [Lifetimes](design/lifetimes.md) defines their limits. Synchronize
 only while idle and never replace frozen inputs under live work.
+
+The descriptor pool defaults to 64 shared slots. Each published immutable
+generation consumes one slot until terminal session retirement; replacing the
+current image does not free the older generation. Ordinary and optional near
+code pools have separate preallocated blocks but share that descriptor limit.
+Each block remains 4 MiB. A build may select `KDLOCK_JIT_IMAGES=128` for bounded
+learning; supported counts are 1 through 256 and the default stays 64. This
+changes preallocated capacity, not publication, frame or source lifetimes.
+
+The planned read-only `jit_image_usage` parameter reports exact occupied,
+published/private and free descriptor counts under the existing publication
+gate, allocated/free blocks in each pool, slot size and pool metadata sizes.
+It is a resource observation, not an ownership or retirement predicate. Capture
+it outside application timing. Capacity 128 reserves up to 512 MiB ordinary
+plus 512 MiB near code, with 10 KiB of descriptor/pointer arrays on x86-64;
+allocator and page-table overhead is additional.
