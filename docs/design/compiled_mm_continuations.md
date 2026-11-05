@@ -1333,15 +1333,26 @@ and restore the outer context on return. Never reuse entries between images,
 translations, provider sessions, or processes. Existing callers that replace
 `get_kernel_symbol` for a fixture continue to intercept every request.
 
-Cache only positively resolved core entries. The matched Linux 7
-`kernel/kallsyms.c` emits its fixed `kallsyms_num_syms` core section first
-(`update_iter`, lines 725–738), then module and additional dynamic sections
-(`update_iter_mod`, lines 705–722). Core rows have no owner field; the later
-sections carry an owner field in `s_show`, lines 761–786. Collect only the
-initial core prefix, stopping at the first qualified row; do not classify an
-unqualified row appearing later as core. Keep the first raw address token for
-each name. Parse hexadecimal only when that name is requested, preserving
-duplicate-name priority and matching malformed-token errors.
+Cache only positively resolved entries in the fixed core prefix through its
+first `_etext` row. The matched Linux 7 `kernel/kallsyms.c` emits its fixed
+`kallsyms_num_syms` core section first (`update_iter`, lines 725–738), then
+module and additional dynamic sections (`update_iter_mod`, lines 705–722).
+`scripts/kallsyms.c` retains `_etext` even without all-symbol enumeration, and
+provider initialization already requires coherent positive `_stext`/`_etext`
+values. Require those markers in the collected prefix, with
+`0 < _stext < _etext`, and commit the prefix only after successful close.
+An owner field before the marker, absent/zero/malformed markers or any observed
+read/close error discards the tentative prefix and keeps live lookup.
+
+Do not infer core provenance merely from a missing owner field. A module that
+has reached COMING can briefly emit rows with an empty name before later
+validation. It still follows the entire fixed core section, including the
+built-in `_etext` marker, so stopping there excludes those transient ownerless
+rows as well as ordinary module and generated rows. Later core data and any
+other rows after the marker remain live. Keep the first raw token for each
+name; only the fixed markers are parsed during fill. Other hexadecimal
+conversion remains request-local, preserving duplicate priority and malformed
+matching-token errors.
 
 Module/dynamic names, missing names and zero-address names always use the
 unchanged live scan. Never store a negative result, a module result or a
@@ -1369,9 +1380,11 @@ not reasons to cache dynamic or missing names. Do not describe the candidate
 as freezing the live symbol table.
 
 The focused checks cover dynamic insertion, replacement and removal, a new
-module shadowing a dynamic name, core priority, zero versus missing, distinct
-defaults, malformed raw tokens, partial reads, open/close failures, cleanup on
-all exits, nested scopes, and the existing mocked translator lookup boundary.
+module shadowing a dynamic name, transient ownerless rows after `_etext`,
+absent/zero/malformed/misordered markers, core priority, zero versus missing,
+distinct defaults, malformed raw tokens, partial reads, open/close failures,
+cleanup on all exits, nested scopes, and the existing mocked translator lookup
+boundary.
 Then compare one full compilation per arm on identical live leased text and
 identical retained histories, with no publication or application execution.
 Include dependency startup, decoding, lowering and assembly in that comparison;
