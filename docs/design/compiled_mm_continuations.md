@@ -589,3 +589,14 @@ not emit an E-side read release. Observe its real credit and queued successor,
 release the O-side read tail, then require a fresh writer and complete source,
 service, reservation and module drain. A terminal handback event alone is not
 storage-retirement evidence.
+
+The first `5ff1f232` live launch stopped before module loading because its
+controller-only CPU mask excluded the requested worker CPUs. The corrected
+launcher reached the fixture but its CALL oracle rejected an ordinary function
+address stored by the snapshot code. Actual ELF records show one absolute
+`R_X86_64_32S` reference and three `R_X86_64_PLT32` references with an `E8`
+opcode and addend -4. Only the latter are source CALL return words. Keep strict
+checks on those actual CALLs and omit the absolute address reference from that
+set. The second attempt retired all frames, modules and writers, unregistered
+the helper pin, unloaded normally and left the VM idle. No body result is
+claimed from either stopped attempt.

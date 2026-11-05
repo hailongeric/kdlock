@@ -88,6 +88,16 @@ def validate_root(events, pid, slot, observation, image, return_words):
     return root, None
 
 
+def source_call_return_offset(kind, addend, code, offset):
+    # The snapshot stores the wrapper address as an absolute signed immediate.
+    # It is not a source CALL and cannot supply a valid return-word location.
+    if kind == 11:
+        return None
+    rt.require(kind in (2, 4) and addend == -4 and offset > 0 and code[offset - 1] == 0xE8,
+               'ordinary wrapper source CALL encoding differs', 'DATA_ERROR')
+    return offset + 4
+
+
 def source_return_words(module):
     result = []
     with Path(module).open('rb') as source:
@@ -103,11 +113,12 @@ def source_return_words(module):
                 if symbols.get_symbol(relocation['r_info_sym']).name != 'jit_test_handoff_wrapper':
                     continue
                 offset = relocation['r_offset']
-                rt.require(relocation['r_info_type'] in (2, 4) and offset > 0 and
-                           target.data()[offset - 1] == 0xE8,
-                           'ordinary wrapper source CALL encoding differs', 'DATA_ERROR')
+                return_offset = source_call_return_offset(relocation['r_info_type'], relocation['r_addend'],
+                                                          target.data(), offset)
+                if return_offset is None:
+                    continue
                 base = int((Path('/sys/module/jit_continuation_test/sections') / target.name).read_text(), 16)
-                result.append(dict(section=target.name, offset=offset - 1, return_word=base + offset + 4))
+                result.append(dict(section=target.name, offset=offset - 1, return_word=base + return_offset))
     rt.require(result, 'ordinary wrapper has no source CALL relocation', 'DATA_ERROR')
     return result
 

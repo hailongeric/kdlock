@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 sys.path.insert(0, str(ROOT / 'tests/kernel/jit_continuation'))
 import bench_runtime as rt
-from handoff_mode import decode_snapshot, decoded_source_blocks, validate_root
+from handoff_mode import (decode_snapshot, decoded_source_blocks, validate_root,
+                         source_call_return_offset)
 from helper_mode import ARGUMENTS, expected_result
 
 
@@ -69,6 +70,14 @@ class HandoffProofTests(unittest.TestCase):
         assembly = ('loc_1000:\nPUSHFQ\nMOVABS R14, 0x1000\nJMP exit\n'
                     '/*\nloc_1100\nMOV EAX, 1\nRET\n */ \nloc_1100:\nMOV EAX, 1\n')
         self.assertEqual(set(decoded_source_blocks(assembly)), {0x1100})
+
+    def test_absolute_address_is_separate_from_actual_CALL_return_word(self):
+        self.assertIsNone(source_call_return_offset(11, 0, bytes.fromhex('48c7850000000000000000'), 7))
+        self.assertEqual(source_call_return_offset(4, -4, bytes.fromhex('e800000000'), 1), 5)
+        with self.assertRaises(rt.Failure):
+            source_call_return_offset(4, -4, bytes.fromhex('9000000000'), 1)
+        with self.assertRaises(rt.Failure):
+            source_call_return_offset(4, 0, bytes.fromhex('e800000000'), 1)
 
 
 if __name__ == '__main__':
