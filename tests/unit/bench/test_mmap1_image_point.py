@@ -19,6 +19,10 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+class FixtureFailure(Exception):
+    status = 'DATA_ERROR'
+
+
 class ImageRetirement(unittest.TestCase):
     def run_case(self, *, bindings=0, changed_registry=False, drained=True):
         with tempfile.TemporaryDirectory() as temporary:
@@ -49,7 +53,7 @@ class ImageRetirement(unittest.TestCase):
                 execution_session=dict(path=str(session), sha256=digest(session)))
             (out / 'result.json').write_text(json.dumps(original))
             calls = []
-            rt = SimpleNamespace(digest=digest, RETIRE=123,
+            rt = SimpleNamespace(digest=digest, RETIRE=123, Failure=FixtureFailure,
                 status=lambda: dict(state=0, modules=7, frames=0, writers=0),
                 registry=lambda: [dict(entry=10, generation=4)] if changed_registry else rows,
                 info=lambda fd: dict(state=2, modules=0, frames=0, writers=0),
