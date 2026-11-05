@@ -959,3 +959,142 @@ existing `PUSHFQ` / flags-bank store before the three control-transfer
 instructions. Require that complete five-instruction sequence instead of
 omitting the flag-save contract. This changes only the fixture expectation;
 no lock or code-generation implementation is changed.
+
+The completed scope experiment and all preliminary rates are recorded in
+[the fixed scope report](../../bench/results/10.176.26.71/tests/mmap1-entry-scope-130b6593/README.md).
+Runtime source `130b65939053026339014833774e5fb11b234972` passed focused
+component checks and both unscored local application checks. Each JIT comparison
+then completed eight learning lifetimes and stopped with `LEARNING_ADVANCED`:
+18 successful compilations and two generation-9 roots per model, zero scored
+points. Both sessions retired normally and the ordinary kernel was verified
+idle. A smaller preparation scope does not establish throughput acceptance.
+
+# Per-acquisition image regions: design review
+
+This follow-on uses the same branch and the original JIT backend, starting
+from the scoped runtime above. The user approved bounded segments within one
+acquisition region. Segments remain inside that region and end at its matching
+release; an image must not contain its own post-release continuation. This
+does not select a numeric CFG cap. The user selected separate child images for
+selected KD acquisitions initially; allocator and other Native locks retain
+their existing instruction-service handling. Code for these transitions has
+not been implemented.
+
+The boundary applies to translated source instructions. Generated entry/exit
+controls and metadata remain necessary, but cannot execute another source
+instruction beyond that region's release. Each child entry and parent join
+must retain compatible IRQ/BH/preemption and CPU-local state. An image boundary
+does not permit a sleeping acquisition inside an existing atomic interval.
+
+An outer region A can suspend at a reached acquisition of B. A retains its
+exact owner, source/stack lifetime and immutable image version. B has its own
+request identity/generation and image family, while the root keeps one shared
+canonical register/stack packet. Only the current packet owner may change it.
+B's resulting registers and memory effects continue into A; restoring A's
+pre-child packet would discard real execution. Internal child-image entries
+must have a distinct family identity so the two-entry public root scope still
+rejects unrelated startup captures.
+
+The integer clobber ABI has two different PCs. The actual CALL word is the
+literal return PC used for cancellation. A capture-capable API also supplies
+the success entry separately in RDX; its success label can clear EAX. Preserve
+both values and validate the supplied entry against the declared ABI/site.
+Never derive it by adding a constant to the literal return PC, and never use
+the success label on cancellation. INTEGER-only callable APIs do not acquire
+a capture label merely because they return an integer.
+
+On failed B admission, observe the original task's signal under the existing
+grant-first queue arbitration, finish exact cancellation retirement, consume
+only the pending acquisition CALL word, and continue A at the literal return
+PC with the error. B's body and success label must not execute. On success,
+consume that acquisition word exactly once, preserve successful-acquisition
+priority, and enter B through its validated success entry when its ABI has one.
+`kd_exec_cont_child_acquired()` currently selects the literal return PC, so it
+needs an explicit capture-aware adapter before it can select B's image.
+
+At B's matching release, a child-scoped service completion validates the
+terminal CALL and physical release without popping that CALL word. Child
+return then consumes the release word once, transfers packet custody, and
+resumes A at the first unexecuted source instruction after B's release. That
+join is inside A and outside B. It is not B's acquisition-return PC. Retain
+separate acquisition and terminal-release transactions; a COMPLETE phase alone
+does not establish the correct join. A's continuation must be admitted by its
+pinned image family, with reached learning supplying a bounded segment later
+when that join has not been compiled.
+
+The existing `kd_exec_cont_child_begin/acquired/return` helpers provide useful
+packet and state operations, but the live `kd_service_nested()` still acquires
+into the root scope and resumes the same root image. A new adapter must give
+each child its own service scope. Current callbacks recover a root structure
+from root-only identity, and retained entry currently requires an independent
+`source_lease` even though generic children borrow their root's lease. Replace
+these assumptions with exact root/parent/generation validation, preserving
+the root lease until every child, Native service and final ACK has retired.
+Do not compose the current acquisition service completion and child-acquired
+helper blindly: both paths can consume the acquisition CALL word.
+
+Downgrade changes the held phase of the same region. Its delegated read tail
+can continue in bounded segments on the executor and ends at that acquisition's
+matching read unlock. The read credit remains live until then. A subsequent
+writer takes fresh admission and drains readers normally; it must not reuse
+the former writer phase or overwrite an outstanding positive cohort.
+
+If B's image or A's post-child join is unavailable, hand the entire active
+region stack permanently to the origin for this invocation at the first
+unexecuted point. Preserve all parent/child/image/source references and publish
+one Native acceptance. A pending acquisition, a committed success entry, and
+an already completed child unlock require different packet/CALL-word states.
+Do not replay a committed operation or return from a missing child interval
+to A on the executor. The legacy missing-continuation status currently reaches
+an unsupported path; a valid completed-control handback must be added explicitly
+instead of globally reinterpreting that status.
+
+The user selected continued B delegation for an API-valid non-LIFO release.
+Releasing ancestor A while B remains held must mark A's region closed without
+allowing A's image to execute after its release. A's storage remains retained
+for B's references and outstanding ACKs. Keep region liveness separate from
+owner-storage retirement and skip closed ancestors on return. B continues on
+the executor while its own region remains live; this case is not a reason to
+hand the invocation back. Existing root-wide all-released tests cannot be used
+as each image's release boundary. This selected transition is still design,
+not an implemented or validated feature.
+
+Typed release controls are segment frontiers. Runtime exact owner matching
+distinguishes the current region's release, an ancestor's release and another
+nonterminal operation. After an ancestor release, B's next segment starts at
+the actual post-release source PC with B still live. After B's own release,
+select the nearest open ancestor, skipping closed A. Retain the canonical
+packet instead of restoring an old ancestor snapshot. Separate image-region
+closure from final frame/storage retirement and physical release ACKs.
+
+# Bounded learning allowance after the two-entry audit
+
+The retained histories show six distinct mmap CALL additions and two distinct
+IJ edges, plus eight distinct munmap CALL additions. All 18 jobs per model
+succeeded. Eight changed learning lifetimes publish generation 9 only after
+the eighth application ends; the old eight-round cap cannot even test that
+generation. This is evidence of continuing incremental coverage, not duplicate
+target churn. The scalar miss report may be overwritten by already admitted
+frames, so it is not a record of the first miss or every dynamic miss.
+
+Raise the optional learning-round maximum to 32, preserving the existing
+default of three and the independently bounded learning deadline. The focused
+configuration retains 1800 seconds. Keep the same provider, daemon, source
+leases, immutable images and history from learning through timing; do not
+restart them at an intermediate generation. Require exact selected entry
+identity, source quiescence, usable NORMAL images and an unchanged registry
+across a complete application lifetime before the single scored application.
+
+With the observed one update per selected root per lifetime, 32 lifetimes
+would occupy 66 images, within the existing 128-slot pool. That observation is
+not a universal allocation bound. Keep actual capacity, deadline and lifetime
+failures explicit; do not reclaim published images, suppress a failure or
+weaken the stable-epoch gate to obtain a score.
+
+Do not copy unversioned IJ addresses from the retired runs into a new session:
+the callback target `0xffffffffc0e31d50` belongs to a loaded module instance.
+Fresh sessions must obtain current targets and source residency. A longer
+bounded live learning phase avoids that stale-instance issue without changing
+the lock implementation. Quiet timing and a separate worker-attributed proof
+remain distinct evidence. The current false proof field is not itself the
+learning failure, and it does not establish that no delegation occurred.

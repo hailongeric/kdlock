@@ -1,0 +1,18 @@
+{
+  "README.md": {
+    "bytes": 6467,
+    "sha256": "a585c882b198fcd95123694ca8a20dcf96784037871da4e9d16da949460f43e5"
+  },
+  "fixture-failures/19e591aa.log": {
+    "bytes": 1775,
+    "sha256": "b75806eb410b45b3cbfc83419bfcb1d61279ef585fb7d76caf8f657f676ae6cb"
+  },
+  "fixture-failures/c66af150.log": {
+    "bytes": 2898,
+    "sha256": "de04704050a7c286c061a140f8c90e902fee32dac25c4aa50a05cddcb1543423"
+  },
+  "summary.json": {
+    "bytes": 115384,
+    "sha256": "3f9d9640dac84f7f21501328372816e43ad84729f9b95b02b7d790cf6e0aaa2c"
+  }
+}
