@@ -893,3 +893,48 @@ query checks need different O/E tasks and stale identity/phase observations.
 Mmap1 application completion remains separate from proof that E executes the
 read tail and subsequently acquires a fresh writer phase. Keep the separately
 blocked retained-continuation fixture out of this validation step.
+# Focused writer-entry selection
+
+The next isolated candidate starts from
+`4eb5a2f5a017686a1edeaef66503c4f6ac7d06cf` on
+`codex/mmap-reached-jit`. The completed 128-slot experiment returned to the
+ordinary development kernel. Its eight thread applications passed and drained,
+but image changes prevented a scored point: 108 serial compilation jobs took
+1453.958 seconds, while application lifetimes totalled 64.297 seconds.
+
+Add the optional, load-time-only `rwsem_provider_entries` array. An empty array
+preserves unrestricted entry selection. Every supplied entry must be unique,
+nonzero, and present as a supported writer in the running kernel's builtin site
+table. Validate this before registering the provider's instruction services.
+The benchmark records the complete selected list and exact module parameter in
+its execution receipts; its registry checks admit only entries in that list.
+
+For this bounded comparison, select `0xffffffff817b6f68`
+(`vm_mmap_pgoff+0x118`) and `0xffffffff8181c73b` (`__vm_munmap+0xbb`) from the
+matched scope5 kernel. These code sites also serve activity outside the timed
+loop, so selection is not worker-only attribution. Default behavior remains
+unrestricted. No application or MM body is changed.
+
+Apply selection in `kd_provider_capture`, before `kd_service_capture_bound`
+can capture, register, or publish a request. An excluded entry must execute the
+callable local KD acquisition matching its wait state: ordinary,
+interruptible, or killable. Return zero only after acquisition, or the actual
+acquisition error. There is no Boolean decline and no alternate Native lock on
+the same object. Provider binding, prepared capability, local/delegated phase
+selection, unlock, downgrade, cancellation, and retirement remain unchanged.
+Preparation and non-demand readiness checks operate on selected entries while
+retaining validation of the builtin table.
+
+Nested locks are not assumed absent. The existing service path retains nested
+owners and resumes the same frame/image; this candidate does not add a child
+image switch. Allocator, page-table, anon-vma, and per-VMA protocols retain their
+existing handling. Each image ending at its own matching release, child-image
+return routing, image storage reuse, and CFG limits remain separate designs.
+
+Focused validation first covers default and selected preparation/activation,
+invalid entry sets, excluded local success/cancellation, and selected capture
+routing using production functions. Run the directly affected receipt checks
+and a W=1 provider build in the VM. Live checks must retain Native API ordering
+and exact source/frame/binding retirement. A later fresh comparison retains its
+one scored round per point and existing learning bounds; selecting two entries
+does not guarantee stability or performance acceptance.

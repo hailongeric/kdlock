@@ -36,7 +36,8 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
     limit = c.get('learning_rounds', 3)
     assert type(limit) is int and 1 <= limit <= 8
     previous, epochs = None, []
-    sites = {row['entry'] for row in owner.audit['records']}
+    sites = bench.execution.selected_writer_entries(c.get('writer_entries', []),
+        {row['entry'] for row in owner.audit['records']})
     base_files = dict(owner.files)
 
     def snapshot():
@@ -135,7 +136,8 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         sites=Path(c['sites']), sites_sha256=c['sites_sha256'],
         source_commit=c['source_commit'], source_state=root / 'source-state.json',
         source_manifest=root / 'source-sha256.json',
-        source_state_sha256=c['state_sha256'], source_manifest_sha256=c['manifest_sha256'])
+        source_state_sha256=c['state_sha256'], source_manifest_sha256=c['manifest_sha256'],
+        writer_entries=c.get('writer_entries', []))
     result_path = out / ('finalization.json' if finalize else 'result.json')
     result = dict(schema=1, passed=False, drained=False, accepted=False,
         execution_mode='image', config_sha256=hashlib.sha256(config_bytes).hexdigest(),
@@ -192,6 +194,10 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         files = dict(inputs['files'])
         files[str(args.sites)] = c['sites_sha256']
         audit = controller.site_audit(args, result['environment']['kernel_binding'])
+        selected = bench.execution.selected_writer_entries(args.writer_entries,
+            {row['entry'] for row in audit['records']})
+        result['writer_entries'] = list(args.writer_entries)
+        result['selected_writer_entries'] = sorted(selected)
         def verify():
             bench.verify_boot(args)
             bench.verified_files(files)
@@ -204,7 +210,12 @@ def image_point(c, config_bytes, root, out, controller, finalize):
                 'jit_timing=0', 'hotlock_stats=0', 'service_cpus=0-61']
             if args.demand:
                 load.append('rwsem_provider_demand=1')
+            if args.writer_entries:
+                load.append('rwsem_provider_entries=' +
+                    ','.join(hex(entry) for entry in args.writer_entries))
             rt.command(load, out / 'load.log', timeout=30)
+            assert bench.execution.parse_writer_entries(
+                (controller.PARAMETERS / 'rwsem_provider_entries').read_text()) == args.writer_entries
             assert (controller.PARAMETERS / 'bench_quiet').read_text().strip() == 'Y'
             assert (controller.PARAMETERS / 'bench_complete_probe').read_text().strip() == 'N'
             assert (controller.PARAMETERS / 'service_trace').read_text().strip() == 'N'

@@ -338,6 +338,41 @@ class ExecutionContract(unittest.TestCase):
             files={str(provider):bench.rt.digest(provider), str(daemon):bench.rt.digest(daemon),
                    str(preparer):bench.rt.digest(preparer)})
 
+    def test_writer_entry_scope_is_exact_and_hash_bound(self):
+        for demand in (False, True):
+            with self.subTest(demand=demand), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                expected = self.expected(root)
+                table = root / 'sites.json'
+                table.write_text(json.dumps(dict(records=[dict(entry=0x1000), dict(entry=0x3000)])))
+                expected.update(writer_entries=[0x1000],
+                    writer_sites=dict(path=str(table), sha256=bench.rt.digest(table)))
+                expected['files'][str(table)] = bench.rt.digest(table)
+                expected['parameters']['rwsem_provider_entries'] = '4096'
+                if demand:
+                    expected.update(schema=3, demand=True)
+                    expected['parameters']['rwsem_provider_demand'] = 'Y'
+                path = root / 'session.json'
+                def save(value):
+                    path.write_text(json.dumps(value))
+                    return bench.execution.ExecutionSession(path, bench.rt.digest(path))
+                save(expected)
+                mutations = (
+                    lambda row: row['parameters'].update(rwsem_provider_entries='12288'),
+                    lambda row: row.pop('writer_entries'),
+                    lambda row: row['files'].pop(str(table)),
+                    lambda row: row['registry'][0].update(entry=0x3000),
+                    lambda row: (row.update(writer_entries=[0x4000]),
+                                 row['parameters'].update(rwsem_provider_entries='16384')),
+                    lambda row: (row.update(writer_entries=[0x1000, 0x1000]),
+                                 row['parameters'].update(rwsem_provider_entries='4096,4096')),
+                )
+                for mutate in mutations:
+                    bad = copy.deepcopy(expected)
+                    mutate(bad)
+                    with self.assertRaises(bench.rt.Failure):
+                        save(bad)
+
     def test_exact_hash_bound_contract_and_negative_controls(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)

@@ -292,6 +292,16 @@ class Controller:
             sha256=rt.digest(self.binaries['provider']), note_sha256=execution.module_note_sha256(self.binaries['provider'])),
             daemon=actual_daemon, preparer=preparer, parameters=selected, registry=rows,
             source={name: source[name] for name in ('state', 'modules', 'writers')}, files=dict(self.files))
+        if 'rwsem_provider_entries' in parameters or hasattr(self.args, 'writer_entries'):
+            entries = getattr(self.args, 'writer_entries', [])
+            execution.selected_writer_entries(entries, {row['entry'] for row in self.audit['records']})
+            parameter = parameters.get('rwsem_provider_entries')
+            rt.require(execution.parse_writer_entries(parameter) == entries,
+                       'configured writer entries differ from the loaded provider', 'DATA_ERROR')
+            value['writer_entries'] = list(entries)
+            value['parameters']['rwsem_provider_entries'] = parameter
+            if entries:
+                value['writer_sites'] = dict(path=str(self.args.sites), sha256=rt.digest(self.args.sites))
         if getattr(self.args, 'demand', False):
             value.update(schema=3, demand=True,
                 writer_sites=dict(path=str(self.args.sites), sha256=rt.digest(self.args.sites)))
@@ -336,7 +346,9 @@ class Controller:
     def ready(self, daemon):
         rows = rt.registry()
         rt.write_json(self.model / 'registry-progress.json', rows)
-        wanted = {row['entry'] for row in self.audit['records']}
+        wanted = bench.execution.selected_writer_entries(
+            getattr(getattr(self, 'args', None), 'writer_entries', []),
+            {row['entry'] for row in self.audit['records']})
         rt.require({row['entry'] for row in rows} == wanted and len(rows) == len(wanted) and all(
             row['pid'] == 0 and row['tgid'] == os.getpid() and row['entry_abi'] == 2 and row['lock_kind'] == 2
             for row in rows), 'all-site registry identity differs')

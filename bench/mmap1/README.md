@@ -1,5 +1,20 @@
 # Unchanged upstream will-it-scale mmap1
 
+The image-point configuration optionally supplies `writer_entries`, a list of
+builtin writer-entry addresses bound to the captured kernel site table. The
+provider's immutable `rwsem_provider_entries` parameter must match that list
+exactly. An empty list preserves unrestricted capture. Excluded entries use
+the same object's callable local KD acquisition; this does not select a Native
+backend for those calls. Receipts retain the list and parameter, and reject
+registry rows outside the selected entries.
+
+The focused scope5 evaluation selects `0xffffffff817b6f68`
+(`vm_mmap_pgoff+0x118`) and `0xffffffff8181c73b` (`__vm_munmap+0xbb`). These
+are root capture sites, not timed-worker identifiers. Existing nested-owner
+handling is unchanged and still resumes the current image; separate child
+images and matching-release image boundaries remain later work. Scope changes
+require a fresh provider session and separate results.
+
 This runner is the final application workload for the staged kernel replacement
 plan. It runs the original `mmap1_threads` and `mmap1_processes` executables from
 will-it-scale commit `75f66e45697e6f5f49c33dd950c4e6b289198f8f`. No syscall loop,

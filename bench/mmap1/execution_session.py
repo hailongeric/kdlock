@@ -48,6 +48,23 @@ def registry(rows):
     return sorted(rows, key=lambda row: (row['pid'], row['tgid'], row['entry']))
 
 
+def selected_writer_entries(values, sites):
+    """An empty immutable entry list retains unrestricted root capture."""
+    rt.require(type(values) is list and len(values) <= 64 and
+               all(type(value) is int and 0 < value < 1 << 64 for value in values) and
+               len(set(values)) == len(values) and set(values) <= set(sites),
+               'writer entry selection differs from the builtin site table', 'DATA_ERROR')
+    return set(values) if values else set(sites)
+
+
+def parse_writer_entries(value):
+    rt.require(type(value) is str, 'missing writer entry parameter', 'DATA_ERROR')
+    try:
+        return [int(word, 0) for word in value.strip().split(',')] if value.strip() else []
+    except ValueError as error:
+        raise rt.Failure('DATA_ERROR', 'invalid writer entry parameter') from error
+
+
 def demand_registry(rows, sites, *, settled=True):
     """Kernel entry identity is independent of its first registrar's task."""
     keys = {(row['pid'], row['entry']) for row in rows}
@@ -147,17 +164,32 @@ class ExecutionSession:
                    type(preparer.get('start_ticks')) is int and preparer['start_ticks'] > 0 and
                    preparer.get('argv'), 'exact live preparation controller required', 'DATA_ERROR')
         rows = expected.get('registry', [])
+        scope = expected.get('writer_entries', [])
+        rt.require(('writer_entries' in expected) == ('rwsem_provider_entries' in values),
+                   'writer entry selection is missing from the receipt', 'DATA_ERROR')
+        if 'writer_entries' in expected:
+            rt.require(parse_writer_entries(values['rwsem_provider_entries']) == scope,
+                       'writer entry parameter differs', 'DATA_ERROR')
+            if scope:
+                table = expected['writer_sites']
+                rt.require(rt.digest(Path(table['path'])) == table['sha256'] and
+                           expected['files'].get(table['path']) == table['sha256'],
+                           'writer entry site-table identity differs', 'DATA_ERROR')
+                selected_writer_entries(scope,
+                    {row['entry'] for row in json.loads(Path(table['path']).read_text())['records']})
         if self.demand:
             table = expected['writer_sites']
             rt.require(values.get('rwsem_provider_demand') == 'Y' and
                        rt.digest(Path(table['path'])) == table['sha256'] and
                        expected['files'].get(table['path']) == table['sha256'],
                        'demand provider or site-table identity differs', 'DATA_ERROR')
-            self.site_entries = {row['entry'] for row in json.loads(Path(table['path']).read_text())['records']}
+            entries = {row['entry'] for row in json.loads(Path(table['path']).read_text())['records']}
+            self.site_entries = selected_writer_entries(scope, entries)
             rt.require(self.site_entries, 'empty demand site table', 'DATA_ERROR')
             demand_registry(rows, self.site_entries)
         else:
             rt.require(rows and len({(row['pid'], row['tgid'], row['entry']) for row in rows}) == len(rows) and
+                   (not scope or {row['entry'] for row in rows} == set(scope)) and
                    all(row['pid'] == row['status'] == 0 and row['tgid'] == preparer['pid'] and row['entry_abi'] == 2 and
                        row['lock_kind'] == 2 and row['entry'] > 0 and row['code'] > 0 and row['generation'] > 0
                        for row in rows), 'complete ready ABI2 image registry required', 'DATA_ERROR')

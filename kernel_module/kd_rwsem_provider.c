@@ -19,6 +19,12 @@ static bool kd_rwsem_provider_initialized;
 static bool kd_rwsem_provider_demand;
 module_param_named(rwsem_provider_demand, kd_rwsem_provider_demand, bool, 0444);
 MODULE_PARM_DESC(rwsem_provider_demand, "Prepare images when their entries are encountered");
+static unsigned long kd_rwsem_provider_entries[64];
+static unsigned int kd_rwsem_provider_entry_count;
+module_param_array_named(rwsem_provider_entries, kd_rwsem_provider_entries,
+	ulong, &kd_rwsem_provider_entry_count, 0444);
+MODULE_PARM_DESC(rwsem_provider_entries,
+	"Immutable writer entry selection; empty selects every builtin writer entry");
 #ifdef CONFIG_KDLOCK_MMAP
 static DEFINE_MUTEX(kd_rwsem_provider_state_lock);
 #endif
@@ -26,6 +32,42 @@ module_param_named(rwsem_provider_active, kd_rwsem_provider_registered, bool, 04
 MODULE_PARM_DESC(rwsem_provider_active, "New rwsem objects bind to the prepared execution provider");
 
 #ifdef CONFIG_KDLOCK_MMAP
+static bool kd_rwsem_entry_selected(unsigned long entry)
+{
+	unsigned int index;
+
+	if (!kd_rwsem_provider_entry_count)
+		return true;
+	for (index = 0; index < kd_rwsem_provider_entry_count; ++index)
+		if (kd_rwsem_provider_entries[index] == entry)
+			return true;
+	return false;
+}
+
+static int kd_rwsem_entry_scope_valid(const struct kd_rwsem_site *sites,
+				    unsigned int count)
+{
+	unsigned int index, other, site;
+
+	for (index = 0; index < kd_rwsem_provider_entry_count; ++index) {
+		unsigned long entry = kd_rwsem_provider_entries[index];
+
+		if (!entry)
+			return -EINVAL;
+		for (other = 0; other < index; ++other)
+			if (kd_rwsem_provider_entries[other] == entry)
+				return -EINVAL;
+		for (site = 0; site < count; ++site)
+			if (sites[site].entry == entry && !sites[site].reserved &&
+			    (sites[site].operation == KD_RWSEM_OP_DOWN_WRITE ||
+			     sites[site].operation == KD_RWSEM_OP_DOWN_WRITE_KILLABLE))
+				break;
+		if (site == count)
+			return -EINVAL;
+	}
+	return 0;
+}
+
 static void kd_provider_init_object(void *object)
 {
 	struct kd_rwsem *sem = object;
@@ -111,6 +153,16 @@ static const struct kd_service_completion kd_provider_completion = {
 static int kd_provider_capture(void *object, unsigned int state,
 			       unsigned long sp, unsigned long ip, unsigned long bp)
 {
+	/* An excluded entry still acquires this object's KD protocol. Decide
+	 * before source capture or registration; zero means the lock is held. */
+	if (!kd_rwsem_entry_selected(ip)) {
+		if (state == TASK_KILLABLE)
+			return kd_provider_down_write_killable(object);
+		if (state == TASK_INTERRUPTIBLE)
+			return kd_provider_down_write_interruptible(object);
+		kd_provider_down_write(object);
+		return 0;
+	}
 	return kd_service_capture_bound(object, KD_ADMISSION_RWSEM_WRITE, state,
 		sp, ip, bp, &kd_provider_completion);
 }
@@ -248,7 +300,7 @@ int kd_rwsem_provider_prepare_entries(void)
 		}
 		/* Cold capture registers its entry and keeps acquisition local.
 		 * Delegated requests require a usable image before publication. */
-		if (kd_rwsem_provider_demand)
+		if (kd_rwsem_provider_demand || !kd_rwsem_entry_selected(sites[index].entry))
 			continue;
 		kd_exe_add_abi(0, sites[index].entry, KD_EXE_LOCK_MUTEX,
 			       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
@@ -310,7 +362,7 @@ int kd_rwsem_provider_activate(void)
 		}
 		/* Image readiness remains mandatory at capture. A missing image
 		 * takes ordinary local acquisition before any delegated effects. */
-		if (kd_rwsem_provider_demand)
+		if (kd_rwsem_provider_demand || !kd_rwsem_entry_selected(sites[index].entry))
 			continue;
 		exe = kd_exe_find_ready(0, sites[index].entry);
 
@@ -357,6 +409,7 @@ int kd_rwsem_provider_init(void)
 {
 #ifdef CONFIG_KDLOCK_MMAP
 	const struct kd_rwsem_control_binding *controls;
+	const struct kd_rwsem_site *sites;
 	struct kd_service_call_desc descriptors[2];
 	char labels[2][32];
 	const struct kd_service_call_desc ownership_query = {
@@ -369,6 +422,10 @@ int kd_rwsem_provider_init(void)
 	unsigned int count, index, registered = 0;
 	int result;
 
+	sites = kd_rwsem_provider_sites(&count);
+	result = kd_rwsem_entry_scope_valid(sites, count);
+	if (result)
+		return result;
 	controls = kd_rwsem_provider_controls(&count);
 	for (index = 0; index < count; ++index) {
 		const struct kd_rwsem_control_binding *binding = &controls[index];
@@ -420,6 +477,9 @@ int kd_rwsem_provider_init(void)
 	result = kd_service_call_register(&ownership_query, 1, THIS_MODULE);
 	if (result)
 		return result;
+#else
+	if (kd_rwsem_provider_entry_count)
+		return -EOPNOTSUPP;
 #endif
 	/* Registration remains an explicit post-preparation action. */
 	WRITE_ONCE(kd_rwsem_provider_initialized, true);

@@ -21,6 +21,22 @@ def row(entry=0x100, tgid=99, generation=1, code=0x1000, status=0):
 
 
 class DemandRegistry(unittest.TestCase):
+    def test_writer_scope_and_parameter_identity(self):
+        self.assertEqual(images.selected_writer_entries([], {0x100, 0x200}), {0x100, 0x200})
+        self.assertEqual(images.selected_writer_entries([0x100], {0x100, 0x200}), {0x100})
+        self.assertEqual(images.parse_writer_entries('256,0x200\n'), [0x100, 0x200])
+        self.assertEqual(images.parse_writer_entries('\n'), [])
+        for values in ([0], [True], [0x100, 0x100], [0x300], [1 << 64], None):
+            with self.subTest(values=values), self.assertRaises(bench.rt.Failure):
+                images.selected_writer_entries(values, {0x100, 0x200})
+        with self.assertRaises(bench.rt.Failure):
+            images.parse_writer_entries(None)
+        with self.assertRaises(bench.rt.Failure):
+            images.parse_writer_entries('256,invalid')
+        with self.assertRaises(bench.rt.Failure):
+            images.demand_registry([row(entry=0x200)],
+                images.selected_writer_entries([0x100], {0x100, 0x200}))
+
     def test_first_registrar_is_metadata(self):
         values = [row(), row(entry=0x200, tgid=1234)]
         self.assertEqual(len(images.demand_registry(values, {0x100, 0x200})), 2)
@@ -65,8 +81,8 @@ class DemandRegistry(unittest.TestCase):
         self.assertTrue(images.demand_transition([row()], [row(status=-3)], {0x100}))
 
 
-def function(source, name):
-    start = source.index('int ' + name + '(')
+def function(source, name, result='int'):
+    start = source.index(result + ' ' + name + '(')
     opening = source.index('{', start)
     depth = 0
     for index in range(opening, len(source)):
@@ -98,6 +114,8 @@ static struct kd_rwsem_site sites[3];
 static struct kd_exe_info entries[3];
 static bool ready[3], kd_rwsem_provider_initialized, kd_rwsem_provider_registered;
 static bool kd_rwsem_provider_demand, source_open, binding;
+static unsigned long kd_rwsem_provider_entries[64];
+static unsigned int kd_rwsem_provider_entry_count;
 static int kd_rwsem_provider_state_lock, kd_rwsem_ops, cpus, adds, gets, binding_puts, registration;
 static unsigned int site_count;
 static void mutex_lock(int *p) { (void)p; }
@@ -124,13 +142,37 @@ static void reset(bool demand)
     kd_rwsem_provider_initialized=source_open=binding=true;
     kd_rwsem_provider_registered=false; kd_rwsem_provider_demand=demand;
     cpus=2; adds=gets=binding_puts=registration=0; site_count=3;
+    kd_rwsem_provider_entry_count=0;
     memset(ready,0,sizeof(ready)); memset(entries,0,sizeof(entries));
     for (int i=0;i<3;i++) sites[i]=(struct kd_rwsem_site){0x100UL+i, i==1?3:1, 0};
 }
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"line %d\n",__LINE__); return 1; } } while(0)
 '''
+        program += '\n' + function(source, 'kd_rwsem_entry_selected', 'bool')
+        program += '\n' + function(source, 'kd_rwsem_entry_scope_valid')
         program += '\n' + function(source, 'kd_rwsem_provider_prepare_entries')
         program += '\n' + function(source, 'kd_rwsem_provider_activate')
+        program += r'''
+#define TASK_UNINTERRUPTIBLE 1
+#define TASK_INTERRUPTIBLE 2
+#define TASK_KILLABLE 3
+#define KD_ADMISSION_RWSEM_WRITE 2
+static int kd_provider_completion, capture_calls, local_calls[3], local_result;
+static bool held;
+static void kd_provider_down_write(void *object)
+{ (void)object; ++local_calls[0]; held=true; }
+static int kd_provider_down_write_interruptible(void *object)
+{ (void)object; ++local_calls[1]; held=!local_result; return local_result; }
+static int kd_provider_down_write_killable(void *object)
+{ (void)object; ++local_calls[2]; held=!local_result; return local_result; }
+static int kd_service_capture_bound(void *object,int kind,unsigned int state,
+    unsigned long sp,unsigned long ip,unsigned long bp,const int *completion)
+{
+    (void)object; (void)kind; (void)state; (void)sp; (void)ip; (void)bp;
+    (void)completion; ++capture_calls; return 77;
+}
+'''
+        program += '\n' + function(source, 'kd_provider_capture')
         program += r'''
 int main(void)
 {
@@ -148,6 +190,41 @@ int main(void)
     CHECK(kd_rwsem_provider_activate()==-ESHUTDOWN);
     reset(true); site_count=0; CHECK(kd_rwsem_provider_activate()==-ENOENT);
     reset(true); cpus=1; CHECK(kd_rwsem_provider_activate()==-EOPNOTSUPP);
+    reset(false); CHECK(kd_rwsem_entry_selected(0x999));
+    CHECK(!kd_rwsem_entry_scope_valid(sites,site_count));
+    CHECK(kd_provider_capture(&held,TASK_UNINTERRUPTIBLE,8,0x999,16)==77);
+    CHECK(capture_calls==1 && !held && !local_calls[0]);
+    reset(false); kd_rwsem_provider_entry_count=2;
+    kd_rwsem_provider_entries[0]=0x100; kd_rwsem_provider_entries[1]=0x102;
+    CHECK(!kd_rwsem_entry_scope_valid(sites,site_count));
+    CHECK(kd_rwsem_entry_selected(0x100) && !kd_rwsem_entry_selected(0x101));
+    CHECK(!kd_rwsem_provider_prepare_entries() && adds==2);
+    ready[0]=ready[2]=true;
+    CHECK(!kd_rwsem_provider_activate() && gets==1);
+    CHECK(kd_provider_capture(&held,TASK_KILLABLE,8,0x100,16)==77 && capture_calls==2);
+    CHECK(!kd_provider_capture(&held,TASK_UNINTERRUPTIBLE,8,0x101,16));
+    CHECK(held && local_calls[0]==1 && capture_calls==2);
+    held=false;
+    CHECK(!kd_provider_capture(&held,TASK_KILLABLE,8,0x101,16));
+    CHECK(held && local_calls[2]==1 && capture_calls==2);
+    held=false; local_result=-EINTR;
+    CHECK(kd_provider_capture(&held,TASK_KILLABLE,8,0x101,16)==-EINTR);
+    CHECK(!held && local_calls[2]==2 && capture_calls==2);
+    CHECK(kd_provider_capture(&held,TASK_INTERRUPTIBLE,8,0x101,16)==-EINTR);
+    CHECK(!held && local_calls[1]==1 && capture_calls==2);
+    local_result=0;
+    CHECK(!kd_provider_capture(&held,TASK_INTERRUPTIBLE,8,0x101,16));
+    CHECK(held && local_calls[1]==2 && capture_calls==2);
+    kd_rwsem_provider_entries[1]=0x100;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    kd_rwsem_provider_entries[1]=0;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    kd_rwsem_provider_entries[1]=0x999;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    kd_rwsem_provider_entries[1]=0x102; sites[2].reserved=1;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    sites[2].reserved=0; sites[2].operation=2;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
     reset(true); binding=false; CHECK(kd_rwsem_provider_activate()==-ESHUTDOWN);
     reset(true); registration=-EBUSY;
     CHECK(kd_rwsem_provider_activate()==-EBUSY && gets==1 && binding_puts==1 && !kd_rwsem_provider_registered);
