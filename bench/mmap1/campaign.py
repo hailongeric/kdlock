@@ -316,6 +316,10 @@ class Campaign:
         (params / 'service_trace').write_text('0\n')
         rt.require(applications_drained(self.out) and not self.observer_loaded,
                    'application or observer lifetime remains live', 'UNDRAINED')
+        if (self.daemon is not None and self.daemon.daemon is not None and
+                rt.children(self.daemon.daemon.pid) and rt.status()['frames'] == 0 and
+                self.daemon.translation_state() in ('T', 't')):
+            self.daemon.translation_phase(False)
         deadline = time.monotonic() + 40
         while (self.daemon is not None and self.daemon.daemon is not None and
                rt.children(self.daemon.daemon.pid)) or rt.status()['frames']:

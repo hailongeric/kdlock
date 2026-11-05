@@ -60,6 +60,33 @@ class CampaignBoundaries(unittest.TestCase):
             value.save.assert_not_called()
             value.close.assert_not_called()
 
+    def test_cleanup_resumes_stopped_parent_to_reap_a_child(self):
+        with tempfile.TemporaryDirectory() as name:
+            folder = Path(name)
+            for key, content in dict(rwsem_provider_mode='N', service_trace='N',
+                    rwsem_provider_bindings='0', service_progress='total=0 shown=0').items():
+                (folder / key).write_text(content)
+            value = campaign.Campaign.__new__(campaign.Campaign)
+            value.out, value.provider_loaded, value.observer_loaded = folder, True, False
+            value.result, value.counts, value.models = dict(points=[]), [1], ['threads']
+            value.save = Mock()
+            children, calls = [789], []
+            def resume(paused):
+                self.assertFalse(paused)
+                calls.append('resume')
+                children.clear()
+            value.daemon = SimpleNamespace(daemon=SimpleNamespace(pid=123),
+                translation_state=lambda: 'T', translation_phase=resume,
+                stop=lambda: calls.append('stop'))
+            with patch.object(campaign.controller, 'PARAMETERS', folder), \
+                 patch.object(campaign.rt, 'children', side_effect=lambda pid: children), \
+                 patch.object(campaign.rt, 'status', return_value=dict(frames=0)), \
+                 patch.object(campaign.rt, 'registry', return_value=[]), \
+                 patch.object(campaign.rt, 'digest', return_value='fixture-note'):
+                value.close()
+            self.assertEqual(calls, ['resume', 'stop'])
+            self.assertEqual(value.result['state'], 'STOPPED_RETIREMENT_PENDING')
+
     def test_proof_requires_finished_collection_and_lifecycle_stop(self):
         for complete in (False, True):
             with self.subTest(complete=complete), tempfile.TemporaryDirectory() as name:

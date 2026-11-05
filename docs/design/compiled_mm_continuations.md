@@ -1162,3 +1162,9 @@ loss. Preparation failures and unknown application lifetimes retain their exact
 stage and live state. A fresh process verifies the recorded registry and source
 ledger before ordinary retirement; partial results remain distinct from passed
 and drained campaign completion.
+
+If a pause attempt observes a child after the daemon stops, keep the observed
+stopped state. With the factory inactive, application drain known and no live
+frames, resume that exact daemon to reap its child before ordinary shutdown.
+A stopped parent cannot retire an unreaped child merely by waiting in the
+controller. Unknown application or frame lifetimes still retain live state.
