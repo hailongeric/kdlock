@@ -1390,3 +1390,16 @@ identical retained histories, with no publication or application execution.
 Include dependency startup, decoding, lowering and assembly in that comparison;
 require matching return status, selected text coverage and generated artifacts.
 Retain all failures. The warning frontier remains unchanged and on hold.
+
+Implemented at `26337db1d722e3f7a239d703496197658bee05e8`. The VM passed
+26 resolver cases and 13 JIT diagnostics cases. The context-policy driver
+retains four identical baseline/candidate failures involving the existing
+8192 requirement bit; they remain unresolved. One complete baseline-first
+compiler pair per selected MM root, using fresh empty histories, produced
+identical lookup results, coverage and all four generated artifacts. mmap
+compilation took 13.375 to 7.765 seconds and munmap 13.323 to 7.715 seconds,
+with 137 lookups but 49 rather than 137 opens. Per-child peak RSS increased
+about 23.4 MiB. No publication or workload ran, so this is cold-history
+compilation evidence, not mmap1 runtime acceptance. Exact retirement and
+normal restoration passed. Full results and retained failures are in
+`bench/results/10.176.26.71/tests/core-symbols-26337db1/README.md`.
