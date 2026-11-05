@@ -1314,3 +1314,66 @@ normal unloaded kernel make retrospective attribution to the earlier enabled
 campaign invalid. No production resolver or JIT change was made. The warning
 frontier remains awaiting review, and child images remain initially scoped to
 selected KD acquisitions as specified above.
+
+# Per-translation core symbol reuse: candidate design
+
+Baseline `be0fd17bd7f10b49ae2776a9b7ccc37a797bdd45` still performs a live
+symbol-file scan for each request. The proposed optimization belongs only to
+translation preparation. It must not change decoded scope, generated code,
+runtime ownership, admission, publication, or validation. The full-table helper
+prototype above is not suitable as production behavior: a new module can
+change the first matching dynamic symbol or make a previously absent name
+available. Source pins retain accepted ranges, not the entire name space.
+
+Use a fresh cache context for each `dis_assem()` invocation, after the CLI has
+entered its validated device session. Fill lazily at the first real lookup;
+direct calls without a validated lease retain the old live resolver. Clear the
+cache on every return or exception. Nested invocations get independent caches
+and restore the outer context on return. Never reuse entries between images,
+translations, provider sessions, or processes. Existing callers that replace
+`get_kernel_symbol` for a fixture continue to intercept every request.
+
+Cache only positively resolved core entries. The matched Linux 7
+`kernel/kallsyms.c` emits its fixed `kallsyms_num_syms` core section first
+(`update_iter`, lines 725–738), then module and additional dynamic sections
+(`update_iter_mod`, lines 705–722). Core rows have no owner field; the later
+sections carry an owner field in `s_show`, lines 761–786. Collect only the
+initial core prefix, stopping at the first qualified row; do not classify an
+unqualified row appearing later as core. Keep the first raw address token for
+each name. Parse hexadecimal only when that name is requested, preserving
+duplicate-name priority and matching malformed-token errors.
+
+Module/dynamic names, missing names and zero-address names always use the
+unchanged live scan. Never store a negative result, a module result or a
+caller's default in the reusable lookup result. A new module can therefore
+turn a miss into a hit, replace the first dynamic match, or remove a previous
+hit during the same translation. A later module cannot precede the fixed core
+section. Existing source pinning before text reads and service-owner retention
+remain mandatory; a symbol address alone never establishes residency.
+
+On an observed cache-fill open, iteration or close error, discard the partial
+cache and use the original live resolver for the current and subsequent
+requests. The fill is a preparation probe, not a cached API result; the current
+request's fresh live scan retains its own first-match, default and error
+behavior. Do not eagerly convert unrelated malformed tokens. Failure must not
+cache a default or persist into the next translation.
+
+Value equivalence assumes the same boot and unchanged translator credentials
+and symbol visibility. A reused positive core entry does not observe a later
+file-read error or visibility change because it does not repeat that read.
+Literal equivalence to arbitrary future I/O failures cannot be promised by
+such a cache without repeating the original reads. An unsuccessful preparation
+probe followed by a fresh live scan is also an extra I/O attempt compared with
+the original resolver. These are explicit environment/measurement limits,
+not reasons to cache dynamic or missing names. Do not describe the candidate
+as freezing the live symbol table.
+
+The focused checks cover dynamic insertion, replacement and removal, a new
+module shadowing a dynamic name, core priority, zero versus missing, distinct
+defaults, malformed raw tokens, partial reads, open/close failures, cleanup on
+all exits, nested scopes, and the existing mocked translator lookup boundary.
+Then compare one full compilation per arm on identical live leased text and
+identical retained histories, with no publication or application execution.
+Include dependency startup, decoding, lowering and assembly in that comparison;
+require matching return status, selected text coverage and generated artifacts.
+Retain all failures. The warning frontier remains unchanged and on hold.
