@@ -56,6 +56,10 @@ OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
 
+# Session-wide immutable image storage; timing builds retain the 64-slot default.
+KDLOCK_JIT_IMAGES ?= 64
+ccflags-y += -DKD_CODE_BLOCK_POOL=$(KDLOCK_JIT_IMAGES)
+
 .PHONY: all clean
 
 all:

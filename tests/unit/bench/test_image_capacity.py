@@ -15,6 +15,27 @@ import native_image
 
 
 class ImageCapacityTests(unittest.TestCase):
+    def test_pool_count_default_and_bounded_build_override(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            source, binary = path / 'pool.c', path / 'pool'
+            source.write_text(
+                '#include <stdio.h>\n#include "kd_image_pool.h"\n'
+                'int main(void) { printf("%u\\n", (unsigned int)KD_CODE_BLOCK_POOL); return 0; }\n')
+            for count, expected in ((None, 64), (128, 128), (0, None), (257, None)):
+                with self.subTest(count=count):
+                    command = ['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
+                               '-I', str(ROOT / 'include'), str(source), '-o', str(binary)]
+                    if count is not None:
+                        command.append(f'-DKD_CODE_BLOCK_POOL={count}')
+                    result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+                    if expected is None:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertIn('KD_CODE_BLOCK_POOL must be between 1 and 256', result.stderr)
+                    else:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(int(subprocess.check_output([str(binary)], text=True)), expected)
+
     def test_shared_header_compiles_to_the_python_capacity(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

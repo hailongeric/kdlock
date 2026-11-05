@@ -265,10 +265,11 @@ Each block remains 4 MiB. A build may select `KDLOCK_JIT_IMAGES=128` for bounded
 learning; supported counts are 1 through 256 and the default stays 64. This
 changes preallocated capacity, not publication, frame or source lifetimes.
 
-The planned read-only `jit_image_usage` parameter reports exact occupied,
+The read-only `jit_image_usage` parameter reports exact occupied,
 published/private and free descriptor counts under the existing publication
 gate, allocated/free blocks in each pool, slot size and pool metadata sizes.
 It is a resource observation, not an ownership or retirement predicate. Capture
-it outside application timing. Capacity 128 reserves up to 512 MiB ordinary
+it outside application timing; it returns `-EAGAIN` during pool initialization
+and teardown. Capacity 128 reserves up to 512 MiB ordinary
 plus 512 MiB near code, with 10 KiB of descriptor/pointer arrays on x86-64;
 allocator and page-table overhead is additional.

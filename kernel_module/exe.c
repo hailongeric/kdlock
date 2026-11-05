@@ -29,6 +29,7 @@
 #include "kd_origin_service.h"
 #include "kd_source.h"
 #include "kd_jit_batch.h"
+#include "kd_image_pool.h"
 
 #include <asm/current.h>
 #include <asm-generic/set_memory.h>
@@ -64,7 +65,6 @@
  * set_memory_x cannot be used there.  All blocks are allocated and marked
  * executable during kd_exe_init().
  */
-#define KD_CODE_BLOCK_POOL 64
 #define KD_CODE_BLOCK_PAGES (KD_CODE_BLOCK_SIZE / PAGE_SIZE)
 #define KD_EXE_HL_MAX_CONTINUATIONS 16
 #define KD_EXE_HL_MAX_HOSTCALLS 16
@@ -128,7 +128,7 @@ MODULE_PARM_DESC(address_guard_count, "Validated spin address-guard native conti
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
 /* Direct E8 calls need addresses in the kernel/module rel32 region. This cold
- * pool has separate storage, but shares the same 64 image descriptors. */
+ * pool has separate storage, but shares the bounded image descriptor table. */
 static void *kd_near_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_near_block_allocations[KD_CODE_BLOCK_POOL];
 static int kd_near_block_free;
@@ -137,6 +137,8 @@ static struct kd_jit_image kd_images[KD_CODE_BLOCK_POOL];
 static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];
 static int kd_code_block_free;
 static atomic_t kd_code_block_gate = ATOMIC_INIT(0);
+/* Observation availability only; never a source/frame retirement barrier. */
+static bool kd_image_usage_ready;
 
 static unsigned long kd_code_block_gate_lock(void)
 {
@@ -155,6 +157,47 @@ static void kd_code_block_gate_unlock(unsigned long flags)
 	atomic_set_release(&kd_code_block_gate, 0);
 	local_irq_restore(flags);
 }
+
+static int kd_jit_image_usage_get(char *buffer, const struct kernel_param *kp)
+{
+	unsigned int used = 0, published = 0, ordinary = 0, near = 0, i;
+	unsigned int capacity = KD_CODE_BLOCK_POOL;
+	unsigned long flags = kd_code_block_gate_lock();
+	int result;
+
+	(void)kp;
+	if (!kd_image_usage_ready) {
+		kd_code_block_gate_unlock(flags);
+		return -EAGAIN;
+	}
+	for (i = 0; i < capacity; ++i) {
+		ordinary += kd_code_block_allocations[i] != NULL;
+		near += kd_near_block_allocations[i] != NULL;
+		if (!kd_images[i].code)
+			continue;
+		++used;
+		published += kd_images[i].entry != NULL;
+	}
+	/* Observe exact slots under their existing gate. These counts neither
+	 * release images nor grant a frame/owner retirement decision. */
+	result = scnprintf(buffer, PAGE_SIZE,
+		"capacity=%u used=%u published=%u private=%u free_descriptors=%u "
+		"ordinary_allocated=%u ordinary_free=%d near_allocated=%u near_free=%d "
+		"slot_bytes=%lu descriptor_bytes=%zu pointer_table_bytes=%zu\n",
+		capacity, used, published, used - published, capacity - used,
+		ordinary, kd_code_block_free, near, kd_near_block_free,
+		KD_CODE_BLOCK_SIZE, sizeof(kd_images), sizeof(kd_code_block_pool) +
+		sizeof(kd_code_block_allocations) + sizeof(kd_near_block_pool) +
+		sizeof(kd_near_block_allocations));
+	kd_code_block_gate_unlock(flags);
+	return result;
+}
+
+static const struct kernel_param_ops kd_jit_image_usage_ops = {
+	.get = kd_jit_image_usage_get,
+};
+module_param_cb(jit_image_usage, &kd_jit_image_usage_ops, NULL, 0444);
+MODULE_PARM_DESC(jit_image_usage, "Preallocated image capacity and exact slot usage");
 
 static unsigned long end_points[6];
 static int end_point_count;

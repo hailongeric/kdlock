@@ -81,6 +81,7 @@ bool kd_exe_is_ready(unsigned int pid, unsigned long ip)
 
 int kd_exe_init(void)
 {
+	unsigned long pool_flags;
 	int i, ret;
 
 	kd_jit_timing_reset();
@@ -181,8 +182,8 @@ int kd_exe_init(void)
 	}
 	/* module_alloc supplies the x86 module address region for direct rel32
 	 * calls. Keep the established vmalloc/mutex pool intact. At most another
-	 * 64 * KD_CODE_BLOCK_SIZE is reserved; shared descriptors still cap all live
-	 * image generations at 64. A missing pool disables only this capability.
+	 * KD_CODE_BLOCK_POOL * KD_CODE_BLOCK_SIZE is reserved; the shared descriptor
+	 * table caps all live generations. A missing pool disables this capability.
 	 * Call-depth instrumentation requires a different generated prologue. */
 	kd_near_block_free = 0;
 #if defined(CONFIG_X86_64) && !defined(CONFIG_MITIGATION_CALL_DEPTH_TRACKING) && \
@@ -211,12 +212,19 @@ int kd_exe_init(void)
 	KD_PR_INFO("JIT direct-call pool ready: %d/%d; shared image limit=%d\n",
 		   kd_near_block_free, KD_CODE_BLOCK_POOL, KD_CODE_BLOCK_POOL);
 
+	pool_flags = kd_code_block_gate_lock();
+	kd_image_usage_ready = true;
+	kd_code_block_gate_unlock(pool_flags);
 	return 0;
 }
 
 void kd_exe_exit(void)
 {
 	int i;
+	unsigned long pool_flags = kd_code_block_gate_lock();
+
+	kd_image_usage_ready = false;
+	kd_code_block_gate_unlock(pool_flags);
 
 	kd_jit_timing_report();
 	KD_PR_INFO(
