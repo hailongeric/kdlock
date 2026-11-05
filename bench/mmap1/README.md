@@ -15,6 +15,14 @@ handling is unchanged and still resumes the current image; separate child
 images and matching-release image boundaries remain later work. Scope changes
 require a fresh provider session and separate results.
 
+Image-point demand learning defaults to three application lifetimes. An
+explicit `learning_rounds` may select 1–32; `learning_timeout` remains an
+independent 1–3600-second bound (900 seconds by default). Learning lifetimes
+remain unscored. A scored application still requires a complete stable
+learning lifetime and usable images for every selected root. Increasing the
+allowance does not change the image pool, reclaim older images, or relax the
+source, binding, registry and retirement checks.
+
 This runner is the final application workload for the staged kernel replacement
 plan. It runs the original `mmap1_threads` and `mmap1_processes` executables from
 will-it-scale commit `75f66e45697e6f5f49c33dd950c4e6b289198f8f`. No syscall loop,

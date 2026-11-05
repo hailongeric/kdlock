@@ -28,13 +28,18 @@ def jit_observations(parameters):
     return values
 
 
-def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
-    """Renew exact receipts only at quiescent learning boundaries."""
+def learning_limits(c):
     timeout = c.get('learning_timeout', 900)
     assert type(timeout) is int and 1 <= timeout <= 3600
-    deadline = time.monotonic() + timeout
     limit = c.get('learning_rounds', 3)
-    assert type(limit) is int and 1 <= limit <= 8
+    assert type(limit) is int and 1 <= limit <= 32
+    return timeout, limit
+
+
+def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify):
+    """Renew exact receipts only at quiescent learning boundaries."""
+    timeout, limit = learning_limits(c)
+    deadline = time.monotonic() + timeout
     previous, epochs = None, []
     sites = bench.execution.selected_writer_entries(c.get('writer_entries', []),
         {row['entry'] for row in owner.audit['records']})

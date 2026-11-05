@@ -13,6 +13,9 @@ spec = importlib.util.spec_from_file_location('demand_bench', ROOT / 'bench/mmap
 bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bench)
 images = bench.execution
+point_spec = importlib.util.spec_from_file_location('demand_point', ROOT / 'bench/mmap1/delegated_point.py')
+point = importlib.util.module_from_spec(point_spec)
+point_spec.loader.exec_module(point)
 
 
 def row(entry=0x100, tgid=99, generation=1, code=0x1000, status=0):
@@ -21,6 +24,17 @@ def row(entry=0x100, tgid=99, generation=1, code=0x1000, status=0):
 
 
 class DemandRegistry(unittest.TestCase):
+    def test_learning_allowance_remains_bounded(self):
+        self.assertEqual(point.learning_limits({}), (900, 3))
+        for rounds in (1, 8, 9, 32):
+            self.assertEqual(point.learning_limits(dict(learning_rounds=rounds,
+                learning_timeout=1800)), (1800, rounds))
+        for values in (dict(learning_rounds=0), dict(learning_rounds=33),
+                       dict(learning_rounds=True), dict(learning_timeout=0),
+                       dict(learning_timeout=3601), dict(learning_timeout=True)):
+            with self.subTest(values=values), self.assertRaises(AssertionError):
+                point.learning_limits(values)
+
     def test_scoring_requires_every_selected_image_ready(self):
         entries = [0x100, 0x200]
         ready = [row(), row(entry=0x200)]
