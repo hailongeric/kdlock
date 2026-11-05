@@ -1204,3 +1204,43 @@ introduced. Killable admission, nested owner records, downgraded read credit
 and exact retirement remain unchanged. Validate branch-not-taken completion,
 branch-taken packet state and original-site identity before another focused
 mmap1 attempt. This paragraph is a design; the frontier is not implemented.
+
+The bounded reproduction on matched Build ID
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`, boot
+`c301906d-c322-47a2-9e9e-a0840f4401d6`, captured `67 48 0f b9 3a` at that
+site and reproduced the pinned decoder's failure at offset 2. The exact source
+path is the file-reference diagnostic in `file_ref_inc()` through `get_file()`
+inside `__split_vma()`. Its increment has already occurred before the diagnostic
+branch. A reached frontier must preserve that effect and resume at the original
+UD1 site without replay. This new boot is a reproduction; the earlier boot's
+bytes remain unavailable. Capture, source evidence and normal restoration are
+retained in
+`bench/results/10.176.26.71/tests/mmap1-warning-form-f9fdaa2a/README.md`.
+
+The mmap root's 28 distinct CALL targets and four distinct IJ edges are not
+evidence of duplicate learning. Both `master` at
+`20fde062729703208ac54445f51fc0f21f24e0e8` and this candidate keep
+`mdis.follow_call = False`; this candidate also has `direct_call_closure = False`.
+Do not restore the intermediate eager closure experiment as a latency fix.
+The shared entry can encounter startup/file-backed mappings as well as worker
+anonymous mappings. Once a callee is learned, its decoded conditional paths
+can expose more source even when a particular branch was not taken.
+
+Retained `critical_section_blocks(..., runtime_delimited=True)` uses unknown
+lexical depth and keeps a finite graph beyond possible releases; exact runtime
+owner matching ends actual execution. Post-release code in an emitted image
+is therefore a real boundary-design limitation, but it does not prove that
+those instructions caused an observed miss. Direct CALL history records only
+the target, with no exact caller PC/task lifetime, so the current artifacts
+cannot assign every addition to an acquisition-to-release interval or worker.
+The latest `can_vma_merge_right` addition is also a normal MM merge helper;
+long learning alone does not show irrelevant work.
+
+For the next scoped diagnostic, retain the already checked literal CALL return
+word together with the current source image, logical origin lifetime, target,
+owner region and operation kind. Record it at the reached miss before any
+handoff, without inventing an IJ edge or changing normal CALL stack effects.
+Only that joined evidence can attribute a direct frontier to a specific region.
+Per-lock segments and child-region transitions remain the separately reviewed
+design above; neither a root-wide arbitrary cutoff nor pruning a cold branch
+implements them.
