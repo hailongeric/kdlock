@@ -9,6 +9,7 @@ from test_origin_instruction_codegen import image_bytes
 from test_rip_relative_codegen import machine_code
 from test_instruction_policy import SYMBOLS
 import origin_memory
+import indirect_jump
 
 PREEMPT = 0x18030
 TAG = 0x4b44535643524545
@@ -73,7 +74,7 @@ class OriginContextReadCodegenTests(unittest.TestCase):
         for encoded in ("658b20", "65668b00", "658500", "6548f70001000000"):
             self.assertIsNone(origin_memory.descriptor(decode(encoded)))
         _, assembly, options = compile_source("mov eax, DWORD PTR gs:[rax]\nret")
-        self.assertEqual(options["requirements"], 3968)
+        self.assertEqual(options["requirements"], 3968 | indirect_jump.RETAINED_MISS_REQUIREMENT)
         binary = image_bytes(assembly, options["requirements"])
         magic, offset, count, symbol = struct.unpack_from("<8sIIQ", binary, len(binary) - 24)
         self.assertEqual((magic, count, symbol), (b"KDOM0002", 1, PREEMPT))

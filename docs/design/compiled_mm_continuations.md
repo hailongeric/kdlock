@@ -720,3 +720,9 @@ The first focused VM run at `87430984` passed the six object-image cases, then
 stopped because the new GS/RIP fixture supplied no ABI2 lock symbol bindings.
 Keep that failed run; correct its fixture to use the existing synthetic symbol
 table before rerunning the focused checks. No module was loaded by this attempt.
+
+At `b9b4e83f`, the GS/RIP wrapper corpus and reached ordinary-read reproducer
+pass. The read-directory fixture still expects requirements `3968`, omitting
+the existing retained-miss bit 13 selected by ABI2; its actual value is `12160`.
+Update that fixture expectation using the named requirement constant. The
+other seven read-codegen cases passed; retain the failed metadata check.
