@@ -813,7 +813,10 @@ gate; do not treat this observation as owner or lifetime accounting.
 Document the count option in a shared header and Kbuild, add the resource
 observation, then run the existing image-capacity and immutable-image fixtures
 plus a matching W=1 private-provider build on the VM. Check default 64 and the
-selected 128 override, including invalid bounds. Continue with new cold
+selected 128 override, including invalid bounds. The registry-extraction fixture
+must include the shared count header and run its production case at 128 as well
+as the default; extracting only defines from `exe.c` would omit the new count.
+Continue with new cold
 thread/process sessions under the same eight-lifetime/1,800-second limits and
 unchanged acceptance. Resource observations occur outside application timing.
 Keep the failed 64-slot campaign separate and verify normal-kernel recovery

@@ -48,7 +48,7 @@ def production():
     source = read_source((ROOT / "kernel_module/exe.c"))
     # Keep production capacities, gate and service declarations. Service calls
     # are not executed; their table is needed by the real init/exit functions.
-    code = "\n".join(
+    code = '#include "kd_image_pool.h"\n' + "\n".join(
         line for line in source.splitlines() if line.startswith("#define KD_CODE_")
     )
     code += (
@@ -155,7 +155,9 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-exe-registry-") as tmp:
         directory = Path(tmp)
-        for name, mutation in [("production", None), *mutations.items()]:
+        variants = [("production", None, None), ("production-128", None, 128)]
+        variants += [(name, mutation, None) for name, mutation in mutations.items()]
+        for name, mutation, capacity in variants:
             candidate = code
             if mutation:
                 before, after = mutation
@@ -172,6 +174,7 @@ def main():
                     "-Wextra",
                     "-Werror",
                     "-pthread",
+                    *([f"-DKD_CODE_BLOCK_POOL={capacity}"] if capacity else []),
                     "-I",
                     str(directory),
                     "-I",
