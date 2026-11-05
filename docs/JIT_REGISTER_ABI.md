@@ -14,9 +14,10 @@ The selected [kdlock lock replacement contract](design/kdlock_lock_replacement_c
 requires original-JIT current-position handback with exact IP/GPR/SP and source
 CALL/RET effects. General flags/SIMD restoration and IRQ/NMI conflict handling
 are deferred for that phase. Existing limited flags contracts below do not
-establish broader restoration. Candidate details distinguish `ebae17c1` from
-the source correction at `10ef078a`; retained-worker ownership routing and
-fresh end-to-end validation remain pending.
+establish broader restoration. Candidate details distinguish `ebae17c1`, the
+source correction at `10ef078a` and runtime wiring at `a6fe0bb2`. Native owner
+routing and packet acceptance are implemented in source; final validation and
+central service-acceptance/final-ACK coverage remain pending.
 
 ## Entry identities and packet states
 
@@ -347,9 +348,11 @@ values from these domains are not interchangeable.
 Generic fault, legacy untyped IJ and budget errors are not arbitrary recovery
 boundaries. The negotiated current-position packet is a separate contract:
 CALL pushes and RET pops already performed by generated code remain committed.
-Ordinary frames can enter the existing native handback; the retained worker's
-full owner-transfer consumer remains pending at `10ef078a`. Generated-packet test
-passes do not validate that end-to-end custody transfer.
+Ordinary frames can enter the existing native handback. The retained worker's
+consumer was absent at `10ef078a` and is wired at `a6fe0bb2`, with full owner
+routing and packet acceptance. Four generated-miss tests pass in its first
+frozen receipt; they do not validate central acceptance/final-ACK execution or
+loaded-provider custody transfer.
 
 Exit 11 is emitted only after evaluating an actual indirect CALL target before
 its virtual push. The provider verifies canonical optional-REX `FF /2` bytes,
@@ -378,8 +381,10 @@ rejects retained spin/RCU state. Preparation rejection is fail-stop rather than
 automatic native handback. Other service descriptors stay unchanged; the public
 query bodies remain ordinary JIT code under the
 [operation-based policy](design/admission.md#selected-rwsem-state-queries).
-This selection adds no wrapper argument or packet layout and is not yet a fresh
-integration/validation result.
+This selection adds no wrapper argument or packet layout. `a6fe0bb2` commits
+the descriptor/registration and passes the writer-query component fixture with
+supplied runtime observations. The query-image group still fails one assertion;
+the actual O/E service/ACK path has no reported live test.
 
 Current strings use ordinary decoded CALL/RET and actual virtual return words,
 without a named service, memory summary, quota or direct native bridge. The
@@ -412,8 +417,9 @@ fields before its acceptance ACK and performs no later root/frame access. That
 ACK can precede E's recursive unwind. E's selected synchronous home-CPU cleanup
 therefore publishes pooled-slot reuse only after its own final references end;
 see [retirement ordering](design/lifetimes.md#selected-retained-handback-retirement).
-Waiter-side final-use ACK/pinning simplification remains later work. Approval of
-this sequence does not establish its implementation or validation.
+Waiter-side final-use ACK/pinning simplification remains later work. This
+sequence is wired at `a6fe0bb2`; focused central acceptance/final-ACK coverage
+is still being prepared, and the first retirement fixture does not compile.
 
 ### Checked instruction exit
 

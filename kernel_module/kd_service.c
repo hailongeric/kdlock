@@ -1312,6 +1312,7 @@ static void kd_service_check_pooled_root(struct kd_service_root *root)
 	       node != per_cpu_ptr(&kd_mutex_nodes[slot], cpu) ||
 	       kd_mutex_wait_record(node)->service != root ||
 	       kd_mutex_wait_record(node)->request_live);
+	BUG_ON(!(READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots) & BIT(slot)));
 }
 
 /* cpus_read_lock spans the caller and this entire operation. Offline CPUs have
@@ -1372,7 +1373,7 @@ static long kd_service_retire_handoff(void *argument)
 		kfree(root);
 	} else if (cpu_online(cpu)) {
 		preempt_disable();
-		BUG_ON(raw_smp_processor_id() != cpu);
+		BUG_ON(raw_smp_processor_id() != (unsigned int)cpu);
 		kd_mutex_release_node(node);
 		preempt_enable();
 	} else {

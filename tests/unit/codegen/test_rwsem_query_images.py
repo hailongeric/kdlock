@@ -108,7 +108,30 @@ class RwsemQueryImageTests(unittest.TestCase):
         self.assertEqual(status, 0, log)
         self.assertTrue(options['requirements'] & (1 << 9))
         self.assertIn(f'kd_service_dispatch_{target + 5:x}:'.encode(), assembly)
-        self.assertNotIn(f'kd_service_dispatch_{self.entry + 10:x}:'.encode(), assembly)
+        # Ordinary caller successors can share the image's service dispatch
+        # table. The actual exit target and source CALL words distinguish the
+        # inner Native query from delegating the outer helper as a service.
+        before, exits = [], []
+        def initialize(regs, stack):
+            before.append(regs[1])
+            regs[16], regs[15] = 0x1122, 0x3344
+        def service(regs, args, stack):
+            exits.append(list(args))
+            if len(exits) != 1:
+                return False
+            self.assertEqual(list(args), [1, 1])
+            self.assertEqual((regs[0], regs[1]), (self.ledger, before[0] - 16))
+            self.assertEqual((stack[6], stack[7]), (target + 5, self.entry + 10))
+            self.assertEqual((regs[16], regs[15]), (0x1122, 0x3344))
+            # Substitute only the inner Native query's Boolean result. Both
+            # surrounding additions and both source returns execute in JIT.
+            regs[0], regs[1], regs[12] = stack[6], regs[1] + 8, 1
+            regs[19], regs[17] = 0x202, 0x4b44535643524545
+            return True
+        regs, args = run_image(assembly, [self.entry], initialize=initialize, resume=service,
+                               abi=2, requirements=options['requirements'])[0]
+        self.assertEqual(exits, [[1, 1], [15, 1]])
+        self.assertEqual((regs[0], regs[1], regs[12]), (0x4444, before[0] + 8, 3))
 
     def test_actual_history_import_keeps_compiled_query_roots(self):
         exclusions = []

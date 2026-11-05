@@ -6,8 +6,9 @@ This guide follows ordinary requests. Family-specific acquisition belongs in
 [Translation policy](design/admission.md) defines trusted source; the
 [register ABI](JIT_REGISTER_ABI.md) defines machine-state capture and exits.
 The selected [lock replacement contract](design/kdlock_lock_replacement_contract.md)
-adds required general current-position handback. Its retained-worker integration
-is pending; the existing ordinary paths below do not prove that integration.
+defines general current-position handback. Its retained-worker runtime wiring
+is committed at `a6fe0bb2`; the first frozen checks fail overall, and central
+service-acceptance/final-ACK coverage and final rerun remain pending.
 
 ## Preparation and entry
 
@@ -82,12 +83,13 @@ publication and each owner's final unlock/ACK.
 
 Checkpoint `ebae17c1` adds the negotiated current-position packet for eligible
 cold ABI2 images and routes ordinary misses through existing native handback.
-The retained dispatcher can produce `KD_EXE_RUN_HANDOFF`, but the worker's full
-owner-transfer and origin-release routing remain pending. The later source
-checkpoint `10ef078a` removes the separate reached emitter/cache/dispatcher and
-routes execution through original images. It also corrects full-width header
-selection for the cold miss requirement. Stale reached-state fields remain;
-fresh build and execution validation of that checkpoint is pending.
+The later source checkpoint `10ef078a` removes the separate reached emitter/
+cache/dispatcher and corrects the cold miss header. Runtime `a6fe0bb2` consumes
+`KD_EXE_RUN_HANDOFF` in the retained worker, registers exact Native owner routes,
+accepts the origin's copied packet and performs typed release/ACK handling
+before synchronous retirement. These are committed source paths, not a live
+handback pass. Final rerun and focused central acceptance/final-ACK checks are
+still pending.
 
 General flags/SIMD restoration and IRQ/NMI conflict handling are deferred and
 unsupported in this phase. Existing typed flags contracts remain distinct.
@@ -99,7 +101,11 @@ returns zero with objtool warnings; the overall receipt fails and loads no
 module. The [validation record](design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
 separates these results from absent live retained-owner handback and timing
 evidence. Historical reached-emitter receipts apply only to their recorded
-source and backend.
+source and backend. The first frozen `a6fe0bb2` receipt builds the provider and
+passes seven component groups, but the query-image assertion and retirement
+fixture compilation fail. It loads no module and reboots nothing. Its
+[current result table](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2)
+preserves those failures separately from the earlier receipt.
 
 ### Selected query and retirement boundaries
 
@@ -118,7 +124,10 @@ retirement. The selected cleanup is synchronous on E, using a hotplug-protected
 home-CPU callback or serialized explicit retirement for an already-offline CPU.
 No new asynchronous cleanup queue or required TCLock-style waiter reclamation
 is part of this phase. The [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement)
-remains an integration requirement; no fresh execution pass is claimed.
+is wired at `a6fe0bb2`. The first retirement fixture does not compile under
+signedness `-Werror`; it supplies no online/offline retirement execution pass.
+Passing query/custody components do not cover the central acceptance/final-ACK
+path or a loaded-provider handback.
 
 ## Unlock and validation
 

@@ -469,3 +469,38 @@ prepared checks until executed on the VM after the overall functionality is
 complete. They do not establish an mmap1 result. The separately selected
 synchronous pooled-storage retirement above retains its own implementation
 and validation obligations.
+
+## First focused candidate evidence
+
+Candidate `a6fe0bb269642cf2dd6f07c3430b6933f9c0557a` built with `W=1` against
+the separate Linux 7 `kdscope5` output tree. The VM remained on
+`7.0.0-38-kdlock1`; no module was loaded and no reboot or timing point ran.
+The build retained its compiler-name notice and objtool return/frame warnings.
+Frozen input hashes were unchanged and the VM was idle after the checks.
+
+Seven fixture drivers passed: the production writer-query/descriptor consumer,
+canonical admission (15 cases and four mutation checks), Native writer custody
+(81 checks and seven mutation checks), original generated misses (four cases),
+returning CALLs (21 cases), the production entry/hostcall consumer and mutation
+checks, and generated MM/provider binding. Their exact source remains the
+candidate above; later fixture reruns do not relabel those receipts.
+
+Two prepared fixtures failed. The query-image fixture incorrectly treated a
+legal caller continuation label as evidence of a Native outer helper. Original
+image generation supplies those labels for ordinary CALL successors too.
+Replace that assertion with execution of the actual inner Native target,
+both source CALL words, one substituted Boolean result and JIT execution of
+the surrounding helper/caller continuation. The retirement fixture did not
+compile under `-Werror` because its supplied unsigned CPU ID was compared with
+an int. Compare against an unsigned CPU value after the existing range checks.
+Also reject a missing pooled reservation before retiring its source/task
+references; a later diagnostic return is not successful slot reclamation.
+
+Prepare the directly affected resource/OSQ and saved-GS checks, the existing
+final-reader-access fixture, and a small production-extraction Native-service
+join. The latter must execute registry acceptance, typed owner match/release,
+the final O-stack ACK, stack-anchor removal and handed-back continuation
+retirement. Physical admission/release, task/CPU context and source-reference
+primitives remain supplied observations. Neither these fixtures nor a provider
+build establishes live kernel handback or mmap1 execution. Retain that boundary
+until separate focused kernel and unchanged application runs prove it.

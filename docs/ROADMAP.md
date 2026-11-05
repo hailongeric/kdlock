@@ -49,8 +49,10 @@ disabled. Historical `7.0.0-38-kdmm1` comparisons use local Native/KD modes;
 later scoped/retained kernels have independent identities. Native MM bodies
 remain unchanged: local controls execute on the origin (O), while retained
 candidates may execute them on the executor (E) through the general lock layer.
-The selected correction restores the original JIT; retained-owner handback remains pending at its
-inspected checkpoint. Linux 6.1 adaptation, operation-specific MM algorithms
+The selected correction restores the original JIT and commits retained-owner
+handback wiring at `a6fe0bb2`. Its first frozen build/component checks fail
+overall; final rerun and central service-acceptance/final-ACK coverage remain
+pending. Linux 6.1 adaptation, operation-specific MM algorithms
 and prepared teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
@@ -83,7 +85,8 @@ acquisition, downgrade, exact asynchronous read-release references and teardown.
 Native mmap/munmap/advice/fault algorithms stay unchanged. The historical local
 adapter keeps execution on the original task. Retained candidates use the
 general lock and service contracts; the original JIT correction's required
-current-position handback and pending worker integration have separate scope.
+committed current-position worker handback and pending validation have separate
+scope. Build/component checks do not establish a live MM or application result.
 
 The historical local adapter uses local KD readers and writers. Nano JIT batching
 therefore does not explain those local-MM measurements. Profile actual phase

@@ -12,8 +12,11 @@ parity; then complete declared kernel replacements and compare applications.
 Favorable exploratory nano cases and scoped application measurements exist.
 Repeated performance acceptance and broader kernel replacement remain open.
 The isolated [original JIT correction](docs/design/kdlock_lock_replacement_contract.md)
-has pending retained-owner integration and mixed focused-check results; earlier
-measurements do not validate it or promote it to master.
+has runtime wiring committed at `a6fe0bb2`. Its first frozen checks include a
+successful provider build and seven passing component groups, but fail overall
+with two check failures under repair. Final validation and central service
+acceptance/final-ACK coverage remain pending; earlier measurements do not
+validate this implementation or promote it to master.
 
 ## Current platform and policy
 

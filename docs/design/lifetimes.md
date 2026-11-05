@@ -157,8 +157,11 @@ The user selected synchronous E-side cleanup, recorded at `c0bb9ccd`:
 No new asynchronous cleanup queue is selected. O keeps its existing packet and
 release ACK timing; waiter-side final-use ACK/pinning simplification and
 TCLock-style reclamation are optional later work. Synchrony does not establish
-bounded cleanup latency. Source integration is in progress and fresh validation
-is pending; this approved sequence is not a build, hotplug or runtime pass.
+bounded cleanup latency. Runtime `a6fe0bb2` commits the sequence and its provider
+build returns zero with objtool warnings. The first retirement component fixture
+fails compilation under signedness `-Werror`, so it supplies no retirement
+execution pass. Final rerun, central acceptance/final-ACK coverage and live
+hotplug/handback evidence remain pending.
 
 ## Kernel-generated instruction source extents
 
@@ -371,7 +374,8 @@ closure, a complete kernel CFG or all-site prewarming. The
 [reached-path record](reached_path_execution.md) preserves the superseded
 separate-emitter design and its receipts. It was still connected at `ebae17c1`;
 `10ef078a` removes it from production source and moves the C reference code to
-fixtures. Fresh validation of that source correction remains pending.
+fixtures. Later runtime `a6fe0bb2` wires retained handback and has a first frozen
+build/component receipt; its overall result fails, with no module load or reboot.
 
 Learning and handback have different lifetimes. A progressed invocation returns
 to O at its exact current source position, preserving GPR/IP/SP/BP and already
@@ -381,12 +385,14 @@ physical acquisitions remain retained until their required owner transfer,
 unlock ACKs and final frame retirement finish. Old-generation reports cannot
 rewrite a newer generation's metadata. A new image serves later invocations.
 
-Checkpoint `ebae17c1` adds original-pipeline miss handling, but retained-worker
-handoff of the full owner list remains pending. Existing legacy native routing
-does not establish that transfer. General flags/SIMD restoration and IRQ/NMI
+Checkpoint `ebae17c1` adds original-pipeline miss handling. Runtime `a6fe0bb2`
+wires the full retained owner route, Native read custody, packet acceptance
+and synchronous cleanup. General flags/SIMD restoration and IRQ/NMI
 conflict handling are deferred. No earlier preparation or separate-emitter
 receipt validates this correction. The owner's focused `ebae17c1` packet and
 dispatcher checks include both passes and failures; the
 [contract's validation record](kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-retains them separately from the unverified `10ef078a` source changes. No
-loaded-provider or live retained-owner handback pass follows.
+retains them separately from the later `a6fe0bb2` receipt. Its component query,
+admission and Native writer-custody passes do not cover the central service
+acceptance/final-ACK chain. The two first-check failures and final frozen rerun
+remain open; no loaded-provider or live retained-owner handback pass follows.

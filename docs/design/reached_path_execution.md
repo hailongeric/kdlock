@@ -18,12 +18,18 @@ Checkpoint `ebae17c1b9c57eb6636a7016f5316e6a28ae01f8` restores bounded
 ordinary-callee behavior, adds a current-position miss requirement for eligible
 cold ABI2 images and keeps actual CALL versus IJ reports distinct. Ordinary
 frames can route the negotiated miss through existing native handback.
-Retained-worker owner routing remains pending. The later source checkpoint
+Retained-worker owner routing was still absent then. The later source checkpoint
 `10ef078ab76ba42447dcf58e608c3d3012b2c9be` removes the separate emitter/cache/
 dispatcher and selects original compiled images. It also corrects protocol-3
 header selection for the cold miss requirement; C reference code moves to
 fixtures and stale reached-state fields remain. Fresh build and execution
-validation for that source checkpoint is pending.
+validation was not supplied for that source checkpoint alone. Runtime
+`a6fe0bb269642cf2dd6f07c3430b6933f9c0557a` subsequently commits retained worker
+handback, Native read custody, packet acceptance, owner routing and synchronous
+retirement. Its first frozen provider build and seven component groups pass;
+the query-image assertion and retirement fixture compilation fail. No module
+load or reboot occurs, and central acceptance/final-ACK coverage and final
+rerun remain pending. See the [current result table](kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2).
 Owner-run VM checks for the earlier `ebae17c1` have mixed results: the three miss-packet
 tests, segment codegen and entry-scope checks pass; returning-call tests have
 eight failures, the mutex-image fixture does not compile and the provider build
@@ -35,8 +41,9 @@ evidence. This documentation audit runs no tests.
 The later selected designs keep the three mmap state-query bodies in the
 original JIT, with the narrow existing `ATOMIC_ORIGIN` runtime custody proof,
 and use synchronous E-side home-CPU retirement with serialized already-offline
-cleanup. Those choices are resolved; implementation and fresh validation remain
-incomplete. The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
+cleanup. Those choices are resolved and wired in `a6fe0bb2`; component checks,
+failed first checks and still-unverified live behavior remain distinct.
+The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime guide](lifetimes.md#selected-retained-handback-retirement) define
 their scope without requiring a second JIT or new asynchronous cleanup queue.
 

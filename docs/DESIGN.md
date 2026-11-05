@@ -97,11 +97,12 @@ returning services retain their separate runtime contracts.
 The selected correction requires general untranslated-code handback at the first
 instruction E has not executed, using current IP/GPR/SP/BP and preserving prior
 stores, acquisitions, CALL pushes and RET pops. It cannot restart a progressed
-body. Checkpoint `ebae17c1` adds negotiated ordinary miss handback. The later
-`10ef078a` removes the separate instruction backend and corrects extended-header
-selection in source; fresh validation is pending. Full retained-worker owner
-transfer remains pending. Generic IJ errors are not evidence of successful
-handback.
+body. Checkpoint `ebae17c1` adds negotiated ordinary miss handback; `10ef078a`
+removes the separate instruction backend and corrects extended-header selection.
+Runtime checkpoint `a6fe0bb2` wires retained-worker handback, packet acceptance,
+Native owner routing and synchronous cleanup. Its first build/component receipt
+fails overall, and central acceptance/final-ACK coverage remains pending.
+Generic IJ errors are not evidence of successful handback.
 
 The selected follow-up keeps the three mmap state/assertion query bodies in the
 original JIT, preserving a narrow `ATOMIC_ORIGIN` Native service only for the
@@ -109,7 +110,8 @@ exact `kd_service_write_owned` custody proof. Other services and bounded callee
 learning retain their policies. Existing downgraded read credit transfers to
 Native custody without a decrement, and pooled slots retire through synchronous
 E-side home-CPU cleanup with an explicit serialized already-offline path. These
-are resolved designs with integration and fresh testing still incomplete; see
+are resolved designs with source wiring in `a6fe0bb2`; final validation remains
+incomplete. Component fixtures are distinct from loaded-provider execution; see
 the [contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement).
 
@@ -143,7 +145,8 @@ from retained execution experiments. The local adapter changes only the lock
 backend and minimal API/lifetime wrappers; its native MM bodies execute on the
 original task. Later retained candidates execute unchanged native bodies on E
 through general lock/service routing. The selected original JIT correction is
-part of kdlock lock replacement, with retained-worker handback still pending.
+part of kdlock lock replacement, with runtime handback wiring committed and
+final validation still pending.
 Operation-specific MM algorithms and prepared teardown remain retired.
 
 The [module-owned mapping experiment](design/mmap_fault.md) changes a private

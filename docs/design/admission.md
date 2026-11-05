@@ -69,8 +69,9 @@ service.
 The [lock replacement contract](kdlock_lock_replacement_contract.md) selects
 bounded original CFG exploration, actual miss learning and subsequent image
 replacement. Its current-position handback preserves IP/GPR/SP and completed
-CALL pushes/RET pops. Retained-worker integration is pending at `10ef078a`;
-general flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
+CALL pushes/RET pops. Retained-worker wiring is committed at `a6fe0bb2`, while
+final validation and central service-acceptance/final-ACK coverage remain pending.
+General flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
 Existing limited flags and instruction contracts do not establish those broader
 features.
 
@@ -99,8 +100,11 @@ owner and pending-pickup predicates remain required. `ATOMIC_ORIGIN` retains
 actual origin pins/RCU; the `BALANCED_ORIGIN` rejection of retained spin/RCU is
 not appropriate for this narrow interval. Other context preconditions still
 apply. Preparation rejection remains fail-stop and does not automatically
-select native handback. The design is selected; uncommitted source changes and
-prepared fixtures do not establish complete integration or a passing test.
+select native handback. The partition and descriptor are committed at
+`a6fe0bb2`. Its writer-query component passes with supplied runtime observations,
+but its six-test query-image group has one failing assertion about a legal
+return-continuation label. Repair and a separately frozen rerun remain pending;
+these checks do not establish the actual O/E Native service or final-ACK path.
 
 An untranslated ordinary callee can transfer the remaining invocation to the
 original waiter. Later learning may extend the graph. It does not authorize

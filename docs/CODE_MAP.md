@@ -27,8 +27,8 @@ responsibility, not a build or runtime pass.
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
 | [kd_admission.c](../kernel_module/kd_admission.c), [kd_wait_queue.c](../kernel_module/kd_wait_queue.c) | Exact acquisition predicates, shared request selection, cancellation and queue membership |
-| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, owner custody, registered returning API intervals and transport/retirement; full current-position worker handback remains pending at `10ef078a` |
-| [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc) | Retained frame/packet joins, exact service dispatch and negotiated original-JIT miss packets; ordinary native handback is separate from the pending full retained-owner consumer |
+| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and committed current-position worker handback at `a6fe0bb2`; final validation remains pending |
+| [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; central acceptance/final-ACK coverage is not yet reported |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, uploads and retirement |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address tables and approximate heat policy; never ownership |
@@ -42,8 +42,10 @@ The subsequent selected query policy partitions operation IDs 14/15/16 in
 registration in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
 `kd_service_write_owned` retains the narrow `ATOMIC_ORIGIN` runtime proof.
 `kd_service.c` owns the selected synchronous home-CPU and serialized offline
-retirement path. These changes are in progress in dirty source, not a completed
-integration or test result; see the [selected contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution).
+retirement path. This wiring is committed in `a6fe0bb2`. Its first provider build
+and seven component groups pass, but query-image and retirement checks fail;
+no module is loaded. Final rerun and central acceptance/final-ACK coverage are
+pending; see the [validation record](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2).
 
 ## Linux 7 and MM integration
 
