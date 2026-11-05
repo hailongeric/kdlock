@@ -17,6 +17,7 @@ PARAMETERS = Path('/sys/module/kdlock_km/parameters')
 NOTE = Path('/sys/module/kdlock_km/notes/.note.gnu.build-id')
 PROC = Path('/proc')
 DEVICE = Path('/dev/kd_dev')
+SYSCALL_SHAPE_PARAMETERS = ('rwsem_provider_syscall_shape', 'rwsem_provider_syscall_shape_version')
 
 
 def reached_observations():
@@ -63,6 +64,20 @@ def parse_writer_entries(value):
         return [int(word, 0) for word in value.strip().split(',')] if value.strip() else []
     except ValueError as error:
         raise rt.Failure('DATA_ERROR', 'invalid writer entry parameter') from error
+
+
+def syscall_shape_contract(parameters, enabled):
+    """Bind optional argument selection without inferring worker or pair proof."""
+    rt.require(type(enabled) is bool, 'syscall argument selection must be explicit', 'DATA_ERROR')
+    setting, version = SYSCALL_SHAPE_PARAMETERS
+    if setting not in parameters:
+        rt.require(version not in parameters and not enabled,
+                   'provider lacks the configured syscall argument contract', 'DATA_ERROR')
+        return None
+    rt.require(parameters.get(setting) in ('Y', 'N') and parameters.get(version) == '1' and
+               (parameters[setting] == 'Y') == enabled,
+               'loaded syscall argument policy or version differs', 'DATA_ERROR')
+    return dict(version=1, enabled=enabled)
 
 
 def ready_writer_entries(rows, entries):
@@ -172,6 +187,11 @@ class ExecutionSession:
                    preparer.get('argv'), 'exact live preparation controller required', 'DATA_ERROR')
         rows = expected.get('registry', [])
         scope = expected.get('writer_entries', [])
+        shape = expected.get('syscall_shape')
+        enabled = shape.get('enabled') if isinstance(shape, dict) else False
+        rt.require(syscall_shape_contract(values, enabled) == shape and
+                   (not enabled or (self.demand and scope)),
+                   'syscall argument selection receipt differs', 'DATA_ERROR')
         rt.require(('writer_entries' in expected) == ('rwsem_provider_entries' in values),
                    'writer entry selection is missing from the receipt', 'DATA_ERROR')
         if 'writer_entries' in expected:
@@ -220,13 +240,16 @@ class ExecutionSession:
                         provider_sha256=self.expected['provider']['sha256'],
                         preparer_pid=self.expected['preparer']['pid'], daemon_pid=None,
                         device_writers=[], delegated_execution_proved=False)
-        return dict(path=str(self.path), sha256=self.sha256,
+        value = dict(path=str(self.path), sha256=self.sha256,
                     provider_sha256=self.expected['provider']['sha256'],
                     daemon_pid=self.expected['daemon']['pid'],
                     daemon_start_ticks=self.expected['daemon']['start_ticks'],
                     preparer_pid=self.expected['preparer']['pid'],
                     daemon_device_writer=self.expected['daemon']['device_writer'],
                     delegated_execution_proved=False)
+        if 'syscall_shape' in self.expected:
+            value['syscall_shape'] = self.expected['syscall_shape']
+        return value
 
     def verify(self, *, allow_identity_probe=False):
         if self.execution_mode == 'reached':
@@ -257,6 +280,9 @@ class ExecutionSession:
             demand_transition(expected['registry'], rt.registry(), self.site_entries)
             raise rt.Failure('LEARNING_ADVANCED', 'image learning continues beyond the timing receipt')
         rt.require(not children, 'translator remains active', 'UNDRAINED')
+        rt.require(all((name in expected['parameters']) == (PARAMETERS / name).is_file()
+                       for name in SYSCALL_SHAPE_PARAMETERS),
+                   'syscall argument policy is missing from the receipt', 'DATA_ERROR')
         for name, wanted in expected['parameters'].items():
             rt.require((PARAMETERS / name).read_text().strip() == wanted,
                        'execution-session parameter changed: ' + name, 'DATA_ERROR')

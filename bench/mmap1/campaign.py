@@ -155,7 +155,8 @@ class Campaign:
             sites_sha256=config['sites_sha256'], source_commit=config['source_commit'],
             source_state=ROOT / 'source-state.json', source_manifest=ROOT / 'source-sha256.json',
             source_state_sha256=config['state_sha256'], source_manifest_sha256=config['manifest_sha256'],
-            writer_entries=config['writer_entries'])
+            writer_entries=config['writer_entries'], syscall_shape=config.get('syscall_shape', False))
+        rt.require(type(self.args.syscall_shape) is bool, 'syscall argument selection must be boolean', 'DATA_ERROR')
         self.result = dict(schema=1, passed=False, drained=False, accepted=False,
             state='STARTING', mode='kd', models=self.models, workers=2, worker_counts=self.counts,
             config_sha256=hashlib.sha256(config_bytes).hexdigest(), source_commit=config['source_commit'],
@@ -204,10 +205,12 @@ class Campaign:
         for name in ('provider', 'daemon', 'probe'):
             rt.require(rt.digest(Path(self.c[name])) == self.c[name + '_sha256'], name + ' bytes differ')
             self.files[self.c[name]] = self.c[name + '_sha256']
-        rt.command(['insmod', self.c['provider'], 'bench_quiet=1', 'bench_complete_probe=0',
+        load = ['insmod', self.c['provider'], 'bench_quiet=1', 'bench_complete_probe=0',
             'jit_timing=0', 'hotlock_stats=0', 'service_cpus=0-61', 'rwsem_provider_demand=1',
-            'rwsem_provider_entries=' + ','.join(hex(value) for value in self.args.writer_entries)],
-            self.out / 'load.log', timeout=30)
+            'rwsem_provider_entries=' + ','.join(hex(value) for value in self.args.writer_entries)]
+        if self.args.syscall_shape:
+            load.append('rwsem_provider_syscall_shape=1')
+        rt.command(load, self.out / 'load.log', timeout=30)
         self.provider_loaded = True
         params = controller.PARAMETERS
         rt.require(bench.execution.parse_writer_entries((params / 'rwsem_provider_entries').read_text()) ==

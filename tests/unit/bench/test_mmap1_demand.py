@@ -24,6 +24,20 @@ def row(entry=0x100, tgid=99, generation=1, code=0x1000, status=0):
 
 
 class DemandRegistry(unittest.TestCase):
+    def test_optional_syscall_argument_contract_is_explicit_and_versioned(self):
+        setting, version = images.SYSCALL_SHAPE_PARAMETERS
+        self.assertIsNone(images.syscall_shape_contract({}, False))
+        self.assertEqual(images.syscall_shape_contract({setting: 'N', version: '1'}, False),
+                         dict(version=1, enabled=False))
+        self.assertEqual(images.syscall_shape_contract({setting: 'Y', version: '1'}, True),
+                         dict(version=1, enabled=True))
+        for parameters, enabled in (({}, True), ({version: '1'}, False),
+                ({setting: 'Y'}, True), ({setting: 'Y', version: '2'}, True),
+                ({setting: 'N', version: '1'}, True), ({setting: 'Y', version: '1'}, False),
+                ({setting: 'Y', version: '1'}, 1)):
+            with self.subTest(parameters=parameters, enabled=enabled), self.assertRaises(bench.rt.Failure):
+                images.syscall_shape_contract(parameters, enabled)
+
     def test_learning_allowance_remains_bounded(self):
         self.assertEqual(point.learning_limits({}), (900, 3))
         for rounds in (1, 8, 9, 32):
@@ -118,6 +132,38 @@ def function(source, name, result='int'):
 
 
 class DemandActivation(unittest.TestCase):
+    def test_selection_requires_compiled_mm_support(self):
+        source = (ROOT / 'kernel_module/kd_rwsem_provider.c').read_text()
+        program = r'''
+#include <stdbool.h>
+#include <errno.h>
+#define WRITE_ONCE(x,v) ((x)=(v))
+static bool kd_rwsem_provider_initialized, kd_rwsem_provider_syscall_shape;
+static unsigned int kd_rwsem_provider_entry_count;
+'''
+        program += function(source, 'kd_rwsem_provider_init')
+        program += r'''
+int main(void)
+{
+    kd_rwsem_provider_syscall_shape=true;
+    if (kd_rwsem_provider_init()!=-EOPNOTSUPP || kd_rwsem_provider_initialized) return 1;
+    kd_rwsem_provider_syscall_shape=false; kd_rwsem_provider_entry_count=1;
+    if (kd_rwsem_provider_init()!=-EOPNOTSUPP || kd_rwsem_provider_initialized) return 2;
+    kd_rwsem_provider_entry_count=0;
+    return kd_rwsem_provider_init() || !kd_rwsem_provider_initialized;
+}
+'''
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name)
+            path, binary = directory / 'configuration.c', directory / 'configuration'
+            path.write_text(program)
+            built = subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+                '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', str(path), '-o', str(binary)],
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            ran = subprocess.run([str(binary)], capture_output=True, text=True, timeout=10)
+            self.assertEqual(ran.returncode, 0, ran.stdout + ran.stderr)
+
     def test_production_prepare_and_activate_with_supplied_primitives(self):
         source = (ROOT / 'kernel_module/kd_rwsem_provider.c').read_text()
         program = r'''
@@ -138,6 +184,7 @@ struct kd_exe_info { unsigned long RIP; int status_code, entry_abi, lock_kind; }
 static struct kd_rwsem_site sites[3];
 static struct kd_exe_info entries[3];
 static bool ready[3], kd_rwsem_provider_initialized, kd_rwsem_provider_registered;
+static bool kd_rwsem_provider_syscall_shape;
 static bool kd_rwsem_provider_demand, source_open, binding;
 static unsigned long kd_rwsem_provider_entries[64];
 static unsigned int kd_rwsem_provider_entry_count;
@@ -166,6 +213,7 @@ static void reset(bool demand)
 {
     kd_rwsem_provider_initialized=source_open=binding=true;
     kd_rwsem_provider_registered=false; kd_rwsem_provider_demand=demand;
+    kd_rwsem_provider_syscall_shape=false;
     cpus=2; adds=gets=binding_puts=registration=0; site_count=3;
     kd_rwsem_provider_entry_count=0;
     memset(ready,0,sizeof(ready)); memset(entries,0,sizeof(entries));
@@ -182,6 +230,27 @@ static void reset(bool demand)
 #define TASK_INTERRUPTIBLE 2
 #define TASK_KILLABLE 3
 #define KD_ADMISSION_RWSEM_WRITE 2
+#define __NR_mmap 9
+#define __NR_munmap 11
+#define PROT_READ 1
+#define PROT_WRITE 2
+#define MAP_PRIVATE 2
+#define MAP_ANONYMOUS 32
+#define PAGE_SIZE 4096UL
+#define PF_KTHREAD 1UL
+struct pt_regs { unsigned long args[6]; long number; bool user, native64; };
+struct fixture_task { void *mm; unsigned long flags; };
+static struct fixture_task fixture_task, *current=&fixture_task;
+static struct pt_regs saved_registers;
+static bool fixture_compat;
+static struct pt_regs *task_pt_regs(struct fixture_task *task)
+{ (void)task; return &saved_registers; }
+static bool in_compat_syscall(void) { return fixture_compat; }
+static bool user_64bit_mode(struct pt_regs *regs) { return regs->user && regs->native64; }
+static long syscall_get_nr(struct fixture_task *task, struct pt_regs *regs)
+{ (void)task; return regs->number; }
+static void syscall_get_arguments(struct fixture_task *task,struct pt_regs *regs,unsigned long *args)
+{ (void)task; memcpy(args,regs->args,sizeof(regs->args)); }
 static int kd_provider_completion, capture_calls, local_calls[3], local_result;
 static bool held;
 static void kd_provider_down_write(void *object)
@@ -197,6 +266,8 @@ static int kd_service_capture_bound(void *object,int kind,unsigned int state,
     (void)completion; ++capture_calls; return 77;
 }
 '''
+        program += '\n' + function(source, 'kd_rwsem_syscall_shape_matches', 'bool')
+        program += '\n' + function(source, 'kd_rwsem_capture_shape_selected', 'bool')
         program += '\n' + function(source, 'kd_provider_capture')
         program += r'''
 int main(void)
@@ -253,6 +324,52 @@ int main(void)
     reset(true); binding=false; CHECK(kd_rwsem_provider_activate()==-ESHUTDOWN);
     reset(true); registration=-EBUSY;
     CHECK(kd_rwsem_provider_activate()==-EBUSY && gets==1 && binding_puts==1 && !kd_rwsem_provider_registered);
+    reset(true); kd_rwsem_provider_syscall_shape=true;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    kd_rwsem_provider_entry_count=1; kd_rwsem_provider_entries[0]=0x100;
+    CHECK(!kd_rwsem_entry_scope_valid(sites,site_count));
+    kd_rwsem_provider_demand=false;
+    CHECK(kd_rwsem_entry_scope_valid(sites,site_count)==-EINVAL);
+    kd_rwsem_provider_demand=true;
+    fixture_task.mm=&held; fixture_task.flags=0;
+    saved_registers=(struct pt_regs){.number=9,.user=true,.native64=true,.args={0,128UL*1024*1024,3,34,~0UL,0}};
+    CHECK(kd_rwsem_capture_shape_selected());
+    saved_registers.args[4]=0xffffffffUL; CHECK(kd_rwsem_capture_shape_selected());
+    for (int i=0;i<6;i++) {
+        unsigned long previous=saved_registers.args[i]; saved_registers.args[i]=i==4?0:previous+1;
+        CHECK(!kd_rwsem_capture_shape_selected()); saved_registers.args[i]=previous;
+    }
+    saved_registers.number=9|0x40000000; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.number=-1; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.number=9; fixture_compat=true; CHECK(!kd_rwsem_capture_shape_selected());
+    fixture_compat=false; saved_registers.user=false; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.user=true; saved_registers.native64=false; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.native64=true;
+    saved_registers.user=true; fixture_task.flags=PF_KTHREAD; CHECK(!kd_rwsem_capture_shape_selected());
+    fixture_task.flags=0; fixture_task.mm=NULL; CHECK(!kd_rwsem_capture_shape_selected());
+    fixture_task.mm=&held;
+    saved_registers.number=11; saved_registers.args[0]=0x1000;
+    CHECK(kd_rwsem_capture_shape_selected());
+    saved_registers.args[0]=0; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.args[0]=0x1001; CHECK(!kd_rwsem_capture_shape_selected());
+    saved_registers.args[0]=0x1000; saved_registers.args[1]/=2;
+    CHECK(!kd_rwsem_capture_shape_selected());
+    capture_calls=0; memset(local_calls,0,sizeof(local_calls)); held=false;
+    local_result=-EINTR;
+    CHECK(kd_provider_capture(&held,TASK_KILLABLE,8,0x100,16)==-EINTR);
+    CHECK(!held && local_calls[2]==1 && capture_calls==0);
+    CHECK(kd_provider_capture(&held,TASK_INTERRUPTIBLE,8,0x100,16)==-EINTR);
+    CHECK(!held && local_calls[1]==1 && capture_calls==0);
+    local_result=0;
+    CHECK(!kd_provider_capture(&held,TASK_KILLABLE,8,0x100,16) && held && local_calls[2]==2);
+    held=false; CHECK(!kd_provider_capture(&held,TASK_UNINTERRUPTIBLE,8,0x100,16));
+    CHECK(held && local_calls[0]==1 && capture_calls==0);
+    saved_registers.args[1]*=2;
+    CHECK(kd_provider_capture(&held,TASK_KILLABLE,8,0x100,16)==77 && capture_calls==1);
+    kd_rwsem_provider_syscall_shape=false; fixture_task.mm=NULL; fixture_compat=true;
+    saved_registers.user=false; saved_registers.number=-1;
+    CHECK(kd_rwsem_capture_shape_selected());
+    CHECK(kd_provider_capture(&held,TASK_KILLABLE,8,0x100,16)==77 && capture_calls==2);
     puts("demand/default activation component checks passed");
     return 0;
 }

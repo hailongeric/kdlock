@@ -6,6 +6,10 @@
 #include <linux/sched.h>
 #include <linux/cpu.h>
 #include <linux/string.h>
+#include <linux/compat.h>
+#include <linux/mman.h>
+#include <linux/sched/task_stack.h>
+#include <asm/syscall.h>
 #include "kd_rwsem_provider.h"
 #include "kd_rwsem.h"
 #include "kd_lock.h"
@@ -25,6 +29,22 @@ module_param_array_named(rwsem_provider_entries, kd_rwsem_provider_entries,
 	ulong, &kd_rwsem_provider_entry_count, 0444);
 MODULE_PARM_DESC(rwsem_provider_entries,
 	"Immutable writer entry selection; empty selects every builtin writer entry");
+static bool kd_rwsem_provider_syscall_shape;
+module_param_named(rwsem_provider_syscall_shape, kd_rwsem_provider_syscall_shape, bool, 0444);
+MODULE_PARM_DESC(rwsem_provider_syscall_shape,
+	"Benchmark native64 syscall argument selection; excluded captures use local KD");
+
+static int kd_rwsem_syscall_shape_version_get(char *buffer,
+					    const struct kernel_param *parameter)
+{
+	(void)parameter;
+	return scnprintf(buffer, PAGE_SIZE, "1\n");
+}
+static const struct kernel_param_ops kd_rwsem_syscall_shape_version_ops = {
+	.get = kd_rwsem_syscall_shape_version_get,
+};
+module_param_cb(rwsem_provider_syscall_shape_version, &kd_rwsem_syscall_shape_version_ops, NULL, 0444);
+MODULE_PARM_DESC(rwsem_provider_syscall_shape_version, "Getter-only syscall argument selection contract version");
 #ifdef CONFIG_KDLOCK_MMAP
 static DEFINE_MUTEX(kd_rwsem_provider_state_lock);
 #endif
@@ -49,6 +69,10 @@ static int kd_rwsem_entry_scope_valid(const struct kd_rwsem_site *sites,
 {
 	unsigned int index, other, site;
 
+	/* Demand registration is what keeps excluded calls out of learning. */
+	if (kd_rwsem_provider_syscall_shape &&
+	    (!kd_rwsem_provider_demand || !kd_rwsem_provider_entry_count))
+		return -EINVAL;
 	for (index = 0; index < kd_rwsem_provider_entry_count; ++index) {
 		unsigned long entry = kd_rwsem_provider_entries[index];
 
@@ -150,12 +174,44 @@ static const struct kd_service_completion kd_provider_completion = {
 	.resume = kd_rwsem_provider_resume,
 };
 
+static bool kd_rwsem_syscall_shape_matches(long number, const unsigned long *arguments)
+{
+	const unsigned long bytes = 128UL * 1024 * 1024;
+
+	if (number == __NR_mmap)
+		return !arguments[0] && arguments[1] == bytes &&
+			arguments[2] == (PROT_READ | PROT_WRITE) &&
+			arguments[3] == (MAP_PRIVATE | MAP_ANONYMOUS) &&
+			(unsigned int)arguments[4] == (unsigned int)-1 && !arguments[5];
+	/* Address/length alone cannot identify the mapping type or its pair. */
+	return number == __NR_munmap && arguments[0] &&
+		!(arguments[0] & (PAGE_SIZE - 1)) && arguments[1] == bytes;
+}
+
+static bool kd_rwsem_capture_shape_selected(void)
+{
+	struct pt_regs *registers;
+	unsigned long arguments[6];
+
+	if (!kd_rwsem_provider_syscall_shape)
+		return true;
+	/* This public entry still runs on the caller. KD continuation tags live
+	 * in a separate packet; only the task's saved userspace frame is read. */
+	if (!current->mm || (current->flags & PF_KTHREAD) || in_compat_syscall())
+		return false;
+	registers = task_pt_regs(current);
+	if (!user_64bit_mode(registers))
+		return false;
+	syscall_get_arguments(current, registers, arguments);
+	return kd_rwsem_syscall_shape_matches(syscall_get_nr(current, registers), arguments);
+}
+
 static int kd_provider_capture(void *object, unsigned int state,
 			       unsigned long sp, unsigned long ip, unsigned long bp)
 {
-	/* An excluded entry still acquires this object's KD protocol. Decide
+	/* An excluded capture still acquires this object's KD protocol. Decide
 	 * before source capture or registration; zero means the lock is held. */
-	if (!kd_rwsem_entry_selected(ip)) {
+	if (!kd_rwsem_entry_selected(ip) || !kd_rwsem_capture_shape_selected()) {
 		if (state == TASK_KILLABLE)
 			return kd_provider_down_write_killable(object);
 		if (state == TASK_INTERRUPTIBLE)
@@ -478,7 +534,7 @@ int kd_rwsem_provider_init(void)
 	if (result)
 		return result;
 #else
-	if (kd_rwsem_provider_entry_count)
+	if (kd_rwsem_provider_entry_count || kd_rwsem_provider_syscall_shape)
 		return -EOPNOTSUPP;
 #endif
 	/* Registration remains an explicit post-preparation action. */

@@ -337,6 +337,11 @@ class Controller:
             sha256=rt.digest(self.binaries['provider']), note_sha256=execution.module_note_sha256(self.binaries['provider'])),
             daemon=actual_daemon, preparer=preparer, parameters=selected, registry=rows,
             source={name: source[name] for name in ('state', 'modules', 'writers')}, files=dict(self.files))
+        shape = execution.syscall_shape_contract(parameters, getattr(self.args, 'syscall_shape', False))
+        if shape is not None:
+            value['syscall_shape'] = shape
+            for name in execution.SYSCALL_SHAPE_PARAMETERS:
+                value['parameters'][name] = parameters[name]
         if 'rwsem_provider_entries' in parameters or hasattr(self.args, 'writer_entries'):
             entries = getattr(self.args, 'writer_entries', [])
             execution.selected_writer_entries(entries, {row['entry'] for row in self.audit['records']})

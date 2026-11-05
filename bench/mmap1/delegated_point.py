@@ -157,7 +157,7 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         source_commit=c['source_commit'], source_state=root / 'source-state.json',
         source_manifest=root / 'source-sha256.json',
         source_state_sha256=c['state_sha256'], source_manifest_sha256=c['manifest_sha256'],
-        writer_entries=c.get('writer_entries', []))
+        writer_entries=c.get('writer_entries', []), syscall_shape=c.get('syscall_shape', False))
     result_path = out / ('finalization.json' if finalize else 'result.json')
     result = dict(schema=1, passed=False, drained=False, accepted=False,
         execution_mode='image', config_sha256=hashlib.sha256(config_bytes).hexdigest(),
@@ -169,6 +169,8 @@ def image_point(c, config_bytes, root, out, controller, finalize):
         assert c['mode'] in ('native', 'kd') and c['model'] in bench.MODELS
         assert c['workers'] in bench.WORKERS and c['profile'] is False
         assert type(args.demand) is bool
+        assert type(args.syscall_shape) is bool
+        assert not args.syscall_shape or (args.demand and args.writer_entries and c['mode'] == 'kd')
         controller.source_manifest(args)
         if finalize:
             original = bench.load(out / 'result.json')
@@ -233,6 +235,8 @@ def image_point(c, config_bytes, root, out, controller, finalize):
             if args.writer_entries:
                 load.append('rwsem_provider_entries=' +
                     ','.join(hex(entry) for entry in args.writer_entries))
+            if args.syscall_shape:
+                load.append('rwsem_provider_syscall_shape=1')
             rt.command(load, out / 'load.log', timeout=30)
             assert bench.execution.parse_writer_entries(
                 (controller.PARAMETERS / 'rwsem_provider_entries').read_text()) == args.writer_entries
