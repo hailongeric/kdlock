@@ -358,7 +358,7 @@ implementation details of this selected option. Full flags/SIMD and IRQ/NMI
 conflict handling remain deferred. Tests follow the completed implementation;
 no intermediate VM run is part of this sequence.
 
-## Additional pooled-storage decision: awaiting confirmation
+## Selected synchronous pooled-storage retirement
 
 The existing pooled release updates this CPU's slot mask and reserved-node
 count. E deliberately executes away from O's reservation CPU. After permanent
@@ -366,52 +366,49 @@ Native restoration O may migrate, and its final write-release ACK also precedes
 recursive E-stack unwind. Neither E freeing the slot directly nor O freeing it
 at that early ACK is valid. No remote release helper currently exists.
 
-The proposed deferred cleanup would be independent of the lock-admission and
-service queues. It is not implemented and is not authorized by the read-custody
-decision alone. The approval request is pending; do not run the unfinished
-handoff path before its pooled retirement is resolved.
+The user authorized the smaller synchronous E-side path. No additional cleanup
+workqueue or change to O's handback/ACK timing is required. The earlier deferred
+work proposal remains historical at `f7d97c55`; it is not selected. This design
+precedes the synchronous cleanup implementation.
 
-* E first finishes every retained writer release, packet acknowledgment and
-  nested stack anchor. A small preallocated work item in the existing root then
-  carries final storage retirement. E returns to its service pool without
-  waiting for that work; O never waits for storage cleanup after release ACK.
-* Use a dedicated kernel cleanup workqueue so pending home-CPU work does not
-  consume the finite E pool or another subsystem's workqueue activation slots.
-  This is new cleanup metadata, not another lock-request queue or heap copy.
-* The cleanup dispatcher holds `cpus_read_lock` while choosing and completing
-  the CPU-specific operation. If the home CPU is online, execute the existing
-  release logic there in task context with preemption disabled. Its local slot
-  updates remain serialized with ordinary producers. A merely queued CPU work
-  item, without this hotplug exclusion, is insufficient.
-* If the home CPU is already offline, there is no executing local producer.
-  Under the same hotplug read exclusion, an explicit cold helper may update
-  that CPU's per-CPU metadata after checking the node pointer and recorded CPU.
-  Factor shared node validation/field retirement; preserve the ordinary local
-  release's CPU-local counter operations. This cold helper is an additional
-  part of the proposal, not an existing routine to call unchanged.
-* Initialize the pooled work item once, not on each slot reuse. Its callback
-  saves module-reference values locally, removes the active-list observation
-  route, retires continuation/source/task/stack references, and only then makes
-  the home slot reusable. After that point it never dereferences the old root.
-  Keep source/task references until active-list removal so a diagnostic reader
-  cannot follow a stale origin pointer. A finished root must not exclude a CPU
-  as though its origin were still waiting for proxy entry.
-* Hold the original capture and worker module references through the callback's
-  last access. Reject a duplicate queue operation rather than freeing storage
-  early. Holding hotplug exclusion handles an online-to-offline transition;
-  the offline branch handles the already-offline case. Both permit cleanup
-  without waiting for the CPU to be brought online again.
-* Module teardown must flush/destroy this cleanup workqueue before freeing any
-  pooled root or its code. The normal idleness test continues to see pending
-  roots; a scheduled callback is not a completed retirement. Failure to create
-  the cleanup workqueue must fail setup before publication.
+1. E first finishes every retained writer release, O packet acceptance and
+   recursive stack anchor. E performs the distinct handed-back terminal
+   transition itself because `resume_executor` names the actual E task.
+2. Snapshot the capture callback module reference, pooled/storage identity and
+   original CPU before dispatching cleanup. Mark the root FINISHED under the
+   existing dispatch guard. It remains observable with source/task references
+   retained, but no longer excludes its origin CPU as a pending proxy origin.
+3. For pooled storage, hold `cpus_read_lock` from the online check through the
+   complete synchronous `work_on_cpu(home_cpu, cleanup, root)` call. A queued
+   callback without hotplug exclusion through execution is insufficient. The
+   target Linux 7 source does not supply an SMP `work_on_cpu_safe` interface.
+4. The callback validates exact encoded CPU, slot, node pointer and service-root
+   identity. Remove active-list observation under the dispatch guard before
+   retiring the continuation's source/task/stack references. Drop that guard
+   before continuation callbacks, source retirement or any sleeping operation.
+   Retire the request after its continuation and before publishing slot reuse.
+5. An online home-CPU callback disables preemption and uses ordinary local node
+   release. Keep all OSQ, queue-membership, selection and count assertions.
+   A service root uses its own request, so the slot's legacy request_live must
+   be false. Slot reuse is the callback's final access to root-associated data.
+6. If the home CPU is already offline, run a service-only explicit CPU-indexed
+   release. Retain hotplug exclusion and serialize bitmap/count updates under
+   the dispatch guard: the hotplug read lock is shared and does not serialize
+   two offline cleanups. Validate the same exact identity and request_live
+   conditions. Factor shared node validation and field retirement rather than
+   omitting the local path's checks. Do not wait for that CPU to return online.
+7. Spill roots have no CPU-local slot and can retire synchronously on E in
+   ordinary sleepable context. No dispatch guard spans vfree or kfree.
+8. E never dereferences the root after the callback returns. Release only the
+   previously saved module references. Existing worker-stop ordering includes
+   synchronous cleanup completion before pool/code destruction.
 
-Reusing E's affinity directly is smaller but would keep a service worker waiting
-for the home CPU. That must not introduce a dependency on Native execution
-which itself needs a free service worker. The deferred alternative avoids that
-pool dependency at the cost of a work item, a kernel cleanup workqueue and a
-proved offline metadata path. These are the concrete choices to confirm before
-implementation; the approved reader-count behavior remains unchanged either way.
+O continues independently after its existing final packet or release ACK. E
+can wait for the home CPU's task-context callback, so this selection is not a
+claim of bounded cleanup latency or universal progress. The reviewed simple
+free-worker/preemption cycle was not demonstrated by the actual capture path;
+do not report it as an observed deadlock. A later waiter-side final-use ACK
+simplification is separate work, not a prerequisite imposed by this design.
 
 ## Selected state queries use the original JIT
 
@@ -463,5 +460,6 @@ service declarations, cold and learned query CALLs, exact ownership predicates
 with different O/E tasks and stale identity/generation observations, and Native
 read custody retiring while its ordinary read credit remains live. These are
 prepared checks until executed on the VM after the overall functionality is
-complete. They do not establish an mmap1 result. The pooled-storage cleanup
-decision above remains pending and is not changed by this correction.
+complete. They do not establish an mmap1 result. The separately selected
+synchronous pooled-storage retirement above retains its own implementation
+and validation obligations.
