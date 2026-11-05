@@ -62,6 +62,8 @@ class KernelProfiles(unittest.TestCase):
                  patch.object(Path,'read_text',return_value='kd_mmap='+('on' if args.mode=='kd' else 'off')):
                 bench.guest(args)
                 family=variant.rsplit('-',1)[0] if variant!='kdlock1' else variant
+                if variant == 'kdscope5-log16-kd':
+                    family = 'kdscope5'
                 disk,date={'kdlock1':('kdlock-builds','20261027'),
                            'kdmm1':('kdlock-builds','20261027'),
                            'kdscope1':('kdlock-builds','20261030'),

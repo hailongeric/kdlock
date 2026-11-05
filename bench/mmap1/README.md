@@ -140,6 +140,8 @@ publisher drainage, retire the source and unload normally. All gates remain.
 Throughput is completed mmap/munmap pairs per nominal second; delegation entry,
 fully returned JIT bodies and handed-back prefixes remain separate claims.
 The pilot does not establish those claims without a matching diagnostic proof.
+Focused runner checks include the diagnostic `kdscope5-log16-kd` variant, which
+uses the `kdscope5` kernel/build family with its own explicit runtime profile.
 
 Use the existing pinned Python and a real confirmed recovery snapshot. Both
 commands require `--mode native|kd`, `--boot-id`, `--host-state`,
