@@ -40,18 +40,22 @@ tests, segment codegen and entry-scope checks pass; returning-call tests have
 eight failures, the mutex-image fixture does not compile and the provider build
 returns zero with objtool warnings. The overall receipt fails, with no module
 load or reboot. The [contract's validation record](kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-keeps these outcomes separate from absent live retained-handback and timing
-evidence. This documentation audit runs no tests.
+keeps these outcomes separate from the later partial live probe and absent
+current timing acceptance. This documentation audit runs no tests.
 
 The later selected designs keep the three mmap state-query bodies in the
 original JIT, with the narrow existing `ATOMIC_ORIGIN` runtime custody proof,
 and use synchronous E-side home-CPU retirement with serialized already-offline
 cleanup. Those choices are resolved and committed; component passes, retained
-failed receipts and still-unverified live behavior remain distinct. The saved
-identity check verifies installed scope5 and an unloaded scope5 provider while
-the guest runs `kdlock1`. Matching live inputs, recovery inventory and
-handback-aware runners remain pending preparation. No current live handback,
-application completion or performance result is recorded here.
+failed receipts and partial live results remain distinct. At `58af0a53`, cold
+CALL and indirect-JMP phases pass. The later RET handback has the exact source
+return IP, SP advanced by eight and useful effects once, but the overall run
+fails its incomplete checker. The cleanup race is subsequently resolved with
+zero references, normal module unload and idle state; recovery to original
+`kdlock1` is verified. Candidate `bccf877c` adds untested RET-wave/shutdown-order
+checks. Further validation is blocked, with no new mmap1 correctness or
+performance acceptance. The [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+retains the exact evidence boundary and platform stop status.
 The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime guide](lifetimes.md#selected-retained-handback-retirement) define
 their scope without requiring a second JIT or new asynchronous cleanup queue.

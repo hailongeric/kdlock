@@ -8,8 +8,9 @@ This guide follows ordinary requests. Family-specific acquisition belongs in
 The selected [lock replacement contract](design/kdlock_lock_replacement_contract.md)
 defines general current-position handback. Its retained-worker runtime wiring
 is committed, with production checkpoint `da55414f` and subsequent focused
-component passes. Earlier failed receipts remain recorded; matching live inputs,
-handback-aware runners and actual live validation remain pending.
+component passes. The later `58af0a53` probe passes cold CALL and indirect-JMP
+handback but fails its overall checker at a post-RET continuation. Candidate
+`bccf877c` adds untested harness fixes; further live validation is blocked.
 
 ## Preparation and entry
 
@@ -102,9 +103,9 @@ successful handback or removed to conceal a missing path. The owner's focused
 failures and a mutex-image fixture compile failure. The W=1 provider build
 returns zero with objtool warnings; the overall receipt fails and loads no
 module. The [validation record](design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-separates these results from absent live retained-owner handback and timing
-evidence. Historical reached-emitter receipts apply only to their recorded
-source and backend. The first frozen `a6fe0bb2` receipt builds the provider and
+separates those earlier results from the later partial live probe and absent
+current timing acceptance. Historical reached-emitter receipts apply only to
+their recorded source and backend. The first frozen `a6fe0bb2` receipt builds the provider and
 passes seven component groups, but the query-image assertion and retirement
 fixture compilation fail. It loads no module and reboots nothing. Its
 [first result table](design/kdlock_lock_replacement_contract.md#first-frozen-runtime-checks-at-a6fe0bb2)
@@ -140,14 +141,18 @@ final access; the concurrent offline pair checks serialized count/bitmap
 updates. Neither these components nor the service join prove real CPU hotplug,
 the actual public query bodies or a loaded-provider handback.
 
-The saved identity receipt verifies installed scope5 and an unloaded scope5
-provider while the guest runs `kdlock1`. Matching daemon/publication inputs,
-recovery inventory, handback-aware runners and running-scope5 verification
-remain pending preparation. Live acceptance must distinguish a fully returned
-JIT episode from a handed-back prefix and observe both handback acceptance and
+The pre-live identity receipt verifies installed scope5 and an unloaded scope5
+provider while the guest then runs `kdlock1`. The later scope5 probe passes cold
+CALL and indirect-JMP phases. Its RET handback has the actual source return IP,
+SP advanced by eight and useful effects once, but its incomplete checker fails
+the run. A cleanup race is subsequently resolved with normal unload and zero
+references; that does not change the failed session verdict. Candidate
+`bccf877c` adds untested RET-wave/shutdown-order checks. Recovery to the original
+`kdlock1` is verified, and further validation is blocked. Live acceptance must
+distinguish a fully returned JIT episode from a handed-back prefix and observe both handback acceptance and
 terminal retirement. Later image learning may change the registry; an unchanged
 registry/returned-only validator cannot establish this path. See the
-[live evidence boundary](design/kdlock_lock_replacement_contract.md#installed-identity-and-pending-live-proof).
+[live evidence boundary](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
 
 ## Unlock and validation
 

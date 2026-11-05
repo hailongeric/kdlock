@@ -72,7 +72,10 @@ replacement. Its current-position handback preserves IP/GPR/SP and completed
 CALL pushes/RET pops. Retained-worker wiring and its production component join
 are committed, with [source-specific results](kdlock_lock_replacement_contract.md#current-focused-component-results)
 and preserved failed attempts. Supplied task/physical primitives limit that
-coverage; actual live validation remains pending.
+coverage. The later `58af0a53` probe passes cold CALL and indirect-JMP handback;
+its exact post-RET observations accompany an overall checker failure. Candidate
+`bccf877c` adds untested harness fixes, and further validation is blocked; see
+the [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
 General flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
 Existing limited flags and instruction contracts do not establish those broader
 features.

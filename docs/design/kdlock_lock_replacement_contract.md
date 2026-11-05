@@ -21,9 +21,12 @@ Subsequent selected designs are recorded in `ebf0aa4c` for Native read custody,
 home-CPU retirement. Those are design/documentation checkpoints. Their runtime
 wiring is committed. Central service acceptance, typed release and final ACK
 now have component coverage, with the supplied primitives and lifetime limits
-described below. Matching live inputs and handback-aware runners remain pending
-preparation. No loaded-provider, live handback, application or timing result is
-established by these receipts.
+described below. A later live probe at `58af0a53` passes cold CALL and
+indirect-JMP handback phases. Its post-RET observations do not change the
+failed overall checker result. Current candidate `bccf877c` adds untested
+harness fixes; further live validation is blocked. The
+[partial live record](#partial-live-probe-and-current-stop) separates those
+outcomes from the component receipts and the still-unvalidated mmap1 path.
 
 ## Required execution model
 
@@ -174,8 +177,8 @@ credit without decrementing it. O's normal `up_read` or `up_read_non_owner`
 consumes that credit. Custody transfer is not physical unlock. A later routed
 downgrade transfers its newly created read credit under the same rule. E retains
 any other live owners and their exact release/ACK obligations. The decision and
-source wiring are established; integrated packet acceptance, routing and lifetime
-behavior remain unverified by a loaded-provider run.
+source wiring are established; the partial live probe below does not complete
+the loaded-provider read-custody and nested-owner validation.
 
 Ordinary readers remain local. The previously implemented delegated-writer
 downgrade/read-tail transition has its own exact read credit; preserve it
@@ -208,7 +211,7 @@ the build/component checks and their limits.
 | [`daemon.c`](../../daemon/daemon.c) and [`workspace.inc`](../../daemon/workspace.inc), `make_callee_cmd`/`make_ij_cmd` | Separate actual CALL and IJ metadata drives subsequent compilation. This code is not a synchronous current-invocation image join. |
 | [`images.inc`](../../kernel_module/execution/images.inc), `kd_image_report`/`kd_image_publish` | Reports check the currently published image; immutable publication rejects a stale base generation and publishes the replacement separately. Existing frame bindings are not rewritten by learning. |
 | [`wrapper.S`](../../include/wrapper.S), image header; [`exe_info.h`](../../include/exe_info.h), `kd_image_protocol` | `ebae17c1` selected cold miss bit 13 without necessarily selecting the full-width header. `10ef078a` makes the wrapper and provider choose protocol 3 for bit 8 or bit 13 and adds a bit-13-only upload/bind fixture. This corrects the inspected source discrepancy; fresh fixture/publication validation remains pending. |
-| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_run_scope`/`kd_service_handoff`; [`native.inc`](../../kernel_module/execution/native.inc), `kd_exec_native_accept` and service wait | Retained owner routing, Native read-custody transfer, packet acceptance and typed release/ACK handling are committed. Routing is removed before the final request ACK. Three Native-service join modes pass at `da55414f` with supplied task/physical primitives; real stack-switch and loaded-provider proof remain open. |
+| [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_run_scope`/`kd_service_handoff`; [`native.inc`](../../kernel_module/execution/native.inc), `kd_exec_native_accept` and service wait | Retained owner routing, Native read-custody transfer, packet acceptance and typed release/ACK handling are committed. Routing is removed before the final request ACK. Three Native-service join modes pass at `da55414f` with supplied task/physical primitives; the separate partial live probe below leaves full retained-owner validation open. |
 | [`device_session.py`](../../disassem/device_session.py), `runtime_rwsem_controls`; [`kd_rwsem_provider.c`](../../kernel_module/kd_rwsem_provider.c) | Operation-14/15/16 partition and narrow `ATOMIC_ORIGIN` custody proof preserve the original JIT and other service classifications. All six synthetic query-image cases pass at `da55414f`; the earlier writer-query fixture passes with supplied runtime observations. Actual public helper execution remains a live requirement. |
 | [`kd_service.c`](../../kernel_module/kd_service.c), `kd_service_finish_handoff`/`kd_service_retire_handoff` | Synchronous home-CPU cleanup, hotplug protection through the callback, serialized offline slot release and missing-reservation rejection are committed. Four positive retirement modes and nine inconsistent-state rejections pass at `da55414f` with supplied CPU/work APIs; real CPU hotplug remains unverified. |
 | [`spin/execute.inc`](../../kernel_module/spin/execute.inc), [`mutex/combiner.inc`](../../kernel_module/mutex/combiner.inc) and [`lock/mutex_calls.inc`](../../kernel_module/lock/mutex_calls.inc) | Executed-error and abort-cleanup checks still reject treating progressed execution as an unstarted retry. The committed negotiated handback path does not turn generic execution errors into native continuation. |
@@ -311,8 +314,8 @@ ownership, actual public query bodies, application completion or throughput.
 
 ### Installed identity and pending live proof
 
-The [identity receipt](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/live-identity-2bfbb8dc.json)
-freshly verifies installed `kdscope5-kd`: 59 bundle files, 70 named source
+The pre-live [identity receipt](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/live-identity-2bfbb8dc.json)
+verifies installed `kdscope5-kd`: 59 bundle files, 70 named source
 files, 12 build files and four installed files, with `kd_mmap=on` and Build ID
 `5f2fce72a33480f6e79a79b374b21a0db377ecd1`. The unloaded provider has SHA256
 `0184c67b4cebcf7a8d0e1a25f12f77e364c593330c4ed66dd35a7542f089de1c`
@@ -329,17 +332,52 @@ builtin-local definition is recorded separately in the
 This interface review does not make all kernel inputs the candidate's revision
 or establish general caller compatibility.
 
-The receipt leaves matching daemon/translator publication inputs, a refreshed
-real recovery inventory, handback-aware runners and selected running-scope5
-verification pending preparation. Existing returned-body/unchanged-registry
-validators cannot validate permanent handback followed by later image learning.
+That receipt predates the live probe below and records preparation gaps at its
+own checkpoint. Existing returned-body/unchanged-registry validators cannot
+validate permanent handback followed by later image learning.
 The [minimum live sequence](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md#minimum-live-acceptance-preparation)
 requires once-only prefix/CALL effects and exact resume position; nested typed
 release, downgrade/read custody and cancellation joins; immutable old images
 and later learned generations; the three actual public query bodies; then
 focused real-syscall `mmap1_threads` and `mmap1_processes` checks. Fully returned
 JIT episodes and handed-back prefixes need distinct acceptance and retirement
-observations. No live or timing result is recorded here.
+observations. The partial probe below does not complete that sequence or
+establish mmap1 correctness or performance acceptance.
+
+### Partial live probe and current stop
+
+The [implementation record](compiled_mm_continuations.md#opt-in-cold-and-learned-continuation-probe)
+retains the stopped attempts and the opt-in generic continuation probe. Its
+live source is `58af0a5303052a57925f96b6e973b29d533c70d2`, with frozen
+manifest `b97edaaaef98e856219787ccbc2ca8ad242703813ec9efb77ad2d3ce6590706d`.
+The saved live reply verifies running scope5 Build ID
+`5f2fce72a33480f6e79a79b374b21a0db377ecd1`, `kd_mmap=on`, boot UUID
+`b19adc77-b8d9-4060-93ab-e2bb8635a5a8`. It is separate from the earlier
+unloaded-provider identity receipt.
+
+| Observation | Evidence status |
+| --- | --- |
+| Cold direct CALL and actual indirect JMP | Both live phases pass their exact current-position handback checks, with distinct O/E identities and useful effects once. |
+| Later RET handback | Inspection finds IP equal to the actual source return word, SP equal to leaf-entry SP plus eight, and useful effects once. The checker did not handle that post-pop continuation; the run exits 1 with `DATA_ERROR` and the learned-return phase incomplete. This is an observation, not a passing overall live result. |
+| Failure cleanup | The controller resumes the paused daemon before its no-child stop check, allowing a compiler child to start. Its saved session has `drained=false` and `translator has not exited`; preserve that failed cleanup verdict. |
+| Subsequent manual cleanup | After the child completes, the exact retained daemon is stopped, retirement reports zero modules/frames/writers, helper registration is released and both modules unload normally. Final idle is verified without force unload. This later cleanup does not rewrite the failed session. |
+| Candidate `bccf877c` | Adds bounded RET-continuation learning waves, exact post-pop checking and termination-before-resume daemon shutdown ordering. These harness fixes have not been tested; freezing their inputs is not a test pass. |
+
+The later recovery receipt verifies the original `7.0.0-38-kdlock1`, Build ID
+`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`, boot UUID
+`73f3cf44-38b5-4502-936b-882d5c784eef`, idle state and empty `next_entry`.
+No test modules or daemon remain active. Saved local replies are under
+`/tmp/kdlock-handoff-live-third-58af0a53`,
+`/tmp/kdlock-handoff-third-inspect-58af0a53`,
+`/tmp/kdlock-handoff-third-cleanup-58af0a53` and
+`/tmp/kdlock-normal-return-confirmed`; this audit reads them offline.
+
+The implementation turn and one continuation stopped at the platform's risk
+flag. The owner reports that no supported review interface was available, so
+an execution approval request was not submitted. Further validation remains
+blocked. This documentation continuation does not retry it. Nested/read-tail
+and later fully returned-image joins remain unaccepted; the actual public
+query bodies and real-syscall mmap1 correctness/performance gates remain open.
 
 ### First frozen runtime checks at a6fe0bb2
 
@@ -422,9 +460,10 @@ Run basic plus directly affected checks on the designated VM under the existing
 execution rules; full suites require an explicit request. This audit
 does not run new VM work. Subsequent focused receipts above cover the repaired
 groups, central service join and supplied online/offline retirement components.
-The live sequence still needs actual execution, exact accepted/retired episodes
-and matching running inputs; a successful build or component join cannot supply
-those results.
+The partial live probe above supplies two passing cold phases and exact RET
+observations with a failed overall result. Remaining joins still need their own
+accepted/retired episodes; the untested harness fixes and successful component
+joins cannot supply them. Validation is blocked and is not retried by this audit.
 
 Flags/SIMD restoration and IRQ/NMI conflict remain deferred. Whole-kernel
 coverage, unsupported configurations and general performance acceptance remain

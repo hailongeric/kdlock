@@ -19,7 +19,11 @@ source correction at `10ef078a`, runtime wiring at `a6fe0bb2` and production
 checkpoint `da55414f`. Native owner routing, packet acceptance and final ACK have
 component coverage with supplied task/physical primitives. Failed attempts and
 [fixture limits](design/kdlock_lock_replacement_contract.md#component-fixture-limits)
-remain explicit; actual live validation is pending.
+remain explicit. The later `58af0a53` live probe passes cold CALL and
+indirect-JMP handback. Post-RET inspection confirms the actual source return IP
+and SP advanced by eight, with useful effects once, but the overall checker
+fails. Candidate `bccf877c` has untested harness fixes; further validation is
+blocked. See the [partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
 
 ## Entry identities and packet states
 

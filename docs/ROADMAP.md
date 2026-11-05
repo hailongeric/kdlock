@@ -53,10 +53,13 @@ The selected correction restores the original JIT and commits retained-owner
 handback wiring at `a6fe0bb2`, with production checkpoint `da55414f` and
 [subsequent focused component results](design/kdlock_lock_replacement_contract.md#current-focused-component-results).
 The observed component failures are resolved across source-specific runs with
-identical production trees; earlier failed receipts remain intact. Matching
-live inputs and handback-aware runners remain pending preparation, and no live
-result is established. Linux 6.1 adaptation, operation-specific MM algorithms
-and prepared teardown are retired.
+identical production trees; earlier failed receipts remain intact. A later
+[live probe](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+passes cold CALL and indirect-JMP phases at `58af0a53`, with exact post-RET
+observations but a failed overall checker result. Candidate `bccf877c` adds
+untested harness fixes; further validation is blocked. No new mmap1 correctness
+or performance acceptance follows. Linux 6.1 adaptation, operation-specific MM
+algorithms and prepared teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
 
@@ -88,8 +91,8 @@ acquisition, downgrade, exact asynchronous read-release references and teardown.
 Native mmap/munmap/advice/fault algorithms stay unchanged. The historical local
 adapter keeps execution on the original task. Retained candidates use the
 general lock and service contracts; the original JIT correction's committed
-current-position worker handback, component evidence and pending live validation
-have separate scope. Build/component checks do not establish a live MM or
+current-position worker handback, component evidence and partial generic live
+probe have separate scope. Build/component checks do not establish a live MM or
 application result.
 
 The historical local adapter uses local KD readers and writers. Nano JIT batching

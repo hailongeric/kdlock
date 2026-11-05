@@ -5,7 +5,7 @@ This map locates maintained source. [Design](DESIGN.md) explains the shared mode
 Build outputs and frozen result snapshots are evidence, not another source tree.
 The [lock replacement contract](design/kdlock_lock_replacement_contract.md)
 separates the selected original JIT correction, its component evidence and
-pending live validation from the historical reached backend. This map identifies
+partial live results from the historical reached backend. This map identifies
 source responsibility, not a build or runtime pass.
 
 ## Provider and execution
@@ -27,7 +27,7 @@ source responsibility, not a build or runtime pass.
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
 | [kd_admission.c](../kernel_module/kd_admission.c), [kd_wait_queue.c](../kernel_module/kd_wait_queue.c) | Exact acquisition predicates, shared request selection, cancellation and queue membership |
-| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; production checkpoint `da55414f` has focused component results, with live proof pending |
+| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; production checkpoint `da55414f` has component results and later partial live handback evidence, with overall validation incomplete |
 | [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; component join covers acceptance/final ACK with supplied task/physical primitives |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, uploads and retirement |
@@ -48,7 +48,11 @@ Later fixture-only runs pass OSQ (26 scenarios, 14 mutations) and resources
 (19,164 checks, 27 mutations), with identical production trees. The
 [validation record](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
 preserves separate receipt verdicts and fixture limits. No module is loaded by
-these checks; matching live inputs and handback-aware runners remain pending.
+those component checks. The later generic probe passes cold CALL and
+indirect-JMP phases at `58af0a53`, but its overall live check fails at an
+unhandled post-RET continuation. Candidate `bccf877c` changes the probe's
+RET-learning and daemon shutdown checks and remains untested; further live
+validation is blocked. See the [partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
 
 ## Linux 7 and MM integration
 

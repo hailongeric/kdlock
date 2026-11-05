@@ -16,9 +16,12 @@ has production source at `da55414f`. Subsequent frozen checks resolve the
 observed component failures, including service acceptance/final ACK and
 retirement fixtures. The [source-specific evidence](bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
 preserves every failed attempt and the limits of supplied task/CPU primitives.
-Live inputs and handback-aware checks remain pending preparation; no live
-handback, application result or performance gain is established for this source.
-Earlier measurements do not promote it to master.
+The later [live probe](docs/design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+passes cold CALL and indirect-JMP handback at `58af0a53`. Its exact post-RET
+observations accompany a failed overall checker result. Candidate `bccf877c`
+adds untested harness fixes; further validation is blocked. No new mmap1
+correctness or performance acceptance is established, and the candidate is not
+promoted to master.
 
 ## Current platform and policy
 
@@ -96,7 +99,7 @@ contains later focused actual-mmap1 execution proofs for the superseded separate
 emitter, with failed performance acceptance and no Nano run. It does not validate
 the restored original JIT correction. See the original contract's
 [current validation record](docs/design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
-for its distinct passes, failures and unverified live handback.
+for its distinct passes, failures, partial live handback and remaining joins.
 
 The [fresh normal-kernel basic checkpoint](bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
 passed all four selected families with correct data, returned JIT bodies and final

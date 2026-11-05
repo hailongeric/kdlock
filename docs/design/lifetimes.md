@@ -405,8 +405,13 @@ retains them separately from `a6fe0bb2` and subsequent source-specific receipts.
 Central acceptance/final ACK and retirement now have the limited component
 coverage above. OSQ passes 26 scenarios and 14 mutations at `615cdb0b`;
 resources pass 19,164 checks and 27 mutations at `2bfbb8dc`. These are not one
-combined run or live ownership proof. Installed scope5 verification and the
-unloaded provider identity do not match the recorded running `kdlock1` kernel;
-matching live inputs, recovery inventory and handback-aware runners remain
-pending preparation. No loaded-provider or live retained-owner handback pass is
-recorded here.
+combined run or live ownership proof. The pre-live installed-scope5/unloaded
+provider receipt is separate from the later `58af0a53` scope5 probe. Its cold
+CALL and indirect-JMP phases pass; post-RET IP/SP and once-only effects are
+observed, but the overall checker and initial cleanup fail. Subsequent manual
+cleanup retires all source references, releases helper registration and unloads
+both modules normally, leaving the VM idle. This later result does not rewrite
+the failed session. Recovery to original `kdlock1` is verified. Candidate
+`bccf877c` adds untested harness fixes; further validation is blocked. See the
+[partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+for exact identities and remaining acceptance gaps.

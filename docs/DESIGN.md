@@ -114,8 +114,11 @@ learning retain their policies. Existing downgraded read credit transfers to
 Native custody without a decrement, and pooled slots retire through synchronous
 E-side home-CPU cleanup with an explicit serialized already-offline path. These
 are resolved designs with committed source and focused component evidence;
-matching live inputs and handback-aware runners remain pending preparation.
-Component fixtures are distinct from loaded-provider execution; see
+the later `58af0a53` live probe passes cold CALL and indirect-JMP handback.
+Its exact post-RET state accompanies a failed overall checker result.
+Candidate `bccf877c` adds untested harness fixes, and further validation is
+blocked. Component results, partial live observations and application acceptance
+remain distinct; see the [live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop),
 the [contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement).
 
@@ -149,8 +152,9 @@ from retained execution experiments. The local adapter changes only the lock
 backend and minimal API/lifetime wrappers; its native MM bodies execute on the
 original task. Later retained candidates execute unchanged native bodies on E
 through general lock/service routing. The selected original JIT correction is
-part of kdlock lock replacement, with runtime handback wiring committed and
-final validation still pending.
+part of kdlock lock replacement, with runtime wiring and two passing cold live
+phases. Overall validation remains incomplete and blocked; no new mmap1
+correctness or performance acceptance follows.
 Operation-specific MM algorithms and prepared teardown remain retired.
 
 The [module-owned mapping experiment](design/mmap_fault.md) changes a private
