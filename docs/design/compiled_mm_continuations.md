@@ -2063,3 +2063,12 @@ counts separately. These callbacks delimit an observed window, not an atomic
 snapshot at the application's counter instruction. Do not claim steady delegated
 performance when coverage advances or completion remains unproved. Keep matched identities and
 placement, immutable running inputs, exact retirement, and normal-kernel recovery.
+
+The first focused VM attempt at `796fbb9906f2e044ed426bb6c1ea1ddf6a33698f`
+passed retained-image, service-join, terminal-continuation and sample-window
+checks, then stopped at a demand-activation fixture compilation error. Its
+mock lookup indexed an unknown entry as `-1`; make unknown lookups return NULL
+and make the mock image validator reject them before indexing readiness.
+This is a fixture correction, with no change to provider behavior. Preserve
+the failed receipt under `learning-preflight-796fbb99` and run the remaining
+checks and builds against a new frozen revision.
