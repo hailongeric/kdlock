@@ -1203,7 +1203,10 @@ handoff machinery; no instruction interpreter or caller-specific MM path is
 introduced. Killable admission, nested owner records, downgraded read credit
 and exact retirement remain unchanged. Validate branch-not-taken completion,
 branch-taken packet state and original-site identity before another focused
-mmap1 attempt. This paragraph is a design; the frontier is not implemented.
+mmap1 attempt. At the end of that scaling run this was a design only. The
+implementation and its validation scope are recorded under
+[Authorized original-instruction frontier](#authorized-original-instruction-frontier)
+below; the earlier run remains unscored.
 
 The bounded reproduction on matched Build ID
 `5f2fce72a33480f6e79a79b374b21a0db377ecd1`, boot
@@ -1311,9 +1314,10 @@ pair took 14.588 seconds versus 0.256 seconds, including snapshot construction;
 symbol-file opens fell from 138 to one. This is metadata lookup cost, not a
 complete compiler or mmap1 throughput measurement. Missing KD symbols on the
 normal unloaded kernel make retrospective attribution to the earlier enabled
-campaign invalid. No production resolver or JIT change was made. The warning
-frontier remains awaiting review, and child images remain initially scoped to
-selected KD acquisitions as specified above.
+campaign invalid. That measurement made no production resolver or JIT change.
+At that point the warning frontier awaited review; its later implementation is
+recorded below. Child images remain initially scoped to selected KD
+acquisitions as specified above, and their transitions remain unimplemented.
 
 # Per-translation core symbol reuse: candidate design
 
@@ -1449,3 +1453,44 @@ identities, separate learning/proof/quiet intervals and the preserved matched
 Native measurements. Require real worker-attributed delegation evidence;
 compilation/publication alone is not proof. Retain every failure and restore
 the verified normal kernel after validation. Do not merge.
+
+Implemented at `d57f7523f4d6438e4c31a840524f48bc7413fb56`, with terminal
+metadata and fixture corrections through
+`99958c7d4d79bc9ddcdac290b51ed0bd40328487`. The generated-state driver passed
+five cases in the VM; the retained join passed write, downgrade and read
+completion with supplied physical/task primitives. The provider, daemon and
+observer built. These establish the focused component behavior, while actual
+MM execution and throughput require the separate worker-attributed campaign.
+The text-region driver retains seven failures and one error reproduced on its
+baseline. Exact scope, identities and earlier failed attempts are recorded in
+[the focused frontier report](../../bench/results/10.176.26.71/tests/source-frontier-99958c7d/README.md).
+
+# Bounded application learning after the frontier correction
+
+The `99958c7d4d79bc9ddcdac290b51ed0bd40328487` campaign completed 32 passed,
+drained applications and 57 successful compilations. Both roots remained
+NORMAL at generations 32/25. Distinct CALL/IJ additions account for every
+generation, with 71 image descriptors still free. Munmap stopped advancing
+within that run; mmap still added VMA merge helpers. The harness reached its
+32-application allowance before its separate execution proof or quiet scoring.
+Exact retirement and normal-kernel restoration passed. Preserve the failure
+and all unscored rates in
+[the campaign report](../../bench/results/10.176.26.71/bench/mmap1-frontier-99958c7d/README.md).
+
+For the next isolated benchmark candidate, accept an explicit learning
+allowance of at most 64 application lifetimes, with the default still three.
+Keep the campaign's 1800-second global learning deadline and its independent
+controller/launcher time bounds. Keep the 128-slot capacity/headroom guard,
+original decoder/CFG bounds, miss semantics, per-lock scope, exact registry
+checks, worker-attributed proof, and one scored round per point unchanged.
+This adjusts preparation, not the lock protocol or proof requirement. Start
+with fresh module/source identities and empty CALL/IJ histories; never rebase
+old module addresses into a new session.
+
+Emit concise learning start/completion records through the existing controller
+output, after each drained application, so the source-host log exposes registry
+generations and remaining advancement without a guest inspection process.
+Printing these preparation records does not enter a quiet scoring interval.
+Append tables lack per-edge task/lock-phase provenance; this change does not
+prove region leakage absent or live diagnostic handback complete. Another
+actual defect must be diagnosed rather than hidden by extending these bounds.
