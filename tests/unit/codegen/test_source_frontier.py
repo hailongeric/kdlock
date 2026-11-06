@@ -128,6 +128,8 @@ class SourceFrontierTests(unittest.TestCase):
         assembly, log, status = render(machine_code('inc QWORD PTR gs:[rax]; std; ret').hex(),
             lock_kind='mutex', abi=2, trusted_source=True, native_escape_capable=True,
             origin_memory_capable=True, source_frontier_capable=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100},
             source_frontier_direction=True, return_status=True, build_options=options)
         self.assertEqual(status, 0, log)
         self.assertTrue(assembly)
