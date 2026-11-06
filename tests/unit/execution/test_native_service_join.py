@@ -22,6 +22,8 @@ def main():
     wait_header = read_source(ROOT / 'include/kd_wait_queue.h')
     declarations = without_includes(read_source(ROOT / 'include/kd_regs.h'))
     declarations += without_includes(read_source(ROOT / 'include/exe_info.h'))
+    declarations += '\n'.join(line for line in read_source(ROOT / 'include/kd_jit_batch.h').splitlines()
+                              if line.startswith('#define KD_JIT_ABI_OFFSET ')) + '\n'
     declarations += definition(read_source(ROOT / 'include/kd_image.h'),
                                'struct kd_jit_image {').rstrip() + ';\n'
     for source, names in (
