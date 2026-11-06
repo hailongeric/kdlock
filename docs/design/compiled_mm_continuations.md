@@ -1722,3 +1722,63 @@ The diagnostic rate was 51,042 pairs/s versus preserved Native 225,144.5.
 No steady-JIT, complete MM read-tail or performance acceptance is claimed.
 Counter/timer definitions, source references, failures and limits are in
 [the selected-path report](../../bench/results/10.176.26.71/bench/mmap1-service-observe-e0a21c4a/README.md).
+
+# Five direct-call levels and publication during learning
+
+Continue the existing branch from `1d5017f1`, retaining the original backend,
+GS lowering, wrapper ABI, source trust policy, cancellation, owners and exact
+first-unexecuted continuation. The user authorized bounded direct-call
+lookahead and image publication during the learning application's lifetime.
+
+Count a source acquisition entry as depth zero and each ordinary direct CALL
+edge as one additional level: follow callee entries at depths one through five.
+Depth is lookahead, not a maximum permitted stack or API nesting depth. A target
+already learned from actual execution is an additional depth-zero decoder seed
+in the same acquisition region; it can extend that region in a later image.
+Branches and tail jumps retain depth, cycles use minimum reached depth, and
+lock controls / declared instruction services remain boundaries. Unknown or
+deeper callees retain the existing exact CALL-miss continuation when reached.
+Apply the default to trusted ABI2 images, with an explicit zero-depth setting
+for fixtures and historical comparisons. Keep ordinary source windows, the
+1-MiB aggregate, 256-KiB reads, 33 decode passes, 32 combined transitions and
+ordinary return-flow budget. Do not select the older compact/closure profile.
+
+Select lookahead only from the existing critical-section scope. A statically
+identified outer release ends that caller path before callee discovery. Do not
+mistake a nested release for the root release. Retained execution uses exact
+object/identity/generation records: closing A does not close still-held B, and
+the accepted non-LIFO case preserves B while marking A closed. Downgrade is not
+a release; its read share and delegated tail continue until the matching read
+release. Where decoded control flow alone cannot identify the release object,
+runtime ownership delimits execution; no new value/CFG admission is introduced.
+Separate images for selected KD child acquisitions remain their own delivery
+item; this bounded discovery change must not claim to implement that machinery.
+
+The capture/publication review found no need for a new admission guard. Capture
+already owns a source/task-stack lease before lookup. Publication initializes
+the immutable image before release-publishing its pointer and then NORMAL
+status under the existing generation gate. Capture's acquire reads can choose
+an old or new complete image, or return no eligible image after a miss; they do
+not modify that image. Retained entry/resume uses its frame-bound image, and
+all published images survive through session retirement. Reports change the
+entry only when the reporting image is still current, under that same gate.
+An old report after replacement cannot mark the new generation missed. Keep
+all old images resident and do not merge, reclaim or swap active frames.
+
+One existing capture filter omits `KD_IMAGE_REQUIRE_SOURCE_FRONTIER` although
+the header and retained runtime support it. Include that declared requirement
+in the retained capture mask and directly check valid/invalid image cases;
+otherwise a deeper image containing the previously fixed reached marker would
+publish successfully yet never be captured. Keep its exact instruction,
+packet, source-lease and Native continuation checks.
+
+Permit `pause_translation=false` in an explicitly unscored learning campaign.
+The existing learning controller already deactivates new bindings and renews
+source, registry, artifact and daemon receipts at drained boundaries. Leave
+its daemon running during each application and wait for its ordinary compiler
+child after drain. Preserve the strict quiet scoring path. Record changing
+generations and actual compilation/application overlap, never pool them into
+a fixed-image score. Keep the small counters and read them outside application
+execution. Run focused depth/release/frontier/publication checks and short
+mmap1 threads/processes observations on the VM, retain all outcomes and restore
+the normal kernel. No merge or claimed gain without a comparable measurement.
