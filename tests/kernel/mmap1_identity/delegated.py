@@ -36,8 +36,8 @@ memory = bench.common.module('mmap1_delegated_memory', ROOT / 'tests/kernel/jit_
 reached = bench.common.module('mmap1_delegated_reached', ROOT / 'tests/kernel/jit_continuation/reached_mode.py')
 pairs = bench.common.module('mmap1_syscall_pairs', ROOT / 'tests/kernel/mmap1_identity/syscall_pairs.py')
 PARAMETERS = Path('/sys/module/kdlock_km/parameters')
-KERNEL_COMPONENT = '1ab7124abb6140752c1f0bb6e862144d426a3875'
-KERNEL_BUILD_ID = '5f2fce72a33480f6e79a79b374b21a0db377ecd1'
+KERNEL_COMPONENT = '9a5d606aee0249d0e566a1c9667375eb038bc9cd'
+KERNEL_BUILD_ID = '357a7115d21941960b90262ac1165bf70d1b398e'
 PYTHON = '/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3'
 GIB = 1024 ** 3
 

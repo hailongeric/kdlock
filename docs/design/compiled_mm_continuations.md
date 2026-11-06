@@ -2226,3 +2226,25 @@ The 390 userspace restore cases establish the local register contract, not live
 MM completion; do not blindly repeat the previous long warmup. Preserve the
 existing ownership/lifetime checks, exact CALL/RET words, reached terminal
 handoff and complete normal-kernel recovery evidence.
+
+## Focused checks on the rebuilt builtin restore
+
+The preserved incremental build completed with kernel component
+`9a5d606aee0249d0e566a1c9667375eb038bc9cd`, Build ID
+`357a7115d21941960b90262ac1165bf70d1b398e` and unchanged configuration
+`7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa`.
+The only changed source-file metadata among 93,359 compared entries belongs to
+`kernel/locking/kd_mmap/provider.c`. The compiled restore sequences finish all
+packet reads before `pop %rsp`; the instruction continuation restores arithmetic
+flags before that stack transition. Kbuild completed normal dependencies,
+including relinking/BTF generation for 6,901 modules. This is build evidence,
+not a live mmap1 result or proof of the earlier failure's cause.
+
+Bind the isolated focused mmap1 controller to this exact component and Build ID.
+Create a fresh writer-site audit from the new ELF and new schema-2 mode bundles;
+retain all older identities and records separately. Do not relax the component,
+image hash, site-table, configuration, source or runtime checks to admit the new
+kernel. The directly affected site-validation fixtures run on the VM, followed
+by bounded thread/process diagnostics using original JIT execution. Keep
+retained-image capture and replacement enabled. Do not repeat the earlier long
+warmup before the bounded diagnostics establish complete execution and retirement.
