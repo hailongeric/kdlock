@@ -18,7 +18,7 @@ def deltas(before, after):
         row = {key: after[entry][key] - before[entry][key] for key in observe.FIELDS}
         rt.require(all(value >= 0 for value in row.values()) and row['invalid_clock'] == 0,
                    'observation interval differs', 'DATA_ERROR')
-        rows.append(dict(entry=hex(entry), **row))
+        rows.append(dict(entry=hex(int(entry)), **row))
     return rows
 
 
