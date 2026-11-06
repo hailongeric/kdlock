@@ -1872,3 +1872,19 @@ Separate child images initially apply only to selected KD acquisitions;
 allocator and other Native locks retain their existing instruction-service
 handling. This boundary correction does not implement separate child images
 or establish complete delegated MM execution.
+
+The CLI/STI candidate `eabe454b4ee51ea6962a73525372b4b09679c737` passed
+the focused generated/negotiation/continuation checks and provider build.
+Threads completed at one/eight workers with both roots publishing generation
+one, then eight JIT submissions and eight permanent handbacks per root. The
+eight-worker rate was 46445.5 pairs/s; generation two was published after
+that application, so learned-dispatch execution remains unproved there.
+
+For the following processes session, permit `[1,2,8]` alongside `[1,8]` in
+the existing observation runner. Its inherited loop already runs each point
+once and retains all observations. The two-worker point is one bounded extra
+learning application before the final eight-worker observation, not another
+scored repeat or an indefinite stabilization loop. Keep the tested provider
+and its source identity; only the runner count check changes. Freeze the new
+runner while idle, retain distinct runner/provider identities, and do not pool
+the threads and processes observations as one source/configuration score.
