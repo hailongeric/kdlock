@@ -1782,3 +1782,28 @@ a fixed-image score. Keep the small counters and read them outside application
 execution. Run focused depth/release/frontier/publication checks and short
 mmap1 threads/processes observations on the VM, retain all outcomes and restore
 the normal kernel. No merge or claimed gain without a comparable measurement.
+
+The first live-learning candidate (`d5ec4eee`, fixture-only corrections through
+`1f847d5b`) completed/drained threads at one and eight workers, at 190216.5 and
+50785.5 pairs/s. Both roots were generation zero / NativeOnly; there were no
+JIT submissions. Readiness correctly refused acceptance. The compiler found
+undecodable blocks at `0xffffffff813b1b67` and `0xffffffff81dbceb2`. A maintained
+leased source read identified `0f 01 ee` (RDPKRU) and `0f 01 ca` (CLAC),
+respectively. The latter differs from the static ELF through kernel text
+alternatives. Neither instruction is proved reached by the applications.
+Exact retirement passed, including the separate two-site source read.
+
+Extend the existing terminal source-frontier marker only for these two observed
+three-byte encodings. Do not execute or emulate either on the executor. If
+reached, export the full packet and preceding effects, retain the exact source
+IP/SP and real CALL words, validate leased bytes at runtime, and use the
+existing first-unexecuted original-task continuation with ACCEPT/final ACK.
+Other branches continue through JIT. The matching full MM critical section is
+not rejected merely because this instruction occurs on an alternative.
+
+Advertise the extended encoding set with capability revision 19. Keep revision
+18's original five-byte marker working; new decoder forms require explicit
+revision-19 negotiation. Keep the same marker/image requirement and retained
+lifetime protocol. Validate the two new generated exits and runtime source
+checks, build on the VM, then resume the short threads/processes run without
+another broad suite. Preserve all local-only observations as such.
