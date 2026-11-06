@@ -1,0 +1,1061 @@
+{
+  "schema": 1,
+  "review_kind": "offline retained JIT assembly and original backend source inspection",
+  "review_label": "munmap-g9",
+  "source_commit": "d726952d8f03bffe62b83028fb51d6726fb1f434",
+  "evidence_status": {
+    "final_g9_runtime_tested": false,
+    "runtime_success_claimed": false,
+    "source_edits": false,
+    "vm_commands": false,
+    "counts_scope": "whole selected retained image static possibilities; not reached counts, runtime shares, or complete-body evidence"
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/kdlock-settled-276f2647-records/campaign/processes/kd/run/workspace/daemon/0xffffffff8181c73b/2372/asm/jit.S",
+      "sha256": "9aace9c217ee56de59a4e8a9434cc457266f34880717c2905525a975d2ec7d19"
+    },
+    {
+      "path": "/tmp/kdlock-settled-276f2647-records/campaign/processes/kd/run/workspace/daemon/0xffffffff8181c73b/2372/asm/ij_table.txt",
+      "sha256": "0a2fb2f68ee6e22664398b62ed408aba73b013bb47c46e1c06e47cc07f4628a3"
+    },
+    {
+      "path": "/tmp/kdlock-settled-276f2647-records/campaign/processes/kd/run/workspace/daemon/0xffffffff8181c73b/2372/asm/callee_table.txt",
+      "sha256": "160ed9ebc9cddc2e86f124fc43b0c2cb707ce9657257cf33d0cd61efbf57c3a6"
+    },
+    {
+      "path": "/tmp/kdlock-settled-276f2647-records/campaign/processes/kd/inputs/module-identity.json",
+      "sha256": "95f68be5636f525d5dc074d921364d3909fbdf6c7f9d5640782d410a7c6153cb"
+    }
+  ],
+  "source_artifacts": [
+    {
+      "path": "/tmp/kdlock-reached-path-translation/disassem/indirect_jump.py",
+      "sha256": "791d9ed17c773abcc7e87a522afe81adda1ad8b708e7bbd39d98c219e9809d04"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/disassem/memread.py",
+      "sha256": "763db0d17170098bad5a78cc290daf9e2923a7c473b21902e92e0855c652144e"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/disassem/special_inst.py",
+      "sha256": "f699b9c4274ab351edb082ccb0624914cc859a12b8a1e0f234e1570d2eef969a"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/disassem/origin_memory.py",
+      "sha256": "846dc19ec63a1483a7471b174d20156458589aa9de8a4f092eb1b62fd9367149"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/disassem/source_frontier.py",
+      "sha256": "9fbd54e5780f96d04b4c678ab59ebec956cad4baa812485ca2161f1de59884a1"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/kernel_module/execution/wrapper_entry.inc",
+      "sha256": "eb028e92db80204f71ef907427be7b0415bc796c6bf54e86fdd8df2043b0260c"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/kernel_module/execution/origin_memory.inc",
+      "sha256": "b8d07266c8e67f0f75906a672b5626e2ebc8fde25fc7894adcc206e4bdd6cbd5"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/kernel_module/exe.c",
+      "sha256": "9d3d1de59e15eae0771355a5a45a773cbec20fc7e3ad980a9f883847d065028d"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/kernel_module/kd_rwsem_provider.c",
+      "sha256": "a552406324bc4ad304b1d292ee868cfe65858f23e0c1dadc7b807214ef19e31d"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/kernel_module/kd_rwsem.c",
+      "sha256": "3cd303d06b6ce0ce6375e10565b423bc557093bea8fc112b26d87b4ef106afa8"
+    },
+    {
+      "path": "/tmp/kdlock-reached-path-translation/include/exe_info.h",
+      "sha256": "1698a1fd98b364fbfe86a14d7fc1802fcd768f8bda9d28ae6a207cee82c169ce"
+    }
+  ],
+  "callback_path": {
+    "caller_block": "0xffffffff814f4904",
+    "source_call_target": "0xffffffffc0000f26",
+    "source_call_return": "0xffffffff814f4918",
+    "source_call_instruction": "0xffffffff814f4913",
+    "generated_call_return_word_lines": [
+      120871
+    ],
+    "tail_instruction": "0xffffffffc0000f26",
+    "tail_instruction_text": "JMP RDX",
+    "tail_next_pc": "0xffffffffc0000f28",
+    "tail_body_label_lines": [
+      235878
+    ],
+    "learned_target": "0xffffffffc0e32980",
+    "learned_target_symbol": "kd_provider_assert_held",
+    "history_lines": [
+      3,
+      4
+    ],
+    "history_duplicate_deduplicated": true,
+    "emitted_table_lines": [
+      243205
+    ],
+    "emitted_match_label_lines": [
+      243217
+    ],
+    "provider_body_label_lines": [
+      236079
+    ],
+    "inner_call_target": "0xffffffffc0e31e10",
+    "inner_call_target_symbol": "kd_rwsem_assert_held",
+    "inner_call_return": "0xffffffffc0e3298e",
+    "inner_body_label_lines": [
+      236014
+    ],
+    "inner_ret_instruction": "0xffffffffc0e31e35",
+    "inner_ret_next_pc": "0xffffffffc0e31e36",
+    "inner_ret_table_lines": [
+      243311
+    ],
+    "inner_ret_match_lines": [
+      243323
+    ],
+    "provider_return_block": "0xffffffffc0e3298e",
+    "provider_return_block_lines": [
+      236097
+    ],
+    "provider_tail_target": "0xffffffff82704e20",
+    "shared_ret_instruction": "0xffffffff82704e20",
+    "shared_ret_next_pc": "0xffffffff82704e21",
+    "shared_ret_body_label_lines": [
+      235867
+    ],
+    "shared_ret_table_line": 241293,
+    "shared_ret_target_count": 317,
+    "missing_outer_return_target": "0xffffffff814f4918",
+    "outer_return_target_present_in_shared_ret_table": false,
+    "shared_ret_miss_exit": 15,
+    "shared_ret_miss_exit_line": 242251,
+    "conclusion": "The learned tail target, callback body, and inner RET edge are emitted. The actual outer CALL return word is absent from shared RET dispatch, retaining an exit15 frontier. Generic entry or budget dispatch entries do not authorize that RET edge.",
+    "source_explanation": {
+      "file": "disassem/indirect_jump.py",
+      "direct_call_collection_lines": [
+        46,
+        54
+      ],
+      "return_propagation_lines": [
+        81,
+        106
+      ],
+      "qualification": "Return propagation walks decoded block.bto successors; it does not propagate caller continuations through learned indirect-target tables."
+    },
+    "assertion_semantics": "kd_provider_assert_held calls kd_rwsem_assert_held; it checks nonzero readers or admission and does not acquire a lock."
+  },
+  "static_frontiers": {
+    "untranslated_callee_stubs": {
+      "exit": 1,
+      "count": 118,
+      "qualification": "Runtime registration determines a known service versus retained original-task handback; no per-target service outcome inferred.",
+      "first_stub_line": [
+        243343
+      ]
+    },
+    "indirect_call_misses": {
+      "exit": 11,
+      "table_count": 14,
+      "empty_table_count": 13,
+      "sites": [
+        {
+          "next_pc": "0xffffffff8124987c",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff814f4a38",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff815132ba",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81598277",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff815984af",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81785775",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81818a2c",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81856203",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81876eb4",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81876eec",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81876f69",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff826ccaff",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff826ccb68",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff826ccc3c",
+          "target_count": 0
+        }
+      ]
+    },
+    "indirect_tail_misses": {
+      "exit": 14,
+      "table_count": 10,
+      "empty_table_count": 9,
+      "sites": [
+        {
+          "next_pc": "0xffffffffc0000f28",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffffc00015f1",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc00015f4",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc00022b9",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc0002374",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc0002377",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc00023e9",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc000246e",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc00099b6",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffffc00099ba",
+          "target_count": 0
+        }
+      ]
+    },
+    "generic_ret_ij_misses": {
+      "exit": 15,
+      "table_count": 166,
+      "empty_table_count": 1,
+      "sites": [
+        {
+          "next_pc": "0xffffffff8121367b",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8121f4be",
+          "target_count": 43
+        },
+        {
+          "next_pc": "0xffffffff8127f16b",
+          "target_count": 11
+        },
+        {
+          "next_pc": "0xffffffff81295fe8",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff813364f4",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff813371c0",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff814102ec",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81411927",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff814119ab",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff814119eb",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81411a3e",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81439d24",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff814968ae",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff814f492d",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff814f49ef",
+          "target_count": 8
+        },
+        {
+          "next_pc": "0xffffffff814f4a74",
+          "target_count": 8
+        },
+        {
+          "next_pc": "0xffffffff81512321",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff815132e8",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81513476",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81513d7d",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81514d23",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff815306e2",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8155a223",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8178de2d",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff8178df3a",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff8178df64",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff817aa6e6",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817aa6f5",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817b6862",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff817b68f4",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff817b6900",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff817b7877",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817b7aa4",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817b7ec0",
+          "target_count": 11
+        },
+        {
+          "next_pc": "0xffffffff817d7964",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e0524",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff817e05f4",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff817e0823",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff817e0d28",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff817e1aee",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817e1bea",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff817e1d23",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e2abc",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e2b6b",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e42be",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e637e",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817e652c",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817f3180",
+          "target_count": 9
+        },
+        {
+          "next_pc": "0xffffffff817f546b",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817f54a9",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817f5739",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff817fa465",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817fa4ab",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817fa4e3",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817fa56f",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817fa838",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff817fa86d",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff817fa8ee",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff817fa9f5",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817faaa6",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff817faae4",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817fabf2",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817fad2a",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff817fafe8",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8180482b",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81804a21",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81804aa1",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81804c7d",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff81804dc0",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81806239",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81807970",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81808b2c",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff81808ca6",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff8180b1b4",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff8180b262",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff8180b3fc",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8180b4aa",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8180ba6e",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8180c4a7",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81816da5",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81817980",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81817da6",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81818a62",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8181a4fe",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8181a730",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8181c7f6",
+          "target_count": 0
+        },
+        {
+          "next_pc": "0xffffffff81846f30",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8184e7b1",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8184e7ff",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8184f06d",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81851026",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818512e6",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81853e71",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81854034",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff818540a8",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff81854164",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818541b2",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818542f4",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8185aa64",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8185ace8",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8185afae",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8185baa7",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8185c0b2",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8185c17e",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81865571",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8186c53f",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff81875ff9",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8187602d",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81876e80",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff81877074",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff8188e274",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8188e2a4",
+          "target_count": 6
+        },
+        {
+          "next_pc": "0xffffffff8188e32c",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff8188e43a",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff8188e7a2",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81890aaa",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff818938f9",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81893bfe",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818949aa",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81895f2a",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff8189687d",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818968ea",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818b00ae",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff818b0f26",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff818d75ea",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff8196536c",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81cbc179",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81cc7235",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81cc7467",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81cc74e9",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81ccfee8",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff81cffb34",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81cffba7",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff81dbd029",
+          "target_count": 126
+        },
+        {
+          "next_pc": "0xffffffff826b27ac",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826b3fb6",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff826b4621",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff826b466b",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff826b4838",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826b4a6a",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff826b4d66",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826b5026",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff826b5175",
+          "target_count": 4
+        },
+        {
+          "next_pc": "0xffffffff826b5bba",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff826b62f1",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826b66b5",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826b8329",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826b85a1",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826baeb9",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826bb9b6",
+          "target_count": 9
+        },
+        {
+          "next_pc": "0xffffffff826be9e9",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826c44ed",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826c4f36",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826ccb7d",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826cccf4",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826cd7b3",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826cd7e2",
+          "target_count": 2
+        },
+        {
+          "next_pc": "0xffffffff826d27f8",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826d35ec",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826d7cc0",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826d7e72",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffff826d8978",
+          "target_count": 3
+        },
+        {
+          "next_pc": "0xffffffff826f056b",
+          "target_count": 5
+        },
+        {
+          "next_pc": "0xffffffff82704e21",
+          "target_count": 317
+        },
+        {
+          "next_pc": "0xffffffffc0e31e36",
+          "target_count": 1
+        },
+        {
+          "next_pc": "0xffffffffc0e32fec",
+          "target_count": 1
+        }
+      ]
+    },
+    "source_frontiers": {
+      "exit": 16,
+      "count": 32,
+      "qualification": "Permanent pending original-instruction boundaries; no CALL token or learned edge. Retained handback depends on runtime checks.",
+      "source_reference": {
+        "file": "include/exe_info.h",
+        "lines": [
+          66,
+          67
+        ]
+      }
+    },
+    "origin_memory": {
+      "exit": 13,
+      "metadata_version": "KDOM0002",
+      "descriptor_count": 149,
+      "supported_descriptor_count": 101,
+      "supported_operation_counts": {
+        "INC": 22,
+        "DEC": 17,
+        "MOV_load": 58,
+        "TEST": 4
+      },
+      "refusal_descriptor_count": 48,
+      "no_jit_successor_count": 48,
+      "refusal_sites": [
+        "0xffffffff81206172",
+        "0xffffffff8121f49c",
+        "0xffffffff81242d54",
+        "0xffffffff81439c7b",
+        "0xffffffff814f4a5a",
+        "0xffffffff815122f7",
+        "0xffffffff815132cf",
+        "0xffffffff81515147",
+        "0xffffffff817b7e92",
+        "0xffffffff817b7e9a",
+        "0xffffffff817b7eaf",
+        "0xffffffff817b7eef",
+        "0xffffffff817b7f94",
+        "0xffffffff817b7f9d",
+        "0xffffffff817b7fb4",
+        "0xffffffff817b7ff4",
+        "0xffffffff817c82b4",
+        "0xffffffff817e6160",
+        "0xffffffff817e650a",
+        "0xffffffff817f47bf",
+        "0xffffffff817f4a5c",
+        "0xffffffff817f4ac7",
+        "0xffffffff817f4da8",
+        "0xffffffff817f4e13",
+        "0xffffffff817f4e47",
+        "0xffffffff817f53f9",
+        "0xffffffff818174ae",
+        "0xffffffff81817d7e",
+        "0xffffffff81818b62",
+        "0xffffffff81818d3a",
+        "0xffffffff8181a4cd",
+        "0xffffffff8181c7bc",
+        "0xffffffff81846f01",
+        "0xffffffff81894b2a",
+        "0xffffffff81894da5",
+        "0xffffffff81895f09",
+        "0xffffffff81899323",
+        "0xffffffff819655f9",
+        "0xffffffff81ccfebf",
+        "0xffffffff826b4d33",
+        "0xffffffff826bd5aa",
+        "0xffffffff826bd62a",
+        "0xffffffff826be9c2",
+        "0xffffffff826c44b7",
+        "0xffffffff826c7561",
+        "0xffffffff826d18d5",
+        "0xffffffff826d80e5",
+        "0xffffffff826d895a"
+      ],
+      "qualification": "Refusal descriptors have operation=0, width=0, and continuation_offset=0. kd_exec_cont_memory_prepare returns -EOPNOTSUPP when a refusal site service path is reached. A guarded GS read need not take its service path at runtime. Supported descriptors do not prove reached service completion.",
+      "source_references": [
+        {
+          "file": "disassem/origin_memory.py",
+          "lines": [
+            98,
+            115
+          ]
+        },
+        {
+          "file": "kernel_module/execution/origin_memory.inc",
+          "lines": [
+            127,
+            140
+          ]
+        },
+        {
+          "file": "kernel_module/execution/origin_memory.inc",
+          "lines": [
+            433,
+            435
+          ]
+        }
+      ],
+      "metadata_label_lines": [
+        281071
+      ],
+      "metadata_footer_lines": [
+        281668
+      ]
+    },
+    "budget_boundaries": {
+      "count": 4100,
+      "qualification": "Yield/resume boundaries, not missing translation."
+    },
+    "emitted_ud2_instructions": {
+      "count": 83,
+      "qualification": "Retained source assertion/error branches, not missing-backend exits."
+    },
+    "qualification": "Static counts include branch-dependent paths. Unknown services and dynamic targets require runtime identity and receipts; no runtime reachability or complete-body claim follows."
+  },
+  "original_review_source_label": "8e9a78384055c81174f1ea0e5c1d9bc7413ef2b3",
+  "image_runtime_commit": "ec623366622d1784f7e819b4e9031ba0482bee9b",
+  "source_identity_note": "Source hashes identify the current inspection commit; the retained g9 image remains the earlier runtime. The original review JSON is retained unchanged in raw records."
+}

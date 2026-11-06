@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "baseline": "8e9a78384055c81174f1ea0e5c1d9bc7413ef2b3",
+  "design_commit": "7a36560d2d2a4f33c249d7b2f27b52d482a32f40",
+  "implementation_commit": "971eddfbb8b912fb640ec5201e1e990426d26e47",
+  "final_checked_commit": "d726952d8f03bffe62b83028fb51d6726fb1f434",
+  "scope": "exact pre-CLD/STD retained instruction boundary; no lock protocol, source MM body, GS routing or depth/region changes",
+  "capability_version": 21,
+  "source_frontier_feature": 262144,
+  "final_checks": {
+    "boot_id": "78a62f64-862a-4a19-89d5-7a0e2d5e8951",
+    "build_kernel_component": "9a5d606aee0249d0e566a1c9667375eb038bc9cd",
+    "build_kernel_release": "7.0.0-38-kdscope5",
+    "checks": [
+      {
+        "argv": [
+          "taskset",
+          "-c",
+          "63",
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "/root/kdlock-inputs/direction-d726952d/tests/unit/run.py",
+          "codegen/test_source_frontier.py"
+        ],
+        "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/source-frontier.log",
+        "name": "source-frontier",
+        "returncode": 0,
+        "tail": "test_bytes_inside_an_immediate_are_not_a_frontier (__main__.SourceFrontierTests.test_bytes_inside_an_immediate_are_not_a_frontier) ... ok\ntest_direction_boundaries_preserve_reached_and_other_paths (__main__.SourceFrontierTests.test_direction_boundaries_preserve_reached_and_other_paths) ... ok\ntest_direction_boundary_coexists_with_retained_memory_services (__main__.SourceFrontierTests.test_direction_boundary_coexists_with_retained_memory_services) ... ok\ntest_direction_forms_require_exact_decode_and_negotiation (__main__.SourceFrontierTests.test_direction_forms_require_exact_decode_and_negotiation) ... ok\ntest_interrupt_boundaries_preserve_reached_and_other_paths (__main__.SourceFrontierTests.test_interrupt_boundaries_preserve_reached_and_other_paths) ... ok\ntest_observed_state_instructions_preserve_reached_and_other_paths (__main__.SourceFrontierTests.test_observed_state_instructions_preserve_reached_and_other_paths) ... ok\ntest_only_complete_exact_encoding_is_recognized (__main__.SourceFrontierTests.test_only_complete_exact_encoding_is_recognized) ... ok\ntest_other_branch_keeps_jit_execution (__main__.SourceFrontierTests.test_other_branch_keeps_jit_execution) ... ok\ntest_pre_std_packet_preserves_copy_preparation_and_native_suffix (__main__.SourceFrontierTests.test_pre_std_packet_preserves_copy_preparation_and_native_suffix) ... ok\ntest_reached_frontier_exports_exact_state_and_effect_once (__main__.SourceFrontierTests.test_reached_frontier_exports_exact_state_and_effect_once) ... ok\ntest_unnegotiated_provider_cannot_emit_frontier_image (__main__.SourceFrontierTests.test_unnegotiated_provider_cannot_emit_frontier_image) ... [WARNING ]: cannot disasm (guess) at 1002\n[WARNING ]: cannot disasm at 1000\nok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.944s\n\nOK\n"
+      },
+      {
+        "argv": [
+          "taskset",
+          "-c",
+          "63",
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "/root/kdlock-inputs/direction-d726952d/tests/unit/run.py",
+          "admission/test_text_regions.py",
+          "DeviceSessionTests.test_source_frontier_requires_v18_and_resets_with_lease",
+          "DeviceSessionTests.test_frontier_controls_require_v20_and_reset_with_lease",
+          "DeviceSessionTests.test_frontier_direction_requires_v21_and_resets_with_lease",
+          "DeviceSessionTests.test_partial_unknown_and_inconsistent_capabilities_stay_disabled"
+        ],
+        "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/frontier-capabilities.log",
+        "name": "frontier-capabilities",
+        "returncode": 0,
+        "tail": "test_source_frontier_requires_v18_and_resets_with_lease (__main__.DeviceSessionTests.test_source_frontier_requires_v18_and_resets_with_lease) ... ok\ntest_frontier_controls_require_v20_and_reset_with_lease (__main__.DeviceSessionTests.test_frontier_controls_require_v20_and_reset_with_lease) ... ok\ntest_frontier_direction_requires_v21_and_resets_with_lease (__main__.DeviceSessionTests.test_frontier_direction_requires_v21_and_resets_with_lease) ... ok\ntest_partial_unknown_and_inconsistent_capabilities_stay_disabled (__main__.DeviceSessionTests.test_partial_unknown_and_inconsistent_capabilities_stay_disabled) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.003s\n\nOK\n"
+      },
+      {
+        "argv": [
+          "taskset",
+          "-c",
+          "63",
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "/root/kdlock-inputs/direction-d726952d/tests/unit/run.py",
+          "execution/test_native_service_join.py"
+        ],
+        "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/native-service-join.log",
+        "name": "native-service-join",
+        "returncode": 0,
+        "tail": "PASS production Native service join: write; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\nPASS production Native service join: downgrade; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\nPASS production Native service join: read; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\n"
+      },
+      {
+        "argv": [
+          "taskset",
+          "-c",
+          "63",
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "-c",
+          "from pathlib import Path\nimport os,resource,shlex,subprocess,sys,tempfile\nresource.setrlimit(resource.RLIMIT_CORE,(0,0))\nroot=Path(sys.argv[1]);sys.path.insert(0,str(root/'tests'))\nfrom unit import configure_paths\nconfigure_paths()\nimport test_source_lifetime as fixture\nwith tempfile.TemporaryDirectory(prefix='kd-source-baseline-') as directory:\n p=Path(directory);(p/'source_production.h').write_text(fixture.production());binary=p/'baseline'\n subprocess.run(shlex.split(os.environ.get('CC','cc'))+['-std=gnu11','-O2','-Wall','-Wextra','-Werror','-pthread','-I',str(p),'-I',str(root/'include'),str(root/'tests/unit/infrastructure/source_lifetime_fixture.c'),'-o',str(binary)],check=True,timeout=30)\n result=subprocess.run([str(binary)],capture_output=True,text=True,timeout=15)\n print(result.stdout,end='');print(result.stderr,end='',file=sys.stderr);assert result.returncode==0\n",
+          "/root/kdlock-inputs/direction-d726952d"
+        ],
+        "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/source-lifetime-baseline.log",
+        "name": "source-lifetime-baseline",
+        "returncode": 0,
+        "tail": "production source lifetime: 49916 checks, 0 failures; cap=64\n"
+      },
+      {
+        "argv": [
+          "taskset",
+          "-c",
+          "0-63",
+          "make",
+          "-C",
+          "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider/kernel_module",
+          "KDIR=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+          "W=1",
+          "-j8",
+          "KDLOCK_SELFTEST=0",
+          "KDLOCK_NUMA=1",
+          "KDLOCK_SPIN_BATCH=1024",
+          "KDLOCK_JIT_IMAGES=128",
+          "UBSAN_SANITIZE=n"
+        ],
+        "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider-build.log",
+        "name": "provider-build",
+        "returncode": 0,
+        "tail": "\nmake[2]: Entering directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider/kernel_module'\n  CC [M]  kd_main.o\n  CC [M]  kd_bench.o\n  CC [M]  kd_api_provider.o\n  CC [M]  kd_lock.o\n  CC [M]  kd_hotlock.o\n  CC [M]  sys.o\n  CC [M]  kd_spin_runtime.o\n  CC [M]  kd_source.o\n  CC [M]  kd_family.o\n  CC [M]  kd_spin_entry.o\n  CC [M]  kd_mutex_tasks.o\n  CC [M]  kd_wait_queue.o\n  CC [M]  kd_admission.o\n  CC [M]  kd_mutex_local.o\n  CC [M]  kd_mutex_osq.o\n  CC [M]  kd_rwsem.o\n  CC [M]  kd_rwsem_api.o\n  CC [M]  kd_rwsem_provider.o\n  CC [M]  kd_service_api.o\n  CC [M]  kd_service_calls.o\n  AS [M]  kd_service_call_entry.o\n  LD [M]  kdlock_km.o\n  MODPOST Module.symvers\n  CC [M]  kdlock_km.mod.o\n  CC [M]  .module-common.o\n  LD [M]  kdlock_km.ko\n  BTF [M] kdlock_km.ko\nmake[2]: Leaving directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider/kernel_module'\nmake[1]: Leaving directory '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'\nmake: Leaving directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider/kernel_module'\nwarning: the compiler differs from the one used to build the kernel\n  The kernel was built by: x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\n  You are using:           gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nkdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build\nkdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame\nkdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state\nkdlock_km.o: warning: objtool: run_combiner+0x13db: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x232: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup\nkdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup\n"
+      }
+    ],
+    "final_idle": true,
+    "frozen_inputs_unchanged": true,
+    "no_daemon": true,
+    "no_mmap1_application": true,
+    "no_module_load": true,
+    "no_reboot": true,
+    "no_timing": true,
+    "normal_kernel": {
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "passed": true,
+    "preparation_sha256": "e24c20f701dc20a73e22c3aa7290ae6e59c4a148779578fb6f087ed4f4a0a65c",
+    "provider": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/direction-boundary-d726952d-20261106/provider/kernel_module/kdlock_km.ko",
+    "provider_sha256": "602c5bd93770e8f4118ae163f66b12382d8b39cd888f297f4efd9be7fed48262",
+    "root": "/root/kdlock-inputs/direction-d726952d",
+    "source_commit": "d726952d8f03bffe62b83028fb51d6726fb1f434"
+  },
+  "final_receipt": {
+    "path": "final/result.json",
+    "sha256": "814bc80af931c4d6b7646f21d2e8fd2246405e5e34a457ad02734e400abd4a76"
+  },
+  "initial_failure": {
+    "path": "initial/result.json",
+    "sha256": "6173632c9154cc2adaebc6448d9529600d5ac07e9498488f39910045116d85df"
+  },
+  "initial_failure_reason": "Missing mock lock symbols in one new coexistence fixture; runtime implementation unchanged by fixture correction.",
+  "raw_index": {
+    "path": "index.json",
+    "sha256": "9fd8f8990c9e0f7451ea981d79837279df6418dad84ee9759ed4ce34728ba0bb"
+  },
+  "raw_files": 9,
+  "raw_bytes": 53189,
+  "python_fixtures_passed": 15,
+  "retained_join_modes_passed": [
+    "write",
+    "downgrade",
+    "read"
+  ],
+  "source_lifetime_checks": 49916,
+  "provider_build_passed": true,
+  "provider_loaded": false,
+  "whole_mmap_translation_replayed": false,
+  "kernel_origin_restore_executed": false,
+  "mmap1_application_run": false,
+  "performance_measured": false,
+  "general_flags_equivalence_claimed": false,
+  "simd_equivalence_claimed": false,
+  "original_jit_and_gs_preserved": true,
+  "depth_and_region_bounds_preserved": true,
+  "immutable_publication_preserved": true,
+  "scalar_copy_double": "Actual generated pre-STD export, then separate bounded native suffix on a C stack; overlap, canaries, DF clear, return value and one prior effect checked.",
+  "munmap_g9_runtime_tested": false,
+  "munmap_g9_review": "munmap-g9.json",
+  "remaining_limits": [
+    "General flags and SIMD restoration are outside this correction.",
+    "No new whole-mmap translation, live provider execution, read-tail proof or throughput result.",
+    "Retained munmap g9 lacks outer shared-RET target 0xffffffff814f4918 and retains the enumerated static frontiers.",
+    "Provider compilation retains recorded compiler-name and objtool return/stack warnings."
+  ],
+  "matching_elf_review": {
+    "path": "source-host/kdlock-direction-boundary-review-20261106/elf-identity.json",
+    "sha256": "28bbd6f3a365148a7593c385a0b06cbe4733eadc0879f7712204f4a7a0df74b4"
+  }
+}

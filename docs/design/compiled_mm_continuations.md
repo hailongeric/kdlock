@@ -2442,3 +2442,15 @@ terminal consumer, and provider compilation without loading it. Keep the VM
 on its verified normal kernel; run no mmap1 application, module load or timing
 matrix for this correction. Inspect munmap g9's saved dispatch/RET structure
 separately and retain its untested status.
+
+The [focused correction record](../../bench/results/10.176.26.71/tests/direction-boundary-d726952d-20261106/README.md)
+records the implemented v21 exact pre-STD/CLD boundary, 15 passing Python
+fixtures, retained join/source-lifetime checks and provider compilation.
+The real generated prefix and a bounded C-stack copy double preserve prepared
+scalar state, overlap, canaries, DF clearing and one prior effect; they do not
+prove kernel restoration or mmap1 execution. No provider was loaded and no
+mmap1 application ran. Final idle checks passed on the normal kernel.
+Munmap g9 contains the new assertion dispatch
+and inner RET, but lacks the caller's outer shared-RET target and retains the
+listed static support boundaries. It remains untested. General flags/SIMD
+restoration and performance acceptance remain outside this correction.
