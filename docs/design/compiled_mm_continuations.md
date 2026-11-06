@@ -1507,6 +1507,10 @@ outcome and all unscored rates remain in
 
 # Bounded original-JIT prefix at the source-cache boundary
 
+This alternative was documented but not implemented. The user's later
+direction selects the active aggregate-limit correction below for the next
+test, without adding an image-retention command or learning latch.
+
 Continue on `codex/mmap-reached-jit` from
 `cfdb52a83e98eed140062bc83c51207579242392`. The user selected reached execution
 over auditing unexecuted branches. A source-cache budget decision is distinct
@@ -1555,3 +1559,34 @@ continuation separately from a fully delegated read tail; compilation alone
 does not establish either. Keep every incomplete/negative result and restore
 the normal kernel. No caller-specific adapter or second execution backend is
 introduced.
+
+# Active aggregate text budget: selected 1 MiB correction
+
+The user authorized a reasonable increase for this test. At
+`cfdb52a83e98eed140062bc83c51207579242392`, `disassem/memread.py:13` sets the
+active `MAX_TEXT_BYTES` to 262,144, while line 14 independently defines
+`RETAINED_MAX_TEXT_BYTES` as 1,048,576. `disassem/disassem.py:349` keeps
+`direct_call_closure = False`, so lines 352-353 select
+`DEFAULT_WINDOW_POLICY`, and `extend_regions()` uses `MAX_TEXT_BYTES`. The
+existing 1 MiB retained constant is not the active original-JIT budget.
+
+Raise only `MAX_TEXT_BYTES` to `1024 * 1024`. Keep the active policy's
+8 KiB lookahead and 4 KiB alignment, without compact-policy selection, eager
+CALL closure or a different backend. Keep 32 combined CFG transitions, 33
+decode passes, return-flow work and lock-region scope. This directly admits
+the observed 270,336-byte plan under a bounded 1,048,576-byte aggregate.
+
+`MAX_SOURCE_READ` and `KD_SOURCE_MAX_READ` remain 262,144. A merged cached
+region larger than that must be read in consecutive pieces, each pinned
+before its read, with complete concatenation or an error. `KD_CODE_BLOCK_SIZE`
+remains 4 MiB per image; the selected pool remains 128 descriptors. Neither is
+the aggregate source-cache limit. Existing CALL/IJ/RET miss handback, source
+validation, current-state retention, owners and final ACK remain unchanged.
+
+Focused VM checks must show that the reported 241,664-to-270,336-byte plan now
+fits, that exact 1 MiB fits but one more mandatory byte refuses before reads,
+and that requests remain at most 256 KiB with unchanged complete-source
+behavior. Preserve the previous result and known unrelated driver failures;
+reuse unchanged runtime checks by hashes. Then use fresh identities/histories
+for mmap1, with progress, worker proof, partial/native-continuation coverage and
+scoring reported accurately. Restore the normal kernel afterwards. No merge.
