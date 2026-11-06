@@ -73,8 +73,8 @@ class Observation(pilot.Pilot):
             print('OBSERVATION_RESULT ' + json.dumps(observation), flush=True)
 
     def run(self):
-        campaign.rt.require(self.models in (['threads'], ['processes']) and self.counts in ([1, 8], [1, 2, 8]),
-                            'one or two priming applications and one eight-worker observation required', 'DATA_ERROR')
+        campaign.rt.require(self.models in (['threads'], ['processes']) and self.counts in ([1, 8], [1, 2, 8], [1, 2, 4, 8]),
+                            'one to three priming applications and one eight-worker observation required', 'DATA_ERROR')
         self.result['instrumentation'] = 'selected-service-counters'
         self.result['translation_during_application'] = not self.c['pause_translation']
         return super().run()

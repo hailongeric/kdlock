@@ -1901,3 +1901,27 @@ confirming progress beyond the prior CALL miss. Generation three was published
 afterward and remains unrun. Actual CLI/STI hits are not counted separately.
 See the [scoped report](../../bench/results/10.176.26.71/bench/mmap1-frontier-eabe454b/README.md)
 for source identities, all rates, regressions, focused checks and proof limits.
+
+## One bounded generation-three follow-up
+
+From report commit `aebd299e176fbee204b174df6f0e945b154335ec`, inspect the
+retained generation-three sources before changing the protocol. Both MM roots
+already resolve `0xffffffffc0e32bec` → `0xffffffff814f4a38`. The generated
+return reads `[R13]`, increments R13 by eight, moves the target to R14 and
+dispatches to the learned label; that label restores dispatch flags and jumps
+to the actual target body without another pop. On a miss, exit 15 preserves
+the already-advanced SP and the first-unexecuted target. The target body is
+present in each selected image. This is static image coverage, not evidence
+that generation three has executed. No new return/callback protocol is needed.
+
+Permit `[1,2,4,8]` in the existing observation loop for one processes session.
+The first three applications relearn within a fresh source/module epoch;
+the final eight-worker application should use generation three if learning
+follows the observed sequence. Do not import old module addresses or histories.
+Run each point once, retain every outcome, stop after this bounded sequence,
+and report the actual generation and any further executed miss. No indefinite
+stabilization or full matrix is requested. Reuse the validated provider from
+`eabe454b4ee51ea6962a73525372b4b09679c737` after verifying runtime and
+translator source bytes are unchanged; only the observation count check and
+documentation change. Preserve all established ownership, read-credit,
+continuation and retirement checks, then restore the normal kernel.
