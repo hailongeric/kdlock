@@ -1,0 +1,1356 @@
+{
+  "schema": 1,
+  "source_commit": "ec623366622d1784f7e819b4e9031ba0482bee9b",
+  "base_report_commit": "282d8f83cb2a1e77a9aebb78b6864aa802363a25",
+  "rows": [
+    {
+      "model": "threads",
+      "scope": "window",
+      "root": "mmap",
+      "entry": "0xffffffff817b6f68",
+      "counts": {
+        "selected": 36415,
+        "local": 0,
+        "local_no_image": 0,
+        "local_success": 0,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 36415,
+        "bound": 36415,
+        "jit_entered": 36415,
+        "returned": 0,
+        "handback": 36415,
+        "handback_finished": 36415,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 36415,
+          "sum_ns": 80840003,
+          "mean_us": 2.2199643828092817
+        },
+        "shadow": {
+          "samples": 36415,
+          "sum_ns": 2896339596,
+          "mean_us": 79.53699288754633
+        },
+        "local": {
+          "samples": 0,
+          "sum_ns": 0,
+          "mean_us": null
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": 0,
+        "bound_completed": 0,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "threads",
+      "scope": "window",
+      "root": "munmap",
+      "entry": "0xffffffff8181c73b",
+      "counts": {
+        "selected": 36415,
+        "local": 0,
+        "local_no_image": 0,
+        "local_success": 0,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 36415,
+        "bound": 36415,
+        "jit_entered": 36415,
+        "returned": 0,
+        "handback": 36416,
+        "handback_finished": 36415,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 36415,
+          "sum_ns": 145410749,
+          "mean_us": 3.993155265687217
+        },
+        "shadow": {
+          "samples": 36416,
+          "sum_ns": 2467632553,
+          "mean_us": 67.76231747034271
+        },
+        "local": {
+          "samples": 0,
+          "sum_ns": 0,
+          "mean_us": null
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 1,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": -1,
+        "bound_completed": -1,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "threads",
+      "scope": "whole",
+      "root": "mmap",
+      "entry": "0xffffffff817b6f68",
+      "counts": {
+        "selected": 6075800,
+        "local": 2363514,
+        "local_no_image": 2363514,
+        "local_success": 2363514,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 3712286,
+        "bound": 3712286,
+        "jit_entered": 3712286,
+        "returned": 0,
+        "handback": 3712286,
+        "handback_finished": 3712286,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 3712286,
+          "sum_ns": 8404326092,
+          "mean_us": 2.2639220394118342
+        },
+        "shadow": {
+          "samples": 3712286,
+          "sum_ns": 147353137937,
+          "mean_us": 39.693368974534835
+        },
+        "local": {
+          "samples": 2363514,
+          "sum_ns": 182751811755,
+          "mean_us": 77.32207710849185
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": 0,
+        "bound_completed": 0,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "threads",
+      "scope": "whole",
+      "root": "munmap",
+      "entry": "0xffffffff8181c73b",
+      "counts": {
+        "selected": 6075797,
+        "local": 3045681,
+        "local_no_image": 3045681,
+        "local_success": 3045681,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 3030116,
+        "bound": 3030116,
+        "jit_entered": 3030116,
+        "returned": 0,
+        "handback": 3030116,
+        "handback_finished": 3030116,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 3030116,
+          "sum_ns": 12514373008,
+          "mean_us": 4.12999799611632
+        },
+        "shadow": {
+          "samples": 3030116,
+          "sum_ns": 85617543573,
+          "mean_us": 28.25553331060593
+        },
+        "local": {
+          "samples": 3045681,
+          "sum_ns": 344617954696,
+          "mean_us": 113.14972076721101
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": 0,
+        "bound_completed": 0,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "processes",
+      "scope": "window",
+      "root": "mmap",
+      "entry": "0xffffffff817b6f68",
+      "counts": {
+        "selected": 210736,
+        "local": 0,
+        "local_no_image": 0,
+        "local_success": 0,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 210736,
+        "bound": 210736,
+        "jit_entered": 210737,
+        "returned": 210740,
+        "handback": 0,
+        "handback_finished": 0,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 210736,
+          "sum_ns": 467117421,
+          "mean_us": 2.2166000161339308
+        },
+        "shadow": {
+          "samples": 210740,
+          "sum_ns": 39526048532,
+          "mean_us": 187.5583587928253
+        },
+        "local": {
+          "samples": 0,
+          "sum_ns": 0,
+          "mean_us": null
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": -4,
+        "handback": 0,
+        "bound_jit": -1,
+        "bound_dispatch": 0,
+        "bound_shadow": -4,
+        "bound_completed": -4,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "processes",
+      "scope": "window",
+      "root": "munmap",
+      "entry": "0xffffffff8181c73b",
+      "counts": {
+        "selected": 210735,
+        "local": 0,
+        "local_no_image": 0,
+        "local_success": 0,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 210735,
+        "bound": 210736,
+        "jit_entered": 210736,
+        "returned": 0,
+        "handback": 210738,
+        "handback_finished": 210738,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 210736,
+          "sum_ns": 1385013545,
+          "mean_us": 6.5722683594639735
+        },
+        "shadow": {
+          "samples": 210738,
+          "sum_ns": 19856362720,
+          "mean_us": 94.2229817118887
+        },
+        "local": {
+          "samples": 0,
+          "sum_ns": 0,
+          "mean_us": null
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": -3,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": -2,
+        "bound_completed": -2,
+        "bound_submitted": 1
+      }
+    },
+    {
+      "model": "processes",
+      "scope": "whole",
+      "root": "mmap",
+      "entry": "0xffffffff817b6f68",
+      "counts": {
+        "selected": 39002329,
+        "local": 19035144,
+        "local_no_image": 19035144,
+        "local_success": 19035144,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 19967185,
+        "bound": 19967185,
+        "jit_entered": 19967185,
+        "returned": 4199281,
+        "handback": 15767904,
+        "handback_finished": 15767904,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 19967185,
+          "sum_ns": 45127946467,
+          "mean_us": 2.2601055915994164
+        },
+        "shadow": {
+          "samples": 19967185,
+          "sum_ns": 1587373263810,
+          "mean_us": 79.4991013410253
+        },
+        "local": {
+          "samples": 19035144,
+          "sum_ns": 5409864976,
+          "mean_us": 0.28420404783909176
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": 0,
+        "bound_completed": 0,
+        "bound_submitted": 0
+      }
+    },
+    {
+      "model": "processes",
+      "scope": "whole",
+      "root": "munmap",
+      "entry": "0xffffffff8181c73b",
+      "counts": {
+        "selected": 39002324,
+        "local": 22489593,
+        "local_no_image": 22489593,
+        "local_success": 22489593,
+        "local_cancel": 0,
+        "prepublication_cancel": 0,
+        "submitted": 16512731,
+        "bound": 16512731,
+        "jit_entered": 16512731,
+        "returned": 0,
+        "handback": 16512731,
+        "handback_finished": 16512731,
+        "canceled": 0
+      },
+      "timers": {
+        "dispatch": {
+          "samples": 16512731,
+          "sum_ns": 104766542471,
+          "mean_us": 6.344592089037241
+        },
+        "shadow": {
+          "samples": 16512731,
+          "sum_ns": 867578720651,
+          "mean_us": 52.539989941760695
+        },
+        "local": {
+          "samples": 22489593,
+          "sum_ns": 7578620936,
+          "mean_us": 0.3369834632400862
+        }
+      },
+      "conservation_residuals": {
+        "selected": 0,
+        "local": 0,
+        "submitted": 0,
+        "handback": 0,
+        "bound_jit": 0,
+        "bound_dispatch": 0,
+        "bound_shadow": 0,
+        "bound_completed": 0,
+        "bound_submitted": 0
+      }
+    }
+  ],
+  "scope": "retained evidence only; no new workload or VM operation",
+  "publication_timelines": [
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 1,
+      "compile_start_ns": 52766985722,
+      "compile_end_ns": 103829961663,
+      "compile_wall_ns": 51062975941,
+      "publication_inferred_lower_ns": 103829961663,
+      "publication_inferred_upper_ns": 103836306901,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -668.990685958,
+      "upper_offset_from_window_seconds": -668.98434072,
+      "final_chunk": {
+        "raw_printk_us": 104072221,
+        "image_bytes": 595080
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 1,
+      "compile_start_ns": 103836306901,
+      "compile_end_ns": 150063864781,
+      "compile_wall_ns": 46227557880,
+      "publication_inferred_lower_ns": 150063864781,
+      "publication_inferred_upper_ns": 150172697275,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -622.75678284,
+      "upper_offset_from_window_seconds": -622.647950346,
+      "final_chunk": {
+        "raw_printk_us": 150305698,
+        "image_bytes": 373592
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 2,
+      "compile_start_ns": 150172697275,
+      "compile_end_ns": 200866136846,
+      "compile_wall_ns": 50693439571,
+      "publication_inferred_lower_ns": 200866136846,
+      "publication_inferred_upper_ns": 200874429723,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -571.954510775,
+      "upper_offset_from_window_seconds": -571.946217898,
+      "final_chunk": {
+        "raw_printk_us": 201108553,
+        "image_bytes": 596728
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 2,
+      "compile_start_ns": 200874429723,
+      "compile_end_ns": 249903457688,
+      "compile_wall_ns": 49029027965,
+      "publication_inferred_lower_ns": 249903457688,
+      "publication_inferred_upper_ns": 250012396372,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -522.917189933,
+      "upper_offset_from_window_seconds": -522.808251249,
+      "final_chunk": {
+        "raw_printk_us": 250145386,
+        "image_bytes": 377776
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 3,
+      "compile_start_ns": 250012396372,
+      "compile_end_ns": 301725109709,
+      "compile_wall_ns": 51712713337,
+      "publication_inferred_lower_ns": 301725109709,
+      "publication_inferred_upper_ns": 301734416644,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -471.095537912,
+      "upper_offset_from_window_seconds": -471.086230977,
+      "final_chunk": {
+        "raw_printk_us": 301967392,
+        "image_bytes": 596752
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 3,
+      "compile_start_ns": 301734416644,
+      "compile_end_ns": 350914444608,
+      "compile_wall_ns": 49180027964,
+      "publication_inferred_lower_ns": 350914444608,
+      "publication_inferred_upper_ns": 351023148046,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -421.906203013,
+      "upper_offset_from_window_seconds": -421.797499575,
+      "final_chunk": {
+        "raw_printk_us": 351156351,
+        "image_bytes": 378360
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 4,
+      "compile_start_ns": 351023148046,
+      "compile_end_ns": 419781837837,
+      "compile_wall_ns": 68758689791,
+      "publication_inferred_lower_ns": 419781837837,
+      "publication_inferred_upper_ns": 419791043381,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -353.038809784,
+      "upper_offset_from_window_seconds": -353.02960424,
+      "final_chunk": {
+        "raw_printk_us": 420024277,
+        "image_bytes": 628472
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 4,
+      "compile_start_ns": 419791043381,
+      "compile_end_ns": 469607500283,
+      "compile_wall_ns": 49816456902,
+      "publication_inferred_lower_ns": 469607500283,
+      "publication_inferred_upper_ns": 469716342667,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -303.213147338,
+      "upper_offset_from_window_seconds": -303.104304954,
+      "final_chunk": {
+        "raw_printk_us": 469849436,
+        "image_bytes": 378384
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 5,
+      "compile_start_ns": 469716342667,
+      "compile_end_ns": 538522943533,
+      "compile_wall_ns": 68806600866,
+      "publication_inferred_lower_ns": 538522943533,
+      "publication_inferred_upper_ns": 538532101326,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -234.297704088,
+      "upper_offset_from_window_seconds": -234.288546295,
+      "final_chunk": {
+        "raw_printk_us": 538765305,
+        "image_bytes": 632648
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 5,
+      "compile_start_ns": 538532101326,
+      "compile_end_ns": 588354984608,
+      "compile_wall_ns": 49822883282,
+      "publication_inferred_lower_ns": 588354984608,
+      "publication_inferred_upper_ns": 588463747573,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -184.465663013,
+      "upper_offset_from_window_seconds": -184.356900048,
+      "final_chunk": {
+        "raw_printk_us": 588596930,
+        "image_bytes": 380032
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 6,
+      "compile_start_ns": 588463747573,
+      "compile_end_ns": 657171788402,
+      "compile_wall_ns": 68708040829,
+      "publication_inferred_lower_ns": 657171788402,
+      "publication_inferred_upper_ns": 657181465676,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -115.648859219,
+      "upper_offset_from_window_seconds": -115.639181945,
+      "final_chunk": {
+        "raw_printk_us": 657414783,
+        "image_bytes": 633240
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 6,
+      "compile_start_ns": 657181465676,
+      "compile_end_ns": 707089823846,
+      "compile_wall_ns": 49908358170,
+      "publication_inferred_lower_ns": 707089823846,
+      "publication_inferred_upper_ns": 707198689775,
+      "publication_phase": "before window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": -65.730823775,
+      "upper_offset_from_window_seconds": -65.621957846,
+      "final_chunk": {
+        "raw_printk_us": 707331801,
+        "image_bytes": 380048
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 7,
+      "compile_start_ns": 707198689775,
+      "compile_end_ns": 775738643144,
+      "compile_wall_ns": 68539953369,
+      "publication_inferred_lower_ns": 775738643144,
+      "publication_inferred_upper_ns": 775748059021,
+      "publication_phase": "during window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": 2.917995523,
+      "upper_offset_from_window_seconds": 2.9274114,
+      "final_chunk": {
+        "raw_printk_us": 775981002,
+        "image_bytes": 633256
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 7,
+      "compile_start_ns": 775748059021,
+      "compile_end_ns": 825977631959,
+      "compile_wall_ns": 50229572938,
+      "publication_inferred_lower_ns": 825977631959,
+      "publication_inferred_upper_ns": 826086459288,
+      "publication_phase": "after window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": 53.156984338,
+      "upper_offset_from_window_seconds": 53.265811667,
+      "final_chunk": {
+        "raw_printk_us": 826219592,
+        "image_bytes": 388632
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff817b6f68",
+      "generation": 8,
+      "compile_start_ns": 826086459288,
+      "compile_end_ns": 902908163159,
+      "compile_wall_ns": 76821703871,
+      "publication_inferred_lower_ns": 902908163159,
+      "publication_inferred_upper_ns": 902917258526,
+      "publication_phase": "after window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": 130.087515538,
+      "upper_offset_from_window_seconds": 130.096610905,
+      "final_chunk": {
+        "raw_printk_us": 903150529,
+        "image_bytes": 637560
+      }
+    },
+    {
+      "model": "threads",
+      "entry": "0xffffffff8181c73b",
+      "generation": 8,
+      "compile_start_ns": 902917258526,
+      "compile_end_ns": 953021564712,
+      "compile_wall_ns": 50104306186,
+      "publication_inferred_lower_ns": 953021564712,
+      "publication_inferred_upper_ns": null,
+      "publication_phase": "after window",
+      "window_begin_ns": 772820647621,
+      "window_end_ns": 782821852534,
+      "lower_offset_from_window_seconds": 180.200917091,
+      "upper_offset_from_window_seconds": null,
+      "final_chunk": {
+        "raw_printk_us": 953263468,
+        "image_bytes": 388632
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff817b6f68",
+      "generation": 1,
+      "compile_start_ns": 1022974702542,
+      "compile_end_ns": 1073742028798,
+      "compile_wall_ns": 50767326256,
+      "publication_inferred_lower_ns": 1073742028798,
+      "publication_inferred_upper_ns": 1073748755597,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -669.244180035,
+      "upper_offset_from_window_seconds": -669.237453236,
+      "final_chunk": {
+        "raw_printk_us": 1073984324,
+        "image_bytes": 595080
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 1,
+      "compile_start_ns": 1073748755597,
+      "compile_end_ns": 1120079101335,
+      "compile_wall_ns": 46330345738,
+      "publication_inferred_lower_ns": 1120079101335,
+      "publication_inferred_upper_ns": 1120188464546,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -622.907107498,
+      "upper_offset_from_window_seconds": -622.797744287,
+      "final_chunk": {
+        "raw_printk_us": 1120320996,
+        "image_bytes": 373592
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff817b6f68",
+      "generation": 2,
+      "compile_start_ns": 1120188464546,
+      "compile_end_ns": 1170979105430,
+      "compile_wall_ns": 50790640884,
+      "publication_inferred_lower_ns": 1170979105430,
+      "publication_inferred_upper_ns": 1170987933510,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -572.007103403,
+      "upper_offset_from_window_seconds": -571.998275323,
+      "final_chunk": {
+        "raw_printk_us": 1171221475,
+        "image_bytes": 596728
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 2,
+      "compile_start_ns": 1170987933510,
+      "compile_end_ns": 1217751773469,
+      "compile_wall_ns": 46763839959,
+      "publication_inferred_lower_ns": 1217751773469,
+      "publication_inferred_upper_ns": 1217861019061,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -525.234435364,
+      "upper_offset_from_window_seconds": -525.125189772,
+      "final_chunk": {
+        "raw_printk_us": 1217993651,
+        "image_bytes": 375240
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff817b6f68",
+      "generation": 3,
+      "compile_start_ns": 1217861019061,
+      "compile_end_ns": 1269795944200,
+      "compile_wall_ns": 51934925139,
+      "publication_inferred_lower_ns": 1269795944200,
+      "publication_inferred_upper_ns": 1269805835511,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -473.190264633,
+      "upper_offset_from_window_seconds": -473.180373322,
+      "final_chunk": {
+        "raw_printk_us": 1270038759,
+        "image_bytes": 596752
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 3,
+      "compile_start_ns": 1269805835511,
+      "compile_end_ns": 1316284622440,
+      "compile_wall_ns": 46478786929,
+      "publication_inferred_lower_ns": 1316284622440,
+      "publication_inferred_upper_ns": 1316393982995,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -426.701586393,
+      "upper_offset_from_window_seconds": -426.592225838,
+      "final_chunk": {
+        "raw_printk_us": 1316526542,
+        "image_bytes": 375256
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff817b6f68",
+      "generation": 4,
+      "compile_start_ns": 1316393982995,
+      "compile_end_ns": 1384880226982,
+      "compile_wall_ns": 68486243987,
+      "publication_inferred_lower_ns": 1384880226982,
+      "publication_inferred_upper_ns": 1384889540016,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -358.105981851,
+      "upper_offset_from_window_seconds": -358.096668817,
+      "final_chunk": {
+        "raw_printk_us": 1385122481,
+        "image_bytes": 628472
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 4,
+      "compile_start_ns": 1384889540016,
+      "compile_end_ns": 1431446365049,
+      "compile_wall_ns": 46556825033,
+      "publication_inferred_lower_ns": 1431446365049,
+      "publication_inferred_upper_ns": 1431555822362,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -311.539843784,
+      "upper_offset_from_window_seconds": -311.430386471,
+      "final_chunk": {
+        "raw_printk_us": 1431688239,
+        "image_bytes": 380296
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff817b6f68",
+      "generation": 5,
+      "compile_start_ns": 1431555822362,
+      "compile_end_ns": 1554999078702,
+      "compile_wall_ns": 123443256340,
+      "publication_inferred_lower_ns": 1554999078702,
+      "publication_inferred_upper_ns": 1555009098133,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -187.987130131,
+      "upper_offset_from_window_seconds": -187.9771107,
+      "final_chunk": {
+        "raw_printk_us": 1555242131,
+        "image_bytes": 720880
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 5,
+      "compile_start_ns": 1555009098133,
+      "compile_end_ns": 1634497135419,
+      "compile_wall_ns": 79488037286,
+      "publication_inferred_lower_ns": 1634497135419,
+      "publication_inferred_upper_ns": 1634607347333,
+      "publication_phase": "before window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": -108.489073414,
+      "upper_offset_from_window_seconds": -108.3788615,
+      "final_chunk": {
+        "raw_printk_us": 1634740349,
+        "image_bytes": 470288
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 6,
+      "compile_start_ns": 1634607347333,
+      "compile_end_ns": 1743359707308,
+      "compile_wall_ns": 108752359975,
+      "publication_inferred_lower_ns": 1743359707308,
+      "publication_inferred_upper_ns": 1743471874931,
+      "publication_phase": "during window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": 0.373498475,
+      "upper_offset_from_window_seconds": 0.485666098,
+      "final_chunk": {
+        "raw_printk_us": 1743604762,
+        "image_bytes": 909424
+      }
+    },
+    {
+      "model": "processes",
+      "entry": "0xffffffff8181c73b",
+      "generation": 7,
+      "compile_start_ns": 1743471874931,
+      "compile_end_ns": 1856648301922,
+      "compile_wall_ns": 113176426991,
+      "publication_inferred_lower_ns": 1856648301922,
+      "publication_inferred_upper_ns": 1861504451045,
+      "publication_phase": "after window",
+      "window_begin_ns": 1742986208833,
+      "window_end_ns": 1752987197106,
+      "lower_offset_from_window_seconds": 113.662093089,
+      "upper_offset_from_window_seconds": 118.518242212,
+      "final_chunk": {
+        "raw_printk_us": 1856891263,
+        "image_bytes": 938880
+      }
+    }
+  ],
+  "cpu": [
+    {
+      "model": "threads",
+      "mode": "Native",
+      "user_seconds": 35.569077,
+      "system_seconds": 5613.746559,
+      "total_seconds": 5649.315636,
+      "voluntary_switches": 8087814,
+      "involuntary_switches": 9466,
+      "scope": "whole upstream lifetime including warmup and reaped workers",
+      "workers_observed": [
+        {
+          "cpus": [
+            0
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2272
+        },
+        {
+          "cpus": [
+            1
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2273
+        },
+        {
+          "cpus": [
+            2
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2274
+        },
+        {
+          "cpus": [
+            3
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2275
+        },
+        {
+          "cpus": [
+            4
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2276
+        },
+        {
+          "cpus": [
+            5
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2277
+        },
+        {
+          "cpus": [
+            6
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2278
+        },
+        {
+          "cpus": [
+            7
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2266,
+          "start_ticks": 3539,
+          "tgid": 2270,
+          "tid": 2279
+        }
+      ]
+    },
+    {
+      "model": "threads",
+      "mode": "KD",
+      "user_seconds": 2.0934239999999997,
+      "system_seconds": 5803.7996969999995,
+      "total_seconds": 5805.893120999999,
+      "voluntary_switches": 756,
+      "involuntary_switches": 5672079,
+      "scope": "whole upstream lifetime including warmup and reaped workers",
+      "workers_observed": [
+        {
+          "cpus": [
+            0
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5272,
+          "tgid": 2360,
+          "tid": 2362
+        },
+        {
+          "cpus": [
+            1
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2363
+        },
+        {
+          "cpus": [
+            2
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2364
+        },
+        {
+          "cpus": [
+            3
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2365
+        },
+        {
+          "cpus": [
+            4
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2366
+        },
+        {
+          "cpus": [
+            5
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2367
+        },
+        {
+          "cpus": [
+            6
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2368
+        },
+        {
+          "cpus": [
+            7
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_threads",
+          "ppid": 2274,
+          "start_ticks": 5273,
+          "tgid": 2360,
+          "tid": 2369
+        }
+      ]
+    },
+    {
+      "model": "processes",
+      "mode": "Native",
+      "user_seconds": 190.70293800000002,
+      "system_seconds": 5619.007116,
+      "total_seconds": 5809.710054,
+      "voluntary_switches": 747,
+      "involuntary_switches": 225136,
+      "scope": "whole upstream lifetime including warmup and reaped workers",
+      "workers_observed": [
+        {
+          "cpus": [
+            0
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3300,
+          "tid": 3300
+        },
+        {
+          "cpus": [
+            1
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3301,
+          "tid": 3301
+        },
+        {
+          "cpus": [
+            2
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3302,
+          "tid": 3302
+        },
+        {
+          "cpus": [
+            3
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3303,
+          "tid": 3303
+        },
+        {
+          "cpus": [
+            4
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3304,
+          "tid": 3304
+        },
+        {
+          "cpus": [
+            5
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76790,
+          "tgid": 3305,
+          "tid": 3305
+        },
+        {
+          "cpus": [
+            6
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76791,
+          "tgid": 3306,
+          "tid": 3306
+        },
+        {
+          "cpus": [
+            7
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3298,
+          "start_ticks": 76791,
+          "tgid": 3307,
+          "tid": 3307
+        }
+      ]
+    },
+    {
+      "model": "processes",
+      "mode": "KD",
+      "user_seconds": 13.973423,
+      "system_seconds": 5566.031529,
+      "total_seconds": 5580.004952,
+      "voluntary_switches": 749,
+      "involuntary_switches": 20797825,
+      "scope": "whole upstream lifetime including warmup and reaped workers",
+      "workers_observed": [
+        {
+          "cpus": [
+            0
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3767,
+          "tid": 3767
+        },
+        {
+          "cpus": [
+            1
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3768,
+          "tid": 3768
+        },
+        {
+          "cpus": [
+            2
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3769,
+          "tid": 3769
+        },
+        {
+          "cpus": [
+            3
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3770,
+          "tid": 3770
+        },
+        {
+          "cpus": [
+            4
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3771,
+          "tid": 3771
+        },
+        {
+          "cpus": [
+            5
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3772,
+          "tid": 3772
+        },
+        {
+          "cpus": [
+            6
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3773,
+          "tid": 3773
+        },
+        {
+          "cpus": [
+            7
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 3765,
+          "start_ticks": 102289,
+          "tgid": 3774,
+          "tid": 3774
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "tests/mmap1.c": {
+      "path": "/tmp/kdlock-will-it-scale-full-20261030/tests/mmap1.c",
+      "sha256": "a7e09c6a7a12524a2cd949e5d37cf8ec0ba2479868cbd04ebd8c83c4eaed9d06",
+      "commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f"
+    },
+    "main.c": {
+      "path": "/tmp/kdlock-will-it-scale-full-20261030/main.c",
+      "sha256": "48d4640f151801fdfb5f3915c822cf280c713df3c1998068e16ce0c961cbf746",
+      "commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f"
+    },
+    "Makefile": {
+      "path": "/tmp/kdlock-will-it-scale-full-20261030/Makefile",
+      "sha256": "9089726b38440a6466ebd0ea7561b3fd99ee263fea2485f974fbd91f4866d5a8",
+      "commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f"
+    }
+  },
+  "publication_bounds_limit": "Inferred from successful sequential compile then upload then next compiler launch, matching per-root generation and final-chunk counts. Chunk log precedes copy/validation/publication, has a different clock basis, and is not an exact publication event. Last upper bound is postclose finalizer time.",
+  "base_summary_sha256": "7fa5adef343ea8d98f107a8ef583d72ffd99da7a52fd3155299c97d9bebdb649",
+  "base_sampled_misses_sha256": "1d2a680f6a01ea984854f7921822a4f1d106001c074738f16a15db398a37193c",
+  "limits": [
+    "No separate capture-completed counter: selected counts capture entry; submitted counts publication-ready root requests.",
+    "Window counters are live sequential READ_ONCE sums; small conservation residuals are preserved.",
+    "No executor CPU-time/jiffies or effective compiler-affinity record; origin CPU and context switches cover the whole application only.",
+    "Only process mmap g5 final assembly was exercised during positive retained returns; other final images were produced after the application.",
+    "No exact per-request handback reason or per-service frequency/time counts."
+  ],
+  "placement": {
+    "workload_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "configured_service_cpus": "0-61",
+    "pinned_execution_excludes_all_active_origin_cpus": true,
+    "executor_observations": {
+      "threads": 1,
+      "processes": 45,
+      "node0_process_observations": 16,
+      "node1_process_observations": 29,
+      "workload_cpu_executor_observations": 0
+    },
+    "executor_affinity_snapshots_saved": false,
+    "compiler_effective_affinity_saved": false,
+    "executor_jiffies_saved": false,
+    "limit": "Concurrent selected diagnostic observations are not runtime or placement-frequency shares."
+  }
+}

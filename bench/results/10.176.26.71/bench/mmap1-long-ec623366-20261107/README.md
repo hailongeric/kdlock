@@ -1,5 +1,9 @@
 # One-round long-warmup mmap1 comparison
 
+The subsequent [retained-evidence analysis](analysis.md) explains counter/timer
+scope, the different completion paths and remaining attribution limits without
+another workload or runtime change.
+
 Both task models completed application checks, postrun settlement and exact
 retirement. Performance remains **unaccepted**. Process mmap completed
 4,199,281 retained returns; munmap and both thread roots completed through
