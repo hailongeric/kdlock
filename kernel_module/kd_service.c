@@ -77,7 +77,12 @@ struct kd_service_root {
 	bool pooled;
 	bool work_notified;
 	bool native_handoff;
+	/* Observation only; neither field participates in protocol decisions. */
+	int observe_index;
+	u64 observe_shadow_start;
 };
+
+#include "kd_service_observe.inc"
 
 static DEFINE_RAW_SPINLOCK(kd_service_dispatch_guard);
 static struct kd_wait_node *kd_service_dispatch_head;
@@ -148,6 +153,8 @@ static void kd_service_finish_handoff(struct kd_service_root *root);
 static void kd_service_trace_event(const char *event,
 	struct kd_service_root *root, const struct kd_service_owner *owner)
 {
+	if (owner == &root->owner)
+		kd_service_observe_event(root->observe_index, event);
 	if (unlikely(READ_ONCE(kd_service_trace)))
 		pr_info("kd_service event=%s origin=%d executor=%d identity=%px generation=%llu object=%px depth=%u entry=%lx may_delegate=%u family_generation=%llu ip=%lx sp=%lx image_generation=%lu\n",
 			event, owner->request.logical_origin->pid, current->pid,
@@ -1079,6 +1086,7 @@ static void kd_service_execute(struct kd_service_root *root)
 	struct kd_exec_continuation *cont = &root->continuation;
 	unsigned long flags;
 	int status;
+	u64 observe_start;
 	enum kd_wait_decision decision;
 
 	/* Actor custody was transferred under dispatcher guard. Until this task
@@ -1152,7 +1160,12 @@ static void kd_service_execute(struct kd_service_root *root)
 	kd_wait_set_state_locked(&root->owner.request, KD_WAIT_EXECUTING);
 	_raw_spin_unlock_irqrestore(&root->lifecycle_guard, flags);
 	BUG_ON(cont->reached_active);
+	observe_start = kd_service_observe_start(root->observe_index);
 	status = kd_exe_on_retained_entry(&cont->frame, root->exe, root->image);
+	kd_service_observe_elapsed(root->observe_index, KD_SERVICE_OBSERVE_DISPATCH_NS,
+		KD_SERVICE_OBSERVE_DISPATCH_SAMPLES, observe_start);
+	if (cont->frame.executed)
+		kd_service_observe_add(root->observe_index, KD_SERVICE_OBSERVE_JIT_ENTERED, 1);
 	status = kd_service_run_scope(root, status);
 	if (status == KD_EXE_RUN_HANDOFF) {
 		BUG_ON(!root->native_handoff || !kd_service_native_finished(&root->scope));
@@ -1428,6 +1441,7 @@ kd_service_native_resume(struct kd_service_root *root, const struct kd_regs *sav
 	 * reference retained by E through all remaining actual owner releases. */
 	if (completion.owner)
 		__module_get(completion.owner);
+	kd_service_observe_shadow_end(root);
 	asm volatile("" : : "m"(packet), "m"(completion) : "memory");
 	BUG_ON(kd_exec_native_accept(frame));
 	/* No root, saved-packet or frame access after acceptance. E may free them. */
@@ -1447,6 +1461,7 @@ kd_service_shadow_wait(struct kd_service_root *root)
 
 	/* This function is entered on independent storage before source execution
 	 * can overwrite any Native capture-helper frame. It never returns there. */
+	root->observe_shadow_start = kd_service_observe_start(root->observe_index);
 	smp_store_release(&root->transport, KD_SERVICE_STACK_READY);
 	while (smp_load_acquire(&root->transport) != KD_SERVICE_RESULT) {
 		if (smp_load_acquire(&root->transport) == KD_SERVICE_NATIVE_READY) {
@@ -1501,6 +1516,7 @@ kd_service_resume_packet(struct kd_service_root *root, const struct kd_regs *sav
 	struct kd_regs packet = *saved;
 	struct kd_service_completion completion = root->completion;
 
+	kd_service_observe_shadow_end(root);
 	preempt_enable();
 	kd_service_free(root);
 	migrate_enable();
@@ -1522,6 +1538,21 @@ static int kd_service_local_acquire(void *object, enum kd_admission_kind kind,
 		((kd_down_write)(object), 0);
 }
 
+static int kd_service_observe_local(int index, bool no_image, void *object,
+	enum kd_admission_kind kind, unsigned int state)
+{
+	u64 start = kd_service_observe_start(index);
+	int result = kd_service_local_acquire(object, kind, state);
+
+	kd_service_observe_elapsed(index, KD_SERVICE_OBSERVE_LOCAL_NS,
+		KD_SERVICE_OBSERVE_LOCAL, start);
+	if (no_image)
+		kd_service_observe_add(index, KD_SERVICE_OBSERVE_LOCAL_NO_IMAGE, 1);
+	kd_service_observe_add(index, result ? KD_SERVICE_OBSERVE_LOCAL_CANCEL :
+		KD_SERVICE_OBSERVE_LOCAL_SUCCESS, 1);
+	return result;
+}
+
 static int kd_service_capture_internal(void *object, enum kd_admission_kind kind,
 	unsigned int state, unsigned long sp, unsigned long ip, unsigned long bp,
 	const struct kd_service_completion *completion, bool bound)
@@ -1539,23 +1570,24 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 	enum kd_wait_decision decision;
 	int result;
 	unsigned int native_index;
+	int observe_index = kd_service_observe_select(ip, current->comm);
 
 	might_sleep();
 	/* A Native primitive owns only this helper's conventional task execution.
 	 * Its nested lock calls must not recursively capture the service machinery. */
 	if (kd_exec_native_service_active(current) || kd_service_origin_scope())
-		return kd_service_local_acquire(object, kind, state);
+		return kd_service_observe_local(observe_index, false, object, kind, state);
 	/* Closed source admission and ordinary nonselected callers retain the
 	 * conventional API. No already published or committed body uses this. */
 	if (!kd_source_is_open() || kd_service_worker_count < 2 ||
 	    (!bound && !kd_comm_matches(&kd_spin_target, current->comm))) {
 		BUG_ON(bound);
-		return kd_service_local_acquire(object, kind, state);
+		return kd_service_observe_local(observe_index, false, object, kind, state);
 	}
 	result = kd_exec_capture_lease_get(&pending_lease, current);
 	if (result) {
 		BUG_ON(bound);
-		return kd_service_local_acquire(object, kind, state);
+		return kd_service_observe_local(observe_index, false, object, kind, state);
 	}
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	exe = kd_exe_find_ready(0, ip);
@@ -1568,7 +1600,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 			pr_info("kd_service event=untranslated_entry origin=%d entry=%lx\n",
 				current->pid, ip);
 		kd_exec_capture_lease_put(&pending_lease);
-		return kd_service_local_acquire(object, kind, state);
+		return kd_service_observe_local(observe_index, true, object, kind, state);
 	}
 	migrate_disable();
 	root = kd_service_reserve();
@@ -1585,6 +1617,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 			_raw_spin_unlock_irqrestore(pending_request.guard, flags);
 			kd_exec_capture_lease_put(&pending_lease);
 			migrate_enable();
+			kd_service_observe_add(observe_index, KD_SERVICE_OBSERVE_PREPUBLICATION_CANCEL, 1);
 			return result;
 		}
 		root = kd_service_spill();
@@ -1602,6 +1635,8 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 	root->result = 0;
 	root->work_notified = false;
 	root->native_handoff = false;
+	root->observe_index = observe_index;
+	root->observe_shadow_start = 0;
 	INIT_LIST_HEAD(&root->active_link);
 	INIT_LIST_HEAD(&root->scope.owners);
 	INIT_LIST_HEAD(&root->native_owners);
@@ -1657,6 +1692,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 	kd_wait_request_init(&root->dispatch_request, NULL, 0, current, current,
 		TASK_UNINTERRUPTIBLE, false, root);
 	kd_wait_node_init(&root->dispatch_member, &root->dispatch_request, KD_WAIT_CONDITION);
+	kd_service_observe_add(observe_index, KD_SERVICE_OBSERVE_SUBMITTED, 1);
 	flags = _raw_spin_lock_irqsave(dispatch.guard);
 	list_add_tail(&root->active_link, &kd_service_active);
 	kd_wait_link_locked(&dispatch, &root->dispatch_member);

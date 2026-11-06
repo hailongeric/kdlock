@@ -186,6 +186,9 @@ class Campaign:
     def admit_images(self, rows):
         require_headroom(self.pool(rows), len(self.args.writer_entries))
 
+    def extra_provider_parameters(self):
+        return []
+
     def prepare(self):
         self.out.mkdir(parents=True, exist_ok=False)
         self.save()
@@ -210,6 +213,7 @@ class Campaign:
             'rwsem_provider_entries=' + ','.join(hex(value) for value in self.args.writer_entries)]
         if self.args.syscall_shape:
             load.append('rwsem_provider_syscall_shape=1')
+        load.extend(self.extra_provider_parameters())
         rt.command(load, self.out / 'load.log', timeout=30)
         self.provider_loaded = True
         params = controller.PARAMETERS

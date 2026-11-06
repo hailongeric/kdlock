@@ -408,7 +408,9 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         result.update(returncode=code, process_elapsed_ns=time.monotonic_ns()-started,
                       cpu_time_scope='whole upstream lifetime including warmup and reaped workers',
                       user_cpu_seconds=after_cpu.ru_utime-before_cpu.ru_utime,
-                      system_cpu_seconds=after_cpu.ru_stime-before_cpu.ru_stime)
+                      system_cpu_seconds=after_cpu.ru_stime-before_cpu.ru_stime,
+                      voluntary_context_switches=after_cpu.ru_nvcsw-before_cpu.ru_nvcsw,
+                      involuntary_context_switches=after_cpu.ru_nivcsw-before_cpu.ru_nivcsw)
         rt.require(code == 0, 'upstream application failed')
         rt.require(all(task_gone(row) for row in rows), 'upstream worker survived normal shutdown')
         result['drained'] = True
