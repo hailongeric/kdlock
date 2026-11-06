@@ -98,8 +98,13 @@ kd_rwsem_provider_resume_instruction(const struct kd_mmap_regs *packet)
 		     "movq %c[flags](%%rdi), %%rcx\n\t"
 		     "andq $%c[arithmetic_flags], %%rcx\n\t"
 		     "orq %%rcx, %%rax\n\t"
-		     "movq %c[sp](%%rdi), %%rsp\n\t"
-		     "pushq %c[ip](%%rdi)\n\t"
+		     /* Keep packet and staged words above the active helper SP until
+		      * every packet read finishes. The source CALL word stays at SP. */
+		     "movq %c[sp](%%rdi), %%rcx\n\t"
+		     "leaq -8(%%rcx), %%rcx\n\t"
+		     "pushq %%rcx\n\t"
+		     "movq %c[ip](%%rdi), %%rdx\n\t"
+		     "movq %%rdx, (%%rcx)\n\t"
 		     "pushq %%rax\n\t"
 		     "movq %c[r15](%%rdi), %%r15\n\t"
 		     "movq %c[r14](%%rdi), %%r14\n\t"
@@ -117,6 +122,7 @@ kd_rwsem_provider_resume_instruction(const struct kd_mmap_regs *packet)
 		     "movq %c[si](%%rdi), %%rsi\n\t"
 		     "movq %c[di](%%rdi), %%rdi\n\t"
 		     "popfq\n\t"
+		     "popq %%rsp\n\t"
 #if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 		     "jmp __x86_return_thunk\n\t"
 #else
@@ -149,7 +155,10 @@ kd_rwsem_provider_resume(struct module *owner, const void *full_packet)
 	module_put(owner);
 	if (packet->orig_ax == KD_MMAP_REG_ORIGIN_SUFFIX_TAG)
 		kd_rwsem_provider_resume_instruction(packet);
-	asm volatile("movq %c[r15](%%rdi), %%r15\n\t"
+	/* The packet is on the lower helper stack. Stage SP before restoring DI
+	 * and consume it only after all packet reads, including DI, have finished. */
+	asm volatile("pushq %c[sp](%%rdi)\n\t"
+		     "movq %c[r15](%%rdi), %%r15\n\t"
 		     "movq %c[r14](%%rdi), %%r14\n\t"
 		     "movq %c[r13](%%rdi), %%r13\n\t"
 		     "movq %c[r12](%%rdi), %%r12\n\t"
@@ -163,8 +172,8 @@ kd_rwsem_provider_resume(struct module *owner, const void *full_packet)
 		     "movq %c[cx](%%rdi), %%rcx\n\t"
 		     "movq %c[dx](%%rdi), %%rdx\n\t"
 		     "movq %c[si](%%rdi), %%rsi\n\t"
-		     "movq %c[sp](%%rdi), %%rsp\n\t"
 		     "movq %c[di](%%rdi), %%rdi\n\t"
+		     "popq %%rsp\n\t"
 #if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 		     "jmp __x86_return_thunk\n\t"
 #else
