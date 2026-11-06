@@ -10,7 +10,7 @@ from elftools.elf.elffile import ELFFile
 
 PAGE_SIZE = 0x1000
 WINDOW_SIZE = 2 * PAGE_SIZE
-MAX_TEXT_BYTES = 256 * 1024
+MAX_TEXT_BYTES = 1024 * 1024
 RETAINED_MAX_TEXT_BYTES = 1024 * 1024
 # Match KD_SOURCE_MAX_READ in include/kd_source_api.h. Aggregate capacity
 # never changes the provider's limit for one lease and its following read.
@@ -117,8 +117,8 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
                 for data, start, roots in regions]
     previous_bytes = union_bytes((start, end) for start, end, _, _ in existing)
     targets = sorted(set(targets))
-    # The explicit retained-service policy owns the larger aggregate budget.
-    # Ordinary callers, including custom non-retained windows, keep 256 KiB.
+    # Window shape and aggregate storage are separate controls. Both current
+    # policies allow 1 MiB; each lease/read remains bounded independently.
     budget = RETAINED_MAX_TEXT_BYTES if policy.budget_fallback else MAX_TEXT_BYTES
     lookaheads = ((1024, 512, 256, 128, 64, 15) if policy.budget_fallback
                  else (policy.lookahead,))

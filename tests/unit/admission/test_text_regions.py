@@ -1158,7 +1158,8 @@ class CompactTextWindowTests(unittest.TestCase):
         body.extend(branch(entry + len(body), BASE + 0x84000, b"\xe8"))
         body.extend(b"\xc3")
         self.put(entry, body)
-        with (patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory),
+        with (patch.object(memread, "MAX_TEXT_BYTES", 256 * 1024),
+              patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory),
               self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
             memread.extend_regions([], targets)
         self.assertEqual(self.reads, [])
@@ -1454,13 +1455,37 @@ class ChunkedTextReadTests(unittest.TestCase):
         self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
 
     def test_ordinary_and_custom_nonretained_policies_keep_aggregate_limit(self):
-        self.assertEqual(memread.MAX_TEXT_BYTES, 262144)
-        initial = [[self.data[:self.limit + 1], BASE, [BASE + 1]]]
+        self.assertEqual(memread.MAX_TEXT_BYTES, 1048576)
+        self.data = b"Q" * memread.MAX_TEXT_BYTES
+        initial = [[self.data, BASE, [BASE + 1]]]
         for policy in (memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(1024, 16)):
+            with self.subTest(policy=policy), self.kcore() as (_, pins, _):
+                result = memread.extend_regions(initial, set(), policy=policy)
+            self.assertEqual(result, initial)
+            self.assertEqual(pins, [(BASE + i * self.limit, self.limit) for i in range(4)])
             with (self.subTest(policy=policy), patch.object(memread, "read_kernel_addr_data") as reader,
-                  self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
-                memread.extend_regions(initial, set(), policy=policy)
+                  self.assertRaisesRegex(memread.TextReadLimit, "1048576 bytes")):
+                memread.extend_regions([[self.data + b"X", BASE, [BASE + 1]]], set(), policy=policy)
             reader.assert_not_called()
+        self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_original_page_policy_fits_observed_plan_with_separate_read_limit(self):
+        previous, planned = 241664, 270336
+        page = memread.PAGE_SIZE
+        targets = {BASE + previous + index * page for index in range(-2, 6)}
+        initial = [[self.data[:previous], BASE, [BASE + 1]]]
+        self.assertEqual(memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(8192, 4096))
+        with (patch.object(memread, "MAX_TEXT_BYTES", 256 * 1024),
+              patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
+            memread.extend_regions(initial, targets)
+        reader.assert_not_called()
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, targets)
+        self.assertEqual(result, [[self.data[:planned], BASE, sorted(targets | {BASE + 1})]])
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, planned - self.limit)])
+        self.assertTrue(all(0 < size <= self.limit for _, size in pins))
+        self.assertEqual(initial, [[self.data[:previous], BASE, [BASE + 1]]])
 
     def test_later_lease_refusal_never_reads_that_piece_or_returns_old_prefix(self):
         initial = [[self.data, BASE, [BASE + 1]]]
