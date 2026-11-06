@@ -20,6 +20,7 @@ class DirectCallDepthTests(unittest.TestCase):
 
     def emit(self, raw, functions, depth=5):
         reads = []
+        functions = {self.entry: raw, **functions}
         def read(address, size):
             reads.append((address, size))
             data = bytearray(b'\x90' * size)
@@ -42,7 +43,7 @@ class DirectCallDepthTests(unittest.TestCase):
         functions[targets[-1]] = b'\xc3'
         assembly, reads, log = self.emit(raw, functions)
         for target in targets[:5]:
-            self.assertIn(f'loc_{target:x}:'.encode(), assembly)
+            self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
             self.assertTrue(any(address <= target < address+size for address,size in reads))
         self.assertNotIn(f'loc_{targets[5]:x}:'.encode(), assembly)
         self.assertFalse(any(address <= targets[5] < address+size for address,size in reads))
@@ -65,14 +66,14 @@ class DirectCallDepthTests(unittest.TestCase):
         raw = self.call(self.entry, self.lock) + self.call(self.entry+5, self.unlock)
         raw += self.call(self.entry+10, target) + self.call(self.entry+15, self.unlock) + b'\xc3'
         assembly, reads, _ = self.emit(raw, {target: b'\xc3'})
-        self.assertIn(f'loc_{target:x}:'.encode(), assembly)
+        self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
         self.assertTrue(reads)
 
     def test_downgrade_keeps_following_read_tail(self):
         target = self.entry + 0x10000
         raw = self.call(self.entry, self.downgrade) + self.call(self.entry+5, target) + b'\xc3'
         assembly, reads, _ = self.emit(raw, {target: b'\xc3'})
-        self.assertIn(f'loc_{target:x}:'.encode(), assembly)
+        self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
         self.assertTrue(reads)
 
 
