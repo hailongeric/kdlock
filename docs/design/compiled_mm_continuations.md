@@ -1590,3 +1590,34 @@ behavior. Preserve the previous result and known unrelated driver failures;
 reuse unchanged runtime checks by hashes. Then use fresh identities/histories
 for mmap1, with progress, worker proof, partial/native-continuation coverage and
 scoring reported accurately. Restore the normal kernel afterwards. No merge.
+
+# Short preliminary mmap1 pilot
+
+The user prioritized quick performance observations over full preparation and
+matrix coverage. The long `f2d9caf3fca0cd69b38b8b2ea5d18422cbf16e22` run was
+ended through the owned daemon's ordinary termination/continuation sequence
+with zero frames and no compiler child. No workload received a signal. Its 33
+completed learning applications remain separate from the final stop-affected
+application. The last completed one-worker thread rate was 195,366 pairs per
+nominal second, with roots advancing 32-to-33 and staying at 25. All completed
+applications passed and drained; none has worker-attributed delegation proof
+or a quiet score. Exact retirement and idle passed.
+
+Add a diagnostic pilot around the existing campaign preparation, one-application
+learning function and exact finalizer. Select counts 1, 8 and 32 for threads
+and processes, one standard upstream lifetime per point: six warmup samples
+and two nominal measured seconds. Keep identity, source/packet/data/placement,
+image headroom and drain checks. Use fresh histories and matching provider
+identities; reuse unchanged build/component evidence by hashes. This is not a
+second lock or execution protocol.
+
+Report each passed/drained application immediately, including raw throughput,
+before/after image availability and generations, and whether the history
+changed. Keep `scored=false`, `accepted=false` and worker proof absent unless
+actually observed. A one-application learning allowance normally ends with
+`LEARNING_ADVANCED`; accept only its saved single passed/drained application,
+not another error or an incomplete lifetime. Preserve the strict campaign's
+proof and quiet scoring path unchanged. Diagnostic completion and successful
+retirement must not be presented as strict performance acceptance. Preserve
+all preliminary positive/negative rates and the comparable Native controls.
+Verify normal-kernel recovery at the end.
