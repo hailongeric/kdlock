@@ -2375,3 +2375,15 @@ close/fresh-finalizer protocol and verified normal-kernel recovery. Focused VM
 fixtures must show that a fixed receipt is used, that instability stops without
 retry, and that unknown application lifetime prevents cleanup. No broad suite
 or extra proof application is authorized for this check.
+
+The [completed fixed-point record](../../bench/results/10.176.26.71/bench/mmap1-settled-276f2647-20261107/README.md)
+retains the failed stability result. Long preparation settled at mmap g5 and
+munmap g7, but new reports appeared during the short application's warmup.
+The measured interval kept the same code/generations and pending status;
+positive mmap retained returns prove continued completion while pending.
+The provisional rate was 21,087.5 pairs/s, with no accepted timing result.
+A later mmap translation selected `STD` in `__memmove` and ended Native-only;
+munmap g9 was published after the application and remains untested. No point
+was repeated. Exact retirement and verified normal-kernel recovery passed,
+preserving the original point and close errors. The separate child-image
+design remains pending.
