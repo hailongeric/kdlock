@@ -2072,3 +2072,16 @@ and make the mock image validator reject them before indexing readiness.
 This is a fixture correction, with no change to provider behavior. Preserve
 the failed receipt under `learning-preflight-796fbb99` and run the remaining
 checks and builds against a new frozen revision.
+
+The corrected revision `e57ae29d53c00d0bde215b3eee696239e118e2be` passed the
+remaining focused checks and provider/daemon builds. Its bounded eight-process
+comparison is retained in the
+[learning report](../../bench/results/10.176.26.71/bench/mmap1-learning-e57ae29d/README.md).
+Native completed at 2,237,819.2 pairs per nominal second over the final ten
+samples. KD failed during preparation: the earliest recorded event dereferenced
+an invalid callback argument in `kd_provider_assert_held_write`, before the
+ownership predicate. No KD final-window rate, completed-body proof or ordinary
+retirement is available. Source-stack/argument preservation remains an unproven
+lead. Normal recovery was verified at boot
+`4ff57d48-bc4c-43bd-9946-b16e0db3d4da`. Keep the candidate unaccepted and
+diagnose the first failure before another live workload.
