@@ -2248,3 +2248,21 @@ kernel. The directly affected site-validation fixtures run on the VM, followed
 by bounded thread/process diagnostics using original JIT execution. Keep
 retained-image capture and replacement enabled. Do not repeat the earlier long
 warmup before the bounded diagnostics establish complete execution and retirement.
+
+The corrected-kernel focused run is retained in
+[mmap1-restore-ec623366-20261107](../../bench/results/10.176.26.71/bench/mmap1-restore-ec623366-20261107/README.md).
+Both models returned and drained at one and eight workers, but the eight-worker
+points exceeded the shared 300-second learning deadline during post-application
+image settlement. That deadline starts before preparation.
+Six serial translations per model consumed 291.4-296.9 seconds in addition
+to preparation and application work. Exact retirement later passed. Keep the
+settled-receipt predicate unchanged: this run does not demonstrate a contract
+defect that would justify accepting an active compiler as settled.
+
+At eight workers every selected request entered generated dispatch and completed
+explicit handback, with zero `returned` events. This establishes neither a fully
+returned delegated body nor a delegated downgrade/read-tail transition. The
+printed thread/process rates were about 97% below their matching Native points;
+both failed points remain unaccepted. Separate images remain initially scoped
+to selected KD acquisitions, and that child-image implementation remains pending.
+The VM was returned to the verified normal kernel after exact retirement.
