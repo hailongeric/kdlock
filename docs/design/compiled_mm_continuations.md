@@ -1925,3 +1925,43 @@ stabilization or full matrix is requested. Reuse the validated provider from
 translator source bytes are unchanged; only the observation count check and
 documentation change. Preserve all established ownership, read-credit,
 continuation and retirement checks, then restore the normal kernel.
+
+Runner `816e9ce3430cebdd2c186f6a8d2baca16d75e66f` completed that bounded
+processes sequence at 220830.5 / 322072 / 372330.5 / 369782.5 pairs/s.
+Generation three was selected before the final point; its source hashes match
+the reviewed return images. Each entry recorded eight JIT handbacks and zero
+ordinary delegated returns. The new recorded CALL targets are
+`unmapped_area_topdown` (`0xffffffff8181c0e0`) for mmap and `mas_mab_cp`
+(`0xffffffff826b2f60`) for munmap. Generation three has CALL-miss stubs there;
+the handback retains the already-pushed return word and begins at the callee.
+This establishes further reached coverage limits, not non-delegability of the
+helpers. Generation four was published afterward and remains unrun. All four
+applications drained, exact retirement passed and normal-kernel recovery was
+verified. Full delegated MM completion and performance acceptance remain open.
+See the [generation-three report](../../bench/results/10.176.26.71/bench/mmap1-generation3-816e9ce3/README.md).
+
+## Bounded generation-four execution, then diagnose recurrence
+
+The retained generation-four sources contain actual bodies for both reached
+targets, `unmapped_area_topdown` at `0xffffffff8181c0e0` and `mas_mab_cp` at
+`0xffffffff826b2f60`. Their recorded hashes are respectively
+`d4e19779467a04124b4fff43104c62bee10af4e896ec0c01d37e3e4d8dea107d` and
+`d09cbc1e5ed1f34cf771377715b684367b6bb24a89a99f56282a9c721b49ed8c`.
+This establishes static callee coverage; the previous run did not execute
+these images. Existing direct CALL lowering retains its real return-word
+push and jumps to the callee label. There is no second CALL at that label.
+
+Use one fresh processes session with `[1,2,4,6,8]`: four bounded priming
+applications, followed by one representative eight-process observation.
+Relearn every edge within the new source/module epoch. Allow at most 900
+seconds for this finite learning sequence; the previous four-point run
+approached the 600-second limit. Keep the existing per-application timeout
+and all identity/drain checks. Runtime and translator bytes remain those of
+validated provider `eabe454b4ee51ea6962a73525372b4b09679c737`; only the
+existing count choice and documentation change, so reuse its build/checks.
+If another actual miss occurs, stop the run series after this observation
+and trace the executed chain to distinguish the five-edge discovery limit,
+scope clipping, seed propagation and ordinary later learning. Do not extend
+the sequence indefinitely or investigate unrelated branches. Keep the
+original backend, immutable images and all continuation/ownership/ACK rules,
+retain every result, then restore and verify the normal kernel.
