@@ -2277,8 +2277,8 @@ same `ec623366622d1784f7e819b4e9031ba0482bee9b` runtime and
 ownership, image publication, pending-image admission or the settled-receipt
 predicate.
 
-Retained tables identify IJ site `0xffffffff814f4a38` targeting
-`0xffffffffc0e32fb0` for both roots in both task models. The site is within
+Retained tables identify IJ report address `0xffffffff814f4a38` targeting
+`0xffffffffc0e32fb0` for both roots in both task models. This is the return address after an indirect callback within
 `kd_mmap_assert_held_write`; the module target name was not retained. Thread-mode
 munmap additionally learned CALL target `0xffffffff8184c0d0` (`anon_vma_name`).
 Duplicate table rows demonstrate repeated workspace updates, not distinct lost
@@ -2290,10 +2290,11 @@ Use the existing long-warmup path at eight workers only, one application per
 model and mode: six upstream warmup samples plus 724 subsequent samples, with
 the final ten selected. This gives 720 nominal seconds before measurement and
 ten measured seconds, 730 samples total. Retain the existing 800-second
-application bound. Select a shared 1,200-second KD learning deadline: the
-730-second application plus the observed 291-297 seconds of serial translation
-leaves approximately 173 seconds for admission, capture and settling even if
-those costs do not overlap. This is a finite allowance derived from the retained
+application bound. Select a shared 1,800-second KD learning deadline: the
+730-second application plus two allowances of the observed 291-297 seconds of
+serial translation leaves approximately 476 seconds for admission, capture and
+settling even if those costs do not overlap. The second translation allowance
+permits further learning waves during the longer application. This is a finite allowance derived from the retained
 run, not a waiver of settlement. Stop after a failed application or unknown
 lifetime; do not retry a point automatically.
 
