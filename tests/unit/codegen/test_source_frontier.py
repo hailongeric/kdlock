@@ -10,10 +10,11 @@ frontier = translator.source_frontier
 
 
 class SourceFrontierTests(unittest.TestCase):
-    def compile(self, raw, *, capable=True):
+    def compile(self, raw, *, capable=True, extended=False):
         options = {}
         assembly, log, status = render(raw.hex(), lock_kind='mutex', abi=2,
             trusted_source=True, body_witness=True, source_frontier_capable=capable,
+            source_frontier_extensions=extended,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
                             'kd_mutex_direct_unlock_clobber_v1': 0x7100},
             build_options=options, return_status=True)
@@ -88,6 +89,39 @@ class SourceFrontierTests(unittest.TestCase):
             self.assertIsNone(decoder.dis(bin_stream_str(bytes(raw)), 64, 0))
         for size in range(len(frontier.ENCODING)):
             self.assertIsNone(decoder.dis(bin_stream_str(frontier.ENCODING[:size]), 64, 0))
+
+    def test_observed_state_instructions_preserve_reached_and_other_paths(self):
+        from miasm.core.bin_stream import bin_stream_str
+        for encoding in frontier.EXTENDED_ENCODINGS:
+            with self.subTest(encoding=encoding.hex()):
+                raw = machine_code('mov eax,3; lock xadd QWORD PTR[rbp],rax')
+                raw += encoding + machine_code('mov QWORD PTR[rbp+8],99; ret')
+                assembly, log, status, options = self.compile(raw, extended=True)
+                self.assertEqual(status, 0, log)
+                memory = (ctypes.c_ulong * 2)(5, 0)
+                before = []
+                def initialize(regs, stack):
+                    regs[2] = ctypes.addressof(memory)
+                    before.append(regs[1])
+                regs, result = run_image(assembly, [0x1000], initialize=initialize,
+                    abi=2, requirements=options['requirements'])[0]
+                self.assertEqual(result, [frontier.EXIT, 1])
+                self.assertEqual(regs[0], 0x1000 + raw.index(encoding))
+                self.assertEqual(regs[1], before[0])
+                self.assertEqual(list(memory), [8, 0])
+                directives = ','.join(hex(value) for value in encoding)
+                branch = machine_code('cmp QWORD PTR[rbp],0; je done; .byte ' +
+                                      directives + '; done: mov eax,42; ret')
+                assembly, log, status, options = self.compile(branch, extended=True)
+                self.assertEqual(status, 0, log)
+                zero = ctypes.c_ulong(0)
+                regs, result = run_image(assembly, [0x1000],
+                    initialize=lambda regs, stack: regs.__setitem__(2, ctypes.addressof(zero)),
+                    abi=2, requirements=options['requirements'])[0]
+                self.assertEqual(result, [15, 1])
+                self.assertEqual(regs[12], 42)
+                legacy = frontier.Decoder(type('Arch', (), {'dis': lambda *args: None})())
+                self.assertIsNone(legacy.dis(bin_stream_str(encoding), 64, 0))
 
 
 if __name__ == '__main__':

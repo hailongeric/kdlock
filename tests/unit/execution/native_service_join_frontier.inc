@@ -41,6 +41,25 @@ static void check_frontier_refusals(struct kd_exec_continuation *cont)
 		cont->service_call.api = KD_SERVICE_NONE;
 		cont->source_lease = true;
 	}
+	for (unsigned int i = 0; i < 2; ++i) {
+		struct kd_regs before;
+		frontier_instruction_length = 3;
+		frontier_text[0] = 0x0f; frontier_text[1] = 0x01;
+		frontier_text[2] = i ? 0xca : 0xee;
+		cont->frame = saved;
+		before = cont->frame.regs;
+		assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));
+		assert(frontier_calls == 1 && cont->frame.regs.ip == before.ip &&
+		       cont->frame.regs.sp == before.sp && cont->frame.regs.flags == before.flags &&
+		       cont->frame.regs.orig_ax == KD_REG_ORIGIN_SUFFIX_TAG);
+		frontier_calls = 0;
+		cont->frame = saved;
+		frontier_text[2] ^= 1;
+		assert(kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs) == -EILSEQ);
+		assert(!memcmp(&before, &cont->frame.regs, sizeof(before)) && !frontier_calls);
+	}
+	memcpy(frontier_text, (unsigned char[]){0x67,0x48,0x0f,0xb9,0x3a}, sizeof(frontier_text));
+	frontier_instruction_length = sizeof(frontier_text);
 	cont->frame = saved;
 	assert(kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
 		KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER));

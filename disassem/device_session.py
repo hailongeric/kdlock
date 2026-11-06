@@ -22,7 +22,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 18
+CAPS_VERSION = 19
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -65,6 +65,7 @@ _origin_memory = False
 _origin_context_read = False
 _indirect_tail = False
 _source_frontier = False
+_source_frontier_extensions = False
 
 
 class SourceRefused(RuntimeError):
@@ -201,6 +202,7 @@ def query_capabilities(fd):
                 "origin_context_read": bool(features & CAP_ORIGIN_CONTEXT_READ),
                 "indirect_tail": bool(features & CAP_INDIRECT_TAIL),
                 "source_frontier": bool(features & CAP_SOURCE_FRONTIER),
+                "source_frontier_extensions": bool(version >= 19 and features & CAP_SOURCE_FRONTIER),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -426,6 +428,12 @@ def source_frontier():
     return _source_frontier
 
 
+def source_frontier_extensions():
+    """Revision 19 also recognizes the two added task-state instructions."""
+    require()
+    return _source_frontier_extensions
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -441,7 +449,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read, _indirect_tail, _source_frontier
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read, _indirect_tail, _source_frontier, _source_frontier_extensions
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -495,6 +503,7 @@ def session():
         _origin_context_read = caps["origin_context_read"]
         _indirect_tail = caps["indirect_tail"]
         _source_frontier = caps["source_frontier"]
+        _source_frontier_extensions = caps.get("source_frontier_extensions", False)
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -528,6 +537,7 @@ def session():
         _origin_context_read = False
         _indirect_tail = False
         _source_frontier = False
+        _source_frontier_extensions = False
         if fd is not None:
             os.close(fd)
 

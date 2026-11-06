@@ -6,6 +6,8 @@ from types import SimpleNamespace
 
 
 ENCODING = bytes.fromhex('67 48 0f b9 3a')
+EXTENDED_ENCODINGS = (bytes.fromhex('0f 01 ee'), bytes.fromhex('0f 01 ca'))
+ENCODINGS = (ENCODING,) + EXTENDED_ENCODINGS
 NAME = 'SOURCE_FRONTIER'
 EXIT = 16
 REQUIREMENT = 1 << 14
@@ -19,8 +21,11 @@ class Instruction:
     l = len(ENCODING)
     b = ENCODING
 
-    def __init__(self, offset):
+    def __init__(self, offset, encoding=ENCODING):
+        if encoding not in ENCODINGS:
+            raise ValueError('unknown source frontier encoding')
         self.offset = offset
+        self.b, self.l = encoding, len(encoding)
         # The exact form has address/REX prefixes, but no LOCK or REP group.
         # Shared emitter spelling inspects this metadata even for terminals.
         self.additional_info = SimpleNamespace(g1=SimpleNamespace(value=0), prefixed=b'')
@@ -46,25 +51,33 @@ class Instruction:
 
 class Decoder:
     """Supplement only the instruction offset requested by the real decoder."""
-    def __init__(self, arch):
+    def __init__(self, arch, *, extended=False):
         self.arch = arch
+        self.encodings = ENCODINGS if extended else (ENCODING,)
 
     def __getattr__(self, name):
         return getattr(self.arch, name)
 
     def dis(self, stream, mode, offset):
         try:
-            raw = stream.getbytes(offset, len(ENCODING))
+            prefix = stream.getbytes(offset, 2)
         except IOError:
-            raw = b''
-        if raw == ENCODING:
-            return Instruction(offset)
+            return self.arch.dis(stream, mode, offset)
+        for encoding in self.encodings:
+            if prefix != encoding[:2]:
+                continue
+            try:
+                raw = stream.getbytes(offset, len(encoding))
+            except IOError:
+                continue
+            if raw == encoding:
+                return Instruction(offset, encoding)
         return self.arch.dis(stream, mode, offset)
 
 
 def descriptor(line):
-    return (line.name == NAME and not line.args and line.l == len(ENCODING)
-            and bytes(line.b) == ENCODING)
+    return (line.name == NAME and not line.args and bytes(line.b) in ENCODINGS
+            and line.l == len(line.b))
 
 
 def marker(line, reg_map):

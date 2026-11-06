@@ -334,10 +334,19 @@ static int kd_jit_retained_miss(struct kd_exe_info *exe,
 static int kd_jit_source_frontier(struct kd_exe_info *exe,
 	struct kd_exec_frame *frame, struct kd_regs *regs)
 {
-	static const unsigned char expected[] = { 0x67, 0x48, 0x0f, 0xb9, 0x3a };
+	static const struct {
+		unsigned char bytes[5];
+		unsigned int length;
+	} encodings[] = {
+		{ { 0x67, 0x48, 0x0f, 0xb9, 0x3a }, 5 },
+		{ { 0x0f, 0x01, 0xee }, 3 },
+		{ { 0x0f, 0x01, 0xca }, 3 },
+	};
 	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
-	unsigned char opcode[sizeof(expected)];
+	unsigned char opcode[5];
 	unsigned long base;
+	unsigned int i, length = 0;
+	bool matched = false;
 	int ret;
 
 	if (!exe || !frame || !regs || frame != kd_exec_current_frame() ||
@@ -354,19 +363,37 @@ static int kd_jit_source_frontier(struct kd_exe_info *exe,
 	    frame->image->entry_abi != frame->entry_abi ||
 	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SOURCE_FRONTIER) ||
 	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE) ||
-	    !(regs->flags & 2) || !regs->ip || regs->ip > ~0UL - sizeof(expected))
+	    !(regs->flags & 2) || !regs->ip || regs->ip > ~0UL - sizeof(opcode))
 		return -EINVAL;
 	base = (unsigned long)task_stack_page(frame->logical_task);
 	if (!base || base > ~0UL - THREAD_SIZE ||
 	    regs->sp < base + 2 * sizeof(unsigned long) ||
 	    regs->sp > base + THREAD_SIZE - sizeof(unsigned long))
 		return -EFAULT;
-	ret = kd_source_pin_text_range(regs->ip, sizeof(expected));
+	ret = kd_source_pin_text_range(regs->ip, 2);
 	if (ret)
 		return ret;
-	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, sizeof(opcode)))
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, 2))
 		return -EFAULT;
-	if (memcmp(opcode, expected, sizeof(expected)))
+	for (i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
+		if (!memcmp(opcode, encodings[i].bytes, 2)) {
+			length = encodings[i].length;
+			break;
+		}
+	if (!length)
+		return -EILSEQ;
+	ret = kd_source_pin_text_range(regs->ip, length);
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, length))
+		return -EFAULT;
+	for (i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
+		if (length == encodings[i].length &&
+		    !memcmp(opcode, encodings[i].bytes, length)) {
+			matched = true;
+			break;
+		}
+	if (!matched)
 		return -EILSEQ;
 	/* IP/SP/GPRs and all earlier effects remain unchanged. Only this validated
 	 * outcome selects the established original-task restoration contract. */

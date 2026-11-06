@@ -416,7 +416,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     for expansion in range(decode_pass_limit):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack,
             source_frontiers=(trusted_source and abi == 2 and lock_kind == 'mutex'
-                              and memread.device_session.source_frontier()))
+                              and memread.device_session.source_frontier()),
+            frontier_extensions=(trusted_source and abi == 2 and lock_kind == 'mutex'
+                                 and memread.device_session.source_frontier_extensions()))
         block_dict = {start: block for start, block in block_dict.items()
                       if start not in excluded_targets}
         db_dict = {block: db_dict[block] for block in block_dict.values()}
