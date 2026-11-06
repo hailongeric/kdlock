@@ -182,10 +182,10 @@ static int frontier_source_error, frontier_read_error;
 #define task_stack_page(task) ((task)->stack)
 static struct kd_exec_frame *kd_exec_current_frame(void) { return &root.continuation.frame; }
 static int kd_source_pin_text_range(unsigned long address, unsigned long size)
-{ assert(address == (unsigned long)frontier_text && (size == 2 || size == frontier_instruction_length)); return frontier_source_error; }
+{ assert(address == (unsigned long)frontier_text && (size == 1 || size == frontier_instruction_length)); return frontier_source_error; }
 static int copy_from_kernel_nofault(void *out, const void *in, size_t size)
 {
-	assert(in == frontier_text && (size == 2 || size == frontier_instruction_length));
+	assert(in == frontier_text && (size == 1 || size == frontier_instruction_length));
 	if (frontier_read_error)
 		return frontier_read_error;
 	memcpy(out, in, size);

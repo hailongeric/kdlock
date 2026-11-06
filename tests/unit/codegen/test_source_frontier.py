@@ -10,11 +10,11 @@ frontier = translator.source_frontier
 
 
 class SourceFrontierTests(unittest.TestCase):
-    def compile(self, raw, *, capable=True, extended=False):
+    def compile(self, raw, *, capable=True, extended=False, controls=False):
         options = {}
         assembly, log, status = render(raw.hex(), lock_kind='mutex', abi=2,
             trusted_source=True, body_witness=True, source_frontier_capable=capable,
-            source_frontier_extensions=extended,
+            source_frontier_extensions=extended, source_frontier_controls=controls,
             kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
                             'kd_mutex_direct_unlock_clobber_v1': 0x7100},
             build_options=options, return_status=True)
@@ -91,12 +91,25 @@ class SourceFrontierTests(unittest.TestCase):
             self.assertIsNone(decoder.dis(bin_stream_str(frontier.ENCODING[:size]), 64, 0))
 
     def test_observed_state_instructions_preserve_reached_and_other_paths(self):
+        self.check_instruction_paths(frontier.EXTENDED_ENCODINGS, extended=True)
+
+    def test_interrupt_boundaries_preserve_reached_and_other_paths(self):
+        self.check_instruction_paths(frontier.CONTROL_ENCODINGS, controls=True)
         from miasm.core.bin_stream import bin_stream_str
-        for encoding in frontier.EXTENDED_ENCODINGS:
+        arch = type('Arch', (), {'dis': lambda *args: None})()
+        for encoding in frontier.CONTROL_ENCODINGS:
+            stream = bin_stream_str(encoding)
+            self.assertIsNone(frontier.Decoder(arch, extended=True).dis(stream, 64, 0))
+            self.assertTrue(frontier.descriptor(
+                frontier.Decoder(arch, controls=True).dis(stream, 64, 0)))
+
+    def check_instruction_paths(self, encodings, **compile_options):
+        from miasm.core.bin_stream import bin_stream_str
+        for encoding in encodings:
             with self.subTest(encoding=encoding.hex()):
                 raw = machine_code('mov eax,3; lock xadd QWORD PTR[rbp],rax')
                 raw += encoding + machine_code('mov QWORD PTR[rbp+8],99; ret')
-                assembly, log, status, options = self.compile(raw, extended=True)
+                assembly, log, status, options = self.compile(raw, **compile_options)
                 self.assertEqual(status, 0, log)
                 memory = (ctypes.c_ulong * 2)(5, 0)
                 before = []
@@ -112,7 +125,7 @@ class SourceFrontierTests(unittest.TestCase):
                 directives = ','.join(hex(value) for value in encoding)
                 branch = machine_code('cmp QWORD PTR[rbp],0; je done; .byte ' +
                                       directives + '; done: mov eax,42; ret')
-                assembly, log, status, options = self.compile(branch, extended=True)
+                assembly, log, status, options = self.compile(branch, **compile_options)
                 self.assertEqual(status, 0, log)
                 zero = ctypes.c_ulong(0)
                 regs, result = run_image(assembly, [0x1000],

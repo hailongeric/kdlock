@@ -341,6 +341,8 @@ static int kd_jit_source_frontier(struct kd_exe_info *exe,
 		{ { 0x67, 0x48, 0x0f, 0xb9, 0x3a }, 5 },
 		{ { 0x0f, 0x01, 0xee }, 3 },
 		{ { 0x0f, 0x01, 0xca }, 3 },
+		{ { 0xfa }, 1 },
+		{ { 0xfb }, 1 },
 	};
 	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
 	unsigned char opcode[5];
@@ -370,13 +372,14 @@ static int kd_jit_source_frontier(struct kd_exe_info *exe,
 	    regs->sp < base + 2 * sizeof(unsigned long) ||
 	    regs->sp > base + THREAD_SIZE - sizeof(unsigned long))
 		return -EFAULT;
-	ret = kd_source_pin_text_range(regs->ip, 2);
+	/* Read only the first byte before choosing the exact source extent. */
+	ret = kd_source_pin_text_range(regs->ip, 1);
 	if (ret)
 		return ret;
-	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, 2))
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, 1))
 		return -EFAULT;
 	for (i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
-		if (!memcmp(opcode, encodings[i].bytes, 2)) {
+		if (!memcmp(opcode, encodings[i].bytes, 1)) {
 			length = encodings[i].length;
 			break;
 		}

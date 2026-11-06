@@ -7,7 +7,8 @@ from types import SimpleNamespace
 
 ENCODING = bytes.fromhex('67 48 0f b9 3a')
 EXTENDED_ENCODINGS = (bytes.fromhex('0f 01 ee'), bytes.fromhex('0f 01 ca'))
-ENCODINGS = (ENCODING,) + EXTENDED_ENCODINGS
+CONTROL_ENCODINGS = (b'\xfa', b'\xfb')
+ENCODINGS = (ENCODING,) + EXTENDED_ENCODINGS + CONTROL_ENCODINGS
 NAME = 'SOURCE_FRONTIER'
 EXIT = 16
 REQUIREMENT = 1 << 14
@@ -51,20 +52,21 @@ class Instruction:
 
 class Decoder:
     """Supplement only the instruction offset requested by the real decoder."""
-    def __init__(self, arch, *, extended=False):
+    def __init__(self, arch, *, extended=False, controls=False):
         self.arch = arch
-        self.encodings = ENCODINGS if extended else (ENCODING,)
+        self.encodings = ((ENCODING,) + (EXTENDED_ENCODINGS if extended else ())
+                          + (CONTROL_ENCODINGS if controls else ()))
 
     def __getattr__(self, name):
         return getattr(self.arch, name)
 
     def dis(self, stream, mode, offset):
         try:
-            prefix = stream.getbytes(offset, 2)
+            prefix = stream.getbytes(offset, 1)
         except IOError:
             return self.arch.dis(stream, mode, offset)
         for encoding in self.encodings:
-            if prefix != encoding[:2]:
+            if prefix != encoding[:1]:
                 continue
             try:
                 raw = stream.getbytes(offset, len(encoding))

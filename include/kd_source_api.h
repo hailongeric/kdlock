@@ -34,7 +34,7 @@ struct kd_source_info {
  * per-CPU arena. It starts after ALIGN(core_static_size, 4) on each possible
  * CPU. Its address extent survives module unload; object validity does not.
  * This excludes dynamic chunks and the first unit's possibly freed tail. */
-#define KD_JIT_CAPS_VERSION 19
+#define KD_JIT_CAPS_VERSION 20
 #define KD_JIT_CAP_MUTEX_STACK (1U << 0)
 #define KD_JIT_CAP_PERCPU_MODULE (1U << 1)
 #define KD_JIT_CAP_MUTEX_IMAGES (1U << 3)

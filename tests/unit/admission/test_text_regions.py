@@ -476,6 +476,18 @@ class DeviceSessionTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
                 self.fail('unnegotiated source frontier admitted')
 
+    def test_frontier_controls_require_v20_and_reset_with_lease(self):
+        for version, feature, extended, controls in (
+                (18, 262144, False, False), (19, 262144, True, False),
+                (20, 0, False, False), (20, 262144, True, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 16384 | feature, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier_extensions(), extended)
+                self.assertEqual(device_session.source_frontier_controls(), controls)
+            self.assertFalse(device_session._source_frontier_controls)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier_controls()
+
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
         # not infer a weaker bound from a larger, shorter or future response.

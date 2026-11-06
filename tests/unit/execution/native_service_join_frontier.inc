@@ -58,6 +58,22 @@ static void check_frontier_refusals(struct kd_exec_continuation *cont)
 		assert(kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs) == -EILSEQ);
 		assert(!memcmp(&before, &cont->frame.regs, sizeof(before)) && !frontier_calls);
 	}
+	/* The one-byte forms must never read a second byte. The fixture's source
+	 * reader enforces this extent while retaining the real frame/owner path. */
+	for (unsigned int i = 0; i < 2; ++i) {
+		struct kd_regs before;
+		unsigned long words[64];
+		frontier_instruction_length = 1;
+		frontier_text[0] = i ? 0xfb : 0xfa;
+		cont->frame = saved;
+		before = cont->frame.regs;
+		memcpy(words, origin_words, sizeof(words));
+		assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));
+		before.orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+		assert(frontier_calls == 1 && !memcmp(&before, &cont->frame.regs, sizeof(before)));
+		assert(!memcmp(words, origin_words, sizeof(words)));
+		frontier_calls = 0;
+	}
 	memcpy(frontier_text, (unsigned char[]){0x67,0x48,0x0f,0xb9,0x3a}, sizeof(frontier_text));
 	frontier_instruction_length = sizeof(frontier_text);
 	cont->frame = saved;
