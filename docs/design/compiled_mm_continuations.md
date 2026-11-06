@@ -2001,3 +2001,57 @@ Stop this bounded live series here. The
 retains the selected images, source paths, all rates and counts, compiler
 outcomes, and recovery evidence. This diagnosis changes no runtime protocol
 and does not implement the separately selected child-image design.
+
+## Retained capture while a recoverable miss is pending
+
+Continue `codex/mmap-reached-jit` from
+`79c2a752a547cecedf41948f3b0549c5ae2c990b`. A valid immutable ABI2 image
+with the retained terminal-miss contract remains usable by retained service
+captures while a CALL/IJ report requests its next generation. Ordinary mutex
+batch and spin readiness keep their current contract. Both demand capture
+and prepared rwsem registration use the same image validator; neither may
+discard an otherwise eligible image through a preceding NORMAL-only lookup.
+Source-open, exact entry/ABI/header/requirements and permanent exclusions
+remain mandatory. Bound frames retain their selected image across replacement;
+no new readiness check is inserted after an instruction has executed.
+
+Keep the existing one-record learning representation, with a per-entry revision
+under the publication gate. Exact duplicate tuples coalesce without changing
+revision. A distinct report replaces the pending tuple as today, increments the
+revision and an explicit superseded-report counter; this remains latest-report
+learning, not a lossless event queue. Bind acknowledgment to the writable device
+description's registry-read snapshot and base generation, frozen at the first
+upload chunk. Publication clears only its matching observed revision. A newer
+pending tuple survives and requests another generation; late reports from an old
+bound image remain ignored. An upload without a matching read receipt consumes
+no pending report. No new wire field or lock/wrapper API is introduced.
+
+Generation-qualified daemon command deduplication must not reuse an earlier
+generation's compiler outcome as a new translation. Source closure and permanent
+entry exclusion still deny fresh capture. No pending array, new backend,
+returning service, or general lock queue is introduced. This narrow change
+preserves existing last-report behavior while closing publication's deletion
+of a newer report; broad branch coverage still requires subsequent occurrences
+of any superseded target.
+
+Finish implementation before focused VM checks. Exercise pending-miss capture,
+duplicate and distinct concurrent reports, exact acknowledgment, replacement
+with an old frame retained, and closed/permanent/invalid cases. Reuse generated
+branch/terminal-continuation checks for bypass completion and reached handback.
+Build the provider and changed daemon on the VM only.
+
+Use one unchanged eight-process application per Native/KD arm with `-s 724`:
+six upstream warmup samples plus 714 additional preparation samples, followed
+by the final ten measured samples. The 720-sample warmup exceeds the prior
+608.812 seconds of serial compiler work, including the latest 201.756-second
+pair; it does not guarantee convergence. Bound each application at 800 seconds
+and preparation/drain separately. Preserve all samples and the upstream average
+over its full 724 post-marker samples; report the selected final-ten average
+separately. Use the same PTY stdout transport for both arms so complete sample lines arrive
+promptly without changing the executable. Sample JIT/local/handback/completion
+counters and registry generations after the final warmup line and final measured
+line, retaining callback timestamps and transport-delay limits. Keep full-lifetime
+counts separately. These callbacks delimit an observed window, not an atomic
+snapshot at the application's counter instruction. Do not claim steady delegated
+performance when coverage advances or completion remains unproved. Keep matched identities and
+placement, immutable running inputs, exact retirement, and normal-kernel recovery.
