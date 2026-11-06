@@ -1621,3 +1621,82 @@ proof and quiet scoring path unchanged. Diagnostic completion and successful
 retirement must not be presented as strict performance acceptance. Preserve
 all preliminary positive/negative rates and the comparable Native controls.
 Verify normal-kernel recovery at the end.
+
+Implemented by `090ec98c9abc1963690ebfef75f1861876038795`, using runtime
+`f2d9caf3fca0cd69b38b8b2ea5d18422cbf16e22`. All six short applications passed
+and drained, with changing generations and no worker-attributed proof. Thread
+rates at 1/8/32 workers were 201283.0/49296.5/18189.5 pairs per nominal second;
+process rates were 234467.5/381426.0/400205.5. All are preliminary/unscored and
+below matched Native controls. Exact retirement and normal restoration passed.
+The 1 MiB change passed 36 focused cases; it is not a measured steady-JIT gain.
+Full results and scope are in
+[the short pilot report](../../bench/results/10.176.26.71/bench/mmap1-pilot-090ec98c/README.md).
+
+# Actual mmap1 path and size: evidence boundary
+
+The selected roots remain `0xffffffff817b6f68` (`vm_mmap_pgoff+0x118`) and
+`0xffffffff8181c73b` (`__vm_munmap+0xbb`). Their matched Native intervals end
+at write release for mmap and, on successful userspace munmap, downgrade plus
+the later read release in `vms_complete_munmap_vmas()`. Post-release userfault
+completion, population and detached-tree destruction are outside those holds.
+
+At short-pilot generation 6 the decoded graphs contain 1100 source bytes / 295
+instructions for mmap and 2676 / 687 for munmap, against fetched windows of
+57344 / 49152 bytes. Those graphs include static alternatives and cover only
+translated prefixes. The 1 MiB cache limit, 4 MiB image slot, decoded graph and
+actual dynamic critical section are different quantities. No lock-held timing,
+dynamic instruction count or runtime ratio was collected.
+
+Reached CALL/IJ tables are execution-frontier evidence but lack per-edge task
+and branch attribution. Current capture uses entry plus syscall shape, not a
+mmap1 task/PID allowlist. Existing bound objects survive factory deactivation,
+and bound capture bypasses the ordinary unbound task-name matcher. Excluded
+acquisitions already stay local on the same KD object. A general requester
+predicate could narrow that existing capture decision without a caller-specific
+MM adapter; this analysis adds no filter or backend. Exact endpoints, targets,
+coverage snapshots and the scope gap are recorded in
+[the path/size evidence](../../bench/results/10.176.26.71/bench/mmap1-pilot-090ec98c/README.md#actual-paths-and-critical-section-size).
+
+# Small executed-path diagnostic
+
+Continue on `codex/mmap-reached-jit` from
+`090ec98c9abc1963690ebfef75f1861876038795`. Separate child images initially
+apply to selected KD acquisitions; allocator and other Native locks retain
+their existing instruction-service treatment. This observation change does
+not implement a different image, lock or handoff protocol.
+
+Add an optional, load-time selected per-CPU observation of two configured
+entry addresses and an exact origin task name. Count selected calls, local
+admissions (including missing-image admissions), published requests, actual
+JIT entry, permanent handback, delegated return, handback completion and
+cancellation. Distinguish a cancellation before publication from a canceled
+published request. Nonselected calls and disabled observations take no clock
+samples or counter updates. These totals never participate in admission,
+ownership, execution selection or retirement.
+
+Retain only an observation index and shadow-wait start in private root
+storage. Keep packets, frames, the wrapper ABI, lock layout and all protocol
+decisions unchanged. Per-CPU totals are read before and after an application
+by the existing controller, outside its lifetime; no concurrent observer or
+per-request logging is added. Check local/published/prepublication-cancel
+conservation, published terminal outcomes, and disabled/enabled behavior.
+
+Elapsed nanoseconds delimit the existing local admission helper, the first
+retained dispatcher call, and shadow-stack wait through normal resume or
+Native acceptance. The dispatcher interval includes its C machinery and may
+overlap shadow wait. Shadow wait includes services and scheduling; it is not
+pure spinning. Neither interval is full critical-section held time or CPU
+time. Existing `jit_timing` remains disabled because the strict image-session
+identity requires that setting. Static decoded instruction counts are not
+dynamic instruction counts, and these measurements do not determine a full
+critical-section runtime ratio.
+
+Use fresh histories, one one-worker priming application and one eight-thread
+application, with the daemon paused throughout each standard six-warmup plus
+two-measured-second lifetime. The eight-thread application uses the published
+priming images, without compilation during execution. Keep source/image
+headroom, identity, placement, data, drain, exact retirement and recovery
+checks. Build and run focused off/on/conservation and directly affected
+continuation checks on the VM, then the diagnostic and normal-kernel recovery.
+Retain observations separately from the uninstrumented pilot and Native rates;
+no acceptance or performance improvement follows from this diagnostic.
