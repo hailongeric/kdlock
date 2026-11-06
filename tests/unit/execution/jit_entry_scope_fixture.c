@@ -51,6 +51,8 @@ typedef struct {
  * ownership and service transactions have separate live fixtures. */
 struct kd_exec_continuation {
 	enum kd_exec_cont_state state;
+	struct task_struct *executor;
+	bool source_lease;
 	const struct kd_exec_service_ops *service_ops;
 	void *service_scope;
 	bool body_reported;
