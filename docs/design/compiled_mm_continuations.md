@@ -2132,3 +2132,11 @@ teardown; retained frames use their exact bound image. Report revision receipts
 contain no GPR or stack fields. These facts narrow the investigation but do not
 establish which image or local/continuation path PID 2426 used. Active capture
 remains enabled; this correction does not discard pending-image execution.
+
+The first focused fixture build at `b1884ccb` stopped before execution because
+its supplied `module_put` stub expanded the `noinline` macro inside an explicit
+attribute. Use the macro directly on that stub; the builtin correction is
+unchanged. Retain the failed receipt and rerun only this fixture. Current host
+headroom is 4,123,881,472 bytes and the second guest build disk has 6,514,475,008
+bytes free, below the separate kernel-preparation reserve. No kernel rebuild
+or live mmap validation is implied by the userspace fixture.

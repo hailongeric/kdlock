@@ -10,7 +10,7 @@
 struct module { int unused; };
 struct module fixture_owner;
 static unsigned int module_put_calls;
-static __attribute__((noinline)) void module_put(struct module *owner)
+static noinline void module_put(struct module *owner)
 {
 	assert(owner == &fixture_owner);
 	module_put_calls++;
