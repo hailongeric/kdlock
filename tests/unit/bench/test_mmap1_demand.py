@@ -40,10 +40,10 @@ class DemandRegistry(unittest.TestCase):
 
     def test_learning_allowance_remains_bounded(self):
         self.assertEqual(point.learning_limits({}), (900, 3))
-        for rounds in (1, 8, 9, 32):
+        for rounds in (1, 8, 9, 32, 33, 64):
             self.assertEqual(point.learning_limits(dict(learning_rounds=rounds,
                 learning_timeout=1800)), (1800, rounds))
-        for values in (dict(learning_rounds=0), dict(learning_rounds=33),
+        for values in (dict(learning_rounds=0), dict(learning_rounds=65),
                        dict(learning_rounds=True), dict(learning_timeout=0),
                        dict(learning_timeout=3601), dict(learning_timeout=True)):
             with self.subTest(values=values), self.assertRaises(AssertionError):

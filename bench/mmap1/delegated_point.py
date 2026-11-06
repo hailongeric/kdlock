@@ -32,8 +32,18 @@ def learning_limits(c):
     timeout = c.get('learning_timeout', 900)
     assert type(timeout) is int and 1 <= timeout <= 3600
     limit = c.get('learning_rounds', 3)
-    assert type(limit) is int and 1 <= limit <= 32
+    assert type(limit) is int and 1 <= limit <= 64
     return timeout, limit
+
+
+def learning_progress(c, number, phase, rows, application=None):
+    """Expose preparation progress without opening another guest lifetime."""
+    value = dict(model=c['model'], workers=c['workers'], round=number, phase=phase,
+        registry=[dict(entry=hex(row['entry']), generation=row['generation'], status=row['status'])
+                  for row in rows])
+    if application is not None:
+        value.update(passed=application['passed'], drained=application['drained'])
+    print('LEARNING_PROGRESS ' + json.dumps(value), flush=True)
 
 
 def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify, *,
@@ -134,12 +144,14 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify, *,
     observations = []
     for number in range(limit):
         before = bench.execution.registry(learning.expected['registry'])
+        learning_progress(c, number, 'start', before)
         application = bench.run_point(out / ('learning-%02d' % number), dict(
             model=c['model'], workers=c['workers'], round=number, nominal_seconds=2),
             inputs, verify, execution_session=learning, learning=True)
         after = bench.execution.registry(learning.expected['registry'])
         observations.append(dict(application=application, registry_before=before, registry_after=after))
         rt.write_json(out / 'learning.json', observations)
+        learning_progress(c, number, 'complete', after, application)
         if before == after:
             return learning.current, observations
     raise rt.Failure('LEARNING_ADVANCED', 'bounded application learning has not reached a stable timing epoch')
