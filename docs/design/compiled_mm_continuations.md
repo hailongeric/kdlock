@@ -2387,3 +2387,58 @@ munmap g9 was published after the application and remains untested. No point
 was repeated. Exact retirement and verified normal-kernel recovery passed,
 preserving the original point and close errors. The separate child-image
 design remains pending.
+
+## Reached direction-state boundary after the fixed point
+
+Continue on `codex/mmap-reached-jit` from
+`8e9a78384055c81174f1ea0e5c1d9bc7413ef2b3`. This is a narrow translation/runtime
+correction, not child-image delivery or another performance campaign. The
+recorded `mas_wr_bnode` translation selected `STD` at `0xffffffff826f0777` and
+rejected the entire prospective image. There is no evidence that mmap1
+executed that instruction.
+
+Use the existing retained `SOURCE_FRONTIER` protocol for exact, unprefixed
+`STD` (`fd`) and `CLD` (`fc`). The decoder supplements the requested instruction
+offset; it does not scan raw byte patterns or add a whole-function exception.
+Generated code ends before that instruction only on a path that reaches it.
+Other branches remain JIT code. The origin permanently resumes at the first
+unexecuted instruction with the exported scalar packet and original source
+CALL/RET words. It does not return this suffix to the executor. Retain the
+source/image/owner ledger through origin acceptance, actual release and final
+ACK, using the existing terminal consumer and ordinary handback route.
+
+Do not remove the retained image's legacy-marker refusal globally. Legacy
+`NATIVE_ESCAPE` images and retained service images have different consumers and
+ownership records. Extend only the existing source-frontier byte validator,
+and negotiate direction-state forms with capability version 21 plus the
+existing source-frontier feature. Version 20 and earlier must not emit these
+new forms; existing CLI/STI and other negotiated forms keep their contracts.
+No public lock API, acquisition/cancellation ordering, nesting or downgrade
+state changes are involved. Original JIT/GS handling, depth-five selection,
+lock-region bounds and immutable online publication remain unchanged.
+
+The matching retained v4 ELF establishes the specific suffix:
+`STD` at `0xffffffff826f0777`, plain `REP MOVSQ` at `0xffffffff826f0778`, `CLD`
+at `0xffffffff826f077b`, `MOV [R10],R11` at `0xffffffff826f077c`, then return
+routing. Earlier instructions already loaded R11, saved the destination in
+R10, adjusted RSI/RDI and shifted RCX to the qword count. Preserve those exact
+values and SP; restarting at `__memmove` entry would repeat preparation. This
+suffix does not consume incoming condition flags before the copy/clear/return.
+Plain `REP MOVSQ` uses RCX and DF; it is not a condition-flag-controlled string
+comparison. The origin executes STD/copy/CLD together, so DF=1 never needs to
+cross between tasks or reenter generated code.
+
+This relies on the existing scalar and DF-clear execution contract before
+the boundary. Restoration merges arithmetic flags with mask `0x8d5` and keeps
+the origin's actual control flags; it does not transfer executor IF/DF/AC.
+General flags and SIMD/FPU equivalence remain deferred. No runtime execution
+of this kernel suffix or complete mmap1 delegation is established by a static
+translation correction.
+
+Focused VM checks will cover reached and unreached direction boundaries,
+exact pre-STD register/SP and source-effect export, exclusion of copy/CLD from
+that terminal path, old capability negotiation, the production retained
+terminal consumer, and provider compilation without loading it. Keep the VM
+on its verified normal kernel; run no mmap1 application, module load or timing
+matrix for this correction. Inspect munmap g9's saved dispatch/RET structure
+separately and retain its untested status.
