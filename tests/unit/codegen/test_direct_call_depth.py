@@ -45,14 +45,16 @@ class DirectCallDepthTests(unittest.TestCase):
         for target in targets[:5]:
             self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
             self.assertTrue(any(address <= target < address+size for address,size in reads))
-        self.assertNotIn(f'loc_{targets[5]:x}:'.encode(), assembly)
+        # An undiscovered callee still needs the ordinary first-CALL
+        # continuation label. Its body must not be fetched or decoded.
+        self.assertTrue(f'loc_{targets[5]:x}:'.encode() in assembly)
         self.assertFalse(any(address <= targets[5] < address+size for address,size in reads))
         self.assertIn('call_depth=5', log)
         self.assertIn('decode_pass_limit=33', log)
         self.assertIn('total_transition_limit=32', log)
         assembly, reads, _ = self.emit(raw, functions, 0)
         self.assertFalse(reads)
-        self.assertNotIn(f'loc_{targets[0]:x}:'.encode(), assembly)
+        self.assertTrue(f'loc_{targets[0]:x}:'.encode() in assembly)
 
     def test_outer_release_stops_callee_discovery(self):
         target = self.entry + 0x10000
