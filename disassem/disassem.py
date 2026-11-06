@@ -39,7 +39,7 @@ from miasm.expression.expression import ExprId, ExprMem, ExprLoc
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
-    find_undecoded_policy_error,
+    find_undecoded_policy_error, find_direct_call_targets,
 )
 
 
@@ -172,10 +172,14 @@ def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
 # stay outside this episode, but any alternate live path remains in scope.
 @kernel_symbols.translation_scope()
 def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
-              trusted_source=True):
+              trusted_source=True, direct_call_depth=5):
     diagnostics.begin(pid, entry)
     if type(trusted_source) is not bool:
         raise ValueError("trusted_source must be boolean")
+    if type(direct_call_depth) is not int or not 0 <= direct_call_depth <= 32:
+        raise ValueError("direct CALL depth must be between zero and 32")
+    if not (trusted_source and lock_kind == 'mutex' and abi == 2):
+        direct_call_depth = 0
     os.makedirs("./asm", exist_ok=True)
 
     if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
@@ -363,6 +367,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     # Decoder seeds do not independently authorize execution. Rebuild reachability
     # from the actual entry and its CALL/CFG/history edges on every generation.
     discovered_targets = {target for _, _, targets in rets for target in targets}
+    call_roots = set(discovered_targets) | {entry}
+    diagnostics.warn('DIRECT_CALL_DEPTH', 'decode_callees',
+        'ordinary direct CALL lookahead retains the original window and work limits',
+        call_depth=direct_call_depth, root_depth=0, reached_seeds=len(call_roots))
     entry_guards = None
     memory_guards = None
     service_queue_required = False
@@ -414,10 +422,12 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         db_dict = {block: db_dict[block] for block in block_dict.values()}
         if escape_capable:
             native_escape.normalize_decoded(block_dict)
+        # These constants only keep candidate return edges until the release
+        # scope is clipped below. No callee bytes are discovered/read here.
         ordinary_call_targets = {
             db_dict[block].get_location_offset(line.args[0].loc_key)
             for block in block_dict.values() for line in block.lines
-            if direct_call_closure and line.name == 'CALL' and line.args
+            if direct_call_depth and line.name == 'CALL' and line.args
             and isinstance(line.args[0], ExprLoc)
         } - excluded_targets
         try:
@@ -539,12 +549,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             return reject_translation(f"{reason} at 0x{offset:x}")
 
         code_ranges = [(start, start + len(data)) for data, start, _ in rets]
-        ordinary_call_targets = {
-            db_dict[block].get_location_offset(line.args[0].loc_key)
-            for block in block_dict.values() for line in block.lines
-            if direct_call_closure and line.name == 'CALL' and line.args
-            and isinstance(line.args[0], ExprLoc)
-        } - excluded_targets
+        ordinary_call_targets = find_direct_call_targets(
+            block_dict, db_dict, call_roots, direct_call_depth, excluded_targets)
+        # Cut permanent CALL suffixes at the depth frontier before selecting
+        # source extensions. Both discovery calls use the release-clipped
+        # graph; a candidate after an outer release cannot request text.
+        block_dict, db_dict, native_exits = context_policy.jit_phase_blocks(
+            block_dict, db_dict, {entry}, keep_call_stack | ordinary_call_targets,
+            indirect_history=jump_table, indirect_call_native=indirect_call_native,
+            returning_indirect=bool(returning_services),
+            nonreturning_targets=nonreturning_targets)
+        ordinary_call_targets = find_direct_call_targets(
+            block_dict, db_dict, call_roots, direct_call_depth, excluded_targets)
         empty_blocks = {
             offset for offset, block in block_dict.items() if not block.lines
         }

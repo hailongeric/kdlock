@@ -72,6 +72,7 @@ def render(
     read_policies=None,
     callee_exclusions=None,
     source_frontier_capable=False,
+    direct_call_depth=0,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -188,6 +189,7 @@ def render(
             status = translator.dis_assem(
                 0, entry, lock_kind, body_witness=body_witness, abi=abi,
                 trusted_source=trusted_source,
+                direct_call_depth=direct_call_depth,
             )
             path = Path("asm/jit.S")
             assembly = path.read_bytes() if path.exists() else b""

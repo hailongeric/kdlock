@@ -143,7 +143,7 @@ class Campaign:
         rt.require(type(self.models) is list and self.models and len(set(self.models)) == len(self.models) and
                    all(model in bench.MODELS for model in self.models), 'distinct mmap1 models required', 'DATA_ERROR')
         rt.require(config['mode'] == 'kd' and config['demand'] is True and config['profile'] is False and
-                   config['writer_entries'] and config.get('pause_translation') is True,
+                   config['writer_entries'] and type(config.get('pause_translation')) is bool,
                    'scoped original-image KD campaign required', 'DATA_ERROR')
         timeout, _ = point.learning_limits(config)
         self.deadline = time.monotonic() + timeout

@@ -157,6 +157,24 @@ static const struct kd_jit_image frontier_image = {
 	.immutable = 1,
 	.requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER,
 };
+static struct kd_exe_info *kd_exes = &frontier_entry;
+static const struct kd_jit_image *kd_published_images[1];
+static bool capture_source_open = true;
+static struct guard publication_guard = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+static unsigned long kd_code_block_gate_lock(void)
+{ assert(!pthread_mutex_lock(&publication_guard.mutex)); return 0; }
+static void kd_code_block_gate_unlock(unsigned long flags)
+{ assert(!flags && !pthread_mutex_unlock(&publication_guard.mutex)); }
+static bool kd_source_is_open(void) { return capture_source_open; }
+static const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry)
+{ assert(entry == &frontier_entry); return smp_load_acquire(&kd_published_images[0]); }
+static bool kd_exe_publish_status(struct kd_exe_info *entry, int status)
+{ smp_store_release(&entry->status_code, status); return true; }
+static bool kd_exe_entry_is_ready(const struct kd_exe_info *entry, unsigned int pid, unsigned long ip)
+{ return entry == &frontier_entry && !pid && ip == entry->RIP && capture_source_open &&
+         smp_load_acquire(&entry->status_code) == KD_EXE_NORMAL; }
+static uint32_t get_unaligned_le32(const void *p) { uint32_t v; memcpy(&v,p,4); return v; }
+#define KD_PR_INFO(...) ((void)0)
 static unsigned int preceding_effects, frontier_calls;
 static int frontier_source_error, frontier_read_error;
 #define THREAD_SIZE sizeof(origin_words)
@@ -289,11 +307,62 @@ static void *execute(void *unused)
 	assert(cont->state == KD_CONT_RETIRED && !cont->packet_owner && !cont->source_lease && !cont->stack_lease);
 	return NULL;
 }
+static void check_capture_publication(void)
+{
+	unsigned char header[256] = { 0 };
+	struct kd_jit_image first = frontier_image, next = frontier_image;
+	const struct kd_jit_image *captured;
+	uint32_t word;
+	unsigned int requirements = first.requirements;
+
+	word = 0x4357444bU; memcpy(header+25, &word, 4);
+	word = 0x32303043U; memcpy(header+28, &word, 4);
+	word = 0x4241444bU; memcpy(header+41, &word, 4);
+	header[KD_JIT_ABI_OFFSET] = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	header[KD_IMAGE_VERSION_OFFSET] = KD_IMAGE_PROTOCOL_SERVICE_QUEUE;
+	header[KD_IMAGE_REQUIREMENTS_OFFSET] = requirements & 0xffU;
+	memcpy(header+KD_IMAGE_FULL_REQUIREMENTS_OFFSET, &requirements, 4);
+	first.code = next.code = header;
+	first.length = next.length = sizeof(header);
+	frontier_entry.RIP = 0x1000;
+	frontier_entry.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	frontier_entry.lock_kind = KD_EXE_LOCK_MUTEX;
+	assert(!kd_image_publish(&frontier_entry, &first, 0));
+	captured = kd_exe_capture_image(&frontier_entry, 0x1000);
+	assert(captured == &first && captured->generation == 1);
+	assert(!kd_image_publish(&frontier_entry, &next, 1));
+	assert(kd_exe_capture_image(&frontier_entry, 0x1000) == &next);
+	assert(captured == &first && captured->generation == 1 && captured->code == header);
+	kd_image_report(&frontier_entry, captured, KD_EXE_CALL_MISS, 0x2222, 0);
+	assert(frontier_entry.status_code == KD_EXE_NORMAL && !frontier_entry.tgt_addr);
+	kd_image_report(&frontier_entry, &next, KD_EXE_CALL_MISS, 0x3333, 0);
+	assert(frontier_entry.status_code == KD_EXE_CALL_MISS && frontier_entry.tgt_addr == 0x3333);
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	assert(kd_image_publish(&frontier_entry, &first, 1) == -ESTALE);
+	frontier_entry.status_code = KD_EXE_NORMAL;
+	next.immutable = 0;
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	next.immutable = 1;
+	next.requirements = KD_IMAGE_REQUIRE_SOURCE_FRONTIER;
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	next.requirements = requirements;
+	header[KD_IMAGE_FULL_REQUIREMENTS_OFFSET] ^= 1;
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	header[KD_IMAGE_FULL_REQUIREMENTS_OFFSET] ^= 1;
+	capture_source_open = false;
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	assert(kd_image_publish(&frontier_entry, &first, 2) == -ESHUTDOWN);
+	capture_source_open = true;
+	memset(&frontier_entry, 0, sizeof(frontier_entry));
+	kd_published_images[0] = NULL;
+}
+
 int main(int argc, char **argv)
 {
 	struct kd_exec_continuation *cont = &root.continuation;
 	pthread_t worker;
 	assert(argc == 2); mode = !strcmp(argv[1], "read") ? 2 : !strcmp(argv[1], "downgrade") ? 1 : 0;
+	check_capture_publication();
 	current = &origin;
 	list_init(&kd_native_frames); list_init(&root.scope.owners); list_init(&root.native_owners);
 	cont->generation = cont->root_generation = 7; cont->root = cont; cont->packet_owner = cont;

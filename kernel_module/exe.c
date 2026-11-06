@@ -985,7 +985,8 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY |
 					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ |
 					      KD_IMAGE_REQUIRE_INDIRECT_TAIL |
-					      KD_IMAGE_REQUIRE_RETAINED_MISS)) ||
+					      KD_IMAGE_REQUIRE_RETAINED_MISS |
+					      KD_IMAGE_REQUIRE_SOURCE_FRONTIER)) ||
 	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
 		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
 		return NULL;

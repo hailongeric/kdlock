@@ -4,6 +4,8 @@ The coordinator completes source coverage before accepting an admission result;
 this module does not read kernel text, publish images, or relax scope checks.
 """
 
+from collections import deque
+
 import context_policy
 import diagnostics
 import instruction_policy
@@ -148,6 +150,39 @@ def find_resumable_call_continuations(block_dict, db_dict, keep_call_stack):
             if callee in keep_call_stack:
                 continuations.add(offset)
     return continuations
+
+
+def find_direct_call_targets(blocks, databases, roots, max_depth, excluded_targets):
+    """Follow at most max_depth ordinary CALL edges from each reached seed.
+
+    Branches and source continuations retain depth. A repeated/shared function
+    uses its minimum depth; this bounds discovery without limiting a runtime
+    recursive call stack. Call only on the selected acquisition-region graph.
+    """
+    if type(max_depth) is not int or not 0 <= max_depth <= 32:
+        raise ValueError("direct CALL depth must be between zero and 32")
+    if not max_depth:
+        return set()
+    pending = deque((root, 0) for root in roots)
+    reached, targets = {}, set()
+    while pending:
+        start, depth = pending.popleft()
+        if start not in blocks or reached.get(start, max_depth + 1) <= depth:
+            continue
+        reached[start] = depth
+        block, db = blocks[start], databases[blocks[start]]
+        successors = {db.get_location_offset(edge.loc_key) for edge in block.bto}
+        for line in block.lines:
+            if line.name != 'CALL' or not line.args or not isinstance(line.args[0], ExprLoc):
+                continue
+            target = db.get_location_offset(line.args[0].loc_key)
+            successors.discard(target)
+            if depth < max_depth and target not in excluded_targets:
+                targets.add(target)
+                pending.append((target, depth + 1))
+            successors.add(line.offset + line.l)
+        pending.extend((target, depth) for target in successors)
+    return targets
 
 
 def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=False):

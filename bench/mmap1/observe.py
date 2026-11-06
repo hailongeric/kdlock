@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One priming application and one fixed-image threads observation."""
+"""One priming application and one eight-worker observation."""
 import argparse
 import json
 from pathlib import Path
@@ -15,13 +15,14 @@ FIELDS = ('selected local local_no_image local_success local_cancel prepublicati
 
 class Observation(pilot.Pilot):
     def extra_provider_parameters(self):
-        return ['service_observe=1', 'service_observe_comm=mmap1_threads',
+        campaign.rt.require(len(self.models) == 1, 'one task name per observation session required', 'DATA_ERROR')
+        return ['service_observe=1', 'service_observe_comm=mmap1_' + self.models[0],
                 'service_observe_entries=' + ','.join(hex(v) for v in self.args.writer_entries)]
 
     def snapshot(self):
         params = campaign.controller.PARAMETERS
         campaign.rt.require((params / 'service_observe').read_text().strip() == 'Y' and
-            (params / 'service_observe_comm').read_text().strip() == 'mmap1_threads',
+            (params / 'service_observe_comm').read_text().strip() == 'mmap1_' + self.models[0],
             'observation parameters differ', 'DATA_ERROR')
         rows = {}
         for line in (params / 'service_observe_stats').read_text().splitlines():
@@ -72,9 +73,10 @@ class Observation(pilot.Pilot):
             print('OBSERVATION_RESULT ' + json.dumps(observation), flush=True)
 
     def run(self):
-        campaign.rt.require(self.models == ['threads'] and self.counts == [1, 8],
+        campaign.rt.require(self.models in (['threads'], ['processes']) and self.counts == [1, 8],
                             'one priming and one eight-thread application required', 'DATA_ERROR')
         self.result['instrumentation'] = 'selected-service-counters'
+        self.result['translation_during_application'] = not self.c['pause_translation']
         return super().run()
 
 
