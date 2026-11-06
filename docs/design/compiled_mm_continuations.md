@@ -2454,3 +2454,64 @@ Munmap g9 contains the new assertion dispatch
 and inner RET, but lacks the caller's outer shared-RET target and retains the
 listed static support boundaries. It remains untested. General flags/SIMD
 restoration and performance acceptance remain outside this correction.
+
+## Fresh v21 publication and one warmed process point
+
+Continue the same branch from `c1b624c985cec9defc600e8f72e69fee15bbbfd2`.
+Reuse the checked provider built from `d726952d8f03bffe62b83028fb51d6726fb1f434`
+only after its binary/source identities are verified. Use the unchanged
+`9a5d606aee0249d0e566a1c9667375eb038bc9cd` kernel component and Build ID
+`357a7115d21941960b90262ac1165bf70d1b398e`; no kernel rebuild is required.
+The new runner snapshot is identified separately from the provider and daemon.
+
+Use one fresh factory and ordinary reached CALL/IJ learning. There is no
+maintained historical-seed API, so do not insert old pointer tables, code,
+context addresses or seeds. Select processes at eight workers and the existing
+long application: 730 samples, 720 before the selected ten-sample interval,
+800-second application bound and a shared 1,800-second learning/settlement
+deadline starting before preparation. Keep online publication enabled and
+current valid immutable images eligible while reports/compilation are pending.
+
+The prerequisite is the formerly failing expanded mmap replacement, not just
+an initial NORMAL root. After the long application drains and compilation
+settles, record actual capability version 21/frontier support and the current
+leased compiler's direction-boundary capability. Bind the exact NORMAL
+registry/code/generations to the copied generated artifacts and a new fixed
+receipt in that same live factory. Require freshly learned CALL history for
+`mas_wr_bnode`, an emitted translated body at its verified current core address
+`0xffffffff826c1df0` rather than a missing-callee stub, and the pre-STD
+`SOURCE_FRONTIER` at `0xffffffff826f0777` in the published mmap image. Retain
+artifact/history hashes and predicates even if the gate fails. If this one
+fresh preparation never reaches that expansion, stop and report the limit;
+do not use the fixed measurement as an undisclosed discovery application.
+
+Only after that publication gate passes, run one fixed eight-process point:
+six ordinary pre-window samples plus ten measured samples, with a 30-second
+application bound. Require both roots to use prepared images, no local
+no-image routing, exact drained counter conservation, unchanged registry/
+code/generations/status, no new compiler/publication/report activity and a
+valid unchanged fixed receipt. Record per-root whole and measured JIT-entry,
+retained-return and completed-handback deltas, actual delivered intervals and
+compiler history. A new miss invalidates stability without receipt renewal or
+another application. These counters still do not independently prove the
+delegated read tail and later writer phase.
+
+Retirement has its own declared 600-second compiler/frame-drain allowance.
+Expose that bound in the campaign configuration while retaining the existing
+40-second default for other runs. Validate the bound before preparation;
+retain all ordinary inactive/drained/source/frame/writer/identity checks.
+NORMAL images are not a retirement prerequisite: a terminal translation
+failure stays a failed measurement but can retire exactly. A timeout retains
+live state and never proves drain. Select a 2,600-second controller wait,
+90-second fresh-finalizer wait and 2,800-second SSH bound. These envelopes
+cover preparation, the one point and the declared cleanup without changing
+learning acceptance. Restore the verified normal kernel only after exact
+retirement and idle checks, or report the exact remaining lifetime blocker.
+
+Keep the saved Native process rate 1,554,416 pairs/s as exploratory reference
+only after fresh kernel/application/host identities and persistent CPU/RAM/
+frequency settings are checked. Its long pre-window interval differs from the
+fixed point's six seconds; endpoint captures do not measure effective frequency
+or intervening activity. No broader Native or worker-count matrix is selected.
+Run only focused runner/gate/cleanup fixtures before this one campaign, and
+retain every failed or unrun stage explicitly.
