@@ -1,0 +1,462 @@
+{
+  "schema": 1,
+  "source_commit": "ec623366622d1784f7e819b4e9031ba0482bee9b",
+  "kernel_build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+  "rows": [
+    {
+      "model": "threads",
+      "record": "progress-03.json",
+      "observed_ns": 286810212051,
+      "entry": "0xffffffff817b6f68",
+      "generation": 2,
+      "status": 2,
+      "report_from": "0xffffffffc0e32fec",
+      "target": "0xffffffff814f4a38",
+      "from_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x3c",
+        "provider": "kdlock_km"
+      },
+      "target_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 203773
+    },
+    {
+      "model": "threads",
+      "record": "progress-03.json",
+      "observed_ns": 286810212051,
+      "entry": "0xffffffff8181c73b",
+      "generation": 2,
+      "status": 2,
+      "report_from": "0xffffffffc0000f22",
+      "target": "0xffffffffc0e32a50",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "kd_provider_is_locked",
+        "offset": "0x0",
+        "provider": "kdlock_km"
+      },
+      "superseded_reports": 203773
+    },
+    {
+      "model": "threads",
+      "record": "progress-04.json",
+      "observed_ns": 404769264775,
+      "entry": "0xffffffff817b6f68",
+      "generation": 3,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff8181c0e0",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "unmapped_area_topdown",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 371289
+    },
+    {
+      "model": "threads",
+      "record": "progress-04.json",
+      "observed_ns": 404769264775,
+      "entry": "0xffffffff8181c73b",
+      "generation": 3,
+      "status": 2,
+      "report_from": "0xffffffff814f4a38",
+      "target": "0xffffffffc0e32fb0",
+      "from_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "target_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x0",
+        "provider": "kdlock_km"
+      },
+      "superseded_reports": 371289
+    },
+    {
+      "model": "threads",
+      "record": "progress-05.json",
+      "observed_ns": 593566938957,
+      "entry": "0xffffffff817b6f68",
+      "generation": 5,
+      "status": 2,
+      "report_from": "0xffffffffc0000f22",
+      "target": "0xffffffffc0e32a50",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "kd_provider_is_locked",
+        "offset": "0x0",
+        "provider": "kdlock_km"
+      },
+      "superseded_reports": 447234
+    },
+    {
+      "model": "threads",
+      "record": "progress-05.json",
+      "observed_ns": 593566938957,
+      "entry": "0xffffffff8181c73b",
+      "generation": 5,
+      "status": 2,
+      "report_from": "0xffffffffc0e32fec",
+      "target": "0xffffffff814f4a38",
+      "from_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x3c",
+        "provider": "kdlock_km"
+      },
+      "target_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 447234
+    },
+    {
+      "model": "threads",
+      "record": "progress-06.json",
+      "observed_ns": 710123153049,
+      "entry": "0xffffffff817b6f68",
+      "generation": 6,
+      "status": 2,
+      "report_from": "0xffffffffc0e32a67",
+      "target": "0xffffffff814f469a",
+      "from_symbol": {
+        "symbol": "kd_provider_is_locked",
+        "offset": "0x17",
+        "provider": "kdlock_km"
+      },
+      "target_symbol": {
+        "symbol": "kd_mmap_is_locked",
+        "offset": "0x8a",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 449998
+    },
+    {
+      "model": "threads",
+      "record": "progress-06.json",
+      "observed_ns": 710123153049,
+      "entry": "0xffffffff8181c73b",
+      "generation": 6,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff817d4d60",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "anon_vma_interval_tree_insert",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 449998
+    },
+    {
+      "model": "threads",
+      "record": "progress-after-window.json",
+      "observed_ns": 878057877042,
+      "entry": "0xffffffff817b6f68",
+      "generation": 7,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff81816f70",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "is_mergeable_anon_vma",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 516272
+    },
+    {
+      "model": "threads",
+      "record": "progress-after-window.json",
+      "observed_ns": 878057877042,
+      "entry": "0xffffffff8181c73b",
+      "generation": 7,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff817d4d60",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "anon_vma_interval_tree_insert",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 516272
+    },
+    {
+      "model": "processes",
+      "record": "progress-01.json",
+      "observed_ns": 1061330232805,
+      "entry": "0xffffffff817b6f68",
+      "generation": 0,
+      "status": -1,
+      "report_from": "0x0",
+      "target": "0x0",
+      "from_symbol": null,
+      "target_symbol": null,
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-01.json",
+      "observed_ns": 1061330232805,
+      "entry": "0xffffffff8181c73b",
+      "generation": 0,
+      "status": -1,
+      "report_from": "0x0",
+      "target": "0x0",
+      "from_symbol": null,
+      "target_symbol": null,
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-02.json",
+      "observed_ns": 1171033500301,
+      "entry": "0xffffffff817b6f68",
+      "generation": 2,
+      "status": 2,
+      "report_from": "0xffffffffc0e32fec",
+      "target": "0xffffffff814f4a38",
+      "from_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x3c",
+        "provider": "kdlock_km"
+      },
+      "target_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-02.json",
+      "observed_ns": 1171033500301,
+      "entry": "0xffffffff8181c73b",
+      "generation": 1,
+      "status": 2,
+      "report_from": "0xffffffff814f4a38",
+      "target": "0xffffffffc0e32fb0",
+      "from_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "target_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x0",
+        "provider": "kdlock_km"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-03.json",
+      "observed_ns": 1302432062020,
+      "entry": "0xffffffff817b6f68",
+      "generation": 3,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff8181c0e0",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "unmapped_area_topdown",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-03.json",
+      "observed_ns": 1302432062020,
+      "entry": "0xffffffff8181c73b",
+      "generation": 2,
+      "status": 2,
+      "report_from": "0xffffffffc0e32fec",
+      "target": "0xffffffff814f4a38",
+      "from_symbol": {
+        "symbol": "kd_provider_assert_held_write",
+        "offset": "0x3c",
+        "provider": "kdlock_km"
+      },
+      "target_symbol": {
+        "symbol": "kd_mmap_assert_held_write",
+        "offset": "0x98",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-04.json",
+      "observed_ns": 1366457560465,
+      "entry": "0xffffffff817b6f68",
+      "generation": 3,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff8181c0e0",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "unmapped_area_topdown",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-04.json",
+      "observed_ns": 1366457560465,
+      "entry": "0xffffffff8181c73b",
+      "generation": 3,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff826f0560",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "memcpy",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-05.json",
+      "observed_ns": 1448689865808,
+      "entry": "0xffffffff817b6f68",
+      "generation": 4,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff826b4a80",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "mas_wr_node_store",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-05.json",
+      "observed_ns": 1448689865808,
+      "entry": "0xffffffff8181c73b",
+      "generation": 4,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff826b2720",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "mas_leaf_max_gap",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-06.json",
+      "observed_ns": 1548103805971,
+      "entry": "0xffffffff817b6f68",
+      "generation": 4,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff826b4a80",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "mas_wr_node_store",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-06.json",
+      "observed_ns": 1548103805971,
+      "entry": "0xffffffff8181c73b",
+      "generation": 4,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff826b2720",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "mas_leaf_max_gap",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-07.json",
+      "observed_ns": 1686261542886,
+      "entry": "0xffffffff817b6f68",
+      "generation": 5,
+      "status": 0,
+      "report_from": "0x0",
+      "target": "0x0",
+      "from_symbol": null,
+      "target_symbol": null,
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-07.json",
+      "observed_ns": 1686261542886,
+      "entry": "0xffffffff8181c73b",
+      "generation": 5,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff817e62d0",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "unmap_single_vma",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-after-window.json",
+      "observed_ns": 1801590142212,
+      "entry": "0xffffffff817b6f68",
+      "generation": 5,
+      "status": 0,
+      "report_from": "0x0",
+      "target": "0x0",
+      "from_symbol": null,
+      "target_symbol": null,
+      "superseded_reports": 0
+    },
+    {
+      "model": "processes",
+      "record": "progress-after-window.json",
+      "observed_ns": 1801590142212,
+      "entry": "0xffffffff8181c73b",
+      "generation": 6,
+      "status": 1,
+      "report_from": "0x0",
+      "target": "0xffffffff8180b8a0",
+      "from_symbol": null,
+      "target_symbol": {
+        "symbol": "unlink_anon_vmas",
+        "offset": "0x0",
+        "provider": "vmlinux"
+      },
+      "superseded_reports": 0
+    }
+  ],
+  "scope": "readonly warmup snapshots; not a per-request or revision history"
+}

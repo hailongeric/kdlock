@@ -2278,7 +2278,8 @@ ownership, image publication, pending-image admission or the settled-receipt
 predicate.
 
 Retained tables identify IJ report address `0xffffffff814f4a38` targeting
-`0xffffffffc0e32fb0` for both roots in both task models. This is the return address after an indirect callback within
+`0xffffffffc0e32fb0` for both roots in both task models. This is the return
+address after an indirect callback within
 `kd_mmap_assert_held_write`; the module target name was not retained. Thread-mode
 munmap additionally learned CALL target `0xffffffff8184c0d0` (`anon_vma_name`).
 Duplicate table rows demonstrate repeated workspace updates, not distinct lost
@@ -2294,7 +2295,8 @@ application bound. Select a shared 1,800-second KD learning deadline: the
 730-second application plus two allowances of the observed 291-297 seconds of
 serial translation leaves approximately 476 seconds for admission, capture and
 settling even if those costs do not overlap. The second translation allowance
-permits further learning waves during the longer application. This is a finite allowance derived from the retained
+permits further learning waves during the longer application. This is a finite
+allowance derived from the retained
 run, not a waiver of settlement. Stop after a failed application or unknown
 lifetime; do not retry a point automatically.
 
@@ -2315,3 +2317,13 @@ acknowledge that revision keeps a report pending. Continue to distinguish those
 mechanisms from source-instruction handback. A warm window with handbacks but
 zero retained returns still does not establish the delegated read-tail or later
 writer criterion. Preserve all outcomes and restore the verified normal kernel.
+
+The completed long comparison is retained in
+[mmap1-long-ec623366-20261107](../../bench/results/10.176.26.71/bench/mmap1-long-ec623366-20261107/README.md).
+Both applications passed and settled within the 1,800-second bound, then retired
+exactly. Actual pre-window/measurement durations were approximately 720.12/10.00
+seconds. Process mmap completed 4,199,281 retained returns; munmap and both
+thread roots completed through handback. Both measured windows included image
+publication, and rates remained 98% below matching Native controls. No lock
+protocol change, stable-image acceptance, delegated read-tail proof or performance
+gain is claimed. The normal kernel was restored and verified afterward.
