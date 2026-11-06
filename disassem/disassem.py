@@ -843,6 +843,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     if memory_sites:
         service_queue_required = True
     if service_queue_required and (has_escapes or root_escapes or origin_sites):
+        terminal_sites = {line.offset: line for block in block_dict.values()
+                          for line in block.lines if native_escape.descriptor(line)}
+        if terminal_sites:
+            first = terminal_sites[min(terminal_sites)]
+            diagnostics.set_instruction(first.offset, first)
+        diagnostics.warn('RETAINED_TERMINAL_SITES', 'report_source_boundaries',
+            'selected instruction sites at the retained compatibility boundary',
+            has_escapes=has_escapes, root_escapes=root_escapes,
+            origin_sites=[hex(ip) for ip in sorted(origin_sites)[:64]],
+            site_count=len(terminal_sites), sites=[
+                dict(ip=hex(ip), name=line.name, opcode=bytes(line.b).hex())
+                for ip, line in sorted(terminal_sites.items())[:64]])
         return reject_translation("retained-service scope needs unsupported instruction services")
     budget_resume_enabled = (abi == 2 and lock_kind == "mutex"
                              and not has_escapes and not root_escapes
