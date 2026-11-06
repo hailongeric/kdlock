@@ -8,7 +8,8 @@ from types import SimpleNamespace
 ENCODING = bytes.fromhex('67 48 0f b9 3a')
 EXTENDED_ENCODINGS = (bytes.fromhex('0f 01 ee'), bytes.fromhex('0f 01 ca'))
 CONTROL_ENCODINGS = (b'\xfa', b'\xfb')
-ENCODINGS = (ENCODING,) + EXTENDED_ENCODINGS + CONTROL_ENCODINGS
+DIRECTION_ENCODINGS = (b'\xfc', b'\xfd')
+ENCODINGS = (ENCODING,) + EXTENDED_ENCODINGS + CONTROL_ENCODINGS + DIRECTION_ENCODINGS
 NAME = 'SOURCE_FRONTIER'
 EXIT = 16
 REQUIREMENT = 1 << 14
@@ -52,10 +53,11 @@ class Instruction:
 
 class Decoder:
     """Supplement only the instruction offset requested by the real decoder."""
-    def __init__(self, arch, *, extended=False, controls=False):
+    def __init__(self, arch, *, extended=False, controls=False, direction=False):
         self.arch = arch
         self.encodings = ((ENCODING,) + (EXTENDED_ENCODINGS if extended else ())
-                          + (CONTROL_ENCODINGS if controls else ()))
+                          + (CONTROL_ENCODINGS if controls else ())
+                          + (DIRECTION_ENCODINGS if direction else ()))
 
     def __getattr__(self, name):
         return getattr(self.arch, name)

@@ -186,7 +186,8 @@ def find_direct_call_targets(blocks, databases, roots, max_depth, excluded_targe
 
 
 def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=False,
-                   frontier_extensions=False, frontier_controls=False):
+                   frontier_extensions=False, frontier_controls=False,
+                   frontier_direction=False):
     cfgs = []
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -197,7 +198,8 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=F
         mdis = machine.dis_engine(c, loc_db=loc_db)
         if source_frontiers:
             mdis.arch = source_frontier.Decoder(mdis.arch, extended=frontier_extensions,
-                                                controls=frontier_controls)
+                                                controls=frontier_controls,
+                                                direction=frontier_direction)
         mdis.follow_call = False
         # A root can already be an interior instruction of an earlier root's
         # block. Split there so every source entry has a checked dispatch label.

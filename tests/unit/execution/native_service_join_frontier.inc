@@ -60,11 +60,11 @@ static void check_frontier_refusals(struct kd_exec_continuation *cont)
 	}
 	/* The one-byte forms must never read a second byte. The fixture's source
 	 * reader enforces this extent while retaining the real frame/owner path. */
-	for (unsigned int i = 0; i < 2; ++i) {
+	for (unsigned int i = 0; i < 4; ++i) {
 		struct kd_regs before;
 		unsigned long words[64];
 		frontier_instruction_length = 1;
-		frontier_text[0] = i ? 0xfb : 0xfa;
+		frontier_text[0] = 0xfa + i; /* CLI, STI, CLD, STD: stop before effects. */
 		cont->frame = saved;
 		before = cont->frame.regs;
 		memcpy(words, origin_words, sizeof(words));

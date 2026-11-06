@@ -343,6 +343,9 @@ static int kd_jit_source_frontier(struct kd_exe_info *exe,
 		{ { 0x0f, 0x01, 0xca }, 3 },
 		{ { 0xfa }, 1 },
 		{ { 0xfb }, 1 },
+		/* Stop before direction changes; the original task runs the suffix. */
+		{ { 0xfc }, 1 },
+		{ { 0xfd }, 1 },
 	};
 	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
 	unsigned char opcode[5];

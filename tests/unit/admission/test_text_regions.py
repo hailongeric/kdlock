@@ -488,6 +488,17 @@ class DeviceSessionTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
                 device_session.source_frontier_controls()
 
+    def test_frontier_direction_requires_v21_and_resets_with_lease(self):
+        for version, feature, expected in (
+                (19, 262144, False), (20, 262144, False),
+                (21, 0, False), (21, 262144, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 16384 | feature, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier_direction(), expected)
+            self.assertFalse(device_session._source_frontier_direction)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier_direction()
+
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
         # not infer a weaker bound from a larger, shorter or future response.

@@ -648,7 +648,7 @@ int main(void)
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 20 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 21 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2 &&
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&

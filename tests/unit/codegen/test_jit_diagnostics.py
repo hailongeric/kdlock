@@ -74,6 +74,7 @@ def render(
     source_frontier_capable=False,
     source_frontier_extensions=False,
     source_frontier_controls=False,
+    source_frontier_direction=False,
     direct_call_depth=0,
 ):
     output = io.StringIO()
@@ -119,6 +120,8 @@ def render(
                                         "source_frontier_extensions", return_value=source_frontier_extensions))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "source_frontier_controls", return_value=source_frontier_controls))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "source_frontier_direction", return_value=source_frontier_direction))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "origin_instruction", return_value=origin_instruction_capable))
         stack.enter_context(patch.object(translator.memread.device_session,

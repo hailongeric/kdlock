@@ -420,7 +420,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             frontier_extensions=(trusted_source and abi == 2 and lock_kind == 'mutex'
                                  and memread.device_session.source_frontier_extensions()),
             frontier_controls=(trusted_source and abi == 2 and lock_kind == 'mutex'
-                               and memread.device_session.source_frontier_controls()))
+                               and memread.device_session.source_frontier_controls()),
+            frontier_direction=(trusted_source and abi == 2 and lock_kind == 'mutex'
+                                and memread.device_session.source_frontier_direction()))
         block_dict = {start: block for start, block in block_dict.items()
                       if start not in excluded_targets}
         db_dict = {block: db_dict[block] for block in block_dict.values()}

@@ -22,7 +22,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 20
+CAPS_VERSION = 21
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -67,6 +67,7 @@ _indirect_tail = False
 _source_frontier = False
 _source_frontier_extensions = False
 _source_frontier_controls = False
+_source_frontier_direction = False
 
 
 class SourceRefused(RuntimeError):
@@ -205,6 +206,7 @@ def query_capabilities(fd):
                 "source_frontier": bool(features & CAP_SOURCE_FRONTIER),
                 "source_frontier_extensions": bool(version >= 19 and features & CAP_SOURCE_FRONTIER),
                 "source_frontier_controls": bool(version >= 20 and features & CAP_SOURCE_FRONTIER),
+                "source_frontier_direction": bool(version >= 21 and features & CAP_SOURCE_FRONTIER),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -442,6 +444,12 @@ def source_frontier_controls():
     return _source_frontier_controls
 
 
+def source_frontier_direction():
+    """Revision 21 adds exact pre-CLD/STD permanent continuations."""
+    require()
+    return _source_frontier_direction
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -457,7 +465,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read, _indirect_tail, _source_frontier, _source_frontier_extensions, _source_frontier_controls
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read, _indirect_tail, _source_frontier, _source_frontier_extensions, _source_frontier_controls, _source_frontier_direction
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -513,6 +521,7 @@ def session():
         _source_frontier = caps["source_frontier"]
         _source_frontier_extensions = caps.get("source_frontier_extensions", False)
         _source_frontier_controls = caps.get("source_frontier_controls", False)
+        _source_frontier_direction = caps.get("source_frontier_direction", False)
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -525,7 +534,8 @@ def session():
             f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)} "
             f"origin_instruction={int(_origin_instruction)} "
             f"origin_call={int(_origin_call)} origin_memory={int(_origin_memory)} "
-            f"origin_context_read={int(_origin_context_read)} indirect_tail={int(_indirect_tail)}"
+            f"origin_context_read={int(_origin_context_read)} indirect_tail={int(_indirect_tail)} "
+            f"source_frontier_direction={int(_source_frontier_direction)}"
         )
         yield fd
     finally:
@@ -548,6 +558,7 @@ def session():
         _source_frontier = False
         _source_frontier_extensions = False
         _source_frontier_controls = False
+        _source_frontier_direction = False
         if fd is not None:
             os.close(fd)
 
