@@ -1711,3 +1711,14 @@ once with `alloc_percpu()` during service initialization instead, before any
 request is admitted, and free them after service workers and retained roots
 have drained. Disabled observation allocates nothing. This retains CPU-local
 updates while leaving the module's static per-CPU reservation unchanged.
+
+Implemented by `e0a21c4a1c043fbb7d77ca9a679f47e5cf7a6c90`. Focused VM
+checks/build and both applications passed; exact retirement and normal-kernel
+restoration passed. At eight threads each root submitted/entered JIT/handed
+back eight requests, returned zero wholly delegated requests, and handled over
+408,000 acquisitions locally (99.99804%). Summed local admission was
+57.624006611 task-seconds; initial dispatcher time totaled 90.049 microseconds.
+The diagnostic rate was 51,042 pairs/s versus preserved Native 225,144.5.
+No steady-JIT, complete MM read-tail or performance acceptance is claimed.
+Counter/timer definitions, source references, failures and limits are in
+[the selected-path report](../../bench/results/10.176.26.71/bench/mmap1-service-observe-e0a21c4a/README.md).
