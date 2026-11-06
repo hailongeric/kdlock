@@ -2266,3 +2266,51 @@ printed thread/process rates were about 97% below their matching Native points;
 both failed points remain unaccepted. Separate images remain initially scoped
 to selected KD acquisitions, and that child-image implementation remains pending.
 The VM was returned to the verified normal kernel after exact retirement.
+
+## Long warmup after the bounded restore check
+
+The preceding `long_warmup=False`, one-round, shared 300-second check was selected
+for bounded restore diagnosis after the previous long run failed. That choice
+did not complete the earlier long-warmup objective. Resume that objective on the
+same `ec623366622d1784f7e819b4e9031ba0482bee9b` runtime and
+`9a5d606aee0249d0e566a1c9667375eb038bc9cd` kernel component, without changing
+ownership, image publication, pending-image admission or the settled-receipt
+predicate.
+
+Retained tables identify IJ site `0xffffffff814f4a38` targeting
+`0xffffffffc0e32fb0` for both roots in both task models. The site is within
+`kd_mmap_assert_held_write`; the module target name was not retained. Thread-mode
+munmap additionally learned CALL target `0xffffffff8184c0d0` (`anon_vma_name`).
+Duplicate table rows demonstrate repeated workspace updates, not distinct lost
+reports. Tables are cumulative and compile metrics omit image generations;
+exact invocation/site counts and the complete intervening miss sequence were
+not logged. Preserve those evidence limits.
+
+Use the existing long-warmup path at eight workers only, one application per
+model and mode: six upstream warmup samples plus 724 subsequent samples, with
+the final ten selected. This gives 720 nominal seconds before measurement and
+ten measured seconds, 730 samples total. Retain the existing 800-second
+application bound. Select a shared 1,200-second KD learning deadline: the
+730-second application plus the observed 291-297 seconds of serial translation
+leaves approximately 173 seconds for admission, capture and settling even if
+those costs do not overlap. This is a finite allowance derived from the retained
+run, not a waiver of settlement. Stop after a failed application or unknown
+lifetime; do not retry a point automatically.
+
+Run matching Native/off and KD/on applications on the same installed image,
+with original application bytes, worker placement and fixed host policy. Keep
+the two selected roots, existing single-image JIT and GS instruction services,
+online publication, immutable image/source leases and exact retirement. Record
+actual delivered sample-window durations, whole-application and measured-window
+service counters, image generations, learned targets and child timings. Existing
+observation prose assumes six-plus-two samples; interpret long-run boundaries
+from the command, parsed sample counts and `sample_window` receipt explicitly.
+Do not use that prose as evidence of the selected duration.
+
+No retained record demonstrates a publication or distinct-report-loss defect
+requiring a protocol change before this run. Equal pending tuples coalesce;
+different tuples advance the revision, and a publication that does not
+acknowledge that revision keeps a report pending. Continue to distinguish those
+mechanisms from source-instruction handback. A warm window with handbacks but
+zero retained returns still does not establish the delegated read-tail or later
+writer criterion. Preserve all outcomes and restore the verified normal kernel.
