@@ -2151,3 +2151,78 @@ contract, not the original failure's cause or the live builtin callback. The
 normal boot remains idle and unchanged. Matching kernel build/live validation
 remain blocked by disk headroom and incomplete first-request provenance; active
 capture is not disabled to bypass either requirement.
+
+
+## Incremental builtin restore validation with current-generation preservation
+
+Continue from `daf374c4adc22b52a3d01e3f622ff4e696c8f91b` on the same isolated
+candidate. The user selected the existing-tree incremental workflow. Preserve
+current scope5 v3 before amending its working source/build; installed kernels,
+normal recovery and the old identity artifacts remain available. This is a
+reviewed reuse of cached objects, not a requirement to copy the complete output
+tree or lower the retained-build reserve.
+
+The old generation is kernel component
+`1ab7124abb6140752c1f0bb6e862144d426a3875`, release `7.0.0-38-kdscope5`,
+Build ID `5f2fce72a33480f6e79a79b374b21a0db377ecd1`, configuration
+`7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa` and
+composition `906a7089f001d93256fc7b36a7fe9c739fde151b9452f4e26aeb2b35e91f1777`.
+The compiled change is the two builtin restore functions from `b1884ccb`.
+Identify that kernel-component recipe separately from the newer runtime module;
+keep MM/API/generated-text composition, public declarations, configuration,
+original JIT/GS behavior and active capture unchanged.
+
+Inventory the complete current source/build/composition, frozen kernel recipe,
+all three preparations, installed boot/module artifacts, mode bundles and boot
+selection metadata. Retain exact content hashes, mode, ownership, nanosecond
+mtime, xattrs, symbolic links and hardlink relationships. Check the same full
+inventory before and after archive creation. Use the established tar/PAX/zstd
+representation and complete-member verifier. Stream the archive over the
+existing VM transport directly to the user-owned 380G10 result workspace; no
+complete archive is staged on the guest or QEMU host. Keep a partial stream and
+its failed receipt on any interruption. A timeout is not a completed archive or
+proof of worker drain.
+
+The intended destination is
+`bench/results/10.176.26.71/raw/tests/mm-restore-kernel-v3-preservation-20261106/`
+on 380G10, with guest receipts in the matching
+`/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/` directory. Preserve one
+full guest inventory; compare canonical hashes of subsequent scans rather than
+keeping several identical 100 MB maps. Review complete decompressed contents
+and metadata on 380G10 before source amendment. Recheck the current full map
+immediately before reuse; no incomplete or older-v2 archive substitutes for v3.
+
+Retain `free > max(16 GiB, 4 * largest intermediate)` on guest build disk 2 and
+`free > 2 GiB` on root before amendment and linking. The fresh-tree 50/34 GiB
+gates are a different workflow. Scope-limited run-log preservation has brought
+build disk 2 to 17,720,115,200 available bytes, above the 16 GiB guard plus a
+512 MiB working margin. Stop cleanup at this point. Host available space is
+9,621,184,512 bytes; reserve blocks are excluded. Neither this capacity nor the
+4.35 GB retained link-output total is a measured build peak. Check both host and
+guest headroom during bounded build work and stop new stages on unexplained
+growth; preserve partial outputs and establish actual child drain before retry.
+
+After verified preservation, prepare only the reviewed provider delta and fresh
+composition/preparation receipts from a separately frozen component. Reuse the
+same paths and cached objects, first requesting the affected provider object,
+then ordinary `bzImage modules` dependency completion. Keep BTF, module BTF and
+all normal Kbuild dependencies. Capture the regenerated output set, release,
+configuration, Build ID, builtin instruction sequence and actual module-stage
+sizes. Do not reuse old identity receipts for the new image.
+
+Use the established staged same-release replacement only after a completed
+build and its actual install-space checks. Preserve the old module tree, all
+four boot files and mode bundles with their exact identities; keep the normal
+kernel as the default. A rollback requires idle state, retained candidate
+records, restoration of the preserved generation and full identity comparison.
+Same-release differently named boot images alone do not isolate module lookup.
+A new release or private copy-up filesystem remains a separate design, not an
+implicit part of this selected workflow.
+
+The next live stage is bounded diagnosis with exact request/image/packet
+provenance, followed by directly affected mmap1 thread/process checks only when
+that stage supports them. The original first-failure cause remains unproved.
+The 390 userspace restore cases establish the local register contract, not live
+MM completion; do not blindly repeat the previous long warmup. Preserve the
+existing ownership/lifetime checks, exact CALL/RET words, reached terminal
+handoff and complete normal-kernel recovery evidence.
