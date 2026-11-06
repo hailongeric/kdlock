@@ -165,8 +165,13 @@ static struct kd_exec_frame *kd_exec_current_frame(void) { return &root.continua
 static int kd_source_pin_text_range(unsigned long address, unsigned long size)
 { assert(address == (unsigned long)frontier_text && size == sizeof(frontier_text)); return frontier_source_error; }
 static int copy_from_kernel_nofault(void *out, const void *in, size_t size)
-{ assert(in == frontier_text && size == sizeof(frontier_text));
-  if (frontier_read_error) return frontier_read_error; memcpy(out, in, size); return 0; }
+{
+	assert(in == frontier_text && size == sizeof(frontier_text));
+	if (frontier_read_error)
+		return frontier_read_error;
+	memcpy(out, in, size);
+	return 0;
+}
 static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct kd_regs *regs)
 { assert(frame == &root.continuation.frame && regs == &frame->regs); ++frontier_calls; }
 static bool need_resched(void) { return true; }
@@ -301,6 +306,7 @@ int main(int argc, char **argv)
 	cont->frame.continuation = cont; cont->frame.logical_task = &origin;
 	cont->frame.executed = cont->frame.complex_ready = true; cont->frame.packet_state = KD_PACKET_FULL;
 	origin.stack = origin_words;
+	origin_words[8] = 0x12345678;
 	cont->frame.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	cont->frame.mutex_backend = true; cont->frame.image = &frontier_image;
 	cont->frame.regs = (struct kd_regs) { .ip = (unsigned long)frontier_text,
