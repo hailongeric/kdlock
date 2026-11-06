@@ -234,7 +234,7 @@ class DeviceSessionTests(unittest.TestCase):
                         'root_native_escape': False, 'indirect_call': False,
                         'origin_instruction': False, 'origin_call': False,
                         'origin_memory': False, 'origin_context_read': False,
-                        'indirect_tail': False})
+                        'indirect_tail': False, 'source_frontier': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -461,6 +461,20 @@ class DeviceSessionTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                     self.fail("unnegotiated indirect tail contract admitted")
                 self.assertFalse(device_session._indirect_tail)
+
+    def test_source_frontier_requires_v18_and_resets_with_lease(self):
+        for version, features, expected in ((17, 59 | 16384, False),
+                (18, 59 | 16384, False), (18, 59 | 16384 | 262144, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier(), expected)
+            self.assertFalse(device_session._source_frontier)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier()
+        for version, features in ((17, 59 | 16384 | 262144), (18, 59 | 262144)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
+                self.fail('unnegotiated source frontier admitted')
 
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do

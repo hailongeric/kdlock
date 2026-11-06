@@ -35,6 +35,7 @@ Trusted translation does not extend that MM integration scope.
 | [origin_instructions.py](origin_instructions.py) | ABI2 original-task instruction directory and flags/budget-preserving reentry |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
 | [kernel_symbols.py](kernel_symbols.py) | Per-translation positive core reuse through `_etext`; dynamic, missing and zero lookups remain live |
+| [source_frontier.py](source_frontier.py) | Exact reached instruction decoding and permanent retained handback, without a learning edge |
 | [instruction_policy.py](instruction_policy.py), [context_policy.py](context_policy.py), `context_symbols.py` | Optional checked-mode instruction and context screening; shared CFG helpers |
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Optional bounded value and memory analysis |
 | `context_guards.py`, `entry_abi.py`, [constant_paths.py](constant_paths.py), [address_guards.py](address_guards.py), [guard_flags.py](guard_flags.py) | Optional checked-mode input, branch and address proofs |

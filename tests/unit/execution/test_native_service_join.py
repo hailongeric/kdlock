@@ -21,6 +21,9 @@ def main():
     continuation_header = read_source(ROOT / 'include/kd_exec_cont.h')
     wait_header = read_source(ROOT / 'include/kd_wait_queue.h')
     declarations = without_includes(read_source(ROOT / 'include/kd_regs.h'))
+    declarations += without_includes(read_source(ROOT / 'include/exe_info.h'))
+    declarations += definition(read_source(ROOT / 'include/kd_image.h'),
+                               'struct kd_jit_image {').rstrip() + ';\n'
     for source, names in (
         (header, ('enum kd_exec_native_operation {', 'struct kd_exec_native_route {')),
         (continuation_header, ('enum kd_exec_cont_state {', 'enum kd_exec_cont_wait {')),
@@ -35,6 +38,8 @@ def main():
     rwsem = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     declarations += definition(execution, 'struct kd_native_request {').rstrip() + ';\n'
     code = '\n'.join(definition(source, name) for source, names in (
+        (read_source(ROOT / 'kernel_module/execution/wrapper_entry.inc'),
+            ('static int kd_jit_source_frontier(struct kd_exe_info *exe,',)),
         (continuation, ('static bool kd_exec_cont_valid(const struct kd_exec_continuation *cont)',
                         'static bool kd_exec_cont_no_stack_service(const struct kd_exec_frame *frame)')),
         (admission, ('void kd_admission_read_to_native(struct kd_admission *a)',)),

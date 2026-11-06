@@ -31,7 +31,7 @@ static void list_del_init(struct list_head *item)
 	for (struct list_head *entry = (head)->prev; entry != (head) && \
 	     ((item) = container_of(entry, __typeof__(*(item)), field), true); entry = entry->prev)
 struct guard { pthread_mutex_t mutex; };
-struct task_struct { atomic_uint refs; unsigned int id; };
+struct task_struct { atomic_uint refs; unsigned int id; void *stack; };
 static struct task_struct origin __attribute__((aligned(8))) = { .refs = 2, .id = 101 };
 static struct task_struct executor __attribute__((aligned(8))) = { .refs = 2, .id = 202 };
 static struct task_struct other __attribute__((aligned(8))) = { .refs = 1, .id = 303 };
@@ -51,10 +51,11 @@ struct kd_exec_frame {
 	struct kd_native_request *native_request;
 	struct list_head native_link;
 	struct kd_regs regs;
+	const struct kd_jit_image *image;
 	void *resume_target, *remote_request;
 	struct { unsigned int phase; } control_call;
-	unsigned int packet_state, state, role;
-	bool executed, completion_seen, complex_ready;
+	unsigned int packet_state, state, role, entry_abi;
+	bool executed, completion_seen, complex_ready, mutex_backend;
 };
 struct kd_exec_service_ops {
 	bool (*native_match)(const void *, unsigned long, enum kd_exec_native_operation,
@@ -120,7 +121,7 @@ struct kd_service_root {
 	struct task_struct *worker;
 	bool native_handoff;
 };
-enum { KD_PACKET_FULL = 2, KD_SERVICE_NONE = 0, KD_CALL_NONE = 0,
+enum { KD_SERVICE_NONE = 0, KD_CALL_NONE = 0,
 	KD_CALL_COMPLETE = 1, KD_CALL_PENDING = 2, KD_ORIGIN_CALL_IDLE = 0,
 	KD_ORIGIN_CALL_CONSUMED = 1, KD_ORIGIN_MEMORY_IDLE = 0,
 	KD_ORIGIN_MEMORY_CONSUMED = 1, KD_EXEC_FRAME_UNUSED = 0, KD_ROLE_DONE = 1,
@@ -148,6 +149,24 @@ static unsigned int mode;
 static struct kd_service_root root;
 static struct kd_rwsem sem;
 static struct kd_mutex nested;
+static unsigned long origin_words[64];
+static const unsigned char frontier_text[] = { 0x67, 0x48, 0x0f, 0xb9, 0x3a };
+static struct kd_exe_info frontier_entry;
+static const struct kd_jit_image frontier_image = {
+	.entry = &frontier_entry, .entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
+	.immutable = 1,
+	.requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER,
+};
+static unsigned int preceding_effects, frontier_calls;
+#define THREAD_SIZE sizeof(origin_words)
+#define task_stack_page(task) ((task)->stack)
+static struct kd_exec_frame *kd_exec_current_frame(void) { return &root.continuation.frame; }
+static int kd_source_pin_text_range(unsigned long address, unsigned long size)
+{ assert(address == (unsigned long)frontier_text && size == sizeof(frontier_text)); return 0; }
+static int copy_from_kernel_nofault(void *out, const void *in, size_t size)
+{ assert(in == frontier_text && size == sizeof(frontier_text)); memcpy(out, in, size); return 0; }
+static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct kd_regs *regs)
+{ assert(frame == &root.continuation.frame && regs == &frame->regs); ++frontier_calls; }
 static bool need_resched(void) { return true; }
 static unsigned int preempt_count(void) { return 0; }
 static bool irqs_disabled(void) { return false; }
@@ -216,7 +235,7 @@ static void *execute(void *unused)
 	if (mode == 2) {
 		root.owner.admission.gate_held = root.owner.admission.phase_held = false;
 		root.owner.admission.physical_owner = NULL;
-		root.owner.admission.read_state = KD_ADMISSION_READ_NATIVE;
+		root.owner.admission.read_state = KD_ADMISSION_READ_LIVE;
 		sem.gate.owner = sem.admission = 0; sem.readers = 1;
 	} else {
 		initialize_owner(&child, &nested, NULL, 9);
@@ -229,6 +248,23 @@ static void *execute(void *unused)
 			KD_NATIVE_OPERATION_RWSEM_UP_WRITE, &route));
 		--root.owner.admission.request_generation;
 	}
+	{
+		struct kd_regs before = cont->frame.regs;
+		++preceding_effects;
+		/* Supply the active executor context for the frontier consumer, then
+		 * its established suspended context for the existing registry join. */
+		cont->state = KD_CONT_BOUND;
+		cont->executor = current;
+		/* The dispatcher maps this successful dedicated outcome to retained
+		 * HANDOFF. Execute the real consumer before the existing ACCEPT join. */
+		assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));
+		before.orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+		assert(!memcmp(&before, &cont->frame.regs, sizeof(before)));
+		assert(!frontier_entry.status_code && !frontier_entry.tgt_addr && !frontier_entry.jump_from);
+		cont->executor = NULL;
+		cont->state = KD_CONT_SUSPENDED;
+	}
+	if (mode == 2) kd_admission_read_to_native(&root.owner.admission);
 	assert(!kd_exec_native_service_begin(&cont->frame));
 	atomic_store_explicit(&ready, 1, memory_order_release);
 	assert(!kd_exec_native_service_wait(&cont->frame));
@@ -260,7 +296,11 @@ int main(int argc, char **argv)
 	list_init(&cont->frame.native_link);
 	cont->frame.continuation = cont; cont->frame.logical_task = &origin;
 	cont->frame.executed = cont->frame.complex_ready = true; cont->frame.packet_state = KD_PACKET_FULL;
-	cont->frame.regs = (struct kd_regs) { .ip = 0x1000, .sp = 0x8000, .orig_ax = KD_REG_ORIGIN_SUFFIX_TAG };
+	origin.stack = origin_words;
+	cont->frame.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	cont->frame.mutex_backend = true; cont->frame.image = &frontier_image;
+	cont->frame.regs = (struct kd_regs) { .ip = (unsigned long)frontier_text,
+		.sp = (unsigned long)&origin_words[8], .ax = 7, .di = 11, .si = 13, .dx = 17, .flags = 2 };
 	root.scope.continuation = cont; root.worker = &executor; root.native_handoff = true;
 	assert(!pthread_create(&worker, NULL, execute, NULL));
 	while (!atomic_load_explicit(&ready, memory_order_acquire)) sched_yield();
@@ -283,6 +323,7 @@ int main(int argc, char **argv)
 	assert(kd_native_started == 1 && kd_native_handed_off == 1 && kd_native_completed == 0);
 	assert(kd_native_unlocks == (mode == 2 ? 0 : 2) && released == (mode == 2 ? 0U : 2U));
 	assert(source_puts == 1 && stack_puts == 1 && origin.refs == 1 && executor.refs == 1);
+	assert(preceding_effects == 1 && frontier_calls == 1);
 	assert(sem.readers == (mode ? 1 : 0));
 	memset(&root, 0xa5, sizeof(root));
 	if (mode) { kd_up_read_non_owner(&sem); assert(!sem.readers); }

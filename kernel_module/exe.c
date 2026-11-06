@@ -558,7 +558,13 @@ returned_wrapper:
 		 * an original-task suffix. Unsupported reached operations are reported
 		 * as an integration boundary with the committed packet unchanged. */
 		if (cont && cont->service_ops) {
-			if (args[0] == KD_EXE_ORIGIN_MEMORY) {
+			if (args[0] == KD_EXE_SOURCE_FRONTIER) {
+				call_ret = fault_kind ? -EINVAL : kd_jit_source_frontier(exe, frame, regs);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_HANDOFF;
+					break;
+				}
+			} else if (args[0] == KD_EXE_ORIGIN_MEMORY) {
 				call_ret = fault_kind ? -EINVAL : kd_exec_cont_memory_prepare(frame);
 				if (!call_ret) {
 					ret_flag = KD_EXE_RUN_ORIGIN_MEMORY;

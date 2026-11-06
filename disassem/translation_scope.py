@@ -9,6 +9,7 @@ import diagnostics
 import instruction_policy
 import normal
 import native_escape
+import source_frontier
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
@@ -149,7 +150,7 @@ def find_resumable_call_continuations(block_dict, db_dict, keep_call_stack):
     return continuations
 
 
-def decode_regions(rets, raw_spin_unlock, keep_call_stack):
+def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=False):
     cfgs = []
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -158,6 +159,8 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
         machine = Machine("x86_64")
         loc_db = LocationDB()
         mdis = machine.dis_engine(c, loc_db=loc_db)
+        if source_frontiers:
+            mdis.arch = source_frontier.Decoder(mdis.arch)
         mdis.follow_call = False
         # A root can already be an interior instruction of an earlier root's
         # block. Split there so every source entry has a checked dispatch label.

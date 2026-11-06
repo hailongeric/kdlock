@@ -34,6 +34,7 @@ import origin_memory
 import returning_calls
 import native_terminals
 import solve_bug
+import source_frontier
 from miasm.expression.expression import ExprId, ExprMem, ExprLoc
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
@@ -405,7 +406,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
 
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(decode_pass_limit):
-        block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
+        block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack,
+            source_frontiers=(trusted_source and abi == 2 and lock_kind == 'mutex'
+                              and memread.device_session.source_frontier()))
         block_dict = {start: block for start, block in block_dict.items()
                       if start not in excluded_targets}
         db_dict = {block: db_dict[block] for block in block_dict.values()}
@@ -436,6 +439,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         # A provider can declare many primitives. Only a reached source CALL
         # in this image requires the returning-service execution contract.
         # Unrelated ordinary images keep their existing publication format.
+        if any(source_frontier.descriptor(line)
+               for block in block_dict.values() for line in block.lines):
+            service_queue_required = True
         if returning_services and any(
                 (line.name == 'CALL' or line.name.startswith('J')) and
                 ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc)) or
@@ -848,6 +854,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     # which stops at its first ordinary callee before any service is reached.
     retained_misses = (abi == 2 and lock_kind == "mutex" and not has_escapes
                        and not root_escapes and not origin_sites)
+    has_frontiers = any(source_frontier.descriptor(line)
+        for block in block_dict.values() for line in block.lines)
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
@@ -891,7 +899,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                          if returning_targets or memory_sites or indirect_tails else 0)
                       | (indirect_jump.RETAINED_TAIL_REQUIREMENT if indirect_tails else 0)
                       | (indirect_jump.RETAINED_MISS_REQUIREMENT
-                         if retained_misses else 0)))
+                         if retained_misses else 0)
+                      | (source_frontier.REQUIREMENT if has_frontiers else 0)))
     return 0
 
 

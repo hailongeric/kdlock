@@ -329,6 +329,53 @@ static int kd_jit_retained_miss(struct kd_exe_info *exe,
 	return 0;
 }
 
+/* A permanent instruction boundary has no CALL token and never learns an
+ * edge. Retain the complete service-owned ledger through ACCEPT/final ACK. */
+static int kd_jit_source_frontier(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	static const unsigned char expected[] = { 0x67, 0x48, 0x0f, 0xb9, 0x3a };
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	unsigned char opcode[sizeof(expected)];
+	unsigned long base;
+	int ret;
+
+	if (!exe || !frame || !regs || frame != kd_exec_current_frame() ||
+	    !cont || !cont->service_ops ||
+	    cont->state != KD_CONT_BOUND || cont->executor != current || !cont->source_lease ||
+	    cont->service_call.api != KD_SERVICE_NONE || !frame->executed ||
+	    !frame->mutex_backend || frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !frame->logical_task || frame->logical_task == current ||
+	    frame->packet_state != KD_PACKET_FULL || regs != kd_exec_frame_regs(frame) ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request || frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    frame->image->entry_abi != frame->entry_abi ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SOURCE_FRONTIER) ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE) ||
+	    !(regs->flags & 2) || !regs->ip || regs->ip > ~0UL - sizeof(expected))
+		return -EINVAL;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE ||
+	    regs->sp < base + 2 * sizeof(unsigned long) ||
+	    regs->sp > base + THREAD_SIZE - sizeof(unsigned long))
+		return -EFAULT;
+	ret = kd_source_pin_text_range(regs->ip, sizeof(expected));
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, sizeof(opcode)))
+		return -EFAULT;
+	if (memcmp(opcode, expected, sizeof(expected)))
+		return -EILSEQ;
+	/* IP/SP/GPRs and all earlier effects remain unchanged. Only this validated
+	 * outcome selects the established original-task restoration contract. */
+	frame->control_call.phase = KD_CALL_NONE;
+	regs->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	return 0;
+}
+
 /* Keep the actual pending CALL word in place until the original C helper
  * returns. The caller supplies valid arguments, memory and lifetime exactly
  * as for a native call. Only KD ownership and continuation bookkeeping are

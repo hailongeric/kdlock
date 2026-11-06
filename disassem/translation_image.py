@@ -14,6 +14,7 @@ import indirect_jump
 import solve_bug
 import special_inst
 import native_escape
+import source_frontier
 import origin_instructions
 import origin_memory
 import budget_resume
@@ -242,6 +243,8 @@ def emit_jit_assembly(
                 # The wrapper will import the FULL packet, not the predecessor's
                 # physical scratch allocation, when it returns at this label.
                 reg_map = conflict.block_init()
+            elif source_frontier.descriptor(line):
+                f.write(source_frontier.marker(line, reg_map))
             elif native_escapes and native_escape.descriptor(line):
                 diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
                                  "resume this invocation's native suffix before the source instruction",

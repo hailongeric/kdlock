@@ -72,6 +72,7 @@ def main(executor=None, benchmark=False):
             "static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_indirect_call_native(struct kd_exe_info *exe,",
             "static int kd_jit_retained_miss(struct kd_exe_info *exe,",
+            "static int kd_jit_source_frontier(struct kd_exe_info *exe,",
             "static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,",
             "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
             "static int kd_jit_native_escape_opcode(unsigned long ip)",
