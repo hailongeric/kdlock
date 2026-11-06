@@ -1807,3 +1807,32 @@ revision-19 negotiation. Keep the same marker/image requirement and retained
 lifetime protocol. Validate the two new generated exits and runtime source
 checks, build on the VM, then resume the short threads/processes run without
 another broad suite. Preserve all local-only observations as such.
+
+The revision-19 candidate `bee6e2b22c6b08ea7e55cc281ca197aa1c7ee3be`
+passed its necessary generated/runtime cases and provider build. Short threads
+rates at one/eight workers were 187061/50447 pairs/s; processes were
+221110/397627. All four applications passed and drained, with exact retirement
+and normal-kernel restoration. Mmap remained generation-zero NativeOnly.
+Munmap entered JIT eight times in each eight-worker application, handed back
+eight times and returned zero requests without permanent handback. These are
+partial-image observations, not steady delegation or an accepted optimization.
+
+The recorded munmap IJ edge is `0xffffffff814f4a38` → `0xffffffffc0e32bf0`.
+Saved generation-1 code shows indirect CALL at `0xffffffff814f4a33` inside
+`kd_mmap_assert_held_write`, with return word `0xffffffff814f4a38` already
+pushed before exit 11. The original task starts at the unexecuted callee;
+this edge is not a completed RET pop. Individual handback reasons and actual
+RDPKRU/CLAC marker hits remain unmeasured.
+
+Mmap's remaining aggregate guard rejects the combination of retained services
+and the older instruction-service markers (`disassem/disassem.py:845`). Its
+last coverage RIP does not identify the offending instruction. Do not add a
+broader returning instruction-service join for unproved branches, or relax
+that guard. A minimal existing terminal CALL boundary may suffice where the
+exact reached helper unconditionally requires the original task; it must not
+exclude an ordinary helper merely for containing another conditional branch.
+The current receipt lacks the selected legacy-site details needed to choose
+that boundary. Preserve those details at the existing refusal before deciding
+between the existing terminal CALL and exact terminal instruction paths.
+The [fixed report](../../bench/results/10.176.26.71/bench/mmap1-depth5-bee6e2b2/README.md)
+retains identities, counts, rates, source evidence and the unresolved scope.
