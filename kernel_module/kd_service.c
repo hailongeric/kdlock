@@ -1835,6 +1835,9 @@ int kd_service_init(void)
 	result = kd_service_calls_init();
 	if (result)
 		return result;
+	result = kd_service_observe_init();
+	if (result)
+		goto fail;
 
 	for_each_possible_cpu(cpu)
 		for (slot = 0; slot < KD_MUTEX_MAX_NODES; slot++) {
@@ -1887,5 +1890,6 @@ void kd_service_exit(void)
 			record->service = NULL;
 		}
 	kd_service_worker_count = 0;
+	kd_service_observe_exit();
 	kd_service_calls_exit();
 }

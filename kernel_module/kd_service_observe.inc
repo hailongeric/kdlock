@@ -43,12 +43,26 @@ MODULE_PARM_DESC(service_observe_entries, "At most two source entries for observ
 struct kd_service_observe_cpu {
 	u64 value[KD_SERVICE_OBSERVE_ROOTS][KD_SERVICE_OBSERVE_COUNT];
 };
-static DEFINE_PER_CPU(struct kd_service_observe_cpu, kd_service_observed);
+static struct kd_service_observe_cpu __percpu *kd_service_observed;
+
+static int kd_service_observe_init(void)
+{
+	if (!kd_service_observe)
+		return 0;
+	kd_service_observed = alloc_percpu(struct kd_service_observe_cpu);
+	return kd_service_observed ? 0 : -ENOMEM;
+}
+
+static void kd_service_observe_exit(void)
+{
+	free_percpu(kd_service_observed);
+	kd_service_observed = NULL;
+}
 
 static void kd_service_observe_add(int index, enum kd_service_observe_stat stat, u64 value)
 {
 	if (unlikely(index >= 0))
-		this_cpu_add(kd_service_observed.value[index][stat], value);
+		this_cpu_add(kd_service_observed->value[index][stat], value);
 }
 
 static int kd_service_observe_select(unsigned long ip, const char *comm)
@@ -126,8 +140,9 @@ static int kd_service_observe_stats_get(char *buffer, const struct kernel_param 
 		for (stat = 0; stat < KD_SERVICE_OBSERVE_COUNT; ++stat) {
 			u64 total = 0;
 
-			for_each_possible_cpu(cpu)
-				total += READ_ONCE(per_cpu(kd_service_observed, cpu).value[i][stat]);
+			if (kd_service_observed)
+				for_each_possible_cpu(cpu)
+					total += READ_ONCE(per_cpu_ptr(kd_service_observed, cpu)->value[i][stat]);
 			used += scnprintf(buffer + used, PAGE_SIZE - used, " %s=%llu",
 				names[stat], (unsigned long long)total);
 		}
@@ -139,3 +154,4 @@ static const struct kernel_param_ops kd_service_observe_stats_ops = {
 	.get = kd_service_observe_stats_get,
 };
 module_param_cb(service_observe_stats, &kd_service_observe_stats_ops, NULL, 0444);
+MODULE_PARM_DESC(service_observe_stats, "Cumulative selected capture and lifecycle totals; read after drain");

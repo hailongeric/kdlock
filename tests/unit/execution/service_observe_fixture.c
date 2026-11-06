@@ -1,8 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #include <assert.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 typedef uint64_t u64;
 #define TASK_COMM_LEN 16
@@ -10,9 +12,11 @@ typedef uint64_t u64;
 #define READ_ONCE(v) (v)
 #define likely(v) (v)
 #define unlikely(v) (v)
-#define DEFINE_PER_CPU(type, name) type name
+#define __percpu
+#define alloc_percpu(type) (allocation_calls++, allocation_fails ? NULL : calloc(1, sizeof(type)))
+#define free_percpu(value) do { if (value) { ++free_calls; free(value); } } while (0)
 #define this_cpu_add(name, amount) ((name) += (amount))
-#define per_cpu(name, cpu) (name)
+#define per_cpu_ptr(name, cpu) (name)
 #define for_each_possible_cpu(cpu) for ((cpu) = 0; (cpu) < 1; ++(cpu))
 #define scnprintf snprintf
 #define MODULE_PARM_DESC(...)
@@ -26,6 +30,8 @@ struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
 struct kd_service_root { int observe_index; u64 observe_shadow_start; };
 enum kd_admission_kind { KD_ADMISSION_MUTEX, KD_ADMISSION_RWSEM };
 static unsigned int acquisitions, clock_calls;
+static unsigned int allocation_calls, free_calls;
+static bool allocation_fails;
 static u64 clock_ns = 100;
 static int acquisition_result;
 static u64 ktime_get_ns(void) { ++clock_calls; return clock_ns += 10; }
@@ -41,7 +47,7 @@ int main(void)
 {
 	char buffer[PAGE_SIZE];
 	struct kd_service_root root = { .observe_index = -1 };
-	u64 *v = kd_service_observed.value[0], start;
+	u64 *v, start;
 	unsigned int i;
 	int index;
 
@@ -49,6 +55,7 @@ int main(void)
 	kd_service_observe_entries[0] = 0x1000;
 	kd_service_observe_entries[1] = 0x2000;
 	kd_service_observe_entry_count = 2;
+	assert(!kd_service_observe_init() && !allocation_calls && !kd_service_observed);
 	index = kd_service_observe_select(0x1000, "worker");
 	assert(index == -1);
 	assert(kd_service_observe_start(index) == 0);
@@ -56,9 +63,15 @@ int main(void)
 	kd_service_observe_shadow_end(&root);
 	assert(!kd_service_observe_local(index, true, &acquisitions, KD_ADMISSION_RWSEM, 7));
 	assert(acquisitions == 1 && clock_calls == 0);
-	for (i = 0; i < KD_SERVICE_OBSERVE_COUNT; ++i) assert(v[i] == 0);
+	assert(kd_service_observe_stats_get(buffer, NULL) > 0 && strstr(buffer, "selected=0 local=0"));
 
 	kd_service_observe = true;
+	allocation_fails = true;
+	assert(kd_service_observe_init() == -ENOMEM && !kd_service_observed);
+	allocation_fails = false;
+	assert(!kd_service_observe_init() && allocation_calls == 2 && kd_service_observed);
+	v = kd_service_observed->value[0];
+	for (i = 0; i < KD_SERVICE_OBSERVE_COUNT; ++i) assert(v[i] == 0);
 	assert(kd_service_observe_select(0x3000, "worker") == -1);
 	assert(kd_service_observe_select(0x1000, "other") == -1);
 	assert(clock_calls == 0);
@@ -107,10 +120,12 @@ int main(void)
 	assert(kd_service_observe_select(0x2000, "worker") == 1);
 	kd_service_observe_elapsed(1, KD_SERVICE_OBSERVE_DISPATCH_NS,
 		KD_SERVICE_OBSERVE_DISPATCH_SAMPLES, clock_ns + 100);
-	assert(kd_service_observed.value[1][KD_SERVICE_OBSERVE_INVALID_CLOCK] == 1);
+	assert(kd_service_observed->value[1][KD_SERVICE_OBSERVE_INVALID_CLOCK] == 1);
 	assert(kd_service_observe_stats_get(buffer, NULL) > 0);
 	assert(strstr(buffer, "entry=1000 selected=7 local=3") &&
 	       strstr(buffer, "entry=2000 selected=1") && strstr(buffer, "invalid_clock=1"));
+	kd_service_observe_exit();
+	assert(!kd_service_observed && free_calls == 1);
 	puts("service observation: disabled/enabled, local outcomes, terminal conservation and clocks passed");
 	return 0;
 }
