@@ -2327,3 +2327,51 @@ thread roots completed through handback. Both measured windows included image
 publication, and rates remained 98% below matching Native controls. No lock
 protocol change, stable-image acceptance, delegated read-tail proof or performance
 gain is claimed. The normal kernel was restored and verified afterward.
+
+## One fixed post-settlement point in a live factory
+
+The next authorized check selects processes at eight workers: its mmap g5 path
+already returned, while the final learned munmap g7 image was not exercised.
+Do not reuse the retired factory, raw code or context addresses. Keep the same
+runtime/provider/daemon bytes at `ec623366622d1784f7e819b4e9031ba0482bee9b` and
+kernel component `9a5d606aee0249d0e566a1c9667375eb038bc9cd`; freeze the changed
+runner separately and verify current module/source identities. No backend,
+context-routing, lock protocol or source-body change belongs to this check.
+
+Use one new owned factory and the existing two-root online learning path. No
+relocation of old absolute module/thunk seeds is implemented. The existing
+required long warmup is the straightforward route: one 730-sample application,
+720 pre-window samples and ten selected samples, with an 800-second application
+bound and 1,800-second learning/settlement bound. Preserve online publication
+and current valid-image admission while learning.
+
+After that application passes and drains, require no compiler children, zero
+source state/frames, exactly one owned writer and current selected NORMAL images.
+Require the current registry to equal the long observation's saved
+`registry_after`, binding the copied image files to those same generations.
+Create a new fixed execution-session receipt through the existing controller
+using current image files and the same live daemon/factory. It is not a saved
+receipt from the retired run and not the learning adapter that renews receipts
+after changes. The helper's bounded LEARNING_ADVANCED result may describe the
+completed warmup's changed history; it is not a reason to run another warmup.
+Current readiness and the fresh receipt must independently pass all ordinary
+verification checks before measurement.
+
+Run exactly one short eight-worker application with six ordinary upstream
+warmup samples and ten measured samples. Use the existing sample-window reader,
+per-root counters and fixed ExecutionSession verifier. Keep translation online:
+a new miss, compiler, changed registry/code/generation, or superseded-report
+activity invalidates stable acceptance. Preserve the failed point and stop;
+do not renew its receipt, suppress publication, repeat it or add another model.
+Record whole-app and ten-second deltas, live boundary residuals, current registry
+identities and actual delivered durations. Source/image ownership and exact
+retirement remain unchanged.
+
+The saved long Native process control is reference evidence only if current
+kernel identity, application bytes, host placement and frequency remain
+comparable. The shorter pre-window interval is explicit; it supplies no repeat
+variance or automatic strict timing qualification. Finish with the existing
+close/fresh-finalizer protocol and verified normal-kernel recovery. Focused VM
+fixtures must show that a fixed receipt is used, that instability stops without
+retry, and that unknown application lifetime prevents cleanup. No broad suite
+or extra proof application is authorized for this check.
