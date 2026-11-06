@@ -1700,3 +1700,14 @@ checks. Build and run focused off/on/conservation and directly affected
 continuation checks on the VM, then the diagnostic and normal-kernel recovery.
 Retain observations separately from the uninstrumented pilot and Native rates;
 no acceptance or performance improvement follows from this diagnostic.
+
+The first observation candidate, `328817076bbac8e17bfe2125609a450f63716a6d`,
+passed its focused helper/controller checks and module build. Live loading
+refused before any application: the extra static per-CPU totals raised the
+module's reserved per-CPU allocation to 7984 bytes, which did not fit the
+available reserved chunk. The VM remained idle; this is not workload or JIT
+execution evidence. Keep that failed launch. Allocate the optional totals
+once with `alloc_percpu()` during service initialization instead, before any
+request is admitted, and free them after service workers and retained roots
+have drained. Disabled observation allocates nothing. This retains CPU-local
+updates while leaving the module's static per-CPU reservation unchanged.
