@@ -1,14 +1,39 @@
 #!/usr/bin/env python3
 """One instrumented point using a fixed receipt after one long learning run."""
 import argparse
+import fcntl
+import hashlib
 import json
 from pathlib import Path
+import re
+import struct
 import traceback
 
 import observe
 
 campaign = observe.campaign
 rt, bench = campaign.rt, campaign.bench
+
+
+def frontier_emission(assembly, target, source_ip):
+    label = 'loc_' + format(target, 'x')
+    body = re.search(r'/\*\s*' + label + r'\s*\n.*?\*/\s*' + label + r':',
+                     assembly, re.S) is not None
+    code = re.sub(r'/\*.*?\*/', '', assembly, flags=re.S)
+    terminal = re.search(r'(?m)^MOVABS\s+R14,\s*' + re.escape(hex(source_ip)) +
+        r'\s*\nMOV\s+Stack_IJ,\s*(?:16|0x10)\s*\nJMP\s+full_exit(?:\s|$)', code) is not None
+    return dict(translated_target=body, exact_terminal=terminal)
+
+
+def current_capability():
+    packet = bytearray(16)
+    with open('/dev/kd_dev', 'rb', buffering=0) as device:
+        fcntl.ioctl(device, 0x80104b73, packet, True)
+    version, features, stack, percpu = struct.unpack('<IIII', packet)
+    rt.require(version == 21 and features & 262144,
+               'current provider does not advertise the v21 source frontier', 'DATA_ERROR')
+    return dict(version=version, features=features, mutex_stack_bytes=stack,
+                percpu_module_bytes=percpu)
 
 
 def deltas(before, after):
@@ -54,6 +79,47 @@ class SettledObservation(observe.Observation):
         exact = self.owner.session_receipt(self.daemon, rows)
         exact.verify()
         return exact
+
+    def publication_gate(self):
+        required = self.c.get('required_publication')
+        if required is None:
+            return
+        entry, target, source_ip = (required[key] for key in ('entry', 'call_target', 'source_ip'))
+        self.exact.verify()
+        row = next(row for row in self.exact.expected['registry'] if row['entry'] == entry)
+        label = hex(entry) + '-g' + str(row['generation'])
+        files = self.exact.expected['files']
+        paths = [Path(name) for name in files if Path(name).name == 'jit.S' and Path(name).parent.name == label]
+        rt.require(len(paths) == 1, 'required published assembly is not bound to this receipt', 'DATA_ERROR')
+        assembly = paths[0].read_bytes()
+        digest = hashlib.sha256(assembly).hexdigest()
+        rt.require(digest == files[str(paths[0])], 'published artifact changed before inspection', 'DATA_ERROR')
+        history_path = self.out / 'workspace/daemon' / hex(entry) / str(row['tgid']) / 'asm/callee_table.txt'
+        history = history_path.read_bytes()
+        reached = target in {int(line, 16) for line in history.decode().splitlines() if line.strip()}
+        emission = frontier_emission(assembly.decode(), target, source_ip)
+        segment, leased = [], False
+        for line in (self.out / 'daemon.log').read_text().splitlines():
+            if line.startswith('KD_TRANSLATION_METRICS '):
+                metric = json.loads(line.split(' ', 1)[1])
+                leased |= (metric['entry'] == hex(entry) and metric['result'] == 0 and
+                           any('source_frontier_direction=1' in text for text in segment))
+                segment = []
+            else:
+                segment.append(line)
+        evidence = dict(required=required, registry=row, capability=current_capability(),
+            assembly=dict(path=str(paths[0]), sha256=digest),
+            history=dict(path=str(history_path), sha256=hashlib.sha256(history).hexdigest()),
+            historically_reached_target=reached, leased_direction_compiler=leased, **emission)
+        evidence['passed'] = reached and leased and all(emission.values())
+        folder = self.out / 'required-publication'
+        folder.mkdir()
+        (folder / 'callee_table.txt').write_bytes(history)
+        rt.write_json(folder / 'result.json', evidence)
+        self.result['required_publication'] = evidence
+        self.save()
+        print('PUBLICATION_RESULT ' + json.dumps(evidence), flush=True)
+        rt.require(evidence['passed'], 'fresh learning did not publish the required expanded root', 'LEARNING_ADVANCED')
 
     def fixed_point(self, folder, row):
         before = self.window_observer()
@@ -110,10 +176,19 @@ class SettledObservation(observe.Observation):
         rt.require(self.models == ['processes'] and self.counts == [8] and
                    self.c['learning_rounds'] == 1 and self.c.get('long_warmup') is True,
                    'one process-model long learning run and one fixed point required', 'DATA_ERROR')
+        required = self.c.get('required_publication')
+        rt.require(required is None or (type(required) is dict and
+                   set(required) == {'entry', 'call_target', 'source_ip'} and
+                   all(type(value) is int and 0 < value < 1 << 64 for value in required.values()) and
+                   required['entry'] in self.args.writer_entries),
+                   'required publication must name one selected root, CALL target and instruction', 'DATA_ERROR')
         self.result.update(instrumentation='selected-service-counters', scored=False,
                            stable_point_passed=False, preparation={}, quiet_performance_accepted=False)
         try:
             self.prepare()
+            if required is not None:
+                self.result['capability_before_learning'] = current_capability()
+                self.save()
             self.current_model = 'processes'
             folder = self.out / self.current_model
             folder.mkdir()
@@ -137,6 +212,7 @@ class SettledObservation(observe.Observation):
                 learning_limit=limit)
             self.save()
             self.exact = self.fixed_receipt(folder / 'fixed-session', learned)
+            self.publication_gate()
             row = dict(model=self.current_model, workers=8, state='MEASURING', scored=False)
             self.result['points'].append(row)
             self.save()

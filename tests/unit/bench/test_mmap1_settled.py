@@ -15,6 +15,19 @@ spec.loader.exec_module(settled)
 
 
 class FixedSession(unittest.TestCase):
+    def test_publication_gate_distinguishes_body_from_missing_callee_stub(self):
+        marker = 'MOVABS R14, 0x3000\nMOV Stack_IJ, 16\nJMP full_exit\n'
+        body = '/*\nloc_2000\nPUSH RBP\n*/\nloc_2000:\nPUSH RBP\n'
+        self.assertEqual(settled.frontier_emission(body + marker, 0x2000, 0x3000),
+                         dict(translated_target=True, exact_terminal=True))
+        stub = 'loc_2000:\nMOVABS R14, 0x2000\nMOV Stack_IJ, 1\nJMP exit\n'
+        self.assertFalse(settled.frontier_emission(stub + marker, 0x2000, 0x3000)['translated_target'])
+
+    def test_publication_gate_ignores_comments_and_other_instruction_sites(self):
+        marker = 'MOVABS R14, 0x3000\nMOV Stack_IJ, 16\nJMP full_exit\n'
+        self.assertFalse(settled.frontier_emission('/*\n' + marker + '*/\n', 0x2000, 0x3000)['exact_terminal'])
+        self.assertFalse(settled.frontier_emission(marker, 0x2000, 0x3001)['exact_terminal'])
+
     def value(self, folder):
         value = settled.SettledObservation.__new__(settled.SettledObservation)
         value.args = SimpleNamespace(writer_entries=[1])

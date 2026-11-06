@@ -15,6 +15,13 @@ spec.loader.exec_module(campaign)
 
 
 class CampaignBoundaries(unittest.TestCase):
+    def test_close_bound_is_finite_and_default_is_preserved(self):
+        self.assertEqual(campaign.close_limit({}), 40)
+        self.assertEqual(campaign.close_limit(dict(close_timeout_seconds=600)), 600)
+        for value in (0, 601, True, 1.5, '600'):
+            with self.subTest(value=value), self.assertRaises(campaign.rt.Failure):
+                campaign.close_limit(dict(close_timeout_seconds=value))
+
     def test_pool_reserves_each_root_before_an_application(self):
         campaign.require_headroom(dict(capacity=128, private=0, free_descriptors=2), 2)
         for values in (dict(capacity=64, private=0, free_descriptors=2),

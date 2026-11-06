@@ -34,6 +34,13 @@ def validate_counts(values):
     return values
 
 
+def close_limit(config):
+    value = config.get('close_timeout_seconds', 40)
+    rt.require(type(value) is int and 1 <= value <= 600,
+               'campaign close bound must be an integer from 1 to 600 seconds', 'DATA_ERROR')
+    return value
+
+
 def image_pool(parameters):
     values = {name: int(value) for name, value in
               (word.split('=') for word in (parameters / 'jit_image_usage').read_text().split())}
@@ -138,6 +145,7 @@ class Campaign:
     def __init__(self, config, config_bytes):
         self.c, self.config_bytes = config, config_bytes
         self.root, self.out = ROOT, Path(config['output'])
+        self.close_timeout_seconds = close_limit(config)
         self.counts = validate_counts(config['worker_counts'])
         self.models = config.get('models', [config['model']])
         rt.require(type(self.models) is list and self.models and len(set(self.models)) == len(self.models) and
@@ -328,7 +336,7 @@ class Campaign:
                 rt.children(self.daemon.daemon.pid) and rt.status()['frames'] == 0 and
                 self.daemon.translation_state() in ('T', 't')):
             self.daemon.translation_phase(False)
-        deadline = time.monotonic() + 40
+        deadline = time.monotonic() + getattr(self, 'close_timeout_seconds', 40)
         while (self.daemon is not None and self.daemon.daemon is not None and
                rt.children(self.daemon.daemon.pid)) or rt.status()['frames']:
             rt.require(time.monotonic() < deadline, 'campaign close did not reach quiescence', 'UNDRAINED')
