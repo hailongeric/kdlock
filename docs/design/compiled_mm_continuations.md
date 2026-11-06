@@ -1403,3 +1403,49 @@ about 23.4 MiB. No publication or workload ran, so this is cold-history
 compilation evidence, not mmap1 runtime acceptance. Exact retirement and
 normal restoration passed. Full results and retained failures are in
 `bench/results/10.176.26.71/tests/core-symbols-26337db1/README.md`.
+
+# Authorized original-instruction frontier
+
+The user authorized the pending warning-path handback and mmap1 validation.
+Start from `c919bd81871d77c7f37a2f8a06fc1e2aa9f5e164` on
+`codex/mmap-reached-jit`; retain the core symbol optimization. This is a general
+retained ABI2 instruction frontier, with no MM caller special case.
+
+At an instruction actually requested by the existing decoder, recognize only
+the complete `67 48 0f b9 3a` form. Represent its five source bytes as a terminal
+instruction in that branch. Do not scan source windows for byte patterns or
+expand call closure. Other branches keep their ordinary JIT execution. The
+frontier has no generated successor, source CALL word, instruction service or
+learning report. It never executes or emulates the original instruction.
+
+Negotiate provider capability version 18, feature `KD_JIT_CAP_SOURCE_FRONTIER`,
+and image requirement `KD_IMAGE_REQUIRE_SOURCE_FRONTIER` under the existing
+extended header. A frontier image requires ABI2 mutex continuation and the
+retained service queue. Earlier providers cannot accept that image. Give its
+generated FULL return a distinct `KD_EXE_SOURCE_FRONTIER` outcome; it is not
+`KD_EXE_RETAINED_MISS` because that outcome necessarily requests learning.
+
+Generated code spills logical GPRs, retains virtual SP/BP and exports the exact
+unexecuted source IP. Preserve the existing arithmetic-flags export without
+claiming new flags, SIMD or IRQ/NMI support. Runtime checks the executed FULL
+packet, matching immutable image/entry/ABI, logical origin, idle typed-call
+state, no pending remote/native operation, original stack bounds and the exact
+five-byte leased source range. Refuse any mismatch before changing the packet
+or ownership. Do not replay the preceding `file_ref_inc()` increment.
+
+On success, set the existing `KD_REG_ORIGIN_SUFFIX_TAG`, save continuation and
+return `KD_EXE_RUN_HANDOFF`. Reuse the established retained handoff with its
+exact owner records, suspension, Native ACCEPT, source/frame retention and
+final owner/unlock ACK. A typed service scope with `api == KD_SERVICE_NONE` is
+valid. Do not route through the legacy borrowing check, which intentionally
+rejects these linked service-owned records. No registry state or image
+generation changes merely because this permanent frontier was reached.
+
+Complete the implementation before focused VM checks. Verify exact IP/SP/GPR
+and preceding once-only effects, branch-not-taken JIT completion, no false
+learning, unsupported-provider refusal and retained-owner lifetime. Then
+resume the benchmark-filtered two-root mmap1 campaign using fresh module
+identities, separate learning/proof/quiet intervals and the preserved matched
+Native measurements. Require real worker-attributed delegation evidence;
+compilation/publication alone is not proof. Retain every failure and restore
+the verified normal kernel after validation. Do not merge.
