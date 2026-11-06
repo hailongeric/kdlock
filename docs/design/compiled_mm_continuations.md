@@ -1494,3 +1494,64 @@ Printing these preparation records does not enter a quiet scoring interval.
 Append tables lack per-edge task/lock-phase provenance; this change does not
 prove region leakage absent or live diagnostic handback complete. Another
 actual defect must be diagnosed rather than hidden by extending these bounds.
+
+The `cfdb52a83e98eed140062bc83c51207579242392` follow-on passed 20 affected
+benchmark checks and rebuilt its provider, daemon and observer. Its 50 passed,
+drained learning applications reached mmap generation 48 and munmap generation
+25. The next mmap compilation planned 270,336 cached bytes against the
+unchanged 262,144-byte limit, although decoded instruction bytes totaled
+28,327. It became Native-only before proof or scoring. There were 55 free
+image descriptors. Exact retirement and normal recovery passed; the negative
+outcome and all unscored rates remain in
+[the follow-on report](../../bench/results/10.176.26.71/bench/mmap1-frontier-cfdb52a8/README.md).
+
+# Bounded original-JIT prefix at the source-cache boundary
+
+Continue on `codex/mmap-reached-jit` from
+`cfdb52a83e98eed140062bc83c51207579242392`. The user selected reached execution
+over auditing unexecuted branches. A source-cache budget decision is distinct
+from an unsupported source/ABI or ownership decision. Preserve complete valid
+JIT work and use the existing retained waiter continuation when actual
+execution reaches an uncompiled target. Keep source/stack ownership and prior
+effects, including an already pushed CALL word or popped RET word. Do not
+replay the acquisition region or earlier stores.
+
+First, allow an explicit ordinary bounded-window policy to reduce only new
+optional lookahead when a plan exceeds 256 KiB. Keep the preferred 8 KiB,
+page-aligned read unchanged when it fits. Plan shorter tails before requesting
+a lease or reading text; retain every existing byte/root and at least the full
+15-byte instruction prefix at each new target. Keep pin-before-read, the
+256 KiB aggregate/per-request bounds, 32 combined CFG transitions, 33 decode
+passes, return-flow work and `follow_call = False`. The existing 1 MiB retained
+policy and retired eager profile are not selected.
+
+If even mandatory data cannot fit, return a distinct translator budget outcome
+and clear partial output artifacts. The daemon must retain only the currently
+published complete immutable ABI2 image with the retained-miss contract, matched
+by entry/ABI and exact base generation under the existing publication gate.
+Source closure, a terminal Native-only decision, a missing/mutable image or a
+changed generation must refuse retention. A budget result never validates a
+new incomplete image. An initial failure without any complete image remains an
+explicit preparation limit, not claimed delegation.
+
+Mark learning closed for that exact retained image and restore its NORMAL
+readiness without changing code, generation or source ownership. Suppress only
+future CALL/IJ learning reports from that limited image, with a recheck under
+the publication gate, so a racing miss cannot reopen compilation. Terminal
+semantic/source refusal continues to win. A stale executor cannot change a
+new image. Expose the bounded state separately from the NORMAL publication
+state, and negotiate the added header-only budget operation. Keep the existing
+miss packet validation and Native ACCEPT/final ACK unchanged. Uncompiled paths
+permanently continue on their origin at their exact current target; compiled
+paths keep using the original JIT.
+
+Focused checks cover the actual oversized-window arithmetic, largest fitting
+optional tail, complete instruction prefixes, preservation of old bytes/roots,
+mandatory-over-budget refusal before reads, exact-generation image retention,
+Native-only/source-close/stale-image refusal and repeated-miss suppression.
+Reuse unchanged continuation checks by hashes. Then build and run fresh-identity
+mmap1 checks. Report worker-attributed prefix execution and original-task
+continuation separately from a fully delegated read tail; compilation alone
+does not establish either. Keep every incomplete/negative result and restore
+the normal kernel. No caller-specific adapter or second execution backend is
+introduced.
