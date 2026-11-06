@@ -2,6 +2,7 @@
 
 from assist import make_inst
 from conflict import release_conflict
+from types import SimpleNamespace
 
 
 ENCODING = bytes.fromhex('67 48 0f b9 3a')
@@ -20,6 +21,9 @@ class Instruction:
 
     def __init__(self, offset):
         self.offset = offset
+        # The exact form has address/REX prefixes, but no LOCK or REP group.
+        # Shared emitter spelling inspects this metadata even for terminals.
+        self.additional_info = SimpleNamespace(g1=SimpleNamespace(value=0), prefixed=b'')
 
     def breakflow(self):
         return True

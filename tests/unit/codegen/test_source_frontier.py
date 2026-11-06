@@ -74,7 +74,8 @@ class SourceFrontierTests(unittest.TestCase):
         self.assertFalse(options['requirements'] & frontier.REQUIREMENT)
 
     def test_unnegotiated_provider_cannot_emit_frontier_image(self):
-        assembly, log, status, _ = self.compile(frontier.ENCODING + b'\xc3', capable=False)
+        assembly, log, status, _ = self.compile(frontier.ENCODING + b'\xc3' + b'\x90' * 32,
+                                               capable=False)
         self.assertEqual(status, 2, log)
         self.assertFalse(assembly)
 
