@@ -1836,3 +1836,39 @@ that boundary. Preserve those details at the existing refusal before deciding
 between the existing terminal CALL and exact terminal instruction paths.
 The [fixed report](../../bench/results/10.176.26.71/bench/mmap1-depth5-bee6e2b2/README.md)
 retains identities, counts, rates, source evidence and the unresolved scope.
+
+## Exact interrupt-state boundaries before the next mmap1 run
+
+The diagnostic at `9d144a95730a80063fc8570f81440f738442176a` identifies
+three remaining legacy sites: CLI at `0xffffffff815e8cc9` in `vkdb_printf`,
+and CLI/STI at `0xffffffff8178f532` / `0xffffffff8178f555` in
+`lru_add_drain_cpu`. These are decoded alternatives, not proved application
+hits. The matched ELF contains paravirtual CALL slots at those addresses;
+the leased running-text decoder sees their patched CLI/STI instructions.
+Do not exclude either complete helper or relax the retained-service guard.
+
+Extend the existing terminal source frontier for precisely the one-byte
+encodings `fa` and `fb`, negotiated only with capability revision 20. If a
+path reaches either, export its preceding effects and exact first-unexecuted
+IP, preserve the real source stack and flags, and complete the existing
+permanent original-task continuation with ownership and final ACK retained.
+Do not execute CLI/STI on the executor or create a returning service join.
+Other paths remain JIT paths. The source reader must validate one byte first
+and the exact selected length, including an instruction at a text boundary;
+it must not require a second byte for a one-byte instruction. Revisions 18
+and 19 retain their respective earlier encoding sets.
+
+Generation 2 already contains the munmap callback edge learned from
+`0xffffffff814f4a38` to the recorded module target `0xffffffffc0e32bf0`.
+Its generated target dispatch needs execution evidence, not a new callback
+protocol. A new-boot leased read at `0xffffffff814f4a33` is
+`2e 2e 2e ff d2`, a five-byte CALL RDX; this is not a retrospective snapshot
+of the old module instance. Keep the missing old module symbol map explicit.
+
+Build on the VM and run only the new generated frontier cases, capability
+negotiation, retained continuation check, and short mmap1 threads/processes
+observations. Keep every result and restore the normal kernel after drain.
+Separate child images initially apply only to selected KD acquisitions;
+allocator and other Native locks retain their existing instruction-service
+handling. This boundary correction does not implement separate child images
+or establish complete delegated MM execution.
