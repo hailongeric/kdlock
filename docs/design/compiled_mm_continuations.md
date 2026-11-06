@@ -2085,3 +2085,50 @@ retirement is available. Source-stack/argument preservation remains an unproven
 lead. Normal recovery was verified at boot
 `4ff57d48-bc4c-43bd-9946-b16e0db3d4da`. Keep the candidate unaccepted and
 diagnose the first failure before another live workload.
+
+## Finish packet reads before restoring the source stack
+
+Continue the isolated candidate from
+`fe753cc3856ab308f77e0525597fd772d1e20b39`. Offline inspection of the exact
+built provider and kernel establishes an ordering defect independently of the
+unexplained first failure. Let T be the aligned stack address selected by
+`kd_service_shadow_wait`, with T no greater than exported source SP, S.
+The compiled `kd_service_native_resume` allocates its 168-byte packet at
+T-216 through T-49: SP is at T-208, BP at T-200 and DI at T-88. These match
+the builtin consumer's offsets 8, 16 and 128. Its separate frame word at
+T-48 is not part of the packet.
+
+The tagged builtin restore moves RSP to S before reading most GPRs. Its target
+and flags pushes occupy S-8 and S-16, above the packet, so these pushes do not
+directly alias the packet. The defect is the remaining reads from packet storage
+below the raised RSP, where interrupt stack use may overwrite them. Ordinary
+completion has the same exposure for its final DI read. This establishes a
+lifetime error, not that an interrupt produced the recorded RDI value. That
+request's packet and interruption history were not captured.
+
+Stage the final stack address on the current lower helper stack. Ordinary
+completion pushes S, restores every packet GPR including DI, then uses
+`popq %rsp` and the existing return. Tagged completion stages S-8, writes the
+target IP at S-8 as before, stages merged flags on the active helper stack,
+restores every GPR, then uses `popfq; popq %rsp` and the existing return.
+No packet read follows the stack change. Tagged completion finishes at S and
+keeps the actual source CALL word at S; ordinary completion consumes that word
+once and finishes at S+8. IRQ/preemption behavior, arithmetic/control flags,
+source effects, packet layout, reference retirement and the JIT backend stay
+unchanged. Only one or two temporary words are added to the active helper stack.
+
+Validate the actual builtin C/assembly in a focused VM userspace fixture:
+distinct GPRs, exact SP/BP, arithmetic flags for tagged continuation and the
+source CALL word. Add a deterministic reuse model that changes packet DI when
+RSP advances above the packet; the corrected path must retain the already-read
+DI, and an early-stack-change variant must fail. This models the exposed-storage
+effect, not a real kernel interrupt or the original failure. No mmap workload
+will run merely because this fixture passes; installation of a corrected builtin
+kernel and an understood first-failure explanation remain separate requirements.
+
+The first fault preceded every replacement publication for the munmap entry.
+Published immutable images also retain their descriptors/code until provider
+teardown; retained frames use their exact bound image. Report revision receipts
+contain no GPR or stack fields. These facts narrow the investigation but do not
+establish which image or local/continuation path PID 2426 used. Active capture
+remains enabled; this correction does not discard pending-image execution.
