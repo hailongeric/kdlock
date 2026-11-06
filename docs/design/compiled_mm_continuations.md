@@ -2140,3 +2140,14 @@ unchanged. Retain the failed receipt and rerun only this fixture. Current host
 headroom is 4,123,881,472 bytes and the second guest build disk has 6,514,475,008
 bytes free, below the separate kernel-preparation reserve. No kernel rebuild
 or live mmap validation is implied by the userspace fixture.
+
+Revision `e342cfc1d9f529abd74390bc070e20b51d9d9ff1` passed 390 focused
+userspace restore cases on the normal VM; six deliberately reordered cases
+detected unread-packet reuse. The
+[forensic/check report](../../bench/results/10.176.26.71/tests/mmap-continuation-restore-e342cfc1/README.md)
+retains the matched compiled layout, source CALL/return contract, partial image
+provenance and both check attempts. This confirms the correction's local register
+contract, not the original failure's cause or the live builtin callback. The
+normal boot remains idle and unchanged. Matching kernel build/live validation
+remain blocked by disk headroom and incomplete first-request provenance; active
+capture is not disabled to bypass either requirement.
