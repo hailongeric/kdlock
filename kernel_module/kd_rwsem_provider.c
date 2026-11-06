@@ -420,7 +420,7 @@ int kd_rwsem_provider_activate(void)
 		 * takes ordinary local acquisition before any delegated effects. */
 		if (kd_rwsem_provider_demand || !kd_rwsem_entry_selected(sites[index].entry))
 			continue;
-		exe = kd_exe_find_ready(0, sites[index].entry);
+		exe = kd_get_exe(0, sites[index].entry);
 
 		if (!kd_exe_capture_image(exe, sites[index].entry)) {
 			result = -EAGAIN;

@@ -224,6 +224,7 @@ static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/registry_lifecycle.inc"
 #include "execution/images.inc"
+module_param_named(image_report_superseded, kd_image_report_superseded, ulong, 0444);
 
 #include "execution/control_calls.inc"
 #include "execution/service_control.inc"
@@ -970,15 +971,26 @@ const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
 	const struct kd_jit_image *image;
 	const unsigned char *code;
 	unsigned int requirements;
+	int status;
 
-	if (!kd_exe_entry_is_ready(exe, 0, entry_ip) ||
+	/* Retained requests bind an immutable version. A recoverable report asks
+	 * for another version; it does not invalidate paths this one implements.
+	 * Keep ordinary batch/spin readiness independent of this admission rule. */
+	if (!exe || !entry_ip || !kd_source_is_open() ||
+	    READ_ONCE(exe->pid) != 0 || READ_ONCE(exe->RIP) != entry_ip ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
 	    READ_ONCE(exe->entry_abi) != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return NULL;
+	status = smp_load_acquire(&exe->status_code);
+	if (status != KD_EXE_NORMAL && status != KD_EXE_CALL_MISS &&
+	    status != KD_EXE_IJ_MISS)
 		return NULL;
 	image = kd_image_current(exe);
 	if (!image || !image->immutable || image->entry != exe ||
 	    image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 	    image->length < KD_IMAGE_HEADER_SIZE ||
+	    (status != KD_EXE_NORMAL &&
+	     !(image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) ||
 	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
 				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
 					      KD_IMAGE_REQUIRE_ORIGIN_CALL |

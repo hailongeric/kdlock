@@ -97,6 +97,52 @@ class KernelProfiles(unittest.TestCase):
 
 
 class Harness(unittest.TestCase):
+    def test_long_warmup_keeps_upstream_average_and_selects_only_tail(self):
+        samples = ['min:4 max:4 total:32'] * 714 + ['min:5 max:5 total:40'] * 10
+        text = '\n'.join(['testcase:'+bench.DESCRIPTION, 'warmup',
+            *(['min:3 max:3 total:24'] * 6), 'measurement', *samples,
+            'average:'+str((714*32+10*40)//724)])+'\n'
+        result = bench.parse_output(text, 8, 724, 10)
+        self.assertEqual(len(result['preparation']), 714)
+        self.assertEqual(len(result['measurement']), 10)
+        self.assertEqual(result['completed_pairs'], 400)
+        self.assertEqual(result['pairs_per_nominal_second'], 40)
+        self.assertEqual(result['upstream_completed_pairs'], 714*32+400)
+        self.assertEqual(bench.argv('/tmp/mmap1_processes', 8, 724)[-3:], ['-s', '724', '-m'])
+        with self.assertRaises(bench.rt.Failure):
+            bench.parse_output(text.replace('average:32', 'average:40'), 8, 724, 10)
+
+    def test_line_delivered_window_observes_only_selected_boundaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'upstream.log'
+            observations = []
+            with path.open('w') as log:
+                window = bench.sample_window.SampleWindow(log, 720, 10,
+                    lambda: observations.append(window.samples) or dict(sample=window.samples))
+                child = subprocess.Popen(['python3', '-c',
+                    'import os; assert os.isatty(1); print("min:1 max:1 total:8\\n"*730,end="")'],
+                    stdout=window.slave, stderr=subprocess.STDOUT)
+                window.start()
+                self.assertEqual(child.wait(timeout=10), 0)
+                receipt = window.finish()
+            self.assertEqual(observations, [720, 730])
+            self.assertEqual([row['boundary'] for row in receipt['events']], ['begin', 'end'])
+            self.assertEqual(len(path.read_text().splitlines()), 730)
+
+    def test_sample_reader_cleanup_before_launch_and_during_open_stream(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for launched in (False, True):
+                with (Path(directory)/str(launched)).open('w') as log:
+                    window = bench.sample_window.SampleWindow(log, 720, 10)
+                    writer = os.dup(window.slave)
+                    try:
+                        if launched:
+                            window.start()
+                        self.assertTrue(window.abort())
+                        self.assertTrue(window.log.closed)
+                    finally:
+                        os.close(writer)
+
     def test_exact_single_round_grid_and_original_cli(self):
         work = bench.plan()
         self.assertEqual(len(work), 42)

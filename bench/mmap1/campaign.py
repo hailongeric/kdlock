@@ -235,7 +235,8 @@ class Campaign:
         config = dict(self.c, workers=workers, model=self.current_model)
         self.exact, observations = point.demand_learning(config, folder, self.owner, self.daemon,
             bench, rt, self.inputs, self.verify, deadline=self.deadline, quiescent=self.pool,
-            before_application=self.admit_images)
+            before_application=self.admit_images,
+            window_observer=getattr(self, 'window_observer', None) if self.c.get('long_warmup', False) else None)
         bench.execution.ready_writer_entries(self.exact.expected['registry'], self.args.writer_entries)
         return observations
 

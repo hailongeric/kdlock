@@ -173,31 +173,57 @@ static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,
 			   loff_t *offset)
 {
 	const size_t entry_size = sizeof(struct kd_exe_info);
+	struct kd_image_upload *upload = file ? file->private_data : NULL;
+	bool recorded[KD_MAX_EXE] = { false };
 	size_t len = 0;
 	unsigned int i;
+	ssize_t result;
 
-	(void)file;
 	(void)offset;
+	/* dup/fork share these receipts and uploads. Serialize their reads with
+	 * chunk writes, without holding the publication spin gate across a copy. */
+	if (upload && kd_mutex_lock_interruptible(&kd_publish_lock))
+		return -ERESTARTSYS;
 	for (i = 0; i < KD_MAX_EXE; i++) {
 		const struct kd_exe_info *entry = kd_exe_get_slot(i);
 		struct kd_exe_info snapshot;
+		struct kd_image_learning_receipt receipt;
 		int status;
 
-		if (!entry)
-			return len ? (ssize_t)len : -ENODEV;
+		if (!entry) {
+			result = len ? (ssize_t)len : -ENODEV;
+			goto out;
+		}
 		status = smp_load_acquire(&entry->status_code);
 		if (status == KD_EXE_UNUSED)
 			continue;
 		if (entry_size > count - len)
 			break;
 
-		kd_exe_snapshot(entry, &snapshot);
-		if (copy_to_user(buf + len, &snapshot, entry_size))
-			return -EFAULT;
+		kd_exe_snapshot_learning(entry, &snapshot, &receipt);
+		if (copy_to_user(buf + len, &snapshot, entry_size)) {
+			result = -EFAULT;
+			goto out;
+		}
+		/* Keep the first successful read at this generation, even when it
+		 * observed no report. A later read cannot change the compiler's
+		 * possible input. This conservative case may need another compile. */
+		if (upload && (!upload->observed[i].valid ||
+			       upload->observed[i].generation != receipt.generation)) {
+			upload->observed[i] = receipt;
+			recorded[i] = true;
+		}
 		len += entry_size;
 	}
-
-	return len;
+	result = len;
+out:
+	if (upload && result < 0)
+		for (i = 0; i < KD_MAX_EXE; ++i)
+			if (recorded[i])
+				upload->observed[i].valid = 0;
+	if (upload)
+		kd_mutex_local_unlock(&kd_publish_lock);
+	return result;
 }
 
 static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
@@ -266,6 +292,7 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		upload->image = NULL;
 		upload->covered = 0;
 		upload->identity = head;
+		upload->acknowledgment = upload->observed[kd_exe_slot_index(entry)];
 		upload->code = entry->code_block;
 		if (entry->lock_kind == KD_EXE_LOCK_MUTEX || head.requirements ||
 		    (kd_image_current(entry) && kd_image_current(entry)->immutable)) {
@@ -341,7 +368,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 				if (ret)
 					return ret;
 			}
-			ret = kd_image_publish(entry, upload->image, head.base_generation);
+			ret = kd_image_publish_learned(entry, upload->image,
+				head.base_generation, &upload->acknowledgment);
 			if (ret)
 				return ret;
 			upload->image = NULL;

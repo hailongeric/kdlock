@@ -32,7 +32,13 @@ typedef unsigned long long u64;
 struct task_struct {
 	int tgid, pid;
 };
-struct file;
+struct file { void *private_data; };
+static int kd_publish_lock;
+static int kd_mutex_lock_interruptible(int *lock) { assert(!*lock); *lock = 1; return 0; }
+static void kd_mutex_local_unlock(int *lock) { assert(*lock); *lock = 0; }
+#ifndef ERESTARTSYS
+#define ERESTARTSYS 512
+#endif
 typedef struct {
 	int counter;
 } atomic_t;
@@ -207,7 +213,7 @@ static int set_memory_x(unsigned long addr, int pages)
 }
 
 static void kd_mutex_local_lock(void) {}
-static void kd_mutex_local_unlock(void) {}
+
 static unsigned long kallsyms_lookup_name(const char *name)
 {
 	return (unsigned long)name;
@@ -582,7 +588,8 @@ static void check_service_source_publication(void)
 	} packet = {0};
 	struct kd_exe_info *entry;
 	unsigned int requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE |
-		KD_IMAGE_REQUIRE_ORIGIN_CALL | KD_IMAGE_REQUIRE_BUDGET_RESUME;
+		KD_IMAGE_REQUIRE_ORIGIN_CALL | KD_IMAGE_REQUIRE_BUDGET_RESUME |
+		KD_IMAGE_REQUIRE_RETAINED_MISS;
 	size_t bytes = sizeof(packet.head) + sizeof(packet.data);
 	int blocks;
 
@@ -620,6 +627,54 @@ static void check_service_source_publication(void)
 	CHECK(entry->generation == 1 && entry->requirements == requirements);
 	CHECK(kd_image_current(entry)->entry == entry && upload.image == NULL);
 	CHECK(kd_code_block_free == blocks - 1);
+	/* Same-generation repeated reads cannot change the compilation receipt.
+	 * Publication consumes only the frozen revision; later reports survive. */
+	service_pin_entry = NULL;
+	const struct kd_jit_image *old = kd_image_current(entry);
+	struct file channel = { .private_data = &upload };
+	struct kd_exe_info snapshots[KD_MAX_EXE];
+	unsigned int slot = kd_exe_slot_index(entry);
+	unsigned char original[sizeof(packet.data)];
+	memcpy(original, packet.data, sizeof(original));
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x2222, 0);
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	unsigned long revision = upload.observed[slot].revision;
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x2222, 0);
+	CHECK(kd_image_learning[slot].revision == revision);
+	packet.head.base_generation = 1; packet.head.upload_id = 2;
+	packet.head.status_code = KD_EXE_UNINIT;
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, sizeof(packet.head) + 32) > 0);
+	kd_image_report(entry, old, KD_EXE_IJ_MISS, 0x3333, 0x4444);
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	CHECK(upload.observed[slot].revision == revision && upload.acknowledgment.revision == revision);
+	packet.head.offset = 32; packet.head.status_code = KD_EXE_NORMAL;
+	memcpy(packet.data, original + 32, sizeof(original) - 32);
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes - 32) > 0);
+	CHECK(entry->generation == 2 && entry->status_code == KD_EXE_IJ_MISS && entry->tgt_addr == 0x3333);
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x5555, 0);
+	CHECK(entry->tgt_addr == 0x3333);
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	packet.head.offset = 0; packet.head.base_generation = 2; packet.head.upload_id = 3;
+	memcpy(packet.data, original, sizeof(original));
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) > 0);
+	CHECK(entry->generation == 3 && entry->status_code == KD_EXE_NORMAL);
+	/* A no-report read cannot acknowledge a subsequently reached frontier. */
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	kd_image_report(entry, kd_image_current(entry), KD_EXE_CALL_MISS, 0x6666, 0);
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	packet.head.base_generation = 3; packet.head.upload_id = 4;
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) > 0);
+	CHECK(entry->generation == 4 && entry->status_code == KD_EXE_CALL_MISS && entry->tgt_addr == 0x6666);
+	/* A failed whole read may not retain its newly copied first-row receipt. */
+	kd_exe_add_abi(0, key(1), KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	memset(upload.observed, 0, sizeof(upload.observed));
+	fail_copy = copy_calls + 2;
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) == -EFAULT);
+	for (unsigned int i = 0; i < KD_MAX_EXE; ++i) CHECK(!upload.observed[i].valid);
+	fail_copy = 0;
+	CHECK(kd_dev_read(&channel, (char *)snapshots, sizeof(snapshots), NULL) > 0);
+	CHECK(upload.observed[slot].generation == 4);
+	CHECK(upload.observed[kd_exe_slot_index(kd_get_exe(0, key(1)))].generation == 0);
 	kd_exe_exit();
 }
 

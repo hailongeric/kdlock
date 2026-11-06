@@ -202,10 +202,8 @@ static void kd_exe_add_abi(int pid,unsigned long ip,int kind,int abi)
 { (void)pid; int i=index_of(ip); ++adds; entries[i]=(struct kd_exe_info){ip,-1,abi,kind}; }
 static struct kd_exe_info *kd_get_exe(int pid,unsigned long ip)
 { (void)pid; return &entries[index_of(ip)]; }
-static struct kd_exe_info *kd_exe_find_ready(int pid,unsigned long ip)
-{ (void)pid; int i=index_of(ip); return ready[i] ? &entries[i] : NULL; }
 static void *kd_exe_capture_image(struct kd_exe_info *e,unsigned long ip)
-{ (void)ip; return e; }
+{ return ready[index_of(ip)] ? e : NULL; }
 static bool kd_source_binding_get(void) { ++gets; return binding; }
 static void kd_source_binding_put(void) { ++binding_puts; }
 static int kd_rwsem_register_provider(int *p) { (void)p; return registration; }

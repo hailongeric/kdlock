@@ -47,6 +47,7 @@ static int hash_cnt;
 
 static char *cmd_hist[1000];
 static int cmd_results[1000];
+static unsigned long cmd_generations[1000];
 static int cmd_cnt;
 
 #include "workspace.inc"
@@ -154,7 +155,7 @@ static void check_once(const struct daemon_config *cfg)
 		}
 
 		if (cmd[0]) {
-			if (!cmd_seen(cmd, &result)) {
+				if (!cmd_seen(cmd, exe->generation, &result)) {
 				if (cfg->verbose)
 					printf(" Compiling");
 				if (run_cmd(cmd, "workspace update")) {
@@ -168,7 +169,7 @@ static void check_once(const struct daemon_config *cfg)
 						printf("\n");
 					continue;
 				}
-				if (remember_cmd(cmd, result)) {
+					if (remember_cmd(cmd, exe->generation, result)) {
 					if (cfg->verbose)
 						printf("\n");
 					continue;

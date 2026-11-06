@@ -20,6 +20,7 @@ rt, identity, platform = common.rt, common.kernel_identity, common.mm_platform
 mm = common.module('mmap1_existing_mm_checks', ROOT/'bench/mmap_writer/linux70.py')
 execution = common.module('mmap1_execution_session', ROOT/'bench/mmap1/execution_session.py')
 kernel_log = common.module('mmap1_kernel_log', ROOT/'bench/mmap1/kernel_log.py')
+sample_window = common.module('mmap1_sample_window', ROOT/'bench/mmap1/sample_window.py')
 REVISION = '75f66e45697e6f5f49c33dd950c4e6b289198f8f'
 PINNED = {
     'main.c': '48d4640f151801fdfb5f3915c822cf280c713df3c1998068e16ce0c961cbf746',
@@ -42,18 +43,21 @@ def plan(model='both'):
             for m in MODELS if model in (m, 'both') for n in WORKERS]
 
 
-def argv(binary, workers):
+def argv(binary, workers, upstream_samples=UPSTREAM_S):
     rt.require(type(workers) is int and workers in WORKERS, 'unplanned worker count')
-    return [str(binary), '-t', str(workers), '-s', str(UPSTREAM_S), '-m']
+    rt.require(type(upstream_samples) is int and 1 <= upstream_samples <= 1200, 'invalid upstream sample count')
+    return [str(binary), '-t', str(workers), '-s', str(upstream_samples), '-m']
 
 
-def parse_output(text, workers):
+def parse_output(text, workers, upstream_samples=UPSTREAM_S, measured_samples=SAMPLES):
     """Validate the pinned harness boundary and original integer average."""
     lines = text.splitlines()
-    rt.require(len(lines) == 12 and lines[:2] == ['testcase:'+DESCRIPTION, 'warmup'] and
+    rt.require(type(measured_samples) is int and 1 <= measured_samples <= upstream_samples,
+               'invalid final sample window')
+    rt.require(len(lines) == 10 + upstream_samples and lines[:2] == ['testcase:'+DESCRIPTION, 'warmup'] and
                lines[8] == 'measurement', 'truncated or unexpected upstream output')
     rows = []
-    for line in lines[2:8]+lines[9:11]:
+    for line in lines[2:8]+lines[9:-1]:
         match = re.fullmatch(r'min:(\d+) max:(\d+) total:(\d+)', line)
         rt.require(match is not None, 'invalid upstream sample')
         low, high, total = map(int, match.groups())
@@ -62,15 +66,19 @@ def parse_output(text, workers):
         rows.append(dict(min=low, max=high, total=total))
     match = re.fullmatch(r'average:(\d+)', lines[-1])
     rt.require(match is not None, 'missing upstream average')
-    rt.require(all(row['min'] > 0 for row in rows[WARMUP_SAMPLES:]),
+    rt.require(all(row['min'] > 0 for row in rows[-measured_samples:]),
                'a worker made no progress in a measured interval')
     total = sum(row['total'] for row in rows[WARMUP_SAMPLES:])
     raw = int(match[1])
-    rt.require(raw == total//UPSTREAM_S, 'upstream average/interval conservation failed')
-    return dict(warmup=rows[:WARMUP_SAMPLES], measurement=rows[WARMUP_SAMPLES:],
-                completed_pairs=total, nominal_seconds=SAMPLES, pairs_per_nominal_second=total/SAMPLES,
-                upstream_average=raw, upstream_average_divisor=UPSTREAM_S,
-                upstream_counter_boundary='-s2: six pre-marker samples, two post-marker samples, integer average divides by2',
+    rt.require(raw == total//upstream_samples, 'upstream average/interval conservation failed')
+    measured = rows[-measured_samples:]
+    measured_total = sum(row['total'] for row in measured)
+    return dict(warmup=rows[:WARMUP_SAMPLES], preparation=rows[WARMUP_SAMPLES:-measured_samples], measurement=measured,
+                completed_pairs=measured_total, nominal_seconds=measured_samples,
+                pairs_per_nominal_second=measured_total/measured_samples,
+                upstream_average=raw, upstream_average_divisor=upstream_samples,
+                upstream_completed_pairs=total,
+                upstream_counter_boundary=f'-s{upstream_samples}: six pre-marker samples, {upstream_samples} post-marker samples; final {measured_samples} selected',
                 elapsed_interval_seconds_observed=False)
 
 
@@ -318,7 +326,8 @@ def timeout_tasks(parent):
 
 
 def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
-              diagnostic_log_bytes=None, diagnostic_collector=None, learning=False):
+              diagnostic_log_bytes=None, diagnostic_collector=None, learning=False,
+              window_observer=None):
     """One normal upstream lifetime; observations end during its own warmup."""
     if execution_session is None:
         idle(allow_identity_probe=diagnostic)
@@ -329,7 +338,15 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     verify()
     out.mkdir()
     binary = inputs['binaries'][spec['model']]
-    command = argv(binary, spec['workers'])
+    upstream_samples = spec.get('upstream_samples', UPSTREAM_S)
+    measured_samples = spec.get('measured_samples', SAMPLES)
+    timeout_seconds = spec.get('timeout_seconds', 30)
+    use_window = spec.get('sample_window', False)
+    rt.require(type(timeout_seconds) is int and 30 <= timeout_seconds <= 1300,
+               'application deadline outside bounds')
+    rt.require(type(use_window) is bool and (window_observer is None or use_window),
+               'window observer requires line-delivered output')
+    command = argv(binary, spec['workers'], upstream_samples)
     traced = diagnostic or (execution_session is not None and
                            execution_session.expected['parameters']['service_trace'] == 'Y')
     result = dict(schema=1, **spec, passed=False, drained=False, scored=not traced and not learning,
@@ -349,6 +366,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
     collector = None
     window_begin = None
     child = None
+    window = None
     started = time.monotonic_ns()
     before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
     try:
@@ -366,17 +384,23 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
             started = time.monotonic_ns()
             before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
         with (out/'upstream.log').open('w') as log:
+            if use_window:
+                window = sample_window.SampleWindow(log, WARMUP_SAMPLES + upstream_samples - measured_samples,
+                                                     measured_samples, window_observer)
             previous = os.sched_getaffinity(0)
             try:
                 os.sched_setaffinity(0, {63})
-                child = subprocess.Popen(command, cwd=Path(binary).parent, stdout=log, stderr=subprocess.STDOUT,
+                child = subprocess.Popen(command, cwd=Path(binary).parent,
+                                         stdout=window.slave if window else log, stderr=subprocess.STDOUT,
                                          start_new_session=True, env={'PATH':'/usr/bin:/bin', 'LC_ALL':'C',
                                                                      'HOME':os.environ.get('HOME', '/root')})
             finally:
                 os.sched_setaffinity(0, previous)
+            if window:
+                window.start()
             result.update(pid=child.pid, started_ns=started)
             rt.write_json(out/'command.json', dict(argv=command, pid=child.pid, started_ns=started,
-                          timeout_seconds=30, cwd=str(Path(binary).parent)))
+                          timeout_seconds=timeout_seconds, cwd=str(Path(binary).parent)))
             # Six upstream one-second warmup samples precede measurement. Read
             # proc only within four seconds of launch, never in the timed tail.
             rows = None
@@ -395,7 +419,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
                        'warmup placement observation exceeded its deadline')
             rt.write_json(out/'result.json', result)
             try:
-                code = child.wait(timeout=max(1, 30-(time.monotonic_ns()-started)/1e9))
+                code = child.wait(timeout=max(1, timeout_seconds-(time.monotonic_ns()-started)/1e9))
             except subprocess.TimeoutExpired as error:
                 if diagnostic:
                     try:
@@ -404,6 +428,8 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
                     except Exception as observation_error:
                         result['timeout_observation_error'] = repr(observation_error)
                 raise rt.Failure('TIMEOUT', 'mmap1 lifetime unknown; no cleanup attempted', unsafe=True) from error
+            if window:
+                result['sample_window'] = window.finish()
         after_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
         result.update(returncode=code, process_elapsed_ns=time.monotonic_ns()-started,
                       cpu_time_scope='whole upstream lifetime including warmup and reaped workers',
@@ -414,7 +440,7 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         rt.require(code == 0, 'upstream application failed')
         rt.require(all(task_gone(row) for row in rows), 'upstream worker survived normal shutdown')
         result['drained'] = True
-        parsed = parse_output((out/'upstream.log').read_text(), spec['workers'])
+        parsed = parse_output((out/'upstream.log').read_text(), spec['workers'], upstream_samples, measured_samples)
         # A diagnostic receipt proves progress/shape, never contributes a score.
         result['output'] = parsed if not traced else dict(output_valid=True, measured_samples=len(parsed['measurement']))
         verify()
@@ -427,6 +453,12 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
         result.update(state='FAILED', passed=False, error=repr(error))
         raise
     finally:
+        if window is not None:
+            stopped = window.abort()
+            result['sample_window_reader_stopped'] = stopped
+            if not stopped:
+                result.update(state='FAILED', passed=False, drained=False,
+                              sample_window_error='reader or observation callback still active; its log remains owned')
         try:
             if collector is not None or window_begin is not None:
                 summary = (collector.finish() if collector is not None else

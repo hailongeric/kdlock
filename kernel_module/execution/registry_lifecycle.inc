@@ -85,6 +85,7 @@ int kd_exe_init(void)
 	int i, ret;
 
 	kd_jit_timing_reset();
+	kd_image_learning_reset();
 	kd_native_terminal_init();
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;

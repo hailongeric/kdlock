@@ -131,11 +131,24 @@ static inline int kd_image_guard_site_valid(const struct kd_address_guard_site *
 	return 1;
 }
 
+/* Internal read receipt; not part of the device wire format. */
+struct kd_image_learning_receipt {
+	unsigned long generation;
+	unsigned long revision;
+	unsigned int valid;
+};
+
+struct kd_image_learning_state {
+	unsigned long revision;
+};
+
 struct kd_image_upload {
 	struct kd_jit_image *image;
 	void *code; /* destination fixed by the first chunk, including old spin */
 	struct kd_recv_pkt identity;
 	unsigned long covered;
+	struct kd_image_learning_receipt acknowledgment;
+	struct kd_image_learning_receipt observed[KD_MAX_EXE];
 };
 
 #define KD_ORIGIN_SITE_MAX 64U
@@ -209,6 +222,10 @@ int kd_image_validate_origin_sites(const struct kd_jit_image *image);
 int kd_image_relocate_direct(struct kd_jit_image *image);
 int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 		     unsigned long base_generation);
+int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,
+	unsigned long base_generation, const struct kd_image_learning_receipt *receipt);
+unsigned int kd_exe_slot_index(const struct kd_exe_info *entry);
+void kd_image_learning_reset(void);
 int kd_image_publish_mutable(struct kd_exe_info *entry, void *code,
 			     unsigned long length);
 const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry);
@@ -217,4 +234,6 @@ void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image
 /* Terminal for this stable entry, including markers from an older image. */
 void kd_image_disable(struct kd_exe_info *entry);
 void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot);
+void kd_exe_snapshot_learning(const struct kd_exe_info *entry,
+	struct kd_exe_info *snapshot, struct kd_image_learning_receipt *receipt);
 #endif

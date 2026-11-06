@@ -47,7 +47,7 @@ class Pilot(campaign.Campaign):
                         registry_after=observation['registry_after'], learning_limit=limit,
                         delegation_proved=False)
                     self.save()
-                    summary = dict(model=model, workers=workers, nominal_seconds=2,
+                    summary = dict(model=model, workers=workers, nominal_seconds=application['output']['nominal_seconds'],
                         rate=application['output']['pairs_per_nominal_second'],
                         passed=True, drained=True, scored=False, worker_attributed_proof=False,
                         coverage='image learning; JIT/native shares unmeasured',

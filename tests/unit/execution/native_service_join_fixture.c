@@ -156,7 +156,8 @@ static struct kd_exe_info frontier_entry;
 static const struct kd_jit_image frontier_image = {
 	.entry = &frontier_entry, .entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
 	.immutable = 1,
-	.requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER,
+	.requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER |
+		KD_IMAGE_REQUIRE_RETAINED_MISS,
 };
 static struct kd_exe_info *kd_exes = &frontier_entry;
 static const struct kd_jit_image *kd_published_images[1];
@@ -171,9 +172,6 @@ static const struct kd_jit_image *kd_image_current(const struct kd_exe_info *ent
 { assert(entry == &frontier_entry); return smp_load_acquire(&kd_published_images[0]); }
 static bool kd_exe_publish_status(struct kd_exe_info *entry, int status)
 { smp_store_release(&entry->status_code, status); return true; }
-static bool kd_exe_entry_is_ready(const struct kd_exe_info *entry, unsigned int pid, unsigned long ip)
-{ return entry == &frontier_entry && !pid && ip == entry->RIP && capture_source_open &&
-         smp_load_acquire(&entry->status_code) == KD_EXE_NORMAL; }
 static uint32_t get_unaligned_le32(const void *p) { uint32_t v; memcpy(&v,p,4); return v; }
 #define KD_PR_INFO(...) ((void)0)
 static unsigned int preceding_effects, frontier_calls;
@@ -338,7 +336,20 @@ static void check_capture_publication(void)
 	assert(frontier_entry.status_code == KD_EXE_NORMAL && !frontier_entry.tgt_addr);
 	kd_image_report(&frontier_entry, &next, KD_EXE_CALL_MISS, 0x3333, 0);
 	assert(frontier_entry.status_code == KD_EXE_CALL_MISS && frontier_entry.tgt_addr == 0x3333);
+	assert(kd_exe_capture_image(&frontier_entry, 0x1000) == &next);
+	frontier_entry.status_code = KD_EXE_IJ_MISS;
+	assert(kd_exe_capture_image(&frontier_entry, 0x1000) == &next);
+	for (int status = KD_EXE_NATIVE_ONLY; status <= KD_EXE_INST_LIMIT; ++status) {
+		if (status == KD_EXE_NORMAL || status == KD_EXE_CALL_MISS || status == KD_EXE_IJ_MISS)
+			continue;
+		frontier_entry.status_code = status;
+		assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	}
+	frontier_entry.status_code = KD_EXE_CALL_MISS;
+	assert(!kd_exe_capture_image(&frontier_entry, 0x1001));
+	frontier_entry.pid = 1;
 	assert(!kd_exe_capture_image(&frontier_entry, 0x1000));
+	frontier_entry.pid = 0;
 	assert(kd_image_publish(&frontier_entry, &first, 1) == -ESTALE);
 	frontier_entry.status_code = KD_EXE_NORMAL;
 	next.immutable = 0;

@@ -26,6 +26,10 @@ def main():
                               if line.startswith('#define KD_JIT_ABI_OFFSET ')) + '\n'
     declarations += definition(read_source(ROOT / 'include/kd_image.h'),
                                'struct kd_jit_image {').rstrip() + ';\n'
+    for name in ('struct kd_image_learning_receipt {', 'struct kd_image_learning_state {'):
+        declarations += definition(read_source(ROOT / 'include/kd_image.h'), name).rstrip() + ';\n'
+    declarations += 'static struct kd_image_learning_state kd_image_learning[KD_MAX_EXE];\n'
+    declarations += 'static unsigned long kd_image_report_superseded;\n'
     for source, names in (
         (header, ('enum kd_exec_native_operation {', 'struct kd_exec_native_route {')),
         (continuation_header, ('enum kd_exec_cont_state {', 'enum kd_exec_cont_wait {')),
@@ -46,7 +50,9 @@ def main():
                         'static bool kd_exec_cont_no_stack_service(const struct kd_exec_frame *frame)')),
         (admission, ('void kd_admission_read_to_native(struct kd_admission *a)',)),
         (read_source(ROOT / 'kernel_module/execution/images.inc'),
-            ('int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,',
+            ('unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)',
+             'int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,',
+             'int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,',
              'void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image,')),
         (read_source(ROOT / 'kernel_module/exe.c'),
             ('const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,',)),

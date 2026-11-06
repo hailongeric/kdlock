@@ -1590,7 +1590,7 @@ static int kd_service_capture_internal(void *object, enum kd_admission_kind kind
 		return kd_service_observe_local(observe_index, false, object, kind, state);
 	}
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	exe = kd_exe_find_ready(0, ip);
+	exe = kd_get_exe(0, ip);
 	image = kd_exe_capture_image(exe, ip);
 	if (!image) {
 		/* No source instruction has executed and no delegated request was

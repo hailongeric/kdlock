@@ -1,6 +1,20 @@
 /* Mutex image lifetime is session-wide. Only private, never-published uploads
  * can return a block to the bounded pool. The publication gate also serializes
  * generation-scoped miss metadata; it is never held across copying or JIT. */
+static struct kd_image_learning_state kd_image_learning[KD_MAX_EXE];
+static unsigned long kd_image_report_superseded;
+
+void kd_image_learning_reset(void)
+{
+	memset(kd_image_learning, 0, sizeof(kd_image_learning));
+	kd_image_report_superseded = 0;
+}
+
+unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)
+{
+	return entry - kd_exes;
+}
+
 static struct kd_jit_image *kd_image_alloc_pool(bool near_text)
 {
 	unsigned long publish_flags;
@@ -200,10 +214,12 @@ int kd_image_validate_origin_sites(const struct kd_jit_image *image)
 	return 0;
 }
 
-int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
-		     unsigned long base_generation)
+int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,
+	unsigned long base_generation, const struct kd_image_learning_receipt *receipt)
 {
 	unsigned long publish_flags;
+	struct kd_image_learning_state *learning = &kd_image_learning[kd_exe_slot_index(entry)];
+	bool pending, acknowledged;
 	int ret = 0;
 
 	publish_flags = kd_code_block_gate_lock();
@@ -212,22 +228,41 @@ int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 	else if (entry->generation != base_generation || base_generation == ~0UL)
 		ret = -ESTALE;
 	else {
+		pending = entry->lock_kind == KD_EXE_LOCK_MUTEX &&
+			entry->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+			kd_image_current(entry) && kd_image_current(entry)->immutable &&
+			(kd_image_current(entry)->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) &&
+			(entry->status_code == KD_EXE_CALL_MISS || entry->status_code == KD_EXE_IJ_MISS);
+		acknowledged = receipt && receipt->valid &&
+			receipt->generation == base_generation &&
+			receipt->revision == learning->revision;
 		image->entry = entry;
 		image->generation = base_generation + 1;
 		entry->code_block = image->code; /* status snapshot, never dispatch authority */
 		entry->requirements = image->requirements;
 		entry->generation = image->generation;
-		entry->tgt_addr = 0;
-		entry->jump_from = 0;
+		if (!pending || acknowledged) {
+			entry->tgt_addr = 0;
+			entry->jump_from = 0;
+		}
 		if (image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS)
 			KD_PR_INFO("JIT direct published: entry=%lx generation=%lu code=%px length=%lu requirements=%u\n",
 				   entry->RIP, image->generation, image->code, image->length,
 				   image->requirements);
 		smp_store_release(&kd_published_images[entry - kd_exes], image);
-		smp_store_release(&entry->status_code, KD_EXE_NORMAL);
+		/* A report accepted after the compiler's read remains pending. Its
+		 * old image may retire, but the already accepted request is retained. */
+		if (!pending || acknowledged)
+			smp_store_release(&entry->status_code, KD_EXE_NORMAL);
 	}
 	kd_code_block_gate_unlock(publish_flags);
 	return ret;
+}
+
+int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
+		     unsigned long base_generation)
+{
+	return kd_image_publish_learned(entry, image, base_generation, NULL);
 }
 
 /* Preserve historical ordinary spin uploads, but serialize their final
@@ -261,11 +296,24 @@ void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image
 	if ((!kd_image_current(entry) && entry->lock_kind != KD_EXE_LOCK_MUTEX) ||
 	    (image && image == kd_image_current(entry))) {
 		if (entry->status_code != KD_EXE_NATIVE_ONLY) {
+			if (image && image->immutable && entry->lock_kind == KD_EXE_LOCK_MUTEX &&
+			    entry->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+			    (image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) {
+				if ((status == KD_EXE_CALL_MISS || status == KD_EXE_IJ_MISS) &&
+				    entry->status_code == status && entry->tgt_addr == target &&
+				    entry->jump_from == from)
+					goto out;
+				if (entry->status_code == KD_EXE_CALL_MISS ||
+				    entry->status_code == KD_EXE_IJ_MISS)
+					kd_image_report_superseded++;
+				kd_image_learning[kd_exe_slot_index(entry)].revision++;
+			}
 			entry->tgt_addr = target;
 			entry->jump_from = from;
 			kd_exe_publish_status(entry, status);
 		}
 	}
+out:
 	kd_code_block_gate_unlock(publish_flags);
 }
 
@@ -281,10 +329,21 @@ void kd_image_disable(struct kd_exe_info *entry)
 	kd_code_block_gate_unlock(publish_flags);
 }
 
-void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot)
+void kd_exe_snapshot_learning(const struct kd_exe_info *entry,
+	struct kd_exe_info *snapshot, struct kd_image_learning_receipt *receipt)
 {
 	unsigned long publish_flags;
 	publish_flags = kd_code_block_gate_lock();
 	memcpy(snapshot, entry, sizeof(*snapshot));
+	if (receipt)
+		*receipt = (struct kd_image_learning_receipt) {
+			.valid = 1, .generation = entry->generation,
+			.revision = kd_image_learning[kd_exe_slot_index(entry)].revision,
+		};
 	kd_code_block_gate_unlock(publish_flags);
+}
+
+void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot)
+{
+	kd_exe_snapshot_learning(entry, snapshot, NULL);
 }

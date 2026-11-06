@@ -2026,6 +2026,14 @@ pending tuple survives and requests another generation; late reports from an old
 bound image remain ignored. An upload without a matching read receipt consumes
 no pending report. No new wire field or lock/wrapper API is introduced.
 
+The first successful registry read of each entry/generation stays fixed in its
+writable open description; repeated reads or another root cannot replace it.
+The first upload chunk freezes that receipt through completion. A failed whole
+read removes only receipts newly recorded by that read. If the first read
+observed NORMAL before a later miss, the upload conservatively preserves that
+miss and can require another compilation; it must not guess which snapshot a
+caller used. Source lifecycle initialization clears the revision state.
+
 Generation-qualified daemon command deduplication must not reuse an earlier
 generation's compiler outcome as a new translation. Source closure and permanent
 entry exclusion still deny fresh capture. No pending array, new backend,

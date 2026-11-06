@@ -272,13 +272,14 @@ int main(void)
 	test_compiler_launch();
 	test_metrics_contract();
 	test_chunk_session();
-	assert(!remember_cmd("rejected fixture", TRANSLATOR_NATIVE_ONLY));
-	assert(cmd_seen("rejected fixture", &result));
+	assert(!remember_cmd("rejected fixture", 1, TRANSLATOR_NATIVE_ONLY));
+	assert(cmd_seen("rejected fixture", 1, &result));
 	assert(result == TRANSLATOR_NATIVE_ONLY);
-	assert(!remember_cmd("successful fixture", 0));
-	assert(cmd_seen("successful fixture", &result));
+	assert(!remember_cmd("successful fixture", 1, 0));
+	assert(cmd_seen("successful fixture", 1, &result));
 	assert(result == 0);
-	assert(!cmd_seen("failed fixture", &result));
+	assert(!cmd_seen("failed fixture", 1, &result));
+	assert(!cmd_seen("successful fixture", 2, &result));
 
 	fd = mkstemp(path);
 	assert(fd >= 0);

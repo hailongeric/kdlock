@@ -14,6 +14,10 @@ FIELDS = ('selected local local_no_image local_success local_cancel prepublicati
 
 
 class Observation(pilot.Pilot):
+    def window_observer(self):
+        return dict(service=self.snapshot(), registry=campaign.rt.registry(),
+                    superseded_reports=int((campaign.controller.PARAMETERS / 'image_report_superseded').read_text()))
+
     def extra_provider_parameters(self):
         campaign.rt.require(len(self.models) == 1, 'one task name per observation session required', 'DATA_ERROR')
         return ['service_observe=1', 'service_observe_comm=mmap1_' + self.models[0],
@@ -73,7 +77,9 @@ class Observation(pilot.Pilot):
             print('OBSERVATION_RESULT ' + json.dumps(observation), flush=True)
 
     def run(self):
-        campaign.rt.require(self.models in (['threads'], ['processes']) and self.counts in ([1, 8], [1, 2, 8], [1, 2, 4, 8], [1, 2, 4, 6, 8]),
+        campaign.rt.require(self.models in (['threads'], ['processes']) and
+                            (self.counts in ([1, 8], [1, 2, 8], [1, 2, 4, 8], [1, 2, 4, 6, 8]) or
+                             (self.c.get('long_warmup') is True and self.counts == [8])),
                             'one to four priming applications and one eight-worker observation required', 'DATA_ERROR')
         self.result['instrumentation'] = 'selected-service-counters'
         self.result['translation_during_application'] = not self.c['pause_translation']
