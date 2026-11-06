@@ -1888,3 +1888,16 @@ scored repeat or an indefinite stabilization loop. Keep the tested provider
 and its source identity; only the runner count check changes. Freeze the new
 runner while idle, retain distinct runner/provider identities, and do not pool
 the threads and processes observations as one source/configuration score.
+
+The short run completed with exact retirement and normal-kernel recovery.
+Threads were 188263 / 46445.5 pairs/s at one/eight workers; processes were
+220110.5 / 329826 / 389100 at one/two/eight. The eight-worker values remain
+79.37% / 77.02% below preserved Native. Both roots now publish images, but
+each eight-worker point still has eight JIT handbacks per root and zero
+ordinary delegated returns; most requests remain local. No performance
+acceptance follows. Processes exercised generation two and learned the
+callback return edge `0xffffffffc0e32bec` → `0xffffffff814f4a38` (exit 15),
+confirming progress beyond the prior CALL miss. Generation three was published
+afterward and remains unrun. Actual CLI/STI hits are not counted separately.
+See the [scoped report](../../bench/results/10.176.26.71/bench/mmap1-frontier-eabe454b/README.md)
+for source identities, all rates, regressions, focused checks and proof limits.
