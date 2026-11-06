@@ -150,7 +150,7 @@ static struct kd_service_root root;
 static struct kd_rwsem sem;
 static struct kd_mutex nested;
 static unsigned long origin_words[64];
-static const unsigned char frontier_text[] = { 0x67, 0x48, 0x0f, 0xb9, 0x3a };
+static unsigned char frontier_text[] = { 0x67, 0x48, 0x0f, 0xb9, 0x3a };
 static struct kd_exe_info frontier_entry;
 static const struct kd_jit_image frontier_image = {
 	.entry = &frontier_entry, .entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
@@ -158,13 +158,15 @@ static const struct kd_jit_image frontier_image = {
 	.requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_SOURCE_FRONTIER,
 };
 static unsigned int preceding_effects, frontier_calls;
+static int frontier_source_error, frontier_read_error;
 #define THREAD_SIZE sizeof(origin_words)
 #define task_stack_page(task) ((task)->stack)
 static struct kd_exec_frame *kd_exec_current_frame(void) { return &root.continuation.frame; }
 static int kd_source_pin_text_range(unsigned long address, unsigned long size)
-{ assert(address == (unsigned long)frontier_text && size == sizeof(frontier_text)); return 0; }
+{ assert(address == (unsigned long)frontier_text && size == sizeof(frontier_text)); return frontier_source_error; }
 static int copy_from_kernel_nofault(void *out, const void *in, size_t size)
-{ assert(in == frontier_text && size == sizeof(frontier_text)); memcpy(out, in, size); return 0; }
+{ assert(in == frontier_text && size == sizeof(frontier_text));
+  if (frontier_read_error) return frontier_read_error; memcpy(out, in, size); return 0; }
 static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct kd_regs *regs)
 { assert(frame == &root.continuation.frame && regs == &frame->regs); ++frontier_calls; }
 static bool need_resched(void) { return true; }
@@ -200,6 +202,7 @@ static void kd_admission_downgrade(struct kd_admission *a)
 { assert(a->sem && a->read_state == KD_ADMISSION_READ_NONE); ++a->sem->readers;
 	a->read_state = KD_ADMISSION_READ_LIVE; kd_admission_release(a); }
 #include "join_production.h"
+#include "native_service_join_frontier.inc"
 
 static const struct kd_exec_service_ops ops = {
 	.native_match = kd_service_native_match,
@@ -255,6 +258,7 @@ static void *execute(void *unused)
 		 * its established suspended context for the existing registry join. */
 		cont->state = KD_CONT_BOUND;
 		cont->executor = current;
+		check_frontier_refusals(cont);
 		/* The dispatcher maps this successful dedicated outcome to retained
 		 * HANDOFF. Execute the real consumer before the existing ACCEPT join. */
 		assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));

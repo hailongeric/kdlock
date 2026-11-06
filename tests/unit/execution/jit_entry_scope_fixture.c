@@ -51,8 +51,6 @@ typedef struct {
  * ownership and service transactions have separate live fixtures. */
 struct kd_exec_continuation {
 	enum kd_exec_cont_state state;
-	struct task_struct *executor;
-	bool source_lease;
 	const struct kd_exec_service_ops *service_ops;
 	void *service_scope;
 	bool body_reported;
@@ -521,7 +519,6 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/origin_instruction.inc"
 #include "jit_entry_scope/root_native_escape.inc"
 #include "jit_entry_scope/native_calls.inc"
-#include "jit_entry_scope/source_frontier.inc"
 #include "jit_entry_scope/address_guard.inc"
 #include "jit_entry_scope/strings.inc"
 #include "jit_entry_scope/string_copy.inc"
@@ -537,7 +534,6 @@ int main(void)
 	check_terminal_and_indirect_calls();
 	check_retained_indirect_tails();
 	check_current_position_misses();
-	check_source_frontier();
 	check_root_native_escape();
 	check_address_guard();
 	check_string_services();
