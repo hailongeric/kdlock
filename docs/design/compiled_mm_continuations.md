@@ -1965,3 +1965,39 @@ scope clipping, seed propagation and ordinary later learning. Do not extend
 the sequence indefinitely or investigate unrelated branches. Keep the
 original backend, immutable images and all continuation/ownership/ACK rules,
 retain every result, then restore and verify the normal kernel.
+
+Runner `00413a9ae078234b14933f4ed9a385f48d26e05c` completed all five
+applications, each once, at 220615 / 327626.5 / 380204 / 389485.5 /
+391778.5 pairs/s. All drained and exact retirement passed. Generation four
+was selected for the final eight-process application; each root recorded
+eight JIT entries, eight completed handbacks and zero wholly delegated
+returns. The final rate remains 76.86% below the preserved Native control;
+this is an instrumented learning observation, not a steady-image comparison
+or acceptance. Generation five was published afterward and is unrun. The
+normal kernel was restored and verified idle with an empty one-shot entry.
+
+Both new reached targets match the configured discovery boundary. The saved
+generation-four source-comment graphs place `mas_wr_node_store`
+(`0xffffffff826b4a80`, mmap) and `mas_leaf_max_gap`
+(`0xffffffff826b2720`, munmap) at minimum direct-CALL depth six from that
+generation's entry/history seeds; their callers are at depth five. Each
+caller pushes its real return word before reaching an exit-1 callee stub.
+Previous learned seeds have decoded bodies. These observations support
+ordinary bounded coverage growth, with no evidence here of lost seeds,
+incorrect release clipping or source-capacity refusal. All ten compiler jobs
+completed successfully.
+
+The new target visits are observed in the histories; the six-edge chains are
+inferred structural paths, not dynamic branch traces or attribution of every
+handback. Fresh munmap priming learned `__memcpy`, not the prior session's
+`mas_mab_cp`, so its generation-four image differs. Do not equate generation
+numbers across those sessions. Fixed `call_roots` come from the initial
+entry/history seeds; a discovered descendant does not reset its callers' or
+unrelated later work's depth. The five-edge setting bounds new discovery,
+not all already decoded paths or the permitted runtime stack depth.
+
+Stop this bounded live series here. The
+[generation-four report](../../bench/results/10.176.26.71/bench/mmap1-generation4-00413a9a/README.md)
+retains the selected images, source paths, all rates and counts, compiler
+outcomes, and recovery evidence. This diagnosis changes no runtime protocol
+and does not implement the separately selected child-image design.
