@@ -2457,6 +2457,15 @@ restoration and performance acceptance remain outside this correction.
 
 ## Fresh v21 publication and one warmed process point
 
+Status on 2026-11-07: candidate `f1b410fe` passed 17 focused runner fixtures,
+but the platform stopped the implementation turn after KD boot and before
+provider loading. No live publication check, learning application or measurement
+ran. Saved normal-kernel recovery is verified; the stopped launch has not been
+retried. The [offline continuation review](../../bench/results/10.176.26.71/tests/continuation-review-f1b410fe-20261107/README.md)
+retains exact receipts, source findings, the unimplemented learning-continuation
+limit and the supported feedback route. The plan below remains unexecuted and
+paused pending a permitted resolution of the platform restriction.
+
 Continue the same branch from `c1b624c985cec9defc600e8f72e69fee15bbbfd2`.
 Reuse the checked provider built from `d726952d8f03bffe62b83028fb51d6726fb1f434`
 only after its binary/source identities are verified. Use the unchanged
