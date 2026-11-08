@@ -2525,9 +2525,15 @@ controller reached its 90-second bound. That attempt is retained; inspection
 confirmed drain and unchanged source, and the bounded 240-second rerun passed
 in 99.313 seconds.
 
-The 85-case text-regions check retains 14 failures and one error, reproduced
+The provenance run's 85-case text-regions check retains 14 failures and one error, reproduced
 with identical 15 failing/error headings on baseline `ec9436d6` production;
-it remains a failed check. Post-timeout and final inspection found no remaining
+that execution remains a failed check. The later
+[fixture contract repair](../../bench/results/10.176.26.71/tests/text-regions-ef7e11d8/README.md)
+at `ca28cbc7` corrects the capability dictionary, paged-registry fixture and
+retired eager-closure/compact-window expectations without changing production.
+Its fresh full driver passes 85 tests, five affected drivers pass another 61,
+and both basic C programs pass. The original failures and timeout are retained.
+Post-timeout and final inspection found no remaining
 test processes or project modules and unchanged source. No provider load,
 campaign, measurement or live publication gate has run, and the platform
 restriction remains unchanged.
