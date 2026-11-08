@@ -28,14 +28,16 @@ def frontier_emission(assembly, target, source_ip):
 
 
 def current_capability():
-    packet = bytearray(16)
+    packet = bytearray(b'\xff' * 16)
     with open('/dev/kd_dev', 'rb', buffering=0) as device:
-        fcntl.ioctl(device, 0x80104b73, packet, True)
+        result = fcntl.ioctl(device, 0x80104b73, packet, True)
     version, features, stack, percpu = struct.unpack('<IIII', packet)
-    rt.require(version == 21 and features & 262144,
-               'current provider does not advertise the v21 source frontier', 'DATA_ERROR')
-    return dict(version=version, features=features, mutex_stack_bytes=stack,
-                percpu_module_bytes=percpu)
+    rt.require(type(result) is int and result == 0,
+               'current provider capability query failed', 'DATA_ERROR')
+    try:
+        return provenance.capability_contract(version, features, stack, percpu)
+    except ValueError as error:
+        raise rt.Failure('DATA_ERROR', 'current publication capability differs: ' + str(error)) from error
 
 
 def deltas(before, after):
@@ -127,14 +129,20 @@ class SettledObservation(observe.Observation):
         rt.require(captured is not None, 'required publication has no provenance chain', 'DATA_ERROR')
         try:
             observation = json.loads(Path(captured['observation']).read_bytes())
-            chain, _, assembly, history = provenance.associate(
+            chain, files, assembly, history = provenance.associate(
                 captured['root'], observation, self.exact.expected, required)
+            manifest = json.loads(files['compile-%d/manifest.json' % chain['compile_attempt_id']])
+            compiler_capability = {name: manifest['capabilities'][name] for name in
+                ('version', 'features', 'mutex_stack_bytes', 'percpu_module_bytes')}
+            capability = current_capability()
+            provenance.require(capability == compiler_capability,
+                               'current and captured compiler capabilities differ')
         except (OSError, ValueError, KeyError, TypeError) as error:
             self.provenance_failure(error)
         row = chain['registry']
         reached = target in {int(line, 16) for line in history.decode().splitlines() if line.strip()}
         emission = frontier_emission(assembly.decode(), target, source_ip)
-        evidence = dict(required=required, registry=row, capability=current_capability(),
+        evidence = dict(required=required, registry=row, capability=capability,
             chain=chain, assembly=dict(sha256=hashlib.sha256(assembly).hexdigest()),
             history=dict(sha256=hashlib.sha256(history).hexdigest()),
             historically_reached_target=reached, leased_direction_compiler=True, **emission)

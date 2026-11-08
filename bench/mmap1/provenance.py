@@ -4,6 +4,12 @@ This module never opens a provider, queries a registry, waits, or retries. The
 caller supplies the result of its already scheduled observation. Generation
 association follows the immutable ABI2 publication contract in the frozen source;
 it is neither a kernel byte digest nor a returned-body witness.
+
+For v22, matching compiler/upload summaries identify the source-derived frozen
+batch association. The captured files omit the full kernel snapshot and ACK
+record, so they do not independently establish exact record membership or the
+completeness of cumulative history. Any batch ACK inference follows the source's
+successful-publication rule. Instrumented capture is not quiet timing.
 """
 import hashlib
 import json
@@ -19,6 +25,8 @@ MAX_FILE = 8 * 1024 * 1024
 MAX_IMAGE = 4 * 1024 * 1024
 U64_MAX = (1 << 64) - 1
 KEY = ('pid', 'tgid', 'entry', 'lock_kind', 'entry_abi')
+CAP_FRONTIER = 1 << 18
+CAP_BATCH = 1 << 19
 
 
 def require(condition, message):
@@ -28,6 +36,57 @@ def require(condition, message):
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def capability_contract(version, features, stack, percpu):
+    """Validate only the two known publication contracts, without device I/O."""
+    require(all(type(value) is int and 0 <= value < 1 << 32
+                for value in (version, features, stack, percpu)), 'invalid capability fields')
+    require(version in (21, 22), 'unsupported publication capability version')
+    # Bit 2 belongs to the retired v3 owned-image contract, not these versions.
+    known = ((1 << (19 if version == 21 else 20)) - 1) & ~4
+    required = (1 << 3) | (1 << 4) | (1 << 14) | CAP_FRONTIER
+    if version == 22:
+        required |= CAP_BATCH
+    require(not features & ~known and features & required == required,
+            'publication capability features differ')
+    dependencies = (
+        (1 << 9, (1 << 7) | (1 << 8)),
+        (1 << 10, 1 << 9), (1 << 11, 1 << 5), (1 << 13, 1 << 5),
+        (1 << 15, 1 << 14), (1 << 16, 1 << 15), (1 << 17, 1 << 14),
+    )
+    require(all(not features & selected or features & needed
+                for selected, needed in dependencies), 'capability dependency differs')
+    require(stack == (256 if features & 1 else 0) and
+            percpu == (8192 if features & 2 else 0), 'capability memory bounds differ')
+    return dict(version=version, features=features, mutex_stack_bytes=stack,
+                percpu_module_bytes=percpu)
+
+
+def learning_summary(context, upload, upload_context, base):
+    """Join producer summaries; raw batch records and kernel ACKs are absent."""
+    names = {'token', 'revision', 'slot', 'count', 'overflow_report_events'}
+    summaries = [owner.get('learning_snapshot') for owner in (context, upload, upload_context)]
+    for value in summaries:
+        require(type(value) is dict and set(value) == names and
+                all(type(value[name]) is int for name in names), 'batch snapshot summary unavailable')
+        require(0 < value['token'] <= U64_MAX and
+                0 <= value['slot'] < 511 and 0 <= value['count'] <= 32 and
+                value['count'] <= value['revision'] <= U64_MAX and
+                0 <= value['overflow_report_events'] <= U64_MAX,
+                'batch snapshot summary bounds differ')
+    value = summaries[0]
+    require(value == summaries[1] == summaries[2],
+            'compiler and upload batch snapshots differ')
+    require(upload.get('cache_hit') is False and upload_context.get('cache_hit') is False,
+            'batch upload used the legacy command cache')
+    require(type(context['entry'].get('status')) is int, 'batch root status unavailable')
+    if value['count'] == 0:
+        require(base == 0 and context['entry']['status'] == -1 and value['revision'] == 0,
+                'empty batch snapshot is not a cold root')
+    else:
+        require(context['entry']['status'] in (1, 2), 'batch root has no recoverable report')
+    return dict(value)
 
 
 def read(root, relative, files, limit=MAX_FILE):
@@ -57,7 +116,8 @@ def record(root, relative, files):
             result[key] = value
         return result
     value = json.loads(read(root, relative, files), object_pairs_hook=distinct)
-    require(type(value) is dict and value.get('schema') == 1, 'unsupported record schema')
+    require(type(value) is dict and type(value.get('schema')) is int and value['schema'] == 1,
+            'unsupported record schema')
     return value
 
 
@@ -106,7 +166,8 @@ def associate(root, observation, expected, required):
         require(directory.is_dir() and not directory.is_symlink() and
                 re.fullmatch(r'upload-[1-9][0-9]*', directory.name), 'invalid upload directory')
         upload = record(root, directory.name + '/receipt.json', files)
-        require(upload['session_id'] == session['session_id'] and
+        require(type(upload.get('upload_id')) is int and 0 < upload['upload_id'] <= U64_MAX and
+                upload['session_id'] == session['session_id'] and
                 directory.name == 'upload-' + str(upload['upload_id']), 'upload session/id differs')
         if (upload.get('upload_complete') is True and
                 upload.get('base_generation') == row['generation'] - 1 and
@@ -115,6 +176,7 @@ def associate(root, observation, expected, required):
     require(len(candidates) == 1, 'matching completed upload is missing or ambiguous')
     upload_dir, upload = candidates[0]
     require(upload.get('evidence_complete') is True and
+            all(type(upload['entry'].get(key)) is int for key in KEY) and
             all(upload['entry'].get(key) == row[key] for key in KEY) and
             upload['requirements'] == row['requirements'], 'upload identity/evidence differs')
     base = upload['base_generation']
@@ -140,8 +202,10 @@ def associate(root, observation, expected, required):
             'cached compiler manifest differs')
     context = record(root, compile_dir + '/context.json', files)
     require(manifest['context'] == context and context['session_id'] == session['session_id'] and
-            context['compile_attempt_id'] == attempt and
+            type(context.get('compile_attempt_id')) is int and context['compile_attempt_id'] == attempt and
+            all(type(context['entry'].get(key)) is int for key in KEY) and
             all(context['entry'].get(key) == row[key] for key in KEY) and
+            type(context['entry'].get('base_generation')) is int and
             context['entry']['base_generation'] == base and
             manifest.get('complete') is True and manifest.get('evidence_complete') is True,
             'compiler attempt or completeness differs')
@@ -164,18 +228,38 @@ def associate(root, observation, expected, required):
             'captured compiler header differs')
     caps = manifest['capabilities']
     raw = bytes.fromhex(caps['raw_hex'])
-    require(caps.get('validated') is True and caps.get('result') == 0 and len(raw) == 16,
+    require(caps.get('validated') is True and type(caps.get('result')) is int and
+            caps['result'] == 0 and len(raw) == 16,
             'compiler capability response unvalidated')
     version, features, stack, percpu = struct.unpack('<IIII', raw)
-    require((version, features, stack, percpu) ==
-            tuple(caps[key] for key in ('version', 'features', 'mutex_stack_bytes', 'percpu_module_bytes')) and
-            version == 21 and features & 262144 and
-            caps['parsed'].get('source_frontier_direction') is True,
+    require(all(type(caps.get(key)) is int for key in
+                ('version', 'features', 'mutex_stack_bytes', 'percpu_module_bytes')) and
+            (version, features, stack, percpu) ==
+            tuple(caps[key] for key in ('version', 'features', 'mutex_stack_bytes', 'percpu_module_bytes')),
+            'captured capability fields differ')
+    capability_contract(version, features, stack, percpu)
+    require(caps['parsed'].get('source_frontier_direction') is True and
+            caps['parsed'].get('mutex_images') is True and caps['parsed'].get('mutex_exclusive') is True,
             'compiler direction capability differs')
+    batch = None
+    if version == 22:
+        upload_context = record(root, upload_dir + '/context.json', files)
+        fields = ('session_id', 'upload_id', 'compile_attempt_id', 'manifest_sha256',
+                  'cache_hit', 'entry', 'base_generation', 'protocol', 'requirements', 'image_length')
+        require(all(type(upload_context.get(name)) is type(upload[name]) and
+                    upload_context[name] == upload[name] for name in fields) and
+                all(type(upload_context['entry'].get(key)) is int for key in KEY),
+                'upload context differs from accepted payload receipt')
+        batch = learning_summary(context, upload, upload_context, base)
+    else:
+        require(context.get('learning_snapshot') is None and upload.get('learning_snapshot') is None,
+                'v21 compiler or upload carries a batch snapshot')
     descriptor = manifest['descriptor']
     require(descriptor.get('validated') is True and descriptor.get('inherited') is True and
             descriptor.get('relationship') == 'inherited_description_then_dup' and
             descriptor.get('inherited_fd') == writer['fd'] and
+            type(descriptor.get('fd')) is int and descriptor['fd'] >= 0 and
+            descriptor['fd'] != writer['fd'] and type(caps.get('fd')) is int and
             descriptor['access_flags'] & os.O_ACCMODE == os.O_RDWR and
             descriptor['source_info']['state'] == 0 and caps['fd'] == descriptor['fd'],
             'compiler descriptor lineage differs')
@@ -228,6 +312,11 @@ def associate(root, observation, expected, required):
         payload_sha256=digest(payload), payload_bytes=len(payload),
         base_generation=base, observed_generation=row['generation'], registry=row,
         final_write_end_ns=completed, read_start_ns=start, read_end_ns=end)
+    if batch is not None:
+        chain.update(learning_snapshot=batch,
+            batch_identity_basis='source-derived compiler and upload summaries',
+            batch_record_membership_proved=False, kernel_acknowledgment_witnessed=False,
+            cumulative_history_completeness_proved=False)
     return chain, files, assembly, history
 
 

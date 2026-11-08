@@ -1,7 +1,9 @@
 """Fixed-session continuation checks; execute only in the development VM."""
 import importlib.util
+import io
 from pathlib import Path
 import sys
+import struct
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -15,6 +17,70 @@ spec.loader.exec_module(settled)
 
 
 class FixedSession(unittest.TestCase):
+    def test_current_capability_accepts_known_v21_and_v22_with_one_query(self):
+        features = (1 << 1) | (1 << 3) | (1 << 4) | (1 << 14) | (1 << 18)
+        cases = ((21, True, 0), (22, True, 0), (21, False, 0), (22, False, 0),
+                 (21, True, (1 << 7) | (1 << 9)), (22, True, (1 << 8) | (1 << 9)))
+        for version, has_module_arena, strings in cases:
+            bits = features | strings | ((1 << 19) if version == 22 else 0)
+            if not has_module_arena:
+                bits &= ~2
+            arena = 8192 if has_module_arena else 0
+            def queried(device, command, packet, mutate):
+                self.assertFalse(device.closed)
+                self.assertEqual((command, mutate), (0x80104b73, True))
+                packet[:] = struct.pack('<IIII', version, bits, 0, arena)
+                return 0
+            with self.subTest(version=version, has_module_arena=has_module_arena, strings=strings), \
+                 patch('builtins.open', return_value=io.BytesIO()) as opened, \
+                 patch.object(settled.fcntl, 'ioctl', side_effect=queried) as query:
+                self.assertEqual(settled.current_capability(),
+                    dict(version=version, features=bits, mutex_stack_bytes=0, percpu_module_bytes=arena))
+            opened.assert_called_once_with('/dev/kd_dev', 'rb', buffering=0)
+            query.assert_called_once()
+
+    def test_current_capability_refuses_unknown_or_inconsistent_contracts(self):
+        bits = (1 << 1) | (1 << 3) | (1 << 4) | (1 << 14) | (1 << 18)
+        cases = [(20, bits, 0, 8192), (23, bits | (1 << 19), 0, 8192),
+                 (21, bits | (1 << 19), 0, 8192), (22, bits, 0, 8192),
+                 (22, bits | (1 << 19) | (1 << 20), 0, 8192),
+                 (21, bits & ~(1 << 3), 0, 8192), (21, bits & ~(1 << 4), 0, 8192),
+                 (21, bits & ~(1 << 14), 0, 8192), (21, bits & ~(1 << 18), 0, 8192),
+                 (21, bits | 4, 0, 8192), (21, bits, 256, 8192),
+                 (21, bits | 1, 0, 8192), (21, bits, 0, 8191),
+                 (21, bits & ~2, 0, 8192),
+                 (21, bits | (1 << 9), 0, 8192),
+                 (21, bits | (1 << 10), 0, 8192), (21, bits | (1 << 11), 0, 8192),
+                 (21, bits | (1 << 13), 0, 8192), (21, bits | (1 << 16), 0, 8192)]
+        for packet in cases:
+            def queried(device, command, output, mutate):
+                output[:] = struct.pack('<IIII', *packet)
+                return 0
+            with self.subTest(packet=packet), \
+                 patch('builtins.open', return_value=io.BytesIO()), \
+                 patch.object(settled.fcntl, 'ioctl', side_effect=queried) as query:
+                with self.assertRaises(settled.rt.Failure) as raised:
+                    settled.current_capability()
+            self.assertEqual(raised.exception.status, 'DATA_ERROR')
+            query.assert_called_once()
+        with patch('builtins.open', return_value=io.BytesIO()), \
+             patch.object(settled.fcntl, 'ioctl', return_value=1) as query:
+            with self.assertRaises(settled.rt.Failure):
+                settled.current_capability()
+        query.assert_called_once()
+
+    def test_current_capability_refuses_incomplete_success_packet(self):
+        bits = (1 << 1) | (1 << 3) | (1 << 4) | (1 << 14) | (1 << 18)
+        def queried(device, command, output, mutate):
+            output[:8] = struct.pack('<II', 21, bits)
+            return 0
+        with patch('builtins.open', return_value=io.BytesIO()), \
+             patch.object(settled.fcntl, 'ioctl', side_effect=queried) as query:
+            with self.assertRaises(settled.rt.Failure) as raised:
+                settled.current_capability()
+        self.assertEqual(raised.exception.status, 'DATA_ERROR')
+        query.assert_called_once()
+
     def test_publication_gate_distinguishes_body_from_missing_callee_stub(self):
         marker = 'MOVABS R14, 0x3000\nMOV Stack_IJ, 16\nJMP full_exit\n'
         body = '/*\nloc_2000\nPUSH RBP\n*/\nloc_2000:\nPUSH RBP\n'

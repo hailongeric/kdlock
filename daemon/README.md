@@ -163,10 +163,16 @@ child measurements include optional evidence work inside that child. History
 preparation, compatibility export and upload occur outside its measured interval;
 these measurements supply no quiet performance result.
 
-The stopped `bench/mmap1/settled.py` and `bench/mmap1/provenance.py` paths retain
-their v21-specific capability gates. This v22 implementation is not claimed
-ready for those launch/evidence paths. Future compatibility work requires
-separate review; no campaign gate is relaxed here.
+The settled/provenance helpers recognize the exact v21 and v22 capability
+contracts. For v22 they require matching batch summaries in the compiler
+context, upload context and completed upload receipt, alongside the existing
+accepted-payload, descriptor, time and generation checks. These are observations
+of the existing operations; compatibility adds no device query or polling.
+The recorded summary does not contain the full batch rows or a kernel ACK
+receipt. Batch membership and acknowledgment remain source-derived inferences,
+not independently reported kernel facts. Overflow events remain visible and do
+not prove complete learning. Stable-image, read-tail and execution requirements
+remain in force. Live provider/publication and campaign validation remain unrun.
 
 In the current implementation, mutex uploads stage a new immutable block and bind
 its generation to each frame. Old versions remain until session teardown, and old
