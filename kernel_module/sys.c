@@ -10,6 +10,7 @@
 #include <linux/errno.h>
 #include <linux/fs.h>
 #include <linux/kallsyms.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/percpu.h>
@@ -22,6 +23,7 @@
 #include "exe.h"
 #include "kd_api_provider.h"
 #include "kd_lock.h"
+#include "kd_learning_api.h"
 #include "kd_mutex.h"
 #include "kd_source.h"
 #include "kd_service_calls.h"
@@ -34,6 +36,9 @@ static struct cdev kd_cdev;
 static struct class *kd_class;
 /* Serializes uploads with rejection, not execution of already published code. */
 static DEFINE_KD_MUTEX(kd_publish_lock);
+/* Tokens are unique across writable descriptions in this provider lifetime.
+ * The existing publication mutex serializes allocation and every view change. */
+static unsigned long long kd_learning_next_token;
 
 static int kd_dev_open(struct inode *inode, struct file *file)
 {
@@ -81,7 +86,8 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 			KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |
 			KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |
 			KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ |
-			KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER,
+			KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER |
+			KD_JIT_CAP_LEARNING_BATCH,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -105,6 +111,234 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 	return caps;
 }
 
+static bool kd_learning_reserved_zero(const __u64 *words, unsigned int count)
+{
+	unsigned int i;
+
+	for (i = 0; i < count; ++i)
+		if (words[i])
+			return false;
+	return true;
+}
+
+static bool kd_learning_root_equal(const struct kd_learning_root *left,
+				  const struct kd_learning_root *right)
+{
+	return left->slot == right->slot && left->pid == right->pid &&
+		left->rip == right->rip && left->lock_kind == right->lock_kind &&
+		left->entry_abi == right->entry_abi;
+}
+
+static struct kd_exe_info *kd_learning_find_root(const struct kd_learning_root *root)
+{
+	struct kd_exe_info *entry;
+
+	if (root->pid < 0 || !root->rip || root->lock_kind != KD_EXE_LOCK_MUTEX ||
+	    root->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return NULL;
+	entry = root->slot == KD_LEARNING_SLOT_LOOKUP ?
+		kd_get_exe(root->pid, root->rip) :
+		(struct kd_exe_info *)kd_exe_get_slot(root->slot);
+	if (!entry || smp_load_acquire(&entry->status_code) == KD_EXE_UNUSED ||
+	    READ_ONCE(entry->pid) != root->pid || READ_ONCE(entry->RIP) != root->rip ||
+	    READ_ONCE(entry->lock_kind) != root->lock_kind ||
+	    READ_ONCE(entry->entry_abi) != root->entry_abi)
+		return NULL;
+	return entry;
+}
+
+static void kd_learning_clear_view(struct kd_image_upload *upload)
+{
+	upload->learning_view_valid = 0;
+	upload->learning_bound = 0;
+	upload->learning_upload_id = 0;
+	upload->learning_receipt.valid = 0;
+}
+
+static bool kd_learning_upload_matches(const struct kd_image_upload *upload,
+				      const struct kd_recv_pkt *head)
+{
+	const struct kd_learning_snapshot *view = &upload->learning_snapshot;
+
+	return upload->learning_view_valid && upload->learning_bound &&
+		upload->learning_receipt.valid && upload->learning_receipt.batch &&
+		upload->learning_receipt.generation == view->base_generation &&
+		upload->learning_receipt.revision == view->revision &&
+		head->pid == view->root.pid && head->RIP == view->root.rip &&
+		head->entry_abi == view->root.entry_abi &&
+		head->base_generation == view->base_generation &&
+		head->upload_id == upload->learning_upload_id;
+}
+
+static long kd_learning_snapshot_locked(struct kd_image_upload *upload,
+					void __user *argument)
+{
+	struct kd_learning_snapshot *request = &upload->learning_request;
+	struct kd_learning_snapshot *view = &upload->learning_snapshot;
+	struct kd_image_learning_receipt receipt;
+	struct kd_exe_info snapshot, *entry;
+	unsigned long long overflow;
+	unsigned int count;
+
+	/* Only the request header is input. The record array is output from the
+	 * coherent ledger snapshot, never a userspace-supplied learning history. */
+	if (copy_from_user(request, argument, KD_LEARNING_SNAPSHOT_HEADER_SIZE))
+		return -EFAULT;
+	if (request->version != KD_LEARNING_API_VERSION ||
+	    request->header_size != KD_LEARNING_SNAPSHOT_HEADER_SIZE ||
+	    request->record_size != KD_LEARNING_RECORD_SIZE ||
+	    request->capacity != KD_LEARNING_CAPACITY ||
+	    !kd_learning_reserved_zero(request->reserved, ARRAY_SIZE(request->reserved)))
+		return -EPROTO;
+	if (upload->learning_view_valid) {
+		if (!request->token)
+			return -EBUSY;
+		if (request->token != view->token ||
+		    !kd_learning_root_equal(&request->root, &view->root) ||
+		    request->base_generation != view->base_generation ||
+		    request->revision != view->revision)
+			return -ESTALE;
+		return copy_to_user(argument, view, sizeof(*view)) ? -EFAULT : 0;
+	}
+	if (request->token)
+		return -ESTALE;
+	if (request->revision || request->count || request->flags || request->overflow_report_events)
+		return -EINVAL;
+	if (upload->covered || upload->image)
+		return -EBUSY;
+	if (!kd_source_is_open())
+		return -ESHUTDOWN;
+	entry = kd_learning_find_root(&request->root);
+	if (!entry)
+		return -ENOENT;
+	if (kd_learning_next_token == ~0ULL)
+		return -EOVERFLOW;
+	/* Only this bounded metadata view is initialized. Pending ledger rows and
+	 * packet/frame storage retain their own exact lifetimes and contents. */
+	memset(view, 0, sizeof(*view));
+	kd_exe_snapshot_misses(entry, &snapshot, view->records, &count, &overflow, &receipt);
+	if (snapshot.status_code == KD_EXE_NATIVE_ONLY)
+		return -ESHUTDOWN;
+	if (snapshot.generation != request->base_generation)
+		return -ESTALE;
+	if (!receipt.valid || !receipt.batch || receipt.generation != snapshot.generation ||
+	    count > KD_LEARNING_CAPACITY)
+		return -EPROTO;
+	view->version = KD_LEARNING_API_VERSION;
+	view->header_size = KD_LEARNING_SNAPSHOT_HEADER_SIZE;
+	view->record_size = KD_LEARNING_RECORD_SIZE;
+	view->capacity = KD_LEARNING_CAPACITY;
+	view->root = request->root;
+	view->root.slot = kd_exe_slot_index(entry);
+	view->base_generation = snapshot.generation;
+	view->revision = receipt.revision;
+	view->token = ++kd_learning_next_token;
+	view->overflow_report_events = overflow;
+	view->count = count;
+	view->flags = overflow ? KD_LEARNING_OVERFLOW : 0;
+	upload->learning_receipt = receipt;
+	if (copy_to_user(argument, view, sizeof(*view))) {
+		kd_learning_clear_view(upload);
+		return -EFAULT;
+	}
+	/* A copied view may be bound later; an initial failed copy grants nothing.
+	 * Reports after this point cannot change the frozen compiler input. */
+	upload->learning_view_valid = 1;
+	return 0;
+}
+
+static long kd_learning_bind_locked(struct kd_image_upload *upload,
+				    void __user *argument)
+{
+	struct kd_learning_bind request;
+	const struct kd_learning_snapshot *view = &upload->learning_snapshot;
+	struct kd_exe_info *entry;
+
+	if (copy_from_user(&request, argument, sizeof(request)))
+		return -EFAULT;
+	if (request.version != KD_LEARNING_API_VERSION || request.size != sizeof(request) ||
+	    !kd_learning_reserved_zero(request.reserved, ARRAY_SIZE(request.reserved)))
+		return -EPROTO;
+	if (!request.token || !request.upload_id || !upload->learning_view_valid ||
+	    !upload->learning_receipt.valid || !upload->learning_receipt.batch ||
+	    upload->learning_receipt.generation != view->base_generation ||
+	    upload->learning_receipt.revision != view->revision ||
+	    request.token != view->token ||
+	    !kd_learning_root_equal(&request.root, &view->root) ||
+	    request.base_generation != view->base_generation || request.revision != view->revision)
+		return -ESTALE;
+	entry = kd_learning_find_root(&request.root);
+	if (!entry || READ_ONCE(entry->generation) != request.base_generation)
+		return -ESTALE;
+	if (!kd_source_is_open() ||
+	    smp_load_acquire(&entry->status_code) == KD_EXE_NATIVE_ONLY)
+		return -ESHUTDOWN;
+	if (upload->covered || upload->image) {
+		/* A userspace read/transport failure can leave part of this view's
+		 * private upload staged. Restart only that exact unpublished attempt;
+		 * neither the frozen receipt nor pending records are acknowledged. */
+		if (!upload->acknowledgment.batch ||
+		    !kd_learning_upload_matches(upload, &upload->identity))
+			return -EBUSY;
+		kd_image_discard(upload->image);
+		upload->image = NULL;
+		upload->code = NULL;
+		upload->covered = 0;
+		upload->acknowledgment.valid = 0;
+	}
+	upload->learning_upload_id = request.upload_id;
+	upload->learning_bound = 1;
+	return 0;
+}
+
+static long kd_learning_cancel_locked(struct kd_image_upload *upload,
+				      void __user *argument)
+{
+	struct kd_learning_cancel request;
+	const struct kd_learning_snapshot *view = &upload->learning_snapshot;
+
+	if (copy_from_user(&request, argument, sizeof(request)))
+		return -EFAULT;
+	if (request.version != KD_LEARNING_API_VERSION || request.size != sizeof(request) ||
+	    !kd_learning_reserved_zero(request.reserved, ARRAY_SIZE(request.reserved)))
+		return -EPROTO;
+	if (!upload->learning_view_valid || !request.token || request.token != view->token ||
+	    !kd_learning_root_equal(&request.root, &view->root) ||
+	    request.base_generation != view->base_generation)
+		return -ESTALE;
+	if (upload->acknowledgment.batch &&
+	    kd_learning_upload_matches(upload, &upload->identity)) {
+		kd_image_discard(upload->image);
+		upload->image = NULL;
+		upload->code = NULL;
+		upload->covered = 0;
+		upload->acknowledgment.valid = 0;
+	}
+	/* Releasing a userspace snapshot is not publication or learning progress. */
+	kd_learning_clear_view(upload);
+	return 0;
+}
+
+static long kd_learning_ioctl(struct file *file, unsigned int command,
+			      unsigned long argument)
+{
+	struct kd_image_upload *upload = file->private_data;
+	long ret;
+
+	if (!upload)
+		return -EBADF;
+	if (kd_mutex_lock_interruptible(&kd_publish_lock))
+		return -ERESTARTSYS;
+	if (command == KD_LEARNING_SNAPSHOT)
+		ret = kd_learning_snapshot_locked(upload, (void __user *)argument);
+	else if (command == KD_LEARNING_BIND)
+		ret = kd_learning_bind_locked(upload, (void __user *)argument);
+	else
+		ret = kd_learning_cancel_locked(upload, (void __user *)argument);
+	kd_mutex_local_unlock(&kd_publish_lock);
+	return ret;
+}
+
 static long kd_dev_ioctl(struct file *file, unsigned int command,
 			 unsigned long arg)
 {
@@ -114,6 +348,10 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 	int ret;
 
 	switch (command) {
+	case KD_LEARNING_SNAPSHOT:
+	case KD_LEARNING_BIND:
+	case KD_LEARNING_CANCEL:
+		return kd_learning_ioctl(file, command, arg);
 	case KD_API_SELECT:
 	case KD_API_CANCEL:
 	case KD_API_QUERY:
@@ -288,11 +526,17 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 	if (smp_load_acquire(&entry->status_code) == KD_EXE_NATIVE_ONLY)
 		return -EPERM;
 	if (!head.offset) {
+		/* Legacy writers retain their exact single-tuple receipts. A writer
+		 * with a frozen batch must bind that view before starting its upload. */
+		if ((upload->learning_view_valid || upload->learning_bound) &&
+		    !kd_learning_upload_matches(upload, &head))
+			return -ESTALE;
 		kd_image_discard(upload->image);
 		upload->image = NULL;
 		upload->covered = 0;
 		upload->identity = head;
-		upload->acknowledgment = upload->observed[kd_exe_slot_index(entry)];
+		upload->acknowledgment = upload->learning_bound ? upload->learning_receipt :
+			upload->observed[kd_exe_slot_index(entry)];
 		upload->code = entry->code_block;
 		if (entry->lock_kind == KD_EXE_LOCK_MUTEX || head.requirements ||
 		    (kd_image_current(entry) && kd_image_current(entry)->immutable)) {
@@ -378,6 +622,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			if (ret)
 				return ret;
 		}
+		if (upload->acknowledgment.batch)
+			kd_learning_clear_view(upload);
 		upload->covered = 0;
 	}
 	return count;
@@ -418,6 +664,15 @@ int kd_sys_init(void)
 {
 	struct device *device;
 	int ret;
+
+	BUILD_BUG_ON(sizeof(struct kd_exe_info) != 64);
+	BUILD_BUG_ON(sizeof(struct kd_recv_pkt) != 64);
+	BUILD_BUG_ON(sizeof(struct kd_learning_root) != 24);
+	BUILD_BUG_ON(sizeof(struct kd_learning_record) != KD_LEARNING_RECORD_SIZE);
+	BUILD_BUG_ON(offsetof(struct kd_learning_snapshot, records) != KD_LEARNING_SNAPSHOT_HEADER_SIZE);
+	BUILD_BUG_ON(sizeof(struct kd_learning_snapshot) != KD_LEARNING_SNAPSHOT_SIZE);
+	BUILD_BUG_ON(sizeof(struct kd_learning_bind) != KD_LEARNING_BIND_SIZE);
+	BUILD_BUG_ON(sizeof(struct kd_learning_cancel) != KD_LEARNING_CANCEL_SIZE);
 
 	ret = alloc_chrdev_region(&kd_devno, 0, 1, "kd_dev");
 	if (ret) {

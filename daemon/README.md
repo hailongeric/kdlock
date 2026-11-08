@@ -36,7 +36,7 @@ packages. [requirements.txt](../disassem/requirements.txt) specifies dependency 
 | `--verbose` | Initialization/miss/compiler messages |
 | `--metrics` | Additional compiler-child wall/CPU/resource JSON; off by default |
 
-Kernel entries use pid 0 for lookup but keep the tgid of the process that registered
+Kernel benchmark entries use pid 0 for lookup but keep the tgid of the process that registered
 them. Here pid is a process identifier, tgid a thread-group identifier and RIP the
 entry instruction address. Workspace mode changes directory organization; it does not select the lock,
 JIT or benchmark mode. The daemon creates `asm/` and the callee/indirect-target tables
@@ -52,6 +52,7 @@ CALL miss.
 | [workspace.inc](workspace.inc) | Workspace commands, learned targets and cache |
 | [compiler.inc](compiler.inc) | Child launch/reap and optional measurements |
 | [publication.inc](publication.inc) |ABI/layout checks, native-only status and upload |
+| [learning.inc](learning.inc) | Finite report snapshots, cumulative histories and frozen batch attempts |
 
 Private components remain in one translation unit and are tracked by the daemon
 build and basic daemon fixture. Entry identities 0/1/2/3 mean legacy/spin-clobber/
@@ -114,6 +115,58 @@ preparation candidate) and include the 48-byte protocol/ABI directory. Uploads
 use chunks of at most 4,000 bytes with a common upload ID, image length and base
 generation. Complete contiguous coverage and matching directory metadata are
 required before NORMAL publication; NORMAL alone does not prove execution.
+
+### Finite ABI2 learning batches
+
+CAPS version 22 and `KD_JIT_CAP_LEARNING_BATCH` (bit 19) select the batch path
+for immutable ABI2 mutex roots and their initial UNINIT preparation. Existing
+registry/upload packets remain 64 bytes, image protocols remain 2/3, and wrapper
+words are unchanged. Spin/rwlock and older providers retain their existing
+daemon path. This source implementation is not live publication or performance
+evidence.
+
+Each root has 32 pending record slots in total, including records held by a
+frozen snapshot. Duplicate keys coalesce. When full, a new distinct report is
+rejected and increments `overflow_report_events`; existing records are never
+evicted. That counter counts rejection events, not exact distinct lost keys.
+Only successfully acknowledged slots become immediately reusable. Published
+images keep their existing session-wide lifetime.
+
+One writable open description owns one frozen snapshot at a time. The daemon
+unions that finite batch with cumulative CALL targets and IJ `(from,target)`
+pairs, freezes the resulting inputs, and compiles one complete image for that
+logical root. It bypasses the old shell-command cache and never polls until
+learning becomes quiet. Later reports belong to a later snapshot.
+
+Authoritative histories and attempts live below a fresh boot/daemon/device
+session and full root key, including slot, PID, TGID, entry, lock kind and ABI.
+The legacy workspace `asm/` is a compatibility export, never a batch compiler
+input. Batch startup preserves existing directories. A cold generation-zero
+root can initialize empty histories; a root with an existing generation must
+have the same session receipt and both cumulative leaves. Missing history or a
+different session refuses preparation rather than transplanting old module
+pointers or forgetting acknowledged input.
+
+Before the first upload chunk, `KD_LEARNING_BIND` binds the snapshot token and
+revision to that upload ID on the same descriptor. A failed upload retains the
+original attempt's input and artifact files for retry with a new upload ID.
+Private partial staging may restart against that exact view. Reading a
+snapshot, compiling it, canceling it, or failing an upload acknowledges no
+records. Successful final publication acknowledges exactly its bound records;
+newer records remain pending. A deliberate native-only compiler decision stays
+separate: cancel the view, then issue the existing terminal status publication.
+
+Compiler/upload provenance records the batch token, revision and root slot
+alongside its original attempt identity. Those observations still do not prove
+that all supplied edges were emitted or that a JIT body returned. Compiler
+child measurements include optional evidence work inside that child. History
+preparation, compatibility export and upload occur outside its measured interval;
+these measurements supply no quiet performance result.
+
+The stopped `bench/mmap1/settled.py` and `bench/mmap1/provenance.py` paths retain
+their v21-specific capability gates. This v22 implementation is not claimed
+ready for those launch/evidence paths. Future compatibility work requires
+separate review; no campaign gate is relaxed here.
 
 In the current implementation, mutex uploads stage a new immutable block and bind
 its generation to each frame. Old versions remain until session teardown, and old

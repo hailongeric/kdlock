@@ -70,6 +70,39 @@ construct a private immutable generation and publish it once. Old frames retain
 that image, and old-generation misses cannot alter current metadata. Every
 published generation consumes the shared image capacity until session teardown.
 
+An eligible immutable ABI2 image remains available for new captures while its
+entry reports `CALL_MISS` or `IJ_MISS`; a recoverable miss requests a future
+replacement rather than withdrawing implemented paths. Each critical-section
+entry has one logical JIT and one current image pointer. The daemon regenerates
+that root from cumulative same-session history union a finite batch of new
+targets or edges. Earlier immutable generations coexist only for exact captured
+frames and continuations; publication neither patches their code nor redirects
+those frames to the replacement.
+
+The miss ledger holds 32 distinct outstanding records per entry, including a
+frozen compilation batch. It never evicts an admitted record. Full-ledger
+rejections increment a sticky, saturating report-event counter; repeated rejected
+keys can contribute repeatedly, so this is not an exact count of distinct lost
+edges. Normal handback and supported image eligibility continue. A rejected key
+needs another reached report after space becomes available. Finite nonblocking
+storage does not preserve arbitrarily many distinct misses.
+
+The [daemon batch protocol](../../daemon/README.md) binds a coherent view to the
+same writable device description and exact root/base generation/revision.
+Successful publication acknowledges only that view's record sequences and
+immediately reuses those miss slots. Arrivals during compilation remain pending
+with their actual reporting generation; new reports from superseded images
+remain excluded. Failed builds/uploads and snapshot cancellation acknowledge
+nothing. These scalar learning records own no executable block, frame or source
+lease. Their acknowledgment does not reclaim a published image or release any
+execution ownership. Physical images still remain until session teardown.
+
+A batch acknowledgment associates compiler inputs with a published replacement;
+it does not prove complete edge coverage or returned-body execution. One
+invocation ends discovery at its first permanent handback, so batching combines
+different invocations and cannot reveal later frontiers on that same path. The
+independent munmap g9 return relationship remains a separate compiler issue.
+
 Ordinary spin/rwlock entries initially use an allocated in-place code block.
 Supported root instruction-marker images (requirements exactly 33) stage a new
 immutable block. The retained checked-address and historical string-image ABIs

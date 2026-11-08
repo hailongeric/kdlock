@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -15,11 +16,14 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "exe_info.h"
+#include "kd_source_api.h"
+#include "kd_learning_api.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define X86_KERNEL_ADDRESS_MIN 0xffff800000000000UL
@@ -59,6 +63,8 @@ static int cmd_cnt;
 #include "compiler.inc"
 
 #include "publication.inc"
+
+#include "learning.inc"
 
 static int valid_address(unsigned long addr)
 {
@@ -106,6 +112,19 @@ static void check_once(const struct daemon_config *cfg)
 	}
 
 	count = (size_t)len / entry_size;
+	if (learning.active) {
+		/* An incomplete upload owns the sole frozen view on this open
+		 * description. Retry it before acquiring another root's snapshot. */
+		for (i = 0; i < count; i++)
+			if (entries[i].pid == learning.entry.pid &&
+			    entries[i].RIP == learning.entry.RIP) {
+				learning_step(cfg, &entries[i]);
+				return;
+			}
+		if (!learning_cancel())
+			learning.active = false;
+		return;
+	}
 	for (i = 0; i < count; i++) {
 		struct kd_exe_info *exe = &entries[i];
 		int result = 0;
@@ -118,6 +137,14 @@ static void check_once(const struct daemon_config *cfg)
 		    (cfg->mode == MODE_V1 &&
 		     exe->status_code == KD_EXE_INST_LIMIT))
 			continue;
+		if (learning.enabled && exe->lock_kind == KD_EXE_LOCK_MUTEX &&
+		    exe->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+		    (exe->status_code == KD_EXE_UNINIT ||
+		     exe->status_code == KD_EXE_CALL_MISS || exe->status_code == KD_EXE_IJ_MISS)) {
+			if (learning_step(cfg, exe))
+				return;
+			continue;
+		}
 
 		if (exe->status_code == KD_EXE_UNINIT) {
 			if (make_init_cmd(cmd, sizeof(cmd), cfg, exe))
@@ -280,7 +307,15 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	provenance_start(sys_fd);
-	if (run_cmd("rm -rf -- 0x*", "workspace cleanup")) {
+	if (learning_start()) {
+		fprintf(stderr, "daemon: learning capability/session unavailable\n");
+		close(sys_fd);
+		sys_fd = -1;
+		return EXIT_FAILURE;
+	}
+	/* Batch histories are scoped below a new session and full root key.
+	 * Existing directories are evidence, never bootstrap inputs to delete. */
+	if (!learning.enabled && run_cmd("rm -rf -- 0x*", "workspace cleanup")) {
 		close(sys_fd);
 		sys_fd = -1;
 		return EXIT_FAILURE;

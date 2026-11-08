@@ -521,6 +521,21 @@ class DeviceSessionTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
                 device_session.source_frontier_direction()
 
+    def test_learning_batch_provider_preserves_translation_capabilities(self):
+        features = 59 | device_session.CAP_ORIGIN_CALL | device_session.CAP_SOURCE_FRONTIER
+        self.caps_packet = device_session.CAPS_STRUCT.pack(
+            22, features | device_session.CAP_LEARNING_BATCH, 256, 8192)
+        with device_session.session():
+            self.assertTrue(device_session.source_frontier_direction())
+            self.assertTrue(device_session._origin_call)
+        # Batch negotiation belongs to the daemon; accepting its feature bit
+        # must not weaken version checks or the immutable-image prerequisite.
+        for version, bits in ((21, features | device_session.CAP_LEARNING_BATCH),
+                              (22, 3 | device_session.CAP_LEARNING_BATCH)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, bits, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
+                self.fail('incompatible learning provider admitted')
+
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
         # not infer a weaker bound from a larger, shorter or future response.

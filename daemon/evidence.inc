@@ -8,6 +8,25 @@ struct provenance_compile {
 	char manifest_sha256[65];
 };
 
+static const struct kd_learning_snapshot *provenance_learning;
+
+static const char *provenance_learning_json(char *buffer, size_t size)
+{
+	int length;
+
+	if (!provenance_learning)
+		return "null";
+	length = snprintf(buffer, size,
+		"{\"token\":%llu,\"revision\":%llu,\"slot\":%u,\"count\":%u,\"overflow_report_events\":%llu}",
+		(unsigned long long)provenance_learning->token,
+		(unsigned long long)provenance_learning->revision,
+		provenance_learning->root.slot, provenance_learning->count,
+		(unsigned long long)provenance_learning->overflow_report_events);
+	if (length < 0 || (size_t)length >= size)
+		return "null";
+	return buffer;
+}
+
 struct provenance_upload {
 	bool selected;
 	int payload_fd;
@@ -18,6 +37,7 @@ struct provenance_upload {
 	struct kd_exe_info entry;
 	struct provenance_compile compiler;
 	bool cache_hit;
+	char learning_json[256];
 	char directory[PATH_MAX];
 };
 
@@ -181,7 +201,7 @@ static struct provenance_compile provenance_compile_begin(const struct kd_exe_in
 {
 	int saved_errno = errno;
 	struct provenance_compile result = { 0 };
-	char directory[PATH_MAX], path[PATH_MAX];
+	char directory[PATH_MAX], path[PATH_MAX], learning_json[256];
 	unsigned int attempt;
 
 	if (!provenance_selected(entry) ||
@@ -193,11 +213,13 @@ static struct provenance_compile provenance_compile_begin(const struct kd_exe_in
 	    !provenance_path(path, sizeof(path), "%s/context.json", directory))
 		goto out;
 	if (!provenance_json(path,
-		"{\"schema\":1,\"session_id\":\"%s\",\"compile_attempt_id\":%u,"
+		"{\"schema\":1,\"session_id\":\"%s\",\"compile_attempt_id\":%u,\"learning_snapshot\":%s,"
 		"\"entry\":{\"pid\":%d,\"tgid\":%d,\"entry\":%lu,\"lock_kind\":%d,"
 		"\"entry_abi\":%u,\"base_generation\":%lu,\"status\":%d,"
 		"\"target\":%lu,\"jump_from\":%lu}}\n",
-		provenance.session_id, attempt, entry->pid, entry->tgid, entry->RIP,
+		provenance.session_id, attempt,
+		provenance_learning_json(learning_json, sizeof(learning_json)),
+		entry->pid, entry->tgid, entry->RIP,
 		entry->lock_kind, entry->entry_abi, entry->generation, entry->status_code,
 		entry->tgt_addr, entry->jump_from))
 		goto out;
@@ -253,6 +275,12 @@ static void provenance_upload_begin(struct provenance_upload *upload,
 	upload->entry = *entry;
 	upload->compiler = provenance_current;
 	upload->cache_hit = cache_hit;
+	{
+		char learning_json[256];
+
+		snprintf(upload->learning_json, sizeof(upload->learning_json), "%s",
+			 provenance_learning_json(learning_json, sizeof(learning_json)));
+	}
 	if (upload->compiler.manifest_sha256[0])
 		snprintf(manifest, sizeof(manifest), "\"%s\"", upload->compiler.manifest_sha256);
 	else
@@ -265,11 +293,12 @@ static void provenance_upload_begin(struct provenance_upload *upload,
 	if (!provenance_path(path, sizeof(path), "%s/context.json", upload->directory) ||
 	    !provenance_json(path,
 		"{\"schema\":1,\"session_id\":\"%s\",\"upload_id\":%lu,"
-		"\"compile_attempt_id\":%u,\"manifest_sha256\":%s,\"cache_hit\":%s,"
+		"\"compile_attempt_id\":%u,\"manifest_sha256\":%s,\"cache_hit\":%s,\"learning_snapshot\":%s,"
 		"\"entry\":{\"pid\":%d,\"tgid\":%d,\"entry\":%lu,\"lock_kind\":%d,\"entry_abi\":%u},"
 		"\"base_generation\":%lu,\"protocol\":%u,\"requirements\":%u,\"image_length\":%lu}\n",
 		provenance.session_id, packet->upload_id, upload->compiler.compile_attempt_id,
-		manifest, cache_hit ? "true" : "false", entry->pid, entry->tgid, entry->RIP,
+		manifest, cache_hit ? "true" : "false", upload->learning_json,
+		entry->pid, entry->tgid, entry->RIP,
 		entry->lock_kind, entry->entry_abi, packet->base_generation, packet->version,
 		packet->requirements, packet->image_length))
 		upload->error = "upload_context_unavailable";
@@ -358,13 +387,14 @@ static void provenance_upload_end(struct provenance_upload *upload, bool complet
 	if (provenance_path(path, sizeof(path), "%s/receipt.json", upload->directory))
 		(void)provenance_json(path,
 			"{\"schema\":1,\"session_id\":\"%s\",\"upload_id\":%lu,"
-			"\"compile_attempt_id\":%u,\"manifest_sha256\":%s,\"cache_hit\":%s,"
+			"\"compile_attempt_id\":%u,\"manifest_sha256\":%s,\"cache_hit\":%s,\"learning_snapshot\":%s,"
 			"\"entry\":{\"pid\":%d,\"tgid\":%d,\"entry\":%lu,\"lock_kind\":%d,\"entry_abi\":%u},"
 			"\"base_generation\":%lu,\"protocol\":%u,\"requirements\":%u,\"image_length\":%lu,"
 			"\"accepted_length\":%lu,\"upload_complete\":%s,\"evidence_complete\":%s,"
 			"\"final_write_end_ns\":%" PRIu64 ",\"payload\":\"upload-%lu/payload.bin\",\"error\":%s}\n",
 			provenance.session_id, packet->upload_id, upload->compiler.compile_attempt_id,
-			manifest, upload->cache_hit ? "true" : "false", entry->pid, entry->tgid,
+			manifest, upload->cache_hit ? "true" : "false", upload->learning_json,
+			entry->pid, entry->tgid,
 			entry->RIP, entry->lock_kind, entry->entry_abi, packet->base_generation,
 			packet->version, packet->requirements, packet->image_length, upload->accepted_length,
 			complete ? "true" : "false", complete && !upload->error ? "true" : "false",

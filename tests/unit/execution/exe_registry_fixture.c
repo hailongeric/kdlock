@@ -678,6 +678,194 @@ static void check_service_source_publication(void)
 	kd_exe_exit();
 }
 
+/* These tests exercise publication metadata, not generated-code execution. */
+static struct kd_jit_image *learning_test_image(unsigned int requirements)
+{
+	struct kd_jit_image *image = kd_image_alloc();
+
+	CHECK(image != NULL);
+	if (!image)
+		abort();
+	image->length = KD_IMAGE_SERVICE_HEADER_SIZE;
+	image->requirements = requirements;
+	image->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	return image;
+}
+
+static void check_learning_batches(void)
+{
+	const unsigned int requirements = KD_IMAGE_REQUIRE_SERVICE_QUEUE |
+		KD_IMAGE_REQUIRE_ORIGIN_CALL | KD_IMAGE_REQUIRE_BUDGET_RESUME |
+		KD_IMAGE_REQUIRE_RETAINED_MISS;
+	const unsigned long call_a = 0x2222, call_b = 0x3333, call_c = 0x7777;
+	struct kd_learning_record records[KD_LEARNING_CAPACITY], frozen[KD_LEARNING_CAPACITY];
+	struct kd_image_learning_receipt batch, legacy, next;
+	struct kd_image_learning_state saved, *learning;
+	struct kd_exe_info *entry, snapshot, before;
+	struct kd_jit_image *replacement, *incompatible;
+	const struct kd_jit_image *old, *current_image;
+	unsigned long long overflow;
+	unsigned int count;
+
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	kd_exe_add_abi(0, key(0), KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	entry = kd_get_exe(0, key(0));
+	learning = &kd_image_learning[kd_exe_slot_index(entry)];
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 0, NULL) == 0);
+	old = kd_image_current(entry);
+	CHECK(entry->generation == 1 && entry->status_code == KD_EXE_NORMAL);
+
+	/* Kind and indirect source are both part of distinct-miss identity. All
+	 * four rows coexist; repeated pending CALL/IJ reports consume no slot. */
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, call_a, 0);
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, call_b, 0);
+	kd_image_report(entry, old, KD_EXE_IJ_MISS, call_a, 0x4444);
+	kd_image_report(entry, old, KD_EXE_IJ_MISS, call_a, 0x5555);
+	CHECK(learning->count == 4 && learning->revision == 4);
+	for (unsigned int i = 0; i < KD_LEARNING_CAPACITY; ++i) {
+		kd_image_report(entry, old, KD_EXE_CALL_MISS, call_a, 0);
+		kd_image_report(entry, old, KD_EXE_IJ_MISS, call_a, 0x4444);
+	}
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &batch);
+	CHECK(count == 4 && !overflow && batch.valid && batch.batch);
+	CHECK(batch.generation == 1 && batch.revision == 4);
+	CHECK(snapshot.generation == 1 && snapshot.status_code == KD_EXE_IJ_MISS);
+	for (unsigned int i = 0; i < count; ++i) {
+		CHECK(records[i].sequence == i + 1 && records[i].admitted_generation == 1);
+		CHECK(!records[i].reserved);
+	}
+	CHECK(records[0].kind == KD_EXE_CALL_MISS && records[0].target == call_a && !records[0].from);
+	CHECK(records[1].kind == KD_EXE_CALL_MISS && records[1].target == call_b && !records[1].from);
+	CHECK(records[2].kind == KD_EXE_IJ_MISS && records[2].target == call_a && records[2].from == 0x4444);
+	CHECK(records[3].kind == KD_EXE_IJ_MISS && records[3].target == call_a && records[3].from == 0x5555);
+	memcpy(frozen, records, count * sizeof(records[0]));
+
+	/* A fifth row arrives after the frozen view. Neither stale/source-closed
+	 * publication nor an incompatible replacement may consume any obligation. */
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, call_c, 0);
+	CHECK(learning->count == 5 && learning->revision == 5);
+	CHECK(!memcmp(frozen, records, 4 * sizeof(records[0])));
+	saved = *learning;
+	before = *entry;
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 0, &batch) == -ESTALE);
+	CHECK(kd_image_current(entry) == old && !replacement->entry);
+	CHECK(!memcmp(&saved, learning, sizeof(saved)) && !memcmp(&before, entry, sizeof(before)));
+	source_open = false;
+	CHECK(kd_image_publish_learned(entry, replacement, 1, &batch) == -ESHUTDOWN);
+	CHECK(kd_image_current(entry) == old && !replacement->entry);
+	CHECK(!memcmp(&saved, learning, sizeof(saved)) && !memcmp(&before, entry, sizeof(before)));
+	source_open = true;
+	incompatible = learning_test_image(requirements & ~KD_IMAGE_REQUIRE_RETAINED_MISS);
+	CHECK(kd_image_publish_learned(entry, incompatible, 1, &batch) == -EPROTO);
+	CHECK(kd_image_current(entry) == old && !incompatible->entry);
+	CHECK(!memcmp(&saved, learning, sizeof(saved)) && !memcmp(&before, entry, sizeof(before)));
+	kd_image_discard(incompatible);
+
+	CHECK(kd_image_publish_learned(entry, replacement, 1, &batch) == 0);
+	current_image = kd_image_current(entry);
+	CHECK(current_image == replacement && entry->generation == 2);
+	CHECK(entry->status_code == KD_EXE_CALL_MISS && entry->tgt_addr == call_c);
+	CHECK(learning->count == 1 && learning->revision == 5);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &next);
+	CHECK(count == 1 && records[0].sequence == 5 && records[0].target == call_c);
+	CHECK(records[0].admitted_generation == 1 && next.generation == 2);
+	CHECK(old->entry == entry && old->generation == 1 && old->code);
+	saved = *learning;
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x8888, 0);
+	CHECK(!memcmp(&saved, learning, sizeof(saved)) && entry->tgt_addr == call_c);
+
+	/* Reuse occurs only after ACK. The same CALL key from the new image is a
+	 * new obligation, while the carried C row retains its original generation. */
+	kd_image_report(entry, current_image, KD_EXE_CALL_MISS, call_a, 0);
+	kd_image_report(entry, current_image, KD_EXE_CALL_MISS, call_c, 0);
+	CHECK(learning->count == 2 && learning->revision == 6);
+	CHECK(learning->records[0].sequence == 6 && learning->records[0].admitted_generation == 2);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &next);
+	CHECK(count == 2 && records[0].sequence == 5 && records[1].sequence == 6);
+	CHECK(records[0].target == call_c && records[0].admitted_generation == 1);
+	CHECK(records[1].target == call_a && records[1].admitted_generation == 2);
+
+	/* A legacy read observes A only. Its watermark must not acknowledge an
+	 * older unseen C row or a B row admitted after that read. */
+	kd_exe_snapshot_learning(entry, &snapshot, &legacy);
+	CHECK(legacy.valid && !legacy.batch && legacy.kind == KD_EXE_CALL_MISS);
+	CHECK(legacy.target == call_a && legacy.revision == 6 && legacy.generation == 2);
+	kd_image_report(entry, current_image, KD_EXE_CALL_MISS, call_b, 0);
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 2, &legacy) == 0);
+	CHECK(entry->generation == 3 && learning->count == 2 && learning->revision == 7);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &batch);
+	CHECK(count == 2 && records[0].sequence == 5 && records[1].sequence == 7);
+	CHECK(records[0].target == call_c && records[1].target == call_b);
+	CHECK(entry->status_code == KD_EXE_CALL_MISS && entry->tgt_addr == call_b);
+	kd_image_report(entry, replacement, KD_EXE_CALL_MISS, call_a, 0);
+	CHECK(learning->count == 3 && learning->revision == 8);
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 3, &batch) == 0);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &batch);
+	CHECK(count == 1 && records[0].target == call_a && records[0].sequence == 8);
+	CHECK(records[0].admitted_generation == 3 && entry->generation == 4);
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 4, &batch) == 0);
+	CHECK(!learning->count && learning->revision == 8 && entry->generation == 5);
+	CHECK(entry->status_code == KD_EXE_NORMAL && !entry->tgt_addr && !entry->jump_from);
+	kd_exe_exit();
+
+	/* Filling all 32 rows never evicts one. Rejections count events, including
+	 * repeated rejected keys; duplicates already pending remain free of charge. */
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	kd_exe_add_abi(0, key(0), KD_EXE_LOCK_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	entry = kd_get_exe(0, key(0));
+	learning = &kd_image_learning[kd_exe_slot_index(entry)];
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 0, NULL) == 0);
+	old = replacement;
+	for (unsigned int i = 0; i < KD_LEARNING_CAPACITY; ++i)
+		kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x10000 + i * 16, 0);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &batch);
+	CHECK(count == KD_LEARNING_CAPACITY && batch.revision == KD_LEARNING_CAPACITY && !overflow);
+	memcpy(frozen, records, sizeof(frozen));
+	for (unsigned int i = 0; i < KD_LEARNING_CAPACITY; ++i)
+		kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x10000 + i * 16, 0);
+	CHECK(!learning->overflow_report_events);
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x90000, 0);
+	kd_image_report(entry, old, KD_EXE_CALL_MISS, 0x90000, 0);
+	CHECK(learning->count == KD_LEARNING_CAPACITY && learning->revision == KD_LEARNING_CAPACITY);
+	CHECK(learning->overflow_report_events == 2);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &next);
+	CHECK(overflow == 2 && count == KD_LEARNING_CAPACITY && !memcmp(records, frozen, sizeof(frozen)));
+	CHECK(entry->tgt_addr == 0x10000 + (KD_LEARNING_CAPACITY - 1) * 16);
+	learning->overflow_report_events = ~0ULL - 1;
+	kd_image_report(entry, old, KD_EXE_IJ_MISS, 0x90000, 0xa0000);
+	kd_image_report(entry, old, KD_EXE_IJ_MISS, 0x90000, 0xa0000);
+	CHECK(learning->overflow_report_events == ~0ULL && learning->count == KD_LEARNING_CAPACITY);
+	CHECK(!memcmp(learning->records, frozen, sizeof(frozen)));
+
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 1, &batch) == 0);
+	CHECK(!learning->count && entry->status_code == KD_EXE_NORMAL);
+	CHECK(learning->overflow_report_events == ~0ULL && learning->revision == KD_LEARNING_CAPACITY);
+	kd_image_report(entry, replacement, KD_EXE_CALL_MISS, 0x90000, 0);
+	CHECK(learning->count == 1 && learning->revision == KD_LEARNING_CAPACITY + 1);
+	CHECK(learning->records[0].sequence == KD_LEARNING_CAPACITY + 1);
+	CHECK(learning->records[0].admitted_generation == 2 && learning->records[0].target == 0x90000);
+	CHECK(learning->overflow_report_events == ~0ULL && old->entry == entry && old->generation == 1);
+	kd_exe_snapshot_misses(entry, &snapshot, records, &count, &overflow, &batch);
+	saved = *learning;
+	current_image = kd_image_current(entry);
+	kd_image_disable(entry);
+	replacement = learning_test_image(requirements);
+	CHECK(kd_image_publish_learned(entry, replacement, 2, &batch) == -ESHUTDOWN);
+	CHECK(kd_image_current(entry) == current_image && !replacement->entry);
+	CHECK(!memcmp(&saved, learning, sizeof(saved)) && entry->status_code == KD_EXE_NATIVE_ONLY);
+	kd_image_discard(replacement);
+	kd_exe_exit();
+}
+
 static void check_registration_reads(void)
 {
 	const int states[] = { KD_EXE_UNINIT, KD_EXE_NORMAL, KD_EXE_CALL_MISS,
@@ -837,6 +1025,8 @@ static void check_concurrent_registration(void)
 	kd_exe_exit();
 }
 
+#include "learning_control_fixture.inc"
+
 int main(void)
 {
 	check_init_failures();
@@ -847,6 +1037,8 @@ int main(void)
 	check_device();
 	check_packet_directory();
 	check_service_source_publication();
+	check_learning_batches();
+	check_learning_control();
 	check_registration_reads();
 	check_lookup_publication();
 	check_concurrent_registration();

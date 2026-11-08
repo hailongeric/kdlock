@@ -22,6 +22,7 @@ def main():
     wait_header = read_source(ROOT / 'include/kd_wait_queue.h')
     declarations = without_includes(read_source(ROOT / 'include/kd_regs.h'))
     declarations += without_includes(read_source(ROOT / 'include/exe_info.h'))
+    declarations += '#include "kd_learning_api.h"\n'
     declarations += '\n'.join(line for line in read_source(ROOT / 'include/kd_jit_batch.h').splitlines()
                               if line.startswith('#define KD_JIT_ABI_OFFSET ')) + '\n'
     declarations += definition(read_source(ROOT / 'include/kd_image.h'),
@@ -51,6 +52,12 @@ def main():
         (admission, ('void kd_admission_read_to_native(struct kd_admission *a)',)),
         (read_source(ROOT / 'kernel_module/execution/images.inc'),
             ('unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)',
+             'static bool kd_image_miss_kind(unsigned int kind)',
+             'static bool kd_image_miss_matches(const struct kd_learning_record *record,',
+             'static void kd_image_pending_tuple(struct kd_exe_info *entry,',
+             'static bool kd_image_miss_acknowledged(const struct kd_learning_record *record,',
+             'static bool kd_image_batch_has_survivors(const struct kd_image_learning_state *learning,',
+             'static void kd_image_ack_misses(struct kd_image_learning_state *learning,',
              'int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,',
              'int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,',
              'void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image,')),
@@ -78,7 +85,8 @@ def main():
         binary = path / 'join'
         subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
             '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-UNDEBUG', '-pthread',
-            '-I', str(path), str(ROOT / 'tests/unit/execution/native_service_join_fixture.c'),
+            '-I', str(path), '-I', str(ROOT / 'include'),
+            str(ROOT / 'tests/unit/execution/native_service_join_fixture.c'),
             '-o', str(binary)], check=True, timeout=30)
         for mode in ('write', 'downgrade', 'read'):
             result = subprocess.run([str(binary), mode], capture_output=True, text=True, timeout=15)

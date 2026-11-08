@@ -1,6 +1,6 @@
 /* Mutex image lifetime is session-wide. Only private, never-published uploads
  * can return a block to the bounded pool. The publication gate also serializes
- * generation-scoped miss metadata; it is never held across copying or JIT. */
+ * session-bound miss metadata; it is never held across copying or JIT. */
 static struct kd_image_learning_state kd_image_learning[KD_MAX_EXE];
 static unsigned long kd_image_report_superseded;
 
@@ -13,6 +13,80 @@ void kd_image_learning_reset(void)
 unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)
 {
 	return entry - kd_exes;
+}
+
+static bool kd_image_miss_kind(unsigned int kind)
+{
+	return kind == KD_EXE_CALL_MISS || kind == KD_EXE_IJ_MISS;
+}
+
+static bool kd_image_miss_matches(const struct kd_learning_record *record,
+	unsigned int kind, unsigned long target, unsigned long from)
+{
+	return record->sequence && record->kind == kind &&
+		record->target == target && record->from == from;
+}
+
+/* The scalar registry retains the latest admitted unresolved tuple for legacy
+ * readers. Sequence IDs survive publication; carried rows keep the generation
+ * that actually reported them, rather than claiming execution by a newer image. */
+static void kd_image_pending_tuple(struct kd_exe_info *entry,
+	const struct kd_image_learning_state *learning)
+{
+	const struct kd_learning_record *latest = NULL;
+	unsigned int i;
+
+	for (i = 0; i < KD_LEARNING_CAPACITY; ++i)
+		if (learning->records[i].sequence &&
+		    (!latest || learning->records[i].sequence > latest->sequence))
+			latest = &learning->records[i];
+	if (latest) {
+		entry->tgt_addr = latest->target;
+		entry->jump_from = latest->from;
+		kd_exe_publish_status(entry, latest->kind);
+	}
+}
+
+static bool kd_image_miss_acknowledged(const struct kd_learning_record *record,
+	const struct kd_image_learning_state *learning, unsigned long base_generation,
+	const struct kd_image_learning_receipt *receipt)
+{
+	if (!receipt || !receipt->valid || receipt->generation != base_generation ||
+	    receipt->revision > learning->revision || receipt->batch > 1 ||
+	    !record->sequence || record->sequence > receipt->revision)
+		return false;
+	return receipt->batch || kd_image_miss_matches(record, receipt->kind,
+		receipt->target, receipt->from);
+}
+
+static bool kd_image_batch_has_survivors(const struct kd_image_learning_state *learning,
+	unsigned long base_generation, const struct kd_image_learning_receipt *receipt)
+{
+	unsigned int i;
+
+	for (i = 0; i < KD_LEARNING_CAPACITY; ++i)
+		if (learning->records[i].sequence &&
+		    !kd_image_miss_acknowledged(&learning->records[i], learning,
+			base_generation, receipt))
+			return true;
+	return false;
+}
+
+static void kd_image_ack_misses(struct kd_image_learning_state *learning,
+	unsigned long base_generation, const struct kd_image_learning_receipt *receipt)
+{
+	unsigned int i;
+
+	for (i = 0; i < KD_LEARNING_CAPACITY; ++i) {
+		struct kd_learning_record *record = &learning->records[i];
+
+		if (!kd_image_miss_acknowledged(record, learning, base_generation, receipt))
+			continue;
+		/* Only successful publication calls this helper. Clearing the occupied
+		 * marker transfers this exact slot back to report admission. */
+		record->sequence = 0;
+		learning->count--;
+	}
 }
 
 static struct kd_jit_image *kd_image_alloc_pool(bool near_text)
@@ -219,7 +293,7 @@ int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *ima
 {
 	unsigned long publish_flags;
 	struct kd_image_learning_state *learning = &kd_image_learning[kd_exe_slot_index(entry)];
-	bool pending, acknowledged;
+	bool pending, acknowledged, had_records;
 	int ret = 0;
 
 	publish_flags = kd_code_block_gate_lock();
@@ -227,6 +301,11 @@ int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *ima
 		ret = -ESHUTDOWN;
 	else if (entry->generation != base_generation || base_generation == ~0UL)
 		ret = -ESTALE;
+	else if (receipt && receipt->batch && kd_image_current(entry) &&
+		 (kd_image_current(entry)->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) &&
+		 !(image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) &&
+		 kd_image_batch_has_survivors(learning, base_generation, receipt))
+		ret = -EPROTO;
 	else {
 		pending = entry->lock_kind == KD_EXE_LOCK_MUTEX &&
 			entry->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
@@ -234,14 +313,19 @@ int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *ima
 			(kd_image_current(entry)->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) &&
 			(entry->status_code == KD_EXE_CALL_MISS || entry->status_code == KD_EXE_IJ_MISS);
 		acknowledged = receipt && receipt->valid &&
+			!receipt->batch &&
 			receipt->generation == base_generation &&
-			receipt->revision == learning->revision;
+			receipt->revision == learning->revision &&
+				receipt->kind == (unsigned int)entry->status_code &&
+			receipt->target == entry->tgt_addr && receipt->from == entry->jump_from;
+		had_records = learning->count != 0;
+		kd_image_ack_misses(learning, base_generation, receipt);
 		image->entry = entry;
 		image->generation = base_generation + 1;
 		entry->code_block = image->code; /* status snapshot, never dispatch authority */
 		entry->requirements = image->requirements;
 		entry->generation = image->generation;
-		if (!pending || acknowledged) {
+		if (!learning->count && (had_records || !pending || acknowledged)) {
 			entry->tgt_addr = 0;
 			entry->jump_from = 0;
 		}
@@ -250,9 +334,11 @@ int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *ima
 				   entry->RIP, image->generation, image->code, image->length,
 				   image->requirements);
 		smp_store_release(&kd_published_images[entry - kd_exes], image);
-		/* A report accepted after the compiler's read remains pending. Its
-		 * old image may retire, but the already accepted request is retained. */
-		if (!pending || acknowledged)
+		/* Publication consumes only the frozen obligations. Reports admitted
+		 * during compilation remain eligible input for the next generation. */
+		if (learning->count)
+			kd_image_pending_tuple(entry, learning);
+		else if (had_records || !pending || acknowledged)
 			smp_store_release(&entry->status_code, KD_EXE_NORMAL);
 	}
 	kd_code_block_gate_unlock(publish_flags);
@@ -298,15 +384,41 @@ void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image
 		if (entry->status_code != KD_EXE_NATIVE_ONLY) {
 			if (image && image->immutable && entry->lock_kind == KD_EXE_LOCK_MUTEX &&
 			    entry->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
-			    (image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) {
-				if ((status == KD_EXE_CALL_MISS || status == KD_EXE_IJ_MISS) &&
-				    entry->status_code == status && entry->tgt_addr == target &&
-				    entry->jump_from == from)
+			    (image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) &&
+			    kd_image_miss_kind(status)) {
+				struct kd_image_learning_state *learning =
+					&kd_image_learning[kd_exe_slot_index(entry)];
+				struct kd_learning_record *available = NULL;
+				unsigned int i;
+
+				for (i = 0; i < KD_LEARNING_CAPACITY; ++i) {
+					struct kd_learning_record *record = &learning->records[i];
+
+					if (kd_image_miss_matches(record, status, target, from))
+						goto out;
+					if (!record->sequence && !available)
+						available = record;
+				}
+				/* Rejected report events are observable, not an exact number of
+				 * distinct lost tuples. No occupied row is ever evicted. Sequence
+				 * exhaustion also refuses admission instead of reusing an ID. */
+				if (!available || learning->revision == ~0UL) {
+					if (learning->overflow_report_events != ~0ULL)
+						learning->overflow_report_events++;
 					goto out;
+				}
+				available->kind = status;
+				available->reserved = 0;
+				available->from = from;
+				available->target = target;
+				available->admitted_generation = image->generation;
+				available->sequence = ++learning->revision;
+				learning->count++;
+				/* This compatibility counter tracks replacement of the scalar
+				 * registry view; its earlier row is still retained in the ledger. */
 				if (entry->status_code == KD_EXE_CALL_MISS ||
 				    entry->status_code == KD_EXE_IJ_MISS)
 					kd_image_report_superseded++;
-				kd_image_learning[kd_exe_slot_index(entry)].revision++;
 			}
 			entry->tgt_addr = target;
 			entry->jump_from = from;
@@ -339,7 +451,44 @@ void kd_exe_snapshot_learning(const struct kd_exe_info *entry,
 		*receipt = (struct kd_image_learning_receipt) {
 			.valid = 1, .generation = entry->generation,
 			.revision = kd_image_learning[kd_exe_slot_index(entry)].revision,
+			.kind = kd_image_miss_kind(entry->status_code) ? entry->status_code : 0,
+			.target = entry->tgt_addr, .from = entry->jump_from,
 		};
+	kd_code_block_gate_unlock(publish_flags);
+}
+
+void kd_exe_snapshot_misses(const struct kd_exe_info *entry,
+	struct kd_exe_info *snapshot, struct kd_learning_record records[KD_LEARNING_CAPACITY],
+	unsigned int *count, unsigned long long *overflow_report_events,
+	struct kd_image_learning_receipt *receipt)
+{
+	const struct kd_image_learning_state *learning =
+		&kd_image_learning[kd_exe_slot_index(entry)];
+	unsigned long publish_flags = kd_code_block_gate_lock();
+	unsigned int i, used = 0;
+
+	memcpy(snapshot, entry, sizeof(*snapshot));
+	for (i = 0; i < KD_LEARNING_CAPACITY; ++i) {
+		const struct kd_learning_record *record = &learning->records[i];
+		unsigned int position = used;
+
+		if (!record->sequence)
+			continue;
+		/* Slot reuse need not preserve order. Return one immutable, ascending
+		 * sequence view so a cursor never walks a changing live collection. */
+		while (position && records[position - 1].sequence > record->sequence) {
+			records[position] = records[position - 1];
+			position--;
+		}
+		records[position] = *record;
+		used++;
+	}
+	*count = used;
+	*overflow_report_events = learning->overflow_report_events;
+	*receipt = (struct kd_image_learning_receipt) {
+		.valid = 1, .batch = 1, .generation = entry->generation,
+		.revision = learning->revision,
+	};
 	kd_code_block_gate_unlock(publish_flags);
 }
 

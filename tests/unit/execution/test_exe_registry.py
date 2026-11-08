@@ -71,7 +71,17 @@ def production():
     ):
         code += definition(source, name)
     device = read_source((ROOT / "kernel_module/sys.c"))
+    code += 'static unsigned long long kd_learning_next_token;\n'
     for name in (
+        "static bool kd_learning_reserved_zero(const __u64 *words, unsigned int count)",
+        "static bool kd_learning_root_equal(const struct kd_learning_root *left,",
+        "static struct kd_exe_info *kd_learning_find_root(const struct kd_learning_root *root)",
+        "static void kd_learning_clear_view(struct kd_image_upload *upload)",
+        "static bool kd_learning_upload_matches(const struct kd_image_upload *upload,",
+        "static long kd_learning_snapshot_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_bind_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_cancel_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_ioctl(struct file *file, unsigned int command,",
         "static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,",
         "static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,",
     ):

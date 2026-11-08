@@ -50,7 +50,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 21
+CAPS_VERSION = 22
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -69,6 +69,7 @@ CAP_ORIGIN_MEMORY = 32768
 CAP_ORIGIN_CONTEXT_READ = 65536
 CAP_INDIRECT_TAIL = 131072
 CAP_SOURCE_FRONTIER = 262144
+CAP_LEARNING_BATCH = 524288
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -189,6 +190,8 @@ def query_capabilities(fd):
             known |= CAP_INDIRECT_TAIL
         if 18 <= version <= CAPS_VERSION:
             known |= CAP_SOURCE_FRONTIER
+        if 22 <= version <= CAPS_VERSION:
+            known |= CAP_LEARNING_BATCH
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -211,6 +214,9 @@ def query_capabilities(fd):
                  or features & CAP_ORIGIN_CALL)
             and (not features & CAP_SOURCE_FRONTIER
                  or features & CAP_ORIGIN_CALL)
+            and (not features & CAP_LEARNING_BATCH
+                 or features & (CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
+                    == CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)

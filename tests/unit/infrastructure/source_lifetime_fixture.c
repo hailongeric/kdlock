@@ -132,6 +132,20 @@ struct file {
 static struct file *api_file, *api_released_file;
 static unsigned int api_command, api_calls, api_releases;
 static unsigned long api_argument;
+static struct file *learning_file;
+static unsigned int learning_command, learning_calls;
+static unsigned long learning_argument;
+/* The registry fixture executes batch control itself. This fixture checks the
+ * device forwarding boundary without replacing source-lifetime decisions. */
+static long kd_learning_ioctl(struct file *file, unsigned int command,
+			      unsigned long argument)
+{
+	learning_file = file;
+	learning_command = command;
+	learning_argument = argument;
+	learning_calls++;
+	return -EINPROGRESS;
+}
 static long kd_api_provider_ioctl(struct file *file, unsigned int command,
 				  unsigned long argument)
 {
@@ -284,7 +298,7 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL | KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ | KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL | KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ | KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER | KD_JIT_CAP_LEARNING_BATCH |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0) |
 				(direct_pool_available ? KD_JIT_CAP_DIRECT_STRINGS : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
@@ -304,6 +318,16 @@ static void check_api_forwarding(void)
 		CHECK(kd_dev_ioctl(&control, commands[i], argument) == -EINPROGRESS);
 		CHECK(api_calls == calls_before + 1 && api_file == &control &&
 		      api_command == commands[i] && api_argument == argument);
+	}
+	const unsigned int batch_commands[] = {
+		KD_LEARNING_SNAPSHOT, KD_LEARNING_BIND, KD_LEARNING_CANCEL,
+	};
+	for (unsigned int i = 0; i < sizeof(batch_commands) / sizeof(batch_commands[0]); i++) {
+		unsigned int calls_before = learning_calls;
+		unsigned long argument = 0x567800UL + i;
+		CHECK(kd_dev_ioctl(&control, batch_commands[i], argument) == -EINPROGRESS);
+		CHECK(learning_calls == calls_before + 1 && learning_file == &control &&
+		      learning_command == batch_commands[i] && learning_argument == argument);
 	}
 	unsigned int releases_before = api_releases;
 	CHECK(!kd_dev_release(NULL, &control));
@@ -647,8 +671,15 @@ int main(void)
 	_Static_assert(KD_SOURCE_INFO == 0x80104b71, "Python INFO ABI");
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
+	_Static_assert(sizeof(struct kd_exe_info) == 64 && sizeof(struct kd_recv_pkt) == 64,
+		       "unchanged registry and upload ABI");
+	_Static_assert(sizeof(struct kd_learning_record) == KD_LEARNING_RECORD_SIZE &&
+		       sizeof(struct kd_learning_snapshot) == KD_LEARNING_SNAPSHOT_SIZE &&
+		       sizeof(struct kd_learning_bind) == KD_LEARNING_BIND_SIZE &&
+		       sizeof(struct kd_learning_cancel) == KD_LEARNING_CANCEL_SIZE,
+		       "learning control ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 21 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 22 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2 &&
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&
@@ -657,7 +688,8 @@ int main(void)
 			       KD_JIT_CAP_ROOT_NATIVE_ESCAPE == 2048 && KD_JIT_CAP_INDIRECT_CALL == 4096 &&
 				KD_JIT_CAP_ORIGIN_INSTRUCTION == 8192 && KD_JIT_CAP_ORIGIN_CALL == 16384 &&
 				KD_JIT_CAP_ORIGIN_MEMORY == 32768 && KD_JIT_CAP_ORIGIN_CONTEXT_READ == 65536 &&
-				KD_JIT_CAP_INDIRECT_TAIL == 131072 && KD_JIT_CAP_SOURCE_FRONTIER == 262144,
+				KD_JIT_CAP_INDIRECT_TAIL == 131072 && KD_JIT_CAP_SOURCE_FRONTIER == 262144 &&
+				KD_JIT_CAP_LEARNING_BATCH == 524288,
 		       "Python capability semantics");
 	_Static_assert(KD_JIT_PERCPU_MODULE_BYTES == 8192 &&
 			       KD_JIT_PERCPU_ALIGNMENT == 4,

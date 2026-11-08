@@ -179,8 +179,11 @@ class CompilerManifestTests(unittest.TestCase):
 
     def test_capability_hook_retains_validated_raw_version_without_extra_query(self):
         session = importlib.import_module('device_session')
-        for version in (20, 21):
-            packet = struct.pack('<IIII', version, 59 | (1 << 14) | (1 << 18), 256, 8192)
+        for version in (20, 21, 22):
+            features = 59 | (1 << 14) | (1 << 18)
+            if version >= 22:
+                features |= 1 << 19
+            packet = struct.pack('<IIII', version, features, 256, 8192)
             queries = []
             def ioctl(fd, command, value, mutate):
                 queries.append((fd, command, mutate))
@@ -194,7 +197,7 @@ class CompilerManifestTests(unittest.TestCase):
             self.assertEqual(captured['raw_hex'], packet.hex())
             self.assertEqual(captured['version'], version)
             self.assertEqual(captured['fd'], 123)
-            self.assertEqual(parsed['source_frontier_direction'], version == 21)
+            self.assertEqual(parsed['source_frontier_direction'], version >= 21)
         with patch.object(manifest, 'capture', side_effect=OSError('optional capture failed')):
             with patch.object(session.fcntl, 'ioctl', side_effect=ioctl):
                 self.assertTrue(session.query_capabilities(123)['source_frontier_direction'])

@@ -21,6 +21,8 @@ def main():
                       'bool kd_exe_publish_status('):
         code += definition(lifecycle, signature)
     code += (ROOT / 'kernel_module/execution/images.inc').read_text()
+    code += definition(device, 'static void kd_learning_clear_view(')
+    code += definition(device, 'static bool kd_learning_upload_matches(')
     code += definition(device, 'static ssize_t kd_dev_write_locked(')
     wrapper = (ROOT / 'kernel_module/execution/wrapper_entry.inc').read_text()
     # The image consumer queries only retained-frame eligibility here. Actual

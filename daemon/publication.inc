@@ -43,8 +43,9 @@ static ssize_t read_sys(void *buffer, size_t size)
 
 /* Transfer bounded payload chunks on the original device. Final status marks
  * readiness, not protection for an executor of a previous in-place image. */
-static int write_sys(const struct daemon_config *cfg,
-		     const struct kd_exe_info *exe, bool cache_hit)
+static int write_sys_at(const struct daemon_config *cfg,
+		const struct kd_exe_info *exe, bool cache_hit, const char *jit_path,
+		const struct kd_learning_snapshot *snapshot)
 {
 	unsigned char buffer[sizeof(struct kd_recv_pkt) + MAX_PAYLOAD];
 	struct provenance_upload evidence = { 0 };
@@ -54,15 +55,11 @@ static int write_sys(const struct daemon_config *cfg,
 		.entry_abi = exe->entry_abi,
 		.base_generation = exe->generation,
 	};
-	char jit_path[512];
-	char workspace[256];
 	size_t remaining;
 	long image_size;
 	FILE *fp;
 
-	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
-
+	(void)cfg;
 	fp = fopen(jit_path, "rb");
 	if (!fp) {
 		fprintf(stderr, "daemon: failed to open %s: %s\n", jit_path,
@@ -117,7 +114,30 @@ static int write_sys(const struct daemon_config *cfg,
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
 	pkt.offset = 0;
+	if (snapshot) {
+		struct kd_learning_bind binding = {
+			.version = KD_LEARNING_API_VERSION,
+			.size = sizeof(binding), .token = snapshot->token,
+			.root = snapshot->root,
+			.base_generation = snapshot->base_generation,
+			.revision = snapshot->revision, .upload_id = pkt.upload_id,
+		};
+		int result;
+
+		do {
+			result = ioctl(sys_fd, KD_LEARNING_BIND, &binding);
+		} while (result < 0 && errno == EINTR);
+		if (result) {
+			int error = errno;
+
+			fclose(fp);
+			errno = error;
+			return -1;
+		}
+	}
+	provenance_learning = snapshot;
 	provenance_upload_begin(&evidence, exe, &pkt, cache_hit);
+	provenance_learning = NULL;
 
 	while (remaining) {
 		size_t chunk = remaining < MAX_PAYLOAD ? remaining :
@@ -162,4 +182,14 @@ error:
 	provenance_upload_end(&evidence, false);
 	fclose(fp);
 	return -1;
+}
+
+static int write_sys(const struct daemon_config *cfg,
+		     const struct kd_exe_info *exe, bool cache_hit)
+{
+	char jit_path[512], workspace[256];
+
+	workspace_path(workspace, sizeof(workspace), cfg, exe);
+	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
+	return write_sys_at(cfg, exe, cache_hit, jit_path, NULL);
 }

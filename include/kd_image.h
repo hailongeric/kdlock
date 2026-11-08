@@ -2,6 +2,7 @@
 #ifndef KD_IMAGE_H
 #define KD_IMAGE_H
 #include "exe_info.h"
+#include "kd_learning_api.h"
 #include "kd_origin_memory.h"
 
 /* Construct privately, then publish once. Published descriptors and executable
@@ -131,15 +132,26 @@ static inline int kd_image_guard_site_valid(const struct kd_address_guard_site *
 	return 1;
 }
 
-/* Internal read receipt; not part of the device wire format. */
+/* Internal read receipt; not part of the image upload wire format. A legacy
+ * receipt acknowledges only its exact visible tuple. An explicitly bound batch
+ * acknowledges the frozen sequence prefix, never arrivals after that view. */
 struct kd_image_learning_receipt {
 	unsigned long generation;
 	unsigned long revision;
+	unsigned long from;
+	unsigned long target;
+	unsigned int kind;
 	unsigned int valid;
+	unsigned int batch;
 };
 
 struct kd_image_learning_state {
+	/* Sequences never change when a pending row moves to a newer image. */
 	unsigned long revision;
+	/* Full-ledger rejection events saturate; this is not a unique-miss count. */
+	unsigned long long overflow_report_events;
+	unsigned int count;
+	struct kd_learning_record records[KD_LEARNING_CAPACITY];
 };
 
 struct kd_image_upload {
@@ -149,6 +161,14 @@ struct kd_image_upload {
 	unsigned long covered;
 	struct kd_image_learning_receipt acknowledgment;
 	struct kd_image_learning_receipt observed[KD_MAX_EXE];
+	struct kd_learning_snapshot learning_snapshot;
+	/* Cold control input shares the writer description's lifetime. Keep its
+	 * storage off the kernel stack and separate from the immutable output view. */
+	struct kd_learning_snapshot learning_request;
+	struct kd_image_learning_receipt learning_receipt;
+	unsigned long long learning_upload_id;
+	unsigned int learning_view_valid;
+	unsigned int learning_bound;
 };
 
 #define KD_ORIGIN_SITE_MAX 64U
@@ -236,4 +256,8 @@ void kd_image_disable(struct kd_exe_info *entry);
 void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot);
 void kd_exe_snapshot_learning(const struct kd_exe_info *entry,
 	struct kd_exe_info *snapshot, struct kd_image_learning_receipt *receipt);
+void kd_exe_snapshot_misses(const struct kd_exe_info *entry,
+	struct kd_exe_info *snapshot, struct kd_learning_record records[KD_LEARNING_CAPACITY],
+	unsigned int *count, unsigned long long *overflow_report_events,
+	struct kd_image_learning_receipt *receipt);
 #endif
