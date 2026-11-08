@@ -2457,14 +2457,82 @@ restoration and performance acceptance remain outside this correction.
 
 ## Fresh v21 publication and one warmed process point
 
-Status on 2026-11-07: candidate `f1b410fe` passed 17 focused runner fixtures,
-but the platform stopped the implementation turn after KD boot and before
-provider loading. No live publication check, learning application or measurement
+Historical status on 2026-11-07: candidate `f1b410fe` passed 17 focused runner
+fixtures, but the platform stopped the implementation turn after KD boot and
+before provider loading. No live publication check, learning application or measurement
 ran. Saved normal-kernel recovery is verified; the stopped launch has not been
 retried. The [offline continuation review](../../bench/results/10.176.26.71/tests/continuation-review-f1b410fe-20261107/README.md)
 retains exact receipts, source findings, the unimplemented learning-continuation
 limit and the supported feedback route. The plan below remains unexecuted and
 paused pending a permitted resolution of the platform restriction.
+
+### Scoped compiler and upload provenance
+
+Candidate `d7763767`, based on `ec9436d6`, implements optional evidence for
+one selected immutable ABI2 image. Only `SettledObservation` with
+`required_publication` configures `KD_PROVENANCE_DIR` and
+`KD_PROVENANCE_ENTRY`; the daemon assigns each compiler child its own
+`KD_PROVENANCE_ATTEMPT_DIR`. Other maintained session launches clear these
+variables. Evidence is limited to 64 compiler attempts and 64 uploads per
+daemon session, with an 8 MiB limit per captured text artifact and a 4 MiB
+binary limit. These limits affect evidence availability, not translation
+selection, source-cache/CFG bounds or publication behavior.
+
+The compiler manifest retains the actual consumed CAPS response, its validated
+inherited descriptor relationship, the service registry and control snapshots,
+and CALL/IJ history bytes before parser normalization. It captures the patched
+`jit.S` immediately before GCC, requires identical assembly after the build,
+and records the resulting binary hash and header. Process, interpreter and
+daemon-context identities accompany those inputs. A cached command retains
+its original attempt and manifest digest; later workspace contents cannot
+silently replace that compiler identity.
+
+The daemon mirrors each payload chunk from the existing write buffer only
+after the provider accepts the full write, before the buffer is reused. It
+records completion time immediately after the final accepted write. The
+verifier compares the complete mirrored payload with that original compiler
+manifest. Missing artifacts, changed cached bytes, partial uploads, ambiguous
+matches or evidence I/O failures leave required provenance unavailable.
+Evidence helpers preserve production results and errno; a required gate
+records the failure and stops with `DATA_ERROR`. Final manifest/sidecar and
+receipt names are exposed only after successful output finalization. No new
+writable device read or acknowledgment read is added.
+
+`fixed_receipt` brackets its already scheduled registry read with
+`CLOCK_MONOTONIC` timestamps. It retains the ordinary settlement and receipt
+checks, then binds the selected captured files to that same receipt without
+adding an observation, wait or retry. Association requires an exact ready
+NORMAL ABI2 row and one complete upload that finished before the observation.
+The observed generation must equal the upload's base generation plus one,
+following the existing immutable publication source contract. A successful
+write alone cannot establish NORMAL readiness: a later report can remain
+pending across publication.
+
+This is a source-derived association between compiler output, accepted upload
+bytes and the existing registry observation. The provider exposes neither a
+kernel byte digest nor a durable lease ID for this claim. It does not prove
+returned-body execution, the required expanded mmap path, a stable mmap1
+point or a performance gain. Enabled compiler wall/CPU/RSS metrics include
+capture, hashing and evidence finalization overhead; they cannot be pooled
+with evidence-disabled compiler timings or treated as quiet performance.
+
+The [focused check record](../../bench/results/10.176.26.71/tests/provenance-chain-ec9436d6/README.md)
+retains the warning-free daemon build and passing VM checks: three C programs;
+12 compiler, 13 chain, 10 settled, 10 campaign and 11 frontier cases;
+44,345 source-lifetime checks; and 32,707/63,488 registry checks at capacities
+64/128, with all 16 registry mutations detected. The first registry-check
+controller reached its 90-second bound. That attempt is retained; inspection
+confirmed drain and unchanged source, and the bounded 240-second rerun passed
+in 99.313 seconds.
+
+The 85-case text-regions check retains 14 failures and one error, reproduced
+with identical 15 failing/error headings on baseline `ec9436d6` production;
+it remains a failed check. Post-timeout and final inspection found no remaining
+test processes or project modules and unchanged source. No provider load,
+campaign, measurement or live publication gate has run, and the platform
+restriction remains unchanged.
+
+### Retained live plan, unexecuted
 
 Continue the same branch from `c1b624c985cec9defc600e8f72e69fee15bbbfd2`.
 Reuse the checked provider built from `d726952d8f03bffe62b83028fb51d6726fb1f434`

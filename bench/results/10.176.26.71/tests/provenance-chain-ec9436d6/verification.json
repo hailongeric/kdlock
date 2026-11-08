@@ -1,0 +1,46 @@
+{
+  "archives": {
+    "baseline-production.tar.gz": {
+      "bytes": 21849,
+      "path": "bench/results/10.176.26.71/raw/tests/provenance-chain-ec9436d6/baseline-production.tar.gz",
+      "sha256": "f0f7565689e5073d0d296c4dc3ed58b867517f599806e0e294cdbc05dd001a36"
+    },
+    "checks.tar.gz": {
+      "bytes": 90031,
+      "path": "bench/results/10.176.26.71/raw/tests/provenance-chain-ec9436d6/checks.tar.gz",
+      "sha256": "8597dfc6365e2b2e31a64cb504d2e7bdb9ed59cb9e89feb6c95f4dc4e2d63005"
+    },
+    "inputs.tar.gz": {
+      "bytes": 2844580,
+      "path": "bench/results/10.176.26.71/raw/tests/provenance-chain-ec9436d6/inputs.tar.gz",
+      "sha256": "6564d171d01f20a816b1c57a6389b21e0689db9695c4159101a7cd278fa49f74"
+    }
+  },
+  "implementation_commit": "d77637675c87ee4d6ba00292d527484c5e51fbc2",
+  "no_new_live_publication_or_execution_proof": true,
+  "no_new_throughput": true,
+  "schema": 1,
+  "source_manifest_sha256": "fb6d38458212874720ff6d5e59f24ab7a48fcd159ecc232dc17f85a1b0875996",
+  "tested_files": {
+    "bench/mmap1/campaign.py": "89a2a80a8ed59c012f6cb5ac9ec9265d9308d6590a33132f5c2d7feb1e34ac0f",
+    "bench/mmap1/provenance.py": "8984a9cde2bb3b423e96fed2922a1eb4e117ad828d38b84de7e733d17589b41b",
+    "bench/mmap1/settled.py": "b3aa9793d9c55f33b357c6a685e0b633619be56ba77546c58fb94b09fec9bb47",
+    "bench/spin_cacheline/bench_session.py": "d0db8f86881b7d4a11143c737a1fca6d087b0a903462f97e723edfe029c24700",
+    "daemon/compiler.inc": "9b9b4273aeccef4024b7bc21e9058f82849e810fa6baf8cc5060dfbd644ae985",
+    "daemon/daemon.c": "4b5777c8ec38c36f38d8f3afd957da67d8acf11036ffc2e8c0a9dbe71b61cd9b",
+    "daemon/evidence.inc": "5e9f7abf776a41ed4d7a0a62e2360e893777e65180954531d90e31dada31db71",
+    "daemon/publication.inc": "cd00db987974fb6aded89025e320e0a945bfca2a243ce9dd9ee04848e7af0b82",
+    "daemon/workspace.inc": "7b2b07bba4cad0b23bda674bafbc8fa9e00f5d841645ff05f9c5426fb9d4a56f",
+    "disassem/compiler_manifest.py": "14fe4ec8aaa206249608d59a52408d1e3dd263ae918625fb9235cb4271e80823",
+    "disassem/device_session.py": "7ca764eaf3b3c66af2c4cf76014aac9e53eebdc03f82206bd79920aa5be9b004",
+    "disassem/disassem.py": "613e04c3c230040463d4ecbfed5cebe4c2ee53b6988ce5bd784fbb9a5d7b4e13",
+    "disassem/memread.py": "80f2d740116e2cc31a9ebd44a4276bc38e0ce8254716f700f2595074fc317966",
+    "tests/unit/Makefile": "81d133a6756cdfd8ed39fd33ef10c56323b04b69612d5f925c5e2580cf4e6062",
+    "tests/unit/basic/test_daemon_policy.c": "bc9274312bdc01e377a7ff6aa7f3d6d0f6b8dc1a0c653bd1dd25fe3d249c23e2",
+    "tests/unit/basic/test_daemon_provenance.c": "d92c8e42d0e8744735844e8343e5c37ca403c9955f9fa968d8aeb8df3dd22f2b",
+    "tests/unit/bench/test_mmap1_provenance.py": "3b4ccc026cc30fb842acc86035ff402b503f026df9538d0e574347f9ff5863c5",
+    "tests/unit/infrastructure/test_compiler_manifest.py": "97495aeef0b1f4d80aa1b71d63b201d0cb5443cf2d418b5c1475ded0336c642c"
+  },
+  "tested_parent": "ec9436d606fc1178cdd2f523c2f1060bea9648e7",
+  "verdict": "scoped implementation checked; affected text-region failures reproduced on baseline"
+}
