@@ -1,0 +1,26 @@
+{
+  "excluded_path_count": 6408,
+  "excluded_path_list_sha256": "19595c65c52dc580311055b4b8f47e3656386ae87006a911d4cee40bf52c6986",
+  "excluded_prefixes": [
+    "bench/results",
+    "results",
+    "kernel_baseline/experiments"
+  ],
+  "files": 1093,
+  "git_head": "b429ea7a66b80853904528eee630f0bad3435932",
+  "git_index_sha256": "c21cee34adb7e2d81b304265ef4e82f1a24c8594b0396f0d84b89a0ff1dfad76",
+  "git_status": "M  bench/mmap1/provenance.py\nM  bench/mmap1/settled.py\nM  daemon/README.md\nM  disassem/README.md\nM  disassem/indirect_jump.py\nM  docs/design/lifetimes.md\nM  tests/unit/bench/test_mmap1_provenance.py\nM  tests/unit/bench/test_mmap1_settled.py\nM  tests/unit/codegen/test_returning_calls.py\n",
+  "omitted_missing_tracked_paths": [],
+  "original_receipt": {
+    "archive": "final-checks.tar.gz",
+    "member": "receipts/source-state.json"
+  },
+  "original_source_state_sha256": "fcfcde1b369542253bae466c4995bf917c5a46edf89f4243c098a075c2c1210f",
+  "record_kind": "source_receipt_summary",
+  "schema": 1,
+  "source_patch_sha256": "3ac9847a06ef6715b30b9f677d704547452304163821fc5061a15d0a0f581a1a",
+  "source_policy": "current tracked working bytes including staged new files",
+  "source_root": "/tmp/kdlock-reached-path-translation",
+  "staged_patch_sha256": "3ac9847a06ef6715b30b9f677d704547452304163821fc5061a15d0a0f581a1a",
+  "transfer_bytes": 10853053
+}

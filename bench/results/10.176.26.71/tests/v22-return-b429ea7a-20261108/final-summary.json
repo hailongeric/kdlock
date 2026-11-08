@@ -1,0 +1,13 @@
+{
+  "checks_bundle_sha256": "f3fd90253129f96c09a537b294840140e359af896cf9d5c4cdd0838770fceba4",
+  "cleanup_performed": false,
+  "guest_output": "/mnt/kdlock-builds2/kdlock-batch-checks-g0kt2nlt",
+  "inputs_tar_sha256": "898433ac6e4b69ebb8733e4b83e50dfb8e4cd8bc3bd47ace368c9024d085b23c",
+  "local_output": "/tmp/kdlock-batch-checks-z4lg9jl5",
+  "original_host_receipts_unchanged": true,
+  "passed": true,
+  "returncode": 0,
+  "source_patch_sha256": "3ac9847a06ef6715b30b9f677d704547452304163821fc5061a15d0a0f581a1a",
+  "staged_patch_sha256": "3ac9847a06ef6715b30b9f677d704547452304163821fc5061a15d0a0f581a1a",
+  "timeout_is_not_drain": true
+}
