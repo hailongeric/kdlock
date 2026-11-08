@@ -173,6 +173,40 @@ class ReturningCallTests(unittest.TestCase):
             blocks, databases, table, max_visits=1), [])
         self.assertEqual(table, {0x4444: [0x5555], 0x1001: []})
 
+    def test_return_flow_follows_only_decoded_learned_tail_jumps(self):
+        # CALL thunk; learned tail -> callback; CALL inner; shared RET. The
+        # callback's inner RET has its own CALL word, while the shared RET
+        # inherits the original caller's word through the learned tail.
+        for name, thunk, source, targets, terminals, expected in (
+                ('tail', 'ffe2', 0x1022, [0x1040, 0x1040], (), [0x1005]),
+                ('cycle', 'ffe2', 0x1022, [0x1020, 0x1040], (), [0x1005]),
+                ('unlearned', 'ffe2', 0x1022, [], (), []),
+                ('undecoded', 'ffe2', 0x1022, [0x9000], (), []),
+                ('terminal', 'ffe2', 0x1022, [0x1040], (0x1040,), []),
+                ('call', 'ffd2c3', 0x1022, [0x1040], (), []),
+                ('return', 'c3', 0x1021, [0x1040], (), [])):
+            with self.subTest(transfer=name):
+                blocks, databases = translator.decode_regions([
+                    (bytes.fromhex('e81b000000c3'), 0x1000, [0x1000]),
+                    (bytes.fromhex(thunk), 0x1020, [0x1020]),
+                    (bytes.fromhex('e81b000000e936000000'), 0x1040, [0x1040]),
+                    (b'\xc3', 0x1060, [0x1060]),
+                    (b'\xc3', 0x1080, [0x1080]),
+                ], 0, set())
+                history = {source: targets}
+                self.assertEqual(translator.indirect_jump.find(
+                    blocks, databases, history, terminal_targets=terminals), [])
+                self.assertEqual(history[0x1081], expected)
+                self.assertEqual(history[0x1061], [0x1045])
+                if name == 'tail':
+                    # The added edges use the existing work budget. Refusal
+                    # must leave the original history wholly unchanged.
+                    limited = {source: list(targets)}
+                    with self.assertRaises(translator.indirect_jump.ReturnFlowError):
+                        translator.indirect_jump.find(
+                            blocks, databases, limited, max_visits=10)
+                    self.assertEqual(limited, {source: targets})
+
     def test_native_context_values_and_indirect_successor(self):
         parse = translator.memread.device_session.parse_service_calls
         for context in range(1, 11):
@@ -412,9 +446,12 @@ class ReturningCallTests(unittest.TestCase):
                 self.assertNotIn(b'Stack_IJ, 14', assembly)
 
     def test_known_local_tail_keeps_normal_dispatch_and_real_return(self):
+        # Supply only the observed tail. Return propagation must derive the
+        # actual CALL continuation without a separately learned RET record.
         assembly, options = self.indirect_tail_image(
-            'ffe0', history={0x1022: [0x1040], 0x1046: [0x100a]}, local=True)
+            'ffe0', history={0x1022: [0x1040]}, local=True)
         self.assertIn(b'loc_1040:', assembly)
+        self.assertIn(b'kd_ij_1046_100a:', assembly)
         before = []
 
         def initialize(regs, stack):

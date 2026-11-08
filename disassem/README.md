@@ -83,6 +83,15 @@ whitelist. Source leases, physical owners, acquisition records, unlock ACKs,
 frame retirement and normal drain remain enforced by the existing runtime.
 A NORMAL image is publication evidence, not a completed delegated body.
 
+Return continuations also propagate through an observed indirect JMP when its
+exact source/target history pair leads to an already decoded block. Such a tail
+keeps the existing caller word. Indirect CALL and RET dispatch targets are not
+tail successors; neither are filtered terminal-service targets. This uses the
+existing return-analysis work budget and adds no text read, decoded block or
+CALL-depth expansion. A missing relationship still takes the existing retained
+handback. A small source fixture can test this relationship without establishing
+that the saved munmap g9 image executed or that all return paths are covered.
+
 KD-only mutex images remain immutable and require the negotiated exclusive-KD
 and immutable-image capabilities. Exact instruction markers keep their existing
 image requirements and runtime source/owner/continuation checks. Trusted mode

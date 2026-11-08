@@ -23,6 +23,7 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
     # reject, never observe a partially populated return whitelist.
     jump_table = {source: set(targets) for source, targets in pre_jump_table.items()}
     callers, returns = defaultdict(set), defaultdict(set)
+    learned_tails = defaultdict(set)
     missing_callees = set()
     terminal_targets = set(terminal_targets)
     work = 0
@@ -73,6 +74,14 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     jump_table[offset].difference_update(terminal_targets)
                 if name == "RET":
                     returns[start].add(offset)
+                elif name == "JMP":
+                    # A learned tail keeps the caller's existing return word.
+                    # Follow only bodies already decoded in this image; CALL
+                    # pushes another word and RET consumes one, so their
+                    # dispatch targets are not tail successors.
+                    learned_tails[start].update(
+                        target for target in jump_table[offset] if target in blocks
+                    )
 
     # Walk each callee once for all its call sites. Shared tails contribute
     # every continuation; no balanced-stack or matching-return assumption is
@@ -102,6 +111,9 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     raise ReturnFlowError(
                         "missing CFG successor in return dispatch", start
                     )
+                targets.add(target)
+            for target in sorted(learned_tails[start]):
+                spend(1, start)
                 targets.add(target)
             pending.extend(sorted(targets - seen, reverse=True))
 

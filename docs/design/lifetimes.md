@@ -101,7 +101,9 @@ A batch acknowledgment associates compiler inputs with a published replacement;
 it does not prove complete edge coverage or returned-body execution. One
 invocation ends discovery at its first permanent handback, so batching combines
 different invocations and cannot reveal later frontiers on that same path. The
-independent munmap g9 return relationship remains a separate compiler issue.
+independent munmap g9 return relationship has a separate compiler regression
+for an already decoded learned tail. Its source inference and fixture execution
+do not establish execution of the saved g9 image or alter frame/image lifetime.
 
 Ordinary spin/rwlock entries initially use an allocated in-place code block.
 Supported root instruction-marker images (requirements exactly 33) stage a new
