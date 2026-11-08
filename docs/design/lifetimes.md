@@ -97,6 +97,13 @@ nothing. These scalar learning records own no executable block, frame or source
 lease. Their acknowledgment does not reclaim a published image or release any
 execution ownership. Physical images still remain until session teardown.
 
+Terminal entry/frame lock-kind mismatches and image publication share the code
+gate. A mismatch that wins prevents publication and its batch acknowledgment.
+A publication that wins may acknowledge its view; a later mismatch still
+disables the entry permanently. The daemon independently refuses a fresh
+snapshot whose generation it cannot account for through its own successful
+uploads, since another writer's acknowledged inputs need not remain pending.
+
 A batch acknowledgment associates compiler inputs with a published replacement;
 it does not prove complete edge coverage or returned-body execution. One
 invocation ends discovery at its first permanent handback, so batching combines

@@ -307,7 +307,9 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 
 	if (READ_ONCE(exe->lock_kind) !=
 	    (frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
-		kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
+		/* Serialize this terminal decision with image publication and its miss
+		 * acknowledgment, so a publisher cannot later restore NORMAL. */
+		kd_image_disable(exe);
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH entry=0x%lx registered=%d mutex_frame=%d\n",
 			entry_ip, exe->lock_kind, frame->mutex_backend);

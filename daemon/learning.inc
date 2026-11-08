@@ -17,6 +17,43 @@ static struct {
 	char scope_tag[160];
 } learning;
 
+/* Slot identities remain retained for this daemon/provider session. A local
+ * history can account only for generation zero and our own successful uploads;
+ * another writer's ACKed inputs cannot be recovered from the pending ledger. */
+static struct learning_generation {
+	bool initialized;
+	struct kd_learning_root root;
+	int tgid;
+	unsigned long expected;
+} learning_generations[KD_MAX_EXE];
+
+static bool learning_generation_accept(const struct kd_exe_info *entry,
+		const struct kd_learning_snapshot *snapshot)
+{
+	struct learning_generation *known;
+
+	if (snapshot->root.slot >= ARRAY_SIZE(learning_generations))
+		return false;
+	known = learning_generations + snapshot->root.slot;
+	if (!known->initialized && !entry->generation) {
+		known->root = snapshot->root;
+		known->tgid = entry->tgid;
+		known->expected = 0;
+		known->initialized = true;
+	}
+	if (known->initialized && known->root.slot == snapshot->root.slot &&
+	    known->root.pid == snapshot->root.pid && known->root.rip == snapshot->root.rip &&
+	    known->root.lock_kind == snapshot->root.lock_kind &&
+	    known->root.entry_abi == snapshot->root.entry_abi && known->tgid == entry->tgid &&
+	    known->expected == entry->generation)
+		return true;
+	fprintf(stderr,
+		"daemon: batch generation unavailable: pid=%d tgid=%d entry=0x%lx slot=%u generation=%lu expected=%lu known=%u\n",
+		entry->pid, entry->tgid, entry->RIP, snapshot->root.slot,
+		entry->generation, known->expected, known->initialized ? 1U : 0U);
+	return false;
+}
+
 static int learning_ioctl(unsigned long command, void *packet)
 {
 	int result;
@@ -452,7 +489,8 @@ static int learning_step(const struct daemon_config *cfg,
 		learning.snapshot = snapshot;
 		learning.active = true;
 		learning.compiled = learning.canceled = false;
-		if (!learning_snapshot_valid(&snapshot, entry) || learning_prepare(cfg)) {
+		if (!learning_snapshot_valid(&snapshot, entry) ||
+		    !learning_generation_accept(entry, &snapshot) || learning_prepare(cfg)) {
 			fprintf(stderr,
 				"daemon: batch input unavailable: pid=%d tgid=%d entry=0x%lx slot=%u generation=%lu token=%llu\n",
 				entry->pid, entry->tgid, entry->RIP, snapshot.root.slot,
@@ -488,6 +526,9 @@ static int learning_step(const struct daemon_config *cfg,
 			goto cancel;
 		return 1;
 	}
+	/* The final device write already published and ACKed this exact view.
+	 * Local evidence and read-only close errors cannot undo that transition. */
+	learning_generations[learning.snapshot.root.slot].expected = learning.entry.generation + 1;
 	learning.active = false;
 	return 0;
 cancel:

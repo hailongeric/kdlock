@@ -209,6 +209,91 @@ class NativeCallBoundariesTests(unittest.TestCase):
             else:
                 self.assertEqual((regs[12], regs[0], args[1]), (42, 0x4444, 1))
 
+    def test_known_indirect_callee_learns_return_after_one_post_pop_miss(self):
+        regions, names = source_bytes("""
+            mov r8, QWORD PTR [rdi]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi], r8
+            mov dl, 127
+            add dl, 1
+        call_site:
+            call rax
+            seto cl
+            sets dl
+            setz bl
+            mov r8, QWORD PTR [rdi+16]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+16], r8
+        root_ret:
+            ret
+            .balign 4096
+        helper:
+            mov r8, QWORD PTR [rdi+8]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+8], r8
+        helper_ret:
+            ret
+        """)
+        continuation = names['call_site'] + 2
+        return_source = names['helper_ret'] + 1
+
+        def generate(history):
+            options = {}
+            assembly, log, status = render('', regions=regions,
+                indirect_history=history, lock_kind='mutex', abi=2,
+                trusted_source=True, body_witness=True,
+                native_escape_capable=True, indirect_call_capable=True,
+                kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                                'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+                build_options=options, return_status=True)
+            self.assertEqual(status, 0, log)
+            self.assertTrue(options['requirements'] & (1 << 13))
+            return assembly, options
+
+        def execute(assembly, options):
+            effects = (ctypes.c_ulong * 3)()
+            before = []
+
+            def initialize(regs, stack):
+                regs[12] = names['helper']
+                regs[16] = ctypes.addressof(effects)
+                before.append((regs[1], stack))
+
+            regs, args = run_image(assembly, [0x1000], initialize=initialize,
+                abi=2, requirements=options['requirements'])[0]
+            original_sp, stack = before[0]
+            self.assertEqual((stack[6], stack[7], stack[8]),
+                             (0, continuation, 0x4444))
+            self.assertEqual(regs[19] & 0x8d5, 0x890)
+            return regs, args, original_sp, list(effects)
+
+        forward = {continuation: [names['helper']]}
+        cold, options = generate(forward)
+        match = f'kd_ij_{return_source:x}_{continuation:x}:'.encode()
+        self.assertNotIn(match, cold)
+        regs, args, original_sp, effects = execute(cold, options)
+        # The CALL was pushed and the callee RET was popped exactly once.
+        # Caller-prefix and callee effects remain; the successor has not run.
+        self.assertEqual(args, [15, 1])
+        self.assertEqual((regs[0], regs[1], regs[17]),
+                         (continuation, original_sp, return_source))
+        self.assertEqual(effects, [1, 1, 0])
+
+        # This substitutes only the later history file containing the exact
+        # reported IJ tuple. It neither resumes nor rewrites the cold image.
+        reported_source, reported_target = regs[17], regs[0]
+        learned = dict(forward)
+        learned[reported_source] = [reported_target]
+        warm, options = generate(learned)
+        self.assertIn(match, warm)
+        regs, args, original_sp, effects = execute(warm, options)
+        self.assertEqual(args, [15, 1])
+        self.assertEqual((regs[0], regs[1], regs[17]),
+                         (0x4444, original_sp + 8, names['root_ret'] + 1))
+        self.assertEqual(effects, [1, 1, 1])
+        self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255),
+                         (1, 1, 0))
+
     def test_ret_and_jmp_history_cannot_enter_native_call_stub(self):
         for raw, source in (("c3", 0x1001), ("ffe0", 0x1002)):
             assembly = self.generated(raw, kernel_symbols={"down_read": 0x2000},

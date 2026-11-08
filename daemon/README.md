@@ -147,6 +147,14 @@ have the same session receipt and both cumulative leaves. Missing history or a
 different session refuses preparation rather than transplanting old module
 pointers or forgetting acknowledged input.
 
+The daemon also tracks each root's last generation published by that process.
+A fresh view must match that expected generation before history preparation.
+If another writer advances the root, its acknowledged inputs may already have
+left the pending ledger; the local histories cannot reconstruct them. The
+daemon cancels that view and refuses the incomplete rebuild. It does not
+withdraw the current image or acknowledge records. A process restart likewise
+cannot adopt a nonzero generation from an earlier process's history.
+
 Before the first upload chunk, `KD_LEARNING_BIND` binds the snapshot token and
 revision to that upload ID on the same descriptor. A failed upload retains the
 original attempt's input and artifact files for retry with a new upload ID.
@@ -195,6 +203,9 @@ The benchmark reads these bytes outside worker timing. This checks generated
 image construction and residency; it reads no helper or source CALL instructions.
 A reached instruction marker or failed address check disables the stable entry
 under the publication gate, so a concurrent upload cannot reopen it.
+An entry/frame lock-kind mismatch uses the same gate. If it disables the entry
+first, a later upload fails without acknowledging its batch; if publication
+wins first, its acknowledgment remains valid and the later disable is terminal.
 Optional checked translation refuses bodies needing both constant-branch simplification
 and spin address checks, because the flag proof must cover the original native
 suffix, including branches that generated code might otherwise remove.

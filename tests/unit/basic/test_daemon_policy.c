@@ -17,9 +17,13 @@
 
 static bool batch_ioctl_active;
 static unsigned int batch_snapshots, batch_bindings, batch_cancels;
-static int batch_bind_error;
+static int batch_bind_error, batch_cancel_error;
 static bool batch_read_failure;
 static unsigned int batch_payload_reads;
+static bool batch_close_failure;
+static unsigned int batch_close_failures;
+static const char *batch_close_path;
+static FILE *batch_close_stream;
 static struct kd_learning_snapshot batch_response;
 static struct kd_learning_bind batch_last_binding;
 
@@ -59,15 +63,48 @@ static int observed_ioctl(int descriptor, unsigned long command, ...)
 	assert(command == KD_LEARNING_CANCEL);
 	assert(((struct kd_learning_cancel *)packet)->token == batch_response.token);
 	batch_cancels++;
+	if (batch_cancel_error) {
+		errno = batch_cancel_error;
+		return -1;
+	}
 	return 0;
+}
+
+static FILE *observed_fopen(const char *path, const char *mode)
+{
+	FILE *stream = fopen(path, mode);
+
+	if (batch_ioctl_active && batch_close_failure && batch_close_path &&
+	    !strcmp(path, batch_close_path) && !strcmp(mode, "r"))
+		batch_close_stream = stream;
+	return stream;
+}
+
+static int observed_fclose(FILE *stream)
+{
+	bool failed = batch_ioctl_active && batch_close_failure && stream == batch_close_stream;
+	int result = fclose(stream);
+
+	if (failed) {
+		batch_close_failure = false;
+		batch_close_stream = NULL;
+		batch_close_failures++;
+		errno = EIO;
+		return EOF;
+	}
+	return result;
 }
 
 static size_t observed_fread(void *data, size_t size, size_t count, FILE *stream)
 {
-	if (batch_ioctl_active && batch_read_failure && size == 1 && count == 4000 &&
-	    ++batch_payload_reads == 2) {
-		errno = EIO;
-		return fread(data, size, count - 1, stream);
+	if (batch_ioctl_active && size == 1 && count == 4000) {
+		batch_payload_reads++;
+		if (batch_close_failure && !batch_close_path)
+			batch_close_stream = stream;
+		if (batch_read_failure && batch_payload_reads == 2) {
+			errno = EIO;
+			return fread(data, size, count - 1, stream);
+		}
 	}
 	return fread(data, size, count, stream);
 }
@@ -108,12 +145,16 @@ static pid_t observed_wait(pid_t child, int *status, int options,
 #define wait4 observed_wait
 #define ioctl observed_ioctl
 #define fread observed_fread
+#define fopen observed_fopen
+#define fclose observed_fclose
 #include "../../../daemon/daemon.c"
 #undef main
 #undef clock_gettime
 #undef wait4
 #undef ioctl
 #undef fread
+#undef fopen
+#undef fclose
 
 static void test_compiler_launch(void)
 {
@@ -387,7 +428,7 @@ static void test_learning_batch_attempt(void)
 	struct daemon_config cfg = { .mode = MODE_V1 };
 	struct kd_exe_info entry = { .pid = 0, .tgid = 42, .RIP = 0xffffffff81001000UL,
 		.lock_kind = KD_EXE_LOCK_MUTEX, .entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
-		.status_code = KD_EXE_CALL_MISS, .generation = 3 };
+		.status_code = KD_EXE_CALL_MISS, .generation = 0 };
 	unsigned char bytes[2048];
 	struct kd_recv_pkt packet;
 	unsigned int old_commands = cmd_cnt, old_bindings, old_cancels;
@@ -413,32 +454,29 @@ static void test_learning_batch_attempt(void)
 		.record_size = KD_LEARNING_RECORD_SIZE, .capacity = KD_LEARNING_CAPACITY,
 		.root = { .slot = 4, .pid = entry.pid, .rip = entry.RIP,
 			.lock_kind = entry.lock_kind, .entry_abi = entry.entry_abi },
-		.base_generation = 3, .revision = 5, .token = 1, .count = 5,
+		.base_generation = 0, .revision = 5, .token = 1, .count = 5,
 		.records = {
-			{1, 3, 0xffffffff81005000UL, 0, KD_LEARNING_CALL, 0},
-			{2, 3, 0xffffffff81005000UL, 0, KD_LEARNING_CALL, 0},
-			{3, 3, 0xffffffff81006000UL, 0xffffffff81002002UL, KD_LEARNING_IJ, 0},
-			{4, 3, 0xffffffff81007000UL, 0xffffffff81002002UL, KD_LEARNING_IJ, 0},
-			{5, 3, 0xffffffff81006000UL, 0, KD_LEARNING_CALL, 0},
+			{1, 0, 0xffffffff81005000UL, 0, KD_LEARNING_CALL, 0},
+			{2, 0, 0xffffffff81005000UL, 0, KD_LEARNING_CALL, 0},
+			{3, 0, 0xffffffff81006000UL, 0xffffffff81002002UL, KD_LEARNING_IJ, 0},
+			{4, 0, 0xffffffff81007000UL, 0xffffffff81002002UL, KD_LEARNING_IJ, 0},
+			{5, 0, 0xffffffff81006000UL, 0, KD_LEARNING_CALL, 0},
 		},
 	};
-	/* Establish a cold same-session fixture before modeling later published
-	 * generations. A daemon restart is never allowed to invent this scope. */
-	learning.entry = entry;
-	learning.entry.generation = 0;
-	learning.entry.status_code = KD_EXE_UNINIT;
-	learning.snapshot = batch_response;
-	learning.snapshot.base_generation = 0;
-	learning.snapshot.count = 0;
-	learning.snapshot.token = 9000;
-	assert(!learning_prepare(&cfg));
+	/* Later generations must follow real successful local uploads, never an
+	 * unexplained jump from a manually seeded generation-zero history. */
 	assert(learning_snapshot_valid(&batch_response, &entry));
+	batch_response.root.slot = KD_MAX_EXE;
+	assert(!learning_snapshot_valid(&batch_response, &entry));
+	assert(!learning_generation_accept(&entry, &batch_response));
+	batch_response.root.slot = 4;
 	batch_response.records[4].reserved = 1;
 	assert(!learning_snapshot_valid(&batch_response, &entry));
 	batch_response.records[4].reserved = 0;
 	batch_bind_error = EIO;
 	assert(learning_step(&cfg, &entry) == 1 && learning.active && learning.compiled);
 	assert(batch_snapshots == 1 && batch_bindings == 1 && !batch_cancels);
+	assert(learning_generations[4].initialized && !learning_generations[4].expected);
 	assert(cmd_cnt == (int)old_commands && fixture_read(counter, bytes, sizeof(bytes)) == 1);
 	workspace_path(workspace, sizeof(workspace), &cfg, &entry);
 	assert(provenance_path(path, sizeof(path), "%s/asm/callee_table.txt", workspace));
@@ -454,22 +492,23 @@ static void test_learning_batch_attempt(void)
 	batch_bind_error = 0;
 	assert(!learning_step(&cfg, &entry) && !learning.active);
 	assert(batch_snapshots == 1 && batch_bindings == 2 && !batch_cancels);
+	assert(learning_generations[4].expected == 1);
 	assert(fixture_read(counter, bytes, sizeof(bytes)) == 1);
 	assert(lseek(sys_fd, 0, SEEK_SET) == 0);
 	assert(read(sys_fd, &packet, sizeof(packet)) == sizeof(packet));
-	assert(packet.upload_id == batch_last_binding.upload_id && packet.base_generation == 3);
+	assert(packet.upload_id == batch_last_binding.upload_id && packet.base_generation == 0);
 	assert(read(sys_fd, bytes, 64) == 64 && bytes[45] == 2 && bytes[46] == 3);
 	assert(!memcmp(bytes + 9, "KDWB002", 7));
 	assert(lseek(sys_fd, 0, SEEK_END) >= 0);
 
 	/* A later finite snapshot unions cumulative roots and keeps its own
 	 * immutable attempt. A changed registry lifetime cancels that view. */
-	entry.generation = 4;
-	batch_response.base_generation = 4;
+	entry.generation = 1;
+	batch_response.base_generation = 1;
 	batch_response.token = 2;
 	batch_response.revision = 6;
 	batch_response.count = 1;
-	batch_response.records[0] = (struct kd_learning_record){6, 4,
+	batch_response.records[0] = (struct kd_learning_record){6, 1,
 		0xffffffff81008000UL, 0, KD_LEARNING_CALL, 0};
 	batch_response.flags = KD_LEARNING_OVERFLOW;
 	batch_response.overflow_report_events = 3;
@@ -485,7 +524,7 @@ static void test_learning_batch_attempt(void)
 	assert(batch_cancels == 1 && batch_bindings == old_bindings);
 	entry.tgid--;
 
-	/* Same addresses in another provider/session never adopt old histories. */
+	/* A changed receipt identity cannot authorize this session's old histories. */
 	snprintf(learning.session, sizeof(learning.session), "{\"provider_session\":\"fixture-other\"}\n");
 	batch_response.token = 3;
 	assert(!learning_step(&cfg, &entry));
@@ -499,22 +538,50 @@ static void test_learning_batch_attempt(void)
 	batch_response.token = 4;
 	old_cancels = batch_cancels;
 	assert(!fstat(sys_fd, &before));
-	assert(!learning_step(&cfg, &entry) && !learning.active);
+	batch_cancel_error = EIO;
+	assert(learning_step(&cfg, &entry) == 1 && learning.active && !learning.compiled);
 	assert(batch_cancels == old_cancels + 1 && batch_bindings == old_bindings);
+	{
+		unsigned int snapshots = batch_snapshots;
+
+		batch_cancel_error = 0;
+		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(batch_snapshots == snapshots && batch_cancels == old_cancels + 2);
+	}
+	assert(learning_generations[4].expected == 1 && batch_bindings == old_bindings);
 	assert(!fstat(sys_fd, &after) && after.st_size == before.st_size);
+	old_cancels = batch_cancels;
 	fixture_text("../disassem/disassem.py", "raise SystemExit(2)\n");
 	batch_response.token = 5;
 	assert(!learning_step(&cfg, &entry) && !learning.active);
-	assert(batch_cancels == old_cancels + 2 && batch_bindings == old_bindings);
+	assert(batch_cancels == old_cancels + 1 && batch_bindings == old_bindings);
+	assert(learning_generations[4].expected == 1);
 	assert(!fstat(sys_fd, &after) && after.st_size == before.st_size + (off_t)sizeof(packet));
 	assert(cmd_cnt == (int)old_commands);
+
+	/* Even a complete history read with a failing close cannot prepare a new
+	 * attempt, advance its generation, or acknowledge any pending records. */
+	assert(learning_storage_path(storage, sizeof(storage), &cfg, &entry, &batch_response));
+	assert(provenance_path(path, sizeof(path), "%s/asm/callee_table.txt", storage));
+	batch_close_path = path;
+	batch_close_failure = true;
+	batch_response.token = 6;
+	old_cancels = batch_cancels;
+	assert(!learning_step(&cfg, &entry) && !learning.active);
+	assert(batch_close_failures == 1 && !batch_close_failure);
+	assert(batch_cancels == old_cancels + 1 && batch_bindings == old_bindings);
+	assert(learning_generations[4].expected == 1);
+	assert(fixture_read(counter, bytes, sizeof(bytes)) == 2);
+	batch_close_path = NULL;
+	assert(provenance_path(path, sizeof(path), "%s/batch-6", storage));
+	assert(access(path, F_OK) == -1 && errno == ENOENT);
 
 	/* A missing established leaf cannot turn acknowledged cumulative input
 	 * into an empty history. The ledger view is canceled without a build. */
 	assert(learning_storage_path(storage, sizeof(storage), &cfg, &entry, &batch_response));
 	assert(provenance_path(path, sizeof(path), "%s/asm/ij_table.txt", storage));
 	assert(!unlink(path));
-	batch_response.token = 6;
+	batch_response.token = 7;
 	old_cancels = batch_cancels;
 	assert(!learning_step(&cfg, &entry));
 	assert(batch_cancels == old_cancels + 1 && batch_bindings == old_bindings);
@@ -526,7 +593,7 @@ static void test_learning_batch_attempt(void)
 	entry.tgid = 45;
 	batch_response.root.pid = 19;
 	batch_response.root.slot = 6;
-	batch_response.token = 7;
+	batch_response.token = 8;
 	assert(!learning_step(&cfg, &entry));
 	assert(batch_cancels == old_cancels + 2 && batch_bindings == old_bindings);
 	fixture_text("../disassem/disassem.py", script);
@@ -536,25 +603,143 @@ static void test_learning_batch_attempt(void)
 	batch_response.root.slot = 5;
 	entry.generation = batch_response.base_generation = 0;
 	entry.status_code = KD_EXE_UNINIT;
-	batch_response.token = 8;
+	batch_response.token = 9;
 	batch_response.count = 0;
+	batch_response.revision = 0;
 	batch_response.flags = 0;
 	batch_response.overflow_report_events = 0;
 	batch_read_failure = true;
 	assert(learning_step(&cfg, &entry) == 1 && learning.active);
 	assert(batch_bindings == old_bindings + 1 && batch_payload_reads == 2);
+	assert(!learning_generations[5].expected);
 	{
 		unsigned long failed_id = batch_last_binding.upload_id;
 		unsigned int snapshots = batch_snapshots;
 
 		batch_read_failure = false;
+		batch_close_failure = true;
 		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(batch_close_failures == 2 && !batch_close_failure);
 		assert(batch_last_binding.upload_id != failed_id);
 		assert(batch_snapshots == snapshots && batch_bindings == old_bindings + 2);
+		assert(learning_generations[5].expected == 1);
 	}
 	assert(fixture_read(counter, bytes, sizeof(bytes)) == 3);
 	assert(learning_storage_path(path, sizeof(path), &cfg, &entry, &batch_response));
 	assert(strcmp(path, storage));
+
+	/* Two writer descriptions can freeze different finite views. B publishes
+	 * {a,b}; A's stale {a} attempt must not later replace it with {a,c}. */
+	{
+		struct kd_learning_snapshot original, other;
+		char script_path[PATH_MAX], binary_path[1024];
+		unsigned int snapshots, bindings, cancels;
+		size_t compiled;
+		int original_fd = sys_fd, other_fd;
+
+		entry.pid = 23;
+		entry.tgid = 46;
+		entry.RIP = 0xffffffff81003000UL;
+		entry.generation = 0;
+		entry.status_code = KD_EXE_CALL_MISS;
+		batch_response = (struct kd_learning_snapshot) {
+			.version = KD_LEARNING_API_VERSION,
+			.header_size = KD_LEARNING_SNAPSHOT_HEADER_SIZE,
+			.record_size = KD_LEARNING_RECORD_SIZE, .capacity = KD_LEARNING_CAPACITY,
+			.root = { .slot = 7, .pid = entry.pid, .rip = entry.RIP,
+				.lock_kind = entry.lock_kind, .entry_abi = entry.entry_abi },
+			.base_generation = 0, .revision = 1, .token = 10, .count = 1,
+			.records = { {1, 0, 0xffffffff8100a000UL, 0, KD_LEARNING_CALL, 0} },
+		};
+		batch_bind_error = EIO;
+		assert(learning_step(&cfg, &entry) == 1 && learning.active && learning.compiled);
+		assert(learning_generations[7].initialized && !learning_generations[7].expected);
+		original = batch_response;
+		assert(learning_storage_path(storage, sizeof(storage), &cfg, &entry, &batch_response));
+		assert(provenance_path(path, sizeof(path), "%s/asm/callee_table.txt", storage));
+		assert(fixture_read(path, bytes, sizeof(bytes)) == strlen("0xffffffff8100a000\n"));
+		assert(!memcmp(bytes, "0xffffffff8100a000\n", strlen("0xffffffff8100a000\n")));
+		assert(!fstat(original_fd, &before));
+
+		other_fd = open("other-transport", O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0600);
+		assert(other_fd >= 3 && other_fd != original_fd);
+		sys_fd = other_fd;
+		batch_response.token = 11;
+		batch_response.revision = 2;
+		batch_response.count = 2;
+		batch_response.records[1] = (struct kd_learning_record){2, 0,
+			0xffffffff8100b000UL, 0, KD_LEARNING_CALL, 0};
+		other = original;
+		other.token = 0;
+		other.root.slot = KD_LEARNING_SLOT_LOOKUP;
+		other.revision = other.count = 0;
+		assert(!learning_ioctl(KD_LEARNING_SNAPSHOT, &other));
+		assert(other.token != original.token && other.count == 2);
+		assert(!mkdir("other-workspace", 0700) && !mkdir("other-workspace/asm", 0700));
+		fixture_text("other-workspace/asm/callee_table.txt",
+			"0xffffffff8100a000\n0xffffffff8100b000\n");
+		fixture_text("other-workspace/asm/ij_table.txt", "");
+		assert(realpath("../disassem/disassem.py", script_path));
+		assert(!compile_at(&cfg, &entry, "other-workspace", script_path));
+		batch_bind_error = 0;
+		assert(!write_sys_at(&cfg, &entry, false, "other-workspace/asm/jit.bin", &other));
+		assert(!fstat(other_fd, &after) && after.st_size > 0);
+		assert(!learning_generations[7].expected);
+		sys_fd = original_fd;
+		batch_response = original;
+		batch_bind_error = ESTALE;
+		cancels = batch_cancels;
+		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(batch_cancels == cancels + 1 && !learning_generations[7].expected);
+		assert(!fstat(original_fd, &after) && after.st_size == before.st_size);
+		compiled = fixture_read(counter, bytes, sizeof(bytes));
+		bindings = batch_bindings;
+		snapshots = batch_snapshots;
+
+		entry.generation = batch_response.base_generation = 1;
+		batch_response.token = 12;
+		batch_response.revision = 3;
+		batch_response.records[0] = (struct kd_learning_record){3, 1,
+			0xffffffff8100c000UL, 0, KD_LEARNING_CALL, 0};
+		batch_bind_error = 0;
+		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(batch_snapshots == snapshots + 1 && batch_bindings == bindings);
+		assert(batch_cancels == cancels + 2 && !learning_generations[7].expected);
+		assert(fixture_read(counter, bytes, sizeof(bytes)) == compiled);
+		assert(provenance_path(binary_path, sizeof(binary_path), "%s/batch-12", storage));
+		assert(access(binary_path, F_OK) == -1 && errno == ENOENT);
+		assert(fixture_read(path, bytes, sizeof(bytes)) == strlen("0xffffffff8100a000\n"));
+		assert(!memcmp(bytes, "0xffffffff8100a000\n", strlen("0xffffffff8100a000\n")));
+		assert(!fstat(original_fd, &after) && after.st_size == before.st_size);
+		assert(entry.generation == 1 && entry.status_code == KD_EXE_CALL_MISS);
+		assert(provenance_path(binary_path, sizeof(binary_path), "%s/asm/jit.bin", learning.directory));
+		assert(!access(binary_path, F_OK));
+
+		/* A matching receipt also cannot justify a larger unexplained jump. */
+		entry.generation = batch_response.base_generation = 3;
+		batch_response.token = 13;
+		batch_response.records[0].admitted_generation = 3;
+		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(batch_bindings == bindings && batch_cancels == cancels + 3);
+		assert(fixture_read(counter, bytes, sizeof(bytes)) == compiled);
+		assert(!learning_generations[7].expected);
+
+		/* A restarted daemon has no local generation knowledge. Its new
+		 * session and descriptor cannot bootstrap this already published root. */
+		assert(!close(original_fd));
+		sys_fd = open("restarted-transport", O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, 0600);
+		assert(sys_fd >= 3);
+		memset(learning_generations, 0, sizeof(learning_generations));
+		strcpy(learning.scope_tag, "session-fixture-restarted");
+		snprintf(learning.session, sizeof(learning.session), "{\"provider_session\":\"fixture-restarted\"}\n");
+		batch_response.token = 14;
+		assert(!learning_step(&cfg, &entry) && !learning.active);
+		assert(!learning_generations[7].initialized);
+		assert(batch_bindings == bindings && batch_cancels == cancels + 4);
+		assert(fixture_read(counter, bytes, sizeof(bytes)) == compiled);
+		assert(!fstat(sys_fd, &after) && !after.st_size);
+		assert(!close(other_fd));
+	}
 	assert(!close(sys_fd));
 	sys_fd = -1;
 	learning.enabled = batch_ioctl_active = false;

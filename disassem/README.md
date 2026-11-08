@@ -92,6 +92,15 @@ CALL-depth expansion. A missing relationship still takes the existing retained
 handback. A small source fixture can test this relationship without establishing
 that the saved munmap g9 image executed or that all return paths are covered.
 
+Direct CALLs seed return continuations in the existing analysis. Learned
+indirect CALLs retain dynamic RET learning: a forward target alone does not
+infer the callee's return edge. The CALL pushes its real source continuation;
+an unknown RET target pops it once and hands back at that target. An admitted
+RET report can supply the exact edge for a later build and invocation, subject
+to the existing source, translation and publication limits. This inherited
+behavior adds no continuation inference or extra decoding. Focused regressions
+cover the separate miss and later-build steps, including their stack effects.
+
 KD-only mutex images remain immutable and require the negotiated exclusive-KD
 and immutable-image capabilities. Exact instruction markers keep their existing
 image requirements and runtime source/owner/continuation checks. Trusted mode

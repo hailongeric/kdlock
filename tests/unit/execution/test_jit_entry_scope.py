@@ -23,6 +23,7 @@ from test_spin_shadow import definition
 def main(executor=None, benchmark=False):
     types, _ = production()
     types += without_includes(read_source((ROOT / "include/exe_info.h")))
+    types += '#include "kd_learning_api.h"\n'
     types += without_includes(read_source(ROOT / "include/kd_image.h"))
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += definition(read_source(ROOT / "include/kd_origin_service.h"),
@@ -144,7 +145,39 @@ def main(executor=None, benchmark=False):
         "\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
+    # Use the actual gate, frozen receipt and publisher alongside the full
+    # dispatcher. Only IRQ state and scheduled CAS observations are substitutes.
+    publication = "".join(definition(executor, signature) for signature in (
+        "static unsigned long kd_code_block_gate_lock(void)",
+        "static void kd_code_block_gate_unlock(unsigned long flags)",
+        "unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)",
+        "static bool kd_image_miss_kind(unsigned int kind)",
+        "static bool kd_image_miss_matches(const struct kd_learning_record *record,",
+        "static void kd_image_pending_tuple(struct kd_exe_info *entry,",
+        "static bool kd_image_miss_acknowledged(const struct kd_learning_record *record,",
+        "static bool kd_image_batch_has_survivors(const struct kd_image_learning_state *learning,",
+        "static void kd_image_ack_misses(struct kd_image_learning_state *learning,",
+        "int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,",
+        "void kd_image_disable(struct kd_exe_info *entry)",
+        "void kd_exe_snapshot_misses(const struct kd_exe_info *entry,",
+    ))
+    # Existing entry cases retain their descriptor/report doubles. The new
+    # publication cases route through these unchanged production definitions.
+    for original, local, signature in (
+        ("kd_image_current", "publication_current",
+         "const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry)"),
+        ("kd_image_report", "publication_report",
+         "void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image,"),
+    ):
+        publication += ("#define " + original + " " + local + "\n" +
+                        definition(executor, signature) + "#undef " + original + "\n")
     mutations = {
+        "mismatch-terminal-bypasses-publication-gate": (
+            'kd_image_disable(exe);\n\t\tpr_warn_ratelimited(\n'
+            '\t\t\t"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH',
+            'kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);\n\t\tpr_warn_ratelimited(\n'
+            '\t\t\t"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH',
+        ),
         "tail-skips-source-site-lease": (
             "result = kd_source_pin_target(site);", "result = 0;",
         ),
@@ -410,7 +443,8 @@ def main(executor=None, benchmark=False):
             )
         for name, mutation in [("production", None), *mutations.items()]:
             sources = {"frame_code.h": code, "hostcall_code.h": hostcalls,
-                       "timing_code.h": timing_code(), "registry_lookup.h": lookup}
+                       "timing_code.h": timing_code(), "registry_lookup.h": lookup,
+                       "publication_code.h": publication}
             if mutation:
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
@@ -436,6 +470,7 @@ def main(executor=None, benchmark=False):
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    "-pthread",
                     *(["-DKD_ENTRY_MUTATION"] if mutation else []),
                     *(["-DKD_BENCH_COMPLETION_FIXTURE"] if benchmark else []),
                     "-I",
