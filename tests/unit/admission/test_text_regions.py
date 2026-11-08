@@ -234,7 +234,10 @@ class DeviceSessionTests(unittest.TestCase):
                         'root_native_escape': False, 'indirect_call': False,
                         'origin_instruction': False, 'origin_call': False,
                         'origin_memory': False, 'origin_context_read': False,
-                        'indirect_tail': False, 'source_frontier': False})
+                        'indirect_tail': False, 'source_frontier': False,
+                        'source_frontier_extensions': False,
+                        'source_frontier_controls': False,
+                        'source_frontier_direction': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -411,10 +414,29 @@ class DeviceSessionTests(unittest.TestCase):
     def test_returning_calls_require_v14_and_provider_registry(self):
         self.caps_packet = device_session.CAPS_STRUCT.pack(14, 59 | 16384, 256, 8192)
         row = '1 ffffffff81001000 6 1 1 primitive_call\n'
-        with patch.object(Path, 'read_text', return_value=row), device_session.session():
+        parameters = Path('/sys/module/kdlock_km/parameters')
+        contents = dict(service_call_table_state='1 1 1\n')
+        contents.update({f'service_call_page_{page}': row if page == 0 else ''
+                         for page in range(8)})
+        reads = []
+
+        def read_registry(path, **kwargs):
+            self.assertEqual(path.parent, parameters)
+            self.assertEqual(kwargs, dict(encoding='ascii'))
+            self.assertIn(path.name, contents)
+            reads.append(path.name)
+            return contents[path.name]
+
+        # State is checked on both sides of the real paged reader. A service
+        # declaration belongs in its page, never in the discovery-state file.
+        with patch.object(Path, 'read_text', read_registry), device_session.session() as fd:
             calls = device_session.service_calls()
             self.assertEqual(calls[0xffffffff81001000]['nargs'], 6)
             self.assertEqual(calls[0xffffffff81001000]['cookie'], 1)
+            self.assertEqual(self.caps_queries, [fd])
+        self.assertEqual(reads, ['service_call_table_state'] +
+                         [f'service_call_page_{page}' for page in range(8)] +
+                         ['service_call_table_state'])
         self.assertFalse(device_session._origin_call)
         with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
             device_session.service_calls()
@@ -1063,7 +1085,7 @@ class CompactTextWindowTests(unittest.TestCase):
         self.cfg_terminal(terminal)
         return hot, [(bytes(self.text[0x2000:0x3000]), hot, [hot])], terminal
 
-    def test_retained_source_extensions_have_their_own_complete_boundary(self):
+    def test_abi2_source_extensions_obey_32_combined_transitions(self):
         for extensions in (32, 33):
             with self.subTest(extensions=extensions):
                 self.reads.clear()
@@ -1077,18 +1099,22 @@ class CompactTextWindowTests(unittest.TestCase):
                 self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
                 self.assertIn('source_extensions=32', log)
                 self.assertIn('covered_rebuilds=0', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
                 if extensions == 32:
                     self.assertEqual(status, 0, log)
                     self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
                     self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
                 else:
                     self.assertEqual((assembly, status, options), (b'', 2, {}))
-                    self.assertIn('exhausted_budget="source"', log)
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="source"', log)
                     self.assertIn('pending_targets_kind="source"', log)
-                    # No33rd source transition or late image construction.
+                    # No 33rd source transition or late image construction.
                     self.assertTrue(all(address < terminal for address, _ in self.reads))
 
-    def test_retained_covered_rebuilds_have_their_own_complete_boundary(self):
+    def test_abi2_covered_rebuilds_obey_32_combined_transitions(self):
         for rebuilds in (32, 33):
             with self.subTest(rebuilds=rebuilds):
                 self.reads.clear()
@@ -1103,30 +1129,53 @@ class CompactTextWindowTests(unittest.TestCase):
                 self.assertEqual(self.reads, [])
                 self.assertIn('covered_rebuilds=32', log)
                 self.assertIn('source_extensions=0', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
                 if rebuilds == 32:
                     self.assertEqual(status, 0, log)
                     self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
                     self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
                 else:
                     self.assertEqual((assembly, status, options), (b'', 2, {}))
-                    self.assertIn('exhausted_budget="covered"', log)
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="covered"', log)
                     self.assertIn('pending_targets_kind="covered"', log)
 
-    def test_retained_mixed_frontier_completes_on_the65th_decode(self):
-        entry, regions, terminal = self.cfg_mixed_chain(32)
-        with patch.object(translator, 'decode_regions',
-                          wraps=translator.decode_regions) as decode:
-            assembly, log, status = self.render_retained(entry, regions)
-        self.assertEqual(status, 0, log)
-        self.assertEqual(decode.call_count, 65)
-        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
-        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
-        self.assertIn('decode_pass=65', log)
-        self.assertIn('covered_rebuilds=32 source_extensions=32', log)
-        self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
-        self.assertNotIn('reason=CFG_WORK_LIMIT', log)
+    def test_abi2_mixed_frontier_completes_at_32_combined_transitions(self):
+        # Keep the original 32-pair stress graph as an explicit refusal case.
+        for pairs in (16, 17, 32):
+            with self.subTest(pairs=pairs):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_mixed_chain(pairs)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+                self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+                self.assertIn('decode_pass=33', log)
+                self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+                if pairs == 16:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
+                    self.assertNotIn('reason=CFG_WORK_LIMIT', log)
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="source"', log)
+                    self.assertIn('pending_targets_kind="source"', log)
+                    pending_source = BASE + 0x10000 + 16 * 0x3000
+                    self.assertTrue(all(address < pending_source for address, _ in self.reads))
+                    self.assertNotIn(f'loc_{terminal:x}:'.encode(), assembly)
 
-    def test_retained_total_ceiling_refuses_before_a66th_decode_or_read(self):
+    def test_abi2_combined_ceiling_refuses_before_a34th_decode_or_read(self):
         entry, regions, terminal = self.cfg_mixed_chain(33)
         options = {}
         with patch.object(translator, 'decode_regions',
@@ -1134,12 +1183,16 @@ class CompactTextWindowTests(unittest.TestCase):
             assembly, log, status = self.render_retained(
                 entry, regions, build_options=options)
         self.assertEqual((assembly, status, options), (b'', 2, {}))
-        self.assertEqual(decode.call_count, 65)
-        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
-        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
-        self.assertIn('exhausted_budget="source"', log)
-        self.assertIn('covered_rebuilds=32 source_extensions=32', log)
-        pending_source = BASE + 0x10000 + 32 * 0x3000
+        self.assertEqual(decode.call_count, 33)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+        self.assertIn('exhausted_budget="combined"', log)
+        self.assertIn('work_kind="source"', log)
+        self.assertIn('pending_targets_kind="source"', log)
+        self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+        self.assertIn('retained_profile=false', log)
+        self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+        pending_source = BASE + 0x10000 + 16 * 0x3000
         self.assertTrue(all(address < pending_source for address, _ in self.reads))
         self.assertNotIn(f'loc_{terminal:x}:'.encode(), assembly)
 
@@ -1228,21 +1281,37 @@ class CompactTextWindowTests(unittest.TestCase):
         self.assertEqual(regions[1][2], [separate])
         self.assertEqual(initial, [[data, BASE + 0x100, [old]]])
 
-    def test_budget_retry_completes_reached_callee_before_emission(self):
+    def test_compact_budget_retry_completes_learned_callee_before_emission(self):
         entry, callee = BASE + 0x100, BASE + 0x3100
         raw = branch(entry, callee, b"\xe8")
         raw += branch(entry + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
         self.put(entry, raw)
         self.put(callee, bytes.fromhex("b82a000000c3"))
+        plans = io.StringIO()
         with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 1536):
             initial = self.extend([], {entry})
             self.reads.clear()
-            assembly, log, status = self.render_retained(entry, initial)
+            # Exercise the compact planner explicitly with a learned root.
+            # Ordinary ABI2 translation does not select this window policy.
+            memread.diagnostics.begin(0, entry)
+            with contextlib.redirect_stderr(plans):
+                complete = self.extend(initial, {callee})
+            self.assertEqual(complete[0][0], initial[0][0])
+            self.assertEqual({root for _, _, roots in complete for root in roots},
+                             {entry, callee})
+            policies = []
+            assembly, log, status = self.render_retained(
+                entry, complete, direct_call_depth=1, read_policies=policies)
         self.assertEqual(status, 0, log)
         self.assertEqual(self.reads, [(entry, 1024), (callee, 512)])
+        self.assertEqual(policies, [memread.DEFAULT_WINDOW_POLICY])
         self.assertIn(f"loc_{entry:x}:".encode(), assembly)
         self.assertIn(f"loc_{callee:x}:".encode(), assembly)
-        self.assertIn("lookahead_bytes=512 ", log)
+        self.assertIn(f"loc_{callee:x}\nMOV".encode(), assembly)
+        self.assertIn(b"0x2a", assembly.lower())
+        self.assertIn("lookahead_bytes=512 ", plans.getvalue())
+        self.assertIn('"within_budget": false', plans.getvalue())
+        self.assertIn('selected=true', plans.getvalue())
         self.assertIn("pending_targets=0", log)
 
     def test_budget_minimum_keeps_full_instruction_across_alignment(self):
@@ -1321,7 +1390,7 @@ class CompactTextWindowTests(unittest.TestCase):
         self.assertIn(f"loc_{body:x}:".encode(), assembly)
         self.assertIn(b"0x13579bdf", assembly.lower())
 
-    def test_truncated_instruction_fetches_a_complete_compact_extension(self):
+    def test_truncated_instruction_fetches_a_complete_ordinary_extension(self):
         entry, cut = BASE + 0x2110, BASE + 0x2125
         self.put(entry, b"\x90" * (cut - entry))
         raw = bytes.fromhex("48b87856341200000000")
@@ -1329,15 +1398,19 @@ class CompactTextWindowTests(unittest.TestCase):
         self.put(cut, raw)
         # The cached prefix ends inside MOVABS, before the complete immediate.
         initial = [[bytes(self.text[0x2110:0x212A]), entry, [entry]]]
-        assembly, log, status = self.render_retained(entry, initial)
+        policies = []
+        assembly, log, status = self.render_retained(entry, initial, read_policies=policies)
         self.assertEqual(status, 0, log)
         self.assertIn("TEXT_RANGE_EXTEND", log)
         self.assertIn(b"0x12345678", assembly.lower())
         self.assertEqual(len(self.reads), 1)
         address, size = self.reads[0]
-        self.assertEqual(address, entry)
+        policy = memread.DEFAULT_WINDOW_POLICY
+        self.assertEqual(policies, [policy])
+        self.assertEqual(address, cut & ~(policy.alignment - 1))
+        self.assertEqual(size, max(policy.lookahead, cut + 15 - address))
         self.assertGreaterEqual(address + size, cut + 15)
-        self.assertLessEqual(size, 1024 + 16)
+        self.assertIn(f'loc_{entry:x}:'.encode(), assembly)
 
     def test_retry_retains_old_bytes_and_every_root(self):
         old, target = BASE + 0xF03, BASE + 0xFE1
