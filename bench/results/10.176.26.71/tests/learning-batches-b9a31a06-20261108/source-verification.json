@@ -1,0 +1,12 @@
+{
+  "current_source_matches_recheck": true,
+  "verified_files": 1093,
+  "first_to_recheck_changed_files": [
+    "daemon/learning.inc",
+    "include/kd_image.h",
+    "kernel_module/sys.c",
+    "tests/unit/execution/learning_control_fixture.inc",
+    "tests/unit/execution/test_native_service_join.py",
+    "tests/unit/infrastructure/test_source_lifetime.py"
+  ]
+}

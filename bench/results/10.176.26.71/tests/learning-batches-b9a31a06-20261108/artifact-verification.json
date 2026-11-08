@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "implementation_commit": "fed19bd66d82898a3a15af41c0b1a7a465d09e6a",
+  "artifacts": [
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/first-pass-checks.tar.gz",
+      "bytes": 42560367,
+      "sha256": "7923eaf4db51dc54543d6634581751ee583bc2be198c73c9129656461441aef6"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/first-pass-inputs.tar.gz",
+      "bytes": 2881308,
+      "sha256": "408c5bf95245837135a855cf613462752f188b41a46a59755f55c731c90820a0"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/interrupted-guest-result.json",
+      "bytes": 2076138,
+      "sha256": "d87bb88e242e0e85fdc5d50cc5f9c7ce2df0811ceb15c1f8ceaefd51f8bf797c"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/interrupted-inputs.tar.gz",
+      "bytes": 2881366,
+      "sha256": "313417d5de49c91de59b75de790f64725b3303aab385d3ea99e3e548895c9112"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/interrupted-local-receipts.tar.gz",
+      "bytes": 169192,
+      "sha256": "76c98420d9885e3df5754428e50fdc5774e62fd401f72f36764e0f5118fa56e8"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/recheck-checks.tar.gz",
+      "bytes": 42548735,
+      "sha256": "8e8ec125dbb36953b1428c0c2d1abad564f392e974548f17789f1ef786d70aa5"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/learning-batches-b9a31a06-20261108/recheck-inputs.tar.gz",
+      "bytes": 2881599,
+      "sha256": "91b350412ff37b25090c5c2de997cf243a46630c8eb6703e54e661238cac1f01"
+    }
+  ],
+  "interrupted_check_count": 0,
+  "content_scope": "Tracked source files; historical result contents excluded from scoped original-source hashing"
+}

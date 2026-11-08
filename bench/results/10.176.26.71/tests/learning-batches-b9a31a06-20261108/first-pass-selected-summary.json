@@ -1,0 +1,192 @@
+{
+  "output": "/mnt/kdlock-builds2/kdlock-batch-checks-djpstlb8",
+  "boot_id": "6148a091-cca7-4258-8d0b-d75227134564",
+  "passed": false,
+  "errors": [],
+  "final_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "frozen_source_unchanged": true,
+  "work_source_unchanged": true,
+  "original_manifest_set_unchanged": true,
+  "checks": [
+    {
+      "name": "daemon-build",
+      "status": "failed",
+      "returncode": 1,
+      "summary": [],
+      "warnings": [
+        "/mnt/kdlock-builds2/kdlock-batch-checks-djpstlb8/work/daemon/learning.inc:276:74: error: comparison of integer expressions of different signedness: \u2018__u32\u2019 {aka \u2018unsigned int\u2019} and \u2018int\u2019 [-Werror=sign-compare]"
+      ],
+      "warning_count": 1
+    },
+    {
+      "name": "test_control_call-build",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_control_call",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_policy-build",
+      "status": "failed",
+      "returncode": 1,
+      "summary": [],
+      "warnings": [
+        "/mnt/kdlock-builds2/kdlock-batch-checks-djpstlb8/work/tests/unit/basic/../../../daemon/learning.inc:276:74: error: comparison of integer expressions of different signedness: \u2018__u32\u2019 {aka \u2018unsigned int\u2019} and \u2018int\u2019 [-Werror=sign-compare]"
+      ],
+      "warning_count": 1
+    },
+    {
+      "name": "test_daemon_policy",
+      "status": "not_run",
+      "returncode": null,
+      "summary": [],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_provenance-build",
+      "status": "failed",
+      "returncode": 1,
+      "summary": [],
+      "warnings": [
+        "/mnt/kdlock-builds2/kdlock-batch-checks-djpstlb8/work/tests/unit/basic/../../../daemon/learning.inc:276:74: error: comparison of integer expressions of different signedness: \u2018__u32\u2019 {aka \u2018unsigned int\u2019} and \u2018int\u2019 [-Werror=sign-compare]"
+      ],
+      "warning_count": 1
+    },
+    {
+      "name": "test_daemon_provenance",
+      "status": "not_run",
+      "returncode": null,
+      "summary": [],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_exe_registry",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "registry mutation detected: registered-wrong-pid",
+        "registry mutation detected: registered-wrong-rip",
+        "registry mutation detected: registered-wrong-backend",
+        "registry mutation detected: registered-after-close"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_mutex_images",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "mutex images: immutable replacement, marker contract, terminal ban, stale misses and 64-block exhaustion passed",
+        "spin guard/root-marker images: exact contracts, stable prior images, ABI1/3 immutable transitions, stale upload/miss and terminal bans passed",
+        "direct images: generated slots, source pins, rel32 range, immutable lifetime and shared 64-image ceiling passed",
+        "origin images: exact opcode/successor directory, source pins, malformed upload refusal and immutable generation retention passed"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_native_service_join",
+      "status": "failed",
+      "returncode": 1,
+      "summary": [],
+      "warnings": [
+        "/mnt/kdlock-builds2/kdlock-batch-checks-djpstlb8/temporary/kd-native-service-join-pgol4rxk/join_types.h:349:10: fatal error: kd_learning_api.h: No such file or directory"
+      ],
+      "warning_count": 1
+    },
+    {
+      "name": "infrastructure-test_source_lifetime",
+      "status": "failed",
+      "returncode": 1,
+      "summary": [
+        "source lifetime mutation detected: writer-after-close",
+        "source lifetime mutation detected: frame-leak",
+        "source lifetime mutation detected: frame-after-close",
+        "source lifetime mutation detected: wrong-stack-capability"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "admission-test_text_regions",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "Ran 86 tests in 5.563s",
+        "OK"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "codegen-test_returning_calls",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "Ran 21 tests in 0.460s",
+        "OK"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "codegen-test_source_frontier",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "Ran 11 tests in 0.935s",
+        "OK"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "infrastructure-test_compiler_manifest",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "Ran 12 tests in 0.093s",
+        "OK"
+      ],
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "provider-build-only",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "warnings": [
+        "warning: the compiler differs from the one used to build the kernel",
+        "sys.c:246:1: warning: the frame size of 1664 bytes is larger than 1024 bytes [-Wframe-larger-than=]",
+        "kdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame",
+        "kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state",
+        "kdlock_km.o: warning: objtool: run_combiner+0x123f: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x266: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup"
+      ],
+      "warning_count": 12
+    }
+  ]
+}
