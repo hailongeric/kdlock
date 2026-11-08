@@ -1,11 +1,17 @@
 """Focused returning-CALL registry and emitted continuation checks."""
 import ctypes
+import hashlib
+import inspect
+import json
+import os
+from pathlib import Path
 import struct
 import unittest
 from unittest.mock import patch
 
 from test_jit_diagnostics import render, translator
 from test_jit_body_witness import run_image
+from test_ordinary_callee_bytes import source_bytes
 
 
 class ReturningCallTests(unittest.TestCase):
@@ -464,6 +470,199 @@ class ReturningCallTests(unittest.TestCase):
         self.assertEqual((regs[0], regs[1]), (0x6100, before[0][0] - 8))
         self.assertEqual(regs[12], 42)
         self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255), (1, 1, 0))
+
+    def test_learned_tail_nested_call_returns_through_shared_ret(self):
+        # Join the saved g9 motif using independent synthetic source bytes.
+        # The only learned input is the JMP edge; neither RET is seeded.
+        regions, names = source_bytes("""
+            mov r8, QWORD PTR [rdi]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi], r8
+            mov bl, 127
+            add bl, 1
+        outer_call:
+            call tail_thunk
+        outer_continuation:
+            mov QWORD PTR [rdi+72], rsp
+            mov r8, QWORD PTR [rdi+32]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+32], r8
+            seto cl
+            sets dl
+            setz bl
+        root_ret:
+            ret
+            .balign 4096
+        tail_thunk:
+            jmp rdx
+            .balign 4096
+        callback:
+            mov r8, QWORD PTR [rdi+8]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+8], r8
+        inner_call:
+            call inner
+        inner_continuation:
+            mov QWORD PTR [rdi+64], rsp
+            mov r8, QWORD PTR [rdi+24]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+24], r8
+            jmp shared_ret
+            .balign 4096
+        inner:
+            mov QWORD PTR [rdi+40], rsp
+            mov r9, QWORD PTR [rsp]
+            mov QWORD PTR [rdi+48], r9
+            mov r9, QWORD PTR [rsp+8]
+            mov QWORD PTR [rdi+56], r9
+            mov r8, QWORD PTR [rdi+16]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+16], r8
+        inner_ret:
+            ret
+            .balign 4096
+        shared_ret:
+            ret
+        """)
+        raw, base, _ = regions[0]
+        regions = [(raw, base, [names[name] for name in
+            ('source_entry', 'tail_thunk', 'callback', 'inner', 'shared_ret')])]
+        self.assertEqual(names['outer_continuation'], names['outer_call'] + 5)
+        self.assertEqual(names['inner_continuation'], names['inner_call'] + 5)
+        tail_source = names['tail_thunk'] + 2
+        inner_source, shared_source = names['inner_ret'] + 1, names['shared_ret'] + 1
+
+        # This mutation retains actual dispatch/emission and decoded bodies.
+        # It removes only the corrected walk, reproducing its former omission.
+        module = translator.indirect_jump
+        original_find, original_decode = module.find, translator.decode_regions
+        walk = ('            for target in sorted(learned_tails[start]):\n'
+                '                spend(1, start)\n'
+                '                targets.add(target)\n')
+        source = inspect.getsource(original_find)
+        self.assertEqual(source.count(walk), 1)
+        scope = dict(vars(module))
+        exec(compile(source.replace(walk, ''), '<tail-walk-control>', 'exec'), scope)
+        snapshots = []
+
+        def generate(finder):
+            decoded = []
+
+            def capture_decode(*args, **kwargs):
+                blocks, databases = original_decode(*args, **kwargs)
+                decoded.append(tuple((start, tuple((line.offset, bytes(line.b))
+                    for line in block.lines)) for start, block in sorted(blocks.items())))
+                return blocks, databases
+
+            def unexpected_read(address, size):
+                self.fail(f'joined motif requested extra text at {address:#x}, size {size}')
+
+            options = {}
+            with patch.object(module, 'find', finder), \
+                    patch.object(translator, 'decode_regions', side_effect=capture_decode):
+                assembly, log, status = render('', regions=regions,
+                    indirect_history={tail_source: [names['callback']]},
+                    memory_reader=unexpected_read, lock_kind='mutex', abi=2,
+                    trusted_source=True, body_witness=True,
+                    native_escape_capable=True, indirect_tail_capable=True,
+                    kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                                    'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+                    build_options=options, return_status=True)
+            self.assertEqual(status, 0, log)
+            self.assertTrue(decoded)
+            snapshots.append(decoded)
+            self.assertTrue(options['requirements'] & (1 << 13))
+            return assembly, options
+
+        control, control_options = generate(scope['find'])
+        corrected, corrected_options = generate(original_find)
+        self.assertEqual(snapshots[0], snapshots[1])
+        self.assertEqual(control_options, corrected_options)
+        inner_match = f'kd_ij_{inner_source:x}_{names["inner_continuation"]:x}:'.encode()
+        outer_match = f'kd_ij_{shared_source:x}_{names["outer_continuation"]:x}:'.encode()
+        for assembly in (control, corrected):
+            self.assertIn(inner_match, assembly)
+        self.assertNotIn(outer_match, control)
+        self.assertIn(outer_match, corrected)
+
+        # An isolated check may retain the exact synthetic inputs and wrapper
+        # outputs. Never replace an existing artifact directory or image.
+        directory = os.environ.get('KD_RETURN_FIXTURE_DIR')
+        directory = Path(directory).resolve() if directory else None
+        if directory is not None:
+            directory.mkdir(mode=0o700)
+        artifacts, outcomes = {}, {}
+
+        def retain(name, data):
+            artifacts[name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+            if directory is not None:
+                with (directory / name).open('xb') as stream:
+                    stream.write(data)
+
+        retain('source.bin', raw)
+        retain('source.json', (json.dumps({'base': base, 'symbols': names,
+            'roots': regions[0][2], 'indirect_history': {tail_source: [names['callback']]},
+            'decode_passes': len(snapshots[0]),
+            'decoded_instructions': sum(len(lines) for _, lines in snapshots[0][-1])},
+            sort_keys=True, indent=2) + '\n').encode())
+        retain('control.S', control)
+        retain('corrected.S', corrected)
+        real_build = translator.build_jit_binary
+        for label, assembly, options, returns in (
+                ('control', control, control_options, False),
+                ('corrected', corrected, corrected_options, True)):
+            with self.subTest(corrected=returns):
+                effects = (ctypes.c_ulong * 10)()
+                before = []
+
+                def initialize(regs, stack):
+                    regs[12] = 0x123456789abcdef0
+                    regs[14] = names['callback']  # Source RDX selects JMP RDX.
+                    regs[16] = ctypes.addressof(effects)
+                    before.append((regs[1], stack))
+
+                def capture_build(*args, **kwargs):
+                    result = real_build(*args, **kwargs)
+                    retain(label + '.bin', Path('asm/jit.bin').read_bytes())
+                    return result
+
+                with patch.object(translator, 'build_jit_binary', side_effect=capture_build):
+                    regs, args = run_image(assembly, [base], initialize=initialize,
+                        abi=2, requirements=options['requirements'])[0]
+                original_sp, stack = before[0]
+                self.assertEqual(args, [15, 1])
+                self.assertEqual(list(effects)[:5], [1, 1, 1, 1, int(returns)])
+                self.assertEqual(list(effects)[5:9], [original_sp - 16,
+                    names['inner_continuation'], names['outer_continuation'], original_sp - 8])
+                self.assertEqual((stack[5], stack[6], stack[7], stack[8]),
+                    (0, names['inner_continuation'], names['outer_continuation'], 0x4444))
+                self.assertEqual(regs[12], 0x123456789abcdef0)
+                self.assertEqual(regs[19] & 0x8d5, 0x890)
+                if returns:
+                    self.assertEqual(effects[9], original_sp)
+                    self.assertEqual((regs[0], regs[1], regs[17]),
+                        (0x4444, original_sp + 8, names['root_ret'] + 1))
+                    self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255),
+                                     (1, 1, 0))
+                else:
+                    self.assertEqual(effects[9], 0)
+                    self.assertEqual((regs[0], regs[1], regs[17]),
+                        (names['outer_continuation'], original_sp, shared_source))
+                outcomes[label] = {'exit': args, 'target': regs[0],
+                    'source_next_pc': regs[17], 'sp_delta': regs[1] - original_sp,
+                    'arithmetic_flags': regs[19] & 0x8d5,
+                    'effects': list(effects)[:5],
+                    'inner_sp_delta': effects[5] - original_sp,
+                    'inner_word': effects[6], 'outer_word': effects[7],
+                    'after_inner_sp_delta': effects[8] - original_sp,
+                    'outer_continuation_sp_delta': effects[9] - original_sp if returns else None}
+        self.assertIs(module.find, original_find)
+        receipt = {'synthetic_source': True, 'artifacts': artifacts, 'outcomes': outcomes,
+                   'decoded_source_equal': snapshots[0] == snapshots[1],
+                   'requirements_equal': control_options == corrected_options}
+        if directory is not None:
+            (directory / 'result.json').write_text(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
+        print('JOINED_TAIL_RESULT ' + json.dumps(receipt, sort_keys=True))
 
     def test_conditional_native_tail_keeps_both_source_paths(self):
         raw = bytearray.fromhex('e81b000000480534120000e8f0500000c3')
