@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -42,12 +43,15 @@ struct daemon_config {
 	useconds_t poll_us;
 };
 
+#include "evidence.inc"
+
 static unsigned int hash_hist[1000];
 static int hash_cnt;
 
 static char *cmd_hist[1000];
 static int cmd_results[1000];
 static unsigned long cmd_generations[1000];
+static struct provenance_compile cmd_provenance[1000];
 static int cmd_cnt;
 
 #include "workspace.inc"
@@ -105,6 +109,7 @@ static void check_once(const struct daemon_config *cfg)
 	for (i = 0; i < count; i++) {
 		struct kd_exe_info *exe = &entries[i];
 		int result = 0;
+		bool cache_hit;
 
 		cmd[0] = 0;
 
@@ -155,7 +160,8 @@ static void check_once(const struct daemon_config *cfg)
 		}
 
 		if (cmd[0]) {
-				if (!cmd_seen(cmd, exe->generation, &result)) {
+			cache_hit = cmd_seen(cmd, exe->generation, &result);
+			if (!cache_hit) {
 				if (cfg->verbose)
 					printf(" Compiling");
 				if (run_cmd(cmd, "workspace update")) {
@@ -169,7 +175,7 @@ static void check_once(const struct daemon_config *cfg)
 						printf("\n");
 					continue;
 				}
-					if (remember_cmd(cmd, exe->generation, result)) {
+				if (remember_cmd(cmd, exe->generation, result)) {
 					if (cfg->verbose)
 						printf("\n");
 					continue;
@@ -185,7 +191,7 @@ static void check_once(const struct daemon_config *cfg)
 						exe->pid, exe->RIP);
 				continue;
 			}
-			if (write_sys(cfg, exe)) {
+			if (write_sys(cfg, exe, cache_hit)) {
 				if (cfg->verbose)
 					printf("\n");
 				continue;
@@ -273,6 +279,7 @@ int main(int argc, char **argv)
 		perror("open /dev/kd_dev session");
 		return EXIT_FAILURE;
 	}
+	provenance_start(sys_fd);
 	if (run_cmd("rm -rf -- 0x*", "workspace cleanup")) {
 		close(sys_fd);
 		sys_fd = -1;

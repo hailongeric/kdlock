@@ -9,6 +9,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import compiler_manifest
+except Exception:
+    compiler_manifest = None
+
 from miasm_python314 import verify_runtime
 
 # Dependency failure is an environment error, never an admission refusal.
@@ -41,6 +46,14 @@ from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
     find_undecoded_policy_error, find_direct_call_targets,
 )
+
+
+def _compiler_observe(action, *args, **kwargs):
+    try:
+        if compiler_manifest is not None:
+            getattr(compiler_manifest, action)(*args, **kwargs)
+    except Exception:
+        pass
 
 
 def get_kernel_symbol(name, default=0):
@@ -127,6 +140,7 @@ def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
     )
     # Standalone/older callers have no proven requirements and keep both.
     gs, task = (True, True) if context_inputs is None else context_inputs
+    _compiler_observe('capture_assembly', './asm/jit.S')
     run_build_step(
         [
             "gcc",
@@ -181,6 +195,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     if not (trusted_source and lock_kind == 'mutex' and abi == 2):
         direct_call_depth = 0
     os.makedirs("./asm", exist_ok=True)
+    _compiler_observe('capture', 'translation', pid=pid, entry=entry,
+                      lock_kind=lock_kind, entry_abi=abi,
+                      trusted_source=trusted_source,
+                      direct_call_depth=direct_call_depth,
+                      body_witness=body_witness)
+    if abi != 2:
+        _compiler_observe('capture', 'service_table', mode='not_read', reason='entry_abi')
+        _compiler_observe('capture', 'controls', mode='not_read')
 
     if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
         diagnostics.set_instruction(entry, "<entry lock kind>")
@@ -935,6 +957,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                       | (indirect_jump.RETAINED_MISS_REQUIREMENT
                          if retained_misses else 0)
                       | (source_frontier.REQUIREMENT if has_frontiers else 0)))
+    _compiler_observe('complete', './asm/jit.bin', DEPENDENCY_IDENTITY)
     return 0
 
 

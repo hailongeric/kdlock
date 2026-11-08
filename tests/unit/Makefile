@@ -16,6 +16,7 @@ ALL_PY_TESTS := $(sort $(wildcard */test_*.py))
 all: $(TESTS)
 
 basic/test_daemon_policy: ../../daemon/daemon.c $(wildcard ../../daemon/*.inc) ../../include/exe_info.h
+basic/test_daemon_provenance: ../../daemon/daemon.c $(wildcard ../../daemon/*.inc) ../../include/exe_info.h
 basic/test_control_call: ../../include/kd_call.h
 
 basic/test_%: basic/test_%.c
@@ -52,4 +53,4 @@ run: $(TESTS)
 	if [ $$failed -gt 0 ]; then exit 1; fi
 
 clean:
-	rm -f $(BASIC_TESTS)
+	rm -f $(BASIC_TESTS) basic/test_daemon_provenance

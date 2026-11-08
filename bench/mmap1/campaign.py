@@ -197,6 +197,9 @@ class Campaign:
     def extra_provider_parameters(self):
         return []
 
+    def configure_daemon_evidence(self, daemon):
+        """Only the scoped settled runner opts into compiler/upload evidence."""
+
     def prepare(self):
         self.out.mkdir(parents=True, exist_ok=False)
         self.save()
@@ -229,6 +232,7 @@ class Campaign:
                    self.args.writer_entries and (params / 'service_trace').read_text().strip() == 'N' and
                    (params / 'rwsem_provider_active').read_text().strip() == 'N', 'provider settings differ')
         self.daemon = controller.Daemon(self.out, ROOT, Path(self.c['daemon']))
+        self.configure_daemon_evidence(self.daemon)
         self.daemon.start()
         self.owner = controller.Controller.__new__(controller.Controller)
         self.owner.args, self.owner.files, self.owner.audit = self.args, self.files, self.audit

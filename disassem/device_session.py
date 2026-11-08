@@ -8,6 +8,7 @@ import argparse
 import errno
 import fcntl
 import json
+import io
 import os
 from pathlib import Path
 import re
@@ -15,6 +16,33 @@ import stat
 import struct
 import sys
 from contextlib import contextmanager
+
+try:
+    import compiler_manifest
+except Exception:
+    # Optional evidence cannot change device/translation behavior.
+    compiler_manifest = None
+
+
+def _capture(event, **values):
+    try:
+        if compiler_manifest is not None:
+            compiler_manifest.capture(event, **values)
+    except Exception:
+        pass
+
+
+def _read_registry_text(path):
+    try:
+        observe = compiler_manifest is not None and compiler_manifest.enabled()
+    except Exception:
+        observe = False
+    if not observe:
+        return path.read_text(encoding='ascii'), None
+    # The same bytes feed evidence and parsing; preserve text-mode newline
+    # behavior without reopening a possibly changed registry file afterward.
+    raw = path.read_bytes()
+    return io.StringIO(raw.decode('ascii'), newline=None).read(), raw
 
 DEVICE = "/dev/kd_dev"
 # x86-64 Linux ioctl layout, checked against include/kd_source_api.h in tests.
@@ -116,6 +144,8 @@ def query_capabilities(fd):
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
     except OSError as error:
+        _capture('capabilities', fd=fd, raw=bytes(packet), result=None,
+                 errno=error.errno, validated=False, parsed=disabled)
         if error.errno != errno.ENOTTY:
             raise
         print(
@@ -185,7 +215,7 @@ def query_capabilities(fd):
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
         ):
-            return {
+            parsed = {
                 "mutex_stack_bytes": stack_bytes,
                 "percpu_module_bytes": module_bytes,
                 "mutex_images": bool(features & CAP_MUTEX_IMAGES),
@@ -208,12 +238,17 @@ def query_capabilities(fd):
                 "source_frontier_controls": bool(version >= 20 and features & CAP_SOURCE_FRONTIER),
                 "source_frontier_direction": bool(version >= 21 and features & CAP_SOURCE_FRONTIER),
             }
+            _capture('capabilities', fd=fd, raw=bytes(packet), result=result,
+                     validated=True, parsed=parsed)
+            return parsed
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
         f"mutex_stack_bytes=0 percpu_module_bytes=0 "
         f"result={result} packet={packet.hex()}",
         file=sys.stderr,
     )
+    _capture('capabilities', fd=fd, raw=bytes(packet), result=result,
+             validated=False, parsed=disabled)
     return disabled
 
 
@@ -342,10 +377,11 @@ def read_service_call_table(directory=None):
     directory = Path(directory) if directory is not None else Path('/sys/module/kdlock_km/parameters')
     state_path = directory / 'service_call_table_state'
     try:
-        before = state_path.read_text(encoding='ascii')
+        before, before_raw = _read_registry_text(state_path)
     except FileNotFoundError:
-        text = (directory / 'service_call_table').read_text(encoding='ascii')
-        parse_service_calls(text)
+        text, raw = _read_registry_text(directory / 'service_call_table')
+        parsed = parse_service_calls(text)
+        _capture('service_table', mode='legacy', raw=raw, parsed=parsed)
         return text
     fields = before.split()
     if len(fields) != 3 or not all(re.fullmatch(r'[0-9]+', value) for value in fields):
@@ -353,9 +389,9 @@ def read_service_call_table(directory=None):
     generation, slots, active = map(int, fields)
     if not 0 <= active <= slots <= 128 or not 0 <= generation <= 256:
         raise ValueError('Native discovery state exceeds its bounds')
-    texts, cookies, targets, symbols = [], set(), set(), set()
+    texts, raw_pages, cookies, targets, symbols = [], [], set(), set(), set()
     for page in range(8):
-        text = (directory / f'service_call_page_{page}').read_text(encoding='ascii')
+        text, raw = _read_registry_text(directory / f'service_call_page_{page}')
         rows = parse_service_calls(text)
         for target, row in rows.items():
             cookie = row['cookie']
@@ -364,12 +400,17 @@ def read_service_call_table(directory=None):
                 raise ValueError('Native discovery page membership differs')
             cookies.add(cookie); targets.add(target); symbols.add(row['symbol'])
         texts.append(text)
-    if state_path.read_text(encoding='ascii') != before:
+        raw_pages.append(raw)
+    after, after_raw = _read_registry_text(state_path)
+    if after != before:
         raise ValueError('Native discovery changed while being read')
     if len(cookies) != active:
         raise ValueError('Native discovery active count differs')
     text = ''.join(texts)
-    parse_service_calls(text, max_bytes=32768)
+    parsed = parse_service_calls(text, max_bytes=32768)
+    _capture('service_table', mode='paged', before=before_raw, after=after_raw,
+             generation=generation, slots=slots, active=active, pages=raw_pages,
+             parsed=parsed)
     return text
 
 
@@ -377,6 +418,7 @@ def service_calls():
     """Read exact declarations from the provider pinned by this device lease."""
     require()
     if not _origin_call:
+        _capture('service_table', mode='not_read', reason='capability_disabled')
         return {}
     return parse_service_calls(read_service_call_table(), max_bytes=32768)
 
@@ -402,9 +444,13 @@ def parse_rwsem_controls(text):
 def rwsem_controls():
     require()
     if not _origin_call:
+        _capture('controls', mode='not_read')
         return {}
     path = Path('/sys/module/kdlock_km/parameters/rwsem_control_table')
-    return parse_rwsem_controls(path.read_text(encoding='ascii'))
+    text, raw = _read_registry_text(path)
+    parsed = parse_rwsem_controls(text)
+    _capture('controls', mode='read', raw=raw, parsed=parsed)
+    return parsed
 
 
 def runtime_rwsem_controls(controls, returning_services):
@@ -494,7 +540,8 @@ def session():
         # capabilities are absent. Reject incompatibility before reading text.
         # A previously leased writer can finish while closing; no new writer
         # opens or image publication are accepted once draining begins.
-        if info(fd)["state"] not in (OPEN, DRAINING):
+        source_info = info(fd)
+        if source_info["state"] not in (OPEN, DRAINING):
             raise RuntimeError("kd_dev source session is retired")
         # Query the same validated description once, before any text read.
         # Never reuse a prior session's capability or open another provider.
@@ -503,6 +550,9 @@ def session():
             raise RuntimeError("exclusive KD mutex object capability required")
         if not caps["mutex_images"]:
             raise RuntimeError("immutable legacy mutex image publication capability required")
+        _capture('descriptor', fd=fd, inherited=inherited is not None,
+                 inherited_fd=parent_fd if inherited is not None else None,
+                 opened=opened, named=named, source_info=source_info)
         _mutex_stack_bytes = caps["mutex_stack_bytes"]
         _percpu_module_bytes = caps["percpu_module_bytes"]
         _native_escape = caps["native_escape"]

@@ -44,9 +44,10 @@ static ssize_t read_sys(void *buffer, size_t size)
 /* Transfer bounded payload chunks on the original device. Final status marks
  * readiness, not protection for an executor of a previous in-place image. */
 static int write_sys(const struct daemon_config *cfg,
-		     const struct kd_exe_info *exe)
+		     const struct kd_exe_info *exe, bool cache_hit)
 {
 	unsigned char buffer[sizeof(struct kd_recv_pkt) + MAX_PAYLOAD];
+	struct provenance_upload evidence = { 0 };
 	static unsigned long upload_sequence;
 	struct kd_recv_pkt pkt = {
 		.version = KD_IMAGE_PROTOCOL,
@@ -116,6 +117,7 @@ static int write_sys(const struct daemon_config *cfg,
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
 	pkt.offset = 0;
+	provenance_upload_begin(&evidence, exe, &pkt, cache_hit);
 
 	while (remaining) {
 		size_t chunk = remaining < MAX_PAYLOAD ? remaining :
@@ -144,15 +146,20 @@ static int write_sys(const struct daemon_config *cfg,
 					written, packet_size);
 			goto error;
 		}
+		if (remaining == chunk)
+			provenance_upload_time(&evidence);
+		provenance_upload_chunk(&evidence, buffer + sizeof(pkt), chunk);
 
 		remaining -= chunk;
 		pkt.offset += chunk;
 	}
 
+	provenance_upload_end(&evidence, true);
 	fclose(fp);
 	return 0;
 
 error:
+	provenance_upload_end(&evidence, false);
 	fclose(fp);
 	return -1;
 }

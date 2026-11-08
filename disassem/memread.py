@@ -2,11 +2,51 @@
 # Pin source residency before reading; extend cold CFG windows without silently
 # treating missing bytes as a completed critical section. No execution occurs.
 import errno
+import io
 from typing import NamedTuple
 
 import device_session
 import diagnostics
 from elftools.elf.elffile import ELFFile
+
+try:
+    import compiler_manifest
+except Exception:
+    compiler_manifest = None
+
+
+def _capture_history(**values):
+    try:
+        if compiler_manifest is not None:
+            compiler_manifest.capture('history', **values)
+    except Exception:
+        pass
+
+
+def _read_history(name):
+    path = './asm/' + name
+    try:
+        observe = compiler_manifest is not None and compiler_manifest.enabled()
+    except Exception:
+        observe = False
+    raw = None
+    try:
+        if observe:
+            with open(path, 'rb') as table:
+                raw = table.read()
+            text = io.StringIO(raw.decode('ascii'), newline=None).read()
+        else:
+            with open(path, 'r', encoding='ascii') as table:
+                text = table.read()
+    except OSError as error:
+        text = ''
+        if observe:
+            _capture_history(name=name, state='unavailable', errno=error.errno,
+                             text=text, raw=None)
+        return text
+    if observe:
+        _capture_history(name=name, state='read', text=text, raw=raw)
+    return text
 
 PAGE_SIZE = 0x1000
 WINDOW_SIZE = 2 * PAGE_SIZE
@@ -173,11 +213,7 @@ def extend_regions(regions, targets, *, policy=DEFAULT_WINDOW_POLICY):
 
 def read(entry, jump_table, excluded_callees=None, *, policy=DEFAULT_WINDOW_POLICY):
     excluded_callees = excluded_callees or set()
-    try:
-        with open("./asm/ij_table.txt", "r", encoding="ascii") as table:
-            ij_file = table.read()
-    except OSError:
-        ij_file = ""
+    ij_file = _read_history('ij_table.txt')
 
     ij_file = sorted(set(ij_file.splitlines()))
     ij_his = [[int(x.split()[0], 16), int(x.split()[1], 16)] for x in ij_file]
@@ -194,11 +230,7 @@ def read(entry, jump_table, excluded_callees=None, *, policy=DEFAULT_WINDOW_POLI
     targets = [x[1] for x in ij_his if x[1] not in excluded_callees]
     targets.append(entry)
 
-    try:
-        with open("./asm/callee_table.txt", "r", encoding="ascii") as table:
-            calleefile = table.read()
-    except OSError:
-        calleefile = ""
+    calleefile = _read_history('callee_table.txt')
     callees = [
         int(x, 16)
         for x in calleefile.splitlines()

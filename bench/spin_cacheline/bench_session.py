@@ -102,6 +102,12 @@ class Session:
         self.daemon_log = (self.path / "daemon.log").open("w")
         env = dict(os.environ, KD_JIT_BODY_WITNESS="1")
         env.pop("KD_DEVICE_FD", None)
+        for name in ('KD_PROVENANCE_DIR', 'KD_PROVENANCE_ENTRY', 'KD_PROVENANCE_ATTEMPT_DIR'):
+            env.pop(name, None)
+        evidence = getattr(self, 'provenance', None)
+        if evidence is not None:
+            env.update(KD_PROVENANCE_DIR=str(evidence['directory']),
+                       KD_PROVENANCE_ENTRY=hex(evidence['entry']))
         self.daemon = subprocess.Popen([getattr(self, 'daemon_binary', ROOT / "daemon/daemon"), "--quiet", "--metrics",
                                         "--mode", "per-tgid"], cwd=workspace / "daemon",
                                        env=env, stdout=self.daemon_log,

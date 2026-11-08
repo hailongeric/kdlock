@@ -7,9 +7,11 @@ import json
 from pathlib import Path
 import re
 import struct
+import time
 import traceback
 
 import observe
+import provenance
 
 campaign = observe.campaign
 rt, bench = campaign.rt, campaign.bench
@@ -59,6 +61,18 @@ def drained_counts(rows):
 
 
 class SettledObservation(observe.Observation):
+    def provenance_failure(self, error):
+        evidence = dict(passed=False, scope='source-derived immutable ABI2 upload association',
+                        error=repr(error))
+        self.result['required_publication'] = evidence
+        self.save()
+        raise rt.Failure('DATA_ERROR', 'required publication provenance unavailable: ' + str(error)) from error
+
+    def configure_daemon_evidence(self, daemon):
+        required = self.c.get('required_publication')
+        if required is not None:
+            daemon.provenance = dict(directory=self.out / 'provenance', entry=required['entry'])
+
     def compiler_records(self):
         return [json.loads(line.split(' ', 1)[1]) for line in
                 (self.out / 'daemon.log').read_text().splitlines()
@@ -69,7 +83,12 @@ class SettledObservation(observe.Observation):
         source = rt.status()
         rt.require(source['state'] == source['frames'] == 0 and source['writers'] == 1,
                    'source is not settled', 'UNDRAINED')
+        scoped = getattr(self, 'c', {}).get('required_publication') is not None
+        if scoped:
+            read_start = time.monotonic_ns()
         rows = rt.registry()
+        if scoped:
+            read_end = time.monotonic_ns()
         bench.execution.ready_writer_entries(rows, self.args.writer_entries)
         rt.require(bench.execution.registry(rows) == learned['registry_after'],
                    'settled images differ from copied learning artifacts', 'LEARNING_ADVANCED')
@@ -78,6 +97,24 @@ class SettledObservation(observe.Observation):
         self.owner.model = folder
         exact = self.owner.session_receipt(self.daemon, rows)
         exact.verify()
+        if scoped:
+            observation = dict(schema=1, clock='CLOCK_MONOTONIC',
+                read_site='SettledObservation.fixed_receipt', boot_id=exact.expected['boot_id'],
+                observer=exact.expected['preparer'], read_start_ns=read_start,
+                read_end_ns=read_end, registry=rows)
+            destination = folder / 'provenance'
+            try:
+                bound = provenance.capture(self.out / 'provenance', destination, observation,
+                                           exact.expected, self.c['required_publication'])
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                self.provenance_failure(error)
+            value = dict(exact.expected, files=dict(exact.expected['files'], **bound),
+                provenance=dict(root=str(destination), observation=str(destination / 'observation.json'),
+                                association=str(destination / 'association.json')))
+            # Extend the not-yet-used receipt without another live observation.
+            rt.write_json(exact.path, value)
+            self.owner.files.update(bound)
+            exact = bench.execution.ExecutionSession(exact.path, rt.digest(exact.path))
         return exact
 
     def publication_gate(self):
@@ -86,32 +123,22 @@ class SettledObservation(observe.Observation):
             return
         entry, target, source_ip = (required[key] for key in ('entry', 'call_target', 'source_ip'))
         self.exact.verify()
-        row = next(row for row in self.exact.expected['registry'] if row['entry'] == entry)
-        label = hex(entry) + '-g' + str(row['generation'])
-        files = self.exact.expected['files']
-        paths = [Path(name) for name in files if Path(name).name == 'jit.S' and Path(name).parent.name == label]
-        rt.require(len(paths) == 1, 'required published assembly is not bound to this receipt', 'DATA_ERROR')
-        assembly = paths[0].read_bytes()
-        digest = hashlib.sha256(assembly).hexdigest()
-        rt.require(digest == files[str(paths[0])], 'published artifact changed before inspection', 'DATA_ERROR')
-        history_path = self.out / 'workspace/daemon' / hex(entry) / str(row['tgid']) / 'asm/callee_table.txt'
-        history = history_path.read_bytes()
+        captured = self.exact.expected.get('provenance')
+        rt.require(captured is not None, 'required publication has no provenance chain', 'DATA_ERROR')
+        try:
+            observation = json.loads(Path(captured['observation']).read_bytes())
+            chain, _, assembly, history = provenance.associate(
+                captured['root'], observation, self.exact.expected, required)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            self.provenance_failure(error)
+        row = chain['registry']
         reached = target in {int(line, 16) for line in history.decode().splitlines() if line.strip()}
         emission = frontier_emission(assembly.decode(), target, source_ip)
-        segment, leased = [], False
-        for line in (self.out / 'daemon.log').read_text().splitlines():
-            if line.startswith('KD_TRANSLATION_METRICS '):
-                metric = json.loads(line.split(' ', 1)[1])
-                leased |= (metric['entry'] == hex(entry) and metric['result'] == 0 and
-                           any('source_frontier_direction=1' in text for text in segment))
-                segment = []
-            else:
-                segment.append(line)
         evidence = dict(required=required, registry=row, capability=current_capability(),
-            assembly=dict(path=str(paths[0]), sha256=digest),
-            history=dict(path=str(history_path), sha256=hashlib.sha256(history).hexdigest()),
-            historically_reached_target=reached, leased_direction_compiler=leased, **emission)
-        evidence['passed'] = reached and leased and all(emission.values())
+            chain=chain, assembly=dict(sha256=hashlib.sha256(assembly).hexdigest()),
+            history=dict(sha256=hashlib.sha256(history).hexdigest()),
+            historically_reached_target=reached, leased_direction_compiler=True, **emission)
+        evidence['passed'] = reached and all(emission.values())
         folder = self.out / 'required-publication'
         folder.mkdir()
         (folder / 'callee_table.txt').write_bytes(history)

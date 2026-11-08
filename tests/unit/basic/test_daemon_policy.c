@@ -220,7 +220,7 @@ static void test_chunk_session(void)
 	/* A dead path catches accidental reopen; headers/payload still travel
 	 * through one shared file description, including the final publication. */
 	sys_path = "/no-such-kdlock-device";
-	assert(!write_sys(&cfg, &exe));
+	assert(!write_sys(&cfg, &exe, false));
 	assert(lseek(sys_fd, 0, SEEK_SET) == 0);
 	for (size_t offset = 0; offset < sizeof(image);) {
 		struct kd_recv_pkt packet;
@@ -241,7 +241,7 @@ static void test_chunk_session(void)
 	assert(read_sys(chunk, sizeof(chunk)) == 0);
 	assert(!close(sys_fd));
 	sys_fd = -1;
-	assert(write_sys(&cfg, &exe) == -1);
+	assert(write_sys(&cfg, &exe, false) == -1);
 	assert(read_sys(chunk, sizeof(chunk)) == -EBADF);
 	assert(!unlink("0x1234/asm/jit.bin"));
 	assert(!rmdir("0x1234/asm"));
