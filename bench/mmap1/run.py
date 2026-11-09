@@ -327,7 +327,7 @@ def timeout_tasks(parent):
 
 def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=None,
               diagnostic_log_bytes=None, diagnostic_collector=None, learning=False,
-              window_observer=None):
+              window_observer=None, application_deadline=None):
     """One normal upstream lifetime; observations end during its own warmup."""
     if execution_session is None:
         idle(allow_identity_probe=diagnostic)
@@ -336,7 +336,6 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
                    'explicit verified execution-session contract required')
         execution_session.verify(allow_identity_probe=diagnostic)
     verify()
-    out.mkdir()
     binary = inputs['binaries'][spec['model']]
     upstream_samples = spec.get('upstream_samples', UPSTREAM_S)
     measured_samples = spec.get('measured_samples', SAMPLES)
@@ -346,6 +345,10 @@ def run_point(out, spec, inputs, verify, *, diagnostic=False, execution_session=
                'application deadline outside bounds')
     rt.require(type(use_window) is bool and (window_observer is None or use_window),
                'window observer requires line-delivered output')
+    if application_deadline is not None:
+        rt.require(time.monotonic() + timeout_seconds <= application_deadline,
+                   'learning deadline reached after application startup verification', 'LEARNING_ADVANCED')
+    out.mkdir()
     command = argv(binary, spec['workers'], upstream_samples)
     traced = diagnostic or (execution_session is not None and
                            execution_session.expected['parameters']['service_trace'] == 'Y')

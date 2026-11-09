@@ -47,7 +47,8 @@ def learning_progress(c, number, phase, rows, application=None):
 
 
 def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify, *,
-                    deadline=None, quiescent=None, before_application=None, window_observer=None):
+                    deadline=None, quiescent=None, before_application=None, window_observer=None,
+                    application_deadline=None):
     """Renew exact receipts only at quiescent learning boundaries."""
     timeout, limit = learning_limits(c)
     own_deadline = time.monotonic() + timeout
@@ -150,7 +151,8 @@ def demand_learning(c, out, owner, daemon, bench, rt, inputs, verify, *,
             spec.update(upstream_samples=724, measured_samples=10, nominal_seconds=10,
                         timeout_seconds=800, sample_window=True)
         application = bench.run_point(out / ('learning-%02d' % number), spec,
-            inputs, verify, execution_session=learning, learning=True, window_observer=window_observer)
+            inputs, verify, execution_session=learning, learning=True, window_observer=window_observer,
+            **({} if application_deadline is None else dict(application_deadline=application_deadline)))
         after = bench.execution.registry(learning.expected['registry'])
         observations.append(dict(application=application, registry_before=before, registry_after=after))
         rt.write_json(out / 'learning.json', observations)

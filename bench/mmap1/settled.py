@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One instrumented point using a fixed receipt after one long learning run."""
+"""One instrumented point after bounded application learning and settlement."""
 import argparse
 import fcntl
 import hashlib
@@ -63,6 +63,73 @@ def drained_counts(rows):
 
 
 class SettledObservation(observe.Observation):
+    def continuation_limit(self):
+        limit = self.c.get('continuation_rounds', 8)
+        rt.require(type(limit) is int and 0 <= limit <= 64,
+                   'continuation rounds must be bounded from zero to 64', 'DATA_ERROR')
+        return limit
+
+    def learning_to_stability(self, folder):
+        """Exercise settled replacements without renewing the campaign deadline."""
+        limit = self.continuation_limit()
+        self.result['learning_budget'] = dict(timeout_seconds=self.c.get('learning_timeout', 900),
+            deadline_monotonic=self.deadline,
+            continuation_rounds=limit, continuation_application_seconds=30)
+        records = self.result['learning_continuations'] = []
+        learned = None
+        for number in range(limit + 1):
+            destination = folder / ('learning' if number == 0 else 'continuation-%02d' % number)
+            learning_limit = None
+            before = None if number == 0 else self.window_observer()
+            try:
+                if number == 0:
+                    self.learn(8, destination)
+                else:
+                    # Leave enough time for the existing short application bound.
+                    # Settlement uses this same deadline, including compilation.
+                    rt.require(time.monotonic() + 30 <= self.deadline,
+                               'campaign learning deadline reached before continuation', 'LEARNING_ADVANCED')
+                    destination.mkdir()
+                    config = dict(self.c, workers=8, model=self.current_model,
+                                  long_warmup=False, learning_rounds=1)
+                    self.exact, _ = campaign.point.demand_learning(config, destination,
+                        self.owner, self.daemon, bench, rt, self.inputs, self.verify,
+                        deadline=self.deadline, quiescent=self.pool,
+                        before_application=self.admit_images, application_deadline=self.deadline)
+            except rt.Failure as error:
+                if error.status != 'LEARNING_ADVANCED' or not (destination / 'learning.json').is_file():
+                    raise
+                learning_limit = str(error)
+            path = destination / 'learning.json'
+            rt.require(path.is_file(), 'learning application receipt missing', 'DATA_ERROR')
+            observations = json.loads(path.read_text())
+            rt.require(len(observations) == 1 and observations[0]['application']['passed'] and
+                       observations[0]['application']['drained'],
+                       'learning application did not complete and drain', 'UNDRAINED')
+            learned = observations[0]
+            record = dict(path=str(path), sha256=rt.digest(path), application=learned['application'],
+                registry_before=learned['registry_before'], registry_after=learned['registry_after'],
+                learning_limit=learning_limit)
+            stable = learning_limit is None and learned['registry_before'] == learned['registry_after']
+            if number == 0:
+                rt.require(learned['application']['sample_window']['samples'] == 730,
+                           'long learning sample count differs', 'DATA_ERROR')
+                self.result['preparation'] = record
+            else:
+                after = self.window_observer()
+                record['service_delta'] = deltas(before['service'], after['service'])
+                drained_counts(record['service_delta'])
+                records.append(record)
+            record['stable'] = stable
+            self.save()
+            if stable:
+                if number:
+                    rt.require(all(row['jit_entered'] > 0 and row['local_no_image'] == 0
+                                   for row in record['service_delta']),
+                               'continuation did not exercise each prepared image', 'DATA_ERROR')
+                return learned
+        raise rt.Failure('LEARNING_ADVANCED', 'bounded continuation learning has not settled during an application')
+
     def provenance_failure(self, error):
         evidence = dict(passed=False, scope='source-derived immutable ABI2 upload association',
                         error=repr(error))
@@ -211,6 +278,7 @@ class SettledObservation(observe.Observation):
         rt.require(self.models == ['processes'] and self.counts == [8] and
                    self.c['learning_rounds'] == 1 and self.c.get('long_warmup') is True,
                    'one process-model long learning run and one fixed point required', 'DATA_ERROR')
+        self.continuation_limit()
         required = self.c.get('required_publication')
         rt.require(required is None or (type(required) is dict and
                    set(required) == {'entry', 'call_target', 'source_ip'} and
@@ -227,25 +295,7 @@ class SettledObservation(observe.Observation):
             self.current_model = 'processes'
             folder = self.out / self.current_model
             folder.mkdir()
-            limit = None
-            try:
-                self.learn(8, folder / 'learning')
-            except rt.Failure as error:
-                if error.status != 'LEARNING_ADVANCED':
-                    raise
-                limit = str(error)
-            path = folder / 'learning/learning.json'
-            rt.require(path.is_file(), 'long learning application receipt missing', 'DATA_ERROR')
-            observations = json.loads(path.read_text())
-            rt.require(len(observations) == 1 and observations[0]['application']['passed'] and
-                       observations[0]['application']['drained'] and
-                       observations[0]['application']['sample_window']['samples'] == 730,
-                       'long learning application did not complete and drain', 'UNDRAINED')
-            learned = observations[0]
-            self.result['preparation'] = dict(path=str(path), sha256=rt.digest(path),
-                application=learned['application'], registry_after=learned['registry_after'],
-                learning_limit=limit)
-            self.save()
+            learned = self.learning_to_stability(folder)
             self.exact = self.fixed_receipt(folder / 'fixed-session', learned)
             self.publication_gate()
             row = dict(model=self.current_model, workers=8, state='MEASURING', scored=False)

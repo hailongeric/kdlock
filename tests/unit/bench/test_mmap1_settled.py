@@ -1,6 +1,7 @@
 """Fixed-session continuation checks; execute only in the development VM."""
 import importlib.util
 import io
+import json
 from pathlib import Path
 import sys
 import struct
@@ -136,6 +137,134 @@ class FixedSession(unittest.TestCase):
                 self.assertIs(value.fixed_receipt(Path(name) / 'receipt', dict(registry_after=rows)), exact)
             value.owner.session_receipt.assert_called_once_with(value.daemon, rows)
             exact.verify.assert_called_once()
+
+    def learning_value(self, folder, transitions, limit=8):
+        value = self.value(folder)
+        value.c = dict(learning_timeout=1800, continuation_rounds=limit, long_warmup=True)
+        value.current_model, value.inputs, value.verify = 'processes', {}, Mock()
+        value.result, value.deadline, value.pool = {}, 1000, Mock()
+        zero = {key: 0 for key in settled.observe.FIELDS}
+        done = dict(zero, selected=1, submitted=1, bound=1, jit_entered=1,
+                    returned=1, dispatch_samples=1, shadow_samples=1)
+        value.window_observer = Mock(side_effect=[dict(service={1: zero}), dict(service={1: done})] * 8)
+        pending = iter(transitions)
+
+        def receipt(destination):
+            before, after = next(pending)
+            destination.mkdir(exist_ok=True)
+            application = dict(passed=True, drained=True, sample_window=dict(samples=730))
+            observation = dict(registry_before=before, registry_after=after, application=application)
+            (destination / 'learning.json').write_text(json.dumps([observation]))
+            if before != after:
+                raise settled.rt.Failure('LEARNING_ADVANCED', 'replacement published after application')
+            return SimpleNamespace(), [observation]
+
+        value.learn = Mock(side_effect=lambda workers, destination: receipt(destination))
+        return value, receipt
+
+    def test_continuations_exercise_each_settled_generation_with_one_deadline(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, receipt = self.learning_value(Path(name), [(1, 2), (2, 3), (3, 3)])
+            with patch.object(settled.time, 'monotonic', return_value=100), \
+                 patch.object(settled.campaign.point, 'demand_learning',
+                              side_effect=lambda config, destination, *args, **kwargs: receipt(destination)) as learn:
+                learned = value.learning_to_stability(Path(name))
+            self.assertEqual(learned['registry_after'], 3)
+            value.learn.assert_called_once()
+            self.assertEqual(learn.call_count, 2)
+            for call in learn.call_args_list:
+                self.assertFalse(call.args[0]['long_warmup'])
+                self.assertEqual(call.args[0]['learning_rounds'], 1)
+                self.assertEqual(call.kwargs['deadline'], 1000)
+                self.assertEqual(call.kwargs['application_deadline'], 1000)
+                self.assertIs(call.kwargs['quiescent'], value.pool)
+                self.assertIs(call.kwargs['before_application'], value.admit_images)
+            self.assertTrue(value.c['long_warmup'])
+            self.assertEqual([row['stable'] for row in value.result['learning_continuations']], [False, True])
+
+    def test_continuation_count_exhaustion_cannot_create_a_fixed_receipt(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, receipt = self.learning_value(Path(name), [(1, 2), (2, 3)], limit=1)
+            with patch.object(settled.time, 'monotonic', return_value=100), \
+                 patch.object(settled.campaign.point, 'demand_learning',
+                              side_effect=lambda config, destination, *args, **kwargs: receipt(destination)) as learn:
+                with self.assertRaises(settled.rt.Failure) as error:
+                    value.learning_to_stability(Path(name))
+            self.assertEqual(error.exception.status, 'LEARNING_ADVANCED')
+            learn.assert_called_once()
+            value.owner.session_receipt.assert_not_called()
+
+    def test_deadline_prevents_another_application_without_renewal(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, _ = self.learning_value(Path(name), [(1, 2)])
+            with patch.object(settled.time, 'monotonic', return_value=971), \
+                 patch.object(settled.campaign.point, 'demand_learning') as learn:
+                with self.assertRaises(settled.rt.Failure) as error:
+                    value.learning_to_stability(Path(name))
+            self.assertEqual(error.exception.status, 'LEARNING_ADVANCED')
+            self.assertEqual(value.deadline, 1000)
+            learn.assert_not_called()
+
+    def test_failed_continuation_is_not_repeated(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, _ = self.learning_value(Path(name), [(1, 2)])
+            failure = settled.rt.Failure('UNDRAINED', 'application is still active')
+            with patch.object(settled.time, 'monotonic', return_value=100), \
+                 patch.object(settled.campaign.point, 'demand_learning', side_effect=failure) as learn:
+                with self.assertRaises(settled.rt.Failure) as error:
+                    value.learning_to_stability(Path(name))
+            self.assertIs(error.exception, failure)
+            learn.assert_called_once()
+
+    def test_late_settlement_prevents_application_start_after_verification(self):
+        with tempfile.TemporaryDirectory() as name:
+            out = Path(name) / 'application'
+            session = Mock(spec=settled.bench.execution.ExecutionSession)
+            clock = [100]
+            def settled_verification(**kwargs):
+                clock[0] = 971
+            session.verify.side_effect = settled_verification
+            verify = Mock()
+            with patch.object(settled.bench.time, 'monotonic', side_effect=lambda: clock[0]), \
+                 patch.object(settled.bench, 'argv') as argv:
+                with self.assertRaises(settled.rt.Failure) as error:
+                    settled.bench.run_point(out, dict(model='processes', workers=8),
+                        dict(binaries={'processes': '/unused/mmap1'}), verify,
+                        execution_session=session, learning=True, application_deadline=1000)
+            self.assertEqual(error.exception.status, 'LEARNING_ADVANCED')
+            session.verify.assert_called_once()
+            verify.assert_called_once()
+            argv.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_startup_deadline_failure_keeps_its_original_status(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, _ = self.learning_value(Path(name), [(1, 2)])
+            failure = settled.rt.Failure('LEARNING_ADVANCED', 'deadline after startup verification')
+            with patch.object(settled.time, 'monotonic', return_value=100), \
+                 patch.object(settled.campaign.point, 'demand_learning', side_effect=failure) as learn:
+                with self.assertRaises(settled.rt.Failure) as error:
+                    value.learning_to_stability(Path(name))
+            self.assertIs(error.exception, failure)
+            learn.assert_called_once()
+
+    def test_stable_registry_without_image_activity_is_refused(self):
+        with tempfile.TemporaryDirectory() as name:
+            value, receipt = self.learning_value(Path(name), [(1, 2), (2, 2)])
+            zero = {key: 0 for key in settled.observe.FIELDS}
+            value.window_observer = Mock(return_value=dict(service={1: zero}))
+            with patch.object(settled.time, 'monotonic', return_value=100), \
+                 patch.object(settled.campaign.point, 'demand_learning',
+                              side_effect=lambda config, destination, *args, **kwargs: receipt(destination)):
+                with self.assertRaisesRegex(settled.rt.Failure, 'each prepared image'):
+                    value.learning_to_stability(Path(name))
+
+    def test_continuation_limit_refuses_unbounded_or_noninteger_values(self):
+        for limit in (-1, 65, True, 1.5):
+            value = self.value(Path('.'))
+            value.c = dict(continuation_rounds=limit)
+            with self.subTest(limit=limit), self.assertRaises(settled.rt.Failure):
+                value.continuation_limit()
 
     def point_value(self, folder, after):
         value = self.value(folder)
