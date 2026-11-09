@@ -22,6 +22,7 @@ def main():
                    'enum kd_admission_read_state {').rstrip() + ';',
         definition(service, 'static struct kd_service_root *kd_service_origin_scope(void)'),
         definition(service, 'bool kd_service_write_owned(void *object, struct task_struct *task)'),
+        definition(provider, 'static int kd_rwsem_entry_scope_valid(const struct kd_rwsem_site *sites,'),
         definition(provider, 'int kd_rwsem_provider_init(void)'),
     ))
     with tempfile.TemporaryDirectory(prefix='kd-writer-query-') as directory:

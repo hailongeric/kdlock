@@ -1,7 +1,9 @@
 """Guest-only production rwsem read admission and OSQ lifetime checks.
 
-Deterministic queue/scheduler substitutes validate ordering, bounded control
-flow and writer reservation retries. They do not prove weak-memory ordering,
+Deterministic queue/scheduler substitutes validate ordering, bounded reader
+control flow and release wake ordering. Canonical writer phase selection and
+queued-reader precedence run in test_admission.py with the production queue.
+These checks do not prove weak-memory ordering,
 concurrent OSQ unlink or sleeping-reader progress; the existing mutex OSQ
 fixture and live rwsem probe cover the latter two separately.
 """
@@ -32,7 +34,6 @@ struct optimistic_spin_queue { int tail; };
 struct kd_rwsem {
     struct kd_mutex gate;
     struct optimistic_spin_queue reader_osq;
-    long admission;
     int phase_wait;
 };
 static struct kd_rwsem sem;
@@ -40,11 +41,10 @@ static struct kd_mutex_osq_node slot;
 static unsigned int pins, gets, locks, unlocks, put_calls, tries, pauses, waits;
 static unsigned int early_pauses, pinned_pauses;
 static unsigned int resched_calls, resched_at, acquire_at, owned, sleeps;
-static unsigned int spin_exits, tail_checks, barriers, wakes, cas_calls;
-static int remaining_tail, injected_tail;
-static long injected_phase;
+static unsigned int spin_exits, tail_checks, barriers, wakes;
+static int remaining_tail;
 static bool available, grant, reserved, queued, waiting;
-static bool wake_barrier, inject_cas;
+static bool wake_barrier;
 
 static void preempt_disable(void)
 { assert(!pins && !owned); pins++; }
@@ -69,43 +69,6 @@ static void kd_rwsem_wake(struct kd_rwsem *s, int *queue)
     assert(wake_barrier && barriers == wakes + 1);
     wakes++;
     wake_barrier = false;
-}
-static long atomic_long_read(long *counter)
-{
-    assert(counter == &sem.admission && !pins && !reserved && !queued);
-    return *counter;
-}
-static void interfere(long *counter)
-{
-    assert(counter == &sem.admission && !pins && !reserved && !queued);
-    assert(++cas_calls <= 2);
-    if (inject_cas) {
-        *counter = injected_phase;
-        sem.reader_osq.tail = injected_tail;
-        inject_cas = false;
-    }
-}
-static long atomic_long_cmpxchg(long *counter, long old, long value)
-{
-    long observed;
-
-    assert(old == 0 && value == -1);
-    interfere(counter);
-    observed = *counter;
-    if (observed == old)
-        *counter = value;
-    return observed;
-}
-static bool atomic_long_try_cmpxchg(long *counter, long *old, long value)
-{
-    assert(*old >= 0 && *old < LONG_MAX && value == *old + 1);
-    interfere(counter);
-    if (*counter == *old) {
-        *counter = value;
-        return true;
-    }
-    *old = *counter;
-    return false;
 }
 static bool need_resched(void)
 {
@@ -205,13 +168,12 @@ static void reset(void)
     pins=gets=locks=unlocks=put_calls=tries=pauses=waits=0;
     early_pauses=pinned_pauses=0;
     resched_calls=resched_at=acquire_at=owned=sleeps=0;
-    spin_exits=tail_checks=barriers=wakes=cas_calls=0;
-    remaining_tail=injected_tail=0;
-    injected_phase=sem.admission=0;
+    spin_exits=tail_checks=barriers=wakes=0;
+    remaining_tail=0;
     sem.reader_osq.tail=0;
     available=grant=true;
     reserved=queued=waiting=false;
-    wake_barrier=inject_cas=false;
+    wake_barrier=false;
 }
 static void returned(bool acquired)
 {
@@ -222,92 +184,6 @@ static void returned(bool acquired)
     assert(pauses == early_pauses+pinned_pauses);
     assert(!wake_barrier && barriers == wakes && tail_checks == spin_exits);
     assert(wakes == (sem.reader_osq.tail ? 0 : spin_exits));
-}
-static void reservation_result(long phase, unsigned int compares,
-                               unsigned int queue_checks)
-{
-    assert(!pins && !reserved && !queued && !waiting && !owned);
-    assert(!spin_exits && !barriers && !wakes && !wake_barrier);
-    assert(sem.admission == phase && cas_calls == compares);
-    assert(tail_checks == queue_checks);
-}
-static void check_writer_reservations(void)
-{
-    const long closed[] = {-1, 1, LONG_MAX};
-
-    /* An ordinary writer can only close an open phase with no queued
-     * readers. A closed phase must not even attempt the reservation RMW. */
-    for (unsigned int i=0; i<sizeof(closed)/sizeof(closed[0]); i++) {
-        reset(); sem.admission=closed[i];
-        assert(!kd_rwsem_reserve_local(&sem));
-        reservation_result(closed[i], 0, 0);
-    }
-    reset(); sem.reader_osq.tail=7;
-    assert(!kd_rwsem_reserve_local(&sem));
-    reservation_result(0, 0, 1);
-    reset();
-    assert(kd_rwsem_reserve_local(&sem));
-    reservation_result(-1, 1, 1);
-    reset(); inject_cas=true; injected_phase=3; injected_tail=7;
-    assert(!kd_rwsem_reserve_local(&sem));
-    reservation_result(3, 1, 1);
-
-    /* Queue presence is a fairness hint. A racing enqueue after the check
-     * does not replace the exact phase CAS with a queue ownership test. */
-    reset(); inject_cas=true; injected_phase=0; injected_tail=7;
-    assert(kd_rwsem_reserve_local(&sem));
-    reservation_result(-1, 1, 1);
-    assert(sem.reader_osq.tail == 7);
-
-    reset(); sem.reader_osq.tail=7;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(0, 0, 1);
-    reset();
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(1, 1, 1);
-
-    /* Existing delegated cohorts retain exact reservations even when
-     * readers are queued; only the transition from zero yields to them. */
-    reset(); sem.admission=2; sem.reader_osq.tail=7;
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(3, 1, 0);
-    reset(); sem.admission=LONG_MAX-1; sem.reader_osq.tail=7;
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(LONG_MAX, 1, 0);
-    reset(); sem.admission=LONG_MAX;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(LONG_MAX, 0, 0);
-    reset(); sem.admission=-1;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(-1, 0, 0);
-
-    /* A failed CAS can observe the previous cohort's final release. The
-     * next iteration must recheck the queue before creating a new cohort. */
-    reset(); sem.admission=2;
-    inject_cas=true; injected_phase=0; injected_tail=7;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(0, 1, 1);
-    reset(); sem.admission=2;
-    inject_cas=true; injected_phase=0;
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(1, 2, 1);
-    reset(); sem.admission=2;
-    inject_cas=true; injected_phase=4; injected_tail=7;
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(5, 2, 0);
-    reset(); sem.admission=2;
-    inject_cas=true; injected_phase=-1;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(-1, 1, 0);
-    reset(); sem.admission=2;
-    inject_cas=true; injected_phase=LONG_MAX;
-    assert(!kd_rwsem_reserve_delegate(&sem));
-    reservation_result(LONG_MAX, 1, 0);
-
-    reset(); inject_cas=true; injected_phase=0; injected_tail=7;
-    assert(kd_rwsem_reserve_delegate(&sem));
-    reservation_result(1, 1, 1);
-    assert(sem.reader_osq.tail == 7);
 }
 int main(void)
 {
@@ -398,8 +274,7 @@ int main(void)
         if (mode==4) assert(tries==16393 && early_pauses==8 && pinned_pauses==16384);
         if (mode==5) assert(tries==9 && early_pauses==8 && !pinned_pauses && !gets);
     }
-    check_writer_reservations();
-    puts("PASS rwsem read admission: bounded polling, released fallback, ordered cohort wake, exact writer reservations");
+    puts("PASS rwsem read admission: bounded polling, released fallback and ordered cohort wake");
 }
 '''
 
@@ -413,21 +288,12 @@ def main():
     poll_end = source.index('\n})\n', poll_start) + len('\n})\n')
     poll = source[poll_start:poll_end]
     spin = definition(source, 'static bool kd_rwsem_spin_read(struct kd_rwsem *sem)')
-    local = definition(source, 'static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)')
-    delegate = definition(source, 'static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)')
-    local_phase = next(line for line in source.splitlines()
-                       if line.startswith('#define KD_RWSEM_LOCAL_WRITER '))
     fast = definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
     condition_kind = definition(source, 'enum kd_rwsem_condition_kind {') + ';'
-    code = local_phase + '\n' + condition_kind + '\n' + poll + spin + local + delegate + fast
-    queue_guard = ('\t\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
-                   '\t\t\treturn false;\n')
-    delegate_loop = '\twhile (phase >= 0 && phase < LONG_MAX) {'
-    assert queue_guard in delegate and delegate_loop in delegate
-    stale_guard = delegate.replace(queue_guard, '', 1).replace(
-        delegate_loop,
-        '\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
-        '\t\treturn false;\n' + delegate_loop, 1)
+    # Writers now use canonical exact phase admission. Its queued-reader
+    # precedence and drain checks live in test_admission.py, not the retired
+    # scalar local/delegated cohort reservation functions.
+    code = condition_kind + '\n' + poll + spin + fast
     pinned_wake = spin.replace('out:\n\tpreempt_enable();', 'out:', 1).replace(
         '\treturn acquired;', '\tpreempt_enable();\n\treturn acquired;', 1)
     mutations = {
@@ -453,20 +319,6 @@ def main():
         'wake-only-on-read-acquisition': (
             'if (!atomic_read(&sem->reader_osq.tail))',
             'if (acquired && !atomic_read(&sem->reader_osq.tail))'),
-        'local-writer-ignores-readers': (
-            'if (atomic_long_read(&sem->admission) ||\n'
-            '\t    atomic_read(&sem->reader_osq.tail))',
-            'if (atomic_long_read(&sem->admission))'),
-        'new-delegated-cohort-ignores-readers': (
-            'if (!phase && atomic_read(&sem->reader_osq.tail))',
-            'if (false && atomic_read(&sem->reader_osq.tail))'),
-        'queued-readers-block-existing-cohort': (
-            'if (!phase && atomic_read(&sem->reader_osq.tail))',
-            'if (atomic_read(&sem->reader_osq.tail))'),
-        'queue-hint-not-rechecked-after-cas-failure': (delegate, stale_guard),
-        'delegated-reservation-saturates-early': (
-            'while (phase >= 0 && phase < LONG_MAX)',
-            'while (phase >= 0 && phase < LONG_MAX - 1)'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-rwsem-read-') as directory:
         path = Path(directory)
@@ -503,7 +355,7 @@ def main():
 def count_checks(source, compiler, path):
     """Use actual reader functions with deterministic publication boundaries.
 
-    This checks exact count/rollback/wake effects and source barrier ordering;
+    This checks exact count/rollback/final-access effects and source barrier ordering;
     the synthetic atomic functions are not a concurrent weak-memory model.
     """
     release = definition(source, 'void kd_up_read(struct kd_rwsem *sem)')
@@ -527,8 +379,15 @@ def count_checks(source, compiler, path):
             'if ((void)atomic_long_read_acquire(&sem->admission), true)'),
         'missing-reader-rollback': ('kd_up_read(sem);', '(void)kd_up_read;'),
         'double-reader-rollback': ('kd_up_read(sem);', 'kd_up_read(sem); kd_up_read(sem);'),
-        'wake-from-irq-disabled-release': ('!irqs_disabled()', '(irqs_disabled(), true)'),
-        'wake-from-atomic-release': ('!in_atomic()', '(in_atomic(), true)'),
+        'release-reads-irq-context': (
+            '(void)atomic_long_dec_and_test(&sem->readers);',
+            '(void)irqs_disabled(); (void)atomic_long_dec_and_test(&sem->readers);'),
+        'release-reads-atomic-context': (
+            '(void)atomic_long_dec_and_test(&sem->readers);',
+            '(void)in_atomic(); (void)atomic_long_dec_and_test(&sem->readers);'),
+        'post-final-notification': (
+            '(void)atomic_long_dec_and_test(&sem->readers);',
+            'if (atomic_long_dec_and_test(&sem->readers)) kd_rwsem_wake(sem, &sem->reader_drain);'),
     }
     for name, replacement in [('count-production', None), *mutations.items()]:
         body = code

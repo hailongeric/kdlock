@@ -72,11 +72,12 @@ static bool atomic_long_dec_and_test(long *counter)
     decrements++;
     return --*counter == 0;
 }
-static bool irqs_disabled(void)
+/* Keep retired context/notification paths available as negative controls. */
+static inline bool irqs_disabled(void)
 { irq_checks++; return irq_off; }
-static bool in_atomic(void)
+static inline bool in_atomic(void)
 { atomic_checks++; return atomic_context; }
-static void kd_rwsem_wake(struct kd_rwsem *s, int *queue)
+static inline void kd_rwsem_wake(struct kd_rwsem *s, int *queue)
 {
     assert(s == &sem && queue == &sem.reader_drain && !sem.readers);
     assert(!irq_off && !atomic_context && stage == 5);
@@ -116,7 +117,7 @@ int main(void)
         assert(sem.readers == (long)prior + 1 && !sem.admission);
         kd_up_read(&sem);
         assert(sem.readers == (long)prior && decrements == 1);
-        assert(wake_calls == !prior && irq_checks == !prior && atomic_checks == !prior);
+        assert(!wake_calls && !irq_checks && !atomic_checks);
         cases++;
     }
     /* A writer can close between the first observation and publication, or
@@ -134,9 +135,7 @@ int main(void)
                 assert(after == 1 && rechecks == 1 && decrements == 1);
                 assert(sem.readers == (long)prior && sem.admission == -1);
                 assert(writer_saw_readers == (long)prior + (race == 2));
-                assert(irq_checks == !prior);
-                assert(atomic_checks == (!prior && !irq_off));
-                assert(wake_calls == (!prior && !irq_off && !atomic_context));
+                assert(!irq_checks && !atomic_checks && !wake_calls);
                 cases++;
             }
         }
