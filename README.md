@@ -19,9 +19,15 @@ preserves every failed attempt and the limits of supplied task/CPU primitives.
 The later [live probe](docs/design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
 passes cold CALL and indirect-JMP handback at `58af0a53`. Its exact post-RET
 observations accompany a failed overall checker result. Candidate `bccf877c`
-adds untested harness fixes; further validation is blocked. No new mmap1
-correctness or performance acceptance is established, and the candidate is not
-promoted to master.
+adds untested harness fixes; that targeted probe remains failed. Later normal
+mmap1 campaigns have separate source-specific receipts. The latest
+[proxy-read point](bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+at `7e3c90b4` passed one compile-excluded eight-process interval: 25,670.9 pairs
+per nominal second with selected-service counters enabled. Both mmap and munmap
+returned every JIT entry across the whole fixed application; exact retirement,
+unload and normal-kernel recovery passed. Quiet performance, Native improvement
+and repeated acceptance remain open. The result does not validate the union
+with master's independent flags-stack changes.
 
 ## Current platform and policy
 

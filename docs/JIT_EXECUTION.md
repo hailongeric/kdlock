@@ -26,6 +26,20 @@ at `32bda7fa` records possible release/frontier sites; the exact taken munmap
 exit PC was not retained. Batched discovery does not permit source emission
 past a recognized release or establish separate nested-image activation.
 
+The later [proxy-read campaign](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+at unchanged `7e3c90b4` reached stable mmap g7 / munmap g12 images after
+2,358.837496 seconds of preparation. All 19 compiler records were unchanged
+across the entire fixed application, with no overlapping compiler interval.
+The eight-process point completed 256,709 pairs in ten nominal-second samples:
+25,670.9 pairs per nominal second with selected-service counters enabled.
+Across the whole fixed application, mmap returned all 398,610 JIT entries and
+munmap all 398,608, both with zero completed handbacks. Exact retirement, normal
+unload and verified normal-kernel recovery passed. The prior 180/1,800-second
+learning failures remain unchanged. This one instrumented point does not
+establish quiet performance, a Native gain, a specific consumed downgrade branch
+or separate nested-image activation. Its receipt validates `7e3c90b4`, without
+master's independent flags-stack changes; the merged runtime remains untested.
+
 ## Preparation and entry
 
 1. Register the continuation and matching backend/ABI after its source is live.

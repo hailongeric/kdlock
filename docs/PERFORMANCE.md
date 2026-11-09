@@ -171,8 +171,29 @@ Whole-run complete mmap/munmap pairs per second are:
 The one-worker deficit is 2.15%, without a repeat-variability estimate. These
 local-lock-backend rates do not measure MM-body JIT delegation. No profiling-based
 cause or accepted Linux 7 optimization is established. The scoped MM improvement
-or parity gate remains unmet; exact `mmap1` and generic actual-backend fault
-throughput remain future work.
+or parity gate remains unmet. Later actual `mmap1` results have their own source,
+kernel and instrumentation identities; generic actual-backend fault throughput
+remains future work.
+
+The later [proxy-read mmap1 campaign](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+at unchanged `7e3c90b4` passed one stable eight-process point on enabled
+`7.0.0-38-kdscope5`: **25,670.9 complete mmap/munmap pairs per nominal second**
+from 256,709 pairs in ten samples. Selected-service counters and sample callbacks
+were enabled; service tracing was off. Preparation took 2,358.837496 seconds;
+19 successful compiler-child wall times totaled 2,308.547260 seconds and
+overlapped preparation. Settlement/export/verification/startup gaps totaled
+1,574.629797 seconds, including compiler work; no pure settlement timer was
+isolated. No compiler overlapped the 16.060509-second fixed application,
+including its six warmup samples. Across that whole application, mmap returned
+all 398,610 JIT entries and munmap all 398,608, both with zero completed
+handbacks. Normal retirement, unload and verified normal-kernel recovery passed.
+
+The report preserves the narrower asynchronously sampled counter differences
+and both earlier failed campaigns. This is one instrumented nominal-rate point,
+without a Native comparison, quiet/strict-peak score, repeat estimate or measured
+gain. It does not validate the merged runtime union with master's independent
+flags-stack changes, identify a particular consumed downgrade branch or measure
+a physical delegation chain. Earlier rates are not pooled with this result.
 
 ## Historical evidence
 

@@ -62,9 +62,18 @@ and stopped-capture history remain unchanged. The independently reviewed
 [normal `d421e7d5` campaign](../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/README.md)
 subsequently passed one stable instrumented eight-process point, restoring
 mmap retained returns while munmap completed through native handback. The exact
-munmap exit remains unidentified; quiet performance and repeated acceptance
-remain open. Linux 6.1 adaptation, operation-specific MM algorithms and prepared
-teardown are retired.
+munmap exit remains unidentified. A later
+[proxy-read campaign](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+at unchanged `7e3c90b4` reached stable mmap g7 / munmap g12 after 2,358.837496
+seconds of preparation. Its fixed application excluded all compilation and
+returned all 398,610 mmap and 398,608 munmap JIT entries, with zero completed
+handbacks. One counter-enabled eight-process point completed 25,670.9 pairs per
+nominal second; exact retirement/unload and verified normal-kernel recovery
+passed. The two earlier learning failures remain preserved. This does not
+establish a quiet result, Native improvement or validation of the merged
+combination with master's flags-stack changes. Quiet performance and repeated
+acceptance remain open. Linux 6.1 adaptation, operation-specific MM algorithms
+and prepared teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
 
@@ -110,7 +119,7 @@ optimization. Mmap's killable path bypasses the ordinary uninterruptible polling
 | Workload | Operation and topology | Status |
 | --- | --- | --- |
 | `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | November 1 original-application comparison and later retained-candidate proofs exist; selected original-JIT validation and repeated acceptance remain open |
-| `mmap1_processes` | Same operation in independent processes/mms | Separate November 1 control and later candidate proofs; `d421e7d5` has one stable instrumented g7 point, with munmap native handback and quiet performance unaccepted |
+| `mmap1_processes` | Same operation in independent processes/mms | Separate November 1 control and later candidate proofs; `7e3c90b4` has one compile-excluded, counter-enabled g7/g12 point with both roots returning all whole-application JIT entries; quiet performance and Native improvement remain unaccepted |
 | Actual minor faults | Precisely declared access/reset method on actual Native/KD mmap backends, with backing implementation fixed | Generic throughput driver still needed |
 | Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | 42 Linux 7 points complete; KD below Native at all counts |
 | Existing private backing faults | Independent mms; reset PTE and read a checked preallocated page | Supporting experiment; actual mmap lock stays Native |
