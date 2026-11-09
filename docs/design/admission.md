@@ -51,10 +51,67 @@ named memory model, string service, control-slot exception, string quota or
 direct native bridge. Historical provider capability bits cannot select those
 routes in current translation.
 
-Only the declared scalar services `ktime_get`, `ktime_get_ns` and `int_sqrt`
-remain selected hostcalls. They have explicit result/clobber contracts; they do
-not switch hardware task identity to the origin. Their source CALL word remains
+The selected scalar hostcalls are `ktime_get`, `ktime_get_ns` and `int_sqrt`.
+They have explicit result/clobber contracts; they do not switch hardware task
+identity to the origin. Their source CALL word remains
 part of the ordinary continuation protocol.
+
+Scalar hostcalls are distinct from the retained candidate's provider-registered
+returning services. `dis_assem` reads `device_session.service_calls()` for ABI2
+and uses those exact targets as declared intervals with their own argument,
+continuation, owner and lifetime contracts. The service-control path can return
+execution to the executor (E) after that interval. This does not make an
+untranslated ordinary callee a returning service, select the retired named string models or authorize
+arbitrary native reentry. Ordinary GS operands retain the original saved-origin
+lowering; only the precisely declared context operation selects an original-task
+service.
+
+The [lock replacement contract](kdlock_lock_replacement_contract.md) selects
+bounded original CFG exploration, actual miss learning and subsequent image
+replacement. Its current-position handback preserves IP/GPR/SP and completed
+CALL pushes/RET pops. Retained-worker wiring and its production component join
+are committed, with [source-specific results](kdlock_lock_replacement_contract.md#current-focused-component-results)
+and preserved failed attempts. Supplied task/physical primitives limit that
+coverage. The later `58af0a53` probe passes cold CALL and indirect-JMP handback;
+its exact post-RET observations accompany an overall checker failure. Candidate
+`bccf877c` adds untested harness fixes, and further validation is blocked; see
+the [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
+General flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
+Existing limited flags and instruction contracts do not establish those broader
+features.
+
+### Selected rwsem state queries
+
+The selected ordinary original-JIT bodies are `kd_mmap_assert_held_write`,
+`kd_mmap_assert_held` and `kd_mmap_is_locked`. Provider discovery records use
+synthetic labels, so classify by operation identity: `KD_RWSEM_OP_ASSERT_HELD`
+(14), `KD_RWSEM_OP_ASSERT_HELD_WRITE` (15) and `KD_RWSEM_OP_IS_LOCKED` (16).
+Retain those immutable discovery records, but exclude them from runtime-control,
+lock-control and callee-exclusion sets. Do not register their public targets as
+returning Native services. A snapshot declaring both classifications must fail
+translation. `IS_CONTENDED` (17), `IS_WRITE_OWNER` (18), and other existing
+services/acquisition/release/downgrade controls stay unchanged.
+
+These helpers still use ordinary bounded CALL/IJ learning. Their downstream
+calls keep their individual policies; do not force an entire call chain into
+translation or turn it into one Native interval. The necessary narrow
+interval is `kd_service_write_owned`, preserving the exact retained custody proof.
+Its selected two-argument Boolean service uses `KD_SERVICE_CALL_ATOMIC_ORIGIN`
+and a word result. O runs only that runtime query while E is suspended, and E
+then resumes the same image with the existing token/module-reference protocol.
+
+The exact task, request generation, phase identity/generation, physical gate
+owner and pending-pickup predicates remain required. `ATOMIC_ORIGIN` retains
+actual origin pins/RCU; the `BALANCED_ORIGIN` rejection of retained spin/RCU is
+not appropriate for this narrow interval. Other context preconditions still
+apply. Preparation rejection remains fail-stop and does not automatically
+select native handback. The partition and descriptor are committed at
+`a6fe0bb2`. Its writer-query component passes with supplied runtime observations.
+All six query-image cases pass at `da55414f`, after fixing the legal
+return-continuation-label assertion; the failed first receipt remains recorded.
+These cases use synthetic source bodies and the actual original image backend.
+Separate production service-join coverage uses supplied task/physical primitives;
+neither establishes actual public helper execution or a live O/E service/ACK.
 
 An untranslated ordinary callee can transfer the remaining invocation to the
 original waiter. Later learning may extend the graph. It does not authorize

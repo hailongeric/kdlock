@@ -3,6 +3,10 @@
 This map locates maintained source. [Design](DESIGN.md) explains the shared model;
 [lock APIs](LOCKS.md) and the four implementation guides own protocol details.
 Build outputs and frozen result snapshots are evidence, not another source tree.
+The [lock replacement contract](design/kdlock_lock_replacement_contract.md)
+separates the selected original JIT correction, its component evidence and
+partial live results from the historical reached backend. This map identifies
+source responsibility, not a build or runtime pass.
 
 ## Provider and execution
 
@@ -22,6 +26,9 @@ Build outputs and frozen result snapshots are evidence, not another source tree.
 | [kd_rwsem_api.h](../include/kd_rwsem_api.h), [kd_rwsem_api.c](../kernel_module/kd_rwsem_api.c) | Unified ordinary writer names; explicitly prepared object permits ABI2 after reserve/drain; origin phase release follows exact unlock/ACK |
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
+| [kd_admission.c](../kernel_module/kd_admission.c), [kd_wait_queue.c](../kernel_module/kd_wait_queue.c) | Exact acquisition predicates, shared request selection, cancellation and queue membership |
+| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; production checkpoint `da55414f` has component results and later partial live handback evidence, with overall validation incomplete |
+| [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; component join covers acceptance/final ACK with supplied task/physical primitives |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, uploads and retirement |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address tables and approximate heat policy; never ownership |
@@ -29,6 +36,23 @@ Build outputs and frozen result snapshots are evidence, not another source tree.
 
 Private `.inc` files share their parent compilation unit and declaration order;
 include them in snapshots. They are not independent Kbuild objects.
+
+The subsequent selected query policy partitions operation IDs 14/15/16 in
+[`device_session.py`](../disassem/device_session.py), with provider service
+registration in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
+`kd_service_write_owned` retains the narrow `ATOMIC_ORIGIN` runtime proof.
+`kd_service.c` owns the selected synchronous home-CPU and serialized offline
+retirement path. Production checkpoint `da55414f` has passing query-image,
+Native-service join and retirement components after the first failed attempts.
+Later fixture-only runs pass OSQ (26 scenarios, 14 mutations) and resources
+(19,164 checks, 27 mutations), with identical production trees. The
+[validation record](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
+preserves separate receipt verdicts and fixture limits. No module is loaded by
+those component checks. The later generic probe passes cold CALL and
+indirect-JMP phases at `58af0a53`, but its overall live check fails at an
+unhandled post-RET continuation. Candidate `bccf877c` changes the probe's
+RET-learning and daemon shutdown checks and remains untested; further live
+validation is blocked. See the [partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
 
 ## Linux 7 and MM integration
 
@@ -40,17 +64,32 @@ include them in snapshots. They are not independent Kbuild objects.
 | [adapter.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c), [pool.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c) | Per-mm Native/KD backend, local concurrent readers/writers and preallocated records |
 | [mmap_fault](../workload_modules/mmap_fault), [mmap_writer](../workload_modules/mmap_writer) | Distinct device/private-backing fault and actual shared-mm workload payloads |
 
-Native MM bodies execute unchanged on their original task. The normal `kdlock1`
-kernel disables the mmap backend; `kdmm1` modes have separate identities.
+The local MM adapter executes unchanged bodies on the original task. Later
+retained candidates run the same native bodies on E through the general lock
+and service layer; this does not introduce operation-specific MM algorithms.
+Ordinary `kdlock1`, historical `kdmm1` and scoped retained kernels have separate
+identities. Their builds and measurements are not interchangeable.
+
+At checkpoint `ebae17c1`, `kd_service.c` and `kd_exe_resume_retained` still select
+the separate reached path through `reached_active`. Historical implementation
+paths at that revision include `kernel_module/kd_reached_jit.c`,
+`kernel_module/reached_jit_emit.inc`, `kernel_module/execution/reached.inc` and
+`kernel_module/execution/reached_dispatch.inc`. Checkpoint `10ef078a` removes
+those production paths and their selected emitter/cache/dispatcher, using
+original compiled images. The C reference engine/adapter moves into test
+fixtures. Stale reached-state fields remain. Later source-specific builds and
+component results above do not establish live execution. Use `ebae17c1` when
+examining the deleted historical source paths.
 
 ## Translation and reference backends
 
 | Source | Responsibility |
 | --- | --- |
 | [daemon](../daemon/README.md) | Source-resident device session, compiler child and upload lifecycle |
-| [disassem.py](../disassem/disassem.py) | Trusted-source default and translation/CLI coordination |
+| [disassem.py](../disassem/disassem.py) | Trusted-source default, original bounded CFG/history translation and image construction; eager ordinary-callee closure disabled by the correction |
 | [translation_scope.py](../disassem/translation_scope.py), [translation_image.py](../disassem/translation_image.py) | Selected graph, wrapper dispatch and generated image |
 | [hostcall.py](../disassem/hostcall.py), [indirect_jump.py](../disassem/indirect_jump.py) | Selected scalar services and exact generated return/target routing |
+| [normal.py](../disassem/normal.py), [special_inst.py](../disassem/special_inst.py), [wrapper.S](../include/wrapper.S) | Original saved-origin GS/logical-task lowering, virtual source SP/BP, actual CALL pushes/RET pops and current logical packet export |
 | `context_*.py`, [constant_paths.py](../disassem/constant_paths.py), [address_guards.py](../disassem/address_guards.py), [guard_flags.py](../disassem/guard_flags.py) | Optional `trusted_source=False` regression analysis; bypassed by production |
 | [strcmp_service.py](../disassem/strcmp_service.py), [strscpy_service.py](../disassem/strscpy_service.py), [native_calls.py](../disassem/native_calls.py) | Retained historical compatibility utilities; current strings use ordinary decoded CALL/RET |
 | [TCLock backend](../tclock_backend/README.md) | Pinned upstream provenance, four-family module ports, fixed-affinity contexts and controlled drain |

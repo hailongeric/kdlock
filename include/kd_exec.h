@@ -22,6 +22,7 @@ struct task_struct;
 struct kd_mutex;
 struct kd_native_request;
 struct kd_remote_request;
+struct kd_exec_continuation;
 
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
@@ -53,6 +54,8 @@ enum kd_exec_frame_state {
 	KD_EXEC_FRAME_RESUME,
 	KD_EXEC_FRAME_COMPLETE,
 	KD_EXEC_FRAME_ERROR,
+	/* Only retained continuation storage can own an unbound suspended frame. */
+	KD_EXEC_FRAME_SUSPENDED,
 };
 
 enum kd_exec_lock_kind {
@@ -117,6 +120,7 @@ struct kd_exec_frame {
 	u8 spin_kind : 1;
 	u8 spin_regs_decoded : 1;
 	u8 rwlock_admitted : 1;
+	u8 has_continuation : 1;
 	struct kd_regs regs;
 	struct kd_regs *regs_ref;
 	unsigned long gsbase;
@@ -143,6 +147,8 @@ struct kd_exec_frame {
 			bool transfer_requested;
 			bool transferred;
 			bool picked_up;
+			/* Only has_continuation permits reading this spin-union alias. */
+			struct kd_exec_continuation *continuation;
 		} mutex_mixed;
 	};
 	unsigned long jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
@@ -165,6 +171,26 @@ struct kd_exec_frame {
 	struct kd_spin_ref spin_origin;
 	const struct kd_jit_image *image;
 };
+
+/* Legacy spin frames own every saved_combiner word, including the location
+ * overlaid by this mutex-only pointer. Test the hot tag before the volatile
+ * pointer read; a clear tag neither reads nor clears any union storage. */
+static inline struct kd_exec_continuation *
+kd_exec_frame_continuation(const struct kd_exec_frame *frame)
+{
+	if (!frame->has_continuation)
+		return NULL;
+	return READ_ONCE(frame->mutex_mixed.continuation);
+}
+
+static inline void
+kd_exec_frame_set_continuation(struct kd_exec_frame *frame,
+			       struct kd_exec_continuation *continuation)
+{
+	if (continuation)
+		WRITE_ONCE(frame->mutex_mixed.continuation, continuation);
+	frame->has_continuation = !!continuation;
+}
 
 struct kd_exec_context {
 	/* One physical owner while depth != 0; frames cannot migrate independently. */
@@ -281,9 +307,31 @@ int kd_exec_frame_state(const struct kd_exec_frame *frame);
 
 /* Native continuation borrows the combiner's locks until the waiter unlocks.
  * Unlock requests are serviced on the executor that acquired each lock. */
+enum kd_exec_native_operation {
+	KD_NATIVE_OPERATION_ACCEPT = 1,
+	KD_NATIVE_OPERATION_MUTEX_UNLOCK,
+	KD_NATIVE_OPERATION_RWSEM_UP_WRITE,
+	KD_NATIVE_OPERATION_RWSEM_DOWNGRADE,
+	KD_NATIVE_OPERATION_WRITE_OWNED,
+};
+
+struct kd_exec_native_route {
+	void *owner;
+	void *identity;
+	u64 generation;
+	unsigned long object;
+	enum kd_exec_native_operation operation;
+};
+
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex);
 int kd_exec_native_wait(struct kd_exec_frame *frame);
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex);
+int kd_exec_native_service_begin(struct kd_exec_frame *frame);
+int kd_exec_native_accept(struct kd_exec_frame *frame);
+bool kd_exec_native_service_unlock(unsigned long object,
+	enum kd_exec_native_operation operation);
+bool kd_exec_native_service_owned(unsigned long object);
+bool kd_exec_native_service_active(struct task_struct *task);
 unsigned int kd_exec_mutex_spin_count(const struct kd_exec_frame *frame);
 bool kd_exec_mutex_transfer_allowed(const struct kd_exec_frame *frame);
 int kd_exec_mutex_transfer_pickup(struct kd_exec_frame *frame);

@@ -45,21 +45,30 @@ class NativeCallBoundariesTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     native_terminals.load_specs(path)
 
-    def test_exact_near_call_encodings_and_no_jmp_ret_or_legacy_prefix(self):
+    def test_exact_near_call_encodings_and_only_alternatives_cs_register_prefixes(self):
         for raw in ("ffd0", "41ffd0", "ff1424", "ff1501020304",
-                    "ff942401020304", "41ff942401020304"):
+                    "ff942401020304", "41ff942401020304",
+                    "2effd0", "2e2effd0", "2e2e2effd0",
+                    "2e41ffd0", "2e2e41ffd0", "2e2e2e41ffd0"):
             with self.subTest(raw=raw):
                 instruction = decode(raw)
                 self.assertEqual(instruction.name, "CALL")
                 self.assertEqual(native_terminals.indirect_call_length(instruction.b),
                                  instruction.l)
         for raw in ("ffe0", "ffd8", "c3", "66ffd0", "f3ffd0", "67ff1424",
-                    "e800000000", "ff", "ff94", "41ff9424010203"):
+                    "e800000000", "ff", "ff94", "41ff9424010203",
+                    "2e2e2e2effd0", "2e66ffd0", "662effd0", "2ef3ffd0",
+                    "2effe0", "2effd8", "2eff1424", "2e41ff1424",
+                    "412effd0", "2e4141ffd0", "2e", "2e2e2e41ff",
+                    "2e2e2effd090"):
             self.assertIsNone(native_terminals.indirect_call_length(bytes.fromhex(raw)), raw)
 
     def test_fresh_call_exports_pre_push_target_once_with_actual_return_word(self):
         # Include RSP and [RSP]: evaluating either after the virtual push is wrong.
         for raw, target_kind in (("ffd0c3", "rax"), ("41ffd0c3", "r8"),
+                                 ("2effd0c3", "rax"), ("2e2e2effd0c3", "rax"),
+                                 ("2e2e41ffd0c3", "r8"),
+                                 ("2e2e2e41ffd0c3", "r8"),
                                  ("ffd4c3", "rsp"), ("ff1424c3", "stack")):
             for capable in (False, True):
                 with self.subTest(raw=raw, capable=capable):
@@ -78,6 +87,28 @@ class NativeCallBoundariesTests(unittest.TestCase):
                     self.assertEqual((stack[7], stack[8]), (0x1000 + length, 0xc000))
                     self.assertEqual(args, [11 if capable else 0x1000 + length, 1])
                     self.assertEqual(regs[17], 0x1000 if capable else 0)
+
+    def test_exact_near_tail_encodings_are_separate_from_calls_and_returns(self):
+        for raw in ("ffe0", "41ffe0", "ff2424", "ff2501020304",
+                    "ffa42401020304", "41ffa42401020304", "2effe0",
+                    "2e2effe0", "2e2e2effe0", "2e41ffe0",
+                    "2e2e41ffe0", "2e2e2e41ffe0"):
+            with self.subTest(raw=raw):
+                instruction = decode(raw)
+                self.assertEqual(instruction.name, "JMP")
+                self.assertEqual(native_terminals.indirect_tail_length(instruction.b),
+                                 instruction.l)
+                self.assertIsNone(native_terminals.indirect_call_length(instruction.b))
+                for size in range(len(instruction.b)):
+                    self.assertIsNone(native_terminals.indirect_tail_length(
+                        instruction.b[:size]))
+        for raw in ("ffd0", "ffe8", "c3", "7500", "66ffe0", "f3ffe0",
+                    "67ff2424", "e900000000", "ff", "ffa4",
+                    "41ffa424010203", "2e2e2e2effe0", "2e66ffe0",
+                    "662effe0", "2ef3ffe0", "2effd0", "2effe8",
+                    "2eff2424", "2e41ff2424", "412effe0", "2e4141ffe0",
+                    "2e", "2e2e2e41ff", "2e2e2effe090"):
+            self.assertIsNone(native_terminals.indirect_tail_length(bytes.fromhex(raw)), raw)
 
     def test_unknown_ret_and_jump_never_get_call_exit(self):
         for raw in ("c3", "ffe0"):
@@ -177,6 +208,91 @@ class NativeCallBoundariesTests(unittest.TestCase):
                 self.assertEqual((regs[0], args), (target, [1, 1]))
             else:
                 self.assertEqual((regs[12], regs[0], args[1]), (42, 0x4444, 1))
+
+    def test_known_indirect_callee_learns_return_after_one_post_pop_miss(self):
+        regions, names = source_bytes("""
+            mov r8, QWORD PTR [rdi]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi], r8
+            mov dl, 127
+            add dl, 1
+        call_site:
+            call rax
+            seto cl
+            sets dl
+            setz bl
+            mov r8, QWORD PTR [rdi+16]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+16], r8
+        root_ret:
+            ret
+            .balign 4096
+        helper:
+            mov r8, QWORD PTR [rdi+8]
+            lea r8, [r8+1]
+            mov QWORD PTR [rdi+8], r8
+        helper_ret:
+            ret
+        """)
+        continuation = names['call_site'] + 2
+        return_source = names['helper_ret'] + 1
+
+        def generate(history):
+            options = {}
+            assembly, log, status = render('', regions=regions,
+                indirect_history=history, lock_kind='mutex', abi=2,
+                trusted_source=True, body_witness=True,
+                native_escape_capable=True, indirect_call_capable=True,
+                kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                                'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+                build_options=options, return_status=True)
+            self.assertEqual(status, 0, log)
+            self.assertTrue(options['requirements'] & (1 << 13))
+            return assembly, options
+
+        def execute(assembly, options):
+            effects = (ctypes.c_ulong * 3)()
+            before = []
+
+            def initialize(regs, stack):
+                regs[12] = names['helper']
+                regs[16] = ctypes.addressof(effects)
+                before.append((regs[1], stack))
+
+            regs, args = run_image(assembly, [0x1000], initialize=initialize,
+                abi=2, requirements=options['requirements'])[0]
+            original_sp, stack = before[0]
+            self.assertEqual((stack[6], stack[7], stack[8]),
+                             (0, continuation, 0x4444))
+            self.assertEqual(regs[19] & 0x8d5, 0x890)
+            return regs, args, original_sp, list(effects)
+
+        forward = {continuation: [names['helper']]}
+        cold, options = generate(forward)
+        match = f'kd_ij_{return_source:x}_{continuation:x}:'.encode()
+        self.assertNotIn(match, cold)
+        regs, args, original_sp, effects = execute(cold, options)
+        # The CALL was pushed and the callee RET was popped exactly once.
+        # Caller-prefix and callee effects remain; the successor has not run.
+        self.assertEqual(args, [15, 1])
+        self.assertEqual((regs[0], regs[1], regs[17]),
+                         (continuation, original_sp, return_source))
+        self.assertEqual(effects, [1, 1, 0])
+
+        # This substitutes only the later history file containing the exact
+        # reported IJ tuple. It neither resumes nor rewrites the cold image.
+        reported_source, reported_target = regs[17], regs[0]
+        learned = dict(forward)
+        learned[reported_source] = [reported_target]
+        warm, options = generate(learned)
+        self.assertIn(match, warm)
+        regs, args, original_sp, effects = execute(warm, options)
+        self.assertEqual(args, [15, 1])
+        self.assertEqual((regs[0], regs[1], regs[17]),
+                         (0x4444, original_sp + 8, names['root_ret'] + 1))
+        self.assertEqual(effects, [1, 1, 1])
+        self.assertEqual((regs[13] & 255, regs[14] & 255, regs[8] & 255),
+                         (1, 1, 0))
 
     def test_ret_and_jmp_history_cannot_enter_native_call_stub(self):
         for raw, source in (("c3", 0x1001), ("ffe0", 0x1002)):

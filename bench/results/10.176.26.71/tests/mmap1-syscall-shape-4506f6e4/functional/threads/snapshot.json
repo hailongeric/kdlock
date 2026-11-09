@@ -1,0 +1,36 @@
+{
+  "abi": 2,
+  "count": 2,
+  "errors": 0,
+  "overflow": 0,
+  "records": [
+    {
+      "backing": 18379471568311626816,
+      "cpu": 0,
+      "lock": 18379471568311626816,
+      "mm": 18379471568311626368,
+      "provider": 18446744072649094048,
+      "route": 2,
+      "start_boottime_ns": 460608668800,
+      "tgid": 2580,
+      "tid": 2581,
+      "use_kd": 1
+    },
+    {
+      "backing": 18379471568311626816,
+      "cpu": 1,
+      "lock": 18379471568311626816,
+      "mm": 18379471568311626368,
+      "provider": 18446744072649094048,
+      "route": 2,
+      "start_boottime_ns": 460609141376,
+      "tgid": 2580,
+      "tid": 2582,
+      "use_kd": 1
+    }
+  ],
+  "refs_acquired": 2,
+  "refs_released": 2,
+  "repeat_equal": true,
+  "stopped": 1
+}

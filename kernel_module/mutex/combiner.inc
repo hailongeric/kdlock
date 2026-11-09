@@ -17,61 +17,58 @@ struct kd_mutex_batch {
 	 * This exact flag prevents a second access after native waiter wake/reuse. */
 	struct kd_mutex_node *current_node;
 	bool current_retired;
+	bool current_handoff;
+	bool current_rebound;
 	/* Immutable slot identity; readiness/code are rechecked per request. */
 	struct kd_exe_info *exe;
-	struct kd_mutex_node *deferred_head;
-	struct kd_mutex_node *deferred_tail;
 	unsigned int deferred_count;
 	unsigned int scan_left;
 	int numa_node;
 	KD_MUTEX_DIAG_MEMBER
 };
 
-/* Only detach a fully linked node. Its successor remains the published tail
- * chain, so no enqueuer can subsequently write the detached node's next link.
- * A finite scan and a configured local cohort bound keep remote requests from
- * being bypassed indefinitely. Deferred requests receive service or physical
- * handoff first at that boundary. Longer local cohorts amortize owner transfer
- * while keeping a substantial remote cohort on its own socket. */
+/* NUMA selection reorders only completely published members under the common
+ * guard. Remote requests remain visible to cancellation/retirement. A local
+ * waiter is a boundary: it is never bypassed to dispatch a foreign body. */
 static struct kd_mutex_node *
 kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 {
-	if (batch->numa_node < 0)
-		return node;
-	while (node && node->numa_node != batch->numa_node && batch->scan_left) {
-		struct kd_mutex_node *next = smp_load_acquire(&node->next);
+	struct kd_wait_queue queue = kd_mutex_wait_queue(batch->lock);
+	struct kd_wait_node *first = kd_mutex_request_member(node);
+	struct kd_wait_node *scan;
+	unsigned long flags;
 
-		if (!next)
-			break;
+	if (batch->numa_node < 0 || node->numa_node == batch->numa_node)
+		return node;
+	flags = _raw_spin_lock_irqsave(queue.guard);
+	BUG_ON(first->queue_head != queue.head);
+	scan = kd_wait_next_locked(&queue, first);
+	while (scan && batch->scan_left && !scan->request->admission &&
+	       scan->request->may_delegate &&
+	       scan->request->state == KD_WAIT_QUEUED) {
+		struct kd_mutex_node *candidate = scan->request->context;
+
 		batch->scan_left--;
-		WRITE_ONCE(node->next, NULL);
-		if (batch->deferred_tail)
-			WRITE_ONCE(batch->deferred_tail->next, node);
-		else
-			batch->deferred_head = node;
-		batch->deferred_tail = node;
+		if (candidate->numa_node == batch->numa_node) {
+			kd_wait_move_before_locked(&queue, scan, first);
+			node = candidate;
+			break;
+		}
 		batch->deferred_count++;
 		KD_MUTEX_DIAG_DEFERRED(batch);
-		node = next;
+		scan = kd_wait_next_locked(&queue, scan);
 	}
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
 	KD_MUTEX_DIAG_SCAN_END(batch, node);
 	return node;
 }
 
-/* The retained successor is still queued and has not been woken. Splicing
- * before gate release preserves the global tail, native ACK and early-outer
- * release protocols. The detached batch must never access this chain again. */
+/* There is no private deferred chain to splice. Pending members never left
+ * the canonical queue, including at native handoff and early outer release. */
 static struct kd_mutex_node *
 kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)
 {
-	if (batch->deferred_head) {
-		BUG_ON(!next || !batch->deferred_tail);
-		WRITE_ONCE(batch->deferred_tail->next, next);
-		next = batch->deferred_head;
-		batch->deferred_head = NULL;
-		batch->deferred_tail = NULL;
-		batch->deferred_count = 0;
-	}
+	(void)batch;
 	return next;
 }
 
@@ -114,44 +111,81 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
  * Legacy/FULL last waiters retain the established physical handoff boundary. */
 static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
 {
-	return node && (READ_ONCE(node->next) ||
+	return node && (kd_mutex_queue_successor(node->lock, node) ||
 		(node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
 		 node->packet_state == KD_PACKET_MINIMAL));
 }
 
-/* Retire queue publication before letting a committed waiter reuse its node.
- * A successful tail CAS makes later arrivals independent heads. A failed CAS
- * means an enqueuer already owns the link: wait for that delayed publication
- * before waking/releasing this node. This is MCS link completion, not a refill
- * spin. Never call on an unstarted/refused request which must become the head.
- * The early-unlock/native paths may call twice; only saved batch state survives
- * the first wake. The KD physical mutex owner and source lease are unchanged. */
+/* Commit only when the retained executor actually owns exclusion. Image
+ * lookup and frame preparation happen first; neither is acquisition. */
+static bool kd_mutex_proxy_grant(struct kd_wait_request *request, void *argument)
+{
+	struct kd_mutex *lock = argument;
+
+	return request->may_delegate && kd_mutex_delegation_owned(lock, current);
+}
+
+static void kd_mutex_proxy_begin(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	struct kd_mutex_wait_record *record = kd_mutex_wait_record(node);
+	struct kd_wait_queue queue = kd_mutex_wait_queue(lock);
+	unsigned long flags = _raw_spin_lock_irqsave(queue.guard);
+
+	BUG_ON(!kd_wait_select_locked(&queue, &record->request,
+				     &record->selection, current));
+	BUG_ON(kd_wait_decide_locked(&queue, &record->request,
+				    record->request.generation,
+				    kd_mutex_proxy_grant, lock) != KD_WAIT_GRANTED);
+	kd_wait_set_state_locked(&record->request, KD_WAIT_EXECUTING);
+	if (!lock->wait_head)
+		atomic_long_andnot(7UL, &lock->owner);
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+}
+
+/* Before public outer release, transfer lifecycle custody to retained slot
+ * storage. A nested suffix may outlive the outer lock object, so completion
+ * must never reacquire that object's queue guard. The batch keeps the exact
+ * slot/frame alive; this transfer does not claim body completion. */
+static void kd_mutex_batch_detach_current(struct kd_mutex *lock,
+					struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_wait_record *record;
+	unsigned long flags;
+
+	if (batch->current_rebound)
+		return;
+	record = kd_mutex_wait_record(batch->current_node);
+	flags = _raw_spin_lock_irqsave(&lock->wait_lock);
+	BUG_ON(record->member.queue_head ||
+	       record->request.guard != &lock->wait_lock);
+	kd_wait_selection_drop_locked(&record->request, &record->selection);
+	kd_wait_rebind_locked(&record->request, &record->lifecycle_guard);
+	_raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
+	batch->next = kd_mutex_queue_first(lock);
+	batch->current_rebound = true;
+}
+
+/* Membership ended at the committed grant. Completion or explicit retained
+ * legacy handoff ends this request's execution authority before result wake. */
 static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
 					struct kd_mutex_batch *batch)
 {
-	struct kd_mutex_node *node;
-	struct kd_mutex_node *next;
+	struct kd_mutex_wait_record *record;
+	unsigned long flags;
 
 	BUG_ON(batch->lock != lock);
 	if (batch->current_retired)
 		return;
-	node = batch->current_node;
-	BUG_ON(!node);
-	next = batch->next;
-	if (!next) {
-		/* A deferred chain forbids retiring the last published tail. The
-		 * loop retains that node for rejoin instead of executing it. */
-		BUG_ON(batch->deferred_head);
-		next = smp_load_acquire(&node->next);
-		if (!next && cmpxchg(&lock->delegation_tail, (u32)node->tail, 0) !=
-			     (u32)node->tail) {
-			do {
-				cpu_relax();
-				next = smp_load_acquire(&node->next);
-			} while (!next);
-		}
-		batch->next = next;
+	kd_mutex_batch_detach_current(lock, batch);
+	record = kd_mutex_wait_record(batch->current_node);
+	flags = _raw_spin_lock_irqsave(&record->lifecycle_guard);
+	if (batch->current_handoff) {
+		kd_wait_handoff_locked(&record->request);
+	} else {
+		kd_wait_set_state_locked(&record->request, KD_WAIT_RELEASED);
+		kd_wait_set_state_locked(&record->request, KD_WAIT_RETURN_ACK);
 	}
+	_raw_spin_unlock_irqrestore(&record->lifecycle_guard, flags);
 	batch->current_retired = true;
 }
 
@@ -175,7 +209,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 		return -EINVAL;
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
-	kd_mutex_batch_retire_current(lock, batch);
+	kd_mutex_batch_detach_current(lock, batch);
 	batch->next = kd_mutex_batch_rejoin(batch, batch->next);
 	if (batch->next && !batch->next->task_struct_ptr)
 		return -EINVAL;
@@ -190,8 +224,8 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	ret = _kd_mutex_unlock_checked(lock);
 	if (ret)
 		return ret;
-	if (batch->next)
-		smp_store_release(&batch->next->locked, 0);
+	/* A common head observes FREE itself. It may already have completed and
+	 * reused its slot, so the releasing executor cannot touch saved nodes. */
 	return 0;
 }
 
@@ -336,6 +370,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	frame->outer_unlock_hook = &batch->outer;
 prepared:
+	kd_mutex_proxy_begin(lock, curr_node);
 	queue_end = kd_exe_queue_timing_start();
 	regs = kd_exec_frame_regs(frame);
 	if (frame->batch_lease && kd_exe_mutex_batch_prepare(exe, frame, &call)) {
@@ -355,10 +390,32 @@ prepared:
 						 frame->outer_lock_addr);
 	}
 	regs = kd_exec_frame_regs(frame);
-	/* Refused dispatches remain queued. Account a real body's pre-dispatch
-	 * endpoint before the waiter can resume and recycle its slot. */
+	/* Account a real body's pre-dispatch endpoint before the result wake.
+	 * A post-grant refusal retains the acquired continuation below. */
 	if (frame->executed)
 		kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
+	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && !frame->executed) {
+		/* The request already won physical acquisition. A later pre-body
+		 * dispatch refusal cannot cancel it or publish it as an unacquired
+		 * waiter. Deliver that exact acquired continuation through the
+		 * retained legacy owner service without replaying a body. */
+		BUG_ON(kd_exec_frame_prepare_mutex_complex(frame));
+		if (frame->regs_borrowed && frame->packet_state == KD_PACKET_MINIMAL) {
+			unsigned long entry_ip = regs->ip, entry_sp = regs->sp;
+			unsigned long entry_bp = regs->bp;
+
+			BUG_ON(entry_ip != curr_node->saved_ret_addr ||
+			       entry_sp != curr_node->regs.sp);
+			frame->regs_borrowed = false;
+			frame->regs_ref = NULL;
+			frame->regs.ip = entry_ip;
+			frame->regs.sp = entry_sp;
+			frame->regs.bp = entry_bp;
+			frame->continuation_sp = 0;
+			regs = &frame->regs;
+		}
+		ret_flag = KD_EXE_RUN_NATIVE;
+	}
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
 		/* Include borrowing/publication before the waiter can run; the
 		 * inner owner-wait timer starts too late to cover that prefix. */
@@ -367,21 +424,22 @@ prepared:
 			kd_exec_mutex_transfer_allowed(frame);
 
 		BUG_ON(kd_exec_native_begin(frame, true));
-		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
-		curr_node->regs = *regs;
-		curr_node->packet_state = KD_PACKET_FULL;
+		BUG_ON(frame->regs_borrowed ||
+		       (frame->packet_state != KD_PACKET_FULL &&
+			frame->packet_state != KD_PACKET_MINIMAL));
+		if (frame->packet_state == KD_PACKET_FULL)
+			curr_node->regs = *regs;
+		curr_node->packet_state = frame->packet_state;
 		/* Native resume releases/reuses the node before owner ACK returns.
 		 * Finish every possible predecessor link before that publication. */
+		batch->current_handoff = true;
 		kd_mutex_batch_retire_current(lock, batch);
 		curr_node->native_spin_pins = kd_exec_mutex_spin_count(frame);
 		curr_node->native_transfer = NULL;
 		if (transfer) {
-			struct kd_mutex_node *next;
-
 			/* Queue and source ownership survive the real owner exchange.
 			 * No unlocked state is exposed between the executed prefix and
 			 * the original task's suffix. Retain this frame until its ACK. */
-			next = kd_mutex_batch_rejoin(batch, batch->next);
 			BUG_ON(kd_mutex_transfer_owner(lock, frame->logical_task));
 			frame->mutex_mixed.transferred = true;
 			curr_node->native_transfer = frame;
@@ -390,8 +448,7 @@ prepared:
 				frame->logical_task->pid, frame->control_call.target);
 			/* The next head may wait for A, but cannot acquire its occupied
 			 * gate. The old combiner never touches this chain after wake. */
-			if (next)
-				smp_store_release(&next->locked, 0);
+			/* Actual release will notify the next canonical head. */
 			batch->next = NULL;
 		}
 		WRITE_ONCE(curr_node->native_resume, KD_MUTEX_RESUME_NATIVE);
@@ -493,8 +550,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		/* Keep unsupported last packets and source refusal on native handoff. */
 		this_cpu_inc(kd_mutex_handoff_count);
 		kd_mutex_set_locked(lock);
-		if (curr_node)
-			smp_store_release(&curr_node->locked, 0);
+		kd_mutex_queue_handoff(lock);
 		KD_MUTEX_DIAG_FINISH(&batch);
 		return;
 	}
@@ -505,8 +561,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		/* Keep a real terminal tail while private deferred nodes exist.
 		 * A substantial remote cohort receives the next physical owner;
 		 * that owner can serve the cohort on its own socket. */
-		if (batch.deferred_head &&
-		    (counter >= KDLOCK_MUTEX_NUMA_BOUNDARY || !smp_load_acquire(&curr_node->next))) {
+		if (batch.deferred_count &&
+		    (counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ||
+		     (curr_node->numa_node != batch.numa_node &&
+		      !kd_mutex_queue_successor(lock, curr_node)))) {
 			if (batch.deferred_count >= 8) {
 				KD_MUTEX_DIAG_STOP(&batch,
 					counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ? KD_MUTEX_DIAG_NUMA_BOUNDARY :
@@ -521,17 +579,12 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			KD_MUTEX_DIAG_SMALL_FIFO(&batch);
 		}
 		counter++;
-		next_node = smp_load_acquire(&curr_node->next);
-		if (next_node) {
-			next_node = kd_mutex_batch_select(&batch, next_node);
-			/* A refused current request keeps its node. Repair its link
-			 * before rejoining the deferred chain ahead of that request.
-			 * Never overwrite an empty link still owned by an enqueuer. */
-			WRITE_ONCE(curr_node->next, next_node);
-		}
+		next_node = kd_mutex_queue_successor(lock, curr_node);
 		batch.next = next_node;
 		batch.current_node = curr_node;
 		batch.current_retired = false;
+		batch.current_handoff = false;
+		batch.current_rebound = false;
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
 		KD_MUTEX_DIAG_REQUEST(&batch, curr_node);
@@ -589,8 +642,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	 * Keep the real mutex and gate for this physical owner's original body. */
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
 	kd_mutex_set_locked(lock);
-	if (next_node)
-		smp_store_release(&next_node->locked, 0);
+	kd_mutex_queue_handoff(lock);
 	KD_MUTEX_DIAG_FINISH(&batch);
 	/* Includes synchronous native continuation and final physical owner ACK. */
 	kd_source_frame_put();

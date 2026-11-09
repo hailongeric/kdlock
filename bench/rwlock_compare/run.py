@@ -348,12 +348,13 @@ def build(args, out, plan, *, mutex_diag=False):
                         'kdlock': ('kd_down_read', 'kd_up_read', 'kd_down_write', 'kd_up_write')}[backend]
             if backend == 'kdlock' and spec['delegate']:
                 expected = ('kd_down_read', 'kd_up_read', 'kd_rwsem_prepare',
-                            'kd_rwsem_down_write_clobber_v1', 'kd_rwsem_write_release',
-                            'kd_mutex_direct_unlock_clobber_v1')
+                            'kd_rwsem_down_write_clobber_v1',
+                            'kd_rwsem_up_write_clobber_v1')
                 from mutex_api_audit import audit_public_entries
                 write_json(out / ('public-entry-' + variant + '.json'),
                            audit_public_entries(binary, {'rb_entry': 'rb_write'},
-                               lock_symbol='kd_rwsem_down_write_clobber_v1'))
+                               lock_symbol='kd_rwsem_down_write_clobber_v1',
+                               unlock_symbol='kd_rwsem_up_write_clobber_v1'))
         elif spec['lock_kind'] == 'mutex':
             expected = {'native': ('mutex_lock', 'mutex_unlock'),
                         'tclock': ('komb_mutex_lock', 'komb_mutex_unlock', 'tc_mutex_worker_register',

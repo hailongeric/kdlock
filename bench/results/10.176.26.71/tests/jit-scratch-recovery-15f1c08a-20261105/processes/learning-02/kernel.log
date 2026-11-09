@@ -1,0 +1,106 @@
+6,1185,1634315730,-;install JIT chunk: pid=0 rip=ffffffff817f7413 status=-1 offset=0 bytes=4000
+
+6,1186,1634315749,-;install JIT chunk: pid=0 rip=ffffffff817f7413 status=-1 offset=4000 bytes=4000
+
+6,1187,1634315761,-;install JIT chunk: pid=0 rip=ffffffff817f7413 status=0 offset=8000 bytes=800
+
+6,1188,1647459422,-;install JIT chunk: pid=0 rip=ffffffff817f9ae5 status=0 offset=0 bytes=3472
+
+5,1189,1653342426,-;audit: type=1400 audit(1793883378.389:225): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+5,1190,1653342441,-;audit: type=1400 audit(1793883378.389:226): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+5,1191,1653342451,-;audit: type=1400 audit(1793883378.389:227): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+5,1192,1653342454,-;audit: type=1400 audit(1793883378.389:228): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+5,1193,1653342553,-;audit: type=1400 audit(1793883378.389:229): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+5,1194,1653342565,-;audit: type=1400 audit(1793883378.389:230): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=4031 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+
+6,1195,1660941307,-;install JIT chunk: pid=0 rip=ffffffff817b6f68 status=-1 offset=0 bytes=4000
+
+6,1196,1660941332,-;install JIT chunk: pid=0 rip=ffffffff817b6f68 status=-1 offset=4000 bytes=4000
+
+6,1197,1660941344,-;install JIT chunk: pid=0 rip=ffffffff817b6f68 status=0 offset=8000 bytes=1680
+
+6,1198,1674390080,-;install JIT chunk: pid=0 rip=ffffffff81344abb status=-1 offset=0 bytes=4000
+
+6,1199,1674390100,-;install JIT chunk: pid=0 rip=ffffffff81344abb status=-1 offset=4000 bytes=4000
+
+6,1200,1674390111,-;install JIT chunk: pid=0 rip=ffffffff81344abb status=0 offset=8000 bytes=2496
+
+6,1201,1687919343,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=0 bytes=4000
+
+6,1202,1687919363,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=4000 bytes=4000
+
+6,1203,1687919375,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=8000 bytes=4000
+
+6,1204,1687919380,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=12000 bytes=4000
+
+6,1205,1687919429,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=-1 offset=16000 bytes=4000
+
+6,1206,1687919434,-;install JIT chunk: pid=0 rip=ffffffff817fd913 status=0 offset=20000 bytes=3480
+
+6,1207,1701312738,-;install JIT chunk: pid=0 rip=ffffffff817f9b47 status=-1 offset=0 bytes=4000
+
+6,1208,1701312758,-;install JIT chunk: pid=0 rip=ffffffff817f9b47 status=-1 offset=4000 bytes=4000
+
+6,1209,1701312770,-;install JIT chunk: pid=0 rip=ffffffff817f9b47 status=0 offset=8000 bytes=3496
+
+6,1210,1714440328,-;install JIT chunk: pid=0 rip=ffffffff8181cc7d status=-1 offset=0 bytes=4000
+
+6,1211,1714440347,-;install JIT chunk: pid=0 rip=ffffffff8181cc7d status=0 offset=4000 bytes=1200
+
+6,1212,1727872925,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=0 bytes=4000
+
+6,1213,1727872945,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=4000 bytes=4000
+
+6,1214,1727872957,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=8000 bytes=4000
+
+6,1215,1727872962,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=12000 bytes=4000
+
+6,1216,1727872967,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=-1 offset=16000 bytes=4000
+
+6,1217,1727872972,-;install JIT chunk: pid=0 rip=ffffffff8181c73b status=0 offset=20000 bytes=2352
+
+6,1218,1741264530,-;install JIT chunk: pid=0 rip=ffffffff818e077d status=-1 offset=0 bytes=4000
+
+6,1219,1741264551,-;install JIT chunk: pid=0 rip=ffffffff818e077d status=-1 offset=4000 bytes=4000
+
+6,1220,1741264563,-;install JIT chunk: pid=0 rip=ffffffff818e077d status=0 offset=8000 bytes=3784
+
+6,1221,1754632448,-;install JIT chunk: pid=0 rip=ffffffff817f79a5 status=-1 offset=0 bytes=4000
+
+6,1222,1754632468,-;install JIT chunk: pid=0 rip=ffffffff817f79a5 status=-1 offset=4000 bytes=4000
+
+6,1223,1754632480,-;install JIT chunk: pid=0 rip=ffffffff817f79a5 status=0 offset=8000 bytes=448
+
+6,1224,1768062874,-;install JIT chunk: pid=0 rip=ffffffff819891c2 status=-1 offset=0 bytes=4000
+
+6,1225,1768062895,-;install JIT chunk: pid=0 rip=ffffffff819891c2 status=0 offset=4000 bytes=1000
+
+6,1226,1781955915,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=0 bytes=4000
+
+6,1227,1781955935,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=4000 bytes=4000
+
+6,1228,1781955947,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=8000 bytes=4000
+
+6,1229,1781955952,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=12000 bytes=4000
+
+6,1230,1781955959,-;install JIT chunk: pid=0 rip=ffffffff818007de status=-1 offset=16000 bytes=4000
+
+6,1231,1781955964,-;install JIT chunk: pid=0 rip=ffffffff818007de status=0 offset=20000 bytes=3088
+
+6,1232,1795302877,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=-1 offset=0 bytes=4000
+
+6,1233,1795302897,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=-1 offset=4000 bytes=4000
+
+6,1234,1795302910,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=-1 offset=8000 bytes=4000
+
+6,1235,1795302929,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=-1 offset=12000 bytes=4000
+
+6,1236,1795302934,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=-1 offset=16000 bytes=4000
+
+6,1237,1795302939,-;install JIT chunk: pid=0 rip=ffffffff817f9283 status=0 offset=20000 bytes=152
+

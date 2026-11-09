@@ -36,7 +36,7 @@ typedef pthread_spinlock_t spinlock_t;
 typedef __u64 u64;
 #define __aligned(n) __attribute__((aligned(n)))
 #define BUILD_BUG_ON(c) _Static_assert(!(c), #c)
-#include "../../workload_modules/spin_cacheline/payload.h"
+#include "../../workload_modules/spin_cacheline/body.h"
 #include "../../workload_modules/spin_cacheline/post_work.h"
 
 static unsigned char control[64] __attribute__((aligned(64)));

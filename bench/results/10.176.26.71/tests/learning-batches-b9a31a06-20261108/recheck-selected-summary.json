@@ -1,0 +1,170 @@
+{
+  "output": "/mnt/kdlock-builds2/kdlock-batch-checks-vkvigvie",
+  "boot_id": "6148a091-cca7-4258-8d0b-d75227134564",
+  "passed": true,
+  "errors": [],
+  "final_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "frozen_source_unchanged": true,
+  "work_source_unchanged": true,
+  "original_manifest_set_unchanged": true,
+  "provider_kernel_inputs_before": {
+    ".config": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "Makefile": "65139af3d3f20b935adad9473f1ed963737d8b6da96b4b48ba0c62566a799283",
+    "Module.symvers": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+    "include/config/kernel.release": "379851c1a39e3680bb4b2322ed6e6a5deafe69b3e17d70583f489abf26afcccf",
+    "include/generated/autoconf.h": "8ee24f96217bcb0a3dfe328896f5f38638e5c73a9a0fa06052ced6c27efa3754"
+  },
+  "provider_kernel_inputs_after": {
+    ".config": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "Makefile": "65139af3d3f20b935adad9473f1ed963737d8b6da96b4b48ba0c62566a799283",
+    "Module.symvers": "dd08f84264e64d09ff3c4b8d11139952f101a727c7402ff5b9b9f376f5d6056c",
+    "include/config/kernel.release": "379851c1a39e3680bb4b2322ed6e6a5deafe69b3e17d70583f489abf26afcccf",
+    "include/generated/autoconf.h": "8ee24f96217bcb0a3dfe328896f5f38638e5c73a9a0fa06052ced6c27efa3754"
+  },
+  "selected_python_drivers": [
+    "execution/test_exe_registry.py",
+    "execution/test_mutex_images.py",
+    "execution/test_native_service_join.py",
+    "infrastructure/test_source_lifetime.py"
+  ],
+  "checks": [
+    {
+      "name": "daemon-build",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_control_call-build",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_control_call",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_policy-build",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_policy",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_provenance-build",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "test_daemon_provenance",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_exe_registry",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "production exe registry: 36543 checks, 0 failures; pool=64 table=511",
+        "production exe registry: 70972 checks, 0 failures; pool=128 table=511"
+      ],
+      "mutation_count": 16,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_mutex_images",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "mutex images: immutable replacement, marker contract, terminal ban, stale misses and 64-block exhaustion passed",
+        "spin guard/root-marker images: exact contracts, stable prior images, ABI1/3 immutable transitions, stale upload/miss and terminal bans passed",
+        "direct images: generated slots, source pins, rel32 range, immutable lifetime and shared 64-image ceiling passed",
+        "origin images: exact opcode/successor directory, source pins, malformed upload refusal and immutable generation retention passed"
+      ],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "execution-test_native_service_join",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "PASS production Native service join: write; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives",
+        "PASS production Native service join: downgrade; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives",
+        "PASS production Native service join: read; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives"
+      ],
+      "mutation_count": 0,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "infrastructure-test_source_lifetime",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [
+        "production source lifetime: 55922 checks, 0 failures; cap=64"
+      ],
+      "mutation_count": 37,
+      "warnings": [],
+      "warning_count": 0
+    },
+    {
+      "name": "provider-build-only",
+      "status": "passed",
+      "returncode": 0,
+      "summary": [],
+      "mutation_count": 0,
+      "warnings": [
+        "warning: the compiler differs from the one used to build the kernel",
+        "kdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build",
+        "kdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame",
+        "kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state",
+        "kdlock_km.o: warning: objtool: run_combiner+0x123f: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x266: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup",
+        "kdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup"
+      ],
+      "warning_count": 11
+    }
+  ]
+}

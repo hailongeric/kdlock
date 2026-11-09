@@ -26,7 +26,7 @@ def function(text, name):
 
 class HashRelinkTests(unittest.TestCase):
     def test_relink_matches_poisoned_body_and_key_set(self):
-        source = (ROOT/'workload_modules/spin_cacheline/hash_payload.h').read_text()
+        source = (ROOT/'workload_modules/spin_cacheline/hash_body.h').read_text()
         body = source[source.index('struct sc_hash_bucket {'):
                       source.index('/* Deterministic per-worker')]
         self.assertEqual(body.count('__hlist_del(&src_entry->node);'), 1)

@@ -47,8 +47,8 @@ def main():
     header = gate + "\n" + "\n".join(declarations) + "\n"
     header += without_includes(ROOT / "include/kd_mutex_direct.h")
     header += "\n" + without_includes(ROOT / "include/kd_mutex_api.h")
-    for nested in (0, 1, 2):
-        with tempfile.TemporaryDirectory(prefix=f"kd-mutex-api-{nested}-") as directory:
+    for nested, signalable in ((0, 0), (1, 0), (2, 0), (0, 1), (0, 2)):
+        with tempfile.TemporaryDirectory(prefix=f"kd-mutex-api-{nested}-{signalable}-") as directory:
             path = Path(directory)
             (path / "mutex_api.h").write_text(header)
             (path / "mutex_compat.h").write_text(
@@ -65,7 +65,8 @@ def main():
                 "-fno-omit-frame-pointer", "-fno-optimize-sibling-calls",
                 "-fno-reorder-blocks-and-partition", "-fno-toplevel-reorder",
                 "-mno-red-zone", "-mpreferred-stack-boundary=4", "-fno-pie",
-                f"-DCASE_NESTED={nested}", "-I" + directory, "-I" + str(ROOT / "include"),
+                f"-DCASE_NESTED={nested}", f"-DCASE_SIGNALABLE={signalable}",
+                "-I" + directory, "-I" + str(ROOT / "include"),
             ]
             subprocess.run(
                 ["cc", *flags, "-c", str(ROOT / "tests/unit/mutex/mutex_api_fixture.c"),
@@ -100,6 +101,8 @@ def main():
                     "kd_mutex_local_lock", "kd_mutex_local_unlock",
                     "kd_mutex_direct_lock_clobber_v1",
                     "kd_mutex_direct_unlock_clobber_v1",
+                    "kd_mutex_lock_interruptible_clobber_v1",
+                    "kd_mutex_lock_killable_clobber_v1",
                 }
             }
             # Real conventional symbols must not become remote ordinary
@@ -119,10 +122,12 @@ def main():
                         return_status=True)
                     assert rejected == context_policy.NATIVE_ONLY_EXIT, rejection
                     assert not refused and name in rejection, rejection
+            build_options = {}
             assembly, log, status = render(
                 "", regions=[(raw, start, [entry])], entry=entry,
                 kernel_symbols=controls, abi=2, lock_kind="mutex",
-                mutex_stack_bytes=stack_bytes, body_witness=True, return_status=True)
+                mutex_stack_bytes=stack_bytes, body_witness=True, return_status=True,
+                build_options=build_options)
             assert status == 0, log
             if not nested:
                 assert b"clobber_complete" in assembly, assembly
@@ -134,7 +139,9 @@ def main():
                 (ROOT / "include/wrapper.S").read_text()
                 + '\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
             subprocess.run(
-                ["cc", "-c", "-DKD_GENERATED_ENTRY_ABI=2", "-Dmain=main_wrapper",
+                ["cc", "-c", "-DKD_GENERATED_ENTRY_ABI=2",
+                 f"-DKD_GENERATED_REQUIREMENTS={build_options['requirements']}",
+                 "-Dmain=main_wrapper",
                  "-I" + directory, "-I" + str(path / "asm"), "-I" + str(ROOT / "include"),
                  str(path / "wrapper.S"), "-o", str(path / "wrapper.o")],
                 check=True, timeout=30)
@@ -152,7 +159,7 @@ def main():
             assert f"ENTRY {entry:x}\n" in result.stdout, result.stdout
             assert "PASS compiled unified " in result.stdout, result.stdout
             print(result.stdout, end="")
-    print("PASS unified facade: actual root/nested/early-unlock compiler output, strict ABI2 admission and generated execution")
+    print("PASS unified facade: root/nested/early-unlock and integer captured-success compiler output, strict ABI2 admission and generated execution")
 
 
 if __name__ == "__main__":

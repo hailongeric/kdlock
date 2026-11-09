@@ -1,0 +1,34 @@
+{
+  "result.json": {
+    "size": 30433,
+    "sha256": "c3e34f05bb06b784bd5579f8dd5f99e101a763114797c622aaf80a0cab029daa"
+  },
+  "finalization.json": {
+    "size": 1107,
+    "sha256": "967d1326011ff18fa918193000567edd5b5848da9e4953eed20a7bd0fae6a002"
+  },
+  "launch.log": {
+    "size": 27533,
+    "sha256": "1b8691cb1846766fb596eb574177887ba11191de465e671dbb7655ffe9676813"
+  },
+  "stderr": {
+    "size": 1741,
+    "sha256": "edb39d65f95d1f4261a988374a870fe3cbd0d4933b5f4d95ca7d710dbb64bd97"
+  },
+  "learning-records/daemon.log": {
+    "size": 524004,
+    "sha256": "e9bd1cb0569ea735dbda1aba92687ad7d379346697aeebdaf448877dcf3dfd77"
+  },
+  "learning-records/daemon-session.json": {
+    "size": 24279,
+    "sha256": "fe7e5ee62a05f59754ccde4a37320b44680318bc95aba21876f1cea32a6fc679"
+  },
+  "learning-records/threads/w01/learn-00/learning.json": {
+    "size": 244836,
+    "sha256": "2b18f3b4c1dfff89c84c65fa5dc27c60d07f0d8d9a921eb2d72a62dae9b9bd7b"
+  },
+  "learning-records/threads/w01/learn-00/learning-epochs.json": {
+    "size": 70131,
+    "sha256": "ea66da61f2b94cb146a9341dbf4e9341e81fa8702475378893de204c5d90c92c"
+  }
+}

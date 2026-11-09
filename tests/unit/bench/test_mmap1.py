@@ -1,12 +1,16 @@
 """Focused unchanged-harness, lifetime and actual object receipt checks (VM only)."""
 import argparse
 import copy
+from contextlib import ExitStack
 import importlib.util
 import json
+import os
 from pathlib import Path
+import stat
 import struct
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -36,9 +40,10 @@ def observed(model='threads'):
     records = [dict(tid=101+i, tgid=100 if model=='threads' else 101+i,
                     start_boottime_ns=(1000+i)*10_000_000+99, mm=0x1000+(0 if model=='threads' else i*0x1000),
                     lock=0x1100+(0 if model=='threads' else i*0x1000),
-                    backing=0x1100+(0 if model=='threads' else i*0x1000), use_kd=1, cpu=i)
+                    backing=0x1100+(0 if model=='threads' else i*0x1000), use_kd=1, cpu=i,
+                    provider=0, route=1)
                for i in range(2)]
-    snapshot = dict(abi=1, count=2, overflow=0, errors=0, stopped=1,
+    snapshot = dict(abi=2, count=2, overflow=0, errors=0, stopped=1,
                     refs_acquired=2, refs_released=2, repeat_equal=True, records=records)
     return snapshot, session
 
@@ -57,11 +62,14 @@ class KernelProfiles(unittest.TestCase):
                  patch.object(Path,'read_text',return_value='kd_mmap='+('on' if args.mode=='kd' else 'off')):
                 bench.guest(args)
                 family=variant.rsplit('-',1)[0] if variant!='kdlock1' else variant
+                if variant == 'kdscope5-log16-kd':
+                    family = 'kdscope5'
                 disk,date={'kdlock1':('kdlock-builds','20261027'),
                            'kdmm1':('kdlock-builds','20261027'),
                            'kdscope1':('kdlock-builds','20261030'),
                            'kdscope3':('kdlock-builds2','20261031'),
-                           'kdscope4':('kdlock-builds2','20261101')}[family]
+                           'kdscope4':('kdlock-builds2','20261101'),
+                           'kdscope5':('kdlock-builds2','20261103')}[family]
                 self.assertEqual(args.kernel_source,Path('/mnt/'+disk+'/linux-7.0.0-38-'+family+'/build'))
                 self.assertEqual(args.kernel_baseline,Path('/root/kdlock-kernel-baselines/linux70-'+variant+'-'+date))
                 if variant=='kdlock1': gate.assert_called_once_with('boot')
@@ -89,6 +97,52 @@ class KernelProfiles(unittest.TestCase):
 
 
 class Harness(unittest.TestCase):
+    def test_long_warmup_keeps_upstream_average_and_selects_only_tail(self):
+        samples = ['min:4 max:4 total:32'] * 714 + ['min:5 max:5 total:40'] * 10
+        text = '\n'.join(['testcase:'+bench.DESCRIPTION, 'warmup',
+            *(['min:3 max:3 total:24'] * 6), 'measurement', *samples,
+            'average:'+str((714*32+10*40)//724)])+'\n'
+        result = bench.parse_output(text, 8, 724, 10)
+        self.assertEqual(len(result['preparation']), 714)
+        self.assertEqual(len(result['measurement']), 10)
+        self.assertEqual(result['completed_pairs'], 400)
+        self.assertEqual(result['pairs_per_nominal_second'], 40)
+        self.assertEqual(result['upstream_completed_pairs'], 714*32+400)
+        self.assertEqual(bench.argv('/tmp/mmap1_processes', 8, 724)[-3:], ['-s', '724', '-m'])
+        with self.assertRaises(bench.rt.Failure):
+            bench.parse_output(text.replace('average:32', 'average:40'), 8, 724, 10)
+
+    def test_line_delivered_window_observes_only_selected_boundaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'upstream.log'
+            observations = []
+            with path.open('w') as log:
+                window = bench.sample_window.SampleWindow(log, 720, 10,
+                    lambda: observations.append(window.samples) or dict(sample=window.samples))
+                child = subprocess.Popen(['python3', '-c',
+                    'import os; assert os.isatty(1); print("min:1 max:1 total:8\\n"*730,end="")'],
+                    stdout=window.slave, stderr=subprocess.STDOUT)
+                window.start()
+                self.assertEqual(child.wait(timeout=10), 0)
+                receipt = window.finish()
+            self.assertEqual(observations, [720, 730])
+            self.assertEqual([row['boundary'] for row in receipt['events']], ['begin', 'end'])
+            self.assertEqual(len(path.read_text().splitlines()), 730)
+
+    def test_sample_reader_cleanup_before_launch_and_during_open_stream(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for launched in (False, True):
+                with (Path(directory)/str(launched)).open('w') as log:
+                    window = bench.sample_window.SampleWindow(log, 720, 10)
+                    writer = os.dup(window.slave)
+                    try:
+                        if launched:
+                            window.start()
+                        self.assertTrue(window.abort())
+                        self.assertTrue(window.log.closed)
+                    finally:
+                        os.close(writer)
+
     def test_exact_single_round_grid_and_original_cli(self):
         work = bench.plan()
         self.assertEqual(len(work), 42)
@@ -197,6 +251,19 @@ class ObjectObservation(unittest.TestCase):
             self.assertTrue(result['actual_mmap_lock_observed'])
             self.assertFalse(result['delegated_execution_proved'])
 
+    def test_provider_selection_is_distinct_from_execution_proof(self):
+        snapshot, session = observed()
+        for row in snapshot['records']:
+            row.update(provider=0x9000, route=2)
+        result = observer.validate(snapshot, session, 'kd', 100, provider=0x9000)
+        self.assertEqual(result['provider_routes'], [2])
+        self.assertFalse(result['delegated_execution_proved'])
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate(snapshot, session, 'kd', 100, provider=0x9001)
+        snapshot['records'][0]['route'] = 1
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate(snapshot, session, 'kd', 100)
+
     def test_task_cpu_backend_pointer_and_reference_mutations_reject(self):
         changes = [lambda s:s.update(refs_released=1),lambda s:s.update(stopped=0),
                    lambda s:s.update(overflow=1),lambda s:s.update(errors=1),
@@ -257,6 +324,277 @@ class ObjectObservation(unittest.TestCase):
             bad=words.copy();bad[offset]=value
             with self.assertRaises(observer.rt.Failure):observer.decode(encode(bad))
         with self.assertRaises(observer.rt.Failure):observer.decode(encode(words)[:-8])
+
+    def delegated_messages(self, snapshot, *, downgrade=False):
+        lines = []
+        stamp = 1
+        for row in snapshot['records']:
+            for entry in (0xA000, 0xB000):
+                stages = ('enter', 'downgrade', 'read_release', 'returned') if downgrade else \
+                         ('enter', 'release', 'returned')
+                for stage in stages:
+                    lines.append(f'6,{stamp},{stamp},-;kd_service event={stage} origin={row["tid"]} '
+                        f'executor=200 identity={row["tid"] * 0x100 + entry:x} generation={entry} '
+                        f'object={row["backing"]:x} depth=0 entry={entry:x} may_delegate=1')
+                    stamp += 1
+        return '\n'.join(lines)
+
+    def test_actual_delegation_requires_joined_completed_roots(self):
+        snapshot, session = observed()
+        for row in snapshot['records']:
+            row.update(provider=0x9000, route=2)
+        sites = dict(mmap=[0xA000], munmap=[0xB000])
+        messages = self.delegated_messages(snapshot, downgrade=True)
+        checked = observer.validate_delegated(snapshot, session, 100, messages, sites, 0x9000)
+        self.assertEqual(checked['completed_request_count'], 4)
+        self.assertEqual(checked['downgraded_read_tails'], 4)
+        self.assertTrue(checked['delegated_execution_proved'])
+        self.assertFalse(checked['fresh_reader_drain_observed'])
+        self.assertFalse(checked['physical_batch_length_measured'])
+        self.assertTrue(all(row['request_wall_ns'] == 3000 for row in checked['completed_requests']))
+        for changed in (messages.replace('executor=200', 'executor=101', 1),
+                        messages.replace('object=1100', 'object=1101', 1),
+                        messages.replace('event=read_release', 'event=release', 1),
+                        '\n'.join(messages.splitlines()[:-1]), messages + '\n' + messages.splitlines()[0]):
+            with self.assertRaises(observer.rt.Failure):
+                observer.validate_delegated(snapshot, session, 100, changed, sites, 0x9000)
+        with self.assertRaises(observer.rt.Failure):
+            observer.validate_delegated(snapshot, session, 100, messages,
+                                        dict(mmap=[0xA000], munmap=[0xC000]), 0x9000)
+
+
+class ExecutionContract(unittest.TestCase):
+    def expected(self, root):
+        provider, daemon, preparer = root/'provider.ko', root/'daemon', root/'python'
+        provider.write_text('exact module')
+        daemon.write_text('exact daemon')
+        preparer.write_text('exact interpreter')
+        return dict(schema=1, boot_id='boot', source=dict(state=0, modules=0, writers=1),
+            provider=dict(path=str(provider), sha256=bench.rt.digest(provider), note_sha256='a'*64),
+            daemon=dict(pid=700, start_ticks=99, executable=str(daemon),
+                        executable_sha256=bench.rt.digest(daemon), cwd=str(root), argv=[str(daemon)],
+                        device_writer=dict(pid=700, start_ticks=99, fd=3, flags=os.O_RDWR|os.O_CLOEXEC,
+                                           device=42, inode=77, rdev=99)),
+            preparer=dict(pid=699, start_ticks=98, executable=str(preparer),
+                          executable_sha256=bench.rt.digest(preparer), cwd=str(root), argv=[str(preparer)]),
+            parameters=dict(rwsem_provider_active='Y', rwsem_provider_mode='active',
+                            jit_timing='N', service_trace='N'),
+            registry=[dict(pid=0, tgid=699, status=0, entry_abi=2, lock_kind=2,
+                           entry=0x1000, code=0x2000, generation=1, requirements=896)],
+            files={str(provider):bench.rt.digest(provider), str(daemon):bench.rt.digest(daemon),
+                   str(preparer):bench.rt.digest(preparer)})
+
+    def test_writer_entry_scope_is_exact_and_hash_bound(self):
+        for demand in (False, True):
+            with self.subTest(demand=demand), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                expected = self.expected(root)
+                table = root / 'sites.json'
+                table.write_text(json.dumps(dict(records=[dict(entry=0x1000), dict(entry=0x3000)])))
+                expected.update(writer_entries=[0x1000],
+                    writer_sites=dict(path=str(table), sha256=bench.rt.digest(table)))
+                expected['files'][str(table)] = bench.rt.digest(table)
+                expected['parameters']['rwsem_provider_entries'] = '4096'
+                if demand:
+                    expected.update(schema=3, demand=True)
+                    expected['parameters']['rwsem_provider_demand'] = 'Y'
+                path = root / 'session.json'
+                def save(value):
+                    path.write_text(json.dumps(value))
+                    return bench.execution.ExecutionSession(path, bench.rt.digest(path))
+                save(expected)
+                mutations = (
+                    lambda row: row['parameters'].update(rwsem_provider_entries='12288'),
+                    lambda row: row.pop('writer_entries'),
+                    lambda row: row['files'].pop(str(table)),
+                    lambda row: row['registry'][0].update(entry=0x3000),
+                    lambda row: (row.update(writer_entries=[0x4000]),
+                                 row['parameters'].update(rwsem_provider_entries='16384')),
+                    lambda row: (row.update(writer_entries=[0x1000, 0x1000]),
+                                 row['parameters'].update(rwsem_provider_entries='4096,4096')),
+                )
+                for mutate in mutations:
+                    bad = copy.deepcopy(expected)
+                    mutate(bad)
+                    with self.assertRaises(bench.rt.Failure):
+                        save(bad)
+
+    def test_exact_hash_bound_contract_and_negative_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            expected=self.expected(root)
+            path=root/'session.json'
+            def save(value):
+                path.write_text(json.dumps(value))
+                return bench.execution.ExecutionSession(path,bench.rt.digest(path))
+            session=save(expected)
+            self.assertFalse(session.identity()['delegated_execution_proved'])
+            session.expected['parameters']['service_trace']='Y'
+            with self.assertRaises(bench.rt.Failure):session.verify()
+            mutations=(lambda row:row['parameters'].update(rwsem_provider_active='N'),
+                       lambda row:row['registry'][0].update(generation=0),
+                       lambda row:row['registry'][0].update(tgid=0),
+                       lambda row:row['registry'][0].update(tgid=700),
+                       lambda row:row['files'].pop(row['provider']['path']),
+                       lambda row:row['source'].update(writers=0),
+                       lambda row:row['source'].update(writers=2),
+                       lambda row:row['daemon']['device_writer'].update(flags=os.O_RDONLY),
+                       lambda row:row['source'].update(frames=0))
+            for mutate in mutations:
+                bad=copy.deepcopy(expected);mutate(bad)
+                with self.assertRaises(bench.rt.Failure):save(bad)
+
+    def test_live_daemon_writer_and_preparer_endpoints(self):
+        cases=('pass','zero_writer','extra_writer','unknown_descriptor','duplicate_descriptor',
+               'changed_descriptor','preparer_changed','writer_changed_during_observation','live_frame')
+        for case in cases:
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as directory,ExitStack() as stack:
+                root=Path(directory)
+                expected=self.expected(root)
+                note=root/'note';note.write_text('module build identity')
+                expected['provider']['note_sha256']=bench.rt.digest(note)
+                params=root/'parameters';params.mkdir()
+                for name,value in dict(expected['parameters'],rwsem_provider_bindings='1').items():
+                    (params/name).write_text(value)
+                receipt=root/'session.json';receipt.write_text(json.dumps(expected))
+                session=bench.execution.ExecutionSession(receipt,bench.rt.digest(receipt))
+                source=dict(expected['source'],frames=0)
+                if case=='zero_writer':source['writers']=0
+                if case=='extra_writer':source['writers']=2
+                if case=='live_frame':source['frames']=1
+                writers=[copy.deepcopy(expected['daemon']['device_writer'])]
+                if case=='unknown_descriptor':writers[0]['pid']=701
+                if case=='duplicate_descriptor':writers.append(dict(writers[0],fd=4))
+                if case=='changed_descriptor':writers[0]['flags']^=os.O_CLOEXEC
+                tasks={row['pid']:{key:row[key] for key in
+                       ('pid','start_ticks','executable','cwd','argv')} for row in
+                       (expected['daemon'],expected['preparer'])}
+                if case=='preparer_changed':tasks[699]['start_ticks']+=1
+                original_read=Path.read_text
+                def read(path,*args,**kwargs):
+                    if str(path)=='/proc/sys/kernel/random/boot_id':return 'boot'
+                    return original_read(path,*args,**kwargs)
+                stack.enter_context(patch.object(bench.execution,'NOTE',note))
+                stack.enter_context(patch.object(bench.execution,'PARAMETERS',params))
+                stack.enter_context(patch.object(bench.execution,'module_note_sha256',return_value=bench.rt.digest(note)))
+                stack.enter_context(patch.object(bench.execution,'task_identity',side_effect=lambda pid:dict(tasks[pid])))
+                stack.enter_context(patch.object(bench.execution,'device_writers',return_value=writers))
+                states=[source,dict(source,writers=2)] if case=='writer_changed_during_observation' else [source,source]
+                stack.enter_context(patch.object(bench.rt,'status',side_effect=states))
+                stack.enter_context(patch.object(bench.rt,'registry',return_value=expected['registry']))
+                stack.enter_context(patch.object(bench.rt,'children',return_value=[]))
+                stack.enter_context(patch.object(Path,'read_text',read))
+                stack.enter_context(patch.object(Path,'iterdir',return_value=[]))
+                stack.enter_context(patch.object(Path,'glob',return_value=[]))
+                if case=='pass':self.assertEqual(session.verify()['source'],source)
+                else:
+                    with self.assertRaises(bench.rt.Failure):session.verify()
+
+    def test_device_descriptor_observation_excludes_readonly_and_retains_other_writers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);proc=root/'proc';proc.mkdir();device=root/'device';device.write_text('device')
+            descriptors={}
+            def task(pid,fd,flags):
+                base=proc/str(pid);(base/'fd').mkdir(parents=True,exist_ok=True)
+                (base/'fdinfo').mkdir(exist_ok=True)
+                fields=['S','1',str(pid),str(pid)]+['0']*15+[str(pid+1)]
+                (base/'stat').write_text(str(pid)+' (daemon) '+' '.join(fields))
+                path=base/'fd'/str(fd);path.write_text('descriptor')
+                (base/'fdinfo'/str(fd)).write_text('flags:\t'+format(flags,'o')+'\n')
+                descriptors[str(path)]=SimpleNamespace(st_mode=stat.S_IFCHR,st_rdev=99,st_dev=42,st_ino=77)
+            task(700,3,os.O_RDWR|os.O_CLOEXEC);task(700,4,os.O_RDONLY)
+            original_stat=Path.stat
+            def observe(path,*args,**kwargs):
+                if path==device:return SimpleNamespace(st_mode=stat.S_IFCHR,st_rdev=99)
+                return descriptors.get(str(path)) or original_stat(path,*args,**kwargs)
+            with patch.object(bench.execution,'PROC',proc),patch.object(bench.execution,'DEVICE',device), \
+                 patch.object(Path,'stat',observe):
+                rows=bench.execution.device_writers()
+                self.assertEqual([(row['pid'],row['fd'],row['start_ticks']) for row in rows],[(700,3,701)])
+                task(701,5,os.O_WRONLY)
+                self.assertEqual([(row['pid'],row['fd']) for row in bench.execution.device_writers()],[(700,3),(701,5)])
+                (proc/'701/fdinfo/5').write_text('flags:\tmalformed\n')
+                with self.assertRaises(ValueError):bench.execution.device_writers()
+
+    def test_an_arbitrary_idle_waiver_is_not_a_session(self):
+        with tempfile.TemporaryDirectory() as directory,patch.object(bench,'idle') as idle:
+            with self.assertRaises(bench.rt.Failure):
+                bench.run_point(Path(directory)/'point',dict(model='threads',workers=2),{},lambda:None,
+                                execution_session=object())
+            idle.assert_not_called()
+
+
+class ReachedExecutionContract(unittest.TestCase):
+    def expected(self, root):
+        row = ExecutionContract().expected(root)
+        daemon = row.pop('daemon')
+        row['files'].pop(daemon['executable'])
+        row.update(schema=2, execution_mode='reached', registry=[], device_writers=[])
+        row['source']['writers'] = 0
+        row['parameters']['service_reached'] = 'Y'
+        audit = root/'sites.json'
+        audit.write_text(json.dumps(dict(records=[dict(entry=0x1000), dict(entry=0x2000)])))
+        digest = bench.rt.digest(audit)
+        row['files'][str(audit)] = digest
+        row['writer_sites'] = dict(path=str(audit), sha256=digest, entries=[0x1000, 0x2000])
+        return row
+
+    def test_schema_two_has_no_daemon_writer_or_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);row=self.expected(root);path=root/'session.json'
+            def save(value):
+                path.write_text(json.dumps(value))
+                return bench.execution.ExecutionSession(path,bench.rt.digest(path))
+            session=save(row)
+            self.assertEqual(session.identity()['execution_mode'],'reached')
+            self.assertIsNone(session.identity()['daemon_pid'])
+            changes=(lambda x:x.update(schema=1),lambda x:x.update(daemon={}),
+                     lambda x:x['source'].update(writers=1),lambda x:x.update(registry=[dict(status=0)]),
+                     lambda x:x.update(device_writers=[dict(pid=700)]),
+                     lambda x:x['parameters'].update(service_reached='N'),
+                     lambda x:x['writer_sites'].update(entries=[0x1000]))
+            for change in changes:
+                bad=copy.deepcopy(row);change(bad)
+                with self.assertRaises(bench.rt.Failure):save(bad)
+
+    def test_live_reached_contract_keeps_exact_controller_and_final_drain(self):
+        for case in ('pass','writer','frame','family','unfinished','image','preparer'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as directory,ExitStack() as stack:
+                root=Path(directory);row=self.expected(root);note=root/'note';note.write_text('module note')
+                row['provider']['note_sha256']=bench.rt.digest(note)
+                params=root/'parameters';params.mkdir()
+                for name,value in dict(row['parameters'],rwsem_provider_bindings='1').items():(params/name).write_text(value)
+                receipt=root/'session.json';receipt.write_text(json.dumps(row))
+                session=bench.execution.ExecutionSession(receipt,bench.rt.digest(receipt))
+                source=dict(row['source'],frames=0)
+                if case=='frame':source['frames']=1
+                observations=dict.fromkeys(('roots','completions','instructions','controls','primitives','memory','cache_hits','cache_misses','cache_full','unsupported','active'),0)
+                if case=='family':observations['active']=1
+                if case=='unfinished':observations['roots']=1
+                preparer={key:row['preparer'][key] for key in ('pid','start_ticks','executable','cwd','argv')}
+                if case=='preparer':preparer['start_ticks']+=1
+                original=Path.read_text
+                def read(path,*args,**kwargs):
+                    return 'boot' if str(path)=='/proc/sys/kernel/random/boot_id' else original(path,*args,**kwargs)
+                stack.enter_context(patch.object(bench.execution,'NOTE',note))
+                stack.enter_context(patch.object(bench.execution,'PARAMETERS',params))
+                stack.enter_context(patch.object(bench.execution,'module_note_sha256',return_value=bench.rt.digest(note)))
+                stack.enter_context(patch.object(bench.execution,'task_identity',return_value=preparer))
+                stack.enter_context(patch.object(bench.execution,'device_writers',return_value=[dict(pid=700)] if case=='writer' else []))
+                stack.enter_context(patch.object(bench.execution,'reached_observations',return_value=observations))
+                stack.enter_context(patch.object(bench.rt,'status',return_value=source))
+                stack.enter_context(patch.object(bench.rt,'registry',return_value=[dict(status=0)] if case=='image' else []))
+                stack.enter_context(patch.object(Path,'read_text',read))
+                stack.enter_context(patch.object(Path,'iterdir',return_value=[]))
+                stack.enter_context(patch.object(Path,'glob',return_value=[]))
+                if case=='pass':
+                    self.assertEqual(session.verify()['source'],source)
+                    source['modules']=2
+                    self.assertEqual(session.verify()['source']['modules'],2)
+                    source['modules']=1
+                    with self.assertRaises(bench.rt.Failure):session.verify()
+                else:
+                    with self.assertRaises(bench.rt.Failure):session.verify()
 
 
 class LaunchLifetime(unittest.TestCase):

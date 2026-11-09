@@ -1,0 +1,194 @@
+[
+  {
+    "percent": 26.96,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e7be",
+    "offset": "0xe7be",
+    "function": "kd_service_shadow_wait",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:1180 (discriminator 2)"
+  },
+  {
+    "percent": 6.93,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e17059",
+    "offset": "0x17059",
+    "function": "kd_service_capture_internal",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:1420 (discriminator 2)"
+  },
+  {
+    "percent": 3.99,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e7c4",
+    "offset": "0xe7c4",
+    "function": "kd_service_shadow_wait",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:1180 (discriminator 5)"
+  },
+  {
+    "percent": 2.26,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e04da0",
+    "offset": "0x4da0",
+    "function": "kd_service_scope_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:265"
+  },
+  {
+    "percent": 1.42,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e04dc8",
+    "offset": "0x4dc8",
+    "function": "kd_service_scope_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:264 (discriminator 2)"
+  },
+  {
+    "percent": 1.17,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e17061",
+    "offset": "0x17061",
+    "function": "kd_service_capture_internal",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:1420 (discriminator 5)"
+  },
+  {
+    "percent": 0.65,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e04d9d",
+    "offset": "0x4d9d",
+    "function": "kd_service_scope_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:265"
+  },
+  {
+    "percent": 0.53,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e4dc",
+    "offset": "0xe4dc",
+    "function": "kd_service_origin_memory",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/service_memory.inc:140 (discriminator 2)"
+  },
+  {
+    "percent": 0.5,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e1ec",
+    "offset": "0xe1ec",
+    "function": "kd_service_origin_primitive",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:495 (discriminator 1)"
+  },
+  {
+    "percent": 0.5,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e10365",
+    "offset": "0x10365",
+    "function": "kd_exe_reached_dispatch",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/reached_dispatch.inc:121"
+  },
+  {
+    "percent": 0.44,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e06f18",
+    "offset": "0x6f18",
+    "function": "kd_reached_cache_note",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/reached_dispatch.inc:78 (discriminator 1)"
+  },
+  {
+    "percent": 0.34,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e4e2",
+    "offset": "0xe4e2",
+    "function": "kd_service_origin_memory",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/service_memory.inc:140 (discriminator 5)"
+  },
+  {
+    "percent": 0.29,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e2a283",
+    "offset": "0x2a283",
+    "function": "kd_reached_step",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_reached.c:847"
+  },
+  {
+    "percent": 0.24,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e08ab2",
+    "offset": "0x8ab2",
+    "function": "kd_exec_cont_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/continuation.inc:8 (discriminator 1)"
+  },
+  {
+    "percent": 0.24,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e1dc17",
+    "offset": "0x1dc17",
+    "function": "kd_service_memory_call",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/service_memory.inc:219"
+  },
+  {
+    "percent": 0.24,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e0e7bc",
+    "offset": "0xe7bc",
+    "function": "native_pause",
+    "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source/arch/x86/include/asm/vdso/processor.h:13"
+  },
+  {
+    "percent": 0.23,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e08acd",
+    "offset": "0x8acd",
+    "function": "kd_exec_cont_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/continuation.inc:9"
+  },
+  {
+    "percent": 0.23,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e0924b",
+    "offset": "0x924b",
+    "function": "kd_reached_frame_fetch",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/reached.inc:61"
+  },
+  {
+    "percent": 0.22,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e08af8",
+    "offset": "0x8af8",
+    "function": "kd_exec_cont_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/execution/continuation.inc:11"
+  },
+  {
+    "percent": 0.22,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e06368",
+    "offset": "0x6368",
+    "function": "kd_service_admission_step",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:576"
+  },
+  {
+    "percent": 0.22,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e28e88",
+    "offset": "0x28e88",
+    "function": "decode",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_reached.c:186"
+  },
+  {
+    "percent": 0.21,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e2cae9",
+    "offset": "0x2cae9",
+    "function": "family_cached_locked",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_family.c:217"
+  },
+  {
+    "percent": 0.2,
+    "comm": "mmap1_threads",
+    "ip": "0xffffffffc0e17223",
+    "offset": "0x17223",
+    "function": "kd_service_capture_internal",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:1439"
+  },
+  {
+    "percent": 0.2,
+    "comm": "kthreadd",
+    "ip": "0xffffffffc0e04d3a",
+    "offset": "0x4d3a",
+    "function": "kd_service_scope_valid",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-perf-dispatch-wait-units-retry-20261103/cold/build/provider/kernel_module/kd_service.c:257"
+  }
+]

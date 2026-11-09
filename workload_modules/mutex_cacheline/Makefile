@@ -1,7 +1,7 @@
-# Separate mutex translation unit; payload/timing helpers are shared sources.
+# Separate mutex translation unit; fixture/timing helpers are shared sources.
 SC_WORKLOAD ?= cacheline
 ifneq ($(words $(SC_WORKLOAD)),1)
-$(error SC_WORKLOAD requires one payload name)
+$(error SC_WORKLOAD requires one workload name)
 endif
 ifneq ($(filter $(SC_WORKLOAD),cacheline rcuht),$(SC_WORKLOAD))
 $(error SC_WORKLOAD must be cacheline or rcuht)

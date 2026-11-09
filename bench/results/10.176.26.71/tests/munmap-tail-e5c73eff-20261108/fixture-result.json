@@ -1,0 +1,77 @@
+{
+  "artifacts": {
+    "control.S": {
+      "bytes": 6493,
+      "sha256": "756023dcf4cab47db5977f13c632cc02cef511cc3fc28febe595595d561fdc15"
+    },
+    "control.bin": {
+      "bytes": 1634,
+      "sha256": "3e2d0d422eb7ee6740ac7f986bf874c05edbfbb08f79e9c2dfab5a2fd0133cec"
+    },
+    "corrected.S": {
+      "bytes": 6626,
+      "sha256": "e07ea8a3256a8f4c4da610009dd409c6a2eb033c15c7b0090aa60992c04bedd7"
+    },
+    "corrected.bin": {
+      "bytes": 1655,
+      "sha256": "f0142ddef0df7f036ff37a8b37381091ee4b0e1ba7ea7391a7baaae81d2f9674"
+    },
+    "source.bin": {
+      "bytes": 16385,
+      "sha256": "4d99e2f0d720f438124807bc0a7d599a7321cbc9310525482ec429bb5b31aa83"
+    },
+    "source.json": {
+      "bytes": 565,
+      "sha256": "26ef91659239597e8a5bd404f882c4620b522e8b79fab16ffc327ba671fd3e25"
+    }
+  },
+  "decoded_source_equal": true,
+  "outcomes": {
+    "control": {
+      "after_inner_sp_delta": -8,
+      "arithmetic_flags": 2192,
+      "effects": [
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "exit": [
+        15,
+        1
+      ],
+      "inner_sp_delta": -16,
+      "inner_word": 12305,
+      "outer_continuation_sp_delta": null,
+      "outer_word": 4116,
+      "source_next_pc": 20481,
+      "sp_delta": 0,
+      "target": 4116
+    },
+    "corrected": {
+      "after_inner_sp_delta": -8,
+      "arithmetic_flags": 2192,
+      "effects": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "exit": [
+        15,
+        1
+      ],
+      "inner_sp_delta": -16,
+      "inner_word": 12305,
+      "outer_continuation_sp_delta": 0,
+      "outer_word": 4116,
+      "source_next_pc": 4142,
+      "sp_delta": 8,
+      "target": 17476
+    }
+  },
+  "requirements_equal": true,
+  "synthetic_source": true
+}

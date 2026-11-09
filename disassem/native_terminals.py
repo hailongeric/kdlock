@@ -29,17 +29,24 @@ def resolve(symbol_lookup, path=None):
     return resolved
 
 
-def indirect_call_length(raw):
-    """Canonical near FF /2, optionally one REX; no far/prefixed state model."""
+def _indirect_transfer_length(raw, extension):
+    """Near FF transfer; alternatives' 1..3 CS prefixes apply only to registers."""
     raw = bytes(raw)
-    index = int(bool(raw) and 0x40 <= raw[0] <= 0x4f)
+    index = 0
+    while index < len(raw) and raw[index] == 0x2e and index < 3:
+        index += 1
+    cs_prefixes = index
+    if index < len(raw) and 0x40 <= raw[index] <= 0x4f:
+        index += 1
     if len(raw) < index + 2 or raw[index] != 0xff:
         return None
     modrm = raw[index + 1]
-    if (modrm >> 3) & 7 != 2:
+    if (modrm >> 3) & 7 != extension:
         return None
     index += 2
     mode, rm = modrm >> 6, modrm & 7
+    if cs_prefixes and mode != 3:
+        return None
     sib_base = None
     if mode != 3 and rm == 4:
         if len(raw) <= index:
@@ -49,3 +56,11 @@ def indirect_call_length(raw):
     index += (1 if mode == 1 else 4 if mode == 2 or
               (mode == 0 and (rm == 5 or sib_base == 5)) else 0)
     return index if index == len(raw) else None
+
+
+def indirect_call_length(raw):
+    return _indirect_transfer_length(raw, 2)
+
+
+def indirect_tail_length(raw):
+    return _indirect_transfer_length(raw, 4)

@@ -1,0 +1,1 @@
+{"passed": true, "user_approved": true, "boot_id": "d106d3fc-97e7-45ff-a6bd-fda9c4a444e1", "cleared": [{"path": "/var/log/kern.log", "removed_bytes": 552094572, "device": 2049, "inode": 55528}, {"path": "/var/log/syslog", "removed_bytes": 552704051, "device": 2049, "inode": 42153}], "free_root_bytes": 3918942208, "rsyslog": "active", "benchmark_and_archive_paths_unchanged": true}

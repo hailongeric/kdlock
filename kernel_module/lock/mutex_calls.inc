@@ -32,6 +32,7 @@ static unsigned long kd_mutex_contended_acquire(struct kd_mutex *lock, unsigned 
 	 * delegation queue. Their KD physical primitives still provide mutual exclusion. */
 	if (!kd_source_is_open() ||
 	    !kd_comm_matches(&kd_spin_target, current->comm) ||
+	    kd_exec_native_service_active(current) ||
 	    kd_mutex_task_active(current)) {
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
@@ -96,14 +97,16 @@ void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,
 	struct kd_mutex *kd_mtx;
 
 	(void)ret_rsp;
+	/* A retained service route does not need a legacy task-cache membership.
+	 * Consult the same Native registry before the fresh/local routing filter. */
+	if (kd_exec_native_unlock((unsigned long)lock, true))
+		return;
 	/* Always reached, even after CPU cooling, rename or source closing. Task
 	 * membership is an ownership lookup here, not a fresh-admission filter. */
 	if (!kd_mutex_task_reroute(current)) {
 		kd_origin_mutex_unlock(lock, ret_addr);
 		return;
 	}
-	if (kd_exec_native_unlock((unsigned long)lock, true))
-		return;
 	kd_mtx = lock;
 	if (kd_mutex_delegation_owned(kd_mtx, current)) {
 		_kd_mutex_unlock(kd_mtx);

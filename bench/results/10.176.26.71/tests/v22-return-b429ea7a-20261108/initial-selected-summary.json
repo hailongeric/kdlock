@@ -1,0 +1,314 @@
+{
+  "output": "/mnt/kdlock-builds2/kdlock-batch-checks-t2y9blsb",
+  "running_release": "7.0.0-38-kdlock1",
+  "boot_id": "6148a091-cca7-4258-8d0b-d75227134564",
+  "passed": true,
+  "errors": [],
+  "initial_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "final_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "frozen_source_unchanged": true,
+  "work_source_unchanged": true,
+  "original_manifest_set_unchanged": true,
+  "selected_python_drivers": [
+    "execution/test_exe_registry.py",
+    "execution/test_mutex_images.py",
+    "execution/test_native_service_join.py",
+    "infrastructure/test_source_lifetime.py",
+    "admission/test_text_regions.py",
+    "codegen/test_returning_calls.py",
+    "codegen/test_source_frontier.py",
+    "infrastructure/test_compiler_manifest.py",
+    "bench/test_mmap1_provenance.py",
+    "bench/test_mmap1_settled.py",
+    "codegen/test_retained_misses.py",
+    "codegen/test_direct_call_depth.py",
+    "admission/test_context_guards.py",
+    "admission/test_address_guards.py",
+    "admission/test_audited_c_memory.py"
+  ],
+  "optional_provider_build": {
+    "reason": "not requested",
+    "requested": false,
+    "status": "not_run"
+  },
+  "selected_recovery_tag": "kdlock-builddisk-clean-20261031",
+  "checks": [
+    {
+      "name": "daemon-build",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_control_call-build",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_control_call",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_daemon_policy-build",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_daemon_policy",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "[PASS] daemon opt-in metrics, real children and observation faults",
+        "[PASS] finite batch union, frozen retry, scope and failure decisions",
+        "[PASS] test_daemon_policy"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_daemon_provenance-build",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [],
+      "build_warning_lines": []
+    },
+    {
+      "name": "test_daemon_provenance",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "[PASS] optional daemon provenance, exact buffers, cache identity and independent failures"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "execution-test_exe_registry",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "production exe registry: 36543 checks, 0 failures; pool=64 table=511",
+        "production exe registry: 70972 checks, 0 failures; pool=128 table=511",
+        "registry mutation detected: timing-session-not-reset",
+        "registry mutation detected: timing-unload-not-reported",
+        "registry mutation detected: partial-publish",
+        "registry mutation detected: duplicate-consumes-block",
+        "registry mutation detected: pool-stops-early",
+        "registry mutation detected: premature-readiness",
+        "registry mutation detected: lost-terminal-rejection",
+        "registry mutation detected: last-slot-invisible",
+        "registry mutation detected: upload-past-end",
+        "registry mutation detected: service-source-pin-error-ignored",
+        "registry mutation detected: repeat-enters-registration-gate",
+        "registry mutation detected: unpublished-registration-hit",
+        "registry mutation detected: registered-wrong-pid",
+        "registry mutation detected: registered-wrong-rip",
+        "registry mutation detected: registered-wrong-backend",
+        "registry mutation detected: registered-after-close"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "execution-test_mutex_images",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [],
+      "build_warning_lines": []
+    },
+    {
+      "name": "execution-test_native_service_join",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "PASS production Native service join: write; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives",
+        "PASS production Native service join: downgrade; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives",
+        "PASS production Native service join: read; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "infrastructure-test_source_lifetime",
+      "status": "passed",
+      "returncode": 0,
+      "tests": null,
+      "summary": [
+        "production source lifetime: 49922 checks, 0 failures; cap=64",
+        "source lifetime mutation detected: api-ioctl-drops-argument",
+        "source lifetime mutation detected: api-selector-release-omitted",
+        "source lifetime mutation detected: duplicate-pins",
+        "source lifetime mutation detected: early-cap",
+        "source lifetime mutation detected: coming-text",
+        "source lifetime mutation detected: kernel-init-text",
+        "source lifetime mutation detected: module-init-residency",
+        "source lifetime mutation detected: module-data-executable",
+        "source lifetime mutation detected: module-region-gap",
+        "source lifetime mutation detected: busy-writer-ignored",
+        "source lifetime mutation detected: busy-frame-ignored",
+        "source lifetime mutation detected: stale-entry",
+        "source lifetime mutation detected: writer-after-close",
+        "source lifetime mutation detected: frame-leak",
+        "source lifetime mutation detected: frame-after-close",
+        "source lifetime mutation detected: wrong-stack-capability",
+        "source lifetime mutation detected: missing-stack-feature",
+        "source lifetime mutation detected: wrong-module-arena",
+        "source lifetime mutation detected: missing-module-feature",
+        "source lifetime mutation detected: missing-native-escape-feature",
+        "source lifetime mutation detected: missing-address-guard-feature",
+        "source lifetime mutation detected: missing-string-service-feature",
+        "source lifetime mutation detected: missing-string-write-feature",
+        "source lifetime mutation detected: missing-audited-string-feature",
+        "source lifetime mutation detected: missing-root-native-escape-feature",
+        "source lifetime mutation detected: missing-indirect-call-feature",
+        "source lifetime mutation detected: missing-origin-instruction-feature",
+        "source lifetime mutation detected: missing-origin-call-feature",
+        "source lifetime mutation detected: missing-origin-memory-feature",
+        "source lifetime mutation detected: missing-origin-context-read-feature",
+        "source lifetime mutation detected: missing-indirect-tail-feature",
+        "source lifetime mutation detected: missing-source-frontier-feature",
+        "source lifetime mutation detected: missing-learning-batch-feature",
+        "source lifetime mutation detected: bound-objects-close-admission",
+        "source lifetime mutation detected: binding-after-close",
+        "source lifetime mutation detected: missing-direct-string-feature",
+        "source lifetime mutation detected: direct-feature-without-pool"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "admission-test_text_regions",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 86,
+      "summary": [
+        "Ran 86 tests in 5.634s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "codegen-test_returning_calls",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 22,
+      "summary": [
+        "Ran 22 tests in 0.503s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "codegen-test_source_frontier",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 11,
+      "summary": [
+        "Ran 11 tests in 0.934s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "infrastructure-test_compiler_manifest",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 12,
+      "summary": [
+        "Ran 12 tests in 0.089s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "bench-test_mmap1_provenance",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 20,
+      "summary": [
+        "Ran 20 tests in 0.442s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "bench-test_mmap1_settled",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 13,
+      "summary": [
+        "Ran 13 tests in 0.018s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "codegen-test_retained_misses",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 4,
+      "summary": [
+        "Ran 4 tests in 0.100s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "codegen-test_direct_call_depth",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 4,
+      "summary": [
+        "Ran 4 tests in 0.086s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "admission-test_context_guards",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 43,
+      "summary": [
+        "Ran 43 tests in 2.665s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "admission-test_address_guards",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 7,
+      "summary": [
+        "Ran 7 tests in 0.886s"
+      ],
+      "build_warning_lines": []
+    },
+    {
+      "name": "admission-test_audited_c_memory",
+      "status": "passed",
+      "returncode": 0,
+      "tests": 13,
+      "summary": [
+        "Ran 13 tests in 0.261s"
+      ],
+      "build_warning_lines": []
+    }
+  ],
+  "python_unittest_count": 235
+}

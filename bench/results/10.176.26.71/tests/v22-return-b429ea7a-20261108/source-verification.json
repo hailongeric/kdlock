@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "source_commits": [
+    "ae1c33e4afc728f6b2c31b68588e5db8dd4093b0",
+    "c5512295512032cbe94f0e603e068a18fef132c8"
+  ],
+  "final_source_matches_current": true,
+  "verified_source_files": 1093,
+  "initial_to_final_changed_files": [
+    "tests/unit/bench/test_mmap1_settled.py"
+  ],
+  "unchanged_provider_source_files": 138,
+  "previous_provider_receipt": "learning-batches-b9a31a06-20261108/recheck-source-sha256.json",
+  "provider_rebuilt_in_this_phase": false
+}

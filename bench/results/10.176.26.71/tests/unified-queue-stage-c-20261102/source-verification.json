@@ -1,0 +1,19 @@
+{
+  "frozen_head": "9370ae4e635bef487d16be475e37a5a1f9e27d7b",
+  "frozen_status": "",
+  "private_inc_files": 86,
+  "receipt_comparisons": [
+    {
+      "files": 235,
+      "path": "stage-c-eighth-20261102/proxy/source-sha256.json",
+      "source_mismatches": []
+    },
+    {
+      "files": 212,
+      "path": "stage-c-eighth-20261102/local_rwsem/source-sha256.json",
+      "source_mismatches": []
+    }
+  ],
+  "sync_files": 6715,
+  "sync_mismatches": []
+}

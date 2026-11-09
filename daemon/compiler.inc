@@ -60,8 +60,9 @@ static int report_translation(const struct kd_exe_info *exe, pid_t child,
 
 /* Only the translator child inherits the writer description. It must not
  * reopen a different provider if inheritance or capability checks fail. */
-static int compile_entry(const struct daemon_config *cfg,
-			 const struct kd_exe_info *exe)
+static int compile_at(const struct daemon_config *cfg,
+		      const struct kd_exe_info *exe, const char *workspace,
+		      const char *script)
 {
 	/* Direct Python file-open errors and shell cd failures also exit 2.
 	 * runpy makes a missing script an ordinary exception (exit 1), so only
@@ -70,9 +71,6 @@ static int compile_entry(const struct daemon_config *cfg,
 		"import os, runpy, sys; script = sys.argv.pop(1); "
 		"sys.path.insert(0, os.path.dirname(script)); "
 		"runpy.run_path(script, run_name='__main__')";
-	const char *script = cfg->mode == MODE_V1 ?
-				     "../../disassem/disassem.py" :
-				     "../../../disassem/disassem.py";
 	const char *abi = exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ? "1" :
 			  exe->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ? "2" :
 			  exe->entry_abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ? "3" :
@@ -80,16 +78,17 @@ static int compile_entry(const struct daemon_config *cfg,
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
 			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
 								 "unknown";
-	char workspace[256], pid_text[32], rip_text[32], fd_text[32];
+	char pid_text[32], rip_text[32], fd_text[32];
 	struct rusage usage;
 	uint64_t started = 0, finished;
 	pid_t child, waited;
 	int status, result;
 
-	workspace_path(workspace, sizeof(workspace), cfg, exe);
+	provenance_current = (struct provenance_compile){ 0 };
 	snprintf(pid_text, sizeof(pid_text), "%d", exe->pid);
 	snprintf(rip_text, sizeof(rip_text), "%p", (void *)exe->RIP);
 	snprintf(fd_text, sizeof(fd_text), "%d", sys_fd);
+	provenance_current = provenance_compile_begin(exe);
 	/* Opt-in observation starts before fork and ends after reaping. A broken
 	 * clock is an experiment/launch error, never a native-only CS verdict. */
 	if (cfg->metrics && monotonic_ns(&started))
@@ -100,6 +99,7 @@ static int compile_entry(const struct daemon_config *cfg,
 		return -1;
 	}
 	if (!child) {
+		provenance_compile_child(&provenance_current);
 		/* Only the translator inherits the session. Workspace shell commands
 		 * retain CLOEXEC; an orphaned translator must keep its provider alive. */
 		if (fcntl(sys_fd, F_SETFD, 0) < 0 ||
@@ -128,11 +128,25 @@ static int compile_entry(const struct daemon_config *cfg,
 	if (cfg->metrics &&
 	    (monotonic_ns(&finished) ||
 	     report_translation(exe, child, status, result, started, finished,
-				&usage)))
+				&usage))) {
+		provenance_compile_end(&provenance_current);
 		return -1;
+	}
+	provenance_compile_end(&provenance_current);
 	if (result < 0)
 		fprintf(stderr,
 			"daemon: translator failed: workspace=%s status=%d\n",
 			workspace, status);
 	return result;
+}
+
+static int compile_entry(const struct daemon_config *cfg,
+			 const struct kd_exe_info *exe)
+{
+	char workspace[256];
+	const char *script = cfg->mode == MODE_V1 ?
+		"../../disassem/disassem.py" : "../../../disassem/disassem.py";
+
+	workspace_path(workspace, sizeof(workspace), cfg, exe);
+	return compile_at(cfg, exe, workspace, script);
 }

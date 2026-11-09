@@ -1,6 +1,6 @@
 # Checked spin pointer-load continuation
 
-This focused check uses the [address-guard payload](payload/module.c)
+This focused check uses the [address-guard payload](fixture/module.c)
 to verify a delegated spin critical section that encounters a checked pointer
 load. JIT means the generated machine code that a lock holder runs on behalf of
 a waiting task. The check compares the load's address with recorded stack writes;

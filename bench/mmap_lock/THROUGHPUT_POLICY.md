@@ -48,7 +48,7 @@ reviewed client SHA-256:
 | Evidence | Requirement retained for both backends |
 | --- | --- |
 | Backend | `paired.py::check_kernel/ready`: exact image, Build ID, configuration, boot arguments, module set, source/artifact hashes and prior API receipts. The adapter initializes an immutable backend per mm. `MW_ID` gives addresses and task/object identities, not a backend flag. |
-| Prior ownership/API checks | Preserve the 137 Native / 161 KD prerequisites. The explicit probe in `tests/kernel/mmap_lock/payload/module.c` checks writer ownership and overlapping reader/writer counters. These are focused prior evidence, not a fresh proof of every timed acquisition or full Native equivalence. |
+| Prior ownership/API checks | Preserve the 137 Native / 161 KD prerequisites. The explicit probe in `tests/kernel/mmap_lock/fixture/module.c` checks writer ownership and overlapping reader/writer counters. These are focused prior evidence, not a fresh proof of every timed acquisition or full Native equivalence. |
 | Functional work | Successful mmap/munmap calls; exact worker mm/lock/object/TGID identities, unique TIDs and CPU placement; successful joins; positive per-worker completion; exact operation and callback totals; zero worker/context/fault errors. |
 | Lifetime | Native VFS/VMA references and `mmgrab/mmdrop` retain ownership of storage. Preserve zero residual files/mm references/VMAs, exact destruction and release-error counters, fault checks, normal unload and idle verification. Counters do not replace references or lock ownership. |
 | Timing | Keep `mmap-window-v2`, `qemu-workers-v1`, settling, workload/instrumentation identity, progress accounting, endpoint ordering, drain and replay. Timed runs require `observe=0`, including zero contention-counter activity. |
@@ -203,7 +203,7 @@ delegation, TCLock equivalence or full Native semantics.
 Sources: [fixed client](../mmap_writer/client.c),
 [paired runner](paired.py), [timed validation](../mmap_writer/timing.py),
 [positive-proof verifier](../../tests/kernel/mmap_lock/mapping.py),
-[explicit API probe](../../tests/kernel/mmap_lock/payload/module.c),
+[explicit API probe](../../tests/kernel/mmap_lock/fixture/module.c),
 [ELF-bound writer sites](../../tests/kernel/mmap_lock/writer_sites_kdmm31.json),
 [payload lifetime/accounting](../../workload_modules/mmap_writer/mapping.c),
 [backend adapter](../../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c).

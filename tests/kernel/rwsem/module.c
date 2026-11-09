@@ -177,7 +177,7 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	struct task_struct *task;
 	unsigned long deadline;
 	bool queued = false;
-	bool gate_wait = writer && !drain && !READ_ONCE(sem.prepared_writes);
+	bool gate_wait = writer && !drain;
 
 	init_completion(&c.ready);
 	init_completion(&c.done);
@@ -204,15 +204,15 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	deadline = jiffies + 5 * HZ;
 	do {
 		queued = gate_wait ? !!READ_ONCE(sem.gate.wait_head) :
-			waitqueue_active(drain ? &sem.reader_drain : &sem.phase_wait);
+			kd_rwsem_condition_active(drain ? &sem.reader_drain : &sem.phase_wait);
 		if (queued)
 			break;
 		msleep(1);
 	} while (time_before(jiffies, deadline));
 	check(queued);
-	check(!waitqueue_active(drain ? &sem.phase_wait : &sem.reader_drain));
+	check(!kd_rwsem_condition_active(drain ? &sem.phase_wait : &sem.reader_drain));
 	if (gate_wait)
-		check(!waitqueue_active(&sem.phase_wait));
+		check(!kd_rwsem_condition_active(&sem.phase_wait));
 	if (signal == SIGKILL) {
 		check(!send_sig(SIGUSR1, task, 1));
 		msleep(20);
@@ -317,18 +317,18 @@ static int sleeping_case(struct result *r, bool outer)
 	if (ret)
 		goto join;
 	writer_slept = parked(workers[2].task);
-	check(waitqueue_active(&sem.reader_drain));
-	check(!waitqueue_active(&sem.phase_wait));
+	check(kd_rwsem_condition_active(&sem.reader_drain));
+	check(!kd_rwsem_condition_active(&sem.phase_wait));
 	check(!completion_done(&workers[2].entered));
 	if (outer) {
-		check(atomic_long_read(&sem.admission) == 1);
+		check(atomic_long_read(&sem.admission) == -1);
 		unpublished(r);
 	}
 	ret = start(3, READER);
 	if (ret)
 		goto join;
 	late_reader_slept = parked(workers[3].task);
-	check(waitqueue_active(&sem.phase_wait));
+	check(kd_rwsem_condition_active(&sem.phase_wait));
 	check(!completion_done(&workers[3].entered));
 	complete(&workers[0].release);
 	check(wait_for_completion_timeout(&workers[0].done, 5 * HZ));
@@ -336,8 +336,8 @@ static int sleeping_case(struct result *r, bool outer)
 	complete(&workers[1].release);
 	check(entered(2));
 	check(parked(workers[2].task));
-	check(!waitqueue_active(&sem.reader_drain));
-	check(waitqueue_active(&sem.phase_wait));
+	check(!kd_rwsem_condition_active(&sem.reader_drain));
+	check(kd_rwsem_condition_active(&sem.phase_wait));
 	check(!completion_done(&workers[3].entered));
 	complete(&workers[2].release);
 	check(entered(3));
@@ -368,20 +368,20 @@ static int downgrade_case(struct result *r)
 	}
 	check(parked(workers[0].task));
 	check(atomic_long_read(&sem.admission) == -1);
-	check(waitqueue_active(&sem.phase_wait));
-	check(!waitqueue_active(&sem.reader_drain));
+	check(READ_ONCE(sem.gate.wait_head));
+	check(!kd_rwsem_condition_active(&sem.reader_drain));
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
 	/* Conversion creates an admitted reader before reopening the phase. The
-	 * waiting outer caller can reserve, but must still sleep before pinning.
+	 * waiting writer freshly selects and drains that retained read share.
 	 */
 	atomic_inc(&reading);
 	kd_downgrade_write(&sem);
-	check(phase_is(1));
+	check(phase_is(-1));
 	check(parked(workers[0].task));
-	check(!waitqueue_active(&sem.phase_wait));
-	check(waitqueue_active(&sem.reader_drain));
-	check(atomic_long_read(&sem.admission) == 1);
+	check(!kd_rwsem_condition_active(&sem.phase_wait));
+	check(kd_rwsem_condition_active(&sem.reader_drain));
+	check(atomic_long_read(&sem.admission) == -1);
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
 	atomic_dec(&reading);
@@ -449,7 +449,7 @@ static int public_api_checks(void)
 	kd_up_read(&sem);
 	{ guard(kd_rwsem_write)(&sem); check(atomic_long_read(&sem.admission) == -1); }
 	kd_down_write(&sem);
-	check(atomic_long_read(&sem.admission) == 1);
+	check(atomic_long_read(&sem.admission) == -1);
 	routed_unlock(&sem);
 	check(kd_rwsem_is_idle(&sem) && READ_ONCE(sem.prepared_writes) == 1);
 	check(!kd_rwsem_compat_checks());
@@ -546,7 +546,7 @@ unlock:
 	return ret;
 }
 
-#include "payload/gate_signal.inc"
+#include "fixture/gate_signal.inc"
 
 static long probe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {

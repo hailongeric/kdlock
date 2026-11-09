@@ -17,6 +17,10 @@ unsigned long kd_mutex_outer_contended_clobber_v1(struct kd_mutex *, unsigned lo
 												  unsigned long, unsigned long);
 void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 									   unsigned long, unsigned long);
+int kd_mutex_lock_interruptible_clobber_v1(struct kd_mutex *, unsigned long,
+					 unsigned long, unsigned long);
+int kd_mutex_lock_killable_clobber_v1(struct kd_mutex *, unsigned long,
+				     unsigned long, unsigned long);
 
 /* ABI2: compiler-owned spills and the existing lock/SP/IP/BP arguments.
  * The ordinary mutex may sleep; the queue implementation owns waiter pinning.
@@ -45,6 +49,29 @@ void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 	KD_MUTEX_DIRECT_CALL(kd_mutex_direct_lock_clobber_v1, lock, continuation)
 #define KD_MUTEX_DIRECT_UNLOCK(lock) \
 	KD_MUTEX_DIRECT_CALL(kd_mutex_direct_unlock_clobber_v1, lock, "")
+
+/* Native return keeps its integer result and skips the synthetic success
+ * entry. A committed proxy enters at 1 with only ABI2 SP/IP/BP inputs, so the
+ * source itself defines EAX before its caller tests the acquisition result.
+ * The compiler owns all other spills; the generated wrapper remains two words. */
+#define KD_LOCK_DIRECT_RESULT_CALL(symbol, lock_type, lock, continuation) ({ \
+	__auto_type kd_result_arg = (lock); \
+	lock_type *kd_result_lock = kd_result_arg; \
+	unsigned long kd_sp, kd_ip, kd_bp; \
+	int kd_result; \
+	asm volatile("movq %%rsp, %%rsi\n\t" \
+		     "leaq 1f(%%rip), %%rdx\n\t" \
+		     "movq %%rbp, %%rcx\n\t" \
+		     "call " #symbol "\n\t" \
+		     "jmp 2f\n\t1:\n\t" continuation "\n\t" \
+		     "xorl %%eax, %%eax\n\t2:\n\t" \
+		     : "=a"(kd_result), "+D"(kd_result_lock), "=S"(kd_sp), \
+		       "=d"(kd_ip), "=c"(kd_bp), ASM_CALL_CONSTRAINT \
+		     : \
+		     : "rbx", "r8", "r9", "r10", "r11", \
+		       "r12", "r13", "r14", "r15", "cc", "memory"); \
+	kd_result; \
+})
 
 /* Explicit outer-only pair. Nested locks inside a translated body keep the
  * general KD_MUTEX_DIRECT interface: their owner changes require a KD ledger.

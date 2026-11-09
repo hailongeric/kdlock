@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Join real mutex resource decisions without executing a kernel stack switch.
- * CPU scheduling, task allocation, physical locks and peers are substitutes.
+ * Scheduling, task allocation, physical locks, queue grants and peers are
+ * supplied observations. Request initialization and retirement are extracted.
  */
 #include <errno.h>
 #include <setjmp.h>
@@ -29,6 +30,7 @@ struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 struct list_head { struct list_head *next, *prev; };
+struct wake_q_head;
 #include "mutex_resource_types.h"
 
 static struct task_struct waiter __attribute__((aligned(8))) = { .pid = 1 };
@@ -39,6 +41,7 @@ static unsigned int checks, errors, preempt, migration, table_irq;
 static unsigned int gets, task_puts, refs, adds, acquires, releases, schedules;
 static unsigned int slow_calls, notify_calls, samples, mode;
 static unsigned int native_waits;
+static const int nr_cpu_ids = 40;
 static unsigned long kd_mutex_multi_slot_count, kd_mutex_frame_failure_count;
 static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
@@ -101,8 +104,11 @@ static jmp_buf resume_target;
 #define atomic64_inc(p) (++*(p))
 #define BIT(n) (1UL << (n))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name
+#define __percpu
 #define this_cpu_ptr(p) (p)
-#define per_cpu_ptr(p, cpu) tail_node_for_cpu(p, cpu)
+#define per_cpu_ptr(p, cpu) _Generic((p), \
+ struct kd_mutex_wait_pool *: fixture_pool_for_cpu, \
+ default: tail_node_for_cpu)((p), (cpu))
 #define DEFINE_RAW_SPINLOCK(name) int name
 #define raw_spin_unlock_irqrestore(p, flags)                    \
 	do {                                                    \
@@ -114,6 +120,8 @@ static jmp_buf resume_target;
 #define raw_smp_processor_id() smp_processor_id()
 #define _Q_LOCKED_VAL 1
 #define _RET_IP_ 0x9000UL
+#define TASK_UNINTERRUPTIBLE 2U
+#define lockdep_assert_held(p) CHECK(*(p) == 1 && table_irq == 1)
 #define KD_PR_DEBUG(...)                     \
 	do {                                 \
 		if (0)                       \
@@ -143,13 +151,15 @@ static bool need_resched(void) __attribute__((unused));
 static void schedule(void) __attribute__((unused));
 static void cpu_relax(void);
 static void kd_origin_mutex_lock(struct kd_mutex *lock);
-static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
-{
-	CHECK(!node);
-	kd_origin_mutex_lock(lock);
-}
+static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node);
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip);
 static bool kd_mutex_task_active(struct task_struct *task);
+static bool kd_exec_native_service_active(struct task_struct *task)
+{
+	(void)task;
+	/* This legacy slot fixture constructs no retained service frame. */
+	return false;
+}
 static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);
@@ -164,6 +174,33 @@ static void jump_to_saved_regs(struct kd_regs *regs);
 static void jump_to_saved_regs_in_cs(struct kd_regs *regs);
 static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
+struct kd_mutex_wait_pool;
+static struct kd_mutex_wait_pool *fixture_pool_for_cpu(struct kd_mutex_wait_pool *pool,
+						     int cpu);
+static void kd_wait_local_identity(void **identity, u64 *generation)
+{
+	(void)identity;
+	(void)generation;
+	/* Captured slot requests always supply their exact explicit identity. */
+	CHECK(false);
+}
+static unsigned long _raw_spin_lock_irqsave(raw_spinlock_t *guard)
+{
+	CHECK(guard && !*guard && !table_irq);
+	*guard = 1;
+	table_irq = 1;
+	return 0;
+}
+static void _raw_spin_unlock_irqrestore(raw_spinlock_t *guard, unsigned long flags)
+{
+	raw_spin_unlock_irqrestore(guard, flags);
+}
+static void cond_resched(void)
+{
+	CHECK(!preempt);
+	if (need_resched())
+		schedule();
+}
 static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
 static void might_sleep(void) { CHECK(!preempt); }
 static void kd_hotlock_mutex_entry(void)
@@ -181,6 +218,15 @@ static bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 	acquires++;
 	return true;
 }
+int kd_mutex_trylock(struct kd_mutex *lock)
+{
+	CHECK(preempt == 1 && !table_irq);
+	if (lock->owner)
+		return 0;
+	lock->owner = current;
+	acquires++;
+	return 1;
+}
 #define atomic_long_set(p,v) (*(p) = (void *)(unsigned long)(v))
 #define osq_lock_init(p) ((p)->tail.counter = 0)
 #define raw_spin_lock_init(p) (*(p) = 0)
@@ -191,6 +237,8 @@ static bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 #define fixture_state_changed(p) fixture_release_observe(p)
 #include "mutex_state_mock.h"
 #include "mutex_resource_code.h"
+
+static struct kd_mutex_wait_pool fixture_wait_pool;
 
 static bool conventional_unlock;
 static void public_unlock(struct kd_mutex *lock)
@@ -226,8 +274,10 @@ static void fixture_release_observe(const void *address)
   struct task_struct *saved = current;
   handoff_on_gate_release = false;
   current = &peer;
+  kd_origin_mutex_lock(reference_gate);
   CHECK(kd_mutex_gate_trylock(reference_gate));
-  kd_mutex_claim_origin(reference_gate);
+  kd_mutex_gate_set(reference_gate, KD_MUTEX_GATE_HELD);
+  kd_mutex_origin_acquires++;
   current = saved;
  }
 }
@@ -252,6 +302,38 @@ static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 	}
 	CHECK(false);
 	return NULL;
+}
+
+static struct kd_mutex_wait_pool *fixture_pool_for_cpu(struct kd_mutex_wait_pool *pool,
+						     int cpu)
+{
+	CHECK(pool == &fixture_wait_pool && cpu == smp_processor_id());
+	return pool;
+}
+
+/* The substituted physical/assembly boundary supplies the successful grant.
+ * Initialization, state transitions and final retirement remain production
+ * code. These cases do not substitute a second queue-election implementation. */
+static void fixture_supply_grant(struct kd_mutex_node *node, struct task_struct *owner)
+{
+	struct kd_mutex_wait_record *record = kd_mutex_wait_record(node);
+	struct kd_wait_request *request = &record->request;
+
+	CHECK(record->request_live && request->identity == record &&
+	      request->generation == record->invocation && request->context == node);
+	CHECK(request->logical_origin == current && request->physical_waiter == current &&
+	      request->may_delegate && request->state == KD_WAIT_PRIVATE && !request->guard);
+	CHECK(node->lock->owner == owner && owner && !request->memberships &&
+	      !request->selection && !request->cleanup && !request->acquisition);
+	request->guard = &record->lifecycle_guard;
+	request->state = KD_WAIT_ACQUIRED;
+}
+
+static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	kd_origin_mutex_lock(lock);
+	if (node)
+		fixture_supply_grant(node, current);
 }
 
 static void preempt_disable(void)
@@ -334,14 +416,15 @@ static void kd_origin_mutex_lock(struct kd_mutex *lock)
 {
 	CHECK(lock && !preempt && !table_irq);
 	if (lock == reference_gate)
-		CHECK(kd_mutex_gate_read(lock) == KD_MUTEX_GATE_ACQUIRING);
+		CHECK(kd_mutex_gate_read(lock) != KD_MUTEX_GATE_HELD &&
+		      kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER);
 	if (native_owner_wait) {
 		struct kd_mutex *gate = lock;
 
 		/* A native peer acquired L between private-queue owners. Claiming
 		 * S cannot bypass that owner; substitute only its eventual unlock. */
 		CHECK(lock->owner == &peer && current == &waiter);
-		CHECK(gate && kd_mutex_gate_read(gate) == KD_MUTEX_GATE_ACQUIRING &&
+		CHECK(gate && kd_mutex_gate_read(gate) == KD_MUTEX_GATE_FREE &&
 		      !fixture_gate_owner(gate) && !release_gate && refs == 1);
 		native_owner_wait = false;
 		native_waits++;
@@ -349,6 +432,13 @@ static void kd_origin_mutex_lock(struct kd_mutex *lock)
 		kd_origin_mutex_unlock(lock, 0x9000);
 		current = &waiter;
 	}
+	if (lock->owner == &peer) {
+		CHECK(waiting_gate == lock && migration == 1);
+		release_peer(lock);
+		waiting_gate = NULL;
+	}
+	if (schedule_wanted)
+		schedule();
 	CHECK(!lock->owner);
 	lock->owner = current;
 	acquires++;
@@ -440,14 +530,31 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
 	CHECK(memcmp(&node->regs, &entry, sizeof(entry)) == 0);
+	if (native_owner_wait) {
+		/* This peer owns only the physical lock. The actual wait helper
+		 * acquires it before publishing a new delegation-gate owner. */
+		CHECK(mode == 0 && kd_mutex_gate_read(lock) == KD_MUTEX_GATE_FREE);
+		kd_mutex_wait_and_lock_node(lock, node);
+		return 2;
+	}
 	if (mode == 2) {
 		release_peer(lock);
-		kd_mutex_gate_set(lock, KD_MUTEX_GATE_ACQUIRING);
-		preempt_enable();
-		kd_mutex_claim_origin(lock);
-		preempt_disable();
+		kd_mutex_wait_and_lock_node(lock, node);
 	} else {
+		struct kd_mutex_wait_record *record = kd_mutex_wait_record(node);
+		unsigned long flags;
+
 		CHECK(mode == 3 || mode == 5);
+		fixture_supply_grant(node, &peer);
+		flags = _raw_spin_lock_irqsave(record->request.guard);
+		kd_wait_set_state_locked(&record->request, KD_WAIT_EXECUTING);
+		if (mode == 3) {
+			kd_wait_set_state_locked(&record->request, KD_WAIT_RELEASED);
+			kd_wait_set_state_locked(&record->request, KD_WAIT_RETURN_ACK);
+		} else {
+			kd_wait_handoff_locked(&record->request);
+		}
+		_raw_spin_unlock_irqrestore(record->request.guard, flags);
 		node->regs = expected_regs;
 		node->native_resume = mode == 5;
 		cpu_shadows.resume_node = node;
@@ -470,10 +577,7 @@ static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *no
 	memset(&poison, 0xa7, sizeof(poison));
 	CHECK(!memcmp(&before, &poison, sizeof(before)));
 	release_peer(lock);
-	kd_mutex_gate_set(lock, KD_MUTEX_GATE_ACQUIRING);
-	preempt_enable();
-	kd_mutex_claim_origin(lock);
-	preempt_disable();
+	kd_mutex_wait_and_lock_node(lock, node);
 	return 2;
 }
 
@@ -501,9 +605,11 @@ static void reset(void)
 	for (unsigned int i = 0; i < 2048; i++) kd_mutex_init(&origins[i].mutex);
 	memset(kd_mutex_nodes, 0, sizeof(kd_mutex_nodes));
 	memset(&cpu_shadows, 0, sizeof(cpu_shadows));
+	memset(&fixture_wait_pool, 0, sizeof(fixture_wait_pool));
+	kd_mutex_wait_pools = &fixture_wait_pool;
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
 		kd_mutex_nodes[i].slot = i;
-		kd_mutex_nodes[i].osq.tail = kd_mutex_encode_tail(0, i);
+		kd_mutex_nodes[i].osq.tail = kd_mutex_encode_tail(smp_processor_id(), i);
 		kd_mutex_nodes[i].osq.locked = KD_MUTEX_OSQ_IDLE;
 		kd_mutex_nodes[i].shadow_stack_base = shadow_stacks[i];
 		kd_mutex_nodes[i].shadow_stack_ptr =
@@ -758,7 +864,7 @@ static void check_frequency_order(void)
 			unsigned int queries = comm_queries;
 			public_unlock(lock);
 			CHECK(!lock->owner && comm_queries == queries && samples == 1);
-			CHECK(!notify_calls && !refs);
+			CHECK(notify_calls == 1 && !refs);
 		}
 	}
 }
@@ -805,7 +911,8 @@ static void check_promotion_and_routing(void)
 static void check_hook_nodes(void)
 {
 	/* Full slots and absent stacks converge on the real no-node wait path.
-	 * It must poll with preemption disabled, then acquire L and unlock L before S. */
+	 * Physical acquisition is preemptible and precedes scheduling-gate pickup.
+	 * The substitute models a requested schedule during that physical wait. */
 	for (int resource = 0; resource < 3; resource++) {
 		struct kd_mutex *lock = &origins[0].mutex;
 		struct kd_mutex *gate;
@@ -839,7 +946,7 @@ static void check_hook_nodes(void)
 		      kd_mutex_gate_read(gate) == _Q_LOCKED_VAL);
 		CHECK(acquires == 1 && kd_mutex_node_overflow_count ==
 					       (unsigned long)(resource != 0));
-		CHECK(!schedules && !preempt && !migration);
+		CHECK(schedules == (unsigned int)(resource != 0) && !preempt && !migration);
 		CHECK(cpu_shadows.node_slots == occupied &&
 		      memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 		release_gate = gate;
@@ -1079,7 +1186,7 @@ static void check_outer_general_unlock(void)
 		public_unlock(lock);
 		CHECK(!lock->owner && releases == old_releases + 1 &&
 		      refs == inherited_refs && !task_puts && !borrowed_requests);
-		CHECK(notify_calls == !!inherited_refs && !cpu_shadows.node_slots &&
+		CHECK(notify_calls == 1 && !cpu_shadows.node_slots &&
 		      !kd_mutex_reserved_nodes && !slow_calls);
 		CHECK(kd_mutex_origin_releases == origin_before &&
 		      current == &waiter && !preempt && !migration && !table_irq);

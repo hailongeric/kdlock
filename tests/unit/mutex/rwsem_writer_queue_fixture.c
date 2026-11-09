@@ -95,8 +95,9 @@ static void cpu_relax(void) { assert(!in_wait); ++pauses; }
 static void might_sleep(void) { assert(!phase_owned && !sem.gate.owned); }
 static bool irqs_disabled(void) { return irq; }
 static bool in_atomic(void) { return irq; }
-static void kd_rwsem_wake(int *q)
+static void kd_rwsem_wake(struct kd_rwsem *s, int *q)
 {
+    assert(s == &sem);
     if(q==&sem.phase_wait) { assert(!phase_owned && !sem.gate.owned); ++wake_phase; }
     else { assert(q==&sem.reader_drain); ++wake_reader; }
 }
@@ -156,7 +157,28 @@ static void wait_schedule(int *q)
 #define wait_event_timeout(queue,condition,ticks) modeled_wait(queue,condition,TASK_UNINTERRUPTIBLE,true)
 #define wait_event_interruptible_timeout(queue,condition,ticks) modeled_wait(queue,condition,TASK_INTERRUPTIBLE,true)
 #define wait_event_killable_timeout(queue,condition,ticks) modeled_wait(queue,condition,TASK_KILLABLE,true)
+/* The shared condition topology is exercised by the live kernel probe. These
+ * doubles retain the same deterministic enqueue/recheck/timer boundaries for
+ * the extracted writer reservation and rollback control-flow checks. */
+static long kd_rwsem_wait_condition(struct kd_rwsem *s, int *queue,
+                                    int kind, unsigned int state, bool timed);
 #include "rwsem_writer_production.h"
+
+static long kd_rwsem_wait_condition(struct kd_rwsem *s, int *queue,
+                                    int kind, unsigned int state, bool timed)
+{
+    assert(s == &sem);
+    if (kind == KD_RWSEM_CONDITION_DRAIN) {
+        assert(queue == &sem.reader_drain && timed);
+        return modeled_wait(sem.reader_drain,
+                            !atomic_long_read_acquire(&sem.readers), state, true);
+    }
+    assert(queue == &sem.phase_wait && !timed);
+    if (kind == KD_RWSEM_CONDITION_LOCAL_WRITE)
+        return modeled_wait(sem.phase_wait, kd_rwsem_reserve_local(&sem), state, false);
+    assert(kind == KD_RWSEM_CONDITION_DELEGATE_WRITE);
+    return modeled_wait(sem.phase_wait, kd_rwsem_reserve_delegate(&sem), state, false);
+}
 
 static void reset(bool prepared)
 {

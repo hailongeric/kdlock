@@ -1,0 +1,168 @@
+/* Source-checked ordinary primitives, not Native MM/VMA bodies. Returning
+ * operations use their declared CPU-state and ownership contexts. The terminal
+ * keeps its actual Native context and source CALL word. Argument
+ * counts exclude no hidden stack arguments; all are ordinary x86-64 C words.
+ * Source identity: authenticated linux=7.0.0-38.38. */
+/* kernel/panic.c:1147-1160 consumes its original caller return address, then
+ * invokes the nonreturning Native diagnostic. No direct varargs descriptor. */
+KD_SERVICE_CONTEXT(__stack_chk_fail, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_NONRETURNING_ORIGIN)
+/* mm/slub.c: pointer, int or void result as declared by each public API. */
+KD_SERVICE_CALL(kmem_cache_alloc_noprof, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_lru_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_node_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_bulk_noprof, 4, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_prefill_sheaf, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_refill_sheaf, 4, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_alloc_from_sheaf_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(kmem_cache_return_sheaf, 3, KD_SERVICE_CALL_VOID)
+/* Caller-dependent cache choice uses the original source return word through
+ * the reviewed explicit-caller Native entry, preserving GFP/bucket/node. */
+#ifdef CONFIG_SLAB_BUCKETS
+KD_SERVICE_MAPPED_CALL(__kmalloc_noprof, 2, __kmalloc_node_track_caller_noprof, 5,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_ZERO, KD_SERVICE_ARG_SOURCE1,
+	KD_SERVICE_ARG_MINUS_ONE, KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED)
+KD_SERVICE_MAPPED_CALL(__kmalloc_node_noprof, 4, __kmalloc_node_track_caller_noprof, 5,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_SOURCE2,
+	KD_SERVICE_ARG_SOURCE3, KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED)
+#else
+KD_SERVICE_MAPPED_CALL(__kmalloc_noprof, 2, __kmalloc_node_track_caller_noprof, 4,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_MINUS_ONE,
+	KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED, KD_SERVICE_ARG_UNUSED)
+KD_SERVICE_MAPPED_CALL(__kmalloc_node_noprof, 3, __kmalloc_node_track_caller_noprof, 4,
+	KD_SERVICE_ARG_SOURCE0, KD_SERVICE_ARG_SOURCE1, KD_SERVICE_ARG_SOURCE2,
+	KD_SERVICE_ARG_RETURN_IP, KD_SERVICE_ARG_UNUSED, KD_SERVICE_ARG_UNUSED)
+#endif
+/* The caller already selected the cache. Keep exact size/node APIs; their
+ * physical caller contributes only trace/debug attribution in this source. */
+KD_SERVICE_CALL(__kmalloc_cache_noprof, 3, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__kmalloc_cache_node_noprof, 4, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CONTEXT(kmem_cache_free, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(kmem_cache_free_bulk, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(kfree, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* include/linux/gfp.h and mm/{page_alloc,mempolicy}.c: exact public APIs.
+ * Native code receives unchanged GFP/order/node/mask inputs and executes on
+ * the origin, preserving task/NUMA policy, conditional waits and refcounts.
+ * Atomic-compatible context preserves valid nonblocking callers too; it does
+ * not classify every allocation as non-sleeping or manufacture source pins. */
+KD_SERVICE_CONTEXT(__alloc_pages_noprof, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(__folio_alloc_noprof, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(alloc_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(folio_alloc_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(get_free_pages_noprof, 2, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(get_zeroed_page_noprof, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* General page-release APIs retain Native refcounts, FPI policy and balanced
+ * CPU/IRQ intervals. gfp.h and mm/internal.h declare exact two-word inputs. */
+KD_SERVICE_CONTEXT(__free_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_exact, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_frozen_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_frozen_pages_nolock, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/swap.c and mm/swap_state.c: Native reference/batch release keeps its
+ * balanced LRU/IRQ interval and original pointer/count/ref-array words. */
+KD_SERVICE_CONTEXT(__folio_put, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(folios_put_refs, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(release_pages, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(free_pages_and_swap_cache, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* lib/percpu_counter.c: void (struct percpu_counter *, s64, s32). */
+KD_SERVICE_CONTEXT(percpu_counter_add_batch, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* include/linux/vmstat.h:281-287: ordinary public node/zone accounting.
+ * Preserve each complete Native CPU-local update, including its retry and
+ * overflow accounting, on the origin. Public mod delta is a long word. */
+KD_SERVICE_CONTEXT(mod_node_page_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_zone_page_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(inc_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(inc_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(dec_node_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(dec_zone_page_state, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* Public memcg/lruvec accounting: mm/memcontrol.c:693-835. Native APIs retain
+ * their balanced CPU-local/RCU intervals and consume the original int delta. */
+KD_SERVICE_CONTEXT(mod_memcg_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_lruvec_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(lruvec_stat_mod_folio, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(mod_lruvec_kmem_state, 3, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/mmap_lock.c: int (struct vm_area_struct *, int), and void (VMA *).
+ * The temporary reader-exclusion wait finishes before either API returns. */
+KD_SERVICE_CALL(__vma_start_write, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__vma_exclude_readers_for_detach, 1, KD_SERVICE_CALL_VOID)
+/* kernel/events/core.c: void (struct vm_area_struct *). */
+KD_SERVICE_CALL(perf_event_mmap, 1, KD_SERVICE_CALL_VOID)
+/* Existing filesystem file-operation callbacks. Prepare APIs receive only
+ * vm_area_desc *, unlike the two-argument inline vfs_mmap_prepare dispatcher.
+ * These callbacks return int and leave no Native acquisition outstanding. */
+KD_SERVICE_CALL(ext4_file_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(shmem_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_readonly_mmap_prepare, 1, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_mmap, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(generic_file_readonly_mmap, 2, KD_SERVICE_CALL_WORD)
+/* File-operation address selection: unsigned long (file *, addr, len,
+ * pgoff, flags). The actual Native API uses the original task's mm. */
+KD_SERVICE_CALL(thp_get_unmapped_area, 5, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(shmem_get_unmapped_area, 5, KD_SERVICE_CALL_WORD)
+/* kernel/sched/core.c: int (void), including its exact static-call entries.
+ * The latter preserve the running kernel's selected reschedule behavior. */
+KD_SERVICE_CALL(__cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__SCT__cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(__SCT__might_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(dynamic_cond_resched, 0, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(dynamic_might_resched, 0, KD_SERVICE_CALL_WORD)
+/* kernel/sched/core.c: void (task *); retain the caller CPU and task
+ * lifetime across the complete returning notification on the origin. */
+KD_SERVICE_CONTEXT(kick_process, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* Native preemption entries are void (void). Keep exact thunks/static-call
+ * targets so the running kernel still selects whether to reschedule. They
+ * permit preemptible RCU, but never a retained spin or preempt-count pin. */
+KD_SERVICE_CONTEXT(preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_thunk, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(preempt_schedule_notrace_thunk, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(__SCT__preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(__SCT__preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(dynamic_preempt_schedule, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+KD_SERVICE_CONTEXT(dynamic_preempt_schedule_notrace, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SCHEDULE_ORIGIN)
+/* Existing public admission APIs: int (struct mm_struct *, long) and
+ * int (unsigned long). Callback dispatch uses the actual origin task. */
+KD_SERVICE_CALL(security_vm_enough_memory_mm, 2, KD_SERVICE_CALL_WORD)
+KD_SERVICE_CALL(security_mmap_addr, 1, KD_SERVICE_CALL_WORD)
+/* include/linux/rcupdate.h: void (struct rcu_head *, rcu_callback_t).
+ * These enqueue callbacks; no read-side ownership survives the return. */
+KD_SERVICE_CONTEXT(call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(call_rcu_hurry, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/slab_common.c:1941-2015 and include/linux/rcupdate.h: void (head, ptr).
+ * A NULL head may wait for a grace period; an embedded head permits atomic
+ * callers. The Native API owns its internal IRQ/per-CPU/slab intervals. */
+KD_SERVICE_CONTEXT(kvfree_call_rcu, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ARG0_BALANCED_OR_ATOMIC)
+/* mm/pgtable-generic.c: conditional pointer result; ptlp is argument four.
+ * Ordinary Native APIs retain separate spin and RCU records after return. */
+KD_SERVICE_CONTEXT(pte_offset_map_lock, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_LOCK)
+KD_SERVICE_CONTEXT(__pte_offset_map, 3, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+KD_SERVICE_CONTEXT(pte_offset_map_ro_nolock, 4, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+KD_SERVICE_CONTEXT(pte_offset_map_rw_nolock, 5, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_PTE_RCU)
+/* kernel/locking/spinlock.c, include/linux/spinlock_api_smp.h and RCU API:
+ * plain forms only; IRQ/BH variants require their own saved-state contract. */
+KD_SERVICE_CONTEXT(_raw_spin_lock, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SPIN_LOCK)
+KD_SERVICE_CONTEXT(_raw_spin_trylock, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_SPIN_TRYLOCK)
+KD_SERVICE_CONTEXT(_raw_spin_unlock, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_SPIN_UNLOCK)
+KD_SERVICE_CONTEXT(__rcu_read_lock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_LOCK)
+KD_SERVICE_CONTEXT(__rcu_read_unlock, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RCU_UNLOCK)
+/* kernel/locking/rwsem.c: void (struct rw_semaphore *). Write ownership
+ * survives the acquire return and requires its exact Native release ACK. */
+KD_SERVICE_CONTEXT(down_write, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RWSEM_WRITE_LOCK)
+KD_SERVICE_CONTEXT(up_write, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK)
+/* x86-64 PV callbacks: DI/SI/DX/CX arguments, AX result. Exact identity
+ * callback preserves the remaining registers and arithmetic flags. */
+KD_SERVICE_CONTEXT(_paravirt_ident_64, 1, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(paravirt_ret0, 0, KD_SERVICE_CALL_WORD, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* arch/x86/kernel/alternative.c: the exact empty target behind paravirt_nop. */
+KD_SERVICE_CONTEXT(nop_func, 0, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* arch/x86/include/asm/pgtable_64.h: void (entry pointer, one-word entry). */
+KD_SERVICE_CONTEXT(native_set_pte, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pmd, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pud, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_p4d, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(native_set_pgd, 2, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+/* mm/rmap.c and arch/x86/mm/tlb.c: actual TLB API owns CPU-local operations;
+ * flush_tlb_mm_range balances its own get_cpu()/put_cpu() protection. */
+KD_SERVICE_CONTEXT(flush_tlb_batched_pending, 1, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)
+KD_SERVICE_CONTEXT(flush_tlb_mm_range, 5, KD_SERVICE_CALL_VOID, KD_SERVICE_CALL_ATOMIC_ORIGIN)

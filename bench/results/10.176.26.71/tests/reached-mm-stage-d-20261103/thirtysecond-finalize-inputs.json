@@ -1,0 +1,68 @@
+{
+  "inputs": [
+    {
+      "bytes": 7884,
+      "path": "/tmp/kdlock-mm-retained-finalize-v1-20261104.py",
+      "sha256": "ab3488f76d81ad54fbdecf9f252a373e4503d84b8fa25cddb0aea58ed0c87b75"
+    },
+    {
+      "bytes": 8525,
+      "path": "/tmp/kdlock-mm-retained-finalize-v2-20261104.py",
+      "sha256": "4bde7ac779a85e2d12340e5bed652b2c8fdeff52400fa970124a3b5477b6fded"
+    },
+    {
+      "bytes": 8637,
+      "path": "/tmp/kdlock-mm-retained-finalize-20261104.py",
+      "sha256": "4c9801097a561431beb3dfbb020ebea76f22bcd903fdf15512271338a3236808"
+    },
+    {
+      "bytes": 832,
+      "path": "/tmp/kdlock-mm-thirtysecond-finalize-config-20261104.json",
+      "sha256": "597006ee73628d7091cd3d6a463e55b556f609f2bf0ad4f99121efb8aab7b480"
+    },
+    {
+      "bytes": 844,
+      "path": "/tmp/kdlock-mm-thirtysecond-finalize-retry-config-20261104.json",
+      "sha256": "8e7efc7c81c27faa55237c7c64878d894bd1f9bc5fd2176c828947521b33570a"
+    },
+    {
+      "bytes": 846,
+      "path": "/tmp/kdlock-mm-thirtysecond-finalize-retry2-config-20261104.json",
+      "sha256": "ea9648d03f96bd6e5b153d4bbda192eb506f0c1e507ff83d2472150b8fdb959d"
+    }
+  ],
+  "preflight_failures": [
+    {
+      "path": "/tmp/kdlock-mm-thirtysecond-finalize-20261104/reply.json",
+      "result": {
+        "accepted": false,
+        "boot_id": "3a0fbe8f-b6f1-49d1-975b-033461f3e9ae",
+        "case": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103",
+        "error": "ValueError('explicit confirmed recovery snapshot required')",
+        "model": "processes",
+        "original_failure_preserved": true,
+        "passed": false,
+        "scored": false,
+        "source_commit": "bfdc35e29d79d3db12dcfb071f2d1ad3438cc71e",
+        "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 36, in <module>\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap1/run.py\", line 130, in verify_boot\n    guest(args)\n    ~~~~~^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap1/run.py\", line 102, in guest\n    mm.platform.guest(args)\n    ~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_writer/shared_platform.py\", line 76, in guest\n    common.mm_platform.guest(args.boot_id, release=selected['release'])\n    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_fault/mm_platform.py\", line 173, in guest\n    require(os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            bool(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}', tag)),\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            'explicit confirmed recovery snapshot required')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_fault/mm_platform.py\", line 28, in require\n    raise ValueError(message)\nValueError: explicit confirmed recovery snapshot required\n"
+      },
+      "sha256": "9a028c5bf6196717d24c4cd4b1273c31b5304c4c373a5675237d23f8a7c0adbb"
+    },
+    {
+      "path": "/tmp/kdlock-mm-thirtysecond-finalize-20261104-retry/reply.json",
+      "result": {
+        "accepted": false,
+        "boot_id": "3a0fbe8f-b6f1-49d1-975b-033461f3e9ae",
+        "case": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-thirtysecond-20261103",
+        "error": "ValueError('pinned Linux 7 translation Python required')",
+        "model": "processes",
+        "original_failure_preserved": true,
+        "passed": false,
+        "scored": false,
+        "source_commit": "bfdc35e29d79d3db12dcfb071f2d1ad3438cc71e",
+        "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 36, in <module>\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap1/run.py\", line 130, in verify_boot\n    guest(args)\n    ~~~~~^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap1/run.py\", line 102, in guest\n    mm.platform.guest(args)\n    ~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_writer/shared_platform.py\", line 76, in guest\n    common.mm_platform.guest(args.boot_id, release=selected['release'])\n    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_fault/mm_platform.py\", line 176, in guest\n    require(sys.executable == PYTHON and shutil.which('python3') == PYTHON,\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            'pinned Linux 7 translation Python required')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-thirtysecond-bfdc35e2-20261103/bench/mmap_fault/mm_platform.py\", line 28, in require\n    raise ValueError(message)\nValueError: pinned Linux 7 translation Python required\n"
+      },
+      "sha256": "f702a7d272e2461340a7087654e4623c9d9ddb74ec4007b6e41f83bea46cbe16"
+    }
+  ]
+}

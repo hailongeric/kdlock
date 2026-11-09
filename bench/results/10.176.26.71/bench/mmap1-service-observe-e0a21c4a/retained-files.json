@@ -1,0 +1,117 @@
+{
+  "result.json": {
+    "bytes": 34761,
+    "sha256": "4c611d8a8f254ce0bab2a2173f3000adf981b01aa58efb1fa24541f94b8271ce",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/result.json"
+  },
+  "finalization.json": {
+    "bytes": 1105,
+    "sha256": "6b9b40fcca332345a0ebcd89944888f2469fd382c9cfbc9b3a70f828a8b26510",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/finalization.json"
+  },
+  "preflight.json": {
+    "bytes": 6199,
+    "sha256": "b922450c8d20d1f24de7a2d760dfadfac09f533d7a4fc3f86ecce7d0129cf922",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-preflight/reply.json"
+  },
+  "freeze.json": {
+    "bytes": 448,
+    "sha256": "101e7996ac7ac5d3d0a82dc5f2cf2ec0dc3673e5afd0b14295fb4d8d78d4dedd",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-freeze/transfer.stdout"
+  },
+  "recovery.json": {
+    "bytes": 726,
+    "sha256": "c2da72d563f3c7a0897fb5461127dede35ab84bd9ef83ff2b40c7d14d2f7a3c8",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-confirm-normal/reply.json"
+  },
+  "host-before.json": {
+    "bytes": 418194,
+    "sha256": "236f8f52118788e8ba32fc40eaf447545bdf3a9c77835c2b91774022fee80644",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/host-before.json"
+  },
+  "host-after.json": {
+    "bytes": 418033,
+    "sha256": "50282ab42724f2200e0a02b86a523feb832a982c2fac376f6dc88eb221e69b94",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/host-after.json"
+  },
+  "prior-load-inspection.json": {
+    "bytes": 16222,
+    "sha256": "e4def8153e98358fd6c20895c856aa9fc8ab2ce9b15712f2ae9f430731ee31dd",
+    "original": "/tmp/kdlock-frontier-32881707-kd/load-inspection.json"
+  },
+  "prior-preflight.json": {
+    "bytes": 6299,
+    "sha256": "91af2570b4311dd679a49b95fa61eef3f92bf73fb48b8abf80396d2e2a06ecc9",
+    "original": "/tmp/kdlock-frontier-32881707-preflight-complete/reply.json"
+  },
+  "prior-preflight-setup.stderr": {
+    "bytes": 420,
+    "sha256": "5c2ee19e9387860add0f071c35d4de8c2d9c20f85f52d2d0335d0bcb0b13949d",
+    "original": "/tmp/kdlock-frontier-32881707-preflight/stderr"
+  },
+  "additional/retained-files.json": {
+    "bytes": 1920,
+    "sha256": "7c0583706a8a8232071417c6f54d133512e37f3b44061bd99cad19036a5a299f",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/retained-files.json"
+  },
+  "additional/run/daemon-session.json": {
+    "bytes": 1501,
+    "sha256": "fb59e5f8ec4f4629dbc3f0b644caa6ec041038b94740d7c85156f063be0b962d",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/daemon-session.json"
+  },
+  "additional/run/load.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/load.log"
+  },
+  "additional/run/daemon.log": {
+    "bytes": 19725,
+    "sha256": "dce7c275454e55688de7ab9cee6079c5704f926ffbd0df02a01caa71f5a15f79",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/daemon.log"
+  },
+  "additional/run/threads/w08/learning/learning.json": {
+    "bytes": 7238,
+    "sha256": "6d8271effeec3dca17f356134ab0299db5055c520577da55d68535e1d506ef82",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w08/learning/learning.json"
+  },
+  "additional/run/threads/w08/learning/service-observation.json": {
+    "bytes": 3577,
+    "sha256": "20bd5f63f8587a10b355c07fa0323ae13d051b0c8ba374898d4f1791ed2a4460",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w08/learning/service-observation.json"
+  },
+  "additional/run/threads/w08/learning/learning-00/result.json": {
+    "bytes": 5314,
+    "sha256": "17148e3fd49c89b629b29babafe5c8ce454c5fa530d8831599b3c910105e4e4b",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w08/learning/learning-00/result.json"
+  },
+  "additional/run/threads/w08/learning/learning-00/upstream.log": {
+    "bytes": 320,
+    "sha256": "411a9cf4366e0d88611ac0c0e7057b5ef09fbab42b1b855e59f52e0d908dd580",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w08/learning/learning-00/upstream.log"
+  },
+  "additional/run/threads/w01/learning/learning.json": {
+    "bytes": 4461,
+    "sha256": "a3231a923810ea66de424b4b22aaf5b1d8c5bc6efbf5a272374e428bc15c2206",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w01/learning/learning.json"
+  },
+  "additional/run/threads/w01/learning/service-observation.json": {
+    "bytes": 3481,
+    "sha256": "55c6407d168e87395c610c621b5696fe3486179b9bf1cda3acc9325841514d67",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w01/learning/service-observation.json"
+  },
+  "additional/run/threads/w01/learning/learning-00/result.json": {
+    "bytes": 3337,
+    "sha256": "c47019d4299ecf23efe934faa27cc872692fccdf4da11962619b91c88270089c",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w01/learning/learning-00/result.json"
+  },
+  "additional/run/threads/w01/learning/learning-00/upstream.log": {
+    "bytes": 361,
+    "sha256": "4931de8572e416df1b98642d8b49ef536277aaa57726a2b288708950e22201ed",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/run/threads/w01/learning/learning-00/upstream.log"
+  },
+  "additional/inputs/config.json": {
+    "bytes": 2676,
+    "sha256": "d31f579d0b9023886cc1ce2b868bcfd7cc3c331c2794c4e9c996fe2852339e05",
+    "original": "/tmp/kdlock-frontier-e0a21c4a-kd/additional/inputs/config.json"
+  }
+}

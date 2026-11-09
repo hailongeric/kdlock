@@ -1,0 +1,44 @@
+{
+  "source_commit": "02990b62e55f7c2c9b5d6f0d9d6c5b1dd486151e",
+  "units": [
+    {
+      "args": [
+        "codegen/test_native_schedule_contract.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "codegen/test_returning_calls.py",
+        "-v"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bench/test_mmap1_delegated.py",
+        "-v"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bench/test_mm_private_source.py",
+        "-v"
+      ],
+      "returncode": 0
+    }
+  ],
+  "resident": {
+    "cases": 67643,
+    "checks": 67643,
+    "executor_pid": 3900,
+    "executor_stack": 18419722476100222584,
+    "failure_line": 0,
+    "origin_pid": 3899,
+    "source_fetches": 60112
+  },
+  "provider_build_passed": true,
+  "passed": true,
+  "final_idle": true
+}

@@ -1,5 +1,28 @@
 # Unchanged upstream will-it-scale mmap1
 
+The image-point configuration optionally supplies `writer_entries`, a list of
+builtin writer-entry addresses bound to the captured kernel site table. The
+provider's immutable `rwsem_provider_entries` parameter must match that list
+exactly. An empty list preserves unrestricted capture. Excluded entries use
+the same object's callable local KD acquisition; this does not select a Native
+backend for those calls. Receipts retain the list and parameter, and reject
+registry rows outside the selected entries.
+
+The focused scope5 evaluation selects `0xffffffff817b6f68`
+(`vm_mmap_pgoff+0x118`) and `0xffffffff8181c73b` (`__vm_munmap+0xbb`). These
+are root capture sites, not timed-worker identifiers. Existing nested-owner
+handling is unchanged and still resumes the current image; separate child
+images and matching-release image boundaries remain later work. Scope changes
+require a fresh provider session and separate results.
+
+Image-point demand learning defaults to three application lifetimes. An
+explicit `learning_rounds` may select 1–32; `learning_timeout` remains an
+independent 1–3600-second bound (900 seconds by default). Learning lifetimes
+remain unscored. A scored application still requires a complete stable
+learning lifetime and usable images for every selected root. Increasing the
+allowance does not change the image pool, reclaim older images, or relax the
+source, binding, registry and retirement checks.
+
 This runner is the final application workload for the staged kernel replacement
 plan. It runs the original `mmap1_threads` and `mmap1_processes` executables from
 will-it-scale commit `75f66e45697e6f5f49c33dd950c4e6b289198f8f`. No syscall loop,
@@ -83,12 +106,77 @@ substitutes for this real syscall workload. The local adapter currently keeps
 native MM bodies on the originating task; this runner does not enable or prove
 delegated MM, change fairness, or add killable polling.
 
+The delegated candidate uses an explicit execution-session contract at the
+Python `run_point` boundary. The ordinary Native path keeps its existing idle
+checks. An opted-in session verifies one frozen provider module identity, its
+selected parameters, the exact daemon PID/start time/executable/workspace,
+the complete ready immutable image registry and an open source with no live
+frames or publishers before and after each application lifetime. This is an
+alternative exact execution environment, not a general idle exemption. The
+controller must start itself and the daemon before provider activation, prepare
+every recorded writer site, activate only after every image is ready, and then
+launch fresh unchanged application processes so their new mms select the
+provider. Deactivation precedes exact binding/frame/publisher drain and normal
+source retirement. The execution-session verifier does not perform those
+lifecycle transitions or turn object selection into delegation proof.
+
+The identity probe's ABI2 appends the immutable provider pointer and a route
+value to the original task/mm/lock/backing/CPU fields: Native is 0, builtin KD
+is 1, and module provider is 2. Runtime request identity/generation and actual
+O/E execution events must be joined to the observed task lifetime and backing
+lock before claiming returned delegated MM execution. Diagnostic tracing stays
+separate from throughput measurements.
+
+Diagnostic points and explicitly traced delegated sessions drain their own
+`/dev/kmsg` descriptor continuously onto the evidence filesystem. An independent
+external collector does not advance that descriptor. The diagnostic reader
+runs on collector CPU63, keeps only a bounded text tail for fault matching,
+and stores complete raw records in `kernel.log`, with every read error in
+`kernel-log-errors.jsonl`. The shared storage budget is 256 MiB, with 64 MiB
+additional free-space headroom required before launch. A ring overrun,
+exhausted budget, I/O error, kernel fault or unjoined reader fails the point;
+the retained prefix and error summary never count as a complete capture. Stop
+and join are bounded and do not imply drain when their deadline expires.
+Ordinary Native timing keeps its existing end-of-run reader and all fault
+checks. These continuously collected diagnostic points remain unscored.
+
 The implementation and focused runner fixtures are source-reviewed first.
 Builds, unit tests and live measurements run only in the VM under the root
 controller. Until those checks complete this directory is an implementation
 candidate, not performance evidence.
 
 ## Interfaces
+
+The current small throughput pilot selects `execution_mode: "image"` and
+`demand: true` in the configuration for `delegated_point.py`. It reuses the
+ordinary daemon and image sessions; the older reached-mode
+configuration remains historical. This changes provider preparation and receipt
+handling; the acquisition/release code and MM bodies are unchanged.
+Each model uses one upstream `-t 2 -s 2 -m` lifetime, workers 0/1 and collector
+63. Tracing stays off for timing. Native and KD points retain separate receipts.
+
+Demand activation validates the builtin site table without requiring images
+for all 55 entries. Missing images use local KD admission before any body
+instruction; reached misses keep the existing current-position continuation.
+First-registrar TGIDs identify metadata, not workload execution.
+
+Up to three unscored application lifetimes allow image learning, with a bounded
+900-second total learning window. The controller renews exact receipts only
+after compiler/frame drainage and retains per-generation image copies. New
+object binding is paused while learning catches up and reactivated before each
+fresh workload; existing objects retain their binding. Timing
+starts after one unchanged learning lifetime. The registry, source/frame ledger,
+provider, daemon and input identities must match across the scored application.
+Further learning leaves the point unaccepted rather than silently repeating it.
+A failed point
+retains its raw upstream output but supplies no accepted score. Deactivate
+before stopping the daemon, then use a fresh process to verify binding/frame/
+publisher drainage, retire the source and unload normally. All gates remain.
+Throughput is completed mmap/munmap pairs per nominal second; delegation entry,
+fully returned JIT bodies and handed-back prefixes remain separate claims.
+The pilot does not establish those claims without a matching diagnostic proof.
+Focused runner checks include the diagnostic `kdscope5-log16-kd` variant, which
+uses the `kdscope5` kernel/build family with its own explicit runtime profile.
 
 Use the existing pinned Python and a real confirmed recovery snapshot. Both
 commands require `--mode native|kd`, `--boot-id`, `--host-state`,

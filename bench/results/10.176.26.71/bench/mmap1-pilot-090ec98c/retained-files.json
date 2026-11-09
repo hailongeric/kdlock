@@ -1,0 +1,42 @@
+{
+  "pilot-result.json": {
+    "size": 73726,
+    "sha256": "d94f8089e60057b3b7a7c0d43c54921f0f825a9916077213e55cd62048e10893"
+  },
+  "pilot-finalization.json": {
+    "size": 1108,
+    "sha256": "17a019ce43d9c92b2d6de2b360b552ef05188da4392d8d4bf6f28addc2404b55"
+  },
+  "pilot-launch.log": {
+    "size": 11672,
+    "sha256": "64d3f0453e6b423feea0d56aaa067a51d6e0765308e94378bcd0a4e6fe43be3c"
+  },
+  "normal-recovery.json": {
+    "size": 726,
+    "sha256": "13020dbdabd8734a0456fdd4534d529f0b0e1b13515dd2c4661e02b1a7132c77"
+  },
+  "budget-preflight.json": {
+    "size": 18150,
+    "sha256": "10403b469e17a0bb9903579379431dde915437b040ed89a4f9961aafae6dbf77"
+  },
+  "prior-learning.json": {
+    "size": 161378,
+    "sha256": "443e6d4f0b496c7956dc46c29497c94455c2f242900c26575fe10121632e8499"
+  },
+  "prior-stop-affected-application.json": {
+    "size": 3095,
+    "sha256": "e5fa4ec2e76ba7bed5f17f14dcb703559519c4d9636093ee9c2772607ef477d1"
+  },
+  "prior-stop.json": {
+    "size": 318,
+    "sha256": "45cc49897c98f45c23ecca05e061674c153337e199380dc8f06e366c871fe3df"
+  },
+  "prior-result.json": {
+    "size": 26845,
+    "sha256": "a419c6a2143b3b62ceced47610936365ac1ef570b5f1c4d1b777ef4bde91b6d4"
+  },
+  "prior-finalization.json": {
+    "size": 1107,
+    "sha256": "0d6c2b8b13ac22fb777c458ca99d6186e8419b9723cea12f2220f2b2938c696c"
+  }
+}

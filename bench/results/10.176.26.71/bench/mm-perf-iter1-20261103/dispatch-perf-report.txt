@@ -1,0 +1,49 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cycles:k' (time slices: 1650.239933621,1658.633244976)
+# Event count (approx.): 48627804309
+#
+# Overhead  Command          Shared Object      Symbol                                       IPC   [IPC Coverage]
+# ........  ...............  .................  ...........................................  ....................
+#
+    26.96%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e7be                       -      -
+    15.74%  mmap1_threads    [kernel.kallsyms]  [k] _raw_spin_lock_irqsave                   -      -
+     6.93%  mmap1_threads    [unknown]          [k] 0xffffffffc0e17059                       -      -
+     6.88%  kthreadd         [kernel.kallsyms]  [k] _raw_spin_lock_irqsave                   -      -
+     3.99%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e7c4                       -      -
+     2.91%  mmap1_threads    [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore              -      -
+     2.26%  kthreadd         [unknown]          [k] 0xffffffffc0e04da0                       -      -
+     1.58%  kthreadd         [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore              -      -
+     1.42%  kthreadd         [unknown]          [k] 0xffffffffc0e04dc8                       -      -
+     1.17%  mmap1_threads    [unknown]          [k] 0xffffffffc0e17061                       -      -
+     0.65%  kthreadd         [unknown]          [k] 0xffffffffc0e04d9d                       -      -
+     0.64%  mmap1_threads    [kernel.kallsyms]  [k] its_return_thunk                         -      -
+     0.54%  mmap1_threads    [kernel.kallsyms]  [k] native_queued_spin_lock_slowpath         -      -
+     0.53%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e4dc                       -      -
+     0.50%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e1ec                       -      -
+     0.50%  kthreadd         [unknown]          [k] 0xffffffffc0e10365                       -      -
+     0.44%  kthreadd         [unknown]          [k] 0xffffffffc0e06f18                       -      -
+     0.43%  kthreadd         [kernel.kallsyms]  [k] copy_from_kernel_nofault                 -      -
+     0.34%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e4e2                       -      -
+     0.32%  kthreadd         [kernel.kallsyms]  [k] copy_from_kernel_nofault_allowed         -      -
+     0.29%  kthreadd         [unknown]          [k] 0xffffffffc0e2a283                       -      -
+     0.24%  kthreadd         [unknown]          [k] 0xffffffffc0e08ab2                       -      -
+     0.24%  kthreadd         [unknown]          [k] 0xffffffffc0e1dc17                       -      -
+     0.24%  mmap1_threads    [unknown]          [k] 0xffffffffc0e0e7bc                       -      -
+     0.23%  kthreadd         [unknown]          [k] 0xffffffffc0e08acd                       -      -
+     0.23%  kthreadd         [unknown]          [k] 0xffffffffc0e0924b                       -      -
+     0.22%  kthreadd         [kernel.kallsyms]  [k] native_queued_spin_lock_slowpath         -      -
+     0.22%  kthreadd         [unknown]          [k] 0xffffffffc0e08af8                       -      -
+     0.22%  mmap1_threads    [unknown]          [k] 0xffffffffc0e06368                       -      -
+     0.22%  kthreadd         [unknown]          [k] 0xffffffffc0e28e88                       -      -
+     0.21%  kthreadd         [unknown]          [k] 0xffffffffc0e2cae9                       -      -
+     0.20%  mmap1_threads    [unknown]          [k] 0xffffffffc0e17223                       -      -
+     0.20%  kthreadd         [unknown]          [k] 0xffffffffc0e04d3a                       -      -
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

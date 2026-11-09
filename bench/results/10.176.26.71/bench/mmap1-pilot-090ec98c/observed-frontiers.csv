@@ -1,0 +1,140 @@
+epoch,entry,kind,ordinal,from_token,target,target_symbol,task_phase_provenance
+cfdb52a8,0xffffffff817b6f68,CALL,1,,0xffffffff817f7c10,do_mmap+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,2,,0xffffffff814f49a0,kd_mmap_assert_held_write+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,3,,0xffffffff8155b7f0,__module_get+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,4,,0xffffffff8155a1e0,module_put+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,5,,0xffffffff817f7100,__get_unmapped_area+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,6,,0xffffffff81891f50,thp_get_unmapped_area_vmflags+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,7,,0xffffffff817f7090,mm_get_unmapped_area_vmflags+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,8,,0xffffffff813a36e0,arch_get_unmapped_area_topdown+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,9,,0xffffffff8140fee0,get_mmap_base+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,10,,0xffffffff817f6fc0,vm_unmapped_area+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,11,,0xffffffff8181c0e0,unmapped_area_topdown+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,12,,0xffffffff826bf540,mas_empty_area_rev+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,13,,0xffffffff826bb820,mas_find+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,14,,0xffffffff826ba560,mas_next_slot+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,15,,0xffffffff826bd570,mas_prev+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,16,,0xffffffff826b81d0,mas_prev_setup.constprop.0+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,17,,0xffffffff826bc320,mas_prev_slot+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,18,,0xffffffff826b4f90,mas_ascend+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,19,,0xffffffff8181ba90,mmap_region+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,20,,0xffffffff81819230,__mmap_region+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,21,,0xffffffff81414180,vm_get_page_prot+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,22,,0xffffffff826b5840,mas_walk+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,23,,0xffffffff826bb7a0,mas_next_range+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,24,,0xffffffff826b8380,mas_next_setup.constprop.0+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,25,,0xffffffff817f95b0,may_expand_vm+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,26,,0xffffffff8187ea90,ksm_vma_flags+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,27,,0xffffffff818190b0,vma_merge_new_range+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,28,,0xffffffff81817080,can_vma_merge_left.constprop.0+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,29,,0xffffffff818171b0,can_vma_merge_right+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,30,,0xffffffff8184c0d0,anon_vma_name+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,31,,0xffffffff814f4610,kd_mmap_is_locked+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,32,,0xffffffffc0000f20,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,33,,0xffffffffc0e30840,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,34,,0xffffffff81816f70,is_mergeable_anon_vma+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,35,,0xffffffff81818e20,vma_expand+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,36,,0xffffffff81817a00,commit_merge+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,37,,0xffffffff81816cb0,init_multi_vma_prep+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,38,,0xffffffff826be820,mas_preallocate+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,39,,0xffffffff826b6180,mas_wr_store_type+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,40,,0xffffffff81817350,vma_prepare+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,41,,0xffffffff817d4e50,anon_vma_interval_tree_remove+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,42,,0xffffffff826cd780,rb_next+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,43,,0xffffffff818966b0,vma_adjust_trans_huge+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,CALL,44,,0xffffffff826c5620,mas_store_prealloc+0x0,not recorded
+cfdb52a8,0xffffffff817b6f68,IJ,1,0xffffffff814f4a38,0xffffffffc0e322f0,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff817b6f68,IJ,2,0xffffffffc0e3232c,0xffffffff814f4a38,kd_mmap_assert_held_write+0x98,not recorded
+cfdb52a8,0xffffffff817b6f68,IJ,3,0xffffffffc0000f22,0xffffffffc0e31d90,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff817b6f68,IJ,4,0xffffffffc0e31da7,0xffffffff814f469a,kd_mmap_is_locked+0x8a,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,1,,0xffffffff8181a5e0,do_vmi_munmap+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,2,,0xffffffff826bb820,mas_find+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,3,,0xffffffff826b5840,mas_walk+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,4,,0xffffffff8181a3c0,do_vmi_align_munmap+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,5,,0xffffffff81817f90,vms_gather_munmap_vmas+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,6,,0xffffffff826bd570,mas_prev+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,7,,0xffffffff826b81d0,mas_prev_setup.constprop.0+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,8,,0xffffffff826bc320,mas_prev_slot+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,9,,0xffffffff826b4f90,mas_ascend+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,10,,0xffffffff826ba560,mas_next_slot+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,11,,0xffffffff81817c70,__split_vma+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,12,,0xffffffff817e01e0,vm_area_dup+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,13,,0xffffffff8184c0d0,anon_vma_name+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,14,,0xffffffff814f4610,kd_mmap_is_locked+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,15,,0xffffffff8155b7f0,__module_get+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,16,,0xffffffffc0000f20,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,17,,0xffffffffc0e30840,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,18,,0xffffffff8155a1e0,module_put+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,19,,0xffffffff826be820,mas_preallocate+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,20,,0xffffffff826b6180,mas_wr_store_type+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,21,,0xffffffff81871700,vma_dup_policy+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,CALL,22,,0xffffffff81807810,anon_vma_clone+0x0,not recorded
+cfdb52a8,0xffffffff8181c73b,IJ,1,0xffffffffc0000f22,0xffffffffc0e31d90,unresolved old module instance,not recorded
+cfdb52a8,0xffffffff8181c73b,IJ,2,0xffffffffc0e31da7,0xffffffff814f469a,kd_mmap_is_locked+0x8a,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,1,,0xffffffff817f7c10,do_mmap+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,2,,0xffffffff814f49a0,kd_mmap_assert_held_write+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,3,,0xffffffff8155b7f0,__module_get+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,4,,0xffffffff8155a1e0,module_put+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,5,,0xffffffff817f7100,__get_unmapped_area+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,6,,0xffffffff81891f50,thp_get_unmapped_area_vmflags+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,7,,0xffffffff817f7090,mm_get_unmapped_area_vmflags+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,8,,0xffffffff813a36e0,arch_get_unmapped_area_topdown+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,9,,0xffffffff8140fee0,get_mmap_base+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,10,,0xffffffff817f6fc0,vm_unmapped_area+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,11,,0xffffffff8181c0e0,unmapped_area_topdown+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,12,,0xffffffff826bf540,mas_empty_area_rev+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,13,,0xffffffff826bb820,mas_find+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,14,,0xffffffff826ba560,mas_next_slot+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,15,,0xffffffff826bd570,mas_prev+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,16,,0xffffffff826b81d0,mas_prev_setup.constprop.0+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,17,,0xffffffff826bc320,mas_prev_slot+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,18,,0xffffffff826b4f90,mas_ascend+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,19,,0xffffffff8181ba90,mmap_region+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,20,,0xffffffff81819230,__mmap_region+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,21,,0xffffffff81414180,vm_get_page_prot+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,22,,0xffffffff826b5840,mas_walk+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,23,,0xffffffff826bb7a0,mas_next_range+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,24,,0xffffffff826b8380,mas_next_setup.constprop.0+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,25,,0xffffffff817f95b0,may_expand_vm+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,26,,0xffffffff8187ea90,ksm_vma_flags+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,27,,0xffffffff818190b0,vma_merge_new_range+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,28,,0xffffffff81817080,can_vma_merge_left.constprop.0+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,29,,0xffffffff818171b0,can_vma_merge_right+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,30,,0xffffffff8184c0d0,anon_vma_name+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,CALL,31,,0xffffffff814f4610,kd_mmap_is_locked+0x0,not recorded
+f2d9caf3,0xffffffff817b6f68,IJ,1,0xffffffff814f4a38,0xffffffffc0e322f0,unresolved old module instance,not recorded
+f2d9caf3,0xffffffff817b6f68,IJ,2,0xffffffffc0e3232c,0xffffffff814f4a38,kd_mmap_assert_held_write+0x98,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,1,,0xffffffff8181a5e0,do_vmi_munmap+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,2,,0xffffffff826bb820,mas_find+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,3,,0xffffffff826b5840,mas_walk+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,4,,0xffffffff8181a3c0,do_vmi_align_munmap+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,5,,0xffffffff81817f90,vms_gather_munmap_vmas+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,6,,0xffffffff826bd570,mas_prev+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,7,,0xffffffff826b81d0,mas_prev_setup.constprop.0+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,8,,0xffffffff826bc320,mas_prev_slot+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,9,,0xffffffff826b4f90,mas_ascend+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,10,,0xffffffff826ba560,mas_next_slot+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,11,,0xffffffff81817c70,__split_vma+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,12,,0xffffffff817e01e0,vm_area_dup+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,13,,0xffffffff8184c0d0,anon_vma_name+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,14,,0xffffffff814f4610,kd_mmap_is_locked+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,15,,0xffffffff8155b7f0,__module_get+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,16,,0xffffffffc0000f20,unresolved old module instance,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,17,,0xffffffffc0e30840,unresolved old module instance,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,18,,0xffffffff8155a1e0,module_put+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,19,,0xffffffff826be820,mas_preallocate+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,20,,0xffffffff826b6180,mas_wr_store_type+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,21,,0xffffffff81871700,vma_dup_policy+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,CALL,22,,0xffffffff81807810,anon_vma_clone+0x0,not recorded
+f2d9caf3,0xffffffff8181c73b,IJ,1,0xffffffffc0000f22,0xffffffffc0e31d90,unresolved old module instance,not recorded
+f2d9caf3,0xffffffff8181c73b,IJ,2,0xffffffffc0e31da7,0xffffffff814f469a,kd_mmap_is_locked+0x8a,not recorded
+090ec98c,0xffffffff817b6f68,CALL,1,,0xffffffff817f7c10,do_mmap+0x0,not recorded
+090ec98c,0xffffffff817b6f68,CALL,2,,0xffffffff814f49a0,kd_mmap_assert_held_write+0x0,not recorded
+090ec98c,0xffffffff817b6f68,CALL,3,,0xffffffff8155b7f0,__module_get+0x0,not recorded
+090ec98c,0xffffffff817b6f68,IJ,1,0xffffffff814f4a38,0xffffffffc0e322f0,unresolved old module instance,not recorded
+090ec98c,0xffffffff817b6f68,IJ,2,0xffffffffc0e3232c,0xffffffff814f4a38,kd_mmap_assert_held_write+0x98,not recorded
+090ec98c,0xffffffff8181c73b,CALL,1,,0xffffffff8181a5e0,do_vmi_munmap+0x0,not recorded
+090ec98c,0xffffffff8181c73b,CALL,2,,0xffffffff826bb820,mas_find+0x0,not recorded
+090ec98c,0xffffffff8181c73b,CALL,3,,0xffffffff826b5840,mas_walk+0x0,not recorded
+090ec98c,0xffffffff8181c73b,CALL,4,,0xffffffff8181a3c0,do_vmi_align_munmap+0x0,not recorded
+090ec98c,0xffffffff8181c73b,CALL,5,,0xffffffff81817f90,vms_gather_munmap_vmas+0x0,not recorded

@@ -1,0 +1,58 @@
+{
+  "boot_id": "ab2bb986-b894-480b-8a5d-a88b9ca97368",
+  "config_sha256": "cf81c925463b7376c86e65b1563db18d52a0f8c95317c26cc5bd15a9f83df8fb",
+  "drained": true,
+  "final_idle": true,
+  "final_jit": {
+    "entries": 16172270,
+    "interpreted": 0,
+    "retired": 16172270
+  },
+  "final_reached": {
+    "active": 0,
+    "cache_full": 4656024,
+    "cache_hits": 241492,
+    "cache_misses": 16024729,
+    "completions": 3037,
+    "controls": 4531,
+    "instructions": 16266221,
+    "memory": 93951,
+    "primitives": 37068,
+    "roots": 3037,
+    "unsupported": 0
+  },
+  "measured_result": {
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/mm-jit-indexed-20261104/processes-n02/run/result.json",
+    "sha256": "00d4553cbcb69c760081badc6e6295c8636615a5748b8c18fd14ba1113c86e4e"
+  },
+  "mode": "kd",
+  "model": "processes",
+  "passed": true,
+  "profile": false,
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "retirement_observations": [
+    {
+      "at_ns": 1005767097870,
+      "state": {
+        "bindings": 0,
+        "source": {
+          "frames": 0,
+          "modules": 0,
+          "state": 0,
+          "writers": 0
+        }
+      }
+    }
+  ],
+  "runner_sha256": "5ded5c7c6a494049319e05767e311b07ed6c6d6199910cb1f19b771aa2f0cded",
+  "schema": 1,
+  "scored": true,
+  "source_commit": "626bd9fb78d1b2876534dce77df8aa213cfabbb9",
+  "state": "COMPLETE",
+  "workers": 2
+}

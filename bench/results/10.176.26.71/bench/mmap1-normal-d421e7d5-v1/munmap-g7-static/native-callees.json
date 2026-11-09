@@ -1,0 +1,2474 @@
+[
+  {
+    "jit_line": 148751,
+    "label_line": 148746,
+    "label": "loc_ffffffff8127f0b0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8127f0b0",
+    "source_symbol": "__list_add_valid_or_report",
+    "continuation": null,
+    "target": "0xffffffff8127f0b0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81244917",
+        "source_pc": "0xffffffff8124491a",
+        "symbol": "anon_vma_clone.cold+0x3",
+        "continuation": "0xffffffff8124491f",
+        "original_tail": "CALL       loc_ffffffff8127f0b0",
+        "comment_line": 68425
+      }
+    ]
+  },
+  {
+    "jit_line": 148758,
+    "label_line": 148753,
+    "label": "loc_ffffffff81345a00",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81345a00",
+    "source_symbol": "preempt_schedule_thunk",
+    "continuation": null,
+    "target": "0xffffffff81345a00",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81411b0f",
+        "source_pc": "0xffffffff81411b0f",
+        "symbol": "__virt_addr_valid+0x10f",
+        "continuation": "0xffffffff81411b14",
+        "original_tail": "CALL       loc_ffffffff81345a00",
+        "comment_line": 69693
+      },
+      {
+        "block_pc": "0xffffffff81411b2d",
+        "source_pc": "0xffffffff81411b2d",
+        "symbol": "__virt_addr_valid+0x12d",
+        "continuation": "0xffffffff81411b32",
+        "original_tail": "CALL       loc_ffffffff81345a00",
+        "comment_line": 69751
+      },
+      {
+        "block_pc": "0xffffffff818d75db",
+        "source_pc": "0xffffffff818d75db",
+        "symbol": "fput+0x7b",
+        "continuation": "0xffffffff818d75e0",
+        "original_tail": "CALL       loc_ffffffff81345a00",
+        "comment_line": 80894
+      }
+    ]
+  },
+  {
+    "jit_line": 148765,
+    "label_line": 148760,
+    "label": "loc_ffffffff81439340",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81439340",
+    "source_symbol": "panic_on_other_cpu",
+    "continuation": null,
+    "target": "0xffffffff81439340",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81512188",
+        "source_pc": "0xffffffff8151218a",
+        "symbol": "vprintk_emit+0x4a",
+        "continuation": "0xffffffff8151218f",
+        "original_tail": "CALL       loc_ffffffff81439340",
+        "comment_line": 70264
+      }
+    ]
+  },
+  {
+    "jit_line": 148772,
+    "label_line": 148767,
+    "label": "loc_ffffffff81498360",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81498360",
+    "source_symbol": "preempt_model_str",
+    "continuation": null,
+    "target": "0xffffffff81498360",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826a83a0",
+        "source_pc": "0xffffffff826a83ae",
+        "symbol": "dump_stack_print_info+0xe",
+        "continuation": "0xffffffff826a83b3",
+        "original_tail": "CALL       loc_ffffffff81498360",
+        "comment_line": 82443
+      }
+    ]
+  },
+  {
+    "jit_line": 148779,
+    "label_line": 148774,
+    "label": "loc_ffffffff814f3630",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff814f3630",
+    "source_symbol": "up_write",
+    "continuation": null,
+    "target": "0xffffffff814f3630",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81807949",
+        "source_pc": "0xffffffff81807954",
+        "symbol": "anon_vma_clone+0x144",
+        "continuation": "0xffffffff81807959",
+        "original_tail": "CALL       loc_ffffffff814f3630",
+        "comment_line": 72650
+      },
+      {
+        "block_pc": "0xffffffff81817790",
+        "source_pc": "0xffffffff8181779b",
+        "symbol": "vma_complete+0xfb",
+        "continuation": "0xffffffff818177a0",
+        "original_tail": "CALL       loc_ffffffff814f3630",
+        "comment_line": 74193
+      },
+      {
+        "block_pc": "0xffffffff818177a7",
+        "source_pc": "0xffffffff818177b2",
+        "symbol": "vma_complete+0x112",
+        "continuation": "0xffffffff818177b7",
+        "original_tail": "CALL       loc_ffffffff814f3630",
+        "comment_line": 74225
+      },
+      {
+        "block_pc": "0xffffffff8196544b",
+        "source_pc": "0xffffffff81965456",
+        "symbol": "userfaultfd_unmap_prep+0x126",
+        "continuation": "0xffffffff8196545b",
+        "original_tail": "CALL       loc_ffffffff814f3630",
+        "comment_line": 81373
+      }
+    ]
+  },
+  {
+    "jit_line": 148786,
+    "label_line": 148781,
+    "label": "loc_ffffffff814f4f70",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff814f4f70",
+    "source_symbol": "kd_mmap_write_unlock_clobber_v1",
+    "continuation": null,
+    "target": "0xffffffff814f4f70",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8181a742",
+        "source_pc": "0xffffffff8181a75e",
+        "symbol": "do_vmi_munmap+0x17e",
+        "continuation": "0xffffffff8181a763",
+        "original_tail": "CALL       loc_ffffffff814f4f70",
+        "comment_line": 78976
+      },
+      {
+        "block_pc": "0xffffffff8181c84b",
+        "source_pc": "0xffffffff8181c869",
+        "symbol": "__vm_munmap+0x1e9",
+        "continuation": "0xffffffff8181c86e",
+        "original_tail": "CALL       loc_ffffffff814f4f70",
+        "comment_line": 79286
+      }
+    ]
+  },
+  {
+    "jit_line": 148793,
+    "label_line": 148788,
+    "label": "loc_ffffffff814f4fa0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff814f4fa0",
+    "source_symbol": "kd_mmap_write_downgrade",
+    "continuation": null,
+    "target": "0xffffffff814f4fa0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81818dc7",
+        "source_pc": "0xffffffff81818dd4",
+        "symbol": "vms_complete_munmap_vmas+0x234",
+        "continuation": "0xffffffff81818dd9",
+        "original_tail": "CALL       loc_ffffffff814f4fa0",
+        "comment_line": 77928
+      }
+    ]
+  },
+  {
+    "jit_line": 148800,
+    "label_line": 148795,
+    "label": "loc_ffffffff814f5280",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff814f5280",
+    "source_symbol": "kd_mmap_read_unlock",
+    "continuation": null,
+    "target": "0xffffffff814f5280",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81818da0",
+        "source_pc": "0xffffffff81818daa",
+        "symbol": "vms_complete_munmap_vmas+0x20a",
+        "continuation": "0xffffffff81818daf",
+        "original_tail": "CALL       loc_ffffffff814f5280",
+        "comment_line": 77893
+      }
+    ]
+  },
+  {
+    "jit_line": 148807,
+    "label_line": 148802,
+    "label": "loc_ffffffff8153b490",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8153b490",
+    "source_symbol": "call_rcu",
+    "continuation": null,
+    "target": "0xffffffff8153b490",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b455e",
+        "source_pc": "0xffffffff826b4570",
+        "symbol": "mas_new_root+0x150",
+        "continuation": "0xffffffff826b4575",
+        "original_tail": "CALL       loc_ffffffff8153b490",
+        "comment_line": 88828
+      },
+      {
+        "block_pc": "0xffffffff826b4642",
+        "source_pc": "0xffffffff826b4654",
+        "symbol": "__mt_destroy+0x64",
+        "continuation": "0xffffffff826b4659",
+        "original_tail": "CALL       loc_ffffffff8153b490",
+        "comment_line": 89060
+      },
+      {
+        "block_pc": "0xffffffff826b7920",
+        "source_pc": "0xffffffff826b792c",
+        "symbol": "mas_topiary_replace+0xb5c",
+        "continuation": "0xffffffff826b7931",
+        "original_tail": "CALL       loc_ffffffff8153b490",
+        "comment_line": 98736
+      }
+    ]
+  },
+  {
+    "jit_line": 148814,
+    "label_line": 148809,
+    "label": "loc_ffffffff8176a230",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8176a230",
+    "source_symbol": "uprobe_mmap",
+    "continuation": null,
+    "target": "0xffffffff8176a230",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81817968",
+        "source_pc": "0xffffffff81817968",
+        "symbol": "vma_complete+0x2c8",
+        "continuation": "0xffffffff8181796d",
+        "original_tail": "CALL       loc_ffffffff8176a230",
+        "comment_line": 74722
+      }
+    ]
+  },
+  {
+    "jit_line": 148821,
+    "label_line": 148816,
+    "label": "loc_ffffffff8176a6e0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8176a6e0",
+    "source_symbol": "uprobe_munmap",
+    "continuation": null,
+    "target": "0xffffffff8176a6e0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8181737c",
+        "source_pc": "0xffffffff81817387",
+        "symbol": "vma_prepare+0x37",
+        "continuation": "0xffffffff8181738c",
+        "original_tail": "CALL       loc_ffffffff8176a6e0",
+        "comment_line": 73661
+      },
+      {
+        "block_pc": "0xffffffff818177ea",
+        "source_pc": "0xffffffff818177f5",
+        "symbol": "vma_complete+0x155",
+        "continuation": "0xffffffff818177fa",
+        "original_tail": "CALL       loc_ffffffff8176a6e0",
+        "comment_line": 74317
+      }
+    ]
+  },
+  {
+    "jit_line": 148828,
+    "label_line": 148823,
+    "label": "loc_ffffffff817ca480",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817ca480",
+    "source_symbol": "kvfree_call_rcu",
+    "continuation": null,
+    "target": "0xffffffff817ca480",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8186c524",
+        "source_pc": "0xffffffff8186c532",
+        "symbol": "__mpol_put+0x22",
+        "continuation": "0xffffffff8186c537",
+        "original_tail": "CALL       loc_ffffffff817ca480",
+        "comment_line": 80023
+      },
+      {
+        "block_pc": "0xffffffff826b4efd",
+        "source_pc": "0xffffffff826b4f01",
+        "symbol": "mas_wr_node_store+0x481",
+        "continuation": "0xffffffff826b4f06",
+        "original_tail": "CALL       loc_ffffffff817ca480",
+        "comment_line": 90976
+      },
+      {
+        "block_pc": "0xffffffff826b77e0",
+        "source_pc": "0xffffffff826b77e4",
+        "symbol": "mas_topiary_replace+0xa14",
+        "continuation": "0xffffffff826b77e9",
+        "original_tail": "CALL       loc_ffffffff817ca480",
+        "comment_line": 98398
+      },
+      {
+        "block_pc": "0xffffffff826b78ce",
+        "source_pc": "0xffffffff826b78d2",
+        "symbol": "mas_topiary_replace+0xb02",
+        "continuation": "0xffffffff826b78d7",
+        "original_tail": "CALL       loc_ffffffff817ca480",
+        "comment_line": 98634
+      },
+      {
+        "block_pc": "0xffffffff826b7b63",
+        "source_pc": "0xffffffff826b7b6a",
+        "symbol": "mas_topiary_replace+0xd9a",
+        "continuation": "0xffffffff826b7b6f",
+        "original_tail": "CALL       loc_ffffffff817ca480",
+        "comment_line": 99522
+      }
+    ]
+  },
+  {
+    "jit_line": 148835,
+    "label_line": 148830,
+    "label": "loc_ffffffff817d4690",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817d4690",
+    "source_symbol": "vma_interval_tree_insert",
+    "continuation": null,
+    "target": "0xffffffff817d4690",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818176cd",
+        "source_pc": "0xffffffff818176d5",
+        "symbol": "vma_complete+0x35",
+        "continuation": "0xffffffff818176da",
+        "original_tail": "CALL       loc_ffffffff817d4690",
+        "comment_line": 74032
+      },
+      {
+        "block_pc": "0xffffffff818176da",
+        "source_pc": "0xffffffff818176e5",
+        "symbol": "vma_complete+0x45",
+        "continuation": "0xffffffff818176ea",
+        "original_tail": "CALL       loc_ffffffff817d4690",
+        "comment_line": 74047
+      }
+    ]
+  },
+  {
+    "jit_line": 148842,
+    "label_line": 148837,
+    "label": "loc_ffffffff817d4790",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817d4790",
+    "source_symbol": "vma_interval_tree_remove",
+    "continuation": null,
+    "target": "0xffffffff817d4790",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81817480",
+        "source_pc": "0xffffffff8181748d",
+        "symbol": "vma_prepare+0x13d",
+        "continuation": "0xffffffff81817492",
+        "original_tail": "CALL       loc_ffffffff817d4790",
+        "comment_line": 73828
+      }
+    ]
+  },
+  {
+    "jit_line": 148849,
+    "label_line": 148844,
+    "label": "loc_ffffffff817d4d60",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817d4d60",
+    "source_symbol": "anon_vma_interval_tree_insert",
+    "continuation": null,
+    "target": "0xffffffff817d4d60",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818078f9",
+        "source_pc": "0xffffffff81807904",
+        "symbol": "anon_vma_clone+0xf4",
+        "continuation": "0xffffffff81807909",
+        "original_tail": "CALL       loc_ffffffff817d4d60",
+        "comment_line": 72604
+      },
+      {
+        "block_pc": "0xffffffff81817738",
+        "source_pc": "0xffffffff81817744",
+        "symbol": "vma_complete+0xa4",
+        "continuation": "0xffffffff81817749",
+        "original_tail": "CALL       loc_ffffffff817d4d60",
+        "comment_line": 74106
+      },
+      {
+        "block_pc": "0xffffffff81817771",
+        "source_pc": "0xffffffff8181777d",
+        "symbol": "vma_complete+0xdd",
+        "continuation": "0xffffffff81817782",
+        "original_tail": "CALL       loc_ffffffff817d4d60",
+        "comment_line": 74175
+      }
+    ]
+  },
+  {
+    "jit_line": 148856,
+    "label_line": 148851,
+    "label": "loc_ffffffff817d4e50",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817d4e50",
+    "source_symbol": "anon_vma_interval_tree_remove",
+    "continuation": null,
+    "target": "0xffffffff817d4e50",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81817423",
+        "source_pc": "0xffffffff8181742e",
+        "symbol": "vma_prepare+0xde",
+        "continuation": "0xffffffff81817433",
+        "original_tail": "CALL       loc_ffffffff817d4e50",
+        "comment_line": 73728
+      },
+      {
+        "block_pc": "0xffffffff8181745b",
+        "source_pc": "0xffffffff81817466",
+        "symbol": "vma_prepare+0x116",
+        "continuation": "0xffffffff8181746b",
+        "original_tail": "CALL       loc_ffffffff817d4e50",
+        "comment_line": 73795
+      }
+    ]
+  },
+  {
+    "jit_line": 148863,
+    "label_line": 148858,
+    "label": "loc_ffffffff817dea50",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817dea50",
+    "source_symbol": "__vma_start_write",
+    "continuation": null,
+    "target": "0xffffffff817dea50",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81817e48",
+        "source_pc": "0xffffffff81817e50",
+        "symbol": "__split_vma+0x1e0",
+        "continuation": "0xffffffff81817e55",
+        "original_tail": "CALL       loc_ffffffff817dea50",
+        "comment_line": 75543
+      },
+      {
+        "block_pc": "0xffffffff81817e85",
+        "source_pc": "0xffffffff81817e8d",
+        "symbol": "__split_vma+0x21d",
+        "continuation": "0xffffffff81817e92",
+        "original_tail": "CALL       loc_ffffffff817dea50",
+        "comment_line": 75601
+      },
+      {
+        "block_pc": "0xffffffff818180ef",
+        "source_pc": "0xffffffff818180f7",
+        "symbol": "vms_gather_munmap_vmas+0x167",
+        "continuation": "0xffffffff818180fc",
+        "original_tail": "CALL       loc_ffffffff817dea50",
+        "comment_line": 76430
+      }
+    ]
+  },
+  {
+    "jit_line": 148870,
+    "label_line": 148865,
+    "label": "loc_ffffffff817df520",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817df520",
+    "source_symbol": "__vma_exclude_readers_for_detach",
+    "continuation": null,
+    "target": "0xffffffff817df520",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818177db",
+        "source_pc": "0xffffffff818177de",
+        "symbol": "vma_complete+0x13e",
+        "continuation": "0xffffffff818177e3",
+        "original_tail": "CALL       loc_ffffffff817df520",
+        "comment_line": 74287
+      },
+      {
+        "block_pc": "0xffffffff81818012",
+        "source_pc": "0xffffffff81818015",
+        "symbol": "vms_gather_munmap_vmas+0x85",
+        "continuation": "0xffffffff8181801a",
+        "original_tail": "CALL       loc_ffffffff817df520",
+        "comment_line": 76137
+      }
+    ]
+  },
+  {
+    "jit_line": 148877,
+    "label_line": 148872,
+    "label": "loc_ffffffff817e62d0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817e62d0",
+    "source_symbol": "unmap_single_vma",
+    "continuation": null,
+    "target": "0xffffffff817e62d0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e6486",
+        "source_pc": "0xffffffff817e6490",
+        "symbol": "unmap_vmas+0xa0",
+        "continuation": "0xffffffff817e6495",
+        "original_tail": "CALL       loc_ffffffff817e62d0",
+        "comment_line": 72125
+      }
+    ]
+  },
+  {
+    "jit_line": 148884,
+    "label_line": 148879,
+    "label": "loc_ffffffff817e6ad0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff817e6ad0",
+    "source_symbol": "pfnmap_track_ctx_release",
+    "continuation": null,
+    "target": "0xffffffff817e6ad0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e04d0",
+        "source_pc": "0xffffffff817e04d0",
+        "symbol": "vm_area_free+0xb0",
+        "continuation": "0xffffffff817e04d5",
+        "original_tail": "CALL       loc_ffffffff817e6ad0",
+        "comment_line": 71977
+      }
+    ]
+  },
+  {
+    "jit_line": 148891,
+    "label_line": 148886,
+    "label": "loc_ffffffff81807c80",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81807c80",
+    "source_symbol": "mm_find_pmd",
+    "continuation": null,
+    "target": "0xffffffff81807c80",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81896709",
+        "source_pc": "0xffffffff8189671d",
+        "symbol": "vma_adjust_trans_huge+0x6d",
+        "continuation": "0xffffffff81896722",
+        "original_tail": "CALL       loc_ffffffff81807c80",
+        "comment_line": 80444
+      },
+      {
+        "block_pc": "0xffffffff818967cd",
+        "source_pc": "0xffffffff818967e0",
+        "symbol": "vma_adjust_trans_huge+0x130",
+        "continuation": "0xffffffff818967e5",
+        "original_tail": "CALL       loc_ffffffff81807c80",
+        "comment_line": 80542
+      },
+      {
+        "block_pc": "0xffffffff8189683d",
+        "source_pc": "0xffffffff8189684c",
+        "symbol": "vma_adjust_trans_huge+0x19c",
+        "continuation": "0xffffffff81896851",
+        "original_tail": "CALL       loc_ffffffff81807c80",
+        "comment_line": 80601
+      }
+    ]
+  },
+  {
+    "jit_line": 148898,
+    "label_line": 148893,
+    "label": "loc_ffffffff8180b8a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8180b8a0",
+    "source_symbol": "unlink_anon_vmas",
+    "continuation": null,
+    "target": "0xffffffff8180b8a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8181780e",
+        "source_pc": "0xffffffff8181780e",
+        "symbol": "vma_complete+0x16e",
+        "continuation": "0xffffffff81817813",
+        "original_tail": "CALL       loc_ffffffff8180b8a0",
+        "comment_line": 74351
+      }
+    ]
+  },
+  {
+    "jit_line": 148905,
+    "label_line": 148900,
+    "label": "loc_ffffffff8183c810",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8183c810",
+    "source_symbol": "__kmalloc_cache_noprof",
+    "continuation": null,
+    "target": "0xffffffff8183c810",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff819653cb",
+        "source_pc": "0xffffffff81965407",
+        "symbol": "userfaultfd_unmap_prep+0xd7",
+        "continuation": "0xffffffff8196540c",
+        "original_tail": "CALL       loc_ffffffff8183c810",
+        "comment_line": 81258
+      }
+    ]
+  },
+  {
+    "jit_line": 148912,
+    "label_line": 148907,
+    "label": "loc_ffffffff8183d300",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8183d300",
+    "source_symbol": "kfree",
+    "continuation": null,
+    "target": "0xffffffff8183d300",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e043b",
+        "source_pc": "0xffffffff817e043f",
+        "symbol": "vm_area_free+0x1f",
+        "continuation": "0xffffffff817e0444",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 71773
+      },
+      {
+        "block_pc": "0xffffffff826b2ea6",
+        "source_pc": "0xffffffff826b2eac",
+        "symbol": "mas_alloc_nodes+0x7c",
+        "continuation": "0xffffffff826b2eb1",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 83536
+      },
+      {
+        "block_pc": "0xffffffff826b3f89",
+        "source_pc": "0xffffffff826b3f8c",
+        "symbol": "mt_destroy_walk.isra.0+0x3c",
+        "continuation": "0xffffffff826b3f91",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 87036
+      },
+      {
+        "block_pc": "0xffffffff826b481f",
+        "source_pc": "0xffffffff826b481f",
+        "symbol": "mas_destroy+0x3f",
+        "continuation": "0xffffffff826b4824",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 89218
+      },
+      {
+        "block_pc": "0xffffffff826beaf7",
+        "source_pc": "0xffffffff826beafa",
+        "symbol": "mas_preallocate+0x2da",
+        "continuation": "0xffffffff826beaff",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 115310
+      },
+      {
+        "block_pc": "0xffffffff826bebd6",
+        "source_pc": "0xffffffff826bebd6",
+        "symbol": "mas_preallocate+0x3b6",
+        "continuation": "0xffffffff826bebdb",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 115583
+      },
+      {
+        "block_pc": "0xffffffff826c7550",
+        "source_pc": "0xffffffff826c7550",
+        "symbol": "mas_store_gfp+0x210",
+        "continuation": "0xffffffff826c7555",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 137063
+      },
+      {
+        "block_pc": "0xffffffff826c76e9",
+        "source_pc": "0xffffffff826c76ec",
+        "symbol": "mas_store_gfp+0x3ac",
+        "continuation": "0xffffffff826c76f1",
+        "original_tail": "CALL       loc_ffffffff8183d300",
+        "comment_line": 137652
+      }
+    ]
+  },
+  {
+    "jit_line": 148919,
+    "label_line": 148914,
+    "label": "loc_ffffffff8183e1a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8183e1a0",
+    "source_symbol": "kmem_cache_free",
+    "continuation": null,
+    "target": "0xffffffff8183e1a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e037a",
+        "source_pc": "0xffffffff817e0384",
+        "symbol": "vm_area_dup+0x1a4",
+        "continuation": "0xffffffff817e0389",
+        "original_tail": "CALL       loc_ffffffff8183e1a0",
+        "comment_line": 71679
+      },
+      {
+        "block_pc": "0xffffffff817e046e",
+        "source_pc": "0xffffffff817e0478",
+        "symbol": "vm_area_free+0x58",
+        "continuation": "0xffffffff817e047d",
+        "original_tail": "CALL       loc_ffffffff8183e1a0",
+        "comment_line": 71855
+      },
+      {
+        "block_pc": "0xffffffff818079b9",
+        "source_pc": "0xffffffff818079d8",
+        "symbol": "anon_vma_clone+0x1c8",
+        "continuation": "0xffffffff818079dd",
+        "original_tail": "CALL       loc_ffffffff8183e1a0",
+        "comment_line": 72820
+      }
+    ]
+  },
+  {
+    "jit_line": 148926,
+    "label_line": 148921,
+    "label": "loc_ffffffff8183f0f0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8183f0f0",
+    "source_symbol": "kmem_cache_free_bulk",
+    "continuation": null,
+    "target": "0xffffffff8183f0f0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b4222",
+        "source_pc": "0xffffffff826b4230",
+        "symbol": "mt_destroy_walk.isra.0+0x2e0",
+        "continuation": "0xffffffff826b4235",
+        "original_tail": "CALL       loc_ffffffff8183f0f0",
+        "comment_line": 87923
+      },
+      {
+        "block_pc": "0xffffffff826b430e",
+        "source_pc": "0xffffffff826b431b",
+        "symbol": "mt_destroy_walk.isra.0+0x3cb",
+        "continuation": "0xffffffff826b4320",
+        "original_tail": "CALL       loc_ffffffff8183f0f0",
+        "comment_line": 88224
+      }
+    ]
+  },
+  {
+    "jit_line": 148933,
+    "label_line": 148928,
+    "label": "loc_ffffffff818404b0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff818404b0",
+    "source_symbol": "kmem_cache_alloc_noprof",
+    "continuation": null,
+    "target": "0xffffffff818404b0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e01e0",
+        "source_pc": "0xffffffff817e01ff",
+        "symbol": "vm_area_dup+0x1f",
+        "continuation": "0xffffffff817e0204",
+        "original_tail": "CALL       loc_ffffffff818404b0",
+        "comment_line": 71405
+      },
+      {
+        "block_pc": "0xffffffff81807865",
+        "source_pc": "0xffffffff81807871",
+        "symbol": "anon_vma_clone+0x61",
+        "continuation": "0xffffffff81807876",
+        "original_tail": "CALL       loc_ffffffff818404b0",
+        "comment_line": 72430
+      },
+      {
+        "block_pc": "0xffffffff826b2f14",
+        "source_pc": "0xffffffff826b2f1b",
+        "symbol": "mas_alloc_nodes+0xeb",
+        "continuation": "0xffffffff826b2f20",
+        "original_tail": "CALL       loc_ffffffff818404b0",
+        "comment_line": 83675
+      },
+      {
+        "block_pc": "0xffffffff826bec00",
+        "source_pc": "0xffffffff826bec0a",
+        "symbol": "mas_preallocate+0x3ea",
+        "continuation": "0xffffffff826bec0f",
+        "original_tail": "CALL       loc_ffffffff818404b0",
+        "comment_line": 115636
+      },
+      {
+        "block_pc": "0xffffffff826c776e",
+        "source_pc": "0xffffffff826c777a",
+        "symbol": "mas_store_gfp+0x43a",
+        "continuation": "0xffffffff826c777f",
+        "original_tail": "CALL       loc_ffffffff818404b0",
+        "comment_line": 137850
+      }
+    ]
+  },
+  {
+    "jit_line": 148940,
+    "label_line": 148935,
+    "label": "loc_ffffffff818455f0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff818455f0",
+    "source_symbol": "kmem_cache_prefill_sheaf",
+    "continuation": null,
+    "target": "0xffffffff818455f0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b2f2f",
+        "source_pc": "0xffffffff826b2f38",
+        "symbol": "mas_alloc_nodes+0x108",
+        "continuation": "0xffffffff826b2f3d",
+        "original_tail": "CALL       loc_ffffffff818455f0",
+        "comment_line": 83719
+      },
+      {
+        "block_pc": "0xffffffff826bea77",
+        "source_pc": "0xffffffff826bea84",
+        "symbol": "mas_preallocate+0x264",
+        "continuation": "0xffffffff826bea89",
+        "original_tail": "CALL       loc_ffffffff818455f0",
+        "comment_line": 115137
+      },
+      {
+        "block_pc": "0xffffffff826c768d",
+        "source_pc": "0xffffffff826c769b",
+        "symbol": "mas_store_gfp+0x35b",
+        "continuation": "0xffffffff826c76a0",
+        "original_tail": "CALL       loc_ffffffff818455f0",
+        "comment_line": 137521
+      }
+    ]
+  },
+  {
+    "jit_line": 148947,
+    "label_line": 148942,
+    "label": "loc_ffffffff818459a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff818459a0",
+    "source_symbol": "kmem_cache_return_sheaf",
+    "continuation": null,
+    "target": "0xffffffff818459a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b47fd",
+        "source_pc": "0xffffffff826b4809",
+        "symbol": "mas_destroy+0x29",
+        "continuation": "0xffffffff826b480e",
+        "original_tail": "CALL       loc_ffffffff818459a0",
+        "comment_line": 89176
+      },
+      {
+        "block_pc": "0xffffffff826bebb1",
+        "source_pc": "0xffffffff826bebc0",
+        "symbol": "mas_preallocate+0x3a0",
+        "continuation": "0xffffffff826bebc5",
+        "original_tail": "CALL       loc_ffffffff818459a0",
+        "comment_line": 115539
+      },
+      {
+        "block_pc": "0xffffffff826c752e",
+        "source_pc": "0xffffffff826c753a",
+        "symbol": "mas_store_gfp+0x1fa",
+        "continuation": "0xffffffff826c753f",
+        "original_tail": "CALL       loc_ffffffff818459a0",
+        "comment_line": 137019
+      }
+    ]
+  },
+  {
+    "jit_line": 148954,
+    "label_line": 148949,
+    "label": "loc_ffffffff81845ba0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81845ba0",
+    "source_symbol": "kmem_cache_refill_sheaf",
+    "continuation": null,
+    "target": "0xffffffff81845ba0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b2ed1",
+        "source_pc": "0xffffffff826b2edf",
+        "symbol": "mas_alloc_nodes+0xaf",
+        "continuation": "0xffffffff826b2ee4",
+        "original_tail": "CALL       loc_ffffffff81845ba0",
+        "comment_line": 83594
+      },
+      {
+        "block_pc": "0xffffffff826beb10",
+        "source_pc": "0xffffffff826beb21",
+        "symbol": "mas_preallocate+0x301",
+        "continuation": "0xffffffff826beb26",
+        "original_tail": "CALL       loc_ffffffff81845ba0",
+        "comment_line": 115343
+      },
+      {
+        "block_pc": "0xffffffff826c765c",
+        "source_pc": "0xffffffff826c766c",
+        "symbol": "mas_store_gfp+0x32c",
+        "continuation": "0xffffffff826c7671",
+        "original_tail": "CALL       loc_ffffffff81845ba0",
+        "comment_line": 137471
+      }
+    ]
+  },
+  {
+    "jit_line": 148961,
+    "label_line": 148956,
+    "label": "loc_ffffffff81845da0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81845da0",
+    "source_symbol": "kmem_cache_alloc_from_sheaf_noprof",
+    "continuation": null,
+    "target": "0xffffffff81845da0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826b39de",
+        "source_pc": "0xffffffff826b39f6",
+        "symbol": "mas_root_expand+0x166",
+        "continuation": "0xffffffff826b39fb",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 86378
+      },
+      {
+        "block_pc": "0xffffffff826b3cd3",
+        "source_pc": "0xffffffff826b3ce2",
+        "symbol": "mas_new_ma_node.isra.0+0x82",
+        "continuation": "0xffffffff826b3ce7",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 86913
+      },
+      {
+        "block_pc": "0xffffffff826b4516",
+        "source_pc": "0xffffffff826b452e",
+        "symbol": "mas_new_root+0x10e",
+        "continuation": "0xffffffff826b4533",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 88750
+      },
+      {
+        "block_pc": "0xffffffff826b4d77",
+        "source_pc": "0xffffffff826b4d8d",
+        "symbol": "mas_wr_node_store+0x30d",
+        "continuation": "0xffffffff826b4d92",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 90676
+      },
+      {
+        "block_pc": "0xffffffff826bff90",
+        "source_pc": "0xffffffff826bff9c",
+        "symbol": "mas_spanning_rebalance+0x27c",
+        "continuation": "0xffffffff826bffa1",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 118438
+      },
+      {
+        "block_pc": "0xffffffff826c0ad9",
+        "source_pc": "0xffffffff826c0aec",
+        "symbol": "mas_spanning_rebalance+0xdcc",
+        "continuation": "0xffffffff826c0af1",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 121514
+      },
+      {
+        "block_pc": "0xffffffff826c1304",
+        "source_pc": "0xffffffff826c1310",
+        "symbol": "mas_spanning_rebalance+0x15f0",
+        "continuation": "0xffffffff826c1315",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 123810
+      },
+      {
+        "block_pc": "0xffffffff826c278c",
+        "source_pc": "0xffffffff826c2798",
+        "symbol": "mas_wr_bnode+0x9a8",
+        "continuation": "0xffffffff826c279d",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 127603
+      },
+      {
+        "block_pc": "0xffffffff826c27ae",
+        "source_pc": "0xffffffff826c27ba",
+        "symbol": "mas_wr_bnode+0x9ca",
+        "continuation": "0xffffffff826c27bf",
+        "original_tail": "CALL       loc_ffffffff81845da0",
+        "comment_line": 127651
+      }
+    ]
+  },
+  {
+    "jit_line": 148968,
+    "label_line": 148963,
+    "label": "loc_ffffffff8184c0a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8184c0a0",
+    "source_symbol": "anon_vma_name_free",
+    "continuation": null,
+    "target": "0xffffffff8184c0a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e048d",
+        "source_pc": "0xffffffff817e048d",
+        "symbol": "vm_area_free+0x6d",
+        "continuation": "0xffffffff817e0492",
+        "original_tail": "CALL       loc_ffffffff8184c0a0",
+        "comment_line": 71896
+      }
+    ]
+  },
+  {
+    "jit_line": 148975,
+    "label_line": 148970,
+    "label": "loc_ffffffff8184c0d0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff8184c0d0",
+    "source_symbol": "anon_vma_name",
+    "continuation": null,
+    "target": "0xffffffff8184c0d0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e02ec",
+        "source_pc": "0xffffffff817e0314",
+        "symbol": "vm_area_dup+0x134",
+        "continuation": "0xffffffff817e0319",
+        "original_tail": "CALL       loc_ffffffff8184c0d0",
+        "comment_line": 71549
+      }
+    ]
+  },
+  {
+    "jit_line": 148982,
+    "label_line": 148977,
+    "label": "loc_ffffffff81861780",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81861780",
+    "source_symbol": "__hugetlb_zap_begin",
+    "continuation": null,
+    "target": "0xffffffff81861780",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e64ca",
+        "source_pc": "0xffffffff817e64d5",
+        "symbol": "unmap_vmas+0xe5",
+        "continuation": "0xffffffff817e64da",
+        "original_tail": "CALL       loc_ffffffff81861780",
+        "comment_line": 72167
+      }
+    ]
+  },
+  {
+    "jit_line": 148989,
+    "label_line": 148984,
+    "label": "loc_ffffffff81862670",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81862670",
+    "source_symbol": "hugetlb_unshare_pmds",
+    "continuation": null,
+    "target": "0xffffffff81862670",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81862b63",
+        "source_pc": "0xffffffff81862b69",
+        "symbol": "hugetlb_split+0x39",
+        "continuation": "0xffffffff81862b6e",
+        "original_tail": "CALL       loc_ffffffff81862670",
+        "comment_line": 79969
+      }
+    ]
+  },
+  {
+    "jit_line": 148996,
+    "label_line": 148991,
+    "label": "loc_ffffffff818715f0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff818715f0",
+    "source_symbol": "__mpol_dup",
+    "continuation": null,
+    "target": "0xffffffff818715f0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8187170e",
+        "source_pc": "0xffffffff8187171a",
+        "symbol": "vma_dup_policy+0x1a",
+        "continuation": "0xffffffff8187171f",
+        "original_tail": "CALL       loc_ffffffff818715f0",
+        "comment_line": 80102
+      }
+    ]
+  },
+  {
+    "jit_line": 149003,
+    "label_line": 148998,
+    "label": "loc_ffffffff81876e20",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81876e20",
+    "source_symbol": "__mmu_notifier_invalidate_range_start",
+    "continuation": null,
+    "target": "0xffffffff81876e20",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff817e654e",
+        "source_pc": "0xffffffff817e6556",
+        "symbol": "unmap_vmas+0x166",
+        "continuation": "0xffffffff817e655b",
+        "original_tail": "CALL       loc_ffffffff81876e20",
+        "comment_line": 72184
+      }
+    ]
+  },
+  {
+    "jit_line": 149010,
+    "label_line": 149005,
+    "label": "loc_ffffffff81907ab0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81907ab0",
+    "source_symbol": "__file_ref_put",
+    "continuation": null,
+    "target": "0xffffffff81907ab0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818d75a4",
+        "source_pc": "0xffffffff818d75af",
+        "symbol": "fput+0x4f",
+        "continuation": "0xffffffff818d75b4",
+        "original_tail": "CALL       loc_ffffffff81907ab0",
+        "comment_line": 80879
+      }
+    ]
+  },
+  {
+    "jit_line": 149017,
+    "label_line": 149012,
+    "label": "loc_ffffffff81cba850",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81cba850",
+    "source_symbol": "rust_fmt_argument",
+    "continuation": null,
+    "target": "0xffffffff81cba850",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7d5e",
+        "source_pc": "0xffffffff826d7d64",
+        "symbol": "pointer+0x4f4",
+        "continuation": "0xffffffff826d7d69",
+        "original_tail": "CALL       loc_ffffffff81cba850",
+        "comment_line": 142569
+      }
+    ]
+  },
+  {
+    "jit_line": 149024,
+    "label_line": 149019,
+    "label": "loc_ffffffff81db0150",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81db0150",
+    "source_symbol": "percpu_counter_add_batch",
+    "continuation": null,
+    "target": "0xffffffff81db0150",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81818d02",
+        "source_pc": "0xffffffff81818d16",
+        "symbol": "vms_complete_munmap_vmas+0x176",
+        "continuation": "0xffffffff81818d1b",
+        "original_tail": "CALL       loc_ffffffff81db0150",
+        "comment_line": 77704
+      }
+    ]
+  },
+  {
+    "jit_line": 149031,
+    "label_line": 149026,
+    "label": "loc_ffffffff81db3740",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81db3740",
+    "source_symbol": "errname",
+    "continuation": null,
+    "target": "0xffffffff81db3740",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7e76",
+        "source_pc": "0xffffffff826d7e90",
+        "symbol": "pointer+0x620",
+        "continuation": "0xffffffff826d7e95",
+        "original_tail": "CALL       loc_ffffffff81db3740",
+        "comment_line": 142816
+      }
+    ]
+  },
+  {
+    "jit_line": 149038,
+    "label_line": 149033,
+    "label": "loc_ffffffff81db9860",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff81db9860",
+    "source_symbol": "stack_depot_fetch",
+    "continuation": null,
+    "target": "0xffffffff81db9860",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81846e6b",
+        "source_pc": "0xffffffff81846e73",
+        "symbol": "__kmem_obj_info+0x163",
+        "continuation": "0xffffffff81846e78",
+        "original_tail": "CALL       loc_ffffffff81db9860",
+        "comment_line": 79720
+      },
+      {
+        "block_pc": "0xffffffff81846f48",
+        "source_pc": "0xffffffff81846f58",
+        "symbol": "__kmem_obj_info+0x248",
+        "continuation": "0xffffffff81846f5d",
+        "original_tail": "CALL       loc_ffffffff81db9860",
+        "comment_line": 79867
+      }
+    ]
+  },
+  {
+    "jit_line": 149045,
+    "label_line": 149040,
+    "label": "loc_ffffffff826b2410",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826b2410",
+    "source_symbol": "mas_pause",
+    "continuation": null,
+    "target": "0xffffffff826b2410",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818178ea",
+        "source_pc": "0xffffffff818178ed",
+        "symbol": "vma_complete+0x24d",
+        "continuation": "0xffffffff818178f2",
+        "original_tail": "CALL       loc_ffffffff826b2410",
+        "comment_line": 74628
+      }
+    ]
+  },
+  {
+    "jit_line": 149052,
+    "label_line": 149047,
+    "label": "loc_ffffffff826bdac0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826bdac0",
+    "source_symbol": "mas_push_data",
+    "continuation": null,
+    "target": "0xffffffff826bdac0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826c2226",
+        "source_pc": "0xffffffff826c2275",
+        "symbol": "mas_wr_bnode+0x485",
+        "continuation": "0xffffffff826c227a",
+        "original_tail": "CALL       loc_ffffffff826bdac0",
+        "comment_line": 127211
+      }
+    ]
+  },
+  {
+    "jit_line": 149059,
+    "label_line": 149054,
+    "label": "loc_ffffffff826c5620",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826c5620",
+    "source_symbol": "mas_store_prealloc",
+    "continuation": null,
+    "target": "0xffffffff826c5620",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81817913",
+        "source_pc": "0xffffffff81817921",
+        "symbol": "vma_complete+0x281",
+        "continuation": "0xffffffff81817926",
+        "original_tail": "CALL       loc_ffffffff826c5620",
+        "comment_line": 74642
+      }
+    ]
+  },
+  {
+    "jit_line": 149066,
+    "label_line": 149061,
+    "label": "loc_ffffffff826d14c0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d14c0",
+    "source_symbol": "put_dec",
+    "continuation": null,
+    "target": "0xffffffff826d14c0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d1a3a",
+        "source_pc": "0xffffffff826d1a4f",
+        "symbol": "number+0x4bf",
+        "continuation": "0xffffffff826d1a54",
+        "original_tail": "CALL       loc_ffffffff826d14c0",
+        "comment_line": 139563
+      }
+    ]
+  },
+  {
+    "jit_line": 149073,
+    "label_line": 149068,
+    "label": "loc_ffffffff826d2230",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d2230",
+    "source_symbol": "widen_string",
+    "continuation": null,
+    "target": "0xffffffff826d2230",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d49d6",
+        "source_pc": "0xffffffff826d49df",
+        "symbol": "string+0x5f",
+        "continuation": "0xffffffff826d49e4",
+        "original_tail": "CALL       loc_ffffffff826d2230",
+        "comment_line": 141264
+      },
+      {
+        "block_pc": "0xffffffff826d4a4c",
+        "source_pc": "0xffffffff826d4a4f",
+        "symbol": "string+0xcf",
+        "continuation": "0xffffffff826d4a54",
+        "original_tail": "CALL       loc_ffffffff826d2230",
+        "comment_line": 141420
+      },
+      {
+        "block_pc": "0xffffffff826d7ddc",
+        "source_pc": "0xffffffff826d7de7",
+        "symbol": "pointer+0x577",
+        "continuation": "0xffffffff826d7dec",
+        "original_tail": "CALL       loc_ffffffff826d2230",
+        "comment_line": 142723
+      }
+    ]
+  },
+  {
+    "jit_line": 149080,
+    "label_line": 149075,
+    "label": "loc_ffffffff826d3880",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d3880",
+    "source_symbol": "dentry_name",
+    "continuation": null,
+    "target": "0xffffffff826d3880",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7b35",
+        "source_pc": "0xffffffff826d7b41",
+        "symbol": "pointer+0x2d1",
+        "continuation": "0xffffffff826d7b46",
+        "original_tail": "CALL       loc_ffffffff826d3880",
+        "comment_line": 142234
+      }
+    ]
+  },
+  {
+    "jit_line": 149087,
+    "label_line": 149082,
+    "label": "loc_ffffffff826d3db0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d3db0",
+    "source_symbol": "symbol_string",
+    "continuation": null,
+    "target": "0xffffffff826d3db0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7c1f",
+        "source_pc": "0xffffffff826d7c2b",
+        "symbol": "pointer+0x3bb",
+        "continuation": "0xffffffff826d7c30",
+        "original_tail": "CALL       loc_ffffffff826d3db0",
+        "comment_line": 142344
+      }
+    ]
+  },
+  {
+    "jit_line": 149094,
+    "label_line": 149089,
+    "label": "loc_ffffffff826d4220",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d4220",
+    "source_symbol": "hex_string",
+    "continuation": null,
+    "target": "0xffffffff826d4220",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7adb",
+        "source_pc": "0xffffffff826d7ae7",
+        "symbol": "pointer+0x277",
+        "continuation": "0xffffffff826d7aec",
+        "original_tail": "CALL       loc_ffffffff826d4220",
+        "comment_line": 142183
+      }
+    ]
+  },
+  {
+    "jit_line": 149101,
+    "label_line": 149096,
+    "label": "loc_ffffffff826d4340",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d4340",
+    "source_symbol": "escaped_string",
+    "continuation": null,
+    "target": "0xffffffff826d4340",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7a46",
+        "source_pc": "0xffffffff826d7a52",
+        "symbol": "pointer+0x1e2",
+        "continuation": "0xffffffff826d7a57",
+        "original_tail": "CALL       loc_ffffffff826d4340",
+        "comment_line": 142066
+      }
+    ]
+  },
+  {
+    "jit_line": 149108,
+    "label_line": 149103,
+    "label": "loc_ffffffff826d44a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d44a0",
+    "source_symbol": "file_dentry_name",
+    "continuation": null,
+    "target": "0xffffffff826d44a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7bf7",
+        "source_pc": "0xffffffff826d7c03",
+        "symbol": "pointer+0x393",
+        "continuation": "0xffffffff826d7c08",
+        "original_tail": "CALL       loc_ffffffff826d44a0",
+        "comment_line": 142325
+      }
+    ]
+  },
+  {
+    "jit_line": 149115,
+    "label_line": 149110,
+    "label": "loc_ffffffff826d45a0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d45a0",
+    "source_symbol": "address_val",
+    "continuation": null,
+    "target": "0xffffffff826d45a0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7ba7",
+        "source_pc": "0xffffffff826d7bb3",
+        "symbol": "pointer+0x343",
+        "continuation": "0xffffffff826d7bb8",
+        "original_tail": "CALL       loc_ffffffff826d45a0",
+        "comment_line": 142287
+      }
+    ]
+  },
+  {
+    "jit_line": 149122,
+    "label_line": 149117,
+    "label": "loc_ffffffff826d4ca0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d4ca0",
+    "source_symbol": "fwnode_string",
+    "continuation": null,
+    "target": "0xffffffff826d4ca0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7a76",
+        "source_pc": "0xffffffff826d7a83",
+        "symbol": "pointer+0x213",
+        "continuation": "0xffffffff826d7a88",
+        "original_tail": "CALL       loc_ffffffff826d4ca0",
+        "comment_line": 142100
+      }
+    ]
+  },
+  {
+    "jit_line": 149129,
+    "label_line": 149124,
+    "label": "loc_ffffffff826d4e60",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d4e60",
+    "source_symbol": "clock.isra.0",
+    "continuation": null,
+    "target": "0xffffffff826d4e60",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7b5d",
+        "source_pc": "0xffffffff826d7b66",
+        "symbol": "pointer+0x2f6",
+        "continuation": "0xffffffff826d7b6b",
+        "original_tail": "CALL       loc_ffffffff826d4e60",
+        "comment_line": 142253
+      }
+    ]
+  },
+  {
+    "jit_line": 149136,
+    "label_line": 149131,
+    "label": "loc_ffffffff826d4f80",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d4f80",
+    "source_symbol": "netdev_bits",
+    "continuation": null,
+    "target": "0xffffffff826d4f80",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7bcf",
+        "source_pc": "0xffffffff826d7bdb",
+        "symbol": "pointer+0x36b",
+        "continuation": "0xffffffff826d7be0",
+        "original_tail": "CALL       loc_ffffffff826d4f80",
+        "comment_line": 142306
+      }
+    ]
+  },
+  {
+    "jit_line": 149143,
+    "label_line": 149138,
+    "label": "loc_ffffffff826d5110",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5110",
+    "source_symbol": "bitmap_string.isra.0",
+    "continuation": null,
+    "target": "0xffffffff826d5110",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d79d4",
+        "source_pc": "0xffffffff826d79d4",
+        "symbol": "pointer+0x164",
+        "continuation": "0xffffffff826d79d9",
+        "original_tail": "CALL       loc_ffffffff826d5110",
+        "comment_line": 141948
+      }
+    ]
+  },
+  {
+    "jit_line": 149150,
+    "label_line": 149145,
+    "label": "loc_ffffffff826d52d0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d52d0",
+    "source_symbol": "device_node_string.isra.0",
+    "continuation": null,
+    "target": "0xffffffff826d52d0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7c4f",
+        "source_pc": "0xffffffff826d7c56",
+        "symbol": "pointer+0x3e6",
+        "continuation": "0xffffffff826d7c5b",
+        "original_tail": "CALL       loc_ffffffff826d52d0",
+        "comment_line": 142378
+      }
+    ]
+  },
+  {
+    "jit_line": 149157,
+    "label_line": 149152,
+    "label": "loc_ffffffff826d5650",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5650",
+    "source_symbol": "mac_address_string",
+    "continuation": null,
+    "target": "0xffffffff826d5650",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7a0e",
+        "source_pc": "0xffffffff826d7a1a",
+        "symbol": "pointer+0x1aa",
+        "continuation": "0xffffffff826d7a1f",
+        "original_tail": "CALL       loc_ffffffff826d5650",
+        "comment_line": 142017
+      }
+    ]
+  },
+  {
+    "jit_line": 149164,
+    "label_line": 149159,
+    "label": "loc_ffffffff826d5890",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5890",
+    "source_symbol": "bdev_name.isra.0",
+    "continuation": null,
+    "target": "0xffffffff826d5890",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7ce9",
+        "source_pc": "0xffffffff826d7cf2",
+        "symbol": "pointer+0x482",
+        "continuation": "0xffffffff826d7cf7",
+        "original_tail": "CALL       loc_ffffffff826d5890",
+        "comment_line": 142514
+      }
+    ]
+  },
+  {
+    "jit_line": 149171,
+    "label_line": 149166,
+    "label": "loc_ffffffff826d5a40",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5a40",
+    "source_symbol": "uuid_string",
+    "continuation": null,
+    "target": "0xffffffff826d5a40",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d797b",
+        "source_pc": "0xffffffff826d7987",
+        "symbol": "pointer+0x117",
+        "continuation": "0xffffffff826d798c",
+        "original_tail": "CALL       loc_ffffffff826d5a40",
+        "comment_line": 141850
+      }
+    ]
+  },
+  {
+    "jit_line": 149178,
+    "label_line": 149173,
+    "label": "loc_ffffffff826d5cd0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5cd0",
+    "source_symbol": "bitmap_list_string.isra.0",
+    "continuation": null,
+    "target": "0xffffffff826d5cd0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7e10",
+        "source_pc": "0xffffffff826d7e10",
+        "symbol": "pointer+0x5a0",
+        "continuation": "0xffffffff826d7e15",
+        "original_tail": "CALL       loc_ffffffff826d5cd0",
+        "comment_line": 142759
+      }
+    ]
+  },
+  {
+    "jit_line": 149185,
+    "label_line": 149180,
+    "label": "loc_ffffffff826d5e70",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d5e70",
+    "source_symbol": "default_pointer",
+    "continuation": null,
+    "target": "0xffffffff826d5e70",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7b10",
+        "source_pc": "0xffffffff826d7b19",
+        "symbol": "pointer+0x2a9",
+        "continuation": "0xffffffff826d7b1e",
+        "original_tail": "CALL       loc_ffffffff826d5e70",
+        "comment_line": 142217
+      }
+    ]
+  },
+  {
+    "jit_line": 149192,
+    "label_line": 149187,
+    "label": "loc_ffffffff826d6100",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d6100",
+    "source_symbol": "restricted_pointer",
+    "continuation": null,
+    "target": "0xffffffff826d6100",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7b82",
+        "source_pc": "0xffffffff826d7b8b",
+        "symbol": "pointer+0x31b",
+        "continuation": "0xffffffff826d7b90",
+        "original_tail": "CALL       loc_ffffffff826d6100",
+        "comment_line": 142270
+      }
+    ]
+  },
+  {
+    "jit_line": 149199,
+    "label_line": 149194,
+    "label": "loc_ffffffff826d6300",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d6300",
+    "source_symbol": "time_and_date",
+    "continuation": null,
+    "target": "0xffffffff826d6300",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7927",
+        "source_pc": "0xffffffff826d7933",
+        "symbol": "pointer+0xc3",
+        "continuation": "0xffffffff826d7938",
+        "original_tail": "CALL       loc_ffffffff826d6300",
+        "comment_line": 141745
+      }
+    ]
+  },
+  {
+    "jit_line": 149206,
+    "label_line": 149201,
+    "label": "loc_ffffffff826d6520",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d6520",
+    "source_symbol": "flags_string",
+    "continuation": null,
+    "target": "0xffffffff826d6520",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7d0e",
+        "source_pc": "0xffffffff826d7d1a",
+        "symbol": "pointer+0x4aa",
+        "continuation": "0xffffffff826d7d1f",
+        "original_tail": "CALL       loc_ffffffff826d6520",
+        "comment_line": 142531
+      }
+    ]
+  },
+  {
+    "jit_line": 149213,
+    "label_line": 149208,
+    "label": "loc_ffffffff826d7120",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d7120",
+    "source_symbol": "resource_or_range",
+    "continuation": null,
+    "target": "0xffffffff826d7120",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7d36",
+        "source_pc": "0xffffffff826d7d42",
+        "symbol": "pointer+0x4d2",
+        "continuation": "0xffffffff826d7d47",
+        "original_tail": "CALL       loc_ffffffff826d7120",
+        "comment_line": 142550
+      }
+    ]
+  },
+  {
+    "jit_line": 149220,
+    "label_line": 149215,
+    "label": "loc_ffffffff826d7190",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d7190",
+    "source_symbol": "ip_addr_string",
+    "continuation": null,
+    "target": "0xffffffff826d7190",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7ab3",
+        "source_pc": "0xffffffff826d7abf",
+        "symbol": "pointer+0x24f",
+        "continuation": "0xffffffff826d7ac4",
+        "original_tail": "CALL       loc_ffffffff826d7190",
+        "comment_line": 142164
+      }
+    ]
+  },
+  {
+    "jit_line": 149227,
+    "label_line": 149222,
+    "label": "loc_ffffffff826d7410",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d7410",
+    "source_symbol": "fourcc_string",
+    "continuation": null,
+    "target": "0xffffffff826d7410",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d78c5",
+        "source_pc": "0xffffffff826d78d1",
+        "symbol": "pointer+0x61",
+        "continuation": "0xffffffff826d78d6",
+        "original_tail": "CALL       loc_ffffffff826d7410",
+        "comment_line": 141621
+      }
+    ]
+  },
+  {
+    "jit_line": 149234,
+    "label_line": 149229,
+    "label": "loc_ffffffff826d85d0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826d85d0",
+    "source_symbol": "va_format",
+    "continuation": null,
+    "target": "0xffffffff826d85d0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff826d7cc4",
+        "source_pc": "0xffffffff826d7ccd",
+        "symbol": "pointer+0x45d",
+        "continuation": "0xffffffff826d7cd2",
+        "original_tail": "CALL       loc_ffffffff826d85d0",
+        "comment_line": 142497
+      }
+    ]
+  },
+  {
+    "jit_line": 149241,
+    "label_line": 149236,
+    "label": "loc_ffffffff826eead0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826eead0",
+    "source_symbol": "__stack_chk_fail",
+    "continuation": null,
+    "target": "0xffffffff826eead0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff8121f4a6",
+        "source_pc": "0xffffffff8121f4a6",
+        "symbol": "_printk+0x76",
+        "continuation": "0xffffffff8121f4ab",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 67478
+      },
+      {
+        "block_pc": "0xffffffff8151253c",
+        "source_pc": "0xffffffff8151253c",
+        "symbol": "vprintk_emit+0x3fc",
+        "continuation": "0xffffffff81512541",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 70386
+      },
+      {
+        "block_pc": "0xffffffff817c8390",
+        "source_pc": "0xffffffff817c8390",
+        "symbol": "kmem_dump_obj+0x120",
+        "continuation": "0xffffffff817c8395",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 71379
+      },
+      {
+        "block_pc": "0xffffffff818174df",
+        "source_pc": "0xffffffff818174df",
+        "symbol": "vma_prepare+0x18f",
+        "continuation": "0xffffffff818174e4",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 73959
+      },
+      {
+        "block_pc": "0xffffffff81817f6c",
+        "source_pc": "0xffffffff81817f6c",
+        "symbol": "__split_vma+0x2fc",
+        "continuation": "0xffffffff81817f71",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 75939
+      },
+      {
+        "block_pc": "0xffffffff81818e0b",
+        "source_pc": "0xffffffff81818e0b",
+        "symbol": "vms_complete_munmap_vmas+0x26b",
+        "continuation": "0xffffffff81818e10",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 77945
+      },
+      {
+        "block_pc": "0xffffffff8181a5c3",
+        "source_pc": "0xffffffff8181a5c3",
+        "symbol": "do_vmi_align_munmap+0x203",
+        "continuation": "0xffffffff8181a5c8",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 78501
+      },
+      {
+        "block_pc": "0xffffffff8181c895",
+        "source_pc": "0xffffffff8181c895",
+        "symbol": "__vm_munmap+0x215",
+        "continuation": "0xffffffff8181c89a",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 79324
+      },
+      {
+        "block_pc": "0xffffffff81846fdc",
+        "source_pc": "0xffffffff81846fdc",
+        "symbol": "__kmem_obj_info+0x2cc",
+        "continuation": "0xffffffff81846fe1",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 79886
+      },
+      {
+        "block_pc": "0xffffffff8196561e",
+        "source_pc": "0xffffffff8196561e",
+        "symbol": "userfaultfd_unmap_complete+0x11e",
+        "continuation": "0xffffffff81965623",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 81675
+      },
+      {
+        "block_pc": "0xffffffff826b4f75",
+        "source_pc": "0xffffffff826b4f75",
+        "symbol": "mas_wr_node_store+0x4f5",
+        "continuation": "0xffffffff826b4f7a",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 91124
+      },
+      {
+        "block_pc": "0xffffffff826b7ccb",
+        "source_pc": "0xffffffff826b7ccb",
+        "symbol": "mas_topiary_replace+0xefb",
+        "continuation": "0xffffffff826b7cd0",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 99787
+      },
+      {
+        "block_pc": "0xffffffff826bd5d6",
+        "source_pc": "0xffffffff826bd5d6",
+        "symbol": "mas_prev+0x66",
+        "continuation": "0xffffffff826bd5db",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 114060
+      },
+      {
+        "block_pc": "0xffffffff826bd659",
+        "source_pc": "0xffffffff826bd659",
+        "symbol": "mas_prev_range+0x69",
+        "continuation": "0xffffffff826bd65e",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 114273
+      },
+      {
+        "block_pc": "0xffffffff826bec44",
+        "source_pc": "0xffffffff826bec44",
+        "symbol": "mas_preallocate+0x424",
+        "continuation": "0xffffffff826bec49",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 115708
+      },
+      {
+        "block_pc": "0xffffffff826c1c70",
+        "source_pc": "0xffffffff826c1c70",
+        "symbol": "mas_spanning_rebalance+0x1f50",
+        "continuation": "0xffffffff826c1c75",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 126159
+      },
+      {
+        "block_pc": "0xffffffff826c3c70",
+        "source_pc": "0xffffffff826c3c70",
+        "symbol": "mas_wr_bnode+0x1e80",
+        "continuation": "0xffffffff826c3c75",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 131258
+      },
+      {
+        "block_pc": "0xffffffff826c4bf7",
+        "source_pc": "0xffffffff826c4bf7",
+        "symbol": "mas_wr_spanning_store+0xf27",
+        "continuation": "0xffffffff826c4bfc",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 134664
+      },
+      {
+        "block_pc": "0xffffffff826c7791",
+        "source_pc": "0xffffffff826c7791",
+        "symbol": "mas_store_gfp+0x451",
+        "continuation": "0xffffffff826c7796",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 137896
+      },
+      {
+        "block_pc": "0xffffffff826d1c14",
+        "source_pc": "0xffffffff826d1c14",
+        "symbol": "number+0x684",
+        "continuation": "0xffffffff826d1c19",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 140114
+      },
+      {
+        "block_pc": "0xffffffff826d85b5",
+        "source_pc": "0xffffffff826d85b5",
+        "symbol": "vsnprintf+0x665",
+        "continuation": "0xffffffff826d85ba",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 144633
+      },
+      {
+        "block_pc": "0xffffffff826d8980",
+        "source_pc": "0xffffffff826d8980",
+        "symbol": "scnprintf+0x90",
+        "continuation": "0xffffffff826d8985",
+        "original_tail": "CALL       loc_ffffffff826eead0",
+        "comment_line": 144838
+      }
+    ]
+  },
+  {
+    "jit_line": 149248,
+    "label_line": 149243,
+    "label": "loc_ffffffff826fcf70",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff826fcf70",
+    "source_symbol": "down_write",
+    "continuation": null,
+    "target": "0xffffffff826fcf70",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff818078cd",
+        "source_pc": "0xffffffff818078d8",
+        "symbol": "anon_vma_clone+0xc8",
+        "continuation": "0xffffffff818078dd",
+        "original_tail": "CALL       loc_ffffffff826fcf70",
+        "comment_line": 72551
+      },
+      {
+        "block_pc": "0xffffffff81817402",
+        "source_pc": "0xffffffff81817409",
+        "symbol": "vma_prepare+0xb9",
+        "continuation": "0xffffffff8181740e",
+        "original_tail": "CALL       loc_ffffffff826fcf70",
+        "comment_line": 73679
+      },
+      {
+        "block_pc": "0xffffffff81965436",
+        "source_pc": "0xffffffff81965446",
+        "symbol": "userfaultfd_unmap_prep+0x116",
+        "continuation": "0xffffffff8196544b",
+        "original_tail": "CALL       loc_ffffffff826fcf70",
+        "comment_line": 81353
+      }
+    ]
+  },
+  {
+    "jit_line": 149255,
+    "label_line": 149250,
+    "label": "loc_ffffffff82702350",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff82702350",
+    "source_symbol": "_raw_spin_lock_irqsave",
+    "continuation": null,
+    "target": "0xffffffff82702350",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81882349",
+        "source_pc": "0xffffffff81882356",
+        "symbol": "__kfence_obj_info+0x96",
+        "continuation": "0xffffffff8188235b",
+        "original_tail": "CALL       loc_ffffffff82702350",
+        "comment_line": 80308
+      }
+    ]
+  },
+  {
+    "jit_line": 149262,
+    "label_line": 149257,
+    "label": "loc_ffffffff827023e0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff827023e0",
+    "source_symbol": "_raw_spin_trylock",
+    "continuation": null,
+    "target": "0xffffffff827023e0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81816ba0",
+        "source_pc": "0xffffffff81816bf2",
+        "symbol": "vmalloc_dump_obj+0x52",
+        "continuation": "0xffffffff81816bf7",
+        "original_tail": "CALL       loc_ffffffff827023e0",
+        "comment_line": 72946
+      }
+    ]
+  },
+  {
+    "jit_line": 149269,
+    "label_line": 149264,
+    "label": "loc_ffffffff82702d10",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff82702d10",
+    "source_symbol": "_raw_spin_lock_irq",
+    "continuation": null,
+    "target": "0xffffffff82702d10",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81961c7c",
+        "source_pc": "0xffffffff81961c9a",
+        "symbol": "userfaultfd_event_wait_completion+0x4a",
+        "continuation": "0xffffffff81961c9f",
+        "original_tail": "CALL       loc_ffffffff82702d10",
+        "comment_line": 81009
+      }
+    ]
+  },
+  {
+    "jit_line": 149276,
+    "label_line": 149271,
+    "label": "loc_ffffffff82702de0",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffff82702de0",
+    "source_symbol": "_raw_spin_unlock",
+    "continuation": null,
+    "target": "0xffffffff82702de0",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffff81816c30",
+        "source_pc": "0xffffffff81816c33",
+        "symbol": "vmalloc_dump_obj+0x93",
+        "continuation": "0xffffffff81816c38",
+        "original_tail": "CALL       loc_ffffffff82702de0",
+        "comment_line": 73119
+      },
+      {
+        "block_pc": "0xffffffff81816c55",
+        "source_pc": "0xffffffff81816c67",
+        "symbol": "vmalloc_dump_obj+0xc7",
+        "continuation": "0xffffffff81816c6c",
+        "original_tail": "CALL       loc_ffffffff82702de0",
+        "comment_line": 73195
+      },
+      {
+        "block_pc": "0xffffffff826c6b63",
+        "source_pc": "0xffffffff826c6b6a",
+        "symbol": "mas_nomem+0x6a",
+        "continuation": "0xffffffff826c6b6f",
+        "original_tail": "CALL       loc_ffffffff82702de0",
+        "comment_line": 136312
+      }
+    ]
+  },
+  {
+    "jit_line": 149283,
+    "label_line": 149278,
+    "label": "loc_ffffffffc0e31080",
+    "wrapper_target": "exit",
+    "exit_code": "0x1",
+    "exit_class": "native_callee_or_control",
+    "source_pc": "0xffffffffc0e31080",
+    "source_symbol": "module address; containing symbol not established here",
+    "continuation": null,
+    "target": "0xffffffffc0e31080",
+    "static_condition": "source CALL or tail transfer reaches this native target stub",
+    "effect": "runtime native service or control; a release ends emitted unit, then exact owners determine whole-root return or native continuation",
+    "source_references": [
+      {
+        "block_pc": "0xffffffffc0e3c995",
+        "source_pc": "0xffffffffc0e3c999",
+        "symbol": "module address; containing symbol not established here",
+        "continuation": "0xffffffffc0e3c99e",
+        "original_tail": "CALL       loc_ffffffffc0e31080",
+        "comment_line": 145356
+      }
+    ]
+  }
+]

@@ -5,7 +5,8 @@ from elftools.elf.elffile import ELFFile
 
 
 def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_clobber_v1',
-                         unlock_symbol='kd_mutex_direct_unlock_clobber_v1'):
+                         unlock_symbol='kd_mutex_direct_unlock_clobber_v1',
+                         integer_result=False):
     """Inspect relocatable x86-64 ELF, never infer an entry from source labels.
 
     The workload aliases the public clobber call's private numeric continuation. Require the
@@ -55,10 +56,17 @@ def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_
             code = elf.get_section(section).data()
             # mov rsp,rsi; lea after_call(%rip),rdx; mov rbp,rcx; call rel32.
             capture = bytes.fromhex('4889e6488d15080000004889e9e8')
+            entry_delta = 4
+            if integer_result:
+                # Native CALL return jumps over XOR EAX,EAX; captured entry
+                # starts at that explicit success-value definition.
+                capture = bytes.fromhex('4889e6488d150a0000004889e9e8')
+                entry_delta = 6
             if (call['r_info_type'] not in (2, 4) or call['r_addend'] != -4
-                    or address != offset + 4 or offset - len(capture) < start
+                    or address != offset + entry_delta or offset - len(capture) < start
                     or code[offset-len(capture):offset] != capture
-                    or code[offset:offset+4] != b'\0' * 4):
+                    or code[offset:offset+4] != b'\0' * 4
+                    or (integer_result and code[offset+4:offset+8] != b'\xeb\x02\x31\xc0')):
                 raise ValueError('public continuation differs from captured RIP: ' + entry_name)
             if not unlocks or any(
                     unlock['r_info_type'] not in (2, 4) or unlock['r_addend'] != -4
@@ -69,4 +77,6 @@ def audit_public_entries(binary, expected, *, lock_symbol='kd_mutex_direct_lock_
                 section=elf.get_section(section).name, entry_offset=address,
                 call_offset=offset-1, relocation_type=call['r_info_type'],
                 unlock_offsets=[unlock['r_offset']-1 for unlock in unlocks])
+            if integer_result:
+                result[entry_name]['integer_result'] = True
         return result

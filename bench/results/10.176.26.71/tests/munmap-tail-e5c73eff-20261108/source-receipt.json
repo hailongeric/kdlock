@@ -1,0 +1,21 @@
+{
+  "excluded_path_count": 6428,
+  "excluded_prefixes": [
+    "bench/results",
+    "results",
+    "kernel_baseline/experiments"
+  ],
+  "files": 1095,
+  "full_receipt": "source-state.json in raw artifacts and checks.tar.gz",
+  "git_head": "e5c73efffa12bc677876b04faa479006968e32c2",
+  "git_index_sha256": "712493538b89e2fffabb53007a8fdfb4ad99e0286f1ea1532f1d2ff53d3295e6",
+  "git_status": "M  tests/unit/codegen/test_returning_calls.py\n",
+  "omitted_missing_tracked_paths": [],
+  "original_source_state_sha256": "8a1934a27251f21c79b4bae5a60ed486632d051ace608fe427d28b177a1daa0b",
+  "schema": 1,
+  "source_patch_sha256": "9167ab0b26cd0414924ca45074dc5c3b0ac25dfc1016115e4a37649b5009ce95",
+  "source_policy": "current tracked working bytes including staged new files",
+  "source_root": "/tmp/kdlock-reached-path-translation",
+  "staged_patch_sha256": "9167ab0b26cd0414924ca45074dc5c3b0ac25dfc1016115e4a37649b5009ce95",
+  "transfer_bytes": 10896990
+}

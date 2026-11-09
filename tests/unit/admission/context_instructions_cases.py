@@ -341,6 +341,75 @@ class ContextInstructionsCases(ContextCaseSupport):
         self.assertIn("excessive lexical lock nesting", log)
 
 
+    def test_retained_deep_scope_uses_explicit_image_requirement(self):
+        symbols = {"kd_mutex_local_lock": 0x3000,
+                   "kd_mutex_local_unlock": 0x4000,
+                   "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                   "kd_mutex_direct_unlock_clobber_v1": 0x7100}
+        for children, expected in ((7, 128), (8, 384)):
+            with self.subTest(children=children):
+                raw = bytearray()
+                for target in [0x3000] * children + [0x4000] * (children + 1):
+                    raw += b"\xe8" + struct.pack("<i", target - (0x1000 + len(raw) + 5))
+                after_release = 0x1000 + len(raw)
+                raw += b"\xb8\x78\x56\x34\x12\xc3"
+                options = {}
+                assembly, log, status = render(
+                    raw.hex(), lock_kind="mutex", abi=2, trusted_source=True,
+                    kernel_symbols=symbols, return_status=True, build_options=options,
+                )
+                self.assertEqual(status, 0, log)
+                self.assertEqual(options["requirements"], expected)
+                # Only the service contract leaves final delimiting to the
+                # exact runtime record; the ordinary image keeps its pruning.
+                self.assertEqual(f"loc_{after_release:x}:".encode() in assembly,
+                                 children == 8)
+
+
+    def test_retained_balanced_child_loop_keeps_ordinary_image_contract(self):
+        # The loop revisits one LOCAL acquisition/release pair; maximum live
+        # depth stays two, so it must not acquire the deep-image requirement.
+        raw = b"\xe8" + struct.pack("<i", 0x3000 - 0x1005)
+        raw += b"\xe8" + struct.pack("<i", 0x4000 - 0x100a)
+        raw += b"\xff\xc9\x75\xf2"
+        raw += b"\xe8" + struct.pack("<i", 0x4000 - 0x1013) + b"\xc3"
+        options = {}
+        assembly, log, status = render(
+            raw.hex(), lock_kind="mutex", abi=2, trusted_source=True,
+            kernel_symbols={"kd_mutex_local_lock": 0x3000,
+                            "kd_mutex_local_unlock": 0x4000,
+                            "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                            "kd_mutex_direct_unlock_clobber_v1": 0x7100},
+            return_status=True, build_options=options,
+        )
+        self.assertEqual(status, 0, log)
+        self.assertTrue(assembly)
+        self.assertEqual(options["requirements"], 128)
+
+
+    def test_retained_callee_owned_child_keeps_early_outer_release_tail(self):
+        # The callee returns with B still held. A's unlock cannot prune the
+        # source instructions before B's later exact release.
+        caller = b"\xe8" + struct.pack("<i", 0x2000 - 0x1005)
+        caller += b"\xe8" + struct.pack("<i", 0x4000 - 0x100a)
+        caller += b"\xb8\x78\x56\x34\x12"
+        caller += b"\xe8" + struct.pack("<i", 0x4000 - 0x1014) + b"\xc3"
+        callee = b"\xe8" + struct.pack("<i", 0x3000 - 0x2005) + b"\xc3"
+        options = {}
+        assembly, log, status = render(
+            "", regions=[(caller, 0x1000, [0x1000]), (callee, 0x2000, [0x2000])],
+            lock_kind="mutex", abi=2, trusted_source=True,
+            kernel_symbols={"kd_mutex_local_lock": 0x3000,
+                            "kd_mutex_local_unlock": 0x4000,
+                            "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                            "kd_mutex_direct_unlock_clobber_v1": 0x7100},
+            return_status=True, build_options=options,
+        )
+        self.assertEqual(status, 0, log)
+        self.assertEqual(options["requirements"], 384)
+        self.assertIn(b"loc_100a:", assembly)
+
+
     def test_callee_depth_needs_the_runtime_capacity_guard(self):
         # Callees are scanned with unknown entry depth. Admission here is not
         # evidence that A plus these eight acquisitions fits a runtime frame.

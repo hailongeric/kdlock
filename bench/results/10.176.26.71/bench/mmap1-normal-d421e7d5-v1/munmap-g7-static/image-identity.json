@@ -1,0 +1,70 @@
+{
+  "artifacts": {
+    "bin.txt": {
+      "bytes": 6474625,
+      "sha256": "e3825b277f371624283908f159de9c55325d5718ae839f630492fb773c6c6dde"
+    },
+    "callee_table.txt": {
+      "bytes": 76,
+      "sha256": "85da477eb0029cdb4bd26afb28a69102bb9c766dc8c2266599791ba1a0907b0d"
+    },
+    "ij_table.txt": {
+      "bytes": 76,
+      "sha256": "1453e0baa854d78ba7b51857e6aa239ee407cadb91955285e61cdbfd8a33e187"
+    },
+    "jit.S": {
+      "bytes": 4433914,
+      "sha256": "03b43a502a7445cf77398c0d63c24f7adfd3a3b1d95e19fcc22a536f452829f7"
+    },
+    "jit.bin": {
+      "bytes": 578944,
+      "sha256": "458e5b036e2a19c8b364b52110e80167512d5972bf59e309832de699c852e267"
+    },
+    "jit.o": {
+      "bytes": 1344376,
+      "sha256": "0d312496aca150cb6233d8345b72e1f40ac16e839c1cd07221bf056c0b333337"
+    }
+  },
+  "batch": 14,
+  "campaign_evidence_commit": "5388993034515cefe2b910f9176fee5b47fc9cd0",
+  "candidate": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+  "code": "0xffa0000025174000",
+  "entry": "0xffffffff8181c73b",
+  "entry_abi": 2,
+  "generation": 7,
+  "inventory_counts": {
+    "budget_pause": 2676,
+    "entry_dispatch_miss": 3,
+    "indirect_call_miss": 2,
+    "indirect_tail_miss": 2,
+    "native_callee_or_control": 77,
+    "original_cpu_memory_service": 61,
+    "retained_ret_or_jump_miss": 59,
+    "source_frontier": 28
+  },
+  "inventory_total": 2908,
+  "kernel_build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+  "kernel_elf": "/tmp/kdlock-mm-scope5-v4-elf-20261107/vmlinux",
+  "kernel_elf_sha256": "1cd5fa2b6094903cd644b202967a9f7ad5ddce0fc29cef9d5b2b981fb2e5e216",
+  "limits": [
+    "No taken-PC/reason record or post-g7 miss-ledger dump is retained.",
+    "Generated image association uses retained workspace, epoch copies, install logs and unchanged registry; no kernel payload digest was recorded.",
+    "Symbol attribution uses exact ELF; generated source-frontier comments do not preserve the live instruction bytes at 27 non-STD frontier PCs.",
+    "This is static analysis and receipt interpretation, not additional runtime evidence."
+  ],
+  "matching_source_root": "/tmp/kdlock-semantic-source-20261030/source",
+  "matching_source_sha256": {
+    "include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+    "kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+    "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+    "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+    "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+  },
+  "pid": 0,
+  "requirements": 32640,
+  "retained_static_root": "/tmp/kdlock-munmap-g7-static-53889930",
+  "schema": 1,
+  "slot": 443,
+  "status": 0,
+  "tgid": 2430
+}

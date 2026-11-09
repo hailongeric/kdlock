@@ -1,0 +1,74 @@
+{
+  "assembly": {
+    "sha256": "1ea39ab0aab53a7ac6a71acc69f9878200a5d5158524ed9af5cf0b250e8ceb8f"
+  },
+  "capability": {
+    "features": 1047547,
+    "mutex_stack_bytes": 256,
+    "percpu_module_bytes": 8192,
+    "version": 22
+  },
+  "chain": {
+    "base_generation": 6,
+    "batch_identity_basis": "source-derived compiler and upload summaries",
+    "batch_record_membership_proved": false,
+    "claim": "source-derived immutable ABI2 upload association",
+    "compile_attempt_id": 7,
+    "cumulative_history_completeness_proved": false,
+    "execution_proved": false,
+    "final_write_end_ns": 1164829315995,
+    "kernel_acknowledgment_witnessed": false,
+    "kernel_digest_reported": false,
+    "learning_snapshot": {
+      "count": 1,
+      "overflow_report_events": 0,
+      "revision": 6,
+      "slot": 68,
+      "token": 13
+    },
+    "manifest_sha256": "ec0a27aac7e6e115777113331eb07358c8984bb719afe56d4f1818e0046d98d4",
+    "observed_generation": 7,
+    "payload_bytes": 742528,
+    "payload_sha256": "32b7698dbb767dac7320a9f73b9059f524b49f371de96d0d304e6a8e4b268161",
+    "read_end_ns": 1363457201254,
+    "read_start_ns": 1363457160222,
+    "registry": {
+      "code": 18419722476571807744,
+      "entry": 18446744071586934632,
+      "entry_abi": 2,
+      "generation": 7,
+      "lock_kind": 2,
+      "pid": 0,
+      "requirements": 32640,
+      "status": 0,
+      "tgid": 2429
+    },
+    "schema": 1,
+    "session_id": "2418-1496",
+    "upload_id": 13
+  },
+  "exact_terminal": true,
+  "historically_reached_target": true,
+  "history": {
+    "sha256": "17e4b91b1fd5202d0c18cd918edc242732f44510f5e720e3fee4096146375c1c"
+  },
+  "leased_direction_compiler": true,
+  "passed": true,
+  "registry": {
+    "code": 18419722476571807744,
+    "entry": 18446744071586934632,
+    "entry_abi": 2,
+    "generation": 7,
+    "lock_kind": 2,
+    "pid": 0,
+    "requirements": 32640,
+    "status": 0,
+    "tgid": 2429
+  },
+  "required": {
+    "call_target": 18446744071602707952,
+    "entry": 18446744071586934632,
+    "source_ip": 18446744071602898807
+  },
+  "translated_target": true
+}

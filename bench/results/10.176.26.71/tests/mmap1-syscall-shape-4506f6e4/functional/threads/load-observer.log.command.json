@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "insmod",
+    "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/scaling-preflight-f9fdaa2a/probe/kd_mmap1_identity.ko",
+    "target=mmap1_threads",
+    "pair_limit=0"
+  ],
+  "cwd": "/root/kdlock-inputs/shape-4506f6e4",
+  "pid": 2579,
+  "started_ns": 460561297184,
+  "timeout_seconds": 30
+}

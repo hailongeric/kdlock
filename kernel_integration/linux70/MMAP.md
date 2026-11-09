@@ -151,7 +151,7 @@ runners remain historical where listed below.
 | `workload_modules/mmap_phase_observer` and `phase_controls/payload` | Compile only. Both refuse module initialization with `-EOPNOTSUPP` because their retained kdmm1 instruction sites have no Linux 7 binding. |
 | `page_fault_completed/payload` | Native and KD live checks each passed 64 entries, completions and returns with zero errors/misses. The current `handle_mm_fault` arguments and exact task/mm lifetime are retained. |
 | `irq/payload` | Private-adapter object check only; no live IRQ/NMI result is implied. |
-| `disabled/run.py` and `disabled/payload/wrappers.c` | Historical 6.1 equivalence fixture, including its removed public writer-try API. It is not a Linux 7 test or a passing skipped case. Linux 7 disabled-mode evidence is the current source/object check plus native BPF fixture controls. |
+| `disabled/run.py` and `disabled/fixture/wrappers.c` | Historical 6.1 equivalence fixture, including its removed public writer-try API. It is not a Linux 7 test or a passing skipped case. Linux 7 disabled-mode evidence is the current source/object check plus native BPF fixture controls. |
 
 Compilation never enables a retired experiment, validates unbound probe sites
 or substitutes for an executed correctness test.

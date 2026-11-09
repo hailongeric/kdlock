@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "accepted_runtime": false,
+  "implementation_commit": "26337db1d722e3f7a239d703496197658bee05e8",
+  "pairs": [
+    {
+      "root": "mmap",
+      "wall_reduction_percent": 41.94338114360527,
+      "speed_ratio": 1.7224564910911164,
+      "system_reduction_percent": 44.47236393802437,
+      "rss_increment_kib": 23956,
+      "artifacts_identical": true,
+      "coverage_identical": true,
+      "lookup_results_identical": true
+    },
+    {
+      "root": "munmap",
+      "wall_reduction_percent": 42.09589770877494,
+      "speed_ratio": 1.726993357000101,
+      "system_reduction_percent": 41.9504938533058,
+      "rss_increment_kib": 23972,
+      "artifacts_identical": true,
+      "coverage_identical": true,
+      "lookup_results_identical": true
+    }
+  ],
+  "baseline_candidate_context_logs_identical_after_normalization": true,
+  "baseline_and_candidate_context_failures": 4,
+  "new_resolver_tests_passed": 26,
+  "diagnostic_tests_passed": 13
+}

@@ -19,6 +19,14 @@
 	KD_MUTEX_DIRECT_UNLOCK((lock)); \
 	(void)0; \
 })
+/* Signalable entries use the common retained admission engine. Their Native
+ * return keeps -EINTR, while the compiler-owned captured entry defines zero. */
+#define kd_mutex_lock_interruptible(lock) \
+	KD_LOCK_DIRECT_RESULT_CALL(kd_mutex_lock_interruptible_clobber_v1, \
+		struct kd_mutex, (lock), "")
+#define kd_mutex_lock_killable(lock) \
+	KD_LOCK_DIRECT_RESULT_CALL(kd_mutex_lock_killable_clobber_v1, \
+		struct kd_mutex, (lock), "")
 
 /* Match the supported non-lockdep native configuration: annotations are not
  * evaluated. Distinct-object nesting is handled by DIRECT's existing protocol;

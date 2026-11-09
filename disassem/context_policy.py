@@ -11,6 +11,7 @@ import context_memory  # Preserve the admission API used by guard consumers.
 import indirect_jump
 import instruction_policy
 import native_escape
+import release_units
 from context_symbols import (
     CONTEXT_SYMBOLS, CONTROL_SYMBOLS, MAX_PERCPU_CPUS, MAX_PERCPU_STATIC_BYTES,
     ContextSymbols, is_context_symbol, load_context_symbols,
@@ -26,6 +27,7 @@ from miasm_compat import expr_args, expr_op, expr_ptr
 
 NATIVE_ONLY_EXIT = 2
 MAX_LOCK_DEPTH = 8
+SERVICE_QUEUE_REQUIREMENT = 1 << 8
 IMPLICIT_SOURCE_MEMORY = {
     "MOVSB",
     "MOVSW",
@@ -48,7 +50,9 @@ IMPLICIT_SOURCE_MEMORY = {
 
 
 def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_history=None,
-                     indirect_call_native=False):
+                     indirect_call_native=False, returning_indirect=False,
+                     nonreturning_targets=(), unit_releases=(), deferred_call_targets=(),
+                     max_visits=65536, discovery_only=False):
     """Select code that can execute before this JIT episode ends.
 
     A missing direct callee transfers the saved CALL state to the original
@@ -57,10 +61,20 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
     edges. Recompute this scope on every translation, including learned targets.
     """
     roots = set(roots)
+    if unit_releases:
+        return release_units.select(
+            blocks, databases, roots, resumable_targets,
+            release_targets=unit_releases, indirect_history=indirect_history or {},
+            deferred_call_targets=deferred_call_targets,
+            nonreturning_targets=nonreturning_targets,
+            indirect_call_native=indirect_call_native,
+            returning_indirect=returning_indirect, max_visits=max_visits,
+            discovery_only=discovery_only)
+    nonreturning_targets = set(nonreturning_targets)
     indirect_history = indirect_history or {}
     if roots - blocks.keys() or (blocks and not roots):
         raise ContextFlowLimit("missing or invalid JIT phase roots")
-    successors, exits = {}, set()
+    successors, exits, terminal_lengths = {}, set(), {}
     for start, block in blocks.items():
         db = databases.get(block)
         if db is None:
@@ -76,6 +90,13 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
             direct = isinstance(line.args[0], (ExprLoc, ExprInt))
             if direct and target is None:
                 raise ContextFlowLimit("unresolved direct CALL target", line.offset)
+            if direct and target in nonreturning_targets:
+                # The source CALL word is real, but no return or decoded
+                # callee belongs to this path. Other incoming branches keep
+                # their own reachability, including a shared successor PC.
+                terminal_lengths[start] = index + 1
+                targets.clear()
+                break
             if direct and target not in blocks and target not in resumable_targets:
                 if index != len(block.lines) - 1:
                     raise ContextFlowLimit(
@@ -84,7 +105,7 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
                 exits.add(start)
                 targets.clear()
                 break
-            if not direct and indirect_call_native and not (
+            if not direct and indirect_call_native and not returning_indirect and not (
                     set(indirect_history.get(next_ip, ())) &
                     (blocks.keys() | set(resumable_targets))):
                 # Every target in this image either has a Native stub or takes
@@ -111,11 +132,13 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
     selected, selected_dbs = {}, {}
     for start in sorted(reached):
         original = block = blocks[start]
-        if start in exits:
+        if start in exits or start in terminal_lengths:
             # Keep a suffix reached by another JIT branch, but remove this
             # native-only edge so its clobbered state cannot reenter analysis.
             block = copy(block)
             block.bto = set()
+            if start in terminal_lengths:
+                block.lines = block.lines[:terminal_lengths[start]]
         selected[start] = block
         selected_dbs[block] = databases[original]
     return selected, selected_dbs, exits & reached
@@ -496,7 +519,9 @@ def instruction_rejection(
 
 
 def critical_section_blocks(
-    blocks, databases, entry, locks, unlocks, extra_targets, *, native_exits=()
+    blocks, databases, entry, locks, unlocks, extra_targets, *, native_exits=(),
+    runtime_delimited=False, retained_candidate=False, nonreturning_targets=(),
+    terminal_sites=None,
 ):
     """Exclude the caller's post-unlock code, but scan discovered callees in full.
 
@@ -504,7 +529,12 @@ def critical_section_blocks(
     Callees and dynamically learned targets have unknown entry depth and cannot
     use an unlock to cut off their admission scan. Runtime still validates locks.
     """
-    pending = deque([(entry, 1)])
+    # A retained-service image does not infer exact ownership from lexical
+    # depth. Follow its finite decoded CFG and leave final release to the
+    # executor's exact acquisition records. Legacy/checked callers retain
+    # the original boundary and its fixed-resource refusal below.
+    pending = deque([(entry, None if runtime_delimited else 1)])
+    nonreturning_targets = set(nonreturning_targets)
     pending.extend((target, None) for target in extra_targets if target != entry)
     visited = set()
     lengths = {}
@@ -528,6 +558,15 @@ def critical_section_blocks(
                     stopped = True
                     break
                 target = static_address(line.args[0], db, next_ip)
+                if target in nonreturning_targets:
+                    stopped = True
+                    break
+                if (retained_candidate and not runtime_delimited and depth is None
+                        and target in locks | unlocks):
+                    # The caller's count does not include locks returned from
+                    # an ordinary callee. Do not trim the caller at its outer
+                    # release before exact runtime records can delimit it.
+                    return blocks, (offset, "callee lock scope needs retained ownership records")
                 if target in locks and depth is not None:
                     depth += 1
                     if depth > MAX_LOCK_DEPTH:
@@ -538,6 +577,8 @@ def critical_section_blocks(
                 elif target in unlocks and depth is not None:
                     depth -= 1
                     if depth == 0:
+                        if terminal_sites is not None:
+                            terminal_sites.add(line.offset)
                         stopped = True
                         break
                 elif target in blocks and target not in locks | unlocks:
@@ -560,3 +601,41 @@ def critical_section_blocks(
             if db.get_location_offset(edge.loc_key) in selected
         }
     return selected, None
+
+
+def terminal_clobber_sites(blocks, databases, entry, locks, unlocks, extra_targets,
+                           terminal_targets, *, native_exits=(), retained_candidate=False,
+                           nonreturning_targets=()):
+    """Reuse the existing lexical scope solely to preserve its old fast exits.
+
+    This grants no new ownership fact: the emitted clobber checks still decide
+    the exact outer identity and absence of live nested owners at runtime.
+    Every newly shortened unit remains outside this compatibility exemption.
+    """
+    private, private_dbs = {}, {}
+    for start, original in blocks.items():
+        block = copy(original)
+        block.lines, block.bto = list(original.lines), set(original.bto)
+        private[start], private_dbs[block] = block, databases[original]
+    # An early decoder stop can hide the old inner-unlock successor. Its
+    # absence is not proof of an old final exit. Keep the compatibility case
+    # free of additional reached acquisitions, without pairing any objects.
+    if any(line.name in {'CALL', 'JMP'} and line.args
+           and static_address(line.args[0], private_dbs[block], line.offset + line.l)
+                in set(locks) - {0, None}
+           for block in private.values() for line in block.lines):
+        return set()
+    lexical_endpoints = set()
+    selected, error = critical_section_blocks(
+        private, private_dbs, entry, locks, unlocks, extra_targets,
+        native_exits=native_exits, retained_candidate=retained_candidate,
+        nonreturning_targets=nonreturning_targets, terminal_sites=lexical_endpoints)
+    if error:
+        return set()
+    offsets = {line.offset for block in selected.values() for line in block.lines}
+    return {line.offset for block in selected.values() for line in block.lines
+            if line.name == 'CALL' and line.args
+            and line.offset in lexical_endpoints
+            and static_address(line.args[0], private_dbs[block], line.offset + line.l)
+                in terminal_targets
+            and line.offset + line.l not in offsets}

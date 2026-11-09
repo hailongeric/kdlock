@@ -43,25 +43,23 @@ static ssize_t read_sys(void *buffer, size_t size)
 
 /* Transfer bounded payload chunks on the original device. Final status marks
  * readiness, not protection for an executor of a previous in-place image. */
-static int write_sys(const struct daemon_config *cfg,
-		     const struct kd_exe_info *exe)
+static int write_sys_at(const struct daemon_config *cfg,
+		const struct kd_exe_info *exe, bool cache_hit, const char *jit_path,
+		const struct kd_learning_snapshot *snapshot)
 {
 	unsigned char buffer[sizeof(struct kd_recv_pkt) + MAX_PAYLOAD];
+	struct provenance_upload evidence = { 0 };
 	static unsigned long upload_sequence;
 	struct kd_recv_pkt pkt = {
 		.version = KD_IMAGE_PROTOCOL,
 		.entry_abi = exe->entry_abi,
 		.base_generation = exe->generation,
 	};
-	char jit_path[512];
-	char workspace[256];
 	size_t remaining;
 	long image_size;
 	FILE *fp;
 
-	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
-
+	(void)cfg;
 	fp = fopen(jit_path, "rb");
 	if (!fp) {
 		fprintf(stderr, "daemon: failed to open %s: %s\n", jit_path,
@@ -82,10 +80,14 @@ static int write_sys(const struct daemon_config *cfg,
 		return -1;
 	}
 	{
-		unsigned char header[KD_IMAGE_HEADER_SIZE];
+		unsigned char header[KD_IMAGE_SERVICE_HEADER_SIZE];
+		size_t header_size = (unsigned long)image_size < sizeof(header) ?
+			(size_t)image_size : sizeof(header);
+		unsigned int requirements;
 		bool directory;
 
-		if (fread(header, 1, sizeof(header), fp) != sizeof(header)) {
+		if (fread(header, 1, header_size, fp) != header_size ||
+		    header_size < KD_IMAGE_HEADER_SIZE) {
 			fclose(fp);
 			return -1;
 		}
@@ -94,15 +96,16 @@ static int write_sys(const struct daemon_config *cfg,
 		            !memcmp(header + 41, "KDAB", 4);
 		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
 		    !directory || header[45] != exe->entry_abi ||
-		    header[KD_IMAGE_VERSION_OFFSET] != KD_IMAGE_PROTOCOL ||
+		    !kd_image_header_requirements(header, header_size, &requirements) ||
 		    !kd_image_requirements_valid(exe->lock_kind, exe->entry_abi,
-					header[KD_IMAGE_REQUIREMENTS_OFFSET]) ||
+					requirements) ||
 		    fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);
 			return -1;
 		}
-		pkt.requirements = header[KD_IMAGE_REQUIREMENTS_OFFSET];
+		pkt.requirements = requirements;
+		pkt.version = header[KD_IMAGE_VERSION_OFFSET];
 	}
 	remaining = (size_t)image_size;
 	pkt.image_length = remaining;
@@ -111,6 +114,30 @@ static int write_sys(const struct daemon_config *cfg,
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
 	pkt.offset = 0;
+	if (snapshot) {
+		struct kd_learning_bind binding = {
+			.version = KD_LEARNING_API_VERSION,
+			.size = sizeof(binding), .token = snapshot->token,
+			.root = snapshot->root,
+			.base_generation = snapshot->base_generation,
+			.revision = snapshot->revision, .upload_id = pkt.upload_id,
+		};
+		int result;
+
+		do {
+			result = ioctl(sys_fd, KD_LEARNING_BIND, &binding);
+		} while (result < 0 && errno == EINTR);
+		if (result) {
+			int error = errno;
+
+			fclose(fp);
+			errno = error;
+			return -1;
+		}
+	}
+	provenance_learning = snapshot;
+	provenance_upload_begin(&evidence, exe, &pkt, cache_hit);
+	provenance_learning = NULL;
 
 	while (remaining) {
 		size_t chunk = remaining < MAX_PAYLOAD ? remaining :
@@ -139,15 +166,30 @@ static int write_sys(const struct daemon_config *cfg,
 					written, packet_size);
 			goto error;
 		}
+		if (remaining == chunk)
+			provenance_upload_time(&evidence);
+		provenance_upload_chunk(&evidence, buffer + sizeof(pkt), chunk);
 
 		remaining -= chunk;
 		pkt.offset += chunk;
 	}
 
+	provenance_upload_end(&evidence, true);
 	fclose(fp);
 	return 0;
 
 error:
+	provenance_upload_end(&evidence, false);
 	fclose(fp);
 	return -1;
+}
+
+static int write_sys(const struct daemon_config *cfg,
+		     const struct kd_exe_info *exe, bool cache_hit)
+{
+	char jit_path[512], workspace[256];
+
+	workspace_path(workspace, sizeof(workspace), cfg, exe);
+	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
+	return write_sys_at(cfg, exe, cache_hit, jit_path, NULL);
 }

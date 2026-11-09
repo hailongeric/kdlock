@@ -1,6 +1,6 @@
 RB_WORKLOAD ?= cacheline
 ifneq ($(words $(RB_WORKLOAD)),1)
-$(error RB_WORKLOAD requires one payload name)
+$(error RB_WORKLOAD requires one workload name)
 endif
 ifneq ($(filter $(RB_WORKLOAD),cacheline rcuht taskname argbounds nano),$(RB_WORKLOAD))
 $(error unsupported RB_WORKLOAD)

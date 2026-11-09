@@ -1,0 +1,47 @@
+make: Entering directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module'
+make -C /mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build M=/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module modules
+make[1]: Entering directory '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'
+make[2]: Entering directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module'
+  CC [M]  kd_main.o
+  CC [M]  kd_bench.o
+  CC [M]  kd_api_provider.o
+  CC [M]  kd_lock.o
+  CC [M]  kd_hotlock.o
+  CC [M]  sys.o
+  CC [M]  kd_spin_runtime.o
+  CC [M]  kd_source.o
+  CC [M]  kd_family.o
+  CC [M]  kd_spin_entry.o
+  CC [M]  kd_mutex_tasks.o
+  CC [M]  kd_wait_queue.o
+  CC [M]  kd_admission.o
+  CC [M]  kd_mutex_local.o
+  CC [M]  kd_mutex_osq.o
+  CC [M]  kd_rwsem.o
+  CC [M]  kd_rwsem_api.o
+  CC [M]  kd_rwsem_provider.o
+  CC [M]  kd_service_api.o
+  CC [M]  kd_service_calls.o
+  AS [M]  kd_service_call_entry.o
+  LD [M]  kdlock_km.o
+  MODPOST Module.symvers
+  CC [M]  kdlock_km.mod.o
+  CC [M]  .module-common.o
+  LD [M]  kdlock_km.ko
+  BTF [M] kdlock_km.ko
+make[2]: Leaving directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module'
+make[1]: Leaving directory '/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build'
+make: Leaving directory '/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module'
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: x86_64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+  You are using:           gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+kdlock_km.o: warning: objtool: kd_spin_restore_request+0x6a: 'naked' return found in MITIGATION_RETHUNK build
+kdlock_km.o: warning: objtool: jump_to_saved_regs+0x43: 'naked' return found in MITIGATION_RETHUNK build
+kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x73: 'naked' return found in MITIGATION_RETHUNK build
+kdlock_km.o: warning: objtool: kd_jump_to_saved_regs_with_flags+0x60: return with modified stack frame
+kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0x17c: undefined stack state
+kdlock_km.o: warning: objtool: run_combiner+0x13db: call without frame pointer save/setup
+kdlock_km.o: warning: objtool: _kd_mutex_lock_abi+0x232: call without frame pointer save/setup
+kdlock_km.o: warning: objtool: kd_service_origin_bridge+0x2b: call without frame pointer save/setup
+kdlock_km.o: warning: objtool: kd_service_origin_terminal_bridge+0x17: call without frame pointer save/setup
+kdlock_km.o: warning: objtool: kd_service_memory_bridge+0x2b: call without frame pointer save/setup

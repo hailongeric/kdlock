@@ -34,6 +34,8 @@ Trusted translation does not extend that MM integration scope.
 | [native_escape.py](native_escape.py) | Exact instruction-marker lowering and retained runtime protocol scope |
 | [origin_instructions.py](origin_instructions.py) | ABI2 original-task instruction directory and flags/budget-preserving reentry |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
+| [kernel_symbols.py](kernel_symbols.py) | Per-translation positive core reuse through `_etext`; dynamic, missing and zero lookups remain live |
+| [source_frontier.py](source_frontier.py) | Exact reached instruction decoding and permanent retained handback, without a learning edge |
 | [instruction_policy.py](instruction_policy.py), [context_policy.py](context_policy.py), `context_symbols.py` | Optional checked-mode instruction and context screening; shared CFG helpers |
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Optional bounded value and memory analysis |
 | `context_guards.py`, `entry_abi.py`, [constant_paths.py](constant_paths.py), [address_guards.py](address_guards.py), [guard_flags.py](guard_flags.py) | Optional checked-mode input, branch and address proofs |
@@ -80,6 +82,24 @@ Generated control flow retains actual CALL/RET operations and the return
 whitelist. Source leases, physical owners, acquisition records, unlock ACKs,
 frame retirement and normal drain remain enforced by the existing runtime.
 A NORMAL image is publication evidence, not a completed delegated body.
+
+Return continuations also propagate through an observed indirect JMP when its
+exact source/target history pair leads to an already decoded block. Such a tail
+keeps the existing caller word. Indirect CALL and RET dispatch targets are not
+tail successors; neither are filtered terminal-service targets. This uses the
+existing return-analysis work budget and adds no text read, decoded block or
+CALL-depth expansion. A missing relationship still takes the existing retained
+handback. A small source fixture can test this relationship without establishing
+that the saved munmap g9 image executed or that all return paths are covered.
+
+Direct CALLs seed return continuations in the existing analysis. Learned
+indirect CALLs retain dynamic RET learning: a forward target alone does not
+infer the callee's return edge. The CALL pushes its real source continuation;
+an unknown RET target pops it once and hands back at that target. An admitted
+RET report can supply the exact edge for a later build and invocation, subject
+to the existing source, translation and publication limits. This inherited
+behavior adds no continuation inference or extra decoding. Focused regressions
+cover the separate miss and later-build steps, including their stack effects.
 
 KD-only mutex images remain immutable and require the negotiated exclusive-KD
 and immutable-image capabilities. Exact instruction markers keep their existing

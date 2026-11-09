@@ -166,7 +166,7 @@ static bool ring_wait_until_queued(struct task_struct *task)
 static int ring_cancellation(unsigned int victim)
 {
 	struct ring_waiter waiters[3];
-	struct kd_local_waiter *first;
+	struct kd_wait_node *first;
 	unsigned int i, tries, expected = 0, started = 0;
 	bool handoff = false;
 	int ret = 0;

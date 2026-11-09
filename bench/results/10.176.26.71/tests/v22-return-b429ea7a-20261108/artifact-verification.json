@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "artifacts": [
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/v22-return-b429ea7a-20261108/final-checks.tar.gz",
+      "bytes": 42534931,
+      "sha256": "f3fd90253129f96c09a537b294840140e359af896cf9d5c4cdd0838770fceba4"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/v22-return-b429ea7a-20261108/final-inputs.tar.gz",
+      "bytes": 2886726,
+      "sha256": "8789542633f7d91c1418df9de9a58ebdba147f8428b4cdd005d9aacdd9fee15f"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/v22-return-b429ea7a-20261108/initial-checks.tar.gz",
+      "bytes": 42534965,
+      "sha256": "6c312629b67ea94509a712e947f435019038830d934f0c97f9ea42f8d45b119b"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/v22-return-b429ea7a-20261108/initial-inputs.tar.gz",
+      "bytes": 2886553,
+      "sha256": "463b3e7be56a6be55dface3ba1468081528886fc94111b9d18c248b8da8f2f2f"
+    }
+  ]
+}

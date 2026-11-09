@@ -71,7 +71,7 @@ alongside the payload name; the name alone does not identify a comparison.
 The ten configurations account for 630 points. Existing runner identifiers and
 archived paths remain unchanged; this guide names the actual payloads.
 [best_case.py](../bench/nano/best_case.py) defines their parameters;
-[rwlock_bench/payload.h](../workload_modules/rwlock_bench/payload.h) supplies the
+[rwlock_bench/body.h](../workload_modules/rwlock_bench/body.h) supplies the
 current cacheline body. KD mutex defaults are cap 1024, locality boundary 1024,
 deferred handoff threshold eight and scan budget 64. Equal limits remove the
 earlier count-based local cutoff while retaining terminal/deferred queue handling.

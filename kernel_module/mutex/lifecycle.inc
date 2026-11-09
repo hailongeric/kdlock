@@ -27,6 +27,10 @@ static void kd_mutex_free_percpu_stacks(void)
 		shadow->node_slots = 0;
 		shadow->resume_node = NULL;
 	}
+	if (kd_mutex_wait_pools) {
+		free_percpu(kd_mutex_wait_pools);
+		kd_mutex_wait_pools = NULL;
+	}
 }
 
 int kd_mutex_init_percpu(void)
@@ -36,6 +40,9 @@ int kd_mutex_init_percpu(void)
 
 	if (ret)
 		return ret;
+	kd_mutex_wait_pools = alloc_percpu(struct kd_mutex_wait_pool);
+	if (!kd_mutex_wait_pools)
+		return -ENOMEM;
 
 	/* Per-CPU alignment alone does not isolate the four array elements. */
 	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
@@ -95,8 +102,12 @@ int kd_mutex_init_percpu(void)
 		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
 			struct kd_mutex_node *node =
 				per_cpu_ptr(&kd_mutex_nodes[j], i);
+			struct kd_mutex_wait_record *record =
+				&per_cpu_ptr(kd_mutex_wait_pools, i)->records[j];
 			void *node_stack = vzalloc_node(KD_MUTEX_SHADOW_STACK_SIZE, cpu_to_node(i));
 
+			raw_spin_lock_init(&record->lifecycle_guard);
+			record->request_live = false;
 			node->slot = j;
 			node->osq.tail = kd_mutex_encode_tail(i, j);
 			node->osq.locked = KD_MUTEX_OSQ_IDLE;
@@ -125,6 +136,8 @@ err_free:
 bool kd_mutex_check_idle(void)
 {
 	int cpu;
+	if (!kd_service_idle())
+		return false;
 
 	/* Controlled drain stops callers first. Never use an approximate sum:
 	 * a reserved sleeping executor or an imbalance on any CPU keeps us busy.

@@ -2,6 +2,7 @@
 /* Public continuation capture; the generated MM backend never links this file. */
 #include <linux/module.h>
 #include "kd_rwsem_api.h"
+#include "kd_service_api.h"
 
 int kd_rwsem_prepare(struct kd_rwsem *sem, unsigned long ip, unsigned int abi)
 {
@@ -31,14 +32,48 @@ __attribute__((noipa)) noinline notrace void
 kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
                               unsigned long ip, unsigned long bp)
 {
-	/* This is the original task before publication. Reader drainage may
-	 * sleep here; the mutex entry receives the caller's actual continuation,
-	 * never a continuation inside this returning helper. */
+	/* Continuation capability is quiescent. The common engine owns selection,
+	 * reader readiness and exact retirement, rather than pre-draining a cohort. */
 	if (!READ_ONCE(sem->prepared_writes)) {
 		(kd_down_write)(sem);
 		return;
 	}
-	kd_rwsem_delegate_enter(sem);
-	kd_mutex_direct_lock_clobber_v1(&sem->gate, sp, ip, bp);
+	BUG_ON(kd_service_capture(sem, KD_ADMISSION_RWSEM_WRITE,
+				 TASK_UNINTERRUPTIBLE, sp, ip, bp));
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_down_write_clobber_v1);
+
+__attribute__((noipa)) noinline notrace int
+kd_rwsem_down_write_interruptible_clobber_v1(struct kd_rwsem *sem,
+	unsigned long sp, unsigned long ip, unsigned long bp)
+{
+	if (!READ_ONCE(sem->prepared_writes))
+		return (kd_down_write_interruptible)(sem);
+	return kd_service_capture(sem, KD_ADMISSION_RWSEM_WRITE,
+				  TASK_INTERRUPTIBLE, sp, ip, bp);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_down_write_interruptible_clobber_v1);
+
+__attribute__((noipa)) noinline notrace int
+kd_rwsem_down_write_killable_clobber_v1(struct kd_rwsem *sem,
+	unsigned long sp, unsigned long ip, unsigned long bp)
+{
+	if (!READ_ONCE(sem->prepared_writes))
+		return (kd_down_write_killable)(sem);
+	return kd_service_capture(sem, KD_ADMISSION_RWSEM_WRITE, TASK_KILLABLE,
+				  sp, ip, bp);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_down_write_killable_clobber_v1);
+
+__attribute__((noipa)) noinline notrace void
+kd_rwsem_up_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,
+	unsigned long ip, unsigned long bp)
+{
+	/* Runtime consumes this typed CALL when the body is proxied. Native
+	 * execution uses the ordinary C release, including its exact owner route. */
+	(void)sp;
+	(void)ip;
+	(void)bp;
+	(kd_up_write)(sem);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_up_write_clobber_v1);

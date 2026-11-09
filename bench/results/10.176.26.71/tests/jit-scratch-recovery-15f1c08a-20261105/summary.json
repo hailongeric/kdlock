@@ -1,0 +1,428 @@
+{
+  "accepted": false,
+  "additional_segment_wrapper_corpus_passed": true,
+  "branch": "codex/mmap-reached-jit",
+  "daemon_sha256": "9a80d79d1c43d7c1be8a27fdc2bd2cfd0c278ba76c855e581a85a0ad962bf413",
+  "delegation_proved": false,
+  "every_registered_root_joined_to_benchmark_worker": false,
+  "exact_miss_history_edges_captured": false,
+  "experimental_boot_id": "95abf641-2398-4758-ba85-7937cc651622",
+  "final_space_bytes": {
+    "/": 3466293248,
+    "/mnt/kdlock-builds": 15129886720,
+    "/mnt/kdlock-builds2": 9039945728
+  },
+  "kernel_build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1",
+  "kernel_component_commit": "1ab7124abb6140752c1f0bb6e862144d426a3875",
+  "measurement": {
+    "collector_cpu": 63,
+    "exact_elapsed_interval_observed": false,
+    "learning_deadline_seconds": 900,
+    "learning_lifetimes_per_model": 3,
+    "method": "sum of the two post-marker upstream sample totals divided by 2",
+    "scored_points_actually_run": 0,
+    "scored_rounds_per_point": 1,
+    "unit": "mmap/munmap pairs per nominal second",
+    "upstream_commit": "75f66e45697e6f5f49c33dd950c4e6b289198f8f",
+    "worker_cpus": [
+      0,
+      1
+    ],
+    "workers": 2
+  },
+  "models": {
+    "processes": {
+      "accepted": false,
+      "all_latest_objects_complete": true,
+      "comparison_state": "LEARNING_ADVANCED",
+      "compiler_jobs": 51,
+      "compiler_jobs_all_succeeded": true,
+      "compiler_max_wall_seconds": 13.785040513,
+      "compiler_median_wall_seconds": 13.157724112,
+      "compiler_total_wall_seconds": 674.220209611,
+      "corrected_map_vdso_image": [
+        {
+          "complete": true,
+          "contexts": [
+            "CMP R14, 0xffffffff813a3726\nJE kd_service_dispatch_ffffffff813a3726\nCMP R14, 0xffffffff817f709d\nJE kd_service_dispatch_ffffffff817f709d\nCMP R14, 0xffffffff817f70d4\nJE kd_service_dispatch_ffffffff817f70d4\nCMP R14, 0xffffffff817f7118\nJE kd_service_dispatch_ffffffff817f7118\nCMP R14, 0xffffffff817f7170\nJE kd_service_dispatch_ffffffff817f7170\nCMP R14, 0xffffffff817f71bc\nJE kd_service_dispatch_ffffffff817f71bc",
+            "JE kd_service_dispatch_ffffffff813a3726\nCMP R14, 0xffffffff817f709d\nJE kd_service_dispatch_ffffffff817f709d\nCMP R14, 0xffffffff817f70d4\nJE kd_service_dispatch_ffffffff817f70d4\nCMP R14, 0xffffffff817f7118\nJE kd_service_dispatch_ffffffff817f7118\nCMP R14, 0xffffffff817f7170\nJE kd_service_dispatch_ffffffff817f7170\nCMP R14, 0xffffffff817f71bc\nJE kd_service_dispatch_ffffffff817f71bc\nCMP R14, 0xffffffff817f728a",
+            "CMP     R14, 0xffffffff817f70cf\nJZ      kd_dispatch_ffffffff817f70cf\nCMP     R14, 0xffffffff817f70d4\nJZ      kd_dispatch_ffffffff817f70d4\nCMP     R14, 0xffffffff817f7100\nJZ      kd_dispatch_ffffffff817f7100\nCMP     R14, 0xffffffff817f7118\nJZ      kd_dispatch_ffffffff817f7118\nCMP     R14, 0xffffffff817f7127\nJZ      kd_dispatch_ffffffff817f7127\nCMP     R14, 0xffffffff817f7148\nJZ      kd_dispatch_ffffffff817f7148",
+            "JZ      kd_dispatch_ffffffff817f70cf\nCMP     R14, 0xffffffff817f70d4\nJZ      kd_dispatch_ffffffff817f70d4\nCMP     R14, 0xffffffff817f7100\nJZ      kd_dispatch_ffffffff817f7100\nCMP     R14, 0xffffffff817f7118\nJZ      kd_dispatch_ffffffff817f7118\nCMP     R14, 0xffffffff817f7127\nJZ      kd_dispatch_ffffffff817f7127\nCMP     R14, 0xffffffff817f7148\nJZ      kd_dispatch_ffffffff817f7148\nCMP     R14, 0xffffffff817f7154",
+            "MOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f70d4\nkd_dispatch_ffffffff817f7100:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7100\nkd_dispatch_ffffffff817f7118:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7118\nkd_dispatch_ffffffff817f7127:\nPOPFQ",
+            "POPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7100\nkd_dispatch_ffffffff817f7118:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7118\nkd_dispatch_ffffffff817f7127:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7127\nkd_dispatch_ffffffff817f7148:"
+          ],
+          "object_sha256": "56e8c0f7ef73bb1060acba529b309f5c7ada14a3a76bac8c10c7d05f50bfc715",
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff81344abb/3596/asm/jit.o",
+          "unnamed_spill": false
+        }
+      ],
+      "daemon_log_sha256": "bc6488012b82339278d911bcdb2cebc626e500cdde8b7cf9ced74ae3f44a7c42",
+      "delegation_proved": false,
+      "image_hash_changes_per_learning_lifetime": [
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          },
+          "jit.bin": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          },
+          "jit.bin": {
+            "changed_hashes": 13,
+            "shared_entries": 13
+          }
+        }
+      ],
+      "learning": [
+        {
+          "descriptive_change_vs_native_percent": -50.82883819286393,
+          "drained": true,
+          "index": 0,
+          "passed": true,
+          "rate": 329256.0,
+          "registry_added": 1,
+          "registry_changed": 12,
+          "scored": false,
+          "source_result": "learning-00/result.json"
+        },
+        {
+          "descriptive_change_vs_native_percent": -50.62424209840923,
+          "drained": true,
+          "index": 1,
+          "passed": true,
+          "rate": 330626.0,
+          "registry_added": 0,
+          "registry_changed": 13,
+          "scored": false,
+          "source_result": "learning-01/result.json"
+        },
+        {
+          "descriptive_change_vs_native_percent": -50.535384670525616,
+          "drained": true,
+          "index": 2,
+          "passed": true,
+          "rate": 331221.0,
+          "registry_added": 0,
+          "registry_changed": 13,
+          "scored": false,
+          "source_result": "learning-02/result.json"
+        }
+      ],
+      "native_control_application_sha256": "531c9a420aa5fa8bd0fea3a67285d6488db349f54fb69ab632031fe5d768eb94",
+      "native_control_boot_id": "b3e73924-47d9-48ce-a45c-baee018d123e",
+      "native_control_rate": 669612.0,
+      "native_control_result_sha256": "3b94ba22e4a4b010c0bc90d433ccf21b5fad65f591d4446436879eadd1a602f4",
+      "native_control_runtime_commit": "805e29f3d4c11f602740c066a7ac26c5689d2ef3",
+      "objects": [
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff81344abb/3596/asm/jit.o",
+          "sha256": "56e8c0f7ef73bb1060acba529b309f5c7ada14a3a76bac8c10c7d05f50bfc715",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817b6f68/3596/asm/jit.o",
+          "sha256": "ad1438e772dfe0fd8eb542d2aa760341173d35a4d0c3b3099f1eaa8685c764a6",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817f7413/3596/asm/jit.o",
+          "sha256": "96f16b431828be5216e0f65ed0c4efdab7da944e9cc3820761ded1c19e1b3052",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817f79a5/3596/asm/jit.o",
+          "sha256": "a51a8292ae27d225d2f53faeb6ee64690e10ac9a5b520726e084139c41b0c2ae",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817f9283/3597/asm/jit.o",
+          "sha256": "65c8efe0f6f1a5c05cdc362b75c344ebcccd76549d3f37a8c8fb52d9e3050997",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817f9ae5/3709/asm/jit.o",
+          "sha256": "cf7b4087b88f1e709f42fb8aa88dbdfd4c7c4464cfae1f2c4c7f6f0d6d49fa11",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817f9b47/3595/asm/jit.o",
+          "sha256": "0da600843ae82f72168058c23b4ecba8ec7f2ea4d43d0927c440dbf9c88b88a8",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff817fd913/3596/asm/jit.o",
+          "sha256": "71ed3d1e058e73e3de70d118bb519fab8d738b19388348bd8aa10669a946fbbc",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff818007de/3600/asm/jit.o",
+          "sha256": "3e0fb62e35f92bc456b221dc51408e9867e2bde670509b329259af064ff9266d",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff8181c73b/3596/asm/jit.o",
+          "sha256": "b977957f21666c32d7c4a578c4a161bf50821bff2905d76f66324def1f844c33",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff8181cc7d/3596/asm/jit.o",
+          "sha256": "65f51df3bc094809e562457e816cb5c083264ee9e3a7e7f7965ebcde57d06ad8",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff818e077d/3596/asm/jit.o",
+          "sha256": "7d4e9968c9b108aa78d8f5d49411d37309e46c0bc548ee63e6afb29f4179954b",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-processes/run/workspace/daemon/0xffffffff819891c2/3596/asm/jit.o",
+          "sha256": "d7643b74e4d3ef2b03a86017452da5ee12140a466ed0bc0bc7a4cc7399925a34",
+          "unnamed_spill": false
+        }
+      ],
+      "scored_points_run": 0,
+      "unnamed_spills": 0
+    },
+    "threads": {
+      "accepted": false,
+      "all_latest_objects_complete": true,
+      "comparison_state": "LEARNING_ADVANCED",
+      "compiler_jobs": 48,
+      "compiler_jobs_all_succeeded": true,
+      "compiler_max_wall_seconds": 13.82970944,
+      "compiler_median_wall_seconds": 13.2075689395,
+      "compiler_total_wall_seconds": 634.3653299980001,
+      "corrected_map_vdso_image": [
+        {
+          "complete": true,
+          "contexts": [
+            "CMP R14, 0xffffffff813a3726\nJE kd_service_dispatch_ffffffff813a3726\nCMP R14, 0xffffffff817f709d\nJE kd_service_dispatch_ffffffff817f709d\nCMP R14, 0xffffffff817f70d4\nJE kd_service_dispatch_ffffffff817f70d4\nCMP R14, 0xffffffff817f7118\nJE kd_service_dispatch_ffffffff817f7118\nCMP R14, 0xffffffff817f7170\nJE kd_service_dispatch_ffffffff817f7170\nCMP R14, 0xffffffff817f71bc\nJE kd_service_dispatch_ffffffff817f71bc",
+            "JE kd_service_dispatch_ffffffff813a3726\nCMP R14, 0xffffffff817f709d\nJE kd_service_dispatch_ffffffff817f709d\nCMP R14, 0xffffffff817f70d4\nJE kd_service_dispatch_ffffffff817f70d4\nCMP R14, 0xffffffff817f7118\nJE kd_service_dispatch_ffffffff817f7118\nCMP R14, 0xffffffff817f7170\nJE kd_service_dispatch_ffffffff817f7170\nCMP R14, 0xffffffff817f71bc\nJE kd_service_dispatch_ffffffff817f71bc\nCMP R14, 0xffffffff817f728a",
+            "CMP     R14, 0xffffffff817f70cf\nJZ      kd_dispatch_ffffffff817f70cf\nCMP     R14, 0xffffffff817f70d4\nJZ      kd_dispatch_ffffffff817f70d4\nCMP     R14, 0xffffffff817f7100\nJZ      kd_dispatch_ffffffff817f7100\nCMP     R14, 0xffffffff817f7118\nJZ      kd_dispatch_ffffffff817f7118\nCMP     R14, 0xffffffff817f7127\nJZ      kd_dispatch_ffffffff817f7127\nCMP     R14, 0xffffffff817f7148\nJZ      kd_dispatch_ffffffff817f7148",
+            "JZ      kd_dispatch_ffffffff817f70cf\nCMP     R14, 0xffffffff817f70d4\nJZ      kd_dispatch_ffffffff817f70d4\nCMP     R14, 0xffffffff817f7100\nJZ      kd_dispatch_ffffffff817f7100\nCMP     R14, 0xffffffff817f7118\nJZ      kd_dispatch_ffffffff817f7118\nCMP     R14, 0xffffffff817f7127\nJZ      kd_dispatch_ffffffff817f7127\nCMP     R14, 0xffffffff817f7148\nJZ      kd_dispatch_ffffffff817f7148\nCMP     R14, 0xffffffff817f7154",
+            "MOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f70d4\nkd_dispatch_ffffffff817f7100:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7100\nkd_dispatch_ffffffff817f7118:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7118\nkd_dispatch_ffffffff817f7127:\nPOPFQ",
+            "POPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7100\nkd_dispatch_ffffffff817f7118:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7118\nkd_dispatch_ffffffff817f7127:\nPOPFQ\nMOV             Stack_JIT_WITNESS, 1\nJMP     loc_ffffffff817f7127\nkd_dispatch_ffffffff817f7148:"
+          ],
+          "object_sha256": "56e8c0f7ef73bb1060acba529b309f5c7ada14a3a76bac8c10c7d05f50bfc715",
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff81344abb/2483/asm/jit.o",
+          "unnamed_spill": false
+        }
+      ],
+      "daemon_log_sha256": "0a6ae32241aeee445eda5f6114a185b49aed2a793b681be8e25ee709dd71e67c",
+      "delegation_proved": false,
+      "image_hash_changes_per_learning_lifetime": [
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        },
+        {
+          "jit.S": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          },
+          "jit.bin": {
+            "changed_hashes": 12,
+            "shared_entries": 12
+          }
+        }
+      ],
+      "learning": [
+        {
+          "descriptive_change_vs_native_percent": -57.54192281182644,
+          "drained": true,
+          "index": 0,
+          "passed": true,
+          "rate": 106568.5,
+          "registry_added": 0,
+          "registry_changed": 12,
+          "scored": false,
+          "source_result": "learning-00/result.json"
+        },
+        {
+          "descriptive_change_vs_native_percent": -60.12283015334845,
+          "drained": true,
+          "index": 1,
+          "passed": true,
+          "rate": 100090.5,
+          "registry_added": 0,
+          "registry_changed": 12,
+          "scored": false,
+          "source_result": "learning-01/result.json"
+        },
+        {
+          "descriptive_change_vs_native_percent": -59.47840014024073,
+          "drained": true,
+          "index": 2,
+          "passed": true,
+          "rate": 101708.0,
+          "registry_added": 0,
+          "registry_changed": 12,
+          "scored": false,
+          "source_result": "learning-02/result.json"
+        }
+      ],
+      "native_control_application_sha256": "00b41d7f47da1ca45a05ead77a9b1982c50674798416314fd8cdf48a231bb83c",
+      "native_control_boot_id": "b3e73924-47d9-48ce-a45c-baee018d123e",
+      "native_control_rate": 250997.0,
+      "native_control_result_sha256": "96bcb64f0e8e4bce39d48071deb21dabebf833814326de19d9d8198e0b74d2de",
+      "native_control_runtime_commit": "805e29f3d4c11f602740c066a7ac26c5689d2ef3",
+      "objects": [
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff81344abb/2483/asm/jit.o",
+          "sha256": "56e8c0f7ef73bb1060acba529b309f5c7ada14a3a76bac8c10c7d05f50bfc715",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817b6f68/2483/asm/jit.o",
+          "sha256": "ad1438e772dfe0fd8eb542d2aa760341173d35a4d0c3b3099f1eaa8685c764a6",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817f7413/2483/asm/jit.o",
+          "sha256": "96f16b431828be5216e0f65ed0c4efdab7da944e9cc3820761ded1c19e1b3052",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817f79a5/2483/asm/jit.o",
+          "sha256": "a51a8292ae27d225d2f53faeb6ee64690e10ac9a5b520726e084139c41b0c2ae",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817f9283/2484/asm/jit.o",
+          "sha256": "65c8efe0f6f1a5c05cdc362b75c344ebcccd76549d3f37a8c8fb52d9e3050997",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817f9b47/2482/asm/jit.o",
+          "sha256": "0da600843ae82f72168058c23b4ecba8ec7f2ea4d43d0927c440dbf9c88b88a8",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff817fd913/2483/asm/jit.o",
+          "sha256": "71ed3d1e058e73e3de70d118bb519fab8d738b19388348bd8aa10669a946fbbc",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff818007de/2487/asm/jit.o",
+          "sha256": "3e0fb62e35f92bc456b221dc51408e9867e2bde670509b329259af064ff9266d",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff8181c73b/2483/asm/jit.o",
+          "sha256": "b977957f21666c32d7c4a578c4a161bf50821bff2905d76f66324def1f844c33",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff8181cc7d/2483/asm/jit.o",
+          "sha256": "65f51df3bc094809e562457e816cb5c083264ee9e3a7e7f7965ebcde57d06ad8",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff818e077d/2483/asm/jit.o",
+          "sha256": "7d4e9968c9b108aa78d8f5d49411d37309e46c0bc548ee63e6afb29f4179954b",
+          "unnamed_spill": false
+        },
+        {
+          "complete": true,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/spill-15f1c08a/kd-threads/run/workspace/daemon/0xffffffff819891c2/2483/asm/jit.o",
+          "sha256": "d7643b74e4d3ef2b03a86017452da5ee12140a466ed0bc0bc7a4cc7399925a34",
+          "unnamed_spill": false
+        }
+      ],
+      "scored_points_run": 0,
+      "unnamed_spills": 0
+    }
+  },
+  "nano_run": false,
+  "normal_recovery": {
+    "boot_id": "a2264466-7090-4587-baf8-177d7394f485",
+    "grub_environment": "next_entry=\n",
+    "idle": true,
+    "release": "7.0.0-38-kdlock1",
+    "verification": {
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    }
+  },
+  "physical_batch_length_measured": false,
+  "provider_build_passed": true,
+  "provider_sha256": "1a682473d413ff09569114d62452eb2eeb5fa7064f56476f0ab97b252d7235d7",
+  "runtime_commit": "15f1c08a3a52ed271fcf3fd81f5da68f1f524878",
+  "schema": 1,
+  "scored_points_run": 0,
+  "source_files_verified_unchanged_after_run": 7166,
+  "source_manifest_sha256": "d598ac407acaf4696c2ac23d0767aa70393c3f94a7ff1b99e4565a5048239f49",
+  "source_state_sha256": "e9520589622214dcc529b140e4eb3d800427b64a834411be4b53baaa26287251",
+  "unit_cases": 21
+}

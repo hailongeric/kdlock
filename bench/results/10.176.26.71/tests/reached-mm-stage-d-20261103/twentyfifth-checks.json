@@ -1,0 +1,39 @@
+{
+  "source_commit": "74011ac1598dd46dc33393231596aad358de5b6f",
+  "units": [
+    {
+      "args": [
+        "codegen/test_origin_memory_decode.py"
+      ],
+      "returncode": 0,
+      "tail": null
+    },
+    {
+      "args": [
+        "bench/test_mmap1_kernel_log.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "tail": null
+    },
+    {
+      "args": [
+        "bench/test_mmap1_delegated.py",
+        "-v"
+      ],
+      "returncode": 1,
+      "tail": "test_positive_tail_and_later_writer_required_without_expanding_scope (__main__.ApplicationContinuation.test_positive_tail_and_later_writer_required_without_expanding_scope) ... ok\ntest_all_sites_actual_preparer_and_complete_publication_before_activation (__main__.Readiness.test_all_sites_actual_preparer_and_complete_publication_before_activation) ... ok\ntest_reached_readiness_needs_no_image_or_writer (__main__.Readiness.test_reached_readiness_needs_no_image_or_writer) ... ok\ntest_complete_call_and_gs_test_pairs_with_sequence_and_root_controls (__main__.Services.test_complete_call_and_gs_test_pairs_with_sequence_and_root_controls) ... ok\ntest_reached_gs_subtraction_retains_instruction_and_result_ack (__main__.Services.test_reached_gs_subtraction_retains_instruction_and_result_ack) ... ok\ntest_reached_many_roots_on_one_worker_keep_separate_family_ledgers (__main__.Services.test_reached_many_roots_on_one_worker_keep_separate_family_ledgers) ... ok\ntest_reached_task_read_requires_both_results_and_exact_instruction_ack (__main__.Services.test_reached_task_read_requires_both_results_and_exact_instruction_ack) ... ERROR\ntest_merged_rodata_and_equal_bound_aliases_keep_exact_site_set (__main__.Sites.test_merged_rodata_and_equal_bound_aliases_keep_exact_site_set) ... ok\n\n======================================================================\nERROR: test_reached_task_read_requires_both_results_and_exact_instruction_ack (__main__.Services.test_reached_task_read_requires_both_results_and_exact_instruction_ack)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/root/kdlock-inputs/reached-mm-twentyfifth-74011ac1-20261103/tests/unit/bench/test_mmap1_delegated.py\", line 127, in test_reached_task_read_requires_both_results_and_exact_instruction_ack\n    self.assertEqual(item.validate_services(proof, [], messages, snapshot)['memory_transactions'], 1)\n                     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-twentyfifth-74011ac1-20261103/tests/kernel/mmap1_identity/delegated.py\", line 373, in validate_services\n    rt.require(audited <= complete.keys(), 'audited returned roots missing from complete worker roots')\n    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/kdlock-inputs/reached-mm-twentyfifth-74011ac1-20261103/bench/spin_cacheline/bench_runtime.py\", line 46, in require\n    raise Failure(status, message)\nbench_runtime.Failure: audited returned roots missing from complete worker roots\n\n----------------------------------------------------------------------\nRan 8 tests in 0.019s\n\nFAILED (errors=1)\n"
+    },
+    {
+      "args": [
+        "bench/test_mm_private_source.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "tail": null
+    }
+  ],
+  "passed": false,
+  "provider_build_run": false,
+  "actual_mm_run": false
+}

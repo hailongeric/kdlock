@@ -14,7 +14,7 @@ _spec.loader.exec_module(probe)
 probe.DEVICE = '/dev/kd_spin_proxy_context'
 probe.WORKER_COMM = 'kctx_worker'
 probe.RUNNER = 'tests/kernel/spin/proxy_context'
-probe.PAYLOAD = probe.RUNNER+'/payload'
+probe.PAYLOAD = probe.RUNNER+'/fixture'
 probe.MODULE = 'kd_spin_proxy_context_test'
 probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (12,), 6, 0
 probe.IMAGE_GENERATION_REQUIRED = False

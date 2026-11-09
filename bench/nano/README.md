@@ -116,7 +116,7 @@ separate from the earlier two-profile and historical two-word/post4 studies.
 ## Bodies and profiles
 
 All active profiles reuse the existing
-[unrolled counter payload](../../workload_modules/rwlock_bench/payload.h): one or
+[unrolled counter payload](../../workload_modules/rwlock_bench/body.h): one or
 sixteen 64-bit counters, each padded and aligned to its own 64-byte cacheline.
 Their total payload footprints are 64 and 1,024 bytes. Every writer increments
 every selected counter under one exclusive acquisition. Rwsem/rwlock readers
@@ -383,7 +383,7 @@ an earlier failed gate.
 ## Historical broad matrix
 
 The retired focused `mutex`, `rwsem-read` and `rwsem-mixed` profiles used the
-[two-word payload](../../workload_modules/rwlock_bench/nano_payload.h), workload
+[two-word payload](../../workload_modules/rwlock_bench/nano_body.h), workload
 ID 6: two adjacent 64-bit fields in one 64-byte record, with four post-unlock
 rounds. Writers stored the same incremented value in both fields; readers
 compared them. Their `lines=2` counted logical words, and their oracle required

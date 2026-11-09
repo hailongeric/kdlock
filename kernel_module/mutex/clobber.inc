@@ -8,14 +8,15 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	struct kd_regs full;
 	bool native = READ_ONCE(node->native_resume);
 	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
+	bool entry_only = native && node->packet_state == KD_PACKET_MINIMAL;
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
 
 	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	BUG_ON(native && READ_ONCE(node->native_resume) != KD_MUTEX_RESUME_NATIVE);
 	BUG_ON(native ? minimal : !READ_ONCE(node->completed));
-	BUG_ON(!minimal && node->packet_state != KD_PACKET_FULL);
+	BUG_ON(!minimal && !entry_only && node->packet_state != KD_PACKET_FULL);
 	/* FULL must outlive node reuse; COMPLETE never reads absent GPRs. */
-	if (!minimal)
+	if (!minimal && !entry_only)
 		full = node->regs;
 	if (native) {
 		struct kd_exec_frame *transfer = node->native_transfer;
@@ -35,13 +36,15 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 		this_cpu_inc(kd_mutex_jit_resume_count);
 	preempt_enable();
 	migrate_enable();
-	if (native)
+	if (native && !entry_only)
 		jump_to_saved_regs_in_cs(&full);
-	kd_mutex_task_put(current);
-	if (!minimal)
+	if (!native)
+		kd_mutex_task_put(current);
+	if (!minimal && !entry_only)
 		jump_to_saved_regs(&full);
-	/* Both pointers describe the post-unlock boundary. Active caller values
-	 * were spilled by its compiler, which reloads them after this return. */
+	/* COMPLETE describes post-unlock; an acquired MINIMAL native handoff
+	 * describes entry. Both use compiler-owned spills and import only the
+	 * three defined packet words, never absent virtual GPR slots. */
 	asm volatile("movq %%rax, %%rsp\n\t"
 		     "movq %%rcx, %%rbp\n\t"
 		     "pushq %%rdx\n\t"

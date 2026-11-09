@@ -4,6 +4,8 @@ import contextlib
 import errno
 import io
 import os
+from pathlib import Path
+import re
 import struct
 import tempfile
 import unittest
@@ -206,6 +208,8 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.indirect_call()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.origin_instruction()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.indirect_tail()
         with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(len(self.caps_queries), 2)
@@ -228,7 +232,12 @@ class DeviceSessionTests(unittest.TestCase):
                         'string_services': False, 'string_write': False,
                         'audited_strings': False, 'direct_strings': False,
                         'root_native_escape': False, 'indirect_call': False,
-                        'origin_instruction': False})
+                        'origin_instruction': False, 'origin_call': False,
+                        'origin_memory': False, 'origin_context_read': False,
+                        'indirect_tail': False, 'source_frontier': False,
+                        'source_frontier_extensions': False,
+                        'source_frontier_controls': False,
+                        'source_frontier_direction': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -312,7 +321,7 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._audited_strings)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.audited_strings()
-        for version, features in ((9, 1019), (10, 635), (14, 1019)):
+        for version, features in ((9, 1019), (10, 635), (device_session.CAPS_VERSION + 1, 1019)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -332,7 +341,7 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._direct_strings)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.direct_strings()
-        for version, features in ((10, 2043), (11, 1531), (11, 1659), (14, 2043)):
+        for version, features in ((10, 2043), (11, 1531), (11, 1659), (device_session.CAPS_VERSION + 1, 2043)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -354,7 +363,7 @@ class DeviceSessionTests(unittest.TestCase):
                     device_session.root_native_escape()
         # Old/future providers and a root bit without the shared flags contract
         # cannot opt into the new retained-root restore merely by setting bit11.
-        for version, features in ((11, 4091), (14, 4091), (12, 2075)):
+        for version, features in ((11, 4091), (device_session.CAPS_VERSION + 1, 4091), (12, 2075)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
             with self.subTest(version=version, features=features):
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -376,7 +385,7 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._indirect_call)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.indirect_call()
-        for version in (11, 14):
+        for version in (11, device_session.CAPS_VERSION + 1):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 4096, 256, 8192)
             with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                 self.fail("unnegotiated indirect CALL exit admitted")
@@ -396,11 +405,136 @@ class DeviceSessionTests(unittest.TestCase):
                 self.assertFalse(device_session._origin_instruction)
                 with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
                     device_session.origin_instruction()
-        for version,features in ((12,59|8192),(13,27|8192),(14,59|8192)):
+        for version,features in ((12,59|8192),(13,27|8192),(device_session.CAPS_VERSION+1,59|8192)):
             self.caps_packet = device_session.CAPS_STRUCT.pack(version,features,256,8192)
             with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                 self.fail("unnegotiated original-task instruction contract admitted")
             self.assertFalse(device_session._origin_instruction)
+
+    def test_returning_calls_require_v14_and_provider_registry(self):
+        self.caps_packet = device_session.CAPS_STRUCT.pack(14, 59 | 16384, 256, 8192)
+        row = '1 ffffffff81001000 6 1 1 primitive_call\n'
+        parameters = Path('/sys/module/kdlock_km/parameters')
+        contents = dict(service_call_table_state='1 1 1\n')
+        contents.update({f'service_call_page_{page}': row if page == 0 else ''
+                         for page in range(8)})
+        reads = []
+
+        def read_registry(path, **kwargs):
+            self.assertEqual(path.parent, parameters)
+            self.assertEqual(kwargs, dict(encoding='ascii'))
+            self.assertIn(path.name, contents)
+            reads.append(path.name)
+            return contents[path.name]
+
+        # State is checked on both sides of the real paged reader. A service
+        # declaration belongs in its page, never in the discovery-state file.
+        with patch.object(Path, 'read_text', read_registry), device_session.session() as fd:
+            calls = device_session.service_calls()
+            self.assertEqual(calls[0xffffffff81001000]['nargs'], 6)
+            self.assertEqual(calls[0xffffffff81001000]['cookie'], 1)
+            self.assertEqual(self.caps_queries, [fd])
+        self.assertEqual(reads, ['service_call_table_state'] +
+                         [f'service_call_page_{page}' for page in range(8)] +
+                         ['service_call_table_state'])
+        self.assertFalse(device_session._origin_call)
+        with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+            device_session.service_calls()
+        for version in (13, device_session.CAPS_VERSION + 1):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 16384, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
+                self.fail('unnegotiated returning CALL contract admitted')
+
+    def test_context_reads_require_v16_and_this_lease(self):
+        features = 59 | 16384 | 32768 | 65536
+        self.caps_packet = device_session.CAPS_STRUCT.pack(16, features, 256, 8192)
+        with device_session.session() as fd:
+            self.assertTrue(device_session.origin_context_read())
+            self.assertTrue(device_session.origin_memory())
+            self.assertEqual(device_session.require(), fd)
+        self.assertFalse(device_session._origin_context_read)
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.origin_context_read()
+        for version, bits in ((15, features), (device_session.CAPS_VERSION + 1, features),
+                              (16, features & ~32768)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, bits, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+                self.fail("unnegotiated context-read contract admitted")
+
+    def test_indirect_tails_require_v17_returning_call_contract_on_this_lease(self):
+        for version, features, expected in (
+                (16, 59 | 16384, False), (17, 59 | 16384, False),
+                (17, 59 | 16384 | 131072, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session() as fd:
+                    self.assertEqual(device_session.indirect_tail(), expected)
+                    self.caps_packet = device_session.CAPS_STRUCT.pack(17, 59 | 16384, 256, 8192)
+                    self.assertEqual(device_session.indirect_tail(), expected)
+                    self.assertEqual(device_session.require(), fd)
+                self.assertFalse(device_session._indirect_tail)
+                with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+                    device_session.indirect_tail()
+        for version, features in ((16, 59 | 16384 | 131072),
+                                  (17, 59 | 131072),
+                                  (device_session.CAPS_VERSION + 1, 59 | 16384 | 131072)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+            with self.subTest(version=version, features=features):
+                with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+                    self.fail("unnegotiated indirect tail contract admitted")
+                self.assertFalse(device_session._indirect_tail)
+
+    def test_source_frontier_requires_v18_and_resets_with_lease(self):
+        for version, features, expected in ((17, 59 | 16384, False),
+                (18, 59 | 16384, False), (18, 59 | 16384 | 262144, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier(), expected)
+            self.assertFalse(device_session._source_frontier)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier()
+        for version, features in ((17, 59 | 16384 | 262144), (18, 59 | 262144)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
+                self.fail('unnegotiated source frontier admitted')
+
+    def test_frontier_controls_require_v20_and_reset_with_lease(self):
+        for version, feature, extended, controls in (
+                (18, 262144, False, False), (19, 262144, True, False),
+                (20, 0, False, False), (20, 262144, True, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 16384 | feature, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier_extensions(), extended)
+                self.assertEqual(device_session.source_frontier_controls(), controls)
+            self.assertFalse(device_session._source_frontier_controls)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier_controls()
+
+    def test_frontier_direction_requires_v21_and_resets_with_lease(self):
+        for version, feature, expected in (
+                (19, 262144, False), (20, 262144, False),
+                (21, 0, False), (21, 262144, True)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, 59 | 16384 | feature, 256, 8192)
+            with device_session.session():
+                self.assertEqual(device_session.source_frontier_direction(), expected)
+            self.assertFalse(device_session._source_frontier_direction)
+            with self.assertRaisesRegex(RuntimeError, 'active kd_dev session'):
+                device_session.source_frontier_direction()
+
+    def test_learning_batch_provider_preserves_translation_capabilities(self):
+        features = 59 | device_session.CAP_ORIGIN_CALL | device_session.CAP_SOURCE_FRONTIER
+        self.caps_packet = device_session.CAPS_STRUCT.pack(
+            22, features | device_session.CAP_LEARNING_BATCH, 256, 8192)
+        with device_session.session():
+            self.assertTrue(device_session.source_frontier_direction())
+            self.assertTrue(device_session._origin_call)
+        # Batch negotiation belongs to the daemon; accepting its feature bit
+        # must not weaken version checks or the immutable-image prerequisite.
+        for version, bits in ((21, features | device_session.CAP_LEARNING_BATCH),
+                              (22, 3 | device_session.CAP_LEARNING_BATCH)):
+            self.caps_packet = device_session.CAPS_STRUCT.pack(version, bits, 256, 8192)
+            with self.assertRaisesRegex(RuntimeError, 'exclusive KD mutex object'), device_session.session():
+                self.fail('incompatible learning provider admitted')
 
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
@@ -410,7 +544,7 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.CAPS_STRUCT.pack(*values)
             for values in (
                 (0, 1, 256, 0),
-                (14, 1, 256, 0),
+                (device_session.CAPS_VERSION + 1, 1, 256, 0),
                 (1, 3, 256, 0),
                 (1, 0, 256, 0),
                 (1, 1, 0, 0),
@@ -634,7 +768,31 @@ class TextRegionTests(unittest.TestCase):
         )
         self.assertEqual(status, 0, log)
         self.assertTrue(assembly)
+        self.assertIn("reason=TEXT_RANGE_EXTEND", log)
+        self.assertIn(f"loc_{self.body:x}:".encode(), assembly)
         self.assertNotIn(b"FS:[", assembly)
+
+    def test_known_callee_keeps_full_scan_after_its_nested_unlock(self):
+        lock, unlock = BASE + 0x8000, BASE + 0x9000
+        # The root holds an outer lock and acquires a nested lock before this
+        # actual callee releases it. That release cannot end the callee's scan
+        # or hide the instruction before the root's outer release.
+        root = branch(self.entry, lock, b"\xe8")
+        root += branch(self.entry + len(root), self.body, b"\xe8")
+        root += branch(self.entry + len(root), unlock, b"\xe8") + b"\xc3"
+        self.put(self.entry, root)
+        self.put(self.body, branch(self.body, unlock, b"\xe8") +
+                 bytes.fromhex("64488b042528000000c3"))
+        regions = [[bytes(self.text[0x1000:0x2000]), BASE + 0x1000, [self.body]],
+                   self.initial()[0]]
+        assembly, log, status = render(
+            "", entry=self.entry, regions=regions, memory_reader=self.read_memory,
+            kernel_symbols={"_raw_spin_lock": lock, "_raw_spin_unlock": unlock},
+            return_status=True)
+        self.assertEqual(status, 2, log)
+        self.assertEqual(assembly, b"")
+        self.assertIn("FS-prefixed memory access is unsupported", log)
+        self.assertIn(f'rip="{self.body + 5:#x}"', log)
 
     def test_real_block_wins_over_cross_region_bad_placeholder_in_both_orders(self):
         previous = [bytes(self.text[0x1000:0x2000]), BASE + 0x1000, [self.body]]
@@ -867,6 +1025,630 @@ class TextRegionTests(unittest.TestCase):
         self.assertLessEqual(
             max(start + size for start, size in self.reads), BASE + 0x82000
         )
+
+
+class CompactTextWindowTests(unittest.TestCase):
+    """Demand windows preserve complete source bytes with bounded lookahead."""
+
+    def setUp(self):
+        self.text = bytearray(b"\xc3" * 0x90000)
+        self.reads = []
+        self.policy = memread.RETAINED_WINDOW_POLICY
+
+    def put(self, address, data):
+        offset = address - BASE
+        self.text[offset:offset + len(data)] = data
+
+    def read_memory(self, address, size):
+        self.reads.append((address, size))
+        self.assertGreaterEqual(address, BASE)
+        self.assertLessEqual(address + size, BASE + len(self.text))
+        return bytes(self.text[address - BASE:address - BASE + size])
+
+    def extend(self, regions, targets, **kwargs):
+        with patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory):
+            return memread.extend_regions(regions, targets, policy=self.policy, **kwargs)
+
+    def render_retained(self, entry, regions, **kwargs):
+        return render(
+            "", entry=entry, regions=regions, memory_reader=self.read_memory,
+            lock_kind="mutex", abi=2, trusted_source=True, return_status=True,
+            kernel_symbols={
+                "kd_mutex_direct_lock_clobber_v1": BASE + 0x82000,
+                "kd_mutex_direct_unlock_clobber_v1": BASE + 0x83000,
+                "kd_rwsem_up_write_clobber_v1": BASE + 0x84000,
+            },
+            returning_services={BASE + 0x85000: dict(
+                cookie=1, nargs=1, result_kind=1, context_kind=1,
+                symbol="primitive_call")},
+            **kwargs,
+        )
+
+    def cfg_terminal(self, address):
+        self.put(address, bytes.fromhex('b82a000000') +
+                 branch(address + 5, BASE + 0x84000, b'\xe8') + b'\xc3')
+
+    def cfg_source_chain(self, extensions):
+        nodes = [BASE + 0x10000 + i * 0x3000 for i in range(extensions + 1)]
+        for source, target in zip(nodes, nodes[1:]):
+            self.put(source, branch(source, target))
+        self.cfg_terminal(nodes[-1])
+        start = nodes[0]
+        offset = start - BASE
+        return start, [(bytes(self.text[offset:offset + 1024]), start, [start])], nodes[-1]
+
+    def cfg_seed_chain(self, rebuilds):
+        hot, cold = BASE + 0x2000, BASE + 0x7000
+        nodes = [(hot if i % 2 == 0 else cold) + i // 2 * 0x20
+                 for i in range(rebuilds + 2)]
+        for source, target in zip(nodes, nodes[1:]):
+            self.put(source, branch(source, target))
+        self.cfg_terminal(nodes[-1])
+        regions = [(bytes(self.text[start - BASE:start - BASE + 4096]), start, [start])
+                   for start in (hot, cold)]
+        return hot, regions, nodes[-1]
+
+    def cfg_mixed_chain(self, extensions):
+        # Each new cold window reveals one unseeded entry in the existing hot
+        # window. The real decoder alternates one read and one seed rebuild.
+        hot = BASE + 0x2000
+        for index in range(extensions):
+            cold = BASE + 0x10000 + index * 0x3000
+            self.put(hot + index * 0x20, branch(hot + index * 0x20, cold))
+            self.put(cold, branch(cold, hot + (index + 1) * 0x20))
+        terminal = hot + extensions * 0x20
+        self.cfg_terminal(terminal)
+        return hot, [(bytes(self.text[0x2000:0x3000]), hot, [hot])], terminal
+
+    def test_abi2_source_extensions_obey_32_combined_transitions(self):
+        for extensions in (32, 33):
+            with self.subTest(extensions=extensions):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_source_chain(extensions)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 32)
+                self.assertIn('source_extensions=32', log)
+                self.assertIn('covered_rebuilds=0', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+                if extensions == 32:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="source"', log)
+                    self.assertIn('pending_targets_kind="source"', log)
+                    # No 33rd source transition or late image construction.
+                    self.assertTrue(all(address < terminal for address, _ in self.reads))
+
+    def test_abi2_covered_rebuilds_obey_32_combined_transitions(self):
+        for rebuilds in (32, 33):
+            with self.subTest(rebuilds=rebuilds):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_seed_chain(rebuilds)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 32)
+                self.assertEqual(self.reads, [])
+                self.assertIn('covered_rebuilds=32', log)
+                self.assertIn('source_extensions=0', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+                if rebuilds == 32:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="covered"', log)
+                    self.assertIn('pending_targets_kind="covered"', log)
+
+    def test_abi2_mixed_frontier_completes_at_32_combined_transitions(self):
+        # Keep the original 32-pair stress graph as an explicit refusal case.
+        for pairs in (16, 17, 32):
+            with self.subTest(pairs=pairs):
+                self.reads.clear()
+                entry, regions, terminal = self.cfg_mixed_chain(pairs)
+                options = {}
+                with patch.object(translator, 'decode_regions',
+                                  wraps=translator.decode_regions) as decode:
+                    assembly, log, status = self.render_retained(
+                        entry, regions, build_options=options)
+                self.assertEqual(decode.call_count, 33)
+                self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+                self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+                self.assertIn('decode_pass=33', log)
+                self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+                self.assertIn('retained_profile=false', log)
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+                if pairs == 16:
+                    self.assertEqual(status, 0, log)
+                    self.assertIn(f'loc_{terminal:x}:'.encode(), assembly)
+                    self.assertIn('requirements', options)
+                    self.assertTrue(options['requirements'] & (1 << 13))
+                    self.assertNotIn('reason=CFG_WORK_LIMIT', log)
+                else:
+                    self.assertEqual((assembly, status, options), (b'', 2, {}))
+                    self.assertIn('exhausted_budget="combined"', log)
+                    self.assertIn('work_kind="source"', log)
+                    self.assertIn('pending_targets_kind="source"', log)
+                    pending_source = BASE + 0x10000 + 16 * 0x3000
+                    self.assertTrue(all(address < pending_source for address, _ in self.reads))
+                    self.assertNotIn(f'loc_{terminal:x}:'.encode(), assembly)
+
+    def test_abi2_combined_ceiling_refuses_before_a34th_decode_or_read(self):
+        entry, regions, terminal = self.cfg_mixed_chain(33)
+        options = {}
+        with patch.object(translator, 'decode_regions',
+                          wraps=translator.decode_regions) as decode:
+            assembly, log, status = self.render_retained(
+                entry, regions, build_options=options)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(decode.call_count, 33)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+        self.assertIn('exhausted_budget="combined"', log)
+        self.assertIn('work_kind="source"', log)
+        self.assertIn('pending_targets_kind="source"', log)
+        self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+        self.assertIn('retained_profile=false', log)
+        self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+        pending_source = BASE + 0x10000 + 16 * 0x3000
+        self.assertTrue(all(address < pending_source for address, _ in self.reads))
+        self.assertNotIn(f'loc_{terminal:x}:'.encode(), assembly)
+
+    def test_ordinary_mixed_frontier_keeps_32_combined_transitions(self):
+        entry, regions, _ = self.cfg_mixed_chain(32)
+        options = {}
+        with patch.object(translator, 'decode_regions',
+                          wraps=translator.decode_regions) as decode:
+            assembly, log, status = render(
+                '', entry=entry, regions=regions, memory_reader=self.read_memory,
+                build_options=options, return_status=True)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(decode.call_count, 33)
+        self.assertEqual(log.count('reason=CFG_ROOT_EXTEND'), 16)
+        self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 16)
+        self.assertIn('32 CFG expansions', log)
+        self.assertIn('exhausted_budget="combined"', log)
+        self.assertIn('covered_rebuilds=16 source_extensions=16', log)
+
+    def test_retained_seeded_undecodable_block_is_not_a_complete_fixed_point(self):
+        entry = BASE + 0x2000
+        self.put(entry, bytes.fromhex('0f04') + b'\xc3' * 30)
+        options = {}
+        assembly, log, status = self.render_retained(
+            entry, [(bytes(self.text[0x2000:0x2020]), entry, [entry])],
+            build_options=options)
+        self.assertEqual((assembly, status, options), (b'', 2, {}))
+        self.assertEqual(self.reads, [])
+        self.assertIn('reachable CFG contains an undecodable block', log)
+        self.assertIn('pending_targets_kind="decode"', log)
+
+    def test_compact_multi_root_closure_preserves_complete_decoding(self):
+        targets = [BASE + 0x100 + index * 0x3000 for index in range(34)]
+        entry = targets[0]
+        body = bytearray()
+        for index, target in enumerate(targets[1:], 1):
+            body.extend(branch(entry + len(body), target, b"\xe8"))
+            self.put(target, b"\xb8" + struct.pack("<I", index) + b"\xc3")
+        body.extend(branch(entry + len(body), BASE + 0x84000, b"\xe8"))
+        body.extend(b"\xc3")
+        self.put(entry, body)
+        with (patch.object(memread, "MAX_TEXT_BYTES", 256 * 1024),
+              patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory),
+              self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
+            memread.extend_regions([], targets)
+        self.assertEqual(self.reads, [])
+        regions = self.extend([], targets)
+        self.assertEqual(sum(len(data) for data, _, _ in regions), 34 * 1024)
+        self.assertLess(34 * 1024, memread.MAX_TEXT_BYTES)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, set(targets))
+        self.assertTrue(all(size == 1024 for _, size in self.reads))
+        assembly, log, status = self.render_retained(entry, regions)
+        self.assertEqual(status, 0, log)
+        for target in targets:
+            self.assertIn(f"loc_{target:x}:".encode(), assembly)
+
+    def test_budget_plan_selects_largest_fit_before_any_source_read(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        log = io.StringIO()
+        memread.diagnostics.begin(0, min(targets))
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 1024),
+              contextlib.redirect_stderr(log)):
+            regions = self.extend([], targets)
+        self.assertEqual(self.reads, [(BASE + 0x100, 512), (BASE + 0x3100, 512)])
+        self.assertEqual(sum(len(data) for data, _, _ in regions), 1024)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, targets)
+        # One diagnostic survives the per-site coalescing and includes both
+        # the rejected preferred plan and the selected, actually read plan.
+        self.assertEqual(log.getvalue().count("reason=TEXT_CACHE_PLAN"), 1)
+        self.assertIn("lookahead_bytes=512 ", log.getvalue())
+        self.assertIn('"lookahead_bytes": 1024', log.getvalue())
+        self.assertIn('"planned_bytes": 2048', log.getvalue())
+        self.assertIn('"within_budget": false', log.getvalue())
+        self.assertIn("selected=true", log.getvalue())
+
+    def test_budget_retry_merges_roots_without_shrinking_old_bytes(self):
+        old, overlap, separate = BASE + 0x103, BASE + 0x14F, BASE + 0x310F
+        self.put(BASE + 0x100, bytes(range(80)))
+        data = bytes(self.text[0x100:0x150])
+        initial = [[data, BASE + 0x100, [old]]]
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 400):
+            regions = self.extend(initial, {overlap, separate})
+        self.assertEqual(self.reads, [(BASE + 0x100, 192), (BASE + 0x3100, 128)])
+        self.assertEqual(regions[0][0][:len(data)], data)
+        self.assertEqual(regions[0][2], [old, overlap])
+        self.assertEqual(regions[1][2], [separate])
+        self.assertEqual(initial, [[data, BASE + 0x100, [old]]])
+
+    def test_compact_budget_retry_completes_learned_callee_before_emission(self):
+        entry, callee = BASE + 0x100, BASE + 0x3100
+        raw = branch(entry, callee, b"\xe8")
+        raw += branch(entry + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(entry, raw)
+        self.put(callee, bytes.fromhex("b82a000000c3"))
+        plans = io.StringIO()
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 1536):
+            initial = self.extend([], {entry})
+            self.reads.clear()
+            # Exercise the compact planner explicitly with a learned root.
+            # Ordinary ABI2 translation does not select this window policy.
+            memread.diagnostics.begin(0, entry)
+            with contextlib.redirect_stderr(plans):
+                complete = self.extend(initial, {callee})
+            self.assertEqual(complete[0][0], initial[0][0])
+            self.assertEqual({root for _, _, roots in complete for root in roots},
+                             {entry, callee})
+            policies = []
+            assembly, log, status = self.render_retained(
+                entry, complete, direct_call_depth=1, read_policies=policies)
+        self.assertEqual(status, 0, log)
+        self.assertEqual(self.reads, [(entry, 1024), (callee, 512)])
+        self.assertEqual(policies, [memread.DEFAULT_WINDOW_POLICY])
+        self.assertIn(f"loc_{entry:x}:".encode(), assembly)
+        self.assertIn(f"loc_{callee:x}:".encode(), assembly)
+        self.assertIn(f"loc_{callee:x}\nMOV".encode(), assembly)
+        self.assertIn(b"0x2a", assembly.lower())
+        self.assertIn("lookahead_bytes=512 ", plans.getvalue())
+        self.assertIn('"within_budget": false', plans.getvalue())
+        self.assertIn('selected=true', plans.getvalue())
+        self.assertIn("pending_targets=0", log)
+
+    def test_budget_minimum_keeps_full_instruction_across_alignment(self):
+        entry, other = BASE + 0x10F, BASE + 0x3100
+        raw = bytes.fromhex("666666666666660f1f840000000000")
+        self.assertEqual(len(raw), 15)
+        self.put(entry, raw)
+        with patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 45):
+            regions = self.extend([], {entry, other})
+        self.assertEqual(self.reads, [(BASE + 0x100, 30), (other, 15)])
+        self.assertEqual(regions[0][0][15:], raw)
+        self.assertEqual({root for _, _, roots in regions for root in roots}, {entry, other})
+
+    def test_budget_retry_cannot_evict_old_bytes_to_fit_new_prefix(self):
+        old, target = BASE + 0x103, BASE + 0x310F
+        data = bytes(self.text[0x100:0x140])
+        initial = [[data, BASE + 0x100, [old]]]
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 93),
+              patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "93 bytes")):
+            memread.extend_regions(initial, {target}, policy=self.policy)
+        reader.assert_not_called()
+        self.assertEqual(initial, [[data, BASE + 0x100, [old]]])
+
+    def test_budget_fallback_requires_explicit_retained_policy(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        for policy in (memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(1024, 16)):
+            with (self.subTest(policy=policy),
+                  patch.object(memread, "MAX_TEXT_BYTES", 1024),
+                  patch.object(memread, "read_kernel_addr_data") as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "1024 bytes")):
+                memread.extend_regions([], targets, policy=policy)
+            reader.assert_not_called()
+
+    def test_source_refusal_does_not_restart_budget_planning(self):
+        for error in (errno.EPERM, errno.ESTALE):
+            with (self.subTest(error=error), patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 64),
+                  patch.object(memread.diagnostics, "warn") as warn,
+                  patch.object(memread, "read_kernel_addr_data", side_effect=
+                               device_session.SourceRefused("mandatory source unavailable", errno=error)) as reader,
+                  self.assertRaises(device_session.SourceRefused)):
+                memread.extend_regions([], {BASE + 0x100}, policy=self.policy)
+            reader.assert_called_once_with(BASE + 0x100, 64)
+            warn.assert_called_once()
+            self.assertEqual(warn.call_args.kwargs["lookahead_bytes"], 64)
+            self.assertTrue(warn.call_args.kwargs["selected"])
+
+    def test_full_fifteen_byte_prefix_crosses_the_policy_alignment(self):
+        entry = BASE + 0xFFF
+        raw = bytes.fromhex("666666666666660f1f840000000000")
+        self.assertEqual(len(raw), 15)
+        self.put(entry, raw)
+        short = memread.TextWindowPolicy(16, 16)
+        with patch.object(memread, "read_kernel_addr_data", side_effect=self.read_memory):
+            regions = memread.extend_regions([], {entry}, policy=short)
+        data, start, roots = regions[0]
+        self.assertEqual(start, BASE + 0xFF0)
+        self.assertGreaterEqual(start + len(data), entry + 15)
+        self.assertEqual(data[entry - start:entry - start + 15], raw)
+        self.assertEqual(roots, [entry])
+
+    def test_backward_extension_keeps_original_entry_and_body(self):
+        entry, body = BASE + 0x4125, BASE + 0x1FFB
+        self.put(entry, branch(entry, body))
+        raw = bytes.fromhex("b8df9b5713")
+        raw += branch(body + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(body, raw)
+        initial = self.extend([], {entry})
+        old = initial[0][0]
+        self.reads.clear()
+        regions = self.extend(initial, {body})
+        self.assertEqual([start for _, start, _ in regions], [BASE + 0x1FF0, BASE + 0x4120])
+        self.assertEqual(regions[1][0], old)
+        assembly, log, status = self.render_retained(entry, regions)
+        self.assertEqual(status, 0, log)
+        self.assertIn(f"loc_{body:x}:".encode(), assembly)
+        self.assertIn(b"0x13579bdf", assembly.lower())
+
+    def test_truncated_instruction_fetches_a_complete_ordinary_extension(self):
+        entry, cut = BASE + 0x2110, BASE + 0x2125
+        self.put(entry, b"\x90" * (cut - entry))
+        raw = bytes.fromhex("48b87856341200000000")
+        raw += branch(cut + len(raw), BASE + 0x84000, b"\xe8") + b"\xc3"
+        self.put(cut, raw)
+        # The cached prefix ends inside MOVABS, before the complete immediate.
+        initial = [[bytes(self.text[0x2110:0x212A]), entry, [entry]]]
+        policies = []
+        assembly, log, status = self.render_retained(entry, initial, read_policies=policies)
+        self.assertEqual(status, 0, log)
+        self.assertIn("TEXT_RANGE_EXTEND", log)
+        self.assertIn(b"0x12345678", assembly.lower())
+        self.assertEqual(len(self.reads), 1)
+        address, size = self.reads[0]
+        policy = memread.DEFAULT_WINDOW_POLICY
+        self.assertEqual(policies, [policy])
+        self.assertEqual(address, cut & ~(policy.alignment - 1))
+        self.assertEqual(size, max(policy.lookahead, cut + 15 - address))
+        self.assertGreaterEqual(address + size, cut + 15)
+        self.assertIn(f'loc_{entry:x}:'.encode(), assembly)
+
+    def test_retry_retains_old_bytes_and_every_root(self):
+        old, target = BASE + 0xF03, BASE + 0xFE1
+        initial = [[bytes(self.text[0xF00:0x1000]), BASE + 0xF00, [old]]]
+        for error in (errno.EPERM, errno.ESTALE):
+            self.reads.clear()
+            def reader(address, size):
+                self.reads.append((address, size))
+                if address + size > BASE + 0x1000:
+                    raise device_session.SourceRefused("outside resident module text", errno=error)
+                return bytes(self.text[address - BASE:address - BASE + size])
+            with (self.subTest(error=error),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=reader)):
+                regions = memread.extend_regions(initial, {target}, policy=self.policy)
+            self.assertEqual(regions, [[initial[0][0], BASE + 0xF00, [old, target]]])
+            self.assertEqual(self.reads, [(BASE + 0xF00, 0x4E0), (BASE + 0xF00, 0x100)])
+
+    def test_source_refusal_never_discards_mandatory_old_bytes(self):
+        old, target = BASE + 0xF03, BASE + 0xF81
+        initial = [[bytes(self.text[0xF00:0x1100]), BASE + 0xF00, [old]]]
+        def reader(address, size):
+            self.reads.append((address, size))
+            raise device_session.SourceRefused("old prefix no longer resident", errno=errno.ESTALE)
+        with (patch.object(memread, "read_kernel_addr_data", side_effect=reader),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertTrue(all(address + size >= BASE + 0x1100 for address, size in self.reads))
+        self.assertEqual(initial[0][0], bytes(self.text[0xF00:0x1100]))
+
+    def test_split_required_instruction_is_not_trimmed_to_a_page(self):
+        entry = BASE + 0xFFF
+        def reader(address, size):
+            self.reads.append((address, size))
+            raise device_session.SourceRefused("required instruction crosses text", errno=errno.ESTALE)
+        with (patch.object(memread, "read_kernel_addr_data", side_effect=reader),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions([], {entry}, policy=self.policy)
+        self.assertEqual(self.reads, [(BASE + 0xFF0, 1024)])
+
+    def test_compact_mandatory_budget_failure_happens_before_any_source_read(self):
+        targets = {BASE + 0x100, BASE + 0x3100}
+        for error in (errno.EPERM, errno.ESTALE):
+            with (self.subTest(error=error), patch.object(memread, "RETAINED_MAX_TEXT_BYTES", 29),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=
+                               device_session.SourceRefused("unavailable lookahead", errno=error)) as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "29 bytes")):
+                memread.extend_regions([], targets, policy=self.policy)
+            reader.assert_not_called()
+
+
+class ChunkedTextReadTests(unittest.TestCase):
+    """Production I/O ordering with substituted leases and a complete ELF span."""
+
+    def setUp(self):
+        self.limit = memread.MAX_SOURCE_READ
+        self.data = b"A" * self.limit + b"B" * self.limit + b"C" * 17
+        self.policy = memread.RETAINED_WINDOW_POLICY
+
+    @contextlib.contextmanager
+    def kcore(self, *, refuse_at=None, error=errno.ESTALE):
+        events, pins, reads = [], [], []
+        fixture = self
+
+        def pin(address, size):
+            pins.append((address, size))
+            events.append(("pin", address, size))
+            if len(pins) == refuse_at:
+                raise device_session.SourceRefused("piece lease refused", errno=error)
+
+        class File(io.BytesIO):
+            def read(self, size=-1):
+                reads.append((self.tell(), size))
+                events.append(("read", self.tell(), size))
+                return super().read(size)
+
+        def opened(path, mode):
+            fixture.assertEqual((path, mode), ("/proc/kcore", "rb"))
+            events.append(("open",))
+            return File(b"padding!" + fixture.data)
+
+        segment = {"p_type": "PT_LOAD", "p_vaddr": BASE,
+                   "p_memsz": len(self.data), "p_offset": 8}
+        with (patch.object(device_session, "pin_range", side_effect=pin),
+              patch("builtins.open", side_effect=opened),
+              patch.object(memread, "ELFFile") as elf):
+            elf.return_value.iter_segments.return_value = [segment]
+            yield events, pins, reads
+
+    def test_request_limit_matches_provider_and_refuses_oversize_before_pin(self):
+        header = (Path(__file__).resolve().parents[3] / "include/kd_source_api.h").read_text()
+        match = re.search(r"#define KD_SOURCE_MAX_READ \((\d+) \* (\d+)\)", header)
+        self.assertIsNotNone(match)
+        self.assertEqual(self.limit, int(match[1]) * int(match[2]))
+        self.assertEqual(self.limit, 262144)
+        for size in (0, -1, self.limit + 1):
+            with (self.subTest(size=size), patch.object(device_session, "pin_range") as pin,
+                  patch("builtins.open") as opened, self.assertRaises(ValueError)):
+                memread.read_kernel_addr_data(BASE, size)
+            pin.assert_not_called()
+            opened.assert_not_called()
+
+    def test_every_piece_is_leased_before_read_and_concatenated_without_gaps(self):
+        roots = [BASE + 1, BASE + self.limit + 2]
+        initial = [[self.data, BASE, roots.copy()]]
+        with self.kcore() as (events, pins, reads):
+            result = memread.extend_regions(initial, {roots[-1]}, policy=self.policy)
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, self.limit),
+                                (BASE + 2 * self.limit, 17)])
+        self.assertEqual(reads, [(8, self.limit), (8 + self.limit, self.limit),
+                                 (8 + 2 * self.limit, 17)])
+        expected = []
+        for (address, size), (offset, _) in zip(pins, reads):
+            expected.extend((("pin", address, size), ("open",), ("read", offset, size)))
+        self.assertEqual(events, expected)
+        self.assertEqual(initial, [[self.data, BASE, roots]])
+
+    def test_exact_provider_boundary_remains_one_ordinary_request(self):
+        self.data = self.data[:self.limit]
+        initial = [[self.data, BASE, [BASE + 1]]]
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, set())
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE, self.limit)])
+
+    def test_retained_aggregate_boundary_fits_four_requests_then_refuses_one_byte(self):
+        self.assertEqual(memread.RETAINED_MAX_TEXT_BYTES, 1048576)
+        self.data = b"Q" * memread.RETAINED_MAX_TEXT_BYTES
+        initial = [[self.data, BASE, [BASE + 1]]]
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, set(), policy=self.policy)
+        self.assertEqual(result, initial)
+        self.assertEqual(pins, [(BASE + i * self.limit, self.limit) for i in range(4)])
+        with (patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "1048576 bytes")):
+            memread.extend_regions([[self.data + b"X", BASE, [BASE + 1]]], set(), policy=self.policy)
+        reader.assert_not_called()
+        self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_ordinary_and_custom_nonretained_policies_keep_aggregate_limit(self):
+        self.assertEqual(memread.MAX_TEXT_BYTES, 1048576)
+        self.data = b"Q" * memread.MAX_TEXT_BYTES
+        initial = [[self.data, BASE, [BASE + 1]]]
+        for policy in (memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(1024, 16)):
+            with self.subTest(policy=policy), self.kcore() as (_, pins, _):
+                result = memread.extend_regions(initial, set(), policy=policy)
+            self.assertEqual(result, initial)
+            self.assertEqual(pins, [(BASE + i * self.limit, self.limit) for i in range(4)])
+            with (self.subTest(policy=policy), patch.object(memread, "read_kernel_addr_data") as reader,
+                  self.assertRaisesRegex(memread.TextReadLimit, "1048576 bytes")):
+                memread.extend_regions([[self.data + b"X", BASE, [BASE + 1]]], set(), policy=policy)
+            reader.assert_not_called()
+        self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_original_page_policy_fits_observed_plan_with_separate_read_limit(self):
+        previous, planned = 241664, 270336
+        page = memread.PAGE_SIZE
+        targets = {BASE + previous + index * page for index in range(-2, 6)}
+        initial = [[self.data[:previous], BASE, [BASE + 1]]]
+        self.assertEqual(memread.DEFAULT_WINDOW_POLICY, memread.TextWindowPolicy(8192, 4096))
+        with (patch.object(memread, "MAX_TEXT_BYTES", 256 * 1024),
+              patch.object(memread, "read_kernel_addr_data") as reader,
+              self.assertRaisesRegex(memread.TextReadLimit, "262144 bytes")):
+            memread.extend_regions(initial, targets)
+        reader.assert_not_called()
+        with self.kcore() as (_, pins, _):
+            result = memread.extend_regions(initial, targets)
+        self.assertEqual(result, [[self.data[:planned], BASE, sorted(targets | {BASE + 1})]])
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, planned - self.limit)])
+        self.assertTrue(all(0 < size <= self.limit for _, size in pins))
+        self.assertEqual(initial, [[self.data[:previous], BASE, [BASE + 1]]])
+
+    def test_later_lease_refusal_never_reads_that_piece_or_returns_old_prefix(self):
+        initial = [[self.data, BASE, [BASE + 1]]]
+        for position in (2, 3):
+            for error in (errno.EPERM, errno.ESTALE, errno.ENOSPC, errno.EINVAL):
+                with (self.subTest(position=position, error=error),
+                      self.kcore(refuse_at=position, error=error) as (events, pins, reads),
+                      self.assertRaises(device_session.SourceRefused) as caught):
+                    memread.extend_regions(initial, set(), policy=self.policy)
+                self.assertEqual(caught.exception.errno, error)
+                self.assertEqual(len(pins), position)
+                self.assertEqual(len(reads), position - 1)
+                self.assertEqual(events[-1][0], "pin")
+                self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_later_missing_short_or_failed_read_never_returns_a_partial_region(self):
+        initial = [[self.data, BASE, [BASE + 1]]]
+        for failure in (None, b"B" * (self.limit - 1), OSError(errno.EIO, "read failed")):
+            with (self.subTest(failure=type(failure).__name__),
+                  patch.object(memread, "read_kernel_addr_data", side_effect=[
+                      self.data[:self.limit], failure]) as reader,
+                  self.assertRaises((RuntimeError, OSError))):
+                memread.extend_regions(initial, set(), policy=self.policy)
+            self.assertEqual([call.args for call in reader.call_args_list],
+                             [(BASE, self.limit), (BASE + self.limit, self.limit)])
+            self.assertEqual(initial, [[self.data, BASE, [BASE + 1]]])
+
+    def test_optional_tail_refusal_keeps_chunked_mandatory_prefix_and_roots(self):
+        old, target = BASE + 1, BASE + self.limit + 0xFE1
+        initial = [[self.data[:self.limit + 0xFE0], BASE, [old]]]
+        requests = []
+        def reader(address, size):
+            requests.append((address, size))
+            if address + size > BASE + self.limit + 0x1000:
+                raise device_session.SourceRefused("optional tail unavailable", errno=errno.ESTALE)
+            return self.data[address - BASE:address - BASE + size]
+        with patch.object(memread, "read_kernel_addr_data", side_effect=reader):
+            result = memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertEqual(requests, [(BASE, self.limit), (BASE + self.limit, 0x13E0),
+                                    (BASE, self.limit), (BASE + self.limit, 0x1000)])
+        self.assertEqual(result, [[self.data[:self.limit + 0x1000], BASE, [old, target]]])
+        self.assertEqual(initial, [[self.data[:self.limit + 0xFE0], BASE, [old]]])
+
+    def test_full_mandatory_instruction_can_cross_a_provider_request_boundary(self):
+        target = BASE + self.limit - 1
+        initial = [[self.data[:self.limit - 5], BASE, [BASE + 1]]]
+        with (patch.object(memread, "RETAINED_MAX_TEXT_BYTES", self.limit + 14),
+              self.kcore() as (_, pins, _)):
+            result = memread.extend_regions(initial, {target}, policy=self.policy)
+        self.assertEqual(pins, [(BASE, self.limit), (BASE + self.limit, 14)])
+        self.assertEqual(result, [[self.data[:self.limit + 14], BASE, [BASE + 1, target]]])
+        self.assertEqual(result[0][0][self.limit - 1:], self.data[self.limit - 1:self.limit + 14])
 
 
 if __name__ == "__main__":

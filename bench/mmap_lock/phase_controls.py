@@ -97,7 +97,7 @@ def prepare(a):
             out/'basic.log',timeout=180)
         rt.command([sys.executable,source/'tests/kernel/mmap_lock/phase_controls/test_receipts.py'],
             out/'receipt-tests.log',timeout=60)
-        directory=source/'tests/kernel/mmap_lock/phase_controls/payload'
+        directory=source/'tests/kernel/mmap_lock/phase_controls/fixture'
         rt.command(['make','-C',directory,'KDIR='+str(plain.SOURCE),'W=1','UBSAN_SANITIZE=n'],
             out/'controls-build.log',timeout=180)
         binary=directory/'kd_mmap_phase_controls.ko'

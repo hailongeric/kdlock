@@ -21,6 +21,7 @@ import normal
 
 import disassem as translator
 from test_jit_body_witness import render, run_image
+from test_instruction_policy import SYMBOLS
 
 CURRENT_TASK_OFFSET = 0x20B80
 GENERIC_GS_OFFSET = 0x23000
@@ -93,6 +94,42 @@ def check_execution():
             regs, args = run_image(assembly, [0x1000], context=(0, task))[0]
             require(regs[14] == task, "current did not use the logical waiter")
             require(args[1] == 1, "logical-current body did not execute")
+
+
+def check_rip_gs_execution():
+    # Destination + GS + IP exhaust both idle slots and temporarily borrow
+    # physical R13. Releasing IP must leave saved logical SP intact.
+    for entry in (0x1000, 0xffffffff817f7110):
+        for kind, abi in (("spin", 0), ("mutex", 2)):
+            for destination, packet in ((12, 6), (13, 5), (14, 4), (15, 3)):
+                raw = bytes((0x65, 0x4c, 0x8b, 0x25 + 8 * (destination - 12)))
+                raw += (0x28).to_bytes(4, "little") + b"\xc3"
+                options = {}
+                assembly, log, status = render(
+                    raw.hex(), entry=entry, lock_kind=kind, abi=abi,
+                    kernel_symbols=SYMBOLS, trusted_source=True,
+                    return_status=True, build_options=options)
+                require(status == 0, log)
+                require(re.search(rb"\bStack_R\b", assembly) is None,
+                        "released IP emitted an unnamed spill")
+                for seed in (0x123456789ABC, 0xABCDEF012345):
+                    origin = (ctypes.c_ulong * 2)(seed, seed + 1)
+                    initial = []
+
+                    def initialize(regs, stack):
+                        regs[2] = seed + 7
+                        initial.append(regs[1])
+
+                    gs = (ctypes.addressof(origin) - entry - 8 - 0x28) % (1 << 64)
+                    regs, args = run_image(
+                        assembly, [entry], initialize=initialize, context=(gs, seed),
+                        abi=abi, requirements=options["requirements"])[0]
+                    require(regs[packet] == seed, "GS/RIP loaded the wrong value")
+                    require(regs[1] == initial[0] + 8, "logical SP was not restored")
+                    require(regs[2] == seed + 7, "logical BP changed")
+                    require(regs[0] == 0x4444, "RET used the wrong logical stack")
+                    require(list(origin) == [seed, seed + 1], "GS read changed storage")
+                    require(args[1] == 1, "GS/RIP body did not execute")
 
 
 def main():
@@ -223,6 +260,7 @@ def main():
     )
 
     check_execution()
+    check_rip_gs_execution()
     print("[PASS] test_segment_codegen")
 
 

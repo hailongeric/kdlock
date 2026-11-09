@@ -64,12 +64,28 @@ def render(
     trusted_source=False,
     indirect_call_capable=False,
     origin_instruction_capable=False,
+    origin_memory_capable=False,
+    origin_context_read_capable=False,
+    indirect_tail_capable=False,
+    returning_services=None,
+    bound_controls=None,
+    read_policies=None,
+    callee_exclusions=None,
+    source_frontier_capable=False,
+    source_frontier_extensions=False,
+    source_frontier_controls=False,
+    source_frontier_direction=False,
+    direct_call_depth=0,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
     previous = os.getcwd()
 
-    def read_regions(entry, jump_table, excluded_callees):
+    def read_regions(entry, jump_table, excluded_callees, *, policy):
+        if read_policies is not None:
+            read_policies.append(policy)
+        if callee_exclusions is not None:
+            callee_exclusions.append(set(excluded_callees))
         # Reproduce learned dispatch metadata as well as bytes so tests cannot
         # accidentally validate a single-entry graph with its IJ history erased.
         jump_table.update(
@@ -97,7 +113,25 @@ def render(
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "indirect_call", return_value=indirect_call_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
+                                        "indirect_tail", return_value=indirect_tail_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "source_frontier", return_value=source_frontier_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "source_frontier_extensions", return_value=source_frontier_extensions))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "source_frontier_controls", return_value=source_frontier_controls))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "source_frontier_direction", return_value=source_frontier_direction))
+        stack.enter_context(patch.object(translator.memread.device_session,
                                         "origin_instruction", return_value=origin_instruction_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "origin_memory", return_value=origin_memory_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "origin_context_read", return_value=origin_context_read_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "service_calls", return_value=returning_services or {}))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "rwsem_controls", return_value=bound_controls or {}))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "root_native_escape", return_value=root_native_escape_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
@@ -164,6 +198,7 @@ def render(
             status = translator.dis_assem(
                 0, entry, lock_kind, body_witness=body_witness, abi=abi,
                 trusted_source=trusted_source,
+                direct_call_depth=direct_call_depth,
             )
             path = Path("asm/jit.S")
             assembly = path.read_bytes() if path.exists() else b""

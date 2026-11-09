@@ -1,0 +1,1822 @@
+[
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-000",
+    "registry": [
+      {
+        "code": 18419722476628070400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 1,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476623872000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 1,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-001",
+    "registry": [
+      {
+        "code": 18419722476628070400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 1,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476623872000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 1,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-002",
+    "registry": [
+      {
+        "code": 18419722476619673600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 2,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476615475200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 2,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-003",
+    "registry": [
+      {
+        "code": 18419722476619673600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 2,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476615475200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 2,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-004",
+    "registry": [
+      {
+        "code": 18419722476611276800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 3,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476607078400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 3,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-005",
+    "registry": [
+      {
+        "code": 18419722476611276800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 3,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476607078400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 3,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-006",
+    "registry": [
+      {
+        "code": 18419722476602880000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 4,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476598681600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 4,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-007",
+    "registry": [
+      {
+        "code": 18419722476602880000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 4,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476598681600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 4,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-008",
+    "registry": [
+      {
+        "code": 18419722476594483200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476590284800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-009",
+    "registry": [
+      {
+        "code": 18419722476594483200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476590284800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-010",
+    "registry": [
+      {
+        "code": 18419722476586086400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 6,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476581888000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 6,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-011",
+    "registry": [
+      {
+        "code": 18419722476586086400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 6,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476581888000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 6,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-012",
+    "registry": [
+      {
+        "code": 18419722476577689600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476573491200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-013",
+    "registry": [
+      {
+        "code": 18419722476577689600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476573491200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-014",
+    "registry": [
+      {
+        "code": 18419722476569292800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 8,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476565094400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 8,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-015",
+    "registry": [
+      {
+        "code": 18419722476569292800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 8,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476565094400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 8,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-016",
+    "registry": [
+      {
+        "code": 18419722476560896000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 9,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476556697600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 9,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-017",
+    "registry": [
+      {
+        "code": 18419722476560896000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 9,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476556697600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 9,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-018",
+    "registry": [
+      {
+        "code": 18419722476552499200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 10,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476548300800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 10,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-019",
+    "registry": [
+      {
+        "code": 18419722476552499200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 10,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476548300800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 10,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-020",
+    "registry": [
+      {
+        "code": 18419722476544102400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 11,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476539904000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 11,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-021",
+    "registry": [
+      {
+        "code": 18419722476544102400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 11,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476539904000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 11,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 12160,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-022",
+    "registry": [
+      {
+        "code": 18419722476535705600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 12,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476531507200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 12,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-023",
+    "registry": [
+      {
+        "code": 18419722476535705600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 12,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476531507200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 12,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-024",
+    "registry": [
+      {
+        "code": 18419722476527308800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 13,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476523110400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 13,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-025",
+    "registry": [
+      {
+        "code": 18419722476527308800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 13,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476523110400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 13,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-026",
+    "registry": [
+      {
+        "code": 18419722476518912000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 14,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476514713600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 14,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-027",
+    "registry": [
+      {
+        "code": 18419722476518912000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 14,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476514713600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 14,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-028",
+    "registry": [
+      {
+        "code": 18419722476510515200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 15,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476506316800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 15,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-029",
+    "registry": [
+      {
+        "code": 18419722476510515200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 15,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476506316800,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 15,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-030",
+    "registry": [
+      {
+        "code": 18419722476502118400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 16,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476497920000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 16,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-031",
+    "registry": [
+      {
+        "code": 18419722476502118400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 16,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476497920000,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 16,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-032",
+    "registry": [
+      {
+        "code": 18419722476493721600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 17,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476489523200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 17,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-033",
+    "registry": [
+      {
+        "code": 18419722476493721600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 17,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476489523200,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 17,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-034",
+    "registry": [
+      {
+        "code": 18419722476485324800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 18,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476481126400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 18,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-035",
+    "registry": [
+      {
+        "code": 18419722476485324800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 18,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476481126400,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 18,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-036",
+    "registry": [
+      {
+        "code": 18419722476476928000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-037",
+    "registry": [
+      {
+        "code": 18419722476476928000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-038",
+    "registry": [
+      {
+        "code": 18419722476468531200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 20,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-039",
+    "registry": [
+      {
+        "code": 18419722476468531200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 20,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-040",
+    "registry": [
+      {
+        "code": 18419722476464332800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 21,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-041",
+    "registry": [
+      {
+        "code": 18419722476464332800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 21,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-042",
+    "registry": [
+      {
+        "code": 18419722476460134400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 22,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-043",
+    "registry": [
+      {
+        "code": 18419722476460134400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 22,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-044",
+    "registry": [
+      {
+        "code": 18419722476455936000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 23,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-045",
+    "registry": [
+      {
+        "code": 18419722476455936000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 23,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-046",
+    "registry": [
+      {
+        "code": 18419722476451737600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 24,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-047",
+    "registry": [
+      {
+        "code": 18419722476451737600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 24,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-048",
+    "registry": [
+      {
+        "code": 18419722476447539200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 25,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-049",
+    "registry": [
+      {
+        "code": 18419722476447539200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 25,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-050",
+    "registry": [
+      {
+        "code": 18419722476443340800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 26,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-051",
+    "registry": [
+      {
+        "code": 18419722476443340800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 26,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-052",
+    "registry": [
+      {
+        "code": 18419722476439142400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 27,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-053",
+    "registry": [
+      {
+        "code": 18419722476439142400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 27,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-054",
+    "registry": [
+      {
+        "code": 18419722476434944000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 28,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-055",
+    "registry": [
+      {
+        "code": 18419722476434944000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 28,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-056",
+    "registry": [
+      {
+        "code": 18419722476430745600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 29,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-057",
+    "registry": [
+      {
+        "code": 18419722476430745600,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 29,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-058",
+    "registry": [
+      {
+        "code": 18419722476426547200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 30,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-059",
+    "registry": [
+      {
+        "code": 18419722476426547200,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 30,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-060",
+    "registry": [
+      {
+        "code": 18419722476422348800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 31,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-061",
+    "registry": [
+      {
+        "code": 18419722476422348800,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 31,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-062",
+    "registry": [
+      {
+        "code": 18419722476418150400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 32,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-063",
+    "registry": [
+      {
+        "code": 18419722476418150400,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 32,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  },
+  {
+    "accepted": true,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/scaling-f9fdaa2a/kd/run/threads/w01/learn-00/epochs/epoch-064",
+    "registry": [
+      {
+        "code": 18419722476413952000,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 33,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": 0,
+        "tgid": 3032
+      },
+      {
+        "code": 18419722476472729600,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 19,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 16256,
+        "status": -3,
+        "tgid": 3032
+      }
+    ]
+  }
+]

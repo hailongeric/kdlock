@@ -4,6 +4,7 @@
 
 #include <linux/rwsem.h>
 #include <linux/kd_mmap_rwsem_types.h>
+#include <linux/kd_rwsem_provider.h>
 
 /* Chosen once, before an mm is published. Neither contention nor a partial
  * critical section can change the backend. Both boot modes have this layout.
@@ -14,10 +15,13 @@ struct kd_mmap_lock {
 		struct kd_mmap_rwsem kd;
 	};
 	bool use_kd;
+	bool initialized;
+	const struct kd_rwsem_provider *provider;
 };
 
 #define KD_MMAP_LOCK_INITIALIZER(name) { \
 	.native = __RWSEM_INITIALIZER(name.native), .use_kd = false, \
+	.initialized = true, .provider = NULL, \
 }
 
 #endif

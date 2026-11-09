@@ -14,7 +14,11 @@ import indirect_jump
 import solve_bug
 import special_inst
 import native_escape
+import source_frontier
 import origin_instructions
+import origin_memory
+import budget_resume
+import returning_calls
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
 from miasm.expression.expression import ExprId, ExprLoc, ExprMem
@@ -42,6 +46,7 @@ def wrapper_context_inputs(assembly):
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
     preserve_flags=True, root_only=False, origin_sites=None,
+    budget_targets=None, returning_targets=None,
 ):
     dispatch_targets = {entry} if root_only else set(block_dict)
     if not root_only:
@@ -55,10 +60,18 @@ def write_entry_dispatch(
     f.write("MOV     R14, PT_RIP\n")
     if preserve_flags:
         f.write("PUSHFQ\n")
+    if budget_targets is not None:
+        if not preserve_flags or root_only or origin_sites:
+            raise ValueError("budget reentry requires a FULL arithmetic-flags contract")
+        budget_resume.entry_dispatch(f, budget_targets)
     if origin_sites:
         if not preserve_flags or root_only:
             raise ValueError("original-task instruction dispatch requires a resumable flags contract")
         origin_instructions.entry_dispatch(f, origin_sites)
+    if returning_targets:
+        if not preserve_flags or root_only:
+            raise ValueError("returning CALL needs a FULL arithmetic-flags contract")
+        returning_calls.entry_dispatch(f, returning_targets)
     for offset in ordered_targets:
         f.write(f"CMP     R14, 0x{offset:x}\n")
         target = (f"kd_dispatch_{offset:x}" if preserve_flags else
@@ -84,6 +97,10 @@ def write_entry_dispatch(
             f.write(f"JMP     loc_{offset:x}\n")
     if origin_sites:
         origin_instructions.continuation_dispatch(f, origin_sites)
+    if budget_targets is not None:
+        budget_resume.continuation_dispatch(f, budget_targets)
+    if returning_targets:
+        returning_calls.continuation_dispatch(f, returning_targets)
 
 
 def emit_jit_assembly(
@@ -98,9 +115,13 @@ def emit_jit_assembly(
     native_calls=None,
     trusted_source=False,
     origin_sites=None,
+    memory_sites=None,
+    memory_preempt_symbol=None,
+    budget_resume_enabled=False, returning_targets=None, returning_services=(),
+    nonreturning_targets=(), indirect_tails=None, retained_misses=False,
 ):
     continuation_targets = find_resumable_call_continuations(
-        block_dict, db_dict, keep_call_stack
+        block_dict, db_dict, set(keep_call_stack) - set(nonreturning_targets)
     )
     # The outer unlock's return PC may be in the native suffix trimmed by
     # critical_section_blocks. COMPLETE returns there physically; it is not
@@ -111,11 +132,21 @@ def emit_jit_assembly(
     )
     if origin_sites:
         continuation_targets.update(line.offset + line.l for line, _ in origin_sites.values())
+    if memory_sites:
+        continuation_targets.update(line.offset + line.l
+            for line, operation, _ in memory_sites.values() if operation)
+        returning_targets = set(returning_targets or ()) | {
+            line.offset + line.l for line, operation, _ in memory_sites.values() if operation}
     continuation_labels = continuation_targets - set(block_dict)
     emitted_continuation_labels = set()
     emitted_offsets = {line.offset for block in block_dict.values() for line in block.lines}
 
     f = StringIO()
+    budget_targets = {
+        offset for offset, block in block_dict.items()
+        if assist.check_is_branch(block.lines)
+        and db_dict[block].pretty_str(block.loc_key).startswith("l")
+    } if budget_resume_enabled else None
     if entry_guards is not None:
         entry_guards.emit(f, entry)
     write_entry_dispatch(
@@ -123,6 +154,8 @@ def emit_jit_assembly(
         preserve_flags=True,
         root_only=root_native_escape or native_calls is not None,
         origin_sites=origin_sites,
+        budget_targets=budget_targets,
+        returning_targets=returning_targets,
     )
     budget_rips = []
 
@@ -192,7 +225,17 @@ def emit_jit_assembly(
                       else None)
             if address_guards is not None:
                 f.write(address_guards.emit(line, reg_map))
-            if origin_sites and line.offset in origin_sites:
+            if (memory_sites and line.offset in memory_sites and
+                    origin_memory.read_operands(line)):
+                f.write(origin_memory.read_guard(line, reg_map, memory_preempt_symbol))
+            if (memory_sites and line.offset in memory_sites and
+                    origin_memory.is_gs_mutation(line)):
+                diagnostics.warn("ORIGIN_MEMORY_SERVICE", "emit_original_cpu_instruction",
+                                 "retain the exact JIT successor after one GS memory instruction",
+                                 source_ip=hex(line.offset), instruction=line.name)
+                f.write(origin_memory.marker(line, reg_map))
+                reg_map = conflict.block_init()
+            elif origin_sites and line.offset in origin_sites:
                 diagnostics.warn("ORIGIN_INSTRUCTION_SERVICE", "emit_waiter_instruction",
                                  "retain the same immutable JIT successor after one original-task instruction",
                                  source_ip=hex(line.offset), instruction=line.name)
@@ -200,6 +243,8 @@ def emit_jit_assembly(
                 # The wrapper will import the FULL packet, not the predecessor's
                 # physical scratch allocation, when it returns at this label.
                 reg_map = conflict.block_init()
+            elif source_frontier.descriptor(line):
+                f.write(source_frontier.marker(line, reg_map))
             elif native_escapes and native_escape.descriptor(line):
                 diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
                                  "resume this invocation's native suffix before the source instruction",
@@ -214,6 +259,16 @@ def emit_jit_assembly(
             else:
                 f.write(special_inst.translate(line, offset, db, reg_map, block_end,
                                                trusted_source=trusted_source))
+            if (memory_sites and line.offset in memory_sites and
+                    memory_sites[line.offset][1] and origin_memory.read_operands(line)):
+                # The ordinary read and returned instruction share next-PC.
+                # Publish dirty logical values before that label, then use the
+                # same canonical mapping imported by the service-return entry.
+                # MOV spills preserve the source instruction's live flags.
+                if reg_map.get("13") != "SP" or reg_map.get("12") != "BP":
+                    raise ValueError("memory read successor requires canonical virtual SP/BP")
+                f.write(conflict.release_conflict(reg_map))
+                reg_map = conflict.block_init()
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1
@@ -225,17 +280,23 @@ def emit_jit_assembly(
                       if indirect_call_native and line.name == "CALL" and line.args and
                       isinstance(line.args[0], (ExprId, ExprMem))}
     f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True,
-                                        indirect_calls=indirect_calls))
+                                        indirect_calls=indirect_calls,
+                                        indirect_tails=indirect_tails,
+                                        retained_misses=retained_misses))
     direct_targets = set(native_calls.services) if native_calls is not None else set()
     f.write(indirect_jump.make_callee_table(
         [target for target in missing_callees if target not in direct_targets],
-        resolved_hostcalls))
+        resolved_hostcalls, returning_services=returning_services,
+        retained_misses=retained_misses))
     # The source RIP is needed only if the budget expires. Keep its material-
     # ization off the frequently executed branch-block path; the exit resumes
     # at the same untouched source block as the previous INC/TEST sequence.
     for offset in budget_rips:
         f.write(f"kd_budget_limit_{offset:x}:\n")
-        f.write("POPFQ\n")
+        if budget_resume_enabled:
+            budget_resume.exhausted(f)
+        else:
+            f.write("POPFQ\n")
         f.write(make_inst("MOVABS", ["R14", hex(offset)]))
         f.write("JMP             inst_limit\n")
 
@@ -280,4 +341,10 @@ def emit_jit_assembly(
             raise ValueError("original-task instruction metadata cannot share another trailer")
         result = ("#ifndef KD_EMIT_ORIGIN_DIRECTORY\n" + result + "#else\n"
                   + origin_instructions.metadata(origin_sites) + "#endif\n")
+    if memory_sites:
+        if (origin_sites or native_calls is not None or
+                (address_guards is not None and address_guards.sites)):
+            raise ValueError("original-CPU memory metadata cannot share another trailer")
+        result = ("#ifndef KD_EMIT_MEMORY_DIRECTORY\n" + result + "#else\n"
+                  + origin_memory.metadata(memory_sites, memory_preempt_symbol) + "#endif\n")
     return result

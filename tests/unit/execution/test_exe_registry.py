@@ -48,7 +48,7 @@ def production():
     source = read_source((ROOT / "kernel_module/exe.c"))
     # Keep production capacities, gate and service declarations. Service calls
     # are not executed; their table is needed by the real init/exit functions.
-    code = "\n".join(
+    code = '#include "kd_image_pool.h"\n' + "\n".join(
         line for line in source.splitlines() if line.startswith("#define KD_CODE_")
     )
     code += (
@@ -71,7 +71,17 @@ def production():
     ):
         code += definition(source, name)
     device = read_source((ROOT / "kernel_module/sys.c"))
+    code += 'static unsigned long long kd_learning_next_token;\n'
     for name in (
+        "static bool kd_learning_reserved_zero(const __u64 *words, unsigned int count)",
+        "static bool kd_learning_root_equal(const struct kd_learning_root *left,",
+        "static struct kd_exe_info *kd_learning_find_root(const struct kd_learning_root *root)",
+        "static void kd_learning_clear_view(struct kd_image_upload *upload)",
+        "static bool kd_learning_upload_matches(const struct kd_image_upload *upload,",
+        "static long kd_learning_snapshot_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_bind_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_cancel_locked(struct kd_image_upload *upload,",
+        "static long kd_learning_ioctl(struct file *file, unsigned int command,",
         "static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,",
         "static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,",
     ):
@@ -124,6 +134,10 @@ def main():
             "head.image_length > KD_CODE_BLOCK_SIZE",
             "head.image_length > KD_CODE_BLOCK_SIZE + 1",
         ),
+        "service-source-pin-error-ignored": (
+            "ret = kd_service_calls_pin();",
+            "ret = (kd_service_calls_pin(), 0);",
+        ),
         "repeat-enters-registration-gate": (
             "if (kd_exe_registered(pid, rip, kind, abi))",
             "if (kd_exe_registered(pid, rip, kind, abi) && false)",
@@ -151,7 +165,9 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-exe-registry-") as tmp:
         directory = Path(tmp)
-        for name, mutation in [("production", None), *mutations.items()]:
+        variants = [("production", None, None), ("production-128", None, 128)]
+        variants += [(name, mutation, None) for name, mutation in mutations.items()]
+        for name, mutation, capacity in variants:
             candidate = code
             if mutation:
                 before, after = mutation
@@ -168,6 +184,7 @@ def main():
                     "-Wextra",
                     "-Werror",
                     "-pthread",
+                    *([f"-DKD_CODE_BLOCK_POOL={capacity}"] if capacity else []),
                     "-I",
                     str(directory),
                     "-I",

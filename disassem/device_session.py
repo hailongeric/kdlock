@@ -8,11 +8,41 @@ import argparse
 import errno
 import fcntl
 import json
+import io
 import os
+from pathlib import Path
+import re
 import stat
 import struct
 import sys
 from contextlib import contextmanager
+
+try:
+    import compiler_manifest
+except Exception:
+    # Optional evidence cannot change device/translation behavior.
+    compiler_manifest = None
+
+
+def _capture(event, **values):
+    try:
+        if compiler_manifest is not None:
+            compiler_manifest.capture(event, **values)
+    except Exception:
+        pass
+
+
+def _read_registry_text(path):
+    try:
+        observe = compiler_manifest is not None and compiler_manifest.enabled()
+    except Exception:
+        observe = False
+    if not observe:
+        return path.read_text(encoding='ascii'), None
+    # The same bytes feed evidence and parsing; preserve text-mode newline
+    # behavior without reopening a possibly changed registry file afterward.
+    raw = path.read_bytes()
+    return io.StringIO(raw.decode('ascii'), newline=None).read(), raw
 
 DEVICE = "/dev/kd_dev"
 # x86-64 Linux ioctl layout, checked against include/kd_source_api.h in tests.
@@ -20,7 +50,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 13
+CAPS_VERSION = 22
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -34,6 +64,12 @@ CAP_DIRECT_STRINGS = 1024
 CAP_ROOT_NATIVE_ESCAPE = 2048
 CAP_INDIRECT_CALL = 4096
 CAP_ORIGIN_INSTRUCTION = 8192
+CAP_ORIGIN_CALL = 16384
+CAP_ORIGIN_MEMORY = 32768
+CAP_ORIGIN_CONTEXT_READ = 65536
+CAP_INDIRECT_TAIL = 131072
+CAP_SOURCE_FRONTIER = 262144
+CAP_LEARNING_BATCH = 524288
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -53,6 +89,14 @@ _direct_strings = False
 _root_native_escape = False
 _indirect_call = False
 _origin_instruction = False
+_origin_call = False
+_origin_memory = False
+_origin_context_read = False
+_indirect_tail = False
+_source_frontier = False
+_source_frontier_extensions = False
+_source_frontier_controls = False
+_source_frontier_direction = False
 
 
 class SourceRefused(RuntimeError):
@@ -94,11 +138,15 @@ def query_capabilities(fd):
                 "string_services": False, "string_write": False,
                 "audited_strings": False, "direct_strings": False,
                 "root_native_escape": False, "indirect_call": False,
-                "origin_instruction": False}
+                "origin_instruction": False, "origin_call": False,
+                "origin_memory": False, "origin_context_read": False,
+                "indirect_tail": False, "source_frontier": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
     except OSError as error:
+        _capture('capabilities', fd=fd, raw=bytes(packet), result=None,
+                 errno=error.errno, validated=False, parsed=disabled)
         if error.errno != errno.ENOTTY:
             raise
         print(
@@ -132,6 +180,18 @@ def query_capabilities(fd):
             known |= CAP_ROOT_NATIVE_ESCAPE | CAP_INDIRECT_CALL
         if 13 <= version <= CAPS_VERSION:
             known |= CAP_ORIGIN_INSTRUCTION
+        if 14 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_CALL
+        if 15 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_MEMORY
+        if 16 <= version <= CAPS_VERSION:
+            known |= CAP_ORIGIN_CONTEXT_READ
+        if 17 <= version <= CAPS_VERSION:
+            known |= CAP_INDIRECT_TAIL
+        if 18 <= version <= CAPS_VERSION:
+            known |= CAP_SOURCE_FRONTIER
+        if 22 <= version <= CAPS_VERSION:
+            known |= CAP_LEARNING_BATCH
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -143,11 +203,25 @@ def query_capabilities(fd):
                  or features & CAP_NATIVE_ESCAPE)
             and (not features & CAP_ORIGIN_INSTRUCTION
                  or features & CAP_NATIVE_ESCAPE)
+            and (not features & CAP_ORIGIN_CALL
+                 or features & (CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
+                    == CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
+            and (not features & CAP_ORIGIN_MEMORY
+                 or features & CAP_ORIGIN_CALL)
+            and (not features & CAP_ORIGIN_CONTEXT_READ
+                 or features & CAP_ORIGIN_MEMORY)
+            and (not features & CAP_INDIRECT_TAIL
+                 or features & CAP_ORIGIN_CALL)
+            and (not features & CAP_SOURCE_FRONTIER
+                 or features & CAP_ORIGIN_CALL)
+            and (not features & CAP_LEARNING_BATCH
+                 or features & (CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
+                    == CAP_MUTEX_IMAGES | CAP_MUTEX_EXCLUSIVE)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
         ):
-            return {
+            parsed = {
                 "mutex_stack_bytes": stack_bytes,
                 "percpu_module_bytes": module_bytes,
                 "mutex_images": bool(features & CAP_MUTEX_IMAGES),
@@ -161,13 +235,26 @@ def query_capabilities(fd):
                 "root_native_escape": bool(features & CAP_ROOT_NATIVE_ESCAPE),
                 "indirect_call": bool(features & CAP_INDIRECT_CALL),
                 "origin_instruction": bool(features & CAP_ORIGIN_INSTRUCTION),
+                "origin_call": bool(features & CAP_ORIGIN_CALL),
+                "origin_memory": bool(features & CAP_ORIGIN_MEMORY),
+                "origin_context_read": bool(features & CAP_ORIGIN_CONTEXT_READ),
+                "indirect_tail": bool(features & CAP_INDIRECT_TAIL),
+                "source_frontier": bool(features & CAP_SOURCE_FRONTIER),
+                "source_frontier_extensions": bool(version >= 19 and features & CAP_SOURCE_FRONTIER),
+                "source_frontier_controls": bool(version >= 20 and features & CAP_SOURCE_FRONTIER),
+                "source_frontier_direction": bool(version >= 21 and features & CAP_SOURCE_FRONTIER),
             }
+            _capture('capabilities', fd=fd, raw=bytes(packet), result=result,
+                     validated=True, parsed=parsed)
+            return parsed
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
         f"mutex_stack_bytes=0 percpu_module_bytes=0 "
         f"result={result} packet={packet.hex()}",
         file=sys.stderr,
     )
+    _capture('capabilities', fd=fd, raw=bytes(packet), result=result,
+             validated=False, parsed=disabled)
     return disabled
 
 
@@ -241,10 +328,178 @@ def indirect_call():
     return _indirect_call
 
 
+def indirect_tail():
+    """An owned near JMP can return a declared service to retained ABI2 code."""
+    require()
+    return _indirect_tail
+
+
 def origin_instruction():
     """Only this v13 lease authorizes same-image original-task instructions."""
     require()
     return _origin_instruction
+
+
+def origin_memory():
+    """Only this lease authorizes original-CPU GS memory transactions."""
+    require()
+    return _origin_memory
+
+
+def origin_context_read():
+    """Guard exact origin preempt-count aliases before ordinary GS reads."""
+    require()
+    return _origin_context_read
+
+
+def parse_service_calls(text, *, max_bytes=4096):
+    """Parse one bounded registry snapshot, without inventing call contracts."""
+    result, cookies = {}, set()
+    if not isinstance(text, str) or len(text) > max_bytes or max_bytes > 32768:
+        raise ValueError("invalid returning CALL registry snapshot")
+    for line in text.splitlines():
+        fields = line.split()
+        if (len(fields) != 6 or
+                not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.$]*", fields[-1])):
+            raise ValueError("invalid returning CALL registry row")
+        cookie, target = (int(value, 16) for value in fields[:2])
+        nargs, result_kind, context_kind = (int(value, 10) for value in fields[2:5])
+        if (not 0 < cookie < 1 << 64 or not 0 < target < 1 << 64 or
+                cookie in cookies or target in result or not 0 <= nargs <= 6 or
+                result_kind not in (1, 2) or context_kind not in range(1, 15) or
+                (context_kind == 11 and
+                 (nargs != 0 or result_kind != 2 or fields[-1] != '__stack_chk_fail')) or
+                (context_kind in (12, 13) and (nargs != 1 or result_kind != 2)) or
+                (context_kind == 14 and nargs == 0)):
+            raise ValueError("inconsistent returning CALL registry row")
+        cookies.add(cookie)
+        result[target] = dict(cookie=cookie, nargs=nargs, result_kind=result_kind,
+                              context_kind=context_kind, symbol=fields[-1])
+    return result
+
+
+def read_service_call_table(directory=None):
+    """Read one exact bounded registry, with an old-provider alternative."""
+    directory = Path(directory) if directory is not None else Path('/sys/module/kdlock_km/parameters')
+    state_path = directory / 'service_call_table_state'
+    try:
+        before, before_raw = _read_registry_text(state_path)
+    except FileNotFoundError:
+        text, raw = _read_registry_text(directory / 'service_call_table')
+        parsed = parse_service_calls(text)
+        _capture('service_table', mode='legacy', raw=raw, parsed=parsed)
+        return text
+    fields = before.split()
+    if len(fields) != 3 or not all(re.fullmatch(r'[0-9]+', value) for value in fields):
+        raise ValueError('invalid Native discovery state')
+    generation, slots, active = map(int, fields)
+    if not 0 <= active <= slots <= 128 or not 0 <= generation <= 256:
+        raise ValueError('Native discovery state exceeds its bounds')
+    texts, raw_pages, cookies, targets, symbols = [], [], set(), set(), set()
+    for page in range(8):
+        text, raw = _read_registry_text(directory / f'service_call_page_{page}')
+        rows = parse_service_calls(text)
+        for target, row in rows.items():
+            cookie = row['cookie']
+            if (not page * 16 < cookie <= min(slots, (page + 1) * 16) or
+                    cookie in cookies or target in targets or row['symbol'] in symbols):
+                raise ValueError('Native discovery page membership differs')
+            cookies.add(cookie); targets.add(target); symbols.add(row['symbol'])
+        texts.append(text)
+        raw_pages.append(raw)
+    after, after_raw = _read_registry_text(state_path)
+    if after != before:
+        raise ValueError('Native discovery changed while being read')
+    if len(cookies) != active:
+        raise ValueError('Native discovery active count differs')
+    text = ''.join(texts)
+    parsed = parse_service_calls(text, max_bytes=32768)
+    _capture('service_table', mode='paged', before=before_raw, after=after_raw,
+             generation=generation, slots=slots, active=active, pages=raw_pages,
+             parsed=parsed)
+    return text
+
+
+def service_calls():
+    """Read exact declarations from the provider pinned by this device lease."""
+    require()
+    if not _origin_call:
+        _capture('service_table', mode='not_read', reason='capability_disabled')
+        return {}
+    return parse_service_calls(read_service_call_table(), max_bytes=32768)
+
+
+def parse_rwsem_controls(text):
+    """The facade declares operation identities; runtime resolves its object."""
+    result = {}
+    if not isinstance(text, str) or len(text) > 4096:
+        raise ValueError('invalid rwsem control registry snapshot')
+    for line in text.splitlines():
+        fields = line.split()
+        if len(fields) != 4:
+            raise ValueError('invalid rwsem control registry row')
+        target, operation, flags = int(fields[0], 16), int(fields[1]), int(fields[2])
+        if (not 0 < target < 1 << 64 or target in result or
+                operation not in range(1, 19) or flags & ~7 or
+                not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.$]*', fields[3])):
+            raise ValueError('inconsistent rwsem control registry row')
+        result[target] = dict(operation=operation, flags=flags, symbol=fields[3])
+    return result
+
+
+def rwsem_controls():
+    require()
+    if not _origin_call:
+        _capture('controls', mode='not_read')
+        return {}
+    path = Path('/sys/module/kdlock_km/parameters/rwsem_control_table')
+    text, raw = _read_registry_text(path)
+    parsed = parse_rwsem_controls(text)
+    _capture('controls', mode='read', raw=raw, parsed=parsed)
+    return parsed
+
+
+def runtime_rwsem_controls(controls, returning_services):
+    """Separate compiled state queries from ownership-changing controls.
+
+    The provider exports synthetic row labels. Operation identities, rather
+    than display names, keep these ordinary helpers out of every control and
+    callee-exclusion set. Their actual downstream calls keep their own policy.
+    """
+    result = {}
+    for target, control in controls.items():
+        if control['operation'] in (14, 15, 16):
+            if control['flags'] != 4:
+                raise ValueError('compiled rwsem state query has incompatible control flags')
+            if target in returning_services:
+                raise ValueError('compiled rwsem state query is registered as a Native service')
+            continue
+        result[target] = control
+    return result
+
+
+def source_frontier():
+    """Only this validated lease permits a permanent source frontier."""
+    require()
+    return _source_frontier
+
+
+def source_frontier_extensions():
+    """Revision 19 also recognizes the two added task-state instructions."""
+    require()
+    return _source_frontier_extensions
+
+
+def source_frontier_controls():
+    """Revision 20 adds exact CLI/STI terminal continuations."""
+    require()
+    return _source_frontier_controls
+
+
+def source_frontier_direction():
+    """Revision 21 adds exact pre-CLD/STD permanent continuations."""
+    require()
+    return _source_frontier_direction
 
 
 def pin_range(address, size):
@@ -262,7 +517,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape, _indirect_call, _origin_instruction, _origin_call, _origin_memory, _origin_context_read, _indirect_tail, _source_frontier, _source_frontier_extensions, _source_frontier_controls, _source_frontier_direction
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -291,7 +546,8 @@ def session():
         # capabilities are absent. Reject incompatibility before reading text.
         # A previously leased writer can finish while closing; no new writer
         # opens or image publication are accepted once draining begins.
-        if info(fd)["state"] not in (OPEN, DRAINING):
+        source_info = info(fd)
+        if source_info["state"] not in (OPEN, DRAINING):
             raise RuntimeError("kd_dev source session is retired")
         # Query the same validated description once, before any text read.
         # Never reuse a prior session's capability or open another provider.
@@ -300,6 +556,9 @@ def session():
             raise RuntimeError("exclusive KD mutex object capability required")
         if not caps["mutex_images"]:
             raise RuntimeError("immutable legacy mutex image publication capability required")
+        _capture('descriptor', fd=fd, inherited=inherited is not None,
+                 inherited_fd=parent_fd if inherited is not None else None,
+                 opened=opened, named=named, source_info=source_info)
         _mutex_stack_bytes = caps["mutex_stack_bytes"]
         _percpu_module_bytes = caps["percpu_module_bytes"]
         _native_escape = caps["native_escape"]
@@ -311,6 +570,14 @@ def session():
         _root_native_escape = caps["root_native_escape"]
         _indirect_call = caps["indirect_call"]
         _origin_instruction = caps["origin_instruction"]
+        _origin_call = caps["origin_call"]
+        _origin_memory = caps["origin_memory"]
+        _origin_context_read = caps["origin_context_read"]
+        _indirect_tail = caps["indirect_tail"]
+        _source_frontier = caps["source_frontier"]
+        _source_frontier_extensions = caps.get("source_frontier_extensions", False)
+        _source_frontier_controls = caps.get("source_frontier_controls", False)
+        _source_frontier_direction = caps.get("source_frontier_direction", False)
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -321,7 +588,10 @@ def session():
             f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
             f"direct_strings={int(_direct_strings)} "
             f"root_native_escape={int(_root_native_escape)} indirect_call={int(_indirect_call)} "
-            f"origin_instruction={int(_origin_instruction)}"
+            f"origin_instruction={int(_origin_instruction)} "
+            f"origin_call={int(_origin_call)} origin_memory={int(_origin_memory)} "
+            f"origin_context_read={int(_origin_context_read)} indirect_tail={int(_indirect_tail)} "
+            f"source_frontier_direction={int(_source_frontier_direction)}"
         )
         yield fd
     finally:
@@ -337,6 +607,14 @@ def session():
         _root_native_escape = False
         _indirect_call = False
         _origin_instruction = False
+        _origin_call = False
+        _origin_memory = False
+        _origin_context_read = False
+        _indirect_tail = False
+        _source_frontier = False
+        _source_frontier_extensions = False
+        _source_frontier_controls = False
+        _source_frontier_direction = False
         if fd is not None:
             os.close(fd)
 

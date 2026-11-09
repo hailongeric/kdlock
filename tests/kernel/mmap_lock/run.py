@@ -104,7 +104,7 @@ def main():
         support=shared_platform.freeze_support(out)
         source, hashes = out / 'source', {}
         layout_source = ROOT / 'kernel_module/kd_mutex_local.c'
-        layout_header = ROOT / 'tests/kernel/mmap_lock/payload/gate_waiter_layout.h'
+        layout_header = ROOT / 'tests/kernel/mmap_lock/fixture/gate_waiter_layout.h'
         rt.require(layout_header.read_text() == gate_waiter_layout(layout_source.read_text()),
                    'test-only gate view differs from captured source')
         layout_copy = source / 'kernel_module/kd_mutex_local.c'
@@ -136,12 +136,12 @@ def main():
                 rt.require(rt.digest(ROOT / name) == rt.digest(source / name) == h,
                            'frozen source changed: ' + name)
 
-        payload = source / 'tests/kernel/mmap_lock/payload/kd_mmap_probe.ko'
+        payload = source / 'tests/kernel/mmap_lock/fixture/kd_mmap_probe.ko'
         if a.reuse_probe:
             from elftools.elf.elffile import ELFFile
             prior = json.loads(a.reuse_probe.read_text())
             expected_sources = {name: h for name, h in hashes.items()
-                                if name.startswith('tests/kernel/mmap_lock/payload/')}
+                                if name.startswith('tests/kernel/mmap_lock/fixture/')}
             rt.require(prior['passed'] and prior['source'] == expected_sources,
                        'prebuilt probe source bindings differ')
             old_payload = Path(prior['module'])

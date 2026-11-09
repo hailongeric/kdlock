@@ -1,0 +1,27 @@
+{
+  "excluded_path_count": 6393,
+  "excluded_path_list_encoding": "UTF-8 JSON list with compact separators; full list retained in original receipt",
+  "excluded_path_list_sha256": "b6c631be3c1c38cdb84ca890fc955f7716cffee38538d98efabacfd79e24a87c",
+  "excluded_prefixes": [
+    "bench/results",
+    "results",
+    "kernel_baseline/experiments"
+  ],
+  "files": 1093,
+  "git_head": "b9a31a069b465987bb683256a044f5a1c80afca1",
+  "git_index_sha256": "d115a04dde9ecb4448b715214252c709515ae998c96b786678a29efc281ee24a",
+  "git_status": "M  daemon/Makefile\nM  daemon/README.md\nM  daemon/compiler.inc\nM  daemon/daemon.c\nM  daemon/evidence.inc\nA  daemon/learning.inc\nM  daemon/publication.inc\nM  disassem/device_session.py\nM  docs/design/lifetimes.md\nM  include/kd_image.h\nA  include/kd_learning_api.h\nM  include/kd_source_api.h\nM  kernel_module/execution/images.inc\nM  kernel_module/sys.c\nM  tests/unit/Makefile\nM  tests/unit/admission/test_text_regions.py\nM  tests/unit/basic/test_daemon_policy.c\nM  tests/unit/execution/exe_registry_fixture.c\nA  tests/unit/execution/learning_control_fixture.inc\nM  tests/unit/execution/test_exe_registry.py\nM  tests/unit/execution/test_mutex_images.py\nM  tests/unit/execution/test_native_service_join.py\nM  tests/unit/infrastructure/source_lifetime_fixture.c\nM  tests/unit/infrastructure/test_compiler_manifest.py\nM  tests/unit/infrastructure/test_source_lifetime.py\n",
+  "omitted_missing_tracked_paths": [],
+  "original_receipt": {
+    "archive": "recheck-checks.tar.gz",
+    "member": "receipts/source-state.json"
+  },
+  "original_source_state_sha256": "6fe168e610ebfaa522c6248381d88fc9e488bd218f92bc580bf2820f40115996",
+  "record_kind": "source_receipt_summary",
+  "schema": 1,
+  "source_patch_sha256": "0aadca5b55427ce38a9aeedd3aeb5a624e806bc359acd75e3208ec72735c8824",
+  "source_policy": "current tracked working bytes including staged new files",
+  "source_root": "/tmp/kdlock-reached-path-translation",
+  "staged_patch_sha256": "0aadca5b55427ce38a9aeedd3aeb5a624e806bc359acd75e3208ec72735c8824",
+  "transfer_bytes": 10827462
+}

@@ -24,6 +24,7 @@ FIXTURE = r'''
 #include <stdio.h>
 #define noinline __attribute__((noinline))
 #define likely(value) (value)
+#define TASK_UNINTERRUPTIBLE 1U
 
 struct kd_mutex { int unused; };
 struct kd_mutex_osq_node { int unused; };
@@ -62,9 +63,9 @@ static void smp_mb(void)
     barriers++;
     wake_barrier = true;
 }
-static void kd_rwsem_wake(int *queue)
+static void kd_rwsem_wake(struct kd_rwsem *s, int *queue)
 {
-    assert(queue == &sem.phase_wait && !pins && !reserved && !queued);
+    assert(s == &sem && queue == &sem.phase_wait && !pins && !reserved && !queued);
     assert(wake_barrier && barriers == wakes + 1);
     wakes++;
     wake_barrier = false;
@@ -183,7 +184,20 @@ static void prepare_wait(int *queue)
     waiting = false; \
 } while (0)
 
+static long kd_rwsem_wait_condition(struct kd_rwsem *s, int *queue,
+                                    int kind, unsigned int state, bool timed);
 #include "rwsem_read_production.h"
+
+static long kd_rwsem_wait_condition(struct kd_rwsem *s, int *queue,
+                                    int kind, unsigned int state, bool timed)
+{
+    assert(s == &sem && kind == KD_RWSEM_CONDITION_READ);
+    assert(state == TASK_UNINTERRUPTIBLE && !timed);
+    prepare_wait(queue);
+    assert(kd_down_read_trylock(s));
+    waiting = false;
+    return 0;
+}
 
 static void reset(void)
 {
@@ -393,15 +407,19 @@ int main(void)
 def main():
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
-    poll = source[source.index('#define kd_rwsem_poll(condition)'):
-                  source.index('#define kd_rwsem_wait(queue, condition)')]
+    # Extract this statement-expression macro itself. Its former neighboring
+    # wait macro was replaced by the common condition-channel implementation.
+    poll_start = source.index('#define kd_rwsem_poll(condition)')
+    poll_end = source.index('\n})\n', poll_start) + len('\n})\n')
+    poll = source[poll_start:poll_end]
     spin = definition(source, 'static bool kd_rwsem_spin_read(struct kd_rwsem *sem)')
     local = definition(source, 'static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)')
     delegate = definition(source, 'static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)')
     local_phase = next(line for line in source.splitlines()
                        if line.startswith('#define KD_RWSEM_LOCAL_WRITER '))
     fast = definition(source, 'void kd_down_read(struct kd_rwsem *sem)')
-    code = local_phase + '\n' + poll + spin + local + delegate + fast
+    condition_kind = definition(source, 'enum kd_rwsem_condition_kind {') + ';'
+    code = local_phase + '\n' + condition_kind + '\n' + poll + spin + local + delegate + fast
     queue_guard = ('\t\tif (!phase && atomic_read(&sem->reader_osq.tail))\n'
                    '\t\t\treturn false;\n')
     delegate_loop = '\twhile (phase >= 0 && phase < LONG_MAX) {'
@@ -424,10 +442,10 @@ def main():
             fast, fast.replace('cpu_relax();', '(void)cpu_relax;', 1)),
         'unbounded-poll': ('while (--kd_rwsem_budget)', 'while (--kd_rwsem_budget || true)'),
         'lost-wake-barrier': ('smp_mb();', '(void)smp_mb;'),
-        'lost-cohort-wake': ('kd_rwsem_wake(&sem->phase_wait);', '(void)kd_rwsem_wake;'),
+        'lost-cohort-wake': ('kd_rwsem_wake(sem, &sem->phase_wait);', '(void)kd_rwsem_wake;'),
         'wake-before-barrier': (
-            'smp_mb();\n\t\tkd_rwsem_wake(&sem->phase_wait);',
-            'kd_rwsem_wake(&sem->phase_wait);\n\t\tsmp_mb();'),
+            'smp_mb();\n\t\tkd_rwsem_wake(sem, &sem->phase_wait);',
+            'kd_rwsem_wake(sem, &sem->phase_wait);\n\t\tsmp_mb();'),
         'wake-while-pinned': (spin, pinned_wake),
         'wake-with-reader-cohort': (
             'if (!atomic_read(&sem->reader_osq.tail))',
@@ -490,7 +508,8 @@ def count_checks(source, compiler, path):
     """
     release = definition(source, 'void kd_up_read(struct kd_rwsem *sem)')
     acquire = definition(source, 'int kd_down_read_trylock(struct kd_rwsem *sem)')
-    code = release + acquire
+    read_try = definition(source, 'static int kd_rwsem_try_read(struct kd_rwsem *sem, bool notify)')
+    code = release + read_try + acquire
     fixture = ROOT / 'tests/unit/mutex/rwsem_read_count_fixture.c'
     (path / 'count_fixture.c').write_text(read_source(fixture))
     mutations = {

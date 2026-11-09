@@ -1,0 +1,50 @@
+{
+  "source_commit": "02990b62e55f7c2c9b5d6f0d9d6c5b1dd486151e",
+  "boot_id": "5c11c49a-fbf5-43a8-84bf-058fb6472fc7",
+  "passed": false,
+  "drained": false,
+  "error": "Failure('diagnostic kernel log incomplete')",
+  "application": {
+    "log": "testcase:Anonymous memory mmap/munmap of 128MB\nwarmup\nmin:39 max:41 total:80\nmin:33 max:33 total:66\nmin:42 max:43 total:85\nmin:42 max:43 total:85\nmin:42 max:42 total:84\nmin:41 max:42 total:83\nmeasurement\nmin:42 max:43 total:85\nmin:43 max:43 total:86\naverage:85\n",
+    "sha256": "bcca326fc4ea02b264cdf18cc209f138d8a2deb3314b48fccbf5f33b5ba69baa"
+  },
+  "retained_reached_stats": "roots=5333 completions=5332 instructions=33099463 controls=7967 primitives=108288 memory=193365 cache_hits=617996 cache_misses=32481467 cache_full=8736117 unsupported=0 active=2",
+  "collector": {
+    "bytes": 2697545,
+    "collector_cpu": 63,
+    "complete": false,
+    "drained": true,
+    "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentythird-20261103/threads/lifecycle-log/kernel-log-errors.jsonl",
+    "errors": 6234,
+    "fault_detected": false,
+    "first_error": {
+      "bytes": 1912033,
+      "errno": 32,
+      "error": "BrokenPipeError(32, 'Broken pipe')",
+      "monotonic_ns": 679534099733,
+      "records": 5625
+    },
+    "last_error": {
+      "bytes": 2697391,
+      "errno": null,
+      "error": "TimeoutError('diagnostic final drain exceeded its deadline')",
+      "monotonic_ns": 712057238892,
+      "records": 5625
+    },
+    "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentythird-20261103/threads/lifecycle-log/kernel.log",
+    "max_bytes": 268435456,
+    "mode": "continuous-diagnostic",
+    "records": 5625
+  },
+  "archive": "/tmp/kdlock-reached-mm-twentythird-after-reset-retry-20261103",
+  "recovery": {
+    "restarted": true,
+    "source_commit": "02990b62e55f7c2c9b5d6f0d9d6c5b1dd486151e",
+    "serial_path": "/tmp/kdlock-mm-twentythird-serial.log",
+    "bytes": 115120585,
+    "sha256": "406c78805dcc3c299cc10d5ae99835488a25d7f6f3ab3a4d55de20dfaba7e0b6",
+    "drained": false
+  },
+  "recovered_boot": "923c6745-e2f0-4bf7-9c81-34f8e146716e",
+  "processes_run": false
+}

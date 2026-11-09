@@ -15,7 +15,7 @@ labels used below.
 This runner compares Linux native rwlocks, the
 [TCLock rwlock port](../../tclock_backend/README.md) and
 [KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
-Use the separate [correctness test](../../tests/kernel/rwlock/payload/README.md) for
+Use the separate [correctness test](../../tests/kernel/rwlock/fixture/README.md) for
 instrumented checks of reader overlap and writer exclusion.
 The same runner also supports sleeping rwsems and extracted proc spin
 snapshots. These modes keep distinct lock, caller and execution identities.
@@ -212,7 +212,7 @@ These records do not constitute a new run of the consolidated provider.
 | `rcuht` | Readers look up a key; writers move a preallocated node between hash buckets | 1,024 buckets, 4,096 nodes, 8,192 possible keys |
 
 The hash update and final structure checks reuse the previous
-[KD/TCLock hash payload](../../workload_modules/spin_cacheline/hash_payload.h),
+[KD/TCLock hash payload](../../workload_modules/spin_cacheline/hash_body.h),
 adapted from TCLocks `rcuhashbash_write_lock`. One global reader/writer lock protects the table.
 Despite the RCUHT name, readers take that lock: the body uses no lock-free RCU,
 node allocation or RCU services.

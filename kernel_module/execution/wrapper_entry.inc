@@ -106,18 +106,28 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 					 "CALL_LIMIT_NATIVE");
 }
 
-/* Canonical near indirect CALL only: optional single REX, FF /2, then the
- * actual ModRM/SIB displacement. No guessed backward scan, far CALL, legacy
- * prefix or RET/JMP can supply this provenance. Read only required bytes. */
+/* Near indirect CALL: optional single REX, FF /2, then actual ModRM/SIB
+ * displacement. Linux alternatives also emit 1..3 CS prefixes on register
+ * CALLs. Those prefixes count toward the source return PC; padding following
+ * the instruction does not. No other legacy prefix, far CALL or RET/JMP can
+ * supply this provenance. Read only required bytes. */
 static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 {
 	u8 bytes[8], modrm, mode, rm, base = 0xff;
-	unsigned int offset = 0, count;
+	unsigned int offset = 0, count, cs_prefixes;
 
 	if (!site || site > ~0UL - sizeof(bytes) ||
 	    copy_from_kernel_nofault(bytes, (void *)site, 1))
 		return -EFAULT;
-	if (bytes[0] >= 0x40 && bytes[0] <= 0x4f)
+	while (bytes[offset] == 0x2e) {
+		if (offset == 3)
+			return -EILSEQ;
+		offset++;
+		if (copy_from_kernel_nofault(bytes, (void *)site, offset + 1))
+			return -EFAULT;
+	}
+	cs_prefixes = offset;
+	if (bytes[offset] >= 0x40 && bytes[offset] <= 0x4f)
 		offset++;
 	if (copy_from_kernel_nofault(bytes, (void *)site, offset + 2))
 		return -EFAULT;
@@ -127,6 +137,8 @@ static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 	count = offset + 2;
 	mode = modrm >> 6;
 	rm = modrm & 7;
+	if (cs_prefixes && mode != 3)
+		return -EILSEQ;
 	if (mode != 3 && rm == 4) {
 		if (copy_from_kernel_nofault(bytes, (void *)site, ++count))
 			return -EFAULT;
@@ -139,6 +151,83 @@ static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)
 		return -EFAULT;
 	*length = count;
 	return 0;
+}
+
+/* The near JMP shares the bounded addressing grammar, but never a CALL push
+ * or RET pop. A distinct decoder keeps those source operations separate. */
+static int kd_jit_indirect_tail_length(unsigned long site, unsigned int *length)
+{
+	u8 bytes[8], modrm, mode, rm, base = 0xff;
+	unsigned int offset = 0, count, cs_prefixes;
+
+	if (!site || site > ~0UL - sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, 1))
+		return -EFAULT;
+	while (bytes[offset] == 0x2e) {
+		if (offset >= 3)
+			return -EILSEQ;
+		offset++;
+		if (copy_from_kernel_nofault(bytes, (void *)site, offset + 1))
+			return -EFAULT;
+	}
+	cs_prefixes = offset;
+	if (bytes[offset] >= 0x40 && bytes[offset] <= 0x4f)
+		offset++;
+	if (copy_from_kernel_nofault(bytes, (void *)site, offset + 2))
+		return -EFAULT;
+	modrm = bytes[offset + 1];
+	if (bytes[offset] != 0xff || ((modrm >> 3) & 7) != 4)
+		return -EILSEQ;
+	count = offset + 2;
+	mode = modrm >> 6;
+	rm = modrm & 7;
+	if (cs_prefixes && mode < 3)
+		return -EILSEQ;
+	if (mode != 3 && rm == 4) {
+		if (copy_from_kernel_nofault(bytes, (void *)site, ++count))
+			return -EFAULT;
+		base = bytes[count - 1] & 7;
+	}
+	count += mode == 1 ? 1 : mode == 2 ||
+		 (mode == 0 && (rm == 5 || base == 5)) ? 4 : 0;
+	if (count > sizeof(bytes) ||
+	    copy_from_kernel_nofault(bytes, (void *)site, count))
+		return -EFAULT;
+	*length = count;
+	return 0;
+}
+
+static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	unsigned long site, base, return_ip;
+	unsigned int length;
+	int result;
+
+	if (!frame || !regs || !frame->mutex_backend ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->packet_state != KD_PACKET_FULL || !frame->executed ||
+	    regs != kd_exec_frame_regs(frame) || !frame->logical_task ||
+	    frame->logical_task == current || !frame->image ||
+	    !frame->image->immutable ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_INDIRECT_TAIL))
+		return -EINVAL;
+	site = regs->orig_ax;
+	result = kd_source_pin_target(site);
+	if (!result)
+		result = kd_jit_indirect_tail_length(site, &length);
+	if (!result)
+		result = kd_source_pin_target(site + length - 1);
+	if (result)
+		return result;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE || regs->sp < base ||
+	    regs->sp > base + THREAD_SIZE - sizeof(return_ip) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp, sizeof(return_ip)) ||
+	    !return_ip)
+		return -EINVAL;
+	/* The original caller's word stays untouched. Its source remains leased
+	 * through the typed service, whose completion consumes it exactly once. */
+	return kd_source_pin_target(return_ip);
 }
 
 static int kd_jit_indirect_call_native(struct kd_exe_info *exe,
@@ -173,6 +262,150 @@ static int kd_jit_indirect_call_native(struct kd_exe_info *exe,
 	if (!kd_native_terminal_target(regs->ip) && !is_end_point(regs->ip))
 		kd_image_report(exe, frame->image, KD_EXE_IJ_MISS, regs->ip, continuation);
 	regs->orig_ax = 0;
+	return 0;
+}
+
+/* Original compiled images export a distinct FULL miss contract. Learning is
+ * for later invocations; this packet is handed back at its current target. */
+static int kd_jit_retained_miss(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_regs *regs, unsigned long exit)
+{
+	struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
+	unsigned long from = 0, word, base;
+	unsigned int length;
+	int status = KD_EXE_CALL_MISS, ret;
+
+	if (!exe || !frame || !frame->executed || !frame->logical_task ||
+	    frame->logical_task == current ||
+	    (cont && cont->service_ops ? cont->service_call.api != KD_SERVICE_NONE :
+	     !kd_exec_frame_can_borrow_locks(frame)) ||
+	    frame->packet_state != KD_PACKET_FULL || regs != kd_exec_frame_regs(frame) ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request || frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS) ||
+	    !(regs->flags & 2) || !regs->ip || !regs->sp)
+		return -EINVAL;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE ||
+	    regs->sp < base + 2 * sizeof(unsigned long) ||
+	    regs->sp > base + THREAD_SIZE - sizeof(word))
+		return -EFAULT;
+	if (exit == KD_EXE_INDIRECT_CALL || exit == KD_EXE_INDIRECT_TAIL) {
+		ret = exit == KD_EXE_INDIRECT_CALL ?
+			kd_jit_indirect_call_length(regs->orig_ax, &length) :
+			kd_jit_indirect_tail_length(regs->orig_ax, &length);
+		if (ret || regs->orig_ax > ~0UL - length)
+			return ret ? ret : -EINVAL;
+		from = regs->orig_ax + length;
+		status = KD_EXE_IJ_MISS;
+	} else if (exit == KD_EXE_RETAINED_MISS) {
+		from = regs->orig_ax;
+		if (!from)
+			return -EINVAL;
+		status = KD_EXE_IJ_MISS;
+	} else if (exit != KD_EXE_CALL_MISS) {
+		return -EINVAL;
+	}
+	if (exit == KD_EXE_CALL_MISS || exit == KD_EXE_INDIRECT_CALL) {
+		if (copy_from_kernel_nofault(&word, (void *)regs->sp, sizeof(word)) ||
+		    !word || (from && word != from))
+			return -EFAULT;
+		ret = kd_source_pin_target(word);
+		if (ret)
+			return ret;
+	}
+	ret = kd_source_pin_target(regs->ip);
+	if (!ret && from)
+		ret = kd_source_pin_target(from - 1);
+	if (ret)
+		return ret;
+	kd_image_report(exe, frame->image, status, regs->ip, from);
+	/* SP and all source effects stay exactly as exported by generated code. */
+	frame->control_call.phase = KD_CALL_NONE;
+	regs->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	return 0;
+}
+
+/* A permanent instruction boundary has no CALL token and never learns an
+ * edge. Retain the complete service-owned ledger through ACCEPT/final ACK. */
+static int kd_jit_source_frontier(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	static const struct {
+		unsigned char bytes[5];
+		unsigned int length;
+	} encodings[] = {
+		{ { 0x67, 0x48, 0x0f, 0xb9, 0x3a }, 5 },
+		{ { 0x0f, 0x01, 0xee }, 3 },
+		{ { 0x0f, 0x01, 0xca }, 3 },
+		{ { 0xfa }, 1 },
+		{ { 0xfb }, 1 },
+		/* Stop before direction changes; the original task runs the suffix. */
+		{ { 0xfc }, 1 },
+		{ { 0xfd }, 1 },
+	};
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	unsigned char opcode[5];
+	unsigned long base;
+	unsigned int i, length = 0;
+	bool matched = false;
+	int ret;
+
+	if (!exe || !frame || !regs || frame != kd_exec_current_frame() ||
+	    !cont || !cont->service_ops ||
+	    cont->state != KD_CONT_BOUND || cont->executor != current || !cont->source_lease ||
+	    cont->service_call.api != KD_SERVICE_NONE || !frame->executed ||
+	    !frame->mutex_backend || frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !frame->logical_task || frame->logical_task == current ||
+	    frame->packet_state != KD_PACKET_FULL || regs != kd_exec_frame_regs(frame) ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request || frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE) ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe ||
+	    frame->image->entry_abi != frame->entry_abi ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SOURCE_FRONTIER) ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_SERVICE_QUEUE) ||
+	    !(regs->flags & 2) || !regs->ip || regs->ip > ~0UL - sizeof(opcode))
+		return -EINVAL;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE ||
+	    regs->sp < base + 2 * sizeof(unsigned long) ||
+	    regs->sp > base + THREAD_SIZE - sizeof(unsigned long))
+		return -EFAULT;
+	/* Read only the first byte before choosing the exact source extent. */
+	ret = kd_source_pin_text_range(regs->ip, 1);
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, 1))
+		return -EFAULT;
+	for (i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
+		if (!memcmp(opcode, encodings[i].bytes, 1)) {
+			length = encodings[i].length;
+			break;
+		}
+	if (!length)
+		return -EILSEQ;
+	ret = kd_source_pin_text_range(regs->ip, length);
+	if (ret)
+		return ret;
+	if (copy_from_kernel_nofault(opcode, (void *)regs->ip, length))
+		return -EFAULT;
+	for (i = 0; i < sizeof(encodings) / sizeof(encodings[0]); ++i)
+		if (length == encodings[i].length &&
+		    !memcmp(opcode, encodings[i].bytes, length)) {
+			matched = true;
+			break;
+		}
+	if (!matched)
+		return -EILSEQ;
+	/* IP/SP/GPRs and all earlier effects remain unchanged. Only this validated
+	 * outcome selects the established original-task restoration contract. */
+	frame->control_call.phase = KD_CALL_NONE;
+	regs->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
 	return 0;
 }
 
@@ -499,6 +732,10 @@ static const struct kd_jit_image *kd_jit_select_image(const struct kd_exe_info *
 	image = frame->image ? frame->image : kd_image_current(exe);
 	if (!image || image->entry != exe ||
 	    image->entry_abi != frame->entry_abi ||
+	    ((image->requirements & (KD_IMAGE_REQUIRE_SERVICE_QUEUE |
+				    KD_IMAGE_REQUIRE_ORIGIN_CALL)) &&
+	     (!kd_exec_frame_continuation(frame) ||
+	      !kd_exec_frame_continuation(frame)->service_ops)) ||
 	    ((image->requirements & KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE) &&
 	     !image->immutable) ||
 	    !kd_image_requirements_valid(frame->mutex_backend ? KD_EXE_LOCK_MUTEX :
@@ -557,6 +794,10 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
  * its first body; subsequent nested/service exits always use FULL instead. */
 static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 {
+	/* Retained requests first use FULL output for exact CALL-result/packet
+	 * transfer. Legacy ABI2 roots keep their existing minimal fast path. */
+	if (kd_exec_frame_continuation(frame))
+		return false;
 	if (frame->parent || frame->depth)
 		return false;
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))

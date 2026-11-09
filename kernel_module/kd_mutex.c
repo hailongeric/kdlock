@@ -39,6 +39,7 @@
 #include "kd_jit_batch.h"
 #include "kd_source.h"
 #include "kd_segment.h"
+#include "kd_service_api.h"
 #include "exe.h"
 #include "utils.h"
 
@@ -91,8 +92,10 @@ KD_MUTEX_STAT(kd_mutex_origin_acquires);
 KD_MUTEX_STAT(kd_mutex_origin_releases);
 KD_MUTEX_STAT(kd_mutex_nested_unlock_count);
 KD_MUTEX_STAT(kd_mutex_nested_abort_release_count);
-/* Each reservation/waiter enters and leaves on its migration-pinned origin CPU,
- * with preemption disabled at both updates. Unlike observational totals, drain
+/* Ordinary reservations enter and leave on their migration-pinned origin CPU,
+ * with preemption disabled at both updates. Permanent service handback uses a
+ * synchronous home-CPU release or an explicit serialized offline-CPU release.
+ * Unlike observational totals, drain
  * checks every exact balance separately; values on different CPUs cannot cancel.
  * Cross-CPU owner, acquisition refs, nested waits and ACKs keep their protocol. */
 static DEFINE_PER_CPU(int, kd_mutex_active_waiters);
@@ -117,6 +120,25 @@ struct kd_mutex_cpu_state {
 DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
+
+/* Cold topology and lifecycle do not change the packet's five-line ABI.
+ * Each record has precisely the same reservation lifetime as its slot. */
+struct kd_service_root;
+struct kd_mutex_wait_record {
+	struct kd_wait_request request;
+	struct kd_wait_node member;
+	struct kd_wait_selection selection;
+	raw_spinlock_t lifecycle_guard;
+	u64 invocation;
+	bool request_live;
+	struct kd_service_root *service;
+};
+struct kd_mutex_wait_pool {
+	struct kd_mutex_wait_record records[KD_MUTEX_MAX_NODES];
+};
+/* Cold records use the dynamic per-CPU area, allocated before publication.
+ * The module's small reserved static per-CPU section keeps the hot ABI nodes. */
+static struct kd_mutex_wait_pool __percpu *kd_mutex_wait_pools;
 
 #include "mutex/queue.inc"
 #include "mutex/count.inc"
@@ -220,10 +242,18 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	/* The gate reserves delegation before physical acquisition. Its embedded
 	 * root lives with the caller-owned mutex, including detached frames/ACKs.
 	 * The read-only hint avoids writing a busy gate just to find it busy. */
+	preempt_disable();
 	if (likely(!kd_mutex_gate_read(lock) && kd_mutex_gate_trylock(lock))) {
-		kd_mutex_claim_origin(lock);
-		return;
+		if (kd_mutex_trylock(lock)) {
+			kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);
+			this_cpu_inc(kd_mutex_origin_acquires);
+			preempt_enable();
+			return;
+		}
+		/* Never retain a gate reservation while entering the queue. */
+		kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);
 	}
+	preempt_enable();
 
 	/* Published waiters keep preemption disabled until completion or native
 	 * handoff: their origin GS storage must not be reused by another task.
@@ -280,6 +310,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();
 		curr_node->saved_ret_addr = ret_addr;
+		kd_mutex_request_prepare(curr_node);
 		ret_val = abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ?
 			kd_mutex_clobber_wait(lock, curr_node) :
 			kd_mutex_lock_slowpath_asm(lock, curr_node);

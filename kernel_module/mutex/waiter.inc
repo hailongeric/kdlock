@@ -10,51 +10,22 @@
 /* --------------------------------------------------------------------------
  * Slowpath: queue as waiter, spin, possibly become combiner
  * -------------------------------------------------------------------------- */
-/* A published successor already proves this reserved node is no longer the
- * tail. Prefer its private link before touching the shared owner/gate/tail
- * line. Even when the link is delayed, a different tail cannot become this
- * node's encoded slot again until the origin releases the reservation. Only
- * the still-current tail needs the retirement CAS; a racing publisher makes
- * that CAS fail and must finish its link before this head can proceed. The
- * producer's full tail exchange orders node initialization before its link;
- * acquire link loads retain publication ordering when no full CAS runs here. */
-static __always_inline struct kd_mutex_node *
-kd_mutex_head_successor(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
-{
-	struct kd_mutex_node *next = smp_load_acquire(&curr_node->next);
-
-	if (next)
-		return next;
-	if (READ_ONCE(lock->delegation_tail) == (u32)curr_node->tail &&
-	    cmpxchg(&lock->delegation_tail, (u32)curr_node->tail, 0) ==
-		    (u32)curr_node->tail)
-		return NULL;
-	do {
-		next = smp_load_acquire(&curr_node->next);
-		if (!next)
-			cpu_relax();
-	} while (!next);
-	return next;
-}
-
+/* Local and captured requests have one completely linked publication.
+ * The physical helper consumes this same membership on its ready grant. */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
 __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 			 struct kd_mutex_node *curr_node)
 {
-	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
+	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_cpu_state *ptr = this_cpu_ptr(&kd_mutex_shadows);
-	u32 old_tail;
-
+	(void)tail;
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
-	old_tail = kd_mutex_xchg_tail(lock, tail);
 	kd_mutex_waiter_enter(lock, curr_node);
+	kd_mutex_queue_publish(lock, curr_node);
 
-	if (old_tail) {
-		/* --- waiter path: link behind prev, spin until woken --- */
-		prev_node = kd_mutex_decode_tail(old_tail);
-		WRITE_ONCE(prev_node->next, curr_node);
+	{
 
 		mutex_debug("Mutex waiter spinning\n");
 	wait_again:
@@ -85,13 +56,11 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());
 
-	next_node = kd_mutex_head_successor(lock, curr_node);
+	next_node = kd_mutex_queue_start_batch(lock);
 	if (!next_node)
 		goto release;
 
 	/* --- combiner path --- */
-	kd_mutex_gate_set(lock, KD_MUTEX_GATE_COMBINER);
-
 	kd_mutex_run_combiner(lock, next_node);
 
 	BUG_ON(kd_mutex_gate_read(lock) != KD_MUTEX_GATE_HELD);

@@ -1,0 +1,555 @@
+{
+  "archive": {
+    "archive_bytes": 447969280,
+    "archive_sha256": "60c3b59d3d6bd03fce405f6da8ab453ce3562c1b7fbc30ae0f315d1cacf41ae3",
+    "files": 466,
+    "passed": true,
+    "returncode": 0,
+    "total_bytes": 446922728
+  },
+  "artifact_reuse": {
+    "benchmark_preparation_manifest": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/manifest.json",
+    "benchmark_preparation_sha256": "4e8ac6e1b8c99bad164fa1da185a3f0b665673bfd07b93db59c7daf323f37eb6",
+    "binary_reuse_identity": {
+      "compatible_harness_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+      "daemon_and_kernel_integration_sources_equal": true,
+      "daemon_build_input_map_sha256": "7f78281354ca19585665ac553198103fbec0781d51c11686613a0a328ac77f75",
+      "daemon_build_input_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+      "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+      "exact_observation_map": true,
+      "exact_prepared_map": true,
+      "exact_provider_production_map": true,
+      "original_source_manifest_sha256": "1a8689a41c7ae54425cd1bbe637abe6e53fa5e161c4a83cc187dc108e91a03fa",
+      "provider_manifest_sha256": "4e8ac6e1b8c99bad164fa1da185a3f0b665673bfd07b93db59c7daf323f37eb6",
+      "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+      "provider_source_commit": "40edde00525b71207246bbde4935767cbcb21fb7"
+    },
+    "boot_id": "d794c6f4-85cc-484b-a290-471c44d68497",
+    "daemon": "/mnt/kdlock-builds2/kdlock-batch-checks-zgrfka_g/bin/daemon",
+    "daemon_sha256": "0a0db51b9c35dc894027d0e347a1be5abb68e7467c7c941717f7bcb39c73c9d2",
+    "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+    "final_idle": true,
+    "focused_source_identity": {
+      "files": {
+        "disassem/context_policy.py": "739c5581e9fea8a12897838899b35da11d3717ec1061a7cd85b82c8ed79724bd",
+        "disassem/disassem.py": "f5015eb64c5541a1ea54b0c7ca3e7c6f5c0f2adabb79cf1f8463b4b91497ea41",
+        "disassem/release_units.py": "004c13036b4debb9b86364f1ed4e0280e3c5fc016f7a8625fa7cd53b964d8e64",
+        "tests/unit/codegen/test_direct_call_depth.py": "bd7b6eaa95833c56245313786765d8dafaf732c7424806987363fed0c0b0ee12",
+        "tests/unit/codegen/test_release_units.py": "7b72c59030f1931d713a7ae9ee7e11b119d4a37186c5967e4dfa3131549b7a37"
+      },
+      "matched": true,
+      "schema": 1,
+      "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+      "source_manifest_path": "/tmp/kdlock-normal-d421-focused-manifest.json",
+      "source_manifest_sha256": "857fa0f1993ffa1628383503340a90e6d853d81ad92ed7affdf46c3daa712853"
+    },
+    "headroom": {
+      "/": 3692425216,
+      "/mnt/kdlock-builds2": 11813322752
+    },
+    "idle": {
+      "modules": [],
+      "source_processes": [],
+      "tasks": []
+    },
+    "image_capacity": 128,
+    "inputs": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+    "inputs_sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+    "kernel_build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+    "kernel_build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+    "no_build": true,
+    "no_daemon_launch": true,
+    "no_module_load": true,
+    "no_provider_or_device_query": true,
+    "passed": true,
+    "preparation_boot_id": "d794c6f4-85cc-484b-a290-471c44d68497",
+    "probe": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/restore-preflight-ec623366-20261107/probe/kd_mmap1_identity.ko",
+    "probe_sha256": "1f5ea76cbaf6c1b0918769300bd4a827578675284d29a47bd0d00f805c177c78",
+    "provider": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module/kdlock_km.ko",
+    "provider_note_sha256": "3404ede92b182cc10ad603b6c3c4a96cdfc9d704c65f95079a0b9049b0fa8a3c",
+    "provider_reused": true,
+    "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+    "provider_source_commit": "40edde00525b71207246bbde4935767cbcb21fb7",
+    "run_id": "normal-d421e7d5da83-v1",
+    "schema": 1,
+    "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+    "source_manifest_path": "/root/kdlock-inputs/normal-d421e7d5da83-v1/source-sha256.json",
+    "source_manifest_sha256": "a83d3583037340a476177523ed80e9713c4e916ede1c86ebac0c7c38214a1e37",
+    "source_root": "/root/kdlock-inputs/normal-d421e7d5da83-v1",
+    "source_state_path": "/root/kdlock-inputs/normal-d421e7d5da83-v1/source-state.json",
+    "source_state_sha256": "2f41a85751f73eacebf643bc18e20129a4502b8cb50893bbe03d73dd9ee81d3d"
+  },
+  "campaign_attempts": 1,
+  "evidence_limits": {
+    "delegation_proved": false,
+    "frozen_source_unchanged": true,
+    "normal_tool_action_denial_observed": false,
+    "official_backend_clearance_verified": false,
+    "physical_batch_length_measured": false,
+    "prior_targeted_capture_not_retried": true,
+    "service_trace_expected": "N",
+    "targeted_capture_requested": false
+  },
+  "guest_evidence_base": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd",
+  "rate": {
+    "campaign_scored": false,
+    "completed_pairs": 209708,
+    "measured_samples": 10,
+    "nested_application_scored": true,
+    "nominal_seconds": 10,
+    "pairs_per_nominal_second": 20970.8,
+    "point_scored": false,
+    "process_elapsed_ns": 16055069460,
+    "quiet_performance_accepted": false,
+    "scope_limit": "transport and callback latency; counters are not sampled atomically with application counters",
+    "warmup_samples": 6,
+    "window_scope": "after delivered last warmup line through delivered final measured line"
+  },
+  "receipts": {
+    "collection-index.json": {
+      "bytes": 201615,
+      "sha256": "577e90bc21b5fb35e8e33c421203220a87101e0e3a60133bfc2f6fff83011990",
+      "source": "/tmp/kdlock-normal-d421-collected/index.json"
+    },
+    "finalization.json": {
+      "bytes": 1105,
+      "sha256": "3b6701f46f0a7b14178cdaeddf4c5998a06f1396b68507a3c59878471771b8ae",
+      "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/finalization.json"
+    },
+    "focused-result.json": {
+      "bytes": 589,
+      "sha256": "d8e69699efa9908d3a496bf5ae48c9ce0d58906a233012c5103db8d18d7e7bc9",
+      "source": "/tmp/kdlock-normal-d421-focused-result.json"
+    },
+    "focused-source-manifest.json": {
+      "bytes": 68735,
+      "sha256": "857fa0f1993ffa1628383503340a90e6d853d81ad92ed7affdf46c3daa712853",
+      "source": "/tmp/kdlock-normal-d421-focused-manifest.json"
+    },
+    "focused.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/tmp/kdlock-discovery-batching-final-d350b172/unit.stderr"
+    },
+    "focused.stdout": {
+      "bytes": 888,
+      "sha256": "f4d94b6b3890b86c855b6d05fe962e25a424b92bf0e94375fe358c745dddc8fe",
+      "source": "/tmp/kdlock-discovery-batching-final-d350b172/unit.stdout"
+    },
+    "host-after.json": {
+      "bytes": 405796,
+      "sha256": "3f77ad20afa1afead764d293d66213a2008fbf76a89eda73461998a61cb16f15",
+      "source": "/tmp/kdlock-normal-d421-run-gvfl_nb8/host-after.json"
+    },
+    "host-before.json": {
+      "bytes": 406813,
+      "sha256": "1d8caa594d7ee6b05006976cbd5c66b25c16d80d9d001000dfefd8c441701888",
+      "source": "/tmp/kdlock-normal-d421-run-gvfl_nb8/host-before.json"
+    },
+    "host-binding.json": {
+      "bytes": 692,
+      "sha256": "8650e47713d470ddcf515acf4a8a81a61aa45d652e03a657164db443a44a77f8",
+      "source": "/tmp/kdlock-normal-d421-run-gvfl_nb8/binding.json"
+    },
+    "normal-control.json": {
+      "bytes": 14718,
+      "sha256": "e028a432b69812fc8ceeb6b3d571f7fe5652707349ae6640a383619e927f02fd",
+      "source": "/tmp/kdlock-normal-d421e7d5da83-v1-once/result.json"
+    },
+    "original-result.json": {
+      "bytes": 190148,
+      "sha256": "48a4880252d5775b5dbf93d4be1884faf0919abd1a5202b541e83def4ff25a0b",
+      "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/result.json"
+    },
+    "preflight.json": {
+      "bytes": 4212,
+      "sha256": "c3dd54bfad42fa8fe71ec59696e0141629141070fb87678bf9bf784f3c0d1548",
+      "source": "/tmp/kdlock-normal-d421e7d5da83-v1-once/preflight.json"
+    },
+    "required-publication.json": {
+      "bytes": 2082,
+      "sha256": "7c98e09d8ed1156eb84eb73e03e7de42ea378e745e3eeddc9523017f7d79f673",
+      "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/required-publication/result.json"
+    },
+    "source-manifest.json": {
+      "bytes": 122150,
+      "sha256": "a83d3583037340a476177523ed80e9713c4e916ede1c86ebac0c7c38214a1e37",
+      "source": "/tmp/kdlock-batch-checks-r11y1cy2/source-sha256.json"
+    },
+    "source-state.json": {
+      "bytes": 614364,
+      "sha256": "2f41a85751f73eacebf643bc18e20129a4502b8cb50893bbe03d73dd9ee81d3d",
+      "source": "/tmp/kdlock-batch-checks-r11y1cy2/source-state.json"
+    }
+  },
+  "retained_host_archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mmap1-normal-d421e7d5-v1/evidence.tar",
+  "schema": 1,
+  "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+  "stage_outcomes": {
+    "continuations": [
+      {
+        "drained": true,
+        "generations_after": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 6
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 6
+          }
+        ],
+        "generations_before": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 5
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 5
+          }
+        ],
+        "passed": true,
+        "stable": false
+      },
+      {
+        "drained": true,
+        "generations_after": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 7
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 7
+          }
+        ],
+        "generations_before": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 6
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 6
+          }
+        ],
+        "passed": true,
+        "stable": false
+      },
+      {
+        "drained": true,
+        "generations_after": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 7
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 7
+          }
+        ],
+        "generations_before": [
+          {
+            "entry": 18446744071586934632,
+            "generation": 7
+          },
+          {
+            "entry": 18446744071587350331,
+            "generation": 7
+          }
+        ],
+        "passed": true,
+        "stable": true
+      }
+    ],
+    "finalization": {
+      "campaign_complete": true,
+      "drained": true,
+      "final_idle": true,
+      "ordinary_cpu_progress": {
+        "bindings_after": 0,
+        "bindings_before": 8,
+        "cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "finished_ns": 1381388402959,
+        "started_ns": 1381267127207
+      },
+      "original_result_sha256": "48a4880252d5775b5dbf93d4be1884faf0919abd1a5202b541e83def4ff25a0b",
+      "passed": true,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "retirement_passed": true
+    },
+    "fixed_point": {
+      "conservation_passed": true,
+      "instrumentation": "selected-service-counters",
+      "measured_delta": [
+        {
+          "bound": 209703,
+          "canceled": 0,
+          "dispatch_ns": 452146408,
+          "dispatch_samples": 209703,
+          "entry": "0xffffffff817b6f68",
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 209703,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 209707,
+          "selected": 209702,
+          "shadow_ns": 41020944280,
+          "shadow_samples": 209707,
+          "submitted": 209702
+        },
+        {
+          "bound": 209703,
+          "canceled": 0,
+          "dispatch_ns": 1303018619,
+          "dispatch_samples": 209703,
+          "entry": "0xffffffff8181c73b",
+          "handback": 209705,
+          "handback_finished": 209705,
+          "invalid_clock": 0,
+          "jit_entered": 209703,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 209702,
+          "shadow_ns": 17844322954,
+          "shadow_samples": 209705,
+          "submitted": 209702
+        }
+      ],
+      "scored": false,
+      "stable": true,
+      "state": "COMPLETE",
+      "whole_application_delta": [
+        {
+          "bound": 336042,
+          "canceled": 0,
+          "dispatch_ns": 724284855,
+          "dispatch_samples": 336042,
+          "entry": "0xffffffff817b6f68",
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 336042,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 336042,
+          "selected": 336042,
+          "shadow_ns": 65634835543,
+          "shadow_samples": 336042,
+          "submitted": 336042
+        },
+        {
+          "bound": 336037,
+          "canceled": 0,
+          "dispatch_ns": 2086363912,
+          "dispatch_samples": 336037,
+          "entry": "0xffffffff8181c73b",
+          "handback": 336037,
+          "handback_finished": 336037,
+          "invalid_clock": 0,
+          "jit_entered": 336037,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 336037,
+          "shadow_ns": 28550819961,
+          "shadow_samples": 336037,
+          "submitted": 336037
+        }
+      ],
+      "workers": 8
+    },
+    "normal_control": {
+      "campaign_returncode": 0,
+      "final-normal-state": {
+        "boot_id": "e36f9aec-0ae6-46a5-ac96-c8de74bf7b62",
+        "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+        "idle": true,
+        "release": "7.0.0-38-kdlock1"
+      },
+      "normal_recovery_verified": true,
+      "passed": true,
+      "recovery_returncode": 0,
+      "running_children": [],
+      "signals_sent": []
+    },
+    "original_controller": {
+      "accepted": false,
+      "drained": false,
+      "passed": false,
+      "quiet_performance_accepted": false,
+      "scored": false,
+      "stable_point_passed": true,
+      "state": "MEASURED_RETIREMENT_PENDING"
+    },
+    "preparation": {
+      "drained": true,
+      "passed": true,
+      "stable": false
+    },
+    "required_publication": {
+      "assembly": {
+        "sha256": "1ea39ab0aab53a7ac6a71acc69f9878200a5d5158524ed9af5cf0b250e8ceb8f"
+      },
+      "capability": {
+        "features": 1047547,
+        "mutex_stack_bytes": 256,
+        "percpu_module_bytes": 8192,
+        "version": 22
+      },
+      "chain": {
+        "base_generation": 6,
+        "batch_identity_basis": "source-derived compiler and upload summaries",
+        "batch_record_membership_proved": false,
+        "claim": "source-derived immutable ABI2 upload association",
+        "compile_attempt_id": 7,
+        "cumulative_history_completeness_proved": false,
+        "execution_proved": false,
+        "final_write_end_ns": 1164829315995,
+        "kernel_acknowledgment_witnessed": false,
+        "kernel_digest_reported": false,
+        "learning_snapshot": {
+          "count": 1,
+          "overflow_report_events": 0,
+          "revision": 6,
+          "slot": 68,
+          "token": 13
+        },
+        "manifest_sha256": "ec0a27aac7e6e115777113331eb07358c8984bb719afe56d4f1818e0046d98d4",
+        "observed_generation": 7,
+        "payload_bytes": 742528,
+        "payload_sha256": "32b7698dbb767dac7320a9f73b9059f524b49f371de96d0d304e6a8e4b268161",
+        "read_end_ns": 1363457201254,
+        "read_start_ns": 1363457160222,
+        "registry": {
+          "code": 18419722476571807744,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        "schema": 1,
+        "session_id": "2418-1496",
+        "upload_id": 13
+      },
+      "exact_terminal": true,
+      "historically_reached_target": true,
+      "history": {
+        "sha256": "17e4b91b1fd5202d0c18cd918edc242732f44510f5e720e3fee4096146375c1c"
+      },
+      "leased_direction_compiler": true,
+      "passed": true,
+      "registry": {
+        "code": 18419722476571807744,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2429
+      },
+      "required": {
+        "call_target": 18446744071602707952,
+        "entry": 18446744071586934632,
+        "source_ip": 18446744071602898807
+      },
+      "translated_target": true
+    }
+  }
+}

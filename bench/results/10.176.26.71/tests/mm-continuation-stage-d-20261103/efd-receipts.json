@@ -1,0 +1,354 @@
+{
+  "source_commit": "efd10ac8c5471b107145c367ba4401ad9dadfca3",
+  "host_receipt": {
+    "path": "/tmp/kdlock-mm-efd-first-20261103/reply.json",
+    "sha256": "dc55f5885c1eff844f4107d41eac31a28ef68cf12149d475a07c4a198eb8d271"
+  },
+  "vm_evidence": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-efd-first-20261103",
+  "kernel": {
+    "release": "7.0.0-38-kdscope5",
+    "build_id": "d3b5cf1b208028495b5fa9be2a3750b0831a2ec3",
+    "boot_id": "4a5dd23d-a9bf-44b0-85b2-2a6689514b1f",
+    "mmap_mode": "off"
+  },
+  "units": [
+    {
+      "args": [
+        "bench/test_mmap1_kernel_log.py"
+      ],
+      "returncode": 0,
+      "log": "unit-0.log",
+      "tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.396s\n\nOK\n"
+    }
+  ],
+  "provider_build_returncode": 0,
+  "actual_mm_delegation_proved": false,
+  "helper": {
+    "passed": true,
+    "drained": true,
+    "entry_abi": 2,
+    "image_requirements": 3968,
+    "capabilities": {
+      "features": 130043,
+      "mutex_stack_bytes": 256,
+      "percpu_module_bytes": 8192,
+      "version": 16
+    },
+    "phases": [
+      {
+        "name": "primitive-six-word-scalar",
+        "complete": true,
+        "execution": "ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "primitive-sleeping-child",
+        "complete": true,
+        "execution": "ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "native-spin-try-rcu-depth9",
+        "complete": true,
+        "execution": "NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "native-early-outer-release",
+        "complete": true,
+        "execution": "NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "gs-counter-inline-preempt",
+        "complete": true,
+        "execution": "ORIGINAL_TASK_GS_SAME_EXECUTOR_IMAGE_FINAL_IP_SP",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "gs-final-inline-preempt",
+        "complete": true,
+        "execution": "ORIGINAL_TASK_GS_SAME_EXECUTOR_IMAGE_FINAL_IP_SP",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      }
+    ]
+  },
+  "killable": {
+    "passed": true,
+    "drained": true,
+    "entry_abi": 2,
+    "image_requirements": 384,
+    "capabilities": {
+      "features": 130043,
+      "mutex_stack_bytes": 256,
+      "percpu_module_bytes": 8192,
+      "version": 16
+    },
+    "phases": [
+      {
+        "name": "killable-success",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "queued-cancel-0",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "queued-cancel-1",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "queued-cancel-2",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "selected-reader-drain-cancel",
+        "complete": true,
+        "execution": "CANCELED_BEFORE_BODY",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "nested-origin-cancel",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "executor-downgrade-and-fresh-writer",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        },
+        "source_events": [
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "enter",
+            "executor": 7635,
+            "generation": 7,
+            "identity": 18379471568014380968,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7729
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "downgrade",
+            "executor": 7635,
+            "generation": 7,
+            "identity": 18379471568014380968,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7729
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "read_release",
+            "executor": 7635,
+            "generation": 7,
+            "identity": 18379471568014380968,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7729
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "returned",
+            "executor": 7635,
+            "generation": 7,
+            "identity": 18379471568014380968,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7729
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "enter",
+            "executor": 7635,
+            "generation": 11,
+            "identity": 18379471568014905256,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7730
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "release",
+            "executor": 7635,
+            "generation": 11,
+            "identity": 18379471568014905256,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7730
+          },
+          {
+            "depth": 0,
+            "entry": 18446744072646181368,
+            "event": "returned",
+            "executor": 7635,
+            "generation": 11,
+            "identity": 18379471568014905256,
+            "may_delegate": true,
+            "object": 18446744072649116096,
+            "origin": 7730
+          }
+        ]
+      },
+      {
+        "name": "mixed-depth9",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "early-outer-depth9",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "repeated-child-128",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      },
+      {
+        "name": "nested-true-control",
+        "complete": true,
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "queue_count": 0,
+          "inner_queue_count": 0,
+          "readers": 0
+        }
+      }
+    ]
+  }
+}

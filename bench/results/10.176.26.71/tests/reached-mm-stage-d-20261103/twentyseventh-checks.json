@@ -1,0 +1,44 @@
+{
+  "source_commit": "cb5ee7a10591fd2e505a9b029a3bad9e7132b3f3",
+  "units": [
+    {
+      "args": [
+        "codegen/test_origin_memory_decode.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bench/test_mmap1_kernel_log.py",
+        "-v"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bench/test_mmap1_delegated.py",
+        "-v"
+      ],
+      "returncode": 0
+    },
+    {
+      "args": [
+        "bench/test_mm_private_source.py",
+        "-v"
+      ],
+      "returncode": 0
+    }
+  ],
+  "provider_build_passed": true,
+  "resident": {
+    "cases": 67643,
+    "checks": 67643,
+    "executor_pid": 3888,
+    "executor_stack": 18419722476106792568,
+    "failure_line": 0,
+    "origin_pid": 3887,
+    "source_fetches": 60112
+  },
+  "passed": true,
+  "final_idle": true
+}

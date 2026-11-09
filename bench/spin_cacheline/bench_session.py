@@ -15,7 +15,7 @@ from summarize import write_json
 from bench_runtime import (
     ROOT, HERE, WORKLOAD, PROVIDER, Failure, require, command, digest,
     status, parameters, registry, children, validate_measurement, classify_bodies,
-    info, RETIRE, FAULT,
+    info, RETIRE, FAULT, image_capacity,
 )
 
 
@@ -102,6 +102,12 @@ class Session:
         self.daemon_log = (self.path / "daemon.log").open("w")
         env = dict(os.environ, KD_JIT_BODY_WITNESS="1")
         env.pop("KD_DEVICE_FD", None)
+        for name in ('KD_PROVENANCE_DIR', 'KD_PROVENANCE_ENTRY', 'KD_PROVENANCE_ATTEMPT_DIR'):
+            env.pop(name, None)
+        evidence = getattr(self, 'provenance', None)
+        if evidence is not None:
+            env.update(KD_PROVENANCE_DIR=str(evidence['directory']),
+                       KD_PROVENANCE_ENTRY=hex(evidence['entry']))
         self.daemon = subprocess.Popen([getattr(self, 'daemon_binary', ROOT / "daemon/daemon"), "--quiet", "--metrics",
                                         "--mode", "per-tgid"], cwd=workspace / "daemon",
                                        env=env, stdout=self.daemon_log,
@@ -150,7 +156,7 @@ class Session:
         folder = (self.path / "workspace/daemon" / hex(entry["entry"]) /
                   str(entry["tgid"]) / "asm")
         image, assembly, disassembly = folder / "jit.bin", folder / "jit.S", folder / "bin.txt"
-        require(image.exists() and 0 < image.stat().st_size <= 640 * 1024 and
+        require(image.exists() and 0 < image.stat().st_size <= image_capacity() and
                 assembly.exists() and disassembly.is_file() and disassembly.stat().st_size > 0,
                 "invalid/missing generated image or disassembly")
         text = assembly.read_text()
@@ -230,6 +236,11 @@ class Session:
             require(self.record["retired"] == dict(state=2, modules=0, frames=0, writers=0),
                     "retirement incomplete", "UNDRAINED")
         if self.loaded_source:
+            # A fixture may retain a registration pin until image/frame
+            # retirement; release it before ordinary source-module unload.
+            after_retire = getattr(self, 'after_source_retire', None)
+            if after_retire is not None:
+                after_retire()
             self.run(["rmmod", self.workload_module.stem], "unload-source.log")
             self.loaded_source = False
         if self.loaded_kd:

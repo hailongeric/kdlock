@@ -26,7 +26,7 @@ VM on `10.176.26.71`. Follow [development rules](../../AGENTS.md).
 | Stock Linux 7 recovery headers | `/usr/src/linux-headers-7.0.0-38-generic` |
 | Legacy recovery tree / bundle | `/root/linux-6.1.159-kdclobber2`; `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | Data disk | `/mnt/kdlock-builds`, 132 GiB virtual capacity |
-| Second build disk | `/mnt/kdlock-builds2`, 160 GiB virtual capacity |
+| Second build disk | `/mnt/kdlock-builds2`, 168 GiB virtual capacity |
 | Live evidence | `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<new-run>` |
 
 The VM has 64 vCPUs and 24 GiB RAM: node 0 uses CPUs 0–31 and 12 GiB; node 1
@@ -48,6 +48,28 @@ It freezes tracked bytes, verifies hashes and updates an idle ext4 guest. It
 does not delete stale leaves. Never synchronize or edit frozen inputs while a
 build, translator or workload is active. Do not edit either mirror as another
 source of truth. Follow [synchronization details](../../tools/vm/README.md).
+
+The shared MM benchmark guest gate also admits an immutable private snapshot
+at exactly one directory below `/root/kdlock-inputs`, alongside the unchanged
+canonical source route. This lets a newer module/runner revision coexist with
+the frozen kernel-component inputs required by schema-2 capture. A private
+snapshot must be a local ext4 copy, with no symlink component, leaf mount or
+nested mount. Its two root-local receipts are `source-state.json` and
+`source-sha256.json`. The parent controller supplies their exact hashes through
+`KDLOCK_PRIVATE_SOURCE_STATE_SHA256` and
+`KDLOCK_PRIVATE_SOURCE_MANIFEST_SHA256`; the guest does not invent expected
+hashes from the same files it is admitting.
+
+The state binds a 40-character `git_head`, empty `git_status`, empty
+`omitted_missing_tracked_paths`, and exact `files`/`transfer_bytes` totals from
+the committed source snapshot. Every other regular file in the private tree
+must occur exactly once in the manifest and match its SHA256; extra files,
+links, nonregular entries, omitted paths and count/byte mismatches refuse the
+snapshot. Keep Python bytecode output disabled and build outside that tree.
+The existing guest UID, release, boot UUID, pinned interpreter, recovery,
+kernel identity, mode, filesystem and host/topology gates still apply. The
+recorded environment includes this source provenance separately from the
+kernel-component identity; admitting the copy is not a runtime test pass.
 
 ## Kernel identity
 

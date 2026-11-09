@@ -23,9 +23,13 @@
  */
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_exec_cont.h"
+#include "kd_reached_session.h"
+#include "kd_service_api.h"
 #include "kd_origin_service.h"
 #include "kd_source.h"
 #include "kd_jit_batch.h"
+#include "kd_image_pool.h"
 
 #include <asm/current.h>
 #include <asm-generic/set_memory.h>
@@ -50,6 +54,8 @@
 #include "kd_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_rwlock.h"
+#include "kd_rwsem_api.h"
+#include "kd_rwsem_provider.h"
 #include "kd_hostcall.h"
 #include "kd_api_provider.h"
 
@@ -59,11 +65,12 @@
  * set_memory_x cannot be used there.  All blocks are allocated and marked
  * executable during kd_exe_init().
  */
-#define KD_CODE_BLOCK_POOL 64
 #define KD_CODE_BLOCK_PAGES (KD_CODE_BLOCK_SIZE / PAGE_SIZE)
 #define KD_EXE_HL_MAX_CONTINUATIONS 16
 #define KD_EXE_HL_MAX_HOSTCALLS 16
 
+/* Observation totals do not grant ownership or authorize retirement. */
+static bool kd_service_trace;
 /* One-shot high-level JIT fault injection for nested recovery tests. */
 static int kd_jit_hl_fault_after_known_call;
 module_param_named(jit_hl_fault_after_known_call,
@@ -121,7 +128,7 @@ MODULE_PARM_DESC(address_guard_count, "Validated spin address-guard native conti
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
 /* Direct E8 calls need addresses in the kernel/module rel32 region. This cold
- * pool has separate storage, but shares the same 64 image descriptors. */
+ * pool has separate storage, but shares the bounded image descriptor table. */
 static void *kd_near_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_near_block_allocations[KD_CODE_BLOCK_POOL];
 static int kd_near_block_free;
@@ -130,6 +137,8 @@ static struct kd_jit_image kd_images[KD_CODE_BLOCK_POOL];
 static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];
 static int kd_code_block_free;
 static atomic_t kd_code_block_gate = ATOMIC_INIT(0);
+/* Observation availability only; never a source/frame retirement barrier. */
+static bool kd_image_usage_ready;
 
 static unsigned long kd_code_block_gate_lock(void)
 {
@@ -148,6 +157,47 @@ static void kd_code_block_gate_unlock(unsigned long flags)
 	atomic_set_release(&kd_code_block_gate, 0);
 	local_irq_restore(flags);
 }
+
+static int kd_jit_image_usage_get(char *buffer, const struct kernel_param *kp)
+{
+	unsigned int used = 0, published = 0, ordinary = 0, near = 0, i;
+	unsigned int capacity = KD_CODE_BLOCK_POOL;
+	unsigned long flags = kd_code_block_gate_lock();
+	int result;
+
+	(void)kp;
+	if (!kd_image_usage_ready) {
+		kd_code_block_gate_unlock(flags);
+		return -EAGAIN;
+	}
+	for (i = 0; i < capacity; ++i) {
+		ordinary += kd_code_block_allocations[i] != NULL;
+		near += kd_near_block_allocations[i] != NULL;
+		if (!kd_images[i].code)
+			continue;
+		++used;
+		published += kd_images[i].entry != NULL;
+	}
+	/* Observe exact slots under their existing gate. These counts neither
+	 * release images nor grant a frame/owner retirement decision. */
+	result = scnprintf(buffer, PAGE_SIZE,
+		"capacity=%u used=%u published=%u private=%u free_descriptors=%u "
+		"ordinary_allocated=%u ordinary_free=%d near_allocated=%u near_free=%d "
+		"slot_bytes=%lu descriptor_bytes=%zu pointer_table_bytes=%zu\n",
+		capacity, used, published, used - published, capacity - used,
+		ordinary, kd_code_block_free, near, kd_near_block_free,
+		KD_CODE_BLOCK_SIZE, sizeof(kd_images), sizeof(kd_code_block_pool) +
+		sizeof(kd_code_block_allocations) + sizeof(kd_near_block_pool) +
+		sizeof(kd_near_block_allocations));
+	kd_code_block_gate_unlock(flags);
+	return result;
+}
+
+static const struct kernel_param_ops kd_jit_image_usage_ops = {
+	.get = kd_jit_image_usage_get,
+};
+module_param_cb(jit_image_usage, &kd_jit_image_usage_ops, NULL, 0444);
+MODULE_PARM_DESC(jit_image_usage, "Preallocated image capacity and exact slot usage");
 
 static unsigned long end_points[6];
 static int end_point_count;
@@ -174,8 +224,10 @@ static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/registry_lifecycle.inc"
 #include "execution/images.inc"
+module_param_named(image_report_superseded, kd_image_report_superseded, ulong, 0444);
 
 #include "execution/control_calls.inc"
+#include "execution/service_control.inc"
 
 #include "execution/registry_publish.inc"
 
@@ -194,9 +246,11 @@ static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,
 
 static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			  unsigned long entry_ip, unsigned long outer_lock_addr,
-			  const struct kd_jit_batch_call *pending)
+			  const struct kd_jit_batch_call *pending, bool retained_resume,
+			  bool retained_entry)
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
+	struct kd_exec_continuation *cont;
 	void (*translated)(struct kd_regs *regs, unsigned long *args);
 	unsigned long args[2];
 	int continuation_count = 0;
@@ -224,13 +278,25 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	if (!regs || !frame || !kd_exec_frame_validate(frame) ||
 	    !frame->gsbase || !frame->logical_task)
 		return KD_EXE_RUN_ERROR;
+	cont = kd_exec_frame_continuation(frame);
+	if (cont && cont->service_ops)
+		body_reported = cont->body_reported;
+	if (retained_entry && (!cont || !cont->service_ops || pending ||
+	    frame->executed || !frame->image || !frame->image->immutable ||
+	    frame->image->entry != exe))
+		return KD_EXE_RUN_ERROR;
+	if (retained_resume && (!cont || !cont->service_ops || pending ||
+	    !frame->executed || frame->packet_state != KD_PACKET_FULL ||
+	    !frame->image || !frame->image->immutable || frame->image->entry != exe))
+		return KD_EXE_RUN_ERROR;
 
 	/* Reuse the caller's slot, not its earlier readiness result. A successful
 	 * frame push admitted a source lease; closure before that push refuses,
 	 * closure observed here refuses, and closure racing after this check must
 	 * retain pins while this frame drains. Slot storage/keys are never reused
 	 * in-session. Mutex frames separately bind one immutable code generation. */
-	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
+	if (!pending && !retained_resume && !retained_entry &&
+	    !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
 		if (!exe)
 			return KD_EXE_NO_RUN;
 		KD_PR_INFO(
@@ -241,13 +307,15 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 
 	if (READ_ONCE(exe->lock_kind) !=
 	    (frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
-		kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
+		/* Serialize this terminal decision with image publication and its miss
+		 * acknowledgment, so a publisher cannot later restore NORMAL. */
+		kd_image_disable(exe);
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH entry=0x%lx registered=%d mutex_frame=%d\n",
 			entry_ip, exe->lock_kind, frame->mutex_backend);
 		return KD_EXE_NO_RUN;
 	}
-	if (!pending && !kd_jit_entry_has_scope(frame, regs, entry_ip)) {
+	if (!pending && !retained_resume && !kd_jit_entry_has_scope(frame, regs, entry_ip)) {
 		kd_jit_log_hl_error("ENTRY_SCOPE_MISMATCH", frame, regs, 0,
 				    -EINVAL, 0, 0);
 		return KD_EXE_NO_RUN;
@@ -257,7 +325,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 	direct_image = kd_jit_direct_image(frame);
 	root_escape_image = kd_jit_root_escape_image(frame);
-	if (!pending && (!kd_jit_direct_entry(frame) ||
+	if (!pending && !retained_resume && (!kd_jit_direct_entry(frame) ||
 			 !kd_jit_root_escape_entry(frame))) {
 		frame->image = previous_image;
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
@@ -265,7 +333,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 
 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
 	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
-	pristine_root = pending || (!frame->resume_target && regs->ip == entry_ip);
+	pristine_root = !retained_resume && !retained_entry &&
+		(pending || (!frame->resume_target && regs->ip == entry_ip));
 	translated = kd_jit_bound_code(exe, frame);
 	for (;;) {
 		int call_ret;
@@ -403,6 +472,8 @@ returned_wrapper:
 			if (!body_reported && args[1] == 1) {
 				kd_exe_note_body(entry_ip, outer_lock_addr, args[1]);
 				body_reported = true;
+				if (cont && cont->service_ops)
+					cont->body_reported = true;
 			}
 			if (resume_after_hostcall)
 				atomic64_inc(&kd_hostcall_resumed);
@@ -481,6 +552,104 @@ returned_wrapper:
 		     !kd_exec_frame_can_borrow_locks(frame) ||
 		     kd_exec_frame_remote_pending(frame) || frame->remote_request ||
 		     frame->native_request || frame->control_call.phase != KD_CALL_NONE)) {
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+
+		/* A retained request has its own exact owner list and result protocol.
+		 * Intercept controls before legacy helpers can borrow owners or build
+		 * an original-task suffix. Unsupported reached operations are reported
+		 * as an integration boundary with the committed packet unchanged. */
+		if (cont && cont->service_ops) {
+			if (args[0] == KD_EXE_SOURCE_FRONTIER) {
+				call_ret = fault_kind ? -EINVAL : kd_jit_source_frontier(exe, frame, regs);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_HANDOFF;
+					break;
+				}
+			} else if (args[0] == KD_EXE_ORIGIN_MEMORY) {
+				call_ret = fault_kind ? -EINVAL : kd_exec_cont_memory_prepare(frame);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_ORIGIN_MEMORY;
+					break;
+				}
+			} else if (args[0] == KD_EXE_CALL_MISS || args[0] == KD_EXE_INDIRECT_CALL ||
+				   args[0] == KD_EXE_INDIRECT_TAIL) {
+				call_ret = fault_kind ? -EINVAL : 0;
+				if (!call_ret && args[0] == KD_EXE_INDIRECT_TAIL)
+					call_ret = kd_jit_retained_tail(frame, regs);
+				if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
+					unsigned int length;
+					unsigned long return_ip, site = regs->orig_ax;
+
+					/* A registered dynamic target still needs the exact
+					 * source CALL and its unconsumed successor word. */
+					call_ret = kd_source_pin_target(site);
+					if (!call_ret)
+						call_ret = kd_jit_indirect_call_length(site, &length);
+					if (!call_ret && (site > ~0UL - length ||
+					    copy_from_kernel_nofault(&return_ip, (void *)regs->sp,
+						 sizeof(return_ip)) || return_ip != site + length))
+						call_ret = -EINVAL;
+				}
+				if (!call_ret)
+					call_ret = kd_jit_service_control(frame, regs);
+				if (call_ret == KD_EXE_KNOWN_SERVICE) {
+					ret_flag = KD_EXE_RUN_SERVICE;
+					break;
+				}
+				if (call_ret == KD_EXE_KNOWN_ORIGIN_CALL) {
+					ret_flag = KD_EXE_RUN_ORIGIN_CALL;
+					break;
+				}
+				if (!call_ret && (frame->image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) {
+					call_ret = kd_jit_retained_miss(exe, frame, regs, args[0]);
+					if (!call_ret) {
+						ret_flag = KD_EXE_RUN_HANDOFF;
+						break;
+					}
+				} else if (!call_ret && args[0] == KD_EXE_INDIRECT_CALL) {
+					unsigned int length;
+
+					if (!kd_jit_indirect_call_length(regs->orig_ax, &length))
+						kd_image_report(exe, frame->image, KD_EXE_IJ_MISS,
+							regs->ip, regs->orig_ax + length);
+				} else if (!call_ret && args[0] != KD_EXE_INDIRECT_TAIL) {
+					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
+				}
+			} else if (args[0] == KD_EXE_RETAINED_MISS && !fault_kind) {
+				call_ret = kd_jit_retained_miss(exe, frame, regs, args[0]);
+				if (!call_ret) {
+					ret_flag = KD_EXE_RUN_HANDOFF;
+					break;
+				}
+			} else if (args[0] == KD_EXE_INST_LIMIT && !fault_kind &&
+				   (frame->image->requirements & KD_IMAGE_REQUIRE_BUDGET_RESUME) &&
+				   regs->orig_ax == KD_REG_BUDGET_READY_TAG) {
+				/* The generated image exported source arithmetic flags before
+				 * cleanup. Resume at this untouched block in the same image. */
+				regs->orig_ax = KD_REG_BUDGET_REENTRY_TAG;
+				kd_exec_frame_save_continuation(frame, regs);
+				ret_flag = KD_EXE_RUN_YIELD;
+				break;
+			} else {
+				call_ret = -EOPNOTSUPP;
+			}
+			kd_jit_log_hl_error("RETAINED_OPERATION_UNIMPLEMENTED", frame,
+				regs, args[0], call_ret ? call_ret : -EOPNOTSUPP,
+				continuation_count, hostcall_count);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+		if (args[0] == KD_EXE_RETAINED_MISS) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_retained_miss(exe, frame, regs, args[0]);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+			break;
+		}
+		if (args[0] == KD_EXE_INDIRECT_TAIL) {
+			kd_jit_log_hl_error("INDIRECT_TAIL_REQUIRES_RETAINED_ROOT", frame,
+				regs, args[0], -EOPNOTSUPP, continuation_count, hostcall_count);
 			ret_flag = KD_EXE_RUN_ERROR;
 			break;
 		}
@@ -723,6 +892,11 @@ returned_wrapper:
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
 							KD_EXE_RUN_NATIVE;
 			}
+		} else if (args[0] == KD_EXE_ORIGIN_MEMORY) {
+			kd_jit_log_hl_error("ORIGIN_MEMORY_REQUIRES_RETAINED_ROOT", frame, regs,
+				args[0], -EOPNOTSUPP, continuation_count, hostcall_count);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
 		} else if (args[0] == KD_EXE_ORIGIN_INSN) {
 			call_ret = fault_kind ? -EINVAL :
 				kd_jit_origin_instruction(exe, frame, regs, continuation_count + 1);
@@ -777,7 +951,8 @@ returned_wrapper:
 	 * them as an instruction-continuation tag when publishing a native suffix. */
 	if ((frame->mutex_backend || root_escape_image) &&
 	    ret_flag == KD_EXE_RUN_NATIVE &&
-	    args[0] != KD_EXE_NATIVE_ESCAPE && args[0] != KD_EXE_ORIGIN_INSN)
+	    args[0] != KD_EXE_NATIVE_ESCAPE && args[0] != KD_EXE_ORIGIN_INSN &&
+	    args[0] != KD_EXE_RETAINED_MISS)
 		regs->orig_ax = 0;
 
 	/* Completion/native/ACK releases and registry status CAS publish their
@@ -789,7 +964,90 @@ returned_wrapper:
 int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long entry_ip, unsigned long outer_lock_addr)
 {
-	return kd_exe_dispatch(exe, regs, entry_ip, outer_lock_addr, NULL);
+	return kd_exe_dispatch(exe, regs, entry_ip, outer_lock_addr, NULL, false, false);
+}
+
+const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,
+	unsigned long entry_ip)
+{
+	const struct kd_jit_image *image;
+	const unsigned char *code;
+	unsigned int requirements;
+	int status;
+
+	/* Retained requests bind an immutable version. A recoverable report asks
+	 * for another version; it does not invalidate paths this one implements.
+	 * Keep ordinary batch/spin readiness independent of this admission rule. */
+	if (!exe || !entry_ip || !kd_source_is_open() ||
+	    READ_ONCE(exe->pid) != 0 || READ_ONCE(exe->RIP) != entry_ip ||
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
+	    READ_ONCE(exe->entry_abi) != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return NULL;
+	status = smp_load_acquire(&exe->status_code);
+	if (status != KD_EXE_NORMAL && status != KD_EXE_CALL_MISS &&
+	    status != KD_EXE_IJ_MISS)
+		return NULL;
+	image = kd_image_current(exe);
+	if (!image || !image->immutable || image->entry != exe ||
+	    image->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    image->length < KD_IMAGE_HEADER_SIZE ||
+	    (status != KD_EXE_NORMAL &&
+	     !(image->requirements & KD_IMAGE_REQUIRE_RETAINED_MISS)) ||
+	    (image->requirements & ~(KD_IMAGE_REQUIRE_BUDGET_RESUME |
+				      KD_IMAGE_REQUIRE_SERVICE_QUEUE |
+					      KD_IMAGE_REQUIRE_ORIGIN_CALL |
+					      KD_IMAGE_REQUIRE_ORIGIN_MEMORY |
+					      KD_IMAGE_REQUIRE_ORIGIN_CONTEXT_READ |
+					      KD_IMAGE_REQUIRE_INDIRECT_TAIL |
+					      KD_IMAGE_REQUIRE_RETAINED_MISS |
+					      KD_IMAGE_REQUIRE_SOURCE_FRONTIER)) ||
+	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,
+		KD_ENTRY_ABI_MUTEX_CLOBBER_V1, image->requirements))
+		return NULL;
+	code = image->code;
+	if (!code || get_unaligned_le32(code + 25) != 0x4357444bU ||
+	    get_unaligned_le32(code + 28) != 0x32303043U ||
+	    get_unaligned_le32(code + 41) != 0x4241444bU ||
+	    code[KD_JIT_ABI_OFFSET] != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    !kd_image_header_requirements(code, image->length, &requirements) ||
+	    requirements != image->requirements)
+		return NULL;
+	return image;
+}
+
+int kd_exe_on_retained_entry(struct kd_exec_frame *frame,
+	struct kd_exe_info *exe, const struct kd_jit_image *image)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+
+	if (!cont || !cont->service_ops || cont->state != KD_CONT_BOUND ||
+	    cont->executor != current || kd_exec_current_frame() != frame ||
+	    frame->executed || frame->image || !image || !image->immutable ||
+	    image->entry != exe || image->entry_abi != frame->entry_abi ||
+	    !cont->source_lease || cont->service_call.api != KD_SERVICE_NONE)
+		return KD_EXE_RUN_ERROR;
+	frame->image = image;
+	return kd_exe_dispatch(exe, cont->packet, frame->entry_ip,
+		frame->outer_lock_addr, NULL, false, true);
+}
+
+int kd_exe_resume_retained(struct kd_exec_frame *frame)
+{
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+	struct kd_regs *regs;
+
+
+	if (!cont || !cont->service_ops || cont->state != KD_CONT_BOUND ||
+	    cont->executor != current || kd_exec_current_frame() != frame ||
+	    cont->service_call.api != KD_SERVICE_NONE || !frame->image ||
+	    !frame->image->immutable || frame->packet_state != KD_PACKET_FULL)
+		return KD_EXE_RUN_ERROR;
+	regs = kd_exec_frame_regs(frame);
+	if (regs != cont->packet || regs->ip != frame->continuation_ip ||
+	    regs->sp != frame->continuation_sp)
+		return KD_EXE_RUN_ERROR;
+	return kd_exe_dispatch(frame->image->entry, regs, frame->entry_ip,
+		frame->outer_lock_addr, NULL, true, false);
 }
 
 int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
@@ -801,7 +1059,7 @@ int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 	 * logging or any service side effect. The packet itself stays shared. */
 	kd_spin_jit_prepare_complex(frame);
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
-			       frame->outer_lock_addr, call);
+			       frame->outer_lock_addr, call, false, false);
 }
 
 int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
@@ -816,5 +1074,5 @@ int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
 	 * routing, then consumes the pending exit once and detaches only FULL
 	 * packets before any service or native owner-ACK wait. */
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
-			       frame->outer_lock_addr, call);
+			       frame->outer_lock_addr, call, false, false);
 }

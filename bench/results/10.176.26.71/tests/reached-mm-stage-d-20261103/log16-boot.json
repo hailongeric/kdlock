@@ -1,0 +1,1 @@
+{"boot_id": "5a5f1b26-143e-4130-9932-b2e8714684cd", "release": "7.0.0-38-kdscope5", "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope5 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on log_buf_len=16M", "idle": true, "buffer_lines": []}

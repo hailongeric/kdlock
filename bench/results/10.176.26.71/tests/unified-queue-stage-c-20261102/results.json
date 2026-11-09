@@ -1,0 +1,890 @@
+{
+  "branch": "codex/unified-lock-queue-c",
+  "design_first_commit": "7527bf2f",
+  "earlier_functional_smoke": [
+    {
+      "cachelines": 1,
+      "completed": 4000,
+      "cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "data_ok": true,
+      "drained": true,
+      "image_requirements": 128,
+      "iterations_per_worker": 1000,
+      "jit_bodies": 1,
+      "jit_completions": 1,
+      "kind": "mutex",
+      "performance_accepted": false,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "source_commit": "af28dfc1483ae284803fd0b517766ae1c356beaa",
+      "threads": 4,
+      "warmup_iterations_per_worker": 48000,
+      "writes": 4000
+    },
+    {
+      "cachelines": 16,
+      "completed": 4000,
+      "cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "data_ok": true,
+      "drained": true,
+      "image_requirements": 128,
+      "iterations_per_worker": 1000,
+      "jit_bodies": 4000,
+      "jit_completions": 4000,
+      "kind": "rwsem",
+      "performance_accepted": false,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "source_commit": "af28dfc1483ae284803fd0b517766ae1c356beaa",
+      "threads": 4,
+      "warmup_iterations_per_worker": 48000,
+      "writes": 4000
+    }
+  ],
+  "final_local_rwsem": {
+    "binaries": {
+      "source/kernel_module/kdlock_km.ko": "fd4f9fc0e6319584c84ad1407e015c15607ebe263ef1f6b99daf6d54696ef1a2",
+      "source/tests/kernel/rwsem/rwsem_probe.ko": "440ba4a48ed4a6455277a2d7d30bcf19c416b8ddc861f6cc2a39ebb2faff038c"
+    },
+    "drained": true,
+    "jit_bodies": 0,
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "passed": true,
+    "results": [
+      {
+        "api_checks": 17,
+        "cancellation_checks": 10,
+        "colocated": 1,
+        "downgrade_checks": 1,
+        "errors": 0,
+        "execution": "local",
+        "gate_signal": {
+          "cases": 3,
+          "errors": 0,
+          "fatal_cancel": 2,
+          "idle": 1,
+          "interruptible_cancel": 1,
+          "nonfatal_wait": 1,
+          "queue_observed": 3,
+          "scoped_retired": 3
+        },
+        "idle": 1,
+        "late_reader_slept": 1,
+        "outer_readers_slept": 2,
+        "outer_writer_slept": 1,
+        "publication_checks": 3,
+        "readers_slept": 2,
+        "writer_slept": 1
+      }
+    ],
+    "snapshot_tag": "kdlock-builddisk-clean-20261031"
+  },
+  "final_units": [
+    {
+      "returncode": 0,
+      "tail": "PASS production reader release: last credit is final object access; post-final notification negative control detected\n",
+      "test": [
+        "mutex/test_rwsem_read_release.py"
+      ]
+    }
+  ],
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "mm_delegation_validated": false,
+  "parent_checkpoint": "28d576ba4bbba8d8539018de36bfbac854dd9996",
+  "performance_accepted": false,
+  "promoted": false,
+  "retained": {
+    "caller_shell": "rwsem_killable_clobber",
+    "child_permission_counts": {
+      "False": 80,
+      "True": 65
+    },
+    "drained": true,
+    "entry_abi": 2,
+    "event_counts": {
+      "cancel": 4,
+      "child_cancel": 1,
+      "child_grant": 145,
+      "downgrade": 1,
+      "enter": 14,
+      "read_release": 1,
+      "release": 158,
+      "returned": 14
+    },
+    "identity_interpretation": "per-CPU UID namespace, not owner-record address; storage reuse is source evidence",
+    "image_requirements": 384,
+    "maximum_depth_including_root": 9,
+    "passed": true,
+    "phase_count": 11,
+    "phases": [
+      {
+        "complete": true,
+        "event_counts": {
+          "enter": 1,
+          "release": 1,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "killable-success",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45674,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "cancel": 1,
+          "enter": 2,
+          "release": 2,
+          "returned": 2
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "queued-cancel-0",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45675,
+            "prefix": 0,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45676,
+            "prefix": 0,
+            "result": -4,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45677,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45678,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "cancel": 1,
+          "enter": 2,
+          "release": 2,
+          "returned": 2
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "queued-cancel-1",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45679,
+            "prefix": 0,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45680,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45681,
+            "prefix": 0,
+            "result": -4,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45682,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "cancel": 1,
+          "enter": 2,
+          "release": 2,
+          "returned": 2
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "queued-cancel-2",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45683,
+            "prefix": 0,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45684,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45685,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45686,
+            "prefix": 0,
+            "result": -4,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "cancel": 1
+        },
+        "execution": "CANCELED_BEFORE_BODY",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "selected-reader-drain-cancel",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45687,
+            "prefix": 0,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45688,
+            "prefix": 0,
+            "result": -4,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "child_cancel": 1,
+          "enter": 1,
+          "release": 1,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "nested-origin-cancel",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45689,
+            "prefix": 0,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          },
+          {
+            "child_prefix": 0,
+            "child_result": -4,
+            "pid": 45690,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "downgrade": 1,
+          "enter": 2,
+          "read_release": 1,
+          "release": 1,
+          "returned": 2
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "executor-downgrade-and-fresh-writer",
+        "slots": [
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45691,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 4660,
+            "tail_ready": 1
+          },
+          {
+            "child_prefix": 0,
+            "child_result": 0,
+            "pid": 45692,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "child_grant": 8,
+          "enter": 1,
+          "release": 9,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "mixed-depth9",
+        "slots": [
+          {
+            "child_prefix": 8,
+            "child_result": 0,
+            "pid": 45693,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 8,
+            "tail_ready": 9
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "child_grant": 8,
+          "enter": 1,
+          "release": 9,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "early-outer-depth9",
+        "slots": [
+          {
+            "child_prefix": 8,
+            "child_result": 0,
+            "pid": 45694,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 8,
+            "tail_ready": 9
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "child_grant": 128,
+          "enter": 1,
+          "release": 129,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "repeated-child-128",
+        "slots": [
+          {
+            "child_prefix": 128,
+            "child_result": 0,
+            "pid": 45695,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "event_counts": {
+          "child_grant": 1,
+          "enter": 1,
+          "release": 2,
+          "returned": 1
+        },
+        "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+        "final": {
+          "active": 0,
+          "errors": 0,
+          "idle": 1,
+          "inner_queue_count": 0,
+          "phase": 0,
+          "queue_count": 0,
+          "readers": 0
+        },
+        "name": "nested-true-control",
+        "slots": [
+          {
+            "child_prefix": 1,
+            "child_result": 0,
+            "pid": 45696,
+            "prefix": 1,
+            "result": 0,
+            "returned": 1,
+            "tail_done": 0,
+            "tail_ready": 0
+          }
+        ]
+      }
+    ],
+    "repeat_distinct_namespace_generation_pairs": 128,
+    "repeat_invocations": 128,
+    "root_pairs": [
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45650,
+        "generation": 1,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45674
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45619,
+        "generation": 1,
+        "identity": 18379471568015429544,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45677
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45605,
+        "generation": 1,
+        "identity": 18379471568015953832,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45678
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45646,
+        "generation": 3,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45680
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45619,
+        "generation": 3,
+        "identity": 18379471568015953832,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45682
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45598,
+        "generation": 5,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45684
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45609,
+        "generation": 5,
+        "identity": 18379471568015429544,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45685
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45639,
+        "generation": 9,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45690
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45657,
+        "generation": 7,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45691
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45657,
+        "generation": 11,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45692
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45596,
+        "generation": 9,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45693
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45657,
+        "generation": 11,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45694
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45623,
+        "generation": 13,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45695
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45637,
+        "generation": 15,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45696
+      }
+    ],
+    "same_executor_own_pending_writer_proven": false,
+    "tail_events": [
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45657,
+        "generation": 7,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45691
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "downgrade",
+        "executor": 45657,
+        "generation": 7,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45691
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "read_release",
+        "executor": 45657,
+        "generation": 7,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45691
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "returned",
+        "executor": 45657,
+        "generation": 7,
+        "identity": 18379471568014380968,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45691
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "enter",
+        "executor": 45657,
+        "generation": 11,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45692
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "release",
+        "executor": 45657,
+        "generation": 11,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45692
+      },
+      {
+        "depth": 0,
+        "entry": 18446744072646181368,
+        "event": "returned",
+        "executor": 45657,
+        "generation": 11,
+        "identity": 18379471568014905256,
+        "may_delegate": true,
+        "object": 18446744072649046464,
+        "origin": 45692
+      }
+    ]
+  },
+  "schema": 1,
+  "snapshot_tag": "kdlock-builddisk-clean-20261031",
+  "stage": "c",
+  "status": "focused_supported_slice_passed; broader_Native_equivalence_incomplete",
+  "tested_implementation": "9370ae4e635bef487d16be475e37a5a1f9e27d7b"
+}

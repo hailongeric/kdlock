@@ -22,23 +22,28 @@ def main():
     source = read_source(ROOT / 'kernel_module/kd_rwsem.c')
     core = "\n".join(definition(source, name) for name in (
         'static void kd_rwsem_release_local(struct kd_rwsem *sem)',
-        'void kd_rwsem_delegate_exit(struct kd_rwsem *sem)',
-        'void kd_rwsem_write_release(struct kd_rwsem *sem)',
         'void kd_up_write(struct kd_rwsem *sem)',
         'void kd_downgrade_write(struct kd_rwsem *sem)'))
     direct = stripped('include/kd_mutex_direct.h')
     direct = direct[direct.index('#define KD_MUTEX_DIRECT_CALL('):
                     direct.index('/* Explicit outer-only pair.')]
+    operations = re.search(r'enum kd_exec_native_operation\s*\{.*?\};',
+        read_source(ROOT / 'include/kd_exec.h'), re.S).group(0)
     api_source = read_source(ROOT / 'kernel_module/kd_rwsem_api.c')
     provider = definition(api_source, 'int kd_rwsem_prepare(struct kd_rwsem *sem, unsigned long ip, unsigned int abi)')
-    provider += '\n' + definition(api_source, 'kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,')
-    # The definition helper begins at the identifier on this split signature.
-    provider = provider.replace('\nkd_rwsem_down_write_clobber_v1(', '\nvoid kd_rwsem_down_write_clobber_v1(')
+    for result, first_line in (
+        ('void', 'kd_rwsem_down_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,'),
+        ('int', 'kd_rwsem_down_write_interruptible_clobber_v1(struct kd_rwsem *sem,'),
+        ('int', 'kd_rwsem_down_write_killable_clobber_v1(struct kd_rwsem *sem,'),
+        ('void', 'kd_rwsem_up_write_clobber_v1(struct kd_rwsem *sem, unsigned long sp,'),
+    ):
+        # These provider definitions split their return type and identifier.
+        provider += '\n' + result + ' ' + definition(api_source, first_line)
     with tempfile.TemporaryDirectory(prefix='kd-rwsem-api-') as directory:
         path = Path(directory)
         for name, text in {
             'types.h': stripped('include/kd_mutex_types.h') + stripped('include/kd_rwsem_types.h'),
-            'decls.h': stripped('include/kd_rwsem.h'),
+            'decls.h': stripped('include/kd_rwsem.h') + '\n' + operations,
             'core.h': core,
             'api.h': direct + stripped('include/kd_rwsem_api.h'),
             'provider.h': provider,
@@ -60,20 +65,58 @@ def main():
                 symbols[words[-1]] = int(words[0], 16)
                 if len(words) == 4:
                     sizes[words[-1]] = int(words[1], 16)
-        entry, start = symbols['rwsem_entry'], symbols['write_body']
-        assert start < entry < start + sizes['write_body']
         sections = subprocess.check_output(['objdump', '-h', binary], text=True)
         base = int(next(line.split()[3] for line in sections.splitlines()
                         if line.split()[1:2] == ['.text']), 16)
         subprocess.run(['objcopy', '--dump-section', f'.text={path}/text.bin', binary], check=True)
-        raw = (path / 'text.bin').read_bytes()[start-base:start-base+sizes['write_body']]
-        assembly, log, status = render('', regions=[(raw, start, [entry])], entry=entry,
-            kernel_symbols={name: symbols[name] for name in ('kd_mutex_direct_lock_clobber_v1',
-                            'kd_mutex_direct_unlock_clobber_v1', 'kd_rwsem_write_release')},
-            abi=2, lock_kind='mutex', mutex_stack_bytes=256, return_status=True, trusted_source=True)
-        assert status == 0 and b'clobber_complete' in assembly, log
-        assert f"loc_{symbols['kd_rwsem_write_release']:x}:".encode() not in assembly
-        print('PASS public rwsem: compiled local/prepared calls, exact unlock-before-phase release, downgrade and ABI2 endpoint')
+        text = (path / 'text.bin').read_bytes()
+        controls = {name: symbols[name] for name in (
+            'kd_rwsem_down_write_clobber_v1',
+            'kd_rwsem_down_write_interruptible_clobber_v1',
+            'kd_rwsem_down_write_killable_clobber_v1',
+            'kd_rwsem_up_write_clobber_v1')}
+        for body, label in (('write_body', 'rwsem_entry'),
+                            ('interruptible_body', 'rwsem_interruptible_entry'),
+                            ('killable_body', 'rwsem_killable_entry')):
+            entry, start = symbols[label], symbols[body]
+            assert start < entry < start + sizes[body]
+            raw = text[start-base:start-base+sizes[body]]
+            assembly, log, status = render('', regions=[(raw, start, [entry])], entry=entry,
+                kernel_symbols=controls, abi=2, lock_kind='mutex', mutex_stack_bytes=256,
+                return_status=True, trusted_source=True)
+            assert status == 0, (body, status, log)
+            for target in controls.values():
+                label = f'loc_{target:x}:'.encode()
+                if label in assembly:
+                    # A retained typed CALL can have a callee-table exit
+                    # label. It must contain only the exact control exit,
+                    # never decoded physical acquisition/release helper code.
+                    stub = assembly.split(label, 1)[1].split(b'\n\n', 1)[0]
+                    instructions = [' '.join(line.decode().split())
+                                    for line in stub.splitlines() if line.strip()]
+                    assert instructions == ['PUSHFQ',
+                                            'POP QWORD PTR[REG_BANK + KD_REG_FLAGS]',
+                                            f'MOVABS R14, 0x{target:x}',
+                                            'MOV Stack_IJ, 0x1', 'JMP exit'], instructions
+            if body == 'write_body':
+                assert b'clobber_complete' in assembly and b'kd_terminal_full_' in assembly, assembly
+            else:
+                assert text[entry-base:entry-base+2] == b'\x31\xc0'
+                # GCC can share the acquisition-failure RET block with the
+                # success unlock continuation. That reachable source PC must
+                # use the exact FULL CALL, not terminal-clobber optimization.
+                listing = subprocess.check_output(
+                    ['objdump', '-d', '--disassemble=' + body, binary], text=True)
+                calls = re.findall(r'^\s*([0-9a-f]+):\s+e8(?:\s+[0-9a-f]{2}){4}\s+call\s+'
+                                   r'[0-9a-f]+\s+<kd_rwsem_up_write_clobber_v1>', listing, re.M)
+                assert len(calls) == 1, listing
+                return_pc = int(calls[0], 16) + 5
+                emitted = assembly.decode()
+                assert f'loc_{return_pc:x}:' in emitted, (listing, emitted)
+                assert re.search(rf'MOVABS\s+R\d+,\s*0x{return_pc:x}\b', emitted, re.I), emitted
+                target = controls['kd_rwsem_up_write_clobber_v1']
+                assert re.search(rf'JMP\s+loc_{target:x}\b', emitted), emitted
+        print('PASS public rwsem: compiled ordinary/integer capture, exact typed release, downgrade and ABI2 endpoints')
 
 
 if __name__ == '__main__':

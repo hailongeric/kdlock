@@ -1,21 +1,33 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Reader/ordinary-writer/delegated-writer phases around an unchanged KD mutex. */
+/* Local readers and one exact selected writer phase around KD exclusion. */
 #include <linux/module.h>
 #include <linux/limits.h>
 #include <linux/sched/signal.h>
 #include "kd_rwsem.h"
 #include "kd_lock.h"
 #include "kd_mutex_local.h"
+#include "kd_admission.h"
+#ifndef KD_RWSEM_LOCAL_BACKEND
+#include "kd_exec.h"
+#endif
 
 #define KD_RWSEM_LOCAL_WRITER (-1L)
+
+static_assert(sizeof(struct kd_rwsem) == 320);
+static_assert(offsetof(struct kd_rwsem, selected_kind) == 36);
+static_assert(offsetof(struct kd_rwsem, selected_owner) == 40);
+static_assert(offsetof(struct kd_rwsem, selected_identity) == 48);
+static_assert(offsetof(struct kd_rwsem, phase_generation) == 56);
+static_assert(offsetof(struct kd_rwsem, readers) == 64);
+static_assert(offsetof(struct kd_rwsem, admission) == 128);
 
 /* Short holders often finish before a task can enqueue and be woken. Poll only
  * before publication, with at most 16384 condition probes. Writers remain
  * preemptible; the ordinary read slowpath pins only its abortable OSQ membership.
  * An individual predicate retains its existing atomic retry loop. Sleeping or
- * colocated holders still get the ordinary wait_event scheduling fallback.
+ * colocated holders still get the condition-channel scheduling fallback.
  * A successful condition may acquire a reservation, so never evaluate it again
- * after success. The wait macro retains its enqueue/recheck ordering. */
+ * after success. The condition adapter retains enqueue/recheck ordering. */
 #define kd_rwsem_poll(condition) ({ \
 	unsigned int kd_rwsem_budget = 16384; \
 	bool kd_rwsem_ready = false; \
@@ -31,38 +43,102 @@
 	kd_rwsem_ready; \
 })
 
-#define kd_rwsem_wait(queue, condition) do { \
-	if (!kd_rwsem_poll(condition)) \
-		wait_event(queue, condition); \
-} while (0)
+enum kd_rwsem_condition_kind {
+	KD_RWSEM_CONDITION_READ,
+};
 
-/* Signalable callers stop spinning for any signal, but only the subsequent
- * wait decides whether that signal cancels this acquisition. Test the condition
- * first: it can consume the caller's one exact phase reservation. */
-#define kd_rwsem_poll_state(condition, state) ({ \
-	unsigned int kd_rwsem_budget = 16384; \
-	bool kd_rwsem_ready = false; \
-	do { \
-		if (condition) { \
-			kd_rwsem_ready = true; \
-			break; \
-		} \
-		if (need_resched() || \
-		    ((state) != TASK_UNINTERRUPTIBLE && signal_pending(current))) \
-			break; \
-		cpu_relax(); \
-	} while (--kd_rwsem_budget); \
-	kd_rwsem_ready; \
-})
+static int
+kd_rwsem_try_read(struct kd_rwsem *sem, bool notify);
+
+static bool kd_rwsem_condition_ready(struct kd_rwsem *sem,
+				     enum kd_rwsem_condition_kind kind,
+				     bool guarded)
+{
+	switch (kind) {
+	case KD_RWSEM_CONDITION_READ:
+		/* A speculative rollback under wait_lock cannot notify a drain queue
+		 * using that same guard. Its timed recheck provides progress instead. */
+		return kd_rwsem_try_read(sem, !guarded);
+	}
+	BUG();
+}
+
+/* This short-lived reader descriptor owns condition membership only. It never
+ * elects a writer acquisition or captures a continuation. Selected writers use
+ * their canonical admission's distinct phase/drain condition membership.
+ * Every node access finishes under the object's guard before this wait returns. */
+static long kd_rwsem_wait_condition(struct kd_rwsem *sem,
+				    struct kd_rwsem_condition *condition,
+				    enum kd_rwsem_condition_kind kind,
+				    unsigned int state, bool timed)
+{
+	struct kd_wait_queue queue = kd_wait_queue_view(&sem->gate.wait_lock,
+						       &condition->head);
+	struct kd_wait_request request;
+	struct kd_wait_node node;
+	unsigned long flags;
+	long remaining = 1, result = 0;
+
+	if (kd_rwsem_condition_ready(sem, kind, false))
+		return timed ? 1 : 0;
+	flags = _raw_spin_lock_irqsave(queue.guard);
+	kd_wait_request_init(&request, NULL, 0,
+			     current, current, state, false, sem);
+	kd_wait_node_init(&node, &request, KD_WAIT_CONDITION);
+	kd_wait_link_locked(&queue, &node);
+	BUG_ON(condition != &sem->phase_wait ||
+	       condition->readers_waiting == U64_MAX);
+	++condition->readers_waiting;
+	for (;;) {
+		/* Publish the state before checking signals. A signal between the
+		 * predicate and schedule then either sets RUNNING or is observed here. */
+		set_current_state(state);
+		if (kd_rwsem_condition_ready(sem, kind, true)) {
+			result = timed ? 1 : 0;
+			break;
+		}
+		if (signal_pending_state(state, current)) {
+			result = -ERESTARTSYS;
+			break;
+		}
+		if (timed && !remaining)
+			break;
+		_raw_spin_unlock_irqrestore(queue.guard, flags);
+		if (timed)
+			remaining = schedule_timeout(remaining);
+		else
+			/* Phase reopening is the final object RMW after wake collection.
+			 * A reader can link in that interval; retry its real predicate
+			 * on a timer even if it missed that earlier notification. */
+			schedule_timeout(1);
+		flags = _raw_spin_lock_irqsave(queue.guard);
+	}
+	__set_current_state(TASK_RUNNING);
+	BUG_ON(!condition->readers_waiting);
+	--condition->readers_waiting;
+	kd_wait_unlink_locked(&queue, &node);
+	BUG_ON(request.memberships || request.acquisition || request.selection);
+	kd_wait_set_state_locked(&request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+	return result;
+}
 
 void kd_rwsem_init(struct kd_rwsem *sem)
 {
 	kd_mutex_init(&sem->gate);
 	WRITE_ONCE(sem->prepared_writes, 0);
+	sem->selected_kind = KD_RWSEM_PHASE_NONE;
+	sem->selected_owner = NULL;
+	sem->selected_identity = NULL;
+	sem->phase_generation = 0;
 	atomic_long_set(&sem->readers, 0);
 	atomic_long_set(&sem->admission, 0);
-	init_waitqueue_head(&sem->phase_wait);
-	init_waitqueue_head(&sem->reader_drain);
+	sem->phase_wait.head = NULL;
+	sem->phase_wait.readers_waiting = 0;
+	sem->phase_wait.reserved = 0;
+	sem->reader_drain.head = NULL;
+	sem->reader_drain.readers_waiting = 0;
+	sem->reader_drain.reserved = 0;
 	osq_lock_init(&sem->reader_osq);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
@@ -76,52 +152,39 @@ void __kd_init_rwsem(struct kd_rwsem *sem, const char *name, struct lock_class_k
 }
 EXPORT_SYMBOL_GPL(__kd_init_rwsem);
 
-static void kd_rwsem_wake(wait_queue_head_t *queue)
+static void kd_rwsem_wake(struct kd_rwsem *sem,
+			  struct kd_rwsem_condition *condition)
 {
+	struct kd_wait_queue queue = kd_wait_queue_view(&sem->gate.wait_lock,
+						       &condition->head);
+	DEFINE_WAKE_Q(wake);
+	unsigned long flags;
+
 	/* Call only after a full barrier or fully ordered count/phase RMW. Each
 	 * predicate keeps its own queue: reader drainage cannot enable a closed
 	 * admission phase. Ordering pairs with enqueue/recheck for this test. */
-	if (waitqueue_active(queue))
-		wake_up_all(queue);
+	if (!READ_ONCE(condition->head))
+		return;
+	flags = _raw_spin_lock_irqsave(queue.guard);
+	kd_wait_collect_wake_locked(&queue, &wake);
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+	/* Collection owns task references only; canceled stack nodes can already
+	 * have retired when scheduler delivery runs after releasing the guard. */
+	wake_up_q(&wake);
 }
 
 void kd_up_read(struct kd_rwsem *sem)
 {
 	/* Trylock rollback and a matching read unlock may run under rq_lock.
 	 * Never acquire a waitqueue/scheduler lock from that atomic context.
-	 * Reader-drain waiters recheck on a timer, so omitting this wake cannot
-	 * strand them. No deferred reference outlives this ordered decrement. */
-	if (atomic_long_dec_and_test(&sem->readers) &&
-	    !irqs_disabled() && !in_atomic())
-		kd_rwsem_wake(&sem->reader_drain);
+	 * Every reader-drain waiter rechecks on a timer. The final credit may
+	 * let a writer retire the object immediately, so no object access or
+	 * deferred notification can follow this fully ordered decrement. */
+	(void)atomic_long_dec_and_test(&sem->readers);
 }
 EXPORT_SYMBOL_GPL(kd_up_read);
 
-static int kd_rwsem_drain_readers(struct kd_rwsem *sem, unsigned int state)
-{
-	long ret;
-
-	if (kd_rwsem_poll_state(!atomic_long_read_acquire(&sem->readers), state))
-		return 0;
-	/* An IRQ-disabled reader cannot safely wake a sleeping writer. Only
-	 * schedulable, unpublished writers wait here; one-jiffy sleeps provide
-	 * progress even when the last decrement omitted its wake. The timeout
-	 * is a recheck, never permission to enter while a reader remains. */
-	do {
-		if (state == TASK_INTERRUPTIBLE)
-			ret = wait_event_interruptible_timeout(sem->reader_drain,
-				!atomic_long_read_acquire(&sem->readers), 1);
-		else if (state == TASK_KILLABLE)
-			ret = wait_event_killable_timeout(sem->reader_drain,
-				!atomic_long_read_acquire(&sem->readers), 1);
-		else
-			ret = wait_event_timeout(sem->reader_drain,
-				!atomic_long_read_acquire(&sem->readers), 1);
-	} while (!ret);
-	return ret < 0 ? -EINTR : 0;
-}
-
-int kd_down_read_trylock(struct kd_rwsem *sem)
+static int kd_rwsem_try_read(struct kd_rwsem *sem, bool notify)
 {
 	if (atomic_long_read(&sem->admission))
 		return 0;
@@ -131,8 +194,17 @@ int kd_down_read_trylock(struct kd_rwsem *sem)
 	atomic_long_inc_return(&sem->readers);
 	if (!atomic_long_read_acquire(&sem->admission))
 		return 1;
-	kd_up_read(sem);
+	if (notify) {
+		kd_up_read(sem);
+	} else {
+		(void)atomic_long_dec_and_test(&sem->readers);
+	}
 	return 0;
+}
+
+int kd_down_read_trylock(struct kd_rwsem *sem)
+{
+	return kd_rwsem_try_read(sem, true);
 }
 EXPORT_SYMBOL_GPL(kd_down_read_trylock);
 
@@ -167,7 +239,7 @@ out:
 	 * queue slot or the CPU pin is still held. */
 	if (!atomic_read(&sem->reader_osq.tail)) {
 		smp_mb();
-		kd_rwsem_wake(&sem->phase_wait);
+		kd_rwsem_wake(sem, &sem->phase_wait);
 	}
 	return acquired;
 }
@@ -189,101 +261,71 @@ void kd_down_read(struct kd_rwsem *sem)
 	} while (--retries);
 	if (kd_rwsem_spin_read(sem))
 		return;
-	wait_event(sem->phase_wait, kd_down_read_trylock(sem));
+	kd_rwsem_wait_condition(sem, &sem->phase_wait,
+		KD_RWSEM_CONDITION_READ, TASK_UNINTERRUPTIBLE, false);
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
 int kd_down_read_interruptible(struct kd_rwsem *sem)
 {
 	might_sleep();
-	return wait_event_interruptible(sem->phase_wait, kd_down_read_trylock(sem)) ? -EINTR : 0;
+	return kd_rwsem_wait_condition(sem, &sem->phase_wait,
+		KD_RWSEM_CONDITION_READ, TASK_INTERRUPTIBLE, false) ? -EINTR : 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_read_interruptible);
 
 int kd_down_read_killable(struct kd_rwsem *sem)
 {
 	might_sleep();
-	return wait_event_killable(sem->phase_wait, kd_down_read_trylock(sem)) ? -EINTR : 0;
+	return kd_rwsem_wait_condition(sem, &sem->phase_wait,
+		KD_RWSEM_CONDITION_READ, TASK_KILLABLE, false) ? -EINTR : 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_read_killable);
 
-static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)
-{
-	if (atomic_long_read(&sem->admission) ||
-	    atomic_read(&sem->reader_osq.tail))
-		return false;
-	return atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER) == 0;
-}
-
 static void kd_rwsem_release_local(struct kd_rwsem *sem)
 {
-	/* Every ordinary writer retains this exclusive phase until after its
-	 * physical unlock. No delegated producer can have passed reader drain. */
+	struct kd_wait_queue queue = kd_wait_queue_view(&sem->gate.wait_lock,
+						       &sem->phase_wait.head);
+	DEFINE_WAKE_Q(wake);
+	unsigned long flags;
+
+	/* The physical release has completed, but -1 still retains this exact
+	 * logical writer phase. A later gate owner must wait for the final RMW. */
+	flags = _raw_spin_lock_irqsave(queue.guard);
+	BUG_ON(sem->selected_kind != KD_RWSEM_PHASE_LOCAL ||
+	       sem->selected_owner != current || !sem->selected_identity ||
+	       atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER);
+	sem->selected_kind = KD_RWSEM_PHASE_NONE;
+	sem->selected_owner = NULL;
+	sem->selected_identity = NULL;
+	kd_wait_collect_wake_locked(&queue, &wake);
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+	/* No object access follows reopening admission. Collected task references
+	 * are independent of object/stack membership lifetime. */
 	BUG_ON(atomic_long_xchg(&sem->admission, 0) != KD_RWSEM_LOCAL_WRITER);
-	kd_rwsem_wake(&sem->phase_wait);
-}
-
-static __always_inline int kd_rwsem_wait_local(struct kd_rwsem *sem,
-					      unsigned int state)
-{
-	if (kd_rwsem_poll_state(kd_rwsem_reserve_local(sem), state))
-		return 0;
-	if (state == TASK_INTERRUPTIBLE)
-		return wait_event_interruptible(sem->phase_wait,
-			kd_rwsem_reserve_local(sem)) ? -EINTR : 0;
-	if (state == TASK_KILLABLE)
-		return wait_event_killable(sem->phase_wait,
-			kd_rwsem_reserve_local(sem)) ? -EINTR : 0;
-	wait_event(sem->phase_wait, kd_rwsem_reserve_local(sem));
-	return 0;
-}
-
-static __always_inline int kd_rwsem_lock_gate(struct kd_rwsem *sem,
-					     unsigned int state)
-{
-	if (state == TASK_UNINTERRUPTIBLE) {
-		kd_mutex_local_lock(&sem->gate);
-		return 0;
-	}
-	/* Prepared local callers are still unpublished. Their phase-first order
-	 * remains, while any pending signal can end gate spinning for both modes. */
-	return kd_mutex_local_lock_signal(&sem->gate, state);
+	wake_up_q(&wake);
 }
 
 static __always_inline int kd_rwsem_down_write_state(struct kd_rwsem *sem,
 						     unsigned int state)
 {
-	bool prepared = READ_ONCE(sem->prepared_writes);
+	struct kd_wait_request request;
+	struct kd_admission admission;
+	unsigned long flags;
 	int ret;
 
-	/* Preparation is quiescent and object-wide. Positive reservations need
-	 * the gate, so only unprepared writers may queue at the gate first. */
-	if (prepared) {
-		ret = kd_rwsem_wait_local(sem, state);
-		if (ret)
-			return ret;
-		ret = kd_rwsem_lock_gate(sem, state);
-		if (ret)
-			goto release_phase;
+	kd_wait_request_init(&request, NULL, 0, current, current, state, false, NULL);
+	kd_admission_init(&admission, &request, KD_ADMISSION_RWSEM_WRITE, sem, NULL);
+	ret = kd_admission_wait(&admission, NULL, NULL);
+	if (!ret) {
+		flags = _raw_spin_lock_irqsave(&sem->gate.wait_lock);
+		kd_admission_detach_local_locked(&admission);
+		_raw_spin_unlock_irqrestore(&sem->gate.wait_lock, flags);
 	} else {
-		ret = kd_rwsem_lock_gate(sem, state);
-		if (ret)
-			return ret;
-		ret = kd_rwsem_wait_local(sem, state);
-		if (ret) {
-			/* The gate may precede the prior writer's phase release.
-			 * This caller has no phase to release until its own CAS. */
-			kd_mutex_local_unlock(&sem->gate);
-			return ret;
-		}
+		flags = _raw_spin_lock_irqsave(request.guard);
+		kd_wait_set_state_locked(&request, KD_WAIT_RETIRED);
+		_raw_spin_unlock_irqrestore(request.guard, flags);
 	}
-	ret = kd_rwsem_drain_readers(sem, state);
-	if (!ret)
-		return 0;
-	kd_mutex_local_unlock(&sem->gate);
-release_phase:
-	/* Wait macros remove their waiter before rollback reopens admission. */
-	kd_rwsem_release_local(sem);
 	return ret;
 }
 
@@ -310,36 +352,78 @@ EXPORT_SYMBOL_GPL(kd_down_write_killable);
 
 int kd_down_write_trylock(struct kd_rwsem *sem)
 {
-	if (!kd_rwsem_reserve_local(sem))
-		return 0;
-	if (kd_mutex_trylock(&sem->gate)) {
-		if (!atomic_long_read_acquire(&sem->readers))
-			return 1;
-		kd_mutex_local_unlock(&sem->gate);
+	struct kd_wait_request request;
+	unsigned long flags;
+	bool gate_held = false;
+	int acquired = 0;
+
+	/* Trylock is bounded and does not publish, allocate, sleep or alter the
+	 * caller's IRQ/preemption state. No partial phase is visible on failure. */
+	kd_wait_request_init(&request, NULL, 0, current, current,
+			     TASK_UNINTERRUPTIBLE, false, NULL);
+	local_irq_save(flags);
+	if (!_raw_spin_trylock(&sem->gate.wait_lock))
+		goto restore;
+	if (sem->gate.wait_head || sem->phase_wait.readers_waiting ||
+	    atomic_long_read(&sem->admission))
+		goto unlock;
+	gate_held = kd_mutex_admission_trylock_locked(&sem->gate, &request);
+	if (!gate_held)
+		goto unlock;
+	if (atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER))
+		goto unlock;
+	if (!atomic_long_read_acquire(&sem->readers)) {
+		BUG_ON(sem->selected_kind != KD_RWSEM_PHASE_NONE ||
+		       sem->phase_generation == U64_MAX);
+		++sem->phase_generation;
+		sem->selected_kind = KD_RWSEM_PHASE_LOCAL;
+		sem->selected_owner = current;
+		sem->selected_identity = request.identity;
+		acquired = 1;
+	} else {
+		BUG_ON(atomic_long_xchg(&sem->admission, 0) != KD_RWSEM_LOCAL_WRITER);
 	}
-	kd_rwsem_release_local(sem);
-	return 0;
+unlock:
+	_raw_spin_unlock(&sem->gate.wait_lock);
+	/* No public acquisition occurred on failure. The tentative physical
+	 * owner must still retire its gate before returning false. */
+	if (gate_held && !acquired)
+		kd_mutex_local_unlock(&sem->gate);
+restore:
+	local_irq_restore(flags);
+	return acquired;
 }
 EXPORT_SYMBOL_GPL(kd_down_write_trylock);
 
 void kd_up_write(struct kd_rwsem *sem)
 {
-	/* Routing validates the exact successful physical/borrowed acquisition.
-	 * A reservation is released only after this unlock has completed its ACK. */
+#ifndef KD_RWSEM_LOCAL_BACKEND
+	if (kd_exec_native_service_unlock((unsigned long)sem,
+		KD_NATIVE_OPERATION_RWSEM_UP_WRITE))
+		return;
+#endif
+	BUG_ON(READ_ONCE(sem->selected_kind) != KD_RWSEM_PHASE_LOCAL ||
+	       READ_ONCE(sem->selected_owner) != current);
 	kd_mutex_api_unlock(&sem->gate);
-	kd_rwsem_write_release(sem);
+	kd_rwsem_release_local(sem);
 }
 EXPORT_SYMBOL_GPL(kd_up_write);
 
 void kd_downgrade_write(struct kd_rwsem *sem)
 {
-	BUG_ON(atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER ||
+#ifndef KD_RWSEM_LOCAL_BACKEND
+	if (kd_exec_native_service_unlock((unsigned long)sem,
+		KD_NATIVE_OPERATION_RWSEM_DOWNGRADE))
+		return;
+#endif
+	BUG_ON(READ_ONCE(sem->selected_kind) != KD_RWSEM_PHASE_LOCAL ||
+	       READ_ONCE(sem->selected_owner) != current ||
+	       atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER ||
 	       !kd_origin_mutex_owned(&sem->gate, current));
-	/* Only the exclusive ordinary phase can downgrade. Publish this reader
-	 * before reopening admission: any later D reservation must drain it while
-	 * schedulable, before entering the legacy queue and pinning its producer. */
-	atomic_long_inc(&sem->readers);
-	kd_mutex_local_unlock(&sem->gate);
+	/* Read credit is fully ordered before physical/phase release. A later
+	 * writer obtains a new selected phase and freshly drains this exact tail. */
+	atomic_long_inc_return(&sem->readers);
+	kd_mutex_api_unlock(&sem->gate);
 	kd_rwsem_release_local(sem);
 }
 EXPORT_SYMBOL_GPL(kd_downgrade_write);
@@ -368,7 +452,7 @@ EXPORT_SYMBOL_GPL(kd_rwsem_is_locked);
 int kd_rwsem_is_contended(struct kd_rwsem *sem)
 {
 	/* An implementation-specific waiting hint, never admission/ownership. */
-	return waitqueue_active(&sem->phase_wait) || waitqueue_active(&sem->reader_drain) ||
+	return READ_ONCE(sem->phase_wait.head) || READ_ONCE(sem->reader_drain.head) ||
 		atomic_read(&sem->reader_osq.tail) || READ_ONCE(sem->gate.wait_head) ||
 		atomic_read(&sem->gate.osq.tail) || READ_ONCE(sem->gate.delegation_tail);
 }
@@ -389,66 +473,14 @@ void kd_rwsem_assert_held_write(const struct kd_rwsem *sem)
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_assert_held_write);
 
-static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
-{
-	long phase = atomic_long_read(&sem->admission);
-
-	while (phase >= 0 && phase < LONG_MAX) {
-		/* Queue presence is a fairness hint, not ownership. A new cohort
-		 * yields to queued local readers; an existing cohort keeps its exact
-		 * reservation/ACK protocol. Recheck after CAS failure can reopen the
-		 * phase. A racing enqueue still relies on the count/drain barriers. */
-		if (!phase && atomic_read(&sem->reader_osq.tail))
-			return false;
-		/* Exact reservations also close reader/ordinary-writer admission.
-		 * Use a full barrier before inspecting admitted readers. */
-		if (atomic_long_try_cmpxchg(&sem->admission, &phase, phase + 1))
-			return true;
-	}
-	return false;
-}
-
-void kd_rwsem_delegate_enter(struct kd_rwsem *sem)
-{
-	might_sleep();
-	BUG_ON(!READ_ONCE(sem->prepared_writes));
-	kd_rwsem_wait(sem->phase_wait, kd_rwsem_reserve_delegate(sem));
-	/* No producer has published yet. A sleeping reader can resume even when
-	 * it shares this CPU. Positive admission prevents new accepted readers or
-	 * ordinary downgrades throughout every reservation in the cohort. */
-	kd_rwsem_drain_readers(sem, TASK_UNINTERRUPTIBLE);
-}
-EXPORT_SYMBOL_GPL(kd_rwsem_delegate_enter);
-
-void kd_rwsem_delegate_exit(struct kd_rwsem *sem)
-{
-	long remaining = atomic_long_dec_return(&sem->admission);
-
-	BUG_ON(remaining < 0);
-	if (!remaining)
-		kd_rwsem_wake(&sem->phase_wait);
-}
-EXPORT_SYMBOL_GPL(kd_rwsem_delegate_exit);
-
-void kd_rwsem_write_release(struct kd_rwsem *sem)
-{
-	/* The successful mutex unlock/ACK precedes this internal call. A local
-	 * writer keeps -1 until release; a delegated origin retains its positive
-	 * reservation through ACK. The phase selects the reservation to retire,
-	 * and never substitutes for the mutex owner's exact acquisition record. */
-	if (atomic_long_read(&sem->admission) == KD_RWSEM_LOCAL_WRITER)
-		kd_rwsem_release_local(sem);
-	else
-		kd_rwsem_delegate_exit(sem);
-}
-EXPORT_SYMBOL_GPL(kd_rwsem_write_release);
-
 bool kd_rwsem_is_idle(struct kd_rwsem *sem)
 {
 	return !atomic_long_read(&sem->admission) &&
 		!atomic_long_read(&sem->readers) &&
-		!waitqueue_active(&sem->phase_wait) &&
-		!waitqueue_active(&sem->reader_drain) &&
+		READ_ONCE(sem->selected_kind) == KD_RWSEM_PHASE_NONE &&
+		!READ_ONCE(sem->selected_owner) && !READ_ONCE(sem->selected_identity) &&
+		!READ_ONCE(sem->phase_wait.head) &&
+		!READ_ONCE(sem->reader_drain.head) &&
 		!atomic_read(&sem->reader_osq.tail) && kd_mutex_is_idle(&sem->gate);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_is_idle);

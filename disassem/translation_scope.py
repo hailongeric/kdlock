@@ -4,11 +4,14 @@ The coordinator completes source coverage before accepting an admission result;
 this module does not read kernel text, publish images, or relax scope checks.
 """
 
+from collections import deque
+
 import context_policy
 import diagnostics
 import instruction_policy
 import normal
 import native_escape
+import source_frontier
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
@@ -149,7 +152,42 @@ def find_resumable_call_continuations(block_dict, db_dict, keep_call_stack):
     return continuations
 
 
-def decode_regions(rets, raw_spin_unlock, keep_call_stack):
+def find_direct_call_targets(blocks, databases, roots, max_depth, excluded_targets):
+    """Follow at most max_depth ordinary CALL edges from each reached seed.
+
+    Branches and source continuations retain depth. A repeated/shared function
+    uses its minimum depth; this bounds discovery without limiting a runtime
+    recursive call stack. Call only on the selected acquisition-region graph.
+    """
+    if type(max_depth) is not int or not 0 <= max_depth <= 32:
+        raise ValueError("direct CALL depth must be between zero and 32")
+    if not max_depth:
+        return set()
+    pending = deque((root, 0) for root in roots)
+    reached, targets = {}, set()
+    while pending:
+        start, depth = pending.popleft()
+        if start not in blocks or reached.get(start, max_depth + 1) <= depth:
+            continue
+        reached[start] = depth
+        block, db = blocks[start], databases[blocks[start]]
+        successors = {db.get_location_offset(edge.loc_key) for edge in block.bto}
+        for line in block.lines:
+            if line.name != 'CALL' or not line.args or not isinstance(line.args[0], ExprLoc):
+                continue
+            target = db.get_location_offset(line.args[0].loc_key)
+            successors.discard(target)
+            if depth < max_depth and target not in excluded_targets:
+                targets.add(target)
+                pending.append((target, depth + 1))
+            successors.add(line.offset + line.l)
+        pending.extend((target, depth) for target in successors)
+    return targets
+
+
+def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=False,
+                   frontier_extensions=False, frontier_controls=False,
+                   frontier_direction=False, unit_releases=()):
     cfgs = []
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -158,6 +196,10 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
         machine = Machine("x86_64")
         loc_db = LocationDB()
         mdis = machine.dis_engine(c, loc_db=loc_db)
+        if source_frontiers:
+            mdis.arch = source_frontier.Decoder(mdis.arch, extended=frontier_extensions,
+                                                controls=frontier_controls,
+                                                direction=frontier_direction)
         mdis.follow_call = False
         # A root can already be an interior instruction of an earlier root's
         # block. Split there so every source entry has a checked dispatch label.
@@ -165,7 +207,13 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
         asmcfg = None
         job_done = set()
 
-        mdis.dont_dis_retcall_funcs = {addr for addr in (raw_spin_unlock,) if addr}
+        unit_releases = set(unit_releases)
+        mdis.dont_dis_retcall_funcs = ({addr for addr in (raw_spin_unlock,) if addr}
+                                      | unit_releases)
+        # Do not decode a release helper's body through a source tail JMP.
+        # Its unchanged CALL/JMP goes to the existing runtime service instead.
+        if unit_releases:
+            mdis.dont_dis = unit_releases
 
         for t in r[2]:
             if t - r[1] in ordering_bug_list:  # To let buggy blocks first. MIASM bug
@@ -190,7 +238,7 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
                 cfg_dbs[block] = asmcfg.loc_db
 
             continuation_targets = find_resumable_call_continuations(
-                cfg_blocks, cfg_dbs, keep_call_stack
+                cfg_blocks, cfg_dbs, set(keep_call_stack) - unit_releases
             )
             existing_targets = set(cfg_blocks)
             chunk_end = r[1] + len(r[0])

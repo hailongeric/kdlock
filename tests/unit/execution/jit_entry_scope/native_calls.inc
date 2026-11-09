@@ -25,6 +25,21 @@ static void check_terminal_and_indirect_calls(void)
 		{{0xff, 0x14, 0x24}, 3}, {{0xff, 0x15, 1, 2, 3, 4}, 6},
 		{{0xff, 0x94, 0x24, 1, 2, 3, 4}, 7},
 		{{0x41, 0xff, 0x94, 0x24, 1, 2, 3, 4}, 8},
+		{{0x2e, 0xff, 0xd0}, 3}, {{0x2e, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0x2e, 0x2e, 0xff, 0xd0}, 5},
+		{{0x2e, 0x41, 0xff, 0xd0}, 4},
+		{{0x2e, 0x2e, 0x41, 0xff, 0xd0}, 5},
+		{{0x2e, 0x2e, 0x2e, 0x41, 0xff, 0xd0}, 6},
+	};
+	static const struct { unsigned char bytes[8]; unsigned int length; } malformed[] = {
+		{{0x2e, 0x2e, 0x2e, 0x2e, 0xff, 0xd0}, 6},
+		{{0x2e, 0x66, 0xff, 0xd0}, 4}, {{0x66, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0xf3, 0xff, 0xd0}, 4},
+		{{0x2e, 0xff, 0xe0}, 3}, {{0x2e, 0xff, 0xd8}, 3},
+		{{0x2e, 0xff, 0x14, 0x24}, 4},
+		{{0x2e, 0x41, 0xff, 0x14, 0x24}, 5},
+		{{0x41, 0x2e, 0xff, 0xd0}, 4},
+		{{0x2e, 0x41, 0x41, 0xff, 0xd0}, 5},
 	};
 	for (unsigned int terminal = 0; terminal < 2; terminal++) {
 		native_call_packet(&call, false, terminal);
@@ -53,6 +68,35 @@ static void check_terminal_and_indirect_calls(void)
 			CHECK(stack[9] == ESCAPE_IP + calls[i].length &&
 			      active.continuation_sp == (unsigned long)&stack[9] &&
 			      active.continuation_ip == 0xb000);
+		}
+		/* The source CALL word names the decoded instruction's exact end,
+		 * not an alternatives patch-window length or following padding. */
+		native_call_packet(&call, true, false);
+		kd_exec_frame_own_regs(&active);
+		memcpy(escape_text, calls[i].bytes, sizeof(calls[i].bytes));
+		stack[9] = ESCAPE_IP + calls[i].length + 1;
+		CHECK(kd_jit_indirect_call_native(entry, &active, &active.regs) < 0);
+		CHECK(stack[9] == ESCAPE_IP + calls[i].length + 1);
+	}
+	for (unsigned int i = 0; i < ARRAY_SIZE(malformed); i++) {
+		unsigned int length = ~0U;
+
+		reset();
+		memcpy(escape_text, malformed[i].bytes, malformed[i].length);
+		CHECK(kd_jit_indirect_call_length(ESCAPE_IP, &length) < 0);
+		CHECK(length == ~0U);
+	}
+	/* Bound every read by the live source extent. Truncating any accepted
+	 * form must fail even when the missing byte is a prefix's next opcode. */
+	for (unsigned int i = 0; i < ARRAY_SIZE(calls); i++) {
+		for (unsigned int available = 1; available < calls[i].length; available++) {
+			unsigned int length = ~0U;
+			unsigned int offset = sizeof(escape_text) - available;
+
+			reset();
+			memcpy(escape_text + offset, calls[i].bytes, available);
+			CHECK(kd_jit_indirect_call_length(ESCAPE_IP + offset, &length) == -EFAULT);
+			CHECK(length == ~0U);
 		}
 	}
 	for (unsigned int bad = 0; bad < 22; bad++) {
@@ -110,4 +154,122 @@ static void check_terminal_and_indirect_calls(void)
 	CHECK(kd_exe_mutex_batch_resume(entry, &call) == KD_EXE_RUN_ERROR);
 	CHECK(active.control_call.phase == KD_CALL_ACQUIRED && !known_calls &&
 	      entry->status_code == KD_EXE_NORMAL);
+}
+
+static void check_retained_indirect_tails(void)
+{
+	struct kd_jit_batch_call call;
+	struct kd_regs before;
+	unsigned long saved_stack[ARRAY_SIZE(stack)];
+	static const struct { unsigned char bytes[8]; unsigned int length; } tails[] = {
+		{{0xff, 0xe0}, 2}, {{0x41, 0xff, 0xe0}, 3},
+		{{0x2e, 0xff, 0xe0}, 3}, {{0x2e, 0x2e, 0x2e, 0x41, 0xff, 0xe0}, 6},
+		{{0xff, 0x24, 0x24}, 3}, {{0xff, 0x25, 1, 2, 3, 4}, 6},
+		{{0x41, 0xff, 0xa4, 0x24, 1, 2, 3, 4}, 8},
+	};
+	static const struct { unsigned char bytes[8]; unsigned int length; } malformed[] = {
+		{{0x2e, 0x2e, 0x2e, 0x2e, 0xff, 0xe0}, 6},
+		{{0x2e, 0x66, 0xff, 0xe0}, 4}, {{0x66, 0x2e, 0xff, 0xe0}, 4},
+		{{0x2e, 0xf3, 0xff, 0xe0}, 4},
+		{{0x2e, 0xff, 0xd0}, 3}, {{0x2e, 0xff, 0xe8}, 3},
+		{{0x2e, 0xff, 0x24, 0x24}, 4},
+		{{0x2e, 0x41, 0xff, 0x24, 0x24}, 5},
+		{{0x41, 0x2e, 0xff, 0xe0}, 4},
+		{{0x2e, 0x41, 0x41, 0xff, 0xe0}, 5},
+	};
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(tails); ++i) {
+		native_call_packet(&call, true, false);
+		kd_exec_frame_own_regs(&active);
+		((struct kd_jit_image *)active.image)->requirements =
+			KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_ORIGIN_CALL |
+			KD_IMAGE_REQUIRE_INDIRECT_TAIL;
+		memcpy(escape_text, tails[i].bytes, sizeof(tails[i].bytes));
+		stack[9] = 0x2005; /* Actual caller word, unrelated to JMP end. */
+		before = active.regs;
+		memcpy(saved_stack, stack, sizeof(stack));
+		CHECK(!kd_jit_retained_tail(&active, &active.regs));
+		CHECK(source_calls == 3);
+		CHECK(!memcmp(&before, &active.regs, sizeof(before)));
+		CHECK(!memcmp(saved_stack, stack, sizeof(stack)));
+		for (unsigned int available = 1; available < tails[i].length; ++available) {
+			unsigned int length = ~0U;
+			unsigned int offset = sizeof(escape_text) - available;
+
+			reset();
+			memcpy(escape_text + offset, tails[i].bytes, available);
+			CHECK(kd_jit_indirect_tail_length(ESCAPE_IP + offset, &length) == -EFAULT);
+			CHECK(length == ~0U);
+		}
+	}
+	for (unsigned int i = 0; i < ARRAY_SIZE(malformed); ++i) {
+		unsigned int length = ~0U;
+
+		reset();
+		memcpy(escape_text, malformed[i].bytes, malformed[i].length);
+		CHECK(kd_jit_indirect_tail_length(ESCAPE_IP, &length) == -EILSEQ);
+		CHECK(length == ~0U);
+	}
+	for (unsigned int bad = 0; bad < 11; ++bad) {
+		native_call_packet(&call, true, false);
+		kd_exec_frame_own_regs(&active);
+		((struct kd_jit_image *)active.image)->requirements =
+			KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_ORIGIN_CALL |
+			KD_IMAGE_REQUIRE_INDIRECT_TAIL;
+		escape_text[1] = 0xe0;
+		stack[9] = 0x2005;
+		switch (bad) {
+		case 0: escape_text[1] = 0xd0; break; /* CALL cannot claim tail. */
+		case 1: escape_text[1] = 0xe8; break; /* Far JMP. */
+		case 2: escape_text[0] = 0xc3; break;
+		case 3: ((struct kd_jit_image *)active.image)->requirements = 0; break;
+		case 4: active.packet_state = KD_PACKET_MINIMAL; break;
+		case 5: active.regs.sp = (unsigned long)stack - 8; break;
+		case 6: stack[9] = 0; break;
+		case 7: active.logical_task = current; break;
+		default: source_error = -ESTALE; source_fail_at = bad - 7; break;
+		}
+		before = active.regs;
+		memcpy(saved_stack, stack, sizeof(stack));
+		CHECK(kd_jit_retained_tail(&active, &active.regs) < 0);
+		CHECK(!memcmp(&before, &active.regs, sizeof(before)));
+		CHECK(!memcmp(saved_stack, stack, sizeof(stack)));
+	}
+}
+
+/* Execute the complete dispatcher cleanup after a typed generic miss. */
+static void check_current_position_misses(void)
+{
+	struct kd_jit_batch_call call;
+	struct kd_regs before;
+	unsigned long words[ARRAY_SIZE(stack)];
+
+	for (unsigned int complete = 0; complete < 2; ++complete) {
+		native_call_packet(&call, false, false);
+		call.args[0] = KD_EXE_RETAINED_MISS;
+		((struct kd_jit_image *)active.image)->requirements = KD_IMAGE_REQUIRE_RETAINED_MISS;
+		active.regs.orig_ax = ESCAPE_IP + 2;
+		active.control_call.phase = complete ? KD_CALL_COMPLETE : KD_CALL_NONE;
+		before = active.regs;
+		memcpy(words, stack, sizeof(stack));
+		CHECK(kd_exe_mutex_batch_resume(entry, &call) == KD_EXE_RUN_NATIVE);
+		CHECK(entry->status_code == KD_EXE_IJ_MISS &&
+		      entry->jump_from == ESCAPE_IP + 2 && entry->tgt_addr == before.ip);
+		before.orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+		CHECK(!memcmp(&before, &active.regs, sizeof(before)));
+		CHECK(!memcmp(words, stack, sizeof(stack)));
+		CHECK(active.control_call.phase == KD_CALL_NONE &&
+		      active.continuation_ip == before.ip && active.continuation_sp == before.sp);
+	}
+	for (unsigned int bad = 0; bad < 2; ++bad) {
+		native_call_packet(&call, false, false);
+		call.args[0] = KD_EXE_RETAINED_MISS;
+		((struct kd_jit_image *)active.image)->requirements = KD_IMAGE_REQUIRE_RETAINED_MISS;
+		active.regs.orig_ax = ESCAPE_IP + 2;
+		if (bad) active.control_call.phase = KD_CALL_ACQUIRED;
+		else active.regs.sp = (unsigned long)stack + sizeof(unsigned long);
+		before = active.regs;
+		CHECK(kd_exe_mutex_batch_resume(entry, &call) == KD_EXE_RUN_ERROR);
+		CHECK(entry->status_code == KD_EXE_NORMAL && !memcmp(&before, &active.regs, sizeof(before)));
+	}
 }

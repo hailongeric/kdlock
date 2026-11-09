@@ -1,0 +1,100 @@
+{
+  "build": {
+    "argv": [
+      "taskset",
+      "-c",
+      "0-63",
+      "make",
+      "-C",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module",
+      "KDIR=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "W=1",
+      "-j8",
+      "KDLOCK_SELFTEST=0",
+      "KDLOCK_NUMA=1",
+      "KDLOCK_SPIN_BATCH=1024",
+      "UBSAN_SANITIZE=n"
+    ],
+    "returncode": 0
+  },
+  "daemon": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/image-pilot-preflight-805e29f3/build/daemon/daemon",
+  "daemon_inputs_equal_to": "805e29f3d4c11f602740c066a7ac26c5689d2ef3",
+  "daemon_sha256": "9a80d79d1c43d7c1be8a27fdc2bd2cfd0c278ba76c855e581a85a0ad962bf413",
+  "final_idle": true,
+  "frozen_inputs_unchanged": true,
+  "no_module_load": true,
+  "no_reboot": true,
+  "no_timing": true,
+  "passed": true,
+  "preparation_kind": "spin_cacheline private provider",
+  "preparation_sha256": "78fb0d67f1accf1b70520930eeac0f8e132ae70fcc89dd2afa4dd0b64f7d8503",
+  "previous_fault_object": {
+    "detail": "incomplete JIT object: .rela.text at 0xea3 targets emitted .text; unapplied relocation for Stack_R",
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/previous-fault-jit.o",
+    "rejected_before_extraction": true,
+    "sha256": "c68c91e6e3a00b1b5d8b6470597fc2f86fd205a0cb3d0b785332af0b7c9fff2c"
+  },
+  "provider": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/provider/kernel_module/kdlock_km.ko",
+  "provider_sha256": "1a682473d413ff09569114d62452eb2eeb5fa7064f56476f0ab97b252d7235d7",
+  "required_parameters_present": true,
+  "root": "/root/kdlock-inputs/spill-15f1c08a",
+  "source_commit": "15f1c08a3a52ed271fcf3fd81f5da68f1f524878",
+  "units": [
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/spill-15f1c08a/tests/unit/run.py",
+        "codegen/test_object_image.py"
+      ],
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/unit-0.log",
+      "returncode": 0,
+      "tail": "test_allocated_metadata_reference_is_incomplete (__main__.ObjectImageTests.test_allocated_metadata_reference_is_incomplete) ... ok\ntest_debug_only_relocation_does_not_affect_image (__main__.ObjectImageTests.test_debug_only_relocation_does_not_affect_image) ... ok\ntest_defined_data_reference_still_needs_relocation (__main__.ObjectImageTests.test_defined_data_reference_still_needs_relocation) ... ok\ntest_failed_build_removes_old_raw_output_and_retains_object (__main__.ObjectImageTests.test_failed_build_removes_old_raw_output_and_retains_object) ... [KD_JIT][ERROR] reason=IMAGE_RELOCATION_PENDING pid=\"n/a\" entry=\"n/a\" rip=\"n/a\" inst=\"<assemble/objcopy/objdump>\" action=\"raise\" detail=\"incomplete JIT object: .rela.text at 0x114 targets emitted .text; unapplied relocation for Stack_R\"\nok\ntest_resolved_local_expressions_and_literal_call_fields (__main__.ObjectImageTests.test_resolved_local_expressions_and_literal_call_fields) ... ok\ntest_undefined_code_reference_is_incomplete (__main__.ObjectImageTests.test_undefined_code_reference_is_incomplete) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.072s\n\nOK\n",
+      "test": "codegen/test_object_image.py"
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/spill-15f1c08a/tests/unit/run.py",
+        "codegen/test_segment_codegen.py"
+      ],
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/unit-1.log",
+      "returncode": 0,
+      "tail": "[PASS] test_segment_codegen\n",
+      "test": "codegen/test_segment_codegen.py"
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/spill-15f1c08a/tests/unit/run.py",
+        "codegen/test_origin_context_read_codegen.py"
+      ],
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/unit-2.log",
+      "returncode": 0,
+      "tail": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.768s\n\nOK\n",
+      "test": "codegen/test_origin_context_read_codegen.py"
+    },
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "/root/kdlock-inputs/spill-15f1c08a/tests/unit/run.py",
+        "codegen/test_jit_body_witness.py"
+      ],
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/spill-preflight-15f1c08a/unit-3.log",
+      "returncode": 0,
+      "tail": "test_default_off_preserves_original_codegen (__main__.JitBodyWitnessTests.test_default_off_preserves_original_codegen) ... ok\ntest_direct_dispatch_to_later_block (__main__.JitBodyWitnessTests.test_direct_dispatch_to_later_block) ... ok\ntest_loop_edges_bypass_witness_and_keep_exact_budget_exit (__main__.JitBodyWitnessTests.test_loop_edges_bypass_witness_and_keep_exact_budget_exit) ... ok\ntest_missing_marker_is_not_proof_of_body_execution (__main__.JitBodyWitnessTests.test_missing_marker_is_not_proof_of_body_execution) ... ok\ntest_only_valid_dispatch_stubs_mark_the_body (__main__.JitBodyWitnessTests.test_only_valid_dispatch_stubs_mark_the_body) ... ok\ntest_original_call_and_hostcall_continuation (__main__.JitBodyWitnessTests.test_original_call_and_hostcall_continuation) ... ok\ntest_real_wrapper_body_and_dispatch_only (__main__.JitBodyWitnessTests.test_real_wrapper_body_and_dispatch_only) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.438s\n\nOK\n",
+      "test": "codegen/test_jit_body_witness.py"
+    }
+  ]
+}

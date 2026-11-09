@@ -16,20 +16,22 @@ static int format_cmd(char *cmd, size_t size, const char *fmt, ...)
 	return 0;
 }
 
-static int cmd_seen(const char *cmd, int *result)
+static int cmd_seen(const char *cmd, unsigned long generation, int *result)
 {
 	int i;
 
+	provenance_current = (struct provenance_compile){ 0 };
 	for (i = 0; i < cmd_cnt; i++) {
-		if (!strcmp(cmd, cmd_hist[i])) {
+		if (cmd_generations[i] == generation && !strcmp(cmd, cmd_hist[i])) {
 			*result = cmd_results[i];
+			provenance_current = cmd_provenance[i];
 			return 1;
 		}
 	}
 	return 0;
 }
 
-static int remember_cmd(const char *cmd, int result)
+static int remember_cmd(const char *cmd, unsigned long generation, int result)
 {
 	if (cmd_cnt >= (int)ARRAY_SIZE(cmd_hist)) {
 		fprintf(stderr, "daemon: command history is full\n");
@@ -42,6 +44,8 @@ static int remember_cmd(const char *cmd, int result)
 	}
 	strcpy(cmd_hist[cmd_cnt], cmd);
 	cmd_results[cmd_cnt] = result;
+	cmd_generations[cmd_cnt] = generation;
+	cmd_provenance[cmd_cnt] = provenance_current;
 	cmd_cnt++;
 	return 0;
 }

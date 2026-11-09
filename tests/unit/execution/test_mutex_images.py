@@ -21,8 +21,23 @@ def main():
                       'bool kd_exe_publish_status('):
         code += definition(lifecycle, signature)
     code += (ROOT / 'kernel_module/execution/images.inc').read_text()
+    code += definition(device, 'static void kd_learning_clear_view(')
+    code += definition(device, 'static bool kd_learning_upload_matches(')
     code += definition(device, 'static ssize_t kd_dev_write_locked(')
     wrapper = (ROOT / 'kernel_module/execution/wrapper_entry.inc').read_text()
+    # The image consumer queries only retained-frame eligibility here. Actual
+    # continuation/task lifetimes belong to the separate execution fixtures.
+    code += '''
+struct kd_exec_continuation { const void *service_ops; };
+static bool fixture_service_frame;
+static struct kd_exec_continuation *
+kd_exec_frame_continuation(const struct kd_exec_frame *frame)
+{
+    static struct kd_exec_continuation service = { .service_ops = (void *)1 };
+    (void)frame;
+    return fixture_service_frame ? &service : NULL;
+}
+'''
     code += definition(wrapper, 'static void *kd_jit_bound_code(')
     code += definition(wrapper, 'static const struct kd_jit_image *kd_jit_select_image(')
     code += definition(wrapper, 'static inline bool kd_jit_bind_image(')

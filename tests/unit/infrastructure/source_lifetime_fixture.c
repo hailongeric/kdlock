@@ -10,18 +10,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+typedef unsigned char u8;
+typedef unsigned int u32;
+typedef unsigned long long u64;
 #include "exe_info.h"
 #include "kd_image.h"
 #define GFP_KERNEL 0
+#define PAGE_SIZE 4096UL
 #define kzalloc(n,f) calloc(1,n)
 #define kfree(p) free(p)
 void kd_image_discard(struct kd_jit_image *image) { if (image) abort(); }
 static bool direct_pool_available;
 int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_source_api.h"
+#include "kd_generated_text.h"
 #include "kd_api_control.h"
 
 typedef long long s64;
+#define U64_MAX ULLONG_MAX
 typedef _Atomic long long atomic64_t;
 #define ATOMIC64_INIT(v) ATOMIC_VAR_INIT(v)
 #define atomic64_read(p) atomic_load(p)
@@ -126,6 +132,20 @@ struct file {
 static struct file *api_file, *api_released_file;
 static unsigned int api_command, api_calls, api_releases;
 static unsigned long api_argument;
+static struct file *learning_file;
+static unsigned int learning_command, learning_calls;
+static unsigned long learning_argument;
+/* The registry fixture executes batch control itself. This fixture checks the
+ * device forwarding boundary without replacing source-lifetime decisions. */
+static long kd_learning_ioctl(struct file *file, unsigned int command,
+			      unsigned long argument)
+{
+	learning_file = file;
+	learning_command = command;
+	learning_argument = argument;
+	learning_calls++;
+	return -EINPROGRESS;
+}
 static long kd_api_provider_ioctl(struct file *file, unsigned int command,
 				  unsigned long argument)
 {
@@ -278,7 +298,7 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS | KD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL | KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL | KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ | KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER | KD_JIT_CAP_LEARNING_BATCH |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0) |
 				(direct_pool_available ? KD_JIT_CAP_DIRECT_STRINGS : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
@@ -298,6 +318,16 @@ static void check_api_forwarding(void)
 		CHECK(kd_dev_ioctl(&control, commands[i], argument) == -EINPROGRESS);
 		CHECK(api_calls == calls_before + 1 && api_file == &control &&
 		      api_command == commands[i] && api_argument == argument);
+	}
+	const unsigned int batch_commands[] = {
+		KD_LEARNING_SNAPSHOT, KD_LEARNING_BIND, KD_LEARNING_CANCEL,
+	};
+	for (unsigned int i = 0; i < sizeof(batch_commands) / sizeof(batch_commands[0]); i++) {
+		unsigned int calls_before = learning_calls;
+		unsigned long argument = 0x567800UL + i;
+		CHECK(kd_dev_ioctl(&control, batch_commands[i], argument) == -EINPROGRESS);
+		CHECK(learning_calls == calls_before + 1 && learning_file == &control &&
+		      learning_command == batch_commands[i] && learning_argument == argument);
 	}
 	unsigned int releases_before = api_releases;
 	CHECK(!kd_dev_release(NULL, &control));
@@ -343,6 +373,7 @@ static void residency(void)
 	reset();
 	CHECK(kd_source_pin_range(SOURCE, 4) == -ESHUTDOWN);
 	CHECK(kd_source_pin_target(SOURCE) == -ESHUTDOWN);
+	CHECK(kd_source_pin_text_range(CORE, 15) == -ESHUTDOWN);
 	CHECK(kd_source_writer_get());
 	CHECK(!kd_source_pin_root(CORE));
 	CHECK(kd_source_pin_root(CORE + 0x2100) == -EPERM);
@@ -389,6 +420,11 @@ static void module_regions(void)
 	reset();
 	CHECK(kd_source_writer_get());
 	CHECK(kd_source_frame_get());
+	CHECK(!kd_source_pin_text_range(CORE + 0x1ff1, 15));
+	CHECK(kd_source_pin_text_range(CORE + 0x1ff2, 15) == -EPERM);
+	CHECK(kd_source_pin_text_range(CORE + 0x2100, 1) == -EPERM);
+	CHECK(!kd_source_pin_text_range(SOURCE + 0x1ff1, 15));
+	CHECK(kd_source_pin_text_range(SOURCE + 0x1ff2, 15) == -EPERM);
 	for (enum mod_mem_type type = MOD_TEXT; type < MOD_MEM_NUM_TYPES; type++) {
 		unsigned long base = (unsigned long)modules[0].mem[type].base;
 		int text_result = type == MOD_TEXT ? 0 : -EPERM;
@@ -465,9 +501,11 @@ static void draining(void)
 	check_caps(&control);
 	CHECK(!kd_source_writer_get() && !kd_source_frame_get());
 	CHECK(!kd_source_pin_target(SOURCE + 0x10000));
+	CHECK(!kd_source_pin_text_range(SOURCE + 0x10000, 15));
 	CHECK(!kd_source_pin_range(SOURCE + 0x20000, 4));
 	CHECK(status().modules == 3 && table[0].status_code == KD_EXE_NORMAL);
 	kd_source_frame_put();
+	CHECK(kd_source_pin_text_range(SOURCE + 0x10000, 15) == -ESHUTDOWN);
 	CHECK(!status().frames && !provider.refs && retire() == -EBUSY);
 	CHECK(!kd_dev_release(NULL, &writer));
 	CHECK(!kd_dev_release(NULL, &control));
@@ -602,6 +640,29 @@ static void concurrent_frame_close(void)
         CHECK(!retire());
 }
 
+static void immutable_bindings(void)
+{
+	reset();
+	CHECK(!kd_source_binding_count());
+	CHECK(kd_source_binding_get());
+	CHECK(kd_source_binding_get());
+	CHECK(kd_source_binding_count() == 2);
+	CHECK(kd_source_begin_retire() == -EBUSY);
+	CHECK(status().state == KD_SOURCE_OPEN);
+	CHECK(kd_source_frame_get());
+	kd_source_frame_put();
+	kd_source_binding_put();
+	CHECK(kd_source_binding_count() == 1);
+	CHECK(kd_source_begin_retire() == -EBUSY);
+	CHECK(status().state == KD_SOURCE_OPEN);
+	kd_source_binding_put();
+	CHECK(!kd_source_binding_count());
+	CHECK(!kd_source_begin_retire());
+	CHECK(status().state == KD_SOURCE_DRAINING);
+	CHECK(!kd_source_binding_get());
+	CHECK(!retire());
+}
+
 int main(void)
 {
 	_Static_assert(sizeof(struct kd_source_info) == 16, "info ABI");
@@ -610,15 +671,25 @@ int main(void)
 	_Static_assert(KD_SOURCE_INFO == 0x80104b71, "Python INFO ABI");
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
+	_Static_assert(sizeof(struct kd_exe_info) == 64 && sizeof(struct kd_recv_pkt) == 64,
+		       "unchanged registry and upload ABI");
+	_Static_assert(sizeof(struct kd_learning_record) == KD_LEARNING_RECORD_SIZE &&
+		       sizeof(struct kd_learning_snapshot) == KD_LEARNING_SNAPSHOT_SIZE &&
+		       sizeof(struct kd_learning_bind) == KD_LEARNING_BIND_SIZE &&
+		       sizeof(struct kd_learning_cancel) == KD_LEARNING_CANCEL_SIZE,
+		       "learning control ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 13 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 22 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2 &&
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&
 			       KD_JIT_CAP_STRING_SERVICES == 128 && KD_JIT_CAP_STRING_WRITE == 256 &&
 			       KD_JIT_CAP_AUDITED_STRINGS == 512 && KD_JIT_CAP_DIRECT_STRINGS == 1024 &&
 			       KD_JIT_CAP_ROOT_NATIVE_ESCAPE == 2048 && KD_JIT_CAP_INDIRECT_CALL == 4096 &&
-			       KD_JIT_CAP_ORIGIN_INSTRUCTION == 8192,
+				KD_JIT_CAP_ORIGIN_INSTRUCTION == 8192 && KD_JIT_CAP_ORIGIN_CALL == 16384 &&
+				KD_JIT_CAP_ORIGIN_MEMORY == 32768 && KD_JIT_CAP_ORIGIN_CONTEXT_READ == 65536 &&
+				KD_JIT_CAP_INDIRECT_TAIL == 131072 && KD_JIT_CAP_SOURCE_FRONTIER == 262144 &&
+				KD_JIT_CAP_LEARNING_BATCH == 524288,
 		       "Python capability semantics");
 	_Static_assert(KD_JIT_PERCPU_MODULE_BYTES == 8192 &&
 			       KD_JIT_PERCPU_ALIGNMENT == 4,
@@ -636,6 +707,7 @@ int main(void)
 	concurrent_pins();
 	atomic_frame_admission();
 	concurrent_frame_close();
+	immutable_bindings();
 	check_api_forwarding();
 	printf("production source lifetime: %u checks, 0 failures; cap=%u\n",
 	       atomic_load(&checks), KD_SOURCE_MAX_MODULES);

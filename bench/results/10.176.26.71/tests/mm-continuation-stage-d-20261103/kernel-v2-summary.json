@@ -1,0 +1,137 @@
+{
+  "source_commit": "9fd17324fb9b864c53a5c39e005512f2d705a819",
+  "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source",
+  "build": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+  "release": "7.0.0-38-kdscope5",
+  "build_identity": {
+    "build_id": "d3b5cf1b208028495b5fa9be2a3750b0831a2ec3",
+    "machine": "x86_64",
+    "release": "7.0.0-38-kdscope5",
+    "version": "#2 SMP PREEMPT_DYNAMIC Mon Nov  2 20:05:26 UTC 2026"
+  },
+  "passed": true,
+  "drain_unknown": false,
+  "generated_source_delta": {
+    "include/linux/kd_rwsem_provider.h": {
+      "after": "4ffe7ca534e4fe2abb2bc0ca5daba8dbb1fff91c8e3c796870ea6641dd70e804",
+      "before": "883630ee6fe9e78f2ab82b9160a4c61bb8b5709187a924b296d81bf314aa9292"
+    },
+    "kernel/locking/kd_mmap/provider.c": {
+      "after": "75205506582253948c0e9fc47e2deecd71b2c05cb4f73c2186fa7735f391e95d",
+      "before": "c266f7ffabcd0540c9e196ef5718573dbe949f946b08ea9ba0d07ae3153a4cfe"
+    }
+  },
+  "amendment_applied": true,
+  "amended_sources_stable": true,
+  "config_sha256": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa",
+  "composition_sha256": "25047377b16b9b876de5e7d20c196a62d3f7a7ab0d94a54f0fbf098033c0562c",
+  "outputs": {
+    ".config": {
+      "bytes": 308552,
+      "sha256": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa"
+    },
+    "Makefile": {
+      "bytes": 242,
+      "sha256": "b0f2713e042996aaf559d194413a77cc362c53dfc225a5e6a2fd3272536898a6"
+    },
+    "Module.symvers": {
+      "bytes": 2388063,
+      "sha256": "4abdbc0f16b486668bda8342fe3b16ddd5075b836ae17ea78ea73b5b0573ec1e"
+    },
+    "System.map": {
+      "bytes": 10551790,
+      "sha256": "8638ebb2f186020113d7595636d80a151fbfc3b7e4e043ca1d7a3707fd6ddb6f"
+    },
+    "arch/x86/boot/bzImage": {
+      "bytes": 17142272,
+      "sha256": "51378c6cb88a5ac3cf0d036a71355b5778b16c380935f6631086f91899383685"
+    },
+    "include/config/auto.conf": {
+      "bytes": 251856,
+      "sha256": "d2a3e7801a3858a978ce1ed5043d2aca9aabb32ab235358234efd9144bad4088"
+    },
+    "include/config/kernel.release": {
+      "bytes": 18,
+      "sha256": "8f323f5165d6061d4e1e15a4e4f51fd70744aab0376f36529b82a2070af63b91"
+    },
+    "include/generated/autoconf.h": {
+      "bytes": 381256,
+      "sha256": "4937a74860e7b8787af61440e76682f8117549f1935c3f30d50933771b61939e"
+    },
+    "include/generated/uapi/linux/version.h": {
+      "bytes": 216,
+      "sha256": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c"
+    },
+    "include/generated/utsrelease.h": {
+      "bytes": 40,
+      "sha256": "0617b58f8a201a7eea06ffda5bf70e79afd65db476eddca6cdc12fae3b27eeec"
+    },
+    "include/generated/utsversion.h": {
+      "bytes": 74,
+      "sha256": "66cdcb3408332d0baada2457fa8b858c4777449ed412204dd1fa45d9a53a9da8"
+    },
+    "modules.order": {
+      "bytes": 226838,
+      "sha256": "53585e7c733e6ae2ca38882eb323756a8184adee0d878a49a2489b7f15e62f82"
+    },
+    "vmlinux": {
+      "bytes": 511820216,
+      "sha256": "f2bb1ca889385ed560847230f1982ceef483e57b7873033104e840ae4d55c25e"
+    }
+  },
+  "preserved_v1": {
+    "archive": "/mnt/kdlock-builds/kdlock-retained/mm-scope5-v1-20261103/linux-7.0.0-38-kdscope5-v1.tar.zst",
+    "archive_content_verified": true,
+    "archive_result": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-abi2-20261103/archive/result.json",
+      "sha256": "9217f3e94ee842a54472eb474afaac4dd5fafc5bf6421a623f08ab1304682ef4"
+    },
+    "bytes": 7217990632,
+    "complete_member_content_metadata_verified": true,
+    "host_verification": {
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-abi2-20261103/amend/host-archive-verification.json",
+      "sha256": "87f2ed68e4a45f2c02b573b0b392daad99c06b56c4e4d6a7c2c75a37fef6fae0"
+    },
+    "inventory": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-abi2-20261103/archive/inventory-v1.json",
+    "inventory_sha256": "bc406f5a2436edb2ecaa8cabb55ecb32331439a744e6829b51bef739e0e66e38",
+    "original_tree_unchanged": true,
+    "sha256": "5704299cdc57eef73dc1f80095debdbaf1249d5aa032f45099e1d2fa5a72cc11"
+  },
+  "installed": false,
+  "booted": false,
+  "live_mm_tests": 0,
+  "receipt": {
+    "amendment_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-abi2-20261103/amend/result.json",
+    "amendment_sha256": "f31dd914784870ae230ee70c5d7bd9f5925dc3b3d2987be78f291b8819dad75e"
+  },
+  "host_archive_verification": {
+    "path": "/tmp/kdlock-mm-scope5-archive-check-20261103/verification.json",
+    "sha256": "87f2ed68e4a45f2c02b573b0b392daad99c06b56c4e4d6a7c2c75a37fef6fae0",
+    "result": {
+      "archive": "/mnt/kdlock-builds/kdlock-retained/mm-scope5-v1-20261103/linux-7.0.0-38-kdscope5-v1.tar.zst",
+      "archive_bytes": 7217990632,
+      "archive_result_sha256": "9217f3e94ee842a54472eb474afaac4dd5fafc5bf6421a623f08ab1304682ef4",
+      "archive_sha256": "5704299cdc57eef73dc1f80095debdbaf1249d5aa032f45099e1d2fa5a72cc11",
+      "complete_member_content_metadata_verified": true,
+      "extracted": false,
+      "finished_ns": 1793648402182191682,
+      "inventory_entries": 209839,
+      "inventory_sha256": "bc406f5a2436edb2ecaa8cabb55ecb32331439a744e6829b51bef739e0e66e38",
+      "kind": "scope5-v1-archive-content",
+      "parent_build": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-20261103/build/result.json",
+        "sha256": "28dcf2ae18c04c0e777cab874f3e0ca39de2db44c45084d5f45d7aaa8f0edfd9"
+      },
+      "parent_prepare": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-kernel-scope5-20261103/prepare/result.json",
+        "sha256": "25e7504a43cfd48977202bd40a456fa72678c227ec10c2d4751b4d039f128f59"
+      },
+      "parent_source_commit": "9529b070086c6d5ca7d6465de6cd71e279a1228c",
+      "passed": true,
+      "schema": 1,
+      "started_ns": 1793648174411050080,
+      "verification_host": "380G10",
+      "verify_script_sha256": "e404b0717b0982b917ce77c8415e412c33c53974cbbb24713c85acee83a9eefa"
+    }
+  }
+}

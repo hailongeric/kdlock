@@ -42,6 +42,8 @@ def generated_sources(target):
     inputs, outputs = {}, {}
     private = target / 'kernel/locking/kd_mmap'
     for name in ('include/kd_config.h', 'include/kd_mutex_types.h', 'include/kd_rwsem_types.h',
+                 'include/kd_wait_queue.h', 'kernel_module/kd_wait_queue.c',
+                 'include/kd_admission.h', 'kernel_module/kd_admission.c',
                  'include/kd_mutex.h', 'include/kd_rwsem.h', 'include/kd_regs.h',
                  'include/kd_lock.h', 'kernel_module/kd_mutex_local.h',
                  'kernel_module/kd_mutex_local.c', 'kernel_module/kd_mutex_osq.c',
@@ -59,27 +61,39 @@ def generated_sources(target):
             text = replace_once(text, 'int old = kd_io_prepare();', 'int old = io_schedule_prepare();')
             text = replace_once(text, 'kd_io_finish(old);', 'io_schedule_finish(old);')
         if name.endswith('kd_rwsem.c'):
-            # Builtin MM never delegates: keep the ordinary local unlock and
-            # negative-phase release, without a loadable API-router dependency.
-            text = replace_once(text, 'kd_mutex_api_unlock(&sem->gate);',
-                                'kd_mutex_local_unlock(&sem->gate);')
-            text = replace_once(text, 'kd_rwsem_write_release(sem);',
-                                'kd_rwsem_release_local(sem);')
-            start = text.index('static bool kd_rwsem_reserve_delegate(')
-            end = text.index('bool kd_rwsem_is_idle(', start)
-            # No executor or positive-phase admission exists in this builtin.
-            # All ordinary/local algorithms before this boundary are reused.
-            text = text[:start] + text[end:]
+            # The builtin retains the same selected-phase C writer algorithm,
+            # with physical local release for both up_write and downgrade.
+            # It has no loadable API router or continuation capture entry.
+            old = 'kd_mutex_api_unlock(&sem->gate);'
+            rt.require(text.count(old) == 2, 'local rwsem release boundaries changed')
+            text = text.replace(old, 'kd_mutex_local_unlock(&sem->gate);')
+            text = '#define KD_RWSEM_LOCAL_BACKEND 1\n' + text
+        if name.endswith('kd_admission.c'):
+            # C writers share canonical admission/cleanup. Their builtin gate
+            # has no scheduling-service ownership or loadable unlock router.
+            text = replace_once(text, 'kd_mutex_api_unlock(a->gate);',
+                                'kd_mutex_local_unlock(a->gate);')
         if name in ('include/kd_mutex.h', 'include/kd_rwsem.h'):
             text = re.sub(r'#include "(kd_(?:mutex|rwsem)_types.h)"',
                           r'#include <linux/\1>', text)
+        text = text.replace('#include "kd_wait_queue.h"', '#include <linux/kd_wait_queue.h>')
         filename = rename(Path(name).name)
-        public_header = name.endswith('_types.h') or name == 'include/kd_config.h'
+        public_header = name.endswith('_types.h') or name in (
+            'include/kd_config.h', 'include/kd_wait_queue.h')
         dest = (target / 'include/linux' if public_header else private) / filename
         dest.parent.mkdir(parents=True, exist_ok=True)
         rt.require(not dest.exists(), 'generated source already exists: ' + str(dest))
         dest.write_text(rename(text))
         outputs[str(dest.relative_to(target))] = digest(dest)
+    # The execution-provider ABI is shared verbatim with the module. Its opaque
+    # object methods must not acquire a second, namespace-renamed definition.
+    source = ROOT / 'include/kd_rwsem_provider.h'
+    dest = target / 'include/linux/kd_rwsem_provider.h'
+    rt.require(not dest.exists(), 'generated provider header already exists: ' + str(dest))
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, dest)
+    inputs[str(source.relative_to(ROOT))] = digest(source)
+    outputs[str(dest.relative_to(target))] = digest(dest)
     for source in (HERE / 'overlay').rglob('*'):
         if not source.is_file():
             continue

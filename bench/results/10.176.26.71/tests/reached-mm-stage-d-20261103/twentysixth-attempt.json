@@ -1,0 +1,62 @@
+{
+  "source_commit": "b2e96afe229ac43c6ee05f186517615a48103385",
+  "boot_id": "12de0f19-7bd8-4076-8a93-c0c82c63b49a",
+  "passed": false,
+  "drained": false,
+  "application": {
+    "state": "FAILED",
+    "error": "Failure('continuous controller kernel log incomplete/faulted')",
+    "pid": 5083,
+    "drained": true,
+    "kernel_log_collection": {
+      "bytes": 69557796,
+      "collector_cpu": 63,
+      "complete": false,
+      "drained": true,
+      "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentysixth-20261103/threads/application/kernel-log-errors.jsonl",
+      "errors": 149956,
+      "fault_detected": false,
+      "first_error": {
+        "bytes": 2025763,
+        "errno": 32,
+        "error": "BrokenPipeError(32, 'Broken pipe')",
+        "monotonic_ns": 453297599431,
+        "records": 5863
+      },
+      "last_error": {
+        "bytes": 52448631,
+        "errno": 32,
+        "error": "BrokenPipeError(32, 'Broken pipe')",
+        "monotonic_ns": 476071064008,
+        "records": 93763
+      },
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentysixth-20261103/threads/application/kernel.log",
+      "max_bytes": 536870912,
+      "mode": "continuous-diagnostic",
+      "records": 142190
+    }
+  },
+  "monitor": {
+    "resident_log_bytes": 168240232,
+    "resident_losses": 233332,
+    "resident_fault": false
+  },
+  "processes_run": false,
+  "archive": "/tmp/kdlock-reached-mm-twentysixth-after-reset-20261104",
+  "console": {
+    "alerts": [
+      "[  648.863597] kd_reached unsupported: origin=5477 executor=5067 generation=3 ip=ffffffff81870a52 sp=ffa00000089abca0 result=2 status=-95 length=1 bytes=65",
+      "[  648.863779] kd_service unsupported continuation: origin=5477 executor=5067 entry=ffffffff817dfd33 ip=ffffffff81870a52 status=3",
+      "[  673.139781] watchdog: BUG: soft lockup - CPU#37 stuck for 26s! [cron:5477]"
+    ]
+  },
+  "recovery": {
+    "restarted": true,
+    "source_commit": "b2e96afe229ac43c6ee05f186517615a48103385",
+    "serial_path": "/tmp/kdlock-mm-twentysixth-serial.log",
+    "bytes": 130199076,
+    "sha256": "3b6729b6759e8a87d842b5fee97f6e88a687c37238e8566e9f3464d1331c34dc",
+    "drained": false
+  },
+  "recovered_boot": "220dc789-0a1f-429f-a795-0e70af2b0f2d"
+}

@@ -1,0 +1,982 @@
+{
+  "accepted": false,
+  "actual_mmap1_completion_proved": false,
+  "actual_mmap1_status": "PENDING_AT_THIS_ENTRY",
+  "evidence": {
+    "actual_diagnostic_launch": {
+      "bytes": 2109,
+      "path": "/tmp/kdlock-mm-8f12-v3-actual-launch-first-20261103/launch.json",
+      "sha256": "79269daf43be14f84e26fac95372a87feb62145b07c279817f49779a766de91d"
+    },
+    "focused_launcher": {
+      "bytes": 4471,
+      "path": "/tmp/kdlock-mm-8f12-v3-first-20261103.py",
+      "sha256": "270580c1cfc4d5568ff2662707401b1c4b69d0019f3e2c37bc13cc6305ec0069"
+    },
+    "focused_reply": {
+      "bytes": 220758,
+      "path": "/tmp/kdlock-mm-8f12-v3-first-20261103/reply.json",
+      "sha256": "6afe6a95dd502899b26535d38169f42870f90ff2d0528cbb8394203ad5aed69e"
+    },
+    "kernel_kd_capture": {
+      "bytes": 999,
+      "path": "/tmp/kdlock-mm-scope5-v3-kd-boot-capture-20261103/capture.json",
+      "sha256": "b96bd938b63862ca81b91d1b36efe94ae46e3155ae66cf6ff53ab4042d554938"
+    },
+    "private_transfer_request": {
+      "bytes": 452,
+      "path": "/tmp/kdlock-mm-8f12-private-transfer-20261103/request-summary.json",
+      "sha256": "99236f66bdc90c199ec3051bb6894a98e87bd5c24329fd4d0ae7462af61afaaf"
+    },
+    "source_manifest": {
+      "bytes": 1030442,
+      "path": "/tmp/kdlock-mm-8f12-private-transfer-20261103/source-sha256.json",
+      "sha256": "67685fd8733b76bf709a9c42ef977cff2c8e0c3a6096b7fea94b8df4652ac464"
+    },
+    "source_state": {
+      "bytes": 319,
+      "path": "/tmp/kdlock-mm-8f12-private-transfer-20261103/source-state.json",
+      "sha256": "1e9e926040986d63d93e9e65cf57e1a1f56e36346ef08a62cae43406c550e546"
+    }
+  },
+  "focused_status": "PASS",
+  "kernel": {
+    "boot_id": "22c0a1d3-64b3-4de3-867c-e0521c6ba8c3",
+    "bundle_manifest": {
+      "path": "/root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103/manifest.json",
+      "sha256": "5a67837a36698a6292513e0ce9ff386f7ce03068ef7feb8f98e9a62c5e72ba5f"
+    },
+    "generation": "v3",
+    "identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "bundle_files": 59,
+      "config": true,
+      "installed_files": 4,
+      "mmap_mode": "on",
+      "ok": true,
+      "running_build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope5 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+        "mmap_mode": "on",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "source_files": 70,
+      "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source",
+      "variant": "kdscope5-kd"
+    },
+    "release": "7.0.0-38-kdscope5",
+    "running_build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1"
+  },
+  "kernel_recipe_commit": "1ab7124abb6140752c1f0bb6e862144d426a3875",
+  "kind": "mapped-native-call-focused-checks",
+  "live": {
+    "helper": {
+      "caller_shell": "rwsem_killable_clobber",
+      "capabilities": {
+        "features": 261115,
+        "mutex_stack_bytes": 256,
+        "percpu_module_bytes": 8192,
+        "version": 17
+      },
+      "drained": true,
+      "entry_abi": 2,
+      "passed": true,
+      "phase_count": 11,
+      "phases": [
+        {
+          "complete": true,
+          "execution": "ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "primitive-six-word-scalar",
+          "reply_pointer": "/live_result/phases/0"
+        },
+        {
+          "complete": true,
+          "execution": "ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 16
+          },
+          "name": "primitive-sleeping-child",
+          "reply_pointer": "/live_result/phases/1"
+        },
+        {
+          "complete": true,
+          "execution": "ORIGINAL_TASK_PRIMITIVE_SAME_EXECUTOR_IMAGE_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "primitive-indirect-tail",
+          "reply_pointer": "/live_result/phases/2"
+        },
+        {
+          "complete": true,
+          "execution": "NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "native-spin-try-rcu-depth9",
+          "reply_pointer": "/live_result/phases/3"
+        },
+        {
+          "complete": true,
+          "execution": "NATIVE_ORIGIN_PAIRS_SAME_EXECUTOR_IMAGE",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "native-early-outer-release",
+          "reply_pointer": "/live_result/phases/4"
+        },
+        {
+          "complete": true,
+          "execution": "MAPPED_NATIVE_TWO_TO_FIVE_SAME_EXECUTOR_IMAGE_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "primitive-mapped-two-to-five",
+          "reply_pointer": "/live_result/phases/5"
+        },
+        {
+          "complete": true,
+          "execution": "ONE_PRODUCTION_MAPPED_ALLOCATION_EXACT_RELEASE",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "primitive-mapped-allocation",
+          "reply_pointer": "/live_result/phases/6"
+        },
+        {
+          "complete": true,
+          "execution": "ORIGINAL_TASK_GS_SAME_EXECUTOR_IMAGE_FINAL_IP_SP",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "gs-counter-inline-preempt",
+          "reply_pointer": "/live_result/phases/7"
+        },
+        {
+          "complete": true,
+          "execution": "ORIGINAL_TASK_GS_SAME_EXECUTOR_IMAGE_FINAL_IP_SP",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "gs-final-inline-preempt",
+          "reply_pointer": "/live_result/phases/8"
+        },
+        {
+          "complete": true,
+          "execution": "NATIVE_ORIGIN_WRITERS_BLOCKED_ACQUIRE_EXECUTOR_SCHEDULE_NONLIFO",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 32
+          },
+          "name": "native-write-blocked-nonlifo",
+          "reply_pointer": "/live_result/phases/9"
+        },
+        {
+          "complete": true,
+          "execution": "NATIVE_ORIGIN_WRITERS_SAME_EXECUTOR_IMAGE_FINAL_RELEASE",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "native-write-final-release",
+          "reply_pointer": "/live_result/phases/10"
+        }
+      ],
+      "returncode": 0
+    },
+    "killable": {
+      "caller_shell": "rwsem_killable_clobber",
+      "capabilities": {
+        "features": 261115,
+        "mutex_stack_bytes": 256,
+        "percpu_module_bytes": 8192,
+        "version": 17
+      },
+      "drained": true,
+      "entry_abi": 2,
+      "passed": true,
+      "phase_count": 11,
+      "phases": [
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "killable-success",
+          "reply_pointer": "/killable_result/phases/0"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 1
+          },
+          "name": "queued-cancel-0",
+          "reply_pointer": "/killable_result/phases/1"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 1
+          },
+          "name": "queued-cancel-1",
+          "reply_pointer": "/killable_result/phases/2"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 1
+          },
+          "name": "queued-cancel-2",
+          "reply_pointer": "/killable_result/phases/3"
+        },
+        {
+          "complete": true,
+          "execution": "CANCELED_BEFORE_BODY",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 2
+          },
+          "name": "selected-reader-drain-cancel",
+          "reply_pointer": "/killable_result/phases/4"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 4
+          },
+          "name": "nested-origin-cancel",
+          "reply_pointer": "/killable_result/phases/5"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 8
+          },
+          "name": "executor-downgrade-and-fresh-writer",
+          "reply_pointer": "/killable_result/phases/6"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "mixed-depth9",
+          "reply_pointer": "/killable_result/phases/7"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "early-outer-depth9",
+          "reply_pointer": "/killable_result/phases/8"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "repeated-child-128",
+          "reply_pointer": "/killable_result/phases/9"
+        },
+        {
+          "complete": true,
+          "execution": "EXACT_OTHER_TASK_ENTER_AND_RETURN",
+          "final": {
+            "active": 0,
+            "errors": 0,
+            "holder_mask": 0,
+            "idle": 1,
+            "inner_queue_count": 0,
+            "phase": 0,
+            "queue_count": 0,
+            "readers": 0,
+            "release_mask": 0
+          },
+          "name": "nested-true-control",
+          "reply_pointer": "/killable_result/phases/10"
+        }
+      ],
+      "returncode": 0
+    }
+  },
+  "mapped_live_observations": [
+    {
+      "complete": true,
+      "execution": "MAPPED_NATIVE_TWO_TO_FIVE_SAME_EXECUTOR_IMAGE_RETURN",
+      "mapped_observation": {
+        "allocation_body_after": 0,
+        "allocation_flags": 0,
+        "allocation_freed": 0,
+        "allocation_pointer": 0,
+        "allocation_size": 0,
+        "allocation_written_bytes": 0,
+        "allocation_zero_bytes": 0,
+        "arguments": [
+          1,
+          0,
+          1234605616436508552,
+          18446744073709551615,
+          18446744072646220231
+        ],
+        "body_after": 1,
+        "body_flags": 68,
+        "body_result": 8917530016608421385,
+        "calls": 1,
+        "errors": 0,
+        "execution_target": 18446744072646214432,
+        "irqs": 0,
+        "logical_calls": 0,
+        "pid": 14633,
+        "preempt": 0,
+        "registered": 1,
+        "result": 8917530016608421385,
+        "source_return": 18446744072646220231,
+        "source_target": 18446744072646214368,
+        "stack_address": 18419722476071237272,
+        "stack_high": 18419722476071239680,
+        "stack_low": 18419722476071223296,
+        "version": 1
+      },
+      "name": "primitive-mapped-two-to-five",
+      "primitive_transactions": [
+        {
+          "ax": 0,
+          "execution_target": 18446744072646214432,
+          "executor": 14565,
+          "flags": 0,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "image_generation": 1,
+          "origin": 14633,
+          "return": 18446744072646220231,
+          "sequence": 1,
+          "stage": "request",
+          "target": 18446744072646214368,
+          "task": 14565
+        },
+        {
+          "ax": 0,
+          "execution_target": 18446744072646214432,
+          "executor": 14565,
+          "flags": 0,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "image_generation": 1,
+          "origin": 14633,
+          "return": 18446744072646220231,
+          "sequence": 1,
+          "stage": "enter",
+          "target": 18446744072646214368,
+          "task": 14633
+        },
+        {
+          "ax": 8917530016608421385,
+          "execution_target": 18446744072646214432,
+          "executor": 14565,
+          "flags": 582,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "image_generation": 1,
+          "origin": 14633,
+          "return": 18446744072646220231,
+          "sequence": 1,
+          "stage": "done",
+          "target": 18446744072646214368,
+          "task": 14633
+        },
+        {
+          "ax": 8917530016608421385,
+          "execution_target": 18446744072646214432,
+          "executor": 14565,
+          "flags": 582,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "image_generation": 1,
+          "origin": 14633,
+          "return": 18446744072646220231,
+          "sequence": 1,
+          "stage": "resume",
+          "target": 18446744072646214368,
+          "task": 14565
+        }
+      ],
+      "reply_pointer": "/live_result/phases/5",
+      "service_events": [
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "enter",
+          "executor": 14565,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14633
+        },
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "release",
+          "executor": 14565,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14633
+        },
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "returned",
+          "executor": 14565,
+          "generation": 11,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14633
+        }
+      ]
+    },
+    {
+      "complete": true,
+      "execution": "ONE_PRODUCTION_MAPPED_ALLOCATION_EXACT_RELEASE",
+      "mapped_observation": {
+        "allocation_body_after": 1,
+        "allocation_flags": 3520,
+        "allocation_freed": 1,
+        "allocation_pointer": 18379471558710647232,
+        "allocation_size": 53,
+        "allocation_written_bytes": 53,
+        "allocation_zero_bytes": 53,
+        "arguments": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "body_after": 0,
+        "body_flags": 0,
+        "body_result": 0,
+        "calls": 0,
+        "errors": 0,
+        "execution_target": 18446744072646214432,
+        "irqs": 0,
+        "logical_calls": 0,
+        "pid": 0,
+        "preempt": 0,
+        "registered": 1,
+        "result": 0,
+        "source_return": 0,
+        "source_target": 18446744072646214368,
+        "stack_address": 0,
+        "stack_high": 0,
+        "stack_low": 0,
+        "version": 1
+      },
+      "name": "primitive-mapped-allocation",
+      "primitive_transactions": [
+        [
+          {
+            "ax": 0,
+            "execution_target": 18446744071587503968,
+            "executor": 14568,
+            "flags": 0,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646220402,
+            "sequence": 1,
+            "stage": "request",
+            "target": 18446744071587502448,
+            "task": 14568
+          },
+          {
+            "ax": 0,
+            "execution_target": 18446744071587503968,
+            "executor": 14568,
+            "flags": 0,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646220402,
+            "sequence": 1,
+            "stage": "enter",
+            "target": 18446744071587502448,
+            "task": 14634
+          },
+          {
+            "ax": 18379471558710647232,
+            "execution_target": 18446744071587503968,
+            "executor": 14568,
+            "flags": 582,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646220402,
+            "sequence": 1,
+            "stage": "done",
+            "target": 18446744071587502448,
+            "task": 14634
+          },
+          {
+            "ax": 18379471558710647232,
+            "execution_target": 18446744071587503968,
+            "executor": 14568,
+            "flags": 582,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646220402,
+            "sequence": 1,
+            "stage": "resume",
+            "target": 18446744071587502448,
+            "task": 14568
+          }
+        ],
+        [
+          {
+            "ax": 0,
+            "execution_target": 18446744071587484416,
+            "executor": 14568,
+            "flags": 0,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646222297,
+            "sequence": 2,
+            "stage": "request",
+            "target": 18446744071587484416,
+            "task": 14568
+          },
+          {
+            "ax": 0,
+            "execution_target": 18446744071587484416,
+            "executor": 14568,
+            "flags": 0,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646222297,
+            "sequence": 2,
+            "stage": "enter",
+            "target": 18446744071587484416,
+            "task": 14634
+          },
+          {
+            "ax": 0,
+            "execution_target": 18446744071587484416,
+            "executor": 14568,
+            "flags": 582,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646222297,
+            "sequence": 2,
+            "stage": "done",
+            "target": 18446744071587484416,
+            "task": 14634
+          },
+          {
+            "ax": 0,
+            "execution_target": 18446744071587484416,
+            "executor": 14568,
+            "flags": 582,
+            "generation": 13,
+            "identity": 18379471568014905256,
+            "image_generation": 1,
+            "origin": 14634,
+            "return": 18446744072646222297,
+            "sequence": 2,
+            "stage": "resume",
+            "target": 18446744071587484416,
+            "task": 14568
+          }
+        ]
+      ],
+      "reply_pointer": "/live_result/phases/6",
+      "service_events": [
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "enter",
+          "executor": 14568,
+          "generation": 13,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14634
+        },
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "release",
+          "executor": 14568,
+          "generation": 13,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14634
+        },
+        {
+          "depth": 0,
+          "entry": 18446744072646220100,
+          "event": "returned",
+          "executor": 14568,
+          "generation": 13,
+          "identity": 18379471568014905256,
+          "may_delegate": true,
+          "object": 18446744072649096640,
+          "origin": 14634
+        }
+      ]
+    }
+  ],
+  "nano_run": false,
+  "observation_limits": [
+    "The live generic fixture captures CF/PF/ZF/SF/OF with SETcc; the transaction trace independently compares full done/resume flags.",
+    "Both slab-bucket rosters passed extracted production C checks. The actual live kernel uses CONFIG_SLAB_BUCKETS=y; no live no-bucket result is claimed.",
+    "One mapped production allocation returned 53 initially zero bytes, all 53 were written and checked, and the same pointer was released once. Cache API identity rows have descriptor checks, not a separate live cache-allocation witness.",
+    "Helper and killable phases are mechanism checks. They do not establish arbitrary callee closure, generated-text lifetime coverage in actual MM, per-syscall application completion or performance.",
+    "Nonzero final release_mask values are retained control bits, not live holder or queue counts."
+  ],
+  "pending_actual_diagnostic": {
+    "accepted": false,
+    "guest_output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-actual-mmap1-first-20261103",
+    "models": [
+      "threads",
+      "processes"
+    ],
+    "rounds_per_point": 1,
+    "scope": "Launch metadata only; no result or per-model start/completion is inferred.",
+    "scored": false,
+    "source_commit": "8f12f82000ea73d28526f938cc21b87bcfa1c744",
+    "workers": 2
+  },
+  "private_source": {
+    "bytes": 410175347,
+    "files": 6787,
+    "git_status_at_capture": "",
+    "guest_root": "/root/kdlock-inputs/mm-8f12-8f12f820-20261103",
+    "selected_git_and_manifest_sha256": {
+      "docs/design/native_call_arguments.md": "47da155fbc8c708629cba93e34ac4def1a25e480aead4d3689efd9c331b3c3f4",
+      "include/kd_service_calls.def": "be0032f727e098f594863963070f0608bdbe51cb1aa58b91e9f513e55789fe31",
+      "include/kd_service_calls.h": "279dd8160c9d7d53cbdde824c5b1aa74a3b31f19bae0ba7b07158888c511d827",
+      "kernel_module/execution/continuation.inc": "08fd4b157daf9718b8892fc6909bc352b5f0bc05b0d9b45fa150513ec39f2339",
+      "kernel_module/kd_service.c": "62d1fb9e31be447e318205e8d5f4eaca59cdf5574e1f9e775d7446ec0595a789",
+      "kernel_module/kd_service_call_entry.S": "c7910b70a561f64006925ac7f87694b0b15c0b20d12ef432a14ec6b7dd1c5c9e",
+      "kernel_module/kd_service_calls.c": "d946e7812f9dba2c2afefbcab7e778c6e2721da19387bcda7dfe59fa350fe77f",
+      "tests/kernel/jit_continuation/mapped_mode.py": "4d5b8ab601ee92860f3a011d0579aeda30b869c0a507db0603c89eb4ece7681b",
+      "tests/kernel/jit_continuation/payload/helper_mapped.inc": "d18c35cdf2e6318b98c3634433f655f68f7d9a62bdf056f2c6b3dd6170c3ebe4",
+      "tests/unit/codegen/native_call_mapping_fixture.c": "59f55e1b709d1be4bfdbba4a1ed68182f0b5aa2cf3638dde0a022cf350b1d4d4",
+      "tests/unit/codegen/test_native_call_mapping.py": "4b86ed5df13c7f9149ef4a748106c6f5dca58f2b45d88013962ae842d64f4a85",
+      "tests/unit/infrastructure/test_mapped_continuation.py": "a53165a7a4a6fa752c6e050d8f013d2d5b2b34744bcddd5bbc6a2851eb0e8abe"
+    }
+  },
+  "promotion": false,
+  "provenance_scope": "Selected observations are copied from the hash-bound reply JSON; JSON pointers identify their original location. No standalone guest result or log byte hash is inferred from parsed JSON.",
+  "provider_build": {
+    "guest_evidence": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/helper/build-provider.log.command.json",
+    "returncode": 0,
+    "scope": "passed helper guarantees required provider build completed; metadata records launch only; no duplicate standalone build"
+  },
+  "schema": 1,
+  "scored": false,
+  "source_commit": "8f12f82000ea73d28526f938cc21b87bcfa1c744",
+  "throughput_claimed": false,
+  "unit_drivers": [
+    {
+      "arguments": [
+        "-v"
+      ],
+      "driver": "bench/test_mm_private_source.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-0.log",
+      "passed_cases": 9,
+      "reply_pointer": "/units/0",
+      "returncode": 0
+    },
+    {
+      "arguments": [],
+      "configuration_checks": [
+        {
+          "CONFIG_SLAB_BUCKETS": 1,
+          "checks": 1756,
+          "failures": 0
+        },
+        {
+          "CONFIG_SLAB_BUCKETS": 0,
+          "checks": 1752,
+          "failures": 0
+        }
+      ],
+      "driver": "codegen/test_native_call_mapping.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-1.log",
+      "negative_controls": [
+        "wrong-version-admitted",
+        "undeclared-source-argument",
+        "unused-selector-admitted",
+        "source-return-substituted",
+        "minus-one-becomes-zero",
+        "execution-root-not-pinned",
+        "execution-target-not-matched"
+      ],
+      "reply_pointer": "/units/1",
+      "returncode": 0
+    },
+    {
+      "arguments": [],
+      "configuration_checks": [
+        {
+          "CONFIG_PREEMPT_RCU": 0,
+          "checks": 156
+        },
+        {
+          "CONFIG_PREEMPT_RCU": 1,
+          "checks": 156
+        }
+      ],
+      "driver": "codegen/test_native_schedule_contract.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-2.log",
+      "negative_controls": [
+        "schedule-with-native-pin",
+        "schedule-in-nonpreempt-rcu",
+        "schedule-nonzero-arity",
+        "schedule-executor-pinned",
+        "schedule-requires-preempt-rcu"
+      ],
+      "reply_pointer": "/units/2",
+      "returncode": 0
+    },
+    {
+      "arguments": [
+        "-v"
+      ],
+      "driver": "codegen/test_returning_calls.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-3.log",
+      "passed_cases": 16,
+      "reply_pointer": "/units/3",
+      "returncode": 0
+    },
+    {
+      "arguments": [
+        "-v"
+      ],
+      "driver": "infrastructure/test_helper_continuation.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-4.log",
+      "passed_cases": 6,
+      "reply_pointer": "/units/4",
+      "returncode": 0
+    },
+    {
+      "arguments": [
+        "-v"
+      ],
+      "driver": "infrastructure/test_mapped_continuation.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-5.log",
+      "passed_cases": 4,
+      "reply_pointer": "/units/5",
+      "returncode": 0
+    },
+    {
+      "arguments": [
+        "-v"
+      ],
+      "driver": "infrastructure/test_jit_continuation_runner.py",
+      "guest_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/mm-8f12-v3-first-20261103/unit-6.log",
+      "passed_cases": 7,
+      "reply_pointer": "/units/6",
+      "returncode": 0
+    }
+  ]
+}

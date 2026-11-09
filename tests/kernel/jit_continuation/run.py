@@ -82,11 +82,7 @@ def validate_execution(delta, hot, service, instructions=1, force_suffix=False):
                    "native-only marker did not resume the original suffix", "DATA_ERROR")
 
 
-def worker(arguments):
-    cpu, iterations, index = map(int, arguments[:3])
-    barrier = Path(arguments[3])
-    role = arguments[4]
-    rt.require(role in ("writer", "reader"), "invalid worker role")
+def configure_worker(cpu):
     libc = ctypes.CDLL(None, use_errno=True)
     if libc.prctl(15, ctypes.c_char_p(WORKER_COMM.encode()), 0, 0, 0):
         error = ctypes.get_errno()
@@ -95,6 +91,14 @@ def worker(arguments):
     rt.require(comm == WORKER_COMM, "worker task name differs from provider eligibility")
     os.sched_setaffinity(0, {cpu})
     rt.require(os.sched_getaffinity(0) == {cpu}, "worker affinity differs")
+
+
+def worker(arguments):
+    cpu, iterations, index = map(int, arguments[:3])
+    barrier = Path(arguments[3])
+    role = arguments[4]
+    rt.require(role in ("writer", "reader"), "invalid worker role")
+    configure_worker(cpu)
     buffer = bytearray(struct.pack("=4I2Q", iterations, index, 0, 0, 0, 0))
     with open(DEVICE, "rb", buffering=0) as device:
         publish_barrier(barrier / f"ready-{index}.json",
@@ -147,8 +151,15 @@ class ContinuationSession(Session):
     def __init__(self, out, spec, binaries, verify):
         super().__init__(out, spec, workload_module=binaries["workload"])
         self.binaries, self.verify = binaries, verify
-        self.daemon_binary = binaries["daemon"]
+        self.daemon_binary = binaries.get("daemon")
         self.translation_source = out / "source"
+
+    def service_generation(self):
+        """Immutable image generation for the original image execution mode."""
+        return self.record["image_registry"][0]["generation"]
+
+    def registry_rows(self):
+        return image_registry()
 
     def counts(self, label):
         row = snapshot()
@@ -181,10 +192,13 @@ class ContinuationSession(Session):
         self.verify()
         self.run(["insmod", self.binaries["guard"]], "load-allocator-guard.log")
         self.run(["rmmod", "tc_allocator_guard"], "unload-allocator-guard.log")
-        self.run(["insmod", self.binaries["provider"], "bench_quiet=1",
+        provider_args = ["insmod", self.binaries["provider"], "bench_quiet=1",
                   "bench_complete_probe=1", "jit_timing=0",
                   f"hotlock_stats={int(self.record['hotlock_stats'])}",
-                  f"target_process={WORKER_COMM}"], "load-provider.log")
+                  f"target_process={WORKER_COMM}"]
+        if self.record.get("execution_mode", "image") == "reached":
+            provider_args.append("service_reached=1")
+        self.run(provider_args, "load-provider.log")
         self.loaded_kd = True
         caps = bytearray(16)
         with open("/dev/kd_dev", "rb", buffering=0) as device:
@@ -193,12 +207,13 @@ class ContinuationSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13) and features & (1 << 5),
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
-        self.record["origin_capable"] = version == 13 and bool(features & (1 << 13))
+        self.record["origin_capable"] = version >= 13 and bool(features & (1 << 13))
         self.record["origin_service"] = (self.record["origin_capable"] and
             self.record["entry_abi"] == 2 and not self.record["mixed_spin"])
-        if self.record["origin_capable"] and self.record["entry_abi"] == 2:
+        if (self.record["origin_capable"] and self.record["entry_abi"] == 2 and
+                self.record.get("mode", "continuation") == "continuation"):
             self.record["image_requirements"] |= 64
         rt.require(not self.record.get("origin_instructions") or self.record["origin_service"],
                    "four-instruction probe requires v13/bit13 sole-outer mutex service")
@@ -206,7 +221,7 @@ class ContinuationSession(Session):
             rt.require((PARAMETERS/"origin_instruction_force_suffix").read_text().strip() == "N",
                        "forced suffix diagnostic unexpectedly enabled at load")
         if self.record["lock_kind"] in ("spin", "rwlock"):
-            rt.require(version in (12, 13) and features & (1 << 11),
+            rt.require(version in (12, 13, 14, 15, 16, 17) and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
@@ -224,6 +239,9 @@ class ContinuationSession(Session):
         (PARAMETERS / "bench_lock_addr").write_text(str(layout["lock_address"]))
         with open(DEVICE, "rb", buffering=0) as device:
             fcntl.ioctl(device, PREPARE)
+        if self.record.get("execution_mode", "image") == "reached":
+            self.prepare_reached()
+            return
         self.start_daemon()
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
@@ -235,10 +253,17 @@ class ContinuationSession(Session):
             if rows[0]["status"] == 0 and not rt.children(self.daemon.pid):
                 self.record["publication"] = self.publication()
                 self.record["image_registry"] = self.registry("initial", 0)
-                rt.require(self.record["image_registry"][0]["requirements"] ==
-                           self.record["image_requirements"] and
-                           self.record["image_registry"][0]["generation"] > 0,
-                           "marker image lacks the required native-exit contract")
+                actual_requirements = self.record["image_registry"][0]["requirements"]
+                expected_requirements = self.record["image_requirements"]
+                if self.record.get("check_set") == "handback":
+                    rt.require(actual_requirements & expected_requirements == expected_requirements and
+                               self.record["image_registry"][0]["generation"] > 0,
+                               "cold image lacks the full current-position miss contract")
+                    self.record["initial_image_requirements"] = actual_requirements
+                else:
+                    rt.require(actual_requirements == expected_requirements and
+                               self.record["image_registry"][0]["generation"] > 0,
+                               "marker image lacks the required native-exit contract")
                 if self.record.get("origin_instructions"):
                     images = list((self.path/"workspace").rglob("jit.bin"))
                     rt.require(len(images) == 1, "exactly one immutable instruction image required")
@@ -447,11 +472,20 @@ class ContinuationSession(Session):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--killable-worker":
+        from killable_mode import worker as killable_worker
+        killable_worker(sys.argv[2:], configure_worker)
+        return 0
     if len(sys.argv) > 1 and sys.argv[1] == "--worker":
         worker(sys.argv[2:])
         return 0
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--mode", choices=("continuation", "killable", "helper"), default="continuation")
+    parser.add_argument("--check-set", choices=("ordinary", "handback"), default="ordinary",
+                        help="opt-in cold/learned retained handback checks in helper mode")
+    parser.add_argument("--execution-mode", choices=("image",), default="image",
+                        help="original bounded compiled-image backend")
     parser.add_argument("--cpus", type=rt.cpu_list, default=list(range(16)))
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
@@ -475,7 +509,14 @@ def main():
                "verified recovery guest and recorded snapshot tag required")
     rt.require(4 <= len(args.cpus) <= 60 and len(set(args.cpus)) == len(args.cpus) and
                set(args.cpus) <= os.sched_getaffinity(0), "select 4..60 distinct available worker CPUs")
-    shared = args.family in ("rwlock", "rwsem")
+    rt.require(args.mode not in ("killable", "helper") or
+               (args.family == "rwsem" and not args.origin_instructions and not args.mixed_spin),
+               "killable/helper modes require rwsem without instruction or mixed-spin variants")
+    rt.require(args.check_set != "handback" or (args.mode == "helper" and args.family == "rwsem"),
+               "handback checks require the generic rwsem helper fixture")
+    rt.require(args.execution_mode != "reached" or args.mode in ("killable", "helper"),
+               "reached execution requires the retained killable/helper rwsem fixtures")
+    shared = args.family in ("rwlock", "rwsem") and args.mode not in ("killable", "helper")
     reader_count = args.reader_count if args.reader_count is not None else int(shared)
     rt.require((shared and 1 <= reader_count <= len(args.cpus) - 4) or
                (not shared and reader_count == 0),
@@ -520,10 +561,11 @@ def main():
         guard_dir = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard_dir)
         rt.command(["make", "-C", guard_dir, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        workload = source / "tests/kernel/jit_continuation/payload/jit_continuation_test.ko"
+        workload = source / "tests/kernel/jit_continuation/fixture/jit_continuation_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
                     f"JIT_CONTINUATION_FAMILY={args.family}",
+                    f"JIT_CONTINUATION_MODE={args.mode}",
                     f"JIT_CONTINUATION_MUTEX_API={args.mutex_api}",
                     f"JIT_CONTINUATION_MIXED_SPIN={int(args.mixed_spin)}",
                     f"JIT_CONTINUATION_ORIGIN_INSTRUCTIONS={int(args.origin_instructions)}",
@@ -535,6 +577,9 @@ def main():
         compiled_family = rt.command(["modinfo", "-F", "kd_continuation_family", workload],
                                      out / "family.txt").strip()
         rt.require(compiled_family == args.family, "compiled continuation family differs")
+        compiled_mode = rt.command(["modinfo", "-F", "kd_continuation_mode", workload],
+                                  out / "mode.txt").strip()
+        rt.require(compiled_mode == args.mode, "compiled continuation mode differs")
         compiled_origin = rt.command(["modinfo", "-F", "kd_origin_instructions", workload],
                                      out / "origin-instructions.txt").strip()
         rt.require(compiled_origin == ("4" if args.origin_instructions else "0"),
@@ -555,6 +600,15 @@ def main():
                        (args.family != "rwlock" or "kd_rwlock_fast_write_unlock" in names) and
                        not any(name.startswith(("kd_mutex_", "mutex", "__mutex")) for name in names),
                        "spin/rwlock marker caller imports another lock family")
+        elif args.family == "rwsem" and args.mode in ("killable", "helper"):
+            names = set(imported.split())
+            rt.require({"kd_rwsem_down_write_killable_clobber_v1", "kd_rwsem_up_write_clobber_v1",
+                        "kd_down_write_killable", "kd_rwsem_prepare"} <= names,
+                       "killable payload lacks integer root or conventional nested controls")
+            rt.write_json(out / "public-entry-audit.json", audit_public_entries(workload,
+                {"jit_continuation_entry": "killable_body"},
+                lock_symbol="kd_rwsem_down_write_killable_clobber_v1",
+                unlock_symbol="kd_rwsem_up_write_clobber_v1", integer_result=True))
         elif args.family == "rwsem":
             names = set(imported.split())
             rt.require({"kd_rwsem_down_write_clobber_v1", "kd_rwsem_write_release",
@@ -583,10 +637,11 @@ def main():
                        "public marker caller imports another call shell")
             rt.write_json(out / "public-entry-audit.json",
                           audit_public_entries(workload, {"jit_continuation_entry": "continuation_body"}))
-        rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
-                   out / "build-daemon.log", timeout=120)
-        binaries = dict(provider=provider, workload=workload, daemon=source / "daemon/daemon",
-                        guard=guard_dir / "tc_allocator_guard.ko")
+        binaries = dict(provider=provider, workload=workload, guard=guard_dir / "tc_allocator_guard.ko")
+        if args.execution_mode == "image":
+            rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
+                       out / "build-daemon.log", timeout=120)
+            binaries["daemon"] = source / "daemon/daemon"
         binary_hashes = {str(path): rt.digest(path) for path in binaries.values()}
         rt.write_json(out / "binary-sha256.json", binary_hashes)
         # Capture exact generated C/.inc/assembly inputs as well as production.
@@ -606,17 +661,24 @@ def main():
 
         verify()
         idle()
-        if args.family == "mutex":
+        if args.mode in ("killable", "helper"):
+            shell, cookie = "rwsem_killable_clobber", "canonical_retained_request"
+        elif args.family == "mutex":
             shell = "mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie"
             cookie = "provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local"
         elif args.family == "rwsem":
             shell, cookie = "rwsem_outer_cookie", "outer_acquisition_local"
         else:
             shell, cookie = args.family + "_direct", "provider_cpu_heat"
-        spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True,
+        spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True, mode=args.mode,
+                    check_set=args.check_set,
+                    execution_mode=args.execution_mode,
                     registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
-                    image_requirements=1 if args.family in ("mutex", "rwsem") else 33,
+                    image_requirements=(8192 if args.check_set == "handback" else
+                                        0 if args.execution_mode == "reached" else
+                                        8064 if args.mode == "helper" else 384 if args.mode == "killable" else
+                                        1 if args.family in ("mutex", "rwsem") else 33),
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     mixed_spin=args.mixed_spin,
                     origin_instructions=args.origin_instructions,
@@ -625,12 +687,26 @@ def main():
                     reader_iterations=args.reader_iterations,
                     cpus=args.cpus, iterations=args.iterations, warmup_iterations=args.warmup_iterations,
                     phase_timeout=args.phase_timeout, kernel_identity=identity)
-        session = ContinuationSession(out, spec, binaries, verify)
+        selected_session = ContinuationSession
+        if args.mode == "killable":
+            from killable_mode import session_class
+            selected_session = session_class(ContinuationSession)
+        elif args.mode == "helper":
+            from helper_mode import session_class
+            selected_session = session_class(ContinuationSession)
+        if args.check_set == "handback":
+            from handoff_mode import session_class
+            selected_session = session_class(ContinuationSession)
+        if args.execution_mode == "reached":
+            from reached_mode import session_class
+            selected_session = session_class(selected_session)
+        session = selected_session(out, spec, binaries, verify)
         session.execute()
         verify()
         idle()
         rt.write_json(out / "result.json", dict(passed=True, drained=True, phases=session.record["phases"],
-            family=args.family, entry_abi=session.record["entry_abi"],
+            family=args.family, mode=args.mode, execution_mode=args.execution_mode,
+            reached=session.record.get("reached"), entry_abi=session.record["entry_abi"],
             image_requirements=session.record["image_requirements"],
             worker_roles=session.record["worker_roles"],
             mixed_spin=session.record["mixed_spin"],
@@ -641,6 +717,18 @@ def main():
             cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
+        if args.mode == "killable":
+            print("PASS: actual other-task killable roots, queued/draining cancellation and nested parent effects")
+            return 0
+        if args.check_set == "handback":
+            print("PASS: cold CALL/IJ handback, exact owner/read custody, later learned execution and drain")
+            return 0
+        if args.mode == "helper":
+            if args.execution_mode == "reached":
+                print("PASS: reached primitives retain exact family/artifact custody and return to the same executor without replay")
+            else:
+                print("PASS: identity and mapped original-task primitives return to the same executor/image without replay")
+            return 0
         print("PASS: cold paths and reached original-task instructions retain exact effects and tested flags; "
               + ("same-image JIT reentry verified; " if session.record["origin_service"] else "native suffix verified; ")
               + "image remains eligible; final drain")

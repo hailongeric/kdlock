@@ -23,10 +23,15 @@ from test_spin_shadow import definition
 def main(executor=None, benchmark=False):
     types, _ = production()
     types += without_includes(read_source((ROOT / "include/exe_info.h")))
+    types += '#include "kd_learning_api.h"\n'
     types += without_includes(read_source(ROOT / "include/kd_image.h"))
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += definition(read_source(ROOT / "include/kd_origin_service.h"),
                         "enum kd_origin_instruction {").rstrip() + ";\n"
+    continuation = read_source(ROOT / "include/kd_exec_cont.h")
+    for signature in ("enum kd_exec_cont_state {", "enum kd_exec_service_api {",
+                      "struct kd_exec_service_ops {"):
+        types += definition(continuation, signature).rstrip() + ";\n"
     types += '#include "kd_hostcall.h"\n'
     if executor is None:
         executor = read_source(ROOT / "kernel_module/exe.c")
@@ -64,7 +69,11 @@ def main(executor=None, benchmark=False):
             "static int kd_jit_pending_call_native(struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
             "static int kd_jit_indirect_call_length(unsigned long site, unsigned int *length)",
+            "static int kd_jit_indirect_tail_length(unsigned long site, unsigned int *length)",
+            "static int kd_jit_retained_tail(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_indirect_call_native(struct kd_exe_info *exe,",
+            "static int kd_jit_retained_miss(struct kd_exe_info *exe,",
+            "static int kd_jit_source_frontier(struct kd_exe_info *exe,",
             "static bool kd_jit_outer_unlock(struct kd_exec_frame *frame,",
             "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
             "static int kd_jit_native_escape_opcode(unsigned long ip)",
@@ -136,7 +145,70 @@ def main(executor=None, benchmark=False):
         "\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
+    # Use the actual gate, frozen receipt and publisher alongside the full
+    # dispatcher. Only IRQ state and scheduled CAS observations are substitutes.
+    publication = "".join(definition(executor, signature) for signature in (
+        "static unsigned long kd_code_block_gate_lock(void)",
+        "static void kd_code_block_gate_unlock(unsigned long flags)",
+        "unsigned int kd_exe_slot_index(const struct kd_exe_info *entry)",
+        "static bool kd_image_miss_kind(unsigned int kind)",
+        "static bool kd_image_miss_matches(const struct kd_learning_record *record,",
+        "static void kd_image_pending_tuple(struct kd_exe_info *entry,",
+        "static bool kd_image_miss_acknowledged(const struct kd_learning_record *record,",
+        "static bool kd_image_batch_has_survivors(const struct kd_image_learning_state *learning,",
+        "static void kd_image_ack_misses(struct kd_image_learning_state *learning,",
+        "int kd_image_publish_learned(struct kd_exe_info *entry, struct kd_jit_image *image,",
+        "void kd_image_disable(struct kd_exe_info *entry)",
+        "void kd_exe_snapshot_misses(const struct kd_exe_info *entry,",
+    ))
+    # Existing entry cases retain their descriptor/report doubles. The new
+    # publication cases route through these unchanged production definitions.
+    for original, local, signature in (
+        ("kd_image_current", "publication_current",
+         "const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry)"),
+        ("kd_image_report", "publication_report",
+         "void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image,"),
+    ):
+        publication += ("#define " + original + " " + local + "\n" +
+                        definition(executor, signature) + "#undef " + original + "\n")
     mutations = {
+        "mismatch-terminal-bypasses-publication-gate": (
+            'kd_image_disable(exe);\n\t\tpr_warn_ratelimited(\n'
+            '\t\t\t"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH',
+            'kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);\n\t\tpr_warn_ratelimited(\n'
+            '\t\t\t"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH',
+        ),
+        "tail-skips-source-site-lease": (
+            "result = kd_source_pin_target(site);", "result = 0;",
+        ),
+        "tail-skips-source-end-lease": (
+            "result = kd_source_pin_target(site + length - 1);", "result = 0;",
+        ),
+        "tail-skips-caller-return-lease": (
+            "return kd_source_pin_target(return_ip);", "return 0;",
+        ),
+        "tail-accepts-call-opcode": (
+            "((modrm >> 3) & 7) != 4",
+            "(((modrm >> 3) & 7) != 4 && ((modrm >> 3) & 7) != 2)",
+        ),
+        "tail-accepts-four-cs-prefixes": (
+            "if (offset >= 3)", "if (false)",
+        ),
+        "tail-accepts-cs-memory-operand": (
+            "if (cs_prefixes && mode < 3)",
+            "if (false && cs_prefixes && mode < 3)",
+        ),
+        "tail-skips-image-requirement": (
+            "!(frame->image->requirements & KD_IMAGE_REQUIRE_INDIRECT_TAIL)",
+            "false",
+        ),
+        "indirect-cs-accepts-four-prefixes": (
+            "if (offset == 3)", "if (false)",
+        ),
+        "indirect-cs-accepts-memory-operand": (
+            "if (cs_prefixes && mode != 3)",
+            "if (false && cs_prefixes && mode != 3)",
+        ),
         "indirect-accepts-jump-opcode": (
             "((modrm >> 3) & 7) != 2",
             "(((modrm >> 3) & 7) != 2 && ((modrm >> 3) & 7) != 4)",
@@ -219,12 +291,12 @@ def main(executor=None, benchmark=False):
             "call->complete = !clobber;",
         ),
         "dispatch-rehashes-entry": (
-            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
-            "if (!kd_exe_is_ready(0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_is_ready(0, entry_ip))",
         ),
         "dispatch-reuses-old-ready-result": (
-            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
-            "if (!exe)",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !retained_resume && !retained_entry &&\n\t    !exe)",
         ),
         "ready-ignores-closing": (
             "if (!exe || !ip || !kd_source_is_open())",
@@ -371,13 +443,18 @@ def main(executor=None, benchmark=False):
             )
         for name, mutation in [("production", None), *mutations.items()]:
             sources = {"frame_code.h": code, "hostcall_code.h": hostcalls,
-                       "timing_code.h": timing_code(), "registry_lookup.h": lookup}
+                       "timing_code.h": timing_code(), "registry_lookup.h": lookup,
+                       "publication_code.h": publication}
             if mutation:
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
-                # Preparation, invoke and return failures each record an error.
+                # Preparation/invoke/return each record errors. Indirect CALL
+                # source pinning has both legacy and retained consumers; the
+                # negative control changes both, while this fixture executes
+                # the legacy consumer and refuses retained-runtime doubles.
                 assert count == (3 if name == "service-error-allows-replay" else
-                                 2 if name == "timing-overflow-not-marked" else 1), (name, count)
+                                 2 if name in ("timing-overflow-not-marked",
+                                               "indirect-skips-source-site-lease") else 1), (name, count)
                 sources = {
                     path: text.replace(before, after)
                     for path, text in sources.items()
@@ -393,6 +470,7 @@ def main(executor=None, benchmark=False):
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    "-pthread",
                     *(["-DKD_ENTRY_MUTATION"] if mutation else []),
                     *(["-DKD_BENCH_COMPLETION_FIXTURE"] if benchmark else []),
                     "-I",

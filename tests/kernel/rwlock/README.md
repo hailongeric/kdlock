@@ -57,8 +57,8 @@ make -C tests/kernel/rwlock/payload KDIR="$RW_KERNEL" RW_BACKEND=kdlock \
   KBUILD_EXTRA_SYMBOLS="$RW_ROOT/bench/spin_cacheline/.build/provider/kernel_module/Module.symvers"
 
 RW_NATIVE_DIR="$(mktemp -d /root/kdlock-rw-native.XXXXXX)"
-cp tests/kernel/rwlock/payload/Makefile tests/kernel/rwlock/payload/api.h \
-  tests/kernel/rwlock/payload/module.c "$RW_NATIVE_DIR/"
+cp tests/kernel/rwlock/fixture/Makefile tests/kernel/rwlock/fixture/api.h \
+  tests/kernel/rwlock/fixture/module.c "$RW_NATIVE_DIR/"
 make -C "$RW_NATIVE_DIR" KDIR="$RW_KERNEL" RW_BACKEND=native
 ```
 

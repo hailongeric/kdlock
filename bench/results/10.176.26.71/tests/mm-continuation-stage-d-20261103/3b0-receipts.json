@@ -1,0 +1,250 @@
+{
+  "schema": 1,
+  "source_commit": "3b018e27df7823ee3c31a315e320fb463d524685",
+  "receipts": {
+    "focused": {
+      "path": "/tmp/kdlock-mm-3b0-first-20261103/reply.json",
+      "sha256": "4b8c4923d85a245260c5a1a6ac0051383a00a000f7ce5c37fe9345318d846456"
+    },
+    "application_attempt": {
+      "path": "/tmp/kdlock-mm-3b0-actual-failure-first-20261103/reply.json",
+      "sha256": "b41bc2ab6850b4c3d7501590c3cd4342c55130b8bddf6c4f28cf4321b5002e14"
+    },
+    "normal_retirement": {
+      "path": "/tmp/kdlock-mm-3b0-actual-normal-retirement-first-20261103/reply.json",
+      "sha256": "287522c8a78afeb43d13da5b90ff04d2cf94a290989d67fa4a3add428f86f3da"
+    }
+  },
+  "units": [
+    {
+      "args": [
+        "bench/test_mm_private_source.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "tests_run": 9,
+      "production_checks": null,
+      "production_failures": null,
+      "negative_controls": 0
+    },
+    {
+      "args": [
+        "execution/test_jit_entry_scope.py"
+      ],
+      "returncode": 0,
+      "tests_run": null,
+      "production_checks": 9177,
+      "production_failures": 0,
+      "negative_controls": 50
+    }
+  ],
+  "provider_build_returncode": 0,
+  "live": {
+    "live_result": {
+      "passed": true,
+      "drained": true,
+      "phase_count": 8
+    },
+    "killable_result": {
+      "passed": true,
+      "drained": true,
+      "phase_count": 11
+    }
+  },
+  "application": {
+    "passed": false,
+    "drained": false,
+    "scored": false,
+    "accepted": false,
+    "factory_active": false,
+    "bindings": 0,
+    "started": false,
+    "failed_entries": [
+      {
+        "entry": "0xffffffff818e05bd",
+        "function": "setup_arg_pages"
+      },
+      {
+        "entry": "0xffffffff817f77e5",
+        "function": "vm_brk_flags"
+      }
+    ],
+    "audited_application_entries": {
+      "mmap": "0xffffffff817b6da8",
+      "munmap": "0xffffffff8181c57b"
+    },
+    "cache_limit_bytes": 262144,
+    "reason": "cached reachable-text windows exceed the existing limit before publication",
+    "decoded_instruction_bytes_measured": false
+  },
+  "post_failure_cleanup": {
+    "passed": true,
+    "before": {
+      "state": 0,
+      "modules": 0,
+      "frames": 0,
+      "writers": 1
+    },
+    "daemon_pid": 24470,
+    "daemon_stat": "24470 (daemon) S 1 24470 24470 0 -1 4194304 197 175613 0 0 0 0 12563 8576 20 0 1 0 535903 2883584 399 18446744073709551615 95192153710592 95192153718425 140721863098800 0 0 0 0 0 0 1 0 0 17 33 0 0 0 0 0 95192153726112 95192153726996 95192417132544 140721863105295 140721863105440 140721863105440 140721863106441 0\n",
+    "translator_children": [
+      "24655"
+    ],
+    "child_lease_fds": {
+      "24655": [
+        {
+          "fd": "3",
+          "target": "/dev/kd_dev"
+        },
+        {
+          "fd": "4",
+          "target": "/dev/kd_dev"
+        }
+      ]
+    },
+    "daemon_terminated_normally": true,
+    "translator_signals_sent": false,
+    "source_after": {
+      "state": 0,
+      "modules": 0,
+      "frames": 0,
+      "writers": 0
+    },
+    "children_remaining": [],
+    "retired": {
+      "state": 2,
+      "modules": 0,
+      "frames": 0,
+      "writers": 0
+    },
+    "kd_mmap1_identity": {
+      "returncode": 0,
+      "stderr": ""
+    },
+    "kdlock_km": {
+      "returncode": 0,
+      "stderr": ""
+    },
+    "drained": true,
+    "normal_unload": true
+  },
+  "per_invocation_syscall_join_proved": false,
+  "actual_mm_delegation_proved": false,
+  "performance_accepted": false,
+  "intermediate_fixture_attempts": [
+    {
+      "source_commit": "8c8d5324b6b53ee9875e9854eda85a267a7f5320",
+      "receipt": {
+        "path": "/tmp/kdlock-mm-8c8-first-20261103/reply.json",
+        "sha256": "b64d73565c4a23da8588626a74c289e181c268b8d00c8927d1cb8b336115f876"
+      },
+      "provider_build_returncode": 0,
+      "live_started": false,
+      "units": [
+        {
+          "args": [
+            "bench/test_mm_private_source.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "codegen/test_native_call_boundaries.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "codegen/test_returning_calls.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "execution/test_jit_entry_scope.py"
+          ],
+          "returncode": 1
+        },
+        {
+          "args": [
+            "bench/test_mmap1_delegated.py",
+            "-v"
+          ],
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "source_commit": "78b492fa0d74ad25f2e4a3dc2d8e08389ab3ba10",
+      "receipt": {
+        "path": "/tmp/kdlock-mm-78b-first-20261103/reply.json",
+        "sha256": "dcff1c76e4e26b4760eb180f0ebe8986a486d6958491c7a3f7daa726c86f9bc6"
+      },
+      "provider_build_returncode": 0,
+      "live_started": false,
+      "units": [
+        {
+          "args": [
+            "bench/test_mm_private_source.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "codegen/test_native_call_boundaries.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "codegen/test_returning_calls.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "execution/test_jit_entry_scope.py"
+          ],
+          "returncode": 1
+        },
+        {
+          "args": [
+            "bench/test_mmap1_delegated.py",
+            "-v"
+          ],
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "source_commit": "291d181d33de5d1c7f4cb6c82e59c63edd9f71ee",
+      "receipt": {
+        "path": "/tmp/kdlock-mm-291-first-20261103/reply.json",
+        "sha256": "b7860dd1236afce9ddec081bac18665e49c9c23b12869d5cf72d9785bc496e33"
+      },
+      "provider_build_returncode": 0,
+      "live_started": false,
+      "units": [
+        {
+          "args": [
+            "bench/test_mm_private_source.py",
+            "-v"
+          ],
+          "returncode": 0
+        },
+        {
+          "args": [
+            "execution/test_jit_entry_scope.py"
+          ],
+          "returncode": 1
+        }
+      ]
+    }
+  ]
+}

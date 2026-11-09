@@ -69,7 +69,7 @@ def segment_policy_error(line):
             return "FS-prefixed memory access is unsupported"
         if segment != "GS":
             return f"{segment}-prefixed memory access is unsupported"
-        if not is_current_task_operand(arg):
+        if line.name.upper() == "LEA" or not is_current_task_operand(arg):
             continue
         if (
             line.name.upper() != "MOV"
@@ -120,6 +120,17 @@ def process_normal(name, args, offset, reg_map):
     if name.upper() == "NOP":
         return make_inst("NOP", [])
 
+    # LEA forms only the source offset; x86 ignores a segment override here.
+    if name.upper() == "LEA":
+        unsegmented = [ExprMem(segment_operand(arg)[1], arg.size)
+                       if segment_operand(arg)[0] == "GS" else arg for arg in args]
+        if unsegmented != args:
+            return process_normal(name, unsegmented, offset, reg_map)
+
+    expanded = expand_segment_address(name, args, offset, reg_map)
+    if expanded is not None:
+        return expanded
+
     # LEA needs no runtime address calculation when its source is RIP-relative.
     # Keep ordinary register mapping for virtual R11--R15 and partial writes.
     if name.upper() == "LEA" and len(args) == 2 and isinstance(args[0], ExprId):
@@ -157,6 +168,47 @@ def process_normal(name, args, offset, reg_map):
         post_inst = recover_stable(reg_map, conflict_regs)
 
     return pre_inst + make_inst(name, purified_args) + post_inst
+
+
+def expand_segment_address(name, args, offset, reg_map):
+    """Keep a complex source EA separate from the saved segment base.
+
+    x86 permits a base plus one scaled index. Adding GS as a third register
+    requires a flag-neutral source LEA first. Reserve the temporary before
+    mapping source operands so SP/BP recovery cannot occupy its physical slot.
+    """
+    for index, arg in enumerate(args):
+        segment, address = segment_operand(arg)
+        if segment != "GS" or is_current_task_operand(arg):
+            continue
+        source = ExprMem(address, arg.size)
+        purified = arg_purify(source, offset)
+        if address.size == 64 and len(purified["regs"]) + bool(purified["mul"]) <= 1:
+            continue
+        registers, used = set(), set()
+        for original in args:
+            extract_reg(arg_purify(original, offset, is_current_task_operand(original)),
+                        registers)
+        for register in registers:
+            extract_conflict_regs(register, used)
+        occupied = set(reg_map.values())
+        temporary = next((candidate for candidate in ("T1", "T2")
+                          if candidate not in used and candidate not in occupied), None)
+        if temporary is None:
+            raise ValueError("no temporary available for segmented effective address")
+        code = conflict_resolve(reg_map, {temporary}, offset)
+        code += process_normal("LEA", [ExprId("R" + temporary, address.size), source],
+                               offset, reg_map)
+        lowered = list(args)
+        lowered[index] = {"sz": arg.size, "regs": [ExprId("RGS", 64),
+                                                  ExprId("R" + temporary, 64)],
+                          "im": "", "mul": []}
+        code += process_normal(name, lowered, offset, reg_map)
+        for physical, logical in reg_map.items():
+            if logical == temporary:
+                reg_map[physical] = ""
+        return code
+    return None
 
 
 def mem_addr(arg, res):

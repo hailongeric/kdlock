@@ -135,7 +135,7 @@ def main():
         integration = ROOT / 'kernel_integration/mmap_lock'
         expected = json.loads((integration / 'base-sha256.json').read_text())
         source_inputs = {str(p.relative_to(ROOT)): rt.digest(p) for p in
-                         [Path(__file__), HERE/'payload/wrappers.c',
+                         [Path(__file__), HERE/'fixture/wrappers.c',
                           integration/'guest-kernel.patch', integration/'base-sha256.json']}
         native = {n: rt.digest(tree/n) for n in NATIVE}
         config = (tree/'include/generated/autoconf.h').read_text()
@@ -225,7 +225,7 @@ def main():
             if target.startswith('kernel/bpf/'):
                 assert str(header_root/'kernel/bpf/mmap_unlock_work.h') in dependencies
             built.append(dest)
-        fixture=HERE/'payload/wrappers.c'
+        fixture=HERE/'fixture/wrappers.c'
         fixtures={}
         for label,headers in [('native',None),('disabled',patched/'include')]:
             dest=out/(label+'-wrappers.o')

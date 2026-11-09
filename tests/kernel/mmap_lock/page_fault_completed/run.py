@@ -63,7 +63,7 @@ def main():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
         rt.write_json(out / 'source-sha256.json', hashes)
-        payload, client = source / 'payload/kd_mmap_completed.ko', out / 'client'
+        payload, client = source / 'fixture/kd_mmap_completed.ko', out / 'client'
         rt.command(['make', '-C', payload.parent, 'KDIR=' + str(a.kernel_source), 'W=1', 'UBSAN_SANITIZE=n'],
                    out / 'build-payload.log', timeout=180)
         rt.command(['gcc', '-O2', '-g', '-Wall', '-Wextra', '-Werror', source / 'client.c', '-o', client],

@@ -152,7 +152,7 @@ def prepare(a, out):
     binaries = {}
     for name, directory in (('writer_payload','workload_modules/mmap_writer'),
                             ('fault_payload','workload_modules/mmap_fault'),
-                            ('api_payload','tests/kernel/mmap_lock/payload')):
+                            ('api_payload','tests/kernel/mmap_lock/fixture')):
         # Workload source directories are intentionally copied explicitly below.
         src = source / directory
         for path in (ROOT / directory).iterdir():

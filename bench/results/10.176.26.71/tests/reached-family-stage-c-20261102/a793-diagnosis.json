@@ -1,0 +1,36 @@
+{
+  "source_commit": "a7935391b1d7fffe121473da9382aa2e0e7b5de8",
+  "passed": false,
+  "drained": false,
+  "execution_mode": "reached",
+  "state": "KERNEL_FAULT",
+  "completed_phases": [
+    "primitive-six-word-scalar",
+    "primitive-sleeping-child",
+    "primitive-indirect-tail",
+    "native-spin-try-rcu-depth9",
+    "native-early-outer-release",
+    "primitive-mapped-two-to-five",
+    "primitive-mapped-allocation"
+  ],
+  "incomplete_phase": [
+    "gs-counter-inline-preempt"
+  ],
+  "root_entry": "ffffffffc09ed944",
+  "reached_ip": "ffffffffc09edee5",
+  "entry_offset": "0x5a1",
+  "elf_entry": "0x1944",
+  "elf_site": "0x1ee5",
+  "opcode": "48 0f ba f2 1f",
+  "instruction": "btr $0x1f,%rdx",
+  "source": {
+    "path": "tests/kernel/jit_continuation/payload/helper_memory.inc",
+    "line": 80,
+    "sha256": "67fdfc1d725140f614d37690f87582625c5cfa763ec86ad0d587d6f492aed7f4",
+    "expression": "valid = !(value >> 32) && (value & ~((unsigned long)PREEMPT_NEED_RESCHED)) == 1;"
+  },
+  "origin_pid": 42593,
+  "executor_pid": 42542,
+  "request_generation": 15,
+  "evidence_note": "Unsupported prefix length3 was reported before BTR executed. The following BUG left the committed origin waiting; reset is recovery, not normal drain."
+}

@@ -1,0 +1,120 @@
+{
+  "files": {
+    "compiler-child.py": {
+      "sha256": "f58af0cacb78daae7066babe277ab5a5350fef80520eeb37da993492956c5fd0"
+    },
+    "mmap/baseline/asm/bin.txt": {
+      "sha256": "2e6459e31b2176ca2920d27ccb032b3891b8fa2d063097f48590c04ffa69bb7b"
+    },
+    "mmap/baseline/asm/callee_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mmap/baseline/asm/ij_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mmap/baseline/asm/jit.S": {
+      "sha256": "6ac5c94eff3f66852c3886ca56dc1dae3f719555eba7c3045369ec85828a6cc0"
+    },
+    "mmap/baseline/asm/jit.bin": {
+      "sha256": "82f5e9763d9192bccdcd074d624fd117754b137396a0064fb5e878406ca86257"
+    },
+    "mmap/baseline/asm/jit.o": {
+      "sha256": "df3da23924e8233eae3a9bb97753411a4a1bcbae64a4e4151e7a080f3c577d3a"
+    },
+    "mmap/baseline/lookup.json": {
+      "sha256": "a618622698fb47dc0c0aff5f3f17eff392ed7ab8572d1f60c1e310af33572b26"
+    },
+    "mmap/baseline/stderr": {
+      "sha256": "14ecf3e926fb2d5f0415205bbabb746785bbaa4346194fe072447f957ad4c74f"
+    },
+    "mmap/baseline/stdout": {
+      "sha256": "dd7945fc62615de58f03bc4913a00c38f8db7dc823b562cb716d1ba338fe08d1"
+    },
+    "mmap/candidate/asm/bin.txt": {
+      "sha256": "2e6459e31b2176ca2920d27ccb032b3891b8fa2d063097f48590c04ffa69bb7b"
+    },
+    "mmap/candidate/asm/callee_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mmap/candidate/asm/ij_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mmap/candidate/asm/jit.S": {
+      "sha256": "6ac5c94eff3f66852c3886ca56dc1dae3f719555eba7c3045369ec85828a6cc0"
+    },
+    "mmap/candidate/asm/jit.bin": {
+      "sha256": "82f5e9763d9192bccdcd074d624fd117754b137396a0064fb5e878406ca86257"
+    },
+    "mmap/candidate/asm/jit.o": {
+      "sha256": "df3da23924e8233eae3a9bb97753411a4a1bcbae64a4e4151e7a080f3c577d3a"
+    },
+    "mmap/candidate/lookup.json": {
+      "sha256": "cea6903bac4b45e4fc173aaf6e645e03032d3a4dbb1f44aa3de658c2398034d1"
+    },
+    "mmap/candidate/stderr": {
+      "sha256": "14ecf3e926fb2d5f0415205bbabb746785bbaa4346194fe072447f957ad4c74f"
+    },
+    "mmap/candidate/stdout": {
+      "sha256": "dd7945fc62615de58f03bc4913a00c38f8db7dc823b562cb716d1ba338fe08d1"
+    },
+    "munmap/baseline/asm/bin.txt": {
+      "sha256": "0039098c7a336718e6c5cdbe844a538b6c923b5a1e40a4ef18e1a92cce3717a6"
+    },
+    "munmap/baseline/asm/callee_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "munmap/baseline/asm/ij_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "munmap/baseline/asm/jit.S": {
+      "sha256": "778513aafc8c234907482478cc6a4f5469c1e9a0e7029d6f8a12cf01ddc7e77c"
+    },
+    "munmap/baseline/asm/jit.bin": {
+      "sha256": "d89406cb72eec20657d175ebe5aaafd5a8922126e81555c93097e779ebbc77db"
+    },
+    "munmap/baseline/asm/jit.o": {
+      "sha256": "cb1856b6c767f26a57de81dfdf2a76789376b991d728d256c02f0f5078ddf284"
+    },
+    "munmap/baseline/lookup.json": {
+      "sha256": "a618622698fb47dc0c0aff5f3f17eff392ed7ab8572d1f60c1e310af33572b26"
+    },
+    "munmap/baseline/stderr": {
+      "sha256": "0b5541964c12e5c220704e767b8abd2be966e15f37e1371ae8d8ce3301d75b47"
+    },
+    "munmap/baseline/stdout": {
+      "sha256": "5db5be58fad04dd63ad4306a2846c46950bddb1bbb5261c96117a370c6d5a5ff"
+    },
+    "munmap/candidate/asm/bin.txt": {
+      "sha256": "0039098c7a336718e6c5cdbe844a538b6c923b5a1e40a4ef18e1a92cce3717a6"
+    },
+    "munmap/candidate/asm/callee_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "munmap/candidate/asm/ij_table.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "munmap/candidate/asm/jit.S": {
+      "sha256": "778513aafc8c234907482478cc6a4f5469c1e9a0e7029d6f8a12cf01ddc7e77c"
+    },
+    "munmap/candidate/asm/jit.bin": {
+      "sha256": "d89406cb72eec20657d175ebe5aaafd5a8922126e81555c93097e779ebbc77db"
+    },
+    "munmap/candidate/asm/jit.o": {
+      "sha256": "cb1856b6c767f26a57de81dfdf2a76789376b991d728d256c02f0f5078ddf284"
+    },
+    "munmap/candidate/lookup.json": {
+      "sha256": "cea6903bac4b45e4fc173aaf6e645e03032d3a4dbb1f44aa3de658c2398034d1"
+    },
+    "munmap/candidate/stderr": {
+      "sha256": "0b5541964c12e5c220704e767b8abd2be966e15f37e1371ae8d8ce3301d75b47"
+    },
+    "munmap/candidate/stdout": {
+      "sha256": "5db5be58fad04dd63ad4306a2846c46950bddb1bbb5261c96117a370c6d5a5ff"
+    },
+    "result.json": {
+      "sha256": "c8d923ed8e0ee954e058093226232d94d823634eba01c049ef8672a149e508e5"
+    }
+  },
+  "release": "7.0.0-38-kdlock1",
+  "boot_id": "74106c59-6990-4d67-a479-8aadf4fcdbf0"
+}

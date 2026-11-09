@@ -119,7 +119,7 @@ def build(out, args):
         hashes[str(relative)] = expected
         files[str(path)] = files[str(target)] = expected
     for kind in CASES:
-        source = out/'source'/HERE.relative_to(ROOT)/'payload'/(kind+'_client.c')
+        source = out/'source'/HERE.relative_to(ROOT)/'fixture'/(kind+'_client.c')
         binary = out/'build'/(kind+'-client')
         rt.command(['gcc','-O2','-g','-Wall','-Wextra','-Werror','-std=gnu11','-pthread',source,'-o',binary],
                    out/('build-'+kind+'.log'), timeout=60)

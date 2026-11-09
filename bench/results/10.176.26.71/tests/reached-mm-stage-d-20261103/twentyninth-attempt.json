@@ -1,0 +1,257 @@
+{
+  "accepted": false,
+  "application": {
+    "application_lock_identity": "not-observed-in-this-process",
+    "argv": [
+      "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "-t",
+      "2",
+      "-s",
+      "2",
+      "-m"
+    ],
+    "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+    "drained": true,
+    "error": "Failure('continuous controller kernel log incomplete/faulted')",
+    "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+    "execution_session": {
+      "daemon_pid": null,
+      "delegated_execution_proved": false,
+      "device_writers": [],
+      "execution_mode": "reached",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/processes/execution-session.json",
+      "preparer_pid": 3691,
+      "provider_sha256": "0a97eadc1dea0a3a11baa244a0cb6a40253f516817b36945c142fc7177ef0309",
+      "sha256": "6aeca05788eac9b97c473e32a7637ec376868079237e2ddea50193a541557690"
+    },
+    "instrumentation": "identity-kprobe",
+    "kernel_log_collection": {
+      "bytes": 193853523,
+      "collector_cpu": 63,
+      "complete": false,
+      "drained": true,
+      "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/processes/application/kernel-log-errors.jsonl",
+      "errors": 3090,
+      "fault_detected": false,
+      "first_error": {
+        "bytes": 59984202,
+        "errno": 32,
+        "error": "BrokenPipeError(32, 'Broken pipe')",
+        "monotonic_ns": 205008681329,
+        "records": 170045
+      },
+      "last_error": {
+        "bytes": 176056112,
+        "errno": 32,
+        "error": "BrokenPipeError(32, 'Broken pipe')",
+        "monotonic_ns": 210856609160,
+        "records": 491182
+      },
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/processes/application/kernel.log",
+      "max_bytes": 536870912,
+      "mode": "continuous-diagnostic",
+      "records": 541286
+    },
+    "log_error": "Failure('diagnostic kernel log incomplete')",
+    "model": "processes",
+    "nominal_seconds": 2,
+    "observation_finished_ns": 202795498873,
+    "output": {
+      "measured_samples": 2,
+      "output_valid": true
+    },
+    "passed": false,
+    "pid": 4704,
+    "process_elapsed_ns": 9170630144,
+    "returncode": 0,
+    "round": 0,
+    "schema": 1,
+    "scored": false,
+    "started_ns": 201821134877,
+    "state": "FAILED",
+    "system_cpu_seconds": 16.793335,
+    "user_cpu_seconds": 0.00814200000000298,
+    "workers": 2,
+    "workers_observed": [
+      {
+        "cpus": [
+          0
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 4704,
+        "start_ticks": 20262,
+        "tgid": 4710,
+        "tid": 4710
+      },
+      {
+        "cpus": [
+          1
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 4704,
+        "start_ticks": 20277,
+        "tgid": 4712,
+        "tid": 4712
+      }
+    ]
+  },
+  "lifecycle": {
+    "bytes": 191809645,
+    "collector_cpu": 63,
+    "complete": false,
+    "drained": true,
+    "error_log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/processes/lifecycle-log/kernel-log-errors.jsonl",
+    "errors": 2990,
+    "fault_detected": false,
+    "first_error": {
+      "bytes": 58870504,
+      "errno": 32,
+      "error": "BrokenPipeError(32, 'Broken pipe')",
+      "monotonic_ns": 204971283353,
+      "records": 166953
+    },
+    "last_error": {
+      "bytes": 174138661,
+      "errno": 32,
+      "error": "BrokenPipeError(32, 'Broken pipe')",
+      "monotonic_ns": 210874182418,
+      "records": 485864
+    },
+    "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/processes/lifecycle-log/kernel.log",
+    "max_bytes": 536870912,
+    "mode": "continuous-diagnostic",
+    "records": 535619
+  },
+  "monitor": {
+    "accepted": false,
+    "argv": [
+      "taskset",
+      "-c",
+      "0-63",
+      "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+      "/root/kdlock-inputs/reached-mm-twentyninth-06caaf07-20261103/tests/kernel/mmap1_identity/delegated.py",
+      "--inputs",
+      "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+      "--inputs-sha256",
+      "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+      "--source-commit",
+      "06caaf073543e3923f143014e6a15a4843ec28be",
+      "--source-state",
+      "/root/kdlock-inputs/reached-mm-twentyninth-06caaf07-20261103/source-state.json",
+      "--source-state-sha256",
+      "dfc2269e852de356df06fcc53e724a47d26e0fd477b730161fc2459510a76148",
+      "--source-manifest",
+      "/root/kdlock-inputs/reached-mm-twentyninth-06caaf07-20261103/source-sha256.json",
+      "--source-manifest-sha256",
+      "a3839e1e0cac1d47b54703949cd8c9911d0fb18efbbf71305d682c8f79538ec3",
+      "--sites",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-launch-20261103/sites.json",
+      "--sites-sha256",
+      "bcc3b8b23fc332904e26929e7e43961416d11db705480ed63e301dca07e1a7a1",
+      "--execution-mode",
+      "reached",
+      "--model-order",
+      "processes-first",
+      "--executor-cpus",
+      "0-61",
+      "--diagnostic-log-mib",
+      "512",
+      "--mode",
+      "kd",
+      "--kernel-variant",
+      "kdscope5-log16-kd",
+      "--boot-id",
+      "de866984-9fa4-40b7-b5d7-376acaf022b2",
+      "--kernel-source",
+      "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "--kernel-baseline",
+      "/root/kdlock-kernel-baselines/linux70-kdscope5-log16-kd-20261103",
+      "--host-state",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-launch-20261103/host-before.json",
+      "--host-reference",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-launch-20261103/host-reference.json",
+      "--host-reference-sha256",
+      "305bae7bb7c60bf08b2bb7b5a5cb1956621b0a5d4dff14bb6102fecbb37b4695",
+      "--output",
+      "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103"
+    ],
+    "before_launch_idle": true,
+    "boot_id": "de866984-9fa4-40b7-b5d7-376acaf022b2",
+    "controller_result": {
+      "accepted": false,
+      "drained": false,
+      "passed": false,
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-20261103/result.json",
+      "sha256": "72c1a7dd7df7e4ed8c79271ba5a92dc47cf20571137489c2d6ccd6ab3e5cd752",
+      "state": "FAILED"
+    },
+    "controller_started": true,
+    "deadline_seconds": 2400,
+    "drained": false,
+    "finished_ns": 212815190456,
+    "inputs": {
+      "binary_sha256": {
+        "processes": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+        "threads": "e6a8102ff408e0a3909248fef301a41b0b0bd07861662002e4e13833534f59c6"
+      },
+      "path": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+      "sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0"
+    },
+    "last_progress": {
+      "command": {
+        "name": "load-observer",
+        "pid": 4702,
+        "returncode": 0,
+        "timed_out": null
+      },
+      "drained": false,
+      "images": {
+        "processes": {
+          "other": 0,
+          "pending": 0,
+          "ready": 0,
+          "total": 0
+        }
+      },
+      "models": {
+        "processes": {
+          "completed_requests": null,
+          "error": "Failure('diagnostic kernel log incomplete')",
+          "factory_active": true,
+          "passed": false,
+          "state": "FAILED"
+        }
+      },
+      "passed": false,
+      "runtime": {
+        "reached": "roots=2581 completions=2581 instructions=13868689 controls=3847 primitives=32098 memory=80089 cache_hits=206135 cache_misses=13662554 cache_full=3952956 unsupported=0 active=0\n",
+        "requests": "total=0 shown=0\n"
+      },
+      "state": "FAILED"
+    },
+    "passed": false,
+    "pid": 3691,
+    "prerequisite": null,
+    "prerequisites": {
+      "focused_units": {
+        "drivers": 4,
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-twentyninth-units-20261103/result.json",
+        "sha256": "378c63074d967ba226db8dbb7e3f9b1533639db22b36c265cb40962ff60956f1",
+        "source_commit": "06caaf073543e3923f143014e6a15a4843ec28be"
+      }
+    },
+    "processes_left_untouched": true,
+    "resident_fault": false,
+    "resident_log_bytes": 249270496,
+    "resident_losses": 0,
+    "returncode": 1,
+    "running_build_id": "5f2fce72a33480f6e79a79b374b21a0db377ecd1",
+    "scored": false,
+    "source_commit": "06caaf073543e3923f143014e6a15a4843ec28be",
+    "start_ticks": 15576,
+    "started_ns": 155763404025
+  },
+  "recovery_boot_id": "60842b20-b98e-4cb1-95a2-0d8bf62df094",
+  "scored": false,
+  "source_commit": "06caaf073543e3923f143014e6a15a4843ec28be"
+}

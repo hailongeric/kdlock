@@ -9,16 +9,29 @@ replacement and evaluation of unchanged applications such as will-it-scale
 The [roadmap](docs/ROADMAP.md) has three stages: demonstrate a useful lock
 micro/nano performance envelope; establish scoped mmap/page-fault improvement or
 parity; then complete declared kernel replacements and compare applications.
-Favorable nano cases exist. The current actual shared-MM performance objective
-remains unmet, and broader kernel replacement remains planned.
+Favorable exploratory nano cases and scoped application measurements exist.
+Repeated performance acceptance and broader kernel replacement remain open.
+The isolated [original JIT correction](docs/design/kdlock_lock_replacement_contract.md)
+has production source at `da55414f`. Subsequent frozen checks resolve the
+observed component failures, including service acceptance/final ACK and
+retirement fixtures. The [source-specific evidence](bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+preserves every failed attempt and the limits of supplied task/CPU primitives.
+The later [live probe](docs/design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+passes cold CALL and indirect-JMP handback at `58af0a53`. Its exact post-RET
+observations accompany a failed overall checker result. Candidate `bccf877c`
+adds untested harness fixes; further validation is blocked. No new mmap1
+correctness or performance acceptance is established, and the candidate is not
+promoted to master.
 
 ## Current platform and policy
 
 The VM uses **Ubuntu 26.04.1 LTS** and normal kernel **`7.0.0-38-kdlock1`**, built
 from authenticated Ubuntu `linux=7.0.0-38.38` source containing upstream 7.0.14.
-The ordinary kernel disables the mmap backend. A separate `7.0.0-38-kdmm1` image
-has explicit Native/KD modes for actual shared-MM experiments. Linux 6.1
-development is retired; results and one legacy recovery version remain preserved.
+The ordinary development image disables the mmap backend. Historical local-MM
+experiments used `7.0.0-38-kdmm1` Native/KD modes; later scoped and retained
+kernels have separately recorded source, configuration and boot identities.
+Linux 6.1 development is retired; results and one legacy recovery version remain
+preserved.
 [VM operations](docs/operations/VM.md) owns paths, identity, dependencies and recovery.
 
 Production trusts all kernel/module source, including loops. It skips semantic
@@ -30,6 +43,9 @@ The checked analyzer is an explicit regression utility, `trusted_source=False`.
 See [translation policy](docs/design/admission.md).
 
 ## Lock interfaces
+
+These are the ordinary family interfaces. Separately activated retained service
+capture has the additional root/owner contracts described in the correction.
 
 | Family | Supported execution model |
 | --- | --- |
@@ -52,24 +68,38 @@ RT/ww_mutex/lockdep, broad oversubscription and complete mitigation coverage rem
 separately unvalidated. [Lock APIs](docs/LOCKS.md) and [open work](docs/TODO.md)
 define the current boundary.
 
-The MM adapter changes only the lock backend and minimal API/lifetime wrappers.
-Native mmap/munmap/advice/fault bodies execute unchanged on their original task.
-Operation-specific MM delegation and prepared teardown are retired.
+The historical local MM adapter changes only the lock backend and minimal
+API/lifetime wrappers; its native bodies run on the original task (O). Later
+retained candidates execute unchanged native bodies on the executor (E) through
+general lock and service routing. The selected correction uses the original JIT and returns untranslated
+code to O at its current source position, without replay. This remains kdlock
+lock replacement; operation-specific MM algorithms and prepared teardown are
+retired. The contract separates required behavior from implemented and verified
+behavior, including deferred flags/SIMD restoration and IRQ/NMI conflicts.
 
 ## Results and validation
 
-The [completed Linux 7 catalog](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+The [October 28 Linux 7 catalog](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
 selects **52 full lock/API configurations plus three MM suites: 3,402 points**.
 It keeps 29 checked-source, 22 trusted-source and one prepared lock/API cohort
 separate, alongside distinct private/shared-MM identities. Each coordinate has
 one two-second round at fixed 2 GHz host policy. All timing is exploratory;
 strict qualification remains failed and no repeat variance is available.
 
-Both mutex nano profiles exceed Native and TCLock at the measured 60-worker
-point, with adverse/local points retained in their full curves. Actual shared-MM
-KD throughput is below Native at all 21 measured worker counts. Those observations
-do not establish universal gains or scoped MM parity. See
-[performance](docs/PERFORMANCE.md) for current tables and interpretation.
+That catalog's mutex nano profiles exceed Native and TCLock at the measured
+60-worker point, with adverse/local points retained in their full curves. Its
+shared-device-MM workload loses to Native at all 21 counts. The separate
+[November 1 campaign](bench/results/10.176.26.71/bench/master-native-20261101/README.md)
+runs unchanged mmap1 threads/processes and original-body syscalls, retaining
+both gains and losses from one round per point. These workloads, source versions
+and controls are not interchangeable, and no repeated acceptance gate follows.
+
+The [indexed reached JIT record](bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md)
+contains later focused actual-mmap1 execution proofs for the superseded separate
+emitter, with failed performance acceptance and no Nano run. It does not validate
+the restored original JIT correction. See the original contract's
+[current validation record](docs/design/kdlock_lock_replacement_contract.md#validation-and-remaining-work)
+for its distinct passes, failures, partial live handback and remaining joins.
 
 The [fresh normal-kernel basic checkpoint](bench/results/10.176.26.71/tests/linux70-normal-basic-20261028/README.md)
 passed all four selected families with correct data, returned JIT bodies and final

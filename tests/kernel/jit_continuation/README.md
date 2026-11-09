@@ -3,8 +3,201 @@
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). The runner freezes the source,
 including private `.inc` implementation files, and builds the provider, daemon,
-allocator guard and [kernel payload](payload/README.md)
+allocator guard and [kernel payload](fixture/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
+
+## Reached execution mode
+
+The isolated family/cache candidate adds an explicit `--execution-mode reached`
+for `--mode killable` or `--mode helper` with `--family rwsem`. The default
+`--execution-mode image` retains the existing complete-image checks below.
+For example, in the verified VM:
+
+```sh
+python3 tests/kernel/jit_continuation/run.py \
+  --mode killable --family rwsem --execution-mode reached --cpus 0-3 \
+  --kernel-variant kdscope5-kd \
+  --kernel-source /mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build \
+  --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103 \
+  --output /mnt/kdlock-builds2/kdlock-evidence/reached-killable-NEW
+```
+
+This mode loads `service_reached=1`, prepares only source/lock metadata and
+starts no translator or prewarming pass. It does not build the daemon. The
+registry must contain no published image, and source frames plus active
+families must be drained at every phase boundary. Every successful root must
+execute on another task and name its exact request family. Every reached
+service requires matching service/resume records with a unique artifact
+sequence, unchanged family and exact source coordinates through the ACK.
+Returning Native/GS transactions keep `image_generation=0` and independently
+carry that same family/artifact identity; zero alone cannot pass the checks.
+
+The existing body effects, cancellation-before-holder-release, nested request
+identities, downgrade/read-credit ordering, API returns and normal retirement
+checks still run. Additional observations require one cold root/completion per
+successful request, positive instruction/cache-miss evidence, exact service
+counts matching the artifact ledger, no unfinished operation and no active
+family at the end. These totals observe execution and do not replace ownership
+or retirement records. No original-task suffix is accepted.
+
+Use helper mode separately to exercise its eleven returning-service phases.
+These are focused mechanism checks; they do not run mmap1 or timing points and
+do not establish general instruction coverage. Failures and unresolved
+lifetimes remain in the output and are not force-unloaded.
+
+## General killable admission mode
+
+The selected-phase candidate adds a separate functional mode:
+
+```sh
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
+  --mode killable --family rwsem --cpus 0-3 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/killable-continuation-NEW
+```
+
+It reuses this runner's source freeze, module, allocator guard, daemon,
+immutable-image audit and normal drain. The integer entry audit checks the
+Native return jump over the captured `XOR EAX,EAX` success label. Its image
+requires the explicit budget-resume and retained service-queue contracts
+(requirements 384, image protocol 3). Existing
+continuation modes retain their original bodies and phase sequence.
+
+Eight preallocated diagnostic slots record original task IDs, API results and
+body effects. Snapshots inspect canonical queue order/state under the object's
+guard. Each queued cancellation runs with a callable writer still acquired;
+head, middle and tail positions are controlled separately. A selected writer
+also cancels while an ordinary reader retains its credit. Failure must return
+`-EINTR`, unlink and finish rollback before the controller releases the holder.
+The canceled user's `SIGKILL` exit is expected and retained alongside the
+in-kernel API result and zero body prefix; it is not a successful user return.
+
+A nested conventional killable call must observe the logical origin's signal
+while remaining on the parent executor. Its canceled child has no prefix, its
+parent retains its earlier effects and completes its successful acquisition,
+and the inner holder remains acquired until that evidence is saved. A final
+case downgrades on the executor, runs a bounded scalar read tail containing
+`PAUSE`, and requires a fresh subsequent writer to drain that read credit.
+Additional bounded cases acquire four distinct rwsem and four distinct mutex
+children under the outer rwsem (total depth 9), release them outside reverse
+acquisition order, release the outer while all eight children remain acquired,
+and acquire/release one mutex child 128 times under a single outer. That last
+case alternates conventional false and public clobber true requests; a separate
+true-only case retains its own receipt. These permission controls still execute
+on the same actual parent executor and do not claim migration to another child
+executor.
+
+Optional `service_trace` is enabled only for these short checks. Every positive
+root needs matching `enter` and `returned` events with an exact nonzero request
+identity/generation and an actual executor different from its original task.
+Nested cancellation and downgrade/read-release events must name that executor
+and the corresponding exact records. Child grant/release events retain distinct
+invocation generations, requested delegation permission and actual depth. The
+early-outer case requires all eight grants before outer release and every child
+release afterwards. API timing or a published image cannot
+substitute for these events. The generic API observer remains
+`proxy_proof = false` and is not used to infer delegation.
+
+All observations, including failed phases, remain in the output directory.
+The controller never forces module removal or releases holders to turn a
+failed cancellation into a pass. Diagnostic holders have a 30-second bound;
+expiry records a failure before normal lock release. This mode reports no
+performance scores, does not run the original RDTSC phases, and does not claim
+MM execution. Source is unvalidated until matching VM receipts exist.
+
+## Returning original-task primitives
+
+`--mode helper --family rwsem --cpus 0-3` adds a separate eleven-phase functional
+check using the same module, publication and normal retirement machinery.
+The existing eleven `killable` phases keep their typed-only image requirement
+384. Helper mode has reachable declared primitive CALLs, inline GS updates and
+a normalized preemption-count read and an ordinary register-JMP callee. It
+requires exactly 8064 (origin CALL,
+retained service queue, budget continuation, original-task memory instructions
+original-context reads and indirect tails), with capability v17/bits14–17. The earlier
+896/1920/3968 images remain separate historical inputs. It does not run timing points or replace any
+of the existing killable checks.
+
+The indirect-tail phase calls an ordinary, unregistered assembly callee that
+loads the scalar primitive address and executes a near register JMP. The
+caller word remains on the source stack. Only the declared scalar primitive
+runs on O; its result and subsequent body effect are observed on the same E
+and immutable image. The ordinary callee has no primitive descriptor, so this
+phase cannot replace it with a whole-body original-task continuation.
+
+The test module registers two six-word C primitives through
+`kd_service_calls.h`. The first checks six distinct arguments and returns the
+full word `0x993f730e40218045`. The second acquires a conventional local child
+mutex on the original task and sleeps while holding it. The controller sends
+the original task a fatal signal after the parent acquisition has committed,
+then permits the primitive to release its child and return. The successful
+parent still finishes with result zero; its eventual user process `SIGKILL`
+exit is retained separately. Existing queued/draining cancellation checks stay
+in killable mode.
+
+Both primitives record actual current task ID, a local stack address inside
+the task-stack interval saved before capture, IRQ/preemption state, arguments
+and result. The translated post-CALL body records the received full AX word
+and increments one marker. Exact request/enter/done/resume trace events must
+bind one source return PC, transaction sequence, root identity/generation and
+immutable image generation. Their actual tasks must be E, O, O, E, followed
+by the parent's returned completion on the same E. The parent prefix and
+post-helper marker must each occur once.
+
+Two further phases observe ordinary Native spin/RCU pairs through declared
+returning primitives. The first acquires a spinlock on O, verifies an actual
+Native trylock of that held object returns false without another acquisition,
+holds nine nested RCU read intervals, then releases them and the spinlock. A
+later trylock must succeed and receive exactly one matching release. Nine
+simultaneous RCU intervals exercise retained storage beyond the eight cold
+records. Each primitive records O's task-stack address and actual preemption,
+IRQ and RCU counts before/after the Native API; the parser checks the complete
+sequence, exact transaction identity and return to the same E. The second
+phase releases the outer KD writer while a Native spinlock remains held, runs
+one scalar marker, then releases that final Native lock. That last transaction
+must report `complete` on E, and normal request/frame/source retirement must
+still finish. These are generic lock mechanism checks, not MM execution.
+
+The final two phases execute actual inline GS INC/DEC instructions in the
+translated body. They update a per-CPU 64-bit counter and create/retire an
+inline 32-bit Native preemption interval. Both phases then execute an actual
+inline GS MOV32 of `__preempt_count`: the returned word must be zero-extended
+and its low 31 bits must equal one, excluding the runtime's pin while preserving
+Native's inverted need-resched bit. This read creates no additional ownership
+record. An observation-only primitive reads
+O's own counter, task stack and physical context before/between/after the
+instructions; it does not execute the critical-section body. Each instruction
+must preserve source CF, R10/R11 witnesses and SP. Exact memory RPC traces bind
+O's apply and the same E/image successor to the root identity/generation.
+The normal phase has five instruction transactions and the early-release
+phase has three. The MOV transaction must report `read=1`, no preemption-owner
+identity, an unchanged arithmetic-flags word and the exact observed result.
+Its separate 312-byte snapshot records the read result and one successful
+source-side check; the earlier observation interfaces keep their layouts.
+The last phase releases the outer KD writer while the inline preemption token
+remains live, then uses the last DEC as an instruction completion endpoint.
+It must report `complete`, preserve SP without consuming a CALL word, and pass
+the Native post-DEC CF/register checks after flags-aware restoration.
+
+A registration pin keeps the fixture loaded. Unregister while source admission
+is open must return `-EBUSY` and preserve that pin. After callers, transactions,
+frames and images retire through the ordinary source RETIRE operation, the
+runner's optional `after_source_retire` hook issues the explicit unregister
+ioctl and drops the pin before normal `rmmod`. Descriptors belonging to other
+owners must remain unchanged. An incomplete operation retains its pin and
+evidence; no forced unload is used.
+
+For example, with the same verified platform and recovery arguments:
+
+```sh
+timeout 900s python3 tests/kernel/jit_continuation/run.py \
+  --mode helper --family rwsem --cpus 0-3 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/returning-primitives-NEW
+```
+
+The directly affected observation/lifecycle unit is
+`infrastructure/test_helper_continuation.py`. These sources remain unvalidated
+until their VM builds, checks and complete live receipts exist. This mechanism
+probe does not establish delegated MM execution.
 
 The active family is named `jit_continuation`. Its runner lives at
 `tests/kernel/jit_continuation/run.py`, its module is `jit_continuation_test.ko`,
@@ -204,8 +397,10 @@ the current invocation's entire suffix; the v13 bounded instruction service
 returns eligible ABI2 writer invocations to the same image. Independent
 entry bans remain sticky and are covered separately by the image/registry tests.
 
-The mutex/rwsem controls accept capability versions 6 through 13 only when feature
-bit 5 (native instruction exit) is present. Spin/rwlock require the additional
+The common continuation gate accepts capability versions 6 through 17 only
+when feature bit 5 (native instruction exit) is present. The indirect-tail
+helper phase additionally requires version 17 and its distinct feature bit;
+accepting the common gate alone does not establish that phase contract. Spin/rwlock require the additional
 contract described above; the version alone does not establish support.
 The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
@@ -257,3 +452,70 @@ instruction traps, memory faults or replay of a partially executed body.
 The string probe now requires valid short and 300-character inputs to complete
 delegated comparison calls, without the former helper prechecks. That change
 does not alter this instruction marker's continuation or repeated-eligibility checks.
+
+## Native rwsem writer pair observations
+
+Helper mode adds two phases for the general one-argument VOID writer contexts
+12/13. The first retains two distinct Native rwsems on O, releases the first
+while the second remains held, then releases the second. A conventional fixture
+holder initially owns the first semaphore. Before releasing it, the controller
+requires an actual Native waiter, an entered-but-ungranted O acquisition and a
+sleeping O; it then runs a lock-free fixture worker on the actual E CPU and
+observes E schedule while O remains blocked. The helper's before/after switch
+counts separately prove that the Native acquisition itself scheduled O.
+
+The blocked-state snapshot and the userspace kmsg cursor are separate
+observations. O can enter its Native wait after the controller's preceding log
+drain, so a true blocked predicate does not imply that the earlier root-enter
+record has already been copied into the controller's message buffer. Before
+selecting E, the Native writer phase therefore drains logs in a bounded loop
+and requires one exact root-enter record for O, the expected outer object and
+entry, a positive request identity/generation and a distinct E. Missing,
+duplicate or inconsistent records retain the blocked state and fail the phase;
+the Native waiter and scheduling checks remain required. The stopped 370e8e7f
+attempt is retained separately from validation of this observation correction.
+
+The second phase releases the outer KD writer while a Native writer remains,
+runs a scalar continuation effect on E, and ends through the final Native
+up_write completion. Exact origin/executor/root/generation, Native object and
+acquisition-sequence records must match, with balanced CPU state and complete
+retirement. No Native writer is described as a balanced acquire-and-release
+helper. The other helper and eleven killable phases retain their checks.
+
+A separate version1 952-byte observation ioctl records up to eight Native
+writer events and their exact objects, actual task/CPU/stack, CPU state and
+context-switch totals. The 1496-, 1976- and 312-byte observation ABIs retain
+their layouts. Holder release is explicit and bounded; timeout retains the
+callers/modules and never authorizes forced task exit or unload. These are
+mechanism checks, not an MM workload or performance result.
+
+## Explicit Native argument mapping fixture
+
+The mapped-call follow-up retains all nine helper phases and all eleven
+killable/nesting phases. The two additional helper phases are prospective checks:
+`primitive-mapped-two-to-five` uses a two-argument logical function and a distinct
+five-argument Native function; `primitive-mapped-allocation` calls the production
+`__kmalloc_noprof` mapping once and releases that exact allocation once.
+
+The general fixture registers its map through a separate post-load ioctl before
+source freezing. Thus a rejected mapped registration leaves the existing loaded
+module available for normal source retirement, rather than returning module-init
+failure after partial registration. It verifies source0, zero, source1, minus
+one and the real source CALL successor, original task/stack and context, and
+same-executor/image AX/flags continuation without replay. Supported `SETcc`
+instructions observe CF/PF/ZF/SF/OF immediately after the source CALL; the
+transaction trace also requires complete done/resume flags equality. A separate observation
+ioctl preserves all older fixture packet layouts. The bounded allocation check
+uses 53 zero-initialized bytes, checks and writes each byte, then observes its
+exact `kfree` transaction. This is allocator mechanism evidence, not an unchanged
+application workload or allocation-policy equivalence proof. Sources are not
+validated until the directly affected VM checks and live phases complete.
+
+The focused unit additions are `codegen/test_native_call_mapping.py` (production
+registry/map/pinning bodies under both `CONFIG_SLAB_BUCKETS` rosters, plus seven
+detected-mutation requirements under the actual enabled roster) and
+`infrastructure/test_mapped_continuation.py` (four runner observation cases with
+negative variants). The existing scheduling-contract fixture now reads mapped
+logical descriptors and checks the two exact cache API arities. The new mapped
+snapshot is version 1, 240 bytes; prior observation packets are unchanged.
+Actual compilation, negative-control detection and live outcomes remain pending.

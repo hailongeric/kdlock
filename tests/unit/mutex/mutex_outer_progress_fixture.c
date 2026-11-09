@@ -30,6 +30,8 @@ typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, v) ((x) = (v))
 #include "mutex_outer_types.h"
 
 static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
@@ -76,10 +78,8 @@ static unsigned int raw_smp_processor_id(void)
 		}                    \
 	} while (0)
 #define BUG() BUG_ON(true)
-#define READ_ONCE(x) (x)
 #define prefetch(p) ((void)(p))
 #define prefetchw(p) ((void)(p))
-#define WRITE_ONCE(x, v) ((x) = (v))
 #define unlikely(x) (x)
 #define smp_load_acquire(p) (*(p))
 #define smp_store_release(p, v)                                   \

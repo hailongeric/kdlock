@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "stage": "baseline-api-observation",
+  "branch": "codex/rwsem-delegated-protocol-20261102",
+  "baseline_commit": "7231ddf0963ff2cc730590c09cc81e7f96f93095",
+  "source_commit": "bbb79781e85305cf3881f21108d11d4bf063af7e",
+  "kernel": "7.0.0-38-kdscope4",
+  "boot": "4b1e10f4-108b-45bd-806f-13d6f2a4d04c",
+  "observer_sha256": "95bb849c6903d913027f9287e04a47c40205bb3947266f1d1ce0fd0561502a3a",
+  "passed": true,
+  "scored": false,
+  "accepted": false,
+  "production_protocol_changed": false,
+  "proxy_proof": false,
+  "delegation_episodes": null,
+  "delegation_length": null,
+  "critical_section_ratio": null,
+  "throughput_comparison": null,
+  "decoder_fixtures": 14,
+  "checks": {
+    "commit": "bbb79781e85305cf3881f21108d11d4bf063af7e",
+    "passed": true,
+    "build_passed": true,
+    "tests_passed": true,
+    "kernel": "7.0.0-38-kdscope4",
+    "boot": "4b1e10f4-108b-45bd-806f-13d6f2a4d04c",
+    "sources": {
+      "tests/kernel/rwsem/observe/collect.py": "e18e3a060b0b10ef75777f163e99e8c75ed47291cf2dc782587cde1a1090d5cb",
+      "tests/kernel/rwsem/observe/test_decode.py": "97eecd324662e52527ff36acd804a2cccc3eac83f01f22223b448b5dbebd4b11",
+      "tests/kernel/rwsem/observe/README.md": "2943125289fa9b6407aad0cfb4293fe73b0e3816ad9c9deb8419192c4298bff2",
+      "tests/kernel/rwsem/observe/payload/module.c": "f3c24fa86736d47c270a38fcf58ae9fb25d85c1ea9d5811cab2eee1d3be40dfe",
+      "tests/kernel/rwsem/observe/payload/Makefile": "a7e6ba33eb96c7bdb58741072f22f12816d9fc1c3a9896dac9321e827e5d6b46",
+      "tests/kernel/rwsem/observe/payload/api.h": "edcf01c090e95c7967de39dbb19f4c41abbc0347e5a5d4872ba4ac7acf033c6d"
+    },
+    "steps": [
+      {
+        "name": "build",
+        "argv": [
+          "make",
+          "-C",
+          "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/rwsem-protocol-observe-20261102/check-r4/payload",
+          "KDIR=/mnt/kdlock-builds2/linux-7.0.0-38-kdscope4/build",
+          "W=1",
+          "CC=x86_64-linux-gnu-gcc"
+        ],
+        "returncode": 0
+      },
+      {
+        "name": "tests",
+        "argv": [
+          "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+          "/root/host_fs/kdlock/tests/kernel/rwsem/observe/test_decode.py"
+        ],
+        "returncode": 0
+      }
+    ],
+    "final_idle": true,
+    "source_unchanged": true
+  },
+  "api_checks": {
+    "passed": true,
+    "state": "COMPLETE",
+    "drained": true,
+    "source_unchanged": true,
+    "delegated": false,
+    "jit_bodies": 0,
+    "accepted": false
+  },
+  "identity_checks": {
+    "passed": true,
+    "state": "COMPLETE",
+    "drained": true,
+    "final_idle": true,
+    "inputs_sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+    "scored": false,
+    "accepted": false
+  },
+  "cases": [
+    {
+      "model": "threads",
+      "workers": 1,
+      "passed": true,
+      "drained": true,
+      "event_count": 17896,
+      "api_counts": {
+        "write_killable": 3579,
+        "downgrade": 1789,
+        "write_release": 1790,
+        "read_release": 1790
+      },
+      "observed_lock_count": 1,
+      "final_idle": true,
+      "api_pairs": 8948,
+      "capture_complete": true,
+      "proxy_proof": false,
+      "start_to_cutoff_ns": 10113337,
+      "start_to_final_stop_ns": 152550767,
+      "missed": 0,
+      "overflow": 0,
+      "inflight": 0,
+      "errors": 0,
+      "body_censoring": {
+        "open_at_final_drain": 0,
+        "completed_intervals_crossing_cutoff": 1,
+        "unmatched_release": 1,
+        "unmatched_downgrade": 0
+      }
+    },
+    {
+      "model": "threads",
+      "workers": 2,
+      "passed": true,
+      "drained": true,
+      "event_count": 18066,
+      "api_counts": {
+        "write_killable": 3613,
+        "downgrade": 1807,
+        "write_release": 1806,
+        "read_release": 1807
+      },
+      "observed_lock_count": 1,
+      "final_idle": true,
+      "api_pairs": 9033,
+      "capture_complete": true,
+      "proxy_proof": false,
+      "start_to_cutoff_ns": 10108946,
+      "start_to_final_stop_ns": 150299644,
+      "missed": 0,
+      "overflow": 0,
+      "inflight": 0,
+      "errors": 0,
+      "body_censoring": {
+        "open_at_final_drain": 2,
+        "completed_intervals_crossing_cutoff": 0,
+        "unmatched_release": 1,
+        "unmatched_downgrade": 1
+      }
+    },
+    {
+      "model": "processes",
+      "workers": 1,
+      "passed": true,
+      "drained": true,
+      "event_count": 20178,
+      "api_counts": {
+        "write_killable": 4035,
+        "downgrade": 2018,
+        "write_release": 2018,
+        "read_release": 2018
+      },
+      "observed_lock_count": 1,
+      "final_idle": true,
+      "api_pairs": 10089,
+      "capture_complete": true,
+      "proxy_proof": false,
+      "start_to_cutoff_ns": 10045242,
+      "start_to_final_stop_ns": 139211296,
+      "missed": 0,
+      "overflow": 0,
+      "inflight": 0,
+      "errors": 0,
+      "body_censoring": {
+        "open_at_final_drain": 0,
+        "completed_intervals_crossing_cutoff": 0,
+        "unmatched_release": 0,
+        "unmatched_downgrade": 1
+      }
+    },
+    {
+      "model": "processes",
+      "workers": 2,
+      "passed": true,
+      "drained": true,
+      "event_count": 32064,
+      "api_counts": {
+        "write_killable": 6413,
+        "downgrade": 3206,
+        "write_release": 3206,
+        "read_release": 3207
+      },
+      "observed_lock_count": 2,
+      "final_idle": true,
+      "api_pairs": 16032,
+      "capture_complete": true,
+      "proxy_proof": false,
+      "start_to_cutoff_ns": 10104313,
+      "start_to_final_stop_ns": 146694703,
+      "missed": 0,
+      "overflow": 0,
+      "inflight": 0,
+      "errors": 0,
+      "body_censoring": {
+        "open_at_final_drain": 2,
+        "completed_intervals_crossing_cutoff": 0,
+        "unmatched_release": 1,
+        "unmatched_downgrade": 1
+      }
+    }
+  ],
+  "raw_files": [
+    {
+      "file": "archive_run.py",
+      "bytes": 11669,
+      "sha256": "6e1264563e6e728075b967121c9f3e6f740f22f59ce20c069e8f31226067b4ad"
+    },
+    {
+      "file": "archives.json",
+      "bytes": 3150,
+      "sha256": "efd4470b2f772bf79446ede2ad1cbb903becf50685b267b3d4e5995acfcd469d"
+    },
+    {
+      "file": "checks.tar.gz",
+      "bytes": 4846974,
+      "sha256": "e869bff0d628e628a08813d1c4e34ec8fac1b3cfb1e2033ccfad49027569397a"
+    },
+    {
+      "file": "controllers.tar.gz",
+      "bytes": 176175,
+      "sha256": "83881d103145a97e6db2c65cd93764e831e3f8f1c80b0e3eaba5e14b94975dd0"
+    },
+    {
+      "file": "download.json",
+      "bytes": 953,
+      "sha256": "a1b9dbcfa2067d4544f6f99be6c75ded32a65428016241e3ac6cba481780ffc8"
+    },
+    {
+      "file": "input-inventory.json",
+      "bytes": 352076,
+      "sha256": "45f28c11a2b7fa34abea694505dd4d22aef182561b49706ad9efdac3f113cf11"
+    },
+    {
+      "file": "metadata.tar.gz",
+      "bytes": 415,
+      "sha256": "f432cb1c478ca263754bde7743adc50252f7d0918dd876da34020c6bfdcb0c7c"
+    },
+    {
+      "file": "observations.tar.gz",
+      "bytes": 3159552,
+      "sha256": "93a07bbabcce404bd9c329abe6faa070d24a0be9af9cc7c11ebc62837f14216a"
+    }
+  ],
+  "restoration": {
+    "request_returncode": 0,
+    "completed": true,
+    "runtime": {
+      "release": "7.0.0-38-kdlock1",
+      "boot": "b4c42511-d2fd-4ac7-b6b5-48650aae48b7",
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0"
+    },
+    "normal_identity_verified": true,
+    "final_idle": true
+  }
+}

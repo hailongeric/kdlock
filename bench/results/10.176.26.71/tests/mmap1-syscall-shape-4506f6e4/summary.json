@@ -1,0 +1,88 @@
+{
+  "source_commit": "4506f6e46394133e439f68a04d6fde38aea0885f",
+  "provider_sha256": "a9e121b1dfae464e3199b8d6cec07d7539f3aedac62d31a3affd680b1b629f65",
+  "default_policy": {
+    "enabled": false,
+    "version": 1
+  },
+  "selected_policy": {
+    "enabled": true,
+    "version": 1
+  },
+  "cases": [
+    {
+      "name": "ready",
+      "passed": true,
+      "entries": []
+    },
+    {
+      "name": "anonymous64",
+      "passed": true,
+      "entries": []
+    },
+    {
+      "name": "file128",
+      "passed": true,
+      "entries": []
+    },
+    {
+      "name": "file128-unmapped",
+      "passed": true,
+      "entries": [
+        "0xffffffff8181c73b"
+      ]
+    },
+    {
+      "name": "anonymous128",
+      "passed": true,
+      "entries": [
+        "0xffffffff817b6f68",
+        "0xffffffff8181c73b"
+      ]
+    },
+    {
+      "name": "anonymous128-unmapped",
+      "passed": true,
+      "entries": [
+        "0xffffffff817b6f68",
+        "0xffffffff8181c73b"
+      ]
+    }
+  ],
+  "applications": [
+    {
+      "model": "threads",
+      "passed": true,
+      "drained": true,
+      "scored": false,
+      "delegation_proved": false,
+      "unique_mms": 1,
+      "provider_routes": [
+        2
+      ]
+    },
+    {
+      "model": "processes",
+      "passed": true,
+      "drained": true,
+      "scored": false,
+      "delegation_proved": false,
+      "unique_mms": 2,
+      "provider_routes": [
+        2
+      ]
+    }
+  ],
+  "exact_retirement": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "accepted": false,
+  "performance_measured": false,
+  "images_published": 0,
+  "interpreter_used": false,
+  "warning_frontier_changed": false,
+  "normal_boot": "1ed38b4b-301c-4c76-a2a1-eb4b9f1bd93e"
+}

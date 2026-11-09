@@ -92,8 +92,13 @@ int kd_exec_frame_lock_push(struct kd_exec_frame *frame,
 
 unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame)
 {
+	struct kd_exec_continuation *cont;
+
 	if (!frame)
 		return 0;
+	cont = kd_exec_frame_continuation(frame);
+	if (cont && cont->service_ops)
+		return cont->service_ops->depth(cont->service_scope);
 	return frame->jit_lock_depth;
 }
 
@@ -205,6 +210,10 @@ bool kd_exec_frame_lock_contains(const struct kd_exec_frame *frame,
 bool kd_exec_frame_has_unreleased_nested(const struct kd_exec_frame *frame)
 {
 	unsigned int i;
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+
+	if (cont && cont->service_ops)
+		return cont->service_ops->has_nested(cont->service_scope);
 
 	if (!frame || frame->outer_lock_index >= frame->jit_lock_depth)
 		return false;
@@ -219,6 +228,13 @@ bool kd_exec_frame_has_unreleased_nested(const struct kd_exec_frame *frame)
 bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame)
 {
 	unsigned int i;
+	struct kd_exec_continuation *cont = frame ? kd_exec_frame_continuation(frame) : NULL;
+
+	if (cont && cont->service_ops)
+		return frame->outer_unlock_seen &&
+			cont->service_ops->outer_released(cont->service_scope) &&
+			cont->service_ops->all_released(cont->service_scope) &&
+			cont->service_call.api == KD_SERVICE_NONE;
 
 	if (!frame || !frame->outer_unlock_seen ||
 	    frame->outer_lock_index >= frame->jit_lock_depth)

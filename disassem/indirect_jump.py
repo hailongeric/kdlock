@@ -6,6 +6,9 @@ from collections import defaultdict
 from assist import make_inst
 from miasm.expression.expression import ExprLoc
 
+RETAINED_TAIL_REQUIREMENT = 1 << 12
+RETAINED_MISS_REQUIREMENT = 1 << 13
+
 
 class ReturnFlowError(ValueError):
     """An incomplete/budgeted return graph cannot authorize generated dispatch."""
@@ -20,6 +23,7 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
     # reject, never observe a partially populated return whitelist.
     jump_table = {source: set(targets) for source, targets in pre_jump_table.items()}
     callers, returns = defaultdict(set), defaultdict(set)
+    learned_tails = defaultdict(set)
     missing_callees = set()
     terminal_targets = set(terminal_targets)
     work = 0
@@ -49,6 +53,12 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     callers[callee].add(offset)
                 else:
                     missing_callees.add(callee)
+            elif name.startswith("J") and direct:
+                callee = db.get_location_offset(line.args[0].loc_key)
+                if callee in terminal_targets:
+                    # A Native tail target inherits the real caller's CALL
+                    # word. Its runtime continuation returns to that caller.
+                    missing_callees.add(callee)
             elif name == "RET" or (
                 (name.startswith("J") or name == "CALL") and not direct
             ):
@@ -64,6 +74,14 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                     jump_table[offset].difference_update(terminal_targets)
                 if name == "RET":
                     returns[start].add(offset)
+                elif name == "JMP":
+                    # A learned tail keeps the caller's existing return word.
+                    # Follow only bodies already decoded in this image; CALL
+                    # pushes another word and RET consumes one, so their
+                    # dispatch targets are not tail successors.
+                    learned_tails[start].update(
+                        target for target in jump_table[offset] if target in blocks
+                    )
 
     # Walk each callee once for all its call sites. Shared tails contribute
     # every continuation; no balanced-stack or matching-return assumption is
@@ -88,9 +106,14 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
                 spend(1, start)
                 target = db_dict[block].get_location_offset(edge.loc_key)
                 if target not in blocks:
+                    if target in terminal_targets:
+                        continue
                     raise ReturnFlowError(
                         "missing CFG successor in return dispatch", start
                     )
+                targets.add(target)
+            for target in sorted(learned_tails[start]):
+                spend(1, start)
                 targets.add(target)
             pending.extend(sorted(targets - seen, reverse=True))
 
@@ -100,9 +123,11 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536, terminal_targets=
     return sorted(missing_callees)
 
 
-def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
+def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None,
+                    indirect_tails=None, retained_misses=False):
     ret_str = ""
     indirect_calls = indirect_calls or {}
+    indirect_tails = indirect_tails or {}
     for offset, psb_targets in sorted(jump_table.items()):
         ret_str += "ij_" + hex(offset)[2:] + ":\n"
         if preserve_flags:
@@ -117,13 +142,23 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
                                        if preserve_flags else f"loc_{psb_tgt:x}"])
         if preserve_flags:
             ret_str += "POPFQ\n"
-        if offset in indirect_calls:
-            # Only an actual source CALL reaches this stub, after target
-            # evaluation and the virtual push. orig_ax is provenance scratch
-            # for the distinct FULL exit, never a native FLAGS-restore tag.
-            ret_str += make_inst("MOVABS", ["R15", hex(indirect_calls[offset])])
+        if offset in indirect_calls or offset in indirect_tails:
+            # CALL already pushed its word; a tail JMP keeps its caller's
+            # existing word. Both save flags and source provenance, while the
+            # distinct FULL exits prevent a JMP from claiming a CALL push.
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
+            source = (indirect_calls if offset in indirect_calls else indirect_tails)[offset]
+            ret_str += make_inst("MOVABS", ["R15", hex(source)])
             ret_str += make_inst("MOV", ["QWORD PTR[REG_BANK + KD_REG_ORIG_AX]", "R15"])
-            ret_str += make_inst("MOV", ["Stack_IJ", "11"])
+            ret_str += make_inst("MOV", ["Stack_IJ", "11" if offset in indirect_calls else "14"])
+            ret_str += make_inst("JMP", ["full_exit"])
+        elif retained_misses:
+            # The source RET pop/JMP target selection already happened. Export
+            # flags before wrapper cleanup; never perform that transfer twice.
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
+            ret_str += make_inst("MOVABS", ["R15", hex(offset)])
+            ret_str += "MOV QWORD PTR[REG_BANK + KD_REG_ORIG_AX], R15\n"
+            ret_str += make_inst("MOV", ["Stack_IJ", "15"])
             ret_str += make_inst("JMP", ["full_exit"])
         else:
             ret_str += make_inst("MOVABS", ["R15", hex(offset)])
@@ -136,7 +171,8 @@ def make_jump_table(jump_table, *, preserve_flags=False, indirect_calls=None):
     return ret_str
 
 
-def make_callee_table(callee_list, hostcalls=None):
+def make_callee_table(callee_list, hostcalls=None, *, returning_services=(),
+                      retained_misses=False):
     hostcalls = hostcalls or {}
     ret_str = ""
     for offset in sorted(callee_list):
@@ -146,6 +182,8 @@ def make_callee_table(callee_list, hostcalls=None):
                 f"/* KD_HOSTCALL id={service.service_id} symbol={service.symbol} */\n"
             )
         ret_str += "loc_" + hex(offset)[2:] + ":\n"
+        if offset in returning_services or retained_misses:
+            ret_str += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
         ret_str += make_inst("MOVABS", ["R14", hex(offset)])
         ret_str += make_inst("MOV", ["Stack_IJ", "0x5" if service else "0x1"])
         # The common exit publishes SP for COMPLETE, reduced and FULL packets.

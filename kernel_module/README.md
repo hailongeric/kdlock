@@ -241,8 +241,9 @@ eligible string images retain the dispatcher path. The selected KD mutex
 protocol and its allocation path are unchanged.
 
 The provider preallocates a separate pool near kernel text, using `module_alloc`
-and its matching `module_memfree`. It reserves up to 64 blocks of 640 KiB, at
-most 40 MiB, while sharing the existing 64 image descriptors. A direct CALL uses
+and its matching `module_memfree`. It reserves up to 64 blocks of
+`KD_CODE_BLOCK_SIZE` (4 MiB each, at most 256 MiB in the retained preparation
+candidate), while sharing the existing 64 image descriptors. A direct CALL uses
 a signed 32-bit displacement from its following instruction, so publication must
 check that the helper is within reach. Missing allocator support, no usable
 startup block or kernel call-depth tracking disables capability bit 10. Later

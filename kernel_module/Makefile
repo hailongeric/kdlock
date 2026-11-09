@@ -5,6 +5,7 @@
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include
+asflags-y += -I$(src)/../include
 
 # Private-state kernel regressions are absent from normal builds.
 ifeq ($(KDLOCK_SELFTEST),1)
@@ -35,16 +36,29 @@ kdlock_km-objs := \
 	sys.o \
 	kd_spin_runtime.o \
 	kd_source.o \
+	kd_family.o \
 	kd_spin_entry.o \
 	kd_mutex_tasks.o \
+	kd_wait_queue.o \
+	kd_admission.o \
 	kd_mutex_local.o \
 	kd_mutex_osq.o \
 	kd_rwsem.o \
-	kd_rwsem_api.o
+	kd_rwsem_api.o \
+	kd_rwsem_provider.o \
+	kd_service_api.o \
+	kd_service_calls.o \
+	kd_service_call_entry.o
+
+OBJECT_FILES_NON_STANDARD_kd_service_call_entry.o := y
 
 OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
+
+# Session-wide immutable image storage; timing builds retain the 64-slot default.
+KDLOCK_JIT_IMAGES ?= 64
+ccflags-y += -DKD_CODE_BLOCK_POOL=$(KDLOCK_JIT_IMAGES)
 
 .PHONY: all clean
 

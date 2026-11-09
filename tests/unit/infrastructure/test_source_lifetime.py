@@ -100,8 +100,8 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |\n\t\t\tKD_JIT_CAP_ROOT_NATIVE_ESCAPE | KD_JIT_CAP_INDIRECT_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_INSTRUCTION,",
-            ".features = 0,",
+            ".features = KD_JIT_CAP_MUTEX_STACK |",
+            ".features =",
         ),
         "wrong-module-arena": (
             "caps.percpu_module_bytes = PERCPU_MODULE_RESERVE;",
@@ -140,8 +140,39 @@ def main():
             "KD_JIT_CAP_ROOT_NATIVE_ESCAPE |",
         ),
         "missing-origin-instruction-feature": (
-            "KD_JIT_CAP_INDIRECT_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_INSTRUCTION,",
-            "KD_JIT_CAP_INDIRECT_CALL,",
+            "KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |",
+            "KD_JIT_CAP_ORIGIN_CALL |",
+        ),
+        "missing-origin-call-feature": (
+            "KD_JIT_CAP_ORIGIN_INSTRUCTION | KD_JIT_CAP_ORIGIN_CALL |",
+            "KD_JIT_CAP_ORIGIN_INSTRUCTION |",
+        ),
+        "missing-origin-memory-feature": (
+            "KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ |",
+            "KD_JIT_CAP_ORIGIN_CALL |\n\t\t\tKD_JIT_CAP_ORIGIN_CONTEXT_READ |",
+        ),
+        "missing-origin-context-read-feature": (
+            "KD_JIT_CAP_ORIGIN_MEMORY | KD_JIT_CAP_ORIGIN_CONTEXT_READ |",
+            "KD_JIT_CAP_ORIGIN_MEMORY |",
+        ),
+        "missing-indirect-tail-feature": (
+            " |\n\t\t\tKD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER |",
+            " |\n\t\t\tKD_JIT_CAP_SOURCE_FRONTIER |",
+        ),
+        "missing-source-frontier-feature": (
+            "KD_JIT_CAP_INDIRECT_TAIL | KD_JIT_CAP_SOURCE_FRONTIER |",
+            "KD_JIT_CAP_INDIRECT_TAIL |",
+        ),
+        "missing-learning-batch-feature": (
+            "KD_JIT_CAP_LEARNING_BATCH,",
+            "0,",
+        ),
+        "bound-objects-close-admission": (
+            "if (kd_source_bindings) {", "if (false) {",
+        ),
+        "binding-after-close": (
+            "acquired = kd_sources.state == KD_SOURCE_OPEN &&",
+            "acquired = kd_sources.state != KD_SOURCE_RETIRED &&",
         ),
         "missing-direct-string-feature": (
             "caps.features |= KD_JIT_CAP_DIRECT_STRINGS;",

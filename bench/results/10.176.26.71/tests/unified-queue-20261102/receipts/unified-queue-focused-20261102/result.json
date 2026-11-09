@@ -1,0 +1,100 @@
+{
+  "rwsem_result": {
+    "binaries": {
+      "source/kernel_module/kdlock_km.ko": "5e5aa30170191b2ac9713c770e2225b41e1c6466ecb76edc9ae24d4912db5a1a",
+      "source/tests/kernel/rwsem/rwsem_probe.ko": "77f15c1cb2a8dbe605f4917607e01f2d23c3d536546dcc25f6793c1a71d070c3"
+    },
+    "drained": true,
+    "jit_bodies": 0,
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "passed": true,
+    "results": [
+      {
+        "api_checks": 17,
+        "cancellation_checks": 10,
+        "colocated": 1,
+        "downgrade_checks": 1,
+        "errors": 0,
+        "execution": "local",
+        "gate_signal": {
+          "cases": 3,
+          "errors": 0,
+          "fatal_cancel": 2,
+          "idle": 1,
+          "interruptible_cancel": 1,
+          "nonfatal_wait": 1,
+          "osq_observed": 3,
+          "scoped_retired": 3
+        },
+        "idle": 1,
+        "late_reader_slept": 1,
+        "outer_readers_slept": 2,
+        "outer_writer_slept": 1,
+        "publication_checks": 3,
+        "readers_slept": 2,
+        "writer_slept": 1
+      }
+    ],
+    "snapshot_tag": "kdlock-builddisk-clean-20261031"
+  },
+  "rwsem_returncode": 0,
+  "rwsem_stderr": "",
+  "rwsem_stdout": "PASS: sleeping readers, ordinary/outer writer admission, same-CPU progress, trylocks, downgrade before publication, cancellation, drain and scoped gate signals\n",
+  "units": [
+    {
+      "driver": "mutex/test_wait_queue.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_wait_queue.log",
+      "returncode": 0,
+      "tail": "PASS production common queue: 14 topology checks; deterministic primitives only\n"
+    },
+    {
+      "driver": "mutex/test_mutex_head.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_mutex_head.log",
+      "returncode": 1,
+      "tail": "utation detected: terminal-head-not-retired\ncommon queue mutation detected: head-successor-lost\nIn file included from /root/host_fs/kdlock/tests/unit/mutex/wait_queue_fixture.c:41,\n                 from /root/host_fs/kdlock/tests/unit/mutex/mutex_head_fixture.c:3:\n/tmp/kd-wait-queue-b9kw59bp/wait_queue_production.h: In function \u2018kd_wait_find_locked\u2019:\n/tmp/kd-wait-queue-b9kw59bp/wait_queue_production.h:388:63: error: unused parameter \u2018generation\u2019 [-Werror=unused-parameter]\n  388 |                                           void *identity, u64 generation)\n      |                                                           ~~~~^~~~~~~~~~\ncc1: all warnings being treated as errors\nTraceback (most recent call last):\n  File \"/root/host_fs/kdlock/tests/unit/run.py\", line 46, in <module>\n    main()\n    ~~~~^^\n  File \"/root/host_fs/kdlock/tests/unit/run.py\", line 42, in main\n    runpy.run_path(str(path), run_name=\"__main__\")\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen runpy>\", line 287, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/host_fs/kdlock/tests/unit/mutex/test_mutex_head.py\", line 30, in <module>\n    main()\n    ~~~~^^\n  File \"/root/host_fs/kdlock/tests/unit/mutex/test_mutex_head.py\", line 26, in main\n    run_cases(head_only=True, mutations=mutations)\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/host_fs/kdlock/tests/unit/mutex/test_wait_queue.py\", line 44, in run_cases\n    subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-UNDEBUG',\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        '-I', str(path), str(ROOT / 'tests/unit/mutex' / fixture),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        '-o', str(binary)], check=True, timeout=30)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.14/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-UNDEBUG', '-I', '/tmp/kd-wait-queue-b9kw59bp', '/root/host_fs/kdlock/tests/unit/mutex/mutex_head_fixture.c', '-o', '/tmp/kd-wait-queue-b9kw59bp/old-generation-matches-reuse']' returned non-zero exit status 1.\n"
+    },
+    {
+      "driver": "mutex/test_rwsem_writer_queue.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_rwsem_writer_queue.log",
+      "returncode": 0,
+      "tail": "PASS writer queue: 82 scenarios; deterministic primitives only\nwriter queue mutation detected: nonfatal-poll-ignored\nwriter queue mutation detected: poll-budget-shortened\nwriter queue mutation detected: reservation-repeated\nwriter queue mutation detected: queued-reader-hint-ignored\nwriter queue mutation detected: unprepared-uses-phase-first\nwriter queue mutation detected: prepared-uses-gate-first\nwriter queue mutation detected: scoped-gate-ignored\nwriter queue mutation detected: unowned-phase-released\nwriter queue mutation detected: rollback-phase-leaked\nwriter queue mutation detected: rollback-before-unlock\nwriter queue mutation detected: reader-drain-skipped\nwriter queue mutation detected: timeout-treated-as-success\nwriter queue mutation detected: internal-preparation-omitted\n"
+    },
+    {
+      "driver": "mutex/test_rwsem_read_admission.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_rwsem_read_admission.log",
+      "returncode": 1,
+      "tail": "Traceback (most recent call last):\n  File \"/root/host_fs/kdlock/tests/unit/run.py\", line 46, in <module>\n    main()\n    ~~~~^^\n  File \"/root/host_fs/kdlock/tests/unit/run.py\", line 42, in main\n    runpy.run_path(str(path), run_name=\"__main__\")\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen runpy>\", line 287, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/host_fs/kdlock/tests/unit/mutex/test_rwsem_read_admission.py\", line 552, in <module>\n    main()\n    ~~~~^^\n  File \"/root/host_fs/kdlock/tests/unit/mutex/test_rwsem_read_admission.py\", line 411, in main\n    source.index('#define kd_rwsem_wait(queue, condition)')]\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: substring not found\n"
+    },
+    {
+      "driver": "mutex/test_rwsem_api.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_rwsem_api.log",
+      "returncode": 0,
+      "tail": "PASS public rwsem native facade and preparation routing\nPASS public rwsem: compiled local/prepared calls, exact unlock-before-phase release, downgrade and ABI2 endpoint\n"
+    },
+    {
+      "driver": "infrastructure/test_mmap_rwsem_generation.py",
+      "log": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-focused-20261102/test_mmap_rwsem_generation.log",
+      "returncode": 0,
+      "tail": "PASS generated MM retains local unlock/downgrade and no public delegation dependency\n"
+    }
+  ]
+}

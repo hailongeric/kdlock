@@ -117,7 +117,7 @@ def main():
         else:
             rt.command(command, out / 'production-build.log', timeout=180)
             result['production_objects'] = {n: rt.digest(private / n) for n in objects}
-        module_dir = out / 'payload'
+        module_dir = out / 'fixture'
         module_dir.mkdir()
         for p in private.iterdir():
             if p.suffix in ('.c', '.h'):
@@ -128,7 +128,7 @@ def main():
         (module_dir / 'kd_mmap_mutex_local.c').write_text(
             prepare['rename']((ROOT / 'kernel_module/kd_mutex_local.c').read_text()))
         result['module_io_bridge'] = 'maintained module resolver; no I/O operation tested'
-        for p in Path(__file__).with_name('payload').iterdir():
+        for p in Path(__file__).with_name('fixture').iterdir():
             shutil.copyfile(p, module_dir / p.name)
             inputs[str(p.relative_to(ROOT))] = rt.digest(p)
         inputs[str(Path(__file__).relative_to(ROOT))] = rt.digest(Path(__file__))

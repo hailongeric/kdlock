@@ -1,0 +1,91 @@
+{
+  "source_commit": "626bd9fb78d1b2876534dce77df8aa213cfabbb9",
+  "boot_id": "7bc570a9-f357-4dce-a165-49e6a7ffa7b5",
+  "instrumentation": "full trace; unscored",
+  "rounds_per_model": 1,
+  "workers": 2,
+  "models": {
+    "threads": {
+      "all_application_invocations_accounted": false,
+      "canceled_before_body": 0,
+      "completed_request_count": 989,
+      "delegated_execution_proved": true,
+      "downgraded_read_tails": 495,
+      "fresh_reader_drain_observed": false,
+      "physical_batch_length_measured": false,
+      "request_wall_time_unit": "monotonic kmsg timestamp ns; includes Native service waits",
+      "scope": "these diagnostic task/MM lifetimes and captured audited entries only",
+      "jit_roots": 989,
+      "jit_entries": 6233315,
+      "jit_retired": 6233315,
+      "interpreted_steps": 0,
+      "later_same_executor_writers": 480,
+      "syscall_pairs": {
+        "all_application_invocations_accounted": false,
+        "completed_pairs": 16,
+        "final_user_return_instruction_observed": false,
+        "fresh_reader_drain_observed": false,
+        "origin_wrapper_returns_observed": true,
+        "passed": true,
+        "returned_address_pairs_observed": true,
+        "sample_limit": 8,
+        "sampled_munmap_read_tails": 16,
+        "scope": "bounded exact syscall-wrapper/address pairs; application progress remains separate",
+        "vma_contents_or_structure_observed": false
+      },
+      "service_transactions": {
+        "captured_worker_roots": 991,
+        "memory_transactions": 35673,
+        "other_worker_roots": 2,
+        "primitive_transactions": 19280,
+        "scope": "complete captured worker MM roots; no expected source transaction count inferred"
+      },
+      "proof_file": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/threads/delegated-proof.json",
+        "bytes": 57011374,
+        "sha256": "7565f46fbc53a635c09d2c33b92f34466e10b23348bc18a471dd23005101f602"
+      }
+    },
+    "processes": {
+      "all_application_invocations_accounted": false,
+      "canceled_before_body": 0,
+      "completed_request_count": 2213,
+      "delegated_execution_proved": true,
+      "downgraded_read_tails": 1106,
+      "fresh_reader_drain_observed": false,
+      "physical_batch_length_measured": false,
+      "request_wall_time_unit": "monotonic kmsg timestamp ns; includes Native service waits",
+      "scope": "these diagnostic task/MM lifetimes and captured audited entries only",
+      "jit_roots": 2213,
+      "jit_entries": 11932419,
+      "jit_retired": 11932419,
+      "interpreted_steps": 0,
+      "later_same_executor_writers": 1049,
+      "syscall_pairs": {
+        "all_application_invocations_accounted": false,
+        "completed_pairs": 16,
+        "final_user_return_instruction_observed": false,
+        "fresh_reader_drain_observed": false,
+        "origin_wrapper_returns_observed": true,
+        "passed": true,
+        "returned_address_pairs_observed": true,
+        "sample_limit": 8,
+        "sampled_munmap_read_tails": 16,
+        "scope": "bounded exact syscall-wrapper/address pairs; application progress remains separate",
+        "vma_contents_or_structure_observed": false
+      },
+      "service_transactions": {
+        "captured_worker_roots": 2215,
+        "memory_transactions": 69992,
+        "other_worker_roots": 2,
+        "primitive_transactions": 25080,
+        "scope": "complete captured worker MM roots; no expected source transaction count inferred"
+      },
+      "proof_file": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/reached-mm-indexed-jit-proof-20261104/processes/delegated-proof.json",
+        "bytes": 101297706,
+        "sha256": "f44b3d7ab78099f67f816f08d499c5e46c97cb8dc1edf9f3fc916e2e66569298"
+      }
+    }
+  }
+}

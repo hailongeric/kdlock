@@ -1,0 +1,497 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/* Actual queue/admission/owner attempts with deterministic primitive services.
+ * No translated body, remote executor or concurrent scheduler is modeled. */
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef long atomic_long_t;
+typedef int atomic_t;
+typedef struct { bool valid, held; } raw_spinlock_t;
+struct optimistic_spin_queue { int tail; };
+struct wake_q_node { struct wake_q_node *next; };
+struct task_struct {
+	struct wake_q_node wake_q;
+	bool ordinary, fatal;
+	unsigned int refs, wakes;
+};
+struct wake_q_head { struct wake_q_node *first, **lastp; };
+#define U64_MAX UINT64_MAX
+#define TASK_RUNNING 0U
+#define TASK_UNINTERRUPTIBLE 1U
+#define TASK_INTERRUPTIBLE 2U
+#define TASK_KILLABLE 4U
+#define ERESTARTSYS 512
+#define WAKE_Q_TAIL ((struct wake_q_node *)1UL)
+#define DEFINE_WAKE_Q(name) struct wake_q_head name = { WAKE_Q_TAIL, &(name).first }
+#define __aligned(n) __attribute__((aligned(n)))
+#define ATOMIC_INIT(n) (n)
+#define ATOMIC_LONG_INIT(n) (n)
+#define OSQ_LOCK_UNLOCKED { 0 }
+#define __RAW_SPIN_LOCK_UNLOCKED(name) { true, false }
+#define BUG_ON(value) assert(!(value))
+#define BUG() assert(false)
+#define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
+#define WRITE_ONCE(value, next) __atomic_store_n(&(value), (next), __ATOMIC_RELAXED)
+#define smp_store_release(ptr, value) __atomic_store_n((ptr), (value), __ATOMIC_RELEASE)
+#define lockdep_assert_held(guard) assert((guard)->valid && (guard)->held)
+#define DEFINE_PER_CPU(type, name) type name
+#define this_cpu_ptr(ptr) (ptr)
+#define cmpxchg_relaxed(ptr, old, next) ({ \
+	__typeof__(*(ptr)) expected = (old); \
+	__atomic_compare_exchange_n((ptr), &expected, (next), false, \
+				   __ATOMIC_RELAXED, __ATOMIC_RELAXED); expected; })
+#define cmpxchg(ptr, old, next) ({ \
+	__typeof__(*(ptr)) expected = (old); \
+	__atomic_compare_exchange_n((ptr), &expected, (next), false, \
+				   __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST); expected; })
+static bool irq_disabled;
+static unsigned int pins, held_guards, pauses, schedules, cases, head_wakes;
+static unsigned int scheduler_state;
+static struct task_struct origin, other_origin, executor, holder;
+static struct task_struct *current;
+#define local_irq_save(flags) do { (flags) = irq_disabled; irq_disabled = true; } while (0)
+#define local_irq_restore(flags) do { irq_disabled = (flags); } while (0)
+static void preempt_disable(void) { ++pins; }
+static void preempt_enable(void) { assert(pins); --pins; }
+static void smp_mb__before_atomic(void) { __atomic_thread_fence(__ATOMIC_SEQ_CST); }
+static bool signal_pending_state(unsigned int state, struct task_struct *task)
+{ return state == TASK_INTERRUPTIBLE ? task->ordinary || task->fatal : state == TASK_KILLABLE && task->fatal; }
+static bool signal_pending(struct task_struct *task) { return task->ordinary || task->fatal; }
+static void get_task_struct(struct task_struct *task) { assert(task->refs); ++task->refs; }
+static void raw_spin_lock_init(raw_spinlock_t *guard) { *guard = (raw_spinlock_t) { true, false }; }
+static unsigned long _raw_spin_lock_irqsave(raw_spinlock_t *guard)
+{
+	unsigned long old = irq_disabled;
+	assert(guard->valid && !guard->held);
+	irq_disabled = true; guard->held = true; ++held_guards;
+	return old;
+}
+static void _raw_spin_unlock_irqrestore(raw_spinlock_t *guard, unsigned long flags)
+{
+	assert(guard->valid && guard->held && held_guards && irq_disabled);
+	guard->held = false; --held_guards; irq_disabled = flags;
+}
+static void wake_up_q(struct wake_q_head *wake)
+{
+	struct wake_q_node *node = wake->first;
+	assert(!held_guards);
+	while (node != WAKE_Q_TAIL) {
+		struct wake_q_node *next = node->next;
+		struct task_struct *task = (void *)((char *)node - offsetof(struct task_struct, wake_q));
+		assert(task->refs > 1); node->next = NULL; --task->refs; ++task->wakes; node = next;
+	}
+	wake->first = WAKE_Q_TAIL; wake->lastp = &wake->first;
+}
+static long atomic_long_read(const atomic_long_t *p) { return READ_ONCE(*p); }
+static inline long atomic_long_read_acquire(const atomic_long_t *p)
+{ return __atomic_load_n(p, __ATOMIC_ACQUIRE); }
+static long atomic_long_cmpxchg(atomic_long_t *p, long old, long next)
+{ return cmpxchg(p, old, next); }
+static long atomic_long_xchg(atomic_long_t *p, long next)
+{ return __atomic_exchange_n(p, next, __ATOMIC_SEQ_CST); }
+static long atomic_long_inc_return(atomic_long_t *p)
+{ return __atomic_add_fetch(p, 1, __ATOMIC_SEQ_CST); }
+static long atomic_long_dec_return(atomic_long_t *p)
+{ return (long)__atomic_sub_fetch(p, 1, __ATOMIC_SEQ_CST); }
+static bool atomic_long_dec_and_test(atomic_long_t *p)
+{ return atomic_long_dec_return(p) == 0; }
+static void atomic_long_or(unsigned long bits, atomic_long_t *p) { *p |= bits; }
+static void atomic_long_andnot(unsigned long bits, atomic_long_t *p) { *p &= ~bits; }
+static bool atomic_long_try_cmpxchg_acquire(atomic_long_t *p, unsigned long *old, unsigned long next)
+{ return __atomic_compare_exchange_n(p, old, next, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED); }
+static bool atomic_long_try_cmpxchg_release(atomic_long_t *p, unsigned long *old, unsigned long next)
+{ return __atomic_compare_exchange_n(p, old, next, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED); }
+static void might_sleep(void) { assert(!held_guards && !pins); }
+static void set_current_state(unsigned int state) { scheduler_state = state; }
+static void __set_current_state(unsigned int state) { scheduler_state = state; }
+static bool need_resched(void) { return false; }
+static void cpu_relax(void) { assert(++pauses < 100); }
+static void (*schedule_hook)(void);
+static long schedule_timeout(unsigned long ticks)
+{
+	assert(ticks == 1 && !held_guards && !pins && ++schedules < 3);
+	if (schedule_hook)
+		schedule_hook();
+	return 0;
+}
+
+#include "admission_types.h"
+static struct kd_wait_queue kd_mutex_wait_queue(struct kd_mutex *lock)
+{ return kd_wait_queue_view(&lock->wait_lock, &lock->wait_head); }
+#define KD_WAITERS 1UL
+#define KD_HANDOFF 2UL
+#define KD_PICKUP 4UL
+#define KD_FLAGS 7UL
+#include "admission_physical.h"
+static void kd_mutex_wake_head_locked(struct kd_mutex *lock)
+{ lockdep_assert_held(&lock->wait_lock); ++head_wakes; }
+static void kd_mutex_local_unlock(struct kd_mutex *lock)
+{
+	assert(!held_guards && (lock->owner & ~KD_FLAGS) == (unsigned long)current);
+	assert(!(lock->owner & KD_PICKUP));
+	lock->owner &= KD_WAITERS;
+}
+static void kd_mutex_api_unlock(struct kd_mutex *lock) { kd_mutex_local_unlock(lock); }
+#include "admission_production.h"
+
+enum kd_rwsem_condition_kind { KD_RWSEM_CONDITION_READ };
+static bool kd_rwsem_condition_ready(struct kd_rwsem *sem,
+				    enum kd_rwsem_condition_kind kind, bool guarded)
+{
+	assert(kind == KD_RWSEM_CONDITION_READ);
+	if (guarded)
+		lockdep_assert_held(&sem->gate.wait_lock);
+	if (sem->admission)
+		return false;
+	atomic_long_inc_return(&sem->readers);
+	return true;
+}
+#include "reader_wait_production.h"
+#include "reader_release_production.h"
+
+struct invocation { struct kd_wait_request request; struct kd_admission admission; };
+static u64 next_generation;
+static void reset_tasks(void)
+{
+	assert(!held_guards && !pins && !irq_disabled);
+	assert(!origin.refs || (origin.refs == 1 && other_origin.refs == 1 &&
+			       executor.refs == 1 && holder.refs == 1));
+	origin = other_origin = executor = holder = (struct task_struct) { .refs = 1 };
+	current = &executor; pauses = schedules = 0; scheduler_state = TASK_RUNNING;
+	schedule_hook = NULL;
+}
+static void init_sem(struct kd_rwsem *sem)
+{ memset(sem, 0, sizeof(*sem)); raw_spin_lock_init(&sem->gate.wait_lock); }
+static void init_mutex(struct kd_mutex *lock)
+{ memset(lock, 0, sizeof(*lock)); raw_spin_lock_init(&lock->wait_lock); }
+static void init_invocation(struct invocation *item, void *object, enum kd_admission_kind kind,
+			   struct task_struct *logical, unsigned int state, bool delegate)
+{
+	memset(item, 0, sizeof(*item));
+	kd_wait_request_init(&item->request, &item->request, ++next_generation,
+		logical, delegate ? logical : current, state, delegate, NULL);
+	kd_admission_init(&item->admission, &item->request, kind, object, NULL);
+}
+static enum kd_wait_decision publish_step(struct invocation *item)
+{
+	struct kd_admission *a = &item->admission;
+	unsigned long flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
+	kd_admission_publish_locked(a);
+	enum kd_wait_decision result = kd_admission_step_locked(a);
+	_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
+	return result;
+}
+static void retain_execution(struct invocation *item)
+{
+	struct kd_admission *a = &item->admission;
+	unsigned long flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
+	kd_admission_transfer_owned_locked(a);
+	raw_spinlock_t *old = kd_wait_rebind_locked(&item->request, a->retained_guard);
+	_raw_spin_unlock_irqrestore(old, flags);
+	flags = _raw_spin_lock_irqsave(a->retained_guard);
+	kd_wait_set_state_locked(&item->request, KD_WAIT_EXECUTING);
+	_raw_spin_unlock_irqrestore(a->retained_guard, flags);
+}
+static void finish_execution(struct invocation *item)
+{
+	struct kd_admission *a = &item->admission;
+	kd_admission_release(a);
+	unsigned long flags = _raw_spin_lock_irqsave(a->retained_guard);
+	kd_wait_set_state_locked(&item->request, KD_WAIT_RELEASED);
+	kd_wait_set_state_locked(&item->request, KD_WAIT_RETURN_ACK);
+	kd_wait_set_state_locked(&item->request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(a->retained_guard, flags);
+}
+static void finish_cancel(struct invocation *item)
+{
+	assert(item->request.state == KD_WAIT_CANCEL_ACK && !item->admission.committed);
+	assert(!item->request.memberships && !item->request.acquisition &&
+	       !item->request.selection && !item->request.cleanup);
+	assert(item->request.guard == item->admission.retained_guard);
+	unsigned long flags = _raw_spin_lock_irqsave(item->request.guard);
+	kd_wait_set_state_locked(&item->request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(item->request.guard, flags);
+}
+static void test_ready_before_fatal(void)
+{
+	for (unsigned int kind = 0; kind < 2; ++kind) {
+		struct kd_rwsem sem; struct invocation item;
+		reset_tasks(); init_sem(&sem); origin.fatal = true;
+		init_invocation(&item, kind ? (void *)&sem : (void *)&sem.gate,
+			kind ? KD_ADMISSION_RWSEM_WRITE : KD_ADMISSION_MUTEX,
+			&origin, TASK_KILLABLE, true);
+		sem.gate.owner = (unsigned long)&origin | KD_PICKUP | KD_WAITERS;
+		assert(publish_step(&item) == KD_WAIT_GRANTED);
+		assert(item.admission.committed && item.request.state == KD_WAIT_ACQUIRED);
+		assert((sem.gate.owner & ~KD_FLAGS) == (unsigned long)current && !(sem.gate.owner & KD_PICKUP));
+		if (kind) assert((long)sem.admission == -1 && sem.selected_identity == item.request.identity);
+		retain_execution(&item); finish_execution(&item);
+		assert(!sem.admission && !sem.gate.owner && !sem.gate.wait_head); ++cases;
+	}
+}
+static void signal_origin(void *argument)
+{
+	struct invocation *item = argument;
+	assert((item->admission.gate->owner & ~KD_FLAGS) == (unsigned long)&holder);
+	assert(scheduler_state == TASK_UNINTERRUPTIBLE);
+	item->request.logical_origin->fatal = true;
+}
+static void test_queued_return_before_holder(void)
+{
+	struct kd_mutex lock; struct invocation item; unsigned int prefix = 0;
+	reset_tasks(); init_mutex(&lock); lock.owner = (unsigned long)&holder;
+	init_invocation(&item, &lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, true);
+	int result = kd_admission_wait(&item.admission, signal_origin, &item);
+	if (!result) ++prefix;
+	assert(result == -EINTR && !prefix && !lock.wait_head);
+	assert((lock.owner & ~KD_FLAGS) == (unsigned long)&holder);
+	assert(!item.admission.gate_held && !schedules); finish_cancel(&item);
+	current = &holder; kd_mutex_local_unlock(&lock); current = &executor;
+	assert(!lock.owner); ++cases;
+}
+static void test_reader_pickup_cancel_and_successor(void)
+{
+	struct kd_rwsem sem; struct invocation item, next; unsigned int prefix = 0;
+	reset_tasks(); init_sem(&sem); sem.readers = 1; origin.fatal = true;
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE, &origin, TASK_KILLABLE, true);
+	init_invocation(&next, &sem, KD_ADMISSION_RWSEM_WRITE, &other_origin, TASK_KILLABLE, true);
+	sem.gate.owner = (unsigned long)&origin | KD_PICKUP | KD_WAITERS;
+	unsigned long flags = _raw_spin_lock_irqsave(&sem.gate.wait_lock);
+	kd_admission_publish_locked(&item.admission); kd_admission_publish_locked(&next.admission);
+	assert(kd_admission_step_locked(&item.admission) == KD_WAIT_CLEANUP_REQUIRED);
+	assert(item.request.state == KD_WAIT_CANCELING && !item.admission.committed);
+	assert(item.request.cleanup == &item.admission.cleanup && item.admission.phase_held);
+	assert(sem.selected_identity == item.request.identity && sem.phase_generation == item.admission.phase_generation);
+	assert(!kd_wait_cancel_ack_locked(&item.request) && sem.reader_drain.head == &item.admission.condition);
+	u64 generation = sem.phase_generation;
+	_raw_spin_unlock_irqrestore(&sem.gate.wait_lock, flags);
+	int result = kd_admission_wait(&item.admission, NULL, NULL);
+	if (!result) ++prefix;
+	assert(result == -EINTR && !prefix && sem.readers == 1 && !sem.admission);
+	assert(sem.selected_kind == KD_RWSEM_PHASE_NONE && !sem.selected_owner && !sem.selected_identity);
+	assert(sem.phase_generation == generation && !sem.reader_drain.head);
+	assert(sem.gate.wait_head == &next.admission.member && next.request.state == KD_WAIT_QUEUED);
+	finish_cancel(&item);
+	flags = _raw_spin_lock_irqsave(&sem.gate.wait_lock);
+	assert(kd_admission_step_locked(&next.admission) == KD_WAIT_PENDING);
+	assert(next.admission.phase_held && sem.phase_generation == generation + 1);
+	assert(sem.selected_identity == next.request.identity && sem.readers == 1);
+	sem.readers = 0;
+	assert(kd_admission_step_locked(&next.admission) == KD_WAIT_GRANTED);
+	_raw_spin_unlock_irqrestore(&sem.gate.wait_lock, flags);
+	retain_execution(&next); finish_execution(&next); ++cases;
+}
+static void test_origin_signals(void)
+{
+	for (unsigned int interruptible = 0; interruptible < 2; ++interruptible) {
+		struct kd_rwsem sem; struct invocation item;
+		reset_tasks(); init_sem(&sem); sem.readers = 1;
+		origin.ordinary = true; executor.fatal = true;
+		init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE, &origin,
+			interruptible ? TASK_INTERRUPTIBLE : TASK_KILLABLE, true);
+		enum kd_wait_decision decision = publish_step(&item);
+		if (!interruptible) {
+			assert(decision == KD_WAIT_PENDING && item.request.state == KD_WAIT_SELECTED_DRAINING);
+			origin.fatal = true;
+		} else assert(decision == KD_WAIT_CLEANUP_REQUIRED);
+		assert(kd_admission_wait(&item.admission, NULL, NULL) == -EINTR);
+		assert(sem.readers == 1 && !sem.admission && !sem.gate.owner);
+		finish_cancel(&item); ++cases;
+	}
+}
+static void test_nested_identity_and_parent(void)
+{
+	struct kd_mutex parent_lock, child_lock; struct invocation parent, child;
+	reset_tasks(); init_mutex(&parent_lock); init_mutex(&child_lock);
+	init_invocation(&parent, &parent_lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, true);
+	assert(publish_step(&parent) == KD_WAIT_GRANTED); retain_execution(&parent);
+	init_invocation(&child, &child_lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, false);
+	child.request.context = &parent;
+	assert(child.request.identity != parent.request.identity && child.request.generation != parent.request.generation);
+	child_lock.owner = (unsigned long)&holder; origin.fatal = true;
+	assert(kd_admission_wait(&child.admission, NULL, NULL) == -EINTR); finish_cancel(&child);
+	assert(parent.request.state == KD_WAIT_EXECUTING && parent.admission.committed);
+	assert((unsigned long)parent_lock.owner == (unsigned long)current &&
+	       (unsigned long)child_lock.owner == (unsigned long)&holder);
+	assert(child.request.context == &parent); /* Runtime anchor references remain a separate check. */
+	finish_execution(&parent);
+	current = &holder; kd_mutex_local_unlock(&child_lock); current = &executor;
+	assert(!parent_lock.owner && !child_lock.owner); ++cases;
+}
+static void test_local_child_and_early_parent_release(void)
+{
+	struct kd_mutex parent_lock, child_lock; struct invocation parent, child;
+	reset_tasks(); init_mutex(&parent_lock); init_mutex(&child_lock);
+	init_invocation(&parent, &parent_lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, true);
+	assert(publish_step(&parent) == KD_WAIT_GRANTED); retain_execution(&parent);
+	init_invocation(&child, &child_lock, KD_ADMISSION_MUTEX, &origin, TASK_KILLABLE, false);
+	current = &holder;
+	assert(publish_step(&child) == KD_WAIT_PENDING);
+	assert(child.request.state == KD_WAIT_QUEUED && !child.request.selection);
+	assert(!(child_lock.owner & ~KD_FLAGS) && (child_lock.owner & KD_WAITERS));
+	current = &executor; origin.fatal = true;
+	assert(!kd_admission_wait(&child.admission, NULL, NULL)); retain_execution(&child);
+	finish_execution(&parent);
+	assert(child.request.state == KD_WAIT_EXECUTING && child.admission.committed);
+	assert((unsigned long)child_lock.owner == (unsigned long)current);
+	finish_execution(&child); assert(!parent_lock.owner && !child_lock.owner); ++cases;
+}
+
+static struct kd_rwsem *reader_tick_sem;
+static bool reader_signal_at_open;
+static void reader_phase_open(void)
+{
+	assert(reader_tick_sem->phase_wait.readers_waiting == 1 &&
+	       reader_tick_sem->phase_wait.head && reader_tick_sem->admission == -1);
+	reader_tick_sem->admission = 0;
+	if (reader_signal_at_open)
+		current->fatal = true;
+	schedule_hook = NULL;
+}
+
+static void test_reader_retry_and_cancellation(void)
+{
+	for (unsigned int mode = 0; mode < 4; ++mode) {
+		struct kd_rwsem sem;
+		reset_tasks(); init_sem(&sem); current = &origin; sem.admission = -1;
+		reader_tick_sem = &sem; reader_signal_at_open = mode == 2;
+		origin.fatal = mode == 1; origin.ordinary = mode == 3;
+		schedule_hook = reader_phase_open;
+		long result = kd_rwsem_wait_condition(&sem, &sem.phase_wait,
+			KD_RWSEM_CONDITION_READ, mode == 3 ? TASK_INTERRUPTIBLE : TASK_KILLABLE, false);
+		assert(!sem.phase_wait.head && !sem.phase_wait.readers_waiting);
+		if (mode == 1 || mode == 3)
+			assert(result == -ERESTARTSYS && !sem.readers && !schedules);
+		else
+			assert(!result && sem.readers == 1 && schedules == 1);
+		++cases;
+	}
+}
+
+static void test_queued_reader_precedes_new_writer_phase(void)
+{
+	struct kd_rwsem sem; struct invocation writer;
+	struct kd_wait_request reader; struct kd_wait_node member;
+	reset_tasks(); init_sem(&sem);
+	init_invocation(&writer, &sem, KD_ADMISSION_RWSEM_WRITE, &origin, TASK_KILLABLE, true);
+	struct kd_wait_queue queue = kd_wait_queue_view(&sem.gate.wait_lock, &sem.phase_wait.head);
+	unsigned long flags = _raw_spin_lock_irqsave(queue.guard);
+	kd_wait_request_init(&reader, &reader, ++next_generation, &other_origin,
+		&other_origin, TASK_KILLABLE, false, &sem);
+	kd_wait_node_init(&member, &reader, KD_WAIT_CONDITION);
+	kd_wait_link_locked(&queue, &member); ++sem.phase_wait.readers_waiting;
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+	assert(publish_step(&writer) == KD_WAIT_PENDING);
+	assert(writer.admission.gate_held && !writer.admission.phase_held && !sem.admission);
+	flags = _raw_spin_lock_irqsave(queue.guard);
+	assert(kd_rwsem_condition_ready(&sem, KD_RWSEM_CONDITION_READ, true));
+	--sem.phase_wait.readers_waiting; kd_wait_unlink_locked(&queue, &member);
+	kd_wait_set_state_locked(&reader, KD_WAIT_RETIRED);
+	assert(kd_admission_step_locked(&writer.admission) == KD_WAIT_PENDING);
+	assert(writer.admission.phase_held && sem.admission == -1 && sem.readers == 1);
+	atomic_long_dec_return(&sem.readers);
+	assert(kd_admission_step_locked(&writer.admission) == KD_WAIT_GRANTED);
+	_raw_spin_unlock_irqrestore(queue.guard, flags);
+	retain_execution(&writer); finish_execution(&writer); ++cases;
+}
+
+static void test_native_read_custody_keeps_real_credit(void)
+{
+	struct kd_rwsem sem;
+	struct invocation item;
+	unsigned long flags;
+
+	reset_tasks(); init_sem(&sem);
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&item) == KD_WAIT_GRANTED);
+	retain_execution(&item);
+	kd_admission_downgrade(&item.admission);
+	assert(sem.readers == 1 && !sem.admission && !sem.gate.owner);
+	/* Extra anonymous credits must not be consumed by custody bookkeeping. */
+	atomic_long_inc_return(&sem.readers);
+	atomic_long_inc_return(&sem.readers);
+	kd_admission_read_to_native(&item.admission);
+	assert(sem.readers == 3 && item.admission.read_state == KD_ADMISSION_READ_NATIVE);
+	assert(item.request.state == KD_WAIT_EXECUTING && item.admission.committed);
+	assert(!item.admission.gate_held && !item.admission.phase_held);
+	/* Translated custody can retire while all three real credits remain live.
+	 * This is deterministic accounting evidence, not a concurrent token test. */
+	flags = _raw_spin_lock_irqsave(item.request.guard);
+	kd_wait_handoff_locked(&item.request);
+	kd_wait_set_state_locked(&item.request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(item.request.guard, flags);
+	assert(sem.readers == 3);
+	memset(&item, 0xa5, sizeof(item));
+	/* Execute the production APIs after the retired metadata is unavailable.
+	 * The ordinary non-owner release consumes one credit in atomic context. */
+	current = &other_origin;
+	irq_disabled = true; pins = 1;
+	kd_up_read_non_owner(&sem);
+	assert(sem.readers == 2 && irq_disabled && pins == 1 && !held_guards);
+	irq_disabled = false; pins = 0;
+	current = &origin;
+	kd_up_read(&sem);
+	assert(sem.readers == 1);
+	kd_up_read(&sem);
+	assert(!sem.readers && !schedules);
+	++cases;
+}
+
+static void test_native_read_custody_keeps_nested_writer_on_executor(void)
+{
+	struct kd_rwsem sem;
+	struct kd_mutex nested;
+	struct invocation outer, child;
+	unsigned long flags;
+
+	reset_tasks(); init_sem(&sem); init_mutex(&nested);
+	init_invocation(&outer, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&outer) == KD_WAIT_GRANTED);
+	retain_execution(&outer);
+	init_invocation(&child, &nested, KD_ADMISSION_MUTEX,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&child) == KD_WAIT_GRANTED);
+	retain_execution(&child);
+	kd_admission_downgrade(&outer.admission);
+	kd_admission_read_to_native(&outer.admission);
+	assert(sem.readers == 1 && child.admission.gate_held);
+	assert(child.admission.physical_owner == &executor);
+	assert((nested.owner & ~KD_FLAGS) == (unsigned long)&executor);
+	finish_execution(&child);
+	assert(!nested.owner && sem.readers == 1);
+	flags = _raw_spin_lock_irqsave(outer.request.guard);
+	kd_wait_handoff_locked(&outer.request);
+	kd_wait_set_state_locked(&outer.request, KD_WAIT_RETIRED);
+	_raw_spin_unlock_irqrestore(outer.request.guard, flags);
+	assert(sem.readers == 1);
+	memset(&outer, 0xa5, sizeof(outer));
+	current = &origin;
+	kd_up_read_non_owner(&sem);
+	assert(!sem.readers && !schedules);
+	++cases;
+}
+
+int main(void)
+{
+	/* Subject mutations must first reach a bounded direct decision, rather
+	 * than enter a deliberately broken cancellation wait indefinitely. */
+	test_ready_before_fatal(); test_origin_signals();
+	test_queued_return_before_holder(); test_reader_pickup_cancel_and_successor();
+	test_nested_identity_and_parent(); test_local_child_and_early_parent_release();
+	test_reader_retry_and_cancellation(); test_queued_reader_precedes_new_writer_phase();
+	test_native_read_custody_keeps_real_credit();
+	test_native_read_custody_keeps_nested_writer_on_executor();
+	assert(!held_guards && !pins && !irq_disabled && scheduler_state == TASK_RUNNING);
+	assert(origin.refs == 1 && other_origin.refs == 1 && executor.refs == 1 && holder.refs == 1);
+	printf("PASS production canonical admission: %u cases; actual queue, phase, PICKUP and cancellation paths; deterministic primitives only\n", cases);
+	return 0;
+}

@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/run.py", line 46, in <module>
+    main()
+    ~~~~^^
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/run.py", line 42, in main
+    runpy.run_path(str(path), run_name="__main__")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/codegen/test_segment_codegen.py", line 266, in <module>
+    main()
+    ~~~~^^
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/codegen/test_segment_codegen.py", line 261, in main
+    check_rip_gs_execution()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/codegen/test_segment_codegen.py", line 110, in check_rip_gs_execution
+    require(status == 0, log)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/root/kdlock-inputs/spill-87430984/tests/unit/codegen/test_segment_codegen.py", line 31, in require
+    raise AssertionError(message)
+AssertionError: [KD_JIT][WARN] reason=TRUSTED_SOURCE pid=0 entry="0x1000" rip="0x1000" inst="<context symbol resolution>" action="translate_without_safety_analysis" detail="kernel and module instructions are trusted by caller policy; context/value admission and entry-input proof are bypassed; compiler clobber-entry inputs are assumed; source leases, lowering, return routing and lock ownership remain"
+[KD_JIT][WARN] reason=CONTEXT_NATIVE_ONLY pid=0 entry="0x1000" rip="0x1000" inst="<context symbol resolution>" action="reject_entry" detail="clobber entry symbols unavailable"
+

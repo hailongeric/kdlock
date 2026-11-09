@@ -1,0 +1,13 @@
+{
+  "purpose": "Replace an overbroad historical-content preflight with source-file verification",
+  "guest_output": "/mnt/kdlock-builds2/kdlock-batch-checks-ge6xae5w",
+  "controller_pid": 11831,
+  "controller_start_ticks": 14420882,
+  "signals_sent": ["SIGINT", "SIGTERM"],
+  "pid_absent_verified": true,
+  "retained_checks": [],
+  "work_copy_created": false,
+  "source_copy_created": true,
+  "result": "Interrupted before builds and tests; no pass is claimed",
+  "cleanup_performed": false
+}

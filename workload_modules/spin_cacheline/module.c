@@ -10,7 +10,7 @@
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
 #include "api.h"
-#include "payload.h"
+#include "body.h"
 #include "post_work.h"
 
 #define SC_DEVICE_NAME "spin_cacheline"

@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "rmmod",
+    "kdlock_km"
+  ],
+  "cwd": "/root/kdlock-inputs/shape-4506f6e4",
+  "pid": 2514,
+  "started_ns": 460058403991,
+  "timeout_seconds": 30
+}

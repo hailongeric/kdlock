@@ -4,6 +4,7 @@
  * native service primitives and locks are substitutes, not kernel-JIT evidence. */
 #include <errno.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,10 @@ typedef int atomic_t;
 #define S64_MAX LLONG_MAX
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
+/* Generic entry cases execute one thread; publication cases schedule two
+ * actors through the real gate. Frame accessors need these declarations here. */
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, value) ((x) = (value))
 
 /* Kernel asm/unaligned.h uses packed scalar loads. Keep this userspace
  * substitute independent of host alignment and byte order, reading four bytes. */
@@ -41,6 +46,19 @@ typedef struct {
 	int value;
 } raw_spinlock_t;
 #include "frame_types.h"
+
+/* Query-only declaration for production branches outside this fixture's
+ * legacy frame scope. No retained continuation is constructed here; its real
+ * ownership and service transactions have separate live fixtures. */
+struct kd_exec_continuation {
+	enum kd_exec_cont_state state;
+	struct task_struct *executor;
+	bool source_lease;
+	const struct kd_exec_service_ops *service_ops;
+	void *service_scope;
+	bool body_reported;
+	struct { enum kd_exec_service_api api; } service_call;
+};
 
 static unsigned long stack[16];
 static struct task_struct executor = { .pid = 1 },
@@ -176,6 +194,12 @@ static int kd_source_pin_target(unsigned long address)
 	source_calls++;
 	return !source_fail_at || source_fail_at == source_calls ? source_error : 0;
 }
+static unsigned long source_range_size;
+static int kd_source_pin_text_range(unsigned long address, unsigned long size)
+{
+	source_range_size = size;
+	return kd_source_pin_target(address);
+}
 static int kd_jit_hl_fault_after_known_call;
 static unsigned long kd_hostcall_exits, kd_hostcall_executed,
 	kd_hostcall_resumed;
@@ -183,7 +207,6 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 	kd_hostcall_failed;
 static unsigned long kd_direct_strcmp, kd_direct_pad;
 
-#define READ_ONCE(x) (x)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 /* Count the real status acquire separately from the frame-state reads. */
 #define smp_load_acquire(p)                                                \
@@ -245,6 +268,31 @@ static unsigned long kd_direct_strcmp, kd_direct_pad;
 			STOP_MUTATION();                                \
 		}                                                       \
 	} while (0)
+
+/* These retained-runtime joins must remain unreachable for every legacy
+ * scenario and negative control below. A call is a fixture failure, never a
+ * fabricated validation or service result. */
+static bool kd_exec_cont_frame_valid(const struct kd_exec_frame *frame)
+{
+	(void)frame;
+	CHECK(false);
+	return false;
+}
+
+static int kd_exec_cont_memory_prepare(struct kd_exec_frame *frame)
+{
+	(void)frame;
+	CHECK(false);
+	return -EOPNOTSUPP;
+}
+
+static int kd_jit_service_control(struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	(void)frame;
+	(void)regs;
+	CHECK(false);
+	return -EOPNOTSUPP;
+}
 
 /* The backend handshake is tested separately. This double changes one scalar
  * result only when it reports execution; consumers must retain that effect. */
@@ -397,12 +445,98 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 #include "hostcall_code.h"
 #include "timing_code.h"
 #pragma GCC diagnostic pop
-/* Publication is exercised by test_mutex_images; generic control/ACK routes
- * use one descriptor per fixture registry slot. */
+/* Keep generic entry doubles independent of the publication ordering cases.
+ * Those cases use the actual gate, miss receipt and immutable publisher. */
+static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];
+static struct kd_image_learning_state kd_image_learning[KD_MAX_EXE];
+static unsigned long kd_image_report_superseded;
+static atomic_t kd_code_block_gate;
+static bool publication_active;
+enum publication_order { PUBLICATION_IDLE, TERMINAL_FIRST, PUBLISHER_FIRST };
+static enum publication_order publication_order;
+static pthread_mutex_t publication_schedule = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t publication_changed = PTHREAD_COND_INITIALIZER;
+static _Thread_local bool publication_mismatch_actor;
+static _Thread_local bool publication_gate_announced;
+static bool publication_checked, publication_mismatch_waiting,
+	publication_mismatch_finished, publication_terminal_locked,
+	publication_publisher_waiting;
+
+static void publication_thread_call(int result)
+{
+	if (result) {
+		fprintf(stderr, "publication scheduling primitive failed: %d\n", result);
+		abort();
+	}
+}
+
+static int atomic_cmpxchg_acquire(atomic_t *value, int expected, int replacement)
+{
+	int observed = expected;
+
+	if (publication_order == PUBLISHER_FIRST && publication_mismatch_actor &&
+	    !publication_gate_announced) {
+		publication_gate_announced = true;
+		publication_thread_call(pthread_mutex_lock(&publication_schedule));
+		publication_mismatch_waiting = true;
+		publication_thread_call(pthread_cond_broadcast(&publication_changed));
+		publication_thread_call(pthread_mutex_unlock(&publication_schedule));
+	}
+	__atomic_compare_exchange_n(value, &observed, replacement, false,
+				    __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+	if (publication_order == TERMINAL_FIRST &&
+	    (publication_mismatch_actor || !publication_gate_announced)) {
+		publication_thread_call(pthread_mutex_lock(&publication_schedule));
+		if (publication_mismatch_actor && observed == expected) {
+			publication_terminal_locked = true;
+			publication_thread_call(pthread_cond_broadcast(&publication_changed));
+			while (!publication_publisher_waiting)
+				publication_thread_call(pthread_cond_wait(
+					&publication_changed, &publication_schedule));
+		} else if (!publication_mismatch_actor && !publication_gate_announced) {
+			publication_gate_announced = true;
+			publication_publisher_waiting = true;
+			publication_thread_call(pthread_cond_broadcast(&publication_changed));
+		}
+		publication_thread_call(pthread_mutex_unlock(&publication_schedule));
+	}
+	return observed;
+}
+
+static void publication_observe_current(void)
+{
+	if (publication_order != PUBLISHER_FIRST || publication_mismatch_actor)
+		return;
+	publication_thread_call(pthread_mutex_lock(&publication_schedule));
+	if (!publication_checked) {
+		/* The publisher owns the gate and has passed its terminal check.
+		 * Let the mismatch reach that same gate before publication continues.
+		 * A reverted ungated setter finishes instead, so it fails assertions
+		 * after both actors join rather than being detected by a timeout. */
+		publication_checked = true;
+		publication_thread_call(pthread_cond_broadcast(&publication_changed));
+		while (!publication_mismatch_waiting && !publication_mismatch_finished)
+			publication_thread_call(pthread_cond_wait(
+				&publication_changed, &publication_schedule));
+	}
+	publication_thread_call(pthread_mutex_unlock(&publication_schedule));
+}
+
+#define local_irq_save(flags) ((flags) = 0)
+#define local_irq_restore(flags) ((void)(flags))
+#define cpu_relax() __asm__ volatile("pause" ::: "memory")
+#define atomic_set_release(value, replacement) \
+	__atomic_store_n(value, replacement, __ATOMIC_RELEASE)
+#include "publication_code.h"
+
 const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
 {
 	static struct kd_jit_image image[KD_MAX_EXE];
 	struct kd_jit_image *slot = &image[exe - kd_exes];
+	if (publication_active) {
+		publication_observe_current();
+		return publication_current(exe);
+	}
 	*slot = (struct kd_jit_image){ .code = exe->code_block,
 		.entry = (struct kd_exe_info *)exe, .entry_abi = exe->entry_abi,
 		.requirements = exe->requirements, .generation = exe->generation,
@@ -417,10 +551,6 @@ void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
 	exe->tgt_addr = target;
 	exe->jump_from = from;
 	kd_exe_publish_status(exe, status);
-}
-void kd_image_disable(struct kd_exe_info *exe)
-{
-	kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
 }
 static bool is_end_point(unsigned long ip)
 {
@@ -466,6 +596,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 /* Keep independent entry, service, timing and backend cases together by purpose. */
 #include "jit_entry_scope/reset.inc"
 #include "jit_entry_scope/entry.inc"
+#include "jit_entry_scope/publication.inc"
 #include "jit_entry_scope/hostcalls.inc"
 #include "jit_entry_scope/timing.inc"
 #include "jit_entry_scope/spin.inc"
@@ -484,9 +615,12 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 
 int main(void)
 {
+	check_mismatch_publication();
 	check_native_escape();
 	check_origin_instruction();
 	check_terminal_and_indirect_calls();
+	check_retained_indirect_tails();
+	check_current_position_misses();
 	check_root_native_escape();
 	check_address_guard();
 	check_string_services();

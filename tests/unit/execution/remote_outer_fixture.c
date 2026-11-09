@@ -60,6 +60,8 @@ typedef struct qspinlock raw_spinlock_t;
 struct kd_mutex {
 	int unused;
 };
+#define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
+#define WRITE_ONCE(x, v) __atomic_store_n(&(x), (v), __ATOMIC_RELAXED)
 #include "remote_types.h"
 struct kd_spin_continuation { struct { struct kd_regs *regs_ref; } frame; };
 struct kd_spin_node { struct kd_spin_continuation *execution; };
@@ -117,8 +119,6 @@ static void publish_after(const void *address);
 			exit(2);                                            \
 		}                                                           \
 	} while (0)
-#define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
-#define WRITE_ONCE(x, v) __atomic_store_n(&(x), (v), __ATOMIC_RELAXED)
 #define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #define smp_store_release(p, v)                                   \
 	do {                                                     \

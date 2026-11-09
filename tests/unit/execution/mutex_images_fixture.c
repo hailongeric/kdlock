@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 #include "kd_image.h"
 #define KD_CODE_BLOCK_POOL 64
 #define READ_ONCE(x) (x)
@@ -45,16 +50,28 @@ static struct kd_exe_info *entry;
 static void start(unsigned long id, unsigned long generation, unsigned int req) {
  memset(&packet,0,sizeof(packet));
  packet.head=(struct kd_recv_pkt){.status_code=KD_EXE_NORMAL,.RIP=0x1000,
-  .version=KD_IMAGE_PROTOCOL,.entry_abi=2,.requirements=req,
+  .version=kd_image_protocol(req),.entry_abi=2,.requirements=req,
   .image_length=128,.upload_id=id,.base_generation=generation};
  memcpy(packet.code+9,"KDWB002",7); memcpy(packet.code+25,"KDWC002",7);
  memcpy(packet.code+41,"KDAB",4); packet.code[45]=2; packet.code[46]=2;
- packet.code[47]=req;
+ packet.code[46]=kd_image_protocol(req);
+ packet.code[47]=req & 0xff;
+ if(kd_image_protocol(req)==KD_IMAGE_PROTOCOL_SERVICE_QUEUE)
+  for(unsigned int i=0;i<4;i++) packet.code[48+i]=(req >> (8*i)) & 0xff;
 }
 static ssize_t send_bytes(size_t n) {
  ssize_t ret=kd_dev_write_locked(&upload,(const char *)&packet,sizeof(packet.head)+n);
  if(ret<0) { kd_image_discard(upload.image); upload.image=NULL; upload.covered=0; }
  return ret;
+}
+static void start_service(unsigned long id, unsigned long generation) {
+ const unsigned int req=KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_BUDGET_RESUME;
+ start(id,generation,req);
+ packet.head.version=KD_IMAGE_PROTOCOL_SERVICE_QUEUE;
+ packet.code[KD_IMAGE_VERSION_OFFSET]=KD_IMAGE_PROTOCOL_SERVICE_QUEUE;
+ packet.code[KD_IMAGE_REQUIREMENTS_OFFSET]=req & 0xff;
+ for(unsigned int i=0;i<4;i++)
+  packet.code[KD_IMAGE_FULL_REQUIREMENTS_OFFSET+i]=(req >> (8*i)) & 0xff;
 }
 int main(void) {
  for(int i=0;i<KD_MAX_EXE;i++) entries[i].status_code=KD_EXE_UNUSED;
@@ -109,7 +126,35 @@ int main(void) {
  start(10,2,KD_IMAGE_REQUIRE_NATIVE_ESCAPE); assert(send_bytes(128)>0);
  fresh.image=NULL;
  assert(kd_jit_bind_image(entry,&fresh) && fresh.image->requirements==KD_IMAGE_REQUIRE_NATIVE_ESCAPE);
- for(unsigned int gen=3;gen<64;gen++) { start(gen+10,gen,0); assert(send_bytes(128)>0); }
+ start_service(11,3); assert(send_bytes(128)>0);
+ const struct kd_jit_image *service=kd_image_current(entry);
+ assert(service->generation==4 && service->requirements==384);
+ fresh.image=NULL;
+ assert(!kd_jit_bind_image(entry,&fresh) && !fresh.image);
+ fixture_service_frame=true;
+ assert(kd_jit_bind_image(entry,&fresh) && fresh.image==service);
+ fixture_service_frame=false;
+ fresh.image=NULL;
+ start_service(12,4); packet.head.version=KD_IMAGE_PROTOCOL;
+ assert(send_bytes(128)==-EPROTO);
+ start_service(13,4); packet.code[KD_IMAGE_REQUIREMENTS_OFFSET]=0;
+ assert(send_bytes(128)==-EPROTO);
+ start_service(14,4); packet.code[KD_IMAGE_FULL_REQUIREMENTS_OFFSET+1]=0;
+ assert(send_bytes(128)==-EPROTO);
+ start_service(15,4); packet.head.image_length=63;
+ assert(send_bytes(63)==-EINVAL);
+ assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN,1,KD_IMAGE_REQUIRE_SERVICE_QUEUE));
+ assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,0,KD_IMAGE_REQUIRE_SERVICE_QUEUE));
+ assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,2,
+  KD_IMAGE_REQUIRE_SERVICE_QUEUE | KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+ /* A cold ABI2 image has a full handback word without a SERVICE_QUEUE bit. */
+ start(16,4,KD_IMAGE_REQUIRE_RETAINED_MISS); assert(send_bytes(128)>0);
+ const struct kd_jit_image *cold=kd_image_current(entry);
+ assert(cold->generation==5 && cold->requirements==KD_IMAGE_REQUIRE_RETAINED_MISS);
+ assert(packet.head.version==KD_IMAGE_PROTOCOL_SERVICE_QUEUE);
+ fresh.image=NULL;
+ assert(kd_jit_bind_image(entry,&fresh) && fresh.image==cold);
+ for(unsigned int gen=5;gen<64;gen++) { start(gen+20,gen,0); assert(send_bytes(128)>0); }
  const struct kd_jit_image *last=kd_image_current(entry);
  start(100,64,0); assert(send_bytes(128)==-ENOSPC);
  assert(kd_image_current(entry)==last && last->generation==64);

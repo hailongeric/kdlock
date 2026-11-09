@@ -1,0 +1,35 @@
+{
+  "binaries": {
+    "source/kernel_module/kdlock_km.ko": "ad47d42d0e5ae1d40106aa3ffb641869e1cbc16a18b3088d86e6b866204441ac",
+    "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "ae90867e838d018b80369824ed678bfcd0fe2b708d677b47967c1952fb7e6f3d"
+  },
+  "drained": false,
+  "error": "command exited 1: ['insmod', PosixPath('/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-local-20261102-a/source/kernel_module/kdlock_km.ko')]; see /mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/unified-queue-local-20261102-a/load-provider.log",
+  "execution": "ordinary-local",
+  "final_idle": false,
+  "jit_bodies": 0,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027",
+    "build_files": 12,
+    "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "bundle_files": 23,
+    "config": true,
+    "installed_files": 4,
+    "ok": true,
+    "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "runtime_policy": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "preempt": "lazy",
+      "preempt_control": "full (lazy)"
+    },
+    "runtime_policy_verified": true,
+    "schema": 2,
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+    "source_files": 39,
+    "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+  },
+  "modules_remaining": [],
+  "passed": false,
+  "snapshot_tag": "kdlock-builddisk-clean-20261031",
+  "status": "PREPARATION_FAILED"
+}
