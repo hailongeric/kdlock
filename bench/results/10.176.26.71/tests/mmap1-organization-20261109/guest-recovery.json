@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "independent_of_guest": true,
+  "records": [
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-batch-checks-y6sf31br/inputs.tar",
+      "retained": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mmap1-organization-20261109/guest-archive-recovery/kdlock-batch-checks-y6sf31br/inputs.tar",
+      "original_host_copy": "/tmp/kdlock-batch-checks-r11y1cy2/inputs.tar",
+      "sha256": "6091ace1cc21adbc542f6138388466236a925811c337776046809c1c4bfbf91c",
+      "bytes": 12953600,
+      "guest_metadata": {
+        "allocated_bytes": 12955648,
+        "bytes": 12953600,
+        "ctime_ns": 1794212197332000000,
+        "device": 2080,
+        "gid": 0,
+        "inode": 9830551,
+        "mode": 33188,
+        "mtime_ns": 1794212197332000000,
+        "nlink": 1,
+        "uid": 0
+      },
+      "host_storage": "hardlink to existing independent source-host copy; no new archive data blocks",
+      "restored_guest_uid": 0,
+      "restored_guest_gid": 0
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-batch-checks-y6sf31br/checks.tar.gz",
+      "retained": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mmap1-organization-20261109/guest-archive-recovery/kdlock-batch-checks-y6sf31br/checks.tar.gz",
+      "original_host_copy": "/tmp/kdlock-batch-checks-r11y1cy2/checks.tar.gz",
+      "sha256": "40bfcc852e230edff9f6129fa7408d452a0e34bc2cce55fd0179ab808d9920a3",
+      "bytes": 44742043,
+      "guest_metadata": {
+        "allocated_bytes": 44744704,
+        "bytes": 44742043,
+        "ctime_ns": 1794212251417000000,
+        "device": 2080,
+        "gid": 0,
+        "inode": 9833113,
+        "mode": 33188,
+        "mtime_ns": 1794212251417000000,
+        "nlink": 1,
+        "uid": 0
+      },
+      "host_storage": "hardlink to existing independent source-host copy; no new archive data blocks",
+      "restored_guest_uid": 0,
+      "restored_guest_gid": 0
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/inputs.tar",
+      "retained": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mmap1-organization-20261109/guest-archive-recovery/kdlock-batch-checks-u1dw9xwz/inputs.tar",
+      "original_host_copy": "/tmp/kdlock-batch-checks-ads4eary/inputs.tar",
+      "sha256": "d371659483cf43a13ae6e0635562dc85cd4f5105dbef6cff2cf4b70834515109",
+      "bytes": 12943360,
+      "guest_metadata": {
+        "allocated_bytes": 12943360,
+        "bytes": 12943360,
+        "ctime_ns": 1794203523542000000,
+        "device": 2080,
+        "gid": 0,
+        "inode": 1573012,
+        "mode": 33188,
+        "mtime_ns": 1794203523542000000,
+        "nlink": 1,
+        "uid": 0
+      },
+      "host_storage": "hardlink to existing independent source-host copy; no new archive data blocks",
+      "restored_guest_uid": 0,
+      "restored_guest_gid": 0
+    },
+    {
+      "guest_path": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/checks.tar.gz",
+      "retained": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mmap1-organization-20261109/guest-archive-recovery/kdlock-batch-checks-u1dw9xwz/checks.tar.gz",
+      "original_host_copy": "/tmp/kdlock-batch-checks-ads4eary/checks.tar.gz",
+      "sha256": "db55e8b1ae39781dfea0f8d8c7a0f6ab10a412dfa0727edba52a64d279dbc341",
+      "bytes": 44655772,
+      "guest_metadata": {
+        "allocated_bytes": 44658688,
+        "bytes": 44655772,
+        "ctime_ns": 1794203813313000000,
+        "device": 2080,
+        "gid": 0,
+        "inode": 1575782,
+        "mode": 33188,
+        "mtime_ns": 1794203813313000000,
+        "nlink": 1,
+        "uid": 0
+      },
+      "host_storage": "hardlink to existing independent source-host copy; no new archive data blocks",
+      "restored_guest_uid": 0,
+      "restored_guest_gid": 0
+    }
+  ],
+  "total_guest_content_bytes": 115294775
+}

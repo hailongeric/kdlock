@@ -211,3 +211,8 @@ Static copies, exact-source copies, symbol map and the preserved original
 logs are retained beneath the original raw evidence directory at
 `raw/bench/mmap1-normal-d421e7d5-v1/munmap-g7-static/`. All original campaign
 receipts remain unchanged.
+
+The temporary `/tmp/kdlock-munmap-g7-static-53889930` extraction was subsequently
+removed after matching its complete retained raw copy. The [cleanup record](../../../tests/mmap1-organization-20261109/README.md)
+provides per-file restoration mappings; no static evidence or original run
+receipt was discarded.

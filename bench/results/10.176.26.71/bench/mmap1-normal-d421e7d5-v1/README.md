@@ -157,3 +157,8 @@ retained on the source host at:
 [summary.json](summary.json) binds the copied receipts, counters, stage outcomes
 and archive identity. Historical rejected, failed and stopped runs remain
 unchanged. No second campaign or targeted observation was performed.
+
+The later [organization and cleanup record](../../tests/mmap1-organization-20261109/README.md)
+retains restoration mappings for redundant temporary copies removed after full
+hash and active-user checks. Canonical raw evidence and these original result
+receipts remain intact.
