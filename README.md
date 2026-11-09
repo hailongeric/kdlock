@@ -15,11 +15,18 @@ separate; a continuation is retained only when its callee has a modeled
 boundary-free route to a RET. Its records are provisional compiler data, not a
 public ABI or a runtime-return proof.
 
-There is no decoder, API recognition, instruction emission, runtime CALL/RET
-effects, lock implementation, build system or benchmark payload yet. Ten focused
+A private [decoder adapter](disassem/source_decode.py) now converts only supplied
+stable source bytes and exact boundary metadata through the original Miasm
+x86_64 decoder into planner records. It retains source bytes/length and separates
+decode failures and unmodeled transfers from missing ordinary coverage. It does
+not read source, discover successors or select a register/packet mapping.
+
+There is no API recognition, instruction emission, runtime CALL/RET effect
+handling, lock implementation, build system or benchmark payload yet. Ten focused
 private cases passed on the earlier intraprocedural planner in `13f2630f` with
-Python 3.10.12. The CALL/RET planning extension has static review only; further
-behavioral tests are deferred until overall functionality is complete. See the
+Python 3.10.12. The CALL/RET and decoder extensions have static review only;
+decoder dependencies have not been installed or imported. Further behavioral
+tests are deferred until overall functionality is complete. See the
 [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 No build, JIT execution, kernel integration or performance result is claimed.
 Acceptance specifications T01-T56 remain unrun.

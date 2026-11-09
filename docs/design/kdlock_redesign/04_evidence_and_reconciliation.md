@@ -48,9 +48,21 @@ RET sites are not connected indiscriminately to callers.
 This is static source-flow planning, not a runtime-return or semantic
 nonreturning-function proof. Indirect calls and changed return targets are
 outside this helper's input contract; it cannot detect misclassified inputs.
-It does not decode, recognize APIs, emit/execute instructions, perform runtime
-CALL/RET effects, materialize S_W or hand back execution. Source/dependency
-identity and lifetime remain future integration obligations.
+It does not recognize APIs, emit/execute instructions, perform runtime CALL/RET
+effects, materialize S_W or hand back execution. Source/dependency identity,
+coherence and lifetime remain future integration obligations.
+
+The private [supplied-byte decoder](../../../disassem/source_decode.py) uses the
+original Miasm x86_64 decoder interface and relative-target arithmetic preserved
+in `archive/before-main-20261109` at
+`7ce7db54334960fe0d9db2c425c5c581cdedf4b0`, `disassem/reached_path.py`. It decodes
+only the first instruction at each supplied site, preserves its exact bytes and
+length, and accepts exact BoundaryKind metadata. It has no provider/source read,
+successor discovery, instruction lowering or packet/register mapping. Decode
+failures and unmodeled transfers remain separately attributable; absence from
+its modeled graph alone is not an ordinary coverage miss. The decoder pins in
+[disassem/requirements.txt](../../../disassem/requirements.txt) retain the
+archived decoder dependency set; they have not been installed or imported.
 
 The earlier intraprocedural implementation in `13f2630f` passed ten focused cases
 with Python 3.10.12: each of the four boundary kinds with a safe shared join and
@@ -61,9 +73,10 @@ JIT/kernel execution or selected kernel configuration/API lane. They establish
 only the exercised graph behavior, not exact handback or callee-return handling.
 These checks preceded the user's clarification to finish overall functionality
 before further behavioral testing. They have not been rerun on the CALL/RET
-extension and do not validate it. The extension has source/static review only.
-Further behavioral tests and suites are deferred until overall functionality is
-complete.
+extension and do not validate it or the supplied-byte decoder. Both extensions
+have source/static review only. No decoder dependency/import check or behavioral
+execution has run. Further behavioral tests and suites are deferred until
+overall functionality is complete.
 
 T01-T56 remain unrun acceptance specifications. Source, build, live execution,
 integration, retirement and performance evidence must be recorded separately

@@ -2,7 +2,7 @@
 
 **Status:** active plan for the independent rebuild
 
-**Current implementation:** private P2 source-flow planning only; no kernel/adapter implementation, build, JIT execution, benchmark, install or reboot
+**Current implementation:** private P2 source-flow planning and supplied-byte decoding only; no kernel/state adapter implementation, build, JIT execution, benchmark, install or reboot
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -84,6 +84,48 @@ Before enabling a chosen backend's optional path, provide its state diagram and 
 
 The ordinary mutex's shared wait-lock protocol is a useful existing example, not proof that an independent "claim CAS" solves every family.
 
+### 2.2 Ordinary mutex release authority proposal (C03/C11, unselected)
+
+The next mutex mechanism choice is who may release physical exclusion after
+execution moves between tasks. Fresh source layouts do not decide this.
+
+| Option | Concrete authority contract | Main obligation |
+| --- | --- | --- |
+| Task-owned backend | The physical acquirer remains the release endpoint; another executor requests release and waits for the matching completion | Suspended ancestors must service releases even while waiting for a nested acquisition; an ordinary blocking wait cannot strand that service |
+| Transferable KD grant (recommended proposal) | Physical exclusion names an exact live acquisition; an explicit transaction transfers/revokes that grant's release authority independently of the S_W pointer | Prove unique authority, exclusion and acquire/release ordering, including old endpoint refusal and non-LIFO release |
+
+For the transferable option, propose one short per-lock metadata guard and one
+pending-request queue. The guard serializes gate/grant changes, local/proxy
+selection, origin-combiner election and unlinking. Source execution and sleeping
+occur outside it. Queue selection and combiner election are not themselves a
+successful source acquisition; keep that phase separate until an actual grant
+is established. This is a proposed C03/C11 mechanism, not implemented support.
+
+A local winner closes proxy selection before advancing source. A proxy winner
+closes local advancement and observes the ready canonical state before acquiring
+the grant and advancing it. Origin-as-combiner uses another origin's distinct
+state when serving it; its own source acquisition remains explicitly pending
+until granted. A sender stops source advancement and explicitly yields both
+execution and the applicable grant authority before a receiver starts. Merely
+passing S_W does not transfer a physical release right.
+
+Each successful acquisition has distinct live identity: A1 and A2 at the same
+object address must remain distinguishable while referenced. Storage reuse needs
+its actual last-user proof or an explicit identity/reuse rule; this does not
+require a separate allocation per acquisition. Releasing A1 while B is live
+must release A1 then, while retaining any still-needed outer return/control
+information independently. Before release completion lets source continue and
+possibly destroy A, finish all accesses to A and its guard; later return or
+notification work uses only retained control. Likewise, finish notification
+accesses before the result permits request-storage reuse. Neither a timeout nor
+an approximate count supplies these last-user facts.
+
+This proposal does not select pinning/parking, core anchoring, register/packet
+mapping, storage capacities, recursive stack bounds, batching policy or code
+publication. It requires no second W packet. The exact transaction/state diagram
+and ordering proof remain implementation work after the mechanism is selected;
+no kernel execution or behavioral validation is claimed.
+
 ## 3 Work packages
 
 ### P0 Establish an independent baseline and contracts
@@ -125,11 +167,20 @@ such a route. This is structural return reachability, not a runtime-return or
 semantic nonreturning-function proof. Indirect calls and changed return targets
 remain outside this helper's input contract.
 
-There is no decoder, API recognition, emitter, machine-state mapping, runtime
-CALL/RET effect handling or handback. The private records select none of the
-remaining C02-C11 mechanisms. Ten checks on the earlier intraprocedural planner
-do not validate this extension. It has static review only and does not complete P2 or
-T07/T08/T52/T53; all T01-T56 remain unrun.
+The private [decoder adapter](../../../disassem/source_decode.py) converts only
+caller-supplied stable bytes and exact boundary metadata through the original
+Miasm x86_64 decoder. It retains decoded bytes/site/length and represents direct
+control flow without successor discovery. Decode failures and unmodeled
+transfers remain separate maps: a missing planner edge to one of those sites
+must not be attributed to ordinary coverage. Source identity/coherence/lifetime
+and API recognition remain caller or future integration obligations.
+
+There is no emitter, machine-state mapping, runtime CALL/RET effect handling or
+handback. The private records select none of the remaining C02-C11 mechanisms.
+Ten checks on the earlier intraprocedural planner do not validate these
+extensions. They have static review only; decoder dependencies have not been
+installed or imported. This does not complete P2 or T07/T08/T52/T53; all T01-T56
+remain unrun.
 
 Implement semantic API recognition and typed pre-operation exits in the original backend. Stop fragment emission across every admitted lock/unlock, including inner or ancestor release. Keep reached-only execution and direct-CALL lookahead as separate concepts.
 
