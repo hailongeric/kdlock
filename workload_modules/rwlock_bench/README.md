@@ -80,14 +80,14 @@ disjoint local destination. Translation still requires count 64 and a known
 local output span to model the original CALL-stack write and all 64 destination
 writes. Ordinary instruction/address admission and common owner/frame/return
 checks remain active. See the
-[writing-service contract](../../docs/design/admission.md#original-strscpy_pad-writing-service).
+[writing-service contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strscpy_pad-writing-service).
 Version 11 optionally uses a
-[direct-call route](../../docs/design/admission.md#direct-original-helper-calls)
+[direct-call route](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 inside one generated invocation. It preserves this payload, its 64-byte output
 effect and actual CALL return word; it adds no helper or argument checks.
 The two-word wrapper ABI and selected KD mutex protocol remain unchanged.
 The runner records uploaded code and relocated loaded bytes outside timing.
-Focused validation is tracked [centrally](../../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
+Focused validation is tracked [centrally](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/VALIDATION.md#taskname-and-xattr-helper-validation);
 the [separate historical direct-route comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
 records that implementation's completed grid. Its results do not transfer to the
 ordinary helper translation path.

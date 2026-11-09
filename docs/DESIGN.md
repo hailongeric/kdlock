@@ -1,176 +1,110 @@
 # KD design
 
-KD lets a physical lock holder execute a waiting caller's protected body. The
-caller resumes after its completed body, or at a supported native continuation
-with prior effects retained. The [roadmap](ROADMAP.md) places this mechanism
-before scoped MM acceptance and broader kernel replacement. Provider loading
-does not replace unrelated Linux locks.
-
-The active [kdlock lock replacement contract](design/kdlock_lock_replacement_contract.md)
-on `codex/mmap-reached-jit` selects the original JIT pipeline and current-position
-waiter handback for untranslated code. Its source status and pending work are
-separate from master, ordinary family behavior and historical MM experiments.
+kdlock is a lock implementation with optional execution of a waiting caller's
+protected body by a physical lock holder. This guide describes source retained
+on `master`; separate redesign proposals have their own review and implementation
+status. The [roadmap](ROADMAP.md) defines project goals, [code map](CODE_MAP.md)
+locates source, and [validation](VALIDATION.md) binds results to exact inputs.
 
 ## Terms used in these guides
 
 | Term | Meaning |
 | --- | --- |
-| Origin / waiter (O) | The task that requested the operation |
-| Executor / combiner (E) | The task holding the physical lock and serving queued requests |
-| Frame / packet | Exact request ownership and its logical machine state |
-| Source lease | A reference retaining source text through inspection and execution |
-| Unlock ACK | Confirmation that the physical owner handled a logical unlock |
-| Drain / retirement | Completion of every owner, queued request, continuation, lease and frame before reuse |
+| Origin / waiter (O) | Task whose source operation is being completed |
+| Executor / combiner (E) | Task physically running the selected protected body |
+| Frame / packet | Request ownership and logical machine state with explicit lifetimes |
+| Source lease | Reference retaining source text through reading, compilation and execution |
+| Unlock ACK | Confirmation that the exact physical owner handled a logical release |
+| Drain / retirement | Completion of every owner, continuation, source and last-user obligation before reuse |
 
-An ACK, a completed body and final physical release are distinct events. The
-[terminology guide](TERMINOLOGY.md) defines the remaining terms.
+Body completion, release, acknowledgment and storage reuse are separate events.
+[Terminology](TERMINOLOGY.md) defines the remaining vocabulary.
 
 ## Components
 
 ```mermaid
 flowchart LR
-    Caller[Direct KD caller] --> Lock[Local acquisition or published waiter]
-    Lock --> Executor[Physical owner and execution frame]
-    Daemon[Daemon and translator] --> Image[Published generated image]
+    Caller[Lock caller] --> Lock[Local acquisition or published request]
+    Lock --> Executor[Physical owner and execution state]
+    Daemon[Daemon and translator] --> Image[Generated image]
     Image --> Executor
-    Executor --> Return[Completion or native continuation]
+    Executor --> Return[Completion or exact native continuation]
     Return --> Caller
 ```
 
-The provider owns physical exclusion, request queues and execution state. The
-daemon decodes leased source and publishes generated images. The wrapper executes
-that code through the unchanged two-word ABI: origin kernel GS base and logical
-task pointer. Hardware `current`, GS, IRQ state and the executor's stack do not
-become the origin's context. See the [code map](CODE_MAP.md).
-Ordinary GS operands retain the original saved-origin lowering; logical
-`current_task` uses the supplied task pointer. A GS prefix alone does not make
-an operation an original-task service. GS mutations and specific context
-operations still require their declared execution contracts.
+The lock/provider paths own physical exclusion, request selection and execution
+state. The daemon compiles leased source and publishes images. Existing retained
+service capture has a separate activation/lifetime contract; it does not make
+a background execution worker a requirement for a future lock design.
+
+The wrapper's two context words carry saved-origin GS and the logical task.
+Source SP/BP and actual CALL/RET words represent that task's execution. Hardware
+`current`, IRQ/RCU state and the physical wrapper stack remain the executor's.
+Saved-origin GS lowering does not switch the complete kernel task context.
+See [register ABI](JIT_REGISTER_ABI.md) and [execution](JIT_EXECUTION.md).
 
 ## Lock and ownership boundaries
 
-The table describes ordinary family interfaces. Separately activated retained
-service capture on the isolated candidate has its own root and owner lifetimes,
-as recorded in the lock replacement contract.
-
-| Family | Physical protocol and execution |
+| Family | Current ordinary protocol |
 | --- | --- |
-| Spin | Four-byte KD lock word; pinned ordinary callers; eligible exclusive bodies may delegate |
-| Mutex | KD-owned 32-byte native-aligned object; direct blocking calls use ABI2; callable and task-sensitive APIs execute locally |
-| Rwlock | Concurrent local readers; exclusive writers use the spin engine after writer admission, ABI3 |
-| Rwsem | Concurrent local readers and ordinary local writers; explicit preparation enables ordinary writer calls to reserve admission and drain readers before mutex delegation |
+| Spin | Four-byte KD word; pinned callers; eligible exclusive bodies may delegate and cannot sleep |
+| Mutex | KD-owned 32-byte object; direct blocking ABI2 calls may delegate; published ordinary delegation waiters poll pinned |
+| Rwlock | Concurrent local readers; exclusive writers use the spin engine after writer admission |
+| Rwsem | Concurrent local readers; local default writers; explicitly prepared source macros can enter the selected writer/capture protocol |
 
-Mutex OSQ and delegation memberships share preallocated CPU/slot storage with
-separate links and retirement rules. The total batch cap defaults to 1024 and
-the NUMA locality boundary to 1024. Equal limits remove the earlier count-based
-local cutoff. At an earlier terminal boundary, eight or more deferred requests
-receive handoff; a smaller prefix is serviced before a bounded FIFO remainder.
-Deferred requests still rejoin on every exit. This policy does not change
-physical ownership or promise fairness.
-
-All users of an object must use one protocol. Local KD execution uses KD
-exclusion; it is not a switch to a Linux lock. Public mutex unlock routes every
-successful acquisition through its exact provider ownership record.
-[Locking](design/locking.md) and [frames](design/frames.md) specify nesting,
-native acknowledgements, cancellation and release ordering.
+All users of one object follow one backend protocol. Public releases route by
+the exact successful acquisition. Queue membership, physical ownership, logical
+mode, source/image binding and frame retirement retain separate identities.
+Mutex OSQ/delegation storage is shared with separate links; mutex cap/locality
+and spin total cap remain 1024. These bounds do not establish fairness.
+[Lock catalog](LOCKS.md), [ownership](design/locking.md), [frames](design/frames.md)
+and the family guides own detailed API and lifetime rules.
 
 ## Translation and execution
 
-Production uses `trusted_source=True` for kernel and module code. It skips
-semantic safety admission, context/memory/alias and loop-value analysis,
-constant-path specialization and entry-input proofs. The compiler clobber-entry
-agreement is assumed; only IP/SP/BP are imported for ABI1/2/3.
+Production trusts kernel/module source and assumes its clobber-entry agreement.
+Optional semantic/context/value/input proofs are regression utilities. Leased
+text, supported decoding, faithful lowering, actual source CALL/RET effects and
+exact runtime ownership remain required. Strings use ordinary decoded callees.
 
-Source trust still requires complete selected text, supported decoding and
-faithful lowering, actual CALL/RET words and exact return routing. String
-functions, including `strscpy_pad`, `strnlen`, `sized_strscpy`, `strcmp` and
-`memcpy`, are ordinary decoded callees. Current translation selects no named
-string models, services or direct native bridges. Optional
-`trusted_source=False` exists for checked regression fixtures.
+The original translator constructs bounded selected graphs and learns reached
+CALL/indirect edges for later images. Untranslated code hands the remaining
+invocation to O at the first unexecuted instruction with current state and prior
+effects retained. It does not replay a body prefix or wait for a replacement
+image. Declared returning services have their own exact continuation contract.
+See [translation policy](design/admission.md) and the
+[retained execution contract](design/kdlock_lock_replacement_contract.md).
 
-The original translator explores a bounded selected CFG and learned CALL/IJ
-edges. It does not require a complete kernel CFG or eager ordinary-callee
-closure. A missing ordinary callee can transfer the remaining invocation to
-the origin and be learned for a later image. Declared lock controls and
-returning services retain their separate runtime contracts.
-
-The selected correction requires general untranslated-code handback at the first
-instruction E has not executed, using current IP/GPR/SP/BP and preserving prior
-stores, acquisitions, CALL pushes and RET pops. It cannot restart a progressed
-body. Checkpoint `ebae17c1` adds negotiated ordinary miss handback; `10ef078a`
-removes the separate instruction backend and corrects extended-header selection.
-Runtime checkpoint `a6fe0bb2` wires retained-worker handback, packet acceptance,
-Native owner routing and synchronous cleanup. Production checkpoint `da55414f`
-has passing central acceptance/final-ACK and retirement components. Later
-fixture-only runs resolve resource/OSQ failures with identical production trees;
-all failed receipts remain recorded. These joins use supplied task/physical/CPU
-primitives and do not establish a live stack switch or MM result. Generic IJ
-errors are not evidence of successful handback.
-
-The selected follow-up keeps the three mmap state/assertion query bodies in the
-original JIT, preserving a narrow `ATOMIC_ORIGIN` Native service only for the
-exact `kd_service_write_owned` custody proof. Other services and bounded callee
-learning retain their policies. Existing downgraded read credit transfers to
-Native custody without a decrement, and pooled slots retire through synchronous
-E-side home-CPU cleanup with an explicit serialized already-offline path. These
-are resolved designs with committed source and focused component evidence;
-the later `58af0a53` live probe passes cold CALL and indirect-JMP handback.
-Its exact post-RET state accompanies a failed overall checker result.
-Candidate `bccf877c` adds untested harness fixes, and further validation is
-blocked. Component results, partial live observations and application acceptance
-remain distinct; see the [live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop),
-the [contract](design/kdlock_lock_replacement_contract.md#selected-state-query-execution)
-and [lifetime ordering](design/lifetimes.md#selected-retained-handback-retirement).
-
-Generated dispatch, budget checks, RET lookup and synthetic LEA lowering have
-their existing arithmetic-flags contracts. General flags/SIMD restoration and
-IRQ/NMI conflict handling are deferred for this correction; limited existing
-flags paths do not establish arbitrary processor-state restoration.
-
-The packet states are MINIMAL (declared entry state), COMPLETE (finished return
-triple) and FULL (current logical GPRs materialized before generic recovery).
-The [execution guide](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) and
-[translation policy](design/admission.md) own those details.
+Retained ABI2 images stop source emission at recognized physical releases.
+JIT-consumed rwsem downgrade is the narrow exception: logical read mode retains
+the exact physical writer until matching typed read release. Native-first and
+ordinary local downgrade create a real reader credit. Separate nested-image
+activation remains additional work; source-operation boundaries in a redesign
+proposal are not an implementation claim for this path.
 
 ## Publication and lifetime
 
-Mutex frames bind immutable image generations. Ordinary spin/rwlock entries may
-still use in-place replacement; supported root instruction-marker images and
-historical checked/service images transition their entry to immutable versions.
-A bound descriptor alone does not make ordinary image bytes immutable.
-
-Source pins, image descriptors, physical acquisitions, native executors and
-frame retirement protect different resources. Stop and join callers, retire
-sources and drain all obligations before unloading or reusing storage.
-[Lifetimes](design/lifetimes.md) defines this order. A `NORMAL` image is publication
-evidence, not proof that any generated body returned.
+Mutex/retained frames bind immutable generations. Ordinary spin/rwlock entries
+may still replace code in place before an immutable transition. A published
+NORMAL image proves publication, not a returned body. Source, data objects,
+physical owners, frames and image storage need their own last-user accounting.
+Stop/join callers and drain exact owners/releases before unload or reuse.
+[Lifetimes](design/lifetimes.md) owns these contracts.
 
 ## MM integration and limits
 
-The ordinary `kdlock1` image and historical local mmap-lock adapter are distinct
-from retained execution experiments. The local adapter changes only the lock
-backend and minimal API/lifetime wrappers; its native MM bodies execute on the
-original task. Later retained candidates execute unchanged native bodies on E
-through general lock/service routing. The selected original JIT correction is
-part of kdlock lock replacement, with runtime wiring and two passing cold live
-phases. Overall validation remains incomplete and blocked; no new mmap1
-correctness or performance acceptance follows.
-Operation-specific MM algorithms and prepared teardown remain retired.
+Normal `7.0.0-38-kdlock1` disables the mmap backend. Local and retained MM profiles
+have separate kernel/source identities. Native MM bodies and real userspace
+syscall paths remain unchanged; retained execution uses general lock/service
+routing. Module-owned backing faults are a different workload.
 
-The [module-owned mapping experiment](design/mmap_fault.md) changes a private
-backing lock while the actual mmap lock stays Native. It is a different
-experiment. The [November 1 comparison](../bench/results/10.176.26.71/bench/master-native-20261101/README.md)
-includes actual unchanged mmap1 and both positive and negative observations;
-older shared-device-MM losses do not describe every subsequent workload.
-The [indexed reached JIT record](../bench/results/10.176.26.71/tests/reached-mm-jit-indexed-20261104/README.md)
-contains later focused MM execution proofs, failed performance acceptance and
-unrun Nano coverage for its separate emitter. Neither record validates the
-restored original JIT correction. Generic fault-throughput and broader coverage
-claims still require their own evidence.
+The latest [mmap1 process point](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+tested `7e3c90b4`: one compile-excluded, counter-enabled interval with both roots
+returning every whole-application JIT entry. The merged combination with master's
+flags-stack changes has static integration checks, without a new runtime run.
+Quiet performance, repeated Native improvement and broader kernel coverage
+remain open. The earlier failed targeted CALL/RET checker retains its own verdict.
 
-Whole-kernel replacement, ww_mutex, broad oversubscription, general native flags
-recovery and full mitigation coverage remain unvalidated. RT, debug mutexes,
-debug lock allocation and lockdep are explicitly refused by the shared build
-contract; they are not pending integration milestones.
-Published mutex waiters poll pinned even though physical owners may sleep.
-[Open work](TODO.md) records these limits.
+Current support limits are in [open work](TODO.md). The complete pre-cleanup
+architecture/status prose is retained in the
+[archive](history/documentation-20261109/DESIGN.md).

@@ -1,5 +1,11 @@
 # Original strcmp with audited caller inputs
 
+This is a historical named-service/direct-call compatibility fixture. Current
+trusted translation uses [ordinary decoded string callees](../../../../docs/design/admission.md#ordinary-callees-and-strings).
+The recorded commands and capability contracts below apply to their matching
+source profile; they do not validate the current ordinary-callee path.
+
+
 This probe checks the original kernel `strcmp` helper inside one delegated spin
 critical section. A typed service is a specific helper call whose arguments,
 return value and memory effects have an explicit contract. The audited caller
@@ -28,7 +34,7 @@ plus direct-call bit 4. Its positive generation identifies an immutable image.
 If direct-call support is unavailable, this focused probe cannot pass through
 the older dispatcher route. The separate writing-service
 requirement enables `strscpy_pad`; this probe exercises `strcmp` only.
-The [direct-call contract](../../../../docs/design/admission.md#direct-original-helper-calls)
+The [direct-call contract](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 keeps the helper inside one generated invocation and preserves the original
 arguments and actual source return word. Before publication, the provider fills
 generated relative CALL operands. Evidence retains the uploaded placeholders

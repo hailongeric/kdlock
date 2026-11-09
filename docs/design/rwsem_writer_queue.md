@@ -1,5 +1,11 @@
 # Local writer queue and reader fast paths
 
+This pre-implementation candidate record retains the former positive prepared
+cohort proposal and its evidence. Current selected-writer admission is described
+in the [rwsem guide](rwsem_implementation.md); the proposal below is not a current
+implementation checklist.
+
+
 This isolated candidate starts at `f7a84065e84474380faa37eeadfdf534abd72a68`.
 The preceding `22d62d5c13cad3c61c97dd47524da908769f1a52` experiment and its
 report `a435ab376ec59f54d0db88a993436a8f854400c2` remain rejected performance

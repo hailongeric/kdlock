@@ -22,12 +22,12 @@ source responsibility, not a build or runtime pass.
 | [kd_mutex_api.h](../include/kd_mutex_api.h), [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Unified ABI2 blocking calls, callable local APIs and source aliases |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_rwlock.h](../include/kd_rwlock.h), `spin/direct.inc`, `combiner.inc` | Concurrent local readers, exclusive writer admission and ABI3 retry/continuation |
-| [kd_rwsem.c](../kernel_module/kd_rwsem.c), [types](../include/kd_rwsem_types.h) | Reader/writer phases, reservations, waiting, cancellation, downgrade and atomic read release |
-| [kd_rwsem_api.h](../include/kd_rwsem_api.h), [kd_rwsem_api.c](../kernel_module/kd_rwsem_api.c) | Unified ordinary writer names; explicitly prepared object permits ABI2 after reserve/drain; origin phase release follows exact unlock/ACK |
+| [kd_rwsem.c](../kernel_module/kd_rwsem.c), [types](../include/kd_rwsem_types.h) | Local readers, exact selected writer phase, waiting, cancellation, real downgrade and atomic read release |
+| [kd_rwsem_api.h](../include/kd_rwsem_api.h), [kd_rwsem_api.c](../kernel_module/kd_rwsem_api.c) | Public writer names and quiescent prepared capture; shared admission checks actual gate/reader readiness; typed release follows exact owner/ACK |
 | [kd_lock.c](../kernel_module/kd_lock.c), [lock/](../kernel_module/lock) | Supported nested controls and exact direct/public mutex routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c), [execution/](../kernel_module/execution) | Shared frames, ledger, image binding, native/remote ACKs, registry and dispatcher |
 | [kd_admission.c](../kernel_module/kd_admission.c), [kd_wait_queue.c](../kernel_module/kd_wait_queue.c) | Exact acquisition predicates, shared request selection, cancellation and queue membership |
-| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; production checkpoint `da55414f` has component results and later partial live handback evidence, with overall validation incomplete |
+| [kd_service.c](../kernel_module/kd_service.c), [kd_service_api.c](../kernel_module/kd_service_api.c), [kd_service_calls.c](../kernel_module/kd_service_calls.c) | Retained origin/executor requests, exact owner custody, returning API intervals and current-position worker handback; source-specific component and application receipts are indexed in validation |
 | [continuation.inc](../kernel_module/execution/continuation.inc), [service_control.inc](../kernel_module/execution/service_control.inc), [wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc), [native.inc](../kernel_module/execution/native.inc) | Retained frame/packet joins, original-JIT miss packets, Native owner routing, packet acceptance and typed release/ACK handling; component join covers acceptance/final ACK with supplied task/physical primitives |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Image descriptors, immutable generations and retained compatibility publication checks |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, uploads and retirement |
@@ -37,22 +37,15 @@ source responsibility, not a build or runtime pass.
 Private `.inc` files share their parent compilation unit and declaration order;
 include them in snapshots. They are not independent Kbuild objects.
 
-The subsequent selected query policy partitions operation IDs 14/15/16 in
-[`device_session.py`](../disassem/device_session.py), with provider service
-registration in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
-`kd_service_write_owned` retains the narrow `ATOMIC_ORIGIN` runtime proof.
-`kd_service.c` owns the selected synchronous home-CPU and serialized offline
-retirement path. Production checkpoint `da55414f` has passing query-image,
-Native-service join and retirement components after the first failed attempts.
-Later fixture-only runs pass OSQ (26 scenarios, 14 mutations) and resources
-(19,164 checks, 27 mutations), with identical production trees. The
-[validation record](design/kdlock_lock_replacement_contract.md#current-focused-component-results)
-preserves separate receipt verdicts and fixture limits. No module is loaded by
-those component checks. The later generic probe passes cold CALL and
-indirect-JMP phases at `58af0a53`, but its overall live check fails at an
-unhandled post-RET continuation. Candidate `bccf877c` changes the probe's
-RET-learning and daemon shutdown checks and remains untested; further live
-validation is blocked. See the [partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
+Operation IDs 14/15/16 are partitioned by
+[`device_session.py`](../disassem/device_session.py), with discovery registration
+in [`kd_rwsem_provider.c`](../kernel_module/kd_rwsem_provider.c).
+`kd_service_write_owned` retains its narrow `ATOMIC_ORIGIN` custody proof.
+`kd_service.c` owns synchronous home-CPU and serialized already-offline retirement.
+[Validation](VALIDATION.md#retained-original-jit-and-proxy-read) separates component
+fixtures, the historical failed targeted checker, later mmap1 results and static
+master integration. A source location or prior component pass does not validate
+the merged runtime combination.
 
 ## Linux 7 and MM integration
 
@@ -88,6 +81,7 @@ examining the deleted historical source paths.
 | [daemon](../daemon/README.md) | Source-resident device session, compiler child and upload lifecycle |
 | [disassem.py](../disassem/disassem.py) | Trusted-source default, original bounded CFG/history translation and image construction; eager ordinary-callee closure disabled by the correction |
 | [translation_scope.py](../disassem/translation_scope.py), [translation_image.py](../disassem/translation_image.py) | Selected graph, wrapper dispatch and generated image |
+| [release_units.py](../disassem/release_units.py) | Final source reachability at physical release boundaries, including the narrow retained-writer downgrade exception |
 | [hostcall.py](../disassem/hostcall.py), [indirect_jump.py](../disassem/indirect_jump.py) | Selected scalar services and exact generated return/target routing |
 | [normal.py](../disassem/normal.py), [special_inst.py](../disassem/special_inst.py), [wrapper.S](../include/wrapper.S) | Original saved-origin GS/logical-task lowering, virtual source SP/BP, actual CALL pushes/RET pops and current logical packet export |
 | `context_*.py`, [constant_paths.py](../disassem/constant_paths.py), [address_guards.py](../disassem/address_guards.py), [guard_flags.py](../disassem/guard_flags.py) | Optional `trusted_source=False` regression analysis; bypassed by production |
@@ -105,6 +99,7 @@ examining the deleted historical source paths.
 | [basic/run.py](../bench/basic/run.py) | Four-family returned-JIT functional presets, no performance scoring |
 | [tclock_compare](../bench/tclock_compare/README.md), [rwlock_compare](../bench/rwlock_compare/README.md), [real_api](../bench/real_api/README.md) | Matched family/API runners, data oracles and returned-body observation |
 | [mmap_fault](../bench/mmap_fault/README.md), [mmap_writer](../bench/mmap_writer/README.md) | Private-MM and actual shared-MM correctness/timing interfaces |
+| [mmap1/settled.py](../bench/mmap1/settled.py), [execution_session.py](../bench/mmap1/execution_session.py) | Bounded learning, fixed image/session receipts, compilation-excluded actual-syscall point and exact retirement |
 | [tests/unit](../tests/unit), [tests/kernel](../tests/kernel), [tests/protocols](../tests/protocols) | Guest-only fixtures, provider probes and trace/ownership oracles |
 | [results](../bench/results/README.md) | Published tables/charts and ignored raw evidence policy |
 

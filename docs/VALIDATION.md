@@ -6,6 +6,33 @@ performance qualification are separate observations. Basic plus directly affecte
 checks are the default; use [test selection](../tests/README.md) for commands.
 This index does not claim a full suite or arbitrary-kernel equivalence.
 
+## Retained original JIT and proxy read
+
+The [focused proxy-read record](../bench/results/10.176.26.71/tests/rwsem-proxy-read-20261109/README.md)
+retains the initial fixture failures and fresh passing two basic/ten affected
+guest checks plus daemon/provider builds at `3ceb7f00`. The later unchanged
+`7e3c90b4` [longer campaign](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+passed one stable eight-process point: 256,709 pairs in ten nominal-second
+samples, or 25,670.9 pairs per nominal second, with selected-service counters.
+All 19 compiler records stayed unchanged across the entire fixed application;
+no compiler overlapped it. Whole-application mmap entries/returns were
+398,610/398,610 and munmap 398,608/398,608, both with zero completed handbacks.
+The narrower asynchronous sample-counter differences remain preserved.
+
+Exact retirement, ordinary unload and verified normal-kernel recovery passed.
+Both earlier failed learning campaigns and the original pending result remain
+unchanged; separate finalization records completion. No quiet/strict-peak score,
+Native gain, branch-specific downgrade-consumption proof or broad coverage is
+inferred. The [master integration receipt](../bench/results/10.176.26.71/tests/proxy-read-main-integration-20261109/README.md)
+records source/hash checks at `6badc60e`; no runtime campaign executed the union
+with master's independent flags-stack changes.
+
+The earlier [targeted CALL/RET probe](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+keeps its failed overall checker and untested harness follow-up. That failure
+does not erase the later independent application result, and the application
+result does not retroactively pass that checker. Remaining acceptance work is
+in [open work](TODO.md).
+
 ## October 29 API implementation checkpoints
 
 The [API checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md)

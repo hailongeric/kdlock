@@ -6,6 +6,14 @@ three stages and their completion criteria. Current work uses Ubuntu 26.04.1
 and Linux `7.0.0-38-kdlock1`; Linux 6.1 is retained for recovery and historical
 evidence only.
 
+This index describes maintained implementation and source-specific evidence.
+Use [execution](JIT_EXECUTION.md) for present source/continuation behavior and
+[validation](VALIDATION.md#retained-original-jit-and-proxy-read) for the latest
+retained-MM result. Historical candidate notebooks preserve decisions and
+receipts; their old work orders do not define a new redesign or schedule runs.
+The [documentation archive](history/documentation-20261109/README.md) records
+superseded guides and the full pre-cleanup design/TODO snapshots.
+
 Production trusts kernel and module source. Semantic safety, context/loop-value
 and entry-input proofs are bypassed; ordinary string callees use the normal
 backend. Source leases, faithful lowering, CALL/RET routing and exact runtime

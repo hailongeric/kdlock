@@ -1,5 +1,10 @@
 # Unified lock queue: Stage (a) design
 
+This is the dated Stage (a)/(b)/(c) design and evidence record. The current
+[admission source map](../CODE_MAP.md) and [rwsem guide](rwsem_implementation.md)
+own implemented behavior. Its historical work orders do not define a later redesign.
+
+
 The authorized Stage (c) implementation is specified in
 [killable capture and exact request retirement](killable_queue_execution.md).
 It brings the necessary object-wide selected-writer admission forward rather
@@ -128,10 +133,10 @@ header or alternative local queue is enabled by the condition-channel change.
 ### Why the earlier retirement warning still matters
 
 The explicit warning is about independently live OSQ and delegation memberships:
-[mutex_implementation.md:125](mutex_implementation.md#L125),
-[571](mutex_implementation.md#L571),
+[mutex_implementation.md:125](mutex_implementation.md#revised-waiter-requirement-october-29),
+[571](mutex_implementation.md#current-storage-and-lookup),
 [include/kd_mutex.h:56](../../include/kd_mutex.h#L56), and
-[lifetimes.md:16](lifetimes.md#L16). No literal blanket prohibition against a new
+[lifetimes.md:16](lifetimes.md#resource-lifetimes). No literal blanket prohibition against a new
 sleeping/delegation queue was found in this source. The sleeping ring's stack
 lifetime and the chain's frame/ACK lifetime nevertheless make a link-only merge
 incorrect.

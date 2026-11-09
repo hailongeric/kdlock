@@ -429,7 +429,7 @@ The selected [kdlock lock replacement contract](kdlock_lock_replacement_contract
 restores the original bounded translator, wrapper and daemon pipeline. It uses
 actual CALL/IJ history and later image replacement without eager ordinary-callee
 closure, a complete kernel CFG or all-site prewarming. The
-[reached-path record](reached_path_execution.md) preserves the superseded
+[reached-path record](../history/documentation-20261109/design/reached_path_execution.md) preserves the superseded
 separate-emitter design and its receipts. It was still connected at `ebae17c1`;
 `10ef078a` removes it from production source and moves the C reference code to
 fixtures. Runtime `a6fe0bb2` wires retained handback; its first frozen
@@ -464,6 +464,7 @@ observed, but the overall checker and initial cleanup fail. Subsequent manual
 cleanup retires all source references, releases helper registration and unloads
 both modules normally, leaving the VM idle. This later result does not rewrite
 the failed session. Recovery to original `kdlock1` is verified. Candidate
-`bccf877c` adds untested harness fixes; further validation is blocked. See the
+`bccf877c` adds untested harness fixes for that targeted probe. See the
 [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
-for exact identities and remaining acceptance gaps.
+for its exact identities. Later independent mmap1 results and the untested merged
+runtime boundary are recorded in [validation](../VALIDATION.md#retained-original-jit-and-proxy-read).

@@ -11,23 +11,14 @@ micro/nano performance envelope; establish scoped mmap/page-fault improvement or
 parity; then complete declared kernel replacements and compare applications.
 Favorable exploratory nano cases and scoped application measurements exist.
 Repeated performance acceptance and broader kernel replacement remain open.
-The isolated [original JIT correction](docs/design/kdlock_lock_replacement_contract.md)
-has production source at `da55414f`. Subsequent frozen checks resolve the
-observed component failures, including service acceptance/final ACK and
-retirement fixtures. The [source-specific evidence](bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
-preserves every failed attempt and the limits of supplied task/CPU primitives.
-The later [live probe](docs/design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
-passes cold CALL and indirect-JMP handback at `58af0a53`. Its exact post-RET
-observations accompany a failed overall checker result. Candidate `bccf877c`
-adds untested harness fixes; that targeted probe remains failed. Later normal
-mmap1 campaigns have separate source-specific receipts. The latest
-[proxy-read point](bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
-at `7e3c90b4` passed one compile-excluded eight-process interval: 25,670.9 pairs
-per nominal second with selected-service counters enabled. Both mmap and munmap
-returned every JIT entry across the whole fixed application; exact retirement,
-unload and normal-kernel recovery passed. Quiet performance, Native improvement
-and repeated acceptance remain open. The result does not validate the union
-with master's independent flags-stack changes.
+Retained original-JIT execution and proxy-read handling are integrated into
+`master`. The latest [actual mmap1 process point](bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+tested `7e3c90b4`: one compile-excluded, counter-enabled interval at 25,670.9
+pairs per nominal second, with both roots returning every whole-application
+JIT entry. Exact retirement, unload and normal-kernel recovery passed. Quiet
+performance, repeated Native improvement and the merged runtime combination
+with master's independent flags-stack changes remain unvalidated.
+[Validation](docs/VALIDATION.md) retains the earlier failures and exact scopes.
 
 ## Current platform and policy
 
@@ -58,7 +49,7 @@ capture has the additional root/owner contracts described in the correction.
 | Spin | Exclusive ordinary pinned pair; eligible bodies may delegate; explicit IRQ/BH variants execute locally |
 | Mutex | KD-owned physical exclusion; direct public blocking calls and aliases use ABI2; callable/signal/try/I/O forms execute locally |
 | Rwlock | Concurrent local readers; exclusive ABI3 writers may delegate after writer admission |
-| Rwsem | Concurrent local readers and ordinary local writers; explicit outer ABI2 writers reserve/drain before delegation |
+| Rwsem | Concurrent local readers and local default writers; explicitly prepared writer macros can capture through selected admission, gate ownership and reader drain |
 
 The maintained mutex is 32 bytes with native alignment. It shares preallocated
 CPU/slot storage between separate OSQ and delegation memberships. Defaults are
@@ -69,9 +60,10 @@ performance gain is established.
 
 Published mutex waiters poll pinned; physical owners may sleep. Every user of an
 object must follow one protocol. Public unlock retains exact acquisition routing.
-Loading the provider does not replace unrelated Linux locks. Whole-kernel,
-RT/ww_mutex/lockdep, broad oversubscription and complete mitigation coverage remain
-separately unvalidated. [Lock APIs](docs/LOCKS.md) and [open work](docs/TODO.md)
+Loading the provider does not replace unrelated Linux locks. PREEMPT_RT, debug
+mutexes, debug lock allocation and lockdep are refused. Whole-kernel/ww_mutex,
+broad oversubscription and complete mitigation coverage remain unvalidated.
+[Lock APIs](docs/LOCKS.md) and [open work](docs/TODO.md)
 define the current boundary.
 
 The historical local MM adapter changes only the lock backend and minimal

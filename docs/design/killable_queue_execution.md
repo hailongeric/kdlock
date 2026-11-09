@@ -1,5 +1,11 @@
 # Stage (c): killable capture and exact request retirement
 
+This is the dated Stage (c) implementation and focused-evidence record. Current
+prepared signalable capture and cancellation are summarized in the
+[rwsem guide](rwsem_implementation.md), with later source-specific application
+results in [validation](../VALIDATION.md#retained-original-jit-and-proxy-read).
+
+
 Branch: `codex/unified-lock-queue-c`.
 Parent checkpoint: `28d576ba4bbba8d8539018de36bfbac854dd9996`.
 Production baseline remains `7231ddf0963ff2cc730590c09cc81e7f96f93095`.

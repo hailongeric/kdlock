@@ -1,362 +1,236 @@
 # Sleeping KD reader/writer semaphore
 
-This lock supports stage 1 reader/writer microbenchmarks and stage 2 local mmap
-locking in the [project roadmap](../ROADMAP.md). Broader kernel replacement is
-the stage 3 objective. The two current uses have distinct execution paths:
-explicitly prepared benchmark writers may delegate, while native MM bodies stay local.
+KD rwsem provides concurrent local readers and one selected writer around a
+KD-owned physical gate. Ordinary objects and callable APIs execute locally.
+Explicit quiescent preparation enables retained continuation capture for the
+public writer macros, including interruptible and killable forms. The selected
+request must acquire its real gate and freshly drain readers before its body
+can run; publication alone grants neither ownership nor reader-free execution.
 
-The waiting policy selected at `c21345b` and later IRQ-safe release correction
-remain the protocol foundation. Ordinary read contention now queues optimistic
-admission attempts before the existing sleeping fallback. New writer phases
-yield while those readers remain queued. Historical acceptance and regressions
-do not qualify current performance. The current Linux 7 shared-MM comparison loses
-to Native at all measured counts; [performance](../PERFORMANCE.md) owns those
-results and [validation](../VALIDATION.md) owns exact source/check scopes.
-
-[`kd_rwsem_api.h`](../../include/kd_rwsem_api.h) provides one ordinary public
-reader/writer name family. Writers remain local until explicit quiescent object
-preparation enables delegation for ordinary macro calls. A lock holder can then
-execute a waiting writer's protected work through the selected KD-only mutex. A reader/writer semaphore, abbreviated **rwsem**,
-allows concurrent readers or one exclusive writer, and blocked callers can sleep.
-Before a writer publishes a delegation request, it closes **reader admission**
-(permission for new readers to enter) and waits for existing readers to finish,
-called **reader drain**. A published mutex waiter then polls with preemption
-disabled, so the scheduler cannot pause it in the ordinary way to run another
-task on that CPU; this is the **pinned waiter** restriction.
-Read bodies always execute on the acquiring task. Queuing a reader's admission
-attempt does not delegate its read operation.
-
-No Linux mutex or Linux rwsem backs the object. The KD mutex keeps the same
-physical ownership records, queue, and batching of several waiting operations.
-Its machine-level calling agreement remains ABI2; just-in-time compiled (JIT)
-code remains
-immutable after publication. References keep the source module loaded until it
-is no longer needed, unlock acknowledgements confirm release, and execution
-records are retired only after their final user finishes. These ownership and
-lifetime rules are unchanged. The [terminology guide](../TERMINOLOGY.md) explains
-other code and evidence terms used below.
-The [lock catalog](../LOCKS.md) compares this sleeping API with the spinning
-rwlock and the two exclusive lock families.
+The ordinary read APIs remain local. A read tail reached by a proxied writer's
+downgrade has a separate retained-writer contract described below. This is
+current implementation behavior, not the proposed general lock redesign.
+[Performance](../PERFORMANCE.md) and [validation](../VALIDATION.md) separate
+source-specific results from correctness and broader replacement claims.
 
 ## Source and object layout
 
 | Source | Responsibility |
 | --- | --- |
-| [kd_rwsem.h](../../include/kd_rwsem.h) | Callable local acquisition declarations and exact routed release on `struct kd_rwsem`; also used by the generated MM backend |
-| [kd_rwsem_types.h](../../include/kd_rwsem_types.h) | Object layout, `DEFINE_KD_RWSEM` and `KD_RWSEM_INITIALIZER` |
-| [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Reader acquisition, queued ordinary-read polling, exact writer reservations, sleeping waits, cancellation, downgrade and idle inspection |
-| [kd_rwsem_api.h](../../include/kd_rwsem_api.h), [kd_rwsem_api.c](../../kernel_module/kd_rwsem_api.c) | Ordinary public writer capture, quiescent preparation and origin phase release after exact mutex unlock/ACK |
-| [kd_rwsem_compat.h](../../include/kd_rwsem_compat.h) | Native source spellings and cleanup guards for exclusively KD objects; no binary layout or lockdep compatibility |
-| [KD mutex implementation](mutex_implementation.md) | Physical writer ownership, legacy delegation queue, generated execution and unlock acknowledgements |
-| [direct_rwsem.h](../../workload_modules/rwlock_bench/direct_rwsem.h) | Benchmark caller mapping for Linux Native, ordinary KD and delegation-capable KD |
+| [kd_rwsem.h](../../include/kd_rwsem.h) | Callable APIs, exact routed releases and inspection |
+| [kd_rwsem_types.h](../../include/kd_rwsem_types.h) | Object layout and static initialization |
+| [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Local readers/writers, condition channels, trylock, real downgrade and final read decrement |
+| [kd_rwsem_api.h](../../include/kd_rwsem_api.h), [kd_rwsem_api.c](../../kernel_module/kd_rwsem_api.c) | Public macro capture, quiescent preparation and typed release entry |
+| [kd_admission.h](../../include/kd_admission.h), [kd_admission.c](../../kernel_module/kd_admission.c) | Canonical writer selection, actual readiness, cancellation, phase and read-tail custody |
+| [kd_wait_queue.h](../../include/kd_wait_queue.h), [kd_wait_queue.c](../../kernel_module/kd_wait_queue.c) | Shared request states, memberships, selection, cleanup and acknowledgement ordering |
+| [kd_service.c](../../kernel_module/kd_service.c) | Retained execution, typed controls and exact native release routing |
+| [kd_rwsem_provider.c](../../kernel_module/kd_rwsem_provider.c) | Explicit per-object provider preparation, binding and activation |
+| [kd_rwsem_compat.h](../../include/kd_rwsem_compat.h) | Native source spellings and cleanup guards for exclusively KD objects |
 
-The October 28 Linux 7 emitted layout retains a 320-byte object with 64-byte
-overall alignment. The appended `reader_osq` occupies offset 280 in the final
-cacheline, preserving all existing field offsets. The previous 512-byte object had 128-byte alignment;
-the
-[layout receipt](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/object-layout.json)
-retains that accepted build's size evidence. Shrinking the embedded mutex changes
-the containing layout without changing the rwsem waiting protocol. Current fields
-are arranged as follows:
+Source assertions retain a 320-byte object with the following offsets. This is
+KD storage, not a Linux rwsem-compatible layout:
 
 | Field | Offset | Purpose |
 | --- | ---: | --- |
-| `gate` | 0 | Embedded 32-byte KD mutex; serializes writer bodies |
-| `prepared_writes` | 32 | Quiescent, monotonic policy in former padding; never ownership authority |
-| `readers` | 64 | Exact reader count, including temporary speculative increments |
-| `admission` | 128 | Open, local-writer or prepared-writer phase |
-| `phase_wait` | 192 | Sleeping callers waiting for an eligible admission phase |
-| `reader_drain` | 256 | Reserved writers waiting for existing readers to finish |
-| `reader_osq` | 280 | Abortable queue for optimistic ordinary-read admission; no reader payload runs under it |
+| `gate` | 0 | Embedded 32-byte KD mutex and shared acquisition guard/queue |
+| `prepared_writes` | 32 | Quiescent capture policy; never ownership authority |
+| `selected_kind` | 36 | No phase, retained admission or local owner |
+| `selected_owner` | 40 | Exact selected physical task |
+| `selected_identity` | 48 | Exact acquisition identity |
+| `phase_generation` | 56 | Distinguishes successive selected phases |
+| `readers` | 64 | Real reader credits, including speculative increments |
+| `admission` | 128 | Open `0` or selected writer `-1` |
+| `phase_wait` | 192 | Admission-condition memberships and queued local-reader count |
+| `reader_drain` | 256 | Selected writer waiting for real readers to finish |
+| `reader_osq` | 280 | Abortable optimistic reader admission; never reader-body delegation |
 
-The reader count, admission word and two waitqueues start on separate 64-byte
-lines. The new queue tail follows `reader_drain` within its region. These offsets do not
-describe a Linux rwsem-compatible layout. The embedded mutex now holds its own
-delegation phase and encoded tail without an auxiliary table. Exact waiter
-records occupy reserved queue nodes; provider-wide queues and execution stacks
-remain additional storage.
-Existing rwsem performance records measure the previous containing layout and
-do not establish performance for this refactor. There is no
-separate rwsem delegation queue or new generated-code ABI.
-The [compact mutex DWARF receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/layout-dwarf.json)
-also records this containing layout from the built provider.
+The condition heads use `gate.wait_lock`; they are not independent physical
+owners. The separately aligned counters/conditions and preallocated reader OSQ
+slots remain. Exact request, source, image and execution storage is additional.
+The earlier [layout receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/layout-dwarf.json)
+and [older object comparison](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/object-layout.json)
+retain their own build identities; their measurements do not qualify later
+protocols or the merged runtime.
 
 ## API and scope
 
-Include `kd_rwsem_api.h` for the ordinary public family:
-`kd_down_read/up_read`, `kd_down_write/up_write`, read/write trylock, read
-interruptible/killable and write killable operations, and `kd_downgrade_write`.
-`kd_down_write_interruptible` is a KD extension: the target Linux header has no
-corresponding writer API. `DEFINE_KD_RWSEM`/`DECLARE_KD_RWSEM`,
-`KD_RWSEM_INITIALIZER`, `kd_init_rwsem`, `kd_rwsem_init` and `__kd_init_rwsem`
-cover static, ordinary dynamic and named initialization. Initialization requires
-a quiescent object and clears prepared mode. Named/class arguments supply no
-lockdep integration.
+Include `kd_rwsem_api.h` for the ordinary public family. Initialization requires
+a quiescent object and clears preparation, selected metadata, counters and queue
+heads. Static, dynamic and named initialization remain available; name/class
+arguments add no lockdep integration.
 
-Ordinary `kd_down_write` calls are local by default and permit atomic downgrade
-with `kd_downgrade_write`, followed by `kd_up_read`. Callable acquisitions
-(`(kd_down_write)(sem)` or a function pointer), trylock, signal and cleanup-guard
-acquisitions always remain local, even on a prepared object. Both macro and
-callable `kd_up_write` route the exact physical acquisition before retiring its
-phase. Mixed macro/callable release is supported; accessing the embedded gate
-directly bypasses reader admission and is invalid.
+| Acquisition form | Route |
+| --- | --- |
+| `kd_down_read`, read signal/try/non-owner forms | Local reader admission and a real reader credit |
+| Unprepared `kd_down_write`, `_interruptible`, `_killable` macros | Local selected-writer admission |
+| Explicitly prepared writer macros above | Retained capture through `kd_service_capture`, subject to eligibility and resource/context checks |
+| Callable writer functions, function pointers and cleanup constructors | Conventional local C acquisition, including on prepared objects |
+| Write trylock | Bounded local attempt; no publication, allocation or sleeping |
 
-`kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` explicitly enables
-writer delegation for that object's ordinary macro calls. Stop and join every
-participant before preparation. The function returns `-EBUSY` for an observed
-live object; the idle observation is not a concurrent lifetime barrier. Only a
-successful source-entry preparation sets the flag, which stays set across local,
-signal and trylock operations. There is no concurrent mode switch or disable
-API. Prepared ordinary writers must be same-task lexical acquire/release pairs,
-must not downgrade and must not acquire inside another translated body. These
-are explicit eligibility obligations, not automatically proved properties.
-Unprepared ordinary writers retain downgrade; callers requiring it on a prepared
-object select callable, signal or trylock local acquisition.
+`kd_down_write_interruptible` remains a KD extension: the target Linux rwsem
+writer API has a killable form but no corresponding interruptible form.
+Read/write trylocks return 1 on success and 0 on failure. Signalable calls return
+0 after actual acquisition or `-EINTR` after applicable cancellation and exact
+cleanup. Killable waits ignore nonfatal signals. Nested/nest-lock annotations
+preserve the supported non-lockdep aliases without evaluating annotations.
 
-The public macro captures the original caller's continuation. Prepared writers
-reserve a positive phase and drain readers before the unchanged mutex DIRECT
-ABI2 entry can publish a pinned waiter. The public unlock reaches the mutex JIT
-endpoint, then only the resumed origin releases its exact reservation after
-physical unlock/ACK. No caller cookie or separate OUTER rwsem API is needed.
-Preparation does not promise a returned JIT body. Benchmark sources publish a
-named continuation in a `noipa` function for registration and auditing; the
-continuation ABI and two-word generated wrapper are unchanged.
+`kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` registers the source
+entry before enabling capture. Stop and join all participants first. Invalid
+arguments/ABI return `-EINVAL`; an observed live object returns `-EBUSY`.
+The idle check is not a concurrent lifetime barrier. Preparation is monotonic
+until quiescent reinitialization and does not guarantee that any request will
+be delegated or return through JIT. Callable/try/cleanup uses still participate
+in the same object's admission protocol.
 
-Read/write trylocks return 1 on success and 0 on failure. Interruptible and
-killable acquisitions return zero on success and `-EINTR` on cancellation without
-leaving a reader, phase or gate acquisition. Killable ignores nonfatal signals;
-an immediately available acquisition may succeed despite a pending signal.
-Prepared ordinary writers cannot cancel after publication; cancellation APIs
-remain local. Read trylock and matching unlock preserve IRQ/preemption state in
-atomic contexts without sleeping, allocating or acquiring a scheduler lock.
-Sleeping acquisitions and writer operations require task context.
+Prepared signalable macros use the retained integer-result entry; they are not
+blanket local fallbacks. Their original task supplies the signal predicate.
+Actual readiness wins the grant-versus-signal election; selection, mutex PICKUP,
+an image or a zero-reader observation from an earlier phase is insufficient.
+Before commitment, cancellation must unlink the request and finish its exact
+tentative physical/phase cleanup before CANCEL_ACK. After commitment, later
+preparation or execution work cannot turn the acquisition into `-EINTR`.
 
-Nested and nest-lock annotations match the target non-lockdep aliases: they do
-not evaluate the annotation or validate lock ordering. Read non-owner forms
-allow an explicitly coordinated task to release a transferred read count; the
-caller must retain the object until that release. This is not an automatic
-lifetime transfer or permission for writer non-owner release. Read/write cleanup
-guards acquire locally, with native-shaped try/intr/kill forms.
-`kd_rwsem_is_locked`, `kd_rwsem_is_contended` and held assertions are observations
-of KD state, not ownership grants. Contention reports KD wait/queue presence;
-it does not reproduce Linux's exact wait-list representation. Speculative reader
-counts can make a lock observation true before a reader enters its body.
-`kd_rwsem_is_idle` is a KD extension for inspection after all users stop/join;
-it cannot replace source/frame retirement.
+Both macro and callable releases route the exact successful acquisition. Never
+operate on `sem->gate` independently or infer owner authority from `admission`
+alone. Ordinary non-owner read release permits an explicitly transferred real
+credit with retained object lifetime; it does not transfer a proxy writer or
+permit writer non-owner release. Cleanup guards acquire locally. Inspection
+and held assertions report state/hints, not acquisition or caller ownership.
+`kd_rwsem_is_idle` is for inspection after users stop/join, not retirement.
 
-`kd_rwsem_compat.h` maps the corresponding Native names and guards to these KD
-operations when included after Linux headers. Rebuild every containing object
-and caller, and use KD storage exclusively. The layout, scheduling/fairness,
-lockdep annotations and prepared execution context differ from Native. There is
-no reader-to-writer upgrade, arbitrary recursive-read guarantee, IRQ/BH writer
-API or translated rwsem nesting ledger. RT/debug/lockdep configurations are
-explicitly refused by the shared build contract. Native MM uses only the
-local declarations and generated backend; the generator removes delegated phase
-helpers and replaces routed unlock with local gate release. It never links the
-loadable public API wrapper or opts MM into delegation.
+All participants must use one object protocol. Rebuild containing objects and
+callers for the KD source aliases. No binary-layout, lockdep, reader-to-writer
+upgrade, arbitrary recursive-read or general IRQ/BH writer support is implied.
+RT/debug/lockdep exclusions remain those of the shared build contract.
 
 ## Who may enter: admission phases
 
-An atomic admission word is independent of the embedded KD physical mutex:
+There is no positive prepared-writer cohort. The atomic admission word has only
+two valid states:
 
-| Admission value | Allowed participants |
+| Value | Meaning |
 | --- | --- |
-| `0` | Readers may enter; a writer may reserve admission when no optimistic readers are queued |
-| Positive | Exact number of live prepared-writer reservations; no new reader or local writer may enter |
-| `-1` | One local writer owns admission; no prepared writer or new reader may enter |
+| `0` | Local readers may acquire; no selected writer phase is closed |
+| `-1` | One exact selected writer phase closes new reader admission |
 
-The positive count records exact reservations acquired and released by the prepared
-acquisition path. It does not identify the physical executor or replace the mutex's owner,
-queue, source lease, result acknowledgement or frame records. An prepared
-reservation begins before the KD mutex call and ends only after its matching
-unlock returns on the originating task. An origin delayed after unlock therefore
-keeps admission closed conservatively.
+Every blocking writer uses the canonical acquisition queue. Its selected
+physical task obtains the real gate, then waits for already linked local-reader
+condition memberships to acquire or cancel while admission remains open.
+Only then does it establish a fresh `0 -> -1` phase with exact kind, owner,
+acquisition identity and generation, and drain real reader credits with the
+required ordering. Only actual gate ownership,
+matching phase and a fresh zero-reader check commit the acquisition. A queued
+writer carries no phase reservation or reusable reader-drain result.
+Trylock uses bounded request/gate/phase checks without publishing a queue node.
 
-When admission is zero, local writers and new prepared-writer cohorts defer
-while `reader_osq` is nonempty. An prepared writer rechecks that hint after a failed
-reservation CAS, because the observed phase may have changed from positive to
-zero. Existing positive cohorts still accept exact prepared-writer reservations.
-The queue hint grants no ownership: an enqueue can race the check, and the
-unchanged reservation RMW and reader-drain barriers still enforce exclusion.
-This gives queued readers a chance to enter before another writer phase starts;
-every reader acquires its own count and executes its own body.
+Local calls transfer successful custody from their temporary stack admission
+to the object's LOCAL owner record before retiring that descriptor. Retained
+capture keeps the canonical admission through physical release and its ACK.
+These are distinct lifetime routes through the same readiness protocol.
 
-A reader observes admission open, publishes its reader count with a fully
-ordered increment, then rechecks admission with acquire ordering. A failed
-speculation rolls back without touching protected data. An ordinary slow reader
-queues its optimistic retries, then sleeps when needed; every retry uses the
-same admission-aware acquisition on its own task. It cannot bypass a
-closed phase by acquiring the physical gate. Speculative reader counts can
-briefly appear during a writer phase, but those callers never access the
-protected payload.
+A reader checks open admission, publishes its credit with a fully ordered
+increment and rechecks admission with acquire ordering. A failed speculation
+rolls back before accessing the critical-section body. Temporary speculative
+counts can overlap a closed phase without granting a reader entry. A queued
+reader still acquires its own credit and runs its own body.
 
-An prepared writer atomically joins or creates a positive phase, executes the
-reader-drain ordering barrier, and waits until existing readers drain. Only
-then does it call the unchanged KD mutex DIRECT interface, which may acquire
-locally, combine other requests or publish a pinned waiter. All admitted
-readers have finished before that publication, and the positive phase prevents
-new admitted readers. The reader's ordered increment/recheck and the writer's
-reservation/barrier/count check prevent both from missing each other.
-
-The final reader's ordered decrement precedes a task-context reader-drain wakeup.
-Waitqueue enrolment and condition rechecks ensure a waiter either observes the
-completed drain or receives a wakeup. Atomic release omits the synchronous wake;
-the writer's timed recheck observes completion. Releasing the last prepared reservation
-reopens admission and wakes phase waiters. Reservation release is outside the
-translated region, after the existing mutex unlock endpoint; synthetic
-completion resumes there on the origin rather than releasing the reservation
-from the executor.
+Release retains `-1` until exact physical release has completed. Metadata and
+wake references are prepared under the object guard; reopening admission is
+the final object RMW. A subsequent writer performs its own selection and reader
+drain. Request generations and owner records, not a counter or queue hint,
+determine which acquisition may release.
 
 ## Waiting and wakeups
 
-Reader counts, admission reservations, and the two waitqueue heads occupy
-separate 64-byte-aligned regions. In the recorded accepted x86_64 build, this
-increased the object from 384 to 512 bytes; both historical layouts had 128-byte
-overall alignment through the former embedded mutex. The compact gate reduced
-the containing object to 320 bytes while retaining those separate regions;
-the appended read-admission tail targets the spare space after `reader_drain`.
-`phase_wait` contains readers and writers waiting for eligible admission,
-including writers deferred by the optimistic reader queue. `reader_drain`
-contains writers that already hold an ordinary or prepared reservation and wait for readers to
-finish. A final reader in schedulable context wakes only `reader_drain`; an ordinary phase release
-or final prepared reservation release wakes only `phase_wait`. Emptying the
-optimistic reader queue can also enable phase waiters without changing admission.
-Reader drainage cannot open a closed admission phase. A reader-drain waiter retains its
-reservation, so admission cannot reopen while that wait remains live. Fully
-ordered count/phase updates precede the lockless `waitqueue_active()` checks
-and pair with waitqueue enrolment and predicate rechecks.
+Ordinary `kd_down_read` first makes up to eight success-first attempts, stopping
+for rescheduling. Continued contention uses the existing preallocated mutex
+CPU/slot storage for an abortable reader OSQ membership. Only its head retries
+shared admission, for at most 16,384 conditions or until rescheduling is needed.
+The temporary CPU pin and slot end before the read body or sleeping fallback.
+No reader payload is published or delegated through this queue.
 
-Read trylock's speculative rollback uses the same ordered decrement as read
-unlock. IRQ-disabled or preemption-disabled callers cannot enter a waitqueue or
-scheduler lock there: they might already hold `rq_lock`. They only decrement.
-All reader-drain sleeps therefore recheck the acquire-ordered reader count on a
-one-jiffy timeout. The timeout does not acquire ownership or expire a reader;
-writers continue sleeping until the count is zero or an applicable signal
-cancels the wait. Timer/stack wait storage belongs to the schedulable writer and
-is retired before returning. No callback retains the semaphore after read release.
-This applies before delegation publication, including positive reservations.
-Phase waits keep their ordinary wakeups and do not poll on a timer.
+Reader condition fallback uses a short-lived stack request protected by
+`gate.wait_lock`. Its membership and `phase_wait.readers_waiting` count retire
+before returning. Condition wake collection retains task references, not stale
+stack-node pointers. Emptying the optimistic reader queue performs the ordering
+barrier and condition notification after dropping its slot/pin.
 
-On the captured `HZ=250` configuration a jiffy is 4 ms. This introduces periodic
-writer wakeups while readers remain and possible additional wake latency after
-an atomic final decrement. Scheduling adds its own delay; there is no new latency
-guarantee or performance claim. IRQ-enabled, non-atomic final release still wakes
-immediately. Admission barriers, exact reservations, cancellation and physical
-ownership remain unchanged. Static and dynamic initialization also clear the
-ordinary-read OSQ tail.
-Keep this validated baseline until measurements justify a safer alternative.
-An embedded `irq_work` wakeup would require proof of late-enqueue, cancellation
-and object-lifetime safety; it is not a validated replacement for the timed wait.
+Local writers use `kd_admission_wait`: success-first readiness and the original
+task's signal predicate, bounded 16,384-probe polling, scheduler checks and
+one-jiffy rechecks. Signalable writers use this common election too; a pending
+signal stops optimistic polling, while only the call's signal class cancels.
+Retained transport has its own service/wait coordination around the same exact
+admission decision. The budgets are implementation bounds, not latency or
+fairness guarantees.
 
-An ordinary `kd_down_read()` first tries up to eight reader acquisitions without
-queuing, stopping early for rescheduling. This short stage avoids a queue round
-trip when a brief writer phase ends. On continued failure, it disables
-preemption and reserves one of the existing preallocated
-mutex CPU/slot records for `reader_osq`. This uses that slot's independent OSQ
-links and exact reservation lifetime; it does not acquire the embedded writer
-gate, publish a delegation request or allocate new per-call storage. The queue
-head alone retries shared admission while queued callers poll their own nodes.
-The head tries at most 16,384 conditions and stops early for `need_resched()`.
-OSQ acquisition can also abort when rescheduling is needed or the predecessor's
-vCPU is preempted. An unavailable slot skips optimistic polling.
+An ordinary public `kd_up_read` finishes with the ordered reader decrement and
+performs no later object access or deferred notification. This applies even in
+ordinary task context: the final credit can permit immediate object retirement.
+The proxy route is checked first and consumes no anonymous reader count.
+Internal speculative rollback remains separate. Writer reader-drain waits use
+timed rechecks, so an atomic/IRQ-disabled final decrement needs no scheduler or
+queue lock. Reader phase-condition fallback also rechecks on a one-jiffy timer
+for the interval between wake collection and the final phase-opening RMW.
 
-Every success, abort or exhausted poll retires OSQ membership and releases the
-slot before enabling preemption. After enabling preemption, an empty OSQ tail
-triggers a full memory barrier before the lockless `phase_wait` check and wake.
-This orders the release-only tail update against writer enrolment/recheck;
-otherwise a writer could remain asleep after the queue became empty. The check
-also runs on unsuccessful acquisition paths. A replacement queued reader keeps
-writers deferred until a later empty transition. The reader then enters its body
-or uses the existing `wait_event()` enrolment/recheck fallback. A reader count is
-always acquired by the reader's own task; the queue head cannot grant ownership
-to another caller. Read trylock and interruptible/killable read APIs bypass this
-queue and retain their existing semantics. A speculative rollback while the
-ordinary-read poll is pinned omits the synchronous drain wake, as described
-above; the writer's timed drain recheck still guarantees an opportunity to
-observe completion.
-
-Uninterruptible writer admission and reader-drain waits retain their existing
-polling stages before sleeping. Each stage tries at most 16,384 condition checks
-and stops early when the scheduler needs the CPU. Those writer polls occur before
-delegation publication with preemption enabled; their finite fallback lets
-sleeping or colocated holders resume. A successful
-predicate may acquire a reader count or writer reservation, so it is consumed
-once without another acquisition attempt. The local writer's read-only
-phase check is only a hint; its compare/exchange remains authoritative. The
-budget is the accepted tuning for the captured benchmark platform, not a
-universal optimum. Earlier measurements of the unqueued policy improved some
-60-worker cases but substantially reduced throughput in some two-worker cases.
-Those observations do not establish performance for queued reader admission.
-
-The polling bound counts predicate invocations, not elapsed time: the existing
-prepared-reservation predicate can retry its compare/exchange internally. The
-fallback retains `wait_event()` enrolment, condition rechecks and scheduling.
-Interruptible and killable acquisitions bypass the 16,384-probe polling stage;
-their reader-drain waits use the timed recheck and retain their cancellation
-rules. In particular, mmap/munmap's `kd_down_write_killable()` path does not run
-that polling loop. Changing its budget would not directly tune those syscalls'
-killable admission or reader-drain waits. Wakeups prompt readers to retry their own admission-aware
-acquisition. Published mutex waiters, physical ownership, queue batching and
-wrapper ABI are unchanged.
+A timer only prompts another real predicate check; it neither grants ownership
+nor expires a reader. At recorded `HZ=250`, a jiffy is 4 ms, with additional
+scheduler delay possible. No starvation freedom, bounded wait or Native fairness
+identity is established. A deferred wake mechanism would need its own exact
+object-lifetime and cancellation proof.
 
 ## Local writers, cancellation and downgrade
 
-A local writer atomically changes admission from `0` to `-1`, acquires the
-KD physical gate locally, and drains readers while it may sleep. An unavailable
-admission phase is itself a sleeping wait. Interruptible/killable acquisition
-cancels at an applicable wait without retaining the phase or physical gate.
-Failure during reader drainage releases both before reporting `-EINTR`.
+Ordinary local downgrade publishes a real reader credit while the caller still
+owns its physical writer and `-1` phase, then releases the gate and reopens
+admission. A following writer freshly selects and drains that read credit.
+Local read release keeps the allocation/guard/scheduling-free final decrement.
 
-Local unlock releases the KD physical gate before reopening admission.
-Downgrade publishes its reader count while it still owns both `-1` admission
-and the physical gate, then releases the gate and reopens admission. A following
-prepared writer must reserve admission and drain this reader before publication.
-An existing positive phase excludes local ownership, so a local writer
-can never introduce a downgraded reader behind already-pinned prepared writers.
+A typed downgrade actually consumed by a JIT proxy is different. It changes the
+logical acquisition to read mode while retaining the same physical writer gate
+and selected `-1` phase. It creates no real reader credit and does not admit
+unrelated readers or another writer. The same bound image can continue at the
+real post-CALL source position; surrounding MM operations are not skipped.
+Its matching typed read release consumes that retained writer exactly once,
+with physical/phase ACKs before completion.
 
-Prepared ordinary macro acquisition does not downgrade because other writers in its positive phase
-may already have published pinned requests. Introducing a reader at that point
-would violate their reader-free admission guarantee and could prevent that
-reader from resuming on a pinned CPU. Cancelling a published request would also
-require changing the selected mutex's queue and source/frame lifetime protocol.
-Keeping those operations on local acquisitions preserves both contracts.
+If an uncompiled instruction hands back after proxy downgrade, the executor
+retains that writer while the original logical task runs the exact unfinished
+suffix. Its typed `UP_READ` waits for the executor's physical release and ACK.
+This proxy final-release route supports the same logical task in ordinary task
+context, not IRQ-off, preemption-disabled, borrowed spin/preempt/RCU intervals
+or cross-task non-owner release. Genuine real-credit read APIs keep their own
+ordinary atomic-context contract.
 
-This construction preserves a live prepared-writer cohort: new prepared writers may
-join a positive phase while readers or local writers wait. New phases yield
-to queued optimistic readers, but this does not port Linux rwsem's reader
-batching or fairness policy. Sustained prepared-writer arrivals can still delay
-those waiters. It does not guarantee starvation freedom, bounded waiting or
-improved throughput. The selected mutex's general oversubscription
-limitations remain separate from the rwsem reader-drain solution.
+If handback occurs before downgrade, the later native downgrade keeps its real
+reader-credit route: publish the credit, release writer/phase and transfer that
+credit to native custody. Never substitute a reader decrement for proxy writer
+release or consume a real credit twice. The [execution flow](../JIT_EXECUTION.md#batch-execution-and-return)
+owns the compiler release-boundary exception and exact CALL/RET/handback rules;
+[frames](frames.md) and [lifetimes](lifetimes.md) own final-user retention.
 
 ## Mmap and validation boundaries
 
-The [Linux 7 mmap adapter](../../kernel_integration/linux70/MMAP.md) uses ordinary
-local KD readers/writers behind Linux's `mmap_*` wrappers. It selects one backend
-per mm before publication; native MM algorithms execute on their original task.
-It never enables prepared writer delegation. Minimal wrappers retain exact
-read-share tokens and mm references for asynchronous read release; an observed
-reader count cannot replace that lifetime transfer.
+The [Linux 7 adapter](../../kernel_integration/linux70/MMAP.md) keeps native MM
+source bodies and algorithms unchanged and selects one backend per mm before
+publication. Its generated local backend does not link the loadable
+`kd_rwsem_api.c` macro wrapper. Explicit generic provider preparation/binding
+and activation are a separate opt-in route; loading a provider alone does not
+enable delegation. Read acquisition remains local. Minimal MM wrappers retain
+exact tokens/mm references for asynchronous real-reader release.
 
-Normal `kdlock1` disables this adapter. The separate enabled `kdmm1` image has
-Native/KD schema-2 identities, fresh API/lifetime/mapping/fault prerequisites and
-42 completed exploratory shared-MM timings. The
-[checkpoint](../../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
-retains the initial failed contention witness and later diagnostic separately.
-The current queued-reader preference does not qualify those frozen MM results.
-Correctness does not establish fairness, full Linux equivalence, performance
-parity, whole-kernel support or automatic non-owner lifetime transfer. RT and
-lockdep configurations are explicitly excluded.
+Normal `kdlock1` disables MM replacement. Enabled kernel/profile identities,
+source, provider activation and actual API path must all be recorded. Historical
+[local-MM checks and timings](../../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+are distinct from later generic retained execution. The
+[proxy-read campaign](../../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+records a stable counter-enabled mmap1 point and complete whole-application
+returns for both selected roots. It does not identify a particular consumed
+downgrade branch, establish quiet/Native performance gain or validate the later
+merged runtime combination. Original failed campaigns and exact cleanup remain
+separate receipts. This documentation edit supplies no new execution evidence.
 
-The [instruction-exit probe](../../tests/kernel/jit_continuation/README.md) has a separate
-prepared local-writer ABI2 family. Its returned cold bodies, hot native suffix, exclusion
-and drain are distinct from the local actual-MM backend. Production source trust
-changes no reader-drain, ownership, ACK or reservation-release requirement.
-
-The archived owned-mutex rwsem design is not interchangeable: prepared writers must
-reserve admission and drain readers before publication, and retain their exact
-reservation through the origin's final release. Do not restore Linux mutex
-backing, parked producers or operation-specific MM delegation. Older kernel
-line audits, fault proposals and stopped campaign plans remain in the
-[fixed pre-cleanup guide](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/rwsem_implementation.md#mmap-and-validation-boundaries)
-and [history](../history/README.md).
+Preserve source/image leases, exact owners, cancellation, acquisition results,
+release ACKs and final-user retirement. Do not restore Linux lock backing,
+positive prepared cohorts or operation-specific MM body delegation. Historical
+protocols and promotion decisions remain in their fixed source/result records
+and the [history index](../history/README.md).

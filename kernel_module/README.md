@@ -188,14 +188,15 @@ performance acceptance requires separate workload measurements.
 
 This section records historical provider compatibility and source-specific
 validation. The current translator selects only the scalar services `ktime_get`,
-`ktime_get_ns` and `int_sqrt`; strings undergo ordinary leased decoding,
-instruction/context admission, memory analysis and generated CALL/RET. It never
+`ktime_get_ns` and `int_sqrt`; strings undergo ordinary leased decoding and
+generated CALL/RET. Optional checked instruction/context/memory analysis is a
+regression utility, while production assumes trusted source. It never
 selects these string services or the direct-call route below, even when the
 provider advertises their capability bits. Retaining those ABI interfaces does
 not validate ordinary helper translation on Linux 7.
 
-The contract introduced in version 10 uses the original [`strcmp` service](../docs/design/admission.md#original-strcmp-service)
-and [`strscpy_pad` writing service](../docs/design/admission.md#original-strscpy_pad-writing-service)
+The contract introduced in version 10 uses the original [`strcmp` service](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strcmp-service)
+and [`strscpy_pad` writing service](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strscpy_pad-writing-service)
 without helper-specific instruction, CALL-encoding, string or runtime buffer
 checks. Feature bit 9 identifies this contract; translation also requires bit 7
 for `strcmp` or bit 8 for `strscpy_pad`. Both require ABI1, one outer physical
@@ -221,7 +222,7 @@ Only `strcmp` has the separate 128-call allowance. `strscpy_pad`, scalar service
 and lock controls share the existing 16-call allowance, for at most 144 such
 continuations before final unlock. These services preserve the two-word wrapper
 ABI, exact owners, source leases and final acknowledgements. The version 10
-[focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
+[focused correctness checks](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 passed through candidate 6. The
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 completed all 567 sessions with validation and drain. In that historical
@@ -274,7 +275,7 @@ original waiter finishes its pending CALL and native suffix under the existing
 owner; the direct image cannot reenter with a full packet and reset the limits.
 A successful invocation may reach minimal terminal completion without an
 intermediate FULL export. See
-[direct-call admission](../docs/design/admission.md#direct-original-helper-calls)
+[direct-call admission](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 for the complete entry, lifetime and error contracts. The final bridge passed
 its focused unit and live checks and separate KD screen. All 18 diagnostic
 profiles completed and drained with tracing restored. During direct-body

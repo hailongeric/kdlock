@@ -1,5 +1,11 @@
 # General delegated rwsem protocol
 
+This is the historical delegated-protocol/MM continuation notebook. Its branch
+authorization and implementation sequence apply to those recorded inputs. Use
+the [current rwsem guide](rwsem_implementation.md) and [JIT execution](../JIT_EXECUTION.md)
+for selected-writer, proxy-read and Native-first downgrade behavior.
+
+
 ## MM continuation implementation, November 3
 
 Branch `codex/unified-lock-queue-mm` starts at

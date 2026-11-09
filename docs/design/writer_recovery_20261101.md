@@ -1,5 +1,10 @@
 # Writer promotion exception and reader recovery
 
+This is the dated promotion/ablation decision record. Its numerical exceptions
+apply only to the named results. Current limits are in [open work](../TODO.md);
+the ordered work below is historical rather than a new execution request.
+
+
 ## Decision and numerical limits
 
 On November 1 the user requested promotion of candidate

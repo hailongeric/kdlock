@@ -74,8 +74,10 @@ are committed, with [source-specific results](kdlock_lock_replacement_contract.m
 and preserved failed attempts. Supplied task/physical primitives limit that
 coverage. The later `58af0a53` probe passes cold CALL and indirect-JMP handback;
 its exact post-RET observations accompany an overall checker failure. Candidate
-`bccf877c` adds untested harness fixes, and further validation is blocked; see
-the [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
+`bccf877c` adds untested harness fixes for that targeted probe; see the
+[partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
+Later independent application results are in
+[validation](../VALIDATION.md#retained-original-jit-and-proxy-read).
 General flags/SIMD restoration and IRQ/NMI conflict are deferred for this phase.
 Existing limited flags and instruction contracts do not establish those broader
 features.

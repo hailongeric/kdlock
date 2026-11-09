@@ -1,5 +1,11 @@
 # Native kernel critical-section semantic map
 
+This is the October 30 source/context audit and its historical implementation
+sequence. The semantic inventory remains useful; old pending/next-step status
+does not describe current master. Use [code map](../CODE_MAP.md),
+[validation](../VALIDATION.md) and [open work](../TODO.md) for current status.
+
+
 This is an analysis before implementation, based on maintained KD commit
 `24b7a80591a3c8367398cc7375ae0c5952069bfb` and the unpromoted mutex candidate
 `2dbcd7afbf141dd63dcf0086b65fd0da4b32d6f7`. The latter changes waiter scheduling

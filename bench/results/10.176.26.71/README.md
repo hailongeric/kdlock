@@ -131,5 +131,5 @@ physical host core 63 with the last worker. The earlier bounded report uses a
 keep their samples separate from the initial 60-vCPU migration validation and
 the [original-host reports](../380G10/README.md).
 Record each run's actual topology and frozen source. Current connection and
-operational instructions are in [the project guide](../../../docs/PROJECT_GUIDE.md).
+operational instructions are in [VM operations](../../../docs/operations/VM.md).
 See [the common layout](../README.md) for guest output and host archive paths.

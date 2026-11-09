@@ -23,7 +23,7 @@ the separate Linux implementation used as a benchmark comparator.
 | Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
 | Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase and encoded tail; reserved nodes hold exact waiter records | Direct public blocking calls permit delegation; callable lock symbols and task-sensitive variants execute locally. Published delegation waiters poll pinned; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
 | Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
-| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and default ordinary writers run locally. Explicitly prepared ordinary writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
+| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, exact selected-writer phase and two condition queues | Readers and unprepared ordinary writers run locally. Explicitly prepared writer macros permit retained continuation capture; the selected writer closes admission and drains readers before its body. | [Reader/writer semaphore](design/rwsem_implementation.md) |
 
 Sizes describe the captured x86_64 configuration, not a portable binary
 interface. They exclude per-CPU queues, stacks, execution frames and translated
@@ -38,14 +38,14 @@ flowchart TD
     Spin["KD spinlock"] --> SpinEngine["Spin queue and execution engine"]
     Rwlock["KD rwlock: local readers, exclusive writers"] --> SpinEngine
     Mutex["KD mutex"] --> MutexEngine["KD physical mutex and legacy delegation queue"]
-    Rwsem["KD rwsem: reserve writer phase and drain readers"] --> MutexEngine
+    Rwsem["KD rwsem: select writer phase and drain readers"] --> MutexEngine
     SpinEngine --> Shared["Shared translation, frames and completion checks"]
     MutexEngine --> Shared
 ```
 
 The rwlock count grants read/write access; its gate orders contended admission.
-The rwsem reservation blocks new readers, but does not grant physical mutex
-ownership. Those layers have separate responsibilities and must all remain live
+The rwsem selected writer phase blocks new readers, but does not grant physical
+mutex ownership. Those layers have separate responsibilities and must all remain live
 until their matching releases. Neither reader/writer lock adds a third JIT
 engine. JIT means just-in-time translation of the original protected code.
 
@@ -53,9 +53,13 @@ Use [`include/kd_rwsem_api.h`](../include/kd_rwsem_api.h) and `struct kd_rwsem` 
 API. Linux mmap callers retain their `mmap_*` wrappers. The internal
 `kd_mutex_local_*` gate implements physical writer exclusion; bypassing rwsem
 admission with that gate does not protect readers. Explicit quiescent preparation
-permits delegation through the same ordinary writer names. Prepared macro acquisitions cannot downgrade; unprepared ordinary
-and callable/signal/try/cleanup writer acquisitions remain local and can downgrade.
-The mmap adapter selects the local protocol and keeps native MM bodies on their original task.
+permits continuation capture through the ordinary writer macros, including
+interruptible and killable forms. Unprepared calls and callable/try/cleanup
+acquisitions execute locally and retain ordinary downgrade semantics. Prepared
+capture may also select local execution when its source or image is unavailable.
+The historical local mmap adapter keeps native MM bodies on their original task;
+separately activated retained capture has its own exact owner and continuation
+contract.
 
 The provider builds both engines and shared execution helpers through
 [`kd_spin_runtime.c`](../kernel_module/kd_spin_runtime.c). Ordinary mutex physical
@@ -70,7 +74,7 @@ linked implementations. See the [code map](CODE_MAP.md).
 | Spinlock | The ordinary pair selects local execution when cold or refused. Explicit `kd_spin_lock_irqsave/irq/bh` pairs always execute locally. | `kd_spin_lock/unlock` source macros in `kd_spin_api.h`; named benchmark continuations retain `KD_SPIN_DIRECT_LOCK/UNLOCK` | Unified calls register their internal continuation on contention; named entries use `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)`; ABI1 |
 | Mutex | `kd_mutex_local_lock/unlock`; callable lock symbol, trylock, interruptible, killable and I/O forms | Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases; explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`; `KD_MUTEX_OUTER_LOCK/UNLOCK` retains its outer cookie | Unified calls capture an internal continuation; explicit named entries use `kd_mutex_prepare(lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`; ABI2 |
 | Rwlock | `kd_read_lock/unlock`; `kd_write_lock/unlock`; local IRQ/BH and trylock forms | `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`; writers only | `kd_rwlock_prepare(lock, entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`; ABI3 |
-| Rwsem | `kd_down_read/up_read`; default `kd_down_write/up_write`; callable/signal/try/cleanup acquisitions stay local with downgrade | Same ordinary writer names after explicit preparation; no downgrade or translated nesting for prepared macro acquisitions | `kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` on a quiescent object; ABI2 |
+| Rwsem | Readers, unprepared writer macros and callable/try/cleanup acquisitions execute locally with ordinary downgrade | Prepared `kd_down_write`, `kd_down_write_interruptible` and `kd_down_write_killable` macros permit retained capture; matching releases use exact acquisition routing | `kd_rwsem_prepare(sem, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1)` on a quiescent object; ABI2 |
 
 An **ABI**, or application binary interface, specifies registers and data layout.
 ABI1/2/3 are declared in [`exe_info.h`](../include/exe_info.h). ABI3 starts
@@ -123,12 +127,15 @@ The former executor retains source/frame state through real unlock ACK and
 reacquires for its own request without republishing a delegation node. The
 recipient resumes its native suffix, not a new combiner loop. Immediate queued
 role exchange is still unimplemented. This replaces the earlier blanket mixed-control
-`-EOPNOTSUPP`; it does not establish arbitrary mixed nesting or live transfer
-correctness. Pinned DIRECT controls and spin-to-mutex controls take pending native
-continuation; sleeping while a spinlock is held remains invalid. Translated
-rwlock/rwsem acquisition has no general mode ledger. See
+`-EOPNOTSUPP`; the corrected `20baf5c2` probe validates scoped physical owner
+handoff, not arbitrary mixed nesting. Pinned DIRECT controls and spin-to-mutex
+controls take pending native continuation; sleeping while a spinlock is held
+remains invalid. Retained service capture recognizes selected mutex and rwsem
+writer operations with exact owner
+records; this does not provide a general rwlock/rwsem mode ledger or arbitrary
+mixed nesting. See
 [ownership and limits](design/locking.md#53-nested-ab-and-native-continuation) and
-[implementation/check status](TODO.md#october-29-api-and-execution-work).
+[implementation/check status](VALIDATION.md).
 
 All users of one object must use the same protocol. KD local and delegating
 interfaces can share their corresponding KD object with matching unlocks.
@@ -145,18 +152,37 @@ stay on the calling CPU. Rwlock interrupt/BH readers bypass a waiting writer to
 avoid blocking an interrupted reader; active writers still exclude them. Mutex
 operations and sleeping rwsem acquisitions require task context. KD rwsem read trylock and matching read
 unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
-observed through timed writer-drain rechecks. Source trust does not switch hardware task identity or make unsupported
-execution/backend protocols available. Explicitly prepared rwsem macro writers cannot cancel after publication,
-downgrade, or appear as nested controls inside a translated body. Default ordinary
-and callable/signal/try/cleanup writer acquisitions remain local with downgrade.
+observed through timed writer-drain rechecks. Source trust does not switch hardware
+task identity or make unsupported execution/backend protocols available.
+
+Prepared interruptible/killable writer captures preserve cancellation before
+acquisition commits, including after request publication. A canceled request
+returns `-EINTR` only after its queue and owner obligations are acknowledged;
+successful commitment retains the acquisition and its exact matching release.
+Callable signalable symbols and cleanup constructors keep local C admission.
+
+A downgrade consumed while the JIT proxies an acquisition makes that ownership
+logically read-only but retains its exact physical writer gate and selected phase.
+The same root image continues through its decoded read suffix. The matching typed
+`kd_up_read` releases that retained writer exactly once. Handback after this
+transition routes the original logical task's final release to the executor.
+This proxy release requires ordinary task context: IRQ-off, preemption-disabled,
+preemptible-RCU and cross-task non-owner release are unsupported. Ordinary local
+read releases retain their existing atomic-context contract.
+
+If native handback occurs before downgrade, the original task's downgrade instead
+creates a real reader credit and releases the writer gate and phase. Local
+downgrade does the same. Its later read release consumes that credit. These paths
+do not add reader delegation or the redesign proposal's general operation-boundary
+and separate-entry protocol.
 
 | Current rwsem behavior | Evidence / limit |
 | --- | --- |
 | Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The [Linux 7 enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md) records fresh bounded API/lifetime and actual-MM prerequisites in both modes. These are not full Linux equivalence claims. |
 | Read trylock/rollback and matching release with IRQs/preemption disabled | Focused standalone and actual mmap checks; no synchronous wake from atomic final release. Writer drain rechecks after one jiffy. |
-| Prepared ordinary writers | Explicit quiescent preparation enables the mutex ABI2 protocol through the same public names; no downgrade or translated nesting. Fresh local/API and instruction-exit checks are indexed in the [October 29 checkpoint](../bench/results/10.176.26.71/tests/api-semantics-20261029/README.md); the changed shell has no new timing result yet. |
+| Prepared ordinary writers and proxy downgrade | The [focused proxy-read checks](../bench/results/10.176.26.71/tests/rwsem-proxy-read-20261109/README.md) cover exact retained-writer release, native routing and cancellation boundaries. The later [mmap1 point](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md) records returned bodies, not proof that a particular proxy-downgrade branch was consumed. Neither result validates the merged runtime combination or arbitrary nesting. |
 | Teardown | Callers must stop/join all users and retire published work. An idle predicate alone does not establish object lifetime. |
-| Fairness, starvation bounds, performance neutrality | Unestablished; completed shared-MM measurements remain exploratory and below Native. See [performance](PERFORMANCE.md). |
+| Fairness, starvation bounds, performance neutrality | Unestablished; historical shared-MM controls remain exploratory and below Native. The later instrumented mmap1 point has no matched Native comparison. See [performance](PERFORMANCE.md). |
 | Whole-kernel and `ww_mutex` | Unvalidated. RT, debug-mutex/debug-lock-allocation and lockdep configurations are explicitly refused, not future acceptance milestones. |
 | TCLock rwsem | Restricted ordinary registered-worker pairs only; no equivalent cancellation, downgrade or actual mmap arm. |
 
@@ -165,7 +191,9 @@ avoids a synchronous scheduler/waitqueue wake when IRQs or preemption are
 disabled. Writers recheck reader drain after one jiffy (4 ms at the captured
 HZ=250, with additional scheduling delay possible). This is an unmeasured latency
 tradeoff. Ordinary uninterruptible acquisitions have bounded polling of at most
-16,384 checks per stage; mmap's killable writer path bypasses that polling loop.
+16,384 checks per stage. Signalable admission uses its original task's predicate
+and the same success-before-cancellation election; historical MM profiles retain
+their own captured polling behavior.
 Neither mechanism establishes fairness or a maximum acquisition latency.
 
 The current translator trusts kernel and module source. Semantic safety,
@@ -200,7 +228,7 @@ the body. Exact ownership and unlock acknowledgements survive until all users
 of the request have finished.
 
 Stop new calls and join users before checking idle state. Queues, readers,
-writer reservations, physical owners, native continuations and execution frames
+selected writer phases, physical owners, native continuations and execution frames
 must drain before freeing lock/data storage or unloading source/provider code.
 An idle-object helper or throughput counter cannot substitute for those checks.
 

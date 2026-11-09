@@ -1,5 +1,11 @@
 # Checked spin pointer-load continuation
 
+This is an explicit checked-analysis regression fixture. Production trusted
+translation bypasses this analysis; its old string-service/direct-call evidence
+below is historical. [Translation policy](../../../../docs/design/admission.md)
+defines the present production and optional regression scopes.
+
+
 This focused check uses the [address-guard payload](fixture/module.c)
 to verify a delegated spin critical section that encounters a checked pointer
 load. JIT means the generated machine code that a lock holder runs on behalf of
@@ -70,7 +76,7 @@ original CALL-word aliases does not remove this check. The
 short and valid 300-character strings to complete through the original `strcmp`
 API without helper prechecks. Neither contract removes this pointer-load probe.
 That string probe now requires the optional version 11
-[direct-call route](../../../../docs/design/admission.md#direct-original-helper-calls).
+[direct-call route](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls).
 Direct-call images cannot also contain address guards; the two probes test
 separate execution paths. This address-guard probe passed and drained in
 [candidate 2](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-2-checks).

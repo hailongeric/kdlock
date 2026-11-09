@@ -4,6 +4,15 @@ Current instructions are in the [documentation index](../README.md). Historical
 records preserve their original source, topology, numbers and failures. A past
 pass does not describe current `master` unless the result binds those inputs.
 
+## November 9 documentation archive
+
+The [tracked archive](documentation-20261109/README.md) retains the superseded
+reached-backend guide, expired interpreter performance plan, and full earlier
+design/TODO status pages. Its index names current replacements and records
+original Git blobs and content hashes. The benchmark-linked reached-stage
+anchor remains at its old path. Current implementation and later redesign
+proposals retain separate authority and evidence status.
+
 ## Pre-cleanup documentation checkpoint
 
 The documentation cleanup on October 28, 2026 removes duplicate guides, expired

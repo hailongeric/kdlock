@@ -1,8 +1,17 @@
 # Original compiled images for kdlock lock replacement
 
-The sole implementation writer is this session on `codex/mmap-reached-jit`,
-starting at `fe06f8add830110e0dbd44bb63c8248257b3f57c`. Master and unrelated
-work remain unchanged. This design precedes implementation.
+This is a chronological implementation/decision notebook. Its branch assignments,
+authorization and next-step statements apply to the recorded checkpoint; they
+do not schedule current work. Unique query, custody, retirement and learning
+decisions remain here with their evidence. Present behavior is summarized in
+[JIT execution](../JIT_EXECUTION.md), the [register ABI](../JIT_REGISTER_ABI.md)
+and the [retained execution contract](kdlock_lock_replacement_contract.md).
+The [validation index](../VALIDATION.md#retained-original-jit-and-proxy-read)
+separates later results from earlier failed/unrun attempts. This notebook does
+not prescribe the target layout or architecture of a separate redesign.
+
+The original writer record began on `codex/mmap-reached-jit` at
+`fe06f8add830110e0dbd44bb63c8248257b3f57c`, before that implementation.
 
 ## Correction and reuse
 

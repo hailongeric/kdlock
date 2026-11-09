@@ -1,5 +1,11 @@
 # JIT continuation check
 
+Current production uses the original compiled-image pipeline described in
+[JIT execution](../../../docs/JIT_EXECUTION.md). Reached-mode and named-helper
+sections below retain historical candidate commands and capability contracts.
+They do not restore the removed reached backend or establish current support.
+
+
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). The runner freezes the source,
 including private `.inc` implementation files, and builds the provider, daemon,
@@ -412,7 +418,7 @@ printed line per count or a printed event in each taken phase. Each taken phase
 must independently increment its marker counter; all retained events must match
 the exact image, instruction and writer tasks from those two phases.
 
-Version 11's optional [direct original-helper route](../../../docs/design/admission.md#direct-original-helper-calls)
+Version 11's optional [direct original-helper route](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls)
 is a separate ABI1 spin feature; it does not change this ABI2 mutex marker or
 the selected mutex protocol. This probe remains an affected regression check,
 not a measurement of direct-call performance. It passed and drained in

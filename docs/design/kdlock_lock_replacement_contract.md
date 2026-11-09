@@ -1,32 +1,24 @@
 # kdlock lock replacement contract
 
-This guide records the selected execution contract for kdlock lock replacement.
-It applies to the correction on `codex/mmap-reached-jit` in
-`/tmp/kdlock-reached-path-translation`; it does not claim that master implements
-the correction or that all kernel locks have been replaced. Native critical
-section bodies, surrounding algorithms and userspace syscall paths remain
-unchanged. This is a general lock replacement task, including its MM consumers.
+This guide describes the retained execution contract implemented on `master`.
+It covers current-position native continuation, exact ownership and source/frame
+lifetime; [JIT execution](../JIT_EXECUTION.md) owns current emission boundaries,
+including the narrow JIT-consumed proxy downgrade. Native critical-section
+bodies and userspace syscall paths remain unchanged.
 
-The production implementation checkpoint is
-`da55414fa576a6e683f98364523cf9353b598c0e`, following the retained current-position
-handback, Native read custody, original-JIT query and synchronous-retirement
-wiring at `a6fe0bb2`. Earlier `ebae17c1` adds miss packets; `10ef078a` removes
-the separate instruction JIT and corrects image-header selection. The four
-component attempts below resolve their observed failures through separately
-identified runs. The [committed evidence](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
-retains every failed attempt; this is not a single combined run or live proof.
+Merge `6badc60e` includes the proxy-read implementation and its source-specific
+evidence. The [latest validation](../VALIDATION.md#retained-original-jit-and-proxy-read)
+distinguishes tested `7e3c90b4` from the unexecuted union with master's flags-stack
+changes. Historical work orders below apply to their named checkpoints;
+separate redesign proposals need their own target decisions and implementation.
 
-Subsequent selected designs are recorded in `ebf0aa4c` for Native read custody,
-`898b9d1c` for the three original-JIT state queries and `c0bb9ccd` for synchronous
-home-CPU retirement. Those are design/documentation checkpoints. Their runtime
-wiring is committed. Central service acceptance, typed release and final ACK
-now have component coverage, with the supplied primitives and lifetime limits
-described below. A later live probe at `58af0a53` passes cold CALL and
-indirect-JMP handback phases. Its post-RET observations do not change the
-failed overall checker result. Current candidate `bccf877c` adds untested
-harness fixes; further live validation is blocked. The
-[partial live record](#partial-live-probe-and-current-stop) separates those
-outcomes from the component receipts and the still-unvalidated mmap1 path.
+The initial production checkpoint `da55414f` followed wiring at `a6fe0bb2`,
+miss packets at `ebae17c1` and removal of the separate instruction backend at
+`10ef078a`. The [component receipts](../../bench/results/10.176.26.71/tests/compiled-mm-handback-components-da55414f/README.md)
+retain every failed and successful source-specific attempt with fixture limits.
+The later `58af0a53` probe passed cold CALL and indirect-JMP phases but failed
+its overall post-RET checker. Its `bccf877c` harness follow-up remains untested;
+that targeted record is separate from later mmap1 campaigns.
 
 ## Required execution model
 
@@ -143,11 +135,10 @@ Keep the exact task, service token, request/phase generation, physical owner and
 pickup checks. A reader count, generic locked observation or translated logical
 task load cannot replace that proof.
 
-The user subsequently selected pure queries on E with exact retained ownership
-records, plus permanent O takeover and immediate requeue for operations requiring
-O. This is the approved follow-on target, not behavior implemented by the compiler
-correction at `15f1c08a`. See the
-[protocol and ordering plan](compiled_mm_continuations.md#approved-follow-on-permanent-takeover-and-executor-local-pure-queries).
+An earlier follow-on selected pure queries on E and permanent O takeover with
+immediate requeue. The [dated work-order record](compiled_mm_continuations.md#approved-follow-on-permanent-takeover-and-executor-local-pure-queries)
+preserves that proposal and its original implementation boundary. It is not a
+claim of completed queued role exchange or a specification for a later redesign.
 
 `BALANCED_ORIGIN` is not the selected class for this interval: it rejects retained
 spin/RCU state. `ATOMIC_ORIGIN` preserves the origin's actual pins/RCU under the
@@ -178,20 +169,23 @@ The retained worker route is wired at `a6fe0bb2`. The `da55414f` Native-service
 join exercises production packet acceptance, typed release and final-ACK code
 with supplied task/physical primitives; its limits are recorded below.
 
-The selected Native read-custody path transfers the existing downgraded read
-credit without decrementing it. O's normal `up_read` or `up_read_non_owner`
-consumes that credit. Custody transfer is not physical unlock. A later routed
-downgrade transfers its newly created read credit under the same rule. E retains
-any other live owners and their exact release/ACK obligations. The decision and
-source wiring are established; the partial live probe below does not complete
-the loaded-provider read-custody and nested-owner validation.
+For genuine reader credits created by local or Native-first downgrade, Native
+custody transfers the existing credit without decrementing it. O's matching
+`up_read`, or a supported non-owner release of that real credit, consumes it.
+That final decrement performs no later object access, allocation or scheduling.
+E retains any other exact owners and release/ACK obligations. The historical
+partial probe below does not establish arbitrary nested-owner coverage.
 
-Ordinary readers remain local. The previously implemented delegated-writer
-downgrade/read-tail transition has its own exact read credit; preserve it
-without relabelling all reads as delegatable. Read-tail final release must not
-add allocation, scheduling or post-release object access. Cancellation,
-successful-ready priority, nested acquisition, queue readiness and retirement
-remain governed by their existing protocols.
+A downgrade consumed by the JIT proxy creates no anonymous reader credit. It
+retains the exact physical writer and selected phase while the same root runs
+its logical read tail. Matching typed `UP_READ` releases that writer once and
+completes its physical/phase ACKs. Native handback after this transition retains
+the same route. This final proxy release requires the original logical task in
+ordinary task context; it can wait for physical release/ACK and does not inherit
+the real-reader final-decrement contract. Ordinary readers remain local.
+[Rwsem implementation](rwsem_implementation.md#local-writers-cancellation-and-downgrade)
+defines the supported context and non-owner boundaries. Cancellation, readiness
+and retirement keep their existing exact protocols.
 
 Current pooled-slot retirement is also a resolved design: E finishes packet
 acceptance, all E-owned releases and recursive stack unwind, then performs
@@ -249,7 +243,7 @@ The owner retains all code and `compiled_mm_continuations.md`.
 
 | Document | Correction or remaining coordination |
 | --- | --- |
-| [Reached-path record](reached_path_execution.md) | Updated: separate emitter checkpoints are historical; miss handling, backend removal, runtime wiring and subsequent component results have distinct source identities. Failed and successful receipts remain intact. |
+| [Reached-path record](../history/documentation-20261109/design/reached_path_execution.md) | Updated: separate emitter checkpoints are historical; miss handling, backend removal, runtime wiring and subsequent component results have distinct source identities. Failed and successful receipts remain intact. |
 | [Lifetimes](lifetimes.md) | Updated: original bounded translation remains selected; source/image/owner rules and dated preparation records are retained. |
 | [Design](../DESIGN.md) | Updated: historical local MM controls, retained candidates and the original JIT correction have separate scope; focused component results do not establish live validation. |
 | [Execution](../JIT_EXECUTION.md) | Updated: ordinary recovery and retained-worker handback are distinguished from services, errors, completion and the remaining live proof. |
@@ -378,12 +372,12 @@ No test modules or daemon remain active. Saved local replies are under
 `/tmp/kdlock-handoff-third-cleanup-58af0a53` and
 `/tmp/kdlock-normal-return-confirmed`; this audit reads them offline.
 
-The implementation turn and one continuation stopped at the platform's risk
-flag. The owner reports that no supported review interface was available, so
-an execution approval request was not submitted. Further validation remains
-blocked. This documentation continuation does not retry it. Nested/read-tail
-and later fully returned-image joins remain unaccepted; the actual public
-query bodies and real-syscall mmap1 correctness/performance gates remain open.
+At that checkpoint, the implementation turn and one continuation stopped at
+the platform's risk flag. The owner reported no supported review interface, so
+an execution approval request was not submitted and the targeted probe stopped.
+Its nested/read-tail and later returned-image joins remain unaccepted by that
+checker. The [later independent mmap1 results](../VALIDATION.md#retained-original-jit-and-proxy-read)
+have their own source and evidence scope; they do not rewrite this failure.
 
 ### First frozen runtime checks at a6fe0bb2
 
@@ -469,9 +463,11 @@ groups, central service join and supplied online/offline retirement components.
 The partial live probe above supplies two passing cold phases and exact RET
 observations with a failed overall result. Remaining joins still need their own
 accepted/retired episodes; the untested harness fixes and successful component
-joins cannot supply them. Validation is blocked and is not retried by this audit.
+joins cannot supply them. Those targeted joins remain unaccepted; this audit
+runs no new execution work. Later application and integration evidence is
+indexed in [validation](../VALIDATION.md#retained-original-jit-and-proxy-read).
 
 Flags/SIMD restoration and IRQ/NMI conflict remain deferred. Whole-kernel
 coverage, unsupported configurations and general performance acceptance remain
-separate from this correction. No full runtime acceptance, promotion or speedup
-follows from this contract.
+separate from these historical checks. Current integration and application
+claims require their separately recorded source-specific receipts.

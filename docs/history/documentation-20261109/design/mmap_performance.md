@@ -1,3 +1,9 @@
+> Historical snapshot from `6badc60ef78303a66594fdac6dd501520f177195`.
+> Expired resident-interpreter performance iteration. Statements of current, next or authorized work apply
+> to their recorded checkpoint. Use the [maintained guide](../../../PERFORMANCE.md)
+> for present behavior and scope. Original content is retained below; only
+> relative links are rebased. See the [archive index](../README.md).
+
 # Delegated mmap performance iteration
 
 The starting branch is `codex/mmap-performance-iter1`, from documentation
@@ -271,6 +277,6 @@ length. Fresh reader drainage is covered by the separate actual continuation
 fixture. The current timed and detailed provider code/data sections match, with
 artifact and instrumentation identities retained separately.
 
-The fixed [iteration report](../../bench/results/10.176.26.71/bench/mm-perf-iter1-20261103/README.md)
+The fixed [iteration report](../../../../bench/results/10.176.26.71/bench/mm-perf-iter1-20261103/README.md)
 records all measured gains/losses, builds, failed setups and remaining limits.
 The current interpreted candidate remains unaccepted and separate from master.

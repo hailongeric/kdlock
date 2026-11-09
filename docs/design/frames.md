@@ -142,7 +142,7 @@ Ordinary CALL miss preserves the virtual CALL word and enters the original calle
 on the waiter. The remainder of that invocation stays native. Known controls and
 dispatcher services can resume JIT at validated registered continuations instead.
 Current ordinary callee misses do not authorize reentry after arbitrary native work.
-The planned [exact Native CALL boundaries](admission.md#planned-native-call-boundaries)
+The planned [exact Native CALL boundaries](admission.md#reached-native-call-boundaries)
 reuse that forward-only lifetime: preserve the actual pending CALL and original
 task, retain every physical acquisition and source/frame lease through the final
 unlock ACK, and leave registry eligibility unchanged. They do not create a new

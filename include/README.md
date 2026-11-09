@@ -65,17 +65,17 @@ context checks remain unchanged; selecting it does not authorize arbitrary helpe
 functions. Ordinary `KD_SPIN_DIRECT_LOCK` has no added instructions.
 
 Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair and retains its
-`strscpy_pad(..., 64)` source call. Current translation decodes and checks the
-compiler-emitted helpers, including their prologues, memory effects and CALL/RET
-paths. It does not select a string-service summary or direct native bridge.
-The ordinary pair adds no helper-specific register initialization, so those
-prologues must pass the normal input-dependency proof. The optional helper entry
-and the separate
-[source constant proof](../docs/design/admission.md#source-branches-with-proven-constant-inputs)
+`strscpy_pad(..., 64)` source call. Current trusted translation decodes the
+compiler-emitted helpers and preserves their instructions, memory effects and
+CALL/RET paths. It assumes the compiler clobber-entry input contract and selects
+no named string-service summary or direct native bridge. The ordinary pair adds
+no helper-specific register initialization. Optional checked regression analysis,
+the helper entry and the historical
+[source constant proof](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#source-branches-with-proven-constant-inputs)
 remain available for other translated code.
 
 The historical version 10 dispatcher implementation without helper-specific checks passed
-[focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
+[focused correctness checks](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6 and completed the
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
 Read-only KD taskname returned delegated bodies. Its 20% mutation control used no helper
@@ -153,8 +153,8 @@ invocation; the direct route preserves the source CALL store and checks the
 actual saved return after the helper. Either route consumes the word once.
 One invocation permits at most 128 comparisons and 16 other continuations,
 including writing services. See
-[read-only API admission](../docs/design/admission.md#original-strcmp-service)
-and [writing API admission](../docs/design/admission.md#original-strscpy_pad-writing-service)
+[read-only API admission](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strcmp-service)
+and [writing API admission](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#original-strscpy_pad-writing-service)
 for the complete caller and continuation contracts.
 
 The private `kd_jit_batch_call` descriptor is 112 bytes: its original 96-byte
@@ -174,7 +174,7 @@ bytes by itself. Benchmark evidence captures the loaded generated image outside
 timing and checks its reconstruction from the original upload and symbol
 addresses. No helper instructions or arguments are inspected. Allocation and
 entry restrictions are defined in
-[direct-call admission](../docs/design/admission.md#direct-original-helper-calls);
+[direct-call admission](https://github.com/hailongeric/kdlock/blob/cbf0df6fa1acf9fd88a05795644a7b0a6c4c9773/docs/design/admission.md#direct-original-helper-calls);
 [the register guide](../docs/JIT_REGISTER_ABI.md) owns exact offsets and exit 10,
 which resumes an unexecuted excess call on the waiter without JIT reentry.
 

@@ -22,8 +22,9 @@ component coverage with supplied task/physical primitives. Failed attempts and
 remain explicit. The later `58af0a53` live probe passes cold CALL and
 indirect-JMP handback. Post-RET inspection confirms the actual source return IP
 and SP advanced by eight, with useful effects once, but the overall checker
-fails. Candidate `bccf877c` has untested harness fixes; further validation is
-blocked. See the [partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop).
+fails. Its `bccf877c` harness follow-up remains untested. See the
+[partial live record](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+and [later independent application evidence](VALIDATION.md#retained-original-jit-and-proxy-read).
 
 ## Entry identities and packet states
 
