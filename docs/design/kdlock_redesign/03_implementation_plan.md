@@ -2,7 +2,7 @@
 
 **Status:** active plan for the independent rebuild
 
-**Current implementation:** a private P2 source-flow planner only; no kernel/adapter contract, build, JIT execution, benchmark, install or reboot
+**Current implementation:** private P2 source-flow planning only; no kernel/adapter implementation, build, JIT execution, benchmark, install or reboot
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -30,11 +30,17 @@ These requirements govern either refactoring or clean reimplementation; they do 
 
 Minimal bounded structured recursion, call-local control and lock-local ordering are starting P, not a claim that a complete current S_W exists. A fresh core/node/backend/adapter is allowed. Extra records/refcounts need a concrete reason. The choices below require review; proposed defaults are not user acceptance or implementation authorization.
 
-## 2 Mechanism decisions requiring confirmation
+## 2 Mechanism decisions and status
 
-| ID | Decision | Proposed starting point | Evidence needed before enabling |
+The user approved C12 source-rebuilt integration with fresh private layouts and
+C01 ordinary mutex lock/unlock in sleepable task context as the first complete
+lane. Other families follow later. No old binary lock/object-layout compatibility
+is promised. C02-C11 and remaining C01 policy details are not automatically
+selected by those approvals, and no lane is validated yet.
+
+| ID | Decision | Current selection or proposed starting point | Evidence needed before enabling |
 | --- | --- | --- | --- |
-| C01 | Initial lanes, policy and delivery order | Choose initial family/API/context lanes and incremental migration versus an independent clean implementation; hotness/admission, pinning/parking, queue topology and family order are not inherited | Declared native semantics, eligibility/progress policy, exact evidence scope and a migration/coexistence plan if selected |
+| C01 | Initial lanes, policy and delivery order | Selected: independent source rebuild; ordinary mutex lock/unlock in sleepable task context first, other families later. Hotness/admission, pinning/parking and queue topology remain open | Declare exact ordinary APIs/context and native semantics, eligibility/progress policy and evidence scope; no signal/try/I/O, reader or IRQ/BH lane is implied |
 | C02 | Core/users, control placement and lookup | One thread-owned core/packet with direct users is fixed; fresh layouts are allowed. Audit node-owned control versus bounded call-local storage; prefer local ownership | T48/T49 lifetime/layout, migration, own/borrowed lookup and reset; any shared index needs necessity, scaling, completeness, publication/identity/lifetime proof |
 | C03 | Grant identity and release-authority backend | Choose exact scoped A1/A2/object identity and owner-sensitive routing versus explicitly transferable authority; S_W transfer alone transfers no grant | Unique authority/transfer linearization, revocation, exclusion/order/context, early release, destruction/reuse and imported-ancestor evidence |
 | C04 | Target entry/exit/materialization ABI and local flags-stack lowering | Select/version the original-backend adapter under C12; keep optional compatibility explicit. AS01 requires no extra general flags/SIMD handling; choose mapped-temporary PUSHFQ/POPFQ simulation | GPR/virtual-stack/cursor/results/reentry proofs, one source push/pop, balanced temporary physical stack and covered local POPFQ effects and the open shared-packet-base/wrapper-backed mapping comparison T56; AS01 is an assumption, not general equivalence evidence |
@@ -45,18 +51,20 @@ Minimal bounded structured recursion, call-local control and lock-local ordering
 | C09 | Source lifetime, code publication and reclamation | Choose immutable replacement/last-user retention or proved quiesced updates, source mutation/admission, build/staging isolation and compiler/daemon/restart organization | No live code corruption or freed source/return use, coherent commit, truthful ACKs and drain; no required lease counters, upload fd or session-only retention |
 | C10 | Reader placement and API/context support scope | Keep initial placement/API proposals and explicit signalable/downgrade/IRQ/BH/NMI/debug extension choices; AS01 removes separate general flags/SIMD handling from this iteration. PREEMPT_RT stays outside the fixed target | Native concurrency/mode/API/context/fault duties and chosen placement proof; test-specific retained-writer downgrade is E only, not a boundary exception or native-equivalence proof |
 | C11 | Family arbitration and W-state transfer | Choose lock-local arbitration plus sender-stop/receiver-start/return ordering; reuse current queues/owner words only deliberately; extra checks address actual races | One executor, local/proxy/election/cancel exclusion, grant/ACK matching, final access and materialization; any merged memberships discharge all duties |
-| C12 | Integration and compatibility contract | Explicitly choose source-rebuilt integration versus specified binary/layout-compatible drop-in lanes; public/native API and observable behavior hold in either case | Enumerate callers/modules, source and binary/layout/adapter promises, version transitions and integration receipts; current object size/private ABI decides neither choice |
+| C12 | Integration and compatibility contract | Selected: source-rebuilt integration with fresh private layouts; no old binary lock/object-layout compatibility promise. Public/native API and observable behavior still hold | Enumerate rebuilt callers/modules, source/adapter contracts, version transitions and integration evidence; fresh layouts do not choose C02/C04 or validate integration |
 
 Correctness obligations cannot be waived by selecting a faster option. For example, choosing broader nested batching still requires a progress proof; choosing copied grant snapshots still requires one physical mutation authority.
 
 ### Prioritized choices for confirmation
 
-1. **C12 with C01 — integration and delivery.** Source rebuilding permits fresh private layouts/adapters; a binary/layout-compatible lane adds exact compatibility duties. Confirm the promised boundary and migration versus independent implementation before treating old sizes/ABIs as constraints.
-2. **C03 with C11 — grant authority and arbitration.** An owner-sensitive adapter reuses an existing backend but inherits its real restrictions; transferable authority permits different handoffs and needs explicit revocation/order/context proofs. Confirm the backend and selection/cancel model, not just S_W ownership.
-3. **C04 with C06 — target adapter and reentry.** Old-ABI compatibility reduces transition work; a versioned adapter can fit the new core/fragments. Confirm valid inputs/materialization and code/return binding, including terminal versus explicitly resumable origin service.
-4. **C10 — reader and API/context lanes.** Origin-local readers are the conservative first lane; another placement may broaden execution choices but needs full concurrency/context proof. Confirm initial lanes and extension scope; current exclusions are not permanent rewrite bans or new support.
-5. **C08 with C09 — learning, update and lifetime policy.** Choose capacities/dispositions and immutable replacement versus quiesced updates, with coherent acknowledgement and last-user proof. Confirm compiler/staging/restart organization only as needed; five-edge discovery is the current approved default.
-6. **C02/C05/C07 — control placement and progress.** Request-node control may simplify retention but extend reservations; call-local control avoids that where lifetime is structured. Confirm lookup, bounds and batching policy from actual capacity/progress evidence, justifying any shared index.
+C12 and the initial C01 lane are approved as recorded above. The remaining
+choices below require a concrete design where they affect implementation.
+
+1. **C03 with C11 — grant authority and arbitration.** An owner-sensitive adapter reuses an existing backend but inherits its real restrictions; transferable authority permits different handoffs and needs explicit revocation/order/context proofs. Confirm the backend and selection/cancel model, not just S_W ownership.
+2. **C04 with C06 — target adapter and reentry.** Old-ABI compatibility reduces transition work; a versioned adapter can fit the new core/fragments. Confirm valid inputs/materialization and code/return binding, including terminal versus explicitly resumable origin service.
+3. **C10 — reader and API/context lanes.** Origin-local readers are the conservative first lane; another placement may broaden execution choices but needs full concurrency/context proof. Confirm initial lanes and extension scope; current exclusions are not permanent rewrite bans or new support.
+4. **C08 with C09 — learning, update and lifetime policy.** Choose capacities/dispositions and immutable replacement versus quiesced updates, with coherent acknowledgement and last-user proof. Confirm compiler/staging/restart organization only as needed; five-edge discovery is the current approved default.
+5. **C02/C05/C07 — control placement and progress.** Request-node control may simplify retention but extend reservations; call-local control avoids that where lifetime is structured. Confirm lookup, bounds and batching policy from actual capacity/progress evidence, justifying any shared index.
 
 ### 2.1 Per-family selection design
 
@@ -80,7 +88,7 @@ The ordinary mutex's shared wait-lock protocol is a useful existing example, not
 
 ### P0 Establish an independent baseline and contracts
 
-The independent main worktree is selected; keep ongoing mmap1 work separate. Choose the C12 integration contract before implementing kernel or adapter contracts. Private compiler work that does not decide that contract may proceed. Inventory current code only as evidence/reuse candidates, not an architectural prerequisite. Either leave old paths untouched while building the new implementation or propose a separate incremental migration with explicit coexistence boundaries.
+The independent main worktree, source-rebuilt C12 contract and initial ordinary-mutex C01 lane are selected; keep ongoing mmap1 work separate. Record the remaining affected mechanism choices before implementing their kernel or adapter contracts. Private compiler work that does not decide those choices may proceed. Inventory current code only as evidence/reuse candidates, not an architectural prerequisite. Either leave old paths untouched while building the new implementation or propose a separate incremental migration with explicit coexistence boundaries.
 
 Produce a target semantic-information inventory: scope, writer/authority, observers, publication, last use, capacity/failure and validation. Bind evidence to kernel/config/toolchain/source and the chosen target ABI. Preserve native/API semantics and truthful evidence classification. The archive named in the repository README preserves code/design recoverability. Old receipt documents and test datasets need not be restored into main; neither the current implementation, object size nor policy is required. Leave existing ignored data and other worktrees untouched.
 
@@ -107,14 +115,21 @@ A selected owner-sensitive or reused path must remain correct under its actual b
 ### P2 Make every lock and unlock a JIT boundary
 
 **Implemented subset:** [disassem/fragment.py](../../../disassem/fragment.py)
-walks a finite, caller-classified intraprocedural source graph. It stops before
-typed source lock/unlock/mode/special sites, retains safe alternatives and
-independently reached joins, and distinguishes missing targets from unresolved
-dynamic alternatives. It has no decoder, API recognition, emitter, CALL/RET
-handling, machine-state mapping or runtime handback. Ordinary CALL/RET body
-nodes are outside its input contract, not recognized or rejected by this pass.
-The private records select no C01-C12 contract. Focused helper checks do not
-complete P2 or T07/T08/T52/T53; all T01-T56 remain unrun.
+walks a finite, caller-classified source graph. It stops before typed source
+lock/unlock/mode/special sites, retains safe alternatives and independently
+reached joins, and distinguishes missing targets from unresolved alternatives.
+Explicit ordinary matched direct CALL/RET records have distinct call-target and
+return-summary relations. A local least fixed point finds modeled boundary-free
+routes to RET; each reached call retains its continuation only if its callee has
+such a route. This is structural return reachability, not a runtime-return or
+semantic nonreturning-function proof. Indirect calls and changed return targets
+remain outside this helper's input contract.
+
+There is no decoder, API recognition, emitter, machine-state mapping, runtime
+CALL/RET effect handling or handback. The private records select none of the
+remaining C02-C11 mechanisms. Ten checks on the earlier intraprocedural planner
+do not validate this extension. It has static review only and does not complete P2 or
+T07/T08/T52/T53; all T01-T56 remain unrun.
 
 Implement semantic API recognition and typed pre-operation exits in the original backend. Stop fragment emission across every admitted lock/unlock, including inner or ancestor release. Keep reached-only execution and direct-CALL lookahead as separate concepts.
 

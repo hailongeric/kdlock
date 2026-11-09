@@ -12,8 +12,11 @@ Proposed mechanisms (P) require an explicit selection and the corresponding
 proofs. Existing source and prior experiment observations (E) do not select the
 new architecture or establish support for the rebuilt lock.
 
-The independent clean-baseline route is selected. C01 still needs initial
-family/API/context lanes; C02-C12 remain open where the plan identifies a choice.
+The independent source-rebuilt C12 route is selected, with fresh private layouts
+and no old binary lock/object-layout compatibility promise. C01 starts with
+ordinary mutex lock/unlock in sleepable task context; other families follow
+later. C02-C11 and remaining C01 policies stay open where the plan identifies a
+choice. These scope approvals establish no validated support lane.
 Keep one canonical S_W, optional unique selection, every source lock/unlock as
 a pre-operation fragment boundary, serial recursive delegation, exact no-replay
 handback and cumulative source-versioned learning with the original backend.
@@ -33,29 +36,40 @@ handback and cumulative source-versioned learning with the original backend.
 
 The first implementation is the private
 [source-flow fragment planner](../../../disassem/fragment.py). Its caller supplies
-a finite, stable, already classified intraprocedural graph. The pass cuts before
-typed boundaries, retains safe alternatives/joins, terminates on cycles and
-reports known missing targets separately from unresolved alternatives. It does
-not decode, recognize APIs, emit or execute instructions, handle CALL/RET,
-materialize S_W or perform runtime handback. Ordinary CALL/RET body nodes are
-outside its input contract; this pass cannot detect misclassified inputs.
-Source/dependency identity and lifetime remain future integration obligations.
+a finite, stable, already classified graph. The pass cuts before typed
+boundaries, retains safe alternatives/joins, terminates on cycles and reports
+known missing targets separately from unresolved alternatives. The current
+extension also represents ordinary matched direct CALL/RET explicitly. A local
+least fixed point establishes modeled boundary-free routes to RET, then each
+reached call retains its own continuation only if its callee has such a route.
+Call-target and return-summary relations remain distinct from ordinary edges;
+RET sites are not connected indiscriminately to callers.
 
-After implementation, ten focused cases passed with Python 3.10.12: each of the
-four boundary kinds with a safe shared join and unchanged input, a cycle with
-repeated edges, two predecessors of a missing target, a known successor plus an
+This is static source-flow planning, not a runtime-return or semantic
+nonreturning-function proof. Indirect calls and changed return targets are
+outside this helper's input contract; it cannot detect misclassified inputs.
+It does not decode, recognize APIs, emit/execute instructions, perform runtime
+CALL/RET effects, materialize S_W or hand back execution. Source/dependency
+identity and lifetime remain future integration obligations.
+
+The earlier intraprocedural implementation in `13f2630f` passed ten focused cases
+with Python 3.10.12: each of the four boundary kinds with a safe shared join and
+unchanged input, a cycle with repeated edges, two predecessors of a missing target, a known successor plus an
 unresolved alternative, a missing entry, a boundary at entry and a supplied
 scope end. These were in-memory helper checks with no decoder, generated code,
 JIT/kernel execution or selected kernel configuration/API lane. They establish
 only the exercised graph behavior, not exact handback or callee-return handling.
 These checks preceded the user's clarification to finish overall functionality
-before further behavioral testing. Further behavioral tests and suites are
-deferred; source/static review continues.
+before further behavioral testing. They have not been rerun on the CALL/RET
+extension and do not validate it. The extension has source/static review only.
+Further behavioral tests and suites are deferred until overall functionality is
+complete.
 
 T01-T56 remain unrun acceptance specifications. Source, build, live execution,
 integration, retirement and performance evidence must be recorded separately
-for each implemented lane and exact source/configuration. No kernel or adapter
-contract is selected by the helper's provisional compiler records.
+for each implemented lane and exact source/configuration. The helper's
+provisional compiler records select none of the remaining kernel or adapter
+mechanisms; the C12/C01 scope approvals are separate from validation.
 
 ### 2.2 Original backend
 

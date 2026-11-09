@@ -6,6 +6,12 @@
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). Fixed behavior and semantic obligations do not prescribe the current owner word, queues, pinning, pools or byte layouts. State/flow diagrams and storage examples are P; current paths are E and impose their actual constraints only when deliberately retained.
 
+The approved first implementation lane is ordinary mutex lock/unlock in
+sleepable task context on Linux 7.0 x86_64 without PREEMPT_RT. Integration rebuilds
+affected source with fresh private layouts; old binary lock/object layouts are
+not a compatibility promise. Other families follow later. This selects scope,
+not the C02-C11 mechanisms or a validated support lane.
+
 ## 1 Roles are temporary parts of the lock
 
 W is the origin of a source continuation. C_A is a physical task combining A, which may itself be W. C_A can enter B's lock code while executing another origin's source and temporarily act as B's waiter or combiner. No dedicated task owns the combiner role.

@@ -38,7 +38,7 @@ This set guides a refactor or rewrite. The latest explicit user directions and s
 
 Proposed defaults are P, including the explicitly approved **current five-edge direct-CALL discovery default**. That default remains selected unless deliberately changed; it is not immutable architecture. Normative statements in the protocol express F/S unless identified as a proposal, example or condition of a selected backend. The C register records P choices; the evidence file preserves E and the [audit/correction register](04_evidence_and_reconciliation.md#32-authority-audit-and-correction-register) records reclassifications. Historical revision records describe their original scope, not new target mandates.
 
-Public/native lock APIs and observable behavior remain S. Whether integration rebuilds all affected source or also promises binary/lock-object-layout compatibility is open C12. The current object size and private JIT adapter do not decide it. A versioned target adapter/layout is possible under the chosen integration contract; compatibility is neither promised nor discarded implicitly.
+Public/native lock APIs and observable behavior remain S. C12 is selected as source-rebuilt integration with fresh private layouts; old binary lock/object-layout compatibility is not promised. C01 starts with ordinary mutex lock/unlock in sleepable task context, with other families later. These approvals do not choose the target core placement, adapter mapping, grant authority or arbitration and establish no support evidence.
 
 ## Current iteration policy and assumption
 
@@ -114,6 +114,6 @@ The source program, not frame depth or the first symbol containing "unlock," det
 
 ## Review boundary
 
-Fixed F directions and S obligations are not mechanism questions. Decisions C01 through C12 select integration/compatibility, storage, adapter ABI, grant authority/arbitration, generation binding, learning/update policies and API/context/reader lanes. They cannot replace the original JIT, duplicate W state, weaken semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
+Fixed F directions and S obligations are not mechanism questions. The plan records the selected C12 integration and C01 initial lane. C02-C11 and remaining C01 policies cover storage, adapter ABI, grant authority/arbitration, generation binding, learning/update and further API/context/reader lanes; those choices remain open where identified. They cannot replace the original JIT, duplicate W state, weaken semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
 
 This Linux 7.0-only baseline keeps the five individual Markdown documents for incremental audit. The complete unsanitized design snapshot remains recoverable through the archive reference named in the repository README.

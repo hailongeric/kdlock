@@ -7,14 +7,19 @@ non-PREEMPT_RT**.
 
 The first implementation slice is a private
 [source-flow fragment planner](disassem/fragment.py), contributing only the
-structural graph walk to P2. Given a finite, caller-classified intraprocedural
-graph, it stops before lock/unlock/mode/special sites, retains safe alternatives
-and shared joins, and reports missing targets and unresolved transfers
-separately. Its records are provisional compiler data, not a public ABI.
+structural source-flow analysis to P2. Given a finite, caller-classified graph,
+it stops before lock/unlock/mode/special sites, retains safe alternatives and
+shared joins, and reports missing targets and unresolved transfers separately.
+Explicit direct CALL/RET records keep each call's target and continuation
+separate; a continuation is retained only when its callee has a modeled
+boundary-free route to a RET. Its records are provisional compiler data, not a
+public ABI or a runtime-return proof.
 
-There is no decoder, API recognition, instruction emission, CALL/RET handling,
-lock implementation, build system or benchmark payload yet. Ten focused private
-planner cases passed with Python 3.10.12; see the
+There is no decoder, API recognition, instruction emission, runtime CALL/RET
+effects, lock implementation, build system or benchmark payload yet. Ten focused
+private cases passed on the earlier intraprocedural planner in `13f2630f` with
+Python 3.10.12. The CALL/RET planning extension has static review only; further
+behavioral tests are deferred until overall functionality is complete. See the
 [evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
 No build, JIT execution, kernel integration or performance result is claimed.
 Acceptance specifications T01-T56 remain unrun.
@@ -27,11 +32,12 @@ Read the design in order:
 4. [Implementation plan and open decisions](docs/design/kdlock_redesign/03_implementation_plan.md)
 5. [Evidence and reconciliation](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md)
 
-Before implementation of kernel or adapter contracts, settle the
-integration/compatibility contract C12 and the initial family/API/context lanes
-in C01, then choose the necessary C02-C11 mechanisms for that lane. The
-independent clean-baseline route is selected; these remaining design choices
-are not decided by deleting the old code.
+C12 is selected: source-rebuilt integration with fresh private layouts and no
+compatibility promise for old binary lock/object layouts. C01 starts with
+ordinary mutex lock/unlock in sleepable task context on Linux 7.0 x86_64 without
+PREEMPT_RT; other lock families follow later. These are implementation scope
+approvals, not support evidence. Grant/release authority, arbitration, the
+original-backend adapter and the other C02-C11 choices remain explicit work.
 
 ## Git history
 
