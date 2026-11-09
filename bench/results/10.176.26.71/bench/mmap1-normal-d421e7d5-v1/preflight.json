@@ -1,0 +1,72 @@
+{
+  "benchmark_preparation_manifest": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/manifest.json",
+  "benchmark_preparation_sha256": "4e8ac6e1b8c99bad164fa1da185a3f0b665673bfd07b93db59c7daf323f37eb6",
+  "binary_reuse_identity": {
+    "compatible_harness_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+    "daemon_and_kernel_integration_sources_equal": true,
+    "daemon_build_input_map_sha256": "7f78281354ca19585665ac553198103fbec0781d51c11686613a0a328ac77f75",
+    "daemon_build_input_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+    "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+    "exact_observation_map": true,
+    "exact_prepared_map": true,
+    "exact_provider_production_map": true,
+    "original_source_manifest_sha256": "1a8689a41c7ae54425cd1bbe637abe6e53fa5e161c4a83cc187dc108e91a03fa",
+    "provider_manifest_sha256": "4e8ac6e1b8c99bad164fa1da185a3f0b665673bfd07b93db59c7daf323f37eb6",
+    "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+    "provider_source_commit": "40edde00525b71207246bbde4935767cbcb21fb7"
+  },
+  "boot_id": "d794c6f4-85cc-484b-a290-471c44d68497",
+  "daemon": "/mnt/kdlock-builds2/kdlock-batch-checks-zgrfka_g/bin/daemon",
+  "daemon_sha256": "0a0db51b9c35dc894027d0e347a1be5abb68e7467c7c941717f7bcb39c73c9d2",
+  "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+  "final_idle": true,
+  "focused_source_identity": {
+    "files": {
+      "disassem/context_policy.py": "739c5581e9fea8a12897838899b35da11d3717ec1061a7cd85b82c8ed79724bd",
+      "disassem/disassem.py": "f5015eb64c5541a1ea54b0c7ca3e7c6f5c0f2adabb79cf1f8463b4b91497ea41",
+      "disassem/release_units.py": "004c13036b4debb9b86364f1ed4e0280e3c5fc016f7a8625fa7cd53b964d8e64",
+      "tests/unit/codegen/test_direct_call_depth.py": "bd7b6eaa95833c56245313786765d8dafaf732c7424806987363fed0c0b0ee12",
+      "tests/unit/codegen/test_release_units.py": "7b72c59030f1931d713a7ae9ee7e11b119d4a37186c5967e4dfa3131549b7a37"
+    },
+    "matched": true,
+    "schema": 1,
+    "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+    "source_manifest_path": "/tmp/kdlock-normal-d421-focused-manifest.json",
+    "source_manifest_sha256": "857fa0f1993ffa1628383503340a90e6d853d81ad92ed7affdf46c3daa712853"
+  },
+  "headroom": {
+    "/": 3692425216,
+    "/mnt/kdlock-builds2": 11813322752
+  },
+  "idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "image_capacity": 128,
+  "inputs": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/inputs.json",
+  "inputs_sha256": "beeb3e82481b881ba09d77667408f29fc37366b7fe5d987f3fd02af0c5ac4dc0",
+  "kernel_build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+  "kernel_build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+  "no_build": true,
+  "no_daemon_launch": true,
+  "no_module_load": true,
+  "no_provider_or_device_query": true,
+  "passed": true,
+  "preparation_boot_id": "d794c6f4-85cc-484b-a290-471c44d68497",
+  "probe": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/tests/restore-preflight-ec623366-20261107/probe/kd_mmap1_identity.ko",
+  "probe_sha256": "1f5ea76cbaf6c1b0918769300bd4a827578675284d29a47bd0d00f805c177c78",
+  "provider": "/mnt/kdlock-builds2/kdlock-batch-checks-u1dw9xwz/provider-128/kernel_module/kdlock_km.ko",
+  "provider_note_sha256": "3404ede92b182cc10ad603b6c3c4a96cdfc9d704c65f95079a0b9049b0fa8a3c",
+  "provider_reused": true,
+  "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+  "provider_source_commit": "40edde00525b71207246bbde4935767cbcb21fb7",
+  "run_id": "normal-d421e7d5da83-v1",
+  "schema": 1,
+  "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+  "source_manifest_path": "/root/kdlock-inputs/normal-d421e7d5da83-v1/source-sha256.json",
+  "source_manifest_sha256": "a83d3583037340a476177523ed80e9713c4e916ede1c86ebac0c7c38214a1e37",
+  "source_root": "/root/kdlock-inputs/normal-d421e7d5da83-v1",
+  "source_state_path": "/root/kdlock-inputs/normal-d421e7d5da83-v1/source-state.json",
+  "source_state_sha256": "2f41a85751f73eacebf643bc18e20129a4502b8cb50893bbe03d73dd9ee81d3d"
+}

@@ -1,0 +1,12 @@
+{"returncode": 0, "elapsed_seconds": 8.535251860000244, "tree": "/tmp/kdlock-discovery-batching-final-d350b172", "output": "/root/kdlock-evidence/10.176.26.71/tests/discovery-batching-final-d350b172", "files_verified": 617, "manifest_sha256": "857fa0f1993ffa1628383503340a90e6d853d81ad92ed7affdf46c3daa712853", "command": ["make", "-C", "tests/unit", "run", "PYTHON=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3", "PY_TESTS=codegen/test_release_units.py codegen/test_direct_call_depth.py admission/test_text_regions.py"]}
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] finite batch union, frozen retry, scope and failure decisions
+[PASS] test_daemon_policy
+Ran 19 tests in 0.166s
+OK
+Ran 4 tests in 0.077s
+OK
+Ran 86 tests in 5.822s
+OK
+Unit tests: 5 passed, 0 failed

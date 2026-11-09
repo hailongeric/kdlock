@@ -1,0 +1,7214 @@
+{
+  "accepted": false,
+  "application": {
+    "application_lock_identity": "not-observed-in-this-process",
+    "argv": [
+      "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+      "-t",
+      "8",
+      "-s",
+      "10",
+      "-m"
+    ],
+    "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+    "drained": true,
+    "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+    "execution_session": {
+      "daemon_device_writer": {
+        "device": 7,
+        "fd": 3,
+        "flags": 557058,
+        "inode": 692,
+        "pid": 2418,
+        "rdev": 61440,
+        "start_ticks": 1496
+      },
+      "daemon_pid": 2418,
+      "daemon_start_ticks": 1496,
+      "delegated_execution_proved": false,
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/fixed-session/execution-session.json",
+      "preparer_pid": 2348,
+      "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+      "sha256": "cac90e1b30fe3ee35acf901e3bebd5d6e38ad891740067589360a4648e63c00a",
+      "syscall_shape": {
+        "enabled": true,
+        "version": 1
+      }
+    },
+    "execution_session_after": {
+      "application_delegation_proved": false,
+      "binding_drain_proved": false,
+      "bindings": 9,
+      "source": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      }
+    },
+    "image_learning": false,
+    "instrumentation": "none",
+    "involuntary_context_switches": 336107,
+    "measured_samples": 10,
+    "model": "processes",
+    "nominal_seconds": 10,
+    "observation_finished_ns": 1364364398153,
+    "output": {
+      "completed_pairs": 209708,
+      "elapsed_interval_seconds_observed": false,
+      "measurement": [
+        {
+          "max": 2640,
+          "min": 2614,
+          "total": 21006
+        },
+        {
+          "max": 2626,
+          "min": 2611,
+          "total": 20956
+        },
+        {
+          "max": 2629,
+          "min": 2612,
+          "total": 20959
+        },
+        {
+          "max": 2630,
+          "min": 2606,
+          "total": 20931
+        },
+        {
+          "max": 2634,
+          "min": 2609,
+          "total": 20977
+        },
+        {
+          "max": 2633,
+          "min": 2605,
+          "total": 20961
+        },
+        {
+          "max": 2633,
+          "min": 2616,
+          "total": 20994
+        },
+        {
+          "max": 2635,
+          "min": 2601,
+          "total": 20968
+        },
+        {
+          "max": 2634,
+          "min": 2615,
+          "total": 20995
+        },
+        {
+          "max": 2634,
+          "min": 2612,
+          "total": 20961
+        }
+      ],
+      "nominal_seconds": 10,
+      "pairs_per_nominal_second": 20970.8,
+      "preparation": [],
+      "upstream_average": 20970,
+      "upstream_average_divisor": 10,
+      "upstream_completed_pairs": 209708,
+      "upstream_counter_boundary": "-s10: six pre-marker samples, 10 post-marker samples; final 10 selected",
+      "warmup": [
+        {
+          "max": 2638,
+          "min": 2611,
+          "total": 21020
+        },
+        {
+          "max": 2647,
+          "min": 2620,
+          "total": 21091
+        },
+        {
+          "max": 2641,
+          "min": 2620,
+          "total": 21041
+        },
+        {
+          "max": 2644,
+          "min": 2621,
+          "total": 21066
+        },
+        {
+          "max": 2641,
+          "min": 2615,
+          "total": 21006
+        },
+        {
+          "max": 2654,
+          "min": 2626,
+          "total": 21102
+        }
+      ]
+    },
+    "passed": true,
+    "pid": 2614,
+    "process_elapsed_ns": 16055069460,
+    "returncode": 0,
+    "round": 0,
+    "sample_window": {
+      "events": [
+        {
+          "boundary": "begin",
+          "line_received_ns": 1370340437737,
+          "observation": {
+            "registry": [
+              {
+                "code": 18419722476571807744,
+                "entry": 18446744071586934632,
+                "entry_abi": 2,
+                "generation": 7,
+                "lock_kind": 2,
+                "pid": 0,
+                "requirements": 32640,
+                "status": 0,
+                "tgid": 2429
+              },
+              {
+                "code": 18419722476567609344,
+                "entry": 18446744071587350331,
+                "entry_abi": 2,
+                "generation": 7,
+                "lock_kind": 2,
+                "pid": 0,
+                "requirements": 32640,
+                "status": 0,
+                "tgid": 2430
+              }
+            ],
+            "service": {
+              "18446744071586934632": {
+                "bound": 20881638,
+                "canceled": 0,
+                "dispatch_ns": 48102557949,
+                "dispatch_samples": 20881638,
+                "handback": 14988518,
+                "handback_finished": 14988518,
+                "invalid_clock": 0,
+                "jit_entered": 20881638,
+                "local": 15620487,
+                "local_cancel": 0,
+                "local_no_image": 15620487,
+                "local_ns": 4526228235,
+                "local_success": 15620487,
+                "prepublication_cancel": 0,
+                "returned": 5893116,
+                "selected": 36502126,
+                "shadow_ns": 1877157035531,
+                "shadow_samples": 20881634,
+                "submitted": 20881639
+              },
+              "18446744071587350331": {
+                "bound": 16682705,
+                "canceled": 0,
+                "dispatch_ns": 105915483532,
+                "dispatch_samples": 16682705,
+                "handback": 16682703,
+                "handback_finished": 16682703,
+                "invalid_clock": 0,
+                "jit_entered": 16682705,
+                "local": 19819392,
+                "local_cancel": 0,
+                "local_no_image": 19819392,
+                "local_ns": 6835320279,
+                "local_success": 19819392,
+                "prepublication_cancel": 0,
+                "returned": 0,
+                "selected": 36502098,
+                "shadow_ns": 938997484151,
+                "shadow_samples": 16682703,
+                "submitted": 16682706
+              }
+            },
+            "superseded_reports": 0
+          },
+          "observation_finished_ns": 1370340829097,
+          "sample": 6
+        },
+        {
+          "boundary": "end",
+          "line_received_ns": 1380341503345,
+          "observation": {
+            "registry": [
+              {
+                "code": 18419722476571807744,
+                "entry": 18446744071586934632,
+                "entry_abi": 2,
+                "generation": 7,
+                "lock_kind": 2,
+                "pid": 0,
+                "requirements": 32640,
+                "status": 0,
+                "tgid": 2429
+              },
+              {
+                "code": 18419722476567609344,
+                "entry": 18446744071587350331,
+                "entry_abi": 2,
+                "generation": 7,
+                "lock_kind": 2,
+                "pid": 0,
+                "requirements": 32640,
+                "status": 0,
+                "tgid": 2430
+              }
+            ],
+            "service": {
+              "18446744071586934632": {
+                "bound": 21091341,
+                "canceled": 0,
+                "dispatch_ns": 48554704357,
+                "dispatch_samples": 21091341,
+                "handback": 14988518,
+                "handback_finished": 14988518,
+                "invalid_clock": 0,
+                "jit_entered": 21091341,
+                "local": 15620487,
+                "local_cancel": 0,
+                "local_no_image": 15620487,
+                "local_ns": 4526228235,
+                "local_success": 15620487,
+                "prepublication_cancel": 0,
+                "returned": 6102823,
+                "selected": 36711828,
+                "shadow_ns": 1918177979811,
+                "shadow_samples": 21091341,
+                "submitted": 21091341
+              },
+              "18446744071587350331": {
+                "bound": 16892408,
+                "canceled": 0,
+                "dispatch_ns": 107218502151,
+                "dispatch_samples": 16892408,
+                "handback": 16892408,
+                "handback_finished": 16892408,
+                "invalid_clock": 0,
+                "jit_entered": 16892408,
+                "local": 19819392,
+                "local_cancel": 0,
+                "local_no_image": 19819392,
+                "local_ns": 6835320279,
+                "local_success": 19819392,
+                "prepublication_cancel": 0,
+                "returned": 0,
+                "selected": 36711800,
+                "shadow_ns": 956841807105,
+                "shadow_samples": 16892408,
+                "submitted": 16892408
+              }
+            },
+            "superseded_reports": 0
+          },
+          "observation_finished_ns": 1380341857164,
+          "sample": 16
+        }
+      ],
+      "limit": "transport and callback latency; counters are not sampled atomically with application counters",
+      "samples": 16,
+      "scope": "after delivered last warmup line through delivered final measured line",
+      "transport": "pty"
+    },
+    "sample_window_reader_stopped": true,
+    "schema": 1,
+    "scored": true,
+    "started_ns": 1364308991323,
+    "state": "COMPLETE",
+    "system_cpu_seconds": 125.27344499999981,
+    "timeout_seconds": 30,
+    "upstream_samples": 10,
+    "user_cpu_seconds": 0.11215400000000031,
+    "voluntary_context_switches": 32,
+    "workers": 8,
+    "workers_observed": [
+      {
+        "cpus": [
+          0
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2616,
+        "tid": 2616
+      },
+      {
+        "cpus": [
+          1
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2617,
+        "tid": 2617
+      },
+      {
+        "cpus": [
+          2
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2618,
+        "tid": 2618
+      },
+      {
+        "cpus": [
+          3
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2619,
+        "tid": 2619
+      },
+      {
+        "cpus": [
+          4
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2620,
+        "tid": 2620
+      },
+      {
+        "cpus": [
+          5
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2621,
+        "tid": 2621
+      },
+      {
+        "cpus": [
+          6
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2622,
+        "tid": 2622
+      },
+      {
+        "cpus": [
+          7
+        ],
+        "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "ppid": 2614,
+        "start_ticks": 136433,
+        "tgid": 2623,
+        "tid": 2623
+      }
+    ]
+  },
+  "boot_id": "c0a76487-f2e8-4d51-a404-3a2db2703191",
+  "capability_before_learning": {
+    "features": 1047547,
+    "mutex_stack_bytes": 256,
+    "percpu_module_bytes": 8192,
+    "version": 22
+  },
+  "config_sha256": "7f3d886a56784cdd1e0231dc2b0a37e44e20260bc75ba9e2a915fbd8f9916edb",
+  "delegation_proved": false,
+  "drained": false,
+  "environment": {
+    "host_qualification": {
+      "additional_workers": [],
+      "exploratory": false,
+      "fixed_frequency_khz": 2000000,
+      "host_endpoint": "PENDING",
+      "observed_threads": 76,
+      "original_threads": 76,
+      "performance_accepted": false,
+      "retired_workers": [],
+      "strict_host_gate": "PASS",
+      "task_set_unchanged": true
+    },
+    "kernel_binding": {
+      "build_files": {
+        ".config": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa",
+        "Makefile": "b0f2713e042996aaf559d194413a77cc362c53dfc225a5e6a2fd3272536898a6",
+        "Module.symvers": "1b2b6686a7078c214120fc6d5aa41bd74226d6b461003be1a25357f8fb9cb7af",
+        "System.map": "1b146a6f1d5a0d8ff8ef185dadef0a0b9f19bb1cdac65695e42a68af82689505",
+        "arch/x86/boot/bzImage": "f04ce141385ec84a1613fedf6ad724e43735f1f2c660d0afa2f2690508d301bd",
+        "include/config/auto.conf": "d2a3e7801a3858a978ce1ed5043d2aca9aabb32ab235358234efd9144bad4088",
+        "include/config/kernel.release": "8f323f5165d6061d4e1e15a4e4f51fd70744aab0376f36529b82a2070af63b91",
+        "include/generated/autoconf.h": "4937a74860e7b8787af61440e76682f8117549f1935c3f30d50933771b61939e",
+        "include/generated/uapi/linux/version.h": "3143ce97d1e0c432cfa8a16a76eac701cead3213f3cd8f143b2fe08b81896e3c",
+        "include/generated/utsrelease.h": "0617b58f8a201a7eea06ffda5bf70e79afd65db476eddca6cdc12fae3b27eeec",
+        "include/generated/utsversion.h": "4927d086ba8629d38c257b13d616dbdebaf6f36b19365af829449ca9ad3651e0",
+        "vmlinux": "1cd5fa2b6094903cd644b202967a9f7ad5ddce0fc29cef9d5b2b981fb2e5e216"
+      },
+      "build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+      "configuration_sha256": "7dffb540209d34287f7ece75a6b3635b87dd751179fb7953f92aa2eff9b714aa",
+      "kernel_mmap_backend": "kd",
+      "manifest_sha256": "64bf73dec5edb8fa3c0ab812881339cdfc09259fcbab577578bc40082aed9f51",
+      "private_backing_locks": false,
+      "release": "7.0.0-38-kdscope5",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope5 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+        "mmap_mode": "on",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "source_files": {
+        "Makefile": "7b16bd89f6768317eed05f31b8e9ebea901751fea90a731223fd4f990d0dcc32",
+        "arch/x86/kernel/alternative.c": "87218ff537a4663bc5db2ae07d1f1b4d223de0f5e35433314239f4307a59d684",
+        "arch/x86/mm/fault.c": "20513a2bde41a23b6ec98a6665899837ac3d452c93561c188f9f8bb6e9913f73",
+        "arch/x86/mm/pat/set_memory.c": "5ecccad496f80b58f0a78225f934a9c7c9a865a8db6cd54087907e29a24a6f15",
+        "debian.master/changelog": "8fc75f22e2b4d4373e2e9be0ae84372bdd133dee17dc47c294299fe0bef40474",
+        "fs/file.c": "052cd5e8348215a8e514677b35d8db9d98a6166a93a331aa863b231909aa2de0",
+        "fs/locks.c": "3f6d59d3e9626ace27ee1933c9c174ed180c686d9d4a1bd2eaa9aca428ec1a40",
+        "fs/pipe.c": "a3943bfd38906af37a23a14548610bc03dae205be6f0f056858fc1eb479319a7",
+        "fs/proc/fd.c": "4c174802a16b7d95322539c18208b317039a5c0625adba4378dacff6cea2dc33",
+        "include/asm-generic/vmlinux.lds.h": "b3e56333284820f58dc6bf3dd2c5afd5c6f7cb04f338df7f40f50cb222fddf66",
+        "include/linux/fdtable.h": "106f38092a481fb5ae09044beef8775f73c58b9e7e51a2326bfda9e26d996373",
+        "include/linux/kd_api/kd_config.h": "062399c1300edefc340ab1726251e6b660efd95dfed384b5e07d10a53104a311",
+        "include/linux/kd_api/kd_mutex_types.h": "ea959f66ed6fc304c205a188002048587189352e5e8fedfb55cccefa6050d73a",
+        "include/linux/kd_api/kd_spin_type.h": "47a1c7a053b79b50d8b2a7af9714eedac6cf36952141d1c9884bc88d3fbe0af5",
+        "include/linux/kd_api_control.h": "78d52dd1c854fe41221ab5159527994060a0913613fd097890e829ad37493c3b",
+        "include/linux/kd_api_lock.h": "ad75eb5611bc23c28349468a8dc84681bfb94c199af2b21062f7159eefecb500",
+        "include/linux/kd_api_lock_types.h": "e1f9f4002f306ae05749affb58d0463151eabdeb1750bfcc178a7a1a577cd4d7",
+        "include/linux/kd_api_provider.h": "5f6de36395d6626b3918b1e5317e74826a13e61a1341333f50d4a905df6fefdb",
+        "include/linux/kd_generated_text.h": "356d6843b173003cf154ef8660abe34d408470c3a8e202957b27cc810b0ce8fd",
+        "include/linux/kd_mmap_config.h": "87e6e56fbf00e3d5a74e15f06b46306ea5f613aa7c9b84386d3043a72f1830b6",
+        "include/linux/kd_mmap_lock.h": "daecb81ed97899bf3a23ff0e26c69a895192671d83375601be7699ac40442b22",
+        "include/linux/kd_mmap_lock_types.h": "12649d1cee6ff6afd25e527c0a22430e87659ee3fadda79758580ca79cca2121",
+        "include/linux/kd_mmap_mutex_types.h": "ab2ab7283d644b8f3aaad910c934bdccb1c18d2c3f9da1526e8442bd3bd8acaf",
+        "include/linux/kd_mmap_rwsem_types.h": "96f530f2fceb9bb7ac23cf7e28d03057f1b3c29d7c3969ec5d07ba774c550a1d",
+        "include/linux/kd_mmap_wait_queue.h": "7e7bf27d7b46387400694beb81856d3bc5db5f0c2dbb105be91d1756b6848848",
+        "include/linux/kd_rwsem_provider.h": "4ffe7ca534e4fe2abb2bc0ca5daba8dbb1fff91c8e3c796870ea6641dd70e804",
+        "include/linux/kd_spin_hooks.h": "7b78d6aeb12ab2e17595b9ea91ad4e765269eafbae0265b49f4a36570960f7c0",
+        "include/linux/mm_types.h": "6a96679d9cc00ab4c967a9f6693727896903d1a0f0bd0273121385262b95c9aa",
+        "include/linux/mmap_lock.h": "bad3659882361d5dd261caccc8eef30f92b1e6baf3d04e9761a4f22409557651",
+        "include/linux/pipe_fs_i.h": "0d3146352f93a49f0172658643c9113f6eb4f2aa91fbcf15b9cea7460ddb8bf3",
+        "include/linux/sched/mm.h": "b80478a38134a11b553bdc204eac85eb2a4507863f1bfec46200abd40b1b16bb",
+        "init/Kconfig": "073beeab7708b4c83205410037ab1d53fe2dcd16702447cb20453e3183e1d825",
+        "io_uring/openclose.c": "ad0c653dd8af2bbb93c2a29e8995bd341801b05d3fb9186ac790470cedc31085",
+        "kernel/bpf/mmap_unlock_work.h": "52761f27254a8b7e5632ed4e72e662cb59d171b2ca495718a958a50e00dcbb17",
+        "kernel/bpf/stackmap.c": "0a8c0cfb3d083231cd8e1897eca78316315172539b1fe614e69b05ad590690b1",
+        "kernel/bpf/task_iter.c": "685e9348c4ac0539554b160efaa0f69dbb0a1d4a3fe706792173e3103b7670f5",
+        "kernel/fork.c": "0bccb1f0e882cfcd68d048271ece6bcce00e0f3e115c3d2770072efabe5bc5a0",
+        "kernel/kallsyms.c": "eeb7bc25f0c9f03cf7b06829b0db78f147d2b4206f635196096fd4a24f5e2fb7",
+        "kernel/locking/Makefile": "884df80b8b195186231775b248d308a58ff76bed14164d5f2c441457b2d37eaa",
+        "kernel/locking/kd_api/Kconfig": "fc09dcd2d16c48a44055958479174d65de7ae8bcd636ea342194ffeb5d0de649",
+        "kernel/locking/kd_api/Makefile": "d869e09ce4a4c0ec6a315e11bf86d9bb4ea3c7c48bd4be4941e2ed24258695fa",
+        "kernel/locking/kd_api/bridge.c": "aa63b4179981aec65d789af731515954e5eab390987bbae714fa8cbab87ff5a2",
+        "kernel/locking/kd_api/entry.S": "31017f3bdc25c12766e8291bd56d2898039461508061363c2c85c498dbbfdf2c",
+        "kernel/locking/kd_mmap/Makefile": "fef5b948779e2fbb255318e595c2b790e07b752759d74b34fcf26807d9e62e1e",
+        "kernel/locking/kd_mmap/adapter.c": "edb0b6fe58b2345d73567351af9c90dcdb85d2cebda44d6e9a99059acea8eaf3",
+        "kernel/locking/kd_mmap/kd_mmap_admission.c": "69feda804350144fb3314749f06798a1a34242d5fea30399ffa72d506dd8109e",
+        "kernel/locking/kd_mmap/kd_mmap_admission.h": "e8cfecbbb00b84c8e9f768100f6bf3b968fae744679fa6056345ce29bce0a897",
+        "kernel/locking/kd_mmap/kd_mmap_lock.h": "8f31fdecba356a48d18abbad9004fd8c6133051dd710084831aa9abcd07d66bf",
+        "kernel/locking/kd_mmap/kd_mmap_mutex.h": "dee9e01d9d3e588c99c7f56e13dec196dc28cb390d4817445183b6be082f5c6f",
+        "kernel/locking/kd_mmap/kd_mmap_mutex_local.c": "cb7db2183e19a3d8d1a0db48325e69fbd64939378528173f1e21843d66b0effd",
+        "kernel/locking/kd_mmap/kd_mmap_mutex_local.h": "cda3689ac6936a04c24b9b29d405806d9bbeb959961d7911db07c57deca77e06",
+        "kernel/locking/kd_mmap/kd_mmap_mutex_osq.c": "ebcbf9587f49faf122ed74fe3f71bfa02bcb4013cbf02a57783bb3f02d154640",
+        "kernel/locking/kd_mmap/kd_mmap_regs.h": "77b29e9ad59d00925cba1721bda7dd55efd4034b6d6ef5c289a16d9184af1874",
+        "kernel/locking/kd_mmap/kd_mmap_rwsem.c": "5f196fa7807df341c80789a68896d41c52c0db8fc616aad7573760e3a4ee892f",
+        "kernel/locking/kd_mmap/kd_mmap_rwsem.h": "d8cab159dbdd3c857444d59e2ea57d59e039fb92a4a6e41ece12bf7095faa28c",
+        "kernel/locking/kd_mmap/kd_mmap_wait_queue.c": "1b1938a619d911f1a43548c7aa391a8260ff635695d399b7d0f49731a2c94364",
+        "kernel/locking/kd_mmap/pool.c": "9e55a24bcc7fd46e49438871f4ee8136e39ce893c9f7fc708cbd81bbd07d71a5",
+        "kernel/locking/kd_mmap/provider.c": "bbf79f1f3ee198233085897c7ce7f736c41d14952313cd47ef6e3d176debc0fe",
+        "kernel/locking/spinlock.c": "43654c17ad3021d762e84c4bdbf297fb32f0cd626019de16271ca9f513d24f0a",
+        "kernel/module/main.c": "be41f95f54498b31f096c3541ddaa71b2f3cd0ed818f21ef3f4eda1e9447e6f7",
+        "kernel/sched/core.c": "7d6a2601752ebd0424be5936db9b2705cae17389b51a4c16e6dc846b2cfd4e3f",
+        "kernel/watch_queue.c": "ca0d715a610dcc02520110d82aea5b1599ce2206d0a59519eba802224369a983",
+        "lib/maple_tree.c": "959a43980d7ef06c1c7970e5c0bb0a735dbe9c4d5a5f450376d8f76e97f21e9f",
+        "mm/Kconfig": "dd08b47de356f8926cab2c03796cb9484c6a313ca51f9ab6f726679516cb137a",
+        "mm/madvise.c": "bb33715ad074b0ca7235d0ca7dc20de41a43b03d3fd411980c3952620ac88d25",
+        "mm/memory.c": "8dcd3330503799b97b1cdca547f5720e70b4879be7ccb1aabe0086c9c610a127",
+        "mm/mmap.c": "26097665c7cfaf7b28c0be7a8b1362b80b51d497033af24278b8a0444d2f1c5b",
+        "mm/mmap_lock.c": "0694371fa007d5d88d512ce169a05085353f332c44c76eeb2b7b34c2e0b2a455",
+        "mm/rmap.c": "a360fd67cf7231a9f61af75189c76c596bc36101ec86245a46547484a8cabf63",
+        "mm/vma.c": "8dea0340f92be7b964b2d424459155f04447fb0b69075d02f4b64b58291f7f05"
+      },
+      "variant": "kdscope5-kd"
+    },
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/linux70-kdscope5-kd-20261103",
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "bundle_files": 59,
+      "config": true,
+      "installed_files": 4,
+      "mmap_mode": "on",
+      "ok": true,
+      "running_build_id": "357a7115d21941960b90262ac1165bf70d1b398e",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdscope5 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+        "mmap_mode": "on",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/build",
+      "source_files": 70,
+      "source_root": "/mnt/kdlock-builds2/linux-7.0.0-38-kdscope5/source",
+      "variant": "kdscope5-kd"
+    }
+  },
+  "execution_mode": "image",
+  "execution_session": {
+    "daemon_device_writer": {
+      "device": 7,
+      "fd": 3,
+      "flags": 557058,
+      "inode": 692,
+      "pid": 2418,
+      "rdev": 61440,
+      "start_ticks": 1496
+    },
+    "daemon_pid": 2418,
+    "daemon_start_ticks": 1496,
+    "delegated_execution_proved": false,
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/fixed-session/execution-session.json",
+    "preparer_pid": 2348,
+    "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+    "sha256": "cac90e1b30fe3ee35acf901e3bebd5d6e38ad891740067589360a4648e63c00a",
+    "syscall_shape": {
+      "enabled": true,
+      "version": 1
+    }
+  },
+  "instrumentation": "selected-service-counters",
+  "learning_budget": {
+    "continuation_application_seconds": 30,
+    "continuation_rounds": 8,
+    "deadline_monotonic": 1812.192193923,
+    "timeout_seconds": 1800
+  },
+  "learning_continuations": [
+    {
+      "application": {
+        "application_lock_identity": "not-observed-in-this-process",
+        "argv": [
+          "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "-t",
+          "8",
+          "-s",
+          "2",
+          "-m"
+        ],
+        "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+        "drained": true,
+        "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+        "execution_session": {
+          "daemon_device_writer": {
+            "device": 7,
+            "fd": 3,
+            "flags": 557058,
+            "inode": 692,
+            "pid": 2418,
+            "rdev": 61440,
+            "start_ticks": 1496
+          },
+          "daemon_pid": 2418,
+          "daemon_start_ticks": 1496,
+          "delegated_execution_proved": false,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-01/epochs/epoch-001/execution-session.json",
+          "preparer_pid": 2348,
+          "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+          "sha256": "a3d7e52de6db37a6a8363e26349c1deada13d9258903e675ab29368662afc7e2",
+          "syscall_shape": {
+            "enabled": true,
+            "version": 1
+          }
+        },
+        "execution_session_after": {
+          "application_delegation_proved": false,
+          "binding_drain_proved": false,
+          "bindings": 9,
+          "source": {
+            "frames": 0,
+            "modules": 1,
+            "state": 0,
+            "writers": 1
+          }
+        },
+        "image_learning": true,
+        "instrumentation": "none",
+        "involuntary_context_switches": 165710,
+        "model": "processes",
+        "nominal_seconds": 2,
+        "observation_finished_ns": 752783811245,
+        "output": {
+          "completed_pairs": 41434,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 2607,
+              "min": 2571,
+              "total": 20733
+            },
+            {
+              "max": 2597,
+              "min": 2580,
+              "total": 20701
+            }
+          ],
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 20717.0,
+          "preparation": [],
+          "upstream_average": 20717,
+          "upstream_average_divisor": 2,
+          "upstream_completed_pairs": 41434,
+          "upstream_counter_boundary": "-s2: six pre-marker samples, 2 post-marker samples; final 2 selected",
+          "warmup": [
+            {
+              "max": 2597,
+              "min": 2565,
+              "total": 20667
+            },
+            {
+              "max": 2600,
+              "min": 2573,
+              "total": 20719
+            },
+            {
+              "max": 2605,
+              "min": 2579,
+              "total": 20731
+            },
+            {
+              "max": 2600,
+              "min": 2570,
+              "total": 20683
+            },
+            {
+              "max": 2594,
+              "min": 2575,
+              "total": 20695
+            },
+            {
+              "max": 2598,
+              "min": 2576,
+              "total": 20714
+            }
+          ]
+        },
+        "passed": true,
+        "pid": 2545,
+        "process_elapsed_ns": 8080842979,
+        "returncode": 0,
+        "round": 0,
+        "schema": 1,
+        "scored": false,
+        "started_ns": 752728955354,
+        "state": "COMPLETE",
+        "system_cpu_seconds": 62.65046799999982,
+        "user_cpu_seconds": 0.08240100000000083,
+        "voluntary_context_switches": 27,
+        "workers": 8,
+        "workers_observed": [
+          {
+            "cpus": [
+              0
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2546,
+            "tid": 2546
+          },
+          {
+            "cpus": [
+              1
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2547,
+            "tid": 2547
+          },
+          {
+            "cpus": [
+              2
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2548,
+            "tid": 2548
+          },
+          {
+            "cpus": [
+              3
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2549,
+            "tid": 2549
+          },
+          {
+            "cpus": [
+              4
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2550,
+            "tid": 2550
+          },
+          {
+            "cpus": [
+              5
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2551,
+            "tid": 2551
+          },
+          {
+            "cpus": [
+              6
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75275,
+            "tgid": 2552,
+            "tid": 2552
+          },
+          {
+            "cpus": [
+              7
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2545,
+            "start_ticks": 75276,
+            "tgid": 2553,
+            "tid": 2553
+          }
+        ]
+      },
+      "learning_limit": "bounded application learning has not reached a stable timing epoch",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-01/learning.json",
+      "registry_after": [
+        {
+          "code": 18419722476580204544,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476576006144,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476588601344,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 5,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476584402944,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 5,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "service_delta": [
+        {
+          "bound": 165653,
+          "canceled": 0,
+          "dispatch_ns": 366739203,
+          "dispatch_samples": 165653,
+          "entry": "0xffffffff817b6f68",
+          "handback": 8,
+          "handback_finished": 8,
+          "invalid_clock": 0,
+          "jit_entered": 165653,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 165645,
+          "selected": 165653,
+          "shadow_ns": 32864365985,
+          "shadow_samples": 165653,
+          "submitted": 165653
+        },
+        {
+          "bound": 165648,
+          "canceled": 0,
+          "dispatch_ns": 1037686563,
+          "dispatch_samples": 165648,
+          "entry": "0xffffffff8181c73b",
+          "handback": 165648,
+          "handback_finished": 165648,
+          "invalid_clock": 0,
+          "jit_entered": 165648,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 165648,
+          "shadow_ns": 14248373024,
+          "shadow_samples": 165648,
+          "submitted": 165648
+        }
+      ],
+      "sha256": "de38e2b0e6d8ba4a94db7f50eab0038aa0097311db7046b57ef8e1d842c255b9",
+      "stable": false
+    },
+    {
+      "application": {
+        "application_lock_identity": "not-observed-in-this-process",
+        "argv": [
+          "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "-t",
+          "8",
+          "-s",
+          "2",
+          "-m"
+        ],
+        "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+        "drained": true,
+        "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+        "execution_session": {
+          "daemon_device_writer": {
+            "device": 7,
+            "fd": 3,
+            "flags": 557058,
+            "inode": 692,
+            "pid": 2418,
+            "rdev": 61440,
+            "start_ticks": 1496
+          },
+          "daemon_pid": 2418,
+          "daemon_start_ticks": 1496,
+          "delegated_execution_proved": false,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-02/epochs/epoch-001/execution-session.json",
+          "preparer_pid": 2348,
+          "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+          "sha256": "8fa0d9c8342a649e59d55ef6426f557bb3b2f6999893c9f81d19eaafe58f5cb2",
+          "syscall_shape": {
+            "enabled": true,
+            "version": 1
+          }
+        },
+        "execution_session_after": {
+          "application_delegation_proved": false,
+          "binding_drain_proved": false,
+          "bindings": 10,
+          "source": {
+            "frames": 0,
+            "modules": 1,
+            "state": 0,
+            "writers": 1
+          }
+        },
+        "image_learning": true,
+        "instrumentation": "none",
+        "involuntary_context_switches": 166888,
+        "model": "processes",
+        "nominal_seconds": 2,
+        "observation_finished_ns": 1024059847215,
+        "output": {
+          "completed_pairs": 41918,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 2634,
+              "min": 2614,
+              "total": 20964
+            },
+            {
+              "max": 2627,
+              "min": 2613,
+              "total": 20954
+            }
+          ],
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 20959.0,
+          "preparation": [],
+          "upstream_average": 20959,
+          "upstream_average_divisor": 2,
+          "upstream_completed_pairs": 41918,
+          "upstream_counter_boundary": "-s2: six pre-marker samples, 2 post-marker samples; final 2 selected",
+          "warmup": [
+            {
+              "max": 2608,
+              "min": 2588,
+              "total": 20790
+            },
+            {
+              "max": 2612,
+              "min": 2597,
+              "total": 20834
+            },
+            {
+              "max": 2607,
+              "min": 2587,
+              "total": 20813
+            },
+            {
+              "max": 2608,
+              "min": 2585,
+              "total": 20797
+            },
+            {
+              "max": 2610,
+              "min": 2589,
+              "total": 20799
+            },
+            {
+              "max": 2615,
+              "min": 2595,
+              "total": 20848
+            }
+          ]
+        },
+        "passed": true,
+        "pid": 2573,
+        "process_elapsed_ns": 8080708609,
+        "returncode": 0,
+        "round": 0,
+        "schema": 1,
+        "scored": false,
+        "started_ns": 1024004838277,
+        "state": "COMPLETE",
+        "system_cpu_seconds": 62.60773700000027,
+        "user_cpu_seconds": 0.08066200000000023,
+        "voluntary_context_switches": 25,
+        "workers": 8,
+        "workers_observed": [
+          {
+            "cpus": [
+              0
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2574,
+            "tid": 2574
+          },
+          {
+            "cpus": [
+              1
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2575,
+            "tid": 2575
+          },
+          {
+            "cpus": [
+              2
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2576,
+            "tid": 2576
+          },
+          {
+            "cpus": [
+              3
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2577,
+            "tid": 2577
+          },
+          {
+            "cpus": [
+              4
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2578,
+            "tid": 2578
+          },
+          {
+            "cpus": [
+              5
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2579,
+            "tid": 2579
+          },
+          {
+            "cpus": [
+              6
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2580,
+            "tid": 2580
+          },
+          {
+            "cpus": [
+              7
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2573,
+            "start_ticks": 102403,
+            "tgid": 2581,
+            "tid": 2581
+          }
+        ]
+      },
+      "learning_limit": "bounded application learning has not reached a stable timing epoch",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-02/learning.json",
+      "registry_after": [
+        {
+          "code": 18419722476571807744,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476567609344,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476580204544,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476576006144,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "service_delta": [
+        {
+          "bound": 166807,
+          "canceled": 0,
+          "dispatch_ns": 367483491,
+          "dispatch_samples": 166807,
+          "entry": "0xffffffff817b6f68",
+          "handback": 6,
+          "handback_finished": 6,
+          "invalid_clock": 0,
+          "jit_entered": 166807,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 166801,
+          "selected": 166807,
+          "shadow_ns": 32856978083,
+          "shadow_samples": 166807,
+          "submitted": 166807
+        },
+        {
+          "bound": 166801,
+          "canceled": 0,
+          "dispatch_ns": 1038502318,
+          "dispatch_samples": 166801,
+          "entry": "0xffffffff8181c73b",
+          "handback": 166801,
+          "handback_finished": 166801,
+          "invalid_clock": 0,
+          "jit_entered": 166801,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 166801,
+          "shadow_ns": 14236077368,
+          "shadow_samples": 166801,
+          "submitted": 166801
+        }
+      ],
+      "sha256": "36812da8fcc6efdd8a0ff397a27306c658efd5224d02a22abba57e67a7b608aa",
+      "stable": false
+    },
+    {
+      "application": {
+        "application_lock_identity": "not-observed-in-this-process",
+        "argv": [
+          "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "-t",
+          "8",
+          "-s",
+          "2",
+          "-m"
+        ],
+        "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+        "drained": true,
+        "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+        "execution_session": {
+          "daemon_device_writer": {
+            "device": 7,
+            "fd": 3,
+            "flags": 557058,
+            "inode": 692,
+            "pid": 2418,
+            "rdev": 61440,
+            "start_ticks": 1496
+          },
+          "daemon_pid": 2418,
+          "daemon_start_ticks": 1496,
+          "delegated_execution_proved": false,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-03/epochs/epoch-001/execution-session.json",
+          "preparer_pid": 2348,
+          "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+          "sha256": "e8a16e45d5db6751870ef430a7aa53e7d68b0eb97be336640116b0a9b8920463",
+          "syscall_shape": {
+            "enabled": true,
+            "version": 1
+          }
+        },
+        "execution_session_after": {
+          "application_delegation_proved": false,
+          "binding_drain_proved": false,
+          "bindings": 10,
+          "source": {
+            "frames": 0,
+            "modules": 1,
+            "state": 0,
+            "writers": 1
+          }
+        },
+        "image_learning": true,
+        "instrumentation": "none",
+        "involuntary_context_switches": 168407,
+        "model": "processes",
+        "nominal_seconds": 2,
+        "observation_finished_ns": 1353632888267,
+        "output": {
+          "completed_pairs": 42168,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 2644,
+              "min": 2622,
+              "total": 21091
+            },
+            {
+              "max": 2646,
+              "min": 2621,
+              "total": 21077
+            }
+          ],
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 21084.0,
+          "preparation": [],
+          "upstream_average": 21084,
+          "upstream_average_divisor": 2,
+          "upstream_completed_pairs": 42168,
+          "upstream_counter_boundary": "-s2: six pre-marker samples, 2 post-marker samples; final 2 selected",
+          "warmup": [
+            {
+              "max": 2629,
+              "min": 2610,
+              "total": 20979
+            },
+            {
+              "max": 2635,
+              "min": 2614,
+              "total": 21019
+            },
+            {
+              "max": 2636,
+              "min": 2611,
+              "total": 21009
+            },
+            {
+              "max": 2640,
+              "min": 2623,
+              "total": 21053
+            },
+            {
+              "max": 2645,
+              "min": 2620,
+              "total": 21044
+            },
+            {
+              "max": 2641,
+              "min": 2615,
+              "total": 21056
+            }
+          ]
+        },
+        "passed": true,
+        "pid": 2600,
+        "process_elapsed_ns": 8082387238,
+        "returncode": 0,
+        "round": 0,
+        "schema": 1,
+        "scored": false,
+        "started_ns": 1353577517187,
+        "state": "COMPLETE",
+        "system_cpu_seconds": 62.636123999999654,
+        "user_cpu_seconds": 0.07296499999999995,
+        "voluntary_context_switches": 28,
+        "workers": 8,
+        "workers_observed": [
+          {
+            "cpus": [
+              0
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2601,
+            "tid": 2601
+          },
+          {
+            "cpus": [
+              1
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2602,
+            "tid": 2602
+          },
+          {
+            "cpus": [
+              2
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2603,
+            "tid": 2603
+          },
+          {
+            "cpus": [
+              3
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2604,
+            "tid": 2604
+          },
+          {
+            "cpus": [
+              4
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2605,
+            "tid": 2605
+          },
+          {
+            "cpus": [
+              5
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2606,
+            "tid": 2606
+          },
+          {
+            "cpus": [
+              6
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135360,
+            "tgid": 2607,
+            "tid": 2607
+          },
+          {
+            "cpus": [
+              7
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2600,
+            "start_ticks": 135361,
+            "tgid": 2608,
+            "tid": 2608
+          }
+        ]
+      },
+      "learning_limit": null,
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/continuation-03/learning.json",
+      "registry_after": [
+        {
+          "code": 18419722476571807744,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476567609344,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476571807744,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2429
+        },
+        {
+          "code": 18419722476567609344,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2430
+        }
+      ],
+      "service_delta": [
+        {
+          "bound": 168339,
+          "canceled": 0,
+          "dispatch_ns": 361849131,
+          "dispatch_samples": 168339,
+          "entry": "0xffffffff817b6f68",
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 168339,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 168339,
+          "selected": 168339,
+          "shadow_ns": 32848277623,
+          "shadow_samples": 168339,
+          "submitted": 168339
+        },
+        {
+          "bound": 168332,
+          "canceled": 0,
+          "dispatch_ns": 1046927557,
+          "dispatch_samples": 168332,
+          "entry": "0xffffffff8181c73b",
+          "handback": 168332,
+          "handback_finished": 168332,
+          "invalid_clock": 0,
+          "jit_entered": 168332,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 168332,
+          "shadow_ns": 14191734303,
+          "shadow_samples": 168332,
+          "submitted": 168332
+        }
+      ],
+      "sha256": "192ccab9cfee3dc11a8bf535c2b4c410eb87b98d8efb419002f77cfd06761995",
+      "stable": true
+    }
+  ],
+  "mode": "kd",
+  "models": [
+    "processes"
+  ],
+  "passed": false,
+  "physical_batch_length_measured": false,
+  "points": [
+    {
+      "after": {
+        "registry": [
+          {
+            "code": 18419722476571807744,
+            "entry": 18446744071586934632,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2429
+          },
+          {
+            "code": 18419722476567609344,
+            "entry": 18446744071587350331,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2430
+          }
+        ],
+        "service": {
+          "18446744071586934632": {
+            "bound": 21091341,
+            "canceled": 0,
+            "dispatch_ns": 48554704357,
+            "dispatch_samples": 21091341,
+            "handback": 14988518,
+            "handback_finished": 14988518,
+            "invalid_clock": 0,
+            "jit_entered": 21091341,
+            "local": 15620487,
+            "local_cancel": 0,
+            "local_no_image": 15620487,
+            "local_ns": 4526228235,
+            "local_success": 15620487,
+            "prepublication_cancel": 0,
+            "returned": 6102823,
+            "selected": 36711828,
+            "shadow_ns": 1918177979811,
+            "shadow_samples": 21091341,
+            "submitted": 21091341
+          },
+          "18446744071587350331": {
+            "bound": 16892408,
+            "canceled": 0,
+            "dispatch_ns": 107218502151,
+            "dispatch_samples": 16892408,
+            "handback": 16892408,
+            "handback_finished": 16892408,
+            "invalid_clock": 0,
+            "jit_entered": 16892408,
+            "local": 19819392,
+            "local_cancel": 0,
+            "local_no_image": 19819392,
+            "local_ns": 6835320279,
+            "local_success": 19819392,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 36711800,
+            "shadow_ns": 956841807105,
+            "shadow_samples": 16892408,
+            "submitted": 16892408
+          }
+        },
+        "superseded_reports": 0
+      },
+      "application": {
+        "application_lock_identity": "not-observed-in-this-process",
+        "argv": [
+          "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "-t",
+          "8",
+          "-s",
+          "10",
+          "-m"
+        ],
+        "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+        "drained": true,
+        "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+        "execution_session": {
+          "daemon_device_writer": {
+            "device": 7,
+            "fd": 3,
+            "flags": 557058,
+            "inode": 692,
+            "pid": 2418,
+            "rdev": 61440,
+            "start_ticks": 1496
+          },
+          "daemon_pid": 2418,
+          "daemon_start_ticks": 1496,
+          "delegated_execution_proved": false,
+          "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/fixed-session/execution-session.json",
+          "preparer_pid": 2348,
+          "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+          "sha256": "cac90e1b30fe3ee35acf901e3bebd5d6e38ad891740067589360a4648e63c00a",
+          "syscall_shape": {
+            "enabled": true,
+            "version": 1
+          }
+        },
+        "execution_session_after": {
+          "application_delegation_proved": false,
+          "binding_drain_proved": false,
+          "bindings": 9,
+          "source": {
+            "frames": 0,
+            "modules": 1,
+            "state": 0,
+            "writers": 1
+          }
+        },
+        "image_learning": false,
+        "instrumentation": "none",
+        "involuntary_context_switches": 336107,
+        "measured_samples": 10,
+        "model": "processes",
+        "nominal_seconds": 10,
+        "observation_finished_ns": 1364364398153,
+        "output": {
+          "completed_pairs": 209708,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 2640,
+              "min": 2614,
+              "total": 21006
+            },
+            {
+              "max": 2626,
+              "min": 2611,
+              "total": 20956
+            },
+            {
+              "max": 2629,
+              "min": 2612,
+              "total": 20959
+            },
+            {
+              "max": 2630,
+              "min": 2606,
+              "total": 20931
+            },
+            {
+              "max": 2634,
+              "min": 2609,
+              "total": 20977
+            },
+            {
+              "max": 2633,
+              "min": 2605,
+              "total": 20961
+            },
+            {
+              "max": 2633,
+              "min": 2616,
+              "total": 20994
+            },
+            {
+              "max": 2635,
+              "min": 2601,
+              "total": 20968
+            },
+            {
+              "max": 2634,
+              "min": 2615,
+              "total": 20995
+            },
+            {
+              "max": 2634,
+              "min": 2612,
+              "total": 20961
+            }
+          ],
+          "nominal_seconds": 10,
+          "pairs_per_nominal_second": 20970.8,
+          "preparation": [],
+          "upstream_average": 20970,
+          "upstream_average_divisor": 10,
+          "upstream_completed_pairs": 209708,
+          "upstream_counter_boundary": "-s10: six pre-marker samples, 10 post-marker samples; final 10 selected",
+          "warmup": [
+            {
+              "max": 2638,
+              "min": 2611,
+              "total": 21020
+            },
+            {
+              "max": 2647,
+              "min": 2620,
+              "total": 21091
+            },
+            {
+              "max": 2641,
+              "min": 2620,
+              "total": 21041
+            },
+            {
+              "max": 2644,
+              "min": 2621,
+              "total": 21066
+            },
+            {
+              "max": 2641,
+              "min": 2615,
+              "total": 21006
+            },
+            {
+              "max": 2654,
+              "min": 2626,
+              "total": 21102
+            }
+          ]
+        },
+        "passed": true,
+        "pid": 2614,
+        "process_elapsed_ns": 16055069460,
+        "returncode": 0,
+        "round": 0,
+        "sample_window": {
+          "events": [
+            {
+              "boundary": "begin",
+              "line_received_ns": 1370340437737,
+              "observation": {
+                "registry": [
+                  {
+                    "code": 18419722476571807744,
+                    "entry": 18446744071586934632,
+                    "entry_abi": 2,
+                    "generation": 7,
+                    "lock_kind": 2,
+                    "pid": 0,
+                    "requirements": 32640,
+                    "status": 0,
+                    "tgid": 2429
+                  },
+                  {
+                    "code": 18419722476567609344,
+                    "entry": 18446744071587350331,
+                    "entry_abi": 2,
+                    "generation": 7,
+                    "lock_kind": 2,
+                    "pid": 0,
+                    "requirements": 32640,
+                    "status": 0,
+                    "tgid": 2430
+                  }
+                ],
+                "service": {
+                  "18446744071586934632": {
+                    "bound": 20881638,
+                    "canceled": 0,
+                    "dispatch_ns": 48102557949,
+                    "dispatch_samples": 20881638,
+                    "handback": 14988518,
+                    "handback_finished": 14988518,
+                    "invalid_clock": 0,
+                    "jit_entered": 20881638,
+                    "local": 15620487,
+                    "local_cancel": 0,
+                    "local_no_image": 15620487,
+                    "local_ns": 4526228235,
+                    "local_success": 15620487,
+                    "prepublication_cancel": 0,
+                    "returned": 5893116,
+                    "selected": 36502126,
+                    "shadow_ns": 1877157035531,
+                    "shadow_samples": 20881634,
+                    "submitted": 20881639
+                  },
+                  "18446744071587350331": {
+                    "bound": 16682705,
+                    "canceled": 0,
+                    "dispatch_ns": 105915483532,
+                    "dispatch_samples": 16682705,
+                    "handback": 16682703,
+                    "handback_finished": 16682703,
+                    "invalid_clock": 0,
+                    "jit_entered": 16682705,
+                    "local": 19819392,
+                    "local_cancel": 0,
+                    "local_no_image": 19819392,
+                    "local_ns": 6835320279,
+                    "local_success": 19819392,
+                    "prepublication_cancel": 0,
+                    "returned": 0,
+                    "selected": 36502098,
+                    "shadow_ns": 938997484151,
+                    "shadow_samples": 16682703,
+                    "submitted": 16682706
+                  }
+                },
+                "superseded_reports": 0
+              },
+              "observation_finished_ns": 1370340829097,
+              "sample": 6
+            },
+            {
+              "boundary": "end",
+              "line_received_ns": 1380341503345,
+              "observation": {
+                "registry": [
+                  {
+                    "code": 18419722476571807744,
+                    "entry": 18446744071586934632,
+                    "entry_abi": 2,
+                    "generation": 7,
+                    "lock_kind": 2,
+                    "pid": 0,
+                    "requirements": 32640,
+                    "status": 0,
+                    "tgid": 2429
+                  },
+                  {
+                    "code": 18419722476567609344,
+                    "entry": 18446744071587350331,
+                    "entry_abi": 2,
+                    "generation": 7,
+                    "lock_kind": 2,
+                    "pid": 0,
+                    "requirements": 32640,
+                    "status": 0,
+                    "tgid": 2430
+                  }
+                ],
+                "service": {
+                  "18446744071586934632": {
+                    "bound": 21091341,
+                    "canceled": 0,
+                    "dispatch_ns": 48554704357,
+                    "dispatch_samples": 21091341,
+                    "handback": 14988518,
+                    "handback_finished": 14988518,
+                    "invalid_clock": 0,
+                    "jit_entered": 21091341,
+                    "local": 15620487,
+                    "local_cancel": 0,
+                    "local_no_image": 15620487,
+                    "local_ns": 4526228235,
+                    "local_success": 15620487,
+                    "prepublication_cancel": 0,
+                    "returned": 6102823,
+                    "selected": 36711828,
+                    "shadow_ns": 1918177979811,
+                    "shadow_samples": 21091341,
+                    "submitted": 21091341
+                  },
+                  "18446744071587350331": {
+                    "bound": 16892408,
+                    "canceled": 0,
+                    "dispatch_ns": 107218502151,
+                    "dispatch_samples": 16892408,
+                    "handback": 16892408,
+                    "handback_finished": 16892408,
+                    "invalid_clock": 0,
+                    "jit_entered": 16892408,
+                    "local": 19819392,
+                    "local_cancel": 0,
+                    "local_no_image": 19819392,
+                    "local_ns": 6835320279,
+                    "local_success": 19819392,
+                    "prepublication_cancel": 0,
+                    "returned": 0,
+                    "selected": 36711800,
+                    "shadow_ns": 956841807105,
+                    "shadow_samples": 16892408,
+                    "submitted": 16892408
+                  }
+                },
+                "superseded_reports": 0
+              },
+              "observation_finished_ns": 1380341857164,
+              "sample": 16
+            }
+          ],
+          "limit": "transport and callback latency; counters are not sampled atomically with application counters",
+          "samples": 16,
+          "scope": "after delivered last warmup line through delivered final measured line",
+          "transport": "pty"
+        },
+        "sample_window_reader_stopped": true,
+        "schema": 1,
+        "scored": true,
+        "started_ns": 1364308991323,
+        "state": "COMPLETE",
+        "system_cpu_seconds": 125.27344499999981,
+        "timeout_seconds": 30,
+        "upstream_samples": 10,
+        "user_cpu_seconds": 0.11215400000000031,
+        "voluntary_context_switches": 32,
+        "workers": 8,
+        "workers_observed": [
+          {
+            "cpus": [
+              0
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2616,
+            "tid": 2616
+          },
+          {
+            "cpus": [
+              1
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2617,
+            "tid": 2617
+          },
+          {
+            "cpus": [
+              2
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2618,
+            "tid": 2618
+          },
+          {
+            "cpus": [
+              3
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2619,
+            "tid": 2619
+          },
+          {
+            "cpus": [
+              4
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2620,
+            "tid": 2620
+          },
+          {
+            "cpus": [
+              5
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2621,
+            "tid": 2621
+          },
+          {
+            "cpus": [
+              6
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2622,
+            "tid": 2622
+          },
+          {
+            "cpus": [
+              7
+            ],
+            "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+            "ppid": 2614,
+            "start_ticks": 136433,
+            "tgid": 2623,
+            "tid": 2623
+          }
+        ]
+      },
+      "application_receipt": {
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/application/result.json",
+        "sha256": "a307c5cacc3e99c951bd566f92825d1a7a1d0dbe8bb901a1a7d7dba9089fd100"
+      },
+      "before": {
+        "registry": [
+          {
+            "code": 18419722476571807744,
+            "entry": 18446744071586934632,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2429
+          },
+          {
+            "code": 18419722476567609344,
+            "entry": 18446744071587350331,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2430
+          }
+        ],
+        "service": {
+          "18446744071586934632": {
+            "bound": 20755299,
+            "canceled": 0,
+            "dispatch_ns": 47830419502,
+            "dispatch_samples": 20755299,
+            "handback": 14988518,
+            "handback_finished": 14988518,
+            "invalid_clock": 0,
+            "jit_entered": 20755299,
+            "local": 15620487,
+            "local_cancel": 0,
+            "local_no_image": 15620487,
+            "local_ns": 4526228235,
+            "local_success": 15620487,
+            "prepublication_cancel": 0,
+            "returned": 5766781,
+            "selected": 36375786,
+            "shadow_ns": 1852543144268,
+            "shadow_samples": 20755299,
+            "submitted": 20755299
+          },
+          "18446744071587350331": {
+            "bound": 16556371,
+            "canceled": 0,
+            "dispatch_ns": 105132138239,
+            "dispatch_samples": 16556371,
+            "handback": 16556371,
+            "handback_finished": 16556371,
+            "invalid_clock": 0,
+            "jit_entered": 16556371,
+            "local": 19819392,
+            "local_cancel": 0,
+            "local_no_image": 19819392,
+            "local_ns": 6835320279,
+            "local_success": 19819392,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 36375763,
+            "shadow_ns": 928290987144,
+            "shadow_samples": 16556371,
+            "submitted": 16556371
+          }
+        },
+        "superseded_reports": 0
+      },
+      "compiler_records_after": [
+        {
+          "child": 2431,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 57006215319,
+          "involuntary_cs": 145,
+          "lock_kind": 2,
+          "major_faults": 14,
+          "maxrss_kib": 139136,
+          "minor_faults": 52743,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 17990925109,
+          "status": 0,
+          "system_ns": 4372047000,
+          "tgid": 2429,
+          "user_ns": 34611879000,
+          "voluntary_cs": 139,
+          "wall_ns": 39015290210
+        },
+        {
+          "child": 2452,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 107922364203,
+          "involuntary_cs": 125,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 130172,
+          "minor_faults": 46180,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 57061707791,
+          "status": 0,
+          "system_ns": 4305322000,
+          "tgid": 2430,
+          "user_ns": 46553102000,
+          "voluntary_cs": 19,
+          "wall_ns": 50860656412
+        },
+        {
+          "child": 2463,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 146967618828,
+          "involuntary_cs": 91,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 139580,
+          "minor_faults": 52861,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 108077705019,
+          "status": 0,
+          "system_ns": 4280980000,
+          "tgid": 2429,
+          "user_ns": 34600387000,
+          "voluntary_cs": 23,
+          "wall_ns": 38889913809
+        },
+        {
+          "child": 2477,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 198143102532,
+          "involuntary_cs": 115,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 131164,
+          "minor_faults": 46802,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 147020910465,
+          "status": 0,
+          "system_ns": 4250163000,
+          "tgid": 2430,
+          "user_ns": 46870126000,
+          "voluntary_cs": 19,
+          "wall_ns": 51122192067
+        },
+        {
+          "child": 2484,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 238274836154,
+          "involuntary_cs": 90,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 139408,
+          "minor_faults": 52815,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 198285638398,
+          "status": 0,
+          "system_ns": 4303821000,
+          "tgid": 2429,
+          "user_ns": 35676748000,
+          "voluntary_cs": 22,
+          "wall_ns": 39989197756
+        },
+        {
+          "child": 2491,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 289738491952,
+          "involuntary_cs": 117,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 130300,
+          "minor_faults": 45683,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 238326402284,
+          "status": 0,
+          "system_ns": 4192686000,
+          "tgid": 2430,
+          "user_ns": 47217180000,
+          "voluntary_cs": 18,
+          "wall_ns": 51412089668
+        },
+        {
+          "child": 2499,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 340696043776,
+          "involuntary_cs": 65,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144848,
+          "minor_faults": 55341,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 289880954113,
+          "status": 0,
+          "system_ns": 4250390000,
+          "tgid": 2429,
+          "user_ns": 46556078000,
+          "voluntary_cs": 24,
+          "wall_ns": 50815089663
+        },
+        {
+          "child": 2509,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 392098721699,
+          "involuntary_cs": 64,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 129920,
+          "minor_faults": 45781,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 340750604982,
+          "status": 0,
+          "system_ns": 4311469000,
+          "tgid": 2430,
+          "user_ns": 47035328000,
+          "voluntary_cs": 20,
+          "wall_ns": 51348116717
+        },
+        {
+          "child": 2523,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 490809388148,
+          "involuntary_cs": 232,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 155128,
+          "minor_faults": 60934,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 392240756594,
+          "status": 0,
+          "system_ns": 4358229000,
+          "tgid": 2429,
+          "user_ns": 94172326000,
+          "voluntary_cs": 23,
+          "wall_ns": 98568631554
+        },
+        {
+          "child": 2530,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 580162501307,
+          "involuntary_cs": 110,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144328,
+          "minor_faults": 52537,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 490866086123,
+          "status": 0,
+          "system_ns": 4266904000,
+          "tgid": 2430,
+          "user_ns": 85013941000,
+          "voluntary_cs": 20,
+          "wall_ns": 89296415184
+        },
+        {
+          "child": 2554,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 926845837559,
+          "involuntary_cs": 656,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 185528,
+          "minor_faults": 77509,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 752842122040,
+          "status": 0,
+          "system_ns": 4426746000,
+          "tgid": 2429,
+          "user_ns": 169549951000,
+          "voluntary_cs": 23,
+          "wall_ns": 174003715519
+        },
+        {
+          "child": 2566,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 1019293745531,
+          "involuntary_cs": 334,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144784,
+          "minor_faults": 53077,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 926909378543,
+          "status": 0,
+          "system_ns": 4291029000,
+          "tgid": 2430,
+          "user_ns": 88083705000,
+          "voluntary_cs": 20,
+          "wall_ns": 92384366988
+        },
+        {
+          "child": 2583,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 1164775040739,
+          "involuntary_cs": 479,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 184180,
+          "minor_faults": 77965,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 1024077612003,
+          "status": 0,
+          "system_ns": 4400177000,
+          "tgid": 2429,
+          "user_ns": 136276778000,
+          "voluntary_cs": 23,
+          "wall_ns": 140697428736
+        },
+        {
+          "child": 2592,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 1348691954975,
+          "involuntary_cs": 645,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 161852,
+          "minor_faults": 62629,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 1164947290012,
+          "status": 0,
+          "system_ns": 4308276000,
+          "tgid": 2430,
+          "user_ns": 179421412000,
+          "voluntary_cs": 19,
+          "wall_ns": 183744664963
+        }
+      ],
+      "compiler_records_before": [
+        {
+          "child": 2431,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 57006215319,
+          "involuntary_cs": 145,
+          "lock_kind": 2,
+          "major_faults": 14,
+          "maxrss_kib": 139136,
+          "minor_faults": 52743,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 17990925109,
+          "status": 0,
+          "system_ns": 4372047000,
+          "tgid": 2429,
+          "user_ns": 34611879000,
+          "voluntary_cs": 139,
+          "wall_ns": 39015290210
+        },
+        {
+          "child": 2452,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 107922364203,
+          "involuntary_cs": 125,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 130172,
+          "minor_faults": 46180,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 57061707791,
+          "status": 0,
+          "system_ns": 4305322000,
+          "tgid": 2430,
+          "user_ns": 46553102000,
+          "voluntary_cs": 19,
+          "wall_ns": 50860656412
+        },
+        {
+          "child": 2463,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 146967618828,
+          "involuntary_cs": 91,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 139580,
+          "minor_faults": 52861,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 108077705019,
+          "status": 0,
+          "system_ns": 4280980000,
+          "tgid": 2429,
+          "user_ns": 34600387000,
+          "voluntary_cs": 23,
+          "wall_ns": 38889913809
+        },
+        {
+          "child": 2477,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 198143102532,
+          "involuntary_cs": 115,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 131164,
+          "minor_faults": 46802,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 147020910465,
+          "status": 0,
+          "system_ns": 4250163000,
+          "tgid": 2430,
+          "user_ns": 46870126000,
+          "voluntary_cs": 19,
+          "wall_ns": 51122192067
+        },
+        {
+          "child": 2484,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 238274836154,
+          "involuntary_cs": 90,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 139408,
+          "minor_faults": 52815,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 198285638398,
+          "status": 0,
+          "system_ns": 4303821000,
+          "tgid": 2429,
+          "user_ns": 35676748000,
+          "voluntary_cs": 22,
+          "wall_ns": 39989197756
+        },
+        {
+          "child": 2491,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 289738491952,
+          "involuntary_cs": 117,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 130300,
+          "minor_faults": 45683,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 238326402284,
+          "status": 0,
+          "system_ns": 4192686000,
+          "tgid": 2430,
+          "user_ns": 47217180000,
+          "voluntary_cs": 18,
+          "wall_ns": 51412089668
+        },
+        {
+          "child": 2499,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 340696043776,
+          "involuntary_cs": 65,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144848,
+          "minor_faults": 55341,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 289880954113,
+          "status": 0,
+          "system_ns": 4250390000,
+          "tgid": 2429,
+          "user_ns": 46556078000,
+          "voluntary_cs": 24,
+          "wall_ns": 50815089663
+        },
+        {
+          "child": 2509,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 392098721699,
+          "involuntary_cs": 64,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 129920,
+          "minor_faults": 45781,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 340750604982,
+          "status": 0,
+          "system_ns": 4311469000,
+          "tgid": 2430,
+          "user_ns": 47035328000,
+          "voluntary_cs": 20,
+          "wall_ns": 51348116717
+        },
+        {
+          "child": 2523,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 490809388148,
+          "involuntary_cs": 232,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 155128,
+          "minor_faults": 60934,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 392240756594,
+          "status": 0,
+          "system_ns": 4358229000,
+          "tgid": 2429,
+          "user_ns": 94172326000,
+          "voluntary_cs": 23,
+          "wall_ns": 98568631554
+        },
+        {
+          "child": 2530,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 580162501307,
+          "involuntary_cs": 110,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144328,
+          "minor_faults": 52537,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 490866086123,
+          "status": 0,
+          "system_ns": 4266904000,
+          "tgid": 2430,
+          "user_ns": 85013941000,
+          "voluntary_cs": 20,
+          "wall_ns": 89296415184
+        },
+        {
+          "child": 2554,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 926845837559,
+          "involuntary_cs": 656,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 185528,
+          "minor_faults": 77509,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 752842122040,
+          "status": 0,
+          "system_ns": 4426746000,
+          "tgid": 2429,
+          "user_ns": 169549951000,
+          "voluntary_cs": 23,
+          "wall_ns": 174003715519
+        },
+        {
+          "child": 2566,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 1019293745531,
+          "involuntary_cs": 334,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 144784,
+          "minor_faults": 53077,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 926909378543,
+          "status": 0,
+          "system_ns": 4291029000,
+          "tgid": 2430,
+          "user_ns": 88083705000,
+          "voluntary_cs": 20,
+          "wall_ns": 92384366988
+        },
+        {
+          "child": 2583,
+          "entry": "0xffffffff817b6f68",
+          "finished_ns": 1164775040739,
+          "involuntary_cs": 479,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 184180,
+          "minor_faults": 77965,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 1024077612003,
+          "status": 0,
+          "system_ns": 4400177000,
+          "tgid": 2429,
+          "user_ns": 136276778000,
+          "voluntary_cs": 23,
+          "wall_ns": 140697428736
+        },
+        {
+          "child": 2592,
+          "entry": "0xffffffff8181c73b",
+          "finished_ns": 1348691954975,
+          "involuntary_cs": 645,
+          "lock_kind": 2,
+          "major_faults": 0,
+          "maxrss_kib": 161852,
+          "minor_faults": 62629,
+          "pid": 0,
+          "result": 0,
+          "schema": 1,
+          "started_ns": 1164947290012,
+          "status": 0,
+          "system_ns": 4308276000,
+          "tgid": 2430,
+          "user_ns": 179421412000,
+          "voluntary_cs": 19,
+          "wall_ns": 183744664963
+        }
+      ],
+      "conservation_passed": true,
+      "fixed_session": {
+        "daemon_device_writer": {
+          "device": 7,
+          "fd": 3,
+          "flags": 557058,
+          "inode": 692,
+          "pid": 2418,
+          "rdev": 61440,
+          "start_ticks": 1496
+        },
+        "daemon_pid": 2418,
+        "daemon_start_ticks": 1496,
+        "delegated_execution_proved": false,
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/fixed-session/execution-session.json",
+        "preparer_pid": 2348,
+        "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+        "sha256": "cac90e1b30fe3ee35acf901e3bebd5d6e38ad891740067589360a4648e63c00a",
+        "syscall_shape": {
+          "enabled": true,
+          "version": 1
+        }
+      },
+      "instrumentation": "selected-service-counters",
+      "measured_delta": [
+        {
+          "bound": 209703,
+          "canceled": 0,
+          "dispatch_ns": 452146408,
+          "dispatch_samples": 209703,
+          "entry": "0xffffffff817b6f68",
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 209703,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 209707,
+          "selected": 209702,
+          "shadow_ns": 41020944280,
+          "shadow_samples": 209707,
+          "submitted": 209702
+        },
+        {
+          "bound": 209703,
+          "canceled": 0,
+          "dispatch_ns": 1303018619,
+          "dispatch_samples": 209703,
+          "entry": "0xffffffff8181c73b",
+          "handback": 209705,
+          "handback_finished": 209705,
+          "invalid_clock": 0,
+          "jit_entered": 209703,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 209702,
+          "shadow_ns": 17844322954,
+          "shadow_samples": 209705,
+          "submitted": 209702
+        }
+      ],
+      "model": "processes",
+      "scored": false,
+      "stable": true,
+      "state": "COMPLETE",
+      "whole_application_delta": [
+        {
+          "bound": 336042,
+          "canceled": 0,
+          "dispatch_ns": 724284855,
+          "dispatch_samples": 336042,
+          "entry": "0xffffffff817b6f68",
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 336042,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 336042,
+          "selected": 336042,
+          "shadow_ns": 65634835543,
+          "shadow_samples": 336042,
+          "submitted": 336042
+        },
+        {
+          "bound": 336037,
+          "canceled": 0,
+          "dispatch_ns": 2086363912,
+          "dispatch_samples": 336037,
+          "entry": "0xffffffff8181c73b",
+          "handback": 336037,
+          "handback_finished": 336037,
+          "invalid_clock": 0,
+          "jit_entered": 336037,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 336037,
+          "shadow_ns": 28550819961,
+          "shadow_samples": 336037,
+          "submitted": 336037
+        }
+      ],
+      "workers": 8
+    }
+  ],
+  "pool_observations": [
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 128,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 128,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 0,
+      "slot_bytes": 4194304,
+      "used": 0
+    },
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 118,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 118,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 10,
+      "slot_bytes": 4194304,
+      "used": 10
+    },
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 117,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 117,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 11,
+      "slot_bytes": 4194304,
+      "used": 11
+    },
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 116,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 116,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 12,
+      "slot_bytes": 4194304,
+      "used": 12
+    },
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 115,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 115,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 13,
+      "slot_bytes": 4194304,
+      "used": 13
+    },
+    {
+      "capacity": 128,
+      "descriptor_bytes": 6144,
+      "free_descriptors": 114,
+      "near_allocated": 0,
+      "near_free": 0,
+      "ordinary_allocated": 128,
+      "ordinary_free": 114,
+      "pointer_table_bytes": 4096,
+      "private": 0,
+      "published": 14,
+      "slot_bytes": 4194304,
+      "used": 14
+    }
+  ],
+  "preparation": {
+    "application": {
+      "application_lock_identity": "not-observed-in-this-process",
+      "argv": [
+        "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+        "-t",
+        "8",
+        "-s",
+        "724",
+        "-m"
+      ],
+      "cpu_time_scope": "whole upstream lifetime including warmup and reaped workers",
+      "drained": true,
+      "executable_sha256": "6ec2ac78249dd13ad201faa0a2708e176f9628d2b537d69d5ff8d584004da733",
+      "execution_session": {
+        "daemon_device_writer": {
+          "device": 7,
+          "fd": 3,
+          "flags": 557058,
+          "inode": 692,
+          "pid": 2418,
+          "rdev": 61440,
+          "start_ticks": 1496
+        },
+        "daemon_pid": 2418,
+        "daemon_start_ticks": 1496,
+        "delegated_execution_proved": false,
+        "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/learning/epochs/epoch-001/execution-session.json",
+        "preparer_pid": 2348,
+        "provider_sha256": "594c4dbd8180a0b1e4ac1b80ded1b281445e8263d25bb1dbc29a29cbfe50865c",
+        "sha256": "8c1698cc1497f32ff1a4a956f9f3e4016716866745898d03f2581e9e2624efa4",
+        "syscall_shape": {
+          "enabled": true,
+          "version": 1
+        }
+      },
+      "execution_session_after": {
+        "application_delegation_proved": false,
+        "binding_drain_proved": false,
+        "bindings": 9,
+        "source": {
+          "frames": 0,
+          "modules": 1,
+          "state": 0,
+          "writers": 1
+        }
+      },
+      "image_learning": true,
+      "instrumentation": "none",
+      "involuntary_context_switches": 21016236,
+      "measured_samples": 10,
+      "model": "processes",
+      "nominal_seconds": 10,
+      "observation_finished_ns": 17947557665,
+      "output": {
+        "completed_pairs": 206468,
+        "elapsed_interval_seconds_observed": false,
+        "measurement": [
+          {
+            "max": 2591,
+            "min": 2571,
+            "total": 20662
+          },
+          {
+            "max": 2599,
+            "min": 2571,
+            "total": 20679
+          },
+          {
+            "max": 2598,
+            "min": 2569,
+            "total": 20638
+          },
+          {
+            "max": 2598,
+            "min": 2571,
+            "total": 20662
+          },
+          {
+            "max": 2596,
+            "min": 2569,
+            "total": 20667
+          },
+          {
+            "max": 2589,
+            "min": 2560,
+            "total": 20626
+          },
+          {
+            "max": 2594,
+            "min": 2563,
+            "total": 20655
+          },
+          {
+            "max": 2590,
+            "min": 2563,
+            "total": 20642
+          },
+          {
+            "max": 2593,
+            "min": 2566,
+            "total": 20644
+          },
+          {
+            "max": 2589,
+            "min": 2567,
+            "total": 20593
+          }
+        ],
+        "nominal_seconds": 10,
+        "pairs_per_nominal_second": 20646.8,
+        "preparation": [
+          {
+            "max": 50843,
+            "min": 48787,
+            "total": 399141
+          },
+          {
+            "max": 50870,
+            "min": 48826,
+            "total": 399272
+          },
+          {
+            "max": 51048,
+            "min": 48779,
+            "total": 399620
+          },
+          {
+            "max": 51014,
+            "min": 48745,
+            "total": 399553
+          },
+          {
+            "max": 51035,
+            "min": 48832,
+            "total": 399702
+          },
+          {
+            "max": 50959,
+            "min": 48765,
+            "total": 399740
+          },
+          {
+            "max": 50886,
+            "min": 48712,
+            "total": 399558
+          },
+          {
+            "max": 50915,
+            "min": 48707,
+            "total": 399606
+          },
+          {
+            "max": 50985,
+            "min": 48831,
+            "total": 399945
+          },
+          {
+            "max": 50936,
+            "min": 48814,
+            "total": 399689
+          },
+          {
+            "max": 51046,
+            "min": 48835,
+            "total": 400030
+          },
+          {
+            "max": 51012,
+            "min": 48740,
+            "total": 399526
+          },
+          {
+            "max": 51109,
+            "min": 48728,
+            "total": 400036
+          },
+          {
+            "max": 50877,
+            "min": 48653,
+            "total": 399324
+          },
+          {
+            "max": 51023,
+            "min": 48808,
+            "total": 399814
+          },
+          {
+            "max": 50898,
+            "min": 48692,
+            "total": 399672
+          },
+          {
+            "max": 50878,
+            "min": 48761,
+            "total": 399735
+          },
+          {
+            "max": 50945,
+            "min": 48773,
+            "total": 399379
+          },
+          {
+            "max": 50839,
+            "min": 48702,
+            "total": 399583
+          },
+          {
+            "max": 50983,
+            "min": 48705,
+            "total": 399610
+          },
+          {
+            "max": 50950,
+            "min": 48815,
+            "total": 400293
+          },
+          {
+            "max": 50987,
+            "min": 48739,
+            "total": 399857
+          },
+          {
+            "max": 51033,
+            "min": 48625,
+            "total": 399853
+          },
+          {
+            "max": 50787,
+            "min": 48587,
+            "total": 398317
+          },
+          {
+            "max": 50883,
+            "min": 48565,
+            "total": 399064
+          },
+          {
+            "max": 50978,
+            "min": 48715,
+            "total": 399175
+          },
+          {
+            "max": 50971,
+            "min": 48638,
+            "total": 399419
+          },
+          {
+            "max": 50857,
+            "min": 48596,
+            "total": 399176
+          },
+          {
+            "max": 50917,
+            "min": 48623,
+            "total": 398775
+          },
+          {
+            "max": 50957,
+            "min": 48719,
+            "total": 398957
+          },
+          {
+            "max": 50911,
+            "min": 48575,
+            "total": 398716
+          },
+          {
+            "max": 50861,
+            "min": 48689,
+            "total": 398695
+          },
+          {
+            "max": 50497,
+            "min": 48350,
+            "total": 396222
+          },
+          {
+            "max": 17703,
+            "min": 17394,
+            "total": 140277
+          },
+          {
+            "max": 13458,
+            "min": 13334,
+            "total": 107266
+          },
+          {
+            "max": 13502,
+            "min": 13373,
+            "total": 107559
+          },
+          {
+            "max": 13115,
+            "min": 12973,
+            "total": 104339
+          },
+          {
+            "max": 11804,
+            "min": 11678,
+            "total": 94028
+          },
+          {
+            "max": 11105,
+            "min": 10995,
+            "total": 88489
+          },
+          {
+            "max": 11115,
+            "min": 10994,
+            "total": 88438
+          },
+          {
+            "max": 10911,
+            "min": 10803,
+            "total": 86900
+          },
+          {
+            "max": 10859,
+            "min": 10752,
+            "total": 86442
+          },
+          {
+            "max": 10826,
+            "min": 10714,
+            "total": 86149
+          },
+          {
+            "max": 10678,
+            "min": 10550,
+            "total": 84955
+          },
+          {
+            "max": 10614,
+            "min": 10499,
+            "total": 84559
+          },
+          {
+            "max": 10639,
+            "min": 10516,
+            "total": 84668
+          },
+          {
+            "max": 10624,
+            "min": 10486,
+            "total": 84451
+          },
+          {
+            "max": 10518,
+            "min": 10396,
+            "total": 83714
+          },
+          {
+            "max": 10294,
+            "min": 10188,
+            "total": 82025
+          },
+          {
+            "max": 10213,
+            "min": 10118,
+            "total": 81354
+          },
+          {
+            "max": 10186,
+            "min": 10084,
+            "total": 81144
+          },
+          {
+            "max": 10189,
+            "min": 10067,
+            "total": 81068
+          },
+          {
+            "max": 10186,
+            "min": 10093,
+            "total": 81143
+          },
+          {
+            "max": 10244,
+            "min": 10124,
+            "total": 81474
+          },
+          {
+            "max": 10316,
+            "min": 10207,
+            "total": 82061
+          },
+          {
+            "max": 10306,
+            "min": 10202,
+            "total": 82095
+          },
+          {
+            "max": 10294,
+            "min": 10187,
+            "total": 82000
+          },
+          {
+            "max": 10234,
+            "min": 10132,
+            "total": 81488
+          },
+          {
+            "max": 10214,
+            "min": 10121,
+            "total": 81327
+          },
+          {
+            "max": 10158,
+            "min": 10033,
+            "total": 80835
+          },
+          {
+            "max": 10109,
+            "min": 9983,
+            "total": 80382
+          },
+          {
+            "max": 10103,
+            "min": 9994,
+            "total": 80474
+          },
+          {
+            "max": 10104,
+            "min": 10006,
+            "total": 80429
+          },
+          {
+            "max": 10067,
+            "min": 9971,
+            "total": 80189
+          },
+          {
+            "max": 9794,
+            "min": 9701,
+            "total": 78019
+          },
+          {
+            "max": 9681,
+            "min": 9557,
+            "total": 76944
+          },
+          {
+            "max": 9688,
+            "min": 9572,
+            "total": 77063
+          },
+          {
+            "max": 9698,
+            "min": 9573,
+            "total": 77122
+          },
+          {
+            "max": 9695,
+            "min": 9594,
+            "total": 77190
+          },
+          {
+            "max": 9684,
+            "min": 9552,
+            "total": 76950
+          },
+          {
+            "max": 9667,
+            "min": 9576,
+            "total": 77042
+          },
+          {
+            "max": 9697,
+            "min": 9574,
+            "total": 77104
+          },
+          {
+            "max": 9605,
+            "min": 9534,
+            "total": 76601
+          },
+          {
+            "max": 9604,
+            "min": 9508,
+            "total": 76387
+          },
+          {
+            "max": 9589,
+            "min": 9508,
+            "total": 76456
+          },
+          {
+            "max": 9604,
+            "min": 9485,
+            "total": 76337
+          },
+          {
+            "max": 9604,
+            "min": 9525,
+            "total": 76475
+          },
+          {
+            "max": 9584,
+            "min": 9485,
+            "total": 76208
+          },
+          {
+            "max": 9581,
+            "min": 9469,
+            "total": 76274
+          },
+          {
+            "max": 9558,
+            "min": 9457,
+            "total": 76116
+          },
+          {
+            "max": 9484,
+            "min": 9362,
+            "total": 75525
+          },
+          {
+            "max": 9462,
+            "min": 9372,
+            "total": 75397
+          },
+          {
+            "max": 9459,
+            "min": 9387,
+            "total": 75386
+          },
+          {
+            "max": 9451,
+            "min": 9368,
+            "total": 75371
+          },
+          {
+            "max": 4815,
+            "min": 4767,
+            "total": 38360
+          },
+          {
+            "max": 4679,
+            "min": 4630,
+            "total": 37280
+          },
+          {
+            "max": 4683,
+            "min": 4641,
+            "total": 37295
+          },
+          {
+            "max": 4684,
+            "min": 4638,
+            "total": 37332
+          },
+          {
+            "max": 4681,
+            "min": 4640,
+            "total": 37305
+          },
+          {
+            "max": 4686,
+            "min": 4642,
+            "total": 37338
+          },
+          {
+            "max": 4687,
+            "min": 4641,
+            "total": 37329
+          },
+          {
+            "max": 4687,
+            "min": 4647,
+            "total": 37353
+          },
+          {
+            "max": 4696,
+            "min": 4639,
+            "total": 37362
+          },
+          {
+            "max": 4688,
+            "min": 4635,
+            "total": 37318
+          },
+          {
+            "max": 4687,
+            "min": 4646,
+            "total": 37360
+          },
+          {
+            "max": 4691,
+            "min": 4654,
+            "total": 37385
+          },
+          {
+            "max": 4697,
+            "min": 4646,
+            "total": 37402
+          },
+          {
+            "max": 4682,
+            "min": 4636,
+            "total": 37352
+          },
+          {
+            "max": 4653,
+            "min": 4616,
+            "total": 37119
+          },
+          {
+            "max": 4648,
+            "min": 4607,
+            "total": 36967
+          },
+          {
+            "max": 4636,
+            "min": 4588,
+            "total": 36952
+          },
+          {
+            "max": 4649,
+            "min": 4587,
+            "total": 36957
+          },
+          {
+            "max": 4627,
+            "min": 4583,
+            "total": 36862
+          },
+          {
+            "max": 4640,
+            "min": 4589,
+            "total": 36999
+          },
+          {
+            "max": 4644,
+            "min": 4596,
+            "total": 36953
+          },
+          {
+            "max": 4631,
+            "min": 4588,
+            "total": 36894
+          },
+          {
+            "max": 4635,
+            "min": 4588,
+            "total": 36918
+          },
+          {
+            "max": 4635,
+            "min": 4596,
+            "total": 36914
+          },
+          {
+            "max": 4625,
+            "min": 4573,
+            "total": 36791
+          },
+          {
+            "max": 4628,
+            "min": 4575,
+            "total": 36822
+          },
+          {
+            "max": 4613,
+            "min": 4564,
+            "total": 36725
+          },
+          {
+            "max": 4612,
+            "min": 4566,
+            "total": 36739
+          },
+          {
+            "max": 4606,
+            "min": 4568,
+            "total": 36738
+          },
+          {
+            "max": 4624,
+            "min": 4572,
+            "total": 36791
+          },
+          {
+            "max": 4622,
+            "min": 4580,
+            "total": 36837
+          },
+          {
+            "max": 4640,
+            "min": 4581,
+            "total": 36909
+          },
+          {
+            "max": 4650,
+            "min": 4600,
+            "total": 36956
+          },
+          {
+            "max": 4633,
+            "min": 4585,
+            "total": 36892
+          },
+          {
+            "max": 4635,
+            "min": 4591,
+            "total": 36924
+          },
+          {
+            "max": 4659,
+            "min": 4608,
+            "total": 37065
+          },
+          {
+            "max": 4661,
+            "min": 4611,
+            "total": 37103
+          },
+          {
+            "max": 4659,
+            "min": 4602,
+            "total": 37094
+          },
+          {
+            "max": 4659,
+            "min": 4609,
+            "total": 37072
+          },
+          {
+            "max": 4381,
+            "min": 4345,
+            "total": 34938
+          },
+          {
+            "max": 4343,
+            "min": 4301,
+            "total": 34613
+          },
+          {
+            "max": 4354,
+            "min": 4304,
+            "total": 34612
+          },
+          {
+            "max": 4354,
+            "min": 4306,
+            "total": 34633
+          },
+          {
+            "max": 4330,
+            "min": 4287,
+            "total": 34483
+          },
+          {
+            "max": 4326,
+            "min": 4286,
+            "total": 34451
+          },
+          {
+            "max": 4323,
+            "min": 4280,
+            "total": 34426
+          },
+          {
+            "max": 4328,
+            "min": 4285,
+            "total": 34453
+          },
+          {
+            "max": 4314,
+            "min": 4275,
+            "total": 34414
+          },
+          {
+            "max": 4310,
+            "min": 4268,
+            "total": 34349
+          },
+          {
+            "max": 4301,
+            "min": 4259,
+            "total": 34252
+          },
+          {
+            "max": 4303,
+            "min": 4264,
+            "total": 34270
+          },
+          {
+            "max": 4303,
+            "min": 4268,
+            "total": 34281
+          },
+          {
+            "max": 4306,
+            "min": 4265,
+            "total": 34309
+          },
+          {
+            "max": 4304,
+            "min": 4261,
+            "total": 34328
+          },
+          {
+            "max": 4322,
+            "min": 4268,
+            "total": 34334
+          },
+          {
+            "max": 4315,
+            "min": 4270,
+            "total": 34342
+          },
+          {
+            "max": 4303,
+            "min": 4266,
+            "total": 34315
+          },
+          {
+            "max": 4305,
+            "min": 4271,
+            "total": 34287
+          },
+          {
+            "max": 4279,
+            "min": 4237,
+            "total": 34099
+          },
+          {
+            "max": 4288,
+            "min": 4242,
+            "total": 34109
+          },
+          {
+            "max": 4285,
+            "min": 4234,
+            "total": 34128
+          },
+          {
+            "max": 4280,
+            "min": 4237,
+            "total": 34102
+          },
+          {
+            "max": 4278,
+            "min": 4243,
+            "total": 34093
+          },
+          {
+            "max": 4290,
+            "min": 4251,
+            "total": 34195
+          },
+          {
+            "max": 4264,
+            "min": 4215,
+            "total": 33917
+          },
+          {
+            "max": 4260,
+            "min": 4211,
+            "total": 33886
+          },
+          {
+            "max": 4258,
+            "min": 4222,
+            "total": 33937
+          },
+          {
+            "max": 4263,
+            "min": 4218,
+            "total": 33943
+          },
+          {
+            "max": 4238,
+            "min": 4199,
+            "total": 33764
+          },
+          {
+            "max": 4240,
+            "min": 4193,
+            "total": 33711
+          },
+          {
+            "max": 4236,
+            "min": 4201,
+            "total": 33761
+          },
+          {
+            "max": 4231,
+            "min": 4203,
+            "total": 33748
+          },
+          {
+            "max": 4240,
+            "min": 4199,
+            "total": 33748
+          },
+          {
+            "max": 4241,
+            "min": 4192,
+            "total": 33736
+          },
+          {
+            "max": 4243,
+            "min": 4200,
+            "total": 33783
+          },
+          {
+            "max": 4232,
+            "min": 4193,
+            "total": 33742
+          },
+          {
+            "max": 4235,
+            "min": 4189,
+            "total": 33732
+          },
+          {
+            "max": 4236,
+            "min": 4189,
+            "total": 33749
+          },
+          {
+            "max": 4235,
+            "min": 4195,
+            "total": 33716
+          },
+          {
+            "max": 4244,
+            "min": 4204,
+            "total": 33799
+          },
+          {
+            "max": 4245,
+            "min": 4203,
+            "total": 33777
+          },
+          {
+            "max": 4224,
+            "min": 4181,
+            "total": 33668
+          },
+          {
+            "max": 4225,
+            "min": 4189,
+            "total": 33688
+          },
+          {
+            "max": 4225,
+            "min": 4189,
+            "total": 33691
+          },
+          {
+            "max": 4237,
+            "min": 4194,
+            "total": 33759
+          },
+          {
+            "max": 4236,
+            "min": 4198,
+            "total": 33734
+          },
+          {
+            "max": 4229,
+            "min": 4191,
+            "total": 33711
+          },
+          {
+            "max": 4238,
+            "min": 4193,
+            "total": 33730
+          },
+          {
+            "max": 4240,
+            "min": 4195,
+            "total": 33760
+          },
+          {
+            "max": 4225,
+            "min": 4180,
+            "total": 33649
+          },
+          {
+            "max": 4023,
+            "min": 3989,
+            "total": 32064
+          },
+          {
+            "max": 3968,
+            "min": 3936,
+            "total": 31607
+          },
+          {
+            "max": 3969,
+            "min": 3933,
+            "total": 31628
+          },
+          {
+            "max": 3971,
+            "min": 3938,
+            "total": 31639
+          },
+          {
+            "max": 3979,
+            "min": 3934,
+            "total": 31655
+          },
+          {
+            "max": 3980,
+            "min": 3934,
+            "total": 31670
+          },
+          {
+            "max": 3970,
+            "min": 3936,
+            "total": 31627
+          },
+          {
+            "max": 3962,
+            "min": 3920,
+            "total": 31567
+          },
+          {
+            "max": 3976,
+            "min": 3943,
+            "total": 31663
+          },
+          {
+            "max": 3973,
+            "min": 3938,
+            "total": 31663
+          },
+          {
+            "max": 3958,
+            "min": 3924,
+            "total": 31513
+          },
+          {
+            "max": 3955,
+            "min": 3913,
+            "total": 31446
+          },
+          {
+            "max": 3948,
+            "min": 3911,
+            "total": 31425
+          },
+          {
+            "max": 3947,
+            "min": 3911,
+            "total": 31462
+          },
+          {
+            "max": 3944,
+            "min": 3908,
+            "total": 31431
+          },
+          {
+            "max": 3950,
+            "min": 3906,
+            "total": 31421
+          },
+          {
+            "max": 3945,
+            "min": 3903,
+            "total": 31425
+          },
+          {
+            "max": 3946,
+            "min": 3904,
+            "total": 31411
+          },
+          {
+            "max": 3941,
+            "min": 3907,
+            "total": 31429
+          },
+          {
+            "max": 3952,
+            "min": 3914,
+            "total": 31451
+          },
+          {
+            "max": 3934,
+            "min": 3907,
+            "total": 31380
+          },
+          {
+            "max": 3950,
+            "min": 3908,
+            "total": 31445
+          },
+          {
+            "max": 3954,
+            "min": 3922,
+            "total": 31505
+          },
+          {
+            "max": 3953,
+            "min": 3912,
+            "total": 31470
+          },
+          {
+            "max": 3946,
+            "min": 3910,
+            "total": 31444
+          },
+          {
+            "max": 3935,
+            "min": 3898,
+            "total": 31326
+          },
+          {
+            "max": 3927,
+            "min": 3893,
+            "total": 31291
+          },
+          {
+            "max": 3932,
+            "min": 3891,
+            "total": 31247
+          },
+          {
+            "max": 3929,
+            "min": 3886,
+            "total": 31252
+          },
+          {
+            "max": 3921,
+            "min": 3881,
+            "total": 31192
+          },
+          {
+            "max": 3900,
+            "min": 3867,
+            "total": 31075
+          },
+          {
+            "max": 3903,
+            "min": 3867,
+            "total": 31080
+          },
+          {
+            "max": 3918,
+            "min": 3873,
+            "total": 31166
+          },
+          {
+            "max": 3907,
+            "min": 3871,
+            "total": 31102
+          },
+          {
+            "max": 3915,
+            "min": 3883,
+            "total": 31188
+          },
+          {
+            "max": 3903,
+            "min": 3857,
+            "total": 31061
+          },
+          {
+            "max": 3906,
+            "min": 3868,
+            "total": 31105
+          },
+          {
+            "max": 3912,
+            "min": 3870,
+            "total": 31112
+          },
+          {
+            "max": 3914,
+            "min": 3868,
+            "total": 31120
+          },
+          {
+            "max": 3920,
+            "min": 3877,
+            "total": 31143
+          },
+          {
+            "max": 3897,
+            "min": 3858,
+            "total": 31003
+          },
+          {
+            "max": 3895,
+            "min": 3867,
+            "total": 31058
+          },
+          {
+            "max": 3899,
+            "min": 3859,
+            "total": 31034
+          },
+          {
+            "max": 3909,
+            "min": 3868,
+            "total": 31093
+          },
+          {
+            "max": 3903,
+            "min": 3855,
+            "total": 31055
+          },
+          {
+            "max": 3903,
+            "min": 3861,
+            "total": 31075
+          },
+          {
+            "max": 3898,
+            "min": 3857,
+            "total": 31037
+          },
+          {
+            "max": 3909,
+            "min": 3867,
+            "total": 31073
+          },
+          {
+            "max": 3906,
+            "min": 3865,
+            "total": 31095
+          },
+          {
+            "max": 3913,
+            "min": 3870,
+            "total": 31122
+          },
+          {
+            "max": 3915,
+            "min": 3875,
+            "total": 31172
+          },
+          {
+            "max": 3909,
+            "min": 3865,
+            "total": 31096
+          },
+          {
+            "max": 3905,
+            "min": 3860,
+            "total": 31076
+          },
+          {
+            "max": 3903,
+            "min": 3870,
+            "total": 31088
+          },
+          {
+            "max": 3902,
+            "min": 3864,
+            "total": 31112
+          },
+          {
+            "max": 3899,
+            "min": 3866,
+            "total": 31059
+          },
+          {
+            "max": 3895,
+            "min": 3863,
+            "total": 31013
+          },
+          {
+            "max": 3904,
+            "min": 3860,
+            "total": 31052
+          },
+          {
+            "max": 3899,
+            "min": 3860,
+            "total": 31053
+          },
+          {
+            "max": 3904,
+            "min": 3862,
+            "total": 31097
+          },
+          {
+            "max": 3903,
+            "min": 3857,
+            "total": 31055
+          },
+          {
+            "max": 3895,
+            "min": 3868,
+            "total": 31063
+          },
+          {
+            "max": 3910,
+            "min": 3872,
+            "total": 31131
+          },
+          {
+            "max": 3931,
+            "min": 3889,
+            "total": 31284
+          },
+          {
+            "max": 3928,
+            "min": 3889,
+            "total": 31270
+          },
+          {
+            "max": 3936,
+            "min": 3899,
+            "total": 31329
+          },
+          {
+            "max": 3933,
+            "min": 3879,
+            "total": 31278
+          },
+          {
+            "max": 3928,
+            "min": 3883,
+            "total": 31269
+          },
+          {
+            "max": 3938,
+            "min": 3892,
+            "total": 31326
+          },
+          {
+            "max": 3931,
+            "min": 3893,
+            "total": 31311
+          },
+          {
+            "max": 3935,
+            "min": 3899,
+            "total": 31316
+          },
+          {
+            "max": 3933,
+            "min": 3894,
+            "total": 31345
+          },
+          {
+            "max": 3933,
+            "min": 3893,
+            "total": 31304
+          },
+          {
+            "max": 3934,
+            "min": 3890,
+            "total": 31313
+          },
+          {
+            "max": 3935,
+            "min": 3886,
+            "total": 31290
+          },
+          {
+            "max": 3933,
+            "min": 3896,
+            "total": 31334
+          },
+          {
+            "max": 3922,
+            "min": 3885,
+            "total": 31236
+          },
+          {
+            "max": 3923,
+            "min": 3888,
+            "total": 31278
+          },
+          {
+            "max": 3930,
+            "min": 3891,
+            "total": 31308
+          },
+          {
+            "max": 3939,
+            "min": 3899,
+            "total": 31329
+          },
+          {
+            "max": 3913,
+            "min": 3875,
+            "total": 31170
+          },
+          {
+            "max": 3935,
+            "min": 3890,
+            "total": 31283
+          },
+          {
+            "max": 3930,
+            "min": 3888,
+            "total": 31279
+          },
+          {
+            "max": 3935,
+            "min": 3893,
+            "total": 31293
+          },
+          {
+            "max": 3927,
+            "min": 3885,
+            "total": 31262
+          },
+          {
+            "max": 3924,
+            "min": 3872,
+            "total": 31183
+          },
+          {
+            "max": 3922,
+            "min": 3886,
+            "total": 31237
+          },
+          {
+            "max": 3924,
+            "min": 3878,
+            "total": 31204
+          },
+          {
+            "max": 3925,
+            "min": 3885,
+            "total": 31244
+          },
+          {
+            "max": 3925,
+            "min": 3886,
+            "total": 31245
+          },
+          {
+            "max": 3935,
+            "min": 3893,
+            "total": 31295
+          },
+          {
+            "max": 3881,
+            "min": 3825,
+            "total": 30827
+          },
+          {
+            "max": 3613,
+            "min": 3579,
+            "total": 28779
+          },
+          {
+            "max": 3613,
+            "min": 3575,
+            "total": 28748
+          },
+          {
+            "max": 3618,
+            "min": 3571,
+            "total": 28774
+          },
+          {
+            "max": 3608,
+            "min": 3567,
+            "total": 28729
+          },
+          {
+            "max": 3618,
+            "min": 3575,
+            "total": 28785
+          },
+          {
+            "max": 3628,
+            "min": 3583,
+            "total": 28870
+          },
+          {
+            "max": 3609,
+            "min": 3576,
+            "total": 28767
+          },
+          {
+            "max": 3584,
+            "min": 3547,
+            "total": 28516
+          },
+          {
+            "max": 3611,
+            "min": 3568,
+            "total": 28768
+          },
+          {
+            "max": 3612,
+            "min": 3574,
+            "total": 28751
+          },
+          {
+            "max": 3615,
+            "min": 3573,
+            "total": 28775
+          },
+          {
+            "max": 3605,
+            "min": 3568,
+            "total": 28733
+          },
+          {
+            "max": 3605,
+            "min": 3568,
+            "total": 28711
+          },
+          {
+            "max": 3597,
+            "min": 3574,
+            "total": 28706
+          },
+          {
+            "max": 3611,
+            "min": 3583,
+            "total": 28781
+          },
+          {
+            "max": 3617,
+            "min": 3585,
+            "total": 28861
+          },
+          {
+            "max": 3632,
+            "min": 3592,
+            "total": 28868
+          },
+          {
+            "max": 3631,
+            "min": 3584,
+            "total": 28873
+          },
+          {
+            "max": 3623,
+            "min": 3582,
+            "total": 28842
+          },
+          {
+            "max": 3613,
+            "min": 3579,
+            "total": 28808
+          },
+          {
+            "max": 3612,
+            "min": 3575,
+            "total": 28760
+          },
+          {
+            "max": 3618,
+            "min": 3566,
+            "total": 28740
+          },
+          {
+            "max": 3610,
+            "min": 3574,
+            "total": 28751
+          },
+          {
+            "max": 3616,
+            "min": 3581,
+            "total": 28794
+          },
+          {
+            "max": 3619,
+            "min": 3585,
+            "total": 28806
+          },
+          {
+            "max": 3622,
+            "min": 3583,
+            "total": 28812
+          },
+          {
+            "max": 3617,
+            "min": 3583,
+            "total": 28797
+          },
+          {
+            "max": 3617,
+            "min": 3577,
+            "total": 28804
+          },
+          {
+            "max": 3619,
+            "min": 3574,
+            "total": 28796
+          },
+          {
+            "max": 3632,
+            "min": 3579,
+            "total": 28850
+          },
+          {
+            "max": 3622,
+            "min": 3579,
+            "total": 28810
+          },
+          {
+            "max": 3612,
+            "min": 3571,
+            "total": 28762
+          },
+          {
+            "max": 3615,
+            "min": 3574,
+            "total": 28760
+          },
+          {
+            "max": 3625,
+            "min": 3585,
+            "total": 28847
+          },
+          {
+            "max": 3619,
+            "min": 3574,
+            "total": 28823
+          },
+          {
+            "max": 3606,
+            "min": 3573,
+            "total": 28720
+          },
+          {
+            "max": 3608,
+            "min": 3569,
+            "total": 28749
+          },
+          {
+            "max": 3609,
+            "min": 3571,
+            "total": 28729
+          },
+          {
+            "max": 3611,
+            "min": 3567,
+            "total": 28737
+          },
+          {
+            "max": 3603,
+            "min": 3567,
+            "total": 28687
+          },
+          {
+            "max": 3594,
+            "min": 3565,
+            "total": 28639
+          },
+          {
+            "max": 3596,
+            "min": 3552,
+            "total": 28637
+          },
+          {
+            "max": 3587,
+            "min": 3560,
+            "total": 28573
+          },
+          {
+            "max": 3596,
+            "min": 3553,
+            "total": 28583
+          },
+          {
+            "max": 3587,
+            "min": 3545,
+            "total": 28543
+          },
+          {
+            "max": 3587,
+            "min": 3545,
+            "total": 28530
+          },
+          {
+            "max": 3585,
+            "min": 3539,
+            "total": 28526
+          },
+          {
+            "max": 3583,
+            "min": 3544,
+            "total": 28552
+          },
+          {
+            "max": 3582,
+            "min": 3539,
+            "total": 28484
+          },
+          {
+            "max": 3589,
+            "min": 3547,
+            "total": 28563
+          },
+          {
+            "max": 3397,
+            "min": 3357,
+            "total": 27019
+          },
+          {
+            "max": 2755,
+            "min": 2721,
+            "total": 21924
+          },
+          {
+            "max": 2699,
+            "min": 2668,
+            "total": 21491
+          },
+          {
+            "max": 2757,
+            "min": 2727,
+            "total": 21941
+          },
+          {
+            "max": 2760,
+            "min": 2722,
+            "total": 21949
+          },
+          {
+            "max": 2759,
+            "min": 2711,
+            "total": 21931
+          },
+          {
+            "max": 2756,
+            "min": 2723,
+            "total": 21936
+          },
+          {
+            "max": 2758,
+            "min": 2730,
+            "total": 21954
+          },
+          {
+            "max": 2762,
+            "min": 2725,
+            "total": 21979
+          },
+          {
+            "max": 2789,
+            "min": 2757,
+            "total": 22210
+          },
+          {
+            "max": 2781,
+            "min": 2746,
+            "total": 22136
+          },
+          {
+            "max": 2783,
+            "min": 2754,
+            "total": 22125
+          },
+          {
+            "max": 2771,
+            "min": 2741,
+            "total": 22090
+          },
+          {
+            "max": 2778,
+            "min": 2743,
+            "total": 22097
+          },
+          {
+            "max": 2779,
+            "min": 2746,
+            "total": 22127
+          },
+          {
+            "max": 2782,
+            "min": 2748,
+            "total": 22118
+          },
+          {
+            "max": 2783,
+            "min": 2744,
+            "total": 22112
+          },
+          {
+            "max": 2787,
+            "min": 2748,
+            "total": 22122
+          },
+          {
+            "max": 2773,
+            "min": 2737,
+            "total": 22071
+          },
+          {
+            "max": 2779,
+            "min": 2752,
+            "total": 22115
+          },
+          {
+            "max": 2781,
+            "min": 2751,
+            "total": 22152
+          },
+          {
+            "max": 2785,
+            "min": 2753,
+            "total": 22154
+          },
+          {
+            "max": 2781,
+            "min": 2746,
+            "total": 22130
+          },
+          {
+            "max": 2786,
+            "min": 2751,
+            "total": 22128
+          },
+          {
+            "max": 2775,
+            "min": 2747,
+            "total": 22120
+          },
+          {
+            "max": 2787,
+            "min": 2752,
+            "total": 22132
+          },
+          {
+            "max": 2785,
+            "min": 2755,
+            "total": 22169
+          },
+          {
+            "max": 2779,
+            "min": 2753,
+            "total": 22126
+          },
+          {
+            "max": 2779,
+            "min": 2756,
+            "total": 22143
+          },
+          {
+            "max": 2814,
+            "min": 2767,
+            "total": 22338
+          },
+          {
+            "max": 2805,
+            "min": 2778,
+            "total": 22359
+          },
+          {
+            "max": 2810,
+            "min": 2783,
+            "total": 22384
+          },
+          {
+            "max": 2808,
+            "min": 2781,
+            "total": 22372
+          },
+          {
+            "max": 2805,
+            "min": 2765,
+            "total": 22354
+          },
+          {
+            "max": 2806,
+            "min": 2784,
+            "total": 22360
+          },
+          {
+            "max": 2806,
+            "min": 2767,
+            "total": 22339
+          },
+          {
+            "max": 2799,
+            "min": 2777,
+            "total": 22290
+          },
+          {
+            "max": 2824,
+            "min": 2793,
+            "total": 22510
+          },
+          {
+            "max": 2844,
+            "min": 2817,
+            "total": 22669
+          },
+          {
+            "max": 2848,
+            "min": 2815,
+            "total": 22647
+          },
+          {
+            "max": 2848,
+            "min": 2811,
+            "total": 22624
+          },
+          {
+            "max": 2837,
+            "min": 2813,
+            "total": 22639
+          },
+          {
+            "max": 2852,
+            "min": 2819,
+            "total": 22679
+          },
+          {
+            "max": 2840,
+            "min": 2804,
+            "total": 22615
+          },
+          {
+            "max": 2841,
+            "min": 2811,
+            "total": 22621
+          },
+          {
+            "max": 2841,
+            "min": 2801,
+            "total": 22609
+          },
+          {
+            "max": 2846,
+            "min": 2814,
+            "total": 22621
+          },
+          {
+            "max": 2819,
+            "min": 2782,
+            "total": 22438
+          },
+          {
+            "max": 2844,
+            "min": 2815,
+            "total": 22632
+          },
+          {
+            "max": 2819,
+            "min": 2794,
+            "total": 22440
+          },
+          {
+            "max": 2813,
+            "min": 2786,
+            "total": 22419
+          },
+          {
+            "max": 2810,
+            "min": 2778,
+            "total": 22382
+          },
+          {
+            "max": 2750,
+            "min": 2719,
+            "total": 21899
+          },
+          {
+            "max": 2731,
+            "min": 2712,
+            "total": 21788
+          },
+          {
+            "max": 2743,
+            "min": 2712,
+            "total": 21813
+          },
+          {
+            "max": 2738,
+            "min": 2704,
+            "total": 21821
+          },
+          {
+            "max": 2742,
+            "min": 2706,
+            "total": 21811
+          },
+          {
+            "max": 2743,
+            "min": 2708,
+            "total": 21812
+          },
+          {
+            "max": 2738,
+            "min": 2713,
+            "total": 21814
+          },
+          {
+            "max": 2740,
+            "min": 2701,
+            "total": 21808
+          },
+          {
+            "max": 2738,
+            "min": 2709,
+            "total": 21785
+          },
+          {
+            "max": 2734,
+            "min": 2694,
+            "total": 21722
+          },
+          {
+            "max": 2730,
+            "min": 2698,
+            "total": 21705
+          },
+          {
+            "max": 2740,
+            "min": 2696,
+            "total": 21728
+          },
+          {
+            "max": 2725,
+            "min": 2692,
+            "total": 21670
+          },
+          {
+            "max": 2734,
+            "min": 2696,
+            "total": 21716
+          },
+          {
+            "max": 2731,
+            "min": 2691,
+            "total": 21688
+          },
+          {
+            "max": 2722,
+            "min": 2688,
+            "total": 21665
+          },
+          {
+            "max": 2713,
+            "min": 2692,
+            "total": 21646
+          },
+          {
+            "max": 2727,
+            "min": 2691,
+            "total": 21685
+          },
+          {
+            "max": 2709,
+            "min": 2685,
+            "total": 21615
+          },
+          {
+            "max": 2716,
+            "min": 2692,
+            "total": 21618
+          },
+          {
+            "max": 2723,
+            "min": 2680,
+            "total": 21615
+          },
+          {
+            "max": 2717,
+            "min": 2692,
+            "total": 21635
+          },
+          {
+            "max": 2722,
+            "min": 2686,
+            "total": 21618
+          },
+          {
+            "max": 2714,
+            "min": 2688,
+            "total": 21620
+          },
+          {
+            "max": 2724,
+            "min": 2683,
+            "total": 21632
+          },
+          {
+            "max": 2714,
+            "min": 2682,
+            "total": 21614
+          },
+          {
+            "max": 2712,
+            "min": 2680,
+            "total": 21595
+          },
+          {
+            "max": 2722,
+            "min": 2683,
+            "total": 21655
+          },
+          {
+            "max": 2719,
+            "min": 2688,
+            "total": 21646
+          },
+          {
+            "max": 2726,
+            "min": 2687,
+            "total": 21650
+          },
+          {
+            "max": 2716,
+            "min": 2695,
+            "total": 21645
+          },
+          {
+            "max": 2717,
+            "min": 2690,
+            "total": 21621
+          },
+          {
+            "max": 2715,
+            "min": 2690,
+            "total": 21610
+          },
+          {
+            "max": 2727,
+            "min": 2687,
+            "total": 21640
+          },
+          {
+            "max": 2721,
+            "min": 2690,
+            "total": 21685
+          },
+          {
+            "max": 2714,
+            "min": 2688,
+            "total": 21583
+          },
+          {
+            "max": 2710,
+            "min": 2680,
+            "total": 21606
+          },
+          {
+            "max": 2720,
+            "min": 2688,
+            "total": 21630
+          },
+          {
+            "max": 2717,
+            "min": 2685,
+            "total": 21591
+          },
+          {
+            "max": 2719,
+            "min": 2684,
+            "total": 21615
+          },
+          {
+            "max": 2678,
+            "min": 2645,
+            "total": 21340
+          },
+          {
+            "max": 2727,
+            "min": 2680,
+            "total": 21609
+          },
+          {
+            "max": 2710,
+            "min": 2690,
+            "total": 21596
+          },
+          {
+            "max": 2711,
+            "min": 2682,
+            "total": 21567
+          },
+          {
+            "max": 2715,
+            "min": 2684,
+            "total": 21593
+          },
+          {
+            "max": 2713,
+            "min": 2681,
+            "total": 21592
+          },
+          {
+            "max": 2716,
+            "min": 2681,
+            "total": 21592
+          },
+          {
+            "max": 2705,
+            "min": 2679,
+            "total": 21539
+          },
+          {
+            "max": 2701,
+            "min": 2671,
+            "total": 21512
+          },
+          {
+            "max": 2709,
+            "min": 2670,
+            "total": 21538
+          },
+          {
+            "max": 2708,
+            "min": 2672,
+            "total": 21542
+          },
+          {
+            "max": 2709,
+            "min": 2673,
+            "total": 21536
+          },
+          {
+            "max": 2703,
+            "min": 2668,
+            "total": 21538
+          },
+          {
+            "max": 2706,
+            "min": 2674,
+            "total": 21543
+          },
+          {
+            "max": 2699,
+            "min": 2670,
+            "total": 21522
+          },
+          {
+            "max": 2712,
+            "min": 2669,
+            "total": 21520
+          },
+          {
+            "max": 2703,
+            "min": 2673,
+            "total": 21515
+          },
+          {
+            "max": 2711,
+            "min": 2666,
+            "total": 21542
+          },
+          {
+            "max": 2714,
+            "min": 2675,
+            "total": 21558
+          },
+          {
+            "max": 2706,
+            "min": 2675,
+            "total": 21531
+          },
+          {
+            "max": 2701,
+            "min": 2679,
+            "total": 21513
+          },
+          {
+            "max": 2706,
+            "min": 2675,
+            "total": 21507
+          },
+          {
+            "max": 2705,
+            "min": 2678,
+            "total": 21535
+          },
+          {
+            "max": 2706,
+            "min": 2671,
+            "total": 21535
+          },
+          {
+            "max": 2699,
+            "min": 2665,
+            "total": 21473
+          },
+          {
+            "max": 2695,
+            "min": 2664,
+            "total": 21475
+          },
+          {
+            "max": 2697,
+            "min": 2664,
+            "total": 21465
+          },
+          {
+            "max": 2690,
+            "min": 2673,
+            "total": 21459
+          },
+          {
+            "max": 2696,
+            "min": 2667,
+            "total": 21474
+          },
+          {
+            "max": 2692,
+            "min": 2665,
+            "total": 21453
+          },
+          {
+            "max": 2692,
+            "min": 2666,
+            "total": 21431
+          },
+          {
+            "max": 2700,
+            "min": 2661,
+            "total": 21453
+          },
+          {
+            "max": 2699,
+            "min": 2672,
+            "total": 21495
+          },
+          {
+            "max": 2695,
+            "min": 2664,
+            "total": 21456
+          },
+          {
+            "max": 2699,
+            "min": 2664,
+            "total": 21468
+          },
+          {
+            "max": 2701,
+            "min": 2664,
+            "total": 21468
+          },
+          {
+            "max": 2697,
+            "min": 2670,
+            "total": 21479
+          },
+          {
+            "max": 2699,
+            "min": 2668,
+            "total": 21479
+          },
+          {
+            "max": 2692,
+            "min": 2661,
+            "total": 21461
+          },
+          {
+            "max": 2705,
+            "min": 2672,
+            "total": 21513
+          },
+          {
+            "max": 2696,
+            "min": 2665,
+            "total": 21452
+          },
+          {
+            "max": 2707,
+            "min": 2671,
+            "total": 21483
+          },
+          {
+            "max": 2697,
+            "min": 2667,
+            "total": 21479
+          },
+          {
+            "max": 2700,
+            "min": 2666,
+            "total": 21474
+          },
+          {
+            "max": 2694,
+            "min": 2663,
+            "total": 21465
+          },
+          {
+            "max": 2676,
+            "min": 2655,
+            "total": 21340
+          },
+          {
+            "max": 2692,
+            "min": 2664,
+            "total": 21438
+          },
+          {
+            "max": 2696,
+            "min": 2672,
+            "total": 21443
+          },
+          {
+            "max": 2698,
+            "min": 2661,
+            "total": 21452
+          },
+          {
+            "max": 2695,
+            "min": 2661,
+            "total": 21444
+          },
+          {
+            "max": 2692,
+            "min": 2661,
+            "total": 21419
+          },
+          {
+            "max": 2696,
+            "min": 2671,
+            "total": 21445
+          },
+          {
+            "max": 2703,
+            "min": 2664,
+            "total": 21509
+          },
+          {
+            "max": 2699,
+            "min": 2663,
+            "total": 21453
+          },
+          {
+            "max": 2696,
+            "min": 2668,
+            "total": 21469
+          },
+          {
+            "max": 2695,
+            "min": 2659,
+            "total": 21447
+          },
+          {
+            "max": 2685,
+            "min": 2653,
+            "total": 21388
+          },
+          {
+            "max": 2689,
+            "min": 2658,
+            "total": 21389
+          },
+          {
+            "max": 2673,
+            "min": 2636,
+            "total": 21276
+          },
+          {
+            "max": 2594,
+            "min": 2562,
+            "total": 20618
+          },
+          {
+            "max": 2592,
+            "min": 2570,
+            "total": 20647
+          },
+          {
+            "max": 2579,
+            "min": 2551,
+            "total": 20564
+          },
+          {
+            "max": 2592,
+            "min": 2564,
+            "total": 20638
+          },
+          {
+            "max": 2582,
+            "min": 2548,
+            "total": 20520
+          },
+          {
+            "max": 2586,
+            "min": 2560,
+            "total": 20603
+          },
+          {
+            "max": 2585,
+            "min": 2556,
+            "total": 20585
+          },
+          {
+            "max": 2585,
+            "min": 2558,
+            "total": 20598
+          },
+          {
+            "max": 2588,
+            "min": 2560,
+            "total": 20591
+          },
+          {
+            "max": 2586,
+            "min": 2568,
+            "total": 20618
+          },
+          {
+            "max": 2582,
+            "min": 2555,
+            "total": 20569
+          },
+          {
+            "max": 2578,
+            "min": 2560,
+            "total": 20552
+          },
+          {
+            "max": 2583,
+            "min": 2568,
+            "total": 20595
+          },
+          {
+            "max": 2582,
+            "min": 2556,
+            "total": 20586
+          },
+          {
+            "max": 2583,
+            "min": 2553,
+            "total": 20585
+          },
+          {
+            "max": 2584,
+            "min": 2558,
+            "total": 20592
+          },
+          {
+            "max": 2585,
+            "min": 2562,
+            "total": 20611
+          },
+          {
+            "max": 2592,
+            "min": 2568,
+            "total": 20628
+          },
+          {
+            "max": 2577,
+            "min": 2557,
+            "total": 20551
+          },
+          {
+            "max": 2580,
+            "min": 2560,
+            "total": 20566
+          },
+          {
+            "max": 2580,
+            "min": 2560,
+            "total": 20569
+          },
+          {
+            "max": 2583,
+            "min": 2556,
+            "total": 20583
+          },
+          {
+            "max": 2587,
+            "min": 2556,
+            "total": 20544
+          },
+          {
+            "max": 2580,
+            "min": 2550,
+            "total": 20540
+          },
+          {
+            "max": 2574,
+            "min": 2549,
+            "total": 20519
+          },
+          {
+            "max": 2580,
+            "min": 2553,
+            "total": 20554
+          },
+          {
+            "max": 2577,
+            "min": 2548,
+            "total": 20541
+          },
+          {
+            "max": 2574,
+            "min": 2556,
+            "total": 20531
+          },
+          {
+            "max": 2583,
+            "min": 2555,
+            "total": 20571
+          },
+          {
+            "max": 2578,
+            "min": 2555,
+            "total": 20551
+          },
+          {
+            "max": 2579,
+            "min": 2561,
+            "total": 20547
+          },
+          {
+            "max": 2576,
+            "min": 2550,
+            "total": 20531
+          },
+          {
+            "max": 2584,
+            "min": 2558,
+            "total": 20563
+          },
+          {
+            "max": 2578,
+            "min": 2553,
+            "total": 20556
+          },
+          {
+            "max": 2578,
+            "min": 2556,
+            "total": 20559
+          },
+          {
+            "max": 2588,
+            "min": 2552,
+            "total": 20596
+          },
+          {
+            "max": 2586,
+            "min": 2553,
+            "total": 20583
+          },
+          {
+            "max": 2590,
+            "min": 2559,
+            "total": 20606
+          },
+          {
+            "max": 2584,
+            "min": 2553,
+            "total": 20546
+          },
+          {
+            "max": 2585,
+            "min": 2552,
+            "total": 20541
+          },
+          {
+            "max": 2584,
+            "min": 2555,
+            "total": 20562
+          },
+          {
+            "max": 2577,
+            "min": 2563,
+            "total": 20567
+          },
+          {
+            "max": 2580,
+            "min": 2559,
+            "total": 20586
+          },
+          {
+            "max": 2584,
+            "min": 2555,
+            "total": 20572
+          },
+          {
+            "max": 2576,
+            "min": 2549,
+            "total": 20525
+          },
+          {
+            "max": 2580,
+            "min": 2556,
+            "total": 20549
+          },
+          {
+            "max": 2581,
+            "min": 2548,
+            "total": 20543
+          },
+          {
+            "max": 2571,
+            "min": 2548,
+            "total": 20496
+          },
+          {
+            "max": 2583,
+            "min": 2561,
+            "total": 20601
+          },
+          {
+            "max": 2580,
+            "min": 2557,
+            "total": 20565
+          },
+          {
+            "max": 2579,
+            "min": 2559,
+            "total": 20569
+          },
+          {
+            "max": 2589,
+            "min": 2562,
+            "total": 20598
+          },
+          {
+            "max": 2579,
+            "min": 2558,
+            "total": 20560
+          },
+          {
+            "max": 2582,
+            "min": 2557,
+            "total": 20572
+          },
+          {
+            "max": 2578,
+            "min": 2554,
+            "total": 20558
+          },
+          {
+            "max": 2579,
+            "min": 2552,
+            "total": 20543
+          },
+          {
+            "max": 2578,
+            "min": 2553,
+            "total": 20540
+          },
+          {
+            "max": 2580,
+            "min": 2559,
+            "total": 20563
+          },
+          {
+            "max": 2583,
+            "min": 2556,
+            "total": 20576
+          },
+          {
+            "max": 2579,
+            "min": 2556,
+            "total": 20554
+          },
+          {
+            "max": 2576,
+            "min": 2552,
+            "total": 20524
+          },
+          {
+            "max": 2578,
+            "min": 2552,
+            "total": 20530
+          },
+          {
+            "max": 2573,
+            "min": 2553,
+            "total": 20518
+          },
+          {
+            "max": 2577,
+            "min": 2544,
+            "total": 20485
+          },
+          {
+            "max": 2575,
+            "min": 2544,
+            "total": 20525
+          },
+          {
+            "max": 2576,
+            "min": 2553,
+            "total": 20556
+          },
+          {
+            "max": 2583,
+            "min": 2555,
+            "total": 20554
+          },
+          {
+            "max": 2576,
+            "min": 2557,
+            "total": 20532
+          },
+          {
+            "max": 2580,
+            "min": 2555,
+            "total": 20565
+          },
+          {
+            "max": 2583,
+            "min": 2559,
+            "total": 20570
+          },
+          {
+            "max": 2581,
+            "min": 2560,
+            "total": 20565
+          },
+          {
+            "max": 2580,
+            "min": 2556,
+            "total": 20553
+          },
+          {
+            "max": 2579,
+            "min": 2547,
+            "total": 20522
+          },
+          {
+            "max": 2577,
+            "min": 2555,
+            "total": 20545
+          },
+          {
+            "max": 2578,
+            "min": 2543,
+            "total": 20482
+          },
+          {
+            "max": 2582,
+            "min": 2542,
+            "total": 20517
+          },
+          {
+            "max": 2579,
+            "min": 2550,
+            "total": 20517
+          },
+          {
+            "max": 2574,
+            "min": 2557,
+            "total": 20540
+          },
+          {
+            "max": 2577,
+            "min": 2542,
+            "total": 20517
+          },
+          {
+            "max": 2584,
+            "min": 2554,
+            "total": 20555
+          },
+          {
+            "max": 2578,
+            "min": 2553,
+            "total": 20533
+          },
+          {
+            "max": 2573,
+            "min": 2548,
+            "total": 20514
+          },
+          {
+            "max": 2577,
+            "min": 2553,
+            "total": 20554
+          },
+          {
+            "max": 2578,
+            "min": 2551,
+            "total": 20526
+          },
+          {
+            "max": 2579,
+            "min": 2561,
+            "total": 20552
+          },
+          {
+            "max": 2578,
+            "min": 2558,
+            "total": 20553
+          },
+          {
+            "max": 2589,
+            "min": 2557,
+            "total": 20588
+          },
+          {
+            "max": 2587,
+            "min": 2556,
+            "total": 20579
+          },
+          {
+            "max": 2584,
+            "min": 2563,
+            "total": 20598
+          },
+          {
+            "max": 2550,
+            "min": 2527,
+            "total": 20338
+          },
+          {
+            "max": 2541,
+            "min": 2513,
+            "total": 20265
+          },
+          {
+            "max": 2546,
+            "min": 2530,
+            "total": 20311
+          },
+          {
+            "max": 2545,
+            "min": 2522,
+            "total": 20284
+          },
+          {
+            "max": 2554,
+            "min": 2519,
+            "total": 20290
+          },
+          {
+            "max": 2547,
+            "min": 2525,
+            "total": 20280
+          },
+          {
+            "max": 2545,
+            "min": 2520,
+            "total": 20297
+          },
+          {
+            "max": 2551,
+            "min": 2513,
+            "total": 20270
+          },
+          {
+            "max": 2543,
+            "min": 2515,
+            "total": 20284
+          },
+          {
+            "max": 2551,
+            "min": 2522,
+            "total": 20300
+          },
+          {
+            "max": 2546,
+            "min": 2524,
+            "total": 20285
+          },
+          {
+            "max": 2542,
+            "min": 2514,
+            "total": 20260
+          },
+          {
+            "max": 2542,
+            "min": 2522,
+            "total": 20275
+          },
+          {
+            "max": 2539,
+            "min": 2520,
+            "total": 20263
+          },
+          {
+            "max": 2550,
+            "min": 2526,
+            "total": 20297
+          },
+          {
+            "max": 2547,
+            "min": 2513,
+            "total": 20256
+          },
+          {
+            "max": 2544,
+            "min": 2531,
+            "total": 20293
+          },
+          {
+            "max": 2541,
+            "min": 2520,
+            "total": 20244
+          },
+          {
+            "max": 2554,
+            "min": 2517,
+            "total": 20294
+          },
+          {
+            "max": 2545,
+            "min": 2518,
+            "total": 20252
+          },
+          {
+            "max": 2545,
+            "min": 2511,
+            "total": 20252
+          },
+          {
+            "max": 2542,
+            "min": 2516,
+            "total": 20258
+          },
+          {
+            "max": 2544,
+            "min": 2520,
+            "total": 20259
+          },
+          {
+            "max": 2539,
+            "min": 2515,
+            "total": 20252
+          },
+          {
+            "max": 2549,
+            "min": 2521,
+            "total": 20279
+          },
+          {
+            "max": 2549,
+            "min": 2519,
+            "total": 20247
+          },
+          {
+            "max": 2543,
+            "min": 2512,
+            "total": 20246
+          },
+          {
+            "max": 2546,
+            "min": 2524,
+            "total": 20271
+          },
+          {
+            "max": 2548,
+            "min": 2518,
+            "total": 20283
+          },
+          {
+            "max": 2543,
+            "min": 2520,
+            "total": 20270
+          },
+          {
+            "max": 2544,
+            "min": 2513,
+            "total": 20247
+          },
+          {
+            "max": 2542,
+            "min": 2526,
+            "total": 20265
+          },
+          {
+            "max": 2548,
+            "min": 2516,
+            "total": 20295
+          },
+          {
+            "max": 2548,
+            "min": 2514,
+            "total": 20282
+          },
+          {
+            "max": 2538,
+            "min": 2515,
+            "total": 20221
+          },
+          {
+            "max": 2548,
+            "min": 2520,
+            "total": 20283
+          },
+          {
+            "max": 2543,
+            "min": 2509,
+            "total": 20231
+          },
+          {
+            "max": 2559,
+            "min": 2532,
+            "total": 20385
+          },
+          {
+            "max": 2556,
+            "min": 2528,
+            "total": 20369
+          },
+          {
+            "max": 2562,
+            "min": 2532,
+            "total": 20385
+          },
+          {
+            "max": 2556,
+            "min": 2523,
+            "total": 20363
+          },
+          {
+            "max": 2560,
+            "min": 2530,
+            "total": 20375
+          },
+          {
+            "max": 2557,
+            "min": 2530,
+            "total": 20344
+          },
+          {
+            "max": 2554,
+            "min": 2522,
+            "total": 20349
+          },
+          {
+            "max": 2559,
+            "min": 2537,
+            "total": 20397
+          },
+          {
+            "max": 2557,
+            "min": 2535,
+            "total": 20399
+          },
+          {
+            "max": 2558,
+            "min": 2531,
+            "total": 20393
+          },
+          {
+            "max": 2565,
+            "min": 2541,
+            "total": 20446
+          },
+          {
+            "max": 2568,
+            "min": 2535,
+            "total": 20425
+          },
+          {
+            "max": 2578,
+            "min": 2531,
+            "total": 20458
+          },
+          {
+            "max": 2565,
+            "min": 2540,
+            "total": 20460
+          },
+          {
+            "max": 2563,
+            "min": 2537,
+            "total": 20412
+          },
+          {
+            "max": 2569,
+            "min": 2544,
+            "total": 20460
+          },
+          {
+            "max": 2570,
+            "min": 2537,
+            "total": 20411
+          },
+          {
+            "max": 2564,
+            "min": 2533,
+            "total": 20402
+          },
+          {
+            "max": 2559,
+            "min": 2523,
+            "total": 20383
+          },
+          {
+            "max": 2569,
+            "min": 2539,
+            "total": 20414
+          },
+          {
+            "max": 2563,
+            "min": 2525,
+            "total": 20384
+          },
+          {
+            "max": 2559,
+            "min": 2531,
+            "total": 20399
+          },
+          {
+            "max": 2563,
+            "min": 2541,
+            "total": 20410
+          },
+          {
+            "max": 2563,
+            "min": 2540,
+            "total": 20431
+          },
+          {
+            "max": 2564,
+            "min": 2534,
+            "total": 20408
+          },
+          {
+            "max": 2559,
+            "min": 2535,
+            "total": 20389
+          },
+          {
+            "max": 2566,
+            "min": 2540,
+            "total": 20423
+          },
+          {
+            "max": 2560,
+            "min": 2534,
+            "total": 20378
+          },
+          {
+            "max": 2555,
+            "min": 2528,
+            "total": 20353
+          },
+          {
+            "max": 2550,
+            "min": 2522,
+            "total": 20318
+          },
+          {
+            "max": 2551,
+            "min": 2535,
+            "total": 20352
+          },
+          {
+            "max": 2556,
+            "min": 2529,
+            "total": 20358
+          },
+          {
+            "max": 2556,
+            "min": 2533,
+            "total": 20373
+          },
+          {
+            "max": 2545,
+            "min": 2525,
+            "total": 20298
+          },
+          {
+            "max": 2548,
+            "min": 2530,
+            "total": 20319
+          },
+          {
+            "max": 2554,
+            "min": 2531,
+            "total": 20349
+          },
+          {
+            "max": 2549,
+            "min": 2521,
+            "total": 20312
+          },
+          {
+            "max": 2549,
+            "min": 2526,
+            "total": 20331
+          },
+          {
+            "max": 2557,
+            "min": 2528,
+            "total": 20336
+          },
+          {
+            "max": 2552,
+            "min": 2530,
+            "total": 20362
+          },
+          {
+            "max": 2554,
+            "min": 2520,
+            "total": 20306
+          },
+          {
+            "max": 2567,
+            "min": 2548,
+            "total": 20472
+          },
+          {
+            "max": 2581,
+            "min": 2547,
+            "total": 20529
+          },
+          {
+            "max": 2569,
+            "min": 2546,
+            "total": 20478
+          },
+          {
+            "max": 2578,
+            "min": 2547,
+            "total": 20509
+          },
+          {
+            "max": 2579,
+            "min": 2541,
+            "total": 20498
+          },
+          {
+            "max": 2576,
+            "min": 2545,
+            "total": 20500
+          },
+          {
+            "max": 2575,
+            "min": 2542,
+            "total": 20498
+          },
+          {
+            "max": 2573,
+            "min": 2550,
+            "total": 20486
+          },
+          {
+            "max": 2573,
+            "min": 2544,
+            "total": 20519
+          },
+          {
+            "max": 2573,
+            "min": 2547,
+            "total": 20521
+          },
+          {
+            "max": 2573,
+            "min": 2547,
+            "total": 20492
+          },
+          {
+            "max": 2572,
+            "min": 2547,
+            "total": 20500
+          },
+          {
+            "max": 2568,
+            "min": 2555,
+            "total": 20489
+          },
+          {
+            "max": 2577,
+            "min": 2549,
+            "total": 20522
+          },
+          {
+            "max": 2577,
+            "min": 2545,
+            "total": 20513
+          },
+          {
+            "max": 2570,
+            "min": 2553,
+            "total": 20507
+          },
+          {
+            "max": 2579,
+            "min": 2548,
+            "total": 20518
+          },
+          {
+            "max": 2576,
+            "min": 2553,
+            "total": 20524
+          },
+          {
+            "max": 2575,
+            "min": 2556,
+            "total": 20528
+          },
+          {
+            "max": 2576,
+            "min": 2553,
+            "total": 20535
+          },
+          {
+            "max": 2575,
+            "min": 2548,
+            "total": 20528
+          },
+          {
+            "max": 2580,
+            "min": 2554,
+            "total": 20541
+          },
+          {
+            "max": 2586,
+            "min": 2553,
+            "total": 20573
+          },
+          {
+            "max": 2583,
+            "min": 2558,
+            "total": 20580
+          },
+          {
+            "max": 2574,
+            "min": 2540,
+            "total": 20498
+          },
+          {
+            "max": 2582,
+            "min": 2554,
+            "total": 20530
+          },
+          {
+            "max": 2569,
+            "min": 2542,
+            "total": 20489
+          },
+          {
+            "max": 2565,
+            "min": 2540,
+            "total": 20450
+          },
+          {
+            "max": 2565,
+            "min": 2546,
+            "total": 20462
+          },
+          {
+            "max": 2566,
+            "min": 2544,
+            "total": 20456
+          },
+          {
+            "max": 2565,
+            "min": 2543,
+            "total": 20451
+          },
+          {
+            "max": 2561,
+            "min": 2538,
+            "total": 20399
+          },
+          {
+            "max": 2561,
+            "min": 2542,
+            "total": 20433
+          },
+          {
+            "max": 2588,
+            "min": 2555,
+            "total": 20554
+          },
+          {
+            "max": 2583,
+            "min": 2559,
+            "total": 20555
+          },
+          {
+            "max": 2575,
+            "min": 2552,
+            "total": 20525
+          },
+          {
+            "max": 2574,
+            "min": 2560,
+            "total": 20540
+          },
+          {
+            "max": 2584,
+            "min": 2564,
+            "total": 20577
+          },
+          {
+            "max": 2581,
+            "min": 2551,
+            "total": 20553
+          },
+          {
+            "max": 2583,
+            "min": 2566,
+            "total": 20599
+          },
+          {
+            "max": 2580,
+            "min": 2551,
+            "total": 20549
+          },
+          {
+            "max": 2577,
+            "min": 2561,
+            "total": 20570
+          },
+          {
+            "max": 2583,
+            "min": 2559,
+            "total": 20551
+          },
+          {
+            "max": 2583,
+            "min": 2556,
+            "total": 20551
+          },
+          {
+            "max": 2584,
+            "min": 2559,
+            "total": 20576
+          },
+          {
+            "max": 2577,
+            "min": 2554,
+            "total": 20544
+          },
+          {
+            "max": 2579,
+            "min": 2557,
+            "total": 20548
+          },
+          {
+            "max": 2580,
+            "min": 2550,
+            "total": 20532
+          },
+          {
+            "max": 2576,
+            "min": 2553,
+            "total": 20529
+          },
+          {
+            "max": 2589,
+            "min": 2561,
+            "total": 20581
+          },
+          {
+            "max": 2577,
+            "min": 2556,
+            "total": 20538
+          },
+          {
+            "max": 2580,
+            "min": 2556,
+            "total": 20566
+          },
+          {
+            "max": 2578,
+            "min": 2551,
+            "total": 20535
+          },
+          {
+            "max": 2582,
+            "min": 2562,
+            "total": 20594
+          },
+          {
+            "max": 2581,
+            "min": 2556,
+            "total": 20524
+          },
+          {
+            "max": 2581,
+            "min": 2556,
+            "total": 20542
+          },
+          {
+            "max": 2568,
+            "min": 2548,
+            "total": 20479
+          },
+          {
+            "max": 2573,
+            "min": 2550,
+            "total": 20500
+          },
+          {
+            "max": 2574,
+            "min": 2554,
+            "total": 20526
+          },
+          {
+            "max": 2570,
+            "min": 2542,
+            "total": 20486
+          },
+          {
+            "max": 2573,
+            "min": 2540,
+            "total": 20462
+          },
+          {
+            "max": 2571,
+            "min": 2550,
+            "total": 20483
+          },
+          {
+            "max": 2571,
+            "min": 2546,
+            "total": 20487
+          },
+          {
+            "max": 2576,
+            "min": 2555,
+            "total": 20522
+          },
+          {
+            "max": 2567,
+            "min": 2544,
+            "total": 20476
+          },
+          {
+            "max": 2578,
+            "min": 2555,
+            "total": 20515
+          },
+          {
+            "max": 2575,
+            "min": 2543,
+            "total": 20476
+          },
+          {
+            "max": 2574,
+            "min": 2549,
+            "total": 20506
+          },
+          {
+            "max": 2577,
+            "min": 2548,
+            "total": 20516
+          },
+          {
+            "max": 2574,
+            "min": 2551,
+            "total": 20477
+          },
+          {
+            "max": 2580,
+            "min": 2550,
+            "total": 20529
+          },
+          {
+            "max": 2577,
+            "min": 2556,
+            "total": 20523
+          },
+          {
+            "max": 2580,
+            "min": 2546,
+            "total": 20510
+          },
+          {
+            "max": 2583,
+            "min": 2556,
+            "total": 20561
+          },
+          {
+            "max": 2577,
+            "min": 2558,
+            "total": 20538
+          },
+          {
+            "max": 2568,
+            "min": 2552,
+            "total": 20488
+          },
+          {
+            "max": 2575,
+            "min": 2550,
+            "total": 20525
+          },
+          {
+            "max": 2573,
+            "min": 2551,
+            "total": 20503
+          },
+          {
+            "max": 2577,
+            "min": 2559,
+            "total": 20541
+          },
+          {
+            "max": 2578,
+            "min": 2549,
+            "total": 20495
+          }
+        ],
+        "upstream_average": 46240,
+        "upstream_average_divisor": 724,
+        "upstream_completed_pairs": 33478432,
+        "upstream_counter_boundary": "-s724: six pre-marker samples, 724 post-marker samples; final 10 selected",
+        "warmup": [
+          {
+            "max": 50880,
+            "min": 48741,
+            "total": 399339
+          },
+          {
+            "max": 50975,
+            "min": 48788,
+            "total": 399858
+          },
+          {
+            "max": 50835,
+            "min": 48671,
+            "total": 398821
+          },
+          {
+            "max": 50875,
+            "min": 48769,
+            "total": 399541
+          },
+          {
+            "max": 50909,
+            "min": 48807,
+            "total": 399525
+          },
+          {
+            "max": 50815,
+            "min": 48862,
+            "total": 399463
+          }
+        ]
+      },
+      "passed": true,
+      "pid": 2421,
+      "process_elapsed_ns": 730155154230,
+      "returncode": 0,
+      "round": 0,
+      "sample_window": {
+        "events": [
+          {
+            "boundary": "begin",
+            "line_received_ns": 738008972453,
+            "observation": {
+              "registry": [
+                {
+                  "code": 18419722476588601344,
+                  "entry": 18446744071586934632,
+                  "entry_abi": 2,
+                  "generation": 5,
+                  "lock_kind": 2,
+                  "pid": 0,
+                  "requirements": 32640,
+                  "status": 0,
+                  "tgid": 2429
+                },
+                {
+                  "code": 18419722476584402944,
+                  "entry": 18446744071587350331,
+                  "entry_abi": 2,
+                  "generation": 5,
+                  "lock_kind": 2,
+                  "pid": 0,
+                  "requirements": 32640,
+                  "status": 0,
+                  "tgid": 2430
+                }
+              ],
+              "service": {
+                "18446744071586934632": {
+                  "bound": 20048039,
+                  "canceled": 0,
+                  "dispatch_ns": 46273303405,
+                  "dispatch_samples": 20048039,
+                  "handback": 14988504,
+                  "handback_finished": 14988504,
+                  "invalid_clock": 0,
+                  "jit_entered": 20048039,
+                  "local": 15620487,
+                  "local_cancel": 0,
+                  "local_no_image": 15620487,
+                  "local_ns": 4526228235,
+                  "local_success": 15620487,
+                  "prepublication_cancel": 0,
+                  "returned": 5059533,
+                  "selected": 35668527,
+                  "shadow_ns": 1712988469422,
+                  "shadow_samples": 20048037,
+                  "submitted": 20048040
+                },
+                "18446744071587350331": {
+                  "bound": 15849129,
+                  "canceled": 0,
+                  "dispatch_ns": 100708245079,
+                  "dispatch_samples": 15849129,
+                  "handback": 15849128,
+                  "handback_finished": 15849127,
+                  "invalid_clock": 0,
+                  "jit_entered": 15849129,
+                  "local": 19819392,
+                  "local_cancel": 0,
+                  "local_no_image": 19819392,
+                  "local_ns": 6835320279,
+                  "local_success": 19819392,
+                  "prepublication_cancel": 0,
+                  "returned": 0,
+                  "selected": 35668523,
+                  "shadow_ns": 867806838160,
+                  "shadow_samples": 15849128,
+                  "submitted": 15849131
+                }
+              },
+              "superseded_reports": 0
+            },
+            "observation_finished_ns": 738009477820,
+            "sample": 720
+          },
+          {
+            "boundary": "end",
+            "line_received_ns": 748010134720,
+            "observation": {
+              "registry": [
+                {
+                  "code": 18419722476588601344,
+                  "entry": 18446744071586934632,
+                  "entry_abi": 2,
+                  "generation": 5,
+                  "lock_kind": 2,
+                  "pid": 0,
+                  "requirements": 32640,
+                  "status": 0,
+                  "tgid": 2429
+                },
+                {
+                  "code": 18419722476584402944,
+                  "entry": 18446744071587350331,
+                  "entry_abi": 2,
+                  "generation": 5,
+                  "lock_kind": 2,
+                  "pid": 0,
+                  "requirements": 32640,
+                  "status": 0,
+                  "tgid": 2430
+                }
+              ],
+              "service": {
+                "18446744071586934632": {
+                  "bound": 20254500,
+                  "canceled": 0,
+                  "dispatch_ns": 46734347677,
+                  "dispatch_samples": 20254500,
+                  "handback": 14988504,
+                  "handback_finished": 14988504,
+                  "invalid_clock": 0,
+                  "jit_entered": 20254500,
+                  "local": 15620487,
+                  "local_cancel": 0,
+                  "local_no_image": 15620487,
+                  "local_ns": 4526228235,
+                  "local_success": 15620487,
+                  "prepublication_cancel": 0,
+                  "returned": 5265996,
+                  "selected": 35874987,
+                  "shadow_ns": 1753973522577,
+                  "shadow_samples": 20254500,
+                  "submitted": 20254500
+                },
+                "18446744071587350331": {
+                  "bound": 16055590,
+                  "canceled": 0,
+                  "dispatch_ns": 102009021801,
+                  "dispatch_samples": 16055590,
+                  "handback": 16055590,
+                  "handback_finished": 16055590,
+                  "invalid_clock": 0,
+                  "jit_entered": 16055590,
+                  "local": 19819392,
+                  "local_cancel": 0,
+                  "local_no_image": 19819392,
+                  "local_ns": 6835320279,
+                  "local_success": 19819392,
+                  "prepublication_cancel": 0,
+                  "returned": 0,
+                  "selected": 35874982,
+                  "shadow_ns": 885614802449,
+                  "shadow_samples": 16055590,
+                  "submitted": 16055590
+                }
+              },
+              "superseded_reports": 0
+            },
+            "observation_finished_ns": 748010536285,
+            "sample": 730
+          }
+        ],
+        "limit": "transport and callback latency; counters are not sampled atomically with application counters",
+        "samples": 730,
+        "scope": "after delivered last warmup line through delivered final measured line",
+        "transport": "pty"
+      },
+      "sample_window_reader_stopped": true,
+      "schema": 1,
+      "scored": false,
+      "started_ns": 17891917681,
+      "state": "COMPLETE",
+      "system_cpu_seconds": 5578.252676,
+      "timeout_seconds": 800,
+      "upstream_samples": 724,
+      "user_cpu_seconds": 12.700042,
+      "voluntary_context_switches": 750,
+      "workers": 8,
+      "workers_observed": [
+        {
+          "cpus": [
+            0
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2423,
+          "tid": 2423
+        },
+        {
+          "cpus": [
+            1
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2424,
+          "tid": 2424
+        },
+        {
+          "cpus": [
+            2
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2425,
+          "tid": 2425
+        },
+        {
+          "cpus": [
+            3
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2426,
+          "tid": 2426
+        },
+        {
+          "cpus": [
+            4
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2427,
+          "tid": 2427
+        },
+        {
+          "cpus": [
+            5
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2428,
+          "tid": 2428
+        },
+        {
+          "cpus": [
+            6
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2429,
+          "tid": 2429
+        },
+        {
+          "cpus": [
+            7
+          ],
+          "executable": "/mnt/kdlock-builds/kdlock-evidence/10.176.26.71/tests/kdscope1-mm-f7a84065-20261030/native-a/mmap1-prepare/upstream/mmap1_processes",
+          "ppid": 2421,
+          "start_ticks": 1792,
+          "tgid": 2430,
+          "tid": 2430
+        }
+      ]
+    },
+    "learning_limit": "bounded application learning has not reached a stable timing epoch",
+    "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-normal-d421-run-gvfl_nb8/processes/kd/run/processes/learning/learning.json",
+    "registry_after": [
+      {
+        "code": 18419722476588601344,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2429
+      },
+      {
+        "code": 18419722476584402944,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 5,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2430
+      }
+    ],
+    "registry_before": [],
+    "sha256": "89a9474738f212135499a372194e50ac0913c997e15de944a60e1181371a2752",
+    "stable": false
+  },
+  "proofs": [],
+  "provider_source_commit": "40edde00525b71207246bbde4935767cbcb21fb7",
+  "quiet_performance_accepted": false,
+  "required_publication": {
+    "assembly": {
+      "sha256": "1ea39ab0aab53a7ac6a71acc69f9878200a5d5158524ed9af5cf0b250e8ceb8f"
+    },
+    "capability": {
+      "features": 1047547,
+      "mutex_stack_bytes": 256,
+      "percpu_module_bytes": 8192,
+      "version": 22
+    },
+    "chain": {
+      "base_generation": 6,
+      "batch_identity_basis": "source-derived compiler and upload summaries",
+      "batch_record_membership_proved": false,
+      "claim": "source-derived immutable ABI2 upload association",
+      "compile_attempt_id": 7,
+      "cumulative_history_completeness_proved": false,
+      "execution_proved": false,
+      "final_write_end_ns": 1164829315995,
+      "kernel_acknowledgment_witnessed": false,
+      "kernel_digest_reported": false,
+      "learning_snapshot": {
+        "count": 1,
+        "overflow_report_events": 0,
+        "revision": 6,
+        "slot": 68,
+        "token": 13
+      },
+      "manifest_sha256": "ec0a27aac7e6e115777113331eb07358c8984bb719afe56d4f1818e0046d98d4",
+      "observed_generation": 7,
+      "payload_bytes": 742528,
+      "payload_sha256": "32b7698dbb767dac7320a9f73b9059f524b49f371de96d0d304e6a8e4b268161",
+      "read_end_ns": 1363457201254,
+      "read_start_ns": 1363457160222,
+      "registry": {
+        "code": 18419722476571807744,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2429
+      },
+      "schema": 1,
+      "session_id": "2418-1496",
+      "upload_id": 13
+    },
+    "exact_terminal": true,
+    "historically_reached_target": true,
+    "history": {
+      "sha256": "17e4b91b1fd5202d0c18cd918edc242732f44510f5e720e3fee4096146375c1c"
+    },
+    "leased_direction_compiler": true,
+    "passed": true,
+    "registry": {
+      "code": 18419722476571807744,
+      "entry": 18446744071586934632,
+      "entry_abi": 2,
+      "generation": 7,
+      "lock_kind": 2,
+      "pid": 0,
+      "requirements": 32640,
+      "status": 0,
+      "tgid": 2429
+    },
+    "required": {
+      "call_target": 18446744071602707952,
+      "entry": 18446744071586934632,
+      "source_ip": 18446744071602898807
+    },
+    "translated_target": true
+  },
+  "retirement": "fresh finalizer after controller exit required",
+  "retirement_snapshot": {
+    "bindings": 8,
+    "module_note_sha256": "3404ede92b182cc10ad603b6c3c4a96cdfc9d704c65f95079a0b9049b0fa8a3c",
+    "registry": [
+      {
+        "code": 18419722476571807744,
+        "entry": 18446744071586934632,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2429
+      },
+      {
+        "code": 18419722476567609344,
+        "entry": 18446744071587350331,
+        "entry_abi": 2,
+        "generation": 7,
+        "lock_kind": 2,
+        "pid": 0,
+        "requirements": 32640,
+        "status": 0,
+        "tgid": 2430
+      }
+    ],
+    "service_progress": "total=0 shown=0",
+    "source": {
+      "frames": 0,
+      "modules": 1,
+      "state": 0,
+      "writers": 0
+    }
+  },
+  "schema": 1,
+  "scored": false,
+  "service_observations": [
+    {
+      "after": {
+        "18446744071586934632": {
+          "bound": 20254500,
+          "canceled": 0,
+          "dispatch_ns": 46734347677,
+          "dispatch_samples": 20254500,
+          "handback": 14988504,
+          "handback_finished": 14988504,
+          "invalid_clock": 0,
+          "jit_entered": 20254500,
+          "local": 15620487,
+          "local_cancel": 0,
+          "local_no_image": 15620487,
+          "local_ns": 4526228235,
+          "local_success": 15620487,
+          "prepublication_cancel": 0,
+          "returned": 5265996,
+          "selected": 35874987,
+          "shadow_ns": 1753973522577,
+          "shadow_samples": 20254500,
+          "submitted": 20254500
+        },
+        "18446744071587350331": {
+          "bound": 16055590,
+          "canceled": 0,
+          "dispatch_ns": 102009021801,
+          "dispatch_samples": 16055590,
+          "handback": 16055590,
+          "handback_finished": 16055590,
+          "invalid_clock": 0,
+          "jit_entered": 16055590,
+          "local": 19819392,
+          "local_cancel": 0,
+          "local_no_image": 19819392,
+          "local_ns": 6835320279,
+          "local_success": 19819392,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 35874982,
+          "shadow_ns": 885614802449,
+          "shadow_samples": 16055590,
+          "submitted": 16055590
+        }
+      },
+      "before": {
+        "18446744071586934632": {
+          "bound": 0,
+          "canceled": 0,
+          "dispatch_ns": 0,
+          "dispatch_samples": 0,
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 0,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 0,
+          "shadow_ns": 0,
+          "shadow_samples": 0,
+          "submitted": 0
+        },
+        "18446744071587350331": {
+          "bound": 0,
+          "canceled": 0,
+          "dispatch_ns": 0,
+          "dispatch_samples": 0,
+          "handback": 0,
+          "handback_finished": 0,
+          "invalid_clock": 0,
+          "jit_entered": 0,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 0,
+          "shadow_ns": 0,
+          "shadow_samples": 0,
+          "submitted": 0
+        }
+      },
+      "conservation_passed": true,
+      "delta": [
+        {
+          "bound": 20254500,
+          "canceled": 0,
+          "dispatch_ns": 46734347677,
+          "dispatch_samples": 20254500,
+          "entry": "0xffffffff817b6f68",
+          "handback": 14988504,
+          "handback_finished": 14988504,
+          "invalid_clock": 0,
+          "jit_entered": 20254500,
+          "local": 15620487,
+          "local_cancel": 0,
+          "local_no_image": 15620487,
+          "local_ns": 4526228235,
+          "local_success": 15620487,
+          "prepublication_cancel": 0,
+          "returned": 5265996,
+          "selected": 35874987,
+          "shadow_ns": 1753973522577,
+          "shadow_samples": 20254500,
+          "submitted": 20254500
+        },
+        {
+          "bound": 16055590,
+          "canceled": 0,
+          "dispatch_ns": 102009021801,
+          "dispatch_samples": 16055590,
+          "entry": "0xffffffff8181c73b",
+          "handback": 16055590,
+          "handback_finished": 16055590,
+          "invalid_clock": 0,
+          "jit_entered": 16055590,
+          "local": 19819392,
+          "local_cancel": 0,
+          "local_no_image": 19819392,
+          "local_ns": 6835320279,
+          "local_success": 19819392,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 35874982,
+          "shadow_ns": 885614802449,
+          "shadow_samples": 16055590,
+          "submitted": 16055590
+        }
+      ],
+      "dynamic_instructions_measured": false,
+      "model": "processes",
+      "scope": "whole application including six warmup and two measured samples",
+      "timers": "inclusive elapsed ns; overlapping intervals are not additive",
+      "whole_critical_section_time_measured": false,
+      "workers": 8
+    }
+  ],
+  "source_commit": "d421e7d5da83675be7b409e584b44f4f662b98b1",
+  "stable_point_passed": true,
+  "state": "MEASURED_RETIREMENT_PENDING",
+  "upstream": {
+    "completed_pairs": 209708,
+    "elapsed_interval_seconds_observed": false,
+    "measurement": [
+      {
+        "max": 2640,
+        "min": 2614,
+        "total": 21006
+      },
+      {
+        "max": 2626,
+        "min": 2611,
+        "total": 20956
+      },
+      {
+        "max": 2629,
+        "min": 2612,
+        "total": 20959
+      },
+      {
+        "max": 2630,
+        "min": 2606,
+        "total": 20931
+      },
+      {
+        "max": 2634,
+        "min": 2609,
+        "total": 20977
+      },
+      {
+        "max": 2633,
+        "min": 2605,
+        "total": 20961
+      },
+      {
+        "max": 2633,
+        "min": 2616,
+        "total": 20994
+      },
+      {
+        "max": 2635,
+        "min": 2601,
+        "total": 20968
+      },
+      {
+        "max": 2634,
+        "min": 2615,
+        "total": 20995
+      },
+      {
+        "max": 2634,
+        "min": 2612,
+        "total": 20961
+      }
+    ],
+    "nominal_seconds": 10,
+    "pairs_per_nominal_second": 20970.8,
+    "preparation": [],
+    "upstream_average": 20970,
+    "upstream_average_divisor": 10,
+    "upstream_completed_pairs": 209708,
+    "upstream_counter_boundary": "-s10: six pre-marker samples, 10 post-marker samples; final 10 selected",
+    "warmup": [
+      {
+        "max": 2638,
+        "min": 2611,
+        "total": 21020
+      },
+      {
+        "max": 2647,
+        "min": 2620,
+        "total": 21091
+      },
+      {
+        "max": 2641,
+        "min": 2620,
+        "total": 21041
+      },
+      {
+        "max": 2644,
+        "min": 2621,
+        "total": 21066
+      },
+      {
+        "max": 2641,
+        "min": 2615,
+        "total": 21006
+      },
+      {
+        "max": 2654,
+        "min": 2626,
+        "total": 21102
+      }
+    ]
+  },
+  "worker_counts": [
+    8
+  ],
+  "workers": 2,
+  "writer_entries": [
+    18446744071586934632,
+    18446744071587350331
+  ]
+}
