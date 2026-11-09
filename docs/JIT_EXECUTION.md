@@ -28,6 +28,17 @@ handback but fails its overall checker at a post-RET continuation. Candidate
    It polls pinned on its reserved stack. The executor uses that existing packet;
    it does not copy a second request to simplify lifetime accounting.
 
+Publication makes a request eligible for possible combiner execution. It is not
+an irrevocable delegation decision: a waiter receiving physical ownership may
+execute its own body and serve other requests as combiner. Local selection and
+remote execution must claim the same exact request exclusively before effects.
+The ordinary KD mutex queue implements this local-versus-proxy election under
+its wait lock. Retained service roots currently use a separate route: after
+admission commitment, a service worker claims the root and the origin transfers
+its gate to that worker. They do not yet join the ordinary local/combiner
+election. This is an actor-selection gap, not a property established merely by
+publishing a request, and the release-unit correction does not resolve it.
+
 Ordinary spin/rwlock pairs protect preemption and IRQ/BH state. Explicit spin
 IRQ/BH variants are local. Published mutex waiters are pinned even though physical
 owners and supported service paths may sleep. Heat never authorizes ownership.
@@ -51,6 +62,22 @@ materializes FULL and uses the dispatcher. Supported controls/scalar services ma
 resume at validated continuations. An ordinary untranslated callee finishes the
 remaining invocation on the origin; it does not resume JIT after arbitrary native
 work or reset the body.
+
+Retained ABI2 service images end a source unit at every recognized release,
+including a nested or unrelated release, a typed Native release and downgrade.
+The compiler does not pair releases with acquisitions. A release inside a callee
+also ends that path; its caller's original suffix is retained only when the
+callee has a release-free return path. Generated exit/dispatch code does not
+authorize original source after the release in that unit.
+
+Runtime performs the real release and completes its CALL exactly once. If all
+required owners are released, ordinary final completion applies. Otherwise the
+exact saved post-release IP/SP and complete packet use the existing native
+handback with remaining owners and source/image lifetimes intact. Downgrade
+keeps its real read credit through the native read tail and matching read
+unlock, without reacquisition. This route does not implement separate nested
+JIT images or JIT-to-JIT continuation units; a full-root returned-JIT counter
+may remain zero even when the native tail completes correctly.
 
 Supported instruction markers resume the origin before the selected instruction
 with the declared arithmetic flags. Prior stores and locks remain owned; the entry

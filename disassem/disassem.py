@@ -370,6 +370,23 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     native_terminal_controls = (
         {get_kernel_symbol("kd_rwlock_fast_write_unlock")} - {0}
         if root_escape_capable and abi == 3 else set())
+    # A translated ABI2 unit ends at every declared release, regardless of
+    # which owner it releases. Runtime performs that operation and decides
+    # whether to finish or continue natively with the exact remaining owners.
+    # Legacy spin/rwlock images retain their existing boundary/refusal policy.
+    unit_releases = set()
+    terminal_clobber_targets = {direct_mutex_unlock or clobber_mutex_unlock,
+                               rwsem_clobber_unlock} - {0, None}
+    if abi == 2 and lock_kind == "mutex":
+        unit_releases = ({raw_spin_unlock, clobber_unlock, cold_spin_unlock,
+                          mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock,
+                          rwsem_clobber_unlock} - {0, None}) | set(terminal_unlock_aliases)
+        unit_releases.update(address for address, name in service_symbols.items()
+                             if name in service_release_names + service_continue_names)
+        unit_releases.update(address for address, control in bound_controls.items()
+                             if control['operation'] in (5, 6, 11, 13))
+        unit_releases.update(address for address, descriptor in returning_services.items()
+                             if descriptor['context_kind'] in (6, 8, 13))
     # Original bounded images learn ordinary CALL/IJ targets from actual
     # executions. Returning services do not require eager callee closure.
     direct_call_closure = False
@@ -396,6 +413,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     entry_guards = None
     memory_guards = None
     service_queue_required = False
+    release_queue_required = False
     covered_rebuilds = source_extensions = 0
     decode_pass_limit = 65 if direct_call_closure else 33
 
@@ -444,7 +462,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             frontier_controls=(trusted_source and abi == 2 and lock_kind == 'mutex'
                                and memread.device_session.source_frontier_controls()),
             frontier_direction=(trusted_source and abi == 2 and lock_kind == 'mutex'
-                                and memread.device_session.source_frontier_direction()))
+                                and memread.device_session.source_frontier_direction()),
+            unit_releases=unit_releases)
         block_dict = {start: block for start, block in block_dict.items()
                       if start not in excluded_targets}
         db_dict = {block: db_dict[block] for block in block_dict.values()}
@@ -459,6 +478,39 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             and isinstance(line.args[0], ExprLoc)
         } - excluded_targets
         try:
+            old_fast_sites = set()
+            if unit_releases:
+                # Preserve only the fast exits which the old scope/emitter
+                # already selected. An inner release newly made terminal by
+                # unit clipping must not acquire this compatibility exemption.
+                old_blocks, old_dbs, old_exits = context_policy.jit_phase_blocks(
+                    block_dict, db_dict, {entry}, keep_call_stack | ordinary_call_targets,
+                    indirect_history=jump_table, indirect_call_native=indirect_call_native,
+                    returning_indirect=bool(returning_services),
+                    nonreturning_targets=nonreturning_targets)
+                old_services = service_queue_required or any(
+                    source_frontier.descriptor(line) or
+                    indirect_tail_capable and returning_services and line.name == 'JMP'
+                    and line.args and isinstance(line.args[0], (ExprId, ExprMem))
+                    and native_terminals.indirect_tail_length(line.b) == line.l or
+                    returning_services and (line.name == 'CALL' or line.name.startswith('J'))
+                    and ((line.name == 'CALL' and not isinstance(line.args[0], ExprLoc))
+                         or isinstance(line.args[0], ExprLoc) and
+                         old_dbs[block].get_location_offset(line.args[0].loc_key)
+                            in returning_services)
+                    for block in old_blocks.values() for line in block.lines)
+                if not old_services:
+                    old_fast_sites = context_policy.terminal_clobber_sites(
+                        old_blocks, old_dbs, entry,
+                        {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock,
+                         clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock,
+                         outer_mutex_lock} | service_acquires,
+                        {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock,
+                         clobber_mutex_unlock, direct_mutex_unlock} | service_releases,
+                        discovered_targets & old_blocks.keys(), terminal_clobber_targets,
+                        native_exits=old_exits,
+                        retained_candidate=trusted_source and abi == 2 and lock_kind == 'mutex',
+                        nonreturning_targets=nonreturning_targets)
             # Admission and emission must use the same executable scope. A
             # native-only suffix is not a service run on the combiner's context.
             block_dict, db_dict, native_exits = context_policy.jit_phase_blocks(
@@ -470,7 +522,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                 indirect_call_native=indirect_call_native,
                 returning_indirect=bool(returning_services),
                 nonreturning_targets=nonreturning_targets,
+                unit_releases=unit_releases, deferred_call_targets=ordinary_call_targets,
+                max_visits=return_flow_work,
             )
+            release_queue_required = bool(unit_releases) and any(
+                line.name in {'CALL', 'JMP'} and line.args
+                and (context_policy.static_address(line.args[0], db_dict[block],
+                                                    line.offset + line.l) in unit_releases
+                     or set(jump_table.get(line.offset + line.l, ())) & unit_releases)
+                and line.offset not in old_fast_sites
+                for block in block_dict.values() for line in block.lines)
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
             return reject_translation(str(error))
@@ -586,7 +647,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             block_dict, db_dict, {entry}, keep_call_stack | ordinary_call_targets,
             indirect_history=jump_table, indirect_call_native=indirect_call_native,
             returning_indirect=bool(returning_services),
-            nonreturning_targets=nonreturning_targets)
+            nonreturning_targets=nonreturning_targets,
+            unit_releases=unit_releases, deferred_call_targets=ordinary_call_targets,
+            max_visits=return_flow_work)
         ordinary_call_targets = find_direct_call_targets(
             block_dict, db_dict, call_roots, direct_call_depth, excluded_targets)
         empty_blocks = {
@@ -840,6 +903,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             indirect_call_native=indirect_call_native,
             returning_indirect=bool(returning_services),
             nonreturning_targets=nonreturning_targets,
+            unit_releases=unit_releases, deferred_call_targets=ordinary_call_targets,
+            max_visits=return_flow_work,
         )
         live_offsets = {line.offset + line.l
                         for block in block_dict.values() for line in block.lines}
@@ -861,6 +926,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                     reads=memread.device_session.origin_context_read())
                     if lock_kind == "mutex" and abi == 2
                     and memread.device_session.origin_memory() else {})
+    service_queue_required = service_queue_required or release_queue_required
     memory_preempt_symbol = None
     if any(origin_memory.read_operands(line) for line, _, _ in memory_sites.values()):
         memory_preempt_symbol = get_kernel_symbol("__preempt_count")

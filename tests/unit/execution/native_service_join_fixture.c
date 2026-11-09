@@ -51,6 +51,7 @@ struct kd_exec_frame {
 	struct kd_native_request *native_request;
 	struct list_head native_link;
 	struct kd_regs regs;
+	unsigned long continuation_ip, continuation_sp;
 	const struct kd_jit_image *image;
 	void *resume_target, *remote_request;
 	struct { unsigned int phase; } control_call;
@@ -71,6 +72,7 @@ struct kd_exec_continuation {
 	const struct kd_exec_service_ops *service_ops;
 	void *service_scope;
 	struct kd_exec_frame frame;
+	struct kd_regs *packet;
 	struct guard guard;
 	struct list_head children, owners, storage_owners, child_link;
 	struct { unsigned int api; } service_call;
@@ -190,7 +192,11 @@ static int copy_from_kernel_nofault(void *out, const void *in, size_t size)
 	return 0;
 }
 static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct kd_regs *regs)
-{ assert(frame == &root.continuation.frame && regs == &frame->regs); ++frontier_calls; }
+{
+	assert(frame == &root.continuation.frame && regs == &frame->regs);
+	frame->continuation_ip = regs->ip; frame->continuation_sp = regs->sp;
+	++frontier_calls;
+}
 static bool need_resched(void) { return true; }
 static unsigned int preempt_count(void) { return 0; }
 static bool irqs_disabled(void) { return false; }
@@ -280,10 +286,22 @@ static void *execute(void *unused)
 		 * its established suspended context for the existing registry join. */
 		cont->state = KD_CONT_BOUND;
 		cont->executor = current;
-		check_frontier_refusals(cont);
-		/* The dispatcher maps this successful dedicated outcome to retained
-		 * HANDOFF. Execute the real consumer before the existing ACCEPT join. */
-		assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));
+		if (mode == 3) {
+			/* The completion fixture exercises the real release CALL pop.
+			 * Here its COMPLETE packet enters the real registry/ACK path;
+			 * neither a pending CALL nor an instruction frontier is involved. */
+			cont->frame.control_call.phase = KD_CALL_COMPLETE;
+			cont->frame.continuation_ip = cont->frame.regs.ip;
+			cont->frame.continuation_sp = cont->frame.regs.sp;
+			assert(kd_service_release_boundary(&root, 0) == KD_EXE_RUN_HANDOFF);
+			assert(cont->frame.regs.sp == (unsigned long)&origin_words[9]);
+			assert(origin_words[8] == 0x12345678);
+		} else {
+			check_frontier_refusals(cont);
+			/* The dispatcher maps this successful dedicated outcome to
+			 * retained HANDOFF before the existing ACCEPT join. */
+			assert(!kd_jit_source_frontier(&frontier_entry, &cont->frame, &cont->frame.regs));
+		}
 		before.orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
 		assert(!memcmp(&before, &cont->frame.regs, sizeof(before)));
 		assert(!frontier_entry.status_code && !frontier_entry.tgt_addr && !frontier_entry.jump_from);
@@ -373,7 +391,8 @@ int main(int argc, char **argv)
 {
 	struct kd_exec_continuation *cont = &root.continuation;
 	pthread_t worker;
-	assert(argc == 2); mode = !strcmp(argv[1], "read") ? 2 : !strcmp(argv[1], "downgrade") ? 1 : 0;
+	assert(argc == 2); mode = !strcmp(argv[1], "release") ? 3 :
+		!strcmp(argv[1], "read") ? 2 : !strcmp(argv[1], "downgrade") ? 1 : 0;
 	check_capture_publication();
 	current = &origin;
 	list_init(&kd_native_frames); list_init(&root.scope.owners); list_init(&root.native_owners);
@@ -385,13 +404,15 @@ int main(int argc, char **argv)
 	list_init(&cont->children); list_init(&cont->owners); list_init(&cont->storage_owners);
 	list_init(&cont->frame.native_link);
 	cont->frame.continuation = cont; cont->frame.logical_task = &origin;
+	cont->packet = &cont->frame.regs;
 	cont->frame.executed = cont->frame.complex_ready = true; cont->frame.packet_state = KD_PACKET_FULL;
 	origin.stack = origin_words;
 	origin_words[8] = 0x12345678;
 	cont->frame.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	cont->frame.mutex_backend = true; cont->frame.image = &frontier_image;
 	cont->frame.regs = (struct kd_regs) { .ip = (unsigned long)frontier_text,
-		.sp = (unsigned long)&origin_words[8], .ax = 7, .di = 11, .si = 13, .dx = 17, .flags = 2 };
+		.sp = (unsigned long)&origin_words[mode == 3 ? 9 : 8],
+		.ax = 7, .di = 11, .si = 13, .dx = 17, .flags = 2 };
 	root.scope.continuation = cont; root.worker = &executor; root.native_handoff = true;
 	assert(!pthread_create(&worker, NULL, execute, NULL));
 	while (!atomic_load_explicit(&ready, memory_order_acquire)) sched_yield();
@@ -403,7 +424,7 @@ int main(int argc, char **argv)
 		current = &origin;
 		assert(!kd_exec_native_service_unlock((unsigned long)&nested, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
 		assert(kd_exec_native_service_unlock((unsigned long)&sem,
-			mode ? KD_NATIVE_OPERATION_RWSEM_DOWNGRADE : KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+			mode == 1 ? KD_NATIVE_OPERATION_RWSEM_DOWNGRADE : KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
 		assert(kd_exec_native_service_active(&origin) && !kd_exec_native_service_owned((unsigned long)&sem));
 		assert(!sem.gate.owner && (unsigned long)nested.owner == (unsigned long)&executor);
 		assert(kd_exec_native_service_unlock((unsigned long)&nested, KD_NATIVE_OPERATION_MUTEX_UNLOCK));
@@ -415,9 +436,9 @@ int main(int argc, char **argv)
 	assert(kd_native_unlocks == (mode == 2 ? 0 : 2) && released == (mode == 2 ? 0U : 2U));
 	assert(source_puts == 1 && stack_puts == 1 && origin.refs == 1 && executor.refs == 1);
 	assert(preceding_effects == 1 && frontier_calls == 1);
-	assert(sem.readers == (mode ? 1 : 0));
+	assert(sem.readers == (mode == 1 || mode == 2 ? 1 : 0));
 	memset(&root, 0xa5, sizeof(root));
-	if (mode) { kd_up_read_non_owner(&sem); assert(!sem.readers); }
+	if (mode == 1 || mode == 2) { kd_up_read_non_owner(&sem); assert(!sem.readers); }
 	printf("PASS production Native service join: %s; acceptance, exact typed release, final ACK and terminal retirement; supplied physical/task primitives\n", argv[1]);
 	return 0;
 }

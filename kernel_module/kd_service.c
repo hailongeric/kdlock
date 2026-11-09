@@ -813,6 +813,31 @@ static void kd_service_pin_resume(struct kd_exec_continuation *cont)
 static int kd_service_run_scope(struct kd_service_root *root, int status);
 static int kd_service_primitive_call(struct kd_service_root *root);
 
+/* A release ends this translated unit after its real operation and CALL
+ * completion. Keep the already advanced packet: a remaining owner authorizes
+ * the existing Native tail, never another invocation of that release. */
+static int kd_service_release_boundary(struct kd_service_root *root, int status)
+{
+	struct kd_exec_continuation *cont = &root->continuation;
+
+	if (status)
+		return status;
+	BUG_ON(cont->service_call.api != KD_SERVICE_NONE ||
+	       cont->frame.control_call.phase != KD_CALL_COMPLETE ||
+	       cont->packet->ip != cont->frame.continuation_ip ||
+	       cont->packet->sp != cont->frame.continuation_sp);
+	cont->packet->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;
+	kd_exec_frame_save_continuation(&cont->frame, cont->packet);
+	return KD_EXE_RUN_HANDOFF;
+}
+
+static bool kd_service_native_release_context(unsigned int context)
+{
+	return context == KD_SERVICE_CALL_SPIN_UNLOCK ||
+		context == KD_SERVICE_CALL_RCU_UNLOCK ||
+		context == KD_SERVICE_CALL_RWSEM_WRITE_UNLOCK;
+}
+
 /* Reserve before Native side effects. A cold-stack extension has no fixed
  * public depth limit and needs no sleeping allocation while NativeSpin lives.
  * Keep its storage through root completion, including non-LIFO releases. */
@@ -838,6 +863,7 @@ static int kd_service_primitive_call(struct kd_service_root *root)
 	struct kd_exec_continuation *cont = &root->continuation;
 	struct kd_origin_call *call = &cont->origin_call;
 	u64 sequence = call->sequence;
+	bool release = kd_service_native_release_context(call->context_kind);
 	int result;
 
 	BUG_ON(call->phase != KD_ORIGIN_CALL_PREPARED || call->executor != current ||
@@ -872,6 +898,8 @@ static int kd_service_primitive_call(struct kd_service_root *root)
 	result = kd_exec_cont_native_complete(cont, sequence);
 	BUG_ON(result != 0 && result != KD_EXE_RUN_TO_UNLOCK);
 	kd_service_primitive_trace(result ? "complete" : "resume", root);
+	if (release)
+		return kd_service_release_boundary(root, result);
 	if (result)
 		return result;
 	return kd_exe_resume_retained(&cont->frame);
@@ -982,7 +1010,8 @@ static int kd_service_release_call(struct kd_service_root *root)
 	}
 	if (owner->released && owner != root->scope.outer)
 		kd_service_retire_child(owner);
-	return kd_exec_cont_service_complete(cont, NULL, 0);
+	return kd_service_release_boundary(root,
+		kd_exec_cont_service_complete(cont, NULL, 0));
 }
 
 static int kd_service_handoff(struct kd_service_root *root)
@@ -1048,8 +1077,6 @@ static int kd_service_run_scope(struct kd_service_root *root, int status)
 					kd_service_nested(root);
 			} else {
 				status = kd_service_release_call(root);
-				if (!status)
-					status = kd_exe_resume_retained(&cont->frame);
 			}
 			continue;
 		}

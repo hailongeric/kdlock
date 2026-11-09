@@ -187,7 +187,7 @@ def find_direct_call_targets(blocks, databases, roots, max_depth, excluded_targe
 
 def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=False,
                    frontier_extensions=False, frontier_controls=False,
-                   frontier_direction=False):
+                   frontier_direction=False, unit_releases=()):
     cfgs = []
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -207,7 +207,13 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=F
         asmcfg = None
         job_done = set()
 
-        mdis.dont_dis_retcall_funcs = {addr for addr in (raw_spin_unlock,) if addr}
+        unit_releases = set(unit_releases)
+        mdis.dont_dis_retcall_funcs = ({addr for addr in (raw_spin_unlock,) if addr}
+                                      | unit_releases)
+        # Do not decode a release helper's body through a source tail JMP.
+        # Its unchanged CALL/JMP goes to the existing runtime service instead.
+        if unit_releases:
+            mdis.dont_dis = unit_releases
 
         for t in r[2]:
             if t - r[1] in ordering_bug_list:  # To let buggy blocks first. MIASM bug
@@ -232,7 +238,7 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack, *, source_frontiers=F
                 cfg_dbs[block] = asmcfg.loc_db
 
             continuation_targets = find_resumable_call_continuations(
-                cfg_blocks, cfg_dbs, keep_call_stack
+                cfg_blocks, cfg_dbs, set(keep_call_stack) - unit_releases
             )
             existing_targets = set(cfg_blocks)
             chunk_end = r[1] + len(r[0])

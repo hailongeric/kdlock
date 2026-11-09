@@ -22,6 +22,8 @@ def main():
     wait_header = read_source(ROOT / 'include/kd_wait_queue.h')
     declarations = without_includes(read_source(ROOT / 'include/kd_regs.h'))
     declarations += without_includes(read_source(ROOT / 'include/exe_info.h'))
+    declarations += '\n'.join(line for line in read_source(ROOT / 'include/exe.h').splitlines()
+                              if line.startswith('#define KD_EXE_')) + '\n'
     declarations += '#include "kd_learning_api.h"\n'
     declarations += '\n'.join(line for line in read_source(ROOT / 'include/kd_jit_batch.h').splitlines()
                               if line.startswith('#define KD_JIT_ABI_OFFSET ')) + '\n'
@@ -65,7 +67,8 @@ def main():
             ('const struct kd_jit_image *kd_exe_capture_image(struct kd_exe_info *exe,',)),
         (service, ('static bool kd_service_native_match(const void *argument, unsigned long object,',
                    'static int kd_service_native_release(void *argument,',
-                   'static bool kd_service_native_finished(const void *argument)')),
+                   'static bool kd_service_native_finished(const void *argument)',
+                   'static int kd_service_release_boundary(struct kd_service_root *root, int status)')),
         (native, ('int kd_exec_native_service_begin(struct kd_exec_frame *frame)',
                   'static void kd_exec_native_service_request_wait(struct kd_native_request *request)',
                   'int kd_exec_native_accept(struct kd_exec_frame *frame)',
@@ -88,7 +91,7 @@ def main():
             '-I', str(path), '-I', str(ROOT / 'include'),
             str(ROOT / 'tests/unit/execution/native_service_join_fixture.c'),
             '-o', str(binary)], check=True, timeout=30)
-        for mode in ('write', 'downgrade', 'read'):
+        for mode in ('write', 'downgrade', 'read', 'release'):
             result = subprocess.run([str(binary), mode], capture_output=True, text=True, timeout=15)
             assert result.returncode == 0, (mode, result.returncode, result.stdout, result.stderr)
             print(result.stdout, end='')
