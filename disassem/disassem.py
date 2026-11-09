@@ -478,6 +478,17 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             and isinstance(line.args[0], ExprLoc)
         } - excluded_targets
         try:
+            # Source planning keeps the original conservative CALL-return
+            # exploration, independently of the strict graph used for emission.
+            # It may read caller bytes which the final release unit excludes.
+            if unit_releases:
+                discovery_blocks, discovery_dbs, _ = context_policy.jit_phase_blocks(
+                    block_dict, db_dict, {entry}, keep_call_stack | ordinary_call_targets,
+                    indirect_history=jump_table, indirect_call_native=indirect_call_native,
+                    returning_indirect=bool(returning_services),
+                    nonreturning_targets=nonreturning_targets,
+                    unit_releases=unit_releases, deferred_call_targets=ordinary_call_targets,
+                    max_visits=return_flow_work, discovery_only=True)
             old_fast_sites = set()
             if unit_releases:
                 # Preserve only the fast exits which the old scope/emitter
@@ -640,9 +651,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         code_ranges = [(start, start + len(data)) for data, start, _ in rets]
         ordinary_call_targets = find_direct_call_targets(
             block_dict, db_dict, call_roots, direct_call_depth, excluded_targets)
-        # Cut permanent CALL suffixes at the depth frontier before selecting
-        # source extensions. Both discovery calls use the release-clipped
-        # graph; a candidate after an outer release cannot request text.
+        # Keep the emitted scope release-clipped at the CALL-depth frontier.
+        # Separate planning below may read additional caller bytes, but cannot
+        # authorize those instructions or return targets for code generation.
         block_dict, db_dict, native_exits = context_policy.jit_phase_blocks(
             block_dict, db_dict, {entry}, keep_call_stack | ordinary_call_targets,
             indirect_history=jump_table, indirect_call_native=indirect_call_native,
@@ -656,6 +667,29 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             offset for offset, block in block_dict.items() if not block.lines
         }
         empty_blocks.update(ordinary_call_targets - block_dict.keys())
+        frontier_blocks, frontier_call_targets = block_dict, ordinary_call_targets
+        if unit_releases:
+            discovery_targets = find_direct_call_targets(
+                discovery_blocks, discovery_dbs, call_roots, direct_call_depth,
+                excluded_targets)
+            # Apply the same CALL-depth boundary to planning, but do not wait
+            # for a callee RET proof before batching its caller continuation.
+            discovery_blocks, discovery_dbs, _ = context_policy.jit_phase_blocks(
+                discovery_blocks, discovery_dbs, {entry},
+                keep_call_stack | discovery_targets,
+                indirect_history=jump_table, indirect_call_native=indirect_call_native,
+                returning_indirect=bool(returning_services),
+                nonreturning_targets=nonreturning_targets,
+                unit_releases=unit_releases, deferred_call_targets=discovery_targets,
+                max_visits=return_flow_work, discovery_only=True)
+            frontier_blocks = discovery_blocks
+            frontier_call_targets = find_direct_call_targets(
+                discovery_blocks, discovery_dbs, call_roots, direct_call_depth,
+                excluded_targets)
+        frontier_empty = {
+            offset for offset, block in frontier_blocks.items() if not block.lines
+        }
+        frontier_empty.update(frontier_call_targets - frontier_blocks.keys())
         seeded_regions = []
         added_roots = set()
         for data, start, roots in rets:
@@ -664,7 +698,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             # These are decoder seeds, never new independent admission roots.
             additions = {
                 offset
-                for offset in empty_blocks
+                for offset in frontier_empty
                 if start <= offset and offset + 15 <= start + len(data)
             } - set(roots)
             added_roots.update(additions)
@@ -673,7 +707,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
             # Decoder seeds can be ordinary branches with the caller's lock
             # depth. Only actual CALL entries add independent callee scans;
             # preserve the conservative policy of the initial history roots.
-            discovered_targets.update(added_roots & ordinary_call_targets)
+            discovered_targets.update(added_roots & frontier_call_targets)
             diagnostics.set_instruction(
                 min(added_roots), "<covered undecoded CFG block>"
             )
@@ -693,7 +727,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         # A truncated instruction at a read boundary also needs another window.
         missing = {
             offset
-            for offset in empty_blocks
+            for offset in frontier_empty
             if not any(
                 start <= offset and offset + 15 <= end for start, end in code_ranges
             )
@@ -836,7 +870,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
         )
         try:
             rets = memread.extend_regions(rets, missing, policy=text_policy)
-            discovered_targets.update(missing & ordinary_call_targets)
+            discovered_targets.update(missing & frontier_call_targets)
             source_extensions += 1
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             report_text_coverage(rets, block_dict, expansion=expansion,

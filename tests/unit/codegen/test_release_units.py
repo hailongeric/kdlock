@@ -174,6 +174,78 @@ class ReleaseUnitTests(unittest.TestCase):
         read.assert_not_called()
         extend.assert_not_called()
 
+    def test_discovery_batches_deferred_caller_continuation_without_changing_emission(self):
+        blocks, databases = self.decode(
+            (0x1000, call(0x1000, 0x2000) + call(0x1005, 0x3000) + b'\xc3'))
+        strict, _, _ = self.select(blocks, databases,
+            resumable={0x2000, 0x3000}, deferred_call_targets={0x2000, 0x3000})
+        planning, _, _ = self.select(blocks, databases,
+            resumable={0x2000, 0x3000}, deferred_call_targets={0x2000, 0x3000},
+            discovery_only=True)
+        self.assertEqual(self.pcs(strict), {0x1000})
+        self.assertEqual(self.pcs(planning), {0x1000, 0x1005, 0x100a})
+
+    def test_batched_cold_callees_are_strictly_clipped_before_codegen(self):
+        base = 0xffffffff81000000
+        entry, helper, later = base + 0x100, base + 0x10000, base + 0x20000
+        acquire, release = base + 0x80000, base + 0x81000
+        root = call(entry, helper) + call(entry + 5, later)
+        root += call(entry + 10, release) + b'\xc3'
+        later_body = bytes.fromhex('b878563412c3')
+        for returns in (False, True):
+            with self.subTest(release_free_return=returns):
+                # An optional RET branch genuinely permits the caller's suffix.
+                helper_body = (bytes.fromhex('85c07401c3') if returns else b'')
+                helper_release = helper + len(helper_body)
+                helper_body += call(helper_release, release) + bytes.fromhex('b821436587c3')
+                pieces = {entry: root, helper: helper_body, later: later_body}
+                reads, tables = [], []
+
+                def reader(address, size):
+                    reads.append((address, size))
+                    data = bytearray(b'\xc3' * size)
+                    for start, body in pieces.items():
+                        if address <= start and start + len(body) <= address + size:
+                            data[start - address:start - address + len(body)] = body
+                    return bytes(data)
+
+                original_find = translator.indirect_jump.find
+
+                def find(*args, **kwargs):
+                    result = original_find(*args, **kwargs)
+                    tables.append({source: tuple(targets)
+                                   for source, targets in args[2].items()})
+                    return result
+
+                with patch.object(translator.indirect_jump, 'find', side_effect=find):
+                    assembly, log, status = render(
+                        root.hex(), entry=entry, regions=[(root, entry, [entry])],
+                        memory_reader=reader, lock_kind='mutex', abi=2,
+                        trusted_source=True, native_escape_capable=True,
+                        kernel_symbols={'kd_mutex_direct_lock_clobber_v1': acquire,
+                                        'kd_mutex_direct_unlock_clobber_v1': release},
+                        direct_call_depth=5, return_status=True)
+                self.assertEqual(status, 0, log)
+                # Both ordinary calls are fetched together before the helper's
+                # return/release decision, using the unchanged source policy.
+                self.assertIn(f'targets=["{helper:#x}", "{later:#x}"]', log)
+                self.assertEqual(log.count('reason=TEXT_RANGE_EXTEND'), 1)
+                self.assertEqual(reads, [(entry, len(root)), (helper, 0x2000), (later, 0x2000)])
+                self.assertIn('total_transition_limit=32 decode_pass_limit=33', log)
+                self.assertIn(f'loc_{helper:x}:'.encode(), assembly)
+                self.assertNotIn(f'loc_{helper_release + 5:x}:'.encode(), assembly)
+                if returns:
+                    self.assertIn(f'loc_{entry + 5:x}:'.encode(), assembly)
+                    self.assertIn(f'loc_{later:x}:'.encode(), assembly)
+                    self.assertIn(b'0x12345678', assembly)
+                else:
+                    self.assertNotIn(f'loc_{entry + 5:x}:'.encode(), assembly)
+                    self.assertNotIn(f'loc_{later:x}:'.encode(), assembly)
+                    self.assertNotIn(b'0x12345678', assembly)
+                    self.assertTrue(tables)
+                    self.assertTrue(all(entry + 5 not in targets
+                        for table in tables for targets in table.values()))
+
     def test_work_refusal_does_not_mutate_decoded_blocks(self):
         blocks, databases = self.decode(
             (0x1000, call(0x1000, 0x2000) + b'\xc3'),

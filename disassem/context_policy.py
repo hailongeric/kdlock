@@ -52,7 +52,7 @@ IMPLICIT_SOURCE_MEMORY = {
 def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_history=None,
                      indirect_call_native=False, returning_indirect=False,
                      nonreturning_targets=(), unit_releases=(), deferred_call_targets=(),
-                     max_visits=65536):
+                     max_visits=65536, discovery_only=False):
     """Select code that can execute before this JIT episode ends.
 
     A missing direct callee transfers the saved CALL state to the original
@@ -68,7 +68,8 @@ def jit_phase_blocks(blocks, databases, roots, resumable_targets, *, indirect_hi
             deferred_call_targets=deferred_call_targets,
             nonreturning_targets=nonreturning_targets,
             indirect_call_native=indirect_call_native,
-            returning_indirect=returning_indirect, max_visits=max_visits)
+            returning_indirect=returning_indirect, max_visits=max_visits,
+            discovery_only=discovery_only)
     nonreturning_targets = set(nonreturning_targets)
     indirect_history = indirect_history or {}
     if roots - blocks.keys() or (blocks and not roots):

@@ -63,20 +63,20 @@ class DirectCallDepthTests(unittest.TestCase):
         self.assertFalse(reads)
         self.assertNotIn(f'loc_{target:x}:'.encode(), assembly)
 
-    def test_inner_release_does_not_stop_parent(self):
+    def test_inner_release_stops_source_unit_before_later_callee(self):
         target = self.entry + 0x10000
         raw = self.call(self.entry, self.lock) + self.call(self.entry+5, self.unlock)
         raw += self.call(self.entry+10, target) + self.call(self.entry+15, self.unlock) + b'\xc3'
         assembly, reads, _ = self.emit(raw, {target: b'\xc3'})
-        self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
-        self.assertTrue(reads)
+        self.assertNotIn(f'loc_{target:x}:'.encode(), assembly)
+        self.assertFalse(reads)
 
-    def test_downgrade_keeps_following_read_tail(self):
+    def test_downgrade_stops_source_unit_before_read_tail(self):
         target = self.entry + 0x10000
         raw = self.call(self.entry, self.downgrade) + self.call(self.entry+5, target) + b'\xc3'
         assembly, reads, _ = self.emit(raw, {target: b'\xc3'})
-        self.assertTrue(f'loc_{target:x}:'.encode() in assembly, f'missing callee {target:x}')
-        self.assertTrue(reads)
+        self.assertNotIn(f'loc_{target:x}:'.encode(), assembly)
+        self.assertFalse(reads)
 
 
 if __name__ == '__main__':

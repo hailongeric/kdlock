@@ -14,7 +14,10 @@ from miasm.expression.expression import ExprInt, ExprLoc
 
 def select(blocks, databases, roots, resumable_targets, *, release_targets,
            indirect_history=(), deferred_call_targets=(), nonreturning_targets=(),
-           indirect_call_native=False, returning_indirect=False, max_visits=65536):
+           indirect_call_native=False, returning_indirect=False, max_visits=65536,
+           discovery_only=False):
+    # Planning may conservatively discover caller continuations before the
+    # callee's release-free return is known. This graph must never be emitted.
     roots, resumable = set(roots), set(resumable_targets)
     releases, deferred = set(release_targets), set(deferred_call_targets)
     terminals = releases | set(nonreturning_targets)
@@ -63,7 +66,7 @@ def select(blocks, databases, roots, resumable_targets, *, release_targets,
                 edges.discard(target)
                 if target in blocks:
                     call = ({target}, next_ip, False)
-                elif target in resumable and target not in deferred:
+                elif target in resumable and (discovery_only or target not in deferred):
                     call = (set(), next_ip, True)
                 else:
                     # A deferred callee needs its own bytes before its return
@@ -75,7 +78,10 @@ def select(blocks, databases, roots, resumable_targets, *, release_targets,
             else:
                 known = set(history.get(next_ip, ()))
                 callees = (known & blocks.keys()) - terminals
-                native_returns = bool(known & (resumable - terminals - deferred - blocks.keys()))
+                native_targets = resumable - terminals - blocks.keys()
+                if not discovery_only:
+                    native_targets -= deferred
+                native_returns = bool(known & native_targets)
                 native_returns = native_returns or returning_indirect
                 if not callees and not native_returns:
                     native_exits.add(start)
@@ -92,6 +98,8 @@ def select(blocks, databases, roots, resumable_targets, *, release_targets,
         successors[start] = edges
         if call is not None:
             calls[start] = call
+        if discovery_only:
+            continue
         if terminal:
             clauses[start] = []
         elif returns:
@@ -152,7 +160,7 @@ def select(blocks, databases, roots, resumable_targets, *, release_targets,
         if start in calls:
             callees, continuation, native_returns = calls[start]
             edges.update(callees)
-            if (native_returns or callees & may_return) and continuation in blocks:
+            if (discovery_only or native_returns or callees & may_return) and continuation in blocks:
                 edges.add(continuation)
         pending.extend(edges - reached)
 
