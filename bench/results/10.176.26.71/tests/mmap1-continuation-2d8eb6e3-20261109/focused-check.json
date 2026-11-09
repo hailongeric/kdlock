@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "63",
+        "/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3",
+        "-u",
+        "/mnt/kdlock-builds2/kdlock-batch-checks-pgsizijj/work/tests/unit/run.py",
+        "bench/test_mmap1_settled.py",
+        "-v"
+      ],
+      "cwd": "/mnt/kdlock-builds2/kdlock-batch-checks-pgsizijj/work",
+      "log": "/mnt/kdlock-builds2/kdlock-batch-checks-pgsizijj/receipts/bench-test_mmap1_settled.log",
+      "log_sha256": "eccf2e5525a2fbe65f1a772afd27af943a3d1bc27d1ab3cd30bb43e51d0753fd",
+      "name": "bench-test_mmap1_settled",
+      "pid": 2619,
+      "process_group": 2619,
+      "returncode": 0,
+      "skip_lines": [],
+      "started_utc": "2026-11-09T04:34:46Z",
+      "status": "passed",
+      "tail": "test_changed_registry_cannot_bind_old_image_files (__main__.FixedSession.test_changed_registry_cannot_bind_old_image_files) ... ok\ntest_compiler_prevents_receipt_creation (__main__.FixedSession.test_compiler_prevents_receipt_creation) ... ok\ntest_continuation_count_exhaustion_cannot_create_a_fixed_receipt (__main__.FixedSession.test_continuation_count_exhaustion_cannot_create_a_fixed_receipt) ... ok\ntest_continuation_limit_refuses_unbounded_or_noninteger_values (__main__.FixedSession.test_continuation_limit_refuses_unbounded_or_noninteger_values) ... ok\ntest_continuations_exercise_each_settled_generation_with_one_deadline (__main__.FixedSession.test_continuations_exercise_each_settled_generation_with_one_deadline) ... ok\ntest_current_capability_accepts_known_v21_and_v22_with_one_query (__main__.FixedSession.test_current_capability_accepts_known_v21_and_v22_with_one_query) ... ok\ntest_current_capability_refuses_incomplete_success_packet (__main__.FixedSession.test_current_capability_refuses_incomplete_success_packet) ... ok\ntest_current_capability_refuses_unknown_or_inconsistent_contracts (__main__.FixedSession.test_current_capability_refuses_unknown_or_inconsistent_contracts) ... ok\ntest_current_receipt_is_built_and_verified_in_same_owner (__main__.FixedSession.test_current_receipt_is_built_and_verified_in_same_owner) ... ok\ntest_deadline_prevents_another_application_without_renewal (__main__.FixedSession.test_deadline_prevents_another_application_without_renewal) ... ok\ntest_empty_activity_cannot_pass_as_prepared_execution (__main__.FixedSession.test_empty_activity_cannot_pass_as_prepared_execution) ... ok\ntest_failed_continuation_is_not_repeated (__main__.FixedSession.test_failed_continuation_is_not_repeated) ... ok\ntest_failed_fixed_verification_does_not_renew_or_retry (__main__.FixedSession.test_failed_fixed_verification_does_not_renew_or_retry) ... ok\ntest_late_settlement_prevents_application_start_after_verification (__main__.FixedSession.test_late_settlement_prevents_application_start_after_verification) ... ok\ntest_new_image_invalidates_point_without_retry (__main__.FixedSession.test_new_image_invalidates_point_without_retry) ... ok\ntest_no_image_routing_cannot_pass_as_prepared_execution (__main__.FixedSession.test_no_image_routing_cannot_pass_as_prepared_execution) ... ok\ntest_point_uses_fixed_receipt_and_only_one_application (__main__.FixedSession.test_point_uses_fixed_receipt_and_only_one_application) ... SETTLED_POINT_RESULT {\"model\": \"processes\", \"workers\": 8, \"rate\": 42, \"stable\": true, \"passed\": true, \"drained\": true, \"scored\": false}\nok\ntest_publication_gate_distinguishes_body_from_missing_callee_stub (__main__.FixedSession.test_publication_gate_distinguishes_body_from_missing_callee_stub) ... ok\ntest_publication_gate_ignores_comments_and_other_instruction_sites (__main__.FixedSession.test_publication_gate_ignores_comments_and_other_instruction_sites) ... ok\ntest_stable_registry_without_image_activity_is_refused (__main__.FixedSession.test_stable_registry_without_image_activity_is_refused) ... ok\ntest_startup_deadline_failure_keeps_its_original_status (__main__.FixedSession.test_startup_deadline_failure_keeps_its_original_status) ... ok\n\n----------------------------------------------------------------------\nRan 21 tests in 0.028s\n\nOK\n",
+      "timeout_seconds": 180,
+      "unittest_count": 21
+    }
+  ],
+  "checks_bundle_sha256": "8adefe7d22bd8b5d333d02332705b9cacc6024afc8a583b572955083744425b1",
+  "final_idle": {
+    "modules": [],
+    "source_processes": [],
+    "tasks": []
+  },
+  "guest_output": "/mnt/kdlock-builds2/kdlock-batch-checks-pgsizijj",
+  "local_output": "/tmp/kdlock-batch-checks-gc7i56z0",
+  "passed": true,
+  "source_archive_sha256": "555efe224eb688b7e5ef34830cc95e295c7a2627eda4abfd4974570e7b543c5d",
+  "source_commit": "2d8eb6e35049c89be1efd58fe0cdc8eb411aae88"
+}

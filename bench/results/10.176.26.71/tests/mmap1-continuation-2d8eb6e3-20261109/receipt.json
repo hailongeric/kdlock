@@ -1,0 +1,440 @@
+{
+  "binary_reuse_identity": {
+    "compatible_harness_commit": "2d8eb6e35049c89be1efd58fe0cdc8eb411aae88",
+    "daemon_and_kernel_integration_sources_equal": true,
+    "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+    "exact_observation_map": true,
+    "exact_prepared_map": true,
+    "exact_provider_production_map": true,
+    "original_source_manifest_sha256": "5de317270b696e3be14a8dfcaa90555d2b2abb2c7c223943a289abe1d26924fd",
+    "provider_manifest_sha256": "91fd0efc4ce3d9594fc43c9a076240aea6495830a15e83b3fa5d77b9c7477d69",
+    "provider_sha256": "748aa04ae0e41771277a5de77797bcc2b7d01b6794911371a2d4270c1f94380b",
+    "provider_source_commit": "ac0b5b8271f0d88fe3ce0a5b040868973dfa62cc"
+  },
+  "boot_id": "3c097f1e-4ecc-46b5-9768-25c0c6161746",
+  "collection": {
+    "archive": "/tmp/kdlock-continue-collected-links/evidence.tar",
+    "archive_bytes": 702443520,
+    "archive_sha256": "5443989842032f11b045cd416f72df3a34520897fd0ae47498ec2f6967bc47cb",
+    "files": 445,
+    "passed": true,
+    "total_bytes": 701440694
+  },
+  "continuations": [
+    {
+      "application": {
+        "drained": true,
+        "error": null,
+        "output": {
+          "completed_pairs": 41303,
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 20651.5
+        },
+        "passed": true,
+        "process_elapsed_ns": 8037973829,
+        "returncode": 0,
+        "state": "COMPLETE"
+      },
+      "receipt_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/processes/continuation-01/learning.json",
+      "receipt_sha256": "4209c060e9fbefdea568cd94d81255d6c6ec85fabbfc6b6a2c0640f9553645bb",
+      "registry_after": [
+        {
+          "code": 18419722476566724608,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 8,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2417
+        },
+        {
+          "code": 18419722476570923008,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2419
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476575121408,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2417
+        },
+        {
+          "code": 18419722476587716608,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 5,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2419
+        }
+      ],
+      "service_delta": [
+        {
+          "bound": 165114,
+          "canceled": 0,
+          "dispatch_ns": 370864939,
+          "dispatch_samples": 165114,
+          "entry": "0xffffffff817b6f68",
+          "handback": 8,
+          "handback_finished": 8,
+          "invalid_clock": 0,
+          "jit_entered": 165114,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 165106,
+          "selected": 165114,
+          "shadow_ns": 31539699664,
+          "shadow_samples": 165114,
+          "submitted": 165114
+        },
+        {
+          "bound": 165110,
+          "canceled": 0,
+          "dispatch_ns": 1097253828,
+          "dispatch_samples": 165110,
+          "entry": "0xffffffff8181c73b",
+          "handback": 165110,
+          "handback_finished": 165110,
+          "invalid_clock": 0,
+          "jit_entered": 165110,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 165110,
+          "shadow_ns": 15993766882,
+          "shadow_samples": 165110,
+          "submitted": 165110
+        }
+      ],
+      "stable": false
+    },
+    {
+      "application": {
+        "drained": true,
+        "error": null,
+        "output": {
+          "completed_pairs": 41205,
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 20602.5
+        },
+        "passed": true,
+        "process_elapsed_ns": 8081084961,
+        "returncode": 0,
+        "state": "COMPLETE"
+      },
+      "receipt_path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/processes/continuation-02/learning.json",
+      "receipt_sha256": "3f97ac3de2576b10077d2c17b489639e92365168684ace3ba55dd291596f82f9",
+      "registry_after": [
+        {
+          "code": 18419722476558327808,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 9,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2417
+        },
+        {
+          "code": 18419722476562526208,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 7,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2419
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476566724608,
+          "entry": 18446744071587350331,
+          "entry_abi": 2,
+          "generation": 8,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2417
+        },
+        {
+          "code": 18419722476570923008,
+          "entry": 18446744071586934632,
+          "entry_abi": 2,
+          "generation": 6,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 32640,
+          "status": 0,
+          "tgid": 2419
+        }
+      ],
+      "service_delta": [
+        {
+          "bound": 164512,
+          "canceled": 0,
+          "dispatch_ns": 369296171,
+          "dispatch_samples": 164512,
+          "entry": "0xffffffff817b6f68",
+          "handback": 6,
+          "handback_finished": 6,
+          "invalid_clock": 0,
+          "jit_entered": 164512,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 164506,
+          "selected": 164512,
+          "shadow_ns": 31650995190,
+          "shadow_samples": 164512,
+          "submitted": 164512
+        },
+        {
+          "bound": 164507,
+          "canceled": 0,
+          "dispatch_ns": 1099431737,
+          "dispatch_samples": 164507,
+          "entry": "0xffffffff8181c73b",
+          "handback": 164507,
+          "handback_finished": 164507,
+          "invalid_clock": 0,
+          "jit_entered": 164507,
+          "local": 0,
+          "local_cancel": 0,
+          "local_no_image": 0,
+          "local_ns": 0,
+          "local_success": 0,
+          "prepublication_cancel": 0,
+          "returned": 0,
+          "selected": 164507,
+          "shadow_ns": 15962016359,
+          "shadow_samples": 164507,
+          "submitted": 164507
+        }
+      ],
+      "stable": false
+    }
+  ],
+  "daemon_source_commit": "76b0147cfbb58246b4a3a0f371434cd758032588",
+  "error": "AssertionError('demand learning did not reach a quiescent boundary')",
+  "final_registry": [
+    {
+      "code": 18419722476562526208,
+      "entry": 18446744071586934632,
+      "entry_abi": 2,
+      "generation": 7,
+      "lock_kind": 2,
+      "pid": 0,
+      "requirements": 32640,
+      "status": 0,
+      "tgid": 2419
+    },
+    {
+      "code": 18419722476558327808,
+      "entry": 18446744071587350331,
+      "entry_abi": 2,
+      "generation": 9,
+      "lock_kind": 2,
+      "pid": 0,
+      "requirements": 32640,
+      "status": 1,
+      "tgid": 2417
+    }
+  ],
+  "fixed_points": [],
+  "learning_budget": {
+    "continuation_application_seconds": 30,
+    "continuation_rounds": 8,
+    "deadline_monotonic": 1812.508514939,
+    "timeout_seconds": 1800
+  },
+  "live_campaign_attempts": 1,
+  "no_build": true,
+  "normal_recovery": {
+    "boot_id": "1eeab914-c1d7-4c69-bc7c-1db2921c3135",
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "idle": true,
+    "release": "7.0.0-38-kdlock1"
+  },
+  "preparation": {
+    "drained": true,
+    "error": null,
+    "output": {
+      "completed_pairs": 205319,
+      "nominal_seconds": 10,
+      "pairs_per_nominal_second": 20531.9
+    },
+    "passed": true,
+    "process_elapsed_ns": 730124608090,
+    "returncode": 0,
+    "state": "COMPLETE"
+  },
+  "provider_reused": true,
+  "provider_source_commit": "ac0b5b8271f0d88fe3ce0a5b040868973dfa62cc",
+  "quiet_performance_accepted": false,
+  "retirement": {
+    "campaign_complete": false,
+    "drained": true,
+    "final_idle": true,
+    "ordinary_cpu_progress": {
+      "bindings_after": 0,
+      "bindings_before": 9,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "finished_ns": 1827735478950,
+      "started_ns": 1827610486634
+    },
+    "original_result_sha256": "be73e9008c812325fdd9f872f68d6ef68b8eff03df24463dc7765ba66abe6514",
+    "passed": false,
+    "retired": {
+      "frames": 0,
+      "modules": 0,
+      "state": 2,
+      "writers": 0
+    },
+    "retirement_passed": true
+  },
+  "schema": 1,
+  "selected_raw_records": [
+    {
+      "bytes": 2996814,
+      "kind": "file",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/daemon.log",
+      "relative": "run/daemon.log",
+      "sha256": "09d2d18e7bd130bc01cec6f9f3630026cfe28571327c8ccfe87f15cf895fa480"
+    },
+    {
+      "bytes": 1107,
+      "kind": "file",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/finalization.json",
+      "relative": "run/finalization.json",
+      "sha256": "d3c4564dfa00b3efafccba378a61b1aac45cb43a7237bc0cc1fb75ddd3220caf"
+    },
+    {
+      "bytes": 5281,
+      "kind": "file",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/processes/continuation-03/learning-00/result.json",
+      "relative": "run/processes/continuation-03/learning-00/result.json",
+      "sha256": "e1f6e2fe9f50751692534cb9319e4009814202c732970dc0f4958719aa879b40"
+    },
+    {
+      "bytes": 128010,
+      "kind": "file",
+      "path": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-continue-run-2d8eb6e35049-jh0fkiq3/processes/kd/run/result.json",
+      "relative": "run/result.json",
+      "sha256": "be73e9008c812325fdd9f872f68d6ef68b8eff03df24463dc7765ba66abe6514"
+    }
+  ],
+  "source_commit": "2d8eb6e35049c89be1efd58fe0cdc8eb411aae88",
+  "stable_point_passed": false,
+  "state": "STOPPED_RETIREMENT_PENDING",
+  "third_application": {
+    "drained": true,
+    "error": "AssertionError('demand learning did not reach a quiescent boundary')",
+    "output": {
+      "completed_pairs": 40823,
+      "nominal_seconds": 2,
+      "pairs_per_nominal_second": 20411.5
+    },
+    "passed": false,
+    "process_elapsed_ns": 8086250197,
+    "returncode": 0,
+    "state": "FAILED"
+  },
+  "third_counter_delta_retained": false
+}
