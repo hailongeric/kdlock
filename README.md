@@ -5,10 +5,19 @@ non-PREEMPT_RT**.
 
 ## Current state
 
-This is the clean design baseline (P0). There is no lock implementation, build
-system, benchmark payload or captured result in this branch. No build, runtime
-correctness, kernel integration or performance result is claimed for the
-rebuilt lock. Acceptance specifications T01-T56 remain unrun.
+The first implementation slice is a private
+[source-flow fragment planner](disassem/fragment.py), contributing only the
+structural graph walk to P2. Given a finite, caller-classified intraprocedural
+graph, it stops before lock/unlock/mode/special sites, retains safe alternatives
+and shared joins, and reports missing targets and unresolved transfers
+separately. Its records are provisional compiler data, not a public ABI.
+
+There is no decoder, API recognition, instruction emission, CALL/RET handling,
+lock implementation, build system or benchmark payload yet. Ten focused private
+planner cases passed with Python 3.10.12; see the
+[evidence limits](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md#21-rebuild-status).
+No build, JIT execution, kernel integration or performance result is claimed.
+Acceptance specifications T01-T56 remain unrun.
 
 Read the design in order:
 
@@ -18,10 +27,11 @@ Read the design in order:
 4. [Implementation plan and open decisions](docs/design/kdlock_redesign/03_implementation_plan.md)
 5. [Evidence and reconciliation](docs/design/kdlock_redesign/04_evidence_and_reconciliation.md)
 
-The next step is to settle the integration/compatibility contract C12 and the
-initial family/API/context lanes in C01, then choose the necessary C02-C11
-mechanisms for that lane. The independent clean-baseline route is selected;
-these remaining design choices are not decided by deleting the old code.
+Before implementation of kernel or adapter contracts, settle the
+integration/compatibility contract C12 and the initial family/API/context lanes
+in C01, then choose the necessary C02-C11 mechanisms for that lane. The
+independent clean-baseline route is selected; these remaining design choices
+are not decided by deleting the old code.
 
 ## Git history
 

@@ -31,10 +31,31 @@ handback and cumulative source-versioned learning with the original backend.
 
 ### 2.1 Rebuild status
 
-There is no implementation in this baseline. T01-T56 are acceptance
-specifications, not passing tests. Source, build, live execution, integration,
-retirement and performance evidence must be recorded separately for each
-implemented lane and exact source/configuration.
+The first implementation is the private
+[source-flow fragment planner](../../../disassem/fragment.py). Its caller supplies
+a finite, stable, already classified intraprocedural graph. The pass cuts before
+typed boundaries, retains safe alternatives/joins, terminates on cycles and
+reports known missing targets separately from unresolved alternatives. It does
+not decode, recognize APIs, emit or execute instructions, handle CALL/RET,
+materialize S_W or perform runtime handback. Ordinary CALL/RET body nodes are
+outside its input contract; this pass cannot detect misclassified inputs.
+Source/dependency identity and lifetime remain future integration obligations.
+
+After implementation, ten focused cases passed with Python 3.10.12: each of the
+four boundary kinds with a safe shared join and unchanged input, a cycle with
+repeated edges, two predecessors of a missing target, a known successor plus an
+unresolved alternative, a missing entry, a boundary at entry and a supplied
+scope end. These were in-memory helper checks with no decoder, generated code,
+JIT/kernel execution or selected kernel configuration/API lane. They establish
+only the exercised graph behavior, not exact handback or callee-return handling.
+These checks preceded the user's clarification to finish overall functionality
+before further behavioral testing. Further behavioral tests and suites are
+deferred; source/static review continues.
+
+T01-T56 remain unrun acceptance specifications. Source, build, live execution,
+integration, retirement and performance evidence must be recorded separately
+for each implemented lane and exact source/configuration. No kernel or adapter
+contract is selected by the helper's provisional compiler records.
 
 ### 2.2 Original backend
 
@@ -134,11 +155,11 @@ The old decision topics remain covered: D01 through D09 and D12 map to C01/C05/C
 
 R23-R29 retain fixed core cardinality/direct references, generic continuation and exact attribution/lifetime duties. R27 now preserves reader semantics while making placement C10, correcting the earlier roadmap-derived mandate. R15 similarly distinguishes preferred local ownership from an absolute shared-index ban. C11 chooses synchronization and C12 now chooses integration/compatibility; neither reopens the fixed one-core/original-JIT model.
 
-The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 adds the matched original-backend mapping comparison without a speed/AS01 validation claim. These are future specifications and were not run by this documentation task.
+The acceptance register is T01 through T56. T01-T51 retain their audit identities and chosen-target scope. T52 adds special-path/bypass/shared-join behavior, T53 safe callee returns/caller fallthrough, T54 local temporary-GPR PUSHFQ/POPFQ effects under AS01, and T55 target downgrade versus the candidate-only exception. T56 adds the matched original-backend mapping comparison without a speed/AS01 validation claim. These remain unrun acceptance specifications; private graph-helper checks do not execute translated source or satisfy them.
 
 ### 3.2 Authority audit and correction register
 
-N IDs identify this normative-origin audit, distinct from the historical v0.6 A01-A41 register. "Corrected" means the text's authority/classification changed; no mechanism was implemented or validated. Current source facts and numeric receipts above remain E.
+N IDs identify this normative-origin audit, distinct from the historical v0.6 A01-A41 register. "Corrected" means the audit changed the text's authority/classification, not that a mechanism was implemented or validated. Historical source observations remain E, not architecture or support claims; old numeric receipt records are outside the active main tree.
 
 | ID | Reviewed coupling / origin | Current classification and correction | Decision / affected sections |
 | --- | --- | --- | --- |

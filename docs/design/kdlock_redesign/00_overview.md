@@ -77,7 +77,7 @@ The files are one design. A proposal in one file is not an implementation claim 
 - Reader concurrency, mode, result and context semantics hold under the execution placement explicitly selected by C10. No unselected remote-reader or other unsupported route is enabled by this document.
 - Intentional lock boundaries and permanent capability frontiers are distinct from ordinary learning misses. Compiler budgets have precise resource classes and bounded forward behavior.
 - Observability separates application completion, local execution, fragment completion, native handback and whole-root JIT return, with actual exit cursor/reason and ownership phase when attribution matters.
-- This baseline specifies the active design and incremental implementation plan. It contains no implementation, does not establish kernel integration and asserts no performance result.
+- This design specifies the active model and incremental implementation plan. Current implementation progress is recorded in the [repository README](../../../README.md); design statements do not establish kernel integration or performance results.
 
 ## Vocabulary
 

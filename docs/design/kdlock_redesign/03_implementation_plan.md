@@ -1,7 +1,8 @@
 # kdlock implementation plan and decisions
 
-**Status:** a proposed plan for a separate complete redesign  
-**Current action:** documentation only; no implementation, build, benchmark, install or reboot was performed for this set
+**Status:** active plan for the independent rebuild
+
+**Current implementation:** a private P2 source-flow planner only; no kernel/adapter contract, build, JIT execution, benchmark, install or reboot
 
 Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origins). This plan implements the target semantic model; historical mechanisms are optional reuse evidence. Operational repository rules still govern any later authorized work.
 
@@ -79,9 +80,9 @@ The ordinary mutex's shared wait-lock protocol is a useful existing example, not
 
 ### P0 Establish an independent baseline and contracts
 
-On an implementation request, choose an independent target branch/worktree and the C12 integration contract; keep ongoing mmap1 work separate. Inventory current code only as evidence/reuse candidates, not an architectural prerequisite. Either leave old paths untouched while building the new implementation or propose a separate incremental migration with explicit coexistence boundaries.
+The independent main worktree is selected; keep ongoing mmap1 work separate. Choose the C12 integration contract before implementing kernel or adapter contracts. Private compiler work that does not decide that contract may proceed. Inventory current code only as evidence/reuse candidates, not an architectural prerequisite. Either leave old paths untouched while building the new implementation or propose a separate incremental migration with explicit coexistence boundaries.
 
-Produce a target semantic-information inventory: scope, writer/authority, observers, publication, last use, capacity/failure and validation. Bind evidence to kernel/config/toolchain/source and the chosen target ABI. Preserve native/API semantics and historical receipts; this does not require preserving the current implementation, object size or policy.
+Produce a target semantic-information inventory: scope, writer/authority, observers, publication, last use, capacity/failure and validation. Bind evidence to kernel/config/toolchain/source and the chosen target ABI. Preserve native/API semantics and truthful evidence classification. The archive named in the repository README preserves code/design recoverability. Old receipt documents and test datasets need not be restored into main; neither the current implementation, object size nor policy is required. Leave existing ignored data and other worktrees untouched.
 
 Use the generic constraint/decision table in [the evidence file](04_evidence_and_reconciliation.md#26-generic-constraints-and-decisions) to separate symptoms from unresolved causes. Code keys and dispatch describe family/API/mode, original S_W, operation phase, source cursor/epoch and ABI. Application names remain evidence labels, not implementation structure.
 
@@ -95,7 +96,7 @@ Map exactly one stable S_W and canonical packet to each original W. All nested n
 
 Make the physical split explicit: regs resides once in the thread-owned core; per-lock/outer-control users reference it directly and contain only necessary queue, authority, identity, role and completion information. Remove per-user unused full W packets and packet-sized owned/borrowed unions from the proposed layout, while preserving required native call-stack saves and every per-lock duty. Inspect actual member/union/pool layouts, not only `regs_ref` equality. Two storage levels permit A -> B -> C within the same proved bounds; this is a design goal, not an implemented or measured saving.
 
-Map information into the target core/users and proposed bounded live calls. Consider reuse only after it satisfies the target. A new lock/handback alone does not justify a new frame/object; justify escaped last users, invalidated storage, stack bounds or measured needs before adding machinery. Keep equivalent exact ownership/lifetime checks and preserve old failures/receipts, not necessarily their current counter/record implementation.
+Map information into the target core/users and proposed bounded live calls. Consider reuse only after it satisfies the target. A new lock/handback alone does not justify a new frame/object; justify escaped last users, invalidated storage, stack bounds or measured needs before adding machinery. Keep equivalent exact ownership/lifetime checks for implemented mechanisms and describe accepted, rejected and unrun evidence accurately. This requires neither restoring old receipt documents/test datasets nor retaining their counter/record implementation.
 
 Evaluate [proposed node-owned control](01_lock_protocol.md#proposed-node-owned-control-open) against its chosen reservation end. Keep a local fast path without unnecessary node/capture. Call-local control or a retained request are alternatives. If the selected backend has OSQ/delegation memberships, preserve all duties or prove an equivalent merged protocol; neither OSQ nor two queues/pools is mandatory. Pinning/waiting/admission/cache policies are open, with progress/lifetime evidence.
 
@@ -104,6 +105,16 @@ A selected owner-sensitive or reused path must remain correct under its actual b
 **Gate:** target local/proxy semantics, A1/B/A2 identity, one-core layout and last-user validity. Behavior-neutral old-path steps are a possible migration strategy, not a condition of clean reimplementation.
 
 ### P2 Make every lock and unlock a JIT boundary
+
+**Implemented subset:** [disassem/fragment.py](../../../disassem/fragment.py)
+walks a finite, caller-classified intraprocedural source graph. It stops before
+typed source lock/unlock/mode/special sites, retains safe alternatives and
+independently reached joins, and distinguishes missing targets from unresolved
+dynamic alternatives. It has no decoder, API recognition, emitter, CALL/RET
+handling, machine-state mapping or runtime handback. Ordinary CALL/RET body
+nodes are outside its input contract, not recognized or rejected by this pass.
+The private records select no C01-C12 contract. Focused helper checks do not
+complete P2 or T07/T08/T52/T53; all T01-T56 remain unrun.
 
 Implement semantic API recognition and typed pre-operation exits in the original backend. Stop fragment emission across every admitted lock/unlock, including inner or ancestor release. Keep reached-only execution and direct-CALL lookahead as separate concepts.
 
@@ -161,7 +172,14 @@ Do not copy TCLock's historical killable shortcut, disabled downgrade, forced ca
 
 ### P8 Qualify the complete lock
 
-Run repository-required static/unit checks, generated-code structural tests, memory-order/lifetime tests and real API workloads on the authorized test environment. Kernel/module execution follows the eventual checkout's AGENTS instructions; do not run builds or benchmarks on a host reserved for source work.
+The user selected overall functionality before behavioral testing. During this
+implementation stage, continue source/static review and defer further behavioral
+tests and suites until that functionality is complete. The ten private planner
+checks recorded in the evidence file preceded this clarification; they do not
+change the order or count as acceptance. Missing mechanism choices must be
+resolved rather than filled in merely to reach testing.
+
+Once overall functionality is complete, run repository-required static/unit checks, generated-code structural tests, memory-order/lifetime tests and real API workloads on the authorized test environment. Kernel/module execution follows the eventual checkout's AGENTS instructions; do not run builds or benchmarks on a host reserved for source work.
 
 Only then compare cold learning, warmed/frozen execution and changed-target adaptation. Separate application completion, native/local body work, origin-as-combiner, per-fragment completion, exact handbacks and whole-root JIT returns. Retain actual exit reason/cursor and owner/operation phase before attributing a limit. Validate Linux Native and TCLock comparisons at matched semantics/configurations and actual executed paths. Real-world API tests use actual userspace system calls, native bodies and minimal lock routing/lifetime glue under the existing workload contract; fixtures remain mechanism evidence.
 
@@ -191,7 +209,7 @@ Current source support facts remain E. A valid local route does not establish de
 
 ## 5 Acceptance tests and receipts
 
-Each receipt records source commit and dirty state, kernel/config/toolchain, enabled feature flags, original S_W identity, actual executor/exclusive binding and any protocol incarnation/sequence used, source entry/fragment and generation, actual exit reason/cursor and operation phase, relevant grant/read-credit custody, expected observations, failure mode, artifacts and limitations. Classify application completion, local execution, per-fragment completion, native handback and whole-root JIT return independently. Missing attribution stays unproven. A helper/unit fixture is not live kernel evidence. The tests below are specifications for future implementation, not tests run by this documentation edit.
+Each receipt records source commit and dirty state, kernel/config/toolchain, enabled feature flags, original S_W identity, actual executor/exclusive binding and any protocol incarnation/sequence used, source entry/fragment and generation, actual exit reason/cursor and operation phase, relevant grant/read-credit custody, expected observations, failure mode, artifacts and limitations. Classify application completion, local execution, per-fragment completion, native handback and whole-root JIT return independently. Missing attribution stays unproven. A helper/unit fixture is not live kernel evidence. The tests below remain unrun acceptance specifications; private graph-helper checks do not execute translated source or satisfy them.
 
 ### Selection and acquisition
 
