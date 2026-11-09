@@ -2457,6 +2457,14 @@ restoration and performance acceptance remain outside this correction.
 
 ## Fresh v21 publication and one warmed process point
 
+For current status, see the [execution guide](../JIT_EXECUTION.md), the later
+[normal `d421e7d5` run](../../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/README.md)
+and its [munmap g7 static review](../../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/munmap-g7-static/README.md).
+That distinct source-bound campaign passed one instrumented fixed point;
+mmap retained returns were restored, munmap still handed back, and quiet
+performance remained unaccepted. It does not change the stopped attempt or
+execute the exact historical source/plan recorded below.
+
 Historical status on 2026-11-07: candidate `f1b410fe` passed 17 focused runner
 fixtures, but the platform stopped the implementation turn after KD boot and
 before provider loading. No live publication check, learning application or measurement

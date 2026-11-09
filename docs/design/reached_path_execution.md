@@ -53,9 +53,14 @@ return IP, SP advanced by eight and useful effects once, but the overall run
 fails its incomplete checker. The cleanup race is subsequently resolved with
 zero references, normal module unload and idle state; recovery to original
 `kdlock1` is verified. Candidate `bccf877c` adds untested RET-wave/shutdown-order
-checks. Further validation is blocked, with no new mmap1 correctness or
-performance acceptance. The [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
-retains the exact evidence boundary and platform stop status.
+checks. That targeted probe remains stopped. The [partial live record](kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
+retains its failed checker, exact evidence boundary and platform stop status.
+The independently reviewed [normal `d421e7d5` campaign](../../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/README.md)
+later passed one stable instrumented process point: mmap retained returns were
+restored and munmap completed through native handback. Quiet performance
+remains unaccepted, and the exact munmap exit was not dynamically identified.
+The [current execution guide](../JIT_EXECUTION.md) owns that implementation and
+its strict any-unlock emission contract.
 The [contract](kdlock_lock_replacement_contract.md#selected-state-query-execution)
 and [lifetime guide](lifetimes.md#selected-retained-handback-retirement) define
 their scope without requiring a second JIT or new asynchronous cleanup queue.

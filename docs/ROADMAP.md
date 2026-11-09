@@ -57,9 +57,14 @@ identical production trees; earlier failed receipts remain intact. A later
 [live probe](design/kdlock_lock_replacement_contract.md#partial-live-probe-and-current-stop)
 passes cold CALL and indirect-JMP phases at `58af0a53`, with exact post-RET
 observations but a failed overall checker result. Candidate `bccf877c` adds
-untested harness fixes; further validation is blocked. No new mmap1 correctness
-or performance acceptance follows. Linux 6.1 adaptation, operation-specific MM
-algorithms and prepared teardown are retired.
+untested harness fixes; that targeted probe remains stopped. Its failed checker
+and stopped-capture history remain unchanged. The independently reviewed
+[normal `d421e7d5` campaign](../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/README.md)
+subsequently passed one stable instrumented eight-process point, restoring
+mmap retained returns while munmap completed through native handback. The exact
+munmap exit remains unidentified; quiet performance and repeated acceptance
+remain open. Linux 6.1 adaptation, operation-specific MM algorithms and prepared
+teardown are retired.
 
 ## Stage 1: establish the mechanism and performance envelope
 
@@ -105,7 +110,7 @@ optimization. Mmap's killable path bypasses the ordinary uninterruptible polling
 | Workload | Operation and topology | Status |
 | --- | --- | --- |
 | `mmap1_threads` | Shared-mm threads; repeatedly map/unmap an untouched 128 MiB anonymous private read/write range | November 1 original-application comparison and later retained-candidate proofs exist; selected original-JIT validation and repeated acceptance remain open |
-| `mmap1_processes` | Same operation in independent processes/mms | Separate November 1 process control and later retained-candidate proofs exist; new source requires its own confirmation |
+| `mmap1_processes` | Same operation in independent processes/mms | Separate November 1 control and later candidate proofs; `d421e7d5` has one stable instrumented g7 point, with munmap native handback and quiet performance unaccepted |
 | Actual minor faults | Precisely declared access/reset method on actual Native/KD mmap backends, with backing implementation fixed | Generic throughput driver still needed |
 | Existing shared-mm device test | Shared-mm threads; untouched 4 KiB read-only shared device mmap/munmap | 42 Linux 7 points complete; KD below Native at all counts |
 | Existing private backing faults | Independent mms; reset PTE and read a checked preallocated page | Supporting experiment; actual mmap lock stays Native |

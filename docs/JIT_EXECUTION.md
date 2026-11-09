@@ -14,8 +14,17 @@ handback but fails its overall checker at a post-RET continuation. Candidate
 [learning run](../bench/results/10.176.26.71/tests/mmap1-continuation-2d8eb6e3-20261109/README.md)
 ends at its settlement deadline and recovers normally, without accepted
 throughput. The [release-unit correction](../bench/results/10.176.26.71/tests/release-units-40edde00-20261109/README.md)
-passes focused component checks and a provider build; it has not been loaded
-or measured.
+passes focused component checks and a provider build. The later `d421e7d5`
+source-discovery correction preserves strict any-unlock emission boundaries.
+Its [normal campaign](../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/README.md),
+recorded at `53889930`, completed one stable, instrumented eight-process g7
+point: mmap returned all 336,042 JIT entries; munmap completed 336,037 native
+handbacks with zero retained returns. Required publication, exact retirement
+and normal-kernel recovery passed. The point remains unscored and quiet
+performance remains unaccepted. The [static inventory](../bench/results/10.176.26.71/bench/mmap1-normal-d421e7d5-v1/munmap-g7-static/README.md)
+at `32bda7fa` records possible release/frontier sites; the exact taken munmap
+exit PC was not retained. Batched discovery does not permit source emission
+past a recognized release or establish separate nested-image activation.
 
 ## Preparation and entry
 

@@ -5,6 +5,15 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+
+The [normal mmap1 campaign](bench/mmap1-normal-d421e7d5-v1/README.md) binds
+candidate `d421e7d5` to evidence `53889930`: one stable instrumented
+eight-process g7 point passed, with 336,042 mmap retained returns and 336,037
+munmap completed native handbacks. Exact retirement and normal-kernel recovery
+passed. Quiet performance remains unaccepted. The [static munmap inventory](bench/mmap1-normal-d421e7d5-v1/munmap-g7-static/README.md)
+at `32bda7fa` records possible exits without claiming a dynamically identified
+handback PC. Earlier failed and unrun attempts remain separate records.
+
 The [`05876a4` taskname/xattr comparison](bench/taskname-xattr-direct-api-20261019/README.md)
 contains 567 validated, drained sessions after keeping original helper calls
 inside generated spin bodies. It compares Native/TCLock/KD on all 21 worker
