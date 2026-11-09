@@ -2,7 +2,7 @@
 
 **Status:** integrated design for review, not an implementation claim  
 **Target:** Linux 7.0, x86_64, non-PREEMPT_RT
-**Revision:** 1.6, path-specific frontiers and local flags-stack contract
+**Revision:** 1.7, selected ordinary-mutex outer-unlock deferral
 **Scope:** a complete kdlock redesign for general lock replacement, independent of the ongoing mmap1 workstream
 
 ## Purpose and conclusion
@@ -23,7 +23,7 @@ The starting proposal is the target one-core/two-level model with bounded struct
 
 **Open proposal:** embed necessary per-lock control in a request-lifetime node where that simplifies the proof. An acquisition-only MCS scheduling slot is insufficient if it is reused before return, release/ACK or handback users finish. Ordinary uncontended local acquisition need not create a node or capture full execution state; outer combining control can stay bounded call-local. Node retention, capacity and cache placement remain choices to audit in [the proposal](01_lock_protocol.md#proposed-node-owned-control-open).
 
-The goal covers native-legal source patterns across the declared Linux target. Structures, keys and dispatch use lock/API, original-state, operation, source and ABI identities. Application names do not select a different protocol. Observations from mmap/munmap expose generic constraints; they do not select application-specific adaptations. Ordinary local/native execution remains a valid lock route where delegation is unavailable. Reader concurrency/mode/API semantics are required; execution placement is an open target policy. Origin-local readers are the conservative initial proposal, not a permanent restriction or authorization of remote readers.
+The goal covers native-legal source patterns across the declared Linux target, subject to the explicitly selected ordinary-mutex outer-unlock deferral below. That policy establishes no generic native timing or progress parity. Structures, keys and dispatch use lock/API, original-state, operation, source and ABI identities. Application names do not select a different protocol. Observations from mmap/munmap expose generic constraints; they do not select application-specific adaptations. Ordinary local/native execution remains a valid lock route where delegation is unavailable. Reader concurrency/mode/API semantics are required; execution placement is an open target policy. Origin-local readers are the conservative initial proposal, not a permanent restriction or authorization of remote readers.
 
 ## Authority and statement origins
 
@@ -31,14 +31,22 @@ This set guides a refactor or rewrite. The latest explicit user directions and s
 
 | Class | Origin and force | Examples |
 | --- | --- | --- |
-| F | Explicit fixed user direction | Original UB-derived JIT/GS lowering, lock-integrated helpers, optional unique selection, source-operation boundaries, exact no-replay handback, cumulative learning, general replacement, one core/two reference levels and Linux 7.0 x86_64 non-PREEMPT_RT |
+| F | Explicit fixed user direction | Original UB-derived JIT/GS lowering, lock-integrated helpers, optional unique selection, source-operation boundaries, exact no-replay handback, cumulative learning, general replacement, one core/two reference levels, selected ordinary-mutex outer-unlock deferral and Linux 7.0 x86_64 non-PREEMPT_RT |
 | S | Semantic correctness or native-API obligation | Required exclusion/concurrency, API results, unique grant/release authority, actual context effects, ordering, exact continuation and last-user lifetime |
 | P | Target mechanism/policy requiring a deliberate choice | Adapter ABI, integration compatibility, backend/queues, reader placement, pinning/waiting, capacities, node control, update/reclamation and rollout |
 | E | Historical/current source or execution evidence | Pinned packet offsets/two-word adapter, node arrays, 32-row ledger, existing owner routing, support limits and recorded receipts |
 
 Proposed defaults are P, including the explicitly approved **current five-edge direct-CALL discovery default**. That default remains selected unless deliberately changed; it is not immutable architecture. Normative statements in the protocol express F/S unless identified as a proposal, example or condition of a selected backend. The C register records P choices; the evidence file preserves E and the [audit/correction register](04_evidence_and_reconciliation.md#32-authority-audit-and-correction-register) records reclassifications. Historical revision records describe their original scope, not new target mandates.
 
-Public/native lock APIs and observable behavior remain S. C12 is selected as source-rebuilt integration with fresh private layouts; old binary lock/object-layout compatibility is not promised. C01 starts with ordinary mutex lock/unlock in sleepable task context, with other families later. These approvals do not choose the target core placement, adapter mapping, grant authority or arbitration and establish no support evidence.
+API result, context, lifetime, exclusion and ordering duties remain required. The selected ordinary-mutex policy below changes outer release-timing/progress expectations only; it does not waive last-use proof or lock-container validity. The concrete lock-object lifetime policy remains pending. C12 selects source-rebuilt integration with fresh private layouts; old binary lock/object-layout compatibility is not promised. C01 starts with ordinary mutex lock/unlock in sleepable task context, with other families later. C03 selects retention of the responsible physical outer-combiner context for deferred outer unlocks. C11 queue/arbitration, target core placement and adapter mapping remain open. No selection establishes support evidence.
+
+### Selected ordinary-mutex outer unlock
+
+For an out-of-order outer mutex unlock, end the source fragment before the operation, record its exact source-unlock request and deferred marker, and notify/unwind to the retained responsible outer combiner. That combiner handles the marker, continues its normal batch protocol and physically releases through that protocol. This user selection supersedes the earlier transferable-grant recommendation and immediate outer-release requirements only for this mutex route. It changes neither the original UB JIT/GS lowering nor the one S_W and every-source-operation boundaries.
+
+Source request/return, deferred acceptance, unwind readiness, owner handling, actual physical release and last-use/reclamation are distinct events. A marker or owner-handled result is not physical release. Extra waiting is accepted, without a generic native release-timing or progress-parity claim. Spin/rwlock/rwsem and downgrade contracts receive no deferral exception.
+
+The lock-object lifetime choice is pending: stable objects through actual physical release versus holding post-unlock source continuation until physical release. Neither is selected. Early reacquisition and source handshakes depending on outer-lock availability remain unresolved scope issues, not a new source-admission whitelist. Retaining a combiner context does not itself retain its caller-owned lock container.
 
 ## Current iteration policy and assumption
 
@@ -73,7 +81,7 @@ The files are one design. A proposal in one file is not an implementation claim 
 - Original UB-style translation, software register virtualization and kdlock's original GS-relative lowering remain. No replacement JIT backend or native borrowed-stack engine is selected.
 - A miss hands the current unfinished continuation back to the originating task without replay. Learning serves later execution and cannot be needed to finish the current invocation.
 - JIT updates accumulate source-versioned observations and make complete validated code/metadata versions visible coherently. Active code/return bindings remain valid through their actual last users; immutable generations or a proved quiesced update/rebinding strategy are P choices.
-- Non-LIFO release, exact acquisition/release authority, operation results and actual Linux context/lifetime duties remain. AS01 supplies the flags/SIMD design scope only; it proves no general equivalence and introduces no IRQ/NMI support.
+- Non-LIFO source unlock retains exact acquisition identity and follows the selected family release protocol. The chosen ordinary-mutex route can defer outer physical release; other families retain their declared release duties. Operation phase/results and actual Linux context/lifetime duties remain exact. AS01 supplies the flags/SIMD design scope only; it proves no general equivalence and introduces no IRQ/NMI support.
 - Reader concurrency, mode, result and context semantics hold under the execution placement explicitly selected by C10. No unselected remote-reader or other unsupported route is enabled by this document.
 - Intentional lock boundaries and permanent capability frontiers are distinct from ordinary learning misses. Compiler budgets have precise resource classes and bounded forward behavior.
 - Observability separates application completion, local execution, fragment completion, native handback and whole-root JIT return, with actual exit cursor/reason and ownership phase when attribution matters.
@@ -89,10 +97,11 @@ The files are one design. A proposal in one file is not an implementation claim 
 | Published request | An eligible, retained description offered to the lock's selection protocol. Publication is not remote selection and is not acquisition. |
 | S_W | The one stable canonical execution state of original W: packet, current cursor/phase, execution owner/sequence and grant/relationship/source/image references. |
 | Continuation | The current forward execution described by S_W. It is not a second mutable state object or a per-lock packet copy. |
-| Protected scope | The logical lifetime of one successful acquisition, including any legal mode change. It can outlive several fragments and nested operations. |
+| Protected scope | The source-level lifetime of one successful acquisition, including any legal mode change. Track it separately from an outer mutex batch whose physical exclusion remains held after a deferred source-unlock request. |
 | JIT fragment | Generated source execution from an admitted entry/resume cursor to the next encountered lock/unlock, supported miss/terminal, or completed-scope return. |
 | Execution record | Logical lock-role control, return routing and retained references pointing to S_W; normally embedded or bounded call-local information, not a required separate allocation. |
-| Grant | Exact successful acquisition identity, mode, backend authority, release route and context effects. |
+| Grant | Exact successful acquisition identity, mode, backend authority, release route and context effects; physical release duties can remain after a deferred source unlock. |
+| Deferred outer unlock | A selected ordinary-mutex source-unlock request retained for the responsible outer combiner; neither its marker nor owner handling is actual physical release. |
 | Lock helpers | Functional code inside kdlock acquisition/unlock/combiner paths, called runtime in older discussions. |
 | Native suffix | Transfer of the unfinished continuation to W; terminal handling is the conservative proposed default, with separately validated resumable services/reentry an open choice. |
 
@@ -106,14 +115,14 @@ For `lock(A); prefix; lock(B); middle; unlock(A); suffix; unlock(B)`:
 2. A selected combiner runs a fragment containing only `prefix`, with its active state pointing to W's S_W. Encountering `lock(B)` exports resident logical registers and the pending operation into that same state and ends the fragment.
 3. Lock code handles B. It may acquire B on the current task, become B's combiner, or publish an optional child node pointing to the same S_W and suspend the outer continuation. A new executor must win lock selection and become the exclusive source executor under that ordering.
 4. The chosen executor runs `middle` in an admitted fragment. Encountering `unlock(A)` ends that fragment even though B remains held.
-5. The lock code routes the exact A1 release to its physical authority, waits for the promised actual release, and updates context/grant state. It does not keep A excluded merely to preserve a combining batch.
-6. With B still live, a validated next fragment can execute `suffix`. Encountering `unlock(B)` ends that fragment.
-7. B's lock code performs the exact release. Ownership of the same S_W returns through the saved execution relationship or to W. Only outer combiner control is restored; no pre-B packet or old whole-region JIT cursor is restored.
+5. For the selected ordinary-mutex route, lock code records A1's exact source-unlock request and deferred marker. A remains physically excluded while the responsible outer-combiner context is retained and notified/unwound to; the marker is not RELEASED.
+6. Any post-unlock source route needs its exact operation phase and a validated current-state bridge. Whether source continuation waits for physical release or instead requires stable lock-object lifetime is still open. Encountering `unlock(B)` always ends its fragment.
+7. On return to the responsible outer context, it handles A1's marker and continues its normal batch/release protocol. Actual physical release and last-user retirement are recorded separately. Ownership of the same S_W follows the saved execution relationship or returns to W; only outer combiner control is restored, never a pre-B packet or old whole-region cursor.
 
-The source program, not frame depth or the first symbol containing "unlock," determines which grant ends. Ending a fragment does not itself release a grant or retire an execution record.
+The exact source operation determines which acquisition receives an unlock request. For the selected mutex route, the exact acquisition binding and live execution relationship identify the responsible retained outer combiner; ancestry alone is not acquisition identity and the source request is not physical release. Ending a fragment neither releases exclusion nor retires an execution record.
 
 ## Review boundary
 
-Fixed F directions and S obligations are not mechanism questions. The plan records the selected C12 integration and C01 initial lane. C02-C11 and remaining C01 policies cover storage, adapter ABI, grant authority/arbitration, generation binding, learning/update and further API/context/reader lanes; those choices remain open where identified. They cannot replace the original JIT, duplicate W state, weaken semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
+Fixed F directions and S obligations are not mechanism questions. The plan records selected C12 integration, the C01 initial lane and C03 owner-retained mutex deferral. Remaining C02-C11 and C01 policies cover storage, adapter ABI, queue/arbitration, generation binding, learning/update and further API/context/reader lanes; they remain open where identified. No choice can replace the original JIT, duplicate W state, extend the selected mutex deferral exception to other semantics or substitute an application-specific design. Choosing an extension requires its own scope and proof; leaving it open neither prohibits it permanently nor authorizes it now. See the plan's prioritized confirmation list.
 
 This Linux 7.0-only baseline keeps the five individual Markdown documents for incremental audit. The complete unsanitized design snapshot remains recoverable through the archive reference named in the repository README.

@@ -9,7 +9,7 @@ Apply the [F/S/P/E authority rule](00_overview.md#authority-and-statement-origin
 
 ## 1 Fragment boundaries replace whole-scope JIT spans
 
-A protected scope lasts from a successful acquisition through its exact final release, including any supported continuous mode transitions. A **JIT fragment** lasts only until the next dynamically reached lock or unlock operation, a supported frontier/terminal, or an admitted completion boundary.
+A protected scope tracks the source-level acquisition and selected unlock/mode-operation phase. For the selected ordinary-mutex outer-unlock route, a deferred source request can leave physical batch exclusion and release duties live after that request; track them separately from the source scope. Other families retain their declared release semantics. A **JIT fragment** lasts only until the next dynamically reached lock or unlock operation, a supported frontier/terminal, or an admitted completion boundary.
 
 For this redesign, all of the following terminate the current fragment before the operation itself:
 
@@ -22,7 +22,7 @@ For this redesign, all of the following terminate the current fragment before th
 
 Mode changes remain explicit target lock operations under C10 and native API semantics. A candidate-specific typed proxy downgrade exempted from its release-unit cuts is E only; it does not select the target mode contract or weaken any source lock/unlock boundary. Unsupported API integration and a reached special-instruction frontier are distinct cases.
 
-Lock code receives a typed operation descriptor, performs or finishes that operation exactly once, records the current result and grant/context effects, then chooses the next source route. Ending generated execution does not imply returning to W immediately. The same physical combiner may continue through lock code into another fragment.
+Lock code receives a typed operation descriptor, handles that source operation exactly once and records its exact phase/result and grant/context effects before choosing a supported route. For selected outer mutex unlocks, handling can record a deferred request and notify/unwind to the retained responsible combiner; it does not mean physical release. Ending generated execution does not imply returning to W immediately. The same physical combiner may continue through lock code into another fragment.
 
 A lock boundary is intentional. It is not a missing callee to learn away. No future generation may compile across it merely because the target became known. Permanent capability frontiers likewise remain explicit dispositions until their generic lowering/context contract changes; ordinary target learning cannot remove them.
 
@@ -80,7 +80,8 @@ entry_A
 
 entry_B
   fragment B0 after acquired B -> pending unlock(A)
-  fragment B1 after completed unlock(A), with B live -> pending unlock(B)
+  fragment B1 only under the chosen post-unlock(A) phase/lifetime contract
+              with B live -> pending unlock(B)
 ```
 
 This is a conceptual example, not a prescribed global naming scheme. Fragment identity must include enough source/ABI information to distinguish the actual cursor, operation phase, required input state and live-grant/context contract. Generic structures/dispatch combine lock family/API/mode, original S_W identity, operation phase, source cursor/dependency epoch and ABI compatibility. Reusable code-cache keys may omit W's identity only with proven input compatibility; each execution binding still names its exact S_W. A lock object's address or mmap/munmap root name is not a sufficient key or a protocol selector.
@@ -96,14 +97,14 @@ At lock(B):
 3. Lock code arbitrates B together with S_W sequence ownership and performs B acquisition or returns its actual failure. N_B references the original W's S_W even when C_A is the physical caller. Do not acquire B again in an image transition.
 4. Select B's compatible entry/image/fragment for the completed-success state, if eligible. Enter through the C04 target adapter using S_W's one packet and the chosen valid-input contract.
 5. On later operations and B completion, export into the same packet and transfer its ownership before selecting the explicit next route. C_A sees B's current result in S_W; it restores only its outer combining control, never a pre-B packet.
-6. If A ended non-LIFO, its retained execution record is routing/lifetime state, not continuing A protection. Any next fragment must be admitted under the remaining grants.
+6. If A has a selected deferred outer-mutex unlock, retain its responsible combiner and physical-release duty until normal outer handling/release. A retained record alone proves no usable source grant, but the physical batch can still exclude A. Any next fragment must use the exact source-operation phase, remaining logical grants and pending physical duties; it cannot assume that the marker released A.
 7. When no supported protected/delegated continuation remains, return the exact post-operation suffix to W. Do not run arbitrary unprotected source on a combiner by default.
 
 Crossing images creates no source CALL or RET of its own. Any source call-stack transition belongs to the original operation and is accounted exactly once.
 
 ### 2.2 General post-operation reentry
 
-After **any successful source acquisition, release or supported mode operation**, lock code must be able to admit a fragment from S_W's exact resulting cursor, phase, current registers, live grants and context. This is a body-independent design requirement, not a munmap release-unit adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
+After **any successfully handled source acquisition, unlock or supported mode operation**, lock code must provide a generic current-state route using S_W's exact cursor, operation phase, registers, logical grants, pending physical duties and context. For selected outer mutex unlocks, deferred acceptance, owner handling and physical release are distinct; no marker alone proves source-API return or authorizes cursor advancement. Post-unlock source continuation depends on the still-pending lock-object lifetime choice. Once its phase/continuation contract is established, fragment admission must remain body-independent, without an operation-specific application adapter. Failed operations instead select their actual result branch. An admitted next fragment never repeats the operation or infers protection from a retained outer frame.
 
 Admission still validates that source execution is legal for the chosen physical task. After the last protected scope ends, an origin-local fragment can be eligible; arbitrary unprotected code does not thereby become eligible on a remote combiner. When coverage, capability, resource or context prevents admission, a correct terminal native suffix is the fallback. That fallback completes the application without demonstrating full JIT completion. No already-entered terminal suffix implicitly regains old JIT-resume rights.
 
@@ -183,6 +184,7 @@ The operation descriptor must distinguish:
 - source return word not yet staged;
 - source return word already staged;
 - native API call completed and returned;
+- selected outer-mutex unlock requested/deferred, unwind-ready, owner-handled or physically released, separately from source CALL/return effects;
 - next source cursor already selected.
 
 For an indirect CALL, retain the resolved mutable target rather than rereading it. If generated preparation already pushed the source return word, the lock helper must not push it again. If it invokes a native lock API using its physical stack, the bridge must separately account for the source API's return/result state.
@@ -218,7 +220,7 @@ This specifies local effects, not an exact instruction sequence or verified impl
 
 | Exit kind | Meaning | Allowed next action |
 | --- | --- | --- |
-| LOCK_OPERATION | Reached acquisition/release/mode operation with exact phase | Lock implementation handles it once, then admits a next fragment or exact suffix |
+| LOCK_OPERATION | Reached acquisition/unlock/mode operation with exact phase | Handle once; selected outer-mutex unlock may notify/unwind with retained owner context. Admit source only through its exact phase/lifetime bridge |
 | SPECIAL_INSTRUCTION_FRONTIER | Known unsupported special instruction reached before execution; current evidence may name SOURCE_FRONTIER | Lock code hands exact first-unexecuted IP/current S_W to native W; no whole-root rejection or learning-through |
 | COVERAGE_MISS | Ordinary source/control target absent from coverage | Exact current-invocation suffix handback; record source-valid observation for later build |
 | ORIGIN_REQUIRED | Supported terminal requiring W's physical context | Exact native suffix, or a separately proved resumable service |
@@ -239,10 +241,10 @@ At a supported handback, preserve:
 - resolved target and already-performed operand/stack effects;
 - exact operation phase and completed result;
 - required current logical register/stack state;
-- live grant identities and actionable physical release routes;
+- live grant identities, deferred outer-unlock phases, retained responsible owner contexts and actionable physical release routes;
 - supported context guards and unique execution sequence.
 
-A pending call executes once. A completed acquisition/release resumes after it. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
+A pending call executes once. A source acquisition/unlock resumes after its CALL only when that source operation's return/phase contract is completed. Deferred acceptance or OWNER_HANDLED is not PHYSICALLY_RELEASED and cannot alone decide source cursor advancement; the lock-object lifetime choice is still pending. A pending RET consumes its source stack word only if that has not already happened. Do not restore the invocation's entry snapshot.
 
 Before delegated effects, unsupported admission can choose W's ordinary local path. After effects, only a pre-established forward continuation is legal. An absent bridge cannot be repaired by saying the invocation should have run locally from the start.
 
@@ -252,11 +254,11 @@ This concerns a genuine unavailable forward-state/integration contract, not the 
 
 On terminal native handback, W receives exclusive current-state authority. All suspended ancestors record that their old JIT-resume rights ended. Their lock code may still service exact grant release duties.
 
-W receives ownership of the same S_W after the current executor has materialized resident state. A later grant ACK is imported only by the current owner after exact identity/sequence/phase validation; it cannot remotely overwrite a newer operation. S_W and retained grant/read-credit custody remain live even if the old executor's frame has retired. New invocation/reset and task exit obey the drain/incarnation contract; unsupported signal/IRQ/reentrant entry cannot substitute another packet.
+W receives ownership of the same S_W after the current executor has materialized resident state. A later grant ACK is imported only by the current owner after exact identity/sequence/phase validation; it cannot remotely overwrite a newer operation. S_W and retained grant/read-credit custody can outlive a nonresponsible executor frame. A responsible outer-mutex combiner context cannot retire while its deferred physical release duty or exact request/return/notifier users remain. New invocation/reset and task exit obey the drain/incarnation contract; unsupported signal/IRQ/reentrant entry cannot substitute another packet.
 
 This ownership return needs no packet copy, additional continuation or separately allocated handback object. The target core/users and proposed structured return ordering can carry it where their lifetimes suffice. Frame, custody and completion terms denote semantic last-user duties; extra storage/accounting needs the concrete escape conditions in [the minimal mechanism table](01_lock_protocol.md#minimal-starting-mechanism-versus-optional-extensions).
 
-Subsequent native unlock(B) releases B; it does not revive an old A fragment. An explicitly supported resumable W service can return to a specified fragment through a new reverse ownership transfer, but it is a different contract and is not implied by "fragment."
+Subsequent native unlock(B) follows its selected operation route: it may record a deferred outer-mutex request rather than immediately release physical exclusion. It never revives an old A fragment. Source handback does not discard a retained owner's batch/release obligations or settle the pending lock-container lifetime choice. An explicitly supported resumable W service can return to a specified fragment through a new reverse ownership transfer, but it is a different contract and is not implied by "fragment."
 
 Miss handling cannot depend on a new image appearing, daemon success or future observations. The current invocation must finish correctly even if learning is disabled.
 
@@ -326,8 +328,8 @@ Closing source admission cannot strand admitted descendants/suffixes or free tex
 | --- | --- |
 | A fragment reaches lock(B) | No B operation executed by that fragment; exact target/arguments/stack phase exported; one later acquisition |
 | Trylock(B) fails | Old fragment ended; no B grant; new cursor follows actual failure branch |
-| B fragment reaches unlock(A) | Fragment ends; A1 physically released through exact route before dependent progress; B remains live |
-| B later reaches unlock(B) | Ends again; matching B1 release; current state returns, not the pre-B snapshot |
+| B fragment reaches unlock(A) | Fragment ends before the source request. Selected outer-mutex route records a deferred marker, retains/notifies/unwinds to the responsible owner, and distinguishes owner handling from normal physical release; no pre-B-completion availability promise |
+| B later reaches unlock(B) | Ends again; matching B1 request follows its selected release phases. Current S_W returns through a validated bridge, never the pre-B snapshot |
 | Unknown indirect CALL | Resolved target and one source CALL transition preserved; non-idempotent prefix remains once |
 | Learned JMP tail with inner CALL and shared RET | Each source return/stack transition occurs once across dispatch and any handback |
 | Image publication during suspension | Old saved references stay valid; future eligible admissions see the complete replacement |
@@ -337,7 +339,7 @@ Closing source admission cannot strand admitted descendants/suffixes or free tex
 | PUSHFQ/POPFQ local simulation | One source word/SP change per instruction, mapped temporary preserved, physical-stack balance and AS01 clearly separate from proof |
 | W -> C_A -> C_B -> C_A/W | Same S_W/packet identity at every hop, refreshed resident state and one authorized sequence holder |
 | Same combiner serves W and V | Separate S_W/S_V; restore active pointer and role without copying or merging origin packets |
-| Any successful acquisition/release/mode operation | Generic current-state admission under actual remaining context, or explicitly attributed native fallback |
+| Any handled acquisition/unlock/mode operation | Generic exact-phase route under remaining context and the chosen lifetime contract; deferred acceptance is not physical-release or source-return evidence |
 | Direction flag or compiler capacity stop | Precise capability/resource class and first-unexecuted cursor; no body-specific model or ordinary-learning claim |
 
 ## 7 Completion and exit attribution
@@ -352,4 +354,4 @@ Receipts distinguish these observations even when one run contains several of th
 | Native handback and finished suffix | Exact continuation was transferred and completed on W | JIT execution across the frontier or post-operation reentry |
 | Whole-root JIT return | The declared root reached its admitted JIT completion path | Unobserved API/context lanes or performance qualification |
 
-When explaining an exit, record actual reason/cursor, pending-versus-completed operation phase, current execution owner/sequence and live grant/read-credit custody. Do not derive these from a `NORMAL` image, total entry count or the image's static frontier list. The recorded diagnostic in [the evidence file](04_evidence_and_reconciliation.md#25-recorded-live-diagnostic-from-the-separate-workstream) has completed applications and many native handbacks but no retained-root returns and no per-invocation exit attribution; it cannot prove a release boundary was reached. Ordinary learning cannot erase intentional boundaries or permanent capability dispositions.
+When explaining an exit, record actual reason/cursor, source request/return, deferred marker, unwind/owner-handling and physical-release phases separately, plus current execution owner/sequence and live grant/read-credit custody. Record retained responsible outer-combiner context and the actual last-user/reclamation phase when applicable. Do not derive these from a `NORMAL` image, total entry count or the image's static frontier list. The recorded diagnostic in [the evidence file](04_evidence_and_reconciliation.md#25-recorded-live-diagnostic-from-the-separate-workstream) has completed applications and many native handbacks but no retained-root returns and no per-invocation exit attribution; it cannot prove a release boundary was reached. Ordinary learning cannot erase intentional boundaries or permanent capability dispositions.
