@@ -160,10 +160,20 @@ whole-kernel replacement and broad oversubscription remain unvalidated.
 
 ## Selected retained handback retirement
 
-The selected design transfers an existing downgraded read credit to Native
-custody without decrementing it; O's normal read release consumes it. Retiring
-E's continuation is not that physical read release. Retain every other E-owned
-gate, source/task/stack reference and pending ACK until its actual final use.
+When downgrade occurs after native handback, the existing real reader credit
+transfers to Native custody without a decrement; O's normal read release
+consumes it. Retiring E's continuation is not that physical read release.
+When the JIT proxy itself consumes downgrade, its exact acquisition instead
+enters logical-read/physical-writer state. No reader credit exists: E retains
+the gate, selected phase and closed admission through the read suffix. Even
+after a later native handback, the original task's matching typed read unlock
+must route to that exact owner identity/generation and complete physical gate
+and phase release on E before ACK. A stale, duplicate or mismatched route
+cannot consume another acquisition, including a later use of the same address.
+The retained-writer read tail requires ordinary task context; general atomic
+or cross-task non-owner release is outside that mode. Local readers retain
+their original release rules. Retain every other E-owned gate, source/task/stack
+reference and pending ACK until its actual final use.
 Bound-object provider/module and non-owner MM references retain their separate
 ordinary lifetimes. Broader unbound-source coverage is not inferred from them.
 

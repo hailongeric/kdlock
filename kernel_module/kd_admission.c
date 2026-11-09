@@ -216,6 +216,7 @@ bool kd_admission_owner_transfer_locked(struct kd_admission *a,
 {
 	kd_admission_assert_object(a);
 	if (!a->gate_held || a->physical_owner != current ||
+	    a->read_state != KD_ADMISSION_READ_NONE ||
 	    !kd_mutex_admission_transfer_locked(a->gate, target))
 		return false;
 	a->physical_owner = target;
@@ -260,7 +261,8 @@ void kd_admission_select_executor_locked(struct kd_admission *a,
 
 void kd_admission_owner_release(struct kd_admission *a)
 {
-	BUG_ON(!a->gate_held || a->pickup_pending || a->physical_owner != current);
+	BUG_ON(!a->gate_held || a->pickup_pending || a->physical_owner != current ||
+	       a->read_state == KD_ADMISSION_READ_PROXY_LIVE);
 	/* The actual owner performs the physical release. The phase remains
 	 * closed until the controller observes this exact release completion. */
 	if (a->scheduling_gate_held)
@@ -278,7 +280,8 @@ bool kd_admission_finish_cleanup_locked(struct kd_admission *a,
 	struct kd_wait_queue phase;
 
 	kd_admission_assert_object(a);
-	BUG_ON(a->cleanup_prepared || a->pickup_pending);
+	BUG_ON(a->cleanup_prepared || a->pickup_pending ||
+	       a->read_state == KD_ADMISSION_READ_PROXY_LIVE);
 	if (a->phase_held) {
 		BUG_ON(!kd_admission_phase_matches(a));
 		a->sem->selected_kind = KD_RWSEM_PHASE_NONE;
@@ -464,7 +467,8 @@ void kd_admission_release(struct kd_admission *a)
 
 	BUG_ON(!a->committed || a->request->guard != a->retained_guard ||
 	       a->request->selection || a->request->cleanup ||
-	       a->request->memberships || a->request->acquisition);
+	       a->request->memberships || a->request->acquisition ||
+	       a->read_state == KD_ADMISSION_READ_PROXY_LIVE);
 	if (a->sem) {
 		flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
 		BUG_ON(!kd_admission_finish_cleanup_locked(a, &wake));
@@ -489,9 +493,60 @@ void kd_admission_downgrade(struct kd_admission *a)
 	kd_admission_release(a);
 }
 
+static void kd_admission_assert_proxy_locked(struct kd_admission *a)
+{
+	unsigned long physical;
+
+	kd_admission_assert_object(a);
+	BUG_ON(a->kind != KD_ADMISSION_RWSEM_WRITE || !a->committed ||
+	       !a->sem || a->object != a->sem || a->gate != &a->sem->gate ||
+	       !a->gate_held || a->pickup_pending || a->physical_owner != current ||
+	       !a->request->logical_origin || a->request->logical_origin == current ||
+	       a->request->guard != a->retained_guard ||
+	       a->request->selection || a->request->cleanup ||
+	       a->request->memberships || a->request->acquisition ||
+	       a->cleanup_prepared || a->phase_release_pending ||
+	       a->phase_kind != KD_RWSEM_PHASE_ADMISSION || !a->phase_generation ||
+	       a->phase_identity != a->request->identity ||
+	       !kd_admission_phase_matches(a) || a->phase_owner != current);
+	physical = atomic_long_read(&a->gate->owner);
+	BUG_ON((physical & KD_ADMISSION_PICKUP) ||
+	       (physical & ~KD_ADMISSION_FLAGS) != (unsigned long)current);
+}
+
+void kd_admission_downgrade_proxy(struct kd_admission *a)
+{
+	unsigned long flags;
+
+	BUG_ON(!a->sem || a->read_state != KD_ADMISSION_READ_NONE ||
+	       a->request->generation != a->request_generation);
+	flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
+	kd_admission_assert_proxy_locked(a);
+	/* Preserve the exact writer and closed -1 phase across the read suffix.
+	 * No ordinary reader can consume this retained acquisition's authority. */
+	smp_store_release(&a->read_state, KD_ADMISSION_READ_PROXY_LIVE);
+	_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
+}
+
 void kd_admission_finish_read(struct kd_admission *a)
 {
 	struct kd_rwsem *sem = a->sem;
+	unsigned long flags;
+
+	if (READ_ONCE(a->read_state) == KD_ADMISSION_READ_PROXY_LIVE) {
+		BUG_ON(!sem || a->request->generation != a->request_generation);
+		flags = _raw_spin_lock_irqsave(&a->gate->wait_lock);
+		kd_admission_assert_proxy_locked(a);
+		BUG_ON(cmpxchg(&a->read_state, KD_ADMISSION_READ_PROXY_LIVE,
+			       KD_ADMISSION_READ_PROXY_CONSUMING) !=
+		       KD_ADMISSION_READ_PROXY_LIVE);
+		_raw_spin_unlock_irqrestore(&a->gate->wait_lock, flags);
+		/* The physical owner performs both writer-release ACKs exactly once.
+		 * Only retained metadata is touched after admission reopens. */
+		kd_admission_release(a);
+		smp_store_release(&a->read_state, KD_ADMISSION_READ_RELEASED);
+		return;
+	}
 
 	BUG_ON(!sem || a->request->generation != a->request_generation ||
 	       cmpxchg(&a->read_state, KD_ADMISSION_READ_LIVE,

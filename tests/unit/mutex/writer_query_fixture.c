@@ -57,7 +57,7 @@ struct kd_admission {
 	bool committed, gate_held, pickup_pending, phase_held;
 	struct task_struct *physical_owner, *phase_owner;
 	void *phase_identity;
-	unsigned int phase_kind;
+	unsigned int phase_kind, read_state;
 	u64 phase_generation;
 };
 struct kd_service_owner {
@@ -198,11 +198,19 @@ int main(void)
 	cont->service_ops = &kd_service_scope_ops; cont->executor = &executor;
 	cont->state = KD_CONT_BOUND; active_frame = &frame; current = &executor;
 	assert(kd_service_write_owned(&outer_sem, &executor));
+	root.owner.admission.read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &executor));
+	root.owner.admission.read_state = KD_ADMISSION_READ_NONE;
 	assert(!kd_service_write_owned(&outer_sem, &origin));
 	current = &origin; cont->executor = NULL; cont->state = KD_CONT_SUSPENDED;
 	cont->origin_call = (struct kd_origin_call) { .origin = &origin, .identity = identity,
 		.generation = 7, .phase = KD_ORIGIN_CALL_RUNNING, .servicing = true };
 	assert(kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_NONE;
 	assert(!kd_service_write_owned(&outer_sem, &other));
 	assert(!kd_service_write_owned(&inner_sem, &origin));
 	outer_sem.selected_identity = &child;

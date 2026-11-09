@@ -1,7 +1,8 @@
 """Guest-only decoded and emitted checks for release-delimited ABI2 units.
 
-The compiler ends at every declared release without pairing objects. These
-checks establish source scope and unchanged CALL words, not runtime handoff.
+The compiler ends at every declared physical release without pairing objects.
+Typed proxy downgrades retain their source continuation; their actual mode and
+owner are runtime decisions. These checks do not establish runtime handoff.
 """
 
 import struct
@@ -273,8 +274,8 @@ class ReleaseUnitTests(unittest.TestCase):
                 self.assertNotIn(b'loc_1005:', assembly)
                 self.assertNotIn(b'FS:[', assembly)
 
-    def test_downgrade_and_read_release_end_unit_without_reacquisition(self):
-        for operation in (5, 6, 11, 13):
+    def test_physical_write_and_read_release_end_unit_without_reacquisition(self):
+        for operation in (5, 11, 13):
             with self.subTest(operation=operation):
                 assembly, log, status = render(
                     (call(0x1000, self.RELEASE) + bytes.fromhex('b878563412c3')).hex(),
@@ -288,6 +289,119 @@ class ReleaseUnitTests(unittest.TestCase):
                 self.assertIn(b'JMP             loc_5000', assembly)
                 self.assertNotIn(b'loc_1005:', assembly)
                 self.assertNotIn(b'0x12345678', assembly)
+
+    def test_proxy_downgrade_keeps_tail_until_read_release(self):
+        read_release = 0x6000
+        raw = call(0x1000, self.RELEASE) + bytes.fromhex('b878563412')
+        raw += call(0x100a, read_release) + bytes.fromhex('bb21436587c3')
+        for named in (False, True):
+            with self.subTest(named=named):
+                symbols = {'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                           'kd_mutex_direct_unlock_clobber_v1': 0x7100}
+                controls = {}
+                if named:
+                    symbols.update(kd_downgrade_write=self.RELEASE, kd_up_read=read_release)
+                else:
+                    controls = {
+                        self.RELEASE: dict(operation=6, flags=0, symbol='mmap_downgrade'),
+                        read_release: dict(operation=11, flags=0, symbol='mmap_read_unlock'),
+                    }
+                options = {}
+                assembly, log, status = render(raw.hex(), lock_kind='mutex', abi=2,
+                    trusted_source=True, kernel_symbols=symbols, bound_controls=controls,
+                    build_options=options, return_status=True)
+                self.assertEqual(status, 0, log)
+                self.assertTrue(options['requirements'] & (1 << 8))
+                self.assertIn(b'JMP             loc_5000', assembly)
+                self.assertIn(b'loc_1005:', assembly)
+                self.assertIn(b'0x12345678', assembly)
+                self.assertIn(b'JMP             loc_6000', assembly)
+                self.assertNotIn(b'loc_100f:', assembly)
+                self.assertNotIn(b'0x87654321', assembly)
+
+    def test_proxy_downgrade_does_not_remove_wrapper_effects(self):
+        read_release = 0x6000
+        root = call(0x1000, 0x2000) + bytes.fromhex('b878563412')
+        root += call(0x100a, read_release) + b'\xc3'
+        wrapper = bytes.fromhex('8907') + call(0x2002, self.RELEASE)
+        wrapper += bytes.fromhex('830701c3')
+        assembly, log, status = render(root.hex(),
+            regions=[(root, 0x1000, [0x1000]), (wrapper, 0x2000, [0x2000])],
+            lock_kind='mutex', abi=2, trusted_source=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+            bound_controls={
+                self.RELEASE: dict(operation=6, flags=0, symbol='mmap_downgrade'),
+                read_release: dict(operation=11, flags=0, symbol='mmap_read_unlock'),
+            }, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn(b'loc_2000:', assembly)
+        self.assertIn(b'loc_2007:', assembly)
+        self.assertIn(b'MOV             DWORD PTR [RDI], EAX', assembly)
+        self.assertIn(b'ADD             DWORD PTR [RDI], 0x1', assembly)
+        self.assertIn(b'0x12345678', assembly)
+        self.assertNotIn(b'loc_100f:', assembly)
+
+    def test_proxy_downgrade_preserves_unrelated_inner_release_cut(self):
+        inner_release, read_release = 0x6000, 0x7000
+        raw = call(0x1000, self.RELEASE) + call(0x1005, inner_release)
+        raw += bytes.fromhex('b878563412') + call(0x100f, read_release) + b'\xc3'
+        assembly, log, status = render(raw.hex(), lock_kind='mutex', abi=2,
+            trusted_source=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x8000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x8100},
+            bound_controls={
+                self.RELEASE: dict(operation=6, flags=0, symbol='mmap_downgrade'),
+                inner_release: dict(operation=5, flags=0, symbol='other_write_unlock'),
+                read_release: dict(operation=11, flags=0, symbol='mmap_read_unlock'),
+            }, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn(b'loc_1005:', assembly)
+        self.assertIn(b'JMP             loc_6000', assembly)
+        self.assertNotIn(b'loc_100a:', assembly)
+        self.assertNotIn(b'0x12345678', assembly)
+
+    def test_proxy_downgrade_before_cold_tail_requires_retained_owner_runtime(self):
+        options = {}
+        read_release, cold = 0x6000, 0x9000
+        raw = call(0x1000, self.RELEASE) + call(0x1005, cold)
+        raw += call(0x100a, read_release) + b'\xc3'
+        assembly, log, status = render(
+            raw.hex(),
+            lock_kind='mutex', abi=2, trusted_source=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+            bound_controls={
+                self.RELEASE: dict(operation=6, flags=0, symbol='mmap_downgrade'),
+                read_release: dict(operation=11, flags=0, symbol='mmap_read_unlock'),
+            },
+            build_options=options, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertTrue(options['requirements'] & (1 << 8))
+        self.assertIn(b'loc_1005:', assembly)
+        self.assertIn(b'JMP             loc_9000', assembly)
+        self.assertNotIn(b'loc_100a:', assembly)
+
+    def test_proxy_downgrade_tail_keeps_callers_real_return_route(self):
+        read_release = 0x6000
+        root = call(0x1000, 0x2000) + bytes.fromhex('b878563412')
+        root += call(0x100a, read_release) + b'\xc3'
+        wrapper = jump(0x2000, self.RELEASE) + bytes.fromhex('bb21436587c3')
+        assembly, log, status = render(root.hex(),
+            regions=[(root, 0x1000, [0x1000]), (wrapper, 0x2000, [0x2000])],
+            lock_kind='mutex', abi=2, trusted_source=True,
+            kernel_symbols={'kd_mutex_direct_lock_clobber_v1': 0x7000,
+                            'kd_mutex_direct_unlock_clobber_v1': 0x7100},
+            bound_controls={
+                self.RELEASE: dict(operation=6, flags=0, symbol='mmap_downgrade'),
+                read_release: dict(operation=11, flags=0, symbol='mmap_read_unlock'),
+            }, return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn(b'loc_1005:', assembly)
+        self.assertIn(b'0x12345678', assembly)
+        self.assertIn(b'JMP             loc_5000', assembly)
+        self.assertNotIn(b'loc_2005:', assembly)
+        self.assertNotIn(b'0x87654321', assembly)
 
     def test_flat_terminal_clobber_keeps_existing_image_requirements(self):
         options = {}

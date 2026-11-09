@@ -77,19 +77,39 @@ resume at validated continuations. An ordinary untranslated callee finishes the
 remaining invocation on the origin; it does not resume JIT after arbitrary native
 work or reset the body.
 
-Retained ABI2 service images end a source unit at every recognized release,
-including a nested or unrelated release, a typed Native release and downgrade.
+Retained ABI2 service images end a source unit at every recognized physical
+release, including a nested or unrelated release and a typed Native release.
 The compiler does not pair releases with acquisitions. A release inside a callee
 also ends that path; its caller's original suffix is retained only when the
 callee has a release-free return path. Generated exit/dispatch code does not
-authorize original source after the release in that unit.
+authorize original source after the release in that unit. The narrow exception
+is a typed rwsem downgrade actually consumed by the JIT proxy: it changes that
+exact acquisition to logical read mode while retaining its physical writer
+gate and selected admission phase. The compiler keeps its real post-CALL
+continuation; it does not skip the surrounding mmap wrapper, tracing,
+`vma_end_write_all`, unmapping, accounting, callbacks or cleanup. The eventual
+read unlock remains a physical release boundary. Other unlock cuts, CFG/depth
+bounds, the original backend and the two-word ABI remain unchanged.
 
 Runtime performs the real release and completes its CALL exactly once. If all
 required owners are released, ordinary final completion applies. Otherwise the
 exact saved post-release IP/SP and complete packet use the existing native
-handback with remaining owners and source/image lifetimes intact. Downgrade
-keeps its real read credit through the native read tail and matching read
-unlock, without reacquisition. This route does not implement separate nested
+handback with remaining owners and source/image lifetimes intact. A JIT proxy
+downgrade creates no anonymous reader credit: the selected writer phase stays
+closed at `admission == -1` until its matching read unlock consumes that writer
+once. A missing later instruction can still hand back; E retains the exact
+writer and source/frame state, and O's typed read unlock waits for E's physical
+release and ACK. The mode uses one selected writer phase, not a positive writer
+cohort. It supports the same logical task's ordinary task-context read tail;
+atomic/IRQ-off and borrowed spin/preempt/RCU final-release contexts are refused.
+It does not add cross-task non-owner release support for this retained writer.
+
+If native handback occurs before downgrade, O's later downgrade API retains
+the existing genuine downgrade: publish a real reader credit, release the
+writer/phase, and transfer that credit to Native custody. Ordinary local
+downgrade and read release remain unchanged, including the local atomic reader
+decrement path. Acquisition results and origin-signal killable cancellation
+also retain their existing contracts. These routes do not implement separate nested
 JIT images or JIT-to-JIT continuation units; a full-root returned-JIT counter
 may remain zero even when the native tail completes correctly.
 

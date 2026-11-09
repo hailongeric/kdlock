@@ -370,11 +370,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     native_terminal_controls = (
         {get_kernel_symbol("kd_rwlock_fast_write_unlock")} - {0}
         if root_escape_capable and abi == 3 else set())
-    # A translated ABI2 unit ends at every declared release, regardless of
-    # which owner it releases. Runtime performs that operation and decides
-    # whether to finish or continue natively with the exact remaining owners.
+    # A translated ABI2 unit ends at every physical release, regardless of
+    # which owner it releases. The typed proxied downgrade is the narrow
+    # exception: runtime changes logical mode while retaining that exact
+    # writer gate, then resumes the real post-CALL continuation. Its matching
+    # read unlock remains a release boundary. No source wrapper is skipped.
     # Legacy spin/rwlock images retain their existing boundary/refusal policy.
     unit_releases = set()
+    proxy_downgrade_targets = set()
     terminal_clobber_targets = {direct_mutex_unlock or clobber_mutex_unlock,
                                rwsem_clobber_unlock} - {0, None}
     if abi == 2 and lock_kind == "mutex":
@@ -382,11 +385,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                           mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock,
                           rwsem_clobber_unlock} - {0, None}) | set(terminal_unlock_aliases)
         unit_releases.update(address for address, name in service_symbols.items()
-                             if name in service_release_names + service_continue_names)
+                             if name in service_release_names)
         unit_releases.update(address for address, control in bound_controls.items()
-                             if control['operation'] in (5, 6, 11, 13))
+                             if control['operation'] in (5, 11, 13))
         unit_releases.update(address for address, descriptor in returning_services.items()
                              if descriptor['context_kind'] in (6, 8, 13))
+        proxy_downgrade_targets = {
+            address for address, name in service_symbols.items()
+            if name in service_continue_names
+        } | {address for address, control in bound_controls.items()
+             if control['operation'] == 6}
     # Original bounded images learn ordinary CALL/IJ targets from actual
     # executions. Returning services do not require eager callee closure.
     direct_call_closure = False
@@ -397,6 +405,15 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
     return_flow_work = (entry_abi.RETAINED_RETURN_FLOW_WORK if direct_call_closure
                         else entry_abi.RETURN_FLOW_WORK)
     jump_table = {}
+
+    def has_proxy_downgrade(blocks, databases):
+        return bool(proxy_downgrade_targets) and any(
+            line.name in {'CALL', 'JMP'} and line.args and
+            (context_policy.static_address(line.args[0], databases[block],
+                                           line.offset + line.l) in proxy_downgrade_targets
+             or set(jump_table.get(line.offset + line.l, ())) & proxy_downgrade_targets)
+            for block in blocks.values() for line in block.lines)
+
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
         rets = memread.read(entry, jump_table, excluded_callees=excluded_targets,
@@ -499,7 +516,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                     indirect_history=jump_table, indirect_call_native=indirect_call_native,
                     returning_indirect=bool(returning_services),
                     nonreturning_targets=nonreturning_targets)
-                old_services = service_queue_required or any(
+                old_services = service_queue_required or has_proxy_downgrade(
+                    old_blocks, old_dbs) or any(
                     source_frontier.descriptor(line) or
                     indirect_tail_capable and returning_services and line.name == 'JMP'
                     and line.args and isinstance(line.args[0], (ExprId, ExprMem))
@@ -543,6 +561,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0,
                      or set(jump_table.get(line.offset + line.l, ())) & unit_releases)
                 and line.offset not in old_fast_sites
                 for block in block_dict.values() for line in block.lines)
+            # A logical-read/physical-write owner needs the retained runtime
+            # even when an earlier cold edge omits its final read unlock.
+            if has_proxy_downgrade(block_dict, db_dict):
+                service_queue_required = True
         except context_policy.ContextFlowLimit as error:
             diagnostics.set_instruction(error.offset, "<JIT phase scope>")
             return reject_translation(str(error))

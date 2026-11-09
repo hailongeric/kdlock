@@ -5,6 +5,8 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+/* The Native join fixture covers retained UP_READ; these are local credits. */
+#define KD_RWSEM_LOCAL_BACKEND 1
 
 struct kd_rwsem {
     long readers, admission;

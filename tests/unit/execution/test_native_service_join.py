@@ -7,6 +7,7 @@ retirement run their production code. This is not live kernel/JIT execution.
 import os
 import resource
 import shlex
+import signal
 import subprocess
 import tempfile
 from pathlib import Path
@@ -35,6 +36,8 @@ def main():
     declarations += 'static unsigned long kd_image_report_superseded;\n'
     for source, names in (
         (header, ('enum kd_exec_native_operation {', 'struct kd_exec_native_route {')),
+        (read_source(ROOT / 'include/kd_admission.h'), ('enum kd_admission_read_state {',)),
+        (read_source(ROOT / 'include/kd_rwsem_types.h'), ('enum kd_rwsem_phase_kind {',)),
         (continuation_header, ('enum kd_exec_cont_state {', 'enum kd_exec_cont_wait {')),
         (wait_header, ('enum kd_wait_state {',)),
     ):
@@ -91,10 +94,16 @@ def main():
             '-I', str(path), '-I', str(ROOT / 'include'),
             str(ROOT / 'tests/unit/execution/native_service_join_fixture.c'),
             '-o', str(binary)], check=True, timeout=30)
-        for mode in ('write', 'downgrade', 'read', 'release'):
+        for mode in ('write', 'downgrade', 'read', 'release', 'proxy-read'):
             result = subprocess.run([str(binary), mode], capture_output=True, text=True, timeout=15)
             assert result.returncode == 0, (mode, result.returncode, result.stdout, result.stderr)
             print(result.stdout, end='')
+        for mode in ('proxy-read-atomic', 'proxy-read-preempt', 'proxy-read-rcu'):
+            refused = subprocess.run([str(binary), mode], capture_output=True,
+                                     text=True, timeout=15)
+            assert refused.returncode == -signal.SIGABRT and 'Assertion' in refused.stderr, (
+                mode, refused.returncode, refused.stdout, refused.stderr)
+            print('production Native service join refused atomic proxy read release before dispatch:', mode)
 
 
 if __name__ == '__main__':

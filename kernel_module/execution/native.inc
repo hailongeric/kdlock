@@ -191,12 +191,17 @@ bool kd_exec_native_service_unlock(unsigned long object,
 	struct kd_exec_frame *frame;
 	unsigned long flags;
 	bool found = false;
+	bool caller_atomic = preempt_count() || irqs_disabled();
 
+#ifdef CONFIG_PREEMPT_RCU
+	caller_atomic |= READ_ONCE(current->rcu_read_lock_nesting) != 0;
+#endif
 	if (list_empty(&kd_native_frames))
 		return false;
 	BUG_ON(operation != KD_NATIVE_OPERATION_MUTEX_UNLOCK &&
 	       operation != KD_NATIVE_OPERATION_RWSEM_UP_WRITE &&
-	       operation != KD_NATIVE_OPERATION_RWSEM_DOWNGRADE);
+	       operation != KD_NATIVE_OPERATION_RWSEM_DOWNGRADE &&
+	       operation != KD_NATIVE_OPERATION_RWSEM_UP_READ);
 	raw_spin_lock_irqsave(&kd_native_lock, flags);
 	list_for_each_entry(frame, &kd_native_frames, native_link) {
 		struct kd_exec_continuation *cont = kd_exec_frame_continuation(frame);
@@ -206,6 +211,11 @@ bool kd_exec_native_service_unlock(unsigned long object,
 		    !cont->service_ops->native_match(cont->service_scope, object,
 			operation, &request.route))
 			continue;
+		/* Unlike an anonymous reader decrement, this operation waits for E's
+		 * physical writer release and wakeups. A proxied read tail is admitted
+		 * only in ordinary task context; never fall through to a reader credit
+		 * when that exact route is found in an unsupported atomic context. */
+		BUG_ON(operation == KD_NATIVE_OPERATION_RWSEM_UP_READ && caller_atomic);
 		BUG_ON(frame->native_request);
 		smp_store_release(&frame->native_request, &request);
 		found = true;

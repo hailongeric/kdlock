@@ -175,6 +175,13 @@ static void kd_rwsem_wake(struct kd_rwsem *sem,
 
 void kd_up_read(struct kd_rwsem *sem)
 {
+#ifndef KD_RWSEM_LOCAL_BACKEND
+	/* A proxied logical reader has no anonymous credit. Its exact retained
+	 * writer is released on the executor before this API returns to O. */
+	if (kd_exec_native_service_unlock((unsigned long)sem,
+		KD_NATIVE_OPERATION_RWSEM_UP_READ))
+		return;
+#endif
 	/* Trylock rollback and a matching read unlock may run under rq_lock.
 	 * Never acquire a waitqueue/scheduler lock from that atomic context.
 	 * Every reader-drain waiter rechecks on a timer. The final credit may
