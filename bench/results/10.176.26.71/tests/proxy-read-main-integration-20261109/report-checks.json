@@ -1,0 +1,31 @@
+{
+  "all_retained_indexed_files_verified": 154,
+  "compact_json_parse": true,
+  "diff_whitespace": true,
+  "frozen_map_differences": [
+    "AGENTS.md",
+    "README.md",
+    "disassem/instruction_policy.py",
+    "disassem/special_inst.py",
+    "docs/JIT_EXECUTION.md",
+    "docs/JIT_REGISTER_ABI.md",
+    "docs/PERFORMANCE.md",
+    "docs/ROADMAP.md",
+    "tests/unit/admission/test_instruction_policy.py",
+    "tests/unit/codegen/test_jit_diagnostics.py"
+  ],
+  "local_markdown_link_files_verified": 129,
+  "measurement_and_complete_archive_audit": true,
+  "offline_only": true,
+  "preexisting_missing_links": [
+    [
+      "bench/results/10.176.26.71/README.md",
+      "../../../docs/PROJECT_GUIDE.md"
+    ]
+  ],
+  "prior_campaigns_unchanged": [
+    "rwsem-proxy-read-3ceb7f00-v1",
+    "rwsem-proxy-read-7e3c90b4-v2"
+  ],
+  "runtime_matches_tested_candidate": false
+}

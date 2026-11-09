@@ -12,6 +12,7 @@
 #include <sched.h>
 #include <stdatomic.h>
 
+#define CONFIG_PREEMPT_RCU 1
 typedef uint64_t u64;
 struct kd_spin_ref { void *unused; };
 #include "join_types.h"
@@ -31,12 +32,19 @@ static void list_del_init(struct list_head *item)
 	for (struct list_head *entry = (head)->prev; entry != (head) && \
 	     ((item) = container_of(entry, __typeof__(*(item)), field), true); entry = entry->prev)
 struct guard { pthread_mutex_t mutex; };
-struct task_struct { atomic_uint refs; unsigned int id; void *stack; };
+struct task_struct {
+	atomic_uint refs;
+	unsigned int id;
+	void *stack;
+	int rcu_read_lock_nesting;
+};
 static struct task_struct origin __attribute__((aligned(8))) = { .refs = 2, .id = 101 };
 static struct task_struct executor __attribute__((aligned(8))) = { .refs = 2, .id = 202 };
 static struct task_struct other __attribute__((aligned(8))) = { .refs = 1, .id = 303 };
 static _Thread_local struct task_struct *current;
 static _Thread_local unsigned int guards;
+static _Thread_local bool native_irqs_off;
+static _Thread_local unsigned int native_preempt_count;
 struct kd_wait_request {
 	void *identity;
 	u64 generation;
@@ -127,9 +135,7 @@ enum { KD_SERVICE_NONE = 0, KD_CALL_NONE = 0,
 	KD_CALL_COMPLETE = 1, KD_CALL_PENDING = 2, KD_ORIGIN_CALL_IDLE = 0,
 	KD_ORIGIN_CALL_CONSUMED = 1, KD_ORIGIN_MEMORY_IDLE = 0,
 	KD_ORIGIN_MEMORY_CONSUMED = 1, KD_EXEC_FRAME_UNUSED = 0, KD_ROLE_DONE = 1,
-	KD_ADMISSION_MUTEX = 1, KD_ADMISSION_RWSEM_WRITE = 2,
-	KD_ADMISSION_READ_NONE = 0, KD_ADMISSION_READ_LIVE = 1,
-	KD_ADMISSION_READ_NATIVE = 2 };
+	KD_ADMISSION_MUTEX = 1, KD_ADMISSION_RWSEM_WRITE = 2 };
 #define KD_MUTEX_OWNER_FLAGS 7UL
 #define BUG_ON(value) assert(!(value))
 #define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
@@ -147,7 +153,7 @@ static struct list_head kd_native_frames;
 static struct guard kd_native_lock = { .mutex = PTHREAD_MUTEX_INITIALIZER };
 static atomic_long kd_native_started, kd_native_completed, kd_native_handed_off, kd_native_unlocks;
 static atomic_uint ready, released, source_puts, stack_puts;
-static unsigned int mode;
+static unsigned int mode, logical_downgrades;
 static struct kd_service_root root;
 static struct kd_rwsem sem;
 static struct kd_mutex nested;
@@ -198,8 +204,8 @@ static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct 
 	++frontier_calls;
 }
 static bool need_resched(void) { return true; }
-static unsigned int preempt_count(void) { return 0; }
-static bool irqs_disabled(void) { return false; }
+static unsigned int preempt_count(void) { return native_preempt_count; }
+static bool irqs_disabled(void) { return native_irqs_off; }
 static void cpu_relax(void) { sched_yield(); }
 static void cond_resched(void) { assert(!guards); sched_yield(); }
 static struct kd_exec_continuation *kd_exec_frame_continuation(struct kd_exec_frame *frame)
@@ -226,9 +232,31 @@ static void kd_admission_release(struct kd_admission *a)
 	if (a->sem) { a->sem->admission = 0; a->phase_held = false; }
 	++released;
 }
+static void kd_admission_downgrade_proxy(struct kd_admission *a)
+{
+	assert(current == &executor && a->sem && a->gate_held && a->phase_held);
+	assert(a->read_state == KD_ADMISSION_READ_NONE && !a->sem->readers);
+	assert(a->sem->admission == -1 && a->request_generation == a->request->generation);
+	assert(a->phase_kind == KD_RWSEM_PHASE_ADMISSION);
+	a->read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	++logical_downgrades;
+}
 static void kd_admission_downgrade(struct kd_admission *a)
-{ assert(a->sem && a->read_state == KD_ADMISSION_READ_NONE); ++a->sem->readers;
-	a->read_state = KD_ADMISSION_READ_LIVE; kd_admission_release(a); }
+{
+	assert(a->sem && a->read_state == KD_ADMISSION_READ_NONE);
+	++a->sem->readers;
+	a->read_state = KD_ADMISSION_READ_LIVE;
+	kd_admission_release(a);
+}
+static void kd_admission_finish_read(struct kd_admission *a)
+{
+	assert(current == &executor && a->sem && a->gate_held && a->phase_held);
+	assert(a->read_state == KD_ADMISSION_READ_PROXY_LIVE && !a->sem->readers);
+	assert(a->request_generation == a->request->generation);
+	a->read_state = KD_ADMISSION_READ_PROXY_CONSUMING;
+	kd_admission_release(a);
+	a->read_state = KD_ADMISSION_READ_RELEASED;
+}
 #include "join_production.h"
 #include "native_service_join_frontier.inc"
 
@@ -246,14 +274,51 @@ static void initialize_owner(struct kd_service_owner *owner, struct kd_mutex *ga
 	owner->admission = (struct kd_admission) { .request = &owner->request,
 		.request_generation = generation, .object = rwsem ? (void *)rwsem : (void *)gate,
 		.gate = gate, .sem = rwsem, .physical_owner = &executor, .phase_owner = &executor,
-		.phase_identity = owner, .phase_generation = generation, .phase_kind = 2,
+		.phase_identity = owner, .phase_generation = generation, .phase_kind = KD_RWSEM_PHASE_ADMISSION,
 		.kind = rwsem ? KD_ADMISSION_RWSEM_WRITE : KD_ADMISSION_MUTEX,
 		.committed = true, .gate_held = true, .phase_held = rwsem != NULL };
 	gate->owner = (unsigned long)&executor;
-	if (rwsem) { rwsem->admission = -1; rwsem->selected_kind = 2;
+	if (rwsem) { rwsem->admission = -1; rwsem->selected_kind = KD_RWSEM_PHASE_ADMISSION;
 		rwsem->selected_owner = &executor; rwsem->selected_identity = owner;
 		rwsem->phase_generation = generation; }
 	list_add(&owner->link, &root.scope.owners);
+}
+static void check_reused_child_read_route(void)
+{
+	struct kd_service_owner reused = { 0 };
+	struct kd_rwsem object = { 0 };
+	struct kd_exec_native_route stale, exact;
+	unsigned int before = released, old_downgrades = logical_downgrades;
+	initialize_owner(&reused, &object.gate, &object, 31);
+	kd_admission_downgrade_proxy(&reused.admission);
+	assert(kd_service_native_match(&root.scope, (unsigned long)&object,
+		KD_NATIVE_OPERATION_RWSEM_UP_READ, &stale));
+	++reused.root_generation;
+	assert(kd_service_native_release(&root.scope, &stale) == -EINVAL && released == before);
+	--reused.root_generation;
+	struct kd_exec_native_route wrong_identity = stale;
+	wrong_identity.identity = &object;
+	assert(kd_service_native_release(&root.scope, &wrong_identity) == -EINVAL && released == before);
+	++object.phase_generation;
+	assert(kd_service_native_release(&root.scope, &stale) == -EINVAL && released == before);
+	--object.phase_generation;
+	assert(!kd_service_native_release(&root.scope, &stale) && reused.released);
+	assert(kd_service_native_release(&root.scope, &stale) == -EINVAL && released == before + 1);
+	list_del_init(&reused.link);
+	/* Reuse the exact object and owner storage with a new acquisition identity
+	 * generation. An old route must not consume its newly retained writer. */
+	memset(&reused, 0, sizeof(reused));
+	initialize_owner(&reused, &object.gate, &object, 32);
+	kd_admission_downgrade_proxy(&reused.admission);
+	assert(kd_service_native_release(&root.scope, &stale) == -EINVAL && released == before + 1);
+	assert(reused.admission.gate_held && object.admission == -1 && !object.readers);
+	assert(kd_service_native_match(&root.scope, (unsigned long)&object,
+		KD_NATIVE_OPERATION_RWSEM_UP_READ, &exact));
+	assert(exact.owner == stale.owner && exact.object == stale.object && exact.generation != stale.generation);
+	assert(!kd_service_native_release(&root.scope, &exact) && released == before + 2);
+	list_del_init(&reused.link);
+	assert(!object.gate.owner && !object.admission && !object.readers);
+	released = before; logical_downgrades = old_downgrades;
 }
 static void *execute(void *unused)
 {
@@ -263,6 +328,7 @@ static void *execute(void *unused)
 	struct list_head anchor;
 	(void)unused; current = &executor;
 	initialize_owner(&root.owner, &sem.gate, &sem, 7);
+	check_reused_child_read_route();
 	if (mode == 2) {
 		root.owner.admission.gate_held = root.owner.admission.phase_held = false;
 		root.owner.admission.physical_owner = NULL;
@@ -278,6 +344,15 @@ static void *execute(void *unused)
 		assert(!kd_service_native_match(&root.scope, (unsigned long)&sem,
 			KD_NATIVE_OPERATION_RWSEM_UP_WRITE, &route));
 		--root.owner.admission.request_generation;
+		if (mode >= 4) {
+			kd_admission_downgrade_proxy(&root.owner.admission);
+			assert(!kd_service_native_match(&root.scope, (unsigned long)&sem,
+				KD_NATIVE_OPERATION_WRITE_OWNED, &route));
+			assert(!kd_service_native_match(&root.scope, (unsigned long)&sem,
+				KD_NATIVE_OPERATION_RWSEM_DOWNGRADE, &route));
+			assert(kd_service_native_match(&root.scope, (unsigned long)&sem,
+				KD_NATIVE_OPERATION_RWSEM_UP_READ, &route));
+		}
 	}
 	{
 		struct kd_regs before = cont->frame.regs;
@@ -391,7 +466,10 @@ int main(int argc, char **argv)
 {
 	struct kd_exec_continuation *cont = &root.continuation;
 	pthread_t worker;
-	assert(argc == 2); mode = !strcmp(argv[1], "release") ? 3 :
+	assert(argc == 2); mode = !strcmp(argv[1], "proxy-read-rcu") ? 7 :
+		!strcmp(argv[1], "proxy-read-preempt") ? 6 :
+		!strcmp(argv[1], "proxy-read-atomic") ? 5 :
+		!strcmp(argv[1], "proxy-read") ? 4 : !strcmp(argv[1], "release") ? 3 :
 		!strcmp(argv[1], "read") ? 2 : !strcmp(argv[1], "downgrade") ? 1 : 0;
 	check_capture_publication();
 	current = &origin;
@@ -418,13 +496,38 @@ int main(int argc, char **argv)
 	while (!atomic_load_explicit(&ready, memory_order_acquire)) sched_yield();
 	assert(!kd_exec_native_accept(&cont->frame));
 	if (mode != 2) {
-		assert(kd_exec_native_service_owned((unsigned long)&sem));
+		assert(kd_exec_native_service_owned((unsigned long)&sem) == (mode < 4));
 		current = &other;
 		assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+		assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_READ));
 		current = &origin;
 		assert(!kd_exec_native_service_unlock((unsigned long)&nested, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
-		assert(kd_exec_native_service_unlock((unsigned long)&sem,
-			mode == 1 ? KD_NATIVE_OPERATION_RWSEM_DOWNGRADE : KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+		if (mode == 1) {
+			assert(kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_DOWNGRADE));
+			/* O reached the downgrade after an earlier handback: its ordinary
+			 * physical downgrade still creates one real anonymous read credit. */
+			assert(!sem.admission && sem.readers == 1 && !sem.gate.owner);
+			assert(!kd_exec_native_service_owned((unsigned long)&sem));
+			assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_DOWNGRADE));
+			assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+		}
+		if (mode >= 4) {
+			/* The actual read API takes the typed owner route; no anonymous
+			 * reader credit exists to decrement on this native suffix. */
+			if (mode == 5) native_irqs_off = true;
+			if (mode == 6) native_preempt_count = 1;
+			if (mode == 7) {
+				assert(!preempt_count() && !irqs_disabled());
+				current->rcu_read_lock_nesting = 1;
+			}
+			kd_up_read(&sem);
+			native_irqs_off = false;
+			native_preempt_count = 0;
+			current->rcu_read_lock_nesting = 0;
+			assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_READ));
+		} else if (mode != 1) {
+			assert(kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+		}
 		assert(kd_exec_native_service_active(&origin) && !kd_exec_native_service_owned((unsigned long)&sem));
 		assert(!sem.gate.owner && (unsigned long)nested.owner == (unsigned long)&executor);
 		assert(kd_exec_native_service_unlock((unsigned long)&nested, KD_NATIVE_OPERATION_MUTEX_UNLOCK));
@@ -432,8 +535,11 @@ int main(int argc, char **argv)
 	assert(!pthread_join(worker, NULL));
 	assert(!kd_exec_native_service_active(&origin));
 	assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_WRITE));
+	assert(!kd_exec_native_service_unlock((unsigned long)&sem, KD_NATIVE_OPERATION_RWSEM_UP_READ));
 	assert(kd_native_started == 1 && kd_native_handed_off == 1 && kd_native_completed == 0);
-	assert(kd_native_unlocks == (mode == 2 ? 0 : 2) && released == (mode == 2 ? 0U : 2U));
+	assert(kd_native_unlocks == (mode == 2 ? 0 : 2));
+	assert(released == (mode == 2 ? 0U : 2U));
+	assert(logical_downgrades == (mode >= 4));
 	assert(source_puts == 1 && stack_puts == 1 && origin.refs == 1 && executor.refs == 1);
 	assert(preceding_effects == 1 && frontier_calls == 1);
 	assert(sem.readers == (mode == 1 || mode == 2 ? 1 : 0));

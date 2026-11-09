@@ -56,10 +56,11 @@ struct kd_exec_continuation {
 	struct kd_exec_service_call service_call;
 	struct kd_origin_call origin_call;
 };
-enum { KD_ADMISSION_READ_NONE, KD_ADMISSION_READ_LIVE, KD_ADMISSION_READ_NATIVE,
-	KD_SERVICE_NATIVE_READY = 10, KD_NATIVE_OWNER_RCU = 20 };
+enum { KD_SERVICE_NATIVE_READY = 10, KD_NATIVE_OWNER_RCU = 20 };
 struct kd_rwsem { unsigned int readers; } sem;
 struct kd_admission {
+	struct kd_wait_request *request;
+	u64 request_generation;
 	void *object;
 	struct kd_rwsem *sem;
 	bool committed, gate_held;
@@ -69,6 +70,7 @@ struct kd_service_owner {
 	struct list_head link;
 	struct kd_wait_request request;
 	struct kd_admission admission;
+	u64 root_generation;
 	bool released;
 };
 struct kd_service_scope {
@@ -99,6 +101,8 @@ static unsigned long words[16];
 static unsigned int releases, downgrades, read_finishes, read_transfers, retired_children;
 static unsigned int resumes, handoffs, native_waits, rpc_acks, entry_puts, module_refs;
 static unsigned int preceding_effects;
+static unsigned int expected_resumes;
+static unsigned int native_pins, native_rcu_depth;
 static unsigned long expected_ip, expected_sp;
 
 #define BUG_ON(value) assert(!(value))
@@ -136,18 +140,26 @@ static void kd_exec_frame_save_continuation(struct kd_exec_frame *frame, struct 
 }
 static void kd_admission_release(struct kd_admission *admission)
 { assert(admission->gate_held); admission->gate_held = false; ++releases; }
-static void kd_admission_downgrade(struct kd_admission *admission)
+static void kd_admission_downgrade_proxy(struct kd_admission *admission)
 {
-	assert(admission->sem && admission->read_state == KD_ADMISSION_READ_NONE);
-	++admission->sem->readers;
-	admission->read_state = KD_ADMISSION_READ_LIVE;
-	++downgrades; kd_admission_release(admission);
+	assert(admission->sem && admission->gate_held && admission->committed);
+	assert(admission->read_state == KD_ADMISSION_READ_NONE && !admission->sem->readers);
+	admission->read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	++downgrades;
 }
 static void kd_admission_finish_read(struct kd_admission *admission)
 {
+	if (admission->read_state == KD_ADMISSION_READ_PROXY_LIVE) {
+		assert(admission->sem && admission->gate_held && !admission->sem->readers);
+		admission->read_state = KD_ADMISSION_READ_PROXY_CONSUMING;
+		kd_admission_release(admission);
+		admission->read_state = KD_ADMISSION_READ_RELEASED;
+		++read_finishes;
+		return;
+	}
 	assert(admission->sem && admission->read_state == KD_ADMISSION_READ_LIVE);
 	assert(admission->sem->readers == 1);
-	--admission->sem->readers; admission->read_state = KD_ADMISSION_READ_NONE; ++read_finishes;
+	--admission->sem->readers; admission->read_state = KD_ADMISSION_READ_RELEASED; ++read_finishes;
 }
 static void kd_admission_read_to_native(struct kd_admission *admission)
 {
@@ -161,9 +173,9 @@ static void kd_service_trace_event(const char *event, struct kd_service_root *sc
 static void kd_service_retire_child(struct kd_service_owner *owner)
 { assert(owner == &child && owner->released); ++retired_children; }
 static unsigned int kd_service_native_pins(struct kd_service_root *scope)
-{ assert(scope == &root); return 0; }
+{ assert(scope == &root); return native_pins; }
 static unsigned int kd_service_native_depth(struct kd_service_root *scope, unsigned int kind)
-{ assert(scope == &root && kind == KD_NATIVE_OWNER_RCU); return 0; }
+{ assert(scope == &root && kind == KD_NATIVE_OWNER_RCU); return native_rcu_depth; }
 static int kd_service_acquire_into(struct kd_service_root *scope, struct kd_service_owner *owner)
 { (void)scope; (void)owner; assert(false); return 0; }
 static int kd_service_nested(struct kd_service_root *scope)
@@ -212,7 +224,7 @@ static int kd_exec_native_service_begin(struct kd_exec_frame *frame)
 	assert(packet.ip == expected_ip && packet.sp == expected_sp);
 	assert(frame->continuation_ip == packet.ip && frame->continuation_sp == packet.sp);
 	assert(packet.flags == 0xad7 && packet.ax == 0x55 && packet.di == 0x66);
-	assert(preceding_effects == 1 && !resumes);
+	assert(preceding_effects == 1 && resumes == expected_resumes);
 	++handoffs; return 0;
 }
 static int kd_exec_native_wait(struct kd_exec_frame *frame)
@@ -225,7 +237,9 @@ static void add_owner(struct kd_service_owner *owner, bool rwsem, unsigned int g
 	owner->request = (struct kd_wait_request) { .identity = owner, .generation = generation,
 		.logical_origin = &origin, .physical_waiter = current, .state = KD_WAIT_EXECUTING };
 	owner->admission = (struct kd_admission) { .object = owner, .sem = rwsem ? &sem : NULL,
+		.request = &owner->request, .request_generation = generation,
 		.committed = true, .gate_held = true };
+	owner->root_generation = 7;
 	list_add(&owner->link, &root.scope.owners);
 }
 static void reset(bool nested, bool rwsem)
@@ -235,6 +249,8 @@ static void reset(bool nested, bool rwsem)
 	releases = downgrades = read_finishes = read_transfers = retired_children = 0;
 	resumes = handoffs = native_waits = rpc_acks = entry_puts = module_refs = 0;
 	preceding_effects = 1;
+	expected_resumes = 0;
+	native_pins = native_rcu_depth = 0;
 	list_init(&root.scope.owners); list_init(&root.native_owners);
 	root.scope.outer = &root.owner; root.scope.continuation = &root.continuation;
 	add_owner(&root.owner, rwsem, 7);
@@ -273,16 +289,69 @@ static void check_kd_releases(void)
 	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_TO_UNLOCK);
 	assert(packet.ip == call_ip && packet.sp == call_sp && !packet.orig_ax);
 	assert(root.owner.released && releases == 1 && !handoffs && !resumes);
-	reset(false, true); prepare_release(&root.owner, KD_SERVICE_RWSEM_DOWNGRADE);
-	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_HANDOFF);
-	assert(!root.owner.released && !root.owner.admission.gate_held);
-	assert(sem.readers == 1 && root.owner.admission.read_state == KD_ADMISSION_READ_NATIVE);
-	assert(downgrades == 1 && releases == 1 && read_transfers == 1 && !read_finishes && !resumes);
 	reset(false, true); root.owner.admission.gate_held = false;
 	root.owner.admission.read_state = KD_ADMISSION_READ_LIVE; sem.readers = 1;
 	prepare_release(&root.owner, KD_SERVICE_RWSEM_UP_READ);
 	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_TO_UNLOCK);
 	assert(root.owner.released && !sem.readers && read_finishes == 1 && !releases && !handoffs);
+}
+static void next_release(struct kd_service_owner *owner, enum kd_exec_service_api api)
+{
+	assert(root.continuation.frame.control_call.phase == KD_CALL_COMPLETE);
+	assert(packet.ip == expected_ip && packet.sp == expected_sp);
+	assert(packet.flags == 0xad7 && packet.ax == 0x55 && packet.di == 0x66);
+	packet.sp = (unsigned long)&words[4]; words[4] += 0x100;
+	expected_ip = words[4]; expected_sp = packet.sp + sizeof(unsigned long);
+	prepare_release(owner, api);
+}
+static void check_proxy_read_suffix(void)
+{
+	/* A completed downgrade CALL resumes the same image without a real reader
+	 * credit. The later matching read release consumes that writer once. */
+	reset(false, true); prepare_release(&root.owner, KD_SERVICE_RWSEM_DOWNGRADE);
+	assert(kd_service_release_call(&root) == KD_EXE_RUN_TO_UNLOCK);
+	assert(!root.owner.released && root.owner.admission.gate_held && !sem.readers);
+	assert(root.owner.admission.read_state == KD_ADMISSION_READ_PROXY_LIVE);
+	assert(downgrades == 1 && !releases && !read_transfers && !read_finishes && resumes == 1);
+	assert(packet.ip == expected_ip && packet.sp == expected_sp && !packet.orig_ax);
+	next_release(&root.owner, KD_SERVICE_RWSEM_UP_READ);
+	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_TO_UNLOCK);
+	assert(root.owner.released && !root.owner.admission.gate_held && !sem.readers);
+	assert(releases == 1 && read_finishes == 1 && !handoffs && resumes == 1);
+
+	/* Releasing the logically read outer acquisition is non-LIFO when a child
+	 * still exists. Its exact CALL completes, then the other release contract
+	 * preserves the child's physical gate through the ordinary Native handoff. */
+	reset(true, true); prepare_release(&root.owner, KD_SERVICE_RWSEM_DOWNGRADE);
+	assert(kd_service_release_call(&root) == KD_EXE_RUN_TO_UNLOCK);
+	assert(child.admission.gate_held && !child.released && !releases);
+	next_release(&root.owner, KD_SERVICE_RWSEM_UP_READ); expected_resumes = 1;
+	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_HANDOFF);
+	assert(root.owner.released && child.admission.gate_held && !child.released);
+	assert(releases == 1 && read_finishes == 1 && !sem.readers && handoffs == 1);
+	assert(root.continuation.frame.outer_unlock_seen && !retired_children);
+
+	/* An unrelated inner release still ends its unit while the logically read
+	 * outer acquisition keeps the actual writer across Native handback. */
+	reset(true, true); prepare_release(&root.owner, KD_SERVICE_RWSEM_DOWNGRADE);
+	assert(kd_service_release_call(&root) == KD_EXE_RUN_TO_UNLOCK);
+	next_release(&child, KD_SERVICE_MUTEX_UNLOCK); expected_resumes = 1;
+	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_HANDOFF);
+	assert(child.released && root.owner.admission.gate_held && !root.owner.released);
+	assert(root.owner.admission.read_state == KD_ADMISSION_READ_PROXY_LIVE);
+	assert(!sem.readers && !read_transfers && !read_finishes && releases == 1 && handoffs == 1);
+
+	/* A nested rwsem has its own logical-read state; its final release must not
+	 * release the unrelated outer mutex or turn that release into image resume. */
+	reset(true, false); child.admission.sem = &sem;
+	prepare_release(&child, KD_SERVICE_RWSEM_DOWNGRADE);
+	assert(kd_service_release_call(&root) == KD_EXE_RUN_TO_UNLOCK);
+	assert(root.owner.admission.gate_held && child.admission.gate_held && !sem.readers);
+	next_release(&child, KD_SERVICE_RWSEM_UP_READ); expected_resumes = 1;
+	assert(kd_service_run_scope(&root, KD_EXE_RUN_SERVICE) == KD_EXE_RUN_HANDOFF);
+	assert(child.released && root.owner.admission.gate_held && !root.owner.released);
+	assert(releases == 1 && read_finishes == 1 && retired_children == 1 && handoffs == 1);
+	assert(!root.continuation.frame.outer_unlock_seen);
 }
 static void check_native_calls(void)
 {
@@ -330,6 +399,15 @@ static void check_completion_refusals(void)
 int main(int argc, char **argv)
 {
 	if (argc == 2) {
+		if (!strcmp(argv[1], "proxy-pin") || !strcmp(argv[1], "proxy-rcu")) {
+			reset(false, true); prepare_release(&root.owner, KD_SERVICE_RWSEM_DOWNGRADE);
+			assert(kd_service_release_call(&root) == KD_EXE_RUN_TO_UNLOCK);
+			next_release(&root.owner, KD_SERVICE_RWSEM_UP_READ);
+			native_pins = !strcmp(argv[1], "proxy-pin");
+			native_rcu_depth = !strcmp(argv[1], "proxy-rcu");
+			(void)kd_service_release_call(&root);
+			return 0;
+		}
 		reset(true, true); prepare_release(&child, KD_SERVICE_MUTEX_UNLOCK);
 		root.continuation.service_call.api = KD_SERVICE_NONE;
 		root.continuation.frame.control_call.phase = !strcmp(argv[1], "pending") ?
@@ -344,7 +422,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	assert(argc == 1);
-	check_kd_releases(); check_native_calls(); check_completion_refusals();
-	puts("PASS production release units: five KD boundaries, three Native releases, ordinary CALL and refusal ordering");
+	check_kd_releases(); check_proxy_read_suffix(); check_native_calls(); check_completion_refusals();
+	puts("PASS production release units: proxy read suffix, matching final release, nested/non-LIFO boundaries, Native releases and refusal ordering");
 	return 0;
 }

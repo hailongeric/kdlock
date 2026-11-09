@@ -17,6 +17,8 @@ def main():
     release = source[start:end]
     fixture = r'''
 #define _GNU_SOURCE
+/* This fixture owns ordinary local reader credits, with no retained route. */
+#define KD_RWSEM_LOCAL_BACKEND 1
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>

@@ -57,7 +57,7 @@ struct kd_admission {
 	bool committed, gate_held, pickup_pending, phase_held;
 	struct task_struct *physical_owner, *phase_owner;
 	void *phase_identity;
-	unsigned int phase_kind;
+	unsigned int phase_kind, read_state;
 	u64 phase_generation;
 };
 struct kd_service_owner {
@@ -94,6 +94,9 @@ static struct kd_exec_frame *active_frame;
 static int kd_service_dispatch_guard;
 static unsigned int pins, fallbacks, register_calls, registered, fail_registration;
 static bool kd_rwsem_provider_initialized;
+static bool kd_rwsem_provider_demand, kd_rwsem_provider_syscall_shape;
+static unsigned long kd_rwsem_provider_entries[64] = { 0x3000 };
+static unsigned int kd_rwsem_provider_entry_count = 1;
 enum { KD_WAIT_EXECUTING = 4, KD_CONT_BOUND = 1, KD_CONT_SUSPENDED = 2,
 	KD_ORIGIN_CALL_RUNNING = 3, KD_SERVICE_CALL_WORD = 1,
 	KD_SERVICE_CALL_ATOMIC_ORIGIN = 2, KD_SERVICE_CALL_BALANCED_ORIGIN = 1 };
@@ -127,6 +130,11 @@ static struct kd_rwsem_control_binding control_rows[] = {
 };
 const struct kd_rwsem_control_binding *kd_rwsem_provider_controls(unsigned int *count)
 { *count = ARRAY_SIZE(control_rows); return control_rows; }
+static const struct kd_rwsem_site site_rows[] = {
+	{ .entry = 0x3000, .operation = KD_RWSEM_OP_DOWN_WRITE_KILLABLE },
+};
+const struct kd_rwsem_site *kd_rwsem_provider_sites(unsigned int *count)
+{ *count = ARRAY_SIZE(site_rows); return site_rows; }
 static struct kd_service_call_desc records[3];
 static struct module *record_owners[3];
 static char record_labels[3][32];
@@ -198,11 +206,19 @@ int main(void)
 	cont->service_ops = &kd_service_scope_ops; cont->executor = &executor;
 	cont->state = KD_CONT_BOUND; active_frame = &frame; current = &executor;
 	assert(kd_service_write_owned(&outer_sem, &executor));
+	root.owner.admission.read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &executor));
+	root.owner.admission.read_state = KD_ADMISSION_READ_NONE;
 	assert(!kd_service_write_owned(&outer_sem, &origin));
 	current = &origin; cont->executor = NULL; cont->state = KD_CONT_SUSPENDED;
 	cont->origin_call = (struct kd_origin_call) { .origin = &origin, .identity = identity,
 		.generation = 7, .phase = KD_ORIGIN_CALL_RUNNING, .servicing = true };
 	assert(kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_PROXY_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_LIVE;
+	assert(!kd_service_write_owned(&outer_sem, &origin));
+	root.owner.admission.read_state = KD_ADMISSION_READ_NONE;
 	assert(!kd_service_write_owned(&outer_sem, &other));
 	assert(!kd_service_write_owned(&inner_sem, &origin));
 	outer_sem.selected_identity = &child;

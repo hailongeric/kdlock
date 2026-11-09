@@ -381,6 +381,7 @@ bool kd_service_write_owned(void *object, struct task_struct *task)
 		unsigned long physical;
 
 		if (a->object != object || owner->released || !a->committed || !a->gate_held ||
+		    a->read_state != KD_ADMISSION_READ_NONE ||
 		    a->pickup_pending || !a->physical_owner)
 			continue;
 		physical = atomic_long_read(&a->gate->owner);
@@ -663,7 +664,12 @@ static bool kd_service_native_match(const void *argument, unsigned long object,
 		} else if (operation == KD_NATIVE_OPERATION_RWSEM_UP_WRITE ||
 			   operation == KD_NATIVE_OPERATION_RWSEM_DOWNGRADE ||
 			   operation == KD_NATIVE_OPERATION_WRITE_OWNED) {
-			if (a->kind != KD_ADMISSION_RWSEM_WRITE)
+			if (a->kind != KD_ADMISSION_RWSEM_WRITE ||
+			    a->read_state != KD_ADMISSION_READ_NONE)
+				continue;
+		} else if (operation == KD_NATIVE_OPERATION_RWSEM_UP_READ) {
+			if (a->kind != KD_ADMISSION_RWSEM_WRITE ||
+			    a->read_state != KD_ADMISSION_READ_PROXY_LIVE)
 				continue;
 		} else {
 			return false;
@@ -701,25 +707,50 @@ static int kd_service_native_release(void *argument,
 		return -EINVAL;
 	list_for_each_entry(owner, &scope->owners, link) {
 		struct kd_admission *a = &owner->admission;
+		unsigned long physical;
 
 		if (owner != route->owner)
 			continue;
 		if (owner->released || owner->request.identity != route->identity ||
 		    owner->request.generation != route->generation ||
+		    owner->root_generation != scope->continuation->generation ||
 		    (unsigned long)a->object != route->object ||
 		    a->request_generation != route->generation || !a->gate_held ||
 		    !a->committed || a->physical_owner != current || a->pickup_pending)
 			return -EINVAL;
+		/* The route can outlive its initial registry lookup. Revalidate the
+		 * exact physical owner and selected phase before touching the object. */
+		physical = atomic_long_read(&a->gate->owner);
+		if ((physical & ~KD_MUTEX_OWNER_FLAGS) !=
+		    (unsigned long)current || (physical & 4UL) ||
+		    (a->sem && (!a->phase_held ||
+		     READ_ONCE(a->sem->selected_kind) != a->phase_kind ||
+		     READ_ONCE(a->sem->selected_owner) != a->phase_owner ||
+		     READ_ONCE(a->sem->selected_identity) != a->phase_identity ||
+		     READ_ONCE(a->sem->phase_generation) != a->phase_generation ||
+		     atomic_long_read(&a->sem->admission) != -1)))
+			return -EINVAL;
 		if (route->operation == KD_NATIVE_OPERATION_RWSEM_DOWNGRADE) {
-			if (a->kind != KD_ADMISSION_RWSEM_WRITE)
+			if (a->kind != KD_ADMISSION_RWSEM_WRITE ||
+			    a->read_state != KD_ADMISSION_READ_NONE)
 				return -EINVAL;
+			/* O reached downgrade only after native handback. Preserve that
+			 * API's real downgrade and ordinary anonymous reader custody. */
 			kd_admission_downgrade(a);
 			kd_admission_read_to_native(a);
 			kd_service_trace_event("native_read_custody", root, owner);
+		} else if (route->operation == KD_NATIVE_OPERATION_RWSEM_UP_READ) {
+			if (a->kind != KD_ADMISSION_RWSEM_WRITE ||
+			    a->read_state != KD_ADMISSION_READ_PROXY_LIVE)
+				return -EINVAL;
+			owner->released = true;
+			kd_admission_finish_read(a);
+			kd_service_trace_event("native_read_release", root, owner);
 		} else if ((route->operation == KD_NATIVE_OPERATION_MUTEX_UNLOCK &&
 			    a->kind == KD_ADMISSION_MUTEX) ||
 			   (route->operation == KD_NATIVE_OPERATION_RWSEM_UP_WRITE &&
-			    a->kind == KD_ADMISSION_RWSEM_WRITE)) {
+			    a->kind == KD_ADMISSION_RWSEM_WRITE &&
+			    a->read_state == KD_ADMISSION_READ_NONE)) {
 			kd_admission_release(a);
 			owner->released = true;
 			kd_service_trace_event("native_release", root, owner);
@@ -813,7 +844,7 @@ static void kd_service_pin_resume(struct kd_exec_continuation *cont)
 static int kd_service_run_scope(struct kd_service_root *root, int status);
 static int kd_service_primitive_call(struct kd_service_root *root);
 
-/* A release ends this translated unit after its real operation and CALL
+/* A physical release ends this translated unit after its real operation and CALL
  * completion. Keep the already advanced packet: a remaining owner authorizes
  * the existing Native tail, never another invocation of that release. */
 static int kd_service_release_boundary(struct kd_service_root *root, int status)
@@ -986,14 +1017,26 @@ static int kd_service_release_call(struct kd_service_root *root)
 	struct kd_exec_continuation *cont = &root->continuation;
 	struct kd_exec_service_call *call = &cont->service_call;
 	struct kd_service_owner *owner = kd_service_find_owner(&root->scope, call->object);
+	bool continue_proxy_read = false;
+	int status;
 
-	BUG_ON(!owner);
+	BUG_ON(!owner || owner->root_generation != cont->generation ||
+	       owner->request.generation != owner->admission.request_generation ||
+	       owner->admission.request != &owner->request);
 	switch (call->api) {
 	case KD_SERVICE_RWSEM_DOWNGRADE:
-		kd_admission_downgrade(&owner->admission);
+		/* Only this proxied acquisition continues across its logical
+		 * downgrade. Keep the writer gate/phase until its matching up_read. */
+		kd_admission_downgrade_proxy(&owner->admission);
+		continue_proxy_read = true;
 		kd_service_trace_event("downgrade", root, owner);
 		break;
 	case KD_SERVICE_RWSEM_UP_READ:
+		/* A retained writer may wake scheduler waiters on E. Its matching
+		 * read suffix cannot finish inside a borrowed atomic/RCU interval. */
+		BUG_ON(owner->admission.read_state == KD_ADMISSION_READ_PROXY_LIVE &&
+		       (kd_service_native_pins(root) ||
+			kd_service_native_depth(root, KD_NATIVE_OWNER_RCU)));
 		/* Retained metadata is committed before the last object access. */
 		owner->released = true;
 		kd_admission_finish_read(&owner->admission);
@@ -1010,8 +1053,10 @@ static int kd_service_release_call(struct kd_service_root *root)
 	}
 	if (owner->released && owner != root->scope.outer)
 		kd_service_retire_child(owner);
-	return kd_service_release_boundary(root,
-		kd_exec_cont_service_complete(cont, NULL, 0));
+	status = kd_exec_cont_service_complete(cont, NULL, 0);
+	if (continue_proxy_read)
+		return status ? status : kd_exe_resume_retained(&cont->frame);
+	return kd_service_release_boundary(root, status);
 }
 
 static int kd_service_handoff(struct kd_service_root *root)
@@ -1023,7 +1068,9 @@ static int kd_service_handoff(struct kd_service_root *root)
 	BUG_ON(root->native_handoff || cont->service_call.api != KD_SERVICE_NONE ||
 	       cont->packet->orig_ax != KD_REG_ORIGIN_SUFFIX_TAG);
 	/* Remove the physical CPU activation before the Native registry is live.
-	 * E keeps every remaining gate and its stack-local ownership anchors. */
+	 * E keeps every remaining gate and its stack-local ownership anchors.
+	 * A proxy read retains that writer and its typed up_read route; only a
+	 * real anonymous reader credit can transfer to ordinary Native custody. */
 	kd_service_unpin(cont);
 	list_for_each_entry(owner, &root->scope.owners, link)
 		if (!owner->released && owner->admission.read_state == KD_ADMISSION_READ_LIVE) {

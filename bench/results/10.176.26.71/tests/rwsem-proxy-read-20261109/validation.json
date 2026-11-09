@@ -1,0 +1,836 @@
+{
+  "evidence_archive": {
+    "bytes": 102144000,
+    "files": 171,
+    "path": "/mnt/kdlock-builds2/kdlock-proxy-collection-_ox7mujx/evidence.tar",
+    "sha256": "aa58fe4e05a3697dcc07525c8582c9d7029aedff7befb2b949b789517161d997",
+    "source": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-proxy-short-3ceb7f002672-v1/processes/kd"
+  },
+  "first_checks": {
+    "failed": [
+      "mutex-test_rwsem_read_admission",
+      "mutex-test_writer_query"
+    ],
+    "idle": {
+      "modules": [],
+      "source_processes": [],
+      "tasks": []
+    },
+    "passed": false,
+    "source_unchanged": true
+  },
+  "fixture_commit": "3ceb7f002672e8e9a4b2a14de6660944338088e5",
+  "focused": {
+    "checks": [
+      {
+        "name": "daemon-build",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "test_control_call-build",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "test_control_call",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "test_daemon_policy-build",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "test_daemon_policy",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "codegen-test_release_units",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "codegen-test_direct_call_depth",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "admission-test_text_regions",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "execution-test_release_units",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "execution-test_native_service_join",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "mutex-test_admission",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "mutex-test_rwsem_read_release",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "mutex-test_rwsem_read_admission",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "mutex-test_rwsem_api",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "mutex-test_writer_query",
+        "returncode": 0,
+        "status": "passed"
+      },
+      {
+        "name": "provider-build-only",
+        "returncode": 0,
+        "status": "passed"
+      }
+    ],
+    "idle": {
+      "modules": [],
+      "source_processes": [],
+      "tasks": []
+    },
+    "kernel_inputs_unchanged": true,
+    "passed": true,
+    "provider": {
+      "bytes": 7808168,
+      "elf_build_ids": [
+        "3dd2f72972d23eb186aa4c8d15a069088b914174"
+      ],
+      "note_sha256": "5079462f965691f10d3b47f235000f70be6f5b9dbdb44e00b385d95ca2faa27a",
+      "path": "/mnt/kdlock-builds2/kdlock-batch-checks-gqsn0jds/provider-128/kernel_module/kdlock_km.ko",
+      "sha256": "663cec836c9661cb744cd62cd64983d3f213e56cd3e6e7e4eac05902d6671c92",
+      "undefined_interface_symbols": [
+        "kd_api_cancel_selector",
+        "kd_api_query_current",
+        "kd_api_register_provider",
+        "kd_api_select_current",
+        "kd_api_sites",
+        "kd_api_unregister_provider",
+        "kd_rwsem_provider_controls",
+        "kd_rwsem_provider_resume",
+        "kd_rwsem_provider_sites",
+        "kd_rwsem_register_provider",
+        "kd_rwsem_unregister_provider"
+      ],
+      "undefined_symbols": [
+        "BUG_func",
+        "__SCT__cond_resched",
+        "__SCT__might_resched",
+        "__SCT__preempt_schedule",
+        "___ratelimit",
+        "__bitmap_and",
+        "__bitmap_weight",
+        "__check_object_size",
+        "__cpu_online_mask",
+        "__cpu_possible_mask",
+        "__fentry__",
+        "__fortify_panic",
+        "__kmalloc_cache_node_noprof",
+        "__kmalloc_cache_noprof",
+        "__kmalloc_large_noprof",
+        "__kmalloc_noprof",
+        "__list_add_valid_or_report",
+        "__list_del_entry_valid_or_report",
+        "__module_get",
+        "__num_online_cpus",
+        "__per_cpu_offset",
+        "__preempt_count",
+        "__put_task_struct_rcu_cb",
+        "__rcu_read_lock",
+        "__rcu_read_unlock",
+        "__ref_stack_chk_guard",
+        "__stack_chk_fail",
+        "__trace_set_current_state",
+        "__tracepoint_sched_set_state_tp",
+        "__ubsan_handle_load_invalid_value",
+        "__ubsan_handle_out_of_bounds",
+        "__ubsan_handle_shift_out_of_bounds",
+        "__wake_up",
+        "__x86_indirect_thunk_r10",
+        "__x86_indirect_thunk_r13",
+        "__x86_indirect_thunk_r15",
+        "__x86_indirect_thunk_rax",
+        "__x86_indirect_thunk_rbx",
+        "__x86_indirect_thunk_rcx",
+        "__x86_indirect_thunk_rdx",
+        "__x86_return_thunk",
+        "_copy_from_user",
+        "_copy_to_user",
+        "_find_first_bit",
+        "_find_next_bit",
+        "_printk",
+        "_raw_spin_lock",
+        "_raw_spin_lock_irqsave",
+        "_raw_spin_trylock",
+        "_raw_spin_unlock",
+        "_raw_spin_unlock_irqrestore",
+        "alloc_chrdev_region",
+        "alloc_cpumask_var_node",
+        "autoremove_wake_function",
+        "bitmap_parselist",
+        "boot_cpu_data",
+        "call_rcu",
+        "capable",
+        "cdev_add",
+        "cdev_del",
+        "cdev_init",
+        "class_create",
+        "class_destroy",
+        "const_current_task",
+        "copy_from_kernel_nofault",
+        "cpu_number",
+        "cpus_read_lock",
+        "cpus_read_unlock",
+        "device_create",
+        "device_destroy",
+        "finish_wait",
+        "free_cpumask_var",
+        "free_percpu",
+        "int_sqrt",
+        "kallsyms_lookup_name",
+        "kd_api_cancel_selector",
+        "kd_api_query_current",
+        "kd_api_register_provider",
+        "kd_api_select_current",
+        "kd_api_sites",
+        "kd_api_unregister_provider",
+        "kd_rwsem_provider_controls",
+        "kd_rwsem_provider_resume",
+        "kd_rwsem_provider_sites",
+        "kd_rwsem_register_provider",
+        "kd_rwsem_unregister_provider",
+        "kfree",
+        "kmalloc_caches",
+        "kthread_create_on_node",
+        "kthread_should_stop",
+        "kthread_stop",
+        "ktime_get",
+        "memcmp",
+        "memcpy",
+        "memset",
+        "migrate_disable",
+        "migrate_enable",
+        "module_put",
+        "mutex_lock",
+        "mutex_unlock",
+        "nonseekable_open",
+        "nr_cpu_ids",
+        "numa_node",
+        "param_array_ops",
+        "param_ops_bool",
+        "param_ops_charp",
+        "param_ops_int",
+        "param_ops_string",
+        "param_ops_uint",
+        "param_ops_ulong",
+        "pcpu_alloc_noprof",
+        "prepare_to_wait_exclusive",
+        "pv_info",
+        "pv_ops",
+        "pv_ops_lock",
+        "random_kmalloc_seed",
+        "rcu_barrier",
+        "refcount_warn_saturate",
+        "schedule",
+        "schedule_timeout",
+        "schedule_timeout_uninterruptible",
+        "scnprintf",
+        "set_cpus_allowed_ptr",
+        "set_memory_x",
+        "sized_strscpy",
+        "snprintf",
+        "strcmp",
+        "strncmp",
+        "strnlen",
+        "strpbrk",
+        "synchronize_rcu",
+        "sysfs_streq",
+        "this_cpu_off",
+        "try_module_get",
+        "unregister_chrdev_region",
+        "validate_usercopy_range",
+        "vfree",
+        "vmalloc_noprof",
+        "vzalloc_node_noprof",
+        "vzalloc_noprof",
+        "wake_up_process",
+        "wake_up_q",
+        "work_on_cpu_key"
+      ],
+      "vermagic": "7.0.0-38-kdscope5 SMP preempt mod_unload modversions"
+    },
+    "source_unchanged": true,
+    "work_unchanged": true
+  },
+  "implementation_commit": "adf4d2680d0b07e38cf5a0a2f9d609673b425636",
+  "live": {
+    "application_results": {
+      "1": {
+        "drained": true,
+        "error": null,
+        "output": {
+          "completed_pairs": 440431,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 220219,
+              "min": 220219,
+              "total": 220219
+            },
+            {
+              "max": 220212,
+              "min": 220212,
+              "total": 220212
+            }
+          ],
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 220215.5,
+          "preparation": [],
+          "upstream_average": 220215,
+          "upstream_average_divisor": 2,
+          "upstream_completed_pairs": 440431,
+          "upstream_counter_boundary": "-s2: six pre-marker samples, 2 post-marker samples; final 2 selected",
+          "warmup": [
+            {
+              "max": 217089,
+              "min": 217089,
+              "total": 217089
+            },
+            {
+              "max": 220113,
+              "min": 220113,
+              "total": 220113
+            },
+            {
+              "max": 220061,
+              "min": 220061,
+              "total": 220061
+            },
+            {
+              "max": 219875,
+              "min": 219875,
+              "total": 219875
+            },
+            {
+              "max": 220108,
+              "min": 220108,
+              "total": 220108
+            },
+            {
+              "max": 220244,
+              "min": 220244,
+              "total": 220244
+            }
+          ]
+        },
+        "passed": true,
+        "returncode": 0,
+        "state": "COMPLETE"
+      },
+      "8": {
+        "drained": true,
+        "error": "AssertionError('demand learning did not reach a quiescent boundary')",
+        "output": {
+          "completed_pairs": 68741,
+          "elapsed_interval_seconds_observed": false,
+          "measurement": [
+            {
+              "max": 4321,
+              "min": 4277,
+              "total": 34390
+            },
+            {
+              "max": 4305,
+              "min": 4284,
+              "total": 34351
+            }
+          ],
+          "nominal_seconds": 2,
+          "pairs_per_nominal_second": 34370.5,
+          "preparation": [],
+          "upstream_average": 34370,
+          "upstream_average_divisor": 2,
+          "upstream_completed_pairs": 68741,
+          "upstream_counter_boundary": "-s2: six pre-marker samples, 2 post-marker samples; final 2 selected",
+          "warmup": [
+            {
+              "max": 4291,
+              "min": 4268,
+              "total": 34267
+            },
+            {
+              "max": 4263,
+              "min": 4235,
+              "total": 34022
+            },
+            {
+              "max": 4323,
+              "min": 4291,
+              "total": 34469
+            },
+            {
+              "max": 4325,
+              "min": 4284,
+              "total": 34427
+            },
+            {
+              "max": 4315,
+              "min": 4294,
+              "total": 34439
+            },
+            {
+              "max": 4310,
+              "min": 4279,
+              "total": 34393
+            }
+          ]
+        },
+        "passed": false,
+        "returncode": 0,
+        "state": "FAILED"
+      }
+    },
+    "finalization": {
+      "campaign_complete": false,
+      "drained": true,
+      "final_idle": true,
+      "ordinary_cpu_progress": {
+        "bindings_after": 0,
+        "bindings_before": 17,
+        "cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "finished_ns": 239839334313,
+        "started_ns": 239716107884
+      },
+      "original_result_sha256": "02f4caada7ca09fa5fa8f794fd5ca8cff2ac285b5d6eba4f837fdcfe1e77eff8",
+      "passed": false,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "retirement_passed": true
+    },
+    "observations": {
+      "1": {
+        "after": {
+          "18446744071586934632": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 503399341,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          },
+          "18446744071587350331": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 505546807,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          }
+        },
+        "before": {
+          "18446744071586934632": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 0,
+            "local_cancel": 0,
+            "local_no_image": 0,
+            "local_ns": 0,
+            "local_success": 0,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 0,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          },
+          "18446744071587350331": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 0,
+            "local_cancel": 0,
+            "local_no_image": 0,
+            "local_ns": 0,
+            "local_success": 0,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 0,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          }
+        },
+        "conservation_passed": true,
+        "delta": [
+          {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "entry": "0xffffffff817b6f68",
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 503399341,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          },
+          {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "entry": "0xffffffff8181c73b",
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 505546807,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          }
+        ],
+        "dynamic_instructions_measured": false,
+        "model": "processes",
+        "scope": "whole application including six warmup and two measured samples",
+        "timers": "inclusive elapsed ns; overlapping intervals are not additive",
+        "whole_critical_section_time_measured": false,
+        "workers": 1
+      },
+      "8": {
+        "after": {
+          "18446744071586934632": {
+            "bound": 274767,
+            "canceled": 0,
+            "dispatch_ns": 765960125,
+            "dispatch_samples": 274767,
+            "handback": 274767,
+            "handback_finished": 274767,
+            "invalid_clock": 0,
+            "jit_entered": 274767,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 503399341,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 2032692,
+            "shadow_ns": 1670289515,
+            "shadow_samples": 274767,
+            "submitted": 274767
+          },
+          "18446744071587350331": {
+            "bound": 274766,
+            "canceled": 0,
+            "dispatch_ns": 1914177139,
+            "dispatch_samples": 274766,
+            "handback": 274766,
+            "handback_finished": 274766,
+            "invalid_clock": 0,
+            "jit_entered": 274766,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 505546807,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 2032691,
+            "shadow_ns": 2835808488,
+            "shadow_samples": 274766,
+            "submitted": 274766
+          }
+        },
+        "before": {
+          "18446744071586934632": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 503399341,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          },
+          "18446744071587350331": {
+            "bound": 0,
+            "canceled": 0,
+            "dispatch_ns": 0,
+            "dispatch_samples": 0,
+            "handback": 0,
+            "handback_finished": 0,
+            "invalid_clock": 0,
+            "jit_entered": 0,
+            "local": 1757925,
+            "local_cancel": 0,
+            "local_no_image": 1757925,
+            "local_ns": 505546807,
+            "local_success": 1757925,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 1757925,
+            "shadow_ns": 0,
+            "shadow_samples": 0,
+            "submitted": 0
+          }
+        },
+        "delta": [
+          {
+            "bound": 274767,
+            "canceled": 0,
+            "dispatch_ns": 765960125,
+            "dispatch_samples": 274767,
+            "entry": "0xffffffff817b6f68",
+            "handback": 274767,
+            "handback_finished": 274767,
+            "invalid_clock": 0,
+            "jit_entered": 274767,
+            "local": 0,
+            "local_cancel": 0,
+            "local_no_image": 0,
+            "local_ns": 0,
+            "local_success": 0,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 274767,
+            "shadow_ns": 1670289515,
+            "shadow_samples": 274767,
+            "submitted": 274767
+          },
+          {
+            "bound": 274766,
+            "canceled": 0,
+            "dispatch_ns": 1914177139,
+            "dispatch_samples": 274766,
+            "entry": "0xffffffff8181c73b",
+            "handback": 274766,
+            "handback_finished": 274766,
+            "invalid_clock": 0,
+            "jit_entered": 274766,
+            "local": 0,
+            "local_cancel": 0,
+            "local_no_image": 0,
+            "local_ns": 0,
+            "local_success": 0,
+            "prepublication_cancel": 0,
+            "returned": 0,
+            "selected": 274766,
+            "shadow_ns": 2835808488,
+            "shadow_samples": 274766,
+            "submitted": 274766
+          }
+        ],
+        "dynamic_instructions_measured": false,
+        "model": "processes",
+        "scope": "whole application including six warmup and two measured samples",
+        "timers": "inclusive elapsed ns; overlapping intervals are not additive",
+        "whole_critical_section_time_measured": false,
+        "workers": 8
+      }
+    },
+    "short": {
+      "campaign_complete": false,
+      "campaign_state": "STOPPED_RETIREMENT_PENDING",
+      "controller_returncode": 1,
+      "delegation_proved": false,
+      "drained": true,
+      "final_idle": true,
+      "finalization_passed": false,
+      "finalizer_returncode": 0,
+      "frozen_source_unchanged": true,
+      "output": "/mnt/kdlock-builds2/kdlock-evidence/10.176.26.71/bench/kdlock-proxy-short-3ceb7f002672-v1/processes/kd",
+      "passed": false,
+      "performance_accepted": false,
+      "pilot_data_passed": false,
+      "retirement_passed": true,
+      "scored": false,
+      "signals_sent": [],
+      "source_commit": "3ceb7f002672e8e9a4b2a14de6660944338088e5"
+    }
+  },
+  "normal_recovery": {
+    "boot_id": "f0a22d78-8d31-46a8-b6d2-918b25145696",
+    "final_idle": true,
+    "kernel_verification": {
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "manifest": {
+      "path": "/root/kdlock-kernel-baselines/linux70-kdlock1-20261027/manifest.json",
+      "sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17"
+    },
+    "mode": "normal",
+    "passed": true,
+    "release": "7.0.0-38-kdlock1"
+  },
+  "raw_directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-proxy-read-3ceb7f00-v1",
+  "schema": 1
+}

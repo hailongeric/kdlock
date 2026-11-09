@@ -24,6 +24,7 @@ def production():
                               if line.startswith('#define KD_EXE_')) + '\n'
     for path, names in (
         ('include/kd_wait_queue.h', ('enum kd_wait_state {',)),
+        ('include/kd_admission.h', ('enum kd_admission_read_state {',)),
         ('include/kd_exec_cont.h', ('enum kd_exec_cont_state {', 'enum kd_exec_cont_wait {',
                                   'enum kd_exec_service_api {', 'struct kd_exec_service_call {')),
         ('include/kd_service_calls.h', ('enum kd_service_call_context {',
@@ -61,8 +62,8 @@ def main():
     declarations, code = production()
     mutations = {
         'resume_after_kd_release': lambda text: replace_once(text,
-            'return kd_service_release_boundary(root,\n\t\tkd_exec_cont_service_complete(cont, NULL, 0));',
-            'return kd_exec_cont_service_complete(cont, NULL, 0);'),
+            'return kd_service_release_boundary(root, status);',
+            'return status ? status : kd_exe_resume_retained(&cont->frame);'),
         'resume_after_native_release': lambda text: replace_once(text,
             'if (release)\n\t\treturn kd_service_release_boundary(root, result);',
             'if (release && false)\n\t\treturn kd_service_release_boundary(root, result);'),
@@ -70,8 +71,10 @@ def main():
             'cont->packet->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;',
             'cont->packet->sp += sizeof(unsigned long);\n\tcont->packet->orig_ax = KD_REG_ORIGIN_SUFFIX_TAG;'),
         'finish_at_downgrade': lambda text: replace_once(text,
-            'case KD_SERVICE_RWSEM_DOWNGRADE:\n\t\tkd_admission_downgrade',
-            'case KD_SERVICE_RWSEM_DOWNGRADE:\n\t\towner->released = true;\n\t\tkd_admission_downgrade'),
+            'case KD_SERVICE_RWSEM_DOWNGRADE:',
+            'case KD_SERVICE_RWSEM_DOWNGRADE:\n\t\towner->released = true;'),
+        'handback_at_proxy_downgrade': lambda text: replace_once(text,
+            'continue_proxy_read = true;', 'continue_proxy_read = false;'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-release-units-') as directory:
         path = Path(directory)
@@ -87,12 +90,12 @@ def main():
             if mutate is None:
                 assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
                 print(result.stdout, end='')
-                for mode in ('pending', 'unadvanced'):
+                for mode in ('pending', 'unadvanced', 'proxy-pin', 'proxy-rcu'):
                     refused = subprocess.run([str(binary), mode], capture_output=True,
                                              text=True, timeout=15)
                     assert refused.returncode == -signal.SIGABRT and 'Assertion' in refused.stderr, (
                         mode, refused.returncode, refused.stdout, refused.stderr)
-                    print('release boundary refused incomplete CALL:', mode)
+                    print('release boundary refused incomplete CALL or incompatible proxy context:', mode)
             else:
                 assert result.returncode == -signal.SIGABRT and 'Assertion' in result.stderr, (
                     name, result.returncode, result.stdout, result.stderr)

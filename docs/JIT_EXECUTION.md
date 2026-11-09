@@ -27,11 +27,26 @@ at `32bda7fa` records possible release/frontier sites; the exact taken munmap
 exit PC was not retained. Batched discovery does not permit source emission
 past a recognized release or establish separate nested-image activation.
 
-Master now includes this implementation through `0a58c048` and retains its
-previously checked flags-stack lowering from `20fde062`. The mmap1 runtime
-result remains bound to `d421e7d5`; the merged combination has no new runtime
-validation. Existing source-specific checks and static merge checks remain
-separate evidence.
+The later [proxy-read campaign](../bench/results/10.176.26.71/bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+at unchanged `7e3c90b4` reached stable mmap g7 / munmap g12 images after
+2,358.837496 seconds of preparation. All 19 compiler records were unchanged
+across the entire fixed application, with no overlapping compiler interval.
+The eight-process point completed 256,709 pairs in ten nominal-second samples:
+25,670.9 pairs per nominal second with selected-service counters enabled.
+Across the whole fixed application, mmap returned all 398,610 JIT entries and
+munmap all 398,608, both with zero completed handbacks. Exact retirement, normal
+unload and verified normal-kernel recovery passed. The prior 180/1,800-second
+learning failures remain unchanged. This one instrumented point does not
+establish quiet performance, a Native gain, a specific consumed downgrade branch
+or separate nested-image activation. Its receipt validates `7e3c90b4`, without
+master's independent flags-stack changes; the merged runtime remains untested.
+
+Master includes the proxy-read implementation `adf4d268`, fixture alignment
+`3ceb7f00` and tested checkpoint `7e3c90b4`, with evidence `2c819210`. It retains
+its previously checked flags-stack lowering from `20fde062`. The mmap1 result
+remains bound to `7e3c90b4`; source-specific guest checks and static integration
+[checks](../bench/results/10.176.26.71/tests/proxy-read-main-integration-20261109/README.md)
+are separate from runtime validation of the merged combination.
 
 ## Preparation and entry
 
@@ -84,19 +99,39 @@ resume at validated continuations. An ordinary untranslated callee finishes the
 remaining invocation on the origin; it does not resume JIT after arbitrary native
 work or reset the body.
 
-Retained ABI2 service images end a source unit at every recognized release,
-including a nested or unrelated release, a typed Native release and downgrade.
+Retained ABI2 service images end a source unit at every recognized physical
+release, including a nested or unrelated release and a typed Native release.
 The compiler does not pair releases with acquisitions. A release inside a callee
 also ends that path; its caller's original suffix is retained only when the
 callee has a release-free return path. Generated exit/dispatch code does not
-authorize original source after the release in that unit.
+authorize original source after the release in that unit. The narrow exception
+is a typed rwsem downgrade actually consumed by the JIT proxy: it changes that
+exact acquisition to logical read mode while retaining its physical writer
+gate and selected admission phase. The compiler keeps its real post-CALL
+continuation; it does not skip the surrounding mmap wrapper, tracing,
+`vma_end_write_all`, unmapping, accounting, callbacks or cleanup. The eventual
+read unlock remains a physical release boundary. Other unlock cuts, CFG/depth
+bounds, the original backend and the two-word ABI remain unchanged.
 
 Runtime performs the real release and completes its CALL exactly once. If all
 required owners are released, ordinary final completion applies. Otherwise the
 exact saved post-release IP/SP and complete packet use the existing native
-handback with remaining owners and source/image lifetimes intact. Downgrade
-keeps its real read credit through the native read tail and matching read
-unlock, without reacquisition. This route does not implement separate nested
+handback with remaining owners and source/image lifetimes intact. A JIT proxy
+downgrade creates no anonymous reader credit: the selected writer phase stays
+closed at `admission == -1` until its matching read unlock consumes that writer
+once. A missing later instruction can still hand back; E retains the exact
+writer and source/frame state, and O's typed read unlock waits for E's physical
+release and ACK. The mode uses one selected writer phase, not a positive writer
+cohort. It supports the same logical task's ordinary task-context read tail;
+atomic/IRQ-off and borrowed spin/preempt/RCU final-release contexts are refused.
+It does not add cross-task non-owner release support for this retained writer.
+
+If native handback occurs before downgrade, O's later downgrade API retains
+the existing genuine downgrade: publish a real reader credit, release the
+writer/phase, and transfer that credit to Native custody. Ordinary local
+downgrade and read release remain unchanged, including the local atomic reader
+decrement path. Acquisition results and origin-signal killable cancellation
+also retain their existing contracts. These routes do not implement separate nested
 JIT images or JIT-to-JIT continuation units; a full-root returned-JIT counter
 may remain zero even when the native tail completes correctly.
 

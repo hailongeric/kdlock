@@ -20,6 +20,8 @@ def production():
     headers = '\n'.join(without_includes(read_source(ROOT / name)) for name in (
         'include/kd_wait_queue.h', 'include/kd_mutex_types.h',
         'include/kd_rwsem_types.h', 'include/kd_admission.h'))
+    headers += '\n' + definition(read_source(ROOT / 'include/kd_exec.h'),
+                                  'enum kd_exec_native_operation {').rstrip() + ';\n'
     physical = read_source(ROOT / 'kernel_module/kd_mutex_local.c')
     owner = '\n'.join(definition(physical, name) for name in (
         'bool kd_mutex_admission_trylock_locked(struct kd_mutex *lock,',
@@ -73,6 +75,13 @@ def main():
                 assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
                 assert 'PASS production canonical admission' in result.stdout, result.stdout
                 print(result.stdout, end='')
+                for mode in ('duplicate-read', 'stale-read', 'stale-phase', 'local-proxy',
+                             'writer-release', 'anonymous-custody'):
+                    refused = subprocess.run([str(binary), mode], capture_output=True,
+                                             text=True, timeout=15)
+                    assert refused.returncode == -signal.SIGABRT and 'Assertion' in refused.stderr, (
+                        mode, refused.returncode, refused.stdout, refused.stderr)
+                    print('proxy admission refused invalid release/custody:', mode)
             else:
                 assert result.returncode == -signal.SIGABRT, (
                     name, result.returncode, result.stdout, result.stderr)

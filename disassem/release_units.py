@@ -1,8 +1,10 @@
-"""Select one translated unit, ending at every declared release operation.
+"""Select one translated unit, ending at every declared physical release.
 
 This is source reachability, not acquisition/release pairing. The runtime
 executes the release and uses its exact owner records to finish or continue
-at the saved Native instruction under any remaining owners.
+at the saved Native instruction under any remaining owners. The coordinator
+keeps typed proxied downgrades resumable because their exact writer is not
+physically released; their eventual read unlock remains a declared boundary.
 """
 
 from collections import defaultdict, deque

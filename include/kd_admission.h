@@ -19,6 +19,10 @@ enum kd_admission_read_state {
 	KD_ADMISSION_READ_RELEASED,
 	/* The real credit remains in readers; ordinary Native release owns it. */
 	KD_ADMISSION_READ_NATIVE,
+	/* Logical read custody retains this acquisition's exact writer gate and
+	 * selected phase. It never creates an ordinary readers credit. */
+	KD_ADMISSION_READ_PROXY_LIVE,
+	KD_ADMISSION_READ_PROXY_CONSUMING,
 };
 
 /* One supplied canonical request spans physical admission and reader drainage.
@@ -98,8 +102,13 @@ void kd_admission_move_owned_locked(struct kd_admission *source,
  * retains its packet/source through the later returned-body acknowledgment. */
 void kd_admission_release(struct kd_admission *admission);
 void kd_admission_downgrade(struct kd_admission *admission);
+/* A proxied write becomes logical read custody without opening admission or
+ * releasing its physical writer. Only finish_read may consume that writer. */
+void kd_admission_downgrade_proxy(struct kd_admission *admission);
 void kd_admission_finish_read(struct kd_admission *admission);
-/* Metadata-only custody transfer, never an up_read or a reader-count change. */
+/* Metadata-only custody transfer of a real read credit, never an up_read or
+ * a reader-count change. Proxied read custody keeps its physical writer and
+ * requires the retained exact-owner release route instead. */
 void kd_admission_read_to_native(struct kd_admission *admission);
 
 #endif /* KD_ADMISSION_H */

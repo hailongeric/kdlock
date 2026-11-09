@@ -18,8 +18,11 @@ def main():
     service = read_source(ROOT / 'kernel_module/kd_service.c')
     provider = read_source(ROOT / 'kernel_module/kd_rwsem_provider.c')
     source = '\n'.join((
+        definition(read_source(ROOT / 'include/kd_admission.h'),
+                   'enum kd_admission_read_state {').rstrip() + ';',
         definition(service, 'static struct kd_service_root *kd_service_origin_scope(void)'),
         definition(service, 'bool kd_service_write_owned(void *object, struct task_struct *task)'),
+        definition(provider, 'static int kd_rwsem_entry_scope_valid(const struct kd_rwsem_site *sites,'),
         definition(provider, 'int kd_rwsem_provider_init(void)'),
     ))
     with tempfile.TemporaryDirectory(prefix='kd-writer-query-') as directory:

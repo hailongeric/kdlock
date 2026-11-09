@@ -1,0 +1,20 @@
+{
+  "build_or_tests_run": false,
+  "compact_json_parse": true,
+  "conflict_marker_check": true,
+  "staged_paths": 39,
+  "static_python_parse": [
+    "disassem/disassem.py",
+    "disassem/instruction_policy.py",
+    "disassem/release_units.py",
+    "disassem/special_inst.py",
+    "tests/unit/codegen/test_direct_call_depth.py",
+    "tests/unit/codegen/test_release_units.py",
+    "tests/unit/execution/test_native_service_join.py",
+    "tests/unit/execution/test_release_units.py",
+    "tests/unit/mutex/test_admission.py",
+    "tests/unit/mutex/test_rwsem_read_admission.py",
+    "tests/unit/mutex/test_rwsem_read_release.py",
+    "tests/unit/mutex/test_writer_query.py"
+  ]
+}

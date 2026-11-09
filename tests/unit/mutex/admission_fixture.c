@@ -123,6 +123,11 @@ static long schedule_timeout(unsigned long ticks)
 }
 
 #include "admission_types.h"
+/* Direct anonymous reader cases have no retained Native service registration.
+ * The separate Native join fixture exercises the real typed UP_READ route. */
+static inline bool kd_exec_native_service_unlock(unsigned long object,
+	enum kd_exec_native_operation operation)
+{ (void)object; (void)operation; return false; }
 static struct kd_wait_queue kd_mutex_wait_queue(struct kd_mutex *lock)
 { return kd_wait_queue_view(&lock->wait_lock, &lock->wait_head); }
 #define KD_WAITERS 1UL
@@ -199,15 +204,19 @@ static void retain_execution(struct invocation *item)
 	kd_wait_set_state_locked(&item->request, KD_WAIT_EXECUTING);
 	_raw_spin_unlock_irqrestore(a->retained_guard, flags);
 }
-static void finish_execution(struct invocation *item)
+static void retire_execution(struct invocation *item)
 {
 	struct kd_admission *a = &item->admission;
-	kd_admission_release(a);
 	unsigned long flags = _raw_spin_lock_irqsave(a->retained_guard);
 	kd_wait_set_state_locked(&item->request, KD_WAIT_RELEASED);
 	kd_wait_set_state_locked(&item->request, KD_WAIT_RETURN_ACK);
 	kd_wait_set_state_locked(&item->request, KD_WAIT_RETIRED);
 	_raw_spin_unlock_irqrestore(a->retained_guard, flags);
+}
+static void finish_execution(struct invocation *item)
+{
+	kd_admission_release(&item->admission);
+	retire_execution(item);
 }
 static void finish_cancel(struct invocation *item)
 {
@@ -480,8 +489,113 @@ static void test_native_read_custody_keeps_nested_writer_on_executor(void)
 	++cases;
 }
 
-int main(void)
+static void test_proxy_read_keeps_writer_until_read_release(void)
 {
+	struct kd_rwsem sem;
+	struct invocation item, next;
+	reset_tasks(); init_sem(&sem);
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&item) == KD_WAIT_GRANTED); retain_execution(&item);
+	u64 generation = item.request.generation, phase = sem.phase_generation;
+	void *identity = sem.selected_identity;
+	kd_admission_downgrade_proxy(&item.admission);
+	assert(item.admission.read_state == KD_ADMISSION_READ_PROXY_LIVE);
+	assert(item.admission.gate_held && item.admission.phase_held && !sem.readers);
+	assert(sem.admission == -1 && sem.selected_identity == identity && sem.phase_generation == phase);
+	assert((sem.gate.owner & ~KD_FLAGS) == (unsigned long)&executor);
+	assert(!kd_rwsem_condition_ready(&sem, KD_RWSEM_CONDITION_READ, false));
+	init_invocation(&next, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&other_origin, TASK_KILLABLE, true);
+	assert(publish_step(&next) == KD_WAIT_PENDING && !next.admission.gate_held);
+	assert(sem.admission == -1 && !sem.readers && sem.phase_generation == phase);
+	/* A signal arriving after this exact acquisition was granted is not a
+	 * second admission election and does not replace the read-release result. */
+	origin.fatal = true;
+	kd_admission_finish_read(&item.admission);
+	assert(item.request.generation == generation && item.admission.read_state == KD_ADMISSION_READ_RELEASED);
+	assert(!item.admission.gate_held && !item.admission.phase_held && !sem.readers && !sem.admission);
+	retire_execution(&item);
+	unsigned long flags = _raw_spin_lock_irqsave(&sem.gate.wait_lock);
+	assert(kd_admission_step_locked(&next.admission) == KD_WAIT_GRANTED);
+	_raw_spin_unlock_irqrestore(&sem.gate.wait_lock, flags);
+	assert(sem.phase_generation == phase + 1 && sem.selected_identity == next.request.identity);
+	retain_execution(&next); finish_execution(&next); ++cases;
+}
+
+static void test_proxy_read_non_lifo_and_same_address_reacquisition(void)
+{
+	struct kd_rwsem sem;
+	struct kd_mutex nested;
+	struct invocation outer, child, next;
+	reset_tasks(); init_sem(&sem); init_mutex(&nested);
+	init_invocation(&outer, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&outer) == KD_WAIT_GRANTED); retain_execution(&outer);
+	kd_admission_downgrade_proxy(&outer.admission);
+	u64 old_generation = outer.request.generation, old_phase = sem.phase_generation;
+	init_invocation(&child, &nested, KD_ADMISSION_MUTEX,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&child) == KD_WAIT_GRANTED); retain_execution(&child);
+	kd_admission_finish_read(&outer.admission); retire_execution(&outer);
+	assert(child.admission.gate_held && child.admission.physical_owner == &executor);
+	assert((nested.owner & ~KD_FLAGS) == (unsigned long)&executor);
+	init_invocation(&next, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(next.request.generation != old_generation && next.request.identity != outer.request.identity);
+	assert(publish_step(&next) == KD_WAIT_GRANTED); retain_execution(&next);
+	assert(sem.phase_generation == old_phase + 1 && sem.selected_identity == next.request.identity);
+	kd_admission_downgrade_proxy(&next.admission);
+	assert(!sem.readers && sem.admission == -1 && child.admission.gate_held);
+	kd_admission_finish_read(&next.admission); retire_execution(&next);
+	finish_execution(&child);
+	assert(!sem.gate.owner && !nested.owner && !sem.readers && !sem.admission); ++cases;
+}
+
+static void test_local_downgrade_retains_real_reader_contract(void)
+{
+	struct kd_rwsem sem;
+	struct invocation item;
+	reset_tasks(); init_sem(&sem); current = &origin;
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, false);
+	assert(publish_step(&item) == KD_WAIT_GRANTED); retain_execution(&item);
+	kd_admission_downgrade(&item.admission);
+	assert(sem.readers == 1 && !sem.admission && !sem.gate.owner);
+	assert(item.admission.read_state == KD_ADMISSION_READ_LIVE);
+	kd_admission_finish_read(&item.admission); retire_execution(&item);
+	assert(!sem.readers && item.admission.read_state == KD_ADMISSION_READ_RELEASED); ++cases;
+}
+
+static void check_proxy_refusal(const char *mode)
+{
+	struct kd_rwsem sem;
+	struct invocation item;
+	reset_tasks(); init_sem(&sem);
+	init_invocation(&item, &sem, KD_ADMISSION_RWSEM_WRITE,
+		&origin, TASK_KILLABLE, true);
+	assert(publish_step(&item) == KD_WAIT_GRANTED); retain_execution(&item);
+	if (!strcmp(mode, "local-proxy")) {
+		item.request.logical_origin = current;
+		kd_admission_downgrade_proxy(&item.admission);
+	} else {
+		kd_admission_downgrade_proxy(&item.admission);
+		if (!strcmp(mode, "duplicate-read")) kd_admission_finish_read(&item.admission);
+		else if (!strcmp(mode, "stale-read")) ++item.request.generation;
+		else if (!strcmp(mode, "stale-phase")) ++sem.phase_generation;
+		else if (!strcmp(mode, "writer-release")) {
+			kd_admission_release(&item.admission); return;
+		} else if (!strcmp(mode, "anonymous-custody")) {
+			kd_admission_read_to_native(&item.admission); return;
+		}
+		kd_admission_finish_read(&item.admission);
+	}
+}
+
+int main(int argc, char **argv)
+{
+	if (argc == 2) { check_proxy_refusal(argv[1]); return 0; }
+	assert(argc == 1);
 	/* Subject mutations must first reach a bounded direct decision, rather
 	 * than enter a deliberately broken cancellation wait indefinitely. */
 	test_ready_before_fatal(); test_origin_signals();
@@ -490,6 +604,9 @@ int main(void)
 	test_reader_retry_and_cancellation(); test_queued_reader_precedes_new_writer_phase();
 	test_native_read_custody_keeps_real_credit();
 	test_native_read_custody_keeps_nested_writer_on_executor();
+	test_proxy_read_keeps_writer_until_read_release();
+	test_proxy_read_non_lifo_and_same_address_reacquisition();
+	test_local_downgrade_retains_real_reader_contract();
 	assert(!held_guards && !pins && !irq_disabled && scheduler_state == TASK_RUNNING);
 	assert(origin.refs == 1 && other_origin.refs == 1 && executor.refs == 1 && holder.refs == 1);
 	printf("PASS production canonical admission: %u cases; actual queue, phase, PICKUP and cancellation paths; deterministic primitives only\n", cases);

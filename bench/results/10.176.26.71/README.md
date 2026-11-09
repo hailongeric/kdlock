@@ -6,7 +6,18 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 regressions, and [terminology](../../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
 
-The [normal mmap1 campaign](bench/mmap1-normal-d421e7d5-v1/README.md) binds
+The latest [proxy-read mmap1 campaign](bench/mmap1-proxy-read-7e3c90b4-v3/README.md)
+binds unchanged `7e3c90b4` to one compile-excluded eight-process point:
+25,670.9 pairs per nominal second with selected-service counters enabled.
+Stable images were mmap g7 / munmap g12. Across the entire fixed application,
+both roots returned all JIT entries (398,610 / 398,608), with zero completed
+handbacks. Exact retirement/unload and verified normal-kernel recovery passed.
+The report separates 2,358.837496 seconds of preparation from overlapping
+compiler work and measurement, and retains both prior learning failures.
+Quiet performance, Native improvement and the merged flags-stack/runtime union
+remain unvalidated.
+
+The earlier [normal mmap1 campaign](bench/mmap1-normal-d421e7d5-v1/README.md) binds
 candidate `d421e7d5` to evidence `53889930`: one stable instrumented
 eight-process g7 point passed, with 336,042 mmap retained returns and 336,037
 munmap completed native handbacks. Exact retirement and normal-kernel recovery

@@ -1,0 +1,193 @@
+{
+  "campaign_learning_budget": {
+    "continuation_application_seconds": 30,
+    "continuation_rounds": 16,
+    "deadline_monotonic": 3688.240025544,
+    "timeout_seconds": 3600
+  },
+  "candidate": "7e3c90b469c1f824ba0e82773880c605f3fbcfe2",
+  "clock": "CLOCK_MONOTONIC",
+  "compilation_child_wall_ns": 2308547259746,
+  "compilation_excluded": true,
+  "compilation_time_is_not_added_to_application_time": true,
+  "compiler_count": 19,
+  "compiler_overlap_whole_application": [],
+  "compiler_records_unchanged": true,
+  "completed_measured_pairs": 256709,
+  "last_compile_to_application_gap_ns": 16768834281,
+  "last_compiler_finished_ns": 2430308687434,
+  "limitations": "Selected-service counters and sample callbacks remain enabled; no quiet-performance qualification or Native comparison.",
+  "measured_nominal_samples": 10,
+  "metrics_enabled": true,
+  "pairs_per_nominal_second": 25670.9,
+  "performance_accepted": false,
+  "points": 1,
+  "preparation_before_fixed_application_ns": 2358837496171,
+  "quiet_performance_accepted": false,
+  "recorded_metrics_prefix_exact": true,
+  "registry_and_superseded_history_unchanged": true,
+  "runner_stable_point_passed": true,
+  "sample_window_events": [
+    {
+      "boundary": "begin",
+      "line_received_ns": 2453110374583,
+      "observation": {
+        "registry": [
+          {
+            "code": 18419722476560359424,
+            "entry": 18446744071586934632,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2383
+          },
+          {
+            "code": 18419722476543565824,
+            "entry": 18446744071587350331,
+            "entry_abi": 2,
+            "generation": 12,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2381
+          }
+        ],
+        "service": {
+          "18446744071586934632": {
+            "bound": 22199976,
+            "canceled": 0,
+            "dispatch_ns": 49833835160,
+            "dispatch_samples": 22199976,
+            "handback": 15457148,
+            "handback_finished": 15457148,
+            "invalid_clock": 0,
+            "jit_entered": 22199976,
+            "local": 15701591,
+            "local_cancel": 0,
+            "local_no_image": 15701591,
+            "local_ns": 4493163756,
+            "local_success": 15701591,
+            "prepublication_cancel": 0,
+            "returned": 6742826,
+            "selected": 37901570,
+            "shadow_ns": 1945125017335,
+            "shadow_samples": 22199974,
+            "submitted": 22199979
+          },
+          "18446744071587350331": {
+            "bound": 17988536,
+            "canceled": 0,
+            "dispatch_ns": 114280774899,
+            "dispatch_samples": 17988536,
+            "handback": 17662007,
+            "handback_finished": 17662007,
+            "invalid_clock": 0,
+            "jit_entered": 17988536,
+            "local": 19912993,
+            "local_cancel": 0,
+            "local_no_image": 19912993,
+            "local_ns": 6762403520,
+            "local_success": 19912993,
+            "prepublication_cancel": 0,
+            "returned": 326526,
+            "selected": 37901529,
+            "shadow_ns": 1013129296047,
+            "shadow_samples": 17988533,
+            "submitted": 17988536
+          }
+        },
+        "superseded_reports": 2
+      },
+      "observation_finished_ns": 2453110812979,
+      "sample": 6
+    },
+    {
+      "boundary": "end",
+      "line_received_ns": 2463111654129,
+      "observation": {
+        "registry": [
+          {
+            "code": 18419722476560359424,
+            "entry": 18446744071586934632,
+            "entry_abi": 2,
+            "generation": 7,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2383
+          },
+          {
+            "code": 18419722476543565824,
+            "entry": 18446744071587350331,
+            "entry_abi": 2,
+            "generation": 12,
+            "lock_kind": 2,
+            "pid": 0,
+            "requirements": 32640,
+            "status": 0,
+            "tgid": 2381
+          }
+        ],
+        "service": {
+          "18446744071586934632": {
+            "bound": 22456677,
+            "canceled": 0,
+            "dispatch_ns": 50337893848,
+            "dispatch_samples": 22456677,
+            "handback": 15457148,
+            "handback_finished": 15457148,
+            "invalid_clock": 0,
+            "jit_entered": 22456677,
+            "local": 15701591,
+            "local_cancel": 0,
+            "local_no_image": 15701591,
+            "local_ns": 4493163756,
+            "local_success": 15701591,
+            "prepublication_cancel": 0,
+            "returned": 6999529,
+            "selected": 38158268,
+            "shadow_ns": 1980886085517,
+            "shadow_samples": 22456677,
+            "submitted": 22456677
+          },
+          "18446744071587350331": {
+            "bound": 18245237,
+            "canceled": 0,
+            "dispatch_ns": 115878215935,
+            "dispatch_samples": 18245237,
+            "handback": 17662007,
+            "handback_finished": 17662007,
+            "invalid_clock": 0,
+            "jit_entered": 18245237,
+            "local": 19912993,
+            "local_cancel": 0,
+            "local_no_image": 19912993,
+            "local_ns": 6762403520,
+            "local_success": 19912993,
+            "prepublication_cancel": 0,
+            "returned": 583230,
+            "selected": 38158230,
+            "shadow_ns": 1039900149377,
+            "shadow_samples": 18245237,
+            "submitted": 18245237
+          }
+        },
+        "superseded_reports": 2
+      },
+      "observation_finished_ns": 2463112149023,
+      "sample": 16
+    }
+  ],
+  "schema": 1,
+  "scope": "No compiler overlaps the entire fixed application, including its six warmup and ten measured samples.",
+  "timing_denominator": "sum of the final ten completed-pair samples divided by ten nominal seconds; not campaign elapsed time",
+  "whole_application_interval_ns": [
+    2447077521715,
+    2463138030688
+  ]
+}

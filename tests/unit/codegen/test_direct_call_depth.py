@@ -10,9 +10,11 @@ class DirectCallDepthTests(unittest.TestCase):
     lock = entry + 0x8000
     unlock = entry + 0x8100
     downgrade = entry + 0x8200
+    read_unlock = entry + 0x8300
     symbols = {'kd_mutex_direct_lock_clobber_v1': lock,
                'kd_mutex_direct_unlock_clobber_v1': unlock,
-               'kd_downgrade_write': downgrade}
+               'kd_downgrade_write': downgrade,
+               'kd_up_read': read_unlock}
 
     @staticmethod
     def call(source, target):
@@ -71,12 +73,18 @@ class DirectCallDepthTests(unittest.TestCase):
         self.assertNotIn(f'loc_{target:x}:'.encode(), assembly)
         self.assertFalse(reads)
 
-    def test_downgrade_stops_source_unit_before_read_tail(self):
-        target = self.entry + 0x10000
-        raw = self.call(self.entry, self.downgrade) + self.call(self.entry+5, target) + b'\xc3'
-        assembly, reads, _ = self.emit(raw, {target: b'\xc3'})
-        self.assertNotIn(f'loc_{target:x}:'.encode(), assembly)
-        self.assertFalse(reads)
+    def test_proxy_downgrade_keeps_read_tail_under_existing_call_depth(self):
+        target, later = self.entry + 0x10000, self.entry + 0x20000
+        raw = self.call(self.entry, self.downgrade) + self.call(self.entry+5, target)
+        raw += self.call(self.entry+10, self.read_unlock)
+        raw += self.call(self.entry+15, later) + b'\xc3'
+        assembly, reads, log = self.emit(raw, {target: b'\xc3', later: b'\xc3'})
+        self.assertIn(f'loc_{target:x}:'.encode(), assembly)
+        self.assertTrue(any(address <= target < address+size for address,size in reads))
+        self.assertNotIn(f'loc_{later:x}:'.encode(), assembly)
+        self.assertFalse(any(address <= later < address+size for address,size in reads))
+        self.assertIn('call_depth=5', log)
+        self.assertIn('total_transition_limit=32', log)
 
 
 if __name__ == '__main__':
