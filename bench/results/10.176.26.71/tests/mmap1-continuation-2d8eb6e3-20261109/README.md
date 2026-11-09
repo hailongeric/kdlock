@@ -51,8 +51,12 @@ The final pending CALL target is **`0xffffffff8181ad20`**. Authoritative batch 1
 has base generation 9, revision/sequence 11, one CALL record, `from=0` and
 overflow zero. Published g9, batch 16 assembly lines 282954–282959, contains its
 CALL-miss stub. Its sole emitted caller is CALL `0xffffffff817e3c64`, pushing
-return word `0xffffffff817e3c69` (lines 150626–150635). The target's symbol name
-was not established. This is a missing-callee boundary; it does not establish a
+return word `0xffffffff817e3c69` (lines 150626–150635). A subsequent direct
+symbol-table check identifies the target as `unlink_file_vma_batch_add` in
+`/tmp/kdlock-mm-scope5-v4-elf-20261107/vmlinux`, whose SHA256
+`1cd5fa2b6094903cd644b202967a9f7ad5ddce0fc29cef9d5b2b981fb2e5e216`
+and Build ID `357a7115d21941960b90262ac1165bf70d1b398e` match the retained
+kernel identity. This is a missing-callee boundary; it does not establish a
 RET correction failure.
 
 The next candidate includes the decoded target and that continuation. Its child
