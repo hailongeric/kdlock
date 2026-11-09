@@ -42,9 +42,19 @@ Public unlock retains exact provider routing for every successful acquisition.
 Ordinary spin source macros expose the unpinned clobber control before acquiring
 caller state; named DIRECT benchmark pairs retain their separate inline prefix.
 Rwlock local IRQ/BH and trylock APIs preserve the declared Native context order.
-Rwsem uses one ordinary family: default and callable/signal/try/cleanup writers
-stay local with downgrade; explicit quiescent preparation enables ordinary macro
-writer delegation with no downgrade or translated rwsem nesting.
+Ordinary rwsem reader acquisitions and unprepared writer macros execute locally.
+Callable writer functions, trylocks and cleanup constructors remain local even
+on prepared objects. Quiescent preparation permits eligible ordinary,
+interruptible and killable writer macros to enter retained capture, subject to
+context/resource checks; it does not guarantee delegation. Actual readiness
+wins over applicable signal cancellation before commitment; cancellation returns
+only after exact cleanup and ACK. A JIT-consumed downgrade keeps the exact
+physical writer gate and selected phase across its logical read tail until
+matching typed UP_READ releases it once. Proxy final release requires the same
+logical task in ordinary task context. Local and Native-first downgrade create
+a real reader credit and release the writer gate and phase. Selected typed
+retained controls do not establish arbitrary mixed nesting or separate
+nested-image activation.
 All users of an object must follow one protocol. Whole-kernel replacement and
 ww_mutex remain separately unvalidated. Explicitly refuse CONFIG_PREEMPT_RT,
 CONFIG_DEBUG_MUTEXES, CONFIG_DEBUG_LOCK_ALLOC and lockdep; these configurations
@@ -94,8 +104,9 @@ validate whole-kernel replacement.
    start a new combiner loop.
    The requested queued role exchange remains unimplemented; code support and
    live owner-handoff validation cannot be reported as completing that request.
-7. Do not modify, build, install or reboot the guest kernel by default. Captured
-   kernel experiments under `kernel_baseline/experiments/` are historical inputs.
+7. Modifying, building and installing the guest kernel, and rebooting the guest,
+   are approved by default; no additional user permission is required.
+   Captured kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
    MM integration is limited to the lock backend and minimal API/lifetime wrappers.
    Keep native MM bodies and semantics unchanged and execute them on their original
@@ -117,6 +128,24 @@ validate whole-kernel replacement.
     and data structures; prefer leaving kernel source unchanged. Extracted-body
     calls and test ioctls are mechanism evidence, not real-world API substitutes.
     See [the workload contract](docs/BENCHMARK_WORKLOADS.md#permanent-testing-constraint).
+
+## Naming and wording
+
+Standing user preference for all future sessions and tasks: avoid
+cybersecurity-associated terminology in newly created names and newly written
+prose. Prefer neutral, technically accurate descriptions of correctness,
+execution, ownership, concurrency and performance. This applies to file and
+directory names, functions, variables, macros, comments, documentation, commit
+messages, branch names, tests and log labels. Prefer terms such as continuation,
+handoff, local execution, instruction service, test body and fixture when they
+faithfully describe the mechanism.
+
+This is a forward-looking wording rule, not a request to rename existing APIs
+or mechanisms. Preserve established identifiers and references exactly, including
+when discussing them in new prose. Technical accuracy takes precedence: if an
+exact technical term has no faithful neutral equivalent, use it and briefly
+explain why it is necessary. This preference concerns wording only; it does not
+change implementation behavior or validation requirements.
 
 ## Git and reporting
 
